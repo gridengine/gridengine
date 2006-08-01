@@ -36,8 +36,7 @@
 #include "sge_object.h"
 #include "sge_mirror.h"
 
-sge_callback_result 
-host_update_master_list(object_description *object_base, sge_object_type type, 
-                        sge_event_action action, lListElem *event, void *clientdata);
+bool host_update_master_list(sge_object_type type, sge_event_action action,
+                             lListElem *event, void *clientdata);
 
 #endif /* __SGE_HOST_MIRROR_H */

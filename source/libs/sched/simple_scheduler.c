@@ -96,7 +96,7 @@ static bool remove_finished_job(sge_object_type type, sge_event_action action,
          DPRINTF(("got final usage for job %s\n", 
                   job_get_id_string(job_id, ja_task_id, NULL)));
 
-         job = job_list_locate(object_type_get_master_list_mt(SGE_TYPE_JOB), job_id);
+         job = job_list_locate(Master_Job_List, job_id);
          ja_task = job_search_task(job, NULL, ja_task_id);
 
          order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL, false);
@@ -130,7 +130,7 @@ static void get_cluster_info()
           "mem_total", "mem_free", "swap_total", "swap_free", "disk_total", "disk_free");
 
    /* loop over all exec hosts and output information */
-   for_each(host, object_type_get_master_list_mt(SGE_TYPE_EXECHOST)) {
+   for_each(host, Master_Exechost_List) {
       const char *name = lGetHost(host, EH_name);
       printf("%-20s", name);
 
@@ -163,7 +163,7 @@ static void get_workload_info()
    printf("\n");
 
    /* loop over all jobs and output information */
-   for_each(job, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(job, Master_Job_List) {
       u_long32 job_id, procs;
       const char *user, *group, *pe;
       lListElem *ja_task, *range, *ep;
@@ -273,7 +273,7 @@ static void get_policy_info()
    printf("%-15s %7s %-15s %s\n", "pe", "procs", "rule", "hosts");
 
    /* output information for all parallel environments */
-   for_each(pe, object_type_get_master_list_mt(SGE_TYPE_PE)) {
+   for_each(pe, Master_Pe_List) {
       const char *name, *allocation_rule;
       int procs; 
       lListElem *queue_ref;
@@ -333,7 +333,7 @@ static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
    lListElem *sjob;
 
    /* find a pending job */
-   for_each(sjob, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(sjob, Master_Job_List) {
       lListElem *range;
 
       /* find non enrolled, pending ja_task_id */
@@ -366,7 +366,7 @@ static int queue_get_free_slots(lListElem *queue)
    name  = lGetString(queue, QU_full_name);
    slots = lGetUlong(queue, QU_job_slots);
 
-   for_each(job, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(job, Master_Job_List) {
       lListElem *ja_task;
 
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
@@ -431,7 +431,7 @@ static void simple_scheduler()
    pe_name = lGetString(job, JB_pe);
    if(pe_name != NULL) {
       lListElem *range;
-      pe = lGetElemStr(object_type_get_master_list_mt(SGE_TYPE_PE), PE_name, pe_name);
+      pe = lGetElemStr(Master_Pe_List, PE_name, pe_name);
       for_each(range, lGetList(job, JB_pe_range)) {
          procs = MAX(procs, lGetUlong(range, RN_max));
       }
@@ -516,7 +516,7 @@ static void delete_some_jobs()
    lListElem *job; 
    u_long32 now = sge_get_gmt();
 
-   for_each(job, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(job, Master_Job_List) {
       lListElem *ja_task;
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
          if((lGetUlong(ja_task, JAT_start_time) + 120) < now) {

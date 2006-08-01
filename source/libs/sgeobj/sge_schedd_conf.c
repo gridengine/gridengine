@@ -138,7 +138,6 @@ typedef struct {
    int        search_alg[SCHEDD_PE_ALG_MAX]; /* stores the weighting for the different algorithms*/
    int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
    int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
-   double     decay_constant;            /* used in the share tree */
 }  sc_state_t; 
 
 /****** sge_schedd_conf/sc_state_init() ****************************************
@@ -174,7 +173,6 @@ static void sc_state_init(sc_state_t* state)
    state->search_alg[SCHEDD_PE_BINARY] = 0;
    state->scheduled_fast_jobs = 0;
    state->scheduled_comprehensive_jobs = 0;
-   state->decay_constant = 0.0;
 }
 
 static void sc_state_destroy(void* state) 
@@ -2542,8 +2540,7 @@ static bool is_config_set(void)
 *  MT-NOTE:   is MT save, uses LOCK_SCHED_CONF(read)
 *
 *******************************************************************************/
-bool sconf_is(void) 
-{
+bool sconf_is(void) {
    bool is = false;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
@@ -3764,17 +3761,6 @@ void sconf_set_last_dispatch_type(int last)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_last_dispatch_type");
    sc_state->last_dispatch_type = last;
-}
-
-void sconf_set_decay_constant(double decay) 
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_decay_constant");
-   sc_state->decay_constant = decay;
-}
-double sconf_get_decay_constant(void) 
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_decay_constant");
-   return sc_state->decay_constant;
 }
 
 u_long32 sconf_get_duration_offset(void)

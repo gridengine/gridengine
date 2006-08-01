@@ -48,24 +48,23 @@
 #define MSG_NULL                   _MESSAGE(23005, _("(NULL)"))
 #define MSG_SMALLNULL                       _MESSAGE(23006, _("(null)"))
 
-#define MSG_FILE_NOCLOSE_SS                                    _MESSAGE(23013, _("cant close file "SFN": "SFN))
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _MESSAGE(23014, _("can't open directory "SFQ": "SFN))
-#define MSG_SGETEXT_CANTRESOLVEHOST_S                          _MESSAGE(23015, _("can't resolve hostname "SFQ))
-#define MSG_SGETEXT_CANTRESOLVEHOST_SS                         _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN))
-#define MSG_NULLPOINTER                                        _MESSAGE(23017, _("NULL pointer received") )    
-#define MSG_FILE_NOOPEN_SS                                     _MESSAGE(23018, _("cant open file "SFN": "SFN))
-#define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                     _MESSAGE(23019, _("Could not open stdout as file"))
-#define MSG_ERROR_UNABLETODUMPJOBLIST                          _MESSAGE(23020, _("Unable to dump job list"))
-#define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS               _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
-#define MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE      _MESSAGE(23022, _("conf_version not found on reading spool file"))
-#define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S               _MESSAGE(23023, _("no value given for configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS       _MESSAGE(23024, _("incorrect value "SFQ" given for configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I           _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
-#define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S              _MESSAGE(23027, _("error storing configuration attribute "SFQ))
-#define MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS              _MESSAGE(23028, _("error closing the configuration spool file "SFN": "SFN))
+#define MSG_SGETEXT_CANTRESOLVEHOST_S           _MESSAGE(23015, _("can't resolve hostname "SFQ))
+#define MSG_SGETEXT_CANTRESOLVEHOST_SS          _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN))
+#define MSG_NULLPOINTER            _MESSAGE(23017, _("NULL pointer received") )    
+#define MSG_FILE_NOOPEN_SS            _MESSAGE(23018, _("cant open file "SFN": "SFN))
+#define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                 _MESSAGE(23019, _("Could not open stdout as file"))
+#define MSG_ERROR_UNABLETODUMPJOBLIST                      _MESSAGE(23020, _("Unable to dump job list"))
 
-#define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23029, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
+#define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS      _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
+#define MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE    _MESSAGE(23022, _("conf_version not found on reading spool file"))
+#define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S      _MESSAGE(23023, _("no value given for configuration attribute "SFQ))
+#define MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS       _MESSAGE(23024, _("incorrect value "SFQ" given for configuration attribute "SFQ))
+#define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I  _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
+#define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
+#define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S     _MESSAGE(23027, _("error storing configuration attribute "SFQ))
+
+#define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23028, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
 
 /*
 ** parse_job_cull.c
@@ -97,9 +96,22 @@
 #define MSG_SGETEXT_MUSTBEMANAGER_S         _MESSAGE(23059, _("denied: "SFQ" must be manager for this operation"))
 #define MSG_SGETEXT_MUSTBEOPERATOR_S        _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation"))
 #define MSG_OPTIONWORKSONLYONJOB            _MESSAGE(23061, _("denied: the selected option works only on jobs and not on tasks"))
+
+
+/*
+** parse.c
+*/
 #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(23062, _("ERROR! "SFN" option must have argument"))
+
+
+/*
+** parse_qlist.c
+*/
 #define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S        _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
-#define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23064, _("error closeing "SFN": "SFN))
+/* #define MSG_PARSE_WORNGOBJLISTFORMATXSPECIFIEDTOYOPTION_SS    _message(23064, _("ERROR! Wrong object list format "SFQ" specified to "SFN" option")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PARSE_DOPTIONMUSTHAVEFILEARGUMENT                 _message(23065, _("ERROR! -d option must have file argument")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_PARSE_WRONGFIELDLISTFORMATXSPECIFIEDFORFOPTION_S  _message(23066, _("ERROR! Wrong field list format "SFQ" specified to -f option")) __TS Removed automatically from testsuite!! TS__*/
+
 
 /*
 ** parse_qsub.c

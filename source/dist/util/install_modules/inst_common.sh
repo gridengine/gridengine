@@ -290,10 +290,15 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
            testsuidroot uidgid infotext"
 
+WINUTILFILES="SGE_Helper_Service.exe"
+
+#SUIDFILES="rsh rlogin testsuidroot sgepasswd"
+
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
    BINFILES="$WINBINFILES"
+   UTILFILES="$UTILFILES $WINUTILFILES"
 fi
 
    missing=false
@@ -338,8 +343,8 @@ fi
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "checkprog      gethostbyname  now            rsh            infotext\n" \
-         "checkuser      gethostname    openssl        rshd\n" \
-         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "checkuser      gethostname    openssl        rshd           filestat\n" \
+         "getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
@@ -392,8 +397,8 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
-             "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
+             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] | [-winupdate] \\\n" \
+             "       [-csp] [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -413,6 +418,7 @@ ErrUsage()
              "              higher than 1024\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
+             "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
@@ -594,6 +600,63 @@ WelcomeTheUserUpgrade()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
+
+#--------------------------------------------------------------------------
+#
+WelcomeTheUserWinUpdate()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   $INFOTEXT -u "\nWelcome to the Grid Engine Win Update"
+   $INFOTEXT "\nBefore you continue with the update please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the udate if you\n" \
+             "     have the possibility to abort the upgrade\n\n" \
+             "The update procedure will take approximately 1-2 minutes.\n" \
+             "After this update you will get a enhanced windows execd\n" \
+             "installation, with gui support."
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
+#--------------------------------------------------------------------------
+#
+WelcomeTheUserWinSvc()
+{
+   mode=$1
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ "$mode" = "install" ]; then
+      installation_id="installation"   
+      install_id="install"
+   elif [ "$mode" = "uninstall" ]; then 
+      installation_id="uninstallation"
+      install_id="uninstall"
+   else
+      installation_id="process"
+      install_id="process"
+   fi
+
+   $INFOTEXT -u "\nWelcome to the Grid Engine Windows Helper Service %s" $installation_id
+   $INFOTEXT "\nBefore you continue with the %s please read these hints:\n\n" \
+             "   - Your terminal window should have a size of at least\n" \
+             "     80x24 characters\n\n" \
+             "   - The INTR character is often bound to the key Ctrl-C.\n" \
+             "     The term >Ctrl-C< is used during the %s if you\n" \
+             "     have the possibility to abort the %s\n\n" \
+             "The %s procedure will take approximately 1-2 minutes.\n" \
+             "After this %s you will get a enhanced windows execd\n" \
+             "installation, with gui support." $installation_id $install_id $installation_id $install_id $install_id
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
 
 #-------------------------------------------------------------------------
 # CheckWhoInstallsSGE

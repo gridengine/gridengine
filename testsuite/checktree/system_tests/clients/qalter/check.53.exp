@@ -64,25 +64,17 @@ lappend check_functions "qalter_qs_args"
 #*******************************
 proc qalter_qs_args {} {
    global ts_config
-   global CHECK_OUTPUT CHECK_USER
+   global CHECK_PRODUCT_ROOT CHECK_ARCH submitresult
+   global check_errno 
+   global check_errstr  CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT CHECK_USER
 
    set option "-qs_args arg1 arg2 arg3 -qs_end"
-   set arch [resolve_arch $ts_config(master_host)]
-
-   set job_id [submit_job "-N QS_ARGS -o /dev/null -j y -h $ts_config(product_root)/examples/jobs/sleeper.sh 10"]
-
-   # start qalter
-   set qalteroutput [start_remote_prog $ts_config(master_host) $CHECK_USER $ts_config(product_root)/bin/$arch/qalter "$option $job_id" qalterresult]
-
-   puts $CHECK_OUTPUT $qalteroutput
-
-   delete_job $job_id
-
-   # evaluate result
-   if {$qalterresult != 0} {
-      set_error -1 "qalter $option $job_id failed:\n$qalteroutput"
-   } else {
-      set_error 0 "qalter $option $job_id succeeded:\n$qalteroutput"
+   set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $submitresult" } qalteroutput ]
+   if {$qalterresult == 1} {
+      set_error -1 "qalter $option - $qalteroutput"
+      return
    }
+   set_error 0 "qalter $option - no errors"
+   return
 }
 

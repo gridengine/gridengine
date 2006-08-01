@@ -5,10 +5,12 @@ Source Code Review Form
 Date: 2005-11-22
 
 1 Identification
-JG-2005-11-22-0: Bugfix:    libdrmaa.sl did not work on HP11 (link error)
+JG-2005-11-22-0: Bugfix:    - parsing error in cluster config, qmaster_params 
+                              (introduced after s2 snapshot1)
+                            - libdrmaa.sl did not work on HP11 (link error)
                  Issue:     1912
                  Bugtraq:   6354164
-                 Review:    SG
+                 Review:    EB, SG
 
 
 2 Conformance to specification

@@ -66,7 +66,7 @@
 #include "sgeee.h"
 #include "sgeobj/sge_range.h"
 #include "sge_support.h"
-#include "sge_interactive_sched.h"
+#include "interactive_sched.h"
 #include "shutdown.h"
 #include "schedd_message.h"
 #include "sge_process_events.h"
@@ -986,7 +986,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    lListElem *granted_el;     
    dispatch_t result = DISPATCH_NOT_AT_TIME;
    const char *pe_name, *ckpt_name;
-   sge_assignment_t a = SGE_ASSIGNMENT_INIT;
+   sge_assignment_t a;
    bool is_computed_reservation = false;
 
    DENTER(TOP_LAYER, "select_assign_debit");
@@ -1358,7 +1358,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
 
    for_each (jep, job_list) {
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {  
-         sge_assignment_t a = SGE_ASSIGNMENT_INIT;
+         sge_assignment_t a;
 
          assignment_init(&a, jep, ja_task, false);
 

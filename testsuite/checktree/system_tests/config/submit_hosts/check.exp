@@ -47,7 +47,7 @@ global env
 # set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "submit_hosts_init_level"
+set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "submit_hosts"
@@ -69,7 +69,7 @@ set check_functions ""
 lappend check_functions "submit_hosts_test"
 global submit_hosts_use_local_conf
 
-proc submit_hosts_init_level {} {
+proc init_level {} {
   global CHECK_ACT_LEVEL
   global submit_hosts_use_local_conf
 

@@ -52,7 +52,7 @@ public class SessionImplJobTest extends TestCase {
    private Session session = null;
 
    static {
-      SLEEPER = Settings.get (Settings.SCRIPTS_DIR) + "/suspendable_sleeper.sh";
+      SLEEPER = Settings.get (Settings.TEST_PATH) + "/sleeper.sh";
    }
    
    public SessionImplJobTest (java.lang.String testName) {
@@ -70,12 +70,7 @@ public class SessionImplJobTest extends TestCase {
    }
    
    public void tearDown () throws DrmaaException {
-      try {
-         session.exit ();
-      } catch (NoActiveSessionException ex) {
-         // Ignore
-      }
-      
+      session.exit ();
       session = null;
    }
    
@@ -1736,77 +1731,6 @@ public class SessionImplJobTest extends TestCase {
          fail ("Exception while trying to get job status: " + e.getMessage ());
       }
    }
-
-   public void testRecoverableSession () throws DrmaaException {
-      System.out.println ("testRecoverableSession");
-      
-      String contact = session.getContact ();
-
-      JobTemplate jt = this.createSleeperTemplate (120);
-
-      String jobId1 = session.runJob (jt);
-
-      session.deleteJobTemplate (jt);
-      
-      jt = this.createSleeperTemplate (10);
-      
-      String jobId2 = session.runJob (jt);
-      
-      session.deleteJobTemplate (jt);
-      
-      jt = this.createSleeperTemplate (10);
-      jt.setJobSubmissionState (jt.HOLD);
-      
-      List jobIds34 = session.runBulkJobs (jt, 1, 2, 1);
-      
-      session.deleteJobTemplate (jt);
-      session.control ((String)jobIds34.get (0), session.RELEASE);
-      
-      session.exit ();
-      
-      /* Take a nap so that we give the job time to get scheduled. */
-      try {
-         Thread.sleep (60000);
-      }
-      catch (InterruptedException e) {
-         fail ("Sleep was interrupted");
-      }
-      
-      session.init (contact);
-
-      JobInfo ji = session.wait (jobId1, session.TIMEOUT_WAIT_FOREVER);
-
-      assertEquals (true, ji.hasExited ());
-      assertEquals (0, ji.getExitStatus ());
-      assertEquals (jobId1, ji.getJobId ());
-
-      try {
-         session.wait (jobId2, session.TIMEOUT_WAIT_FOREVER);
-         fail ("Call to wait() succeeded for job which ended");
-      }
-      catch (NoResourceUsageException e) {
-         // Supposed to happen
-      }
-      catch (InvalidJobException e) {
-         // Supposed to happen
-      }
-
-      try {
-         session.wait ((String)jobIds34.get (0), session.TIMEOUT_WAIT_FOREVER);
-         fail ("Call to wait() suceeded for job which ended");
-      } catch (NoResourceUsageException ex) {
-         // Supposed to happen
-      }
-
-      try {
-         session.wait ((String)jobIds34.get (1), session.TIMEOUT_NO_WAIT);
-         fail ("Call to wait() did not time out as expect");
-      } catch (ExitTimeoutException ex) {
-         // Supposed to happen
-      }
-      
-      session.control ((String)jobIds34.get(1), session.TERMINATE);
-   }
    
    private JobTemplate createSleeperTemplate (int sleep) throws DrmaaException {
       JobTemplate jt = session.createJobTemplate ();
@@ -1818,7 +1742,7 @@ public class SessionImplJobTest extends TestCase {
       
       return jt;
    }
-
+   
    private class BadJobTemplate extends JobTemplate {
       public BadJobTemplate () {         
       }

@@ -77,7 +77,7 @@ enum {
    PA_translation
 };
 
-LISTDEF(PA_Type)
+SLISTDEF(PA_Type, PathAlias)
    SGE_STRING(PA_origin, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SPOOL)
    SGE_HOST(PA_submit_host, CULL_DEFAULT | CULL_SPOOL) 
    SGE_HOST(PA_exec_host, CULL_DEFAULT | CULL_SPOOL) 

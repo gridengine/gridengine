@@ -62,6 +62,8 @@
 
 #define HGROUP_LAYER TOP_LAYER
 
+lList *Master_HGroup_List = NULL;
+
 /****** sgeobj/hgroup/is_hgroup_name() ****************************************
 *  NAME
 *     is_hgroup_name() -- Is the given name a hostgroup name 
@@ -149,10 +151,7 @@ bool hgroup_check_name(lList **answer_list, const char* name)
 lList **
 hgroup_list_get_master_list(void) 
 {
-    /* depending on the setting, we want to return the local thread setting and
-       not the global master list. The object_type_get_master_list knows, which
-       one to get */
-    return object_type_get_master_list(SGE_TYPE_HGROUP);
+   return &Master_HGroup_List;
 }
 
 /****** sgeobj/hgroup/hgroup_list_locate() ************************************

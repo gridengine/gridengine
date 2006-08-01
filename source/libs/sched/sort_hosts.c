@@ -54,7 +54,7 @@
 #include "sge_qinstance.h"
 #include "msg_schedd.h"
 
-static const char load_ops[]={
+static char load_ops[]={
         '+',
         '-',
         '*',

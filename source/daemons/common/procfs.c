@@ -43,7 +43,7 @@ int verydummyprocfs;
 #include <sys/types.h>
 #include <sys/signal.h>
 
-#if !defined(CRAY) && !defined(NECSX4) && !defined(NECSX5) && !defined(AIX)
+#if !defined(CRAY) && !defined(NECSX4) && !defined(NECSX5)
 #include <sys/syscall.h>
 #endif
 
@@ -73,9 +73,6 @@ int verydummyprocfs;
 #include <sys/param.h>          /* for HZ (jiffies -> seconds ) */
 #endif
 
-#include "uti/sge_stdio.h"
-#include "uti/sge_unistd.h"
-
 #include "sge_log.h"
 #include "msg_sge.h"
 #include "sgermon.h"
@@ -83,6 +80,7 @@ int verydummyprocfs;
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
+#include "sge_unistd.h"
 
 #if !defined(CRAY)
 #include "procfs.h"
@@ -148,24 +146,23 @@ static struct dirent *dent;
 
 #if defined(LINUX)
 
-int groups_in_proc (void) 
-{
+int groups_in_proc (void) {
+   char procnam[256];
    char buf[1024];
    FILE* fd = (FILE*) NULL;
    
-   if (!(fd = fopen(PROC_DIR "/self/status", "r"))) {
-      return 0;
+   sprintf(procnam, "%s/self/status", PROC_DIR);
+   if (!(fd = fopen(procnam, "r"))) {
+      return (0);
    }
    while (fgets(buf, sizeof(buf), fd)) {
       if (strcmp("Groups:", strtok(buf, "\t"))==0) {
-         FCLOSE(fd);
-         return 1;
+         fclose(fd);
+         return (1);
       }
    }
-   FCLOSE(fd);
-   return 0;
-FCLOSE_ERROR:
-   return 0;
+   fclose(fd);
+   return (0);
 }
 
 #endif
@@ -371,8 +368,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
 #if defined(SOLARIS) || defined(ALPHA)
       close(fd);
 #elif defined(LINUX)
-      FCLOSE(fp);
-FCLOSE_ERROR:
+      fclose(fp);
 #endif
 
       /* send each process a signal which belongs to add_grg_id */
@@ -624,9 +620,7 @@ int time_stamp
                break;
             }
          }
-         FCLOSE(f);
-FCLOSE_ERROR:
-         ;
+         fclose(f);
       } 
 #  elif defined(SOLARIS) || defined(ALPHA)
       

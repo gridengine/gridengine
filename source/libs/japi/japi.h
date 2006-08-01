@@ -71,6 +71,13 @@
 extern "C" {
 #endif
 
+/*
+ * persistent JAPI sessions store their state information under
+ * 
+ * $HOME/.sge/session/<unique_id> 
+ */
+#define JAPI_SESSION_SUBDIR ".sge/session"
+
 /* Bitfield for japi_wait() event flag */
 enum japi_events {
    JAPI_JOB_FINISH = 0x01,
@@ -118,12 +125,9 @@ int japi_enable_job_wait (const char *session_key_in, dstring *session_key_out,
  * This routine ends this DRMAA Session, but does not effect any jobs (e.g.,
  * queued and running jobs remain queued and running).
  */
-int japi_exit(int flag, dstring *diag);
 
-/*
- * Tests if the current session has been initialized.  Returns
- * DRMAA_ERRNO_SUCCESS if so, and DRMAA_ERRNO_NO_ACTIVE_SESSION if not.
- */
+int japi_exit(bool close_session, int flag, dstring *diag);
+
 int japi_was_init_called(dstring* diag);
 
 
@@ -291,7 +295,7 @@ const char *japi_strerror(int drmaa_errno);
 /* 
  * Current contact information for DRM system (string)
  */ 
-int japi_get_contact(dstring *contact, dstring *diag);
+void japi_get_contact(dstring *contact);
 
 /* 
  * OUT major - major version number (non-negative integer)
@@ -310,11 +314,8 @@ void japi_version(unsigned int *major, unsigned int *minor);
 int japi_get_drm_system(dstring *drm, dstring *diag, int me);
 
 /* get next string attribute from iterator 
- * DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_NO_MORE_ELEMENTS if no such exists */
+DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
 int japi_string_vector_get_next(drmaa_attr_values_t* values, dstring *val);
-
-/* Get the number of elements from iterator */
-int japi_string_vector_get_num(drmaa_attr_values_t* values, int *size);
 
 /* release opaque iterator */
 void japi_delete_string_vector(drmaa_attr_values_t* values);

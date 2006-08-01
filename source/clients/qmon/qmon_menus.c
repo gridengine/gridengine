@@ -381,11 +381,7 @@ XtPointer cld, cad;
 
    reportWidgets(top, fp);
 
-   FCLOSE(fp);
-   return;
-FCLOSE_ERROR:
-   /* TODO: error handling */
-   return;
+   fclose(fp);
 }
    
 /*-------------------------------------------------------------------------*/

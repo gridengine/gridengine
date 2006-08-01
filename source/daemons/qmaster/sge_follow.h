@@ -33,16 +33,13 @@
 /*___INFO__MARK_END__*/
 
 #include "uti/sge_monitor.h"
-#include "sgeobj/sge_object.h"
 
 int 
 sge_follow_order(lListElem *order, lList **alpp, char *ruser, 
-                 char *rhost, lList **topp, monitoring_t *monitor, 
-                 object_description *object_base);
+                 char *rhost, lList **topp, monitoring_t *monitor);
 
 int 
-distribute_ticket_orders(lList *ticket_orders, monitoring_t *monitor, 
-                 object_description *object_base);
+distribute_ticket_orders(lList *ticket_orders, monitoring_t *monitor);
 
 void 
 sge_set_next_spooling_time(void);

@@ -63,7 +63,6 @@ SGEOBJLIB_SRC = \
          sge_id.c \
          sge_ja_task.c \
          sge_job.c \
-         sge_limit_rule.c \
          sge_load.c \
          sge_order.c \
          sge_mailrec.c \
@@ -90,7 +89,7 @@ SGEOBJLIB_SRC = \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
-         sge_var.c
+         sge_var.c 
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
 
@@ -211,9 +210,6 @@ sge_job.o: $(SGEOBJLIB_DIR)/sge_job.c
 
 sge_load.o: $(SGEOBJLIB_DIR)/sge_load.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_load.c
-
-sge_limit_rule.o: $(SGEOBJLIB_DIR)/sge_limit_rule.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_limit_rule.c
 
 sge_mailrec.o: $(SGEOBJLIB_DIR)/sge_mailrec.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_mailrec.c

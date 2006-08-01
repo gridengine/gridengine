@@ -73,7 +73,7 @@ cqueue_verify_calendar(lListElem *cqueue, lList **answer_list,
       const char *name = lGetString(attr_elem, ASTR_value);
 
       if (name != NULL && strcasecmp("none", name)) {
-         lListElem *calendar = calendar_list_locate(*object_type_get_master_list(SGE_TYPE_CALENDAR), name);
+         lListElem *calendar = calendar_list_locate(Master_Calendar_List, name);
          if (calendar == NULL) {
             sprintf(SGE_EVENT, MSG_CQUEUE_UNKNOWNCALENDAR_S, name);
             answer_list_add(answer_list, SGE_EVENT,

@@ -43,7 +43,7 @@
 #include "sge_ja_task_mirror.h"
 #include "sge_pe_task_mirror.h"
 
-static bool job_update_master_list_usage(lList *job_list, lListElem *event);
+static bool job_update_master_list_usage(lListElem *event);
 
 /****** Eventmirror/job/job_update_master_list_usage() *************************
 *  NAME
@@ -62,16 +62,15 @@ static bool job_update_master_list_usage(lList *job_list, lListElem *event);
 *
 *  INPUTS
 *     lListElem *event - event object containing the new usage list
-*     lList *job_list  - master job list
 *
 *  RESULT
-*     bool - true, if the operation succeeds, else false
+*     int - true, if the operation succeeds, else false
 *
 *  SEE ALSO
 *     Eventmirror/ja_task/pe_task_update_master_list_usage()
 *     Eventmirror/pe_task/pe_task_update_master_list_usage()
 *******************************************************************************/
-static bool job_update_master_list_usage(lList *job_list, lListElem *event)
+static bool job_update_master_list_usage(lListElem *event)
 {
    bool ret = true;
    u_long32 job_id, ja_task_id;
@@ -89,9 +88,9 @@ static bool job_update_master_list_usage(lList *job_list, lListElem *event)
    }
 
    if(pe_task_id != NULL) {
-      ret = (pe_task_update_master_list_usage(job_list, event) != SGE_EMA_FAILURE)?true:false;   /* usage for a pe task */
+      ret = pe_task_update_master_list_usage(event);   /* usage for a pe task */
    } else {
-      ret = (ja_task_update_master_list_usage(job_list, event) != SGE_EMA_FAILURE)?true:false;   /* usage for a ja task */
+      ret = ja_task_update_master_list_usage(event);   /* usage for a ja task */
    }
 
    DEXIT;
@@ -134,9 +133,8 @@ static bool job_update_master_list_usage(lList *job_list, lListElem *event)
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/job/job_update_master_list_usage()
 *******************************************************************************/
-sge_callback_result
-job_update_master_list(object_description *object_base, sge_object_type type, 
-                       sge_event_action action, lListElem *event, void *clientdata)
+bool job_update_master_list(sge_object_type type, sge_event_action action,
+                           lListElem *event, void *clientdata)
 {
    lList **list;
    const lDescr *list_descr;
@@ -146,7 +144,7 @@ job_update_master_list(object_description *object_base, sge_object_type type,
 
    DENTER(TOP_LAYER, "job_update_master_list");
 
-   list = sge_master_list(object_base, SGE_TYPE_JOB);
+   list = &Master_Job_List;
    list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);
@@ -158,7 +156,7 @@ job_update_master_list(object_description *object_base, sge_object_type type,
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
                 job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
          DEXIT;
-         return SGE_EMA_FAILURE;
+         return false;
       }
 
       if (event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE ) {
@@ -168,9 +166,9 @@ job_update_master_list(object_description *object_base, sge_object_type type,
          * Preferable would probably be to send MOD events for the different
          * object types.
          */
-         bool ret = job_update_master_list_usage(*list, event);
+         bool ret = job_update_master_list_usage(event);
          DEXIT;
-         return (ret?SGE_EMA_OK:SGE_EMA_FAILURE);
+         return ret;
       } else {
          /* this is the true modify event.
           * we may not update several fields:
@@ -196,7 +194,7 @@ job_update_master_list(object_description *object_base, sge_object_type type,
    if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL), action, event) != SGE_EM_OK) {
       lFreeList(&ja_tasks);
       DEXIT;
-      return SGE_EMA_FAILURE;
+      return false;
    }
 
    /* restore ja_task list after modify event */
@@ -208,7 +206,7 @@ job_update_master_list(object_description *object_base, sge_object_type type,
                 job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
          lFreeList(&ja_tasks);
          DEXIT;
-         return SGE_EMA_FAILURE;
+         return false;
       }
 
       lXchgList(job, JB_ja_tasks, &ja_tasks);
@@ -216,23 +214,24 @@ job_update_master_list(object_description *object_base, sge_object_type type,
    }
 
    DEXIT;
-   return SGE_EMA_OK;
+   return true;
 }
 
-sge_callback_result
-job_schedd_info_update_master_list(object_description *object_base, sge_object_type type, 
-                                   sge_event_action action, lListElem *event, void *clientdata)
+bool 
+job_schedd_info_update_master_list(sge_object_type type, 
+                                   sge_event_action action, 
+                                   lListElem *event, void *clientdata)
 {
-   lList **list = NULL;
-   const lDescr *list_descr = NULL;
+   lList **list;
+   lDescr *list_descr;
 
    lList *data_list;
    lListElem *ep = NULL;
    
    DENTER(TOP_LAYER, "job_schedd_info_update_master_list");
 
-   list = sge_master_list(object_base, type); 
-   list_descr = lGetListDescr(lGetList(event, ET_new_version));
+   list = &Master_Job_Schedd_Info_List;
+   list_descr = SME_Type;
 
    /* We always update the whole list (consisting of one list element) */
    lFreeList(list);
@@ -250,6 +249,6 @@ job_schedd_info_update_master_list(object_description *object_base, sge_object_t
    }
 
    DEXIT;
-   return SGE_EMA_OK;
+   return true;
 }
 

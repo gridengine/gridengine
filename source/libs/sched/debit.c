@@ -186,6 +186,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
          /* precompute suspensions for subordinated queues */
          total = lGetUlong(qep, QU_job_slots);
          for_each (so, lGetList(qep, QU_subordinate_list)) {
+            
             if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, so)) {   /* but now                */
                lListElem *order = NULL;

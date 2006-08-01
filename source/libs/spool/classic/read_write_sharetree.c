@@ -178,8 +178,8 @@ FPRINTF_ERROR:
    if (fname) {
       FCLOSE(fp); 
    }
-   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
 FCLOSE_ERROR:
+   answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
    DEXIT;
    return -1;
 }

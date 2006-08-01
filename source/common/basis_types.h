@@ -214,6 +214,7 @@ typedef char stringT[MAX_STRING_SIZE];
 #if defined(INTERIX)
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
 #endif
     
 
@@ -252,10 +253,12 @@ typedef char stringT[MAX_STRING_SIZE];
    else \
       variable = pthread_getspecific(key)
 
+#if !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
+#endif
 
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R

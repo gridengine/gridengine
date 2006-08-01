@@ -231,7 +231,6 @@ const lList* master_hGroup_List
    int nm = 0;
    char *name = NULL;
    int found_host;
-   int ret;
 
    DENTER(TOP_LAYER, "sge_del_host");
 
@@ -244,17 +243,17 @@ const lList* master_hGroup_List
 
    switch ( target ) {
    case SGE_EXECHOST_LIST:
-      host_list = object_type_get_master_list(SGE_TYPE_EXECHOST);
+      host_list = &Master_Exechost_List;
       nm = EH_name;
       name = "execution host";
       break;
    case SGE_ADMINHOST_LIST:
-      host_list = object_type_get_master_list(SGE_TYPE_ADMINHOST);
+      host_list = &Master_Adminhost_List;
       nm = AH_name;
       name = "administrative host";
       break;
    case SGE_SUBMITHOST_LIST:
-      host_list = object_type_get_master_list(SGE_TYPE_SUBMITHOST);
+      host_list = &Master_Submithost_List;
       nm = SH_name;
       name = "submit host";
       break;
@@ -279,23 +278,18 @@ const lList* master_hGroup_List
       return STATUS_EUNKNOWN;
    }
 
-   ret = sge_resolve_hostname(host, unique, EH_name);
-   if (ret  != CL_RETVAL_OK) {
-      /* 
-       * Due to CR 6319231, IZ 1760 this is allowed 
-       */
-      ;
-   }
-
    /* check if host is in host list */
    found_host = 1;
-   if ((ep=host_list_locate(*host_list, unique))==NULL) {
+   if ((ep=host_list_locate(*host_list, host))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       found_host = 0;
    }
 
-   if (!found_host) {
+   if (found_host) {
+      strcpy(unique, host);     /* no need to make unique anymore */
+   }
+   else {
       /* may be host was not the unique hostname.
          Get the unique hostname and try to find it again. */
       if (getuniquehostname(host, unique, 0)!=CL_RETVAL_OK)
@@ -401,7 +395,6 @@ int sub_command, monitoring_t *monitor
    int nm;
    int pos;
    int dataType;
-   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "host_mod");
 
@@ -466,7 +459,7 @@ int sub_command, monitoring_t *monitor
          DPRINTF(("got new EH_prj\n"));
          /* check prj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
-                  *object_base[SGE_TYPE_PROJECT].list, "projects",
+                  Master_Project_List, "projects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
          }   
@@ -480,7 +473,7 @@ int sub_command, monitoring_t *monitor
          DPRINTF(("got new EH_xprj\n"));
          /* check xprj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
-                  *object_base[SGE_TYPE_PROJECT].list, "xprojects",
+                  Master_Project_List, "xprojects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
          }   
@@ -505,7 +498,7 @@ int sub_command, monitoring_t *monitor
          /* check if all report_variables are valid complex variables */
          for_each(var, lGetList(ep, EH_report_variables)) {
             const char *name = lGetString(var, STU_name);
-            if (centry_list_locate(*object_base[SGE_TYPE_CENTRY].list, name) == NULL) {
+            if (centry_list_locate(Master_CEntry_List, name) == NULL) {
                ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
                                ANSWER_QUALITY_ERROR);
@@ -580,32 +573,31 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
    switch(object->key_nm) {
       case EH_name:
       {
-         lListElem *jep = NULL;
+         lListElem *jep;
          const char *host = lGetHost(ep, EH_name);
-         int slots; 
+         int slots;
          int global_host = !strcmp(SGE_GLOBAL_NAME, host);
-         lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
          lSetList(ep, EH_resource_utilization, NULL);
-         debit_host_consumable(NULL, ep, master_centry_list, 0);
-         for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+         debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
+         for_each (jep, Master_Job_List) {
             slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
                slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list), 
                   global_host?NULL:host);
             }
             if (slots)
-               debit_host_consumable(jep, ep, master_centry_list, slots);
+               debit_host_consumable(jep, ep, Master_CEntry_List, slots);
          }
 
          sge_change_queue_version_exechost(host);
 
          if (global_host) {
-            host_list_merge(*object_type_get_master_list(SGE_TYPE_EXECHOST));
+            host_list_merge(Master_Exechost_List);
          } else {
-            const lListElem *global_ep = NULL;
+            const lListElem *global_ep;
 
-            global_ep = lGetElemHost(*object_type_get_master_list(SGE_TYPE_EXECHOST), EH_name, 
+            global_ep = lGetElemHost(Master_Exechost_List, EH_name, 
                                      SGE_GLOBAL_NAME);
             host_merge(ep, global_ep);
          }
@@ -713,7 +705,7 @@ lList *lp
 
       /* update load value list of rhost */
       if (*hepp == NULL) {
-         *hepp = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), host);
+         *hepp = host_list_locate(Master_Exechost_List, host);
          if (!*hepp) {
             if (!global) {
                report_host = lGetHost(ep, LR_host); /* this is our error indicator */
@@ -819,7 +811,7 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
    lListElem *template_host_elem = NULL;
    time_t now = time(NULL);
    unsigned long last_heard_from;
-   lList *master_exechost_list = *object_type_get_master_list(SGE_TYPE_EXECHOST);
+
    const void *iterator = NULL;
 
 
@@ -830,11 +822,11 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
    comproc = prognames[EXECD];
 
    /* get "global" element pointer */
-   global_host_elem   = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);    
+   global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);    
    /* get "template" element pointer */
-   template_host_elem = host_list_locate(master_exechost_list, SGE_TEMPLATE_NAME); 
+   template_host_elem = host_list_locate(Master_Exechost_List, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
-   for_each(hep, master_exechost_list) {   
+   for_each(hep, Master_Exechost_List) {   
       if (hep == template_host_elem) {
          continue;
       }   
@@ -1092,7 +1084,7 @@ sge_gdi_request *answer
       kill_jobs = lGetUlong(lFirst(request->lp), ID_force)?1:0;
       /* walk over exechost list and send every exechosts execd a
          notification */
-      for_each(lel, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {  
+      for_each(lel, Master_Exechost_List) {  
          hostname = lGetHost(lel, EH_name);
          if (strcmp(hostname, "template") && strcmp(hostname, "global")) {
             notify(lel, answer, kill_jobs, 0); 
@@ -1118,7 +1110,7 @@ sge_gdi_request *answer
             WARNING((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(rep, ID_str)));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
          } else {
-            if ((lel = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), host))) {
+            if ((lel = host_list_locate(Master_Exechost_List, host))) {
                kill_jobs = lGetUlong(rep, ID_force)?1:0;
                /*
                ** if a host name is given, then a kill is forced
@@ -1190,7 +1182,7 @@ int force
 
    if(kill_jobs) {
       /* mark killed jobs as deleted */
-      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {   
+      for_each(jep, Master_Job_List) {   
          lListElem *jatep;
          mail_users = NULL;
          mail_options = 0;
@@ -1282,7 +1274,7 @@ u_long32 target, monitoring_t *monitor) {
       return STATUS_EUNKNOWN;
    }
    
-   hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
+   hep = host_list_locate(Master_Exechost_List, rhost);
    if(!hep) {
       if (sge_add_host_of_type(rhost, SGE_EXECHOST_LIST, monitor) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
@@ -1292,7 +1284,7 @@ u_long32 target, monitoring_t *monitor) {
       } 
    }
 
-   hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
+   hep = host_list_locate(Master_Exechost_List, rhost);
    if(!hep) {
       ERROR((SGE_EVENT, MSG_OBJ_NOADDHOST_S, rhost));
       answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
@@ -1351,13 +1343,12 @@ u_long32 target, monitoring_t *monitor) {
 static int verify_scaling_list(lList **answer_list, lListElem *host) 
 {
    bool ret = true;
-   lListElem *hs_elem = NULL;
-   lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
+   lListElem *hs_elem;
 
    DENTER(TOP_LAYER, "verify_scaling_list");
    for_each (hs_elem, lGetList(host, EH_scaling_list)) {
       const char *name = lGetString(hs_elem, HS_name);
-      lListElem *centry = centry_list_locate(master_centry_list, name);
+      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
    
       if (centry == NULL) {
          const char *hname = lGetHost(host, EH_name);

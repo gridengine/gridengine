@@ -34,6 +34,8 @@
 
 #include "sge_usersetL.h"
 
+extern lList *Master_Userset_List;
+
 lList **
 userset_list_get_master_list(void);
 

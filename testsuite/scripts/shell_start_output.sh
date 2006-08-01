@@ -1,2 +1,2 @@
 #!/bin/sh
-echo "ts_shell_response"
+echo "testsuite shell response"

@@ -397,13 +397,11 @@ void sge_create_and_join_threads(void)
    enum { NUM_THRDS = 5 };
    const char *thread_names[NUM_THRDS] = {"SIGT","MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
-   u_long32 threads = bootstrap_get_gdi_thread_count();
+   int threads = 2;
    int i;
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");
 
-   INFO((SGE_EVENT, MSG_QMASTER_THREADCOUNT_U, sge_u32c(threads)));
-   
    if (threads >= NUM_THRDS) {
       threads = NUM_THRDS -1;
    }
@@ -1023,7 +1021,6 @@ void sge_qmaster_shutdown(bool do_spool)
    DENTER(TOP_LAYER, "sge_qmaster_shutdown");
 
    if (do_spool == true) {
-      sge_job_spool();     /* store qmaster jobs to database */
       sge_userprj_spool(); /* spool the latest usage */
    }
 

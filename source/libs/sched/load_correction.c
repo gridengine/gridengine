@@ -139,14 +139,11 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                      "%s by "sge_u32" to "sge_u32"\n", job_id, ja_task_id, slots, qnm, hnm, 
                      (u_long32)(100*host_lcf), lGetUlong(hep, EH_load_correction_factor)));
 #endif
-            if (schedd_is_monitor_next_run()){
-               char log_string[2048 + 1];
-               SCHED_MON((log_string, "JOB "sge_u32"."sge_u32" ["sge_u32"] in queue "SFN
-                          " increased absolute lc of host "SFN" by "sge_u32" to "
-                          sge_u32"", job_id, ja_task_id, slots, qnm, hnm, 
-                          (u_long32)(host_lcf*100), lGetUlong(hep, 
-                          EH_load_correction_factor)));
-            }            
+            SCHED_MON((log_string, "JOB "sge_u32"."sge_u32" ["sge_u32"] in queue "SFN
+                       " increased absolute lc of host "SFN" by "sge_u32" to "
+                       sge_u32"", job_id, ja_task_id, slots, qnm, hnm, 
+                       (u_long32)(host_lcf*100), lGetUlong(hep, 
+                        EH_load_correction_factor)));
          }
       }
       lSetUlong(global_host, EH_load_correction_factor, 

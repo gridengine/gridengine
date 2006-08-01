@@ -79,6 +79,7 @@ ADD_TO_RC=false
 REMOVE_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
+WIN_UPDATE=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -96,6 +97,7 @@ CONFIG_FILE="undef"
 STDOUT2LOG="0"
 PAR_EXECD_INST_COUNT="20"
 JAVA_VERSION="undef"
+WIN_SVC="undef"
 
 SGE_NOMSG="undef"
 
@@ -224,6 +226,24 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_update.sh
      #update from 5.3 to 6.0
      ;;
+   -winupdate)
+     #update to new Gridengine Helper Service
+     WIN_UPDATE="true"
+     . ./util/install_modules/inst_common.sh
+     . ./util/install_modules/inst_execd.sh
+     ;;
+   -winsvc)
+     #install the windows helper service only
+     WIN_SVC="install"
+     . ./util/install_modules/inst_common.sh
+     . ./util/install_modules/inst_execd.sh
+    ;;
+   -uwinsvc)
+     #uninstall the windows helper service only
+     WIN_SVC="uninstall"
+     . ./util/install_modules/inst_common.sh
+     . ./util/install_modules/inst_execd.sh
+    ;;
    -rccreate)
      MAKE_RC=true
      #Generate new rc scripts from settings file
@@ -268,6 +288,24 @@ done
 
 if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
    ErrUsage
+fi
+
+if [ $WIN_UPDATE = "true" ]; then
+   WelcomeTheUserWinUpdate
+   SetupWinSvc update #service install due to an update -> param: update
+   exit 0
+fi
+
+if [ $WIN_SVC = "install" ]; then
+   WelcomeTheUserWinSvc install #install text param
+   SetupWinSvc install #service install due to service install switch -> param install
+   exit 0
+fi
+
+if [ $WIN_SVC = "uninstall" ]; then
+   WelcomeTheUserWinSvc uninstall #uninstall text param
+   SetupWinSvc uninstall #service install due to service uninstall switch -> param uninstall
+   exit 0
 fi
 
 
@@ -502,7 +540,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid execd 
+      AddSGEStartUpScript $euid execd
+      SetupWinSvc execinst #service install during execd installation -> param: execinst
       StartExecd
       AddQueue
       GiveHints
@@ -535,6 +574,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
+      SetupWinSvc execinst  #service install during execd installation -> param: execinst
       StartExecd
       AddQueue
       GiveHints
@@ -616,6 +656,7 @@ if [ "$EXECD" = "uninstall" ]; then
       exit 1
    fi
    FetchHostname
+   SetupWinSvc uninstall
    
    MoveLog
    

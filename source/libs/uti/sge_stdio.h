@@ -124,20 +124,11 @@
 *  NOTES
 *     Don't forget to define the 'FCLOSE_ERROR'-label
 ******************************************************************************/
-#if defined(IRIX)
-#define FCLOSE(x) \
-   fsync(fileno(x)); \
-   if(fclose(x) != 0) { \
-      goto FCLOSE_ERROR; \
-   }
-#else
 #define FCLOSE(x) \
    if(fclose(x) != 0) { \
       goto FCLOSE_ERROR; \
    }
-#endif
 
-#define FCLOSE_IGNORE_ERROR(x) fclose(x) 
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 

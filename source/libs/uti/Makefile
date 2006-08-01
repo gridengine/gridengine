@@ -230,7 +230,7 @@ test_sge_bitfield.o: $(UTILIB_DIR)/test_sge_bitfield.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_bitfield.c
 
 test_sge_dstring: test_sge_dstring.o $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_dstring $(LFLAGS) test_sge_dstring.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_dstring $(LFLAGS) test_sge_dstring.o $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_dstring.o: $(UTILIB_DIR)/test_sge_dstring.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_dstring.c

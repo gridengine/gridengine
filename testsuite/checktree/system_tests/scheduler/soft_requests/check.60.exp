@@ -51,7 +51,7 @@ global env
 set check_init_level_procedure "soft_requests_init_level"
 
 # define test's name and run level descriptions
-set check_name            "soft_requests"
+set check_name            "pe_ranges"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1
 set check_description(0)  "test pe-ranges"
@@ -125,29 +125,25 @@ proc soft_requests_setup  {} {
 }
 
 proc soft_requests_cleanup  {} {
-   global CHECK_OUTPUT CHECK_ARCH ts_config
+   global CHECK_OUTPUT ts_config
    global soft_requests_test_hosts
    global soft_requests_saved_slot_count
    global consumable_complex_backup
 
-   # delete all jobs and trigger a scheduling run to make sure all jobs have really
-   # left qmaster
    delete_all_jobs
    wait_for_end_of_all_jobs 60
-   trigger_scheduling
-   sleep 5
 
-   # enable all.q
    set queue_list {}
    foreach host $ts_config(execd_nodes) {
       lappend queue_list [get_queue_instance "all.q" $host]
    }
    enable_queue $queue_list
-   puts $CHECK_OUTPUT "enabled $queue_list"
+   puts $CHECK_OUTPUT "disabled $queue_list"
 
-   # delete test queue and pe
+
    set qname "res.q"
    del_queue $qname $soft_requests_test_hosts  0 1
+
    del_pe        "round_robin"
 
    # restore complex
@@ -159,10 +155,10 @@ proc soft_requests_cleanup  {} {
 proc soft_requests_submit_pejobs_and_wait { request host_list } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
-   set job_id [submit_job "-o /dev/null -e /dev/null -pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+   set job_id [submit_job "-pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -172,7 +168,6 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
          set job_std_state [get_standard_job_info  $job_id ]
          foreach line $job_std_state {
             foreach host $host_list {
-               set host [resolve_host $host 1]
                puts "host: $host queue: [lindex $line 7]"
                if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                   incr match 1
@@ -182,7 +177,7 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
          incr running_jobs 1
          if { $match == 0 } {
             set error 1
-            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list: $host_list \n $job_std_state"
+            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
          }
       }
 
@@ -205,10 +200,10 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
 proc soft_requests_submit_jobs_and_wait { request host_list } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
-   set job_id [submit_job "-o /dev/null -e /dev/null -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+   set job_id [submit_job "-soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -218,7 +213,6 @@ proc soft_requests_submit_jobs_and_wait { request host_list } {
          set job_std_state [get_standard_job_info  $job_id ]
          foreach line $job_std_state {
             foreach host $host_list {
-               set host [resolve_host $host 1]
                puts "host: $host queue: [lindex $line 7]"
                if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                   incr match 1
@@ -228,7 +222,7 @@ proc soft_requests_submit_jobs_and_wait { request host_list } {
          incr running_jobs 1
          if { $match == 0 } {
             set error 1
-            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
+            add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
          }
       }
 
@@ -256,7 +250,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
       lappend map($arch) $host
    }
      
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
      
    set submited_jobs 0
    set job_id_list {}
@@ -267,11 +261,11 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
       set request "arch=$arch"
       incr submited_jobs 1
       lappend job_id_arch $arch
-      lappend job_id_list [submit_job "-o /dev/null -e /dev/null -pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+      lappend job_id_list [submit_job "-pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
    }   
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -287,7 +281,6 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
             set job_std_state [get_standard_job_info  $job_id ]
             foreach line $job_std_state {
                foreach host $host_list {
-                  set host [resolve_host $host 1]
                   puts "host: $host queue: [lindex $line 7]"
                   if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                      incr match 1
@@ -297,7 +290,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
             incr running_jobs 1
             if { $match == 0 } {
                set error 1
-               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
+               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
             }
          }
          incr counter 1
@@ -327,7 +320,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
       lappend map($arch) $host
    }
      
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
      
    set submited_jobs 0
    set job_id_list {}
@@ -338,11 +331,11 @@ proc soft_requests_submit_jobs_and_wait2 { } {
       set request "arch=$arch"
       incr submited_jobs 1
       lappend job_id_arch $arch
-      lappend job_id_list [submit_job "-o /dev/null -e /dev/null -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
+      lappend job_id_list [submit_job "-soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
    }   
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -358,7 +351,6 @@ proc soft_requests_submit_jobs_and_wait2 { } {
             set job_std_state [get_standard_job_info  $job_id ]
             foreach line $job_std_state {
                foreach host $host_list {
-                  set host [resolve_host $host 1]
                   puts "host: $host queue: [lindex $line 7]"
                   if { [string match "*$host*" [lindex $line 7] ] == 1 } {
                      incr match 1
@@ -368,7 +360,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
             incr running_jobs 1
             if { $match == 0 } {
                set error 1
-               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run in the specified host list $host_list \n $job_std_state"
+               add_proc_error "soft_requests_submit_pejobs_and_wait" -2 "soft requests: job did not run on the specified host $host \n $job_std_state"
             }
          }
          incr counter 1

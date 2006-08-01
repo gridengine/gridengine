@@ -56,7 +56,7 @@ enum {
    SCT_job_ref               /* contains all other jobs, could also be pending ones */
 };
 
-LISTDEF(SCT_Type)
+ILISTDEF(SCT_Type, SCategories, SGE_SCT_LIST)
    SGE_STRING(SCT_str, CULL_HASH | CULL_UNIQUE)
    SGE_LIST(SCT_job_pending_ref, REF_Type, CULL_DEFAULT)
    SGE_LIST(SCT_job_ref, REF_Type, CULL_DEFAULT)
@@ -74,7 +74,7 @@ enum {
    REF_ref = REF_LOWERBOUND /*reference to an object */
 };
 
-LISTDEF(REF_Type)
+ILISTDEF(REF_Type, references, SGE_REF_LIST)
    SGE_REF(REF_ref, JB_Type, CULL_DEFAULT)
 LISTEND
 
@@ -101,7 +101,7 @@ enum {
    CT_cached_master_hard_queue_list /* stores teh resolved master queue request list for pe jobs */
 };
 
-LISTDEF(CT_Type)
+ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
    SGE_INT(CT_count, CULL_DEFAULT)
@@ -146,7 +146,7 @@ enum {
    CCT_pe_job_slot_count      /* number of values in the array */   
 };
 
-LISTDEF(CCT_Type)
+ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)
    SGE_STRING(CCT_pe_name, CULL_HASH | CULL_UNIQUE)
    SGE_LIST(CCT_ignore_queues, CTI_Type, CULL_DEFAULT)
    SGE_LIST(CCT_ignore_hosts, CTI_Type, CULL_DEFAULT)

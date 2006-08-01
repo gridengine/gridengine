@@ -88,7 +88,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
-#include "uti/sge_string.h"
+#include "sge_string.h"
 
 /*-------------------------------------------------------------------------*/
 

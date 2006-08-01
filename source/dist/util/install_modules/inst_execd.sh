@@ -698,3 +698,173 @@ CheckWinAdminUser()
       export PATH 
    fi
 }
+
+InstWinHelperSvc()
+{
+   tmp_path=$PATH
+   PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
+   export PATH
+
+   loop=0
+
+   WIN_SVC="N1 Grid Engine Helper Service"
+   WIN_DIR=`winpath2unix $SYSTEMROOT`
+
+   $INFOTEXT " Testing, if a service is already installed!\n"
+   $INFOTEXT -log " Testing, if a service is already installed!\n"
+   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
+   ret=$?
+   if [ "$ret" = 0 ]; then
+      ret=2
+      $INFOTEXT "   ... a service is already installed!"
+      $INFOTEXT -log "   ... a service is already installed!"
+      $INFOTEXT "   ... stopping service!"
+      $INFOTEXT -log "   ... stopping service!"
+
+      while [ "$ret" -ne 0 ]; do
+         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
+         ret=$?
+      done    
+      
+   fi
+
+   if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
+      $INFOTEXT "   ... uninstalling old service!"
+      $INFOTEXT -log "   ... uninstalling old service!"
+      $WIN_DIR/SGE_Helper_Service.exe -uninstall
+      rm $WIN_DIR/SGE_Helper_Service.exe
+   fi
+
+   ret=1
+   $INFOTEXT "\n   ... moving new service binary!"
+   $INFOTEXT -log "\n   ... moving new service binary!"
+   cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
+
+   while [ "$ret" -ne "0" -a "$loop" -lt 6 ]; do 
+      $INFOTEXT "   ... installing new service!"
+      $INFOTEXT -log "   ... installing new service!"
+      $WIN_DIR/SGE_Helper_Service.exe -install
+      ret=$?
+      loop=`expr $loop + 1`
+      sleep 2
+   done
+
+   if [ "$ret" -ne 0 ]; then
+      $INFOTEXT "\n ... service could not be installed!"
+      $INFOTEXT -log "\n ... service could not be installed!"
+      $INFOTEXT " ... exiting installation"
+      $INFOTEXT -log " ... exiting installation"
+      exit 1
+   fi
+
+   $INFOTEXT "\n   ... starting new service!"
+   $INFOTEXT -log "\n   ... starting new service!"
+   eval "net start \"$WIN_SVC\"" > /dev/null 2>&1
+
+   if [ "$?" -ne 0 ]; then
+      $INFOTEXT "\n ... service could not be started!"
+      $INFOTEXT -log "\n ... service could not be started!"
+      $INFOTEXT " ... exiting installation"
+      $INFOTEXT -log " ... exiting installation"
+      exit 1
+   fi
+
+   PATH=$tmp_path
+   export PATH
+}
+
+UnInstWinHelperSvc()
+{
+   tmp_path=$PATH
+   PATH=/usr/contrib/win32/bin:/common:$SAVED_PATH
+   export PATH
+
+   loop=0
+
+   WIN_SVC="N1 Grid Engine Helper Service"
+   WIN_DIR=`winpath2unix $SYSTEMROOT`
+
+   $INFOTEXT " Testing, if service is installed!\n"
+   $INFOTEXT -log " Testing, if service is installed!\n"
+   eval "net pause \"$WIN_SVC\"" > /dev/null 2>&1
+   ret=$?
+   if [ "$ret" = 0 ]; then
+      ret=2
+      $INFOTEXT "   ... a service is installed!"
+      $INFOTEXT -log "   ... a service is installed!"
+      $INFOTEXT "   ... stopping service!"
+      $INFOTEXT -log "   ... stopping service!"
+
+      while [ "$ret" -ne 0 ]; do
+         eval "net continue \"$WIN_SVC\"" > /dev/null 2>&1
+         ret=$?
+      done
+   else
+      $INFOTEXT "   ... no service installed!"   
+      $INFOTEXT -log "   ... no service installed!"   
+   fi
+
+   if [ -f "$WIN_DIR"/SGE_Helper_Service.exe ]; then
+      $INFOTEXT "   ... found service binary!" 
+      $INFOTEXT -log "   ... found service binary!" 
+      $INFOTEXT "   ... uninstalling service!"
+      $INFOTEXT -log "   ... uninstalling service!"
+      $WIN_DIR/SGE_Helper_Service.exe -uninstall
+      rm $WIN_DIR/SGE_Helper_Service.exe
+   fi
+
+   PATH=$tmp_path
+   export PATH
+}
+
+
+SetupWinSvc()
+{
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      return
+   fi
+
+   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+      $INFOTEXT "Please, source <sge-root>/<sge-cell>/common/settings.[c]sh"
+      $INFOTEXT "file to setup a proper environment."
+      $INFOTEXT "... exiting now!"
+      $INFOTEXT -log "Please, source <sge-root>/<sge-cell>/common/settings.[c]sh"
+      $INFOTEXT -log "file to setup a proper environment."
+      $INFOTEXT -log "... exiting now!"
+
+      exit 1 
+   fi
+
+   if [ "$1" = "execinst" ]; then #execinst param is used for service installation during execd install
+      $INFOTEXT -u "SGE Windows Helper Service Installation"
+      $INFOTEXT "\nIf you're going to run Windows job's using GUI support, you have\n to install the" \
+                " Windows Helper Service"
+      $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to install the Windows Helper Service? (y/n) [n] >> "
+      if [ "$?" = "1" ]; then
+         return
+      fi 
+      InstWinHelperSvc
+   elif [ "$1" = "install" ]; then #install param is used, if service is installed with -winsvc switch
+      $INFOTEXT -u "SGE Windows Helper Service Installation"
+      $INFOTEXT "\nIf you're going to run Windows job's using GUI support, you have\n to install the" \
+                " Windows Helper Service"
+      $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "y" "Do you want to install the Windows Helper Service? (y/n) [y] >> "
+      if [ "$?" = "1" ]; then
+         return
+      fi 
+      InstWinHelperSvc
+   elif [ "$1" = "update" ]; then #in case of an update, this tree is used
+      InstWinHelperSvc
+   else
+      UnInstWinHelperSvc
+   fi
+
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+
+   $CLEAR
+   if [ "$WIN_UPDATE" = "true" ]; then
+      SGE_STARTUP_FILE="$SGE_ROOT/$SGE_CELL/common/sgeexecd"
+      StartExecd
+   fi
+   $CLEAR
+}

@@ -566,7 +566,7 @@ const char *file
          cl_com_cached_gethostbyname(cp,&resolved_host,NULL,NULL,NULL);
          if (resolved_host) {
             if (!sge_hostcmp(host, resolved_host )) {
-               FCLOSE(fp);
+               fclose(fp);
                FREE(resolved_host);
                DEXIT;
                return 0;
@@ -576,10 +576,8 @@ const char *file
       }      
    }
 
-   FCLOSE(fp);
-   DRETURN(1);
-FCLOSE_ERROR:
-   DRETURN(0);
+   fclose(fp);
+   return 1;
 }
 
 /*---------------------------------------------------------------------

@@ -94,7 +94,7 @@ enum {
    };
 
 
-LISTDEF(SC_Type)
+ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    /*
     * configuration values used by both SGE and SGEEE
     */
@@ -220,7 +220,7 @@ enum {
    PARA_value
 };
 
-LISTDEF(PARA_Type)
+ILISTDEF(PARA_Type, Params, SGE_PARA_LIST)
    SGE_STRING(PARA_name, CULL_PRIMARY_KEY | CULL_DEFAULT)
    SGE_STRING(PARA_value, CULL_DEFAULT)
 LISTEND

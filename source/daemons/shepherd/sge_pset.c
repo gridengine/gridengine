@@ -53,7 +53,6 @@
 #include "config_file.h"
 #include "execution_states.h"
 #include "err_trace.h"
-#include "sge_stdio.h"
 
 #define PROC_SET_OK            0
 #define PROC_SET_WARNING       1
@@ -264,7 +263,7 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
    /* dump to file for later use */
    if ((fp = fopen("processor_set_number","w"))) {
       fprintf(fp,"%d\n",proc_set_num);
-      FCLOSE(fp);
+      fclose(fp);
    } else {
       shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
       return PROC_SET_ERROR;
@@ -315,9 +314,6 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
 #endif
 
    return PROC_SET_OK;
-FCLOSE_ERROR:
-   shepherd_trace("MPPS_CREATE: failed creating file processor_set_number");
-   return PROC_SET_ERROR;
 }
 
 /****** shepherd/pset/free_processor_set() ************************************
@@ -356,7 +352,7 @@ static int free_processor_set(char *err_str)
    /* read unique processor set number from file */
    if ((fp = fopen("processor_set_number","r"))) {
       fscanf(fp, "%d", &proc_set_num);
-      FCLOSE_IGNORE_ERROR(fp);
+      fclose(fp);
    } else {
       shepherd_trace("MPPS_CREATE: failed reading from file processor_set_number");
       return PROC_SET_ERROR;

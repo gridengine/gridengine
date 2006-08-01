@@ -44,7 +44,7 @@ global check_init_level_procedure
 global check_root_access_needs
 global env
 
-set check_root_access_needs "yes"
+set check_root_access_needs "no"
 
 # define a level initialization procedure:
 set check_init_level_procedure "drmaaj_init_level"
@@ -52,15 +52,13 @@ set check_init_level_procedure "drmaaj_init_level"
 # define test's name and run level descriptions
 set check_name            "drmaa-j"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   201
-set check_description(200)  "tests to verify DRMAA-J 0.95 library"
-set check_description(201)  "tests to verify DRMAA-J 1.0 library"
+set check_highest_level   210
+set check_description(210)  "tests to verify DRMAA-J library"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-set check_setup_function "drmaaj_setup"
 set check_cleanup_function "drmaaj_cleanup"
 
 # define test's procedure order
@@ -75,10 +73,7 @@ proc drmaaj_init_level {} {
   # returning -1 causes disabling a certain runlevel
   # here per run level settings can be prepared
   switch -- $CHECK_ACT_LEVEL {
-     "200" { 
-           return 0
-     } 
-     "201" { 
+     "210" { 
            return 0
      } 
   } 
@@ -89,31 +84,21 @@ proc drmaaj_init_level {} {
 
 # here the actual test is done
 proc drmaaj_check {} {
-   global ts_config env
+   global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_ACTUAL_TEST_PATH
-   global CHECK_HOST CHECK_ARCH CHECK_USER CHECK_SCRIPT_FILE_DIR CHECK_ACT_LEVEL
+   global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+
+   set my_sleeper "/tmp/drmaaj_sleeper.sh"
 
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
    puts $CHECK_OUTPUT "host is $CHECK_HOST"
 
-   # make sure that we have a drmaa.jar, drmaa-test.jar and
-   # suspendable_sleeper.sh
-   set needed_files ""
-   lappend needed_files $ts_config(product_root)/lib/drmaa.jar
-   lappend needed_files $ts_config(source_dir)/CLASSES/drmaa-test.jar
-   lappend needed_files $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/suspendable_sleeper.sh
-   set missing_files ""
-
-   foreach file $needed_files {
-      if {[file exists $file] == 0} {
-         append missing_files " $file"
-      }
-   }
-
-   if {$missing_files != ""} {
-      add_proc_error "drmaaj_check" -3 "The following necessary files are missing: [string trim $missing_files]"
-      return -3
-   }
+   get_config old_config
+   # must forbit reschedule on job exiting with 99 
+   # must forbit job error upon job exiting with 100
+   set new_config(delegated_file_staging) "true"
+   set new_config(qmaster_params) "FORBID_RESCHEDULE FORBID_APPERROR"
+   set_config new_config
 
    foreach host $ts_config(unique_arch_nodes) {
       set binary_arch "[resolve_arch $host]"
@@ -133,8 +118,6 @@ proc drmaaj_check {} {
          "hp11-64" -
          "tru64" -
          "darwin" -
-         "darwin-ppc" -
-         "darwin-x86" -
          "alpha5" {
             puts $CHECK_OUTPUT "architecture $binary_arch is supported"
          }
@@ -145,69 +128,43 @@ proc drmaaj_check {} {
          }
       }
 
-      if { $CHECK_ACT_LEVEL == 200 } {
-         drmaa_redirect_lib "0.95" $host
-      } else {
-         drmaa_redirect_lib "1.0" $host
-      }
-
       set compile_arch_mt "[resolve_build_arch $host]"
-      set classpath "$ts_config(product_root)/lib/drmaa.jar:$ts_config(source_dir)/CLASSES/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
+      set classpath "$CHECK_PRODUCT_ROOT/lib/drmaa.jar:$CHECK_TESTSUITE_ROOT/lib/drmaa-test.jar:$CHECK_TESTSUITE_ROOT/lib/junit.jar"
       puts $CHECK_OUTPUT "host is $host has arch $compile_arch_mt with classpath $classpath"
 
-      set options [build_java_env_list]
+      set options ""
 
       if { $binary_arch == "sol-sparc64" } {
          puts $CHECK_OUTPUT "using 64-bit VM"
          set options "-d64 $options"
       }
 
-      set options "-cp $classpath $options"
-
-      puts $CHECK_OUTPUT "Starting VM: $JAVA $options junit.textui.TestRunner DrmaaSuite"
-#      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n$JAVA $options junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
-      set test_output [ start_remote_prog $host $CHECK_USER "cd" ".\nLD_LIBRARYN32_PATH=\$LD_LIBRARY_PATH \nexport LD_LIBRARYN32_PATH\n. \$SGE_ROOT/util/dl.sh\ndl 2\n$JAVA $options junit.textui.TestRunner com.sun.grid.drmaa.SessionImplJobTest" prg_exit_state 500 ]
+      # Make sleeper script file available.  We have a problem in that JUnit
+      # doesn't allow arguments to be passed to the test program.  In order for
+      # the test program to find the sleeper script, it has to be in a
+      # predetermined location.  We have to use this special sleeper script
+      # because the test program requires that the script survive a suspend and
+      # resume.  On most architectures other than Solaris, /bin/sleep wakes up
+      # on SIGCONT.  This script notes the time before it sleeps and keeps
+      # sleeping until the given duration is reached.
+      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
+      start_remote_prog $host $CHECK_USER "ln" "-s $CHECK_ACTUAL_TEST_PATH/sleeper.sh $my_sleeper" prg_exit_state 80
+      set test_output [ start_remote_prog $host $CHECK_USER $JAVA "$options -cp $classpath junit.textui.TestRunner DrmaaSuite" prg_exit_state 500 ]
+      # Remove script file
+      start_remote_prog $host $CHECK_USER "rm" $my_sleeper prg_exit_state 80
 
       if { $prg_exit_state != 0 } {
-         add_proc_error drmaa_check -1 "DRMAA-J jUnit test suite failed at host $host:\n$test_output"
+         add_proc_error drmaa_check -1 "DRMAA-J JUnit test suite failed at host $host:\n$test_output"
       }
    }
 
-   set_error 0 "ok"
-}
-
-proc drmaaj_setup {} {
-   global drmaaj_config
-
-   # must forbit reschedule on job exiting with 99 
-   # must forbit job error upon job exiting with 100
-   # otherwise drmaa_test ST_EXIT_STATUS never finishes
-
-   # backup old settings
-   get_config drmaaj_config
-
-   # set new value
-   set new_config(qmaster_params) "FORBID_RESCHEDULE=TRUE,FORBID_APPERROR=TRUE"
-   set new_config(delegated_file_staging) "true"
-   set_config new_config
-
-   set_error 0 "ok"
-}
-
-# undo what we've done in drmaa_setup
-proc drmaaj_cleanup  {} {
-   global backup_qmaster_params drmaaj_config ts_config
-
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
-
    # undo configuration changes that were made for this test
-   set_config drmaaj_config
+   set_config old_config
 
-   # restore DRMAA library version
-   foreach host $ts_config(unique_arch_nodes) {
-      drmaa_redirect_lib "0.95" $host
-   }
+   set_error 0 "ok"
+}
 
+proc drmaaj_cleanup {} {
+   delete_all_jobs
    set_error 0 "ok"
 }

@@ -113,15 +113,14 @@ int sge_read_host_group_entries_from_disk()
   lListElem* ep = NULL;
   const char*      hostGroupEntry = NULL;
   int        ret = 0;  /* 0 means ok */
-  lList **master_hgroup_list = object_type_get_master_list(SGE_TYPE_HGROUP);
 
   DENTER(TOP_LAYER, "sge_read_host_group_entries_from_disk");
  
  
   direntries = sge_get_dirents(HGROUP_DIR);
   if (direntries) {
-     if (*master_hgroup_list == NULL) {
-        *master_hgroup_list = lCreateList("", HGRP_Type);
+     if (Master_HGroup_List == NULL) {
+        Master_HGroup_List = lCreateList("", HGRP_Type);
      }  
      if (!sge_silent_get()) { 
         printf("%s\n", MSG_CONFIG_READINGHOSTGROUPENTRYS);
@@ -142,7 +141,7 @@ int sge_read_host_group_entries_from_disk()
                ERROR((SGE_EVENT, MSG_HGROUP_INCFILE_S, hostGroupEntry));
                return -1;
            }
-           lAppendElem(*master_hgroup_list, ep);
+           lAppendElem(Master_HGroup_List, ep);
         } else {
            sge_unlink(HGROUP_DIR, hostGroupEntry);
         }   
@@ -190,7 +189,7 @@ int sge_read_user_mapping_entries_from_disk()
             ep = cull_read_in_ume(UME_DIR, ume , 1, 0, NULL, NULL); 
          
             if (ep != NULL) {
-               lAppendElem(*(cuser_master_list), ep);
+               lAppendElem(Master_Cuser_List, ep);
             } else {
                WARNING((SGE_EVENT, MSG_ANSWER_IGNORINGMAPPINGFOR_S,  ume ));  
                lFreeElem(&ep);
@@ -234,10 +233,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
 
          host = lGetString(direntry, ST_name);
          if (host[0] != '.') {
-            lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-            
             DPRINTF(("Host: %s\n", host));
-
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, EH_name, 
                                    NULL, NULL);
             if (!ep) {
@@ -255,11 +251,11 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
             }
 
             /* necessary to setup actual list of exechost */
-            debit_host_consumable(NULL, ep, master_centry_list, 0);
+            debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
 
             /* necessary to init double values of consumable configuration */
             centry_list_fill_request(lGetList(ep, EH_consumable_config_list), 
-                                     NULL, master_centry_list, true, false, true);
+                                     NULL, Master_CEntry_List, true, false, true);
 
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
                lFreeElem(&ep);
@@ -686,7 +682,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                   qinstance_state_set_cal_suspended(qinstance, false);
                   qinstance_set_slots_used(qinstance, 0);
                   
-                  if (host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), 
+                  if (host_list_locate(Master_Exechost_List, 
                                        lGetHost(qinstance, QU_qhostname)) == NULL) {
 
                      ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUE_SS,

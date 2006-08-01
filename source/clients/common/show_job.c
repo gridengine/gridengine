@@ -411,6 +411,10 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetString(job, JB_script_ptr))
          printf("script_ptr:            \n%s\n", lGetString(job, JB_script_ptr));
 
+   if (lGetPosViaElem(job, JB_job_source, SGE_NO_ABORT)>=0)
+      if (lGetString(job, JB_job_source))
+         printf("job_source:                 %s\n", lGetString(job, JB_job_source));
+
    if (lGetPosViaElem(job, JB_pe, SGE_NO_ABORT)>=0)
       if (lGetString(job, JB_pe)) {
          dstring range_string = DSTRING_INIT;
@@ -443,13 +447,13 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_jid_successor_list, SGE_NO_ABORT)>=0)
-      if (lGetList(job, JB_jid_successor_list)) {
+   if (lGetPosViaElem(job, JB_jid_sucessor_list, SGE_NO_ABORT)>=0)
+      if (lGetList(job, JB_jid_sucessor_list)) {
          int fields[] = { JRE_job_number, 0 };
 
          delis[0] = "";
-         printf("jid_successor_list:          ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_successor_list), 
+         printf("jid_sucessor_list:          ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_sucessor_list), 
             fields, delis, 0);
       }
 

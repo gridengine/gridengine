@@ -187,7 +187,6 @@
 #define ZOMBIE_DIR                "zombies"
 #define MAN_DIR                   "managers"
 #define OP_DIR                    "operators"
-#define LIMITRULESETS             "limit_rule_sets"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"

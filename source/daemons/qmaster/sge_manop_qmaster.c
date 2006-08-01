@@ -81,11 +81,11 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    switch (target) {
    case SGE_MANAGER_LIST:
-      lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
+      lpp = &Master_Manager_List;
       object_name = MSG_OBJ_MANAGER;
       break;
    case SGE_OPERATOR_LIST:
-      lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
+      lpp = &Master_Operator_List;
       object_name = MSG_OBJ_OPERATOR;
       break;
    default :
@@ -93,7 +93,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
+DTRACE;
    /* ep is no acl element, if ep has no MO_name */
    if ((pos = lGetPosViaElem(ep, MO_name, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -172,11 +172,11 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
    switch (target) {
    case SGE_MANAGER_LIST:
-      lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
+      lpp = &Master_Manager_List;
       object_name = MSG_OBJ_MANAGER;
       break;
    case SGE_OPERATOR_LIST:
-      lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
+      lpp = &Master_Operator_List;
       object_name = MSG_OBJ_OPERATOR;
       break;
    default :

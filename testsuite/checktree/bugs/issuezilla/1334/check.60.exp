@@ -114,7 +114,7 @@ proc issue_1334_cleanup  {} {
    global issue_1334_job_stdout_file issue_1334_job_stderr_file
    
    delete_all_jobs
-   wait_for_end_of_all_jobs 60
+   wait_for_end_of_all_jobs 180
    
    puts $CHECK_OUTPUT "delete test queue"
    del_queue "iz_1334" "@allhosts" 0 1
@@ -143,14 +143,7 @@ proc issue_1334_run {} {
      set_error 1 "submit job failed"
      return
    }
- 
-   # wait until job ran through
-   if {[wait_for_jobend $my_job "" 60 0]} {
-      set_error 1 "job was not running"
-      return
-   }
-  
-   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
+   
    set res [ wait_for_remote_file $CHECK_HOST $CHECK_USER $issue_1334_job_stdout_file 120 ]
    
    if { $res != 0 } {
@@ -158,6 +151,7 @@ proc issue_1334_run {} {
       return
    }
    
+   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
    #
    # Hence the job starter had been invoked the stdout file must contain
    # the pattern SGE_STARTER_SHELL_PATH
@@ -176,25 +170,20 @@ proc issue_1334_run {} {
    #
    #  Submit a binary job with a shell
    #
-   set my_job [submit_job "-q iz_1334  $option -shell y -b y /bin/true"]
+   set my_job [ submit_job "-q iz_1334  $option -shell y -b y /bin/true" ]
    if {$my_job < 0 } {
      set_error 1 "submit job failed"
      return
    }
    
-   # wait until job ran through
-   if {[wait_for_jobend $my_job "" 60 0]} {
-      set_error 1 "job was not running"
-      return
-   }
-  
-   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
    set res [ wait_for_remote_file $CHECK_HOST $CHECK_USER $issue_1334_job_stdout_file 120 ]
    
    if { $res != 0 } {
       set_error 1 "stdout file $issue_1334_job_stdout_file of job $my_job not found"
       return
    }
+   
+   puts $CHECK_OUTPUT "waiting for file $issue_1334_job_stdout_file"
 
    #
    # Hence the job starter had been invoked the stdout file must contain
@@ -207,8 +196,12 @@ proc issue_1334_run {} {
    }
    puts $CHECK_OUTPUT "content of job output file $issue_1334_job_stdout_file:\n$output\n"
 
+
+   
    delete_file $issue_1334_job_stdout_file
    delete_file $issue_1334_job_stderr_file
+   
+   
    
    set_error 0 "ok"
 }

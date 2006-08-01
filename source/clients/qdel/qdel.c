@@ -151,6 +151,18 @@ int main(int argc, char **argv) {
    have_master_privileges = false;
    if (force == 1) {
       have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
+      if (have_master_privileges == -10) {
+         /* -10 indicates no connection to qmaster */
+
+         /* fills SGE_EVENT with diagnosis information */
+         if (alp != NULL) {
+            if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
+               fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            }
+            lFreeList(&alp);
+         }
+         goto error_exit;
+      }  
       lFreeList(&alp);
    }
    /* delete the job */

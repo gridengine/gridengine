@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2005/11/09 17:44:41 $     Revision: $Revision: 1.28 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2006/03/10 16:15:12 $     Revision: $Revision: 1.26.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2005/11/09 17:44:41 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2006/03/10 16:15:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -215,8 +215,6 @@ the time interval in which accumulated usage will have been decayed
 to half its original value. Valid values are specified in hours or according to 
 the time format as specified in
 .M queue_conf 5 .
-.br
-If the value is set to 0, the usage is not decayed.
 .\"
 .SS "\fBusage_weight_list\fP"
 xxQS_NAMExx accounts for the consumption of the resources CPU-time, memory and IO

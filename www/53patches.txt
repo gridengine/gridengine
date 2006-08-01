@@ -1,55 +1,34 @@
-Bugs fixed in SGE 5.3p7 since release 5.3p6
--------------------------------------------
-
-Issue   Sun BugId  Description
-------- ---------- ---------------------------------------------------------------------------------
-942     6370485    stale resource_unknown_list
-538     6370481    increase PATH size limit of 2048 characters
-1958    6370003    long lines in accounting entries break qacct
-        6366691    utilbin/rsh can be used to gain root access
-1840    6340741    scheduler dies when array jobs are submitted with -now y
-1778    6318659    sge_ca -usercert fails when executed more than once
-1625    6252525    qmon: complex attributes not removeable
-1541    6250603    qmon crash (segmentation fault) on Solaris64
-1515    6232120    Certificate renewal in CSP mode broken
-1403    6218430    Problems with load values if execution daemons run in a solaris zone
-1288    6198937    Core dump in `qmon`Xpm.c`CreateImage running qmon on E25K (using remote DISPLAY)
-1302    6185208    qmon and equal job arguments
-1535    5086193    load.sh fails on a machine when uptime displays time for less than an hour
-1012    5040728    Job error state broken
-
-
 Bugs fixed in SGE 5.3p6 since release 5.3p5
 -------------------------------------------
 
 Issue   Sun BugId  Description
 ------- ---------- ---------------------------------------------------------------------------------
-        4753766    Various fixes in man pages
-551     4969825    not supported array task dependencies are not rejected
-        5006354    sge_ca script will not create user certs when SGE_CELL (default) is not set
-871     5018669    qrsh/qlogin: "Connection refused" due to race condition in shepherd
-632     5018695    loadsensor doing output to stderr can block
-599     5018726    qalter lacks -dl option!
-600     5018733    Empty parameters crashes qstat and qhost
-919     5018757    HPCT jobs may fail - add variable to job environment which point to SGE binaries
-        5018884    SSL vulnerabilities stated in Sun Alert 57524
-835     5019497    modification of loadsensor causes crash of execd
-820     5019584    SGEEE: scheduler may crash on Linux AMD64 in functional ticket calculation
-709     5019595    Dateformat YYMMDDhhmm was interpreted wrong (qacct, qsub, qalter,...)
-635     5019601    "vmem" in qstat -j keeps the max value
-771     5019624    qselect/qstat -l selection wrongly considers load and utilization
-648     5019635    schedd_job_info=true causes large delays with parallel job scheduling
-646     5020131    renaming a user deletes the user
-607     5020134    qhost output broken for global consumables
-        5020139    a stored job template in qmon sets -hold_jid to a wrong value
-        5020141    qsh and qlogin accepted the options -h and -hold_jid and ignored them later
-        5020143    qdel XXX.YY- will delete the first array task of job XXX
-637     5020153    mail bomb upon abort with tightly integrated par jobs
-314     5020278    a colon in a job name breaks qacct
-        5020282    some Linux distributions are not recognized by SGE
-931     5020371    sge_shepherd creates world writable files
-        5021405    CSP reconnect problem of scheduler and execd
-        5022074    qmon displays wrong numerical values on AMD Linux in spinbox widgets
+        4753766 Various fixes in man pages
+551     4969825 not supported array task dependencies are not rejected
+        5006354 sge_ca script will not create user certs when SGE_CELL (default) is not set
+871     5018669 qrsh/qlogin: "Connection refused" due to race condition in shepherd
+632     5018695 loadsensor doing output to stderr can block
+599     5018726 qalter lacks -dl option!
+600     5018733 Empty parameters crashes qstat and qhost
+919     5018757 HPCT jobs may fail - add variable to job environment which point to SGE binaries
+        5018884 SSL vulnerabilities stated in Sun Alert 57524
+835     5019497 modification of loadsensor causes crash of execd
+820     5019584 SGEEE: scheduler may crash on Linux AMD64 in functional ticket calculation
+709     5019595 Dateformat YYMMDDhhmm was interpreted wrong (qacct, qsub, qalter,...)
+635     5019601 "vmem" in qstat -j keeps the max value
+771     5019624 qselect/qstat -l selection wrongly considers load and utilization
+648     5019635 schedd_job_info=true causes large delays with parallel job scheduling
+646     5020131 renaming a user deletes the user
+607     5020134 qhost output broken for global consumables
+        5020139 a stored job template in qmon sets -hold_jid to a wrong value
+        5020141 qsh and qlogin accepted the options -h and -hold_jid and ignored them later
+        5020143 qdel XXX.YY- will delete the first array task of job XXX
+637     5020153 mail bomb upon abort with tightly integrated par jobs
+314     5020278 a colon in a job name breaks qacct
+        5020282 some Linux distributions are not recognized by SGE
+931     5020371 sge_shepherd creates world writable files
+        5021405 CSP reconnect problem of scheduler and execd
+        5022074 qmon displays wrong numerical values on AMD Linux in spinbox widgets
 
 
 Bugs fixed in SGE 5.3p5 since release 5.3p4

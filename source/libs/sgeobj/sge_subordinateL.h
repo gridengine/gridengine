@@ -47,7 +47,7 @@ enum {
    SO_threshold    
 };
 
-LISTDEF(SO_Type)
+SLISTDEF(SO_Type, SubordinateQueue)
    SGE_STRING(SO_name, CULL_PRIMARY_KEY | CULL_SUBLIST) 
    SGE_ULONG(SO_threshold, CULL_SUBLIST)
 LISTEND

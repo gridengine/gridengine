@@ -836,6 +836,7 @@ void answer_list_append_list(lList **answer_list, lList **new_list)
       }
       if (*new_list != NULL) {
          lAddList(*answer_list, new_list);
+         *new_list = NULL;
       }
    }
    DEXIT;

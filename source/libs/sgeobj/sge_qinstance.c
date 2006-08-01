@@ -695,7 +695,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-         if ( !sge_hostcmp(hostname_pattern, hostname) || !fnmatch(hostname_pattern, hostname, 0)) {
+         if (!fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
                dstring buffer = DSTRING_INIT;
                const char *qi_name = qinstance_get_name(qinstance, &buffer);
@@ -810,7 +810,7 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
 *     MT-NOTE: qinstance_check_unknown_state() is MT safe 
 *******************************************************************************/
 void
-qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
+qinstance_check_unknown_state(lListElem *this_elem)
 {
    const char *hostname = NULL;
    lList *load_list = NULL;
@@ -819,7 +819,7 @@ qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
 
    DENTER(QINSTANCE_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);
-   host = host_list_locate(master_exechost_list, hostname);
+   host = host_list_locate(Master_Exechost_List, hostname);
    if (host != NULL) {
       load_list = lGetList(host, EH_load_list);
 
@@ -1011,7 +1011,7 @@ qinstance_set_full_name(lListElem *this_elem)
 *     MT-NOTE: qinstance_validate() is MT safe 
 *******************************************************************************/
 bool
-qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exechost_list)
+qinstance_validate(lListElem *this_elem, lList **answer_list)
 {
    bool ret = true;
    lList *centry_master_list = *(centry_list_get_master_list());
@@ -1057,7 +1057,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
       qinstance_state_set_cal_suspended(this_elem, false);
       qinstance_set_slots_used(this_elem, 0);
       
-      if (host_list_locate(master_exechost_list, 
+      if (host_list_locate(Master_Exechost_List, 
                            lGetHost(this_elem, QU_qhostname)) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
@@ -1096,7 +1096,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
 *     MT-NOTE: qinstance_list_validate() is MT safe 
 *******************************************************************************/
 bool
-qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exechost_list)
+qinstance_list_validate(lList *this_list, lList **answer_list)
 {
    bool ret = true;
    lListElem *qinstance;
@@ -1104,7 +1104,7 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
    DENTER(TOP_LAYER, "qinstance_list_validate");
 
    for_each(qinstance, this_list) {
-      if (!qinstance_validate(qinstance, answer_list, master_exechost_list)) {
+      if (!qinstance_validate(qinstance, answer_list)) {
          ret = false;
          break;
       }

@@ -62,7 +62,6 @@
 #include "sge_qinstance.h"
 #include "sge_pe.h"
 #include "sge_report.h"
-#include "sgeobj/sge_object.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -1003,7 +1002,7 @@ static void get_reserved_usage(lList **job_usage_list)
 
    temp_job_usage_list = lCreateList("JobResUsageList", JB_Type);
 
-   for_each (job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+   for_each (job, Master_Job_List) {
       u_long32 job_id;
       const lListElem *pe, *ja_task;
       lListElem *new_job = NULL;

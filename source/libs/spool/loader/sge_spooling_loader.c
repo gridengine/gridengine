@@ -141,13 +141,9 @@ spool_create_dynamic_context(lList **answer_list, const char *method,
    }
 #endif
 #ifdef SPOOLING_dynamic
-   /* 
-    * don't need compiled_method here, but otherwise we get an
-    * unused variable compiler warning. And we need the DPRINTF
-    * on irix6, otherwise we get a set but not used warning.
-    */
-   compiled_method = "dynamic";
-   DPRINTF(("creating "SFQ" spooling context", compiled_method));
+   compiled_method = "dynamic"; /* don't need it here, but otherwise we get an
+                                 * unused variable compiler warning 
+                                 */
    context = spool_dynamic_create_context(answer_list, method, shlib_name, 
                                           args);
 #endif

@@ -312,7 +312,6 @@ u_long32 flags
    DEXIT;
    return epc;
 FCLOSE_ERROR:
-   WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS, fname, strerror(errno)));
    DEXIT;
    return NULL;
 }

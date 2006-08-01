@@ -118,20 +118,7 @@ int main(int argc,char *argv[])
 #include "sge_unistd.h"
 #endif
 
-#if defined(AIX)
-#  if defined(_ALL_SOURCE)
-#     undef _ALL_SOURCE
-#  endif
-#include <procinfo.h>
-#include <sys/types.h>
-#endif
-
-#if defined(HP1164)
-#include <sys/param.h>
-#include <sys/pstat.h>
-#endif
-
-#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD) || defined(HP1164) || defined(AIX)
+#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD)
 
 #include "sge_os.h"
 #endif
@@ -529,9 +516,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
       return 0;
    }
 
-   if (fp) {
-      fsetpos(fp, &offset);
-   }
+   if (fp) fsetpos(fp, &offset);
 
    while (more_records) {
 
@@ -699,7 +684,7 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
 
          }
 
-	      fgetpos(fp, &offset);
+	 fgetpos(fp, &offset);
       }
 
       /*
@@ -710,14 +695,12 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
 
       if (newfile && (fp==NULL || feof(fp) || corrupted)) {
 
-         if (fp) {
-            FCLOSE(fp);
-         }
+         if (fp) fclose(fp);
          if (SGE_STAT(PACCT, &pstat)==0 && (fp = fopen(PACCT, "r"))) {
             pacct_inode = pstat.st_ino;
             newfile = 0;
             corrupted = 0;
-	         fgetpos(fp, &offset);
+	    fgetpos(fp, &offset);
          } else {
             sprintf(ps_errstr, MSG_SGE_UNABLETOOPENNEWPACCTFILE );
             return -1;
@@ -732,9 +715,6 @@ read_pacct(lnk_link_t *job_list, time_t time_stamp)
            count, jobcount);
 
    return 0;
-FCLOSE_ERROR:
-   sprintf(ps_errstr, MSG_FILE_ERRORCLOSEINGXY_SS, PACCT, strerror(errno));
-   return -1;
 }
 
 #endif
@@ -1424,171 +1404,6 @@ psRetrieveOSJobData(void)
          ; 
       pt_close();
    }
-#elif defined(AIX)
-   {
-      #define SIZE 16
-
-      struct procsinfo pinfo[SIZE];
-
-      int idx = 0, count;
-      job_elem_t *job_elem;
-      double old_time = 0.0;
-      uint64 old_vmem = 0;
-      pid_t index;
-
-      while ((count = getprocs(pinfo, sizeof(struct procsinfo), NULL, 0, &index, SIZE)) > 0) {
-
-        int i;
-        /* for all processes */
-        for (i=0; i < count; i++)
-        {
-          for (curr=job_list.next; curr != &job_list; curr=curr->next) {
-            int group;
-
-            job_elem = LNK_DATA(curr, job_elem_t, link);
-
-            if (job_elem->job.jd_jid == pinfo[i].pi_pgrp) {
-
-              lnk_link_t  *curr2;
-              proc_elem_t *proc_elem;
-              int newprocess = 1;
-
-              for (curr2=job_elem->procs.next; curr2 != &job_elem->procs; curr2=curr2->next) {
-
-                proc_elem = LNK_DATA(curr2, proc_elem_t, link);
-
-                if (proc_elem->proc.pd_pid == pinfo[i].pi_pid) {
-                  newprocess = 0;
-                  break;
-                }
-              }
-
-              if (newprocess) {
-                proc_elem = (proc_elem_t *) malloc(sizeof(proc_elem_t));
-
-                if (proc_elem == NULL) {
-                    DEXIT;
-                    return 0;
-                }
-
-                memset(proc_elem, 0, sizeof(proc_elem_t));
-                proc_elem->proc.pd_length = sizeof(psProc_t);
-                proc_elem->proc.pd_state  = 1; /* active */
-
-                LNK_ADD(job_elem->procs.prev, &proc_elem->link);
-                job_elem->job.jd_proccount++;
-
-              }
-              else {
-                  /* save previous usage data - needed to build delta usage */
-                  old_time = proc_elem->proc.pd_utime + proc_elem->proc.pd_stime;
-                  old_vmem  = proc_elem->vmem;
-              }
-
-              proc_elem->proc.pd_tstamp = time_stamp;
-              proc_elem->proc.pd_pid    = pinfo[i].pi_pid;
-
-              proc_elem->proc.pd_utime  = pinfo[i].pi_ru.ru_utime.tv_sec;
-              proc_elem->proc.pd_stime  = pinfo[i].pi_ru.ru_stime.tv_sec;
-
-              proc_elem->proc.pd_uid    = pinfo[i].pi_uid;
-              proc_elem->vmem           = pinfo[i].pi_dvm +
-                                          pinfo[i].pi_tsize + pinfo[i].pi_dsize;
-              proc_elem->rss            = pinfo[i].pi_drss + pinfo[i].pi_trss;
-              proc_elem->proc.pd_pstart = pinfo[i].pi_start;
-
-              proc_elem->mem = ((proc_elem->proc.pd_stime + proc_elem->proc.pd_utime) - old_time) *
-                                (( old_vmem + proc_elem->vmem)/2);
-
-            } /* if */
-          } /* for job_list */
-        } /* process */
-      }
-   }
-#elif defined(HP1164)
-   {
-      #define SIZE 16
-      struct pst_status pstat_buffer[SIZE];
-      int idx = 0, count;
-      job_elem_t *job_elem;
-      double old_time = 0;
-      uint64 old_vmem = 0;
-
-      while ((count = pstat_getproc(pstat_buffer, sizeof(struct pst_status), SIZE, idx)) > 0) {
-
-        int i;
-        /* for all processes */
-        for (i=0; i < count; i++)
-        {
-          for (curr=job_list.next; curr != &job_list; curr=curr->next) {
-            int group;
-
-            job_elem = LNK_DATA(curr, job_elem_t, link);
-
-            if (job_elem->job.jd_jid == pstat_buffer[i].pst_pgrp) {
-
-              lnk_link_t  *curr2;
-              proc_elem_t *proc_elem;
-              int newprocess = 1;
-
-              for (curr2=job_elem->procs.next; curr2 != &job_elem->procs; curr2=curr2->next) {
-
-                proc_elem = LNK_DATA(curr2, proc_elem_t, link);
-
-                if (proc_elem->proc.pd_pid == pstat_buffer[i].pst_pid) {
-                  newprocess = 0;
-                  break;
-                }
-              }
-
-              if (newprocess) {
-                proc_elem = (proc_elem_t *) malloc(sizeof(proc_elem_t));
-
-                if (proc_elem == NULL) {
-                    DEXIT;
-                    return 0;
-                }
-
-                memset(proc_elem, 0, sizeof(proc_elem_t));
-                proc_elem->proc.pd_length = sizeof(psProc_t);
-                proc_elem->proc.pd_state  = 1; /* active */
-
-                LNK_ADD(job_elem->procs.prev, &proc_elem->link);
-                job_elem->job.jd_proccount++;
-
-              }
-              else {
-                  /* save previous usage data - needed to build delta usage */
-                  old_time = proc_elem->proc.pd_utime + proc_elem->proc.pd_stime;
-                  old_vmem  = proc_elem->vmem;
-              }
-
-              proc_elem->proc.pd_tstamp = time_stamp;
-              proc_elem->proc.pd_pid    = pstat_buffer[i].pst_pid;
-
-              proc_elem->proc.pd_utime  = pstat_buffer[i].pst_utime;
-              proc_elem->proc.pd_stime  = pstat_buffer[i].pst_stime;
-
-              proc_elem->proc.pd_uid    = pstat_buffer[i].pst_uid;
-              proc_elem->proc.pd_gid    = pstat_buffer[i].pst_gid;
-              proc_elem->vmem           = pstat_buffer[i].pst_vdsize +
-                                          pstat_buffer[i].pst_vtsize + pstat_buffer[i].pst_vssize;
-              proc_elem->rss            = pstat_buffer[i].pst_rssize;
-              proc_elem->proc.pd_pstart = pstat_buffer[i].pst_start;
-
-              proc_elem->vmem = proc_elem->vmem * getpagesize();
-              proc_elem->rss  = proc_elem->rss  * getpagesize();
-
-              proc_elem->mem = ((proc_elem->proc.pd_stime + proc_elem->proc.pd_utime) - old_time) *
-                                (( old_vmem + proc_elem->vmem)/2);
-
-            } /* if */
-          } /* for job_list */
-        } /* process */
-
-        idx = pstat_buffer[count-1].pst_idx + 1;
-      }
-   }
 #elif defined(NECSX4) || defined(NECSX5)
    {
       for (curr=job_list.next; curr != &job_list; curr=curr->next) {
@@ -2136,7 +1951,7 @@ psRetrieveOSJobData(void)
 
       }
 
-#elif defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164)
+#elif defined(ALPHA) || defined(LINUX) || defined(SOLARIS)
       {
          int proccount;
          lnk_link_t *currp, *nextp;
@@ -2292,7 +2107,7 @@ int psStartCollector(void)
    pagesize = getpagesize();
 
    /* retrieve static parameters */
-#if defined(LINUX) || defined(ALINUX) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(HP1164)
+#if defined(LINUX) || defined(ALINUX) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
 #ifdef PDC_STANDALONE
    ncpus = sge_nprocs();
 #endif   

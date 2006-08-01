@@ -103,7 +103,6 @@ void on_communication_error(const cl_application_error_list_elem_t* commlib_erro
 }
 
 
-
 /*
  *  commlib debug log function callback 
  */

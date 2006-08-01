@@ -692,26 +692,26 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R7
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for Solaris */
-   DPRINTF(("Getting host by addr - Solaris\n"));
+   DPRINTF (("Getting host by addr - Solaris\n"));
    {
       char buffer[4096];
       struct hostent *help_he = NULL;
-      he = (struct hostent *)malloc(sizeof(struct hostent));
+      he = (struct hostent *)malloc (sizeof (struct hostent));
       if (he != NULL) {
          memset(he, 0, sizeof(struct hostent));
 
          /* On Solaris, this function returns the pointer to my struct on success
           * and NULL on failure. */
-         help_he = gethostbyaddr_r((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+         help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
       
          /* Since he contains pointers into buffer, and buffer goes away when we
           * exit this code block, we make a deep copy to return. */
          if (help_he != NULL) {
-            struct hostent *new_he = sge_copy_hostent(help_he);
-            FREE(he);
+            struct hostent *new_he = sge_copy_hostent (help_he);
+            FREE (he);
             he = new_he;
          } else {
-            FREE(he);
+            FREE (he);
             he = NULL;
          }
       }
@@ -721,7 +721,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R5
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX < 11 */
-   DPRINTF(("Getting host by addr - 3 arg\n"));
+   DPRINTF (("Getting host by addr - 3 arg\n"));
    
    {
       struct hostent_data he_data;

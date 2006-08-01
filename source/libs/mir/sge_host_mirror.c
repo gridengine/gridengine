@@ -73,9 +73,9 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-sge_callback_result
-host_update_master_list(object_description *object_base, sge_object_type type, 
-                        sge_event_action action, lListElem *event, void *clientdata)
+bool 
+host_update_master_list(sge_object_type type, sge_event_action action,
+                        lListElem *event, void *clientdata)
 {
    lList **list;
    const lDescr *list_descr;
@@ -83,21 +83,45 @@ host_update_master_list(object_description *object_base, sge_object_type type,
 
    const char *key;
 
-   DENTER(TOP_LAYER, "host_update_master_list");
-   list = sge_master_list(object_base, type);
-   list_descr = lGetListDescr(lGetList(event, ET_new_version));
-   key_nm = object_type_get_key_nm(type); 
 
+   DENTER(TOP_LAYER, "host_update_master_list");
+   
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
+   
+   switch (type) {
+      case SGE_TYPE_ADMINHOST:
+         list = &Master_Adminhost_List;
+/*         list_descr = AH_Type;*/
+         key_nm = AH_name;
+         break;
+      case SGE_TYPE_EXECHOST:
+         list = &Master_Exechost_List;
+/*         list_descr = EH_Type; */
+         key_nm = EH_name;
+         break;
+      case SGE_TYPE_SUBMITHOST:
+         list = &Master_Submithost_List;
+/*         list_descr = SH_Type; */
+         key_nm = SH_name;
+         break;
+      case SGE_TYPE_HGROUP:
+         list = &Master_HGroup_List;
+         key_nm = HGRP_name;
+         break;
+      default:
+         return false;
+   }
+ 
    key = lGetString(event, ET_strkey);
 
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
 
       DEXIT;
-      return SGE_EMA_FAILURE;
+      return false;
    }
 
    DEXIT;
-   return SGE_EMA_OK;
+   return true;
 }
 

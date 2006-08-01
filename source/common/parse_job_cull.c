@@ -37,7 +37,6 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#include "uti/sge_stdio.h"
 #include "symbols.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
@@ -764,22 +763,22 @@ u_long32 flags
       if (script_file && strcmp(script_file, "-")) {
          /* are we able to access this file? */
          if ((fp = fopen(script_file, "r")) == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
-                     MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
+            snprintf(error_string, MAX_STRING_SIZE, MSG_FILE_ERROROPENINGXY_SS, script_file, 
+                    strerror(errno));
             answer_list_add(&answer, error_string, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
          
-         FCLOSE(fp);
+         fclose(fp);
 
          /* read the script file in one sweep */
          filestrptr = sge_file2string(script_file, &script_len);
 
          if (filestrptr == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
-                     MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
+            snprintf(error_string, MAX_STRING_SIZE, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
+                    script_file);
             answer_list_add(&answer, error_string, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
@@ -1032,12 +1031,6 @@ u_long32 flags
 
    DEXIT;
    return answer;
-FCLOSE_ERROR:
-   snprintf(error_string, MAX_STRING_SIZE,
-            MSG_FILE_ERRORCLOSEINGXY_SS, script_file, strerror(errno));
-   answer_list_add(&answer, error_string,
-                   STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-   DRETURN(answer);
 }
 
 /* This method is not thread safe.  Fortunately, it is only used by the

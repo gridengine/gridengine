@@ -74,9 +74,8 @@ struct rusage {
 #include "basis_types.h"
 #include "config_file.h"
 #include "err_trace.h"
+#include "sge_uidgid.h"
 #include "setosjobid.h"
-#include "uti/sge_uidgid.h"
-#include "uti/sge_stdio.h"
 
 #if defined(NECSX4) || defined(NECSX5)
 static void print_scheduling_parameters(dispset2_t attr);
@@ -139,14 +138,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
       if (!(fp = fopen("addgrpid", "w")))
          shepherd_error("can't open \"addgrpid\" file");   
       fprintf(fp, gid_t_fmt"\n", *add_grp_id_ptr);
-      FCLOSE(fp);   
-# elif defined(HP1164) || defined(AIX)
-    {
-      if (!(fp = fopen("addgrpid", "w")))
-         shepherd_error("can't open \"addgrpid\" file");
-      fprintf(fp, pid_t_fmt"\n", getpgrp());
-      FCLOSE(fp);
-    }
+      fclose(fp);   
 #  else
    {
       char osjobid[100];
@@ -349,10 +341,8 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
       if(fprintf(fp, "%s\n", osjobid) < 0)
          shepherd_trace("error writing osjobid file");
          
-      FCLOSE(fp); /* Close os-jobid file */   
+      fclose(fp); /* Close os-jobid file */   
    }
 #  endif
    return;
-FCLOSE_ERROR:
-   shepherd_error("can't close file"); 
 }

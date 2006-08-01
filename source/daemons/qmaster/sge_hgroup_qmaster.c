@@ -125,6 +125,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
             ret &= href_list_resolve_hostnames(*add_hosts, answer_list, false);
          }
 
+
          /*
           * Try to find cycles in the definition
           */
@@ -547,7 +548,7 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
                    * Let's remove the object => Success!
                    */
 
-                  lRemoveElem(*object_type_get_master_list(SGE_TYPE_HGROUP), &hgroup);
+                  lRemoveElem(Master_HGroup_List, &hgroup);
 
                   INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
                         remote_user, remote_host, name , "host group entry"));

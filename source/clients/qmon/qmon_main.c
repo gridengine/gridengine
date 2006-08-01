@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <locale.h>
 
 #include <Xm/Xm.h>
 
@@ -195,7 +196,9 @@ char **argv
    Widget StartupWindow = 0;
    Arg  args[10];
    Cardinal ac = 0;
+#ifdef L10N
    char *lang;
+#endif   
    static char progname[256];
 /*    static char app_name[1024]; */
 
@@ -204,6 +207,11 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
 
+#ifndef L10N
+   setlocale(LC_ALL, "C");
+   putenv("LANG=C"); 
+   putenv("LC_ALL=C"); 
+#endif
    sge_mt_init();
 
    /* INSTALL SIGNAL HANDLER */
@@ -282,6 +290,7 @@ char **argv
    XtAppAddActionHook(AppContext, TraceActions, NULL);
 #endif
 
+#ifdef L10N
    /*
    ** Internationalization:
    ** The qmon_messages.ad file is installed under 
@@ -296,6 +305,8 @@ char **argv
          lang = "C";
       XmtLoadResourceFile(AppShell, "qmon_messages", False, True);
    }   
+#endif
+
 #if 0   
    strcpy(app_name, "QMON +++ Main Control");
    if (strcmp(uti_state_get_default_cell(), "default")) {

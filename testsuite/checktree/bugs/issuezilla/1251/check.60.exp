@@ -37,7 +37,7 @@ global check_init_level_procedure check_category
 global check_root_access_needs
 global prj_count node_count stree tmp_name
 
-set check_init_level_procedure "issue_1251_init_level"
+set check_init_level_procedure "init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "issue_1251"
@@ -54,7 +54,7 @@ set check_highest_level       0
 set my_pid [pid]
 set tmp_name "/tmp/tmp1251.$my_pid"
 
-proc issue_1251_init_level {} {
+proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
    # setup levels 
@@ -74,7 +74,7 @@ proc issue_1251_run  {} {
    set node_count 0
    set stree ""
 
-   issue_1251_build_share_tree 5
+   build_share_tree 5
 
    set f [ open "$tmp_name" w ]
    puts $f $stree
@@ -100,7 +100,7 @@ proc issue_1251_run  {} {
    }
 }
 
-proc issue_1251_build_share_tree { depth } {
+proc build_share_tree { depth } {
    global prj_count node_count stree
 
    set parent $node_count
@@ -115,10 +115,10 @@ proc issue_1251_build_share_tree { depth } {
       set stree "${stree}shares=1\n"
       set stree "${stree}childnodes=$child1,$child2\n"
 
-      issue_1251_build_share_tree [ expr $depth - 1 ]
-      issue_1251_build_share_tree [ expr $depth - 1 ]
+      build_share_tree [ expr $depth - 1 ]
+      build_share_tree [ expr $depth - 1 ]
    } else {
-      issue_1251_add_project "prj$prj_count"
+      add_project "prj$prj_count"
 
       set stree "${stree}id=$parent\n"
       set stree "${stree}name=prj$prj_count\n"
@@ -130,7 +130,7 @@ proc issue_1251_build_share_tree { depth } {
    }
 }
 
-proc issue_1251_add_project { name } {
+proc add_project { name } {
    global tmp_name CHECK_PRODUCT_ROOT CHECK_ARCH
 
    set f [ open "$tmp_name" w ]

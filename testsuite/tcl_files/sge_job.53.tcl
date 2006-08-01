@@ -30,20 +30,16 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-proc delete_all_jobs {{clear_queues 1}} {
-   global ts_config CHECK_OUTPUT CHECK_USER
+proc delete_all_jobs {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
 
+   set ret 1
+   
    puts $CHECK_OUTPUT "deleting all jobs"
-   set arch [resolve_arch $ts_config(master_host)]
-   set qdel "$ts_config(product_root)/bin/$arch/qdel"
-   set output [start_remote_prog $ts_config(master_host) $CHECK_USER $qdel "-uall"]
-   if {$prg_exit_state == 0} {
-      set ret 1
-   } else {
+   if {[catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result] != 0} {
       set ret 0
    }
 
-   puts $CHECK_OUTPUT $output
-
-   return $ret
+   puts $CHECK_OUTPUT $catch_result
+   return $catch_result
 }

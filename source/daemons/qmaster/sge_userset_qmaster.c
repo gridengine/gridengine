@@ -676,11 +676,10 @@ const char *userset_name
    lListElem *ep = NULL;
    lListElem *cqueue = NULL;
    lList* user_lists = NULL;
-   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
-   for_each (cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance;
 
@@ -704,7 +703,7 @@ const char *userset_name
       }
    }
 
-   for_each (ep, *object_base[SGE_TYPE_PE].list) {
+   for_each (ep, Master_Pe_List) {
       if (lGetElemStr(lGetList(ep, PE_user_list), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_USERLIST, MSG_OBJ_PE, lGetString(ep, PE_name)));
@@ -719,7 +718,7 @@ const char *userset_name
       }
    }
 
-   for_each (ep, *object_base[SGE_TYPE_PROJECT].list) {
+   for_each (ep, Master_Project_List) {
       if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
                MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
@@ -735,7 +734,7 @@ const char *userset_name
    }
 
    /* hosts */
-   for_each (ep, *object_base[SGE_TYPE_EXECHOST].list) {
+   for_each (ep, Master_Exechost_List) {
       if (lGetElemStr(lGetList(ep, EH_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
                MSG_OBJ_USERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));

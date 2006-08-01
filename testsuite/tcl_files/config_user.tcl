@@ -1235,30 +1235,3 @@ proc setup_user_config { file { force 0 }} {
    }
 }
 
-#****** config_user/user_conf_get_cluster_users() ******************************
-#  NAME
-#     user_conf_get_cluster_users() -- get a list of cluster users
-#
-#  SYNOPSIS
-#     user_conf_get_cluster_users { } 
-#
-#  FUNCTION
-#     Returns a list of all users that will be used in the given test cluster.
-#     The lists consists of
-#     - the CHECK_USER
-#     - root
-#     - first and second "foreign" user
-#
-#  RESULT
-#     user list
-#*******************************************************************************
-proc user_conf_get_cluster_users {} {
-   global ts_user_config CHECK_USER
-
-   set user_list $CHECK_USER
-   lappend user_list "root"
-   lappend user_list $ts_user_config(first_foreign_user)
-   lappend user_list $ts_user_config(second_foreign_user)
-
-   return $user_list
-}

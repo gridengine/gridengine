@@ -427,12 +427,11 @@ bool spool_default_validate_func(lList **answer_list,
                }
 
                if (ret) {
-                  lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
                   /* necessary to setup actual list of exechost */
-                  debit_host_consumable(NULL, object, master_centry_list, 0);
+                  debit_host_consumable(NULL, object, Master_CEntry_List, 0);
                   /* necessary to init double values of consumable configuration */
                   centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                        NULL, master_centry_list, true, false, true);
+                        NULL, Master_CEntry_List, true, false, true);
 
                   if (ensure_attrib_available(NULL, object, 
                                               EH_consumable_config_list)) {
@@ -443,10 +442,10 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_QINSTANCE:
-         ret = qinstance_validate(object, answer_list, *object_type_get_master_list(SGE_TYPE_EXECHOST));
+         ret = qinstance_validate(object, answer_list);
          break;
       case SGE_TYPE_CQUEUE:
-         ret = qinstance_list_validate(lGetList(object, CQ_qinstances), answer_list, *object_type_get_master_list(SGE_TYPE_EXECHOST));
+         ret = qinstance_list_validate(lGetList(object, CQ_qinstances), answer_list);
          break;
       case SGE_TYPE_CONFIG:
          {
@@ -503,7 +502,7 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_CENTRY:
-         if (!centry_elem_validate(object, *object_type_get_master_list(SGE_TYPE_CENTRY), answer_list)) {
+         if (!centry_elem_validate(object, Master_CEntry_List, answer_list)) {
             ret = false;
          }
          break;
@@ -545,7 +544,7 @@ spool_default_validate_list_func(lList **answer_list,
       case SGE_TYPE_ADMINHOST:
          break;
       case SGE_TYPE_EXECHOST:
-         host_list_merge(*object_type_get_master_list(SGE_TYPE_EXECHOST));
+         host_list_merge(Master_Exechost_List);
          break;
       case SGE_TYPE_SUBMITHOST:
       case SGE_TYPE_CONFIG:
@@ -554,7 +553,7 @@ spool_default_validate_list_func(lList **answer_list,
       case SGE_TYPE_PE:
          break;
       case SGE_TYPE_CENTRY:
-         centry_list_sort(*object_type_get_master_list(SGE_TYPE_CENTRY));
+         centry_list_sort(Master_CEntry_List);
          break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:

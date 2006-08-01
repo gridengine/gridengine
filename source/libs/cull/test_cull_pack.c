@@ -165,8 +165,9 @@ int main(int argc, char *argv[])
    /* cleanup and exit */
    lFreeElem(&ep);
    return EXIT_SUCCESS;
+
 FCLOSE_ERROR:
-   printf(MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   printf(MSG_ERRORCLOSINGFILE_SS, filename, strerror(errno));
    return EXIT_FAILURE;
 }
 

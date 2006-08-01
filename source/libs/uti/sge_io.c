@@ -38,11 +38,11 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include "uti/sge_io.h"
-#include "uti/sge_stdio.h"
-#include "uti/sge_unistd.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_io.h"
+#include "sge_unistd.h"
 
 #include "msg_utilib.h"  
 
@@ -706,9 +706,8 @@ int sge_string2file(const char *str, int len, const char *fname)
       DEXIT;
       return -1;
    }
-   if (!len) {
+   if (!len)
       len = strlen(str);
-   }
  
    if (fwrite(str, len, 1, fp) != 1) {
       int old_errno = errno;
@@ -724,7 +723,6 @@ int sge_string2file(const char *str, int len, const char *fname)
    DEXIT;
    return 0;
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_FCLOSEFAILED_SS, fname, strerror(errno)));
    DEXIT;
    return -1;
 }          

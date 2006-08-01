@@ -38,8 +38,7 @@
 #include "sge_feature.h"
 #include "gdi_setup.h"
 #include "sge_profiling.h"
-#include "lck/sge_lock.h"
-#include "sgeobj/sge_object.h"
+#include "sge_lock.h"
 
 #include "sgeobj/sge_schedd_conf.h"
 
@@ -74,9 +73,6 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
-   /* object */
-   obj_init_mt(); 
-
    sge_setup_lock_service();
 
    sge_prof_setup();

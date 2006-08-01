@@ -61,15 +61,12 @@
 #include "sge_qinstance_state.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
-#include "uti/sge_stdio.h"
-
 #if defined(DARWIN)
 #include "sge_uidgid.h"
 #endif
 
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
-#include "sgeobj/sge_object.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM
@@ -110,7 +107,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
       found = (signal_job(jobid, jataskid, signal)==0);
    } 
    else {            /* signal a queue */
-      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+      for_each(jep, Master_Job_List) {
          lListElem *gdil_ep, *master_q, *jatep;
          const char *qnm;
 
@@ -525,15 +522,14 @@ const char *pe_task_id
       sge_get_active_job_file_path(&fname,
                                    job_id, ja_task_id, pe_task_id, "signal");
       if (!(fp = fopen(sge_dstring_get_string(&fname), "w"))) {
-         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, 
-                sge_dstring_get_string(&fname)));
+         ERROR((SGE_EVENT, MSG_EXECD_WRITESIGNALFILE_S, sge_dstring_get_string(&fname)));
          sge_dstring_free(&fname);
          goto CheckShepherdStillRunning;
       } 
 
       fprintf(fp, "%d\n", sig);
+      fclose(fp);
       sge_dstring_free(&fname);
-      FCLOSE(fp);
    }
 
    /*
@@ -561,7 +557,6 @@ const char *pe_task_id
    DEXIT;
    return 0;
 
-FCLOSE_ERROR:
 CheckShepherdStillRunning:
    {
       dstring path = DSTRING_INIT;
@@ -621,14 +616,14 @@ u_long32 signal
    DENTER(TOP_LAYER, "signal_job");
 
    /* search appropriate array task and job */
-   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
 
       if(jatep != NULL) {
          break;
       }
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
    if (!jatep) {

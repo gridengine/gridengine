@@ -207,6 +207,7 @@ proc qmake_submit {slots target {variables ""}} {
                      }
                      default {
                         puts $CHECK_OUTPUT "qmake_submit: unexpected output: $line"
+#                        add_proc_error "qmake_submit" -3 "submit host: $ts_config(master_host)($CHECK_USER)\ncd $CHECK_ACTUAL_TEST_PATH\nqmake $arguments\nunexpected output:\n$line"
                      }
                   }
                }
@@ -220,6 +221,7 @@ proc qmake_submit {slots target {variables ""}} {
 
 proc qmake_close_channel {id} {
    set sp_id [lindex $id 1]
+   send -i $sp_id "\003" ;# send CTRL+C
    close_spawn_process $id
 }
 

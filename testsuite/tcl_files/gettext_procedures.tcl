@@ -71,156 +71,6 @@ proc test_file { me two} {
   return "test ok"
 }
 
-#****** gettext_procedures/diff_macro_files() **********************************
-#  NAME
-#     diff_macro_files() -- diff 2 testsuite message macro dump files
-#
-#  SYNOPSIS
-#     diff_macro_files { file_a file_b { ignore_backslash_at_end 1 } } 
-#
-#  FUNCTION
-#     This function will check if all message macros from file_a are contained
-#     in file_b and compare the message text. The testsuite is creating the
-#     dump files in the results/protocols directory when the compile option
-#     is used.
-#
-#  INPUTS
-#     file_a                        - testsuite message dump file A
-#     file_b                        - testsuite message dump file B
-#     { ignore_backslash_at_end 1 } - if 1 (default) backslashes at end of a
-#                                     macro are ignored
-#
-#  RESULT 
-#     0 - success without errors or warnings
-#     1 - there where compare errors
-#     2 - there where no compare errors, but some macros wasn't found in
-#         file_b (new macros).
-#     
-#  SEE ALSO
-#     ???/???
-#*******************************************************************************
-proc diff_macro_files { file_a file_b { ignore_backslash_at_end 1 } } {
-   global CHECK_OUTPUT
-
-   puts $CHECK_OUTPUT "reading $file_a ..."
-   read_array_from_file $file_a "macro_messages_list" macros_1 1 
-   puts $CHECK_OUTPUT "ok                               "
-   puts $CHECK_OUTPUT "messages are from $macros_1(source_code_directory)"
-
-
-   puts $CHECK_OUTPUT "reading $file_b ..."
-   read_array_from_file $file_b "macro_messages_list" macros_2 1 
-   puts $CHECK_OUTPUT "ok                               "
-   puts $CHECK_OUTPUT "messages are from $macros_2(source_code_directory)"
-
-   set macros_1_macro_names {}
-   for {set i 1} {$i <= $macros_1(0) } {incr i 1} {
-# ,id
-# ,macro
-# ,string
-# ,file
-# ,message_id
-# source_code_directory
-#      puts $CHECK_OUTPUT "id:         $macros_1($i,id)"
-#      puts $CHECK_OUTPUT "macro:      $macros_1($i,macro)"
-#      puts $CHECK_OUTPUT "string:     $macros_1($i,string)"
-#      puts $CHECK_OUTPUT "-"
-      lappend macros_1_macro_names $macros_1($i,macro)
-   }
-   set macros_2_macro_names {}
-   for {set i 1} {$i <= $macros_2(0) } {incr i 1} {
-      lappend macros_2_macro_names $macros_2($i,macro)
-   }
-
-   
-
-   puts $CHECK_OUTPUT "$file_a has [llength $macros_1_macro_names] macro entries!"
-   puts $CHECK_OUTPUT "$file_b has [llength $macros_2_macro_names] macro entries!"
-   set not_found {}
-   set compare_error {}
-   set runs [llength $macros_1_macro_names]
-   foreach macro $macros_1_macro_names {
-      set found 0
-      foreach help $macros_2_macro_names {
-         if { $help == $macro} {
-            set found 1
-            # ok macro exists, check content
-            for {set i 1} {$i <= $macros_1(0) } {incr i 1} {
-               if { $macros_1($i,macro) == $macro } {
-                  set macro_1_string $macros_1($i,string)
-               } 
-            }
-            for {set i 1} {$i <= $macros_2(0) } {incr i 1} {
-               if { $macros_2($i,macro) == $macro } {
-                  set macro_2_string $macros_2($i,string)
-               } 
-            }
-
-            if { $ignore_backslash_at_end != 0 } {
-               set len [string length $macro_2_string]
-               if {[string range $macro_2_string [expr $len -2] [expr $len -1]] == "\\n" } {
-                  set str_length [string length $macro_2_string]
-                  incr str_length -3
-                  set new_string [string range $macro_2_string 0 $str_length]
-
-               } else {
-                  set new_string [string range $macro_2_string 0 end]
-               }
-            } else {
-               set new_string [string range $macro_2_string 0 end]
-            }
-            
-            if { $new_string != $macro_1_string } {
-               lappend compare_error $macro
-               puts $CHECK_OUTPUT ""
-               puts $CHECK_OUTPUT "error for macro $macro:"
-               puts $CHECK_OUTPUT "$file_a:"
-               puts $CHECK_OUTPUT "\"$macro_1_string\""
-               puts $CHECK_OUTPUT "$file_b:"
-               puts $CHECK_OUTPUT "\"$new_string\""
-            } else {
-             
-            }
-         }
-      }
-      if { $found == 0 } {
-         # macro not found in file 2
-         lappend not_found $macro
-      }
-      puts -nonewline $CHECK_OUTPUT "\rtodo: $runs                     "
-      flush stdout
-      incr runs -1
-   }
-
-   set had_errors 0
-   set new_macros 0   
-
-   puts $CHECK_OUTPUT "\n\nfollowing macros from \n\"$file_a\"\n are not in \n\"$file_b\""
-   foreach not_found_macro $not_found {
-      incr new_macros 1
-      puts $CHECK_OUTPUT $not_found_macro
-   }
-   
-   puts $CHECK_OUTPUT "\nfollowing macros from \n\"$file_a\"\n had compare errors \n\"$file_b\""
-   foreach error $compare_error {
-      incr had_errors 1
-      puts $CHECK_OUTPUT $error
-   }
-   puts $CHECK_OUTPUT "Comparison reported $had_errors errors!"
-   puts $CHECK_OUTPUT "Comparison reported $new_macros not found (new) message macros!"
-
-   if { $had_errors != 0 } {
-      return 1
-   }
-
-   if { $new_macros != 0 } {
-      return 2
-   }
-
-   return 0
-}
-
-
 proc get_macro_messages_file_name { } {
   global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE CHECK_OUTPUT
   
@@ -791,48 +641,6 @@ proc replace_string { input_str what with {only_count 0}} {
    }
 }
 
-#****** gettext_procedures/translate_macro() ***********************************
-#  NAME
-#     translate_macro() -- translate content of a certain sge messages macro
-#
-#  SYNOPSIS
-#     translate_macro { macro {par1 ""} {par2 ""} {par3 ""} {par4 ""} {par5 ""} 
-#     {par6 ""} } 
-#
-#  FUNCTION
-#     Looks up the contents of a certain sge messages macro (call to sge_macro),
-#     translate the message and fill in any parameters.
-#
-#  INPUTS
-#     macro     - messages macro name
-#     {par1 ""} - parameter 1
-#     {par2 ""} - parameter 2
-#     {par3 ""} - parameter 3
-#     {par4 ""} - parameter 4
-#     {par5 ""} - parameter 5
-#     {par6 ""} - parameter 6
-#
-#  RESULT
-#     Translated and formatted message.
-#
-#  EXAMPLE
-#     translate_macro MSG_SGETEXT_CANTRESOLVEHOST_S "myhostname"
-#     will return
-#     can't resolve hostname "myhostname"
-#
-#  SEE ALSO
-#     gettext_procedures/translate()
-#     gettext_procedures/sge_macro()
-#*******************************************************************************
-proc translate_macro {macro {par1 ""} {par2 ""} {par3 ""} {par4 ""} {par5 ""} {par6 ""}} {
-   global ts_config
-
-   set msg [sge_macro $macro]
-   set ret [translate $ts_config(master_host) 1 0 0 $msg $par1 $par2 $par3 $par4 $par5 $par6]
-
-   return $ret
-}
-
 #****** gettext_procedures/translate() *****************************************
 #  NAME
 #     translate() -- get l10ned string
@@ -891,7 +699,6 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
           set prg_exit_state 0
           debug_puts "reading message from l10n raw cache ..."
       } else {
-          puts $CHECK_OUTPUT "translating message ..."
           set back [start_remote_prog $host "ts_def_con_translate" $CHECK_PRODUCT_ROOT/utilbin/$arch_string/infotext "-raw -__eoc__ \"$msg_text\""]
           set l10n_raw_cache($msg_text) $back
           debug_puts "adding message to l10n raw cache ..." 
@@ -911,8 +718,8 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          set prg_exit_state 0
          debug_puts "reading message from l10n install cache ..."
       } else {
-         puts $CHECK_OUTPUT "translating message ..."
-         set back [start_remote_prog $host "ts_def_con_translate" $CHECK_PRODUCT_ROOT/utilbin/$arch_string/infotext "-n -__eoc__ \"$msg_text\" $parameter_list"]
+         debug_puts "translating Grid Engine message macro ..."
+         set back [start_remote_prog $host $CHECK_USER $CHECK_PRODUCT_ROOT/utilbin/$arch_string/infotext "-n -__eoc__ \"$msg_text\" $parameter_list"]
          set l10n_install_cache($msg_text) $back
          debug_puts "adding message to l10n install cache ..." 
       }

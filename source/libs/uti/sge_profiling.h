@@ -36,9 +36,6 @@
 #include <sys/time.h>
 #include <sys/times.h>
 
-#if defined(FREEBSD)
-#include <pthread.h>
-#endif
 
 #include "basis_types.h"
 

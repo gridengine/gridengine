@@ -34,6 +34,8 @@
 
 #include "sge_ckptL.h"
 
+extern lList *Master_Ckpt_List;
+
 bool 
 ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
                    const lList *master_job_list,

@@ -172,7 +172,7 @@ enum {
 *     SGE_LIST(JB_jid_predecessor_list)
 *        Predecessor jobs (JRE_Type only JRE_job_name)
 *  
-*     SGE_LIST(JB_jid_successor_list)  
+*     SGE_LIST(JB_jid_sucessor_list)  
 *        Sucessor jobs (JRE_Type only JRE_job_number)
 *
 *     SGE_STRING(JB_session) 
@@ -424,7 +424,14 @@ enum {
 *             via condition. 
 *        (ID_Type)
 *
+*     SGE_STRING(JB_job_source)
+*        Submitter (host:commproc:id) of a pe task. Only needed 
+*        in execd.
+*        ---> probably no longer needed here, but in PET_Type.
+*
 *     SGE_XULONG(JB_verify_suitable_queues)   ---> qalter?
+*
+*     SGE_XULONG(JB_nrunning)
 *
 *     SGE_XULONG(JB_soft_wallclock_gmt) ---> the same as complex s_rt?
 *
@@ -511,7 +518,7 @@ enum {
    JB_version,
    JB_jid_request_list,
    JB_jid_predecessor_list,
-   JB_jid_successor_list,
+   JB_jid_sucessor_list,
    JB_session,
 
    JB_project,
@@ -585,7 +592,9 @@ enum {
 
    JB_user_list, 
    JB_job_identifier_list,
+   JB_job_source, /* unused, should be removed */
    JB_verify_suitable_queues,
+   JB_nrunning, /* unused, should be removed */
    JB_soft_wallclock_gmt,
    JB_hard_wallclock_gmt,
    JB_override_tickets,
@@ -603,13 +612,13 @@ enum {
  * IF YOU CHANGE SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
  */
    
-LISTDEF(JB_Type)
+ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_ULONG(JB_job_number, CULL_PRIMARY_KEY | CULL_HASH | CULL_SPOOL) 
    SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_request_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
-   SGE_LIST(JB_jid_successor_list, JRE_Type, CULL_DEFAULT) 
+   SGE_LIST(JB_jid_sucessor_list, JRE_Type, CULL_DEFAULT) /* JG: TODO: typo: successor */
    SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 
 
    SGE_STRING(JB_project, CULL_DEFAULT | CULL_SPOOL)             
@@ -683,7 +692,9 @@ LISTDEF(JB_Type)
 
    SGE_LIST(JB_user_list, ST_Type, CULL_DEFAULT)  
    SGE_LIST(JB_job_identifier_list, ID_Type, CULL_DEFAULT)    
+   SGE_STRING(JB_job_source, CULL_DEFAULT)
    SGE_ULONG(JB_verify_suitable_queues, CULL_DEFAULT)
+   SGE_ULONG(JB_nrunning, CULL_DEFAULT)
    SGE_ULONG(JB_soft_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_hard_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_override_tickets, CULL_DEFAULT | CULL_SPOOL)   
@@ -707,7 +718,7 @@ NAMEDEF(JBN)
    NAME("JB_version")
    NAME("JB_jid_request_list")
    NAME("JB_jid_predecessor_list")
-   NAME("JB_jid_successor_list")
+   NAME("JB_jid_sucessor_list")
    NAME("JB_session")
 
    NAME("JB_project")
@@ -781,7 +792,9 @@ NAMEDEF(JBN)
    
    NAME("JB_user_list")
    NAME("JB_job_identifier_list")
+   NAME("JB_job_source")
    NAME("JB_verify_suitable_queues")
+   NAME("JB_nrunning")
    NAME("JB_soft_wallclock_gmt")
    NAME("JB_hard_wallclock_gmt")
    NAME("JB_override_tickets")
@@ -808,7 +821,7 @@ enum {
    PN_file_staging
 };
 
-LISTDEF(PN_Type)
+SLISTDEF(PN_Type, PathName)
    SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
    SGE_HOST(PN_host, CULL_DEFAULT )                    /* CR - hostname change */
    SGE_HOST(PN_file_host, CULL_DEFAULT )
@@ -868,7 +881,7 @@ enum {
    JG_processors
 };
 
-LISTDEF(JG_Type)
+SLISTDEF( JG_Type, GrantedQueue )
    SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
    SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_SUBLIST)/* redundant qualified host name for caching  */  /* CR - hostname change */

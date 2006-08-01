@@ -40,9 +40,7 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
-#include "uti/sge_stdio.h"
-#include "uti/sge_unistd.h"
-
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"
 #include "sge_options.h"
@@ -142,6 +140,163 @@ static int sge_gdi_is_adminhost(const char *host);
 
 static const char *write_attr_tmp_file (const char *name, const char *value, 
                                         char delimiter);
+
+static const spool_flatfile_instr qconf_sub_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &qconf_sub_sfi,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_sfi,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_sub_comma_list_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   ',',
+   '\0',
+   '\0',
+   '\0',
+   NULL,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_name_value_list_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   false,
+   false,
+   '=',
+   '\n',
+   ',',
+   '\0',
+   '\0',
+   &qconf_sub_comma_list_sfi,
+   {
+      STN_children,
+      STN_id,
+      STN_version
+   }
+};
+
+static const spool_flatfile_instr qconf_sub_name_value_comma_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ',',
+   '\0',
+   '\0',
+   NULL,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_sub_comma_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '\0',
+   ',',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_param_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_comma_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_comma_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_comma_sfi,
+   { NoName, NoName, NoName }
+};
 
 /***************************************************************************/
 static char **sge_parser_get_next(char **arg) 
@@ -4161,14 +4316,32 @@ char *argv[]
 
          for_each(argep, arglp) {
 
-            const char *nodepath = lGetString(argep, STN_name);
+            lListElem *node = NULL;
+            const char *nodepath = NULL;
+            ancestors_t ancestors;
 
+            nodepath = lGetString(argep, STN_name);
             if (nodepath) {
-               found = show_sharetree_path(ep, nodepath);
+
+               memset(&ancestors, 0, sizeof(ancestors));
+               node = search_named_node_path(ep, nodepath, &ancestors);
+               if (node) {
+                  int i, shares;
+                  found++;
+                  for(i=0; i<ancestors.depth; i++)
+                     printf("/%s", lGetString(ancestors.nodes[i], STN_name));
+                  shares = (int)lGetUlong(node, STN_shares);
+                  printf("=%d\n", shares);
+               } else {
+                  fprintf(stderr, MSG_TREE_UNABLETOLACATEXINSHARETREE_S,
+                          nodepath);
+                  fprintf(stderr, "\n");
+               }
+               free_ancestors(&ancestors);
             }
          }
 
-         if ( found != 0 ) {
+         if (!found && *(spp+1) == NULL) {
             SGE_EXIT(1);
          }
 
@@ -5166,7 +5339,7 @@ char *argv[]
          
          /* print to stdout */
          fields = sge_build_UP_field_list (false, false);
-         filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII, 
                                               NULL, false);
          lFreeList(&alp);
@@ -5277,6 +5450,7 @@ char *s
       case lHostT:
          DPRINTF(("parse_name_list_to_cull: Adding lHostT type element\n"));
          lSetHost(ep, nm, cp2);
+         sge_resolve_host(ep, nm);
          break;
       default:
          DPRINTF(("parse_name_list_to_cull: unexpected data type\n"));
@@ -6873,13 +7047,11 @@ static const char *write_attr_tmp_file (const char *name, const char *value,
       return NULL;
    }
    
-   fprintf(fp, "%s", name);
-   fprintf(fp, "%c", delimiter);
-   fprintf(fp, "%s\n", value);
+   fprintf (fp, "%s", name);
+   fprintf (fp, "%c", delimiter);
+   fprintf (fp, "%s\n", value);
    
-   FCLOSE(fp);
+   fclose (fp);
    
    return (const char *)filename;
-FCLOSE_ERROR:
-   return NULL;
 }

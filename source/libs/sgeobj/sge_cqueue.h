@@ -71,6 +71,8 @@ typedef struct _list_attribute_struct {
    bool (*verify_function)(lListElem *attr_elem, lList **answer_list, lListElem *cqueue);
 } list_attribute_struct;
 
+extern lList *Master_CQueue_List;
+
 extern list_attribute_struct cqueue_attribute_array[];
 
 lEnumeration *

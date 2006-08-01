@@ -6,8 +6,9 @@ Date: 2006-04-18
 
 1 Identification
 CR-2006-04-18-0: Bugfix:    added fix for aix and hp in ssl module
-                 Changed:   cl_ssl_framework.c => commlib (merge from V60s2_BRANCH)
+                 Changed:   cl_ssl_framework.c => commlib
                  Review:    RD
+
 
 
 2 Conforms to specification

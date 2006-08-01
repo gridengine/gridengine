@@ -141,8 +141,7 @@
 /* 
 ** utilib/sge_sysconf.c
 */
-#define MSG_SYSCONF_UNABLETORETRIEVE_I          _MESSAGE(49057, _("unable to retrieve value for system limit (%d)") )   
-#define MSG_FILE_FCLOSEFAILED_SS                _MESSAGE(49058, _("fclose("SFQ") failed: "SFN))
+#define MSG_SYSCONF_UNABLETORETRIEVE_I                _MESSAGE(49057, _("unable to retrieve value for system limit (%d)") )   
 
 /* 
 ** utilib/sge_uidgid.c

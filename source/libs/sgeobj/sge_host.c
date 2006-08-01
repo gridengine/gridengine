@@ -51,6 +51,10 @@
 #include "sge_hgroup.h"
 #include "sge_hrefL.h"
 
+lList *Master_Exechost_List = NULL;
+lList *Master_Adminhost_List = NULL;
+lList *Master_Submithost_List = NULL;
+
 lListElem *
 host_list_locate(const lList *host_list, const char *hostname) 
 {

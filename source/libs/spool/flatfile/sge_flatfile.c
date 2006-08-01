@@ -59,7 +59,6 @@
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sgeobj/sge_feature.h"
-#include "sgeobj//sge_sharetreeL.h"
 
 /* spool */
 #include "spool/sge_spooling_utilities.h"
@@ -75,277 +74,6 @@
 
 /* uti */
 #include "uti/sge_spool.h"
-
-const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   '=',
-   ' ',
-   '\0',
-   '\0',
-   &qconf_sub_name_value_space_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   true,
-   false,
-   false,
-   true,
-   ' ',
-   '\n',
-   '\0',
-   '\0',
-   '\0',
-   &qconf_sub_name_value_space_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sub_comma_list_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   ',',
-   '\0',
-   '\0',
-   '\0',
-   NULL,
-   {NoName, NoName, NoName}
-};
-
-const spool_flatfile_instr qconf_name_value_list_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '=',
-   '\n',
-   ',',
-   '\0',
-   '\0',
-   &qconf_sub_comma_list_sfi,
-   {
-      STN_children,
-      STN_id,
-      STN_version
-   }
-};
-
-const spool_flatfile_instr qconf_sub_name_value_comma_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   '=',
-   ',',
-   '\0',
-   '\0',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sub_comma_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   '\0',
-   ',',
-   '\0',
-   '\0',
-   &qconf_sub_name_value_space_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_param_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   '\n',
-   '\0',
-   '\0',
-   '\0',
-   &qconf_sub_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sub_param_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   true,
-   false,
-   true,
-   '\0',
-   ' ',
-   '\0',
-   '\0',
-   '\n',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_comma_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   true,
-   false,
-   false,
-   true,
-   ' ',
-   '\n',
-   '\0',
-   '\0',
-   '\0',
-   &qconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_ce_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   true,
-   false,
-   false,
-   true,
-   ' ',
-   '\n',
-   '\0',
-   '\0',
-   '\0',
-   &qconf_sub_name_value_space_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_ce_list_sfi = 
-{
-   NULL,
-   false,
-   true,
-   true,
-   false,
-   true,
-   false,
-   true,
-   '\0',
-   ' ',
-   '\0',
-   '\0',
-   '\n',
-   NULL,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sub_limit_rule_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   ' ',
-   '\0',
-   '\0',
-   '\n',
-   &qconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_limit_rule_set_sfi = 
-{
-   NULL,
-   true,
-   false,
-   false,
-   false,
-   false,
-   true,
-   true,
-   '\0',
-   '\n',
-   '\0',
-   '{',
-   '}',
-   &qconf_sub_limit_rule_sfi,
-   { NoName, NoName, NoName }
-};
-
-const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   false,
-   true,
-   '\0',
-   '=',
-   ',',
-   '[',
-   ']',
-   &qconf_sub_name_value_comma_sfi,
-   { NoName, NoName, NoName }
-};
-
 
 static void spool_flatfile_add_line_breaks (dstring *buffer);
 
@@ -1007,7 +735,7 @@ spool_flatfile_open_file(lList **answer_list,
             return NULL;
          }
 
-#if !defined(DARWIN6)
+#if !defined(AIX42) && !defined(DARWIN6)
          flockfile(file);
 #endif
          fflush(file);
@@ -1100,7 +828,7 @@ spool_flatfile_close_file(lList **answer_list, FILE *file, const char *filepath,
 {
    if (destination == SP_DEST_STDOUT || destination == SP_DEST_STDERR) {
       fflush(file);
-#if !defined(DARWIN6)
+#if !defined(AIX42) && !defined(DARWIN6)
       funlockfile(file);
 #endif
    } else {
@@ -1139,7 +867,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    }
 
    if (print_header && (sge_spoolmsg_write(file, COMMENT_CHAR, 
-                        feature_get_product_name(FS_VERSION, &ds)) < 0)) {
+      feature_get_product_name(FS_VERSION, &ds)) < 0)) {
       /* on error just don't print the header */
    }
 
@@ -1215,11 +943,8 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       /* if not first field, output field_delimiter */
       if (!first_field || recurse) {
          sge_dstring_append_char(&field_buffer, instr->field_delimiter);
-      } 
-
-      /* if record_start_end_newline indent three spaces */
-      if (instr->record_start_end_newline) {
-         sge_dstring_append(&field_buffer, "   ");
+      } else {   
+         first_field = false;
       }
 
       /* if show_field_names, output field name */
@@ -1242,10 +967,9 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
 
       /* output value */
       if (fields[i].write_func != NULL) {
-         if (fields[i].write_func(object, fields[i].nm, &field_buffer, answer_list) == 0 && !instr->show_empty_fields) {
-            sge_dstring_clear(&field_buffer);
-         }
-      } else if (mt_get_type(descr[pos].mt) == lListT) {
+         fields[i].write_func (object, fields[i].nm, &field_buffer, answer_list);
+      }
+      else if (mt_get_type(descr[pos].mt) == lListT) {
          const spool_flatfile_instr *sub_instr = NULL;
          const bool recurse_field = (instr->recursion_info.recursion_field
                                        == fields[i].nm) ? true : false;
@@ -1267,15 +991,11 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
          }
 
          if(sub_instr == NULL || sub_fields == NULL) {
-            if (sub_instr->show_empty_fields) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                       ANSWER_QUALITY_WARNING, 
-                                       MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS,
-                                       lNm2Str(fields[i].nm), SGE_FUNC);
-               sge_dstring_append(&field_buffer, NONE_STR);
-            } else {
-                sge_dstring_clear(&field_buffer);
-            }
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_WARNING, 
+                                    MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS,
+                                    lNm2Str(fields[i].nm), SGE_FUNC);
+            sge_dstring_append(&field_buffer, NONE_STR);
          } else {
             lList *sub_list = lGetList(object, fields[i].nm);      
 
@@ -1285,11 +1005,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
              * desired effect with the minimum amount of overhead. */
             if ((sub_list == NULL) || (lGetNumberOfElem(sub_list) == 0)) {
                if (fields[i].name != NULL) {
-                  if (sub_instr->show_empty_fields) {
-                     sge_dstring_append(&field_buffer, NONE_STR);
-                  } else {
-                     sge_dstring_clear(&field_buffer);
-                  }
+                  sge_dstring_append(&field_buffer, NONE_STR);
                }
             } else {
                sge_dstring_clear(&tmp_buffer);
@@ -1303,25 +1019,23 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
                }
             }
          }
-      } else {
+      }
+      else {
          sge_dstring_clear(&tmp_buffer);
-
+      
          value = object_append_field_to_dstring(object, answer_list, 
                                                 &tmp_buffer, fields[i].nm, 
                                                 '\0');
-         if (!instr->show_empty_fields && !strcasecmp(value, "none")) {
-            sge_dstring_clear(&field_buffer);
+         
+         /* If asked to align the data and this isn't the last field, pad with
+          * spaces. Testing for i+1 is always valid because the last element
+          * is NoName, and we can't get to here if the current element is
+          * NoName, i.e. we're at the last element. */
+         if (instr->align_data && (fields[i + 1].nm != NoName)) {
+            sge_dstring_sprintf_append(&field_buffer, "%-*s", fields[i].width,
+                                       value);
          } else {
-            /* If asked to align the data and this isn't the last field, pad with
-             * spaces. Testing for i+1 is always valid because the last element
-             * is NoName, and we can't get to here if the current element is
-             * NoName, i.e. we're at the last element. */
-            if (instr->align_data && (fields[i + 1].nm != NoName)) {
-               sge_dstring_sprintf_append(&field_buffer, "%-*s", fields[i].width,
-                                          value);
-            } else {
-               sge_dstring_append(&field_buffer, value);
-            }
+            sge_dstring_append(&field_buffer, value);
          }
       }
       
@@ -1335,10 +1049,6 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       }
       
       sge_dstring_append_dstring (buffer, &field_buffer);
-
-      if (sge_dstring_strlen(buffer) != 0) {
-         first_field = false;
-      }
    }
 
    sge_dstring_free(&field_buffer);
@@ -1355,8 +1065,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
                                  const spooling_field *fields, bool recurse)
 {
    lListElem *ep;
-   bool first = true;
-   bool first_start = true;
+   int first = true;
    dstring record_buffer = DSTRING_INIT;
    const spooling_field *my_fields = NULL;
 
@@ -1370,7 +1079,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
    /* If recursion is enabled, only write out a single id field for each element
     * in the list.  Then recursively write out the entire element. */
    if (recurse) {
-      my_fields = get_recursion_field_list(instr);
+      my_fields = get_recursion_field_list (instr);
    }
    else {
       my_fields = fields;
@@ -1388,15 +1097,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
 
       /* if record_start, output record_start */
       if (instr->record_start != '\0') {
-         if (instr->record_start_end_newline == true && !first_start) {
-            sge_dstring_append_char(buffer, '\n');
-         } else {
-            first_start = false;
-         }
          sge_dstring_append_char(buffer, instr->record_start);
-         if (instr->record_start_end_newline == true) {
-            sge_dstring_append_char(buffer, '\n');
-         }
       }
          
       sge_dstring_clear (&record_buffer);
@@ -1847,15 +1548,17 @@ FF_DEBUG("detected end_token");
                stop = true;
                continue;
             }
-         } else {
+         }
+         else {
             if (fields[field_index].read_func (*object, nm,
-                                               sge_dstring_get_string(&buffer),
+                                               sge_dstring_get_string (&buffer),
                                                answer_list) == 0) {
                stop = true;
                continue;
             }
          }
-      } else { /* if (type == lListT) */
+      }
+      else { /* if (type == lListT) */
          lList *list;
          const lDescr *sub_descr;
 
@@ -2085,12 +1788,10 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
                          const char *filepath)
 {
    bool file_opened = false;
-   int token = 0;
+   int token;
    lList *list = NULL;
    const spooling_field *fields = NULL;
    spooling_field *my_fields = NULL;
-   const char *end_token = NULL;
-   char new_end_token[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "spool_flatfile_read_list");
 
@@ -2151,11 +1852,8 @@ spool_flatfile_read_list(lList **answer_list, const lDescr *descr,
       fields = my_fields;
    }
 
-   get_end_token(new_end_token, MAX_STRING_SIZE, end_token,
-                 instr->record_end);
-
    list = _spool_flatfile_read_list(answer_list, descr, instr, 
-                                    fields, fields_out, &token, new_end_token,
+                                    fields, fields_out, &token, NULL,
                                     parse_values);
    spool_scanner_shutdown();
 
@@ -2253,9 +1951,6 @@ FF_DEBUG("detected record_delimiter");
             continue;
          }
 FF_DEBUG("detected record_start");
-         if (instr->record_start_end_newline == true) {
-            *token = spool_lex();
-         }
          *token = spool_lex();
       }
 
@@ -2288,9 +1983,6 @@ FF_DEBUG("detected record_start");
             continue;
          }
 FF_DEBUG("detected record_end");
-         if (instr->record_start_end_newline == true) {
-            *token = spool_lex();
-         }
          *token = spool_lex();
       }
 
@@ -2308,7 +2000,6 @@ FF_DEBUG("after parsing list");
       lFreeList(&list);
    }
 
-   DEXIT;
    return list;
 }
 

@@ -48,7 +48,7 @@ enum {
    CONF_entries                 /* Points to CF_Type list */
 };
 
-LISTDEF(CONF_Type)
+ILISTDEF(CONF_Type, Configuration, SGE_CONFIG_LIST)
    SGE_HOST(CONF_hname, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(CONF_version, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(CONF_entries, CF_Type, CULL_DEFAULT | CULL_SPOOL)
@@ -72,7 +72,7 @@ enum {
    CF_local                  /* global value can be overridden */
 };
 
-LISTDEF(CF_Type)
+SLISTDEF(CF_Type, ConfigEntry)
    SGE_STRING(CF_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
    SGE_STRING(CF_value, CULL_DEFAULT | CULL_SUBLIST)
    SGE_LIST(CF_sublist, CULL_ANY_SUBTYPE, CULL_DEFAULT)

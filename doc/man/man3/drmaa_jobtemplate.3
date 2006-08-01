@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_jobtemplate.3,v $     Last Update: $Date: 2006/03/01 22:05:53 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: drmaa_jobtemplate.3,v $     Last Update: $Date: 2004/08/11 13:38:21 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_jobtemplate 3 "$Date: 2006/03/01 22:05:53 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_jobtemplate 3 "$Date: 2004/08/11 13:38:21 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -109,15 +109,6 @@ drmaa_get_vector_attribute, drmaa_get_next_attr_value, drmaa_release_attr_values
 \fB);\fB
 .PP
 .nf
-\fBint drmaa_get_num_attr_values(\fB
-.RS
-\fBdrmaa_attr_values_t* values,\fB
-\fBint *size\fB
-.RE
-.fi
-);\fB
-.PP
-.nf
 \fBvoid drmaa_release_attr_values(\fB
 .RS
 \fBdrmaa_attr_values_t* values
@@ -175,12 +166,6 @@ vector returned into \fIvalues\fP using
 .SS "drmaa_get_next_attr_value()"
 Each time drmaa_get_next_attr_value() is called it returns into \fIvalue\fP up to \fIvalue_len\fP 
 bytes of the next entry stored in the DRMAA values string vector, \fIvalues\fP.
-.PP
-.\" 
-.SS "drmaa_get_num_attr_values()"
-The drmaa_get_num_attr_values() returns into \fIsize\fP the number of entries
-in the DRMAA values string vector.  This function is only available in the 1.0
-implementation.
 .PP
 .\" 
 .SS "drmaa_release_attr_values()"

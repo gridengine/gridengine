@@ -76,50 +76,8 @@ proc dump_array_to_tmpfile { change_array } {
    return $tmpfile
 }
 
-
-#****** control_procedures/get_string_value_between() **************************
-#  NAME
-#     get_string_value_between() -- string parsing function
-#
-#  SYNOPSIS
-#     get_string_value_between { start end line } 
-#
-#  FUNCTION
-#     This function will return the content between the strings $start and
-#     $end which must occur in $line.
-#
-#  INPUTS
-#     start - first search parameter (first occurance)
-#     end   - second search parameter 
-#             if $start == $end: (last occurance)
-#             if -1            : get content till end of $line 
-#     line  - string to parse 
-#
-#  RESULT
-#     string
-#*******************************************************************************
-proc get_string_value_between { start end line } {
-   global CHECK_OUTPUT
-   set pos1 [string first "$start" $line]
-   incr pos1 [string length $start]
-
-   if { $end != -1 } {
-      if { $start == $end } {
-         set pos2 [string last "$end"   $line]
-      } else {
-         set pos2 [string first "$end"   $line]
-      }
-      incr pos2 -1
-      return [string trim [string range $line $pos1 $pos2]]
-   } else {
- 
-      return [string trim [string range $line $pos1 end]]
-   }
-}
-
 # take a name/value array and build a vi command to set new values
 proc build_vi_command { change_array {current_array no_current_array_has_been_passed}} {
-   global CHECK_OUTPUT
    upvar $change_array  chgar
    upvar $current_array curar
 
@@ -151,7 +109,8 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
            }
         } else {
            # if the config entry didn't exist in old config: append a new line
-           lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+           lappend vi_commands "A\n$elem  $newVal"
+           lappend vi_commands [format "%c" 27]
         }
      }   
    } else {
@@ -180,9 +139,6 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     expected_result {additional_expected_result "___ABCDEFG___"} 
 #     {additional_expected_result2 "___ABCDEFG___"} 
 #     {additional_expected_result3 "___ABCDEFG___"}} 
-#     {qconf_error_msg "___ABCDEFG___"}
-#     {raise_error  1} }
-#
 #
 #  FUNCTION
 #     Start an application which and send special command strings to it. Wait
@@ -201,17 +157,13 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     {additional_expected_result "___ABCDEFG___"}  - additional expected_result 
 #     {additional_expected_result2 "___ABCDEFG___"} - additional expected_result 
 #     {additional_expected_result3 "___ABCDEFG___"} - additional expected_result
-#     {qconf_error_msg "___ABCDEFG___"}            - qconf error message 
-#     {raise_error  1}                                - do add_proc_error in case of errors
-#
 #
 #  RESULT
 #     0 when the output of the application contents the expected_result 
-#    -1 on timeout or other error
+#    -1 on timeout
 #    -2 on additional_expected_result
 #    -3 on additional_expected_result2 
 #    -4 on additional_expected_result3
-#    -9 on chekcpointing qconf_error_msg
 #
 #  EXAMPLE
 #     ??? 
@@ -225,345 +177,254 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"} {qconf_error_msg "___ABCDEFG___"} {raise_error 1}} {
+proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
-   set expected_result              [string trimright $expected_result "*"]
-   set additional_expected_result   [string trimright $additional_expected_result "*"]
-   set additional_expected_result2  [string trimright $additional_expected_result2 "*"]
-   set additional_expected_result3  [string trimright $additional_expected_result3 "*"]
-   set additional_expected_result4  [string trimright $additional_expected_result4 "*"]
-   set qconf_error_msg  [string trimright $qconf_error_msg "*"]
 
-   # we want to start a certain configured vi, and have no backslash continued lines
-   set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
-   set result -100
-
-   puts $CHECK_OUTPUT "using EDITOR=$vi_env(EDITOR)"
-   # start program (e.g. qconf)
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $prog_binary "$prog_args" 0 vi_env]
-   set sp_id [ lindex $id 1 ] 
-   if {$CHECK_DEBUG_LEVEL != 0} {
-      log_user 1
-      set send_speed .001
-   } else {
-      log_user 0 ;# set to 1 if you wanna see vi responding
-      set send_speed .0005
-   }
-   set send_slow "1 $send_speed" 
-
-   debug_puts "now waiting for vi start ..."
-   set error 0
-
-   set timeout 10
-   expect {
-      -i $sp_id full_buffer {
-         add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         set error 1
-      }
-
-      -i $sp_id eof {
-         set error 1
-         add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-      }
-
-      -i $sp_id timeout {  
-         set error 1
-         add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
-      }
-      -i $sp_id  "_start_mark_*\n" {
-         puts $CHECK_OUTPUT "starting now!"
-      }
-   }
-
-   set timeout 10
-   expect {
-      -i $sp_id full_buffer {
-         set error 1
-         add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-      }
-
-      -i $sp_id eof {
-         set error 1
-         add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-      }
-
-
-      -i $sp_id "$qconf_error_msg" {
-         set error $raise_error
-         add_proc_error "handle_vi_edit"  -1 "$qconf_error_msg" $raise_error
-         set result -9
-         close_spawn_process $id
-         return -9
-      }
-
-      -i $sp_id timeout {  
-         set error 1
-         add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
-      }
-      -i $sp_id  {[A-Za-z]*} {
-         puts $CHECK_OUTPUT "vi should run now ..."
-      }
-   }
-
-   
-   
-   set timeout 1
-   # wait for vi to startup and go to first line
-   send -s -i $sp_id -- "G"
-   set timeout_count 0
-
-   expect {
-      -i $sp_id full_buffer {
-         add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         set error 1
-      }
-
-      -i $sp_id eof {
-         add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-         set error 1
-      }
-
-      -i $sp_id timeout {  
-         send -s -i $sp_id -- "G"
-         incr timeout_count 1
-         if { $timeout_count > 60 } {
-            add_proc_error "handle_vi_edit" -2 "timeout - vi doesn't respond"
-            set error 1
-         } else {
-            exp_continue
-         }
-      }
-
-      -i $sp_id  "100%" {
-      }
-      
-      -i $sp_id  "o lines in buffer" {
-      }
-      
-      -i $sp_id  "erminal too wide" {
-         add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
-         set error 1
-      }
-   }
-
-   # we had an error during vi startup - close connection and return with error
-   if {$error} {
-      # maybe vi is up and we can exit
-      send -s -i $sp_id -- "[format "%c" 27]" ;# ESC
-      send -s -i $sp_id -- ":q!\n"            ;# exit without saving
-      set timeout 10
-      expect {
-         -i $sp_id full_buffer {
-            add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-         }
-
-         -i $sp_id eof {
-            add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-         }
-
-         -i $sp_id "_exit_status*\n" {
-            puts $CHECK_OUTPUT "vi terminated! (1)"
-            exp_continue
-         }
-
-      }
-
-
-      # close the connection - hopefully vi and/or the called command will exit
-      close_spawn_process $id
-
-      return -1
-   }
-
-   # second waiting: Part I:
-   # =======================
-   # set start time (qconf must take at least one second, because he
-   # does a file stat to find out if the file was changed, so the
-   # file edit process must take at least 1 second
-
-   set start_time [clock clicks -milliseconds]
-   # send the vi commands
-   set timeout 1
-   set timeout_count 0
-   set sent_vi_commands 0
-   send -s -i $sp_id -- "1G"      ;# go to first line
-
-
-   foreach elem $vi_command_sequence {
-      incr sent_vi_commands 1
-      set com_length [ string length $elem ]
-      set com_sent 0
-      send -s -i $sp_id -- "$elem"
-      send -s -i $sp_id -- "G"
-      set timeout 1
-      expect {
-         -i $sp_id full_buffer {
-            add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-            set error 1
-         }
-
-         -i $sp_id eof {
-            add_proc_error "handle_vi_edit" -1 "unexpected end of file"
-            set error 1
-         }
-         -i $sp_id "*Hit return*" {
-            send -s -i $sp_id -- "\n"
-            puts $CHECK_OUTPUT "found Hit return"
-            exp_continue
-         }
-         -i $sp_id timeout {
-            incr timeout_count 1
-            if { $timeout_count > 15 } {
-               set error 2
-            } else {
-               send -s -i $sp_id -- "G"
-               exp_continue
-            }
-         }
-
-         -i $sp_id "100%" {
-         }
-      }
-      flush $CHECK_OUTPUT
-      if { $error != 0 } {
+   debug_puts "handle_vi_edit(1)"
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $expected_result]] > 0 } {
+      set help1 [string last "*" $expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set expected_result [string range $expected_result 0 $help2 ]
+      } else {
          break
       }
    }
 
-   if { $error == 0 } {
-      
-      # second waiting: Part II:
-      # =======================
-      # wait for file time older one second
-      # we give an extra waiting time of 100 ms to be sure that
-      # the vi takes at least 1 second
-      set end_time [expr [clock clicks -milliseconds] + 1100 ]
-      while { [clock clicks -milliseconds] < $end_time } { 
-         after 100
-      }
-      set run_time [expr [clock clicks -milliseconds] - $start_time]
+   debug_puts "handle_vi_edit(2)"
 
-      # save and exit
-      if { $CHECK_DEBUG_LEVEL != 0 } {
-         after 3000
-      }
-      send -s -i $sp_id -- ":wq\n"
-      set timeout 60
 
-      # we just execute and don't wait for a certain result:
-      # wait for exit status of command
-      if { [string compare "" $expected_result ] == 0 } {
-         expect {
-            -i $sp_id full_buffer {
-               add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               set result -1
-            }
-            -i $sp_id timeout {
-               add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
-               set result -1
-            }
-            -i $sp_id eof {
-               add_proc_error "handle_vi_edit" -1 "eof error:$expect_out(buffer)"
-               set result -1
-            }
-            -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated! (2) (rt=$run_time)"
-               set result 0
-               exp_continue
-            }
-
-        }
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result]] > 0 } {
+      set help1 [string last "*" $additional_expected_result]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result [string range $additional_expected_result 0 $help2 ]
       } else {
-         # we do expect certain result(s)
-         # wait for result and/or exit status
-
-         expect {
-            -i $sp_id full_buffer {
-               add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               set result -1
-            }
-            -i $sp_id timeout {
-               set result -1
-               add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
-            }
-            -i $sp_id eof {
-               add_proc_error "handle_vi_edit" -1 "eof error:$expect_out(buffer)"
-               set result -1
-            }
-            -i $sp_id  "$expected_result" {
-               set result 0
-               exp_continue
-            }
-            -i $sp_id  "$additional_expected_result" {
-               set result -2
-               exp_continue
-            }
-            -i $sp_id  "$additional_expected_result2" {
-               set result -3
-               exp_continue
-            }
-            -i $sp_id  "$additional_expected_result3" {
-               set result -4
-               exp_continue
-            }
-            -i $sp_id  "$additional_expected_result4" {
-               set result -5
-               exp_continue
-            }
-            
-            -i $sp_id "_exit_status_" {
-               puts $CHECK_OUTPUT "vi terminated! (3)  (rt=$run_time)"
-               if { $result == -100 } {
-                  set pos [string last "\n" $expect_out(buffer)]
-                  incr pos -2
-                  set buffer_message [string range $expect_out(buffer) 0 $pos ]
-                  set pos [string last "\n" $buffer_message]
-                  incr pos 1
-                  set buffer_message [string range $buffer_message $pos end] 
-
-                  set message_txt ""
-                  append message_txt "expect_out(buffer)=\"$expect_out(buffer)\""
-                  append message_txt "expect out buffer is:\n"
-                  append message_txt "   \"$buffer_message\"\n"
-                  append message_txt "this doesn't match any given expression:\n"
-                  append message_txt "   \"$expected_result\"\n"
-                  append message_txt "   \"$additional_expected_result\"\n"
-                  append message_txt "   \"$additional_expected_result2\"\n"
-                  append message_txt "   \"$additional_expected_result3\"\n"
-                  append message_txt "   \"$additional_expected_result4\"\n"
-                  add_proc_error "handle_vi_edit" -1 $message_txt
-               }
-            }
-         }
-      }
-      debug_puts "sent_vi_commands = $sent_vi_commands"
-      if { $sent_vi_commands == 0 } {
-         puts $CHECK_OUTPUT "INFO: there was NO vi command sent!"
-      }
-   } else {
-      if { $error == 2 } {
-         send -s -i $sp_id -- "[format "%c" 27]" ;# ESC
-         send -s -i $sp_id -- "[format "%c" 27]" ;# ESC
-         send -s -i $sp_id -- ":q!\n"            ;# exit without saving
-         set timeout 10
-         expect -i $sp_id "_exit_status_"
-         puts $CHECK_OUTPUT "vi terminated! (4)"
-         close_spawn_process $id
-         set error_text ""
-         append error_text "got timeout while sending vi commands\n"
-         append error_text "please make sure that no single vi command sequence\n"
-         append error_text "leaves the vi in \"insert mode\" !!!"
-         add_proc_error "handle_vi_edit" -1 $error_text
-         return -1
+         break
       }
    }
 
-   close_spawn_process $id
+   debug_puts "handle_vi_edit(3)"
 
-   # output what we have just done
-   log_user 1
-   foreach elem $vi_command_sequence {
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result2]] > 0 } {
+      set help1 [string last "*" $additional_expected_result2]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result2 [string range $additional_expected_result2 0 $help2 ]
+      } else {
+         break
+      }
+   }
+
+   debug_puts "handle_vi_edit(4)"
+
+   # removing * at end of expected_result (expect has problems with it)
+   while { [set help2 [string length $additional_expected_result3]] > 0 } {
+      set help1 [string last "*" $additional_expected_result3]
+      incr help2 -1
+      if { $help1 == $help2 } {
+         incr help2 -1 
+         set additional_expected_result3 [string range $additional_expected_result3 0 $help2 ]
+      } else {
+         break
+      }
+   }
+
+
+
+   debug_puts "handle_vi_edit(5)"
+
+   set env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
+   set env(SGE_SINGLE_LINE) 1
+   set result -100
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$prog_binary" "$prog_args"]
+      set sp_id [ lindex $id 1 ] 
+#      debug_puts "starting -> $prog_binary $prog_args"
+      if {$CHECK_DEBUG_LEVEL != 0} {
+         log_user 1
+         set send_speed .05
+         set send_line_speed 1
+      } else {
+         log_user 0 ;# reisi
+         set send_speed .0001
+         set send_line_speed .0001
+      }
+
+      set stop_line_wait 0
+      set timeout 10
+
+      send -i $sp_id "G"
+      set timeout_count 0
+      set start_time 0
+      while { $stop_line_wait == 0 } {
+         expect {
+            -i $sp_id full_buffer {
+               add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               set stop_line_wait 1
+            }
+            -i $sp_id "100%" {
+               set start_time [ timestamp ] 
+#               debug_puts "handle_vi_edit(5.1)"
+#               debug_puts "start_time = $start_time"
+               send -i $sp_id "1G"      ;# go to first line
+               set stop_line_wait 1
+            }
+
+            -i $sp_id timeout {  
+#               set stream [open /tmp/cr.txt "a"]              ;# debug
+#               puts -nonewline $stream $expect_out(buffer)  ;# debug $expect_out(buffer) 0,string 
+#               close $stream                                  ;# debug
+               send -i $sp_id "G"
+               incr timeout_count 1
+               if { $timeout_count > 60 } {
+                  add_proc_error "handle_vi_edit" -2 "vi doesn't respond! perhaps this is a \"terminal to wide\" error?"
+                  set stop_line_wait 1
+               }
+            }
+            
+            -i $sp_id "o lines in buffer" {
+               set start_time [ timestamp ] 
+               set stop_line_wait 1
+            }
+            
+            -i $sp_id "erminal too wide" {
+               add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
+               set stop_line_wait 1
+            }
+            -i $sp_id eof {
+               add_proc_error "handle_vi_edit" -1 "unexpected end of file"
+               set stop_line_wait 1
+            }
+         }
+      }
+      set timeout 0
+      set send_slow "1 $send_speed" 
+
+      foreach elem $vi_command_sequence {
+         set com_length [ string length $elem ]
+         set com_sent 0
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
+         if { $CHECK_DEBUG_LEVEL != 0 } {
+            send -s -i $sp_id -- "$elem"
+         } else {
+            send -i $sp_id -- "$elem"
+         }
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
+
+         after 25
+      }
+
+      # wait for file time older one second
+      while { [ timestamp ] <= $start_time } { 
+         after 100
+      }
+      send -i $sp_id ":wq\n"
+      set timeout 30
+      set doStop 0
+#      debug_puts "handle_vi_edit(6)"
+
+      if { [string compare "" $expected_result ] == 0 } {
+         set doStop 0
+         while { $doStop == 0 } {
+            expect {
+               -i $sp_id full_buffer {
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               }
+               -i $sp_id timeout {
+                  set result -1
+                  set doStop 0
+               }
+               -i $sp_id eof {
+                  set doStop 1
+                  set result 0
+               }
+               -i $sp_id "_exit_status_" {
+                  set doStop 1
+                  set result 0
+               }
+           }
+        }
+      } else {
+         while { $doStop == 0 } {
+            expect {
+               -i $sp_id full_buffer {
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               }
+               -i $sp_id -- "$expected_result" {
+                  set result 0
+               }
+               -i $sp_id -- "$additional_expected_result" {
+                  set result -2
+               }
+               -i $sp_id -- "$additional_expected_result2" {
+                  set result -3
+               }
+               -i $sp_id -- "$additional_expected_result3" {
+                  set result -4
+               }
+               -i $sp_id timeout {
+                  set result -1
+                  set doStop 1
+                  add_proc_error "handle_vi_edit" -1 "timeout error:$expect_out(buffer)"
+               }
+               -i $sp_id eof {
+                  if { $result == -100 } {
+                  }
+                  set doStop 1
+               }
+               -i $sp_id "_exit_status_" {
+                  if { $result == -100 } {
+        
+                     set pos [string last "\n" $expect_out(buffer)]
+                     incr pos -2
+                     set buffer_message [string range $expect_out(buffer) 0 $pos ]
+                     set pos [string last "\n" $buffer_message]
+                     incr pos 1
+                     set buffer_message [string range $buffer_message $pos end] 
+
+                     set message_txt ""
+                     append message_txt "expect_out(buffer)=\"$expect_out(buffer)\""
+                     append message_txt "expect out buffer is:\n"
+                     append message_txt "   \"$buffer_message\"\n"
+                     append message_txt "this doesn't match any given expression:\n"
+                     append message_txt "   \"$expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result\"\n"
+                     append message_txt "   \"$additional_expected_result2\"\n"
+                     append message_txt "   \"$additional_expected_result3\"\n"
+                     add_proc_error "handle_vi_edit" -1 $message_txt
+                  }
+                  set doStop 1
+               }
+               -i $sp_id default {
+                  add_proc_error "handle_vi_edit" -1  "unexpected output $expect_out(buffer)"
+                  set doStop 1
+               }
+           }
+        }
+     }
+  close_spawn_process $id
+
+  # debug output start
+
+  log_user 1
+  foreach elem $vi_command_sequence {
       debug_puts "sequence: $elem"
       if { [string first "A" $elem ] != 0 } {
          set index1 [ string first "." $elem ]
@@ -600,109 +461,26 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                if { [string compare $elem [format "%c" 27]] == 0 } {
                   puts $CHECK_OUTPUT "--> vi command: \"ESC\""    
                } else {
-                  set output [replace_string $elem "\n" "\\n"]
-                  puts $CHECK_OUTPUT "--> vi command: \"$output\"" 
+                  puts $CHECK_OUTPUT "--> vi command: \"$elem\"" 
                }
             }
          }
       } else {
          set add_output [ string range $elem 2 end ]
-         puts $CHECK_OUTPUT "--> adding [string trim $add_output "[format "%c" 27] ^"]"
+         puts $CHECK_OUTPUT "--> adding $add_output"
       }
-   }
-   flush $CHECK_OUTPUT
+  }
+  flush stdout
+  # debug output end
+  if {$CHECK_DEBUG_LEVEL != 0} {
+    log_user 1
+  } else {
+    log_user 0 
+  }
 
-   # debug output end
-   if {$CHECK_DEBUG_LEVEL != 0} {
-      log_user 1
-   } else {
-      log_user 0 
-   }
-
-   return $result
+  return $result
 }
 
-
-#****** control_procedures/get_uid() *******************************************
-#  NAME
-#     get_uid() -- get user id for user on host
-#
-#  SYNOPSIS
-#     get_uid { user host } 
-#
-#  FUNCTION
-#     The function returns the user id of user $user on host $host
-#
-#  INPUTS
-#     user - username
-#     host - hostname 
-#
-#  RESULT
-#     string containing user id
-#
-#  SEE ALSO
-#     control_procedures/get_uid()
-#     control_procedures/get_gid()
-#*******************************************************************************
-proc get_uid { user host } {
-   global CHECK_OUTPUT
-   set my_uid -1
-
-   set output [start_remote_prog $host $user id ""]
-   set output [string trim [split $output " =()"]]
-   set found_uid 0
-   foreach line $output {
-      if { $found_uid == 1 } {
-         set my_uid $line
-         break
-      }
-      if { $line == "uid" } {
-         set found_uid 1
-      }
-   }
-   return $my_uid
-}
-
-
-#****** control_procedures/get_gid() *******************************************
-#  NAME
-#     get_gid() -- get group id for user on host
-#
-#  SYNOPSIS
-#     get_gid { user host } 
-#
-#  FUNCTION
-#     The function returns the group id of user $user on host $host
-#
-#  INPUTS
-#     user - username 
-#     host - hostname 
-#
-#  RESULT
-#     string containing group id
-#
-#  SEE ALSO
-#     control_procedures/get_uid()
-#     control_procedures/get_gid()
-#*******************************************************************************
-proc get_gid { user host } {
-   global CHECK_OUTPUT
-   set my_gid -1
-
-   set output [start_remote_prog $host $user id ""]
-   set output [string trim [split $output " =()"]]
-   set found_gid 0
-   foreach line $output {
-      if { $found_gid == 1 } {
-         set my_gid $line
-         break
-      }
-      if { $line == "gid" } {
-         set found_gid 1
-      }
-   }
-   return $my_gid
-}
 
 
 
@@ -876,6 +654,7 @@ proc ps_grep { forwhat { host "local" } { variable ps_info } } {
 #     control_procedures/ps_grep
 #*******************************
 proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_run 0} } {
+
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    upvar $variable psinfo
 
@@ -918,9 +697,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
      
-      "darwin" -
-      "darwin-ppc" -
-      "darwin-x86" {
+      "darwin" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
@@ -1036,8 +813,6 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       "glinux" -
       "lx24-x86" -
       "lx26-x86" - 
-      "lx24-ia64" -
-      "lx26-ia64" - 
       "lx24-amd64" - 
       "lx26-amd64" { 
          set myenvironment(COLUMNS) "500"
@@ -1404,9 +1179,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global ts_config CHECK_ARCH CHECK_OUTPUT env
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
 
-  set catch_return [ catch { exec "$ts_config(product_root)/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
      set result [split $result "."]
      set newname [lindex $result 0]
@@ -1446,37 +1221,33 @@ proc gethostname {} {
 #****** control_procedures/resolve_arch() ******
 # 
 #  NAME
-#     resolve_arch -- resolve architecture of host
+#     resolve_arch -- ??? 
 #
 #  SYNOPSIS
-#     resolve_arch { {node "none"} {use_source_arch 0}} 
+#     resolve_arch { { host "none" } } 
 #
 #  FUNCTION
-#     Resolves the architecture of a given host.
-#     Tries to call $SGE_ROOT/util/arch - if this script doesn't exist yet,
-#     calls <source_dir>/dist/util/arch.
-#
-#     If the parameter use_source_arch is set, the function will always
-#     call <source_dir>/dist/util/arch.
-#     This is for example required when building new binaries:
-#     The installed arch script might return a different architecture than
-#     the source arch script, for example when a cluster was installed from
-#     our Grid Engine packages, where we deliver lx-24-* packages also for
-#     Linux kernel 2.6 machines (lx26-*), or hp11 packages for hp11-64.
+#     ??? 
 #
 #  INPUTS
-#     {node "none"}     - return architecture of this host.
-#                         If "none", resolve architecture of CHECK_HOST.
-#     {use_source_arch} - use <source_dir>/dist/util/arch script.
+#     { host "none" } - ??? 
 #
 #  RESULT
-#     Architecture string (e.g. "sol-amd64"), "unknown" in case of errors.
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
 #
 #  SEE ALSO
-#     control_procedures/resolve_arch_clear_cache()
+#     ???/???
 #*******************************
-proc resolve_arch {{node "none"} {use_source_arch 0}} {
-   global ts_config
+proc resolve_arch { { node "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
   global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
@@ -1496,24 +1267,15 @@ proc resolve_arch {{node "none"} {use_source_arch 0}} {
      return "unknown"
   }
 
-   if {$host == "none"} {
-      set host $CHECK_HOST
-   }
+ 
 
-   # if $SGE_ROOT/util/arch is available, use this one,
-   # otherwise use the one from the distribution
-   if {[file exists "$ts_config(product_root)/util/arch"] && ! $use_source_arch} {
-      set arch_script "$ts_config(product_root)/util/arch"
-   } else {
-      set arch_script "$CHECK_SOURCE_DIR/dist/util/arch"
-   }
-
-   # try to retrieve architecture
-   set result [start_remote_prog $host $CHECK_USER $arch_script "" prg_exit_state 60 0 "" 1 0 0]
-   if {$prg_exit_state != 0} {
-      return "unknown"
-   }
-
+  if { [ string compare $host "none" ] == 0 || 
+       [ string compare $host $CHECK_HOST ] == 0 } {
+      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
+  } else {
+      debug_puts "resolve_arch: resolving architecture for host $host"
+      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
+  }
   set result [string trim $result]
   set result2 [split $result "\n"]
   if { [ llength $result2 ] > 1 } {
@@ -1549,34 +1311,6 @@ proc resolve_arch {{node "none"} {use_source_arch 0}} {
   }
 
   return $arch_cache($host)
-}
-
-#****** control_procedures/resolve_arch_clear_cache() **************************
-#  NAME
-#     resolve_arch_clear_cache() -- clear cache of resolve_arch()
-#
-#  SYNOPSIS
-#     resolve_arch_clear_cache { } 
-#
-#  FUNCTION
-#     The function resolve_arch caches its results.
-#     resolve_arch_clear_cache will clear this cache to force reresolving
-#     the architecture strings.
-#
-#     This is for example done after compiling and installing binaries.
-#     In this case the newly installed arch script might return other 
-#     architecture names than the previously installed one.
-#
-#  SEE ALSO
-#     control_procedures/resolve_arch()
-#*******************************************************************************
-proc resolve_arch_clear_cache {} {
-   global CHECK_OUTPUT arch_cache
-
-   puts $CHECK_OUTPUT "clearing architecture cache used by resolve_arch"
-   if {[info exists arch_cache]} {
-      unset arch_cache
-   }
 }
 
 #                                                             max. column:     |
@@ -1633,22 +1367,6 @@ proc resolve_build_arch { host } {
   return $build_arch_cache($host)
 }
 
-proc resolve_build_arch_installed_libs {host} {
-   set build_arch [resolve_build_arch $host]
-
-   # we need special handling for some architectures, e.g. HP11 64bit
-   switch $build_arch {
-      "HP1164" {
-         set arch [resolve_arch $host]
-         if {$arch == "hp11"} {
-            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries"
-            set build_arch "HP11"
-         }
-      }
-   }
-
-   return $build_arch
-}
 
 #                                                             max. column:     |
 #****** control_procedures/resolve_host() ******
@@ -1814,7 +1532,7 @@ proc get_pid_from_file { pid_file } {
             }
          }
       }   
-      after 500
+      after 2000
    }
 
    return $pid
@@ -1862,204 +1580,4 @@ proc parse_cpu_time {s_cpu} {
    }
 
    return $cpu
-}
-
-#****** control_procedures/operational_lock() **********************************
-#  NAME
-#     operational_lock() -- sychronizes an operation using file-based locks
-#
-#  SYNOPSIS
-#     operational_lock { operation_name lock_location }
-#
-#  FUNCTION
-#     This function uses a file lock in the lock_location directory to prevent
-#     multiple instances of a test suite operation from occuring simultaneously.
-#     No two test suite instances maybe be within a proetcted section of code
-#     on the same machine with the same operation_name and the same
-#     lock_location.  If the lock_location is not specified, it defaults to
-#     /tmp.
-#     This algorithm is based on "ls -crt | head -1" returning the oldest lock
-#     file.  In this way, clients receive the lock on a first come, first served
-#     basis.
-#
-#  INPUTS
-#     operation_name - the name of the lock
-#     host           - the name of the host to lock. Defaults to $CHECK_HOST
-#     lock_location  - where to store the locks.  Defaults to /tmp.
-#
-#  RESULTS
-#     -1   - error
-#      0   - success
-#
-#  SEE ALSO
-#     control_procedures/operational_lock()
-#
-#*******************************************************************************
-proc operational_lock {operation_name {host ""} {lock_location "/tmp"}} {
-   global CHECK_USER CHECK_HOST CHECK_OUTPUT
-
-   if {$host == ""} {
-      set host $CHECK_HOST
-   }
-
-   set pid [pid]
-   set lock "$lock_location/lock.$operation_name.$pid"
-   set all_locks "$lock_location/lock.$operation_name.*"
-
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "touch" $lock result]
-
-   if {$result != 0} {
-      add_proc_error "operational_lock" -1 "Could not update lock: $output"
-      return -1
-   }
-
-   # ls -crt behaves approximately the same on all platforms.  On HP-UX and
-   # IRIX, symbolic links are not included in the sorting, but since we're not
-   # using symbolic links, it shouldn't be an issue.
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "ls" "-crt $all_locks | head -1" result]
-
-   if {$result != 0} {
-      add_proc_error "operational_lock" -1 "Could not read locks: $output"
-      return -1
-   }
-
-   while {[string trim $output] != $lock} {
-      puts $CHECK_OUTPUT "Waiting for lock"
-      after 1000
-
-      set output [start_remote_prog $CHECK_HOST $CHECK_USER "ls" "-crt $all_locks | head -1" result]
-
-      if {$result != 0} {
-         add_proc_error "operational_lock" -1 "Could not read locks: $output"
-         return -1
-      }
-   }
-
-   return 0
-}
-
-#****** control_procedures/operational_unlock() ********************************
-#  NAME
-#     operational_unlock() -- sychronizes an operation using file-based locks
-#
-#  SYNOPSIS
-#     operational_unlock { operation_name lock_location }
-#
-#  FUNCTION
-#     This function removes the file lock in the lock_location directory
-#     allowing other processes access to the specified operation.  If the
-#     lock_location is not specified, it defaults to /tmp.
-#
-#  INPUTS
-#     operation_name - the name of the lock
-#     host           - the name of the host to lock. Defaults to $CHECK_HOST
-#     lock_location  - where to store the locks.  Defaults to /tmp.
-#
-#  RESULTS
-#     -1   - error
-#      0   - success
-#
-#  SEE ALSO
-#     control_procedures/operational_lock()
-#
-#*******************************************************************************
-proc operational_unlock {operation_name {host ""} {lock_location "/tmp"}} {
-   global CHECK_USER CHECK_HOST
-
-   if {$host == ""} {
-      set host $CHECK_HOST
-   }
-
-   set pid [pid]
-   set lock "$lock_location/lock.$operation_name.$pid"
-
-   set output [start_remote_prog $CHECK_HOST $CHECK_USER "rm" $lock result]
-
-   if {$result != 0} {
-      add_proc_error "operational_lock" -1 "Could not release lock: $output"
-      return -1
-   }
-
-   return 0
-}
-
-
-#****** control_procedures/scale_timeout() *************************************
-#  NAME
-#     scale_timeout() -- scale timeout values
-#
-#  SYNOPSIS
-#     scale_timeout { timeout {does_computation 1} {does_spooling 1} 
-#     {process_invocations 1} } 
-#
-#  FUNCTION
-#     Scales a given timeout value depending on setup.
-#     The given timeout is increased, when
-#        o we use classic spooling
-#        o we spool on a NFS filesystem
-#        o we run with code coverage
-#
-#  INPUTS
-#     timeout                 - base timeout
-#     {does_computation 1}    - is the tested
-#     {does_spooling 1}       - ??? 
-#     {process_invocations 1} - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************************************************************
-proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invocations 1}} {
-   global ts_config
-   global CHECK_COVERAGE
-
-   set ret $timeout
-
-   # respect spooling influence
-   if {$does_spooling} {
-      # if we use a RPC server, assume 100% slower spooling
-      if {$ts_config(bdb_server) != "none"} {
-         set ret [expr $ret * 2.0]
-      } else {
-         # classic spooling is slower than BDB, assume 100% slower spooling
-         if {$ts_config(spooling_method) == "classic"} {
-            set ret [expr $ret * 2.0]
-            set spool_dir [get_qmaster_spool_dir]
-         } else {
-            set spool_dir [get_bdb_spooldir]
-         }
-
-         # spooling on NFS mounted filesystem, assume 50% slower spooling
-         set fstype [get_fstype $spool_dir]
-         if {[string match "nfs*" $spool_dir]} {
-            set ret [expr $ret * 1.5]
-         }
-      }
-   }
-
-   # respect code coverage influence
-   # we assume that the process will run slightly slower
-   if {$CHECK_COVERAGE != "none"} {
-      # computation will be slower - add 10% overhead
-      if {$does_computation} {
-         set ret [expr $ret * 1.10]
-      }
-
-      # coverage profiles are written per process invocation
-      # add 1 second overhead per process invocation
-      set ret [expr $ret + $process_invocations * 1]
-   }
-
-   return [format "%.0f" [expr ceil($ret)]]
 }

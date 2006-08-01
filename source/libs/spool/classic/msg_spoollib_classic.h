@@ -64,21 +64,15 @@
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61027, _("qmaster is unable to spool "SFN" "SFQ))
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
 
-/*
- * libs/spool/read_write_manop.c
- */
-#define MSG_FILE_ERRORCLOSEINGX_S   _MESSAGE(61031, _("error closeing "SFN))
-#define MSG_FILE_ERROROPENINGX_S    _MESSAGE(61032, _("error opening "SFN))
+#define MSG_FILE_ERROROPENINGX_S                      _MESSAGE(61032, _("error opening "SFN))
 
-/*
- * libs/spool/read_write_job.c
- */
 #define MSG_CONFIG_FAILEDREMOVINGSCRIPT_SS            _MESSAGE(61033, _("failed removing script of bad jobfile (reason: "SFN"): please delete "SFQ" manually"))
 #define MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S       _MESSAGE(61034, _("removed script of bad jobfile "SFQ))
 #define MSG_CONFIG_READINGINX_S                       _MESSAGE(61035, _("Reading in "SFN"."))
 #define MSG_CONFIG_NODIRECTORY_S                      _MESSAGE(61036, _(SFQ" is no directory - skipping the entry"))
 #define MSG_CONFIG_CANTFINDSCRIPTFILE_U               _MESSAGE(61037, _("can't find script file for job " sge_U32CFormat " - deleting"))
 #define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U _MESSAGE(61038, _("job file \""sge_U32CFormat"\" has wrong file name - deleting"))
+#define MSG_FILE_ERRORCLOSINGX_S                      _MESSAGE(61056, _("error closing "SFN))
 #define MSG_CONFIG_JOBSPOOLINGLONGDELAY_UUI           _MESSAGE(61135, _("spooling job "sge_U32CFormat"."sge_U32CFormat" took %d seconds")) 
 
 /*
@@ -140,13 +134,18 @@
  */
 #define MSG_USERSET_NOUSERETELEMENT    _MESSAGE(61140, _("no userset element"))
 
-/*
- * read_write_limit_rule.c
- */
-#define MSG_LIMITRULE_RULESETNOTFINISHED     _MESSAGE(61150, _("limitation rule set not finished by \"}\""))
-#define MSG_LIMITRULE_RULESETNOTSTARTED      _MESSAGE(61151, _("limitation rule set not started by \"{\""))
-#define MSG_LIMITRULE_ERRORPARSINGRULELIMIT  _MESSAGE(61152, _("error parsing limitation rule limit"))
-#define MSG_LIMITRULE_UNKNOWNCONFIGURATIONATTRIBUTE   _MESSAGE(61153, _("unknown configuration attribute "SFQ))
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
  * all classic spooling code

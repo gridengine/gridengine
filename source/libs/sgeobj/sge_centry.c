@@ -49,13 +49,14 @@
 #include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
-#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
 #include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER
+
+lList *Master_CEntry_List = NULL;
 
 /* EB: ADOC: add commets */
 
@@ -384,6 +385,7 @@ centry_create(lList **answer_list, const char *name)
 *     lList **answer_list               - AN_Type 
 *     const lList *master_cqueue_list   - CQ_Type 
 *     const lList *master_exechost_list - EH_Type 
+*     const lList *master_sconf_list    - SC_Type 
 *
 *  RESULT
 *     bool - true or false
@@ -517,7 +519,7 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
 lList **
 centry_list_get_master_list(void)
 {
-   return object_type_get_master_list(SGE_TYPE_CENTRY);
+   return &Master_CEntry_List;
 }
 
 /****** sgeobj/centry/centry_list_locate() ************************************
@@ -1278,10 +1280,12 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
    if (ep != NULL) {
+      DTRACE;
       for_each (attr, lGetList(ep, nm)) {
          const char *name = lGetString(attr, CE_name);
-         lListElem *centry = centry_list_locate(*object_type_get_master_list(SGE_TYPE_CENTRY), name);
+         lListElem *centry = centry_list_locate(Master_CEntry_List, name);
 
+         DTRACE;
          if (centry == NULL) {
             ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 
                    name != NULL ? name : "<noname>"));
@@ -1294,7 +1298,9 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
             /*
              * Replace shortcuts by the fullname silently 
              */
-            if (strcmp(fullname, name) != 0) {
+            DTRACE;
+            if (fullname != NULL && name != NULL &&
+                strcmp(fullname, name) != 0) {
                lSetString(attr, CE_name, fullname);
             }
          }

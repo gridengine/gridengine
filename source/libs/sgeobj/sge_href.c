@@ -714,12 +714,12 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *  SYNOPSIS
 *     bool 
 *     href_list_resolve_hostnames(lList *this_list, 
-*                                 lList **answer_list, bool ignore_errors
+*                                 lList **answer_list, bool ignore_errors) 
 *
 *  FUNCTION
 *     Resolve hostnames contained in 'this_list'. Depending on the
 *     'ignore_errors' parameter the function will either fail if a
-*     host is not resolvable or this will be ignored.
+*     host is not resolvable or this will be ignored. 
 *
 *  INPUTS
 *     lList *this_list    - HR_Type list 
@@ -732,12 +732,13 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *        false - Error
 *******************************************************************************/
 bool 
-href_list_resolve_hostnames(lList *this_list, lList **answer_list,
-                            bool ignore_errors) 
+href_list_resolve_hostnames(lList *this_list, 
+                            lList **answer_list, bool ignore_errors) 
 {
    bool ret = true;
 
    DENTER(HOSTREF_LAYER, "href_list_resolve_hostnames");
+
    if (this_list != NULL) {
       lListElem *href = NULL;
 
@@ -755,14 +756,14 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list,
                   INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
                   answer_list_add(answer_list, SGE_EVENT, 
                                   STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+
                   ret = false;
                }
             }
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/href/href_list_append_to_dstring() *****************************

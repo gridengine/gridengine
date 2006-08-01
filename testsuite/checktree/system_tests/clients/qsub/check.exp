@@ -52,10 +52,13 @@ set HUGE_SCRIPT_PATTERN  "generated huge script file for testsuite, 100 characte
 
 # setup check's highest level
 
-set check_highest_level 0
+set check_highest_level [llength $ts_config(unique_arch_nodes)]
+incr check_highest_level -1
 
 # set description for each level
-set check_description(0)  "check every qsub option"
+for {set i 0} { $i <= $check_highest_level } { incr i} {
+   set check_description($i)  "check every option for execution on host [lindex $ts_config(unique_arch_nodes) $i]" 
+}
 
 set check_init_level_procedure "qsub_init_level"
 set check_name         "qsub"
@@ -72,7 +75,7 @@ lappend check_functions "check_submit"
 lappend check_functions "qsub_starter_method"
 lappend check_functions "check_start_time"  
 lappend check_functions "check_hold"           
-#lappend check_functions "check_deadline" 
+# lappend check_functions "check_deadline" 
 lappend check_functions "check_option_ac"
 lappend check_functions "check_option_A"
 lappend check_functions "check_option_clear"
@@ -114,9 +117,9 @@ lappend check_functions "check_huge_script"
 lappend check_functions "check_qhold_jobname"
 
 # test specific globals:
-global CHECK_JOB_OUTPUT_DIR job_output_dir
+global job_output_dir
 global actual_host
-set job_output_dir $CHECK_JOB_OUTPUT_DIR
+set job_output_dir "."
 
 
 #                                                             max. column:     |
@@ -149,76 +152,29 @@ set job_output_dir $CHECK_JOB_OUTPUT_DIR
 #     ???/???
 #*******************************
 proc qsub_init_level {} {
-   global CHECK_ACT_LEVEL
+   global ts_config
+   global actual_host CHECK_ACT_LEVEL
+   global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
+   global HUGE_SCRIPT_MAX_SIZE 
 
-   if {$CHECK_ACT_LEVEL == 0} {
+   set num_queues [llength $ts_config(unique_arch_nodes)] 
+
+   # setup huge_script test
+   set steps_per_queue [expr $HUGE_SCRIPT_STEPS / $num_queues]
+   if {[expr $steps_per_queue * $num_queues] < $HUGE_SCRIPT_STEPS} {
+      incr steps_per_queue
+   } 
+   set steps_total [expr $steps_per_queue * $num_queues]
+   set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
+   
+   if { $CHECK_ACT_LEVEL < $num_queues } {
+      set actual_host [lindex $ts_config(unique_arch_nodes) $CHECK_ACT_LEVEL] 
       return 0
-   }
+   } 
 
    return -1 
 }
 
-proc qsub_submit_check {jobargs expect_submit_error {user ""} {host ""} {output_files 2}} {
-   global ts_config CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global job_output_dir
-
-   # default user is the first "foreign" user!
-   if {$user == ""} {
-      set user $CHECK_FIRST_FOREIGN_SYSTEM_USER
-   }
-
-   # default submit host is the master host
-   if {$host == ""} {
-      set host $ts_config(master_host)
-   }
-
-   # if we expect a submit error, submit_job shall not do error checking
-   set submit_error_check 1
-   if {$expect_submit_error} {
-      set submit_error_check 0
-   }
-
-   # submit job and evaluate result
-   set job_id [submit_job $jobargs $submit_error_check 60 $host $user]
-   if {$expect_submit_error} {
-      if {$job_id > 0} {
-         add_proc_error "qsub_submit_check" -1 "submission of job \"$jobargs\" as user $user should have failed"
-         delete_job $job_id
-      }
-      # are done
-      return 0
-   } else {
-      if {$job_id < 0} {
-         add_proc_error "qsub_submit_check" -1 "submission of job \"$jobargs\" as user $user failed:\nerror $job_id"
-         return 0
-      }
-   }
-
-   # wait for job accounting record and expect 1 or 2 ($output_files) output/error files
-   set time [expr ([timestamp] + 300)] 
-   while {[timestamp] < $time}  {
-      sleep 1
-      set back [was_job_running $job_id 0] 
-      if {$back != -1} {
-         set back [del_job_files $job_id $job_output_dir $output_files]
-         if {$back != $output_files} {
-            add_proc_error "qsub_submit_check" -1 "job $job_id (\"$jobargs\") did not produce error and output file"
-            return 0
-         } else {
-            # job ran through successfully
-            return $job_id
-         }
-      }
-   }
-
-   # if we get here, we didn't find an accounting record within reasonable time
-   add_proc_error "qsub_submit_check" -1 "timeout waiting for job $job_id (\"$jobargs\")"
-
-   # cleanup
-   delete_job $job_id
-   del_job_files $job_id $job_output_dir 2
-}
- 
 #                                                             max. column:     |
 #****** qsub/check_submit() ******
 # 
@@ -249,23 +205,40 @@ proc qsub_submit_check {jobargs expect_submit_error {user ""} {host ""} {output_
 #     ???/???
 #*******************************
 proc check_submit {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global check_errno job_output_dir actual_host
+   global check_errstr CHECK_OUTPUT
+
 
    # first clean up output directory:  
    setup_output_directory
-   
-   # submit from every architecture
-   foreach host $ts_config(unique_arch_nodes) {
-      qsub_submit_check $default_args 0 "" $host
-   }
+  
 
-   # submit to every architecture
    foreach host $ts_config(unique_arch_nodes) {
-      qsub_submit_check "-l h=${host} $default_args" 0
-   }
+     set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+     set result [submit_job $jobargs 1 30 $host] 
 
-   set_error 0 "ok"
+     if {$result < 0} {
+        set_error -1 "could not submit job from host $host to host $actual_host"
+     }
+     # Wait job to run and for end of job
+     set back [ wait_for_jobstart $result "leeper" 300 ]
+     if { $back != 0 } {
+        set_error -1 "job $result doesn't start"
+     }
+
+     # Wait for end of job
+     set back [ wait_for_jobend $result "leeper" 300 ]
+     if { $back != 0 } {
+        set_error -1 "job $result doesn't stop"
+     } 
+     set back [ del_job_files $result $job_output_dir 2 ]
+     if { $back != 2 } {
+        set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+     }
+   }
+   set_error 0 "no errors"
 }
 
 
@@ -274,91 +247,76 @@ proc qsub_starter_method {} {
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
    global actual_host
-   global default_q_args default_h_args
 
-   set ok 1
 
    # first clean up output directory:  
    setup_output_directory
   
+
    # set starter method
    set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-   mod_queue all.q "" change_array
 
-   set jobargs $default_q_args
+   # JG: TODO: it would suffice to set the attribute only for the specific test host,
+   # but set_queue seems to do the reset incorrectly, resulting in stuff like
+   set_queue all.q "" change_array
+
+   set jobargs "-q [get_queue_instance all.q ${actual_host}] -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
    set result [submit_job $jobargs] 
 
    if {$result < 0} {
-      add_proc_error "qsub_starter_method" -1 "could not submit job: $jobargs"
-      set ok 0
+      set_error -1 "could not submit job: $jobargs"
    }
-
    # Wait job to run and for end of job
-   if {$ok} {
-      set back [ wait_for_jobstart $result "leeper" 300 ]
-      if { $back != 0 } {
-         add_proc_error "qsub_starter_method" -1 "job $result doesn't start"
-         set ok 0
-      }
+   set back [ wait_for_jobstart $result "leeper" 300 ]
+   if { $back != 0 } {
+      set_error -1 "job $result doesn't start"
    }
 
    # Wait for end of job
-   if {$ok} {
-      set back [ wait_for_jobend $result "leeper" 300 ]
-      if { $back != 0 } {
-         add_proc_error "qsub_starter_method" -1 "job $result doesn't stop"
-         set ok 0
-      }
+   set back [ wait_for_jobend $result "leeper" 300 ]
+   if { $back != 0 } {
+      set_error -1 "job $result doesn't stop"
    }
 
    # check output file, should contain output from starter method
-   if {$ok} {
-      sleep 2
-      set outfilename "$job_output_dir/Sleeper.o$result"
-      puts $CHECK_OUTPUT "checking output file $outfilename"
+   after 2000
+   set outfilename "$job_output_dir/Sleeper.o$result"
+   puts $CHECK_OUTPUT "checking output file $outfilename"
 
-      if { ![file exists $outfilename]} {
-         add_proc_error "qsub_starter_method" -1 "output file for job $result on host $actual_host does not exist"
-         set ok 0
-      } else {
-         set f [open $outfilename r]
-         set files_ok 0
-         set num_lines 0
-         while {[gets $f line] >= 0} {
-          incr num_lines
-          puts $CHECK_OUTPUT $line
-           if {[string compare $line "starter method started"] == 0} {
-             set files_ok 1
-             break
-           }
-         }
-         if {$num_lines == 0} {
-            add_proc_error "qsub_starter_method" -1 "error reading from job output file for job $result on host $actual_host"
-            set ok 0
-         } else {
-           if {$files_ok == 0} {
-               add_proc_error "qsub_starter_method" -1 "starter method was not started for job $result on host $actual_host"
-               set ok 0
-           }
-         }  
-         close $f
+   if { ![file exists $outfilename]} {
+    add_proc_error "qsub_starter_method" -1 "output file for job $result on host $actual_host does not exist"
+   } else {
+      set f [open $outfilename r]
+      set ok 0
+      set num_lines 0
+      while {[gets $f line] >= 0} {
+       incr num_lines
+       puts $CHECK_OUTPUT $line
+        if {[string compare $line "starter method started"] == 0} {
+          set ok 1
+          break
+        }
       }
-   }
+      if {$num_lines == 0} {
+        add_proc_error "qsub_starter_method" -1 "error reading from job output file for job $result on host $actual_host"
+      } else {
+        if {$ok == 0} {
+          add_proc_error "qsub_starter_method" -1 "starter method was not started for job $result on host $actual_host"
+        }
+      }  
+      close $f
+   }   
 
-   # cleanup
-   set back [del_job_files $result $job_output_dir 2]
+   set back [ del_job_files $result $job_output_dir 2 ]
    if { $back != 2 } {
-      add_proc_error "qsub_starter_method" -1 "job $result did not produce error and output file\njobargs: $jobargs"
-   }
-   if {! $ok && $result > 0} {
-      delete_job $result
+      set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
    }
 
    # unset starter method
    set change_array(starter_method) "none"
-   mod_queue all.q "" change_array
+   set_queue all.q "" change_array
 
-   set_error 0 "ok"
+   set_error 0 "no errors"
 }
 
 
@@ -393,35 +351,32 @@ proc qsub_starter_method {} {
 #     ???/???
 #*******************************
 proc setup_output_directory {} {
-   global CHECK_OUTPUT job_output_dir 
+
+   global CHECK_JOB_OUTPUT_DIR CHECK_OUTPUT job_output_dir 
    
-   if {[string length $job_output_dir] < 5} {
-      add_proc_error "setup_output_directory" -1 "job output dir path must at least have 5 characters\ngot \"$job_output_dir\""
-      return -1
-   }
-  
-   # create directory, if it does not yet exist
-   # if it already exists, delete all files in it
    set files_deleted 0
-   if {![file isdirectory "$job_output_dir"]} {
+   set job_output_dir "$CHECK_JOB_OUTPUT_DIR"
+   if {[file isdirectory "$job_output_dir"] != 1} {
       file mkdir "$job_output_dir"
       puts $CHECK_OUTPUT "new output directory \"$job_output_dir\" generated!"
    } else {
-      puts $CHECK_OUTPUT "deleting all files in output directory \"$job_output_dir\"!"
-      set files [ glob -nocomplain $job_output_dir/* ]
-      foreach elem $files {
-         puts $CHECK_OUTPUT $elem
-         if { [ file isfile $elem ] == 1 } {
-            puts $CHECK_OUTPUT "deleting file $elem"
-            incr files_deleted
-            delete_file $elem
-         } 
+      if { [ string length $job_output_dir  ] > 5 } {
+         puts $CHECK_OUTPUT "deleting all files in output directory \"$job_output_dir\"!"
+         set files [ glob -nocomplain $job_output_dir/* ]
+         foreach elem $files {
+             puts $CHECK_OUTPUT $elem
+             if { [ file isfile $elem ] == 1 } {
+                puts $CHECK_OUTPUT "deleting file $elem"
+                incr files_deleted
+                delete_file $elem
+             } 
+         }
+      } else {
+         set_error -1 "job output dir path must at least have 5 characters"
       }
    }
-
-   # make sure every user may create output files here
-   file attributes $job_output_dir -permissions "a+rwx"
-   
+   sleep 3
+   set_error "0" "deleted $files_deleted files"
    return $files_deleted 
 }
 
@@ -456,67 +411,50 @@ proc setup_output_directory {} {
 #*******************************
 proc check_hold {} {
    global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
-   global default_args
-
-   set ok 1
-
+ 
    # first clean up output directory:  
    setup_output_directory
 
-   set jobargs "-h $default_args"
+   set jobargs "-h -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set result [submit_job $jobargs] 
-   if {$result < 0} {
-      add_proc_error "check_hold" -1 "error submitting job \"$jobargs\"\nerror $result"
-      set_error 0 ok ; return
-   }
  
    # wait for job to get in pending state 
-   if {[wait_for_jobpending $result "leeper" 200] != 0} {
-      add_proc_error "check_hold" -1 "job $result is not in pending state"
-      set ok 0
+   if { [wait_for_jobpending $result "leeper" 200] != 0 } {
+      set_error -1 "job $result is not in pending state"
+      return
    } 
+
+   puts $CHECK_OUTPUT "check_hold - set hold for job $result, job should not start"
 
    # job should not run within the next 2 minutes 
-   if {$ok} {
-      puts $CHECK_OUTPUT "check_hold - set hold for job $result, job should not start"
-      if { [wait_for_jobstart $result "leeper" 120 0] != -1 } {
-         add_proc_error "check_hold" -1 "job $result should not run until yet"
-         set ok 0
-      } 
+   if { [wait_for_jobstart $result "leeper" 120 0] != -1 } {
+      set_error -1 "job $result should not run until yet"
+      return 
    } 
 
-   # release job
-   if {$ok} {
-      puts $CHECK_OUTPUT "check_hold - ok now we release the job"
-      release_job $result
-   }
+   # release job 
+   puts $CHECK_OUTPUT "check_hold - ok now we release the job"
+   release_job $result
 
    # wait for job to start
-   if {$ok} {
-      if {[wait_for_jobstart $result "leeper" 300] == -1} {
-         add_proc_error "check_hold" -1 "check_hold - job $result doesn't start"
-         set ok 0
-      }
-   }
+   if { [wait_for_jobstart $result "leeper" 300] == -1 } {
+      set_error -1 "check_hold - job $result doesn't start"
+      return 
+   } 
  
    # wait for end of job
-   if {$ok} {
-      if {[wait_for_jobend $result "leeper" 300] == -1} {
-         add_proc_error "check_hold" -1 "check_hold - job $result doesn't stop"
-         set ok 0
-      }
-   }
+   if { [wait_for_jobend $result "leeper" 300] == -1 } {
+      set_error -1 "check_hold - job $result doesn't stop"
+      return 
+   } 
    
-   # cleanup
+
    set back [ del_job_files $result $job_output_dir 2 ] 
    if { $back != 2 } {
-      add_proc_error "check_hold" -1 "job $result did not produce error and output file\njobargs: $jobargs"
-   }
-   if {! $ok && $result > 0} {
-      delete_job $result
+      set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
    }
 
-   set_error 0 "ok"
+   set_error 0 "no errors"
 }
 #                                                             max. column:     |
 #****** qsub/check_start_time() ******
@@ -597,63 +535,45 @@ proc check_start_time {} {
       set seconds [string index $seconds 1 ]
    }     
 
-   set ok 1
-
    # submit job
    set result [submit_job $jobargs] 
-   if {$result < 0} {
-      add_proc_error "check_start_time" -1 "error submitting job \"$jobargs\"\nerror $result"
-      set_error 0 ok ; return
-   }
 
    # wait for job to get in pending state
-   if {[wait_for_jobpending $result "leeper" 200] != 0} {
-      add_proc_error "check_start_time" -1 "job $result is not in pending state"
-      set ok 0
+   if { [wait_for_jobpending $result "leeper" 200] != 0 } {
+      set_error -1 "job $result is not in pending state"
    } 
    
    # calulate time until job should run
-   if {$ok} {
-      set pend_time [expr ( [timestamp] - $time )]
-      set wait_time [expr ( 120 - $pend_time - $seconds - 10 ) ] ;# 10 seconds are ok  
-      puts $CHECK_OUTPUT "check_start_time - job should not start the next $wait_time seconds"
-      set time [timestamp]
-      if { [wait_for_jobstart $result "leeper" $wait_time 0] != -1 } {
-         puts $CHECK_OUTPUT "check_start_time - time left: [expr ($wait_time - [expr ( [timestamp] - $time)] ) ]"
-         add_proc_error "check_start_time" -1 "check_start_time - job $result should not run until yet"
-         set ok 0
-      }
-   }
+   set pend_time [expr ( [timestamp] - $time )]
+   set wait_time [expr ( 120 - $pend_time - $seconds - 10 ) ] ;# 10 seconds are ok  
+   puts $CHECK_OUTPUT "check_start_time - job should not start the next $wait_time seconds"
+   set time [timestamp]
+   if { [wait_for_jobstart $result "leeper" $wait_time 0] != -1 } {
+      puts $CHECK_OUTPUT "check_start_time - time left: [expr ($wait_time - [expr ( [timestamp] - $time)] ) ]"
+      set_error -1 "check_start_time - job $result should not run until yet"
+      return
+   } 
 
 
    # wait for job to start
-   if {$ok} {
-      puts $CHECK_OUTPUT "check_start_time - ok now the job should start"
-      if { [wait_for_jobstart $result "leeper" 300] == -1 } {
-         add_proc_error "check_start_time" -1 "check_start_time - job $result doesn't start"
-         set ok 0
-      }
-   }
+   puts $CHECK_OUTPUT "check_start_time - ok now the job should start"
+   if { [wait_for_jobstart $result "leeper" 300] == -1 } {
+      set_error -1 "check_start_time - job $result doesn't start"
+      return 
+   } 
  
    # wait for end of job
-   if {$ok} {
-      if { [wait_for_jobend $result "leeper" 300] == -1 } {
-         add_proc_error "check_start_time" -1 "check_start_time - job $result doesn't stop"
-         set ok 0
-      }
-   }
+   if { [wait_for_jobend $result "leeper" 300] == -1 } {
+      set_error -1 "check_start_time - job $result doesn't stop"
+      return 
+   } 
   
 
-   # cleanup
    set back [ del_job_files $result $job_output_dir 2 ] 
    if { $back != 2 } {
-      add_proc_error "check_start_time" -1 "job $result did not produce error and output file\njobargs: $jobargs"
+      set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
    }
-   if {! $ok && $result > 0} {
-      delete_job $result
-   }
-
-   set_error 0 "ok"
+   set_error 0 "no errors"
 }
 
 
@@ -688,16 +608,16 @@ proc check_start_time {} {
 #     ???/???
 #*******************************
 proc check_deadline {} {
-   global ts_config
-   global CHECK_PRODUCT_ROOT CHECK_ARCH
-   global check_errno actual_host
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+   global check_errno CHECK_JOB_OUTPUT_DIR actual_host
    global check_errstr CHECK_OUTPUT job_output_dir
 
-   if {$ts_config(product_type) == "sge"} {
-      add_proc_error "check_deadline" -3 "not possible in sge system"
-      set_error 0 ok
+   if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+      set_error 0 "not possible for sge system"   
       return
    }
+
+   set job_output_dir "$CHECK_JOB_OUTPUT_DIR"
 
    # Wait for zero deadlinejobs
    set nub_deadline_jobs 1
@@ -759,7 +679,7 @@ proc check_deadline {} {
    # start job
    set result [submit_job $jobargs] 
    if {$result < 0 } {
-      add_proc_error "check_deadline" -1 "could not submit job"
+      set_error -1 "could not submit job"
       return
    }
 
@@ -815,12 +735,11 @@ proc check_deadline {} {
       }     
       
       if { ([was_job_running $result 0] != -1) } {
-         set_error 0 ok
+         set_error 0 "check_deadline - no errors"
          set back [ del_job_files $result $job_output_dir 2 ] 
          if { $back != 2 } {
-            add_proc_error "check_deadline" -1 "job $result did not produce error and output file"
+            set_error -1 "job $result did not produce error and output file"
          }
-         set_error 0 ok
          return
       }       
  
@@ -846,20 +765,17 @@ proc check_deadline {} {
       } else {
          # use dlcontr in case of 6.0
          if { ($run_time < 90) && ($job_tickets > [expr ($max_tickets / 2) ]  ) } {
-            add_proc_error "check_deadline" -1 "check_deadline - job shouldn't have so much tickets until yet"
-            set_error 0 ok
+            set_error -1 "check_deadline - job shouldn't have so much tickets until yet"
             return 
          }
          
          if { ($run_time > 200) && ($job_tickets < [expr ($max_tickets / 2) ] ) } {
-            add_proc_error "check_deadline" -1 "check_deadline - job should have more tickets at this point of time"  
-            set_error 0 ok
+            set_error -1 "check_deadline - job should have more tickets at this point of time"  
             return 
          }
 
          if { ($run_time > 400) && ($job_tickets < $max_tickets ) } {
-            add_proc_error "check_deadline" -1 "check_deadline - job should have all tickets now"
-            set_error 0 ok
+            set_error -1 "check_deadline - job should have all tickets now"
             return   
          }
           
@@ -872,10 +788,8 @@ proc check_deadline {} {
    }
    set back [ del_job_files $result $job_output_dir  2 ] 
    if { $back != 2 } {
-      add_proc_error "check_deadline" -1 "job $result did not produce error and output file"
+      set_error -1 "job $result did not produce error and output file"
    }
-
-   set_error 0 ok
 }
 
 #                                                             max. column:     |
@@ -908,76 +822,41 @@ proc check_deadline {} {
 #     ???/???
 #*******************************
 proc check_option_ac {} {
-   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
-   global CHECK_USER CHECK_HOST CHECK_ARCH actual_host
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-ac myvar1=\"test 1\" -ac myvar2='test 2'"
-   # We use a special job script which contains context variable settings
-   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_ACTUAL_TEST_PATH/sleeper.sh 60" 
+   set option "-ac myvar=test -ac myvar2=test2"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
    if { $result < 0 } {
-      add_proc_error "check_option_ac" -1 "error submitting job \"$jobargs\"\nerror $result"
-      set_error 0 ok ; return
+      set_error -1 "could not submit job"
+      return
    }
 
-   set qstatoutput [start_sge_bin "qstat" "-j $result"]
+   set time [ expr ( [timestamp] + 300  ) ] 
 
-   if {$prg_exit_state != 0} {
-      add_proc_error "check_option_ac" -1 "error executing qstat -j $result"
-      set_error 0 ok ; return
-   }
-
-   if {[regexp {context:([^\r\n]+\r?\n)} $qstatoutput match vars] != 1} {
-      add_proc_error "check_option_ac" -1 "qsub $option - qsub error: context variables were not set"
-      set_error 0 ok ; return
-   }
-
-   puts $CHECK_OUTPUT "context variables: $vars"
-
-   if {[regexp {[ \t,]myvar1=test 1[,\r\n]} $vars match] != 1} {
-      add_proc_error "check_option_ac" -1 "qsub $option - qsub error: command-line context variable was not set"
-      set_error 0 ok ; return
-   } elseif {[regexp {[ \t,]myvar2=test 2[,\r\n]} $vars match] != 1} {
-      add_proc_error "check_option_ac" -1 "qsub $option - qsub error: command-line context variable was not set"
-      set_error 0 ok ; return
-   } elseif {[regexp {[ \t,]myvar3=test 3[,\r\n]} $vars match] != 1} {
-      add_proc_error "check_option_ac" -1 "qsub $option - qsub error: inline context variable was not set"
-      set_error 0 ok ; return
-   } elseif {[regexp {[ \t,]myvar4=test 4[,\r\n]} $vars match] != 1} {
-      if {[regexp {[ \t,]myvar4='test 4'[,\r\n]} $vars match] == 1} {
-         add_proc_error "check_option_ac" -3 "qsub $option - qsub error: issue IZ1850 encountered"
-         set_error 0 ok ; return
-      }
-
-      add_proc_error "check_option_ac" -1 "qsub $option - qsub error: inline context variable was not set"
-      set_error 0 ok ; return
-   }
-
-   set time [expr ([timestamp] + 300)] 
-
-   while {[timestamp] < $time}  {
+   while { [timestamp] < $time }  {
       sleep 1
       set back [was_job_running $result 0] 
       if {$back != -1} {
          set back [ del_job_files $result $job_output_dir 2 ] 
          if { $back != 2 } {
-            add_proc_error "check_option_ac" -1 "job $result did not produce error and output file\njobargs: $jobargs"
-            set_error 0 ok ; return
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
          } else {
-            set_error 0 ok
+            set_error 0 "no error"
             return
          }
       }
    }
  
-   add_proc_error "check_option_ac" -1 "timeout while waiting for job accounting"
-   set_error 0 ok
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 
@@ -1011,25 +890,41 @@ proc check_option_ac {} {
 #     ???/???
 #*******************************
 proc check_option_A {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-A blahblah"
-   set jobargs "$option $default_args"
- 
-   set job_id [qsub_submit_check $jobargs 0]
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   if {$job_id > 0} {
-      get_qacct $job_id
-      if {$qacct_info(account) != "blahblah"} {
-         add_proc_error -1 "check_option_A" "account string requested with -A option missing in accounting record"
-      }
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 
@@ -1063,24 +958,41 @@ proc check_option_A {} {
 #     ???/???
 #*******************************
 proc check_option_clear {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   set option "-A blahblah -clear"
-   set jobargs "$option $default_args"
-   set job_id [qsub_submit_check $jobargs 0]
+   set option "-clear"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   if {$job_id > 0} {
-      get_qacct $job_id
-      if {$qacct_info(account) == "blahblah"} {
-         add_proc_error -1 "check_option_A" "-clear option didn't earlier -A option"
-      }
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 
@@ -1115,17 +1027,41 @@ proc check_option_clear {} {
 #     ???/???
 #*******************************
 proc check_option_c {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-c n"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1158,17 +1094,41 @@ proc check_option_c {} {
 #     ???/???
 #*******************************
 proc check_option_ckpt {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-ckpt testcheckpointobject"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1201,17 +1161,41 @@ proc check_option_ckpt {} {
 #     ???/???
 #*******************************
 proc check_option_cwd {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-cwd"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1244,17 +1228,41 @@ proc check_option_cwd {} {
 #     ???/???
 #*******************************
 proc check_option_C {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-C TESTPREFIX"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1287,17 +1295,41 @@ proc check_option_C {} {
 #     ???/???
 #*******************************
 proc check_option_dc {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-dc myvar,myvar2"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1330,16 +1362,41 @@ proc check_option_dc {} {
 #     ???/???
 #*******************************
 proc check_option_e {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   # we submit just with default args - they contain the -e option
-   qsub_submit_check $default_args 0
+   set option ""
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1372,17 +1429,41 @@ proc check_option_e {} {
 #     ???/???
 #*******************************
 proc check_option_hard {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hard"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1415,17 +1496,23 @@ proc check_option_hard {} {
 #     ???/???
 #*******************************
 proc check_option_help {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-help"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 1
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0] 
 
-   set_error 0 ok
+   if { $result != -2 } {
+      set_error -1 "no help output on -help option"
+   }  
+ 
+ 
+   set_error 0 "no error"
 }
 
 #                                                             max. column:     |
@@ -1458,24 +1545,41 @@ proc check_option_help {} {
 #     ???/???
 #*******************************
 proc check_option_hold_jid {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-hold_jid 1,2,3"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   # test with job names
-   if {$ts_config(gridengine_version) >= 60} {
-      set option "-hold_jid foo,bar"
-      set jobargs "$option $default_args"
-      qsub_submit_check $jobargs 0
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1508,17 +1612,41 @@ proc check_option_hold_jid {} {
 #     ???/???
 #*******************************
 proc check_option_j_y {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j y"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0 "" "" 1
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 1 ] 
+         if { $back != 1 } {
+            set_error -1 "job $result did not merge error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1551,17 +1679,41 @@ proc check_option_j_y {} {
 #     ???/???
 #*******************************
 proc check_option_j_n {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-j n"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1594,17 +1746,41 @@ proc check_option_j_n {} {
 #     ???/???
 #*******************************
 proc check_option_l {} {
-   global ts_config CHECK_OUTPUT
-   global default_h_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   # the default_h_args contain -l h=...
-   set jobargs "$default_h_args"
-   qsub_submit_check $jobargs 0
+   set option "-l h=${actual_host}"
+   set jobargs "$option -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1637,17 +1813,41 @@ proc check_option_l {} {
 #     ???/???
 #*******************************
 proc check_option_m {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-m beas"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1680,17 +1880,41 @@ proc check_option_m {} {
 #     ???/???
 #*******************************
 proc check_option_notify {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-notify"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1723,14 +1947,14 @@ proc check_option_notify {} {
 #     ???/???
 #*******************************
 proc check_option_now_yes {} {
-   global ts_config CHECK_OUTPUT
-   global default_args job_output_dir
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now yes"
-   set jobargs "$option $default_args"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
 
    for { set i 1} { $i <= 3 } { incr i 1 } {
@@ -1801,17 +2025,41 @@ proc check_option_now_yes {} {
 #     ???/???
 #*******************************
 proc check_option_now_no {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-now no"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1844,14 +2092,11 @@ proc check_option_now_no {} {
 #     ???/???
 #*******************************
 proc check_option_M {} {
-   global ts_config CHECK_OUTPUT 
-   global CHECK_REPORT_EMAIL_TO
-   global default_args
 
-   # can't run the check, if no email address has been configured
-   if {[string compare $CHECK_REPORT_EMAIL_TO "none"] == 0} {
-      add_proc_error "check_option_M" -3 "no email address configured - can't run qsub -M check"  
-      set_error 0 ok
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_USER CHECK_REPORT_EMAIL_TO
+
+   if { [ string compare $CHECK_REPORT_EMAIL_TO "none" ] == 0 } {
+      add_proc_error "check_option_M" -1 "no email address specified"  
       return
    }
 
@@ -1859,10 +2104,34 @@ proc check_option_M {} {
    setup_output_directory
 
    set option "-M $CHECK_REPORT_EMAIL_TO"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1895,24 +2164,41 @@ proc check_option_M {} {
 #     ???/???
 #*******************************
 proc check_option_N {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-N leeper_job"
-   set jobargs "$option $default_args"
-   set job_id [qsub_submit_check $jobargs 0]
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   if {$job_id > 0} {
-      get_qacct $job_id
-      if {$qacct_info(jobname) != "leeper_job"} {
-         add_proc_error -1 "check_option_N" "job name specified by -N switch missing in accounting record"
-      }
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 
@@ -1946,16 +2232,41 @@ proc check_option_N {} {
 #     ???/???
 #*******************************
 proc check_option_o {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   # the default args already contain a -o option
-   qsub_submit_check $default_args 0
+   set option ""
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -1988,24 +2299,41 @@ proc check_option_o {} {
 #     ???/???
 #*******************************
 proc check_option_P {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-P mytestproject"
-   set jobargs "$option $default_args"
-   set job_id [qsub_submit_check $jobargs 0]
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   if {$job_id > 0} {
-      get_qacct $job_id
-      if {$qacct_info(project) != "mytestproject"} {
-         add_proc_error -1 "check_option_P" "project specified by -P switch missing in accounting record"
-      }
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2038,38 +2366,41 @@ proc check_option_P {} {
 #     ???/???
 #*******************************
 proc check_option_p {} {
-   global ts_config CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   # test -p option:
-   # any user must be allowed to submit with negative -p
-   # only superuser may submit with positive -p
-   
-   # set as admin user: complete range
-   qsub_submit_check "-p -1023 $default_args" 0 $CHECK_USER ;# IZ 2055
-   qsub_submit_check "-p 0 $default_args" 0 $CHECK_USER
-   qsub_submit_check "-p 1024 $default_args" 0 $CHECK_USER
+   set option "-p 1024"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   qsub_submit_check "-p -1024 $default_args" 1 $CHECK_USER
-   qsub_submit_check "-p 1025 $default_args" 1 $CHECK_USER
-
-   # test as non admin user: only negative .. 0
-   qsub_submit_check "-p -100 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER ;# IZ 2055
-   qsub_submit_check "-p 0 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
-
-   # Up to version 6.0, a positive priority from non operators will be silently 
-   # set to 0 by qmaster.
-   # Beginning with version 6.5, we will reject such jobs.
-   if {$ts_config(gridengine_version) <= 60} {
-      qsub_submit_check "-p 1 $default_args" 0 $CHECK_FIRST_FOREIGN_SYSTEM_USER
-   } else {
-      qsub_submit_check "-p 1 $default_args" 1 $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2102,27 +2433,41 @@ proc check_option_p {} {
 #     ???/???
 #*******************************
 proc check_option_pe {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-pe mytestpe 1-3"
-   set jobargs "$option $default_args"
-   set job_id [qsub_submit_check $jobargs 0 "" "" 4]
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   if {$job_id > 0} {
-      get_qacct $job_id
-      if {$qacct_info(granted_pe) != "mytestpe"} {
-         add_proc_error -1 "check_option_pe" "granted_pe missing in accounting record"
-      }
-      if {$qacct_info(slots) != 3} {
-         add_proc_error -1 "check_option_pe" "slots incorrect in accounting record"
-      }
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 4 ] 
+         if { $back != 4 } {
+            set_error -1 "job $result did not produce 4 files\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2155,26 +2500,41 @@ proc check_option_pe {} {
 #     ???/???
 #*******************************
 proc check_option_q {} {
-   global ts_config CHECK_OUTPUT
-   global default_args actual_host
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
-   # submission to a queue instance (5.3 queue)
-   set qinstance [get_queue_instance "all.q" $actual_host]
-   qsub_submit_check "-q $qinstance $default_args" 0
+   set option "-q [get_queue_instance all.q ${actual_host}]"
+   set jobargs "$option -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   # beginning with 6.0, we can also submit
-   #  - to a cluster queue
-   #  - to all queue instances on a host
-   #  - to all qinstances of a hostgroup
-   if {$ts_config(gridengine_version) >= 60} {
-      qsub_submit_check "-q *@${actual_host} $default_args" 0
-      qsub_submit_check "-q *@@allhosts $default_args" 0
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
    }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2207,17 +2567,41 @@ proc check_option_q {} {
 #     ???/???
 #*******************************
 proc check_option_r_y {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r y"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2250,17 +2634,41 @@ proc check_option_r_y {} {
 #     ???/???
 #*******************************
 proc check_option_r_n {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-r n"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2293,17 +2701,41 @@ proc check_option_r_n {} {
 #     ???/???
 #*******************************
 proc check_option_sc {} {
-   global ts_config
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-sc myvar=test3"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2336,17 +2768,41 @@ proc check_option_sc {} {
 #     ???/???
 #*******************************
 proc check_option_soft {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-soft"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2379,17 +2835,41 @@ proc check_option_soft {} {
 #     ???/???
 #*******************************
 proc check_option_S {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-S /bin/sh"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2422,25 +2902,59 @@ proc check_option_S {} {
 #     ???/???
 #*******************************
 proc check_option_t {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT
+   global job_output_dir actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-t 1-2:-1"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 1
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
 
+   set result [submit_job $jobargs 0]
+   if { $result != -20 } {
+      add_proc_error "check_option_t" -1 "Negative step in range should produce an error"
+   } 
+ 
    set option "-t 1-2:xx"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 1
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+
+   set result [submit_job $jobargs 0]
+
+   if { $result != -21 } {
+      add_proc_error "check_option_t" -1 "Invalid range spec should produce an error"
+   }
 
    set option "-t 2-8:2"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0 "" "" 8
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
   
-   set_error 0 ok
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
+
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 8 ] 
+         if { $back != 8 } {
+            set_error -1 "job $result did not produce 8 files\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2473,23 +2987,24 @@ proc check_option_t {} {
 #     ???/???
 #*******************************
 proc check_option_verify {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-verify"
-   set jobargs "$option $default_args"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
    if { $result != -4 } {
-      add_proc_error "check_option_verify" -1 "no verify output on -verify command"
+      set_error -1 "no verify output on -verify command"
+      return
    }
 
-   set_error 0 ok
+   set_error 0 "no error"
 }
 
 #                                                             max. column:     |
@@ -2522,17 +3037,41 @@ proc check_option_verify {} {
 #     ???/???
 #*******************************
 proc check_option_V {} {
-   global ts_config CHECK_OUTPUT
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-V"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   set_error 0 ok
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
+
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2565,20 +3104,41 @@ proc check_option_V {} {
 #     ???/???
 #*******************************
 proc check_option_w {} {
+
    global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host
-   global default_args
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-w e"
-   set jobargs "$option $default_args"
-   qsub_submit_check $jobargs 0
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+  
+   set result [submit_job $jobargs 0]  
+   puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
-   # negative test: -w e -q <invalid queue> has to be rejected
-   qsub_submit_check "-q blah $jobargs" 1
+   if { $result < 0 } {
+      set_error -1 "could not submit job"
+      return
+   }
 
-   set_error 0 ok
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   while { [timestamp] < $time }  {
+      sleep 1
+      set back [was_job_running $result 0] 
+      if {$back != -1} {
+         set back [ del_job_files $result $job_output_dir 2 ] 
+         if { $back != 2 } {
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
+         }
+      }
+   }
+ 
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -2611,22 +3171,23 @@ proc check_option_w {} {
 #     ???/???
 #*******************************
 proc check_option_@ {} {
-   global ts_config CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
-   global default_args
+
+   global job_output_dir CHECK_PRODUCT_ROOT CHECK_OUTPUT actual_host CHECK_ACTUAL_TEST_PATH
 
    # first clean up output directory:  
    setup_output_directory
 
    set option "-@ $CHECK_ACTUAL_TEST_PATH/commandfile.txt"
-   set jobargs "$option $default_args"
+   set jobargs "$option -l h=${actual_host} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
   
    set result [submit_job $jobargs 0]  
 
    if { $result != -2 } {
-      add_proc_error "check_option_@" -1 "no help output on -@ commandfile option"
+      set_error -1 "no help output on -@ commandfile option"
+      return
    }
 
-   set_error 0 ok
+   set_error 0 "no errors"
 }
 
 #                                                             max. column:     |
@@ -2662,7 +3223,6 @@ proc check_huge_script {} {
    global job_output_dir CHECK_PROTOCOL_DIR CHECK_ACT_LEVEL
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH actual_host
    global HUGE_SCRIPT_SIZE HUGE_SCRIPT_PATTERN HUGE_SCRIPT_TIMEOUT steps_per_queue size_interval
-   global default_q_args default_h_args
 
    # first clean up output directory:  
    setup_output_directory
@@ -2704,9 +3264,8 @@ proc check_huge_script {} {
       set submit_start [clock seconds]
       set result [submit_job $jobargs 1 $HUGE_SCRIPT_TIMEOUT]
       if { $result < 0 } {
-         add_proc_error "check_huge_script" -1 "could not submit job (result: $result)"
+         set_error -1 "could not submit job (result: $result)"
          close $protocol
-         set_error 0 ok
          return
       } else {
          set sched_start [clock seconds]
@@ -2726,9 +3285,8 @@ proc check_huge_script {} {
    
       set back [ del_job_files $result $job_output_dir 2 ] 
       if { $back != 2 } {
-         add_proc_error "check_huge_script" -1 "job $result did not produce error and output file\njobargs: $jobargs"
+         set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
          close $protocol
-         set_error 0 ok
          return
       }
    }
@@ -2740,43 +3298,12 @@ proc check_huge_script {} {
 proc qsub_setup {} {
    global ts_config
    global stored_configuration
-   global job_output_dir actual_host default_args default_q_args default_h_args
-   global HUGE_SCRIPT_SIZE HUGE_SCRIPT_TIMEOUT HUGE_SCRIPT_STEPS steps_per_queue size_interval
-   global HUGE_SCRIPT_MAX_SIZE
 
-   # set some global variables
-   set num_queues [llength $ts_config(unique_arch_nodes)] 
-
-   # run host specific tests on a random host
-   set idx [expr [timestamp] % $num_queues]
-   set actual_host [lindex $ts_config(unique_arch_nodes) $idx] 
-
-   # set default jobargs
-   set default_args "-o $job_output_dir -e $job_output_dir $ts_config(product_root)/examples/jobs/sleeper.sh 5"
-   set qinstance [get_queue_instance "all.q" $actual_host]
-   set default_q_args "-q $qinstance $default_args"
-   set default_h_args "-l h=${actual_host} $default_args"
-
-   # setup huge_script test
-   set steps_per_queue [expr $HUGE_SCRIPT_STEPS / $num_queues]
-   if {[expr $steps_per_queue * $num_queues] < $HUGE_SCRIPT_STEPS} {
-      incr steps_per_queue
-   }
-   set steps_total [expr $steps_per_queue * $num_queues]
-   set size_interval [expr $HUGE_SCRIPT_MAX_SIZE / $steps_total]
-
-   # backup global config
-   get_config stored_configuration
-  
-   # set config for fast scheduling / fast writing of accounting record
-   if {$ts_config(gridengine_version) == 53} {
+   if { $ts_config(gridengine_version) == 53 } {
+      get_config stored_configuration
       set my_config(schedd_params) "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0"
+      set_config my_config
    } else {
-      set my_config(reporting_params) "accounting=true reporting=false flush_time=00:00:01 joblog=true sharelog=00:10:00"
-   }
-   set_config my_config
-
-   if {$ts_config(gridengine_version) >= 60} {
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
@@ -2791,10 +3318,11 @@ proc qsub_cleanup {} {
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
-   if {$ts_config(gridengine_version) >= 60} {
+   if {$ts_config(gridengine_version) == 60} {
       reset_schedd_config
+   } else {
+      set_config stored_configuration
    }
-   set_config stored_configuration
    
    set_error 0 "ok"
 }

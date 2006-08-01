@@ -1,134 +1,494 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML>
-<!--This file created 24.04.2005 22:32 Uhr by Claris Home Page version 3.0-->
 <HEAD>
-<TITLE>Grid Engine HOWTOs</TITLE>
-   <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
-<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en"><meta http-equiv="Content-Type"
- content="text/html; charset=iso-8859-1"><meta http-equiv="CONTENT-TYPE"
- content="text/html; charset=iso-8859-1"><meta name="CREATED" content="20020313;14482400"><meta name="CHANGED" content="20020313;14550200">
+<TITLE>Grid Engine Documentation</TITLE>
 </HEAD>
-<BODY>
-<H1><FONT COLOR="#336699">Grid Engine HOWTOs</FONT></H1>
-
-<BLOCKQUOTE><A HREF="#General%20Grid%20Engine%20concepts">General
-   Grid Engine concepts</A><BR>
-   <A HREF="#Resource%20management">Resource management</A><BR>
-   <A HREF="#Cluster%20management">Cluster management</A><BR>
-   <A HREF="#Special%20Applications">Special Applications</A><BR>
-   <A HREF="#Tight Integration of Parallel Libraries">Tight
-   Integration of Parallel Libraries</A><BR>
-   <A HREF="#Installation,%20Upgrade,%20Patches">Installation,
-   Upgrade, Patches for SGE 5.3 and 6.0</A></BLOCKQUOTE>
-
-<H4><A NAME="General Grid Engine concepts"></A>General Grid Engine
-concepts</H4>
-
-<BLOCKQUOTE><A HREF="basic_usage.html">Basic Usage</A><BR>
-   <A HREF="commontasks.html">Common Administrative Tasks</A><BR>
-   <A HREF="qmon/qmon_custom.html">Customization of Qmon</A><BR>
-   <A HREF="sge_migrate.html">Migration of Qmaster to Another
-   Machine</A><BR>
-   <A HREF="shadow.html">Setting Up a Shadow Master</A><BR>
-   <A HREF="commonproblems.html">Commonly Seen Problems</A><BR>
-   <A HREF="troubleshooting.html">Troubleshooting</A></BLOCKQUOTE>
-
-<H4><A NAME="Resource management"></A>Resource management</H4>
-
-<BLOCKQUOTE><A HREF="drmaa_java.html">DRMAA Java<SUP>TM</SUP>
-   Language Binding</A><BR>
-   <A HREF="filestaging/filestaging6.html">File Staging in Grid
-   Engine 6.0</A><BR>
-   <A HREF="drmaa.html">DRMAA C Binding</A><BR>
-   <A HREF="resource.html">Managing Resources Abstractly</A><BR>
-   <A HREF="consumable.html">Consumable Resources</A><BR>
-   <A HREF="loadsensor.html">Setting Up Load Sensors to Track
-   Resource Availablility/Utilisation</A><BR>
-   <A HREF="resource_management.html">Different resource management
-   approaches with Grid Engine</A><BR>
-   <A HREF="idle.html">Tracking interactive idle time of desktop
-   workstations</A><BR>
-   <A HREF="reloc.html">Relocating Jobs From a User's
-   Workstation</A><BR>
-   <A HREF="geee.html">Grid Engine Enterprise Edition</A><BR>
-   <A HREF="http://www.sun.com/blueprints/0703/817-3179.pdf">Sun Grid
-   Engine, Enterprise Edition -- Configuration Use Cases and
-   Guidelines</A><BR>
-   <B>&#91;NEW&#93;</B> <A HREF="http://www.sun.com/blueprints/1005/819-4325.html">Scheduler 
-   Policies for Job Prioritization in the N1 Grid Engine 6 System </A><BR>
-   <A HREF="filestaging">File Staging</A></BLOCKQUOTE>
-
-<H4><A NAME="Cluster management"></A>Cluster management</H4>
-
-<BLOCKQUOTE><A HREF="tuning.html">Tuning guide</A><BR>
-   <A HREF="scripting.html">Command Line and Scripting of
-   Administrative Tasks</A><BR>
-   <A HREF="binarysubmit.html">Submitting Binaries</A><BR>
-   <A HREF="qrsh_qlogin_ssh.html">Configure qrsh and qlogin to use ssh as transport
-   protocol</A><BR>
-   <A HREF="rotatelogs.html">Rotating and truncating Log
-   Files</A><BR>
-   <A HREF="nfsreduce.html">Reducing and Eliminating NFS
-   Usage</A><BR>
-   <A HREF="multi_intrfcs.html">Installing on a system with multiple
-   network interfaces</A><BR>
-   <A HREF="howto_ipmp_ge.html">Installing on a system with Solaris
-   IP Multipathing</A><BR>
-   <A HREF="knoppix/grid-knoppix.html">Deploying PCs with Grid Engine
-   enabled KNOPPIX boot images</A><BR>
-   <B>&#91;NEW&#93;</B> <A HREF="http://www.sun.com/blueprints/0805/819-3165.html">Using Host Groups 
-   and Cluster Queues</A></BLOCKQUOTE>
-
-<H4><A NAME="Special Applications"></A>Special Applications</H4>
-
-<BLOCKQUOTE><A HREF="http://bioteam.net/dag/sge-flexlm-integration/">FlexLM
-   Integration</A>, also as <A HREF="http://bioteam.net/dag/license-juggling.pdf">slides</A><BR>
-   <A HREF="clearcase.html">Using Clearcase</A><BR>
-   <A HREF="http://www.model.com/products/pdf/appnotes/GridWare.pdf">Using
-   Mentor ModelSim and Mentor JobSpy</A><BR>
-   <A HREF="http://scalableinformatics.com/sge_mpiblast.html">Using
-   mpiBLAST</A><BR>
-   <A HREF="hpc.html">Sun HPC Cluster Tools parallel jobs</A><BR>
-   <A HREF="TransferQueues/transferqueues.html">MultiClustering using
-   Transfer Queues</A><BR>
-   <A HREF="s9rm/howto_s9rm.html">Integration of SGE and Solaris 9
-   Resource Manager</A><BR>
-   <A HREF="globus/globus2.html">SGE-Globus integration</A><BR>
-   <A HREF="checkpointing.html">Checkpointing
-   jobs using SGE's checkpointing support</A><BR>
-   <A HREF="APSTC-TB-2004-005.pdf">Checkpointing under Linux with
-   Berkeley Lab Checkpoint/Restart</A><BR>
-   <A HREF="jam.html">JAM - Job &amp; Application Manager</A><BR>
-   <A HREF="JGrid/jgrid.html">JGrid - an RMI-based Java interface for
-   Grid Engine</A></BLOCKQUOTE>
-
-<H4><A NAME="Tight Integration of Parallel Libraries"></A>Tight
-Integration of Parallel Libraries</H4>
-
-<BLOCKQUOTE><B>&#91;IN PREPARATION&#93;</B> Tight Integration of
-   GlobalArrays (TCGMSG) and SGE<BR>
-   <A HREF="lam-integration/lam-integration.html">Tight Integration
-   of LAM/MPI and SGE</A><BR>
-   <A HREF="mpich-integration.html">Tight Integration of MPICH and
-   SGE -- With Application Notes</A><BR>
-   <B>&#91;NEW&#93;</B> <A HREF="mpich2-integration/mpich2-integration.html">Tight
-   Integration of MPICH2 and SGE</A><BR>
-   <A HREF="pvm-integration/pvm-integration.html">Tight Integration
-   of PVM and SGE</A><BR>
-   <A HREF="mvapich/MVAPICH_Integration.html">Mvapich (MPICH Infiniband) + Loose/Tight SGE Integration</A>
-</BLOCKQUOTE>
-
-<H4><A NAME="Installation, Upgrade, Patches"></A>Installation,
-Upgrade, Patches</H4>
-
-<BLOCKQUOTE><A HREF="../install60patch.txt">Install
-   SGE 6.0 patches</A><BR>
-   <B>&#91;UPDATED&#93;</B> <A HREF="/project/gridengine/60patches.txt">Bugfixes
-   for SGE 6.0</A><BR>
-   <A HREF="/project/gridengine/install53patch.txt">Install SGE 5.3
-   patches</A><BR>
-   <A HREF="/project/gridengine/53patches.txt">Bugfixes for SGE
-   5.3<BR>
-   </A></BLOCKQUOTE>
-</BODY>
-</HTML>
-
+<BODY BGCOLOR="#FFFFFF"  LINK="#0000FF" VLINK="#00007F" ALINK="#FF0000">
+<CENTER><H1>Grid Engine Documentation</H1></CENTER>
+<H3>Section 1</H3>
+<P><UL>
+<LI><A HREF=
+htmlman1/qacct.html
+>qacct</A>
+<LI><A HREF=
+htmlman1/qalter.html
+>qalter</A>
+<LI><A HREF=
+htmlman1/qconf.html
+>qconf</A>
+<LI><A HREF=
+htmlman1/qdel.html
+>qdel</A>
+<LI><A HREF=
+htmlman1/qhold.html
+>qhold</A>
+<LI><A HREF=
+htmlman1/qhost.html
+>qhost</A>
+<LI><A HREF=
+htmlman1/qlogin.html
+>qlogin</A>
+<LI><A HREF=
+htmlman1/qmake.html
+>qmake</A>
+<LI><A HREF=
+htmlman1/qmod.html
+>qmod</A>
+<LI><A HREF=
+htmlman1/qmon.html
+>qmon</A>
+<LI><A HREF=
+htmlman1/qresub.html
+>qresub</A>
+<LI><A HREF=
+htmlman1/qrls.html
+>qrls</A>
+<LI><A HREF=
+htmlman1/qrsh.html
+>qrsh</A>
+<LI><A HREF=
+htmlman1/qselect.html
+>qselect</A>
+<LI><A HREF=
+htmlman1/qsh.html
+>qsh</A>
+<LI><A HREF=
+htmlman1/qstat.html
+>qstat</A>
+<LI><A HREF=
+htmlman1/qsub.html
+>qsub</A>
+<LI><A HREF=
+htmlman1/qtcsh.html
+>qtcsh</A>
+<LI><A HREF=
+htmlman1/sge_ckpt.html
+>sge_ckpt</A>
+<LI><A HREF=
+htmlman1/sge_intro.html
+>sge_intro</A>
+<LI><A HREF=
+htmlman1/submit.html
+>submit</A>
+</UL></P>
+<H3>Section 3</H3>
+<P><UL>
+<LI><A HREF=
+htmlman3/_lNm2Str.html
+>_lNm2Str</A>
+<LI><A HREF=
+htmlman3/_lStr2Nm.html
+>_lStr2Nm</A>
+<LI><A HREF=
+htmlman3/lAddElemStr.html
+>lAddElemStr</A>
+<LI><A HREF=
+htmlman3/lAddList.html
+>lAddList</A>
+<LI><A HREF=
+htmlman3/lAddSubStr.html
+>lAddSubStr</A>
+<LI><A HREF=
+htmlman3/lAndWhere.html
+>lAndWhere</A>
+<LI><A HREF=
+htmlman3/lAppendElem.html
+>lAppendElem</A>
+<LI><A HREF=
+htmlman3/lCopyDescr.html
+>lCopyDescr</A>
+<LI><A HREF=
+htmlman3/lCopyElem.html
+>lCopyElem</A>
+<LI><A HREF=
+htmlman3/lCopyList.html
+>lCopyList</A>
+<LI><A HREF=
+htmlman3/lCountDescr.html
+>lCountDescr</A>
+<LI><A HREF=
+htmlman3/lCountWhat.html
+>lCountWhat</A>
+<LI><A HREF=
+htmlman3/lCreateElem.html
+>lCreateElem</A>
+<LI><A HREF=
+htmlman3/lCreateElemList.html
+>lCreateElemList</A>
+<LI><A HREF=
+htmlman3/lCreateList.html
+>lCreateList</A>
+<LI><A HREF=
+htmlman3/lDbFuncs.html
+>lDbFuncs</A>
+<LI><A HREF=
+htmlman3/lDechainElem.html
+>lDechainElem</A>
+<LI><A HREF=
+htmlman3/lDelElemStr.html
+>lDelElemStr</A>
+<LI><A HREF=
+htmlman3/lDelSubStr.html
+>lDelSubStr</A>
+<LI><A HREF=
+htmlman3/lDescriptorFuncs.html
+>lDescriptorFuncs</A>
+<LI><A HREF=
+htmlman3/lDiffListStr.html
+>lDiffListStr</A>
+<LI><A HREF=
+htmlman3/lDumpDescr.html
+>lDumpDescr</A>
+<LI><A HREF=
+htmlman3/lDumpList.html
+>lDumpList</A>
+<LI><A HREF=
+htmlman3/lFindFirst.html
+>lFindFirst</A>
+<LI><A HREF=
+htmlman3/lFindLast.html
+>lFindLast</A>
+<LI><A HREF=
+htmlman3/lFindNext.html
+>lFindNext</A>
+<LI><A HREF=
+htmlman3/lFindPrev.html
+>lFindPrev</A>
+<LI><A HREF=
+htmlman3/lFirst.html
+>lFirst</A>
+<LI><A HREF=
+htmlman3/lFreeElem.html
+>lFreeElem</A>
+<LI><A HREF=
+htmlman3/lFreeList.html
+>lFreeList</A>
+<LI><A HREF=
+htmlman3/lFreeWhat.html
+>lFreeWhat</A>
+<LI><A HREF=
+htmlman3/lFreeWhere.html
+>lFreeWhere</A>
+<LI><A HREF=
+htmlman3/lGetChar.html
+>lGetChar</A>
+<LI><A HREF=
+htmlman3/lGetDouble.html
+>lGetDouble</A>
+<LI><A HREF=
+htmlman3/lGetElemStr.html
+>lGetElemStr</A>
+<LI><A HREF=
+htmlman3/lGetFloat.html
+>lGetFloat</A>
+<LI><A HREF=
+htmlman3/lGetInt.html
+>lGetInt</A>
+<LI><A HREF=
+htmlman3/lGetList.html
+>lGetList</A>
+<LI><A HREF=
+htmlman3/lGetListDescr.html
+>lGetListDescr</A>
+<LI><A HREF=
+htmlman3/lGetListName.html
+>lGetListName</A>
+<LI><A HREF=
+htmlman3/lGetNumberOfElem.html
+>lGetNumberOfElem</A>
+<LI><A HREF=
+htmlman3/lGetNumberOfRemainingElem.html
+>lGetNumberOfRemainingElem</A>
+<LI><A HREF=
+htmlman3/lGetPosChar.html
+>lGetPosChar</A>
+<LI><A HREF=
+htmlman3/lGetPosDouble.html
+>lGetPosDouble</A>
+<LI><A HREF=
+htmlman3/lGetPosFloat.html
+>lGetPosFloat</A>
+<LI><A HREF=
+htmlman3/lGetPosInDescr.html
+>lGetPosInDescr</A>
+<LI><A HREF=
+htmlman3/lGetPosInt.html
+>lGetPosInt</A>
+<LI><A HREF=
+htmlman3/lGetPosList.html
+>lGetPosList</A>
+<LI><A HREF=
+htmlman3/lGetPosString.html
+>lGetPosString</A>
+<LI><A HREF=
+htmlman3/lGetPosUlong.html
+>lGetPosUlong</A>
+<LI><A HREF=
+htmlman3/lGetPosViaElem.html
+>lGetPosViaElem</A>
+<LI><A HREF=
+htmlman3/lGetString.html
+>lGetString</A>
+<LI><A HREF=
+htmlman3/lGetSubStr.html
+>lGetSubStr</A>
+<LI><A HREF=
+htmlman3/lGetType.html
+>lGetType</A>
+<LI><A HREF=
+htmlman3/lGetUlong.html
+>lGetUlong</A>
+<LI><A HREF=
+htmlman3/lInit.html
+>lInit</A>
+<LI><A HREF=
+htmlman3/lInsertElem.html
+>lInsertElem</A>
+<LI><A HREF=
+htmlman3/lJoin.html
+>lJoin</A>
+<LI><A HREF=
+htmlman3/lJoinSubList.html
+>lJoinSubList</A>
+<LI><A HREF=
+htmlman3/lLast.html
+>lLast</A>
+<LI><A HREF=
+htmlman3/lListElemFuncs.html
+>lListElemFuncs</A>
+<LI><A HREF=
+htmlman3/lListFuncs.html
+>lListFuncs</A>
+<LI><A HREF=
+htmlman3/lListType.html
+>lListType</A>
+<LI><A HREF=
+htmlman3/lNext.html
+>lNext</A>
+<LI><A HREF=
+htmlman3/lNm2Str.html
+>lNm2Str</A>
+<LI><A HREF=
+htmlman3/lOrWhere.html
+>lOrWhere</A>
+<LI><A HREF=
+htmlman3/lPSortList.html
+>lPSortList</A>
+<LI><A HREF=
+htmlman3/lPrev.html
+>lPrev</A>
+<LI><A HREF=
+htmlman3/lSelect.html
+>lSelect</A>
+<LI><A HREF=
+htmlman3/lSelectDestroy.html
+>lSelectDestroy</A>
+<LI><A HREF=
+htmlman3/lSetChar.html
+>lSetChar</A>
+<LI><A HREF=
+htmlman3/lSetDouble.html
+>lSetDouble</A>
+<LI><A HREF=
+htmlman3/lSetFloat.html
+>lSetFloat</A>
+<LI><A HREF=
+htmlman3/lSetInt.html
+>lSetInt</A>
+<LI><A HREF=
+htmlman3/lSetList.html
+>lSetList</A>
+<LI><A HREF=
+htmlman3/lSetPosChar.html
+>lSetPosChar</A>
+<LI><A HREF=
+htmlman3/lSetPosDouble.html
+>lSetPosDouble</A>
+<LI><A HREF=
+htmlman3/lSetPosFloat.html
+>lSetPosFloat</A>
+<LI><A HREF=
+htmlman3/lSetPosInt.html
+>lSetPosInt</A>
+<LI><A HREF=
+htmlman3/lSetPosList.html
+>lSetPosList</A>
+<LI><A HREF=
+htmlman3/lSetPosString.html
+>lSetPosString</A>
+<LI><A HREF=
+htmlman3/lSetPosUlong.html
+>lSetPosUlong</A>
+<LI><A HREF=
+htmlman3/lSetString.html
+>lSetString</A>
+<LI><A HREF=
+htmlman3/lSetType.html
+>lSetType</A>
+<LI><A HREF=
+htmlman3/lSetUlong.html
+>lSetUlong</A>
+<LI><A HREF=
+htmlman3/lSortList.html
+>lSortList</A>
+<LI><A HREF=
+htmlman3/lSplit.html
+>lSplit</A>
+<LI><A HREF=
+htmlman3/lStr2Nm.html
+>lStr2Nm</A>
+<LI><A HREF=
+htmlman3/lUnDumpDescr.html
+>lUnDumpDescr</A>
+<LI><A HREF=
+htmlman3/lUnDumpList.html
+>lUnDumpList</A>
+<LI><A HREF=
+htmlman3/lUndumpElem.html
+>lUndumpElem</A>
+<LI><A HREF=
+htmlman3/lWhat.html
+>lWhat</A>
+<LI><A HREF=
+htmlman3/lWhere.html
+>lWhere</A>
+<LI><A HREF=
+htmlman3/lWriteDescr.html
+>lWriteDescr</A>
+<LI><A HREF=
+htmlman3/lWriteElem.html
+>lWriteElem</A>
+<LI><A HREF=
+htmlman3/lWriteElemTo.html
+>lWriteElemTo</A>
+<LI><A HREF=
+htmlman3/lWriteList.html
+>lWriteList</A>
+<LI><A HREF=
+htmlman3/lWriteListTo.html
+>lWriteListTo</A>
+<LI><A HREF=
+htmlman3/lWriteWhat.html
+>lWriteWhat</A>
+<LI><A HREF=
+htmlman3/lWriteWhere.html
+>lWriteWhere</A>
+<LI><A HREF=
+htmlman3/list_intro.html
+>list_intro</A>
+<LI><A HREF=
+htmlman3/sge_gdi.html
+>sge_gdi</A>
+<LI><A HREF=
+htmlman3/sge_gdi_host_attribute.html
+>sge_gdi_host_attribute</A>
+<LI><A HREF=
+htmlman3/sge_gdi_host_nslots.html
+>sge_gdi_host_nslots</A>
+<LI><A HREF=
+htmlman3/sge_gdi_host_scaling.html
+>sge_gdi_host_scaling</A>
+<LI><A HREF=
+htmlman3/sge_gdi_myhost_attribute.html
+>sge_gdi_myhost_attribute</A>
+<LI><A HREF=
+htmlman3/sge_gdi_myhost_nslots.html
+>sge_gdi_myhost_nslots</A>
+<LI><A HREF=
+htmlman3/sge_gdi_myhost_scaling.html
+>sge_gdi_myhost_scaling</A>
+<LI><A HREF=
+htmlman3/sge_gdi_setup.html
+>sge_gdi_setup</A>
+<LI><A HREF=
+htmlman3/sge_gdi_shutdown.html
+>sge_gdi_shutdown</A>
+<LI><A HREF=
+htmlman3/sge_gdi_trm.html
+>sge_gdi_trm</A>
+</UL></P>
+<H3>Section 5</H3>
+<P><UL>
+<LI><A HREF=
+htmlman5/access_list.html
+>access_list</A>
+<LI><A HREF=
+htmlman5/accounting.html
+>accounting</A>
+<LI><A HREF=
+htmlman5/calendar_conf.html
+>calendar_conf</A>
+<LI><A HREF=
+htmlman5/checkpoint.html
+>checkpoint</A>
+<LI><A HREF=
+htmlman5/complex.html
+>complex</A>
+<LI><A HREF=
+htmlman5/host_conf.html
+>host_conf</A>
+<LI><A HREF=
+htmlman5/hostgroup.html
+>hostgroup</A>
+<LI><A HREF=
+htmlman5/project.html
+>project</A>
+<LI><A HREF=
+htmlman5/qtask.html
+>qtask</A>
+<LI><A HREF=
+htmlman5/queue_conf.html
+>queue_conf</A>
+<LI><A HREF=
+htmlman5/sched_conf.html
+>sched_conf</A>
+<LI><A HREF=
+htmlman5/sge_aliases.html
+>sge_aliases</A>
+<LI><A HREF=
+htmlman5/sge_conf.html
+>sge_conf</A>
+<LI><A HREF=
+htmlman5/sge_h_aliases.html
+>sge_h_aliases</A>
+<LI><A HREF=
+htmlman5/sge_pe.html
+>sge_pe</A>
+<LI><A HREF=
+htmlman5/sge_request.html
+>sge_request</A>
+<LI><A HREF=
+htmlman5/share_tree.html
+>share_tree</A>
+<LI><A HREF=
+htmlman5/user.html
+>user</A>
+<LI><A HREF=
+htmlman5/usermapping.html
+>usermapping</A>
+</UL></P>
+<H3>Section 8</H3>
+<P><UL>
+<LI><A HREF=
+htmlman8/sge_commd.html
+>sge_commd</A>
+<LI><A HREF=
+htmlman8/sge_execd.html
+>sge_execd</A>
+<LI><A HREF=
+htmlman8/sge_qmaster.html
+>sge_qmaster</A>
+<LI><A HREF=
+htmlman8/sge_schedd.html
+>sge_schedd</A>
+<LI><A HREF=
+htmlman8/sge_shadowd.html
+>sge_shadowd</A>
+<LI><A HREF=
+htmlman8/sge_shepherd.html
+>sge_shepherd</A>
+<LI><A HREF=
+htmlman8/sgecommdcntl.html
+>sgecommdcntl</A>
+</UL></P>
+</BODY></HTML>

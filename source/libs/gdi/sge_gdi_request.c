@@ -83,10 +83,13 @@ sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_shor
 static bool
 sge_pack_gdi_info(u_long32 command);
 
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
-                             lList **alpp);
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        const char *rhost,
+                                        const char *commproc,
+                                        u_short id,
+                                        sge_gdi_request *out,
+                                        sge_gdi_request **in,
+                                        lList **alpp);
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -424,7 +427,8 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    }
 #endif
    gid = getegid();
-   if(sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
+   if (sge_gid2group(gid, groupname, sizeof(groupname), 
+         MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
                              sge_u32c(gid)));
       goto error; 
@@ -965,10 +969,13 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-static int 
-sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
-                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
-                             lList **alpp)
+static int sge_send_receive_gdi_request(int *commlib_error,
+                                        const char *rhost, 
+                                        const char *commproc, 
+                                        u_short id, 
+                                        sge_gdi_request *out,
+                                        sge_gdi_request **in,
+                                        lList **alpp)
 {
    int ret;
    char rcv_rhost[CL_MAXHOSTLEN+1];

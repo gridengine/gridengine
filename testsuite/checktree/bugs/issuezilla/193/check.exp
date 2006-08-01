@@ -49,7 +49,7 @@ global ts_user_config
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "issue_193_init_level"
+set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_193"
@@ -95,24 +95,23 @@ lappend pe_names      "reschpe_fill"
 lappend pe_alloc_rule "\$fill_up"
 
 
-proc issue_193_init_level {} {
-   global ts_config CHECK_OUTPUT check_name
-   global CHECK_ACT_LEVEL hold_state pending_state queue
-   global rerun_host no_rerun_host
+proc init_level {} {
+   global ts_config
+  global CHECK_ACT_LEVEL hold_state pending_state queue
+  global rerun_host no_rerun_host CHECK_OUTPUT
 
-   if {$CHECK_ACT_LEVEL == 0} {
-      if {[llength $ts_config(execd_nodes)] < 2} {
-         puts $CHECK_OUTPUT "need at least 2 execd hosts for check $check_name"
-         return -1
-      }
+  if { [ llength $ts_config(execd_nodes) ] < 2 } {
+     set_error -3 "need at least 2 execd hosts"
+  } else {   
+     set rerun_host    [ lindex $ts_config(execd_nodes) 0  ]
+     set no_rerun_host [ lindex $ts_config(execd_nodes) 1  ]
 
-      set rerun_host    [ lindex $ts_config(execd_nodes) 0  ]
-      set no_rerun_host [ lindex $ts_config(execd_nodes) 1  ]
+     switch -- $CHECK_ACT_LEVEL {
+        "0" { return 0 } 
+     } 
+  }
 
-      return 0
-   }
-
-   return -1  ;# no other level else
+  return -1  ;# no other level else
 }
 
 proc issue193_setup {} {
@@ -678,9 +677,6 @@ proc issue193_deleted_job {} {
    catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $no_rerun_host} output
    puts $output
 
-   shutdown_system_daemon $no_rerun_host execd
-
-
    puts $CHECK_OUTPUT "deleting job $job_id ..."
    delete_job $job_id
 
@@ -701,7 +697,7 @@ proc issue193_deleted_job {} {
    startup_execd $no_rerun_host
    wait_for_load_from_all_queues 200 
 
-   wait_for_jobend $job_id "Sleeper" 300 0
+   wait_for_jobend $job_id "Sleeper" 200 0
    
    set_error 0 "ok"
 }

@@ -62,7 +62,7 @@ howto2.o: $(DRMAA_HOWTO_DIR)/howto2.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto2.c
 
 howto2_1: howto2_1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2_1 howto2_1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2_1 howto2_1.o $(LFLAGS) -ldrmaa $(LIBS) $(WINGRIDLIB) $(SLIBS) $(DLLIB)
 
 howto2_1.o: $(DRMAA_HOWTO_DIR)/howto2_1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto2_1.c
@@ -74,7 +74,7 @@ howto3.o: $(DRMAA_HOWTO_DIR)/howto3.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto3.c
 
 howto3_1: howto3_1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_1 howto3_1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto3_1 howto3_1.o $(LFLAGS) -ldrmaa $(LIBS) $(WINGRIDLIB) $(SLIBS) $(DLLIB)
 
 howto3_1.o: $(DRMAA_HOWTO_DIR)/howto3_1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto3_1.c
@@ -98,7 +98,7 @@ howto5.o: $(DRMAA_HOWTO_DIR)/howto5.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto5.c
 
 howto6: howto6.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto6 howto6.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto6 howto6.o $(LFLAGS) -ldrmaa $(LIBS) $(WINGRIDLIB) $(SLIBS) $(DLLIB)
 
 howto6.o: $(DRMAA_HOWTO_DIR)/howto6.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto6.c

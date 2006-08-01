@@ -31,11 +31,9 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
-
 # define global variable in this namespace
 global check_name 
-global check_category 
+global check_category
 global check_description 
 global check_needs
 global check_functions 
@@ -49,605 +47,499 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "shadowd_migrate_init_level"
+set check_init_level_procedure "init_level"
+
 
 # define test's name and run level descriptions
-set check_name            "shadowd_migrate"
-set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   9
-set check_description(0)  "test shadowd functionality"
-set check_description(1)  "test simple shadowd functionality"
-set check_description(2)  "test sgemaster -migrate command"
-set check_description(3)  "start qmaster without act_qmaster file"
-set check_description(4)  "start qmaster with empty act_qmaster file"
-set check_description(5)  "start qmaster with unresolvable host in act_qmaster file"
-set check_description(6)  "start qmaster with resolvable foreign host in act_qmaster file without running qmaster"
-set check_description(7)  "start qmaster with resolvable foreign host in act_qmaster file with running qmaster"
-set check_description(8)  "start qmaster with own ip adress in act_qmaster file"
-set check_description(9)  "test heartbeat file writing"
-
+set check_name            "shadowd"
+set check_category        "COMPATIBILITY SYSTEM"
+set check_highest_level   0
+set check_description(0)  "setting up shadowd on 2.nd execd, restart system, kill master, wait for new master, reset system"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
 
-# setup and cleanup functions
-set check_setup_function shadowd_migrate_setup
-set check_cleanup_function shadowd_migrate_cleanup
-
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "shadowd_migrate_test"
+lappend check_functions "shadowd_setup"
+lappend check_functions "shadowd_kill_all_shadowd"
+lappend check_functions "shadowd_startup"
+lappend check_functions "shadowd_kill_master_and_sheduler"
+lappend check_functions "shadowd_wait_for_startup"
+lappend check_functions "shadowd_kill_shadowd_master_and_shadowd_sheduler"
+lappend check_functions "shadowd_cleanup"
 
+# check's globals
+global shadowd_hostname
+global shadowd_file 
+global shadowd_pid
+global shadowd_master_spool_dir
+global shadowd_original_master_spool_dir
+global shadowd_moved_master_dir
+set shadowd_hostname ""
+set shadowd_pid -1
+set shadowd_file "shadow_masters"
+set shadowd_master_spool_dir "undefined"
+set shadowd_original_master_spool_dir "undefined"
+set shadowd_moved_master_dir 0
 
-global shadowd_migrate_test_hosts
-global shadowd_migrate_saved_slot_count
-
-proc shadowd_migrate_init_level {} {
-   global CHECK_ACT_LEVEL CHECK_OUTPUT
+# run level initialization
+#                                                             max. column:     |
+#****** migrate/init_level() ******
+# 
+#  NAME
+#     init_level -- ??? 
+#
+#  SYNOPSIS
+#     init_level { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc init_level {} {
    global ts_config
+   global CHECK_ACT_LEVEL hold_state pending_state
 
-   if { $CHECK_ACT_LEVEL >= 0 && $CHECK_ACT_LEVEL <= 9} {
-      return 0
+   if { [ llength $ts_config(execd_nodes) ] < 2 } {
+      return -1
    }
-   return -1  ;# no other level 
+
+   switch -- $CHECK_ACT_LEVEL {
+     "0" {  return 0   } 
+   } 
+   return -1  ;# no other level else
 }
 
+# -------- local test procedures -----------------------------------------------
 
+#                                                             max. column:     |
+#****** migrate/shadowd_setup() ******
+# 
+#  NAME
+#     shadowd_setup -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_setup { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_setup {} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT 
+   global shadowd_file shadowd_hostname shadowd_master_spool_dir
+   global shadowd_original_master_spool_dir shadowd_moved_master_dir
 
-
-# -------- local test procedures: initialization------------------------------
-
-
-proc shadowd_migrate_setup  {} {
-   global CHECK_OUTPUT ts_config
-   set nr_shadowds [llength $ts_config(shadowd_hosts)]
-   if { $nr_shadowds < 2 } {
-      add_proc_error "shadowd_migrate_setup" -3 "Need 2 configured shadowd hosts. Can't run this test."
-   }
-   set_error 0 "ok"
-}
-
-proc shadowd_migrate_cleanup  {} {
-   global CHECK_OUTPUT ts_config
-
-   set_error 0 "ok"
-}
-
-
-proc shadowd_migrate_test {} {
-   global CHECK_OUTPUT ts_config  CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR check_description 
-   global CHECK_USER file_procedure_logfile_wait_sp_id
-
-   set nr_shadowds [llength $ts_config(shadowd_hosts)]
-
-   if { $nr_shadowds >= 2 } {
-      set heartbeat_file [get_qmaster_spool_dir]/heartbeat
-      set qmaster_lock_file [get_qmaster_spool_dir]/lock
-      set qmaster_messages_file [get_qmaster_spool_dir]/messages
-      set act_qmaster_file "$ts_config(product_root)/$ts_config(cell)/common/act_qmaster"
-      set sgemaster_file $ts_config(product_root)/$ts_config(cell)/common/sgemaster
-      set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-      set act_qmaster [string trim $result]
-
-      set result [start_remote_prog [lindex $ts_config(shadowd_hosts) 0] $CHECK_USER "cat" $heartbeat_file]
-      if { $prg_exit_state != 0 } {
-         set_error -3 "no nfs shared qmaster spool directory? Cat failed - > Skipping this test (1)!\nresult: $result"
-         return;
-      } 
-
-      puts $CHECK_OUTPUT $result
-      set heartbeat1 [string trim $result]
-      set heartbeat1 [string trimleft $heartbeat1 "0"]
-
-      set result [start_remote_prog [lindex $ts_config(shadowd_hosts) 1] $CHECK_USER "cat" $heartbeat_file]
-      if { $prg_exit_state != 0 } {
-         set_error -3 "no nfs shared qmaster spool directory? Cat failed - > Skipping this test (2)!\nresult: $result"
-         return;
-      }
-
-      puts $CHECK_OUTPUT $result
-      set heartbeat2 [string trim $result ]
-      set heartbeat2 [string trimleft $heartbeat2 "0"]
-
-      set heart_diff [expr ( $heartbeat2 - $heartbeat1 ) ]
-      if { $heart_diff > 1 || $heart_diff < -1 } {
-         add_proc_error "shadowd_migrate_test" -3 "heartbeat file diff error ($heartbeat1,$heartbeat2). heart_diff=$heart_diff"
-         set_error -3 "no nfs shared qmaster spool directory found. Skipping this test"
-         return;
-      }
-
-
-      # We need access to spooling data from shadow hosts, by
-      # - classic spooling to a shared filesystem (to qmaster spooldir - if it was not shared,
-      #   we would have failed earlier.
-      # - bdb spooling with rpc server
-      # - bdb spooling to nfsv4
-      set spooling_ok 0
-      if { $ts_config(spooling_method) == "classic" } {
-         puts $CHECK_OUTPUT "We have \"classic\" spooling to a shared qmaster spool dir."
-         set spooling_ok 1
-      } else {
-         if {$ts_config(spooling_method) == "berkeleydb"} {
-            if {$ts_config(bdb_server) != "none"} {
-               puts $CHECK_OUTPUT "We have \"berkeleydb\" spooling with RPC server." 
-               set spooling_ok 1
-            } else {
-               set bdb_spooldir [get_bdb_spooldir]
-               set fstype [get_fstype $bdb_spooldir $ts_config(master_host)]
-               if {$fstype == "nfs4"} {
-                  puts $CHECK_OUTPUT "We have \"berkeleydb\" spooling on NFS v4" 
-                  set spooling_ok 1
-
-                  # check that the spooldir is NFS v4 on all shadow hosts
-                  foreach host $ts_config(shadowd_hosts) {
-                     set fstype [get_fstype $bdb_spooldir $host]
-                     if {$fstype != "nfs4"} {
-                        puts $CHECK_OUTPUT "berkeley spool directory $bdb_spooldir is not nfsv4 mounted on shadow host $host"
-                        set spooling_ok 0
-                        break
-                     }
-                  }
-               }
-            }
+   set ok 0
+   set qmaster_hosts [ get_hosts ]
+   for {set i 1} { $i < [ llength $ts_config(execd_nodes) ] } { incr i 1 } {
+      set shadowd_host [lindex $ts_config(execd_nodes) $i]
+      set shadowd_hostname [ resolve_host $shadowd_host 1 ]
+      set ok 0
+      foreach elem $qmaster_hosts {
+         if { [ string compare $elem $shadowd_hostname ] == 0 } {
+            set ok 1 
+            break;
          }
       }
-
-      if {! $spooling_ok} {
-         add_proc_error "shadowd_migrate_test" -3 "Spooling database is not shared between master and shadow hosts"
-         set_error 0 ok
-         return
+      if { $ok == 1 } {
+          break;
       }
+   }
 
-      puts $CHECK_OUTPUT "------------------------------------------------------------"
-      puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
-      puts $CHECK_OUTPUT "------------------------------------------------------------"
+   if { $ok != 1 } {
+      set_error "-3" "no suiteable shadowd host found in cluster configuration, perhaps wrong host name resolving"
+      return
+   }
 
-      if { $CHECK_ACT_LEVEL == 0 } {
-         set CONTROLED_SHUTDOWN [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SHADOWD_CONTROLLEDSHUTDOWN_SU] "*" "100" ]
-
-         puts $CHECK_OUTPUT "restarting qmaster and shadowds with SGE_TEST_HEARTBEAT_TIMEOUT=600"
-         shutdown_system_daemon $ts_config(master_host) "qmaster"
-         shutdown_system_daemon [lindex $ts_config(shadowd_hosts) 0] "shadowd"
-         shutdown_system_daemon [lindex $ts_config(shadowd_hosts) 1] "shadowd"
-
-         puts $CHECK_OUTPUT "   reading heartbeat file ..."
-         puts $CHECK_OUTPUT "   $heartbeat_file"
-         
-
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $heartbeat_file]
-
-         set heartbeat [string trimleft [string trim $result ] "0"]
-         puts $CHECK_OUTPUT "   setting heartbeat from $heartbeat to 98 ..."
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "echo" " 98 > $heartbeat_file"]
-         puts $CHECK_OUTPUT $result
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $heartbeat_file]
-         set heartbeat [string trimleft [string trim $result ] "0"]
-         puts $CHECK_OUTPUT "   heartbeat set to $heartbeat !"
+   puts $CHECK_OUTPUT "using execd host \"${shadowd_hostname}\" as shadowd host"
 
 
-         set my_env(SGE_TEST_HEARTBEAT_TIMEOUT) 600
-         startup_qmaster 0 my_env
-         startup_shadowd [lindex $ts_config(shadowd_hosts) 0] my_env
-         startup_shadowd [lindex $ts_config(shadowd_hosts) 1] my_env
+   set default_spool_dir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/spool/qmaster"
+   set shadowd_master_spool_dir [ get_qmaster_spool_dir ]  
 
-         puts $CHECK_OUTPUT "qmaster and shadowds restarted!"
+   if { [string compare $default_spool_dir $shadowd_master_spool_dir] != 0 } {
+       puts $CHECK_OUTPUT "setting qmaster spool dir to $default_spool_dir"
+       set shadowd_original_master_spool_dir $shadowd_master_spool_dir
+       move_qmaster_spool_dir $default_spool_dir
+       set shadowd_moved_master_dir 1
+       set shadowd_master_spool_dir [ get_qmaster_spool_dir ]  
+   }
  
-         set my_timeout [timestamp]
-         incr my_timeout 660
-         set heartbeat 0
-         while { $heartbeat  <= 102 } {
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $heartbeat_file]
-            set heartbeat [string trimleft [string trim $result] "0"]
-            after 1000
-##            puts $CHECK_OUTPUT -nonewline "."
-            set todo [ expr ( $my_timeout - [timestamp]  ) ]
-            puts -nonewline $CHECK_OUTPUT "\rtimeout in $todo seconds. Heartbeat = $heartbeat    "
-            flush stdout
-            if { [timestamp] > $my_timeout } {
-               add_proc_error "shadowd_migrate_test" -1 "timeout waiting for shadowd to take over!"
-               break;
-            }
-         }
-         puts $CHECK_OUTPUT ""
-
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-         set new_act_qmaster [string trim $result]
-
-         if { $act_qmaster == $new_act_qmaster } {
-            add_proc_error "shadowd_migrate_test" -1 "no qmaster took over!"
-         } else {
-            puts $CHECK_OUTPUT "qmaster on host $new_act_qmaster took over!"
-         }
-
-         init_logfile_wait $ts_config(master_host) $qmaster_messages_file 
-         set message_file_output ""
-         set my_timeout [timestamp]
-         incr my_timeout 300
-
-         set still_running 1
-         set was_in_elem_loop 0
-         while { $still_running == 1 } {
-            set still_running 0
-            set was_in_elem_loop 0
-            set found_p [ ps_grep "$ts_config(product_root)" $ts_config(master_host) ]
-#            puts $CHECK_OUTPUT $found_p
-            foreach i $found_p {
-               set was_in_elem_loop 1
-#               puts $CHECK_OUTPUT $ps_info(string,$i)
-               if { [string first "sge_qmaster" $ps_info(string,$i)] >= 0 } {
-                  set still_running 1
-               }
-            }
-            if { $was_in_elem_loop == 0 } {
-               # don't stop ps grep'in when ps_grep doesn't return any value  
-               # (execd and shadowd should be available)
-               set still_running 1
-            }
-            set todo [ expr ( $my_timeout - [timestamp]  ) ]
-            puts -nonewline $CHECK_OUTPUT "\rtimeout in $todo seconds.    "
-            flush stdout
-
-            if { [timestamp] > $my_timeout } {
-               add_proc_error "shadowd_migrate_test" -1 "old qmaster doesn't stop!"
-               break;
-            }
-            set output [logfile_wait $CONTROLED_SHUTDOWN 1 0 0]
-            if { $logfile_wait_error == 0 } {
-               set message_file_output $output
-            }
-
-         }
-         close_logfile_wait
-
-         puts $CHECK_OUTPUT "message file of qmaster contains:\n$message_file_output"
-         if { $message_file_output == "" } {
-            add_proc_error "shadowd_migrate_test" -1 "old qmaster doesn't stop with exit state 100"
-         }
-
-         wait_for_load_from_all_queues 120
-
-         if { [is_remote_file $new_act_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown of old qmaster"
-         }
-
-         if { [is_remote_file $act_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown of old qmaster"
-         }
-
-         shutdown_system_daemon $new_act_qmaster "qmaster"
-         shutdown_system_daemon [lindex $ts_config(shadowd_hosts) 0] "shadowd"
-         shutdown_system_daemon [lindex $ts_config(shadowd_hosts) 1] "shadowd"
-
-         startup_qmaster
-         startup_shadowd [lindex $ts_config(shadowd_hosts) 0]
-         startup_shadowd [lindex $ts_config(shadowd_hosts) 1]
-         
-         wait_for_load_from_all_queues 120
-      }
-
-      if { $CHECK_ACT_LEVEL == 1 } {
-         puts $CHECK_OUTPUT "shutting down qmaster ..."
-         
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown of old qmaster"
-         }
-
-         shutdown_system_daemon $ts_config(master_host) "qmaster"
-
-         wait_for_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file
-
-         puts $CHECK_OUTPUT "deleting lock file ..."
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "rm" $qmaster_lock_file]
-         puts $CHECK_OUTPUT $result
-         if { $prg_exit_state != 0 } {
-            add_proc_error "shadowd_migrate_test" -1 "error removing qmaster lock file \"$qmaster_lock_file\""
-         }
-         
-         set new_act_qmaster $act_qmaster
-         set my_timeout [timestamp]
-         incr my_timeout 660
-         while { $new_act_qmaster == $act_qmaster } {
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set new_act_qmaster [string trim $result]
-            after 1000
-            if { [timestamp] > $my_timeout } {
-               add_proc_error "shadowd_migrate_test" -1 "no shadowd took over"
-               break;
-            }
-            set todo [ expr ( $my_timeout - [timestamp]  ) ]
-            puts -nonewline $CHECK_OUTPUT "\rtimeout in $todo seconds.    "
-            flush stdout
-         }
-
-         if { [is_remote_file $new_act_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after startup of new qmaster on host $new_act_qmaster"
-         }
-         wait_for_load_from_all_queues 120
-
-
-         puts $CHECK_OUTPUT "shutting down qmaster on host $new_act_qmaster ..."
-         shutdown_system_daemon $new_act_qmaster "qmaster"
-
-         puts $CHECK_OUTPUT "restarting qmaster on host $act_qmaster ..."
-         startup_qmaster
-
-         if { [is_remote_file $new_act_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown and restart of original qmaster on host $act_qmaster"
-         }
-         wait_for_load_from_all_queues 120
-      }
-
-      if { $CHECK_ACT_LEVEL == 2 } {
-
-         set migrate_host ""
-         foreach host $ts_config(shadowd_hosts) {
-            if { $host != $ts_config(master_host) } {
-               set migrate_host $host
-            }
-         }
-
-         if { $migrate_host == "" } {
-            add_proc_error "shadowd_migrate_test" -1 "can't find migrate host"
-            set_error 0 "ok"
-            return
-         }
-
-         puts $CHECK_OUTPUT "testing sgemaster -migrate on host $migrate_host ..."
-         set output [start_remote_prog $migrate_host "root" $sgemaster_file "-migrate" {exit_var prg_exit_state}]
-         puts $CHECK_OUTPUT $output
-         if { $prg_exit_state != 0 } {
-            add_proc_error "shadowd_migrate_test" -1 "$migrate_host: $sgemaster_file -migrate returned with exit_state = $prg_exit_state:\n$output"
-         }
-
-         wait_for_load_from_all_queues 120
-
-
-         if { [is_remote_file $migrate_host $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after -migrate on host $migrate_host"
-         }
-
-         
-         puts $CHECK_OUTPUT "testing sgemaster -migrate on host $act_qmaster ..."
-         set output [start_remote_prog $act_qmaster "root" $sgemaster_file "-migrate" {exit_var prg_exit_state}]
-         puts $CHECK_OUTPUT $output
-         if { $prg_exit_state != 0 } {
-            add_proc_error "shadowd_migrate_test" -1 "$act_qmaster: $sgemaster_file -migrate returned with exit_state = $prg_exit_state:\n$output"
-         }
-
-         wait_for_load_from_all_queues 120
-
- 
-         if { [is_remote_file $act_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after -migrate on host $act_qmaster"
-         }
-      }
-
-      if { $CHECK_ACT_LEVEL == 3 ||
-           $CHECK_ACT_LEVEL == 4 ||
-           $CHECK_ACT_LEVEL == 5 ||
-           $CHECK_ACT_LEVEL == 6 ||
-           $CHECK_ACT_LEVEL == 8} {
-
-         # shut down qmaster
-         shutdown_system_daemon $ts_config(master_host) "qmaster"
-
-         # check whether qmaster did write lock file
-         wait_for_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file] != 1 } {
-            add_proc_error "shadowd_migrate_test" -1 "found no lock file after shutdown of qmaster"
-         }
-
-         # delete act_qmaster file
-         puts $CHECK_OUTPUT "deleting $act_qmaster_file ..."
-         set result [start_remote_prog $ts_config(master_host) $CHECK_USER "rm" $act_qmaster_file]
-         puts $CHECK_OUTPUT $result
-
-
-         # check if file is removed
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] } {
-            add_proc_error "shadowd_migrate_test" -1 "can't delete act_qmaster file $act_qmaster_file"
-         }
-
-         if { $CHECK_ACT_LEVEL == 4 } {
-            # create empty act_qmaster file
-            puts $CHECK_OUTPUT "touching $act_qmaster_file ..."
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "touch" $act_qmaster_file]
-            puts $CHECK_OUTPUT $result
-            # check if file is touched
-            if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] != 1 } {
-               add_proc_error "shadowd_migrate_test" -1 "can't create act_qmaster file $act_qmaster_file"
-            }
-         }
-
-         if { $CHECK_ACT_LEVEL == 5 } {
-            puts $CHECK_OUTPUT "writing unresolvable host into $act_qmaster_file ..."
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "echo" " trulla > $act_qmaster_file"]
-            puts $CHECK_OUTPUT $result
-            # check if file is touched
-            if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] != 1 } {
-               add_proc_error "shadowd_migrate_test" -1 "can't create act_qmaster file $act_qmaster_file"
-            }
-            # output file content
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set result [string trim $result]
-            puts $CHECK_OUTPUT "act_qmaster_file: \"$result\""
-         }
-
-
-         if { $CHECK_ACT_LEVEL == 6 } {
-            set new_act_master [lindex $ts_config(shadowd_hosts) 0]
-            if { $new_act_master == $ts_config(master_host) } {
-               set new_act_master [lindex $ts_config(shadowd_hosts) 1]
-            }
-
-            puts $CHECK_OUTPUT "writing resolvable host into $act_qmaster_file ..."
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "echo" " $new_act_master > $act_qmaster_file"]
-            puts $CHECK_OUTPUT $result
-            # check if file is touched
-            if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] != 1 } {
-               add_proc_error "shadowd_migrate_test" -1 "can't create act_qmaster file $act_qmaster_file"
-            }
-            # output file content
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set result [string trim $result]
-            puts $CHECK_OUTPUT "act_qmaster_file: \"$result\""
-         }
-
-         if { $CHECK_ACT_LEVEL == 8 } {
-            set arch [resolve_arch $ts_config(master_host)]
-            set gethostname_binary $ts_config(product_root)/utilbin/${arch}/gethostname
-            set output [start_remote_prog $ts_config(master_host) $CHECK_USER $gethostname_binary ""]
-            set line [split $output "\n"]
-            foreach ln $line {
-               if { [string match "*Address*" $ln] } {
-                  set ip_address [split $ln ":"]
-                  set ip_address [lindex $ip_address 1]
-                  set ip_address [string trim $ip_address]
-                  puts $CHECK_OUTPUT "host \"$ts_config(master_host)\"'s IP: \"$ip_address\""
-               }
-            }
-
-
-            puts $CHECK_OUTPUT "writing ip into $act_qmaster_file ..."
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "echo" " $ip_address > $act_qmaster_file"]
-            puts $CHECK_OUTPUT $result
-            # check if file is touched
-            if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] != 1 } {
-               add_proc_error "shadowd_migrate_test" -1 "can't create act_qmaster file $act_qmaster_file"
-            }
-            # output file content
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set result [string trim $result]
-            puts $CHECK_OUTPUT "act_qmaster_file: \"$result\""
-         }
-
-         # restart qmaster
-         startup_qmaster 1
-
-         # wait for all execd's to connect
-         wait_for_load_from_all_queues 120
-
-         # qmaster should delete lock file at startup ...
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after restart of qmaster"
-         }
-
-         # and we should have a new act_qmaster file
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] } {
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set result [string trim $result]
-            puts $CHECK_OUTPUT "act_qmaster_file: \"$result\""
-         } else {
-            add_proc_error "shadowd_migrate_test" -1 "can't delete act_qmaster file $act_qmaster_file"
-         }
-
-
-      }
-
-      if { $CHECK_ACT_LEVEL == 7 } {
-         
-         set wrong_started_qmaster [lindex $ts_config(shadowd_hosts) 0]
-         if { $wrong_started_qmaster == $ts_config(master_host) } {
-            set wrong_started_qmaster [lindex $ts_config(shadowd_hosts) 1]
-         }
-         puts $CHECK_OUTPUT "try to start qmaster on host $wrong_started_qmaster"
-         startup_qmaster 1 "" $wrong_started_qmaster
-
-
-         set my_timeout [timestamp]
-         incr my_timeout 60
-         while { [is_daemon_running $wrong_started_qmaster sge_qmaster] } {
-            after 1000
-            set todo [ expr ( $my_timeout - [timestamp]  ) ]
-            puts -nonewline $CHECK_OUTPUT "\rtimeout in $todo seconds.    "
-            flush stdout
-            if { [timestamp] > $my_timeout } {
-               add_proc_error "shadowd_migrate_test" -1 "timeout waiting for wrongly started qmaster to stop!"
-               break;
-            }
-         }
-         # check whether qmaster did write lock file
-         if { [is_remote_file $wrong_started_qmaster $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after shutdown of wrongly started qmaster on $wrong_started_qmaster"
-         }
-
-         # wait for all execd's to connect
-         wait_for_load_from_all_queues 120
-
-         # qmaster should delete lock file at startup ...
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER $qmaster_lock_file] } {
-            add_proc_error "shadowd_migrate_test" -1 "found lock file after restart of qmaster"
-         }
-
-         # and we should have a new act_qmaster file
-         if { [is_remote_file $ts_config(master_host) $CHECK_USER  $act_qmaster_file ] } {
-            set result [start_remote_prog $ts_config(master_host) $CHECK_USER "cat" $act_qmaster_file]
-            set result [string trim $result]
-            puts $CHECK_OUTPUT "act_qmaster_file: \"$result\""
-         } else {
-            add_proc_error "shadowd_migrate_test" -1 "can't delete act_qmaster file $act_qmaster_file"
-         }
-      }
-   }
-   if { $CHECK_ACT_LEVEL == 9 } {
-      foreach host $ts_config(execd_nodes) {
-         puts $CHECK_OUTPUT "\ntesting heartbeat incrementation on host $host ..."
-      
-         set heartbeat_file [get_tmp_file_name]
-         set arch [resolve_build_arch $host]
-         set test_heartbeat_binary $ts_config(source_dir)/${arch}/test_heartbeat
-
-         set exp_heartbeat 1
-         while { $exp_heartbeat != 3 } {
-            puts $CHECK_OUTPUT "expected heartbeat = $exp_heartbeat ..."
-            set output [start_remote_prog $host $CHECK_USER $test_heartbeat_binary "-only-write $heartbeat_file"]
-            puts $CHECK_OUTPUT $output
-            set heart_beat [get_string_value_between "heartbeat value is" -1 $output]
-            if { $heart_beat != $exp_heartbeat } {
-               add_proc_error "shadowd_migrate_test" -1 "$host: heartbeat should be $exp_heartbeat"
-               break
-            }
-             
-            set cat_output [start_remote_prog $host $CHECK_USER cat $heartbeat_file]
-            puts $CHECK_OUTPUT "cat: $cat_output"
-            if { $cat_output != $heart_beat } {
-               add_proc_error "shadowd_migrate_test" -1 "$host: heartbeat file content != test_heartbeat_binary output"
-               break
-            }
-            incr exp_heartbeat 1
-         }
-
-         puts $CHECK_OUTPUT "now setting heartbeat to 99998 ..."
-         set echo_output [start_remote_prog $host $CHECK_USER echo " 99998 > $heartbeat_file"]
-         puts $CHECK_OUTPUT "$echo_output"
-
-         set exp_heartbeat 99999
-         while { $exp_heartbeat != 2 } {
-            puts $CHECK_OUTPUT "expected heartbeat = $exp_heartbeat ..."
-            set output [start_remote_prog $host $CHECK_USER $test_heartbeat_binary "-only-write $heartbeat_file"]
-            puts $CHECK_OUTPUT $output
-            set heart_beat [get_string_value_between "heartbeat value is" -1 $output]
-            if { $heart_beat != $exp_heartbeat } {
-               add_proc_error "shadowd_migrate_test" -1 "$host: heartbeat should be $exp_heartbeat"
-               break
-            }
-             
-            set cat_output [start_remote_prog $host $CHECK_USER cat $heartbeat_file]
-            puts $CHECK_OUTPUT "cat: $cat_output"
-            if { $cat_output != $heart_beat } {
-               add_proc_error "shadowd_migrate_test" -1 "$host: heartbeat file content != test_heartbeat_binary output"
-               break
-            }
-            incr exp_heartbeat 1
-            if { $exp_heartbeat > 99999 } {
-               set exp_heartbeat 1
-            }
-         }
-      }
-   }
-
+  
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "creating file \"$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file\" ..." 
+   set file_p [ open "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file" "w" ]
+   puts $file_p $shadowd_hostname
+   close $file_p   
    set_error 0 "ok"
 }
+
+#                                                             max. column:     |
+#****** migrate/shadowd_startup() ******
+# 
+#  NAME
+#     shadowd_startup -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_startup { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_startup {} {
+
+   global CHECK_OUTPUT shadowd_hostname CHECK_PRODUCT_ROOT
+   global shadowd_pid
+  
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "starting up shadowd daemon ..."
+   startup_shadowd $shadowd_hostname
+  
+   set mytimeout [ expr ( [timestamp] + 30 ) ]
+   while { [timestamp] < $mytimeout } { 
+      set index_list [ ps_grep "$CHECK_PRODUCT_ROOT" "$shadowd_hostname" ]
+      set new_index ""
+      puts $CHECK_OUTPUT "looking for shadowd daemon process ..."
+      foreach elem $index_list {
+         puts $CHECK_OUTPUT $ps_info(string,$elem)
+         if { [ string first "shadowd" $ps_info(string,$elem) ] >= 0 } {
+            lappend new_index $elem
+            puts $CHECK_OUTPUT "found shadowd!"
+         }
+      }
+      if { [llength $new_index] != 0 } {
+         break;
+      }
+   } 
+   
+   if { [llength $new_index] == 1 }  {
+      set shadowd_index [ lindex $new_index 0 ]
+      set shadowd_pid $ps_info(pid,$shadowd_index)
+      puts $CHECK_OUTPUT "found running shadowd with pid $shadowd_pid"
+   } 
+   if { [llength $new_index] == 0 } {
+      add_proc_error "shadowd_startup" "-1" "shadowd is not running on host $shadowd_hostname"
+   } 
+   if { [llength $new_index] > 1 } {
+      add_proc_error "shadowd_startup" "-1" "more than one shadowd processes are running on host $shadowd_hostname (started with path \"$CHECK_PRODUCT_ROOT\")"
+   }
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** migrate/shadowd_kill_all_shadowd() ******
+# 
+#  NAME
+#     shadowd_kill_all_shadowd -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_kill_all_shadowd { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_kill_all_shadowd {} {
+   global shadowd_hostname
+
+   set nr [ shutdown_all_shadowd $shadowd_hostname ]
+   set nr [ shutdown_all_shadowd $shadowd_hostname ]
+   
+   if { $nr != 0 } {
+      add_proc_error "shadowd_kill_all_shadowd" "-1" "there are still $nr shadowd daemons running on host $shadowd_hostname"
+   }
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** migrate/shadowd_kill_master_and_sheduler() ******
+# 
+#  NAME
+#     shadowd_kill_master_and_sheduler -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_kill_master_and_sheduler { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_kill_master_and_sheduler {} {
+   global CHECK_CORE_MASTER shadowd_master_spool_dir
+
+   shutdown_master_and_scheduler $CHECK_CORE_MASTER $shadowd_master_spool_dir
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** migrate/shadowd_wait_for_startup() ******
+# 
+#  NAME
+#     shadowd_wait_for_startup -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_wait_for_startup { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_wait_for_startup {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT shadowd_hostname CHECK_CORE_MASTER
+   global CHECK_USER CHECK_TCL_SCRIPTFILE_DIR shadowd_master_spool_dir
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "removing qmasters lock ..."
+   puts $CHECK_OUTPUT "file: \"$shadowd_master_spool_dir/lock\""
+   
+   start_remote_tcl_prog $CHECK_CORE_MASTER $CHECK_USER "file_procedures.tcl" "delete_file" "$shadowd_master_spool_dir/lock"
+   
+  
+   set time [timestamp]
+   while { 1 } {
+      puts $CHECK_OUTPUT "waiting for startup of qmaster and scheduler ..."
+      set running [ are_master_and_scheduler_running $shadowd_hostname $shadowd_master_spool_dir]
+      if { $running == 3 } {
+         break; 
+      }
+
+      set runtime [expr ( [timestamp] - $time) ]
+      if { $runtime >= 600 } {
+          add_proc_error "shadowd_wait_for_startup" -1 "timeout while waiting for startup of qmaster and scheduler"
+          break;
+      }
+      sleep 30
+   } 
+   
+   wait_for_load_from_all_queues 600
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** migrate/shadowd_kill_shadowd_master_and_shadowd_sheduler() ******
+# 
+#  NAME
+#     shadowd_kill_shadowd_master_and_shadowd_sheduler -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_kill_shadowd_master_and_shadowd_sheduler { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_kill_shadowd_master_and_shadowd_sheduler {} {
+   global shadowd_hostname shadowd_master_spool_dir
+
+   shutdown_master_and_scheduler $shadowd_hostname $shadowd_master_spool_dir
+   set_error 0 "ok"
+}
+
+#                                                             max. column:     |
+#****** migrate/shadowd_cleanup() ******
+# 
+#  NAME
+#     shadowd_cleanup -- ??? 
+#
+#  SYNOPSIS
+#     shadowd_cleanup { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc shadowd_cleanup {} {
+   global ts_config
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT shadowd_file shadowd_pid 
+   global shadowd_hostname CHECK_CORE_MASTER CHECK_USER
+   global shadowd_original_master_spool_dir shadowd_moved_master_dir
+
+   if { $shadowd_pid > 0  } {
+      set nr [ shutdown_all_shadowd $shadowd_hostname  ]
+      set nr [ shutdown_all_shadowd $shadowd_hostname  ]
+      if { $nr != 0 } {
+         add_proc_error "shadowd_cleanup" "-1" "there are still $nr shadowd daemons running on host $shadowd_hostname"
+      }
+   }
+ 
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "delete file \"$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file\" ..." 
+   delete_file "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file" 
+
+
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "setting act_qmaster to $CHECK_CORE_MASTER ..."
+   set file_p [ open "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/act_qmaster" "w" ]
+   puts $file_p $CHECK_CORE_MASTER
+   close $file_p   
+
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "starting up qmaster and scheduler on host $CHECK_CORE_MASTER ..."
+   startup_qmaster 
+   wait_for_load_from_all_queues 600 
+
+
+   if { $shadowd_moved_master_dir == 1 } {
+      puts $CHECK_OUTPUT "restoring old qmaster spool directory"
+      move_qmaster_spool_dir $shadowd_original_master_spool_dir
+   }
+   set_error 0 "ok"
+}
+
+# ------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

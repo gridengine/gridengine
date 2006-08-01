@@ -40,7 +40,6 @@
 
 #include "uti/sge_monitor.h"
 #include "cull.h"
-#include "sgeobj/sge_object.h"
 
 typedef struct _gdi_object_t gdi_object_t;
 
@@ -78,7 +77,7 @@ struct _gdi_object_t {
    int                key_nm;          /* QU_qname */
    lDescr             *type;           /* QU_Type */
    char               *object_name;    /* "queue" */
-   sge_object_type    list_type;       /* identifier to retrive the master list via object_type_get_master_list*/
+   lList              **master_list;   /* &Master_Calendar_List */
    modifier_func_t    modifier;        /* responsible for validating each our attribute modifier */
    writer_func_t      writer;          /* function that spools our object */
    on_success_func_t  on_success;      /* do everything what has to be done on successful writing */

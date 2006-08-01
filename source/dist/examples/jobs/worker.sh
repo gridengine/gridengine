@@ -48,7 +48,6 @@ time=120
 procs=1
 ntimes=1
 wparam=""
-
 if [ $# -ge 1 ]; then
    time=$1
 fi

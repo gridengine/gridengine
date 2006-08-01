@@ -43,79 +43,13 @@
 
 #define DSTRING_LAYER BASIS_LAYER
 
+/* please add here a defined(<ARCH>) if vsnprintf() family is not supported */
+#if 0
+#define HAS_NO_VSNPRINTF 
+#endif
+
+
 /* JG: TODO: Introduction uti/dstring/--Dynamic_String is missing */
-
-typedef const char* (*sge_dstring_copy_append_f)(dstring *sb, const char *a);
-
-static const char*
-sge_dstring_vsprintf_copy_append(dstring *sb,
-                                 const char *format,
-                                 va_list ap,
-                                 sge_dstring_copy_append_f function);
-
-static const char*
-sge_dstring_vsprintf_copy_append(dstring *sb,
-                                 const char *format,
-                                 va_list ap,
-                                 sge_dstring_copy_append_f function)
-{
-   const char *ret = NULL;
-
-   if (sb != NULL && format != NULL && function != NULL) {
-      char static_buffer[BUFSIZ];
-      int vsnprintf_ret;
-
-      vsnprintf_ret = vsnprintf(static_buffer, BUFSIZ, format, ap);
-      /*
-       * We have to handle three cases here:
-       *    1) If the function returns -1 then vsprintf does not follow 
-       *       the C99 standard. We have to increase the buffer until
-       *       all parameters fit into the buffer.
-       *    2) The function returns a value >BUFSIZE. This indicates
-       *       that the function follows the C99 standard. 
-       *       vsnprintf_ret is the number of characters which would
-       *       have been written to the buffer if it where large enough.
-       *       We have to create a buffer of this size.
-       *    3) If the return value is >0 and <BUFSIZ than vsprintf
-       *       was successfull. We do not need a dyn_buffer.
-       */
-      if (vsnprintf_ret == -1) {
-         size_t dyn_size = 2 * BUFSIZ;
-         char *dyn_buffer = sge_malloc(dyn_size);
-
-         while (vsnprintf_ret == -1 && dyn_buffer != NULL) {
-            vsnprintf_ret = vsnprintf(dyn_buffer, dyn_size, format, ap);
-            if (vsnprintf_ret == -1) {
-               dyn_size *= 2;
-               dyn_buffer = sge_realloc(dyn_buffer, dyn_size);
-            }
-         }
-         if (dyn_buffer != NULL) {
-            ret = function(sb, dyn_buffer);
-            sge_free(dyn_buffer);
-         } else {
-            /* error: no memory */
-            ret = NULL;
-         }
-      } else if (vsnprintf_ret > BUFSIZ) {
-         char *dyn_buffer = NULL;
-
-         dyn_buffer = sge_malloc(vsnprintf_ret + 1);
-         if (dyn_buffer != NULL) {
-            vsnprintf(dyn_buffer, vsnprintf_ret + 1, format, ap);
-            ret = function(sb, dyn_buffer);
-            sge_free(dyn_buffer);
-         } else {
-            /* error: no memory */
-            ret = NULL;
-         }
-      } else {
-         ret = function(sb, static_buffer);
-      }
-   }
-   return ret;
-}
-
 
 static void
 sge_dstring_allocate(dstring *sb, size_t request)
@@ -279,24 +213,45 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 *
 *  NOTES
 *     MT-NOTE: sge_dstring_sprintf() is MT safe
+*
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
 ******************************************************************************/
 const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
-   const char *ret = NULL;
+   va_list ap;
 
-   if (sb != NULL) {
-      if (format != NULL) {
-         va_list ap;
+   va_start(ap, format);
 
-         va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap,
-                                                sge_dstring_copy_string);
-      } else {
-         ret = sb->s;
-      }
+   if (sb == NULL) {
+      return NULL;
    }
 
-   return ret;
+   if (format == NULL) {
+      return sb != NULL ? sb->s : NULL;
+   }
+
+   if (sb->is_static) {
+      /* add here a defined(<ARCH>) if snprintf is not supported */
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(sb->s, format, ap);
+#else
+      vsnprintf(sb->s, sb->size, format, ap);
+#endif
+      sb->length = strlen(sb->s);
+   } else {
+      char buf[BUFFER_SIZE];
+
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
+      sge_dstring_copy_string(sb, buf);
+   }
+
+   return sb->s;
 }
 
 /****** uti/dstring/sge_dstring_vsprintf() *************************************
@@ -319,20 +274,40 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 *
 *  NOTES
 *     MT-NOTE: sge_dstring_vsprintf() is MT safe
+*
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
 ******************************************************************************/
 const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 {
-   const char *ret = NULL;
-
-   if (sb != NULL) {
-      if (format != NULL) {
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap,
-                                                sge_dstring_copy_string);
-      } else {
-         ret = sb->s;
-      }
+   if (sb == NULL) {
+      return NULL;
    }
-   return ret;
+
+   if (format == NULL) {
+      return sb != NULL ? sb->s : NULL;
+   }
+
+   if (sb->is_static) {
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(sb->s, format, ap);
+#else
+      vsnprintf(sb->s, sb->size, format, ap);
+#endif
+      sb->length = strlen(sb->s);
+   } else {
+      char buf[BUFFER_SIZE];
+
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
+      sge_dstring_copy_string(sb, buf);
+   }
+
+   return sb->s;
 }
 
 /****** uti/dstring/sge_dstring_sprintf_append() ******************************
@@ -358,23 +333,44 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 *
 *  NOTES
 *     MT-NOTE: sge_dstring_sprintf_append() is MT safe
+*
+*     JG: TODO (265): Do not use a fixed size buffer and vprintf!
+*                     This undoes the benefits of a dynamic string
+*                     implementation.
 ******************************************************************************/
 const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
-   const char *ret = NULL;
+   va_list ap;
 
-   if (sb != NULL) {
-      if (format != NULL) {
-         va_list ap;
-   
-         va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap, 
-                                                sge_dstring_append);
-      } else {
-         ret = sb->s;
-      }
+   if (sb == NULL) {
+      return NULL;
    }
-   return ret;
+
+   va_start(ap, format);
+   if (format == NULL) {
+      return sb != NULL ? sb->s : NULL;
+   }
+
+   if (sb->is_static) {
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(sb->s + sb->length, format, ap);
+#else
+      vsnprintf(sb->s + sb->length, sb->size - sb->length, format, ap);
+#endif
+      sb->length = strlen(sb->s);
+   } else {
+      char buf[BUFFER_SIZE];
+
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
+#endif
+
+      sge_dstring_append(sb, buf);
+   }
+
+   return sb->s;
 }
 
 /****** uti/dstring/sge_dstring_copy_string() *********************************
@@ -659,6 +655,7 @@ const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
    sge_dstring_sprintf(sb, buffer);
    return sge_dstring_get_string(sb);
 }
+
 
 #if 0 /* EB: DEBUG: */
 int main(void)

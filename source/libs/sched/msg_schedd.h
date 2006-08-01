@@ -223,20 +223,15 @@
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed"))
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed"))
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47228, _("ensure_valid_where(): lWhat() for job failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47227, _("ensure_valid_where(): lWhat() for job failed"))
 
 /* 
 ** schedd/scheduler.c
 */ 
-#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
+#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47228, _("queues dropped because they are temporarily not available: "))
 #define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47229, _("no pending jobs to perform scheduling on"))
 #define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
-/* 
-** schedd/sge.c
-*/ 
-/* #define MSG_FILE_OPENSTDOUTASFILEFAILED            _message(47229, _("Could not open stdout as file")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SGE_UNABLETODUMPJOBLIST                _message(47230, _("Unable to dump job list")) __TS Removed automatically from testsuite!! TS__*/
 
 /* 
 ** schedd/sge_share_mon.c

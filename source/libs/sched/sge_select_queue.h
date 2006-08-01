@@ -112,8 +112,6 @@ typedef struct {
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
-
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
@@ -159,5 +157,8 @@ int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
 
 int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, const lList *exechost_list, const lList *complex_list);
 
+char *trace_resource(lListElem *rep);
+
+void trace_resources(lList *resources);
 
 #endif

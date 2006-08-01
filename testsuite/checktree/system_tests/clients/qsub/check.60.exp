@@ -33,16 +33,14 @@
 
 lappend check_functions "check_option_sync"
 lappend check_functions "check_option_sync_t"
-lappend check_functions "check_option_sync_ww"
 
 proc check_qhold_jobname {} {
-   global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
-   global CHECK_FIRST_FOREIGN_SYSTEM_USER
+ global check_errno CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT job_output_dir actual_host
+ global CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # first clean up output directory:  
    setup_output_directory
 
-   # submit jobs, second one depends on FIRST one
    set jobargs "-h -l h=${actual_host} -N FIRST -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 90" 
    set hold_job1 [submit_job $jobargs] 
 
@@ -50,12 +48,14 @@ proc check_qhold_jobname {} {
    set hold_job2 [submit_job $jobargs] 
 
 
+
    # wait for jobs to get in pending state
    wait_for_jobpending $hold_job1 "FIRST" 200
    wait_for_jobpending $hold_job2 "Sleeper" 200 
 
 
-   # job 1 should not run within the next 60 seconds  (user hold)
+
+   # job 1 should not run within the next 60 seconds  
    if { [wait_for_jobstart $hold_job1 "Sleeper" 60 0] != -1 } {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job1 should not run until yet(1)"
    } 
@@ -66,11 +66,15 @@ proc check_qhold_jobname {} {
    wait_for_jobstart $hold_job1 "FIRST" 100
 
 
-   # job 2 should not run within the next minute (dependency)
+
+
+   # job 2 should not run within the next minute 
    if { [wait_for_jobstart $hold_job2 "Sleeper" 60 0] != -1 } {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job2 should not run until yet(2)"
    } 
 
+
+   
 
    # job1 will stop in ca. 30 sec
    wait_for_jobend $hold_job1 "FIRST" 100
@@ -80,6 +84,8 @@ proc check_qhold_jobname {} {
 
    # job2 should run till end
    wait_for_jobend $hold_job2 "Sleeper" 100 
+
+
 
 
    set back [ del_job_files $hold_job1 $job_output_dir 2 ] 
@@ -92,11 +98,16 @@ proc check_qhold_jobname {} {
       add_proc_error "check_qhold_jobname" -1 "job $hold_job2 did not produce error and output file"
    }
 
+
+   
+
    puts $CHECK_OUTPUT "Test wait for not existent job (job should immediately run)"
    set jobargs "-hold_jid FIRST -l h=${actual_host} -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
    set job_id [submit_job $jobargs] 
    wait_for_jobstart $job_id "Sleeper" 60
    wait_for_jobend $job_id "Sleeper" 60
+
+
 
    puts $CHECK_OUTPUT "additional job submit with same name test"
    set jobargs "-h -l h=${actual_host} -N FIRST -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
@@ -153,6 +164,7 @@ proc check_qhold_jobname {} {
 
    wait_for_jobstart $hold_job3 "Sleeper" 75
    wait_for_jobend $hold_job3 "Sleeper" 75
+
 
 
    puts $CHECK_OUTPUT "additional job submit with same name test"
@@ -224,36 +236,39 @@ proc check_option_v {} {
    puts $CHECK_OUTPUT "\njob $result has args: \"$jobargs\""
 
    if { $result < 0 } {
-      add_proc_error "check_option_v" -1 "could not submit job"
-      set_error 0 ok
+      set_error -1 "could not submit job"
       return
    }
 
+   set time [ expr ( [timestamp] + 300  ) ] 
+
+   set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-j" "$result"} qstat_out]
+
    # check if the environment variables are set correctly in the job object
-   set qstat_out [start_sge_bin qstat "-j"]
    if { [string match *DISPLAY*,test_var1=hello=world,test_var2=hello=my=friend* $qstat_out] == -1 } {
-      add_proc_error "check_option_v" -1 "-v option failed, equal sign within variable values not supported"
+      set_error -1 "-v option failed, equal sign within variable values not supported"
+      return
    }
 
    # JG: TODO: instead of starting the example sleeper job, we should output the environment and sleep for some
    # time. Then we could check, if the passed environment variables are really set in the job environment.
 
-   set time [ expr ( [timestamp] + 300  ) ] 
    while { [timestamp] < $time }  {
       sleep 1
       set back [was_job_running $result 0] 
       if {$back != -1} {
          set back [ del_job_files $result $job_output_dir 2 ] 
          if { $back != 2 } {
-            add_proc_error "check_option_v" -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
+            return
+         } else {
+            set_error 0 "no error"
+            return
          }
-         set_error 0 ok
-         return
       }
    }
  
-   add_proc_error "check_option_v" -1 "timeout while waiting for job accounting"
-   set_error 0 ok
+   set_error -1 "timeout while waiting for job accounting"
 }
 
 #                                                             max. column:     |
@@ -368,65 +383,5 @@ proc check_option_sync_t {} {
    } else {
       set_error -1 "qsub terminated abnormally"
    }
-}
-
-proc check_option_sync_ww {} {
-   global CHECK_OUTPUT CHECK_HOST
-   global ts_config CHECK_PRODUCT_ROOT
-
-   set found_warning 0
-   set found_job_submitted 0
-   set found_timeout 0
-
-   set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-   set WARNING             [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_VERIFYWARN] ]
-   set NOSUITABLEQ_S       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOSUITABLEQ_S] $WARNING ]
-
-   set option "-sync y -w w -l arch=no_arch"
-   set jobargs "$option -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 100" 
-
-   set qsub_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" "qsub" "$jobargs"]
-   set sp_id [ lindex $qsub_id 1 ] 
-  
-   set timeout 20
-   expect {
-      -i $sp_id full_buffer {
-         add_proc_error "check_option_sync_ww" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-      }
-       -i $sp_id -- "$NOSUITABLEQ_S" {
-         set found_warning 1
-         exp_continue
-      }
-      -i $sp_id -- "$JOB_SUBMITTED" {
-         set found_job_submitted 1
-         trigger_scheduling
-         exp_continue
-      }
-      -i $sp_id -- "*our job*has been submitted" {
-         # till 60u7 the qmaster reported "your" but it should be "Your"
-         set found_job_submitted 1
-         trigger_scheduling
-         exp_continue
-      }
-      -i $sp_id "_exit_status_:(*)*\n" {
-            puts $CHECK_OUTPUT "got exit status from script:\n$expect_out(buffer)"
-      }
-      -i $sp_id timeout {
-         set found_timeout 1
-      }
-   }
-   close_spawn_process $qsub_id
-
-   if { $found_warning == 0 } {
-      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - got no warning message"
-   } elseif { $found_job_submitted == 0 } {
-      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - got no submitted message"
-   } elseif { $found_timeout == 0 } {
-      add_proc_error "check_option_sync_ww" -1 "IZ 1945: qsub -sync -w w broken - sync does not wait until jobend"
-   }
-
-   delete_all_jobs
-
-   set_error 0 "ok"
 }
 

@@ -63,7 +63,6 @@
 #include "sge_var.h"
 #include "sge_qinstance.h"
 #include "get_path.h"
-#include "sgeobj/sge_object.h"
 #include "sge_bootstrap.h"
 #include "sge_answer.h"
 
@@ -254,6 +253,8 @@ int slave
            slave ?"slave ":"", lGetUlong(jelem, JB_job_number),
            de->commproc, de->host, de->id));
 
+   lSetString(jelem, JB_job_source, NULL); 
+
    jobid = lGetUlong(jelem, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
 
@@ -264,7 +265,7 @@ int slave
     * 
     * We can ignore this job because job is resend by qmaster.
     */
-   jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+   jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       jep_jatep = job_search_task(jep, NULL, jataskid);
       if(jep_jatep != NULL) {
@@ -274,7 +275,7 @@ int slave
          goto Ignore;   /* don't set queue in error state */
       }
 
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
 
    /* initialize state - prevent slaves from getting started */
@@ -391,10 +392,10 @@ int slave
           * check wether there is another master task of the same job running
           * on this host. This is important in case of array pe-jobs.
           */
-         next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+         next_tmp_job = lGetElemUlongFirst(Master_Job_List,
                                            JB_job_number, job_id, &iterator);
          while((tmp_job = next_tmp_job) != NULL) {
-            next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+            next_tmp_job = lGetElemUlongNext(Master_Job_List,
                                            JB_job_number, job_id, &iterator);
            
             ja_task_list = lGetList(tmp_job,JB_ja_tasks);
@@ -472,7 +473,7 @@ int slave
 
    if (!jep_jatep) {
       /* put into job list */
-      lAppendElem(*(object_type_get_master_list(SGE_TYPE_JOB)), jelem);
+      lAppendElem(Master_Job_List, jelem);
    }
 
    DEXIT;
@@ -719,14 +720,14 @@ int *synchron
    jobid    = lGetUlong(petrep, PETR_jobid);
    jataskid = lGetUlong(petrep, PETR_jataskid);
 
-   jep=lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+   jep=lGetElemUlongFirst(Master_Job_List, JB_job_number, jobid, &iterator);
    while(jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
       if(jatep != NULL) {
          break;
       }
 
-      jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, jobid, &iterator);
+      jep = lGetElemUlongNext(Master_Job_List, JB_job_number, jobid, &iterator);
    }
    
    if (jep == NULL) {

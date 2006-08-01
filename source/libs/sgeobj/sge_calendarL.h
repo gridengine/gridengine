@@ -53,7 +53,7 @@ enum {
    CAL_parsed_week_calendar
 };
 
-LISTDEF(CAL_Type)
+ILISTDEF(CAL_Type, Calendar, SGE_CALENDAR_LIST)
    SGE_STRING(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_STRING(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL)

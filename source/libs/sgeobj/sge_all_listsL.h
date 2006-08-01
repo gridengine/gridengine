@@ -94,7 +94,6 @@
 #include "sge_qetiL.h"
 #include "cull_xmlL.h"
 #include "sched/sge_select_queueL.h"
-#include "sgeobj/sge_limit_ruleL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -263,11 +262,6 @@ extern "C" {
       {SCT_LOWERBOUND, SCTS, SCTN},             /* scheduler categories */
 
       {REF_LOWERBOUND, REFS, REFN},             /* a simple ref object */
-
-      {LIRS_LOWERBOUND, LIRSS, LIRSN},          /* limitation rule set */
-      {LIR_LOWERBOUND, LIRS, LIRN},             /* limitation rule */
-      {LIRF_LOWERBOUND, LIRFS, LIRFN},          /* limitation rule filter */
-      {LIRL_LOWERBOUND, LIRLS, LIRLN},          /* limitation rule limit */
       
       {0, 0, NULL}
    };

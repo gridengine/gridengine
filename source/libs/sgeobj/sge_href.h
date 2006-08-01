@@ -88,8 +88,8 @@ lListElem *
 href_list_locate(const lList *this_list, const char *name);
 
 bool 
-href_list_resolve_hostnames(lList *this_list, lList **answer_list,
-                            bool ignore_error);
+href_list_resolve_hostnames(lList *this_list, 
+                            lList **answer_list, bool ignore_error);
 
 void
 href_list_debug_print(const lList *this_list, const char *prefix);

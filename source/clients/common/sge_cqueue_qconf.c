@@ -68,6 +68,48 @@ static void insert_custom_complex_values_writer(spooling_field *fields);
 static int write_QU_consumable_config_list(const lListElem *ep, int nm,
                                            dstring *buffer, lList **alp);
 
+/* Bugfix: Issuezilla #1198
+ * In order to remove slots from the complex values list, we use a custom writer
+ * for the QU_consumable_config_list field.  This writer is defined in
+ * write_QU_consumable_config_list() and tries to mimic the format specified by
+ * the cqqconf_sfi spooling instruction.  If either the
+ * cqqconf_sub_name_value_space_sfi spooling instruction or the cqqconf_sfi
+ * subinstruction field changes, the write_QU_consumable_config_list() function
+ * will have to be changed to match. */
+static const spool_flatfile_instr cqqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &cqqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr cqqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &cqqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
 bool
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
@@ -319,7 +361,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
       char *filename = NULL;      
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, CQ_fields,
-                                                     &qconf_sfi, SP_DEST_TMP,
+                                                     &cqqconf_sfi, SP_DEST_TMP,
                                                      SP_FORM_ASCII, filename,
                                                      false);
       
@@ -335,7 +377,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          fields_out[0] = NoName;
          cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
                                              CQ_fields, fields_out, false, 
-                                             &qconf_sfi, SP_FORM_ASCII, 
+                                             &cqqconf_sfi, SP_FORM_ASCII, 
                                              NULL, filename);
 
          if (answer_list_output(answer_list)) {
@@ -422,7 +464,7 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          CQ_fields, fields_out, false, &qconf_sfi,
+                                          CQ_fields, fields_out, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output(answer_list)) {
@@ -497,7 +539,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          CQ_fields, fields_out, false, &qconf_sfi,
+                                          CQ_fields, fields_out, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output(answer_list)) {
@@ -628,7 +670,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                            filename_stdout = spool_flatfile_write_object(
                                                        answer_list, qinstance,
                                                        false, fields,
-                                                       &qconf_sfi,
+                                                       &cqqconf_sfi,
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
@@ -690,7 +732,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 
                            filename = spool_flatfile_write_object(answer_list, qinstance,
                                                                   false, fields,
-                                                                  &qconf_sfi,
+                                                                  &cqqconf_sfi,
                                                                   SP_DEST_STDOUT,
                                                                   SP_FORM_ASCII, NULL,
                                                                   false);
@@ -725,7 +767,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      }
 
                      outname = spool_flatfile_write_object(answer_list, cqueue, 
-                                                 false, CQ_fields, &qconf_sfi,
+                                                 false, CQ_fields, &cqqconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
                      FREE(outname);
@@ -760,7 +802,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       DTRACE;
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
       filename = spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
-                                             &qconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
+                                             &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                              NULL, false);
                            
       FREE(filename);
@@ -878,6 +920,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
                              MSG_CQUEUE_DEFOVERWRITTEN_SSSSS,
                              cqueue_attribute_array[index].name,
                              name, cqueue_name, name, cqueue_name);
+                     sge_dstring_append(ds, "\n");
                   }
 
                   lFreeList(&add_hosts);
@@ -898,6 +941,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
                              MSG_CQUEUE_UNUSEDATTRSETTING_SS,
                              cqueue_attribute_array[index].name,
                              name, cqueue_name);
+                  sge_dstring_append(ds, "\n");
                } else {
                   DTRACE;
                }
@@ -977,8 +1021,8 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
    
    /* Look through the complex_values list and print everything but slots */
    /* The format we're using to print is intended to replicate what is set forth
-    * in the qconf_sub_name_value_space_sfi spooling instruction.  If this
-    * instruction changes, or if the qconf_sfi spooling instruction changes to
+    * in the cqqconf_sub_name_value_space_sfi spooling instruction.  If this
+    * instruction changes, or if the cqqconf_sfi spooling instruction changes to
     * use a new sub-instruction, this function will have to be changed to
     * to reflect this.  Otherwise, the complex values will be printed in a
     * different format from the other attributes. */

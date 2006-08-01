@@ -33,10 +33,9 @@
 #include <string.h>
 #include <time.h>
 #include <limits.h>
-#include <errno.h>
 
-#include "uti/sge_stdio.h"
 #include "sge_all_listsL.h"
+#include "sge_stdio.h" 
 #include "schedd_monitor.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
@@ -44,29 +43,12 @@
 #include "setup_path.h"
 #include "sge_answer.h"
 
-#include "msg_common.h"
+int monitor_next_run = 0;
+char log_string[2048 + 1] = "invalid log_string";
 
-static bool monitor_next_run = false;
-static char log_string[2048 + 1] = "invalid log_string";
-static char schedd_log_file[SGE_PATH_MAX + 1] = "";
 
 /* if set we do not log into schedd log file but we fill up this answer list */
 static lList **monitor_alpp = NULL;
-
-bool schedd_is_monitor_next_run(void)
-{
-   return monitor_next_run;
-}
-
-void schedd_set_monitor_next_run(bool set)
-{
-   monitor_next_run = set;
-}
-
-char* schedd_get_log_string(void)
-{
-   return log_string;
-}
 
 void clean_monitor_alp()
 {
@@ -77,11 +59,16 @@ void set_monitor_alpp(
 lList **alpp 
 ) {
    monitor_alpp = alpp;
-   monitor_next_run = (alpp!=NULL)?true:false;
+   monitor_next_run = (alpp!=NULL);
 }
 
-int schedd_log(const char *logstr) 
-{
+int schedd_log(const char *logstr) {
+   time_t now;
+   FILE *fp;
+   static char schedd_log_file[SGE_PATH_MAX + 1] = "";
+   char time_str[256 + 1];
+   char str[128];
+
    DENTER(TOP_LAYER, "schedd_log");
 
    if (!monitor_next_run) {
@@ -94,20 +81,15 @@ int schedd_log(const char *logstr)
 /*       DPRINTF(("schedd_log: %s\n", logstr)); */
       sprintf(logloglog, "%s", logstr);
       answer_list_add(monitor_alpp, logloglog, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-   } 
-   else {
-      time_t now;
-      FILE *fp = NULL;
-      char *time_str = NULL;
-      char str[128];
-   
+   } else {
       if (!*schedd_log_file) {
          sprintf(schedd_log_file, "%s/%s/%s", path_state_get_cell_root(), "common", SCHED_LOG_NAME);
          DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));
       }
 
       now = (time_t)sge_get_gmt();
-      time_str =  ctime_r(&now, str);
+      /* strftime(time_str, sizeof(time_str), "%m-%d-%Y:%H:%M:%S ", localtime(&now)); */
+      strcpy(time_str, ctime_r((time_t *)&now, str));
       if (time_str[strlen(time_str) - 1] == '\n') {
          time_str[strlen(time_str) - 1] = '|';
       }
@@ -119,6 +101,8 @@ int schedd_log(const char *logstr)
          return -1;
       }
 
+/*       DPRINTF(("Logging: %s%s\n", time_str, logstr)); */
+
       fprintf(fp, "%s", time_str);
       fprintf(fp, "%s\n", logstr);
       FCLOSE(fp);
@@ -127,7 +111,6 @@ int schedd_log(const char *logstr)
    DEXIT;
    return 0;
 FCLOSE_ERROR:
-   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedd_log_file, strerror(errno)));
    DEXIT;
    return -1;
 }
@@ -151,6 +134,8 @@ int schedd_log_list(const char *logstr, lList *lp, int nm) {
    }
    
    fields[0] = nm;
+
+   
 
    for_each(ep, lp) {
       if (!lp_part) {

@@ -37,10 +37,7 @@
 #include "uti/sge_monitor.h"
 
 
-extern int    sge_add_event_client_local(lListElem *clio, lList **alpp, 
-                                         event_client_update_func_t update_func, monitoring_t *monitor);
 extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*, monitoring_t *monitor);
-
 extern int    sge_mod_event_client(lListElem*, lList**, char*, char*);
 extern bool   sge_has_event_client(u_long32);
 extern void   sge_remove_event_client(u_long32);

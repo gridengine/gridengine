@@ -79,7 +79,6 @@
 #include "sge_profiling.h"
 #include "execd.h"
 #include "qm_name.h"
-#include "sgeobj/sge_object.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -118,6 +117,7 @@ dispatch_entry execd_dispatcher_table[] = {
    { TAG_SIGJOB,        NULL, NULL, 0, execd_signal_queue },
    { TAG_SIGQUEUE,      NULL, NULL, 0, execd_signal_queue },
    { TAG_KILL_EXECD,    NULL, NULL, 0, execd_kill_execd  },
+   { TAG_NEW_FEATURES,  NULL, NULL, 0, execd_new_features },
    { TAG_GET_NEW_CONF,  NULL, NULL, 0, execd_get_new_conf },
    { -1,                NULL, NULL, 0, execd_ck_to_do}
 };
@@ -183,7 +183,6 @@ char **argv
    static char tmp_err_file_name[SGE_PATH_MAX];
    time_t next_prof_output = 0;
    int execd_exit_state = 0;
-   lList **master_job_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -310,9 +309,8 @@ char **argv
    INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
 #endif
 
-   master_job_list = object_type_get_master_list(SGE_TYPE_JOB);
-   *master_job_list = lCreateList("Master_Job_List", JB_Type);
-   job_list_read_from_disk(master_job_list, "Master_Job_List",
+   Master_Job_List = lCreateList("Master_Job_List", JB_Type);
+   job_list_read_from_disk(&Master_Job_List, "Master_Job_List",
                            0, SPOOL_WITHIN_EXECD, 
                           job_initialize_job);
    
@@ -375,7 +373,7 @@ char **argv
       }
    }
 
-   lFreeList(master_job_list);
+   lFreeList(&Master_Job_List); 
   
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
 
@@ -667,7 +665,8 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    /* Loop over all options. Only valid options can be in the
       ppcmdline list.
    */
-   while(lGetNumberOfElem(*ppcmdline)) {
+   while(lGetNumberOfElem(*ppcmdline))
+   {
       /* -help */
       if(parse_flag(ppcmdline, "-help", &alp, help)) {
          usageshowed = 1;
@@ -675,7 +674,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
          break;
       }
    }
-   
    if(lGetNumberOfElem(*ppcmdline)) {
       sprintf(str, MSG_PARSE_TOOMANYARGS);
       if(!usageshowed)
@@ -684,7 +682,6 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
       DEXIT;
       return alp;
    }
-
    DEXIT;
    return alp;
 }

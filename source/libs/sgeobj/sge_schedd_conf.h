@@ -223,9 +223,6 @@ int sconf_get_fast_jobs(void);
 void sconf_inc_comprehensive_jobs(void); 
 int sconf_get_comprehensive_jobs(void);
 
-void sconf_set_decay_constant(double decay);
-double sconf_get_decay_constant(void);
-
 void sconf_reset_jobs(void);
 
 #endif /* __SGE_SCHEDD_CONF_H */

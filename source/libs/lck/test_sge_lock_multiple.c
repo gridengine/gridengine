@@ -49,7 +49,6 @@
 /*-------------------------*/
 
 static pthread_mutex_t  mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 
 /*--------------------------------*/
 /* part for the thread local test */
@@ -97,6 +96,8 @@ static void has_finished(const char* str, double time)
    Control.working--;
    Control.time += time;
 
+   printf("time: %f\n", time);
+
    if (Control.working == 0) {
       Control.working = threads;
       Control.time /= threads;
@@ -136,11 +137,6 @@ int get_thrd_demand(void)
    
    return (int)p;
 }
-
-static void log_once_init(void)
-{
-   return;
-} 
 
 void *(*get_thrd_func(void))(void *anArg)
 {
@@ -211,22 +207,6 @@ static void *thread_function(void *anArg)
    time_new = after.tv_sec - before.tv_sec + (time_new/1000000);
 
    has_finished("thread local   ", time_new);
-  
-   gettimeofday(&before, NULL); 
-   for (i = 0; i < max; i++) {
-      pthread_once(&log_once, log_once_init);
-      {
-        GET_SPECIFIC(state_t, state, state_init, state_key, "test_sge_lock_multiple");
-         state->value2 = state->value +1;
-         state->value = state->value2 +1;
-      }
-   }
-   gettimeofday(&after, NULL);
-
-   time_new = after.tv_usec - before.tv_usec;
-   time_new = after.tv_sec - before.tv_sec + (time_new/1000000);
-
-   has_finished("thread local once ", time_new);
    
    gettimeofday(&before, NULL); 
    for (i = 0; i < max; i++) {

@@ -70,6 +70,10 @@
 
 #include "sge_job.h"
   
+lList *Master_Job_List = NULL;
+lList *Master_Zombie_List = NULL;
+lList *Master_Job_Schedd_Info_List = NULL;
+
 /****** sgeobj/job/job_get_ja_task_template_pending() *************************
 *  NAME
 *     job_get_ja_task_template_pending() -- create a ja task template 
@@ -727,7 +731,6 @@ int job_count_pending_tasks(lListElem *job, bool count_all)
    return n;
 }
 
-
 /****** sgeobj/job/job_delete_not_enrolled_ja_task() **************************
 *  NAME
 *     job_delete_not_enrolled_ja_task() -- remove unenrolled task 
@@ -1053,12 +1056,17 @@ const char *job_get_shell_start_mode(const lListElem *job,
                                      const char *conf_shell_start_mode) 
 {
    const char *ret;
-   const char *queue_start_mode = lGetString(queue, QU_shell_start_mode);
 
-   if (queue_start_mode && strcasecmp(queue_start_mode, "none")) {
-      ret = queue_start_mode;
+   if (lGetString(job, JB_job_source)) {
+      ret = "raw_exec";
    } else {
-      ret = conf_shell_start_mode;
+      const char *queue_start_mode = lGetString(queue, QU_shell_start_mode);
+   
+      if (queue_start_mode && strcasecmp(queue_start_mode, "none")) {
+         ret = queue_start_mode;
+      } else {
+         ret = conf_shell_start_mode;
+      }
    }
    return ret;
 }
@@ -2196,16 +2204,15 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
 *     user given by user_name.
 *
 *  INPUTS
-*     const char *user_name      - the user name 
-*     u_long32   job_id          - the job number
-*     lList      master_job_list - a ref to the master job list
+*     const char *user_name - the user name 
+*     u_long32 job_id       - the job number
 *
 *  RESULT
 *     int - -1, if the job cannot be found
 *            0, if the user is the job owner
 *            1, if the user is not the job owner
 ******************************************************************************/
-int job_check_owner(const char *user_name, u_long32 job_id, lList *master_job_list) 
+int job_check_owner(const char *user_name, u_long32 job_id) 
 {
    lListElem *job;
 
@@ -2221,7 +2228,7 @@ int job_check_owner(const char *user_name, u_long32 job_id, lList *master_job_li
       return 0;
    }
 
-   job = job_list_locate(master_job_list, job_id);
+   job = job_list_locate(Master_Job_List, job_id);
    if (job == NULL) {
       DEXIT;
       return -1;
@@ -3218,8 +3225,17 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* TODO: JB_user_list */
    /* TODO: JB_job_identifier_list */
 
-   /* JB_verify_suitable_q any ulong value */
+   /* JB_job_source must be NULL */
+   if (ret) {
+      if (lGetString(job, JB_job_source) != NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                           MSG_INVALIDJOB_REQUEST_S, "job source");
+         ret = false;
+      }
+   }
 
+   /* JB_verify_suitable_q any ulong value */
+   /* JB_nrunning any ulong value */
    /* JB_soft_wallclock_gm must be 0 */
    if (ret) {
       ret = object_verify_ulong_null(job, answer_list, JB_soft_wallclock_gmt);

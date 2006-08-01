@@ -132,7 +132,7 @@ global check_init_level_procedure check_category
 global check_root_access_needs
 
 set check_root_access_needs  "yes"
-set check_init_level_procedure "throughput_init_level"
+set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
 set check_description(0)      "Functional test, submit 300 jobs with enabled queues"
@@ -210,7 +210,7 @@ set throughput_subdir ""
 global throughput_num_data_sets
 set throughput_num_data_sets 26
 
-proc throughput_init_level {} {
+proc init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
    global end_job_count                      ;# number of jobs
@@ -261,7 +261,7 @@ proc throughput_init_level {} {
 
    # submit host list
    set submit_hosts {}
-   foreach host $ts_config(execd_hosts) {  ;# only start a submitter on real hosts
+   foreach host $ts_config(execd_hosts) {
       if { [string compare $host $ts_config(master_host)] != 0 } {
          lappend submit_hosts $host
       }
@@ -482,13 +482,13 @@ proc throughput_setup_sharetree {} {
    add_prj prj_setup
 
    # vi commands
-   set vi_commands "" 
+   set vi_commands "i" 
    set s_tree [throughput_set_share_tree]
-
    foreach elem $s_tree {
-      lappend vi_commands "GA${elem}[format "%c" 27]"
+      lappend vi_commands "${elem}\n"
    } 
-   lappend vi_commands "1Gdddddddddd"
+   lappend vi_commands [format "%c" 27]
+   lappend  vi_commands "dddddddddddd"
   
    # delete a possibly existing sharetree
    set catch_return [ catch {  
@@ -507,7 +507,9 @@ proc throughput_setup_sharetree {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) != 53 } {
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }
@@ -564,7 +566,9 @@ proc throughput_setup_functional_policy {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) != 53 } {
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }
@@ -824,26 +828,25 @@ proc run_throughput_test {} {
       expect {
          -i $event_client_id full_buffer {
             add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
-            close_spawn_process $event_client_id
             return -1
          }
          -i $event_client_id timeout {
             puts $CHECK_OUTPUT "timeout starting event client"
-            break
+            break;
          }
          -i $event_client_id eof {
             puts $CHECK_OUTPUT "eof from event client"
-            break
+            break;
          }
          -i $event_client_id "ECL_STATE" {
             puts $CHECK_OUTPUT "old qevent version"
             set is_old_version 1
-            break
+            break;
          }
          -i $event_client_id -- "ts|*testsuite" {
             puts $CHECK_OUTPUT "new qevent version"
             set is_old_version 0
-            break
+            break;
          }
       }
    }
@@ -1089,8 +1092,6 @@ proc run_throughput_test {} {
           foreach elem $remote_spawn_list {
              close_spawn_process $elem
           }
-          close_spawn_process $event_client_sid
-          close_spawn_process $schedd_messages_sid
           set_error -1 "could not enable all host connections"
           return -1
        }
@@ -3459,8 +3460,8 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    upvar $qping_name qping_data
    upvar $event_name event_data
 
-   set nr_of_execdhosts [llength $ts_config(execd_nodes)]
-   incr nr_of_execdhosts -1
+   set nr_of_execd_hosts [llength $ts_config(execd_nodes)]
+   incr nr_of_execd_hosts -1
 
    set have_local_spool_dir 0
    foreach elem $ts_config(execd_nodes) {
@@ -3478,9 +3479,9 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    set test_end_job_count [expr $end_job_count * $array_size]
 
    if { $have_local_spool_dir == 1 } {
-      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/local_spool/_${nr_of_execdhosts}_execds/_${test_end_job_count}_jobs"
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/local_spool/_${nr_of_execd_hosts}_execds/_${test_end_job_count}_jobs"
    } else {
-      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execdhosts}_execds/_${test_end_job_count}_jobs"
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${test_end_job_count}_jobs"
    }
 
    puts $CHECK_OUTPUT "saving report in directory:"

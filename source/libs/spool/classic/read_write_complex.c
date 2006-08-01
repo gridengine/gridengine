@@ -125,19 +125,19 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp) 
 {
    FILE *fp;
-   lListElem *ep = NULL;
+   lListElem *ep=NULL;
    int line = 0;
    int type = 0;
-   const char *name = NULL;
+   const char *name;
    int relop = 0;
-   char buf[10000], *cp = NULL;
-   const char *s = NULL;
-   lList *lp = NULL;
-   double dval = 0.0;
+   char buf[10000], *cp;
+   const char *s;
+   lList *lp;
+   double dval;
 
    DENTER(TOP_LAYER, "read_cmplx");
 
-   lp = lCreateList("complex_entries", CE_Type);
+   lp = lCreateList("complex entries", CE_Type);
    
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
@@ -374,12 +374,9 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
    }
 
    FCLOSE(fp);
-
    DEXIT;
    return lp;
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_NOCLOSE_SS, fname, strerror(errno)));
-   answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    DEXIT;
    return NULL;
 }
@@ -537,9 +534,8 @@ lList **alpp
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, fname, strerror(errno)));
-   if (alpp) {
+   if (alpp) 
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
-   }
    DEXIT;
    return -1;
 }

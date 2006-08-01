@@ -752,7 +752,8 @@ proc ticket_check_job_share { jobs job_count } {
 
    upvar $jobs job
 
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
    after 5000
 
    # Check the shares of the jobs
@@ -769,7 +770,8 @@ proc ticket_check_job_share { jobs job_count } {
 #              set ok 1
 #              break
 #           } else {
-#              trigger_scheduling
+#              catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+#              puts $CHECK_OUTPUT $catch_result
 #              after 3000
 #           }
 #        } else {
@@ -789,7 +791,8 @@ proc ticket_check_job_share { jobs job_count } {
      set is_ok 0
      while { $try_count > 0 && $is_ok == 0 } {
         if { $job_info(share) != $job($i,share) } {
-           trigger_scheduling
+           catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+           puts $CHECK_OUTPUT $catch_result
            after 2000
            get_extended_job_info $job($i,id)
            incr try_count -1

@@ -327,7 +327,7 @@
 #define MSG_EVENT_INVALIDSESSIONKEY _MESSAGE(64345, _("invalid session key for event client"))
 #define MSG_EVENT_INVALIDEVENT _MESSAGE(64346, _("invalid event id in event client subscription"))
 
-#define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script lenght does not match declared length"))
+#define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script length does not match declared length"))
 #define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64352, _("invalid "SFQ" value in job request"))
 
 #define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
@@ -337,7 +337,5 @@
 #define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
-
-#define MSG_LIMITRULE_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
 
 #endif /* __MSG_SGEOBJLIB_H */

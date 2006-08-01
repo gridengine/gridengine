@@ -752,7 +752,7 @@ double get_cpu_load()
 
    kern_return_t error;
    struct host_cpu_load_info cpu_load_data;
-   mach_msg_type_number_t host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+   int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
    mach_port_t host_priv_port = mach_host_self();
 
    error = host_statistics(host_priv_port, HOST_CPU_LOAD_INFO,

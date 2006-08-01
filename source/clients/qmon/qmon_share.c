@@ -1986,14 +1986,10 @@ XtPointer cld, cad;
    
    lDumpList(fp, shac, 0);
 
-   FCLOSE(fp);
+   fclose(fp);
    printf("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n");
 
    DEXIT;
-   return;
-FCLOSE_ERROR:
-   DEXIT;
-   return;
 }
    
 /*-------------------------------------------------------------------------*/

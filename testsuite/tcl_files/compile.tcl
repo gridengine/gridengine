@@ -53,18 +53,18 @@
 #    -1 - at least for one host, no compile host is configured
 #*******************************************************************************
 proc compile_check_compile_hosts {host_list} {
-   global ts_config ts_host_config
+   global ts_host_config
 
    # remember already resolved compile archs
    set compile_archs {}
 
    # check each host in host_list
    foreach host $host_list {
-      if {![host_conf_is_supported_host $host]} {
-         add_proc_error "compile_check_compile_hosts" -1 "host $host is not contained in testsuite host configuration or not supported host!"
+      if {![info exists ts_host_config($host,arch)]} {
+         add_proc_error "compile_check_compile_hosts" -1 "host $host is not contained in testsuite host configuration!"
       } else {
          # host's architecture
-         set arch [host_conf_get_arch $host]
+         set arch $ts_host_config($host,arch)
 
          # do we already have a compile host for this arch?
          # if not, search it.
@@ -112,18 +112,12 @@ proc compile_host_list {} {
    
    set host_list [concat $ts_config(master_host) $ts_config(execd_hosts) \
                          $ts_config(shadowd_hosts) $ts_config(submit_only_hosts) \
-                         $ts_config(bdb_server) \
-                         [checktree_get_required_hosts]]
-   
+                         $ts_config(bdb_server)]
 
    set host_list [compile_unify_host_list $host_list]
 
    foreach host $host_list {
-      set arch [host_conf_get_arch $host]
-      if {$arch == ""} {
-         add_proc_error "compile_host_list" -1 "Can't not determine the architecture of host $host"
-         return ""
-      }
+      set arch $ts_host_config($host,arch)
       if { ! [info exists compile_host($arch)] } {
          set c_host [compile_search_compile_host $arch]
          if {$c_host == "none"} {
@@ -137,40 +131,6 @@ proc compile_host_list {} {
 
 
    return [lsort -dictionary $compile_host(list)]
-}
-
-
-#****** compile/get_compile_options_string() ***********************************
-#  NAME
-#     get_compile_options_string() -- return current compile option string
-#
-#  SYNOPSIS
-#     get_compile_options_string { } 
-#
-#  FUNCTION
-#     This function returns a string containing the current set aimk compile
-#     options
-#
-#  RESULT
-#     string containing compile options
-#
-#  SEE ALSO
-#     ???/???
-#*******************************************************************************
-proc get_compile_options_string { } {
-   global ts_config CHECK_OUTPUT
-
-   set options $ts_config(aimk_compile_options)
-
-   if { $options == "none" } {
-      set options ""
-   }
-
-   if { $options != "" } {
-      puts $CHECK_OUTPUT "compile options are: \"$options\""
-   }
-
-   return $options
 }
 
 #****** compile/compile_unify_host_list() **************************************
@@ -232,8 +192,8 @@ proc compile_search_compile_host {arch} {
    global CHECK_OUTPUT
 
    foreach host $ts_host_config(hostlist) {
-      if {[host_conf_get_arch $host] == $arch && \
-          [host_conf_is_compile_host $host]} {
+      if { $ts_host_config($host,arch) == $arch && \
+           $ts_host_config($host,compile) == 1} {
          return $host
       }
    }

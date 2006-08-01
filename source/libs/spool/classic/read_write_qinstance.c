@@ -74,8 +74,8 @@ lListElem *cull_read_in_qinstance(const char *dirname, const char *filename,
 
    DENTER(TOP_LAYER, "cull_read_in_qinstance");
 
-   ep = read_object(dirname, filename, spool, 0, 0, &args, 
-                    tag?tag:&intern_tag, fields);
+   ep = read_object(dirname, filename, spool, 0, 0,&args, 
+                    tag?tag:&intern_tag, NULL);
 
    DEXIT;
    return ep;
@@ -88,7 +88,7 @@ lListElem *cull_read_in_qinstance(const char *dirname, const char *filename,
 
 */
 int read_qinstance_work(
-lList **alpp,   /* answer list */
+lList **alpp,   /* anser list */
 lList **clpp,   /* parsed file */
 int fields[],   /* not needed */
 lListElem *ep,  /* list element to fill of type CU_Type */
@@ -111,61 +111,59 @@ int parsing_type
       ret = (!set_conf_string(alpp, clpp, fields, "hostname", ep, QU_qhostname)) ? -1 : 0;
    }
 
-   if (spool == 1) {
-      /* --------- QU_state */
-      if (!set_conf_ulong(alpp, clpp, fields, "state", ep, QU_state)) {
+   /* --------- QU_state */
+   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, QU_state)) {
+      DEXIT;
+      return -1;
+   }
+   else if ((lGetUlong(ep, QU_state) & QI_ERROR) != 0){
+      lList *message_list = lCreateList("mesage", QIM_Type);
+      lListElem *message = lCreateElem(QIM_Type);
+      
+      lAppendElem(message_list, message);
+      lSetList(ep, QU_message_list, message_list);
+
+      lSetUlong(message, QIM_type, QI_ERROR);
+      lSetString(message, QIM_message, MSG_ERROR_CLASSIC_SPOOLING);
+   }
+
+   /* --------- QU_pending_signal */
+   if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
+            ep, QU_pending_signal)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_pending_signal_delivery_time */
+   if (!set_conf_ulong(alpp, clpp, fields, "pending_signal_del", ep,
+            QU_pending_signal_delivery_time)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_version */
+   if (!set_conf_ulong(alpp, clpp, fields, "version", ep, QU_version)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- QU_error messages */
+   /* SG: not supported yet */
+#if 0   
+   {
+      const char *str = NULL;
+      if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, "error_messages"))) {
          DEXIT;
          return -1;
       }
-      else if ((lGetUlong(ep, QU_state) & QI_ERROR) != 0){
-         lList *message_list = lCreateList("mesage", QIM_Type);
-         lListElem *message = lCreateElem(QIM_Type);
-         
-         lAppendElem(message_list, message);
-         lSetList(ep, QU_message_list, message_list);
+      qinsteance_message_from_string(ep, str, alpp);
+   }
+#endif   
 
-         lSetUlong(message, QIM_type, QI_ERROR);
-         lSetString(message, QIM_message, MSG_ERROR_CLASSIC_SPOOLING);
-      }
-
-      /* --------- QU_pending_signal */
-      if (!set_conf_ulong(alpp, clpp, fields, "pending_signal",
-                          ep, QU_pending_signal)) {
-         DEXIT;
-         return -1;
-      }
-
-      /* --------- QU_pending_signal_delivery_time */
-      if (!set_conf_ulong(alpp, clpp, fields, "pending_signal_del", ep,
-                          QU_pending_signal_delivery_time)) {
-         DEXIT;
-         return -1;
-      }
-
-      /* --------- QU_version */
-      if (!set_conf_ulong(alpp, clpp, fields, "version", ep, QU_version)) {
-         DEXIT;
-         return -1;
-      }
-
-   #if 0   
-      /* --------- QU_error messages */
-      /* SG: not supported yet */
-      {
-         const char *str = NULL;
-         if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, "error_messages"))) {
-            DEXIT;
-            return -1;
-         }
-         qinsteance_message_from_string(ep, str, alpp);
-      }
-   #endif   
-
-      /* --------- QU_queue_number */
-      if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
-         DEXIT;
-         return -1;
-      }
+   /* --------- QU_queue_number */
+   if (!set_conf_ulong(alpp, clpp, fields, "queue_number", ep, QU_queue_number)) {
+      DEXIT;
+      return -1;
    }
 
    DEXIT;
@@ -213,9 +211,10 @@ write_qinstance(int spool, int how, const lListElem *ep)
       return NULL;
    }
 
-   FPRINTF((fp, "qname              %s\n", lGetString(ep, QU_qname)));
-   FPRINTF((fp, "hostname           %s\n", lGetHost(ep, QU_qhostname)));
-
+   if (how == 0 || how == 2) {
+      FPRINTF((fp, "qname              %s\n", lGetString(ep, QU_qname)));
+      FPRINTF((fp, "hostname           %s\n", lGetHost(ep, QU_qhostname)));
+   }
    if (how == 0) {
       {
          FPRINTF((fp, "seq_no             %d\n", 

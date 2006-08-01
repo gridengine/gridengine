@@ -1,4 +1,3 @@
-#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -34,6 +33,166 @@
 # JG: TODO: Change the assign/unassign procedures.
 # The current implemtation using aattr/dattr is destroying the default 
 # settings in all.q
+
+proc unassign_queues_with_pe_object { pe_obj } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
+   set queue_list [get_queue_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_pe_object" -1 "error reading queue list: $result"
+      }
+   }
+   puts $CHECK_OUTPUT "searching for references in queue instances ..."
+   set queue_list [get_qinstance_list "-pe $pe_obj"]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "pe_list" "$pe_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_pe_object" -1 "error changing pe_list: $result"
+      }
+   }
+}
+
+#****** sge_procedures.60/copy_certificates() **********************************
+#  NAME
+#     copy_certificates() -- copy csp (ssl) certificates to the specified host
+#
+#  SYNOPSIS
+#     copy_certificates { host } 
+#
+#  FUNCTION
+#     copy csp (ssl) certificates to the specified host
+#
+#  INPUTS
+#     host - host where the certificates has to be copied. (Master installation
+#            must be called before)
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc copy_certificates { host } {
+   global CHECK_OUTPUT ts_config CHECK_ADMIN_USER_SYSTEM CHECK_USER
+
+   set remote_arch [resolve_arch $host]
+   
+   puts $CHECK_OUTPUT "installing CA keys"
+   puts $CHECK_OUTPUT "=================="
+   puts $CHECK_OUTPUT "host:         $host"
+   puts $CHECK_OUTPUT "architecture: $remote_arch"
+   puts $CHECK_OUTPUT "port:         $ts_config(commd_port)"
+   puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${ts_config(commd_port)}/\" on host $ts_config(master_host)"
+   puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${ts_config(commd_port)}/\" on host $host"
+  
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
+      puts $CHECK_OUTPUT "we have root access, fine !"
+      set CA_ROOT_DIR "/var/sgeCA"
+      set TAR_FILE "${CA_ROOT_DIR}/port${ts_config(commd_port)}.tar"
+
+      puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
+      set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
+      puts $CHECK_OUTPUT $result
+
+      puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
+      set tar_bin [get_binary_path $ts_config(master_host) "tar"]
+      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${ts_config(commd_port)}/*"
+      set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$remote_command_param" ]
+      puts $CHECK_OUTPUT $result
+
+      if { $prg_exit_state != 0 } {
+         add_proc_error "copy_certificates" -2 "could not tar Certificate Authority (CA) directory into \"$TAR_FILE\""
+      } else {
+         puts $CHECK_OUTPUT "copy tar file \"$TAR_FILE\"\nto \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\" ..."
+         set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "cp" "$TAR_FILE $ts_config(results_dir)/port${ts_config(commd_port)}.tar" prg_exit_state 300 ]
+         puts $CHECK_OUTPUT $result
+                    
+         # tar file will be on nfs - wait for it to be visible
+         wait_for_remote_file $host "root" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar"
+                    
+         puts $CHECK_OUTPUT "copy tar file \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\"\nto \"$TAR_FILE\" on host $host as root user ..."
+         after 1000
+         set result [ start_remote_prog "$host" "root" "cp" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar $TAR_FILE" prg_exit_state 300 ]
+         puts $CHECK_OUTPUT $result
+
+         set tar_bin [get_binary_path $host "tar"]
+
+         puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
+         start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR" 
+         if { $prg_exit_state != 0 } { 
+            set result [ start_remote_prog "$host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
+         }   
+
+         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
+         puts $CHECK_OUTPUT $result
+         if { $prg_exit_state != 0 } {
+            add_proc_error "copy_certificates" -2 "could not untar \"$TAR_FILE\" on host $host;\ntar-bin:$tar_bin"
+         } 
+
+         puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" on host $host ..."
+         set result [ start_remote_prog "$host" "root" "rm" "$TAR_FILE" ]
+         puts $CHECK_OUTPUT $result
+
+         puts $CHECK_OUTPUT "removing tar file \"$ts_config(results_dir)/port${ts_config(commd_port)}.tar\" ..."
+         set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$ts_config(results_dir)/port${ts_config(commd_port)}.tar" ]
+         puts $CHECK_OUTPUT $result
+      }
+                
+      puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" ..."
+      set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
+      puts $CHECK_OUTPUT $result
+
+      # check for syncron clock times
+      set my_timeout [timestamp]
+      incr my_timeout 600
+      while { 1 } {
+         set result [start_remote_prog $host $CHECK_USER "$ts_config(product_root)/bin/$remote_arch/qstat" "-f"]
+         puts $CHECK_OUTPUT $result
+         if { $prg_exit_state == 0 } {
+            puts $CHECK_OUTPUT "qstat -f works, fine!"
+            break
+         }
+         puts $CHECK_OUTPUT "waiting for qstat -f to work ..."
+         puts $CHECK_OUTPUT "please check hosts for synchron clock times"
+         sleep 10
+         if { [timestamp] > $my_timeout } {
+            add_proc_error "copy_certificates" -2 "$host: timeout while waiting for qstat to work (please check hosts for synchron clock times)"
+         }
+      } 
+   } else {
+      puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
+      puts $CHECK_OUTPUT "installation error"
+      add_proc_error "copy_certificates" -2 "$host: can't copy certificate files as user $CHECK_USER"
+   }
+}
+
+proc unassign_queues_with_ckpt_object { ckpt_obj } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
+
+   puts $CHECK_OUTPUT "searching for references in cluster queues ..."
+   set queue_list [get_queue_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_ckpt_object" -1 "error reading queue list: $result"
+      }
+   }
+   puts $CHECK_OUTPUT "searching for references in queue instances ..."
+   set queue_list [get_qinstance_list]
+   foreach elem $queue_list {
+      puts $CHECK_OUTPUT "queue: $elem"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dattr" "queue" "ckpt_list" "$ckpt_obj" "$elem" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "unassign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
+      }
+   }
+}
+
 
 proc get_complex { change_array } {
   global ts_config
@@ -104,7 +263,7 @@ proc get_complex { change_array } {
 #*******************************************************************************
 proc set_complex { change_array } {
   global ts_config CHECK_USER
-  global env CHECK_ARCH CHECK_OUTPUT
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]
@@ -136,7 +295,8 @@ proc set_complex { change_array } {
         }
      } else {
         # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+        lappend vi_commands "A\n$elem  $newVal"
+        lappend vi_commands [format "%c" 27]
      }
   }
 
@@ -157,183 +317,62 @@ proc set_complex { change_array } {
 }
 
 
+proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
 
-#****** sge_procedures.60/switch_to_admin_user_system() ************************
-#  NAME
-#     switch_to_admin_user_system() -- switch to a admin user system
-#
-#  SYNOPSIS
-#     switch_to_admin_user_system { } 
-#
-#  FUNCTION
-#     run install core system and install admin user system
-#
-#  INPUTS
-#
-#  RESULT
-#     0 - on success
-#
-#  NOTES
-#     not implemented
-#
-#  SEE ALSO
-#     sge_procedures.60/switch_to_admin_user_system()
-#     sge_procedures.60/switch_to_normal_user_system()
-#     sge_procedures.60/switch_to_root_user_system()
-#*******************************************************************************
-proc switch_to_admin_user_system {} {
-   global CHECK_OUTPUT actual_user_system
-
-   if { $actual_user_system != "admin user system" } {
-      puts $CHECK_OUTPUT "switching from $actual_user_system to admin user system ..."
-      add_proc_error "switch_to_admin_user_system" -3 "Function not implemented"
-      set actual_user_system "admin user system"
+   set queue_list {}
+   # if we have no hostlist: change cluster queue
+   if {[llength $hostlist] == 0} {
+      set queue_list $qname
+   } else {
+      foreach host $hostlist {
+         lappend queue_list "${qname}@${host}"
+      }
    }
 
-   return 0
-}
-
-#****** sge_procedures.60/switch_to_root_user_system() *************************
-#  NAME
-#     switch_to_root_user_system() -- switch to a root user system
-#
-#  SYNOPSIS
-#     switch_to_root_user_system { } 
-#
-#  FUNCTION
-#     run install core system and install root user system
-#
-#  INPUTS
-#
-#  RESULT
-#     0 - on success
-#
-#  NOTES
-#     not implemented
-#
-#  SEE ALSO
-#     sge_procedures.60/switch_to_admin_user_system()
-#     sge_procedures.60/switch_to_normal_user_system()
-#     sge_procedures.60/switch_to_root_user_system()
-#*******************************************************************************
-proc switch_to_root_user_system {} {
-   global CHECK_OUTPUT actual_user_system
-    
-   add_proc_error "switch_to_root_user_system" -3 "Function not implemented"
-   return 1
-
-   if { $actual_user_system != "root user system" } {
-      puts $CHECK_OUTPUT "switching from $actual_user_system to root user system ..."
-      set actual_user_system "root user system"
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT "queue: $queue"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "ckpt_list" "$ckpt_obj" "$queue" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "assign_queues_with_ckpt_object" -1 "error changing ckpt_list: $result"
+      }
    }
 }
 
-#****** sge_procedures.60/switch_to_normal_user_system() ***********************
-#  NAME
-#     switch_to_normal_user_system() -- switch to a standard user system
-#
-#  SYNOPSIS
-#     switch_to_normal_user_system { } 
-#
-#  FUNCTION
-#      run install core system and install standard user system
-#
-#  INPUTS
-#
-#  RESULT
-#     0 - on success
-#
-#  NOTES
-#     not implemented
-#
-#  SEE ALSO
-#     sge_procedures.60/switch_to_admin_user_system()
-#     sge_procedures.60/switch_to_normal_user_system()
-#     sge_procedures.60/switch_to_root_user_system()
-#*******************************************************************************
-proc switch_to_normal_user_system {} {
-   global CHECK_OUTPUT actual_user_system
+proc assign_queues_with_pe_object { qname hostlist pe_obj } {
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH
 
-   add_proc_error "switch_to_root_user_system" -3 "Function not implemented"
-   return 1
+   set queue_list {}
+   # if we have no hostlist: change cluster queue
+   if {[llength $hostlist] == 0} {
+      set queue_list $qname
+   } else {
+      foreach host $hostlist {
+         lappend queue_list "${qname}@${host}"
+      }
+   }
 
-   if { $actual_user_system != "normal user system" } {
-      puts $CHECK_OUTPUT "switching from $actual_user_system to normal user system ..."
-      set actual_user_system "normal user system"
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT "queue: $queue"
+      if { [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aattr" "queue" "pe_list" "$pe_obj" "$queue" } result] != 0 } {
+         # if command fails: output error
+         add_proc_error "assign_queues_with_pe_object" -1 "error changing pe_list: $result"
+      }
    }
 }
 
-#****** sge_procedures.60/switch_execd_spool_dir() *****************************
-#  NAME
-#     switch_execd_spool_dir() -- switch execd spool directory
-#
-#  SYNOPSIS
-#     switch_execd_spool_dir { host spool_type { force_restart 0 } } 
-#
-#  FUNCTION
-#     This function will shutdown the execd running on $host, switch the
-#     spool type depending on $spool_type if the spool directory doesn't
-#     match. The optional parameter force_restart can be used to 
-#     shutdown/restart the execd even when the spool directory is already
-#     set to the correct value.
-#
-#  INPUTS
-#     host                - host of execd
-#     spool_type          - "cell", "local", "NFS-ROOT2NOBODY" or "NFS-ROOT2ROOT"
-#     { force_restart 0 } - optional if 1: do shutdown/restart even when
-#                           spool directory is already matching
-#
-#  RESULT
-#     0 - on success
-#
-#  SEE ALSO
-#     file_procedures/get_execd_spooldir()
-#*******************************************************************************
-proc switch_execd_spool_dir { host spool_type { force_restart 0 } } {
+proc validate_checkpointobj { change_array } {
    global CHECK_OUTPUT
 
-   set spool_dir [get_execd_spooldir $host $spool_type]
-   set base_spool_dir [get_execd_spooldir $host $spool_type 1]
+   upvar $change_array chgar
 
-   if { [info exists execd_config] } {
-      unset execd_config
-   }
-   if { [get_config execd_config $host] != 0 } {
-      add_proc_error "switch_execd_spool_dir" -1 "can't get configuration for host $host"
-      return -1
-   }
-
-   if { $execd_config(execd_spool_dir) == $spool_dir && $force_restart == 0 } {
-      debug_puts "spool dir is already set to $spool_dir"
-      return 0
-   }
-   
-   puts $CHECK_OUTPUT "$host: actual spool dir: $execd_config(execd_spool_dir)"
-   puts $CHECK_OUTPUT "$host: new spool dir   : $spool_dir"
- 
-   delete_all_jobs
-   wait_for_end_of_all_jobs 60
-
-   shutdown_system_daemon $host execd
-
-   puts $CHECK_OUTPUT "changing execd_spool_dir for host $host ..."
-   set execd_config(execd_spool_dir) $spool_dir
-   set_config execd_config $host
-
-   if { [ remote_file_isdirectory $host $base_spool_dir ] != 1 } {
-      puts $CHECK_OUTPUT "creating not existing base spool directory:\n\"$base_spool_dir\""
-      remote_file_mkdir $host $base_spool_dir
-   }   
-
-   puts $CHECK_OUTPUT "cleaning up spool dir $spool_dir ..."
-   cleanup_spool_dir_for_host $host $base_spool_dir "execd"
-   
-
-   startup_execd $host
-
-   wait_for_load_from_all_queues 100
-
-   return 0
+  if { [info exists chgar(queue_list)] } { 
+     puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
+     add_proc_error "validate_checkpointobj" -3 "this Grid Engine version doesn't support a queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter."
+     unset chgar(queue_list)
+  }
 }
 
 
@@ -371,15 +410,13 @@ proc switch_execd_spool_dir { host spool_type { force_restart 0 } } {
 #     sge_procedures/shutdown_system_daemon()
 #     sge_procedures/startup_qmaster()
 #     sge_procedures/startup_execd()
+#     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_shadowd { hostname {env_list ""} } {
-   global ts_config
+proc startup_shadowd { hostname } {
+  global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
-   if {$env_list != ""} {
-      upvar $env_list envlist
-   }
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
       if { [have_root_passwd] != 0  } {
@@ -390,10 +427,11 @@ proc startup_shadowd { hostname {env_list ""} } {
    } else {
       set startup_user $CHECK_USER
    }
+ 
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "-shadowd start" prg_exit_state 60 0 envlist]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "-shadowd start"]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
@@ -439,12 +477,10 @@ proc startup_shadowd { hostname {env_list ""} } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_execd { hostname {envlist ""}} {
+proc startup_execd { hostname } {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
-
-   upvar $envlist my_envlist
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
  
@@ -458,7 +494,7 @@ proc startup_execd { hostname {envlist ""}} {
    }
 
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start" prg_exit_state 60 0 my_envlist 1 1 1]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start"]
 
    return 0
 }
@@ -593,11 +629,3 @@ proc get_urgency_job_info {jobid {variable job_info} { do_replace_NA 1 } } {
    return 0
 }
 
-# ADOC see sge_procedures/get_sge_error_generic()
-proc get_sge_error_generic_vdep {messages_var} {
-   upvar $messages_var messages
-
-   lappend messages(index) "-100"
-   set messages(-100) "*[translate_macro MSG_GDI_UNABLE_TO_CONNECT_SUS "qmaster" "*" "*"]"
-   set messages(-100,description) "probably sge_qmaster is down"
-}

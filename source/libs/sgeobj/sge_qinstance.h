@@ -37,10 +37,10 @@
 #include "sge_qinstanceL.h"
 
 bool
-qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exechost_list);
+qinstance_validate(lListElem *this_elem, lList **answer_list);
 
 bool
-qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exechost_list);
+qinstance_list_validate(lList *this_list, lList **answer_list);
 
 void
 qinstance_set_full_name(lListElem *this_elem);
@@ -108,7 +108,7 @@ qinstance_debit_consumable(lListElem *this_elem, lListElem *job,
                            lList *centry_list, int slots);
 
 void
-qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list);
+qinstance_check_unknown_state(lListElem *this_elem);
 
 bool
 qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);

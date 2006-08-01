@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
+#include <fnmatch.h>
 
 #include "basis_types.h"
 #include "sgermon.h" 
@@ -643,3 +644,69 @@ qref_resolve_hostname(lListElem *this_elem)
    return;
 }
 
+/****** sge_qref/qref_list_cq_rejected() ***************************************
+*  NAME
+*     qref_list_cq_rejected() -- Check if -q qref_list rejects cluster queue
+*
+*  SYNOPSIS
+*     bool qref_list_cq_rejected(const lList *qref_list, const char *cqname) 
+*
+*  FUNCTION
+*     Check if -q qref_list rejects cluster queue.
+*
+*  INPUTS
+*     const lList *qref_list - QR_Type list as usef for -q qref_list
+*     const char *cqname     - cluster queue name
+*
+*  RESULT
+*     bool - true if rejected
+*
+*  NOTES
+*     MT-NOTE: qref_list_cq_rejected() is MT safe 
+*******************************************************************************/
+#ifdef COMPILE_CQ_OPT
+bool
+qref_list_cq_rejected(const lList *qref_list, const char *cqname)
+{
+   lListElem *qref_pattern = NULL;
+
+   DENTER(TOP_LAYER, "qref_list_rejected");
+
+   if (!cqname) {
+      DEXIT;
+      return true;
+   }
+
+   if (!qref_list) {
+      DEXIT;
+      return false;
+   }
+
+   for_each(qref_pattern, qref_list) {
+      const char *s;
+      const char *name = lGetString(qref_pattern, QR_name); 
+
+      if ((s=strchr(name, '@'))) { 
+         /* use qref part before '@' as wc_cqueue pattern */
+         bool boo;
+         char *wc_cqueue = strdup(name);
+         wc_cqueue[ s - name ] = '\0';
+         boo = fnmatch(wc_cqueue, cqname, 0);
+         free(wc_cqueue);
+         if (!boo) {
+            DEXIT;
+            return false;
+         }
+      } else {
+         /* use entire qref as wc_queue */
+         if (!fnmatch(name, cqname, 0)) {
+            DEXIT;
+            return false;
+         } 
+      }
+   }
+      
+   DEXIT;
+   return true;
+}
+#endif

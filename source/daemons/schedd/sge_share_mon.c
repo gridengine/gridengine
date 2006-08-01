@@ -35,8 +35,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "uti/sge_dstring.h"
-#include "uti/sge_stdio.h"
+#include "sge_dstring.h"
 
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
@@ -177,10 +176,10 @@ static FILE *
 close_output(FILE *file)
 {
    if (file != stdout) {
-      FCLOSE(file);
+      fclose(file);
       file = NULL;
    }
-FCLOSE_ERROR:
+
    return file;
 }
 

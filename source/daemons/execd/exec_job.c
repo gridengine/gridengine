@@ -90,8 +90,6 @@
 #include "sge_var.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
-#include "sgeobj/sge_object.h"
-#include "uti/sge_stdio.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -190,7 +188,7 @@ static int addgrpid_already_in_use(long add_grp_id)
    lListElem *ja_task = NULL;
    lListElem *pe_task = NULL;
    
-   for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+   for_each(job, Master_Job_List) {
       for_each (ja_task, lGetList(job, JB_ja_tasks)) {
          const char *id = lGetString(ja_task, JAT_osjobid);
          if (id != NULL && atol(id) == add_grp_id) {
@@ -430,7 +428,7 @@ int err_length) {
             }
          }
 
-         FCLOSE(fp);
+         fclose(fp);
       }
       /*************************** finished writing sge hostfile  ********/
 
@@ -767,7 +765,7 @@ int err_length) {
 
 
 
-      FCLOSE(fp);  
+      fclose(fp);  
       /*************************** finished writing environment *****************/
 
       /**************** write out config file ******************************/
@@ -796,7 +794,7 @@ int err_length) {
          if (!sup_groups_in_proc()) {
             lFreeList(&environmentList);
             snprintf(err_str, err_length, MSG_EXECD_NOSGID); 
-            FCLOSE(fp);
+            fclose(fp);
             DEXIT;
             return(-2);
          }
@@ -813,7 +811,7 @@ int err_length) {
              lFreeList(&alp);
              snprintf(err_str, err_length, MSG_EXECD_NOPARSEGIDRANGE);
              lFreeList(&environmentList);
-             FCLOSE(fp);
+             fclose(fp);
              DEXIT;
              return (-2);
          } 
@@ -826,7 +824,7 @@ int err_length) {
             if (temp_id == last_addgrpid) {
                snprintf(err_str, err_length, MSG_EXECD_NOADDGID);
                lFreeList(&environmentList);
-               FCLOSE(fp);
+               fclose(fp);
                DEXIT;
                return (-1);
             }
@@ -1160,7 +1158,7 @@ int err_length) {
             DPRINTF(("exec_file=%s\n", xterm));
          } else {
             snprintf(err_str, err_length, MSG_EXECD_NOXTERM);
-            FCLOSE(fp);
+            fclose(fp);
             lFreeList(&environmentList);
             DEXIT;
             return -2;
@@ -1234,7 +1232,7 @@ int err_length) {
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);
-            FCLOSE(fp);
+            fclose(fp);
             DEXIT;
             return -1;
          }
@@ -1244,7 +1242,7 @@ int err_length) {
    
    if (arch_dep_config(fp, cplx, err_str)) {
       lFreeList(&environmentList);
-      FCLOSE(fp);
+      fclose(fp);
       DEXIT;
       return -2;
    } 
@@ -1372,7 +1370,7 @@ int err_length) {
    fprintf(fp, "enable_addgrp_kill=%d\n", (int)mconf_get_enable_addgrp_kill());
 
    lFreeList(&environmentList);
-   FCLOSE(fp);
+   fclose(fp);
    /********************** finished writing config ************************/
 
    /* test whether we can access scriptfile */
@@ -1669,16 +1667,15 @@ int err_length) {
    fp = fopen("error", "w");
    if (fp) {
       fprintf(fp, "failed to exec shepherd for job" sge_u32"\n", job_id);
-      FCLOSE(fp);
+      fclose(fp);
    }
 
    fp = fopen("exit_status", "w");
    if (fp) {
       fprintf(fp, "1\n");
-      FCLOSE(fp);
+      fclose(fp);
    }
 
-FCLOSE_ERROR:
    CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTSHEPHERD));
 
    exit(1);

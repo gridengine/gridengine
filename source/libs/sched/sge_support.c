@@ -59,7 +59,9 @@
 #include "sgeobj/sge_sharetree.h"
 #include "valid_queue_user.h"
 
-static const long sge_usage_interval = SGE_USAGE_INTERVAL;
+const long sge_usage_interval = SGE_USAGE_INTERVAL;
+static double sge_decay_rate;
+static double sge_decay_constant;
 
 /*--------------------------------------------------------------------
  * decay_usage - decay usage for the passed usage list
@@ -71,15 +73,23 @@ decay_usage( lList *usage_list,
              u_long curr_time,
              u_long usage_time_stamp )
 {
-   lListElem *usage = NULL;
+   lListElem *usage;
+   static int ua_value_pos = -1;
+   static int ua_name_pos = -1;
+
+   if (ua_value_pos == -1) {
+      lListElem *ua_elem = lCreateElem(UA_Type);
+      ua_value_pos = lGetPosViaElem(ua_elem, UA_value, SGE_NO_ABORT);
+      ua_name_pos = lGetPosViaElem(ua_elem, UA_name, SGE_NO_ABORT);
+      lFreeElem(&ua_elem);
+   }
 
    if (usage_list) {
-      double decay = 0;
-      double default_decay = 0;
 
+      double decay, default_decay;
       if (curr_time > usage_time_stamp) {
 
-         default_decay = pow(sconf_get_decay_constant(),
+         default_decay = pow(sge_decay_constant,
                      (double)(curr_time - usage_time_stamp) /
                      (double)sge_usage_interval);
 
@@ -87,17 +97,14 @@ decay_usage( lList *usage_list,
             lListElem *decay_elem;
             if (decay_list &&
                 ((decay_elem = lGetElemStr(decay_list, UA_name,
-                      lGetPosString(usage, UA_name_POS))))) {
-
-               decay = pow(lGetPosDouble(decay_elem, UA_value_POS),
+                      lGetPosString(usage, ua_name_pos)))))
+               decay = pow(lGetPosDouble(decay_elem, ua_value_pos),
                      (double)(curr_time - usage_time_stamp) /
                      (double)sge_usage_interval);
-            }
-            else {
+            else
                decay = default_decay;
-            }
-            lSetPosDouble(usage, UA_value_POS,
-                          lGetPosDouble(usage, UA_value_POS) * decay);
+            lSetPosDouble(usage, ua_value_pos,
+                          lGetPosDouble(usage, ua_value_pos) * decay);
          }
       }
    }
@@ -115,8 +122,25 @@ decay_userprj_usage( lListElem *userprj,
                      u_long curr_time )
 {
    u_long usage_time_stamp;
+   static int up_usage_seqno_pos = -1;
+   static int up_usage_time_stamp_pos = -1;
+   static int up_usage_pos = -1;
+   static int up_project_pos = -1;
+   static int upp_usage_pos = -1;
 
-   if (userprj && seqno != lGetPosUlong(userprj, UP_usage_seqno_POS)) {
+   if (up_usage_seqno_pos == -1) {
+      lListElem *up_elem = lCreateElem(UP_Type);
+      lListElem *upp_elem = lCreateElem(UPP_Type);
+      up_usage_seqno_pos = lGetPosViaElem(up_elem, UP_usage_seqno, SGE_NO_ABORT);
+      up_usage_time_stamp_pos = lGetPosViaElem(up_elem, UP_usage_time_stamp, SGE_NO_ABORT);
+      up_usage_pos = lGetPosViaElem(up_elem, UP_usage, SGE_NO_ABORT);
+      up_project_pos = lGetPosViaElem(up_elem, UP_project, SGE_NO_ABORT);
+      upp_usage_pos = lGetPosViaElem(upp_elem, UPP_usage, SGE_NO_ABORT);
+      lFreeElem(&up_elem);
+      lFreeElem(&upp_elem);
+   }
+
+   if (userprj && seqno != lGetPosUlong(userprj, up_usage_seqno_pos)) {
 
    /*-------------------------------------------------------------
     * Note: In order to decay usage once per decay interval, we
@@ -127,25 +151,23 @@ decay_userprj_usage( lListElem *userprj,
     * the scheduling interval.
     *-------------------------------------------------------------*/
 
-      usage_time_stamp = lGetPosUlong(userprj, UP_usage_time_stamp_POS);
+      usage_time_stamp = lGetPosUlong(userprj, up_usage_time_stamp_pos);
 
       if (usage_time_stamp > 0) {
          lListElem *upp;
 
-         decay_usage(lGetPosList(userprj, UP_usage_POS), decay_list,
+         decay_usage(lGetPosList(userprj, up_usage_pos), decay_list,
                      curr_time, usage_time_stamp);
 
-         for_each(upp, lGetPosList(userprj, UP_project_POS)) {
-            decay_usage(lGetPosList(upp, UPP_usage_POS), decay_list,
+         for_each(upp, lGetPosList(userprj, up_project_pos))
+            decay_usage(lGetPosList(upp, upp_usage_pos), decay_list,
                         curr_time, usage_time_stamp);
-         }
 
       }
 
-      lSetPosUlong(userprj, UP_usage_time_stamp_POS, curr_time);
-      if (seqno != (u_long) -1) {
-      	lSetPosUlong(userprj, UP_usage_seqno_POS, seqno);
-      }
+      lSetPosUlong(userprj, up_usage_time_stamp_pos, curr_time);
+      if (seqno != (u_long) -1)
+	 lSetPosUlong(userprj, up_usage_seqno_pos, seqno);
 
    }
 
@@ -167,12 +189,10 @@ calculate_decay_constant( double halftime,
    if (halftime < 0) {
       *decay_rate = 1.0;
       *decay_constant = 0;
-   } 
-   else if (halftime == 0) {
+   } else if (halftime == 0) {
       *decay_rate = 0;
       *decay_constant = 1.0;
-   } 
-   else {
+   } else {
       *decay_rate = - log(0.5) / (halftime * 60);
       *decay_constant = 1 - (*decay_rate * sge_usage_interval);
    }
@@ -189,12 +209,7 @@ calculate_decay_constant( double halftime,
 void
 calculate_default_decay_constant( int halftime )
 {
-   double sge_decay_rate = 0.0;
-   double sge_decay_constant = 0.0;
-   
-   calculate_decay_constant(halftime*60.0, &sge_decay_rate, &sge_decay_constant); 
-   
-   sconf_set_decay_constant(sge_decay_constant);
+   calculate_decay_constant(halftime*60.0, &sge_decay_rate, &sge_decay_constant);
 }
 
 
@@ -209,22 +224,23 @@ sge_for_each_share_tree_node( lListElem *node,
                               void *ptr )
 {
    int retcode=0;
-   lList *children = NULL;
-   lListElem *child_node = NULL;
+   lList *children;
+   lListElem *child_node;
+   static int sn_children_pos = -1;
 
-   if (node == NULL) {
+   if (!node)
       return 0;
-   }
 
-   if ((retcode = (*func)(node, ptr))) {
+   if (sn_children_pos == -1)
+      sn_children_pos = lGetPosViaElem(node, STN_children, SGE_NO_ABORT);
+
+   if ((retcode = (*func)(node, ptr)))
       return retcode;
-   }
 
-   if ((children = lGetPosList(node, STN_children_POS))) {
+   if ((children = lGetPosList(node, sn_children_pos))) {
       for_each(child_node, children) {
-         if ((retcode = sge_for_each_share_tree_node(child_node, func, ptr))) {
+         if ((retcode = sge_for_each_share_tree_node(child_node, func, ptr)))
             break;
-         }   
       }
    }
 
@@ -241,10 +257,20 @@ int
 sge_zero_node_fields( lListElem *node,
                       void *ptr )
 {
-   lSetPosDouble(node, STN_m_share_POS, 0);
-   lSetPosDouble(node, STN_adjusted_current_proportion_POS, 0);
-   lSetPosUlong(node, STN_job_ref_count_POS, 0);
+   static int sn_m_share_pos = -1;
+   static int sn_adjusted_current_proportion_pos = -1;
+   static int sn_job_ref_count_pos = -1;
 
+   if (sn_m_share_pos == -1) {
+      sn_m_share_pos = lGetPosViaElem(node, STN_m_share, SGE_NO_ABORT);
+      sn_adjusted_current_proportion_pos =
+            lGetPosViaElem(node, STN_adjusted_current_proportion, SGE_NO_ABORT);
+      sn_job_ref_count_pos = lGetPosViaElem(node, STN_job_ref_count, SGE_NO_ABORT);
+   }
+
+   lSetPosDouble(node, sn_m_share_pos, 0);
+   lSetPosDouble(node, sn_adjusted_current_proportion_pos, 0);
+   lSetPosUlong(node, sn_job_ref_count_pos, 0);
    return 0;
 }
 
@@ -284,10 +310,31 @@ sge_calc_node_usage( lListElem *node,
    lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
    const char *usage_name;
+   static int sn_children_pos = -1;
+   static int sn_combined_usage_pos = -1;
+   static int sn_name_pos = -1;
+   static int sn_usage_list_pos = -1;
+   static int ua_name_pos = -1;
+   static int ua_value_pos = -1;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
 
-   children = lGetPosList(node, STN_children_POS);
+   if (sn_children_pos == -1) {
+      lListElem *ua_elem = lCreateElem(UA_Type);
+      lListElem *sc_elem = lCreateElem(SC_Type);
+      lListElem *up_elem = lCreateElem(UP_Type);
+      sn_children_pos = lGetPosViaElem(node, STN_children, SGE_NO_ABORT);
+      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage, SGE_NO_ABORT);
+      sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list, SGE_NO_ABORT);
+      sn_name_pos = lGetPosViaElem(node, STN_name, SGE_NO_ABORT);
+      ua_name_pos = lGetPosViaElem(ua_elem, UA_name, SGE_NO_ABORT);
+      ua_value_pos = lGetPosViaElem(ua_elem, UA_value, SGE_NO_ABORT);
+      lFreeElem(&ua_elem);
+      lFreeElem(&sc_elem);
+      lFreeElem(&up_elem);
+   }
+
+   children = lGetPosList(node, sn_children_pos);
    if (!children) {
 
       if (projname) {
@@ -297,7 +344,7 @@ sge_calc_node_usage( lListElem *node,
           *-------------------------------------------------------------*/
 
          if ((userprj = userprj_list_locate(user_list, 
-                                      lGetPosString(node, STN_name_POS)))) {
+                                      lGetPosString(node, sn_name_pos)))) {
 
             lList *projects = lGetList(userprj, UP_project);
             lListElem *upp;
@@ -315,17 +362,19 @@ sge_calc_node_usage( lListElem *node,
           *-------------------------------------------------------------*/
 
          if ((userprj = userprj_list_locate(user_list, 
-                                            lGetPosString(node, STN_name_POS)))) {
+                                      lGetPosString(node, sn_name_pos)))) {
 
             usage_list = lGetList(userprj, UP_usage);
 
          } else if ((userprj = userprj_list_locate(project_list, 
-                                                   lGetPosString(node, STN_name_POS)))) {
+                              lGetPosString(node, sn_name_pos)))) {
 
             usage_list = lGetList(userprj, UP_usage);
 
          }
+
       }
+
    } else {
 
       /*-------------------------------------------------------------
@@ -335,7 +384,7 @@ sge_calc_node_usage( lListElem *node,
 
       if (!projname) {
          if ((userprj = userprj_list_locate(project_list, 
-                                            lGetPosString(node, STN_name_POS)))) {
+                                lGetPosString(node, sn_name_pos)))) {
             project_node = 1;
             usage_list = lGetList(userprj, UP_usage);
             projname = lGetString(userprj, UP_name);
@@ -351,9 +400,8 @@ sge_calc_node_usage( lListElem *node,
        * Decay usage
        *-------------------------------------------------------------*/
 
-      if (curr_time) {
+      if (curr_time)
          decay_userprj_usage(userprj, decay_list, seqno, curr_time);
-      }  
 
       /*-------------------------------------------------------------
        * Sum usage weighting factors
@@ -364,7 +412,7 @@ sge_calc_node_usage( lListElem *node,
          if (usage_weight_list) {
             for_each(usage_weight, usage_weight_list)
                sum_of_usage_weights +=
-                     lGetPosDouble(usage_weight, UA_value_POS);
+                     lGetPosDouble(usage_weight, ua_value_pos);
          }
       }
 
@@ -374,12 +422,12 @@ sge_calc_node_usage( lListElem *node,
 
       if (usage_weight_list) {
          for_each(usage_elem, usage_list) {
-            usage_name = lGetPosString(usage_elem, UA_name_POS);
+            usage_name = lGetPosString(usage_elem, ua_name_pos);
             usage_weight = lGetElemStr(usage_weight_list, UA_name,
                                        usage_name);
             if (usage_weight && sum_of_usage_weights>0) {
-               usage_value += lGetPosDouble(usage_elem, UA_value_POS) *
-                  (lGetPosDouble(usage_weight, UA_value_POS) /
+               usage_value += lGetPosDouble(usage_elem, ua_value_pos) *
+                  (lGetPosDouble(usage_weight, ua_value_pos) /
                    sum_of_usage_weights);
             }
          }
@@ -392,17 +440,17 @@ sge_calc_node_usage( lListElem *node,
        *-------------------------------------------------------------*/
 
       for_each(usage_elem, usage_list) {
-         const char *nm = lGetPosString(usage_elem, UA_name_POS);
+         const char *nm = lGetPosString(usage_elem, ua_name_pos);
          lListElem *u;
          if (strcmp(nm, USAGE_ATTR_CPU) != 0 &&
              strcmp(nm, USAGE_ATTR_MEM) != 0 &&
              strcmp(nm, USAGE_ATTR_IO) != 0) {
-            if (((u=lGetElemStr(lGetPosList(node, STN_usage_list_POS),
+            if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
                                 UA_name, nm))) ||
                 ((u = lAddSubStr(node, UA_name, nm, STN_usage_list, UA_Type))))
-               lSetPosDouble(u, UA_value_POS,
-                             lGetPosDouble(u, UA_value_POS) +
-                             lGetPosDouble(usage_elem, UA_value_POS));
+               lSetPosDouble(u, ua_value_pos,
+                             lGetPosDouble(u, ua_value_pos) +
+                             lGetPosDouble(usage_elem, ua_value_pos));
          }
       }
    }
@@ -425,15 +473,15 @@ sge_calc_node_usage( lListElem *node,
           *-------------------------------------------------------------*/
 
          if (!project_node)
-            for_each(nu, lGetPosList(child_node, STN_usage_list_POS)) {
-               const char *nm = lGetPosString(nu, UA_name_POS);
+            for_each(nu, lGetPosList(child_node, sn_usage_list_pos)) {
+               const char *nm = lGetPosString(nu, ua_name_pos);
                lListElem *u;
-               if (((u=lGetElemStr(lGetPosList(node, STN_usage_list_POS),
+               if (((u=lGetElemStr(lGetPosList(node, sn_usage_list_pos),
                                    UA_name, nm))) ||
                    ((u=lAddSubStr(node, UA_name, nm, STN_usage_list, UA_Type))))
-                  lSetPosDouble(u, UA_value_POS,
-                                lGetPosDouble(u, UA_value_POS) +
-                                lGetPosDouble(nu, UA_value_POS));
+                  lSetPosDouble(u, ua_value_pos,
+                                lGetPosDouble(u, ua_value_pos) +
+                                lGetPosDouble(nu, ua_value_pos));
             }
       }
 
@@ -457,8 +505,8 @@ sge_calc_node_usage( lListElem *node,
             double default_usage = usage_value - child_usage;
             if (default_usage > 1.0) {
                for(i=1; i<ancestors.depth; i++) {
-                  double u = lGetPosDouble(ancestors.nodes[i], STN_combined_usage_POS);
-                  lSetPosDouble(ancestors.nodes[i], STN_combined_usage_POS, u + default_usage);
+                  double u = lGetPosDouble(ancestors.nodes[i], sn_combined_usage_pos);
+                  lSetPosDouble(ancestors.nodes[i], sn_combined_usage_pos, u + default_usage);
                }
             }
             free_ancestors(&ancestors);
@@ -469,7 +517,7 @@ sge_calc_node_usage( lListElem *node,
       else {
          lListElem *default_node;
          if ((default_node=search_named_node(node, "default")))
-            lSetPosDouble(default_node, STN_combined_usage_POS,
+            lSetPosDouble(default_node, sn_combined_usage_pos,
                MAX(usage_value - child_usage, 0));
       }
 #endif
@@ -480,7 +528,7 @@ sge_calc_node_usage( lListElem *node,
     * Set combined usage in the node
     *-------------------------------------------------------------*/
 
-   lSetPosDouble(node, STN_combined_usage_POS, usage_value);
+   lSetPosDouble(node, sn_combined_usage_pos, usage_value);
 
    DEXIT;
    return usage_value;
@@ -496,14 +544,25 @@ void
 sge_calc_node_proportion( lListElem *node,
                           double total_usage )
 {
-   lList *children = NULL;
-   lListElem *child_node = NULL;
+   lList *children;
+   lListElem *child_node;
+   static int sn_children_pos = -1;
+   static int sn_actual_proportion_pos = -1;
+   static int sn_combined_usage_pos = -1;
+
+   DENTER(TOP_LAYER, "sge_calc_node_proportions");
+
+   if (sn_children_pos == -1) {
+      sn_children_pos = lGetPosViaElem(node, STN_children, SGE_NO_ABORT);
+      sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion, SGE_NO_ABORT);
+      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage, SGE_NO_ABORT);
+   }
 
    /*-------------------------------------------------------------
     * Calculate node proportions for all children
     *-------------------------------------------------------------*/
 
-   if ((children = lGetPosList(node, STN_children_POS))) {
+   if ((children = lGetPosList(node, sn_children_pos))) {
       for_each(child_node, children) {
          sge_calc_node_proportion(child_node, total_usage);
       }
@@ -513,14 +572,13 @@ sge_calc_node_proportion( lListElem *node,
     * Set proportion in the node
     *-------------------------------------------------------------*/
 
-   if (total_usage == 0) {
-      lSetPosDouble(node, STN_actual_proportion_POS, 0);
-   }   
-   else {
-      lSetPosDouble(node, STN_actual_proportion_POS,
-                    lGetPosDouble(node, STN_combined_usage_POS) / total_usage);
-   }      
+   if (total_usage == 0)
+      lSetPosDouble(node, sn_actual_proportion_pos, 0);
+   else 
+      lSetPosDouble(node, sn_actual_proportion_pos,
+         lGetPosDouble(node, sn_combined_usage_pos) / total_usage);
 
+   DEXIT;
    return;
 }
 
@@ -645,19 +703,25 @@ sge_add_default_user_nodes( lListElem *root_node,
       if (search_userprj_node(root_node, "default", proj_name, NULL)) {
          for_each(user, user_list) {
             int has_access = 1;
-            
+#if 0            
+            int has_usage = 1;
+            lList *user_prj_usage = lGetList(user, UP_project);
+#endif            
             user_name = lGetString(user, UP_name);
 
             /*
             ** check if user would be allowed
             */
             has_access = sge_has_access_(user_name, NULL, acl, xacl, userset_list);
+#if 0            
+            /*
+            ** check if user has usage for this project
+            */
+            has_usage = (lGetElemStr(user_prj_usage, UPP_name, proj_name) != NULL);
+#endif
 
-            if (has_access && 
-                ((dnode=search_userprj_node(root_node, user_name, 
-                                            proj_name, &pnode))) &&
+            if (has_access && ((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
                 !strcmp("default", lGetString(dnode, STN_name))) {
-
                lListElem *node = lCopyElem(dnode);
                lSetString(node, STN_name, user_name);
                lSetList(node, STN_children, NULL);
@@ -707,32 +771,45 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
 
 {
    lListElem *cep, *fep;
+   static int sn_children_pos = -1;
+   static int sn_name_pos = -1;
+   static int sn_project_pos = -1;
    const char *nodename;
    lList *children;
 
-   if (ep == NULL || (username == NULL && projname == NULL)) {
+   DENTER(TOP_LAYER, "search_userprj_node");
+
+   if (!ep || (!username && !projname)) {
+      DEXIT;
       return NULL;
    }
 
-   nodename = lGetPosString(ep, STN_name_POS);
+   if (sn_name_pos == -1) {
+      sn_children_pos = lGetPosViaElem(ep, STN_children, SGE_NO_ABORT);
+      sn_name_pos = lGetPosViaElem(ep, STN_name, SGE_NO_ABORT);
+      sn_project_pos = lGetPosViaElem(ep, STN_project, SGE_NO_ABORT);
+   }
+
+   nodename = lGetPosString(ep, sn_name_pos);
 
    /*
     * skip project nodes which don't match
     */
 
-   if (lGetPosUlong(ep, STN_project_POS) &&
+   if (lGetPosUlong(ep, sn_project_pos) &&
         ep != root &&
        (!projname || strcmp(nodename, projname))) {
+      DEXIT;
       return NULL;
    }
 
-   children = lGetPosList(ep, STN_children_POS);
+   children = lGetPosList(ep, sn_children_pos);
 
    /*
     * if project name is supplied, look for the project
     */
 
-   if (projname != NULL) {
+   if (projname) {
 
       if (strcmp(nodename, projname) == 0) {
 
@@ -742,28 +819,69 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
           * return the project node.
           */
 
-         if (children == NULL) {
+         if (!children) {
+            DEXIT;
             return ep;
          }
 
          return search_userprj_node_work(ep, username, NULL, pep, ep);
-      } 
-      else {
-          /* search the child nodes for the project */
+
+#if 0
+
          for_each(cep, children) {
-            if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
-               if (pep && (cep == fep)) {
+            if ((fep = search_userprj_node_work(cep, username, NULL, pep, ep))) {
+               if (pep && (cep == fep))
                   *pep = ep;
-               }   
+               DEXIT;
                return fep;
             }
          }
-         /* project was not found, fall thru and return NULL */
+
+         /*
+          * The user is not in the project sub-tree, so look for
+          * a user node called "default", which can be used to
+          * specify shares for users not in the share tree.
+          */
+
+         for_each(cep, children) {
+            if ((fep = search_userprj_node_work(cep, "default", NULL, pep, root))) {
+               if (pep && (cep == fep))
+                  *pep = ep;
+               DEXIT;
+               return fep;
+            }
+         }
+#endif
+
+         /*
+          * user was not found, fall thru and return NULL
+          */
+
+      } else {
+
+         /* 
+          * search the child nodes for the project
+          */
+
+         for_each(cep, children) {
+            if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
+               if (pep && (cep == fep))
+                  *pep = ep;
+               DEXIT;
+               return fep;
+            }
+         }
+
+         /*
+          * project was not found, fall thru and return NULL
+          */
+
       }
-   } 
-   else {
+
+   } else {
 
       if (strcmp(nodename, username) == 0) {
+         DEXIT;
          return ep;
       }
 
@@ -773,9 +891,9 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
 
       for_each(cep, children) {
          if ((fep = search_userprj_node_work(cep, username, projname, pep, root))) {
-            if (pep && (cep == fep)) {
+            if (pep && (cep == fep))
                *pep = ep;
-            }   
+            DEXIT;
             return fep;
          }
       }
@@ -784,9 +902,8 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
        * if we've searched the entire tree, search for default user
        */
 
-      if (ep == root && strcmp(username, "default")) {
+      if (ep == root && strcmp(username, "default"))
          return search_userprj_node(ep, "default", NULL, pep);
-       }   
 
       /*
        * user was not found, fall thru and return NULL
@@ -794,6 +911,7 @@ search_userprj_node_work( lListElem *ep,      /* branch to search */
 
    }
 
+   DEXIT;
    return NULL;
 }
 
@@ -807,6 +925,7 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
                      const char *username,
                      const char *projname,
                      lListElem **pep )   /* parent of found node */
+
 {
    return search_userprj_node_work(ep, username, projname, pep, ep);
 }
@@ -828,7 +947,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
       return;
    }
 
-#if 0
+#if 1
    DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
    DPRINTF(("     SORTING SGEEE JOB LIST     \n"));
    DPRINTF(("+ + + + + + + + + + + + + + + + \n"));
@@ -868,7 +987,7 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
 
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
-#if 0
+#if 1
       DPRINTF(("JOB: "sge_u32" PRIORITY: "sge_u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
          lGetDouble(tmp_sge_job, SGEJ_priority)));

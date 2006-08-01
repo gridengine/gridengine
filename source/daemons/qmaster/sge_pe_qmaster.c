@@ -256,7 +256,6 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    int pos;
    lListElem *ep = NULL;
    const char *pe = NULL;
-   lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
 
    DENTER(TOP_LAYER, "sge_del_pe");
 
@@ -283,7 +282,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((ep=pe_list_locate(master_pe_list, pe))==NULL) {
+   if ((ep=pe_list_locate(Master_Pe_List, pe))==NULL) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -296,7 +295,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (pe_is_referenced(ep, &local_answer_list, *(object_type_get_master_list(SGE_TYPE_JOB)),
+      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List,
                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
          lListElem *answer = lFirst(local_answer_list);
 
@@ -319,7 +318,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* delete found pe element */
-   lRemoveElem(master_pe_list, &ep);
+   lRemoveElem(Master_Pe_List, &ep);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
          ruser, rhost, pe, object_name ));
@@ -343,7 +342,7 @@ lList *pe_list
       pe_name = lGetString(pep, PE_name);
       DPRINTF(("debiting from pe %s:\n", pe_name));
 
-      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+      for_each(jep, Master_Job_List) {
          lListElem *jatep;
 
          slots = 0;

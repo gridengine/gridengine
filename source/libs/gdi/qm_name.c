@@ -34,8 +34,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "uti/sge_stdio.h"
 #include "sge_log.h"
+#include "sge_stdio.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "qm_name.h"
@@ -107,14 +107,16 @@ char *err_str
       if (err_str)
          if (master_host)
             sprintf(err_str, MSG_GDI_NULLPOINTERPASSED );
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    }
 
    if (!(fp=fopen(master_file,"r"))) {
       ERROR((SGE_EVENT, MSG_GDI_FOPEN_FAILED, master_file, strerror(errno)));
       if (err_str)
          sprintf(err_str, MSG_GDI_OPENMASTERFILEFAILED_S , master_file);
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    }    
 
    /* read file in one sweep and append O Byte to the end */
@@ -142,7 +144,8 @@ char *err_str
       if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S , master_file);
       FCLOSE(fp);
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    }   
        
    if (len > CL_MAXHOSTLEN - 1) {
@@ -151,14 +154,17 @@ char *err_str
                  master_file, (int) CL_MAXHOSTLEN);
          sprintf(err_str, "\n");
       FCLOSE(fp);
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    }
 
    FCLOSE(fp);
    strcpy(master_host, first);
-   DRETURN(0);
+   DEXIT;
+   return 0;
 FCLOSE_ERROR:
-   DRETURN(-1);
+   DEXIT;
+   return -1;
 }
 
 /*********************************************************************
@@ -192,7 +198,7 @@ char *err_str
       return -1;
    } 
 
-   FCLOSE(fp);
+   fclose(fp);
    return 0;
 FCLOSE_ERROR:
    return -1;

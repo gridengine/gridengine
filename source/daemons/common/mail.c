@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <unistd.h>
 #include <errno.h>
-#include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -48,9 +47,7 @@
 #include "sge_os.h"
 #include "sge_job.h"
 #include "sge_mailrec.h"
-#include "uti/sge_stdio.h"
 
-#include "msg_common.h"
 #include "msg_daemons_common.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
@@ -207,7 +204,7 @@ const char *buf
    close(pipefds[0]);
    fp = fdopen(pipefds[1], "w");
    fprintf(fp, "%s\n", buf);
-   FCLOSE(fp);
+   fclose(fp);
 
    sge_setup_sig_handlers(uti_state_get_mewho());
 
@@ -250,7 +247,4 @@ const char *buf
       DPRINTF(("mailer exited with exit status %d\n", exit_status));
       exit(exit_status);
    }
-FCLOSE_ERROR:
-   CRITICAL((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, "<pipefds>", strerror(errno)));
-   exit(1);
 }

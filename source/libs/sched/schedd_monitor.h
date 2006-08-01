@@ -32,6 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+extern int monitor_next_run;
+
+extern char log_string[];
+
 #define SCHED_LOG_NAME "schedd_runlog"
 
 /* free answer list if anyone is registered */
@@ -49,11 +53,6 @@ int schedd_log(const char *logstr);
 
 /* used for multiple calling schedd_log() and generating list of items such as jobids */
 int schedd_log_list(const char *logstr, lList *lp, int nm);
-
-void schedd_set_monitor_next_run(bool set);
-bool schedd_is_monitor_next_run(void);
-
-char* schedd_get_log_string(void);
 
 #define SCHED_MON(x) (sprintf x,schedd_log(log_string))
 

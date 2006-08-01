@@ -83,17 +83,18 @@ char *rhost
   sge_mod_sharetree - Master code
 
   Modify a share tree
-  lListElem *ep,   This is the new share tree 
-  lList **lpp,     list to change 
  ************************************************************/
-int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp, 
-                      char *ruser, char *rhost ) 
-{
+int sge_mod_sharetree(
+lListElem *ep,  /* This is the new share tree */
+lList **lpp,    /* list to change */
+lList **alpp, 
+char *ruser,
+char *rhost 
+) {
    int ret;
    int prev_version;
    int adding; 
    lList *found = NULL;
-   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_mod_sharetree");
 
@@ -105,9 +106,8 @@ int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp,
       return STATUS_EUNKNOWN;
    }
 
-   ret = check_sharetree(alpp, ep, *object_base[SGE_TYPE_USER].list, 
-                         *object_base[SGE_TYPE_PROJECT].list, 
-                         NULL, &found);
+   ret = check_sharetree(alpp, ep, Master_User_List, Master_Project_List, 
+         NULL, &found);
    lFreeList(&found);
    if (ret) {
       /* alpp gets filled by check_sharetree() */
@@ -147,14 +147,12 @@ int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp,
       return ret;
    }
 
-   if (adding) {
+   if (adding)
       INFO((SGE_EVENT, MSG_STREE_ADDSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
-   }
-   else {
+   else
       INFO((SGE_EVENT, MSG_STREE_MODSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
-   }
 
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
@@ -358,7 +356,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
          if (strcmp(name, "default") &&
              !sge_has_access_(name, NULL, lGetList(project, UP_acl),
-                  lGetList(project, UP_xacl), *object_type_get_master_list(SGE_TYPE_USERSET))) {
+                  lGetList(project, UP_xacl), Master_Userset_List)) {
             ERROR((SGE_EVENT, MSG_STREE_USERTNOACCESS2PRJ_SS, name, lGetString(project, UP_name)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;

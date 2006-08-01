@@ -47,24 +47,15 @@ SPOOLFLIB_OBJS = $(SPOOLFLIB_SRC:.c=.o)
 SPOOLFLIB_ADD_SRC = \
          read_write_job.c 
 
-SPOOLFLIB_TEST_PROGS_OBJ = \
-         test_sge_spooling_flatfile.o \
-         test_ff_cl.o
-
-SPOOLFLIB_TEST_PROGS = \
-         test_sge_spooling_flatfile \
-         test_ff_cl
-
 SPOOLFLIB_ADD_OBJS = $(SPOOLFLIB_ADD_SRC:.c=.o)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoolflib: $(SPOOLFLIB) $(SPOOLFLIB_TEST_PROGS)
+spoolflib: $(SPOOLFLIB)
 
 spoolflib_clean:
-		$(RM) $(SPOOLFLIB_OBJS) libspoolf.a libspoolf$(SHAREDEXT) $(SPOOLFLIB_TEST_PROGS) \
-             $(SPOOLFLIB_TEST_PROGS_OBJ) 
+		$(RM) $(SPOOLFLIB_OBJS) libspoolf.a libspoolf$(SHAREDEXT)
 
 spoolflib_depend:
 		$(DEPEND) -f$(SPOOLFLIB_DIR)/spoolf_dependencies $(SPOOLFLIB_DIR)/*.c
@@ -115,19 +106,14 @@ sge_spooling_flatfile_scanner.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.
 
 #---------------------------------------------------------------------
 # test programs
-test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJLIB) $(COMMLIB) $(LCKLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLFLIB) $(SPOOLLIB) $(COMMLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(WINGRIDLIB) $(SECLIB) $(DLLIB) $(SLIBS) $(LIBS) 
+test_sge_spooling_flatfile: test_sge_spooling_flatfile.o $(SPOOLFLIB) $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o $(SPOOLFLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 
-test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                        $(RMONLIB) $(UTILIB) $(SPOOLFLIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) \
-                         $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(GDILIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
+test_ff_cl: test_ff_cl.o $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
+	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) $(SPOOLLIB) -lgdi -lsec -ldl -lspoolc -lsgeobjd -lsgeobj $(LIBS) -llck -lsched -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
 
 test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl.c

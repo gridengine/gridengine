@@ -120,7 +120,9 @@ proc error_states_prolog {} {
    set_queue $error_states_check_queue my_conf 
 
    set job_id [submit_job "-q $error_states_check_queue $jobargs 5" ]
-   trigger_scheduling
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
    wait_for_jobpending $job_id "leeper" 60 1
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
    
@@ -131,7 +133,9 @@ proc error_states_prolog {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-c $error_states_check_queue" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   trigger_scheduling
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
    wait_for_jobpending $job_id "leeper" 60 1
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
 
@@ -142,7 +146,9 @@ proc error_states_prolog {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-c $error_states_check_queue" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   trigger_scheduling
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
    wait_for_jobpending $job_id "leeper" 60 1
 
    wait_for_job_state $job_id "R" 60
@@ -150,7 +156,9 @@ proc error_states_prolog {} {
    set my_conf(prolog) "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_00.sh"
    set_queue $error_states_check_queue my_conf 
 
-   trigger_scheduling
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
    wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
@@ -176,10 +184,6 @@ proc error_states_epilog {} {
    wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
-   # JG: TODO: this get_qacct will fail in 6.0 due to delayed writing of accounting information
-   # set reporting_params, accounting_flush_time to 00:00:00, or poll one minute until
-   # accounting info is available. Consider writing a function get_qacct_poll in sge_procedures
-   # There are multiple calls to qacct in this check!
    get_qacct $job_id
    puts $CHECK_OUTPUT "qacct output for job $job_id:"
    puts $CHECK_OUTPUT "failed: $qacct_info(failed)"

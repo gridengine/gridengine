@@ -51,6 +51,57 @@
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 
+static const spool_flatfile_instr ceqconf_ce_sfi = 
+{
+   NULL,
+   false,
+   true,
+   true,
+   false,
+   true,
+   '\0',
+   ' ',
+   '\0',
+   '\0',
+   '\n',
+   NULL,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr ceqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &ceqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr ceqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &ceqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
 bool 
 centry_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
@@ -115,7 +166,7 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
       char *filename = NULL;
 
       filename = (char *)spool_flatfile_write_object(&alp, *this_elem, false,
-                                             CE_fields, &qconf_ce_sfi, SP_DEST_TMP,
+                                             CE_fields, &ceqconf_sfi, SP_DEST_TMP,
                                              SP_FORM_ASCII, filename, false);
       
       if (answer_list_output(&alp)) {
@@ -129,7 +180,7 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
 
          fields_out[0] = NoName;
          centry = spool_flatfile_read_object(&alp, CE_Type, NULL,
-                                             CE_fields, fields_out, true, &qconf_ce_sfi,
+                                             CE_fields, fields_out, true, &ceqconf_sfi,
                                              SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (&alp)) {
@@ -202,7 +253,7 @@ centry_add_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       centry = spool_flatfile_read_object(answer_list, CE_Type, NULL,
-                                          CE_fields, fields_out, true, &qconf_ce_sfi,
+                                          CE_fields, fields_out, true, &ceqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
@@ -273,7 +324,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       centry = spool_flatfile_read_object(answer_list, CE_Type, NULL,
-                                          CE_fields, fields_out, true, &qconf_ce_sfi,
+                                          CE_fields, fields_out, true, &ceqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
@@ -335,7 +386,7 @@ centry_show(lList **answer_list, const char *name)
    
       if (centry != NULL) {
          spool_flatfile_write_object(answer_list, centry, false, CE_fields,
-                                     &qconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
+                                     &ceqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                      NULL, false);
       
          if (answer_list_output(answer_list)) {
@@ -369,7 +420,7 @@ centry_list_show(lList **answer_list)
       spool_flatfile_align_list(answer_list, (const lList *)centry_list,
                                 CE_fields, 3);
       filename = spool_flatfile_write_list(answer_list, centry_list, CE_fields,
-                                           &qconf_ce_list_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
+                                           &ceqconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
                                            NULL, false);
      
       FREE(filename);
@@ -680,7 +731,7 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
       lList *centry_list = NULL; 
       
       centry_list = spool_flatfile_read_list(answer_list, CE_Type, CE_fields,
-                                             NULL, true, &qconf_ce_list_sfi,
+                                             NULL, true, &ceqconf_ce_sfi,
                                              SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
@@ -721,7 +772,7 @@ centry_list_provide_modify_context(lList **this_list,
       spool_flatfile_align_list(answer_list, (const lList *)*this_list,
                                 CE_fields, 3);
       filename = spool_flatfile_write_list(answer_list, *this_list, CE_fields,
-                                           &qconf_ce_list_sfi, SP_DEST_TMP,
+                                           &ceqconf_ce_sfi, SP_DEST_TMP,
                                            SP_FORM_ASCII, NULL, false);
       
       if (answer_list_output(answer_list)) {
@@ -735,7 +786,7 @@ centry_list_provide_modify_context(lList **this_list,
          lList *centry_list;
 
          centry_list = spool_flatfile_read_list(answer_list, CE_Type, CE_fields,
-                                                NULL, true, &qconf_ce_list_sfi,
+                                                NULL, true, &ceqconf_ce_sfi,
                                                 SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (answer_list)) {

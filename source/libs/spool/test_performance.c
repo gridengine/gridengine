@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-   what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM1")", JB_Type,
+   what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM2")", JB_Type,
          JB_job_number, 
          JB_script_file,
          JB_submission_time,
@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
          JB_uid,      /* x*/
          JB_group,
          JB_gid,        /* x*/
+         JB_nrunning,
          JB_execution_time,
          JB_checkpoint_attr,     /* x*/
 

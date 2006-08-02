@@ -168,11 +168,16 @@ public class Expect {
             
             ExpectBuffer workingBuffer = new ExpectBuffer();
             
-            while(!Thread.currentThread().isInterrupted() &&
-                    execThread.isAlive()) {
+            while(true) {
                 
                 String received = null;
                 synchronized(buffer) {
+                    if(Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+                    if(!execThread.isRunning()) {
+                        break;
+                    }
                     if(buffer.length() == 0) {
                         LOGGER.log(Level.FINER, "waiting for input");
                         long start = System.currentTimeMillis();
@@ -221,18 +226,26 @@ public class Expect {
      */
     private class ExecThread extends Thread {
         
+        private boolean running = true;
+        
         public void run() {
             try {
                 process.waitFor();
                 LOGGER.log(Level.FINE,"command exited with status " + process.exitValue());
                 sleep(100);
             } catch (InterruptedException ex) {
+            } finally {
+                running = false;
+                stdout.interrupt();
+                stderr.interrupt();
+                synchronized(buffer) {
+                    buffer.notifyAll();
+                }
             }
-            stdout.interrupt();
-            stderr.interrupt();
-            synchronized(buffer) {
-                buffer.notifyAll();
-            }
+        }
+        
+        public boolean isRunning() {
+            return running;
         }
     }
     

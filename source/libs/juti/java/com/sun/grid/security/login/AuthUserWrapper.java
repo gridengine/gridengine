@@ -122,7 +122,7 @@ class AuthUserWrapper {
         expect.add(new ExpectStringHandler("username: ", username.toCharArray()));
         expect.add(new ExpectPasswordHandler("password: ", password));
         
-        PrincipalHandler principalHandler = new PrincipalHandler();        
+        PrincipalHandler principalHandler = new PrincipalHandler(username);        
         expect.add(principalHandler);
         
         ErrorHandler errorHandler = new ErrorHandler();
@@ -180,14 +180,20 @@ class AuthUserWrapper {
     class PrincipalHandler implements ExpectHandler {
 
         private Set principals = new HashSet();
+        private String username;
+        
+        public PrincipalHandler(String username) {
+            this.username = username;
+        }
         
         public void handle(Expect expect, ExpectBuffer buffer) throws IOException {
 
             String line = buffer.consumeLine("uid ");
             if(line != null) {
-                
+
+                UnixPrincipal up = new UnixPrincipal(username);
+                principals.add(up);
                 line = line.trim();
-                
                 UnixNumericUserPrincipal p = new UnixNumericUserPrincipal(line);
                 principals.add(p);
             }

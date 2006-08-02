@@ -95,6 +95,7 @@ public class GridCAImpl implements GridCA {
         ret.command().add(config.getCaHost());
         ret.command().add("-adminuser");
         ret.command().add(config.getAdminUser());
+        ret.command().add("-nosge");
         return ret;
     }
     
@@ -254,7 +255,7 @@ public class GridCAImpl implements GridCA {
         LOGGER.entering("GridCAImpl", "createDaemon");
         Expect pb = createProcess();
         pb.command().add("-grm_daemon");
-        pb.command().add(daemon + ":" + user + ":" + email);
+        pb.command().add(user + ":" + daemon + ":" + email);
 
         execute(pb);
         

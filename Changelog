@@ -1,3 +1,7 @@
+RH-2006-08-02-0: Enhancem.: o multipurpose sge_ca script
+                            o bugfixes in juti
+                 Review:    AA
+                              
 AH-2006-08-02-0: Enhancem.: Added comment to dist/util/arch about alternative
                             means for determining GNU C library version.
 

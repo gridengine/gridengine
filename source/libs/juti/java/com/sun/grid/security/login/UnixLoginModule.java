@@ -31,9 +31,12 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.security.login;
 
+import com.sun.grid.util.SGEUtil;
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -71,8 +74,8 @@ import javax.security.auth.spi.LoginModule;
  * <table>
  *   <tr><th>Option</th><th>description</th></tr>
  *   <tr>
- *      <td>command</td>
- *      <td>path to the authuser binary (SGE_ROOT/utilbin/<arch>/authuser)</td>
+ *      <td>sge_root</td>
+ *      <td>path to the gridengine distribution</td>
  *   </tr>
  *   <tr>
  *      <td>auth_method</td>
@@ -90,7 +93,7 @@ import javax.security.auth.spi.LoginModule;
  * <pre>
  *  sample {
  *   com.sun.grid.security.login.UnixLoginModule requisite
- *         command="/opt/sge/utilbin/sol-sparc64/authuser",
+ *         sge_root="/opt/sge",
  *         auth_method="pam";
  *         pam_service="su";
  *  };
@@ -101,7 +104,7 @@ import javax.security.auth.spi.LoginModule;
  * <pre>
  *  sample {
  *   com.sun.grid.security.login.UnixLoginModule requisite
- *         command="/opt/sge/utilbin/sol-sparc64/authuser",
+ *         command="/opt/sge",
  *         auth_method="shadow";
  *  };
  * </pre>
@@ -125,7 +128,7 @@ public class UnixLoginModule implements LoginModule {
     private String username;
     private Set principals;
     private AuthUserWrapper authuser;
-
+ 
     
     /**
      * Initialize the <code>UnixLoginModule</code>
@@ -138,7 +141,20 @@ public class UnixLoginModule implements LoginModule {
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
        
-       command = (String)options.get("command");
+       String sgeRoot = (String)options.get("sge_root");
+       if(sgeRoot != null) {
+            try {
+                String arch = SGEUtil.getArch(new File(sgeRoot));
+                command = sgeRoot + File.separatorChar + "utilbin"
+                        + File.separatorChar + arch 
+                        + File.separatorChar + "authuser";
+                LOGGER.log(Level.FINE, "command={0}", command);
+            } catch (IOException ex) {
+                LOGGER.log(Level.WARNING, "Can not determine gridengine arch", ex);
+            }
+       } else {
+           LOGGER.log(Level.WARNING,"mandatory option sge_root not available");
+       }
        authMethod = (String)options.get("auth_method");
        pamService = (String)options.get("pam_service");
        this.subject = subject;
@@ -159,6 +175,9 @@ public class UnixLoginModule implements LoginModule {
      */
     public boolean login() throws LoginException {
         
+        if(command == null) {
+            throw new LoginException("invalid login module configuration");
+        }
         PasswordCallback pwCallback = new PasswordCallback("password: ", false);
         NameCallback nameCallback = new NameCallback("username: ");
         

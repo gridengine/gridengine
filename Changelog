@@ -1,3 +1,6 @@
+AH-2006-08-02-0: Enhancem.: Added comment to dist/util/arch about alternative
+                            means for determining GNU C library version.
+
 AA-2006-08-01-0: Enhancem.: Preliminary version of LIRS code for qmon added
                  Review:    RD
 

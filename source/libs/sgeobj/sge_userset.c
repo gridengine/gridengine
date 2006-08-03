@@ -116,14 +116,9 @@ lListElem *userset_list_locate(lList *lp, const char *name)
 
    DENTER(TOP_LAYER, "userset_list_locate");
 
-   for_each(ep, lp) {
-      if (!strcasecmp(name, lGetString(ep, US_name))) {
-         break; 
-      }
-   }
+   ep = lGetElemStr(lp, US_name, name);
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /****** sgeobj/userset/userset_list_validate_acl_list() ***********************

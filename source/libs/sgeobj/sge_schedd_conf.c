@@ -676,7 +676,8 @@ bool sconf_is_valid_load_formula(lListElem *schedd_conf,
             if (cmplx_attr != NULL) {
                int type = lGetUlong(cmplx_attr, CE_valtype);
 
-               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_RESTR ||
+                   type == TYPE_HOST) {
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, 
                                          fact));
                   answer_list_add(answer_list, SGE_EVENT, 

@@ -366,6 +366,10 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
                                                      false);
       
       if (answer_list_output(answer_list)) {
+         if (filename != NULL) { 
+            unlink(filename);
+            FREE(filename);
+         }
          DEXIT;
          SGE_EXIT(1);
       }

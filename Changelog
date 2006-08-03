@@ -1,3 +1,7 @@
+RD-2006-08-03-0: Bufix:     Fixed some minor issues and one memory leak
+                            merge from maintrunk RD-2006-08-03-0
+                 Review:    JG, AA
+
 RD-2006-07-31-2: Cleanup:   Fixed gcc42 compiler warnings
                  Review:    AA
 

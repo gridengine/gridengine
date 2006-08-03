@@ -48,6 +48,7 @@
 #define SGE_GLOBAL_NAME          "global"
 #define SGE_QUEUE_NAME           "queue"
 #define SGE_HOST_NAME            "host"
+#define SGE_LIRS_NAME            "limitation_ruleset"
 
 /* sge object names */
 #define SGE_OBJ_QUEUE                  "queue"
@@ -61,6 +62,8 @@
 #define SGE_OBJ_LIRS                   "limitation_ruleset"
 
 /* attribute names of sge objects */
+#define SGE_ATTR_LOAD_FORMULA          "load_formula"
+#define SGE_ATTR_DYNAMICAL_LIMIT       "dynamical_limit"
 #define SGE_ATTR_LOAD_SCALING          "load_scaling"
 #define SGE_ATTR_PE_LIST               "pe_list"
 #define SGE_ATTR_HOST_LIST             "hostlist"

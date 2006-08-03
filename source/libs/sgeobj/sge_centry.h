@@ -118,5 +118,8 @@ centry_list_is_correct(lList *this_list, lList **answer_list);
 
 int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 
+bool
+validate_load_formula(const char *formula, lList **answer_list, lList *centry_list, const char *name);
+
 #endif /* __SGE_CENTRY_H */
 

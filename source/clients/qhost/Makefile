@@ -40,7 +40,6 @@ QHOST_SRC = qhost.c
 
 QHOST_ADD_SRC = \
                qstat_printing.c \
-               read_write_complex.c \
                show_job.c \
                sig_handlers.c \
                usage.c sge_options.c

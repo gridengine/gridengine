@@ -1505,6 +1505,19 @@ sge_mirror_process_event_list(lList *event_list)
          case sgeE_USERSET_MOD:
             ret = sge_mirror_process_event(mirror_base, object_base, SGE_TYPE_USERSET, SGE_EMA_MOD, event);
             break;
+
+         case sgeE_LIRS_LIST:
+            ret = sge_mirror_process_event(mirror_base, object_base, SGE_TYPE_LIRS, SGE_EMA_LIST, event);
+            break;
+         case sgeE_LIRS_ADD:
+            ret = sge_mirror_process_event(mirror_base, object_base, SGE_TYPE_LIRS, SGE_EMA_ADD, event);
+            break;
+         case sgeE_LIRS_DEL:
+            ret = sge_mirror_process_event(mirror_base, object_base, SGE_TYPE_LIRS, SGE_EMA_DEL, event);
+            break;
+         case sgeE_LIRS_MOD:
+            ret = sge_mirror_process_event(mirror_base, object_base, SGE_TYPE_LIRS, SGE_EMA_MOD, event);
+            break;
    
 #ifndef __SGE_NO_USERMAPPING__
          case sgeE_CUSER_LIST:

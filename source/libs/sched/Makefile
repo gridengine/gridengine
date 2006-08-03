@@ -60,7 +60,8 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sge_schedd_text.c \
               sge_ssi.c \
               sge_sharetree_printing.c \
-              sge_interactive_sched.c
+              sge_interactive_sched.c \
+              sge_lirs_schedd.c
 
 SCHEDLIB_OBJS = $(SCHEDLIB_SRC:.c=.o)
 
@@ -174,6 +175,9 @@ sge_sharetree_printing.o: $(SCHEDLIB_DIR)/sge_sharetree_printing.c
 
 sge_interactive_sched.o : $(SCHEDLIB_DIR)/sge_interactive_sched.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_interactive_sched.c
+
+sge_lirs_schedd.o : $(SCHEDLIB_DIR)/sge_lirs_schedd.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_lirs_schedd.c
 
 #---------------------------------------------------------------------
 # test programs

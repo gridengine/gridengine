@@ -388,7 +388,6 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory)
 int sge_read_pe_list_from_disk(lList **list, const char *directory)
 {
    lList *direntries;
-   lList *alp = NULL;
    lListElem *ep, *direntry;
    int ret = 0;
    const char *pe;
@@ -412,7 +411,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_PE_S, pe);
                printf("\n");
             }
-            if (verify_str_key(&alp, pe, MAX_VERIFY_STRING, "pe") != STATUS_OK) {
+            if (verify_str_key(NULL, pe, MAX_VERIFY_STRING, "pe") != STATUS_OK) {
                DEXIT;
                return -1;
             }       
@@ -442,12 +441,12 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
 
 int sge_read_cal_list_from_disk(lList **list, const char *directory)
 {
+   lList *alp = NULL;
    lList *direntries;
    lListElem *aep, *ep, *direntry;
    int ret = 0;
    const char *cal;
    const char *s;
-   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "sge_read_cal_list_from_disk");
    
@@ -468,7 +467,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_CALENDAR_S, cal);
                printf("\n");
             }
-            if (verify_str_key(&alp, cal, MAX_VERIFY_STRING, "cal") != STATUS_OK) {
+            if (verify_str_key(NULL, cal, MAX_VERIFY_STRING, "cal") != STATUS_OK) {
                DEXIT;
                return -1;
             }      
@@ -599,7 +598,7 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
 
 int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
 {
-   lList *alp = NULL, *direntries;
+   lList *direntries;
    lListElem *qep, *direntry;
    int config_tag = 0;
 
@@ -625,7 +624,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_QUEUE_S, queue_str);
                printf("\n");
             }
-            if (verify_str_key(&alp, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
+            if (verify_str_key(NULL, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
                DEXIT;
                return -1;
             }   
@@ -717,7 +716,6 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
 
 int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
 {
-   lList *answer_list = NULL;
    lList *dir_entries = NULL;
    DENTER(TOP_LAYER, "sge_read_limit_rule_set_list_from_disk");
 
@@ -746,32 +744,32 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_LIRS_S, lirs_name);
                printf("\n");
            }
-           if (verify_str_key(&answer_list, lirs_name, MAX_VERIFY_STRING, "lirs") != STATUS_OK) {
+           if (verify_str_key(NULL, lirs_name, MAX_VERIFY_STRING, "lirs") != STATUS_OK) {
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
            sge_dstring_sprintf(&filename, "%s/%s", directory, lirs_name);
-           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), &answer_list);
+           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), NULL);
            lirs = lCopyElem(lFirst(tmp_lirs_list));
+           lFreeList(&tmp_lirs_list);
 
            if (!lirs) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                       lirs_name));
-               lFreeList(&tmp_lirs_list);
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
 
-           if (!limit_rule_sets_verify_attributes(tmp_lirs_list, &answer_list, true)) {
+           if (!limit_rule_set_verify_attributes(lirs, NULL, true)) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
+                      lirs_name));
                lFreeElem(&lirs);
-               lFreeList(&tmp_lirs_list);
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
-           lFreeList(&tmp_lirs_list);
 
            lAppendElem(*list, lirs);
 
@@ -782,13 +780,13 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
       }
       lFreeList(&dir_entries);
    }
-   
+  
    DRETURN(0);
 }
 
 int sge_read_project_list_from_disk(lList **list, const char *directory)
 {
-   lList *alp = NULL, *direntries;
+   lList *direntries;
    lListElem *ep, *direntry;
    int config_tag = 0;
 
@@ -814,7 +812,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(&alp, userprj_str, MAX_VERIFY_STRING, "project") != STATUS_OK) {
+            if (verify_str_key(NULL, userprj_str, MAX_VERIFY_STRING, "project") != STATUS_OK) {
                DEXIT;
                return -1;
             }  
@@ -896,7 +894,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory)
 
 int sge_read_userset_list_from_disk(lList **list, const char *directory)
 {
-   lList *alp = NULL, *direntries;
+   lList *direntries;
    lListElem *ep, *direntry;
 
    DENTER(TOP_LAYER, "sge_read_userset_list_from_disk");
@@ -919,7 +917,7 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(&alp, userset, MAX_VERIFY_STRING, "userset") != STATUS_OK) {
+            if (verify_str_key(NULL, userset, MAX_VERIFY_STRING, "userset") != STATUS_OK) {
                DEXIT;
                return -1;
             }  
@@ -1200,6 +1198,7 @@ int read_all_configurations(lList **lpp,
                /* answer list gets filled in write_configuration() */
                free(old_name);
                sge_switch2start_user();
+               lFreeList(&alp);
                DEXIT;
                return -1;
             } else {

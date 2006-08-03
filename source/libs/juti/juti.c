@@ -39,13 +39,13 @@
 #include <pwd.h>
 
 #if defined(IRIX65) || defined(AIX43) || defined(HP1164) \
-    || defined(DARWIN_PPC) || defined(INTERIX)
+    || defined(DARWIN) || defined(INTERIX)
 #define JUTI_NO_PAM
 #else
 #include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN_PPC) || defined(AIX51) || defined(AIX43) || defined(INTERIX)
+#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX)
 #define JUTI_NO_SHADOW
 #else
 #include <shadow.h>

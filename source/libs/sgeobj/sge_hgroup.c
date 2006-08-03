@@ -72,11 +72,14 @@
 *  FUNCTION
 *     Is the given name a hostgroup name 
 *
+*  NOTE
+*     This function is also used for usergroup in limitation rule sets
+*
 *  INPUTS
 *     const char *name - hostname or hostgroup name 
 *
 *  RESULT
-*     bool - true for hostgroupnames otherwise faslse
+*     bool - true for hostgroupnames otherwise false
 ******************************************************************************/
 bool 
 is_hgroup_name(const char *name)
@@ -548,13 +551,13 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
    bool ret = true;
 
    DENTER(HGROUP_LAYER, "hgroup_list_exists");
-   if (href_list != NULL) {
+   if (href_list != NULL && this_list != NULL) {
       lListElem *href;
 
       for_each(href, href_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (sge_is_hgroup_ref(name)) {
+         if (is_hgroup_name(name)) {
             lListElem *hgroup = hgroup_list_locate(this_list, name);
          
             if (hgroup == NULL) {

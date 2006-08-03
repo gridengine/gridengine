@@ -44,8 +44,13 @@
 #include "sgeobj/sge_limit_rule.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_job.h"
+   #include "sgeobj/sge_ja_task.h"
 #include "spool/sge_spooling.h"
 #include "evm/sge_event_master.h"
+
+static bool
+limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list);
 
 /****** sge_limit_rule_qmaster/lirs_mod() **************************************
 *  NAME
@@ -65,11 +70,11 @@
 *  INPUTS
 *     lList **alpp          - referenct to an answer list
 *     lListElem *new_lirs   - if a new lirs object will be created by this
-*                             function, than new_lirs is a newly initialized
+*                             function, then new_lirs is a newly initialized
 *                             CULL object.
 *                             if this function was called due to a modify request
 *                             than new_lirs will contain the old data
-*     lListElem *lirs       - a reduces lirs object which contails all
+*     lListElem *lirs       - a reduced lirs object which contails all
 *                             necessary information to create a new object
 *                             or modify parts of an existing one
 *     int add               - 1 if a new element should be added to the master list
@@ -96,8 +101,9 @@ int lirs_mod(lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const 
            const char *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor)
 {
    const char *lirs_name = NULL; 
+   bool rules_changed = false;
 
-   DENTER(TOP_LAYER, "lirs_spool");
+   DENTER(TOP_LAYER, "lirs_mod");
 
    /* ---- LIRS_name */
    if (add) {
@@ -119,6 +125,7 @@ int lirs_mod(lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const 
 
    /* ---- LIRS_rule */
    if (lGetPosViaElem(lirs, LIRS_rule, SGE_NO_ABORT)>=0) {
+      rules_changed = true;
       if (sub_command == SGE_GDI_SET_ALL) {
          normalize_sublist(lirs, LIRS_rule);
          attr_mod_sub_list(alpp, new_lirs, LIRS_rule,
@@ -145,9 +152,11 @@ int lirs_mod(lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const 
          }
       }
    }
-
    if (!limit_rule_set_verify_attributes(new_lirs, alpp, true)) {
       DRETURN(STATUS_EUNKNOWN);
+   }
+   if (rules_changed && lGetBool(new_lirs, LIRS_enabled) == true) {
+      limit_rule_reinit_consumable_actual_list(new_lirs, alpp);
    }
   
    DRETURN(0);
@@ -332,4 +341,69 @@ int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list,
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    DRETURN(STATUS_OK);
+}
+
+/****** sge_limit_rule_qmaster/limit_rule_reinit_consumable_actual_list() **************
+*  NAME
+*     limit_rule_reinit_consumable_actual_list() -- debit running jobs
+*
+*  SYNOPSIS
+*     static bool limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList 
+*     **answer_list) 
+*
+*  FUNCTION
+*     Newly added limitation rule sets need to be debited for all running jos
+*     This is done by this function
+*
+*  INPUTS
+*     lListElem *lirs     - limitation rule set (LIRS_Type)
+*     lList **answer_list - answer list
+*
+*  RESULT
+*     bool - always true
+*
+*  NOTES
+*     MT-NOTE: limit_rule_reinit_consumable_actual_list() is not MT safe 
+*
+*******************************************************************************/
+static bool
+limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list) {
+   bool ret = true;
+   lList *master_centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
+   lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
+   lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+
+   DENTER(TOP_LAYER, "limit_rule_reinit_consumable_actual_list");
+
+   if (lirs != NULL) {
+      lListElem *job;
+      lList *job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
+      lListElem * rule = NULL;
+
+      for_each(rule, lGetList(lirs, LIRS_rule)) {
+         lListElem *limit = NULL;
+         for_each(limit, lGetList(rule, LIR_limit)) {
+            lList *usage = lGetList(limit, LIRL_usage);
+            lFreeList(&usage);
+         }
+      }
+
+      for_each(job, job_list) {
+         lListElem *ja_task = NULL;
+         lList *ja_task_list = lGetList(job, JB_ja_tasks);
+
+         for_each(ja_task, ja_task_list) {
+            lListElem *granted = NULL;
+            lList *gdi_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
+
+            for_each(granted, gdi_list) {
+               int tmp_slot = lGetUlong(granted, JG_slots);
+               lirs_debit_consumable(lirs, job, granted, lGetString(ja_task, JAT_granted_pe), master_centry_list,
+                                     master_userset_list, master_hgroup_list, tmp_slot);
+            }
+         }
+      }
+   }
+
+   DRETURN(ret);
 }

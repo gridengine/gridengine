@@ -237,10 +237,12 @@ int event_handler_default_scheduler()
    copy.user_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_USER));
    copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
    copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
+   copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
+   copy.lirs_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_LIRS));
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-            "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
+            "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(copy.all_queue_list),
             lGetNumberOfElem(copy.job_list),
@@ -255,13 +257,14 @@ int event_handler_default_scheduler()
             lGetNumberOfElem(copy.ckpt_list),
             lGetNumberOfElem(copy.user_list),
             lGetNumberOfElem(copy.project_list),
+            lGetNumberOfElem(copy.lirs_list),
             lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
             lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
            ));
 
    if (getenv("SGE_ND")) {
       printf("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-         "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
+         "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(copy.all_queue_list),
          lGetNumberOfElem(copy.job_list),
@@ -276,6 +279,7 @@ int event_handler_default_scheduler()
          lGetNumberOfElem(copy.ckpt_list),
          lGetNumberOfElem(copy.user_list),
          lGetNumberOfElem(copy.project_list),
+         lGetNumberOfElem(copy.lirs_list),
          lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
@@ -324,6 +328,8 @@ int event_handler_default_scheduler()
    lFreeList(&(copy.user_list));
    lFreeList(&(copy.project_list));
    lFreeList(&(copy.ckpt_list));
+   lFreeList(&(copy.hgrp_list));
+   lFreeList(&(copy.lirs_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -736,7 +742,7 @@ sge_process_schedd_conf_event_before(object_description *object_base, sge_object
       lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
       if (master_centry_list != NULL &&
-          !sconf_is_valid_load_formula(new, &alpp, master_centry_list)) {
+          !validate_load_formula(new_load_formula, &alpp, master_centry_list, SGE_ATTR_LOAD_FORMULA)) {
             
          ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
          answer_list_output(&alpp);
@@ -1165,6 +1171,7 @@ int subscribe_default_scheduler(void)
    sge_mirror_subscribe(event_client, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(event_client, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(event_client, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_LIRS,           NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/

@@ -66,7 +66,7 @@ get_root_qstat_file_path(dstring *file_path)
    const char *ret;
 
    DENTER (TOP_LAYER, "get_root_qstat_file_path");
-   sge_dstring_sprintf (file_path, "%s/%s", path_state_get_cell_root(),
+   sge_dstring_sprintf(file_path, "%s/%s", path_state_get_cell_root(),
                         SGE_COMMON_DEF_QSTAT_FILE);
    ret = sge_dstring_get_string(file_path);
    DEXIT;
@@ -313,7 +313,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
          fprintf(fp, "        [-g {d}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
          fprintf(fp, "        [-g {t}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
       }
-      fprintf(fp, "        [-help]                           %s\n",MSG_QSTAT_USAGE_PRINTTHISHELP);
+      fprintf(fp, "        [-help]                           %s\n",MSG_COMMON_help_OPT_USAGE);
       if (!qselect_mode)
          fprintf(fp, "        [-j job_identifier_list ]         %s\n",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
       fprintf(fp, "        [-l resource_list]                %s\n",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
@@ -341,7 +341,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       if (!qselect_mode) {
          fprintf(fp, "        [-urg]                            %s\n",MSG_QSTAT_URGENCYINFO );
          fprintf(fp, "        [-pri]                            %s\n",MSG_QSTAT_PRIORITYINFO );
-         fprintf(fp, "        [-xml]                            %s\n", MSG_QSTAT_XML_OUTPUT );
+         fprintf(fp, "        [-xml]                            %s\n", MSG_COMMON_xml_OPT_USAGE);
       }   
       
       if (getenv("MORE_INFO")) {

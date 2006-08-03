@@ -343,7 +343,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    char username[128];
    char groupname[128];
 
-   DENTER(GDI_LAYER, "sge_gdi_multi");
+   DENTER(GDI_LAYER, "sge_gdi_multi_sync");
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI);
 
@@ -635,7 +635,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    }
    else {
       /* nothing todo... */
-      return true;
+      DRETURN(true);
    }
   
    /* recive answer */
@@ -684,8 +684,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
          }   
          gdi_state_clear_last_gdi_request(); 
       }
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
  
    for (an = (*answer); an; an = an->next) { 
@@ -708,7 +707,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
 
    gdi_state_clear_last_gdi_request();
    
-   return true;
+   DRETURN(true);
 }
 
 /****** sge_gdi_request/gdi_send_multi_sync() **********************************

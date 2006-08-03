@@ -1787,13 +1787,16 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                } else {
                   lListElem *range;
                   for_each (range, lGetList(japi_job, JJ_not_yet_finished_ids)) {
-                     dstring job_task_specifier = DSTRING_INIT;
+                     char buffer[1024];
+                     dstring job_task_specifier;
                      u_long32 start, end, step;
+
+                     sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
                      sge_dstring_sprintf(&job_task_specifier, sge_u32".", jobid);
                      range_get_all_ids(range, &start, &end, &step);
                      range_to_dstring(start, end, step, &job_task_specifier, false);
                      lAddElemStr(&ref_list, ST_name,
-                                 sge_dstring_get_string (&job_task_specifier),
+                                 sge_dstring_get_string(&job_task_specifier),
                                  ST_Type);
                   }
                }

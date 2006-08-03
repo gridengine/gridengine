@@ -48,12 +48,12 @@
 #define MSG_NULL                   _MESSAGE(23005, _("(NULL)"))
 #define MSG_SMALLNULL                       _MESSAGE(23006, _("(null)"))
 
-#define MSG_FILE_NOCLOSE_SS                                    _MESSAGE(23013, _("cant close file "SFN": "SFN))
+#define MSG_FILE_NOCLOSE_SS                                    _MESSAGE(23013, _("can't close file "SFN": "SFN))
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _MESSAGE(23014, _("can't open directory "SFQ": "SFN))
 #define MSG_SGETEXT_CANTRESOLVEHOST_S                          _MESSAGE(23015, _("can't resolve hostname "SFQ))
 #define MSG_SGETEXT_CANTRESOLVEHOST_SS                         _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN))
 #define MSG_NULLPOINTER                                        _MESSAGE(23017, _("NULL pointer received") )    
-#define MSG_FILE_NOOPEN_SS                                     _MESSAGE(23018, _("cant open file "SFN": "SFN))
+#define MSG_FILE_NOOPEN_SS                                     _MESSAGE(23018, _("can't open file "SFN": "SFN))
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                     _MESSAGE(23019, _("Could not open stdout as file"))
 #define MSG_ERROR_UNABLETODUMPJOBLIST                          _MESSAGE(23020, _("Unable to dump job list"))
 #define MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS               _MESSAGE(23021, _("error opening the configuration spool file "SFN": "SFN))
@@ -1053,13 +1053,13 @@
 #define MSG_GDI_USAGE_alrs_OPT             "[-alrs [lirs_list]]"
 #define MSG_GDI_UTEXT_alrs_OPT             _MESSAGE(60618, _("add limitation rule set(s)"))
 #define MSG_GDI_USAGE_Alrs_OPT             "[-Alrs fname]"
-#define MSG_GDI_UTEXT_Alrs_OPT             _MESSAGE(60618, _("add limitation rule set(s) from file"))
+#define MSG_GDI_UTEXT_Alrs_OPT             _MESSAGE(60619, _("add limitation rule set(s) from file"))
 #define MSG_GDI_USAGE_dlrs_OPT             "[-dlrs lirs_list]"
-#define MSG_GDI_UTEXT_dlrs_OPT             _MESSAGE(60618, _("delete limitation rule set(s)"))
+#define MSG_GDI_UTEXT_dlrs_OPT             _MESSAGE(60620, _("delete limitation rule set(s)"))
 #define MSG_GDI_USAGE_mlrs_OPT             "[-mlrs [lirs_list]]"
-#define MSG_GDI_UTEXT_mlrs_OPT             _MESSAGE(60618, _("modify limitation rule set(s)"))
+#define MSG_GDI_UTEXT_mlrs_OPT             _MESSAGE(60621, _("modify limitation rule set(s)"))
 #define MSG_GDI_USAGE_Mlrs_OPT             "[-Mlrs fname [lirs_list]]"
-#define MSG_GDI_UTEXT_Mlrs_OPT             _MESSAGE(60618, _("modify limitation rule set(s) from file"))
+#define MSG_GDI_UTEXT_Mlrs_OPT             _MESSAGE(60622, _("modify limitation rule set(s) from file"))
 /*
  * Objects and components
  */

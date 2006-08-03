@@ -960,7 +960,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                      ret = false;
                      break;
                   }
-                  if (sge_is_hgroup_ref(hostname)) {
+                  if (is_hgroup_name(hostname)) {
                      if (in_master && strcmp(hostname, HOSTREF_DEFAULT)) {
                         const lList *master_list = 
                               *(object_type_get_master_list(SGE_TYPE_HGROUP));

@@ -151,6 +151,7 @@ bool limit_rule_get_via_gdi(lList **answer_list, const lList *lirsref_list,
          }
       }
 
+      lFreeList(answer_list);
       *answer_list = sge_gdi(SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, where, what);
       if (!answer_list_has_error(answer_list)) {
          ret = true;
@@ -192,6 +193,7 @@ bool limit_rule_get_all_via_gdi(lList **answer_list, lList **lirs_list)
 
    DENTER(TOP_LAYER, "limit_rule_get_all_via_gdi");
 
+   lFreeList(answer_list);
    *answer_list = sge_gdi(SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, NULL, what);
    if (!answer_list_has_error(answer_list)) {
       ret = true;
@@ -474,6 +476,7 @@ bool limit_rule_set_add_del_mod_via_gdi(lList *lirs_list, lList **answer_list,
          ret = limit_rule_sets_verify_attributes(lirs_list, answer_list, false);
       }
       if (ret) {
+         lFreeList(answer_list);
          *answer_list = sge_gdi(SGE_LIRS_LIST, gdi_command, &lirs_list, NULL, NULL);
       }
    }

@@ -102,6 +102,7 @@
 #include "spool/sge_spooling.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
+#include "sched/sge_lirs_schedd.h"
 
 static void 
 sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots, 
@@ -934,9 +935,8 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
 void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, 
                     sge_commit_mode_t mode, int commit_flags, monitoring_t *monitor)
 {
-   lListElem *cqueue, *hep, *petask, *tmp_ja_task;
+   lListElem *petask, *tmp_ja_task;
    lListElem *global_host_ep;
-   int slots;
    lUlong jobid, jataskid;
    int no_unlink = 0;
    int spool_job = !(commit_flags & COMMIT_NO_SPOOLING);
@@ -951,6 +951,12 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
    lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
    lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
+   lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
+   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
+   lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+   lListElem *lirs = NULL;
+   lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -970,47 +976,53 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
 
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
-      /* should use jobs gdil instead of tagging queues */
       global_host_ep = host_list_locate(master_exechost_list, "global");
+      for_each(ep, gdil) {
+         const char *queue_name = lGetString(ep, JG_qname);
+         lListElem *queue = cqueue_list_locate_qinstance(master_cqueue_list, 
+                                                         queue_name);
 
-      for_each(cqueue, master_cqueue_list) {     
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance;
+         if (queue) {
+            const char *queue_hostname = lGetHost(queue, QU_qhostname);
+            int tmp_slot = lGetUlong(ep, JG_slots);
+            lListElem *host;
 
-         for_each(qinstance, qinstance_list) {
-            if (lGetUlong(qinstance, QU_tag)) {
-               const char* qep_QU_qhostname;
-
-               slots = lGetUlong(qinstance, QU_tag);
-               lSetUlong(qinstance, QU_tag, 0);
-
-               qep_QU_qhostname = lGetHost(qinstance, QU_qhostname);
-
-               /* debit in all layers */
-               if (debit_host_consumable(jep, global_host_ep, master_centry_list, slots) > 0 ) {
-                  /* this info is not spooled */
-                  sge_add_event(now, sgeE_EXECHOST_MOD, 0, 0, 
-                                "global", NULL, NULL, global_host_ep );
-                  reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
-                  answer_list_output(&answer_list);
-                  lListElem_clear_changed_info(global_host_ep);
-               }
-
-               hep = host_list_locate(master_exechost_list, qep_QU_qhostname);
-               if ( debit_host_consumable(jep, hep, master_centry_list, slots) > 0 ) {
-                  /* this info is not spooled */
-                  sge_add_event( now, sgeE_EXECHOST_MOD, 0, 0, 
-                                qep_QU_qhostname, NULL, NULL, hep);
-                  reporting_create_host_consumable_record(&answer_list, hep, now);
-                  answer_list_output(&answer_list);
-                  lListElem_clear_changed_info(hep);
-               }
-               qinstance_debit_consumable(qinstance, jep, master_centry_list, slots);
-               reporting_create_queue_consumable_record(&answer_list, qinstance, now);
+            /* debit consumable resources */ 
+            if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot) > 0) {
                /* this info is not spooled */
-               qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD); 
-               lListElem_clear_changed_info(qinstance);
+               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+                             "global", NULL, NULL, global_host_ep);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
+               answer_list_output(&answer_list);
+               lListElem_clear_changed_info(global_host_ep);
             }
+            host = host_list_locate(master_exechost_list, queue_hostname);
+            if (debit_host_consumable(jep, host, master_centry_list, tmp_slot) > 0) {
+               /* this info is not spooled */
+               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+                             queue_hostname, NULL, NULL, host);
+               reporting_create_host_consumable_record(&answer_list, host, now);
+               answer_list_output(&answer_list);
+               lListElem_clear_changed_info(host);
+            }
+            qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot);
+            reporting_create_queue_consumable_record(&answer_list, queue, now);
+            /* this info is not spooled */
+            qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
+            lListElem_clear_changed_info(queue);
+
+            /* debit limitation rule set */
+            for_each(lirs, master_lirs_list) {
+               if (lirs_debit_consumable(lirs, jep, ep, lGetString(jatep, JAT_granted_pe), master_centry_list, 
+                                         master_userset_list, master_hgroup_list, tmp_slot) > 0) {
+                  /* this info is not spooled */
+                  sge_add_event(0, sgeE_LIRS_MOD, 0, 0, 
+                                lGetString(lirs, LIRS_name), NULL, NULL, lirs);
+                  lListElem_clear_changed_info(lirs);
+               }
+            }
+         } else {
+            ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, queue_name));
          }
       }
 
@@ -1422,9 +1434,15 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
    lList *answer_list = NULL;
    u_long32 now;
    object_description *object_base = object_type_get_object_description();
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
    lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
-
+   lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
+   lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
+   lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
+   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
+   lListElem *lirs = NULL;
+   lListElem *global_host_ep = NULL;
  
    DENTER(TOP_LAYER, "sge_clear_granted_resources");
 
@@ -1439,13 +1457,13 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
    /* unsuspend queues on subordinate */
    cqueue_list_x_on_subordinate_gdil(master_list, false, gdi_list, monitor);
 
+   global_host_ep = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);
 
    /* free granted resources of the queue */
    for_each(ep, gdi_list) {
       const char *queue_name = lGetString(ep, JG_qname);
-      lListElem *queue = cqueue_list_locate_qinstance(
-                              *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                              queue_name);
+      lListElem *queue = cqueue_list_locate_qinstance(master_cqueue_list, 
+                                                      queue_name);
 
       if (queue) {
          const char *queue_hostname = lGetHost(queue, QU_qhostname);
@@ -1457,16 +1475,15 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             lListElem *host;
 
             /* undebit consumable resources */ 
-            host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, "global");
-            if (debit_host_consumable(job, host, master_centry_list, -tmp_slot) > 0) {
+            if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
-                             "global", NULL, NULL, host);
-               reporting_create_host_consumable_record(&answer_list, host, now);
+                             "global", NULL, NULL, global_host_ep);
+               reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
                answer_list_output(&answer_list);
-               lListElem_clear_changed_info(host);
+               lListElem_clear_changed_info(global_host_ep);
             }
-            host = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, queue_hostname);
+            host = host_list_locate(master_exechost_list, queue_hostname);
             if (debit_host_consumable(job, host, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
@@ -1476,6 +1493,20 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                lListElem_clear_changed_info(host);
             }
             qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot);
+
+            /* undebit limitation rule set */
+            for_each(lirs, master_lirs_list) {
+               DPRINTF(("undebiting lirs %s\n", lGetString(lirs, LIRS_name)));
+               if (lirs_debit_consumable(lirs, job, ep, lGetString(ja_task, JAT_granted_pe),
+                                         master_centry_list, master_userset_list, master_hgroup_list,
+                                         -tmp_slot) > 0) {
+                  /* this info is not spooled */
+                  sge_add_event(0, sgeE_LIRS_MOD, 0, 0, 
+                                lGetString(lirs, LIRS_name), NULL, NULL, lirs);
+                  lListElem_clear_changed_info(lirs);
+               }
+            }
+
             reporting_create_queue_consumable_record(&answer_list, queue, now);
          }
 

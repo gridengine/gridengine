@@ -88,7 +88,8 @@ host_list_locate(const lList *host_list, const char *hostname)
 *  SYNOPSIS
 *     bool host_is_referenced(const lListElem *host, 
 *                             lList **answer_list, 
-*                             const lList *queue_list) 
+*                             const lList *queue_list
+*                             const lList *hgrp_list) 
 *
 *  FUNCTION
 *     This function returns true if the given "host" is referenced

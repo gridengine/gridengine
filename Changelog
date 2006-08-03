@@ -1,3 +1,13 @@
+RD-2006-08-03-0: Enhancem.: o Added limitation rule set scheduling code for
+                              - sequential jobs
+                              - parallel jobs
+                              - dynamical limits 
+                            o Added qmaster limitation rule set verification
+                            o Added qmaster debiting code
+                            o fixed some minor memory leaks and bugs
+                 Changed:   all
+                 Review:    JG
+
 HP-2006-08-03-1: Enhancem.: Added a reserved complex variable "display_win_gui"
                             that allows submitter to request the GUI of the job
                             to be displayed to the visible desktop and allows

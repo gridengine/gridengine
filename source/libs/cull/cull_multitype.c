@@ -4709,14 +4709,14 @@ lListElem *lGetElemHost( const lList *lp, int nm, const char *str )
 
 /****** cull/multitype/lGetElemHostFirst() ************************************
 *  NAME
-*     lGetElemHostFirst() -- lGetElemStringFirst for hostnames 
+*     lGetElemHostFirst() -- lGetElemHostFirst for hostnames 
 *
 *  SYNOPSIS
 *     lListElem* lGetElemHostFirst(const lList *lp, int nm, const char *str, 
 *                                  const void **iterator) 
 *
 *  FUNCTION
-*     lGetElemStringFirst for hostnames 
+*     lGetElemHostFirst for hostnames 
 *
 *  INPUTS
 *     const lList *lp       - list 
@@ -4796,7 +4796,7 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
 
 /****** cull/multitype/lGetElemHostNext() *************************************
 *  NAME
-*     lGetElemHostNext() -- lGetElemStringNext() for hostnames 
+*     lGetElemHostNext() -- lGetElemHostNext() for hostnames 
 *
 *  SYNOPSIS
 *     lListElem* lGetElemHostNext(const lList *lp, 
@@ -4805,7 +4805,7 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
 *                                 const void **iterator) 
 *
 *  FUNCTION
-*     lGetElemStringNext() for hostnames 
+*     lGetElemHostNext() for hostnames 
 *
 *  INPUTS
 *     const lList *lp       - list 

@@ -106,6 +106,7 @@
 #include "sge_event_master.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
+#include "sgeobj/sge_limit_rule.h"
 
 
 static void   process_cmdline(char**);
@@ -613,7 +614,7 @@ static void communication_setup(void)
 
          CRITICAL((SGE_EVENT, MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S, ((CL_RETVAL_OK == res ) ? host : "unknown")));
 
-         if (CL_RETVAL_OK == res) { free(host); }
+         if (CL_RETVAL_OK == res) { FREE(host); }
       }
 
       SGE_EXIT(1);
@@ -982,7 +983,8 @@ static int setup_qmaster(void)
    /* 
       if the job is in state running 
       we have to register each slot 
-      in a queue and in the parallel 
+      in a queue, in the limitation rule sets
+      and in the parallel 
       environment if the job is a 
       parallel one
    */
@@ -1189,6 +1191,7 @@ static int debit_all_jobs_from_qs()
    int ret = 0;
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
 
@@ -1216,12 +1219,18 @@ static int debit_all_jobs_from_qs()
                lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
             } else {
                /* debit in all layers */
+               lListElem *lirs = NULL;
                debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
                                      "global"), master_centry_list, slots);
                debit_host_consumable(jep, host_list_locate(
                         *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)), 
                         master_centry_list, slots);
                qinstance_debit_consumable(qep, jep, master_centry_list, slots);
+               for_each (lirs, master_lirs_list) {
+                  lirs_debit_consumable(lirs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
+                                        *(object_type_get_master_list(SGE_TYPE_USERSET)), *(object_type_get_master_list(SGE_TYPE_HGROUP)), slots);
+               }
+
             }
          }
       }

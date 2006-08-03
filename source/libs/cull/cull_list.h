@@ -106,7 +106,7 @@ enum _enum_lMultiType {
 #define LISTDEF( name ) lDescr name[] = {
 #define LISTEND {NoName, lEndT, NULL}};
 
-#define SGE_INT(name,flags)         { name, lIntT    | flags, NULL },
+#define SGE_INT(name,flags)         { name, lIntT    | flags, NULL }, /* don't use it, not implemented on gdi level */
 #define SGE_HOST(name,flags)        { name, lHostT   | flags, NULL },
 #define SGE_STRING(name,flags)      { name, lStringT | flags, NULL },
 #define SGE_FLOAT(name,flags)       { name, lFloatT  | flags, NULL },

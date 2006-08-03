@@ -31,13 +31,29 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
+#include <fnmatch.h>
+
+#include "sge.h"
 
 #include "sgeobj/sge_limit_rule.h"
 #include "sgeobj/sge_strL.h"
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_centry.h"
+#include "msg_common.h"
 #include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
 #include "rmon/sgermon.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sched/sge_resource_utilizationL.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_hrefL.h"
+#include "sgeobj/sge_host.h"
+
 
 
 /****** sge_limit_rule/LIRF_object_parse_from_string() *************************
@@ -252,7 +268,8 @@ lListElem* limit_rule_set_defaults(lListElem* lirs)
 *
 *  FUNCTION
 *     This function verifies the attributes of a given lirs object. A valid lirs
-*     object has a name and at least one rule set.
+*     object has a name and at least one rule set. After verification it sets the
+*     double limit value.
 *     Addition checks are done if in_master is true.
 *
 *  INPUTS
@@ -273,23 +290,110 @@ bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool
    lList *rules = NULL;
 
    DENTER(TOP_LAYER, "limit_rule_set_verify_attributes");
+
    /* every rule set needs a LIRS_name */
    if (lGetString(lirs, LIRS_name) == NULL) {
-      sprintf(SGE_EVENT, "limitation rule set has no name");
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, MSG_LIMITRULE_NONAME);
       ret = false;
    }
 
    /* every rule set needs at least one rule */
    rules = lGetList(lirs, LIRS_rule);
    if (ret && (rules == NULL || lGetNumberOfElem(rules) < 1)) {
-      sprintf(SGE_EVENT, "limitation rule set has no rules");
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, MSG_LIMITRULE_NORULES);
       ret = false;
    }
   
    if (ret && in_master) {
-      /* RD: TODO additional check if dynamical limit is correct */
+      lList *master_centry_list = (*centry_list_get_master_list());
+
+      lListElem *rule = NULL;
+      for_each(rule, rules) {
+         bool host_expand = false;
+         bool queue_expand = false;
+         lListElem *limit = NULL;
+         lListElem *filter = NULL;
+         lList *limit_list = lGetList(rule, LIR_limit);
+
+         /* set rule level. Needed by schedd */
+
+         if ((filter = lGetObject(rule, LIR_filter_hosts))) {
+            lListElem *host = NULL;
+            host_expand = lGetBool(filter, LIRF_expand) ? true : false;
+
+            for_each(host, lGetList(filter, LIRF_xscope)) {
+               sge_resolve_host(host, ST_name);
+            }
+            for_each(host, lGetList(filter, LIRF_scope)) {
+               sge_resolve_host(host, ST_name);
+            }
+            
+         }
+         if ((filter = lGetObject(rule, LIR_filter_queues))) {
+            queue_expand = lGetBool(filter, LIRF_expand) ? true : false;
+         }
+
+         if (host_expand == false && queue_expand == false) {
+            lSetUlong(rule, LIR_level, LIR_GLOBAL);
+         } else if (host_expand == true && queue_expand == false) {
+            /* per host */
+            lSetUlong(rule, LIR_level, LIR_HOST);
+         } else if (host_expand == false && queue_expand == true) {
+            /* per queue */
+            lSetUlong(rule, LIR_level, LIR_CQUEUE);
+         } else {
+            lSetUlong(rule, LIR_level, LIR_QUEUEI);
+         }
+
+         for_each(limit, limit_list) {
+            const char *name = lGetString(limit, LIRL_name);
+            const char *strval = lGetString(limit, LIRL_value);
+            lListElem *centry = centry_list_locate(master_centry_list, name);
+
+            if (centry == NULL) {
+               sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, name, SGE_LIRS_NAME);
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING);
+               continue;
+            }
+
+            if (strchr(strval, '$') != NULL) {
+               if (lGetUlong(rule, LIR_level) == LIR_HOST || lGetUlong(rule, LIR_level) == LIR_QUEUEI) {
+                  /* the value is a dynamical limit */
+                  if (!validate_load_formula(lGetString(limit, LIRL_value), answer_list, 
+                                            master_centry_list, SGE_ATTR_DYNAMICAL_LIMIT)) {
+                     ret = false;
+                     break;
+                  }
+
+                  lSetUlong(limit, LIRL_type, lGetUlong(centry, CE_valtype));
+                  lSetBool(limit, LIRL_dynamic, true);
+               } else {
+                  answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, MSG_LIMITRULE_DYNAMICLIMITNOTSUPPORTED);
+                  ret = false;
+                  break;
+               }  
+               /* The evaluation of the value needs to be done at scheduling time. Per default it's zero */
+            } else {
+               /* fix limit, fill up missing attributes */
+               lSetBool(limit, LIRL_dynamic, false);
+
+               if (lGetBool(centry, CE_consumable)) {
+                  double dval = 0.0;
+
+                  if (parse_ulong_val(&dval, NULL, lGetUlong(centry, CE_valtype), strval, NULL, 0) == 0) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_LIMITRULE_INVALIDLIMIT, lGetString(limit, LIRL_name));
+                     ret = false;
+                     break;
+                  }
+                  lSetDouble(limit, LIRL_dvalue, dval);
+                  lSetUlong(limit, LIRL_type, lGetUlong(centry, CE_valtype));
+               } 
+            }
+         }
+         if (ret == false) {
+            break;
+         }
+      }
    }
 
    DRETURN(ret);
@@ -476,5 +580,619 @@ bool lir_xattr_pre_gdi(lList *this_list, lList **answer_list)
          lFreeList(&lp);
       }
    }
+   DRETURN(ret);
+}
+
+/****** sge_limit_rule/limit_rule_get_rue_string() *****************************
+*  NAME
+*     limit_rule_get_rue_string() -- creates a rue name
+*
+*  SYNOPSIS
+*     bool limit_rule_get_rue_string(dstring *name, lListElem *rule, const char 
+*     *user, const char *project, const char *host, const char *queue, const 
+*     char* pe) 
+*
+*  FUNCTION
+*     Creates the rue name used for debiting a specific job request. The name 
+*     consists of the five touples devided by a /. The order is user, project,
+*     pe, queue, host.
+*     Filters that count for a sum
+*     of hosts are saved as a empty string because they don't need to be matched.
+*
+*     For example the rule
+*       limit users `*` queues `all.q,my.q` to slots=10
+*     may result in the rue name
+*       user1///all.q//
+*
+*  INPUTS
+*     dstring *name       - out: rue_name
+*     lListElem *rule     - limitation rule (LIR_Type)
+*     const char *user    - user name
+*     const char *project - project name
+*     const char *host    - host name
+*     const char *queue   - queue name
+*     const char* pe      - pe name
+*
+*  RESULT
+*     bool - always true
+*
+*  NOTES
+*     MT-NOTE: limit_rule_get_rue_string() is MT safe 
+*
+*******************************************************************************/
+bool
+limit_rule_get_rue_string(dstring *name, const lListElem *rule, const char *user, 
+                              const char *project, const char *host, const char *queue,
+                              const char* pe)
+{
+   lListElem *filter = NULL;
+
+   DENTER(TOP_LAYER, "limit_rule_get_rue_string");
+
+   if (rule == NULL) {
+      DRETURN(false);
+   }
+
+   sge_dstring_clear(name);
+
+   if ((filter = lGetObject(rule, LIR_filter_users)) != NULL) {
+      if (filter != NULL && user != NULL && lGetBool(filter, LIRF_expand) == true) {
+         sge_dstring_append(name, user); 
+      }
+   }
+   sge_dstring_append(name, "/");
+
+   if ((filter = lGetObject(rule, LIR_filter_projects)) != NULL) {
+      if (filter != NULL && project != NULL && lGetBool(filter, LIRF_expand) == true) {
+         sge_dstring_append(name, project); 
+      }
+   }
+   sge_dstring_append(name, "/");
+
+   if ((filter = lGetObject(rule, LIR_filter_pes)) != NULL) {
+      if (filter != NULL && pe != NULL && lGetBool(filter, LIRF_expand) == true) {
+         sge_dstring_append(name, pe); 
+      }
+   }
+   sge_dstring_append(name, "/");
+
+   if ((filter = lGetObject(rule, LIR_filter_queues)) != NULL) {
+      if (filter != NULL && queue != NULL && lGetBool(filter, LIRF_expand) == true) {
+         sge_dstring_append(name, queue); 
+      }
+   }
+   sge_dstring_append(name, "/");
+
+   if ((filter = lGetObject(rule, LIR_filter_hosts)) != NULL) {
+      if (filter != NULL && host != NULL && lGetBool(filter, LIRF_expand) == true) {
+         sge_dstring_append(name, host); 
+      }
+   }
+   sge_dstring_append(name, "/");
+
+   DPRINTF(("rue_name: %s\n", sge_dstring_get_string(name)));
+
+   DRETURN(true);
+}
+
+/****** sge_limit_rule/lirs_debit_consumable() *********************************
+*  NAME
+*     lirs_debit_consumable() -- debit slots in all relevant rule sets
+*
+*  SYNOPSIS
+*     int lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem 
+*     *granted, lListElem *pe, lList *centry_list, int slots) 
+*
+*  FUNCTION
+*     iterater over all rules in the given rule set and debit the amount of slots
+*     in the relevant rule
+*
+*  INPUTS
+*     lListElem *lirs    - limitation rule set (LIRS_Type)
+*     lListElem *job     - job request (JB_Type)
+*     lListElem *granted - granted destination identifier (JG_Type)
+*     lListElem *pe      - granted pe (PE_Type)
+*     lList *centry_list - consumable resouces list (CE_Type)
+*     int slots          - slot amount
+*
+*  RESULT
+*     int - amount of modified rule
+*
+*  NOTES
+*     MT-NOTE: lirs_debit_consumable() is not MT safe 
+*
+*******************************************************************************/
+int
+lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const char *pename, lList *centry_list, 
+                      lList *acl_list, lList *hgrp_list, int slots)
+{
+   lListElem *rule = NULL;
+   int mods = 0;
+   const char* hostname = lGetHost(granted, JG_qhostname);
+   const char* username = lGetString(job, JB_owner);
+   char* qname = NULL;
+   const char* project = lGetString(job, JB_project);
+   char *at_sign = NULL; 
+
+   DENTER(TOP_LAYER, "lirs_debit_consumable");
+
+   if (!lGetBool(lirs, LIRS_enabled)) {
+      DRETURN(0);
+   }
+
+   qname = strdup(lGetString(granted, JG_qname));
+   /* remove the host name part of the queue instance name */
+   if ((at_sign = strchr(qname, '@'))) {
+      at_sign[0] = '\0';
+   } 
+
+   rule = lirs_get_matching_rule(lirs, username, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
+
+   if (rule != NULL) {
+      /* debit usage */
+      dstring rue_name = DSTRING_INIT;
+
+      limit_rule_get_rue_string(&rue_name, rule, username, project,
+                                hostname, qname, pename);
+
+      mods = lirs_debit_rule_usage(job, rule, rue_name, slots, centry_list, lGetString(lirs, LIRS_name));
+
+      sge_dstring_free(&rue_name);
+   }
+   FREE(qname);
+
+   DRETURN(mods); 
+}
+
+/****** sge_limit_rule/lirs_get_matching_rule() ********************************
+*  NAME
+*     lirs_get_matching_rule() -- found relevant rule for job request
+*
+*  SYNOPSIS
+*     lListElem* lirs_get_matching_rule(lListElem *lirs, const char *user, 
+*     const char *project, const char* pe, const char *host, const char *queue, 
+*     lList *userset_list, lList* hgroup_list, dstring *rule_name) 
+*
+*  FUNCTION
+*     This function searches in a limitation rule set the relevant rule.
+*
+*  INPUTS
+*     lListElem *lirs     - rule set (LIRS_Type)
+*     const char *user    - user name
+*     const char *project - project name
+*     const char* pe      - pe name
+*     const char *host    - host name
+*     const char *queue   - queue name
+*     lList *userset_list - master user set list (US_Type)
+*     lList* hgroup_list  - master host group list (HG_Type);
+*     dstring *rule_name  - out: name or matching rule
+*
+*  RESULT
+*     lListElem* - pointer to matching rule
+*
+*  NOTES
+*     MT-NOTE: lirs_get_matching_rule() is MT safe 
+*
+*******************************************************************************/
+lListElem *
+lirs_get_matching_rule(const lListElem *lirs, const char *user, const char *project,
+                                  const char* pe, const char *host, const char *queue,
+                                  lList *userset_list, lList* hgroup_list, dstring *rule_name)
+{
+   lListElem *rule = NULL;
+   lList *rule_list = lGetList(lirs, LIRS_rule);
+   int i = 0;
+
+   DENTER(TOP_LAYER, "lirs_get_matching_rule");
+
+   for_each (rule, rule_list) {
+      i++;
+
+      if (!lirs_is_matching_rule(rule, user, project, pe, host, queue, userset_list, hgroup_list)) {
+         continue;
+      }
+      if (lGetString(rule, LIR_name)) {
+         DPRINTF(("Using limitation rule %s\n", lGetString(rule, LIR_name)));
+         sge_dstring_sprintf(rule_name, "%s/%s", lGetString(lirs, LIRS_name), lGetString(rule, LIR_name));
+      } else {
+         DPRINTF(("Using limitation rule %d\n", i));
+         sge_dstring_sprintf(rule_name, "%s/%d", lGetString(lirs, LIRS_name), i);
+      }
+      /* if all filter object matches this is our rule */
+      break;
+   }
+   DRETURN(rule);
+}
+
+/****** sge_limit_rule/lirs_debit_rule_usage() *********************************
+*  NAME
+*     lirs_debit_rule_usage() -- debit usage in a limitation rule
+*
+*  SYNOPSIS
+*     int lirs_debit_rule_usage(lListElem *job, lListElem *rule, dstring 
+*     rue_name, int slots, lList *centry_list, const char *obj_name) 
+*
+*  FUNCTION
+*     Debit an amount of slots in all limits of one limitation rule
+*
+*  INPUTS
+*     lListElem *job       - job request (JG_Type)
+*     lListElem *rule      - limitation rule (LIR_Type)
+*     dstring rue_name     - rue name that counts
+*     int slots            - amount of slots to debit
+*     lList *centry_list   - consumable resource list (CE_Type)
+*     const char *obj_name - name of the limit
+*
+*  RESULT
+*     int - amount of debited limits
+*
+*  NOTES
+*     MT-NOTE: lirs_debit_rule_usage() is MT safe 
+*******************************************************************************/
+int
+lirs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slots, lList *centry_list, const char *obj_name) 
+{
+   lList *limit_list;
+   lListElem *limit;
+   const char *centry_name;
+   int mods = 0;
+
+   DENTER(TOP_LAYER, "lirs_debit_rule_usage");
+
+   limit_list = lGetList(rule, LIR_limit);
+
+   for_each(limit, limit_list) {
+      lListElem *raw_centry;
+      lListElem *rue_elem;
+      double dval;
+
+      centry_name = lGetString(limit, LIRL_name);
+      
+      if (!(raw_centry = centry_list_locate(centry_list, centry_name))) {
+         /* ignoring not defined centry */
+         continue;
+      }
+
+      if (!lGetBool(raw_centry, CE_consumable)) {
+         continue;
+      }
+
+      rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage);
+      if(rue_elem == NULL) {
+         DPRINTF(("creating new rue_elem\n"));
+         rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage, RUE_Type);
+         /* RUE_utilized_now is implicitly set to zero */
+      }
+
+      if (job) {
+         bool tmp_ret = job_get_contribution(job, NULL, centry_name, &dval, raw_centry);
+         if (tmp_ret && dval != 0.0) {
+            DPRINTF(("debiting %f of %s on lirs %s for %s %d slots\n", dval, centry_name,
+                     obj_name, sge_dstring_get_string(&rue_name), slots));
+            lAddDouble(rue_elem, RUE_utilized_now, slots * dval);
+            mods++;
+         }
+         if ((lGetDouble(rue_elem, RUE_utilized_now) == 0) && !lGetList(rue_elem, RUE_utilized)) {
+            rue_elem = lDechainElem(lGetList(limit, LIRL_usage), rue_elem);
+            lFreeElem(&rue_elem);
+         }
+      }
+   }
+
+   DRETURN(mods);
+}
+
+/****** sge_limit_rule/lirs_is_matching_rule() *********************************
+*  NAME
+*     lirs_is_matching_rule() -- matches a rule with the filter touples
+*
+*  SYNOPSIS
+*     bool lirs_is_matching_rule(lListElem *rule, const char *user, const char 
+*     *project, const char *pe, const char *host, const char *queue, lList 
+*     *master_userset_list, lList *master_hgroup_list) 
+*
+*  FUNCTION
+*     The function verifies for every filter touple if the request matches
+*     the configured limitation rule. If only one touple does not match
+*     the whole rule will not match
+*
+*  INPUTS
+*     lListElem *rule            - limitation rule (LIR_Type)
+*     const char *user           - user name
+*     const char *project        - project name
+*     const char *pe             - pe name
+*     const char *host           - host name
+*     const char *queue          - queue name
+*     lList *master_userset_list - master user set list (US_Type)
+*     lList *master_hgroup_list  - master hostgroup list (HG_Type)
+*
+*  RESULT
+*     bool - true if the rule does match
+*            false if the rule does not match
+*
+*  NOTES
+*     MT-NOTE: lirs_is_matching_rule() is MT safe 
+*
+*******************************************************************************/
+bool
+lirs_is_matching_rule(lListElem *rule, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list)
+{
+
+      DENTER(TOP_LAYER, "lirs_is_matching_rule");
+
+      if (!limit_rule_filter_match(lGetObject(rule, LIR_filter_users), FILTER_USERS, user, master_userset_list, master_hgroup_list)) {
+         DPRINTF(("user doesn't match\n"));
+         DRETURN(false);
+      }
+      if (!limit_rule_filter_match(lGetObject(rule, LIR_filter_projects), FILTER_PROJECTS, project, master_userset_list, master_hgroup_list)) {
+         DPRINTF(("project doesn't match\n"));
+         DRETURN(false);
+      }
+      if (!limit_rule_filter_match(lGetObject(rule, LIR_filter_pes), FILTER_PES, pe, master_userset_list, master_hgroup_list)) {
+         DPRINTF(("pe doesn't match\n"));
+         DRETURN(false);
+      }
+      if (!limit_rule_filter_match(lGetObject(rule, LIR_filter_queues), FILTER_QUEUES, queue, master_userset_list, master_hgroup_list)) {
+         DPRINTF(("queue doesn't match\n"));
+         DRETURN(false);
+      }
+      if (!limit_rule_filter_match(lGetObject(rule, LIR_filter_hosts), FILTER_HOSTS, host, master_userset_list, master_hgroup_list)) {
+         DPRINTF(("host doesn't match\n"));
+         DRETURN(false);
+      }
+
+      DRETURN(true);
+}
+
+
+/****** sge_limit_rule/limit_rule_filter_match() *******************************
+*  NAME
+*     limit_rule_filter_match() -- compares value with configured filter
+*
+*  SYNOPSIS
+*     bool limit_rule_filter_match(lListElem *filter, int filter_type, const 
+*     char *value, lList *master_userset_list, lList *master_hgroup_list) 
+*
+*  FUNCTION
+*     This function compares for the given filter if the value does match
+*     the configured one. Wildcards are allowed for the filter as well as for
+*     the value.
+*
+*  INPUTS
+*     lListElem *filter          - filter element (LIRF_Type)
+*     int filter_type            - filter type
+*     const char *value          - value to match
+*     lList *master_userset_list - master userset list (US_Type)
+*     lList *master_hgroup_list  - master hostgroup list (HG_Type
+*
+*  RESULT
+*     bool - true if the value does match
+*            false if the value does not match
+*
+*  NOTES
+*     MT-NOTE: limit_rule_filter_match() is MT safe 
+*
+*******************************************************************************/
+bool
+limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list) {
+   bool ret = true;
+   lListElem* ep; 
+
+   DENTER(TOP_LAYER, "limit_rule_filter_match");
+
+   if (filter != NULL) {
+      lList* scope = lGetList(filter, LIRF_scope);
+      lList* xscope = lGetList(filter, LIRF_xscope);
+
+      switch (filter_type) {
+         case FILTER_USERS:
+         case FILTER_HOSTS:
+         {  
+            DPRINTF(("matching users or hosts with %s\n", value));
+            for_each(ep, xscope) {
+               const char *cp = lGetString(ep, ST_name);
+
+               if (is_hgroup_name(cp)) { /* acls have the same differentiator '@' like hostgroups */
+
+                  if (strcmp(cp, "@*") == 0) {
+                     ret = false;
+                     break;
+                  }
+
+                  if (filter_type == FILTER_USERS) {
+                     /* match ACL */
+                     lListElem *ugroup = NULL;
+
+                     /* the userset name does not contain the preattached \@ sign */
+                     cp++; 
+                     DPRINTF(("xscope: strcmp(%s,%s) - ", cp, value));
+
+                     if ((ugroup = userset_list_locate(master_userset_list, cp)) != NULL) {
+                        if (sge_contained_in_access_list(value, NULL, ugroup, NULL) == 1) {
+                           ret = false;
+                           break;
+                        }
+                     }
+                  } else {
+                     /* match hostgroup */
+                     lListElem *hgroup = NULL;
+
+                     if ((hgroup = hgroup_list_locate(master_hgroup_list, cp)) != NULL) {
+                        lList *host_list = NULL;
+                        hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
+                        if (host_list != NULL && lGetElemHost(host_list, HR_name, value) != NULL) {
+                           lFreeList(&host_list);
+                           ret = false;
+                           break;
+                        }
+                        lFreeList(&host_list);
+                     }
+                  }
+               } else {
+                  if (is_hgroup_name(value)) {
+                     /* the given value is a hostgroup or userset. Can only happen when called by qlimit */
+                     if (filter_type == FILTER_USERS) {
+                        /* match ACL */
+                        lListElem *ugroup = NULL;
+
+                        /* the userset name does not contain the preattached \@ sign */
+                        value++; 
+
+                        if ((ugroup = userset_list_locate(master_userset_list, value)) != NULL) {
+                           if (sge_contained_in_access_list(cp, NULL, ugroup, NULL) == 1) {
+                              ret = false;
+                              break;
+                           }
+                        }
+                     } else {
+                        /* match hostgroup */
+                        lListElem *hgroup = NULL;
+
+                        if ((hgroup = hgroup_list_locate(master_hgroup_list, value)) != NULL) {
+                           lList *host_list = NULL;
+                           hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
+                           if (host_list != NULL && lGetElemHost(host_list, HR_name, cp) != NULL) {
+                              lFreeList(&host_list);
+                              ret = false;
+                              break;
+                           }
+                           lFreeList(&host_list);
+                        }
+                     }
+                  } else {
+                     if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value, cp, 0) == 0)) {
+                        ret = false;
+                        break;
+                     }
+                  }
+               }
+            }
+            if (ret == true) { 
+               bool found = false;
+               for_each(ep, scope) {
+                  const char *cp = lGetString(ep, ST_name);
+
+                  if (is_hgroup_name(cp)) {
+                     if (strcmp(cp, "@*") == 0) {
+                        found = true;
+                        break;
+                     }
+                     if (filter_type == FILTER_USERS) {
+                        /* match ACL */
+                        lListElem *ugroup = NULL;
+
+                        cp++;
+                        DPRINTF(("scope: strcmp(%s,%s) - ", cp, value));
+                        if ((ugroup = userset_list_locate(master_userset_list, cp)) != NULL) {
+                           if (sge_contained_in_access_list(value, NULL, ugroup, NULL) == 1) {
+                              found = true;
+                              break;
+                           }
+                        }
+                     } else {
+                        /* match hostgroup */
+                        lListElem *hgroup = NULL;
+
+                        if ((hgroup = hgroup_list_locate(master_hgroup_list, cp)) != NULL) {
+                           lList *host_list = NULL;
+
+                           hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
+                           if (host_list != NULL && lGetElemHost(host_list, HR_name, value) != NULL) {
+                              lFreeList(&host_list);
+                              found = true;
+                              break;
+                           }
+                           lFreeList(&host_list);
+                        }
+                     }
+
+                  } else {
+                     if (strcmp(cp, "*") == 0) {
+                        found = true;
+                        break;
+                     }
+                     if (is_hgroup_name(value)) {
+                        /* the given value is a hostgroup or userset. Can only happen when called by qlimit */
+                        if (filter_type == FILTER_USERS) {
+                           /* match ACL */
+                           lListElem *ugroup = NULL;
+
+                           /* the userset name does not contain the preattached \@ sign */
+                           value++; 
+
+                           if ((ugroup = userset_list_locate(master_userset_list, value)) != NULL) {
+                              if (sge_contained_in_access_list(cp, NULL, ugroup, NULL) == 1) {
+                                 found = true;
+                                 break;
+                              }
+                           }
+                        } else {
+                           /* match hostgroup */
+                           lListElem *hgroup = NULL;
+
+                           if ((hgroup = hgroup_list_locate(master_hgroup_list, value)) != NULL) {
+                              lList *host_list = NULL;
+                              hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
+                              if (host_list != NULL && lGetElemHost(host_list, HR_name, cp) != NULL) {
+                                 lFreeList(&host_list);
+                                 found = true;
+                                 break;
+                              }
+                              lFreeList(&host_list);
+                           }
+                        }
+                     } else {
+                        if ((fnmatch(cp, value, 0) == 0) || (fnmatch(value, cp, 0) == 0)) {
+                           found = true;
+                           break;
+                        }
+                     }
+                  }
+               }
+               if (scope != NULL && found == false) {
+                  ret = false;
+               }
+            }
+            break;
+         }
+         case FILTER_PROJECTS:
+         case FILTER_PES:
+         case FILTER_QUEUES:
+            DPRINTF(("matching projects, pes or queues with %s\n", value? value: "NULL"));
+            for_each(ep, xscope) {
+               const char *cp = lGetString(ep, ST_name);
+               if (value == NULL || (strcmp(value, "*") == 0)) {
+                  break;
+               }
+               DPRINTF(("xscope: strcmp(%s,%s)\n", cp, value));
+               if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
+                  DPRINTF(("match\n"));
+                  ret = false;
+                  break;
+               }
+               DPRINTF(("no match\n"));
+            }
+            if (ret != false) { 
+               bool found = false;
+               for_each(ep, scope) {
+                  const char *cp = lGetString(ep, ST_name);
+
+                  if (value == NULL) {
+                     break;
+                  }
+                  DPRINTF(("scope: strcmp(%s,%s)\n", cp, value));
+                  if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
+                     found = true;
+                     break;
+                  }
+               }
+               if (scope != NULL && found == false) {
+                  ret = false;
+               }
+            }
+            break;
+      }
+   }
+
    DRETURN(ret);
 }

@@ -80,9 +80,9 @@
 #define QHOST_DISPLAY_JOBS       (1<<1)
 #define QHOST_DISPLAY_RESOURCES  (1<<2)
 
-static lList *sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdline);
-static lList *sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show);
-static void qhost_usage(FILE *fp);
+static bool sge_parse_cmdline_qhost(char **argv, char **envp, lList **ppcmdline, lList **alpp);
+static bool sge_parse_qhost(lList **ppcmdline, lList **pplres, lList **ppFres, lList **pphost, lList **ppuser, u_long32 *show, lList **alpp);
+static bool qhost_usage(FILE *fp);
 static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, lList *pel, u_long32 show);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
 static void sge_print_host(lListElem *hep, lList *centry_list);
@@ -107,7 +107,6 @@ char **argv
    lList *jl = NULL;
    lList *pel = NULL;
    lList *alp = NULL;
-   lListElem *aep;
    lListElem *ep;
    u_long32 status = STATUS_OK;
    lList *resource_list = NULL;
@@ -135,15 +134,11 @@ char **argv
    /*
    ** stage 1 of commandline parsing
    */
-   alp = sge_parse_cmdline_qhost(argv, environ, &pcmdline);
-   if(alp) {
+   if (!sge_parse_cmdline_qhost(argv, environ, &pcmdline, &alp)) {
       /*
       ** high level parsing error! sow answer list
       */
-      for_each(aep, alp) {
-         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-      }
-      lFreeList(&alp);
+      answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
@@ -152,23 +147,19 @@ char **argv
    /*
    ** stage 2 of commandline parsing 
    */
-   alp = sge_parse_qhost(
+   if (!sge_parse_qhost(
             &pcmdline, 
             &resource_match_list,   /* -l resource_request           */
             &resource_list,         /* -F qresource_request          */
             &host_list,             /* -h host_list                  */
             &ul,                    /* -u user_list                  */
-            &show                   /* -q, -j                        */
-         );
-
-   if (alp) {
+            &show,                  /* -q, -j                        */
+            &alp
+         )) {
       /*
       ** low level parsing error! show answer list
       */
-      for_each(aep, alp) {
-         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-      }
-      lFreeList(&alp);
+      answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
       SGE_EXIT(1);
@@ -196,6 +187,7 @@ char **argv
 
       if (centry_list_fill_request(resource_match_list, &alp, cl, true, true, false)) {
          /* error message gets written by centry_list_fill_request into SGE_EVENT */
+         sge_prof_cleanup();
          SGE_EXIT(1);
       }
 
@@ -633,7 +625,7 @@ u_long32 show
 **   note that the other clients use a common function
 **   for this. output was adapted to a similar look.
 */
-static void qhost_usage(
+static bool qhost_usage(
 FILE *fp 
 ) {
    dstring ds;
@@ -641,13 +633,17 @@ FILE *fp
 
    DENTER(TOP_LAYER, "qhost_usage");
 
+   if (fp == NULL) {
+      DRETURN(false);
+   }
+
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
-   fprintf(fp, "  [-help]                    %s\n", MSG_QHOST_help_OPT_USAGE);
+   fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
    fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
    fprintf(fp, "  [-j]                       %s\n", MSG_QHOST_j_OPT_USAGE);
@@ -655,12 +651,7 @@ FILE *fp
    fprintf(fp, "  [-F [resource_attribute]]  %s\n", MSG_QHOST_F_OPT_USAGE); 
    fprintf(fp, "  [-u user[,user,...]]       %s\n", MSG_QHOST_u_OPT_USAGE); 
 
-   if (fp==stderr) {
-      SGE_EXIT(1);
-   } else {
-      SGE_EXIT(0);   
-   }
-   DEXIT;
+   DRETURN(true);
 }
 
 /****
@@ -669,56 +660,52 @@ FILE *fp
  **** 'stage 1' parsing of qhost-options. Parses options
  **** with their arguments and stores them in ppcmdline.
  ****/ 
-static lList *sge_parse_cmdline_qhost(
+static bool sge_parse_cmdline_qhost(
 char **argv,
 char **envp,
-lList **ppcmdline 
+lList **ppcmdline,
+lList **alpp
 ) {
    char **sp;
    char **rp;
-   stringT str;
-   lList *alp = NULL;
    DENTER(TOP_LAYER, "sge_parse_cmdline_qhost");
 
    rp = ++argv;
    while(*(sp=rp)) {
       /* -help */
-      if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, alpp)) != sp)
          continue;
  
       /* -q option */
-      if ((rp = parse_noopt(sp, "-q", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_noopt(sp, "-q", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -F */
-      if ((rp = parse_until_next_opt2(sp, "-F", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_until_next_opt2(sp, "-F", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -h */
-      if ((rp = parse_until_next_opt(sp, "-h", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_until_next_opt(sp, "-h", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -j */
-      if ((rp = parse_noopt(sp, "-j", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_noopt(sp, "-j", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -l */
-      if ((rp = parse_until_next_opt(sp, "-l", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_until_next_opt(sp, "-l", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -u */
-      if ((rp = parse_until_next_opt(sp, "-u", NULL, ppcmdline, &alp)) != sp)
+      if ((rp = parse_until_next_opt(sp, "-u", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* oops */
-      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
       qhost_usage(stderr);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return alp;
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
+      DRETURN(false);
    }
-   DEXIT;
-   return alp;
+   DRETURN(true);
 }
 
 /****
@@ -726,18 +713,18 @@ lList **ppcmdline
  ****
  **** 'stage 2' parsing of qhost-options. Gets the options from pcmdline
  ****/
-static lList *sge_parse_qhost(
+static bool sge_parse_qhost(
 lList **ppcmdline,
 lList **pplres,
 lList **ppFres,
 lList **pphost,
 lList **ppuser,
-u_long32 *show 
+u_long32 *show,
+lList **alpp
 ) {
-stringT str;
-lList *alp = NULL;
+bool ret = true;
 u_long32 helpflag;
-int usageshowed = 0;
+bool usageshowed = false;
 u_long32 full = 0;
 char * argstr = NULL;
 lListElem *ep;
@@ -747,15 +734,16 @@ lListElem *ep;
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
-   while(lGetNumberOfElem(*ppcmdline))
+   while (lGetNumberOfElem(*ppcmdline))
    {
-      if(parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
+      if (parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
+         usageshowed = true;
          qhost_usage(stdout);
-         SGE_EXIT(0);
+         ret = false;
          break;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-h", &alp, pphost, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-h", alpp, pphost, ST_Type, ST_name)) {
          /* 
          ** resolve hostnames and replace them in list
          */
@@ -763,20 +751,22 @@ lListElem *ep;
             if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
-               answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return alp; 
+               answer_list_add(alpp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
             }
-
+         }
+         if (ret == false) {
+            break;
          }
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-F", &alp, ppFres, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-F", alpp, ppFres, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_RESOURCES;
          continue;
       }
-      if(parse_flag(ppcmdline, "-q", &alp, &full)) {
+      if (parse_flag(ppcmdline, "-q", alpp, &full)) {
          if(full) {
             (*show) |= QHOST_DISPLAY_QUEUES;
             full = 0;
@@ -784,7 +774,7 @@ lListElem *ep;
          continue;
       }
 
-      if(parse_flag(ppcmdline, "-j", &alp, &full)) {
+      if (parse_flag(ppcmdline, "-j", alpp, &full)) {
          if(full) {
             (*show) |= QHOST_DISPLAY_JOBS;
             full = 0;
@@ -792,29 +782,27 @@ lListElem *ep;
          continue;
       }
 
-      if(parse_string(ppcmdline, "-l", &alp, &argstr)) {
+      if (parse_string(ppcmdline, "-l", alpp, &argstr)) {
          *pplres = centry_list_parse_from_string(*pplres, argstr, false);
          FREE(argstr);
          continue;
       }
 
-      if (parse_multi_stringlist(ppcmdline, "-u", &alp, ppuser, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "-u", alpp, ppuser, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_JOBS;
          continue;
       }
 
 
    }
-   if(lGetNumberOfElem(*ppcmdline)) {
-     sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
-     if (!usageshowed)
+   if (lGetNumberOfElem(*ppcmdline)) {
+     if (!usageshowed) {
         qhost_usage(stderr);
-     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-     DEXIT;
-     return alp;
+     }
+     answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_TOOMANYOPTIONS);
+     ret = false;
    }
-   DEXIT;
-   return alp;
+   DRETURN(ret);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -933,6 +921,7 @@ lWriteListTo(ehl, stdout);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -944,6 +933,7 @@ lWriteListTo(ehl, stdout);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1013,6 +1003,7 @@ lWriteListTo(ehl, stdout);
 
       if (alp) {
          printf("%s\n", lGetString(lFirst(alp), AN_text));
+         sge_prof_cleanup();
          SGE_EXIT(1);
       }
    }
@@ -1027,6 +1018,7 @@ lWriteListTo(ehl, stdout);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1040,6 +1032,7 @@ lWriteListTo(ehl, stdout);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1055,6 +1048,7 @@ lWriteListTo(ehl, stdout);
 
    if (alp) {
       printf("%s\n", lGetString(lFirst(alp), AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
 
@@ -1067,10 +1061,12 @@ lWriteListTo(ehl, stdout);
                                  mal, exechost_l);
    if (!alp) {
       printf("%s\n", MSG_GDI_EXECHOSTSGEGDIFAILED);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       printf("%s\n", lGetString(aep, AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    lFreeList(&alp);
@@ -1080,10 +1076,12 @@ lWriteListTo(ehl, stdout);
                                  mal, queue_l);
    if (!alp) {
       printf("%s\n", MSG_GDI_QUEUESGEGDIFAILED);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       printf("%s\n", lGetString(aep, AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    lFreeList(&alp);
@@ -1094,10 +1092,12 @@ lWriteListTo(ehl, stdout);
       alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_JOB_LIST, j_id, mal, job_l);
       if (!alp) {
          printf("%s\n", MSG_GDI_JOBSGEGDIFAILED);
+         sge_prof_cleanup();
          SGE_EXIT(1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
          printf("%s\n", lGetString(aep, AN_text));
+         sge_prof_cleanup();
          SGE_EXIT(1);
       }
       /*
@@ -1115,10 +1115,12 @@ lWriteListTo(ehl, stdout);
                                  mal, centry_l);
    if (!alp) {
       printf("%s\n", MSG_GDI_COMPLEXSGEGDIFAILED);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       printf("%s\n", lGetString(aep, AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    lFreeList(&alp);
@@ -1128,10 +1130,12 @@ lWriteListTo(ehl, stdout);
                                  mal, pe_l);
    if (!alp) {
       printf("%s\n", MSG_GDI_COMPLEXSGEGDIFAILED);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       printf("%s\n", lGetString(aep, AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    lFreeList(&alp);
@@ -1140,10 +1144,12 @@ lWriteListTo(ehl, stdout);
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
       printf("%s\n", MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       printf("%s\n", lGetString(aep, AN_text));
+      sge_prof_cleanup();
       SGE_EXIT(1);
    }
    if (lFirst(conf_l)) {

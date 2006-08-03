@@ -1,5 +1,5 @@
-#ifndef _SCHEDULER_H_
-#define _SCHEDULER_H_
+#ifndef _SGE_LIRS_SCHEDD_H
+#define __SGE_LIRS_SCHEDD_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,43 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* 
- *  internal interfaces between modules of default scheduler (private)
- */
-
-/* data model default scheduler */
-typedef struct {
-   lList *host_list;        /* EH_Type */
-   lList *queue_list;       /* QU_Type */
-   lList *dis_queue_list;   /* QU_Type  contains the queues only for the reservation*/
-   lList *all_queue_list;   /* QU_Type */
-   lList *job_list;         /* JB_Type */
-   lList *centry_list;      /* CE_Type */
-   lList *acl_list;         /* US_Type */
-   lList *pe_list;          /* PE_Type */
-   lList *user_list;        /* UP_Type */
-   lList *dept_list;        /* US_Type */
-   lList *project_list;     /* UP_Type */
-   lList *share_tree;       /* STN_Type */
-   lList *ckpt_list;        /* CK_Type */
-   lList *running_per_user; /* JC_Type */
-   lList *hgrp_list;        /* HGRP_Type */
-   lList *lirs_list;        /* LIRS_Type */
-} sge_Sdescr_t;
-
-/*
- * external interface of default scheduler used schedd framework (public)
- */
-
-typedef int (*default_scheduler_alg_t)(sge_Sdescr_t *, lList**);
-
-int scheduler(sge_Sdescr_t *lists, lList **orders);
-
-#ifdef SCHEDULER_SAMPLES
-int my_scheduler(sge_Sdescr_t *lists, lList **orders);
-#endif
+#include "sgeobj/sge_limit_rule.h"
 
 
-u_long32 sgeee_get_scheduling_run_id(void);
+bool limit_rule_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 
-#endif /* _SCHEDULER_H */
+int debit_job_from_lirs(lListElem *job, lList *granted, lList *lirs_list, lListElem *pe, lList *centry_list, lList *acl_list, lList *hgrp_list);
+
+#endif /* __SGE_LIRS_SCHEDD_H*/

@@ -35,11 +35,7 @@
 #include <time.h>
 #include <pthread.h>
 
-#if defined(FREEBSD)
-#include <db43/db.h>
-#else
 #include <db.h>
-#endif
 
 #include "uti/sge_dstring.h"
 

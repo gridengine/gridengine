@@ -1,3 +1,7 @@
+RD-2006-08-03-1: Enhancem.: o Added qlimit
+                 Changed:   qlimit
+                 Review:    AA
+
 RD-2006-08-03-0: Enhancem.: o Added limitation rule set scheduling code for
                               - sequential jobs
                               - parallel jobs

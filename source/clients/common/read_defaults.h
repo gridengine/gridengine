@@ -36,6 +36,8 @@
 #define SGE_HOME_DEF_REQ_FILE       ".sge_request"
 #define SGE_COMMON_DEF_QSTAT_FILE   "common/sge_qstat"
 #define SGE_HOME_DEF_QSTAT_FILE     ".sge_qstat"
+#define SGE_COMMON_DEF_QLIMIT_FILE   "common/sge_qlimit"
+#define SGE_HOME_DEF_QLIMIT_FILE     ".sge_qlimit"
 
 void opt_list_append_opts_from_default_files(lList **pcmdline,  
                                              lList **answer_list,

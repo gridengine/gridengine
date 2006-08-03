@@ -97,7 +97,8 @@ const char *prognames[] =
    "japi_ec"   ,       /* 41  */
    "drmaa"     ,       /* 42  */
    "qping"     ,       /* 43  */ 
-   "sgepasswd"         /* 44  */
+   "sgepasswd" ,       /* 44  */
+   "qlimit"            /* 45  */
 };
  
 typedef struct {

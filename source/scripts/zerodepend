@@ -38,6 +38,7 @@ files=" \
        clients/qconf/qconf_dependencies  \
        clients/qdel/qdel_dependencies  \
        clients/qhost/qhost_dependencies  \
+       clients/qlimit/qlimit_dependencies  \
        clients/qmod/qmod_dependencies  \
        clients/qmon/qmon_dependencies  \
        clients/qsh/qsh_dependencies  \

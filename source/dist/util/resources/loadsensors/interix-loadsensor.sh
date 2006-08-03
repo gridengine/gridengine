@@ -39,6 +39,7 @@
 
 PATH=/bin:/usr/bin
 ARCH=`$SGE_ROOT/util/arch`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 # start the loadsensor.exe binary as co-process
 #
@@ -46,7 +47,7 @@ ARCH=`$SGE_ROOT/util/arch`
 #        use "qloadsensor.exe -help"
 #        or read the man page if you need additional help
 #
-$SGE_ROOT/bin/$ARCH/qloadsensor.exe -set-load-fac 0.8 |&
+$SGE_ROOT/bin/$ARCH/qloadsensor.exe -hostname $HOST -set-load-fac 0.8 |&
 
 end=false
 while [ $end = false ]; do

@@ -1,3 +1,8 @@
+HP-2006-08-03-0: Bugfix:    o fixed mixed short/long hostnames for
+                              ignore_fqdn=false systems in load report
+                 Changed:   interix-loadsensor.sh
+                 Review:    JG
+
 CR-2006-08-03-0: Bugfix:    o fixed bug in sge_ca script
                  Review:    RH
 

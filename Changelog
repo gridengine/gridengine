@@ -1,3 +1,13 @@
+HP-2006-08-03-1: Enhancem.: Added a reserved complex variable "display_win_gui"
+                            that allows submitter to request the GUI of the job
+                            to be displayed to the visible desktop and allows
+                            the scheduler to make the right decisions.
+                            Added a test for it to the testsuite
+                 Changed:   execd, shepherd, testsuite
+                 Added:     centry/display_win_gui, system_tests/windows/gui test
+                 Bugster:   6428621
+                 Review:    JG, MD
+
 HP-2006-08-03-0: Bugfix:    o fixed mixed short/long hostnames for
                               ignore_fqdn=false systems in load report
                  Changed:   interix-loadsensor.sh

@@ -588,6 +588,23 @@ static int sge_get_loadavg(lList **lpp)
    }
 #endif /* SGE_LOADCPU */
 
+#ifdef INTERIX
+   {
+      int   svc_running;
+      pid_t pids[1];
+
+      /* look if SGE_Helper_Service.exe is running */
+      svc_running = sge_get_pids(pids, 1, "SGE_Helper_Service.exe", PSCMD);
+      if(svc_running <= 0) {
+         svc_running = 0;
+      }
+
+      /* report if SGE_Helper_Service.exe is running and GUI can be displayed */
+      sge_add_int2load_report(lpp, "display_win_gui", 
+         svc_running, uti_state_get_qualified_hostname());
+   }
+#endif
+
    DEXIT;
    return 0;
 }

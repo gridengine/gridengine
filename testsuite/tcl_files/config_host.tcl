@@ -2063,3 +2063,39 @@ proc host_conf_get_windows_host {} {
 
    return $ret
 }
+
+#****** config_host/host_conf_get_windows_exec_host() **************************
+#  NAME
+#     host_conf_get_windows_exec_host() -- get a windows exec host
+#
+#  SYNOPSIS
+#     host_conf_get_windows_exec_host { } 
+#
+#  FUNCTION
+#     Returns the hostname of the first windows exec host in our testsuite
+#     cluster configuration.
+#
+#  RESULT
+#     A hostname of a windows exec host, or an empty string, if we don't have a 
+#     windows exec host in our cluster.
+#
+#  SEE ALSO
+#     config_host/host_conf_get_arch()
+#*******************************************************************************
+proc host_conf_get_windows_exec_host {} {
+   global ts_config CHECK_OUTPUT
+   set ret ""
+
+   # get a list of all exec hosts referenced in the cluster
+   set exec_hosts $ts_config(execd_nodes)
+
+   # search for a windows host
+   foreach host $exec_hosts {
+      if {[host_conf_get_arch $host] == "win32-x86"} {
+         set ret $host
+         break
+      }
+   }
+
+   return $ret
+}

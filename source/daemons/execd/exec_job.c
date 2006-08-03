@@ -1371,6 +1371,27 @@ int err_length) {
    /* should the addgrp-id be used to kill processes */
    fprintf(fp, "enable_addgrp_kill=%d\n", (int)mconf_get_enable_addgrp_kill());
 
+#ifdef INTERIX
+   /* should the job display it's gui to the visible desktop? */
+   {
+      const char *s;
+      ulong      ultemp = 0;
+      lListElem  *ep    = job_get_request(jep, "display_win_gui");
+   
+      if(ep != NULL) {
+         s = lGetString(ep, CE_stringval);
+         if(s == NULL ||
+            !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
+            lFreeList(&environmentList);
+            FCLOSE(fp);
+            DEXIT;
+            return -3;
+         }
+      }
+      fprintf(fp, "display_win_gui="sge_u32"\n", ultemp);
+   }
+#endif
+
    lFreeList(&environmentList);
    FCLOSE(fp);
    /********************** finished writing config ************************/

@@ -87,8 +87,8 @@ static int fd_pipe[2];
 *     Checks only basename of command after "/".
 *
 *  INPUTS
-*     pid_t *pids           - pid list 
-*     int max_pids          - size of pid list 
+*     pid_t *pids           - pid array
+*     int max_pids          - size of pid array
 *     const char *name      - name 
 *     const char *pscommand - ps commandline
 *
@@ -119,7 +119,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
       return -1;
    }
 
-   while (!feof(fp_out)) {
+   while (!feof(fp_out) && num_of_pids<max_pids) {
       if ((fgets(buf, sizeof(buf), fp_out))) {
          if ((len = strlen(buf))) {
 

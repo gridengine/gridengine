@@ -668,7 +668,7 @@ proc setup_execd_conf {} {
               # on windows, we need a special execd param for use of domain users
               if {[host_conf_get_arch $host] == "win32-x86"} {
                  incr expected_entries 1
-                 if {$tmp_config(execd_params) == "enable_windomac=true"} {
+                 if {$tmp_config(execd_params) == "enable_windomacc=true"} {
                     set win_execd_params_found 1
                  }
               } else {
@@ -707,7 +707,7 @@ proc setup_execd_conf {} {
 
      # we need execd params for windows hosts
      if {[host_conf_get_arch $host] == "win32-x86" && !$win_execd_params_found} {
-        set tmp_config(execd_params) "enable_windomac=true"
+        set tmp_config(execd_params) "enable_windomacc=true"
      }
     
      # remove unexpected options

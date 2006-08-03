@@ -1765,7 +1765,7 @@ char *childname            /* "job", "pe_start", ...     */
 /* <Windows_GUI> */
       sge_set_environment();
       if(strcmp(childname, "job") == 0 &&
-         wl_get_GUI_mode(sge_get_environment()) == true) {
+         wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
          if(npid != -1) {      
             char errormsg[MAX_STRING_SIZE];
 
@@ -1863,7 +1863,7 @@ char *childname            /* "job", "pe_start", ...     */
 #if defined(INTERIX)
             sge_set_environment();
             if(strcmp(childname, "job") == 0 &&
-               wl_get_GUI_mode(sge_get_environment()) == true) {
+               wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
                /*
                 * forward SIGKILL, swallow all other signals
                 */

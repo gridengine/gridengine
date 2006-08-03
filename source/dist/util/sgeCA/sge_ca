@@ -610,6 +610,7 @@ MakeCAcert()
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
+   return 0
 }
 
 #--------------------------------------------------------------------------

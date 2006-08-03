@@ -1,3 +1,6 @@
+CR-2006-08-03-0: Bugfix:    o fixed bug in sge_ca script
+                 Review:    RH
+
 RH-2006-08-02-0: Enhancem.: o multipurpose sge_ca script
                             o bugfixes in juti
                  Review:    AA

@@ -1028,28 +1028,30 @@ proc qdel_help {} {
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
-   set output [start_sge_bin "qdel" "-help" "" "" state]
+   set output [start_sge_bin "qdel" "-help"]
 
    puts $CHECK_OUTPUT "qdel output    : \n---"
    puts $CHECK_OUTPUT "$output"
    puts $CHECK_OUTPUT "---\n"
-   puts $CHECK_OUTPUT "qdel exit state: $state"
+   puts $CHECK_OUTPUT "qdel exit state: $prg_exit_state"
 
-   if {$state != 0} {
+   if {$prg_exit_state != 0} {
       set_error -1 "exit state is not 0"
    }
 
-   if { [ string first $CHECK_PRODUCT_VERSION_NUMBER $output] < 0 } {
+   set output [string trim $output]
+
+   if {[string first $CHECK_PRODUCT_VERSION_NUMBER $output] < 0} {
       set_error -1 "version string ($CHECK_PRODUCT_VERSION_NUMBER) not found"
    } 
  
-   set lines [ split $output "\n"]
-   set nr_of_lines [ llength $lines ] 
+   set lines [split $output "\n"]
+   set nr_of_lines [llength $lines] 
 
    puts $CHECK_OUTPUT "Output has $nr_of_lines lines"
 
-   if { $nr_of_lines != $qdel_help_lines } {
-      set_error -1 "help output has $nr_of_lines, but expected are $qdel_help_lines lines"
+   if {$nr_of_lines != $qdel_help_lines} {
+      add_proc_error "qdel_help" -1 "help output has $nr_of_lines, but expected are $qdel_help_lines lines:\n$output"
    }
 
    set_error 0 "ok"

@@ -112,7 +112,7 @@ lappend check_functions "qconf_modify_exechost"	;# Modify exec host
 lappend check_functions "qconf_modify_project";# Modify project
 lappend check_functions "qconf_modify_userlist";# Modify user list
 lappend check_functions "qconf_modify_sched_conf";# Modify scheduler config
-lappend check_functions "qconf_issue_2023"; 
+lappend check_functions "qconf_issue_2023"
 
 global queue_names
 
@@ -915,10 +915,8 @@ proc qconf_sel {} {
    # positive check
    # qconf -sel, has to match testsuite's execd_nodes list
    if {[get_exechost_list exechost_list] == 0} {
-      set qconf_list [lsort $exechost_list]
-      set testsuite_list [lsort $ts_config(execd_nodes)]
-      if {[string compare $qconf_list $testsuite_list] != 0} {
-         add_proc_error "qconf_sel" -1 "exec host list delivered by qconf does not match testsuite exec host list:\n$qconf_list\n$testsuite_list"
+      if {[host_list_compare $exechost_list $ts_config(execd_nodes)] != 0} {
+         add_proc_error "qconf_sel" -1 "exec host list delivered by qconf does not match testsuite exec host list:\n$exechost_list\n$ts_config(execd_nodes)"
       }
    }
 

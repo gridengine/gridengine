@@ -799,3 +799,52 @@ proc host_get_running_states {host} {
 
    return $states
 }
+
+#****** sge_host/host_list_compare() *******************************************
+#  NAME
+#     host_list_compare() -- compare two host lists
+#
+#  SYNOPSIS
+#     host_list_compare { list_1 list_2 {raise_error 1} } 
+#
+#  FUNCTION
+#     Compares two host lists.
+#     Only the short host names are compared.
+#
+#  INPUTS
+#     list_1          - first list
+#     list_2          - second list
+#     {raise_error 1} - raise an error condition if the lists differ?
+#
+#  RESULT
+#     0   on success
+#     < 0 if the lists differ
+#*******************************************************************************
+proc host_list_compare {list_1 list_2 {raise_error 1}} {
+   # lists have to have same length
+   if {[llength $list_1] != [llength $list_2]} {
+      add_proc_error "host_list_compare" -1 "host lists have different length:\n$list_1\n$list_2" $raise_error
+      return -1
+   }
+
+   # sort lists to compare them host by host
+   set list_1 [lsort $list_1]
+   set list_2 [lsort $list_2]
+
+   set len [llength $list_1]
+   for {set i 0} {$i < $len} {incr i} {
+      set host_1 [lindex $list_1 $i]
+      set host_2 [lindex $list_2 $i]
+
+      # compare only short hosts
+      set short_1 [lindex [split $host_1 "."] 0]
+      set short_2 [lindex [split $host_2 "."] 0]
+
+      if {[string compare -nocase $short_1 $short_2] != 0} {
+         add_proc_error "host_list_compare" -1 "host lists differ:\n$list_1\n$list_2" $raise_error
+         return -2
+      }
+   }
+
+   return 0
+}

@@ -1,3 +1,9 @@
+JG-2006-08-04-0: Testsuite: Added function parse_properties_file to parse
+                            Java properties files, as well as the execd/shepherd
+                            config or environment file.
+                            Minor fixes and cleanup.
+                 Review:    RD
+
 RD-2006-08-03-1: Enhancem.: o Added qlimit
                  Changed:   qlimit
                  Review:    AA

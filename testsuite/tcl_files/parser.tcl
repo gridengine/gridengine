@@ -3280,3 +3280,90 @@ proc parse_csv {output_var input_var delimiter index} {
 
    return 0
 }
+
+#****** parser/parse_properties_file() ************************************
+#  NAME
+#     parse_properties_file() -- parse a properties file
+#
+#  SYNOPSIS
+#     parse_properties_file { output_var filename {overwrite 0} } 
+#
+#  FUNCTION
+#     Parses a file containing lines in the form <name>=<value>.
+#     Empty lines and lines starting with # are skipped.
+#     
+#     Parsed records are stored in the tcl array referenced by output_var.
+#
+#  INPUTS
+#     output_var    - name of an output variable
+#     filename      - file to parse
+#     {overwrite 0} - overwrite or replace output
+#
+#  EXAMPLE
+#     #
+#     # Path to SGE_ROOT
+#     #
+#     sge.root=/cod_home/joga/sys/arco
+#     #
+#     #  Path to the SGE source tree
+#     #
+#     sge.srcdir=/cod_home/joga/devel/gridengine/source
+#     
+#     #
+#     #  Compile options
+#     #
+#     compile.debug=true
+#     ...
+#     
+#     will be stored as
+#     out(sge.root)        /cod_home/joga/sys/arco
+#     out(sge.srcdir)      /cod_home/joga/devel/gridengine/source
+#     out(compile.debug)   true
+#     ...
+#
+#  NOTES
+#     Should also be suited for example for execd/shepherd environment
+#     and config file.
+#*******************************************************************************
+proc parse_properties_file {output_var filename {overwrite 0}} {
+   upvar $output_var out
+
+   # reset the output array unless we want to overwrite entries,
+   # e.g. if a public and a private properties file shall be merged
+   if {!$overwrite && [info exists out]} {
+      unset out
+   }
+
+   # open properties file
+   if {![file exists $filename]} {
+      add_proc_error "parse_properties_file" -3 "properties file $filename does not exist"
+      return -1
+   }
+   set f [open $filename "r"]
+
+   # parse entries
+   while {[gets $f line] >= 0} {
+      set line [string trim $line]
+
+      # skip empty lines
+      if {$line == ""} {
+         continue
+      }
+
+      # skip comments
+      if {[string range $line 0 0] == "#"} {
+         continue
+      }
+
+      # parse entries
+      set split_line [split $line "="]
+      set name [lindex $split_line 0]
+      set value [lrange $split_line 1 end]
+
+      set out($name) $value
+   }
+ 
+   close $f
+ 
+   return 0
+}

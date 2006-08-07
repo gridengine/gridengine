@@ -1,3 +1,6 @@
+EB-2006-08-07-0: Enhancem.: Enabled pam support in juti for DARWIN_PPC AND DARWIN_X86
+                 Review:    AA 
+
 JG-2006-08-04-0: Testsuite: Added function parse_properties_file to parse
                             Java properties files, as well as the execd/shepherd
                             config or environment file.

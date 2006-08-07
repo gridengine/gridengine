@@ -51,6 +51,8 @@
 #include "sge_utility.h"
 #include "sge_cqueue.h"
 #include "sge_attrL.h"
+#include "sgeobj/sge_limit_rule.h"
+#include "sge_limit_rule_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -145,17 +147,27 @@ char *rhost
       return ret;
    }
 
+   {
+      dstring ds = DSTRING_INIT;
+      lListElem *lirs;
+
+      sge_dstring_sprintf(&ds, "@%s", userset_name);
+
+      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
+         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+            lSetBool(ep, US_consider_with_categories, true);
+            break;
+         }
+      }
+      sge_dstring_free(&ds);
+   }
+
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
                         0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EUNKNOWN;
-   }   
-   /* change queue versions */
-   /* isn't this unnecessary? since the userset hast just been created
-    * it CANNOT by used by any queue in its (x)acl.  (Archie)
-    */
-   sge_change_queue_version_acl(userset_name);
+   }
 
    /* update in interal lists */
    if (!*userset_list)
@@ -323,6 +335,21 @@ char *rhost
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
+
+   {
+      dstring ds = DSTRING_INIT;
+      lListElem *lirs;
+
+      sge_dstring_sprintf(&ds, "@%s", userset_name);
+
+      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
+         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+            lSetBool(ep, US_consider_with_categories, true);
+            break;
+         }
+      }
+      sge_dstring_free(&ds);
+   }
 
    /* update on file */
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
@@ -798,7 +825,18 @@ const char *userset_name
 *******************************************************************************/
 static bool userset_still_used(const char *u)
 {
-   const lListElem *qc, *cq, *hep;
+   const lListElem *qc, *cq, *hep, *lirs;
+   dstring ds = DSTRING_INIT;
+
+   sge_dstring_sprintf(&ds, "@%s", u);
+
+   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
+      if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+         sge_dstring_free(&ds);
+         return true;
+      }
+   }
+   sge_dstring_free(&ds);
 
    for_each (hep, *object_type_get_master_list(SGE_TYPE_PE)) 
       if (lGetSubStr(hep, US_name, u, PE_user_list) ||

@@ -71,6 +71,8 @@
 #include "sge_cqueue.h"
 #include "sge_suser.h"
 #include "sge_lock.h"
+#include "sgeobj/sge_limit_rule.h"
+#include "sge_limit_rule_qmaster.h"
 
 #include "uti/sge_bootstrap.h"
 
@@ -224,8 +226,17 @@ Error:
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
+   lListElem *lirs;
    
    DENTER(TOP_LAYER, "userprj_success");
+
+   for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
+      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, lGetString(ep, UP_name))) {
+         lSetBool(ep, UP_consider_with_categories, true);
+         break;
+      }
+   }
+
    sge_add_event( 0, old_ep?
                  (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
                  (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
@@ -688,7 +699,13 @@ void sge_userprj_spool(void) {
 *******************************************************************************/
 static bool project_still_used(const char *p)
 {
-   const lListElem *qc, *cq, *hep;
+   const lListElem *qc, *cq, *hep, *lirs;
+
+   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
+      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, p)) {
+         return true;
+      }
+   }
 
    for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST))
       if (lGetSubStr(hep, UP_name, p, EH_prj) ||

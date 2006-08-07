@@ -1,3 +1,7 @@
+RD-2006-08-07-0: Enhancem.: Enabled category scalability improvement for usersets and
+                            projects (was disabled by RD-2006-08-03-0)
+                 Review:    AH
+
 EB-2006-08-07-0: Enhancem.: Enabled pam support in juti for DARWIN_PPC AND DARWIN_X86
                  Review:    AA 
 

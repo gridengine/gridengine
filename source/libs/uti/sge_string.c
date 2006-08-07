@@ -825,15 +825,15 @@ int sge_strnullcasecmp(const char *a, const char *b)
 *  NOTES
 *     MT-NOTE: sge_is_pattern() is MT safe
 ******************************************************************************/
-int sge_is_pattern(const char *s) 
+bool sge_is_pattern(const char *s) 
 {
    char c;
    while ((c = *s++)) {
       if (strchr("*?[]", c)) {
-         return 1;
+         return true;
       }
    }
-   return 0;
+   return false;
 }
 
 /****** uti/string/sge_strisint() *********************************************

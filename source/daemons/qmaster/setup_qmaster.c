@@ -107,6 +107,7 @@
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
 #include "sgeobj/sge_limit_rule.h"
+#include "sge_limit_rule_qmaster.h"
 
 
 static void   process_cmdline(char**);
@@ -1256,8 +1257,28 @@ static int debit_all_jobs_from_qs()
 static void init_categories(void)
 {
    const lListElem *cq, *pe, *hep, *ep;
-   lListElem *acl, *prj;
+   lListElem *acl, *prj, *lirs;
    lList *u_list = NULL, *p_list = NULL;
+   lList *master_project_list = (*object_type_get_master_list(SGE_TYPE_PROJECT));
+   lList *master_userset_list = (*object_type_get_master_list(SGE_TYPE_USERSET));
+   bool all_projects = false;
+   bool all_usersets = false;
+
+   /*
+    * collect a list of references to usersets/projects used in
+    * the limitation rule sets
+    */
+   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
+      if (!all_projects && !lirs_diff_projects(lirs, NULL, &p_list, NULL, master_project_list)) {
+         all_projects = true;
+      }
+      if (!all_usersets && !lirs_diff_usersets(lirs, NULL, &u_list, NULL, master_userset_list)) {
+         all_usersets = true;
+      }
+      if (all_usersets && all_projects) {
+         break;
+      }
+   }
 
    /*
     * collect list of references to usersets/projects used as ACL
@@ -1281,11 +1302,11 @@ static void init_categories(void)
     * now set categories flag with usersets/projects used as ACL
     */
    for_each(ep, p_list)
-      if ((prj = userprj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), lGetString(ep, UP_name))))
+      if ((prj = userprj_list_locate(master_project_list, lGetString(ep, UP_name))))
          lSetBool(prj, UP_consider_with_categories, true);
 
    for_each(ep, u_list)
-      if ((acl = userset_list_locate(*object_type_get_master_list(SGE_TYPE_USERSET), lGetString(ep, US_name))))
+      if ((acl = userset_list_locate(master_userset_list, lGetString(ep, US_name))))
          lSetBool(acl, US_consider_with_categories, true);
    
    lFreeList(&p_list);

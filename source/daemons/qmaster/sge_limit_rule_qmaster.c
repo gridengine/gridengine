@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <sys/types.h>
+#include <fnmatch.h>
 
 #include "sge_limit_rule_qmaster.h"
 #include "msg_common.h"
@@ -45,12 +46,30 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_job.h"
-   #include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_userset.h"
 #include "spool/sge_spooling.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userprj.h"
 #include "evm/sge_event_master.h"
+#include "sge_userprj_qmaster.h"
+#include "sge_userset_qmaster.h"
+#include "uti/sge_string.h"
 
 static bool
 limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list);
+
+static void
+lirs_update_categories(const lListElem *new_lirs, const lListElem *old_lirs);
+
+static bool
+filter_diff_usersets_or_projects(const lListElem *rule, int filter_nm, lList **scope_l,
+                              int nm, const lDescr *dp, lList *master_list);
+
+static bool
+filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm, 
+            lList **scope_ref, int nm, const lDescr *dp, lList *master_list);
 
 /****** sge_limit_rule_qmaster/lirs_mod() **************************************
 *  NAME
@@ -255,6 +274,8 @@ int lirs_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 
    lirs_name = lGetString(ep, LIRS_name);
 
+   lirs_update_categories(ep, old_ep);
+
    sge_add_event( 0, old_ep?sgeE_LIRS_MOD:sgeE_LIRS_ADD, 0, 0, 
                  lirs_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
@@ -330,7 +351,11 @@ int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list,
       return STATUS_EEXIST;
    }
 
-   lRemoveElem(*lirs_list, &found);
+   found = lDechainElem(*lirs_list, found);
+
+   lirs_update_categories(NULL, found);
+
+   lFreeElem(&found);
 
    sge_event_spool(alpp, 0, sgeE_LIRS_DEL, 
                    0, 0, lirs_name, NULL, NULL,
@@ -406,4 +431,365 @@ limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list) {
    }
 
    DRETURN(ret);
+}
+
+/****** sge_limit_rule_qmaster/filter_diff_usersets_or_projects_scope() ********
+*  NAME
+*     filter_diff_usersets_or_projects_scope() -- diff single scope
+*
+*  SYNOPSIS
+*     static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, 
+*     int filter_nm, lList **scope_ref, int nm, const lDescr *dp, lList 
+*     *master_list) 
+*
+*  FUNCTION
+*     This function iterates over a scope and generates
+*     a list with all referenced names.
+*     This function resolves wildcards by using fnmatch for patterned scopes.
+*
+*     This function can only be used for usersets or projects
+*
+*  INPUTS
+*     const lListElem *filter_scope  - filter scope (LIRF_type)
+*     int filter_nm         - nm of the filter type (eg. LIR_filter_users)
+*     lList **scope_ref     - generated resolved list
+*     int nm                - nm of the names of the list
+*     const lDescr *dp      - type of the generated list
+*     lList* master_list    - master list, needed for resolving
+*
+*  RESULT
+*     static bool - true if one or more scopes where found
+*                   false if all projects or usersets are referenced
+*
+*  NOTES
+*     MT-NOTE: filter_diff_usersets_or_projects_scope() is MT safe 
+*
+*  SEE ALSO
+*     sge_limit_rule_qmaster/filter_diff_usersets_or_projects()
+*******************************************************************************/
+static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm, 
+            lList **scope_ref, int nm, const lDescr *dp, lList *master_list) {
+   lListElem *scope_ep;
+   const char *scope;
+   bool ret = true;
+
+   for_each(scope_ep, filter_scope) {
+      scope = lGetString(scope_ep, ST_name);
+      if (filter_nm == LIR_filter_users) {
+         if (!is_hgroup_name(scope)) {
+            continue;
+         } else {
+           scope++; /* sge intern usergroups don't have the preleading @ sign */
+         }
+      }
+      if (strcmp("*", scope) == 0) {
+         lEnumeration *what = lWhat("%T(%I)", dp, nm);
+
+         lFreeList(scope_ref);
+         *scope_ref = lSelect("", master_list, NULL, what);
+         lFreeWhat(&what);
+         ret = false;               
+         break;
+      } else {
+         if (sge_is_pattern(scope)) {
+            lListElem *ep;
+            for_each(ep, master_list) {
+               const char* ep_entry = lGetString(ep, nm);
+               if (fnmatch(scope, ep_entry, 0) == 0) {
+                  lAddElemStr(scope_ref, nm, ep_entry, dp);
+               }
+            }
+         } else {
+            lAddElemStr(scope_ref, nm, scope, dp);
+         }
+      }
+   }
+   return ret;
+}
+
+/****** sge_limit_rule_qmaster/filter_diff_usersets_or_projects() **************
+*  NAME
+*     filter_diff_usersets_or_projects() -- generate list of referenced usersets
+*                                           or projects in given rule
+*
+*  SYNOPSIS
+*     static bool filter_diff_usersets_or_projects(const lListElem *rule, int 
+*     filter_nm, lList **scope_l, int nm, const lDescr *dp, lList* master_list) 
+*
+*  FUNCTION
+*     This function iterates over the project of user scope of a rule and generates
+*     a list with all referenced names.
+*     This function resolves wildcards by using fnmatch for patterned scopes.
+*
+*     This function can only be used for usersets or projects
+*
+*  INPUTS
+*     const lListElem *rule - limitation rule (LIR_Type)
+*     int filter_nm         - nm of the filter type (eg. LIR_filter_users)
+*     lList **scope_l       - generated resolved list
+*     int nm                - nm of the names of the list
+*     const lDescr *dp      - type of the generated list
+*     lList* master_list    - master list, needed for resolving
+*
+*  RESULT
+*     static bool - true if one or more scopes where found
+*                   false if all projects or usersets are referenced
+*
+*  NOTES
+*     MT-NOTE: filter_diff_usersets_or_projects() is MT safe 
+*
+*******************************************************************************/
+static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_nm, lList **scope_l, int nm, const lDescr *dp, lList* master_list)
+{
+   lListElem *filter = lGetObject(rule, filter_nm);
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "filter_diff_usersets_or_projects");
+
+   if (filter == NULL || master_list == NULL) {
+      DRETURN(ret);
+   }
+
+   if (filter_nm != LIR_filter_users && filter_nm != LIR_filter_projects) {
+      DRETURN(ret);
+   }
+   if ((ret = filter_diff_usersets_or_projects_scope(lGetList(filter, LIRF_scope),
+                                    filter_nm, scope_l, nm, dp, master_list))) {
+      ret = filter_diff_usersets_or_projects_scope(lGetList(filter, LIRF_xscope),
+                                    filter_nm, scope_l, nm, dp, master_list); 
+   } 
+
+   DRETURN(ret);
+}
+
+/****** sge_limit_rule_qmaster/lirs_diff_usersets() ****************************
+*  NAME
+*     lirs_diff_usersets() -- diff referenced usersets in lirs
+*
+*  SYNOPSIS
+*     bool lirs_diff_usersets(const lListElem *new_lirs, const lListElem 
+*     *old_lirs, lList **new_list, lList **old_list) 
+*
+*  FUNCTION
+*     This function generates a list of all usersets referenced in a limitation rule set.
+*     After locating the usersets a diff beween the usersets found in old_list and new_list
+*     is done and the usersets referenced in both are removed.
+*
+*  INPUTS
+*     const lListElem *new_lirs - new limitation rule set list (LIRS_Type)
+*     const lListElem *old_lirs - old limitation rule set list (LIRS_Type)
+*     lList **new_list          - list of referenced usersets in new_lirs (US_Type)
+*     lList **old_list          - list of referenced usersets in old_lirs (US_Type)
+*
+*  RESULT
+*     bool - true if some or none userset is referenced
+*            false if all userset are referenced in new_list
+*
+*  NOTES
+*     MT-NOTE: lirs_diff_projects() is MT safe 
+*
+*  SEE ALSO
+*     sge_limit_rule_qmaster/lirs_diff_projects()
+*******************************************************************************/
+bool lirs_diff_usersets(const lListElem *new_lirs, const lListElem *old_lirs, lList **new_list,
+                        lList **old_list, lList *master_userset_list)
+{
+   const lListElem *rule;
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "lirs_diff_usersets");
+
+   if (old_lirs && old_list) {
+      for_each(rule, lGetList(old_lirs, LIRS_rule)) {
+         if (!filter_diff_usersets_or_projects(rule, LIR_filter_users, old_list, US_name, US_Type, master_userset_list)) {
+            break;
+         } 
+      }
+   }
+
+   if (new_lirs && new_list) {
+      for_each(rule, lGetList(new_lirs, LIRS_rule)) {
+         if (!filter_diff_usersets_or_projects(rule, LIR_filter_users, new_list, US_name, US_Type, master_userset_list)) {
+            if (!old_lirs || lGetNumberOfElem(*old_list) == 0) {
+               ret = false;
+            }
+            break;
+         } 
+      }
+   }
+   lDiffListStr(US_name, new_list, old_list);
+
+   DRETURN(ret);
+}
+
+/****** sge_limit_rule_qmaster/lirs_diff_projects() ****************************
+*  NAME
+*     lirs_diff_projects() -- diff referenced usersets in lirs
+*
+*  SYNOPSIS
+*     bool lirs_diff_projects(const lListElem *new_lirs, const lListElem 
+*     *old_lirs, lList **new_list, lList **old_list) 
+*
+*  FUNCTION
+*     This function generates a list of all projects referenced in a limitation rule set.
+*     After locating the projects a diff beween the projects found in old_list and new_list
+*     is done and the projects referenced in both are removed.
+*
+*  INPUTS
+*     const lListElem *new_lirs - new limitation rule set list (LIRS_Type)
+*     const lListElem *old_lirs - old limitation rule set list (LIRS_Type)
+*     lList **new_list          - list of referenced projects in new_lirs (UP_Type)
+*     lList **old_list          - list of referenced projects in old_lirs (UP_Type)
+*
+*  RESULT
+*     bool - true if some or none project is referenced
+*            false if all projects are referenced in new_list
+*
+*  NOTES
+*     MT-NOTE: lirs_diff_projects() is MT safe 
+*
+*  SEE ALSO
+*     sge_limit_rule_qmaster/lirs_diff_usersets()
+*******************************************************************************/
+bool lirs_diff_projects(const lListElem *new_lirs, const lListElem *old_lirs, lList **new_list,
+                        lList **old_list, lList *master_project_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "lirs_diff_projects");
+
+   if (old_lirs && old_list) {
+      const lListElem *rule;
+      for_each(rule, lGetList(old_lirs, LIRS_rule)) {
+         if (!filter_diff_usersets_or_projects(rule, LIR_filter_projects, old_list, UP_name, UP_Type, master_project_list)) {
+            break;
+         } 
+      }
+   }
+
+   if (new_lirs && new_list) {
+      const lListElem *rule;
+      for_each(rule, lGetList(new_lirs, LIRS_rule)) {
+         if (!filter_diff_usersets_or_projects(rule, LIR_filter_projects, new_list, UP_name, UP_Type, master_project_list)) {
+            if (!old_lirs || lGetNumberOfElem(*old_list) == 0) {
+               ret = false;
+            }
+            break;
+         } 
+      }
+   }
+   lDiffListStr(UP_name, new_list, old_list);
+
+   DRETURN(ret);
+}
+
+/****** sge_limit_rule_qmaster/lirs_update_categories() ************************
+*  NAME
+*     lirs_update_categories() -- update categories after lirs change
+*
+*  SYNOPSIS
+*     static void lirs_update_categories(const lListElem *new_lirs, const 
+*     lListElem *old_lirs) 
+*
+*  FUNCTION
+*     This function generates a list of referenced usersets and projects by the
+*     new and the old limitation rule set and updates the "consider_with_categories"
+*     flag for the relevant objects.
+*
+*  INPUTS
+*     const lListElem *new_lirs - new limitation rule set (LIRS_Type)
+*     const lListElem *old_lirs - old limitation rule set (LIRS_Type)
+*
+*  NOTES
+*     MT-NOTE: lirs_update_categories() is not MT safe 
+*
+*******************************************************************************/
+static void lirs_update_categories(const lListElem *new_lirs, const lListElem *old_lirs)
+{
+   lList *old = NULL, *new = NULL;
+
+   DENTER(TOP_LAYER, "lirs_update_categories");
+
+   lirs_diff_projects(new_lirs, old_lirs, &new, &old, (*object_type_get_master_list(SGE_TYPE_PROJECT)));
+   project_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+
+   lirs_diff_usersets(new_lirs, old_lirs, &new, &old, (*object_type_get_master_list(SGE_TYPE_USERSET)));
+   userset_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+
+   DEXIT;
+}
+
+/****** sge_limit_rule_qmaster/scope_is_referenced_lirs() **********************
+*  NAME
+*     scope_is_referenced_lirs() -- check if the name is referenced in the limitation
+*                                   rule set
+*
+*  SYNOPSIS
+*     bool scope_is_referenced_lirs(const lListElem *lirs, int nm, const char 
+*     *name) 
+*
+*  FUNCTION
+*     This function iterates over all rules of a rule set and check if the given name
+*     is referenced in the scope list of the rules.
+*     The compare is done with fnmatch(), so wildcards are allowed.
+*
+*     userset note:
+*     usersets in the limitation rule sets have a preleading @ like hostgroups. This must be
+*     consideres if usersets are searched with this function. If the name has no preleading @
+*     this function searches for users instead of usersets.
+*
+*  INPUTS
+*     const lListElem *lirs - limitation rule set to search (LIRS_Type)
+*     int nm                - type of the filter scope
+*     const char *name      - name so search
+*
+*  RESULT
+*     bool - true if name is referenced
+*            false if no reference was found
+*
+*  NOTES
+*     MT-NOTE: scope_is_referenced_lirs() is MT safe 
+*
+*******************************************************************************/
+bool
+scope_is_referenced_lirs(const lListElem *lirs, int nm, const char *name) {
+   const lListElem *rule;
+   bool ret = false;
+
+   if (lirs == NULL || name == NULL) {
+      return ret;
+   }
+
+   for_each (rule, lGetList(lirs, LIRS_rule)) {
+      lListElem *filter = lGetObject(rule, nm);
+      if (filter != NULL) {
+         const lListElem *scope_ep;
+         for_each(scope_ep, lGetList(filter, LIRF_scope)) {
+            const char* scope = lGetString(scope_ep, ST_name);
+            if (fnmatch(scope, name, 0) == 0) {
+               ret = true;
+               break;
+            }
+         }
+         if (ret) {
+            break;
+         }
+         for_each(scope_ep, lGetList(filter, LIRF_xscope)) {
+            const char* scope = lGetString(scope_ep, ST_name);
+            if (fnmatch(scope, name, 0) == 0) {
+               ret = true;
+               break;
+            }
+         }
+         if (ret) {
+            break;
+         }
+      }
+   }
+
+   return ret;
 }

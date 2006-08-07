@@ -159,7 +159,14 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    owner = lGetPosString(job, Category_Control.cull_order_pos.JB_owner_pos);
    group = lGetPosString(job, Category_Control.cull_order_pos.JB_group_pos);
    sge_unparse_acl_dstring(category_str, owner, group, acl_list, "-U");
-  
+ 
+   /* 
+   ** need user in scheduling category due to limitation rules
+   ** RD: TODO: only in lirs referenced users should be added to the category string.
+   **           currently this is not done and we add always the user to the category.
+   */ 
+   sge_dstring_sprintf_append(category_str, " -u %s", lGetString(job, JB_owner));
+
    /*
    ** -hard -q qlist
    */
@@ -208,12 +215,8 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    {
       const char *project = lGetPosString(job, Category_Control.cull_order_pos.JB_project_pos);
 
-   #if 0 /* RD: TODO: does currently not work for limitation rule sets */
       const lListElem *prj;
       if (project && (prj=lGetElemStr(prj_list, UP_name, project)) && lGetBool(prj, UP_consider_with_categories)) {
-   #else
-      if (project && lGetElemStr(prj_list, UP_name, project)) {
-   #endif
          if (did_project)
             *did_project = true;
          sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");

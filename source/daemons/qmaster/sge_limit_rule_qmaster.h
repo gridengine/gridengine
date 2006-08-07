@@ -47,4 +47,13 @@ int lirs_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list, 
                     char *ruser, char *rhost);
 
+bool lirs_diff_usersets(const lListElem *new_lirs, const lListElem *old_lirs, lList **new_acl,
+                        lList **old_acl, lList *master_userset_list);
+
+bool lirs_diff_projects(const lListElem *new_lirs, const lListElem *old_lirs, lList **new_acl,
+                        lList **old_acl, lList *master_project_list);
+
+bool
+scope_is_referenced_lirs(const lListElem *lirs, int filter_type, const char *name);
+
 #endif

@@ -104,11 +104,11 @@ remove_immediate_jobs( lList *pending_job_list, lList *running_job_list, order_t
          continue;    
       }
 
-      /* Remove the job from the pending list */
-      remove_immediate_job(pending_job_list, job, orders, 0);
-      
       /* Prepare search condition for running list */
       where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, lGetUlong(job, JB_job_number));
+      
+      /* Remove the job from the pending list */
+      remove_immediate_job(pending_job_list, job, orders, 0);
       
       /* If the job also exists in the running list, we need to remove it there
        * as well since array jobs are all or nothing. */

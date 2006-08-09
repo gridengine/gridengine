@@ -479,6 +479,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                DPRINTF(("### better ### reservation in PE \"%s\" at "sge_u32" with %d soft violations\n",
                      lGetString(best->pe, PE_name), best->start, best->soft_violations));
             }
+
+            assignment_release(&tmp);
          }
       }
    } 
@@ -528,6 +530,8 @@ sge_select_parallel_environment( sge_assignment_t *best, lList *pe_list)
                DPRINTF(("### better ### assignment in PE \"%s\" with %d soft violations\n",
                         lGetString(best->pe, PE_name), best->soft_violations));
             }
+
+            assignment_release(&tmp);
          }
       }
    }

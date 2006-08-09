@@ -1127,7 +1127,7 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, 
                          int is_rsh, int is_rlogin)
 {
-   lList* stdout_stderr_path = NULL;
+   lList *stdout_stderr_path = NULL;
    u_long32 jb_now = lGetUlong(job, JB_type);
    const char *job_name  = lGetString(job, JB_job_name);
    
@@ -1163,6 +1163,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
    cull_parse_path_list(&stdout_stderr_path, "/dev/null");
    lSetList(job, JB_stdout_path_list, lCopyList("stdout_path_list", stdout_stderr_path));
    lSetList(job, JB_stderr_path_list, lCopyList("stderr_path_list", stdout_stderr_path));
+   lFreeList(&stdout_stderr_path);
 }
 
 /****** Interactive/qsh/set_command_to_env() ***************************************

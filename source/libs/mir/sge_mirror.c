@@ -1670,7 +1670,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          break;
       default:
          return SGE_EM_BAD_ARG;
-   }      
+   }
    
    DEXIT;
    return SGE_EM_OK;

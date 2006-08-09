@@ -1,3 +1,6 @@
+JG-2006-08-09-0: Bugfix:    Fixed memory leaks and access errors.
+                 Review:    AH
+
 AH-2006-05-27-0: Enhancem.: Merged S3-branch scalability enhancements
                  Review:    RD
 

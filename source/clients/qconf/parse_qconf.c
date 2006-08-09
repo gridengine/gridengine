@@ -6600,6 +6600,7 @@ u_long32 flags
    } else {
       fields_out[0] = NoName;
       fields = sge_build_CONF_field_list (false);
+      lFreeElem(&ep);
       ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
                                       fields, fields_out, false, &qconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);

@@ -56,7 +56,7 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
 
    static const char mid_characters[19] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
       '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0};
-   static const char *mid_strings[18];
+   static const char *mid_strings[19];
 
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];

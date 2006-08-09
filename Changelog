@@ -1,3 +1,9 @@
+AH-2006-08-08-0: Enhancem.: Prepared relative path $ORIGIN/../../lib/$buildarch
+                            be used rather than LD_LIBRARY_PATH for Solaris/Linux 
+                 Bugster:   6456290
+                 Issue:     2090
+                 Review:    AA, JG
+
 RD-2006-08-07-0: Enhancem.: Enabled category scalability improvement for usersets and
                             projects (was disabled by RD-2006-08-03-0)
                  Review:    AH

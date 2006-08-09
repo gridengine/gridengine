@@ -444,6 +444,7 @@ set JAVA_SHAREDEXT   = ""
 set JNI              = 1
 set JNI_TARGET       = "ALL"
 set PROTECTED        = 0
+set RUNPATH          = ""
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -1302,6 +1303,9 @@ case IRIX65:
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lPW -lm"
    set RANLIB   = echo
 
+   # set SONAME_LFLAG_DRMAA10 = "-W l,-soname,libdrmaa.so.1.0"
+   # set SONAME_LFLAG_DRMAA95 = "-W l,-soname,libdrmaa.so.0.95"
+
    set SHAREDLD = ld
    set SHARED_CFLAGS = "-KPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
@@ -1372,6 +1376,10 @@ case HP1164:
 
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
+
+   # http://docs.hp.com/en/B2355-90968/linkertasks.htm#BAJEBEEC
+   # set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch
+   # echo "aimk RUNPATH: #${RUNPATH}#"
    breaksw
    
 case ALINUX:
@@ -1471,6 +1479,11 @@ case LINUXPPC:
       set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    endif
    set JAVA_ARCH = "linux"
+
+   # due to -rpath relative_path the LD_LIBRARY_PATH not needed anymore
+   set RUNPATH = -Wl,-rpath,'\$$ORIGIN'/../../lib/$buildarch
+   set LFLAGS   = "$LFLAGS $RUNPATH"
+
    breaksw
    
 case WIN32_X86:
@@ -1805,6 +1818,11 @@ case SOLARISAMD64:
 
    set RANLIB   = "echo"
    set JAVA_ARCH = "solaris"
+
+   # due to -R relative_path the LD_LIBRARY_PATH not needed anymore
+   set RUNPATH = "-R "'\$$ORIGIN'/../../lib/$buildarch
+   set LFLAGS   = "$LFLAGS $RUNPATH"
+
    breaksw
 
 case UNICOS*:

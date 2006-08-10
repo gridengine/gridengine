@@ -1,4 +1,6 @@
-RD-2006-08-10-0: Enhancem:  Added 6.0u8_2 to gdi version array
+HP-2006-08-10-0: Bugfix:    Now loading key and rand file for Administrator, not 
+                            longer for HOST+Administrator.
+                 Changed:   libs/gdi/sge_security.c
                  Review:    JG
 
 AH-2006-08-01-0: Enhancem.: Merged S3-branch scalability enhancements

@@ -2067,7 +2067,6 @@ proc operational_unlock {operation_name {host ""} {lock_location "/tmp"}} {
 #*******************************************************************************
 proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invocations 1}} {
    global ts_config
-   global CHECK_COVERAGE
 
    set ret $timeout
 
@@ -2095,7 +2094,7 @@ proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invo
 
    # respect code coverage influence
    # we assume that the process will run slightly slower
-   if {$CHECK_COVERAGE != "none"} {
+   if {[coverage_enabled]} {
       # computation will be slower - add 10% overhead
       if {$does_computation} {
          set ret [expr $ret * 1.10]
@@ -2108,3 +2107,4 @@ proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invo
 
    return [format "%.0f" [expr ceil($ret)]]
 }
+

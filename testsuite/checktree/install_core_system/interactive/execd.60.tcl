@@ -67,7 +67,6 @@ proc install_execd {} {
    global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
    global CHECK_COMMD_PORT CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
-   global CHECK_COVERAGE
 
    set CORE_INSTALLED ""
    set INST_VERSION 0 
@@ -481,7 +480,7 @@ proc install_execd {} {
                # wait a little bit before closing the connection.
                # Otherwise the last command executed (infotext)
                # will leave a lockfile lying around.
-               if {$CHECK_COVERAGE != ""} {
+               if {[coverage_enabled]} {
                   sleep 2
                }
                continue

@@ -359,7 +359,7 @@ global CHECK_EXPECT_MATCH_MAX_BUFFER   ;# read buffer for expect
 set CHECK_EXPECT_MATCH_MAX_BUFFER 640000
 
 global CHECK_COVERAGE
-set CHECK_COVERAGE "none" ;# tcov or insure
+set CHECK_COVERAGE {} ;# list of code coverage methods (tcov, insure, or emma)
 
 global CHECK_COVERAGE_DIR ;# directory for test coverage profiles
 set CHECK_COVERAGE_DIR ""
@@ -2382,7 +2382,28 @@ proc update_ts_host_config_version { filename } {
      
       show_config ts_host_config
       wait_for_enter
-      if { [ save_host_configuration $filename] != 0} {
+      if {[save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
+      return 0
+   }
+
+   if {$ts_host_config(version) == "1.7" && $actual_ts_host_config_version == "1.8"} {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.7 to 1.8 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         # we now store java compile host property depending on gridengine version
+         set ts_host_config($host,java_compile,53) 0
+         set ts_host_config($host,java_compile,60) 0
+         set ts_host_config($host,java_compile,65) 0
+      }
+      set ts_host_config(version) "1.8"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if {[save_host_configuration $filename] != 0} {
          puts $CHECK_OUTPUT "Could not save host configuration"
          wait_for_enter
          return
@@ -8364,7 +8385,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "display DISPLAY       set display for daemon debug windows"
       puts ""
-      puts "coverage <type>       with code coverage analysis, type =\"tcov|insure\""
+      puts "coverage <type(s)>    with code coverage analysis, type =\"tcov|insure|emma\""
       puts "coverage_dir <dir>    directory for test coverage profiles"
 
       exit 1
@@ -8517,11 +8538,13 @@ for { set i 0 } { $i < $argc } { incr i } {
       incr i
       set help_var [lindex $argv $i]
       set help_var [string trim $help_var]
-      if {$help_var == "tcov" || $help_var == "insure"} {
-         set CHECK_COVERAGE $help_var
-         puts $CHECK_OUTPUT " ---> doing code coverage analysis with \"$CHECK_COVERAGE\" <---"
-      } else {
-         puts $CHECK_OUTPUT "invalid coverage method $help_var"
+      foreach cov $help_var {
+         if {$cov == "tcov" || $cov == "insure" || $cov == "emma"} {
+            lappend CHECK_COVERAGE $cov
+            puts $CHECK_OUTPUT " ---> doing code coverage analysis with \"$cov\" <---"
+         } else {
+            puts $CHECK_OUTPUT "invalid coverage method $cov"
+         }
       }
       continue
    }
@@ -8618,13 +8641,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       break
    }
 
-   
-
    if { ( [string compare [lindex $argv $i] "--no_main"] == 0 ) || ([string compare [lindex $argv $i] "no_main"] == 0 ) } {
       set do_nomain 1
       set no_action 0
       continue
    }
+
    if { ( [string compare [lindex $argv $i] "--no_main2"] == 0 ) || ([string compare [lindex $argv $i] "no_main2"] == 0 ) } {
       set do_nomain 1
       set no_action 0
@@ -8633,7 +8655,7 @@ for { set i 0 } { $i < $argc } { incr i } {
    }
 }
 
-if {$CHECK_COVERAGE != "none" && $CHECK_COVERAGE_DIR == ""} {
+if {$CHECK_COVERAGE != {} && $CHECK_COVERAGE_DIR == ""} {
    puts $CHECK_OUTPUT "please specify a coverage profile directory with the option coverage_dir"
    exit -1
 }

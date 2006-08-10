@@ -1149,7 +1149,7 @@ proc open_remote_spawn_process { hostname
 
    global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global CHECK_EXPECT_MATCH_MAX_BUFFER CHECK_DEBUG_LEVEL
-   global CHECK_SHELL_PROMPT CHECK_COVERAGE
+   global CHECK_SHELL_PROMPT
    global last_shell_script_file last_spawn_command_arguments
 
    debug_puts "open_remote_spawn_process on host \"$hostname\""
@@ -1188,7 +1188,7 @@ proc open_remote_spawn_process { hostname
    }
 
    # for code coverage testing, we might need a special environment
-   if {$CHECK_COVERAGE != "none"} {
+   if {[coverage_enabled]} {
       coverage_per_process_setup $hostname $real_user users_env
    }
 
@@ -2588,7 +2588,7 @@ proc is_spawn_process_in_use {spawn_id} {
 #*******************************
 proc close_spawn_process {id {check_exit_state 0}} {
    global CHECK_OUTPUT CHECK_DEBUG_LEVEL
-   global CHECK_SHELL_PROMPT CHECK_COVERAGE
+   global CHECK_SHELL_PROMPT
  
    set pid      [lindex $id 0]
    set spawn_id [lindex $id 1]
@@ -2621,7 +2621,7 @@ proc close_spawn_process {id {check_exit_state 0}} {
       # if we have code coverage analysis enabled, give the process
       # some time to finish writing coverage data
       # hopefully one second is enough
-      if {$CHECK_COVERAGE != "none"} {
+      if {[coverage_enabled]} {
          sleep 2
       }
 

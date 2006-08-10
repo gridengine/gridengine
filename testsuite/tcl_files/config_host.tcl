@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.7"
+set    actual_ts_host_config_version "1.8"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -358,10 +358,22 @@ proc host_config_hostlist_show_hosts {array_name} {
       for { set i 0 } { $i < [ expr ( $max_length - [ string length $host ]  ) ] } { incr i 1 } {  
           append space " "
       }
+      set c_comp 0
+      set j_comp 0
+      set all_comp {}
       if {[host_conf_is_compile_host $host config]} {
-          set comp_host "(compile host)"
+         set c_comp 1
+         lappend all_comp "c"
+      }
+      if {[host_conf_is_java_compile_host $host config]} {
+         set j_comp 1
+         lappend all_comp "java"
+      }
+
+      if {$c_comp || $j_comp} {
+         set comp_host "(compile host: $all_comp)"
       } else {
-          set comp_host "              "
+         set comp_host "                      "
       }
 
       set conf_arch [host_conf_get_arch $host config]
@@ -578,6 +590,9 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    set config($new_host,compile,53)    0
    set config($new_host,compile,60)    0
    set config($new_host,compile,65)    0
+   set config($new_host,java_compile,53)    0
+   set config($new_host,java_compile,60)    0
+   set config($new_host,java_compile,65)    0
    set config($new_host,compile_time)  0
    set config($new_host,response_time) [ expr ( [timestamp] - $time ) ]
    set config($new_host,fr_locale)     ""
@@ -680,6 +695,11 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       } else {
          puts $CHECK_OUTPUT "   compile       : not a compile host"
       }
+      if {[host_conf_is_java_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   java_compile  : compile host for java ($ts_config(gridengine_version))"
+      } else {
+         puts $CHECK_OUTPUT "   java_compile  : not a java compile host"
+      }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
 
@@ -717,7 +737,8 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
             set isdir 1 
          }
 
-         "compile" { 
+         "compile" -
+         "java_compile" { 
             set input_type "compile"
          }
 
@@ -770,8 +791,8 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          }
 
          "compile" {
-            set input "compile,$ts_config(gridengine_version)"
-            puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for compilation of $ts_config(gridengine_version) version (y/n) :"
+            puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for $input of $ts_config(gridengine_version) version (y/n) :"
+            set input "$input,$ts_config(gridengine_version)"
             set value [wait_for_enter 1]
             if {[string compare "y" $value] == 0} {
                set value 1
@@ -935,6 +956,11 @@ proc host_config_hostlist_delete_host { array_name } {
       } else {
          puts $CHECK_OUTPUT "   compile       : not a compile host"
       }
+      if {[host_conf_is_java_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   compile_java  : compile host for java ($ts_config(gridengine_version))"
+      } else {
+         puts $CHECK_OUTPUT "   compile_java  : not a java compile host"
+      }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
 
@@ -970,6 +996,9 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,compile,53)
          unset config($host,compile,60)
          unset config($host,compile,65)
+         unset config($host,java_compile,53)
+         unset config($host,java_compile,60)
+         unset config($host,java_compile,65)
          unset config($host,compile_time)
          unset config($host,response_time)
          continue
@@ -1672,6 +1701,45 @@ proc host_conf_is_compile_host {host {config_var ""}} {
    return $ret
 }
 
+#****** config_host/host_conf_is_java_compile_host() ********************************
+#  NAME
+#     host_conf_is_java_compile_host() -- is a given host compile host for java?
+#
+#  SYNOPSIS
+#     host_conf_is_java_compile_host { host {config_var ""} } 
+#
+#  FUNCTION
+#     Returns if a given host is used as java compile host.
+#     The information is retrieved from the ts_host_config array,
+#     unless another array is specified (e.g. during configuration).
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     0: is not java compile host
+#     1: is compile host
+#*******************************************************************************
+proc host_conf_is_java_compile_host {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+   
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret 0
+
+   if {[info exists config($host,java_compile,$ts_config(gridengine_version))]} {
+      set ret $config($host,java_compile,$ts_config(gridengine_version))
+   }
+
+   return $ret
+}
+
 #****** config_host/host_conf_get_arch() ***************************************
 #  NAME
 #     host_conf_get_arch() -- return a host's architecture
@@ -2098,4 +2166,43 @@ proc host_conf_get_windows_exec_host {} {
    }
 
    return $ret
+}
+
+#****** config_host/host_conf_get_java_compile_host() **************************
+#  NAME
+#     host_conf_get_java_compile_host() -- get java compile host
+#
+#  SYNOPSIS
+#     host_conf_get_java_compile_host { {raise_error 1} } 
+#
+#  FUNCTION
+#     Returns the name of the java compile host configured in the host config.
+#     If no compile host is found, an error is raised and an empty string
+#     is returned.
+#
+#  INPUTS
+#     {raise_error 1} - raise error condition or just output error message
+#
+#  RESULT
+#     name of compile host or "", if no compile host was found
+#
+#  SEE ALSO
+#     config_host/host_conf_is_java_compile_host()
+#*******************************************************************************
+proc host_conf_get_java_compile_host {{raise_error 1}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   set compile_host ""
+   foreach host $ts_host_config(hostlist) {
+      if {[host_conf_is_java_compile_host $host]} {
+         set compile_host $host
+         break
+      }
+   }
+
+   if {$compile_host == ""} {
+      add_proc_error "host_conf_get_java_compile_host" -1 "didn't find java compile host in host configuration" $raise_error
+   }
+
+   return $compile_host
 }

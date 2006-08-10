@@ -1,3 +1,6 @@
+JG-2006-08-10-0: Bugfix:    Fixed memory leaks and access errors.
+                 Review:    AH, RD
+
 RD-2006-08-03-0: Bufix:     Fixed some minor issues and one memory leak
                             merge from maintrunk RD-2006-08-03-0
                  Review:    JG, AA
@@ -5,7 +8,7 @@ RD-2006-08-03-0: Bufix:     Fixed some minor issues and one memory leak
 RD-2006-07-31-2: Cleanup:   Fixed gcc42 compiler warnings
                  Review:    AA
 
-JG-2006-06-23-0: Enhancem.: Build on darwin-x86 platform (fixed duplicate
+JG-2006-07-31-0: Enhancem.: Build on darwin-x86 platform (fixed duplicate
                             symbols in spooling libs).
                             Merge from maintrunk JG-2006-06-23-0.
                             Fixed build of standalone pdc.

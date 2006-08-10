@@ -318,7 +318,7 @@ const char *sge_get_default_cell(void)
 *     sge_get_alias_path() -- Return the path of the 'alias_file' 
 *
 *  SYNOPSIS
-*     char* sge_get_alias_path(void) 
+*     const char* sge_get_alias_path(void) 
 *
 *  FUNCTION
 *     Return the path of the 'alias_file' 
@@ -327,7 +327,7 @@ const char *sge_get_default_cell(void)
 *     MT-NOTE: sge_get_alias_path() is MT safe
 *
 ******************************************************************************/
-char *sge_get_alias_path(void) 
+const char *sge_get_alias_path(void) 
 {
    const char *sge_root, *sge_cell;
    char *cp;

@@ -1388,6 +1388,8 @@ MoveLog()
       return
    fi
 
+   GetAdminUser
+
    #due to problems with adminrun and ADMINUSER permissions, on windows systems
    #the auto install log files couldn't be copied to qmaster_spool_dir
    # leaving log file in /tmp dir. There is a need for a better solution

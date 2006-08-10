@@ -236,12 +236,15 @@ CheckCSP()
 #
 CheckHostNameResolving()
 {
-   if [ "$1" = "" -o "$1" -eq 0 ]; then
-      mode=installation 
-      MODE=Installation 
+   if [ "$1" = "install" ]; then
+      mode="installation "
+      MODE="Installation "
+   elif [ "$1" = "uninstall" ]; then
+      mode="uninstallation "
+      MODE="Uninstallation "
    else
-      mode=uninstallation
-      MODE=Uninstallation
+      mode="install script "
+      MODE="Install script "
    fi
 
    myrealname=`$SGE_UTILBIN/gethostname -name`

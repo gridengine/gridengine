@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-const char GDI_VERSION[] = "6.0u8";
+const char GDI_VERSION[] = "6.0u8_2";
 
 #ifdef ADD_SUN_COPYRIGHT
 const char GE_LONGNAME[] = "N1 Grid Engine";

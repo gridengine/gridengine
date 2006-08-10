@@ -1270,7 +1270,7 @@ int main(int argc, char *argv[]) {
 
    /* set alias file */
    if ( !option_noalias ) {
-      char *alias_path = sge_get_alias_path();
+      const char *alias_path = sge_get_alias_path();
       if (alias_path != NULL) {
          retval = cl_com_set_alias_file(alias_path);
          if (retval != CL_RETVAL_OK) {

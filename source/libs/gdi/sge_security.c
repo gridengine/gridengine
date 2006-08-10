@@ -439,6 +439,7 @@ int sge_ssl_setup_security_path(const char *progname) {
    free(rand_file);
    free(cert_file); 
    free(reconnect_file);
+   free(crl_file);
 
    DEXIT;
    return return_value;

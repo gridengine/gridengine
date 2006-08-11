@@ -786,15 +786,17 @@ proc save_file { filename array_name } {
 #     read_file() -- read fill into array (line by line)
 #
 #  SYNOPSIS
-#     read_file { filename array_name } 
+#     read_file {filename array_name {wait_timeout 0}} 
 #
 #  FUNCTION
 #     This procedure reads the content of the given file and saves the lines
 #     into the array
 #
 #  INPUTS
-#     filename   - file
-#     array_name - name of array to store file content
+#     filename         - file
+#     array_name       - name of array to store file content
+#     {wait_timeout 0} - if > 0, we'll wait wait_timeout seconds for the file
+#                        to appear
 #
 #  EXAMPLE
 #     read_file myfile.txt data
@@ -806,18 +808,22 @@ proc save_file { filename array_name } {
 #  SEE ALSO
 #     file_procedures/save_file()
 #*******************************************************************************
-proc read_file { filename array_name } {
+proc read_file {filename array_name {wait_timeout 0}} {
    global CHECK_OUTPUT
    upvar  $array_name data
 
-   if { [file isfile $filename] != 1 } {
+   if {$wait_timeout > 0} {
+      wait_for_file $filename $wait_timeout
+   }
+
+   if {[file isfile $filename] != 1} {
       set data(0) 0
       puts $CHECK_OUTPUT "read_file - returning empty file data structure, no such file"
       return
    }
    set file [open $filename "r"]
    set x 1
-   while { [gets $file line] >= 0 } {
+   while {[gets $file line] >= 0} {
        set data($x) $line
        incr x 1
    }

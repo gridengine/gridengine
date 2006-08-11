@@ -1521,25 +1521,25 @@ proc gethostname {} {
 #     control_procedures/resolve_arch_clear_cache()
 #*******************************
 proc resolve_arch {{node "none"} {use_source_arch 0}} {
-   global ts_config
-  global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
+   global arch_cache
 
    set host [node_get_host $node]
 
-  if { [ info exists arch_cache($host) ] } {
-     return $arch_cache($host)
-  }
+   if {[info exists arch_cache($host)]} {
+      return $arch_cache($host)
+   }
 
-  if { [ info exists CHECK_USER ] == 0 } {
-     puts $CHECK_OUTPUT "user not set, aborting"
-     return "unknown"
-  }
+   if { [ info exists CHECK_USER ] == 0 } {
+      puts $CHECK_OUTPUT "user not set, aborting"
+      return "unknown"
+   }
   
-  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
-     debug_puts "source directory not set, aborting"
-     return "unknown"
-  }
+   if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
+      debug_puts "source directory not set, aborting"
+      return "unknown"
+   }
 
    if {$host == "none"} {
       set host $CHECK_HOST
@@ -1589,10 +1589,6 @@ proc resolve_arch {{node "none"} {use_source_arch 0}} {
 
   set arch_cache($host) [lindex $result 0]
   
-  if { [info exists arch_cache($host) ] != 1 } {
-     return "unknown"
-  }
-
   return $arch_cache($host)
 }
 
@@ -1678,7 +1674,9 @@ proc resolve_build_arch { host } {
   return $build_arch_cache($host)
 }
 
-proc resolve_build_arch_installed_libs {host} {
+proc resolve_build_arch_installed_libs {host {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+
    set build_arch [resolve_build_arch $host]
 
    # we need special handling for some architectures, e.g. HP11 64bit
@@ -1686,8 +1684,15 @@ proc resolve_build_arch_installed_libs {host} {
       "HP1164" {
          set arch [resolve_arch $host]
          if {$arch == "hp11"} {
-            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries"
+            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries" $raise_error
             set build_arch "HP11"
+         }
+      }
+      "LINUX86_26" {
+         set arch [resolve_arch $host]
+         if {$arch == "lx24-x86"} {
+            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on lx26-x86 platform (build platform LINUX86_26) with lx24-x86 binaries installed.\nUsing lx24-x86 (build platform LINUX86_24) test binaries" $raise_error
+            set build_arch "LINUX86_24"
          }
       }
    }

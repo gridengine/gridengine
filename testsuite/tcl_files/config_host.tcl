@@ -1044,17 +1044,17 @@ proc verify_host_config { config_array only_check parameter_error_list { force 0
    set errors 0
    set error_list ""
 
-   if { [ info exists config(version) ] != 1 } {
+   if {[info exists config(version)] != 1} {
       puts $CHECK_OUTPUT "Could not find version info in host configuration file"
       lappend error_list "no version info"
       incr errors 1
       return -1
    }
 
-   if { $config(version) != $actual_ts_host_config_version } {
+   if {$config(version) != $actual_ts_host_config_version} {
       puts $CHECK_OUTPUT "Host configuration file version \"$config(version)\" not supported."
       puts $CHECK_OUTPUT "Expected version is \"$actual_ts_host_config_version\""
-      lappend error_list "unexpected host config file version $version"
+      lappend error_list "unexpected host config file version $config(version)"
       incr errors 1
       return -1
    } else {
@@ -1653,7 +1653,7 @@ proc host_conf_get_cluster_hosts {} {
    global ts_config CHECK_OUTPUT
 
    set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
-   set cluster_hosts [lsort -unique $hosts]
+   set cluster_hosts [lsort -dictionary -unique $hosts]
    set none_elem [lsearch $cluster_hosts "none"]
    if {$none_elem >= 0} {
       set cluster_hosts [lreplace $cluster_hosts $none_elem $none_elem]

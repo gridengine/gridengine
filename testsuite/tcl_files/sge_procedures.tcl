@@ -7733,7 +7733,8 @@ if { [info exists argc ] != 0 } {
 #     ???/???
 #*******************************************************************************
 proc copy_certificates { host } {
-   global CHECK_OUTPUT ts_config CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global ts_config ts_user_config
+   global CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    set remote_arch [resolve_arch $host]
    
@@ -7749,6 +7750,11 @@ proc copy_certificates { host } {
       puts $CHECK_OUTPUT "we have root access, fine !"
       set CA_ROOT_DIR "/var/sgeCA"
       set TAR_FILE "${CA_ROOT_DIR}/port${ts_config(commd_port)}.tar"
+      if {$remote_arch == "win32-x86"} {
+         set UNTAR_OPTS "-xvf"
+      } else {
+         set UNTAR_OPTS "-xpvf"
+      }
 
       puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
@@ -7756,7 +7762,7 @@ proc copy_certificates { host } {
 
       puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
       set tar_bin [get_binary_path $ts_config(master_host) "tar"]
-      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${ts_config(commd_port)}/*"
+      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cpvf $TAR_FILE ./port${ts_config(commd_port)}/*"
       set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$remote_command_param" ]
       puts $CHECK_OUTPUT $result
 
@@ -7782,7 +7788,7 @@ proc copy_certificates { host } {
             set result [ start_remote_prog "$host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
          }   
 
-         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
+         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} $UNTAR_OPTS $TAR_FILE" prg_exit_state 300 ]
          puts $CHECK_OUTPUT $result
          if { $prg_exit_state != 0 } {
             add_proc_error "copy_certificates" -2 "could not untar \"$TAR_FILE\" on host $host;\ntar-bin:$tar_bin"
@@ -7801,6 +7807,15 @@ proc copy_certificates { host } {
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
       puts $CHECK_OUTPUT $result
 
+      # on windows, we have to correct the file permissions
+      if {$remote_arch == "win32-x86"} {
+         puts $CHECK_OUTPUT "correcting certificate file permissions on windows host"
+         set users "$CHECK_USER $ts_user_config(first_foreign_user) $ts_user_config(second_foreign_user)"
+         foreach user $users {
+            start_remote_prog $host "root" "chown" "-R $user /var/sgeCA/port${ts_config(commd_port)}/default/userkeys/$user"
+         }
+      }
+
       # check for syncron clock times
       set my_timeout [timestamp]
       incr my_timeout 600
@@ -7817,7 +7832,7 @@ proc copy_certificates { host } {
          if { [timestamp] > $my_timeout } {
             add_proc_error "copy_certificates" -2 "$host: timeout while waiting for qstat to work (please check hosts for synchron clock times)"
          }
-      } 
+      }
    } else {
       puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
       puts $CHECK_OUTPUT "installation error"

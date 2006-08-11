@@ -1,3 +1,7 @@
+HP-2006-08-11-1: Enhancem:  Improved starting and stopping of 
+                            N1 Grid Engine Helper Service during test.
+                 Changed:   checktree/system_tests/windows/gui/check.60.exp
+                         
 HP-2006-08-11-0: Bugfix:    Now loading key and rand file for Administrator, not 
                             longer for HOST+Administrator.
                  Changed:   libs/gdi/sge_security.c

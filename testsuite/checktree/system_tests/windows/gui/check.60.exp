@@ -157,14 +157,10 @@ proc display_win_gui {} {
    # The exit status 57 of GUI_test.exe means that it was able to display it's
    # GUI on the visible desktop. 0 means that it wasn't able to display it.
 
+   set SGE_Helper_Servcie_was_running [is_SGE_Helper_Service_running $host]
+
    # make sure that the "N1 Grid Engine Helper Service" runs on the exec host.
-   puts ""
-   puts "starting N1 Grid Engine Helper Service"
-   set ret [control_SGE_Helper_Service 1]
-   if {$ret == 0} {
-      puts "N1 Grid Engine Helper Service is running"
-   } else {
-      puts "N1 Grid Engine Helper Service is not running! Test failed!"
+   if {[start_SGE_Helper_Service] != 0} {
       add_proc_error "display_win_gui" -1 \
          "error starting N1 Grid Engine Helper Service"
    }
@@ -177,13 +173,8 @@ proc display_win_gui {} {
       if {$i == 5} {
          # stop the "N1 Grid Engine Helper Service" for the second half
          # of the submits.
-         puts ""
-         puts "stopping N1 Grid Engine Helper Service"
-         set ret [control_SGE_Helper_Service 0]
-         if {$ret == 0} {
-            puts "N1 Grid Engine Helper Service is stopped"
-         } else {
-            puts "N1 Grid Engine Helper Service is not stopped! Test failed!"
+
+         if {[stop_SGE_Helper_Service] != 0} {
             add_proc_error "display_win_gui" -1 \
                "error stopping N1 Grid Engine Helper Service"
          }
@@ -241,10 +232,41 @@ proc display_win_gui {} {
       }
       incr i
    }
+   if {$SGE_Helper_Servcie_was_running == 1} {
+      # start "N1 Grid Engine Helper Service" again on the exec host.
+      if {[start_SGE_Helper_Service] != 0} {
+         add_proc_error "display_win_gui" -1 \
+            "error starting N1 Grid Engine Helper Service"
+      }
+   }
 
    set_error 0 "ok"
 }
 
+proc start_SGE_Helper_Service {} {
+   puts ""
+   puts "starting N1 Grid Engine Helper Service"
+   
+   set ret [control_SGE_Helper_Service 1]
+   if {$ret == 0} {
+      puts "N1 Grid Engine Helper Service is running"
+   } else {
+      puts "N1 Grid Engine Helper Service is not running! Test failed!"
+   }
+   return $ret
+}
+
+proc stop_SGE_Helper_Service {} {
+   puts ""
+   puts "stopping N1 Grid Engine Helper Service"
+   set ret [control_SGE_Helper_Service 0]
+   if {$ret == 0} {
+      puts "N1 Grid Engine Helper Service is stopped"
+   } else {
+      puts "N1 Grid Engine Helper Service is not stopped! Test failed!"
+   }
+   return $ret
+}
 
 #****** is_SGE_Helper_Service_running() ****************************************
 #  NAME

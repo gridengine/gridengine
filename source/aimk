@@ -1502,32 +1502,6 @@ case WIN32_X86:
    set COMPILE_DC       = 1
    set AUTHLIBS         = ""
 
-
-   # generate all not compilable targets using touch
-   if (0) then
-   if ($CORE == 1) then
-      set TOUCH_DIR = $COMPILE_ARCH
-
-      touch $TOUCH_DIR/qmon
-      if ( ! -d "./3rdparty/qmon/${COMPILE_ARCH}" ) then
-         mkdir ./3rdparty/qmon/$COMPILE_ARCH
-      endif
-
-      touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
-      touch $TOUCH_DIR/sge_qmaster
-      touch $TOUCH_DIR/sge_shadowd
-      touch $TOUCH_DIR/berkeley_db_svc
-      touch $TOUCH_DIR/db_archive
-      touch $TOUCH_DIR/db_checkpoint
-      touch $TOUCH_DIR/db_dump
-      touch $TOUCH_DIR/db_load
-      touch $TOUCH_DIR/openssl
-      touch $TOUCH_DIR/spooldefaults
-      touch $TOUCH_DIR/spooledit
-      touch $TOUCH_DIR/spoolinit
-   endif
-   endif
-   
    set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
    set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
    set WINGRIDLIB_DEP = "libwingrid.a"

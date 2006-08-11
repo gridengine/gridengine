@@ -1,3 +1,8 @@
+HP-2006-08-11-0: Bugfix:    Now loading key and rand file for Administrator, not 
+                            longer for HOST+Administrator.
+                 Changed:   libs/gdi/sge_security.c
+                 Review:    JG
+
 RD-2006-08-11-0: Enhancem:  Added reservation code for limitation rule sets
                             Moved gdi version defines to libs/gdi/version.c
                  Changed:   all

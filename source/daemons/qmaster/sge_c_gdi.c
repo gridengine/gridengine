@@ -214,28 +214,7 @@ int id
    dstring ds;
    char buffer[256];
 
-   /* actual GDI version is defined in
-    *   libs/gdi/sge_gdiP.h
-    */   
-   const struct vdict_t {
-      u_long32 version;
-      char *release;
-   } *vp,vdict[] = {
-      { 0x10000000, "5.0"  },
-      { 0x10000001, "5.1"  },
-      { 0x10000002, "5.2"  },
-      { 0x10000003, "5.2.3"  },
-      { 0x100000F0, "5.3alpha1" },
-      { 0x100000F1, "5.3beta1 without hashing" },
-      { 0x100000F2, "5.3beta1" },
-      { 0x100000F3, "5.3beta2" },
-      { 0x100000F4, "5.3" },
-      { 0x10000FFF, "6.0"   },
-      { 0x10001000, "6.0u3" },
-      { 0x10001001, "6.0u4" },
-      { 0x10001002, "6.0u8_2" },
-      { 0,          NULL   }
-   };
+   const vdict_t *vp, *vdict = GRM_GDI_VERSION_ARRAY;
 
    DENTER(TOP_LAYER, "verify_request_version");
 

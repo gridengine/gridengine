@@ -95,7 +95,7 @@ enum{
    MAX_TAG
 };
 
-#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPM"[level]
+#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPLM"[level]
 
 enum {
    CE_name = CE_LOWERBOUND,

@@ -1,3 +1,8 @@
+RD-2006-08-11-0: Enhancem:  Added reservation code for limitation rule sets
+                            Moved gdi version defines to libs/gdi/version.c
+                 Changed:   all
+                 Review:    SG
+
 JG-2006-08-11-0: Testsuite: Minor fixes and cleanup.
                  Review:    RD
 

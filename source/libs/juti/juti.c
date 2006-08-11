@@ -46,7 +46,7 @@
 #include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX)
+#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD)
 #define JUTI_NO_SHADOW
 #else
 #include <shadow.h>

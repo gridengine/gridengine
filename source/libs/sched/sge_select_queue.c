@@ -177,8 +177,8 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a);
 static dispatch_t
 sequential_queue_time( u_long32 *start, const sge_assignment_t *a, int *violations, lListElem *qep); 
 
-static bool
-lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, const char *host, const char *queue);
+static dispatch_t 
+lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, const char *host, const char *queue, u_long32 *start);
 
 static dispatch_t
 sequential_host_time(u_long32 *start, const sge_assignment_t *a, int *violations, lListElem *hep); 
@@ -3162,7 +3162,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          
          queue_violations = global_violations;
 
-         result = sequential_host_time( &tt_host, a, use_category.compute_violation?&queue_violations:NULL, 
+         result = sequential_host_time(&tt_host, a, use_category.compute_violation?&queue_violations:NULL, 
                                      hep);
 
          if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
@@ -3194,7 +3194,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             
             if (a->start == DISPATCH_TIME_QUEUE_END) {
                DPRINTF(("    global "sge_u32" host "sge_u32" queue "sge_u32"\n", tt_global, tt_host, tt_queue));
-               tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
+               tt_queue = MAX(lGetUlong(qep, QU_available_at), MAX(tt_queue, MAX(tt_host, tt_global)));
                lSetUlong(qep, QU_available_at, tt_queue);
             }
             DPRINTF(("    set Q: %s number="sge_u32" when="sge_u32" violations="sge_u32"\n", qname,
@@ -3286,6 +3286,7 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
       no_check = true;
    }
    for_each(queue_instance, a->queue_list) {
+      u_long32 tt_lirs_all = 0;
 
       if (no_check == false) {
          for_each(lirs, a->lirs_list) {
@@ -3294,6 +3295,7 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
             const char *host_name = NULL;
             const char *queue_name = NULL;
             const lListElem *rule = NULL;
+            u_long32 tt_lirs = a->start;
 
             if (!lGetBool(lirs, LIRS_enabled)) {
                continue;
@@ -3308,16 +3310,21 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
             rule = lirs_get_matching_rule(lirs, user, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
             if (rule != NULL) {
                /* Check booked usage */
-               if (lirs_limitation_reached(a, rule, host_name, queue_name)) {
+               result = lirs_limitation_reached(a, rule, host_name, queue_name, &tt_lirs);
+               
+               if (result != DISPATCH_OK) {
                   schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNLIRS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
                   DPRINTF(("limitation rule set %s deny job execution\n on %s@%s\n", sge_dstring_get_string(&rule_name), queue_name, host_name));
                   break;
                }
+               tt_lirs_all = MAX(tt_lirs_all, tt_lirs);
             } 
          }
          if (lirs == NULL) { /* all rule sets checked successfully */
             lSetUlong(queue_instance, QU_tag, 1);
-            result = DISPATCH_OK;
+            if (a->is_reservation) {
+               lSetUlong(queue_instance, QU_available_at, tt_lirs_all);
+            }
          } else {
             lSetUlong(queue_instance, QU_tag, 0);
          }
@@ -3348,17 +3355,19 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
 *     const lListElem *rule        - limitation rule (LIR_Type)
 *     const char* host       - host name
 *     const char* queue      - queue name
+*    u_long32 *start         - start time of job
 *
 *  RESULT
-*     static bool - true if limit is reached
-*                   false no limit is reached
+*     static dispatch_t - DISPATCH_OK job can be scheduled
+*                         DISPATCH_NEVER_CAT no jobs of this category will be scheduled
+*                         DISPATCH_NOT_AT_TIME job can be scheduled later
 *
 *  NOTES
 *     MT-NOTE: lirs_limitation_reached() is not MT safe 
 *
 *******************************************************************************/
-static bool lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, const char* host, const char* queue) {
-   bool ret = false;
+static dispatch_t lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, const char* host, const char* queue, u_long32 *start) {
+   dispatch_t ret = DISPATCH_OK;
    lList *limit_list = NULL;
    lListElem * limit = NULL;
    static lListElem *implicit_slots_request = NULL;
@@ -3399,7 +3408,7 @@ static bool lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, 
             job_centry = implicit_slots_request;
          } else if (is_forced == true) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_NOTREQFORCEDRES); 
-            ret = true;
+            ret = DISPATCH_NEVER_CAT;
             break;
          } else {
             /* ignoring because centry was not requested */
@@ -3419,7 +3428,6 @@ static bool lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, 
          if (limit_rule_set_dynamical_limit(limit, global_host, exec_host, a->centry_list)) {
             lList *rue_list = lGetList(limit, LIRL_usage);
             u_long32 tmp_time = a->start;
-            dispatch_t matched;
 
             /* create tmp_centry_list */
             tmp_centry_elem = lCopyElem(raw_centry);
@@ -3438,15 +3446,18 @@ static bool lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, 
             lAppendElem(tmp_rue_list, tmp_rue_elem);
            
             sge_dstring_clear(&reason);
-            matched = ri_time_by_slots(a, job_centry, NULL, tmp_centry_list,  tmp_rue_list,
+            ret = ri_time_by_slots(a, job_centry, NULL, tmp_centry_list,  tmp_rue_list,
                                        NULL, &reason, false, 1, DOMINANT_LAYER_LIRS, 0.0, &tmp_time,
                                        SGE_LIRS_NAME);
-            if (matched != DISPATCH_OK) {
+            if (ret != DISPATCH_OK) {
                DPRINTF(("denied because: %s\n", sge_dstring_get_string(&reason)));
-               ret = true;
                lFreeList(&tmp_rue_list);
                lFreeList(&tmp_centry_list);
                break;
+            }
+
+            if (a->is_reservation && ret == DISPATCH_OK) {
+               *start = tmp_time;
             }
 
             lFreeList(&tmp_rue_list);
@@ -3460,7 +3471,7 @@ static bool lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, 
          lSetString(raw_centry, CE_stringval, lGetString(limit, LIRL_value));
          DPRINTF(("comparing %s with %s\n", lGetString(raw_centry, CE_stringval), lGetString(job_centry, CE_stringval)));
          if (compare_complexes(1, raw_centry, job_centry, availability_text, false, false) != 1) {
-            ret = true;
+            ret = DISPATCH_NEVER_CAT;
             break;
          }
       }
@@ -4243,89 +4254,97 @@ parallel_max_host_slots(sge_assignment_t *a, lListElem *host) {
 static dispatch_t
 parallel_lirs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend, const char *host, const char *queue)
 {
-   const char* user = lGetString(a->job, JB_owner);
-   const char* project = lGetString(a->job, JB_project);
-   const char* pe = lGetString(a->job, JB_pe);
-   lListElem *lirs = NULL;
    dispatch_t result = DISPATCH_OK;
    int tslots = INT_MAX;
    int tslots_qend = INT_MAX;
-   bool first = true;
-   dstring rule_name = DSTRING_INIT;
-   dstring rue_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "parallel_lirs_slots_by_time");
 
-   for_each(lirs, a->lirs_list) {
-      lListElem *rule = NULL;
-      lListElem *global_host = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
-      lListElem *exec_host = host_list_locate(a->host_list, host);
+   /* We have to set at first the slots for the case no ruleset is defined or all are enabled */
+   *slots = tslots;
+   *slots = tslots_qend;
 
-      /* ignore disabled rule sets */
-      if (!lGetBool(lirs, LIRS_enabled)) {
-         continue;
-      }
-      sge_dstring_clear(&rule_name);
-      rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
-      if (rule != NULL) {
-         lList *limit_list = lGetList(rule, LIR_limit);
-         lListElem *limit = NULL;
+   if (lGetNumberOfElem(a->lirs_list) == 0) {
+      DRETURN(result);
+   } else {
+      const char* user = lGetString(a->job, JB_owner);
+      const char* project = lGetString(a->job, JB_project);
+      const char* pe = lGetString(a->job, JB_pe);
+      lListElem *lirs = NULL;
+      bool first = true;
+      dstring rule_name = DSTRING_INIT;
+      dstring rue_name = DSTRING_INIT;
 
-         for_each(limit, limit_list) {
-            const char *limit_name = lGetString(limit, LIRL_name);
+      for_each(lirs, a->lirs_list) {
+         lListElem *rule = NULL;
+         lListElem *global_host = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
+         lListElem *exec_host = host_list_locate(a->host_list, host);
 
-            lListElem *raw_centry = centry_list_locate(a->centry_list, limit_name);
-            lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
-            lListElem *job_centry = centry_list_locate(job_centry_list, limit_name);
+         /* ignore disabled rule sets */
+         if (!lGetBool(lirs, LIRS_enabled)) {
+            continue;
+         }
+         sge_dstring_clear(&rule_name);
+         rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
+         if (rule != NULL) {
+            lList *limit_list = lGetList(rule, LIR_limit);
+            lListElem *limit = NULL;
 
-            if (raw_centry == NULL) {
-               DPRINTF(("ignoring limit %s because not defined", limit_name));
-               continue;
-            } else {
-               DPRINTF(("checking limit %s\n", lGetString(raw_centry, CE_name)));
-            }
+            for_each(limit, limit_list) {
+               const char *limit_name = lGetString(limit, LIRL_name);
 
-            /* found a rule, now check limit */
-            if (lGetBool(raw_centry, CE_consumable)) {
+               lListElem *raw_centry = centry_list_locate(a->centry_list, limit_name);
+               lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
+               lListElem *job_centry = centry_list_locate(job_centry_list, limit_name);
 
-               limit_rule_get_rue_string(&rue_name, rule, user, project, host, queue, pe);
+               if (raw_centry == NULL) {
+                  DPRINTF(("ignoring limit %s because not defined", limit_name));
+                  continue;
+               } else {
+                  DPRINTF(("checking limit %s\n", lGetString(raw_centry, CE_name)));
+               }
 
-               if (limit_rule_set_dynamical_limit(limit, global_host, exec_host, a->centry_list)) {
-                  result = parallel_limit_slots_by_time(a, job_centry, &tslots, &tslots_qend, raw_centry, limit, rue_name);
-                  if (first) {
-                     first = false;
-                     *slots = tslots;
-                     *slots_qend = tslots_qend;
+               /* found a rule, now check limit */
+               if (lGetBool(raw_centry, CE_consumable)) {
+
+                  limit_rule_get_rue_string(&rue_name, rule, user, project, host, queue, pe);
+
+                  if (limit_rule_set_dynamical_limit(limit, global_host, exec_host, a->centry_list)) {
+                     result = parallel_limit_slots_by_time(a, job_centry, &tslots, &tslots_qend, raw_centry, limit, rue_name);
+                     if (first) {
+                        first = false;
+                        *slots = tslots;
+                        *slots_qend = tslots_qend;
+                     } else {
+                        *slots = MIN(*slots, tslots);
+                        *slots_qend = MIN(*slots_qend, tslots_qend);
+                     }
+                     if (result != DISPATCH_OK) {
+                        sge_dstring_free(&rule_name);
+                        sge_dstring_free(&rue_name);
+                        DRETURN(result);
+                     }
                   } else {
-                     *slots = MIN(*slots, tslots);
-                     *slots_qend = MIN(*slots_qend, tslots_qend);
-                  }
-                  if (result != DISPATCH_OK) {
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_JOBDYNAMICALLIMIT_SS, limit_name, sge_dstring_get_string(&rule_name));
                      sge_dstring_free(&rule_name);
-                     sge_dstring_free(&rue_name);
-                     DRETURN(result);
+                     DRETURN(DISPATCH_NEVER_CAT);
                   }
                } else {
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_JOBDYNAMICALLIMIT_SS, limit_name, sge_dstring_get_string(&rule_name));
-                  sge_dstring_free(&rule_name);
-                  DRETURN(DISPATCH_NEVER_CAT);
-               }
-            } else {
-               char availability_text[2048];
+                  char availability_text[2048];
 
-               lSetString(raw_centry, CE_stringval, lGetString(limit, LIRL_value));
-               if (compare_complexes(1, raw_centry, job_centry, availability_text, false, false) != 1) {
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNLIRS_SSS, queue, host, sge_dstring_get_string(&rule_name));
-                  sge_dstring_free(&rule_name);
-                  DRETURN(DISPATCH_NEVER_CAT);
+                  lSetString(raw_centry, CE_stringval, lGetString(limit, LIRL_value));
+                  if (compare_complexes(1, raw_centry, job_centry, availability_text, false, false) != 1) {
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNLIRS_SSS, queue, host, sge_dstring_get_string(&rule_name));
+                     sge_dstring_free(&rule_name);
+                     DRETURN(DISPATCH_NEVER_CAT);
+                  }
                }
             }
          }
       }
+      sge_dstring_free(&rue_name);
+      sge_dstring_free(&rule_name);
    }
-
-   sge_dstring_free(&rue_name);
-   sge_dstring_free(&rule_name);
 
    DRETURN(result);
 }
@@ -5917,8 +5936,6 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    attrname = lGetString(rep, CE_name);
    actual_el = lGetElemStr(actual_attr, RUE_name, attrname);
    ready_time = *start_time;
-
-   DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    /*
     * Consumables are treated futher below in schedule based mode 

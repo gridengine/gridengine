@@ -38,7 +38,7 @@
 #include "sge_qrefL.h"
 #include "sge_strL.h"
 #include "sge_userprjL.h"
-#include "sge_userprj.c"
+#include "sge_userprj.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"

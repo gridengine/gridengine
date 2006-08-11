@@ -109,7 +109,7 @@ job_get_duration(u_long32 *duration, const lListElem *jep);
 static void 
 prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
                            lList *pe_list, lList *host_list, lList *queue_list, 
-                           lList *centry_list, lList *lirs_list);
+                           lList *lirs_list, lList *centry_list, lList *acl_list, lList *hgroup_list);
 
 
 static void 
@@ -481,7 +481,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                                  *(splitted_job_lists[SPLIT_SUSPENDED]),
                                  lists->pe_list, lists->host_list, lists->queue_list, 
-                                 lists->centry_list, lists->lirs_list);
+                                 lists->lirs_list, lists->centry_list, lists->acl_list,
+                                 lists->hgrp_list);
 
       if (dis_queue_elem != NULL) {
          lDechainList(lists->queue_list, &(lists->dis_queue_list), dis_queue_elem);
@@ -1345,7 +1346,8 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
 
 static int 
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
-                         lList *host_list, lList *queue_list, lList *centry_list)
+                         lList *host_list, lList *queue_list, lList *lirs_list,
+                         lList *centry_list, lList *acl_list, lList *hgroup_list)
 {
    lListElem *jep, *ja_task;
    const char *pe_name;
@@ -1408,6 +1410,9 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.host_list = host_list;
          a.queue_list = queue_list;
          a.centry_list = centry_list;
+         a.lirs_list = lirs_list;
+         a.acl_list = acl_list;
+         a.hgrp_list = hgroup_list;
 
          DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
                   sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
@@ -1657,12 +1662,12 @@ static lListElem *newResourceElem(u_long32 time, double amount)
 *     MT-NOTE: prepare_resource_schedules() is not MT safe 
 *******************************************************************************/
 static void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
-   lList *pe_list, lList *host_list, lList *queue_list, lList *centry_list, lList *lirs_list)
+   lList *pe_list, lList *host_list, lList *queue_list, lList *lirs_list, lList *centry_list, lList *acl_list, lList *hgroup_list)
 {
    DENTER(TOP_LAYER, "prepare_resource_schedules");
 
-   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, centry_list);
-   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, centry_list);
+   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, lirs_list, centry_list, acl_list, hgroup_list);
+   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, lirs_list, centry_list, acl_list, hgroup_list);
    add_calendar_to_schedule(queue_list); 
 
 #ifdef SGE_LOCK_DEBUG /* just for information purposes... */

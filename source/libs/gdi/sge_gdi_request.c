@@ -63,6 +63,7 @@
 #endif
 #include "msg_common.h"
 #include "msg_gdilib.h"
+#include "gdi/version.h"
 
 static bool
 gdi_send_multi_async(lList **alpp, state_gdi_multi *state);

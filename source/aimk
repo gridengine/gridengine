@@ -1229,6 +1229,7 @@ case FREEBSD_*:
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -export-dynamic" 
+   set AUTHLIBS = "-lcrypt -lpam"
    
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"

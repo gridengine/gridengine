@@ -356,6 +356,8 @@ bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool
                continue;
             }
 
+            lSetString(limit, LIRL_name, lGetString(centry, CE_name));
+
             if (strchr(strval, '$') != NULL) {
                if (lGetUlong(rule, LIR_level) == LIR_HOST || lGetUlong(rule, LIR_level) == LIR_QUEUEI) {
                   /* the value is a dynamical limit */
@@ -859,7 +861,6 @@ lirs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slo
 
       rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage);
       if(rue_elem == NULL) {
-         DPRINTF(("creating new rue_elem\n"));
          rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage, RUE_Type);
          /* RUE_utilized_now is implicitly set to zero */
       }

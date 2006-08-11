@@ -62,6 +62,7 @@
 #include "sge_qinstance.h"
 #include "sge_pe.h"
 #include "sge_report.h"
+#include "gdi/version.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"

@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <fnmatch.h>
 
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_object.h"
@@ -45,6 +46,7 @@
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
+#include "sge_string.h"
 
 static const char* userset_types[] = {
    "ACL",   /* US_ACL   */
@@ -350,34 +352,48 @@ userset_list_append_to_dstring(const lList *this_list, dstring *string)
 int sge_contained_in_access_list(const char *user, const char *group, 
                                  const lListElem *acl, lList **alpp) 
 {
-   const char *entry_name = NULL;
-   lListElem *acl_entry = NULL;
-   
-   DENTER(TOP_LAYER,"sge_contained_in_access_list");
+   bool found = false;
+   lList *user_list = lGetList(acl, US_entries);
 
-   for_each (acl_entry, lGetList(acl, US_entries)) {
-      entry_name = lGetString(acl_entry,UE_name);
-      if (!entry_name) {
-          continue;
-      }    
-      if (entry_name[0] == '@') {
-         if (group && !strcmp(&entry_name[1], group)) {
-            if (alpp) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS, group, lGetString(acl, US_name)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+   DENTER(TOP_LAYER,"sge_contained_in_access_list");
+   if (group != NULL) {
+      dstring group_entry = DSTRING_INIT;
+
+      sge_dstring_sprintf(&group_entry, "@%s", group);
+      if (lGetElemStr(user_list, UE_name, sge_dstring_get_string(&group_entry)) != NULL) {
+         found = true;
+      } else if (sge_is_pattern(group)) {
+         lListElem *acl_entry; 
+         const char *entry_name;
+         for_each(acl_entry, user_list) {
+            entry_name = lGetString(acl_entry, UE_name);
+            if (entry_name != NULL && fnmatch(sge_dstring_get_string(&group_entry), entry_name, 0) == 0) {
+               found = true;
+               break;
             }
-            DRETURN(1);
          }
-      } 
-      else {
-         if (user && !strcmp(entry_name, user)) {
-            if (alpp) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS, user, lGetString(acl, US_name)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      }
+      sge_dstring_free(&group_entry);
+   }
+   if (found == false && user != NULL) {
+      if (lGetElemStr(user_list, UE_name, user) != NULL) {
+         found = true;            
+      } else if (sge_is_pattern(user)) {
+         lListElem *acl_entry; 
+         const char *entry_name;
+         for_each(acl_entry, user_list) {
+            entry_name = lGetString(acl_entry, UE_name);
+            if (entry_name != NULL && fnmatch(user, entry_name, 0) == 0) {
+               found = true;
+               break;
             }
-            DRETURN(1);
          }
       }
    }
+
+   if (found) {
+      DRETURN(1);
+   }
+
    DRETURN(0);
 }

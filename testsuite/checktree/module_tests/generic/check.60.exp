@@ -78,6 +78,9 @@ lappend generic_module_tests "test_cull_pack"
 lappend generic_module_tests "test_enumeration"
 lappend generic_module_tests "test_sge_calendar"
 lappend generic_module_tests "test_sge_object"
+lappend generic_module_tests "test_resource_utilization"
+lappend generic_module_tests "test_ff_cl"
+lappend generic_module_tests "test_sge_limit_rule"
 
 proc generic_module_tests_init_level {} {
    global ts_config

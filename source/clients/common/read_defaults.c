@@ -50,9 +50,6 @@
 #include "parse_qsub.h"
 #include "read_defaults.h"
 
-
-static char *get_root_defaults_file_path (void);
-static char *get_user_home_defaults_file_path (lList **answer_list);
 static char *get_cwd_defaults_file_path (lList **answer_list);
 static void append_opts_from_default_files (lList **pcmdline, 
                                      lList **answer_list,
@@ -96,19 +93,25 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
                                              lList **answer_list,
                                              char **envp) 
 {
+   dstring req_file = DSTRING_INIT;
    char *def_files[3 + 1];
-   
+
+   const char *user = uti_state_get_user_name();
+   const char *cell_root = path_state_get_cell_root();
+
    DENTER(TOP_LAYER, "opt_list_append_opts_from_default_files");
 
    lFreeList(answer_list);
 
    /* the sge root defaults file */
-   def_files[0] = get_root_defaults_file_path();
+   get_root_file_path(&req_file, cell_root, SGE_COMMON_DEF_REQ_FILE);
+   def_files[0] = strdup(sge_dstring_get_string(&req_file));
 
    /*
     * the defaults file in the user's home directory
     */
-   def_files[1] = get_user_home_defaults_file_path(answer_list);
+   get_user_home_file_path(&req_file, SGE_HOME_DEF_REQ_FILE, user, answer_list);
+   def_files[1] = strdup(sge_dstring_get_string(&req_file));
 
    /*
     * the defaults file in the current working directory
@@ -121,55 +124,30 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-   append_opts_from_default_files(pcmdline,  answer_list, envp, def_files); /* MT-NOTE !!!! */
-    
+   append_opts_from_default_files(pcmdline, answer_list, envp, def_files); /* MT-NOTE !!!! */
+
+   sge_dstring_free(&req_file);
+
    DEXIT;
    return;
 }
 
-/****** sge/opt/get_root_defaults_file_path() **********************************
+/****** read_defaults/get_user_home_file_path() *****************************
 *  NAME
-*     get_root_defaults_file_path() -- find root default file path
+*     get_user_home_file_path() -- get absolut path name to file in user
+*                                  home
 *
 *  SYNOPSIS
-*     char *get_root_defaults_file_path () 
+*     char *get_user_home_file_path (lList **answer_list) 
 *
 *  FUNCTION
-*     This function returns the path of the root defaults file.
-*
-*  OUTPUTS
-*     char * - root defaults file name with absolute path
-*
-*  NOTES
-*     MT-NOTE: get_root_defaults_file_path() is MT safe
-*******************************************************************************/
-static char *get_root_defaults_file_path () {
-   char *file = NULL;
-   
-   DENTER (TOP_LAYER, "get_root_defaults_file_path");
-   
-   file = (char *)malloc(strlen(path_state_get_cell_root()) +
-                       strlen(SGE_COMMON_DEF_REQ_FILE) + 3);
-   
-   sprintf (file, "%s/%s", path_state_get_cell_root(),
-            SGE_COMMON_DEF_REQ_FILE);
-   
-   DEXIT;
-   return file;
-}
-
-/****** sge/opt/get_user_home_defaults_file_path() *****************************
-*  NAME
-*     get_user_home_defaults_file_path() -- find user default file path
-*
-*  SYNOPSIS
-*     char *get_user_home_defaults_file_path (lList **answer_list) 
-*
-*  FUNCTION
-*     This function returns the path to the defaults file in the user's home
+*     This function returns the path to the file in the user's home
 *     directory
 *
 *  INPUTS
+*     dstring              - computed absoult filename
+*     const char *filename - file name
+*     const char *user     - user name
 *     lList* - answer list, AN_Type or NULL if everything ok
 *        possible errors:
 *           STATUS_ENOSUCHUSER - could not retrieve passwd info on me.user_name
@@ -181,52 +159,30 @@ static char *get_root_defaults_file_path () {
 *                                reading from existing file, (is just a warning)
 *                                plus all other error stati returned by 
 *                                parse_script_file, see there
-*     char * - user defaults file name with absolute path
 *
-*     MT-NOTE: get_user_home_defaults_file_path() is MT safe
+*  RETURNS
+*     bool - true or false
+*
+*     MT-NOTE: get_user_home_file_path() is MT safe
 *******************************************************************************/
-static char *get_user_home_defaults_file_path(lList **answer_list)
+bool get_user_home_file_path(dstring *absolut_filename, const char *filename, const char *user, lList **answer_list)
 {
-   struct passwd *pwd;
-   char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
+   bool ret = false;
 
-   char *file = NULL;
-   
-   DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
+   DENTER (TOP_LAYER, "get_user_home_file_path");
 
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
-   if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
-      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
-                      ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
-   }
-   if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, uti_state_get_user_name());
-      answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
+   if (absolut_filename != NULL && filename != NULL) {
+
+      sge_dstring_clear(absolut_filename);
+
+      if (get_user_home(absolut_filename, user, answer_list)) {
+         sge_dstring_append(absolut_filename, "/");
+         sge_dstring_append(absolut_filename, filename); 
+         ret = true;
+      }
    }
 
-   file = (char *)malloc(strlen(pwd->pw_dir) + 
-                         strlen(SGE_HOME_DEF_REQ_FILE) + 2);
-   strcpy(file, pwd->pw_dir);
-   if (*file && (file[strlen(file) - 1] != '/')) {
-      strcat(file, "/");
-   }
-   strcat(file, SGE_HOME_DEF_REQ_FILE);
-
-   DEXIT;
-   return file;
+   DRETURN(ret);
 }
 
 /****** sge/opt/get_cwd_defaults_file_path() ***********************************
@@ -736,3 +692,97 @@ bool opt_list_is_X_true(lList *opts, const char *option)
    return ret;
 }
 
+/****** read_defaults/get_root_file_path() *************************************
+*  NAME
+*     get_root_file_path() -- creates absolute filename for file in SGE_ROOT
+*
+*  SYNOPSIS
+*     const char* get_root_file_path(dstring *absolut_filename, const char 
+*     *cell_root, const char *filename) 
+*
+*  FUNCTION
+*     Sets the absolut filename of a file in SGE_ROOT in the given dstring
+*
+*  INPUTS
+*     dstring *absolut_filename - created absolut filename
+*     const char *cell_root     - sge root patch
+*     const char *filename      - file name
+*
+*  RESULT
+*     const char* - pointer to filename in absolut_filename
+*
+*  NOTES
+*     MT-NOTE: get_root_file_path() is MT safe 
+*
+*******************************************************************************/
+const char *get_root_file_path(dstring *absolut_filename, const char *cell_root, const char *filename)
+{
+   DENTER (TOP_LAYER, "get_root_file_path");
+
+   sge_dstring_sprintf(absolut_filename, "%s/%s", cell_root, filename);
+   DRETURN(sge_dstring_get_string(absolut_filename));
+}
+
+/****** read_defaults/get_user_home() ******************************************
+*  NAME
+*     get_user_home() -- get absoult filename in users home dir
+*
+*  SYNOPSIS
+*     bool get_user_home(dstring *home_dir, const char *user, lList 
+*     **answer_list) 
+*
+*  FUNCTION
+*     Sets the absolut filename of a file in the users home directory
+*
+*  INPUTS
+*     dstring *home_dir   - created absolut filename
+*     const char *user    - user
+*     lList **answer_list - answer list
+*
+*  RESULT
+*     bool - true on success
+*            false on error
+*
+*  NOTES
+*     MT-NOTE: get_user_home() is MT safe 
+*
+*******************************************************************************/
+bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
+{
+   bool ret = true;
+   struct passwd *pwd;
+#ifdef HAS_GETPWNAM_R
+   struct passwd pw_struct;
+   char buffer[2048];
+#endif
+
+   DENTER(TOP_LAYER, "get_user_home");
+
+   if (home_dir != NULL) {
+
+#ifdef HAS_GETPWNAM_R
+      pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
+#else
+      pwd = sge_getpwnam(user);
+#endif
+      if (!pwd) {
+         answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
+                         ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S, user);
+         ret = false;
+      }
+      if (ret && !pwd->pw_dir) {
+         answer_list_add_sprintf(answer_list, STATUS_EDISK, ANSWER_QUALITY_ERROR,
+                                 MSG_USER_NOHOMEDIRFORUSERX_S, user);
+         ret = false;
+      } 
+      if (ret) {
+         sge_dstring_sprintf(home_dir, "%s", pwd->pw_dir);
+      }
+
+   } else {
+      /* should never happen */
+      ret = false;
+   }
+
+  DRETURN(ret); 
+}

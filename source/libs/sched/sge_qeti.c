@@ -204,18 +204,15 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    return 0;
 }
 
-sge_qeti_t *sge_qeti_allocate2(lListElem *cr)
+sge_qeti_t *sge_qeti_allocate2(lList *cr_list)
 {
    sge_qeti_t *iter;
-   lList *rue_list;
 
    if (!(iter = calloc(1, sizeof(sge_qeti_t)))) {
       return NULL;
    }
 
-   rue_list = lCreateList("", lGetElemDescr(cr));
-   lAppendElem(rue_list, cr);
-   sge_qeti_list_add(&iter->cr_refs_pe, "slots", rue_list, 10, true);
+   sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, cr_list, 10, true);
    return iter;
 }
 

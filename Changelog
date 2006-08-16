@@ -1,3 +1,11 @@
+RD-2006-08-16-0: Enhancem:  - rewrite of limitation rule matching code to handle
+                              all kind of wildcard searches
+                            - added module test for limitation rule matching code
+                            - added module test for resource utilization
+                            - added generic functions for qlimit/qsub/qstat request files
+                 Changed:   qlimit, qstat, qsub, qmaster, schedd
+                 Review:    AA
+
 HP-2006-08-11-1: Enhancem:  Improved starting and stopping of 
                             N1 Grid Engine Helper Service during test.
                  Changed:   checktree/system_tests/windows/gui/check.60.exp

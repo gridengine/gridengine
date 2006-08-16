@@ -40,6 +40,9 @@ QLIMIT_SRC = qlimit.c \
              qlimit_output.c
 
 QLIMIT_ADD_SRC = \
+               parse_job_cull.c \
+               parse_qsub.c \
+               read_defaults.c \
                qstat_printing.c \
                show_job.c \
                sge_host.c \

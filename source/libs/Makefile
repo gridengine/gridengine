@@ -56,7 +56,7 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all rmonlib schedlib utilib lcklib drmaa_all comm_all juti_all $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all rmonlib schedlib_all utilib lcklib drmaa_all comm_all juti_all $(SGELIB)
 
 libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean drmaa_clean juti_clean $(SGELIB)_clean
 

@@ -204,8 +204,6 @@ static int xml_report_resource_value(report_handler_t* handler, const char* reso
    return QLIMIT_SUCCESS;
 }
 
-static const char *get_root_qlimit_file_path(dstring *file_path, const char *cell_root);
-static const char *get_home_qlimit_file_path(dstring *file_path, const char *user, lList **answer_list);
 static bool sge_parse_from_file_qlimit(const char *file, lList **ppcmdline, lList **alpp);
 static bool sge_parse_cmdline_qlimit(char **argv, lList **ppcmdline, lList **alpp);
 static bool sge_parse_qlimit(lList **ppcmdline, lList **host_list, lList **resource_match_list,
@@ -281,9 +279,12 @@ int main(int argc, char **argv)
 #endif
 
       /* arguments from SGE_ROOT/common/sge_qlimit file */
-      if (sge_parse_from_file_qlimit(get_root_qlimit_file_path(&file, cell_root), &pcmdline, &alp) == true) {
+      get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QLIMIT_FILE);
+      if (sge_parse_from_file_qlimit(sge_dstring_get_string(&file), &pcmdline, &alp) == true) {
          /* arguments from $HOME/.qlimit file */
-         sge_parse_from_file_qlimit(get_home_qlimit_file_path(&file, user, &alp), &pcmdline, &alp);
+         if (get_user_home_file_path(&file, SGE_HOME_DEF_QLIMIT_FILE, user, &alp)) {
+            sge_parse_from_file_qlimit(sge_dstring_get_string(&file), &pcmdline, &alp);
+         }
       }
       sge_dstring_free(&file); 
 
@@ -392,97 +393,6 @@ qlimit_usage(FILE *fp)
    fprintf(fp, "  [-xml]                     %s\n", MSG_COMMON_xml_OPT_USAGE);
 
    DRETURN(true);
-}
-
-/****** qlimit/get_root_qlimit_file_path() *************************************
-*  NAME
-*     get_root_qlimit_file_path() -- get path of sge_qlimit file
-*
-*  SYNOPSIS
-*     static const char *get_root_qlimit_file_path(dstring *file_path) 
-*
-*  FUNCTION
-*     saves the path to the global sge_qlimit file in an dstring
-*
-*  INPUTS
-*     dstring *file_path - path to sge_qlimit file
-*
-*  RESULT
-*     static const char * - path to sge_qlimit file
-*
-*  NOTES
-*     MT-NOTE: get_root_qlimit_file_path() is MT safe 
-*
-*******************************************************************************/
-static const char *
-get_root_qlimit_file_path(dstring *file_path, const char *cell_root) 
-{
-   const char *ret;
-
-   DENTER (TOP_LAYER, "get_root_qlimit_file_path");
-   sge_dstring_sprintf(file_path, "%s/%s", cell_root,
-                        SGE_COMMON_DEF_QLIMIT_FILE);
-   ret = sge_dstring_get_string(file_path);
-
-   DRETURN(ret);
-}
-
-/****** qlimit/get_home_qlimit_file_path() *************************************
-*  NAME
-*     get_home_qlimit_file_path() -- get path to user defined .qlimit file
-*
-*  SYNOPSIS
-*     static const char * get_home_qlimit_file_path(dstring *file_path, lList 
-*     **answer_list) 
-*
-*  FUNCTION
-*     saves the path to the user defined qlimit file in an dstring
-*
-*  INPUTS
-*     dstring *file_path  - path to .qlimit file
-*     lList **answer_list - answer list
-*
-*  RESULT
-*     static const char * - path to .qlimit file
-*
-*  NOTES
-*     MT-NOTE: get_home_qlimit_file_path() is MT safe 
-*
-*******************************************************************************/
-static const char *
-get_home_qlimit_file_path(dstring *file_path, const char *user, lList **answer_list) 
-{
-   struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
-
-   DENTER (TOP_LAYER, "get_home_qlimit_file_path");
-
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(user, &pw_struct, 
-                        buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(user);
-#endif
-  if (!pwd) {
-      answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
-                              ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S,
-                              user);
-      DRETURN(NULL);
-   }
-   if (!pwd->pw_dir) {
-      answer_list_add_sprintf(answer_list, STATUS_EDISK, ANSWER_QUALITY_ERROR,
-                              MSG_USER_NOHOMEDIRFORUSERX_S, 
-                              user);
-      DRETURN(NULL);
-   }
-
-   sge_dstring_sprintf(file_path, "%s/%s", pwd->pw_dir,
-                        SGE_HOME_DEF_QLIMIT_FILE);
-
-   DRETURN(sge_dstring_get_string(file_path));
 }
 
 /****** qlimit/sge_parse_from_file_qlimit() ************************************

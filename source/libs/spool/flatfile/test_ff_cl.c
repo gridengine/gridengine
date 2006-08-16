@@ -1807,17 +1807,8 @@ static int CQ_test(void) {
    
    lSetString(ep, CQ_name, "Test_Name");
    
-   lp = lCreateList("Host List", HR_Type);
-   
-   ep2 = lCreateElem(HR_Type);
-   lSetHost(ep2, HR_name, "Test_Name2");
-   lAppendElem(lp, ep2);
-   
-   ep2 = lCreateElem(HR_Type);
-   lSetHost(ep2, HR_name, "Test_Name3");
-   lAppendElem(lp, ep2);
-   
-   lSetList(ep, CQ_hostlist, lp);
+   lAddSubHost(ep, HR_name, "Test_Name2", CQ_hostlist, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name3", CQ_hostlist, HR_Type);
 
    lp = lCreateList("Seq No. List", AULNG_Type);
    
@@ -2779,29 +2770,15 @@ static int HGRP_test(void)
 {
    int ret = 0;
    lListElem *ep = NULL;
-   lListElem *ep2 = NULL;
-   lList * lp = NULL;
    lList * alp = NULL;
    const char *file1 = NULL, *file2 = NULL;
    
    ep = lCreateElem(HGRP_Type);
    lSetHost(ep, HGRP_name, "Test_Name");
-   
-   lp = lCreateList("Host List", HR_Type);
-   
-   ep2 = lCreateElem(HR_Type);
-   lSetHost(ep2, HR_name, "Test_Name2");
-   lAppendElem(lp, ep2);
-   
-   ep2 = lCreateElem(HR_Type);
-   lSetHost(ep2, HR_name, "Test_Name3");
-   lAppendElem(lp, ep2);
-   
-   ep2 = lCreateElem(HR_Type);
-   lSetHost(ep2, HR_name, "Test_Name4");
-   lAppendElem(lp, ep2);
-   
-   lSetList(ep, HGRP_host_list, lp);
+  
+   lAddSubHost(ep, HR_name, "Test_Name2", HGRP_host_list, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name3", HGRP_host_list, HR_Type);
+   lAddSubHost(ep, HR_name, "Test_Name4", HGRP_host_list, HR_Type);
    
    printf("HGRP: No Args\n");   
    

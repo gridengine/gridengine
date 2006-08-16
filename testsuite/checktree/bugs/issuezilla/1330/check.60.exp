@@ -107,6 +107,7 @@ lappend check_functions "setup_schedconf"
 lappend check_functions "setup_default_calendars"
 lappend check_functions "setup_check_user_permissions"
 lappend check_functions "setup_check_messages_files"
+lappend check_functions "setup_win_users"
 lappend check_functions "setup_inhouse_cluster"
 
 global Autoinstall_test_test_hosts

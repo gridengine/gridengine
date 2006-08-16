@@ -347,6 +347,6 @@
 #define MSG_LIMITRULE_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
 #define MSG_LIMITRULE_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
 #define MSG_LIMITRULE_NORULES                    _MESSAGE(64377, _("limitation rule set has no rules"))
-#define MSG_LIMITRULE_NONAME                     _MESSAGE(64377, _("limitation rule set has no name"))
+#define MSG_LIMITRULE_NONAME                     _MESSAGE(64378, _("limitation rule set has no name"))
 
 #endif /* __MSG_SGEOBJLIB_H */

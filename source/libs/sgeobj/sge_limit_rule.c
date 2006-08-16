@@ -53,8 +53,9 @@
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_hrefL.h"
 #include "sgeobj/sge_host.h"
+#include "uti/sge_string.h"
 
-
+static bool lirs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list);
 
 /****** sge_limit_rule/LIRF_object_parse_from_string() *************************
 *  NAME
@@ -883,6 +884,213 @@ lirs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slo
    DRETURN(mods);
 }
 
+/****** sge_limit_rule/lirs_match_user_host_scope() ****************************
+*  NAME
+*     lirs_match_user_host_scope() -- match user or host scope
+*
+*  SYNOPSIS
+*     static bool lirs_match_user_host_scope(lList *scope, int filter_type, 
+*     const char *value, lList *master_userset_list, lList *master_hgroup_list) 
+*
+*  FUNCTION
+*     This function verifies a user or host scope. The function allows for every
+*     scope entry and for the value a wildcard definition. Hostgroups and Usergroups
+*     are resolved and matched against the value
+*     
+*
+*  INPUTS
+*     lList *scope               - Scope to match (ST_Type)
+*     int filter_type            - filter type (FILTER_USERS or FILTER_HOSTS)
+*     const char *value          - value to match
+*     lList *master_userset_list - master userset list (US_Type)
+*     lList *master_hgroup_list  - master hostgroup list (HG_Type)
+*
+*  RESULT
+*     static bool - true, if value was found in scope 
+*                   false, if value was not found in scope
+*
+*  NOTES
+*     MT-NOTE: lirs_match_user_host_scope() is MT safe 
+*
+*  SEE ALSO
+*     sge_limit_rule/limit_rule_filter_match()
+*******************************************************************************/
+static bool lirs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list) {
+
+   bool found = false;
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "lirs_match_user_host_scope");
+
+   if (!sge_is_pattern(value)) {
+      if (lGetElemStr(scope, ST_name, value) != NULL) {
+         found = true;
+      } else {
+         for_each(ep, scope) {
+            lListElem *group_ep;
+            const char *cp = lGetString(ep, ST_name);
+            const char *group_name = NULL;
+            const char *query = NULL;
+
+            if (fnmatch(cp, value, 0) == 0) {
+               found = true;
+               break;
+            }
+
+            if (!is_hgroup_name(value) && is_hgroup_name(cp)) {
+               group_name = cp;
+               query = value;
+            } else if (is_hgroup_name(value) && !is_hgroup_name(cp)) {
+               group_name = value;
+               query = cp;
+            }
+
+            if (group_name != NULL && query != NULL) {
+               DPRINTF(("group_name=%s, query=%s\n", group_name, query));
+               if (filter_type == FILTER_USERS) {
+                  /* the userset name does not contain the preattached \@ sign */
+                  group_name++; 
+                  if (!sge_is_pattern(group_name)) {
+                     if ((group_ep = userset_list_locate(master_userset_list, group_name)) != NULL) {
+                        if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
+                           found = true;
+                           break;
+                        }
+                     }
+                  } else {
+                     for_each(group_ep, master_userset_list) {
+                        if (fnmatch(group_name, lGetString(group_ep, US_name), 0) == 0) {
+                           if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
+                              found = true;
+                              break;
+                           }
+                        }
+                     }
+                     if (found == true) {
+                        break;
+                     }
+                  }
+               } else { /* FILTER_HOSTS */
+                  lListElem *hgroup = NULL;
+                  lList *host_list = NULL;
+                  if (!sge_is_pattern(group_name)) {
+                     if ((hgroup = hgroup_list_locate(master_hgroup_list, group_name))) { 
+                        hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
+                        if (host_list != NULL && lGetElemHost(host_list, HR_name, query) != NULL) {
+                           lFreeList(&host_list);
+                           found = true;
+                           break;
+                        } else if (sge_is_pattern(query)) {
+                           lListElem *host_ep;
+                           for_each(host_ep, host_list) {
+                              if (fnmatch(query, lGetHost(host_ep, HR_name), 0) == 0) {
+                                 lFreeList(&host_list);
+                                 found = true;
+                                 break;
+                              }
+                           }
+                           if (found == true) {
+                              break;
+                           }
+                        }
+                        lFreeList(&host_list);
+                     }
+                  } else {
+                     for_each(group_ep, master_hgroup_list) {
+                        if (fnmatch(group_name, lGetHost(group_ep, HGRP_name), 0) == 0) {
+                           hgroup_find_all_references(group_ep, NULL, master_hgroup_list, &host_list, NULL);
+                           if (host_list != NULL && lGetElemHost(host_list, HR_name, query) != NULL) {
+                              lFreeList(&host_list);
+                              found = true;
+                              break;
+                           } else if (sge_is_pattern(query)) {
+                              lListElem *host_ep;
+                              for_each(host_ep, host_list) {
+                                 if (fnmatch(query, lGetHost(host_ep, HR_name), 0) == 0) {
+                                    lFreeList(&host_list);
+                                    found = true;
+                                    break;
+                                 }
+                              }
+                              if (found == true) {
+                                 break;
+                              }
+                           }
+                           lFreeList(&host_list);
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+   } else {
+      for_each(ep, scope) {
+         const char *cp = lGetString(ep, ST_name);
+         const char *group_name = NULL;
+         const char *query = NULL;
+
+         if (fnmatch(value, cp, 0) == 0) {
+            found = true;
+            break;
+         }
+         if (sge_is_pattern(cp) && (fnmatch(cp, value, 0) == 0)) {
+            found = true;
+            break;
+         }
+         if (!is_hgroup_name(value) && is_hgroup_name(cp)) {
+            group_name = cp;
+            query = value;
+         } else if (is_hgroup_name(value) && !is_hgroup_name(cp)) {
+            group_name = value;
+            query = cp;
+         }
+
+         if (group_name != NULL && query != NULL) {
+            lListElem *group_ep;
+            DPRINTF(("group_name=%s, query=%s\n", group_name, query));
+            if (filter_type == FILTER_USERS) {
+               /* the userset name does not contain the preattached \@ sign */
+               group_name++;
+               for_each(group_ep, master_userset_list) {
+                  if (fnmatch(group_name, lGetString(group_ep, US_name), 0) == 0) {
+                     if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
+                        found = true;
+                        break;
+                     }
+                  }
+               }
+               if (found == true) {
+                  break;
+               }
+            } else {
+               lList *host_list = NULL;
+               for_each(group_ep, master_hgroup_list) {
+                  if (fnmatch(group_name, lGetHost(group_ep, HGRP_name), 0) == 0) {
+                     lListElem *host_ep;
+                     hgroup_find_all_references(group_ep, NULL, master_hgroup_list, &host_list, NULL);
+                     for_each(host_ep, host_list) {
+                        if (fnmatch(query, lGetHost(host_ep, HR_name), 0) == 0) {
+                           found = true;
+                           break;
+                        }
+                     }
+                     lFreeList(&host_list);
+                     if (found == true) {
+                        break;
+                     }
+                  }
+               }
+               if (found == true) {
+                  break;
+               }
+            }
+         }
+      }
+   }
+   DRETURN(found);
+}
+
 /****** sge_limit_rule/lirs_is_matching_rule() *********************************
 *  NAME
 *     lirs_is_matching_rule() -- matches a rule with the filter touples
@@ -990,166 +1198,11 @@ limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, l
          case FILTER_HOSTS:
          {  
             DPRINTF(("matching users or hosts with %s\n", value));
-            for_each(ep, xscope) {
-               const char *cp = lGetString(ep, ST_name);
-
-               if (is_hgroup_name(cp)) { /* acls have the same differentiator '@' like hostgroups */
-
-                  if (strcmp(cp, "@*") == 0) {
-                     ret = false;
-                     break;
-                  }
-
-                  if (filter_type == FILTER_USERS) {
-                     /* match ACL */
-                     lListElem *ugroup = NULL;
-
-                     /* the userset name does not contain the preattached \@ sign */
-                     cp++; 
-                     DPRINTF(("xscope: strcmp(%s,%s) - ", cp, value));
-
-                     if ((ugroup = userset_list_locate(master_userset_list, cp)) != NULL) {
-                        if (sge_contained_in_access_list(value, NULL, ugroup, NULL) == 1) {
-                           ret = false;
-                           break;
-                        }
-                     }
-                  } else {
-                     /* match hostgroup */
-                     lListElem *hgroup = NULL;
-
-                     if ((hgroup = hgroup_list_locate(master_hgroup_list, cp)) != NULL) {
-                        lList *host_list = NULL;
-                        hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
-                        if (host_list != NULL && lGetElemHost(host_list, HR_name, value) != NULL) {
-                           lFreeList(&host_list);
-                           ret = false;
-                           break;
-                        }
-                        lFreeList(&host_list);
-                     }
-                  }
-               } else {
-                  if (is_hgroup_name(value)) {
-                     /* the given value is a hostgroup or userset. Can only happen when called by qlimit */
-                     if (filter_type == FILTER_USERS) {
-                        /* match ACL */
-                        lListElem *ugroup = NULL;
-
-                        /* the userset name does not contain the preattached \@ sign */
-                        value++; 
-
-                        if ((ugroup = userset_list_locate(master_userset_list, value)) != NULL) {
-                           if (sge_contained_in_access_list(cp, NULL, ugroup, NULL) == 1) {
-                              ret = false;
-                              break;
-                           }
-                        }
-                     } else {
-                        /* match hostgroup */
-                        lListElem *hgroup = NULL;
-
-                        if ((hgroup = hgroup_list_locate(master_hgroup_list, value)) != NULL) {
-                           lList *host_list = NULL;
-                           hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
-                           if (host_list != NULL && lGetElemHost(host_list, HR_name, cp) != NULL) {
-                              lFreeList(&host_list);
-                              ret = false;
-                              break;
-                           }
-                           lFreeList(&host_list);
-                        }
-                     }
-                  } else {
-                     if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value, cp, 0) == 0)) {
-                        ret = false;
-                        break;
-                     }
-                  }
-               }
-            }
+            /* inverse logic because of xscope */
+            ret = lirs_match_user_host_scope(xscope, filter_type, value, master_userset_list, master_hgroup_list) ? false: true;
             if (ret == true) { 
                bool found = false;
-               for_each(ep, scope) {
-                  const char *cp = lGetString(ep, ST_name);
-
-                  if (is_hgroup_name(cp)) {
-                     if (strcmp(cp, "@*") == 0) {
-                        found = true;
-                        break;
-                     }
-                     if (filter_type == FILTER_USERS) {
-                        /* match ACL */
-                        lListElem *ugroup = NULL;
-
-                        cp++;
-                        DPRINTF(("scope: strcmp(%s,%s) - ", cp, value));
-                        if ((ugroup = userset_list_locate(master_userset_list, cp)) != NULL) {
-                           if (sge_contained_in_access_list(value, NULL, ugroup, NULL) == 1) {
-                              found = true;
-                              break;
-                           }
-                        }
-                     } else {
-                        /* match hostgroup */
-                        lListElem *hgroup = NULL;
-
-                        if ((hgroup = hgroup_list_locate(master_hgroup_list, cp)) != NULL) {
-                           lList *host_list = NULL;
-
-                           hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
-                           if (host_list != NULL && lGetElemHost(host_list, HR_name, value) != NULL) {
-                              lFreeList(&host_list);
-                              found = true;
-                              break;
-                           }
-                           lFreeList(&host_list);
-                        }
-                     }
-
-                  } else {
-                     if (strcmp(cp, "*") == 0) {
-                        found = true;
-                        break;
-                     }
-                     if (is_hgroup_name(value)) {
-                        /* the given value is a hostgroup or userset. Can only happen when called by qlimit */
-                        if (filter_type == FILTER_USERS) {
-                           /* match ACL */
-                           lListElem *ugroup = NULL;
-
-                           /* the userset name does not contain the preattached \@ sign */
-                           value++; 
-
-                           if ((ugroup = userset_list_locate(master_userset_list, value)) != NULL) {
-                              if (sge_contained_in_access_list(cp, NULL, ugroup, NULL) == 1) {
-                                 found = true;
-                                 break;
-                              }
-                           }
-                        } else {
-                           /* match hostgroup */
-                           lListElem *hgroup = NULL;
-
-                           if ((hgroup = hgroup_list_locate(master_hgroup_list, value)) != NULL) {
-                              lList *host_list = NULL;
-                              hgroup_find_all_references(hgroup, NULL, master_hgroup_list, &host_list, NULL);
-                              if (host_list != NULL && lGetElemHost(host_list, HR_name, cp) != NULL) {
-                                 lFreeList(&host_list);
-                                 found = true;
-                                 break;
-                              }
-                              lFreeList(&host_list);
-                           }
-                        }
-                     } else {
-                        if ((fnmatch(cp, value, 0) == 0) || (fnmatch(value, cp, 0) == 0)) {
-                           found = true;
-                           break;
-                        }
-                     }
-                  }
-               }
+               found = lirs_match_user_host_scope(scope, filter_type, value, master_userset_list, master_hgroup_list);
                if (scope != NULL && found == false) {
                   ret = false;
                }
@@ -1160,31 +1213,39 @@ limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, l
          case FILTER_PES:
          case FILTER_QUEUES:
             DPRINTF(("matching projects, pes or queues with %s\n", value? value: "NULL"));
-            for_each(ep, xscope) {
-               const char *cp = lGetString(ep, ST_name);
-               if (value == NULL || (strcmp(value, "*") == 0)) {
-                  break;
+            if (lGetElemStr(xscope, ST_name, value) != NULL) {
+               ret = false;
+            } else {
+               for_each(ep, xscope) {
+                  const char *cp = lGetString(ep, ST_name);
+                  if (value == NULL || (strcmp(value, "*") == 0)) {
+                     break;
+                  }
+                  DPRINTF(("xscope: strcmp(%s,%s)\n", cp, value));
+                  if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
+                     DPRINTF(("match\n"));
+                     ret = false;
+                     break;
+                  }
+                  DPRINTF(("no match\n"));
                }
-               DPRINTF(("xscope: strcmp(%s,%s)\n", cp, value));
-               if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
-                  DPRINTF(("match\n"));
-                  ret = false;
-                  break;
-               }
-               DPRINTF(("no match\n"));
             }
             if (ret != false) { 
                bool found = false;
-               for_each(ep, scope) {
-                  const char *cp = lGetString(ep, ST_name);
+               if (lGetElemStr(scope, ST_name, value) != NULL) {
+                  found = true;
+               } else {
+                  for_each(ep, scope) {
+                     const char *cp = lGetString(ep, ST_name);
 
-                  if (value == NULL) {
-                     break;
-                  }
-                  DPRINTF(("scope: strcmp(%s,%s)\n", cp, value));
-                  if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
-                     found = true;
-                     break;
+                     if (value == NULL) {
+                        break;
+                     }
+                     DPRINTF(("scope: strcmp(%s,%s)\n", cp, value));
+                     if ((strcmp(cp, "*") == 0) || (fnmatch(cp, value, 0) == 0) || (fnmatch(value,cp, 0) == 0)) {
+                        found = true;
+                        break;
+                     }
                   }
                }
                if (scope != NULL && found == false) {

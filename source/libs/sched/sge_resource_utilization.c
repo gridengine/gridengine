@@ -51,59 +51,6 @@
 #include "sge_serf.h"
 #include "sgeobj/sge_limit_rule.h"
 
-#ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-
-#include "sge_qeti.h"
-
-int main(int argc, char *argv[]) 
-{
-   lListElem *cr;
-   sge_qeti_t *iter;
-   u_long32 pe_time;
-   extern sge_qeti_t *sge_qeti_allocate2(lListElem *cr);
-
-
-   DENTER_MAIN(TOP_LAYER, "sge_resource_utilization");
-
-   cr = lCreateElem(RUE_Type);
-   lSetString(cr, RUE_name, "slots");
-
-   printf("adding a 200s now assignment of 8 starting at 800\n");
-   utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING");   
-   utilization_print(cr, "pe_slots");
-
-   printf("adding a 100s now assignment of 4 starting at 1000\n");
-   utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING");   
-   utilization_print(cr, "pe_slots");
-
-   printf("adding a 100s reservation of 8 starting at 1100\n");
-   utilization_add(cr, 1100, 100, 8, 102, 1, PE_TAG, "pe_slots", "RESERVING");   
-   utilization_print(cr, "pe_slots");
-
-   printf("max utilization starting at 1000 for a 100s job: %f\n",
-      utilization_max(cr, 1000, 100));
-
-   printf("max utilization starting at 1200 for a 1000s job: %f\n",
-      utilization_max(cr, 1200, 1000));
-
-   printf("max utilization starting at 700 for a 150s job: %f\n",
-      utilization_max(cr, 700, 150));
-
-   /* use a QETI to iterate through times */
-
-   /* sge_qeti_allocate() */
-   iter = sge_qeti_allocate2(cr);
-
-   /* sge_qeti_first() */
-   for (pe_time = sge_qeti_first(iter); pe_time; pe_time = sge_qeti_next(iter)) {
-      printf("QETI returns "sge_u32"\n", pe_time);
-   }
-
-   return 0;
-}
-
-#endif
-
 static void utilization_normalize(lList *diagram);
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration);
 
@@ -210,7 +157,7 @@ void utilization_print(const lListElem *cr, const char *object_name)
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-      printf("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
+      printf("\t"sge_u32"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
 #endif
    }
 

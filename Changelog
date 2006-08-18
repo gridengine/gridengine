@@ -1,3 +1,5 @@
+RH-2006-08-18-1: Cleanup:   o wrong checkin (sge_passwd.c)
+
 RH-2006-08-18-0: Enhancem:  o i18n for juti
                             o strong argument checking for GridCAImpl.initCA
                             o aimk.site contains JUNIT_JAR parameter

@@ -380,11 +380,9 @@ read_private_key(const char *keyfile)
    
    pku.pointer = NULL;
    
-#if 0
+#if 1
    /* pointer to pkey must passed into function and will not be returned by function! */
-   /* static int (*shared_ssl_func__EVP_DecryptUpdate)(EVP_CIPHER_CTX *ctx, 
-             unsigned char *out, int *outl, const unsigned char *in, int inl); */
-   shared_ssl_func__PEM_read_PrivateKey(fp, (unsigned char *)&pku.pointer, NULL, NULL);
+   shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
 #else
    pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif

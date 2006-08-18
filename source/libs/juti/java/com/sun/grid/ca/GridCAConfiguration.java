@@ -64,14 +64,15 @@ public class GridCAConfiguration implements Serializable {
     public void validate() throws GridCAException {
         
         if(sgeCaScript == null ) {
-            throw new GridCAException("sgeCaScript not set");
+            throw RB.newGridCAException("gridCAConf.missing", "sgeCaScript");
         }
         if(caTop == null ) {
-            throw new GridCAException("caTop not set");
+            throw RB.newGridCAException("gridCAConf.missing", "caTop");
         }
         if(caLocalTop == null ) {
-            throw new GridCAException("caLocalTop not set");
+            throw RB.newGridCAException("gridCAConf.missing", "caLocalTop");
         }
+        
         if(configDir == null ) {
             configDir = new File(caTop, "util/sgeCA".replace('/', File.separatorChar));
         }
@@ -82,7 +83,7 @@ public class GridCAConfiguration implements Serializable {
             adminUser = System.getProperty("user.name");
         }
         if(caHost == null) {
-            throw new GridCAException("caHost not set");
+            throw RB.newGridCAException("gridCAConf.missing", "caHost");
         }
     }
     

@@ -31,19 +31,23 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.ca;
 
+import com.sun.grid.security.login.ConsoleCallbackHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.security.KeyStore;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 
 /**
  * CLI util for the <code>GridCA</code>.
@@ -58,7 +62,7 @@ import javax.security.auth.callback.PasswordCallback;
  *     init                initialize CA infrastructure
  *     user &lt;u:g:e&gt;        generate certificates and keys for &lt;u:g:e&gt;
  *                         with u=Unix User, g=Common Name, e=email
- *     initks &lt;u&gt; &lt;file&gt;   create keystore for user &lt;u&gt;
+ *     initks &lt;type&gt; &lt;u&gt; &lt;file&gt; [&lt;pwfile&gt;]  create keystore for user &lt;u&gt;
  *     printcert &lt;u&gt;       print certificate of a user
  *     renew &lt;u&gt; [&lt;days&gt;]  renew certificate for a user
  *
@@ -88,38 +92,10 @@ public class Main {
         if(msg != null) {
             System.err.println(msg);
         }
-        System.err.println(Main.class.getName() + " [options] <command>");
-        System.err.println();
+        String usage = ResourceBundle.getBundle(GridCAConstants.BUNDLE).getString("main.usage");
+        usage = MessageFormat.format(usage, new Object [] { Main.class.getName() });
         
-        System.err.println("  Commands:");
-        System.err.println();
-        
-        System.err.println("    init                          initialize CA infrastructure");
-        System.err.println("    create <type> <u:g:e>         generate certificates and keys for <u:g:e>");
-        System.err.println("    initks <type> <name> <file>   get a keystore for user or a daemon");
-        System.err.println("                                  and store it in <file>.");
-        System.err.println("    printcert <type> <name>       print certificate of a user or a daemon");
-        System.err.println("    renew <type> <name> <days>    renew certificate for a user or a daemon");
-        System.err.println();
-        System.err.println("  Mandatory Options: ");
-        System.err.println("    -catop      <dir>       path to the ca root directory");
-        System.err.println("    -calocaltop <dir>       path to the local ca root directory");
-        System.err.println("    -cascript <script>      path to the sge_ca script");
-        System.err.println();
-        System.err.println("  Optional Options:");
-        System.err.println("    -tmp <dir>              path tmp files (default system property java.io.tmp)");
-        System.err.println("    -config <dir>           path to CA configuration files (default $cadist/util/sgeCA");
-        System.err.println("    -adminuser <user>       name of the admin user (default system proeprty user.name)");
-        System.err.println("    -cahost <host>          the ca host (default localhost)");
-        
-        System.err.println("  <type>   \"user\" or \"daemon\"");
-        System.err.println("  <name>   For users <name> is the unix username. For daemons <name> ");
-        System.err.println("           is the common name");
-        System.err.println("  <u:g:e>  for users u=unix username, g=common name, e=email address");
-        System.err.println("           for daemons u=unix username of the process owner, " );
-        System.err.println("                       g=common name of the daemon, ");
-        System.err.println("                       e=email address of the process owner");
-        System.err.println();
+        System.err.println(usage);
         
         System.exit(exitCode);
     }
@@ -230,30 +206,13 @@ public class Main {
     private static void init() {
         
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Please give some basic parameters to create the distinguished name (DN)");
-            System.out.println("for the certificates.");
-            
-            System.out.println();
-            System.out.print("Please enter the two letter country code: ");
-            String country = br.readLine();
-            
-            System.out.print("Please enter the state: ");
-            String state = br.readLine();
-            
-            System.out.print("Please enter the location, e.g city or your buildingcode: ");
-            String location = br.readLine();
-            
-            System.out.print("Please enter the organization: ");
-            String org = br.readLine();
-            
-            System.out.print("Please enter the organization unit: ");
-            String orgUnit = br.readLine();
-            
-            System.out.print("Please enter the email address of the CA administrator (you!): ");
-            String address = br.readLine();
-            
-            ca.init(country, state, location, org, orgUnit, address);
+            ConsoleCallbackHandler cbh = new ConsoleCallbackHandler();
+            InitCAParameters params = InitCAParameters.queryNewInstance(cbh);
+            ca.init(params);
+        } catch (UnsupportedCallbackException ex) {
+            IllegalStateException ex1 = new IllegalStateException("unexpected error");
+            ex1.initCause(ex);
+            throw ex1;
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
             System.exit(1);
@@ -346,36 +305,56 @@ public class Main {
     }
     
     private static void initks(ArrayList args) {
-        if(args.size() != 3) {
-            usage("Invalid number of arguments for initks command", 1);
+        
+        int type = 0;
+        String name = null;
+        File keyStoreFile = null;
+        File pwFile = null;
+        
+        switch(args.size()) {
+            case 4:
+                pwFile = new File((String)args.get(3));
+                // fall through
+            case 3:
+                type = parseType((String)args.get(0));
+                name = (String)args.get(1);
+                keyStoreFile = new File((String)args.get(2));
+                break;
+            default:
+                usage("Invalid number of arguments for initks command", 1);
         }
         try {
             
-            int type = parseType((String)args.get(0));
-            String name = (String)args.get(1);
-            File keyStoreFile = new File((String)args.get(2));
             
             KeyStore ks = null;
             char [] pw = null;
             switch(type) {
                 case TYPE_USER:
-                    CallbackHandler cbh = new com.sun.security.auth.callback.TextCallbackHandler();
-                    
-                    PasswordCallback keystorePWCallback = new PasswordCallback("keystore password: ", false);
-                    PasswordCallback privateKeyPWCallback = new PasswordCallback("private key password: ", false);
-                    
-                    Callback [] cb = new Callback [] {
-                        keystorePWCallback,
-                        privateKeyPWCallback
-                    };
-                    
-                    cbh.handle(cb);
-                    
-                    
-                    pw = keystorePWCallback.getPassword();
-                    char [] pkPw = privateKeyPWCallback.getPassword();
-                    
-                    ks = ca.createKeyStore(name, pw, pkPw);
+                    if(pwFile == null) {
+                        CallbackHandler cbh = new com.sun.security.auth.callback.TextCallbackHandler();
+                        
+                        PasswordCallback keystorePWCallback = new PasswordCallback("keystore password: ", false);
+                        
+                        Callback [] cb = new Callback [] {
+                            keystorePWCallback,
+                        };
+                        
+                        cbh.handle(cb);
+                        pw = keystorePWCallback.getPassword();
+                        if(pw == null) {
+                            pw = new char[0];
+                        }
+                    } else {
+                        FileReader fr = new FileReader(pwFile);
+                        BufferedReader br = new BufferedReader(fr);
+                        String line = br.readLine();
+                        if(line == null || line.length() == 0) {
+                            pw = new char[0];
+                        } else {
+                            pw = line.toCharArray();
+                        }
+                    }
+                    ks = ca.createKeyStore(name, pw, pw);
                     break;
                 case TYPE_DAEMON:
                     pw = new char[0];
@@ -385,7 +364,7 @@ public class Main {
                     throw new IllegalStateException("unknown type " + type);
                     
             }
-            ks.store(new FileOutputStream(keyStoreFile), pw);            
+            ks.store(new FileOutputStream(keyStoreFile), pw);
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
             System.exit(1);

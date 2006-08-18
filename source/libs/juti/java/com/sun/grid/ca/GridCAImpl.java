@@ -70,7 +70,7 @@ import java.util.logging.Logger;
  */
 public class GridCAImpl implements GridCA {
     
-    private static final Logger LOGGER = Logger.getLogger(GridCAImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GridCAImpl.class.getName(), GridCAConstants.BUNDLE);
     
     private GridCAConfiguration config;
     
@@ -102,55 +102,43 @@ public class GridCAImpl implements GridCA {
     /**
      * Initialize the gridengine ca.
      *
-     * @param countryCode       the two letter country code
-     * @param state             the state
-     * @param location          the location, e.g city or your buildingcode
-     * @param organization      the organization (e.g. your company name)
-     * @param organizationUnit  the organizational unit, e.g. your department
-     * @param adminMailAddress  the email address of the CA administrator (you!)
+     * @param  params  parmeters for the CA
      * @throws com.sun.grid.ca.GridCAException 
      */
-    public void init(String countryCode,
-                     String state,
-                     String location,
-                     String organization,
-                     String organizationUnit,
-                     String adminMailAddress) throws GridCAException {
+    public void init(InitCAParameters params) throws GridCAException {
         LOGGER.entering("GridCAImpl", "init");
+
+        params.validate();
         
-        File autoFile = null;
+        File autoFile = createTempFile("auto", ".conf");
         try {
-            try {
-                autoFile = File.createTempFile("auto", ".conf", config.getTmpDir());
-                autoFile = new File(config.getTmpDir(), "auto.conf");
-            } catch(IOException ioe) {
-                GridCAException cae = new GridCAException("Can not create file in " + config.getTmpDir(), ioe);
-                LOGGER.throwing( "GridCAImpl" ,"init", cae);
-                throw cae;
-            }
-            
             try {
                 PrintWriter pw = new PrintWriter(new FileWriter(autoFile));
 
-                pw.print("CSP_COUNTRY_CODE=");
-                pw.println(countryCode);
-                pw.print("CSP_STATE=");
-                pw.println(state);
-                pw.print("CSP_LOCATION=");
-                pw.println(location);
-                pw.print("CSP_ORGA=");
-                pw.println(organization);
-                pw.print("CSP_ORGA_UNIT=");
-                pw.println(organizationUnit);
-                pw.print("CSP_MAIL_ADDRESS=");
-                pw.println(adminMailAddress);
+                pw.print("CSP_COUNTRY_CODE=\"");
+                pw.print(params.getCountry());
+                pw.println("\"");
+                pw.print("CSP_STATE=\"");
+                pw.print(params.getState());
+                pw.println("\"");
+                pw.print("CSP_LOCATION=\"");
+                pw.print(params.getLocation());
+                pw.println("\"");
+                pw.print("CSP_ORGA=\"");
+                pw.print(params.getOrganization());
+                pw.println("\"");
+                pw.print("CSP_ORGA_UNIT=\"");
+                pw.print(params.getOrganizationUnit());
+                pw.println("\"");
+                pw.print("CSP_MAIL_ADDRESS=\"");
+                pw.print(params.getAdminEmailAddress());
+                pw.println("\"");
                 pw.close();
                 
-                LOGGER.log(Level.FINE, "auto file successfully written");
+                LOGGER.log(Level.FINE, "gridCAImpl.autoFileWritten");
             } catch(IOException ioe) {
-                GridCAException cae = new GridCAException("Can not write auto.conf file", ioe);
-                LOGGER.throwing( "GridCAImpl" ,"init", cae);
-                throw cae;
+                throw RB.newGridCAException(ioe, "gridCAImpl.error.autoFile",
+                                            ioe.getLocalizedMessage());
             }
             
             Expect pb = createProcess();
@@ -160,12 +148,12 @@ public class GridCAImpl implements GridCA {
             
             execute(pb);
             
-            LOGGER.log(Level.FINE, "init command successfully executed");
+            LOGGER.log(Level.FINE, "gridCAImpl.initSuccess");
 
         } finally {
-//            if(autoFile != null) {
-//                autoFile.delete();
-//            }
+            if(autoFile != null) {
+                autoFile.delete();
+            }
         }
     }
     
@@ -195,16 +183,19 @@ public class GridCAImpl implements GridCA {
         try {
             res = pb.exec(60 * 1000);
         } catch (IOException ex) {
-            throw new GridCAException("IO error while execution sge_ca", ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.sge_ca.ioError",
+                                        ex.getLocalizedMessage());
         } catch (InterruptedException ex) {
-            throw new GridCAException("Execution sge_ca has been interrupted", ex);
+            throw RB.newGridCAException("gridCAImpl.sge_ca.interrupt");
         }
         if(res != 0) {
             String error = eh.getError();
             if(error == null || error.length() == 0) {
-                throw new GridCAException("sge_ca script with status " + res + ", no error message was reported");
+                throw RB.newGridCAException("gridCAImpl.sge_ca.unknownError",
+                                            new Integer(res));
             } else {
-                throw new GridCAException(error);
+                throw RB.newGridCAException("gridCAImpl.sge_ca.error",
+                                            new Object [] { new Integer(res), error });
             }
         }
         LOGGER.exiting("GridCAImpl", "execute");
@@ -264,6 +255,33 @@ public class GridCAImpl implements GridCA {
     
     
     
+    private X509Certificate readCertificate(File certFile) throws GridCAException {
+        LOGGER.entering("GridCAImpl", "readCertificate");
+        try {
+            if(!certFile.exists()) {
+                throw RB.newGridCAException("gridCAImpl.error.certFileNotFound",
+                                            certFile);
+            }
+            if(!certFile.canRead()) {
+                throw RB.newGridCAException("gridCAImpl.error.certFileReadable",
+                                            certFile);
+            }
+            
+            FileInputStream in = new FileInputStream(certFile);
+            try {
+                LOGGER.exiting("GridCAImpl", "readCertificate");
+                return (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(in);
+            } finally {
+                in.close();
+            }
+        } catch(IOException ioe) {
+            throw RB.newGridCAException(ioe, "gridCAImpl.error.certFileIOError",
+                                        ioe.getLocalizedMessage());
+        } catch(CertificateException ex) {
+            throw RB.newGridCAException(ex, "gridCAImpl.error.certFileInvalid",
+                                        new Object [] { certFile, ex.getLocalizedMessage() });
+        }
+    }
     
     /**
      *  Get the X.509 certificate of a user.
@@ -274,28 +292,11 @@ public class GridCAImpl implements GridCA {
      */
     public X509Certificate getCertificate(String username) throws GridCAException {
         LOGGER.entering("GridCAImpl", "getCertificate");
-        try {
-            File certFile = getCertFileForUser(username);
-            
-            if(!certFile.exists()) {
-                throw new GridCAException("cert file for user not found in ca");
-            }
-            if(!certFile.canRead()) {
-                throw new GridCAException("cert file for user is not accessible");
-            }
-            
-            FileInputStream in = new FileInputStream(certFile);
-            try {
-                LOGGER.exiting("GridCAImpl", "getCertificate");
-                return (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(in);
-            } finally {
-                in.close();
-            }
-        } catch(IOException ioe) {
-            throw new GridCAException("I/O Error while reading cert file", ioe);
-        } catch(CertificateException ex) {
-            throw new GridCAException("cert file of user " + username + " does not contain a valid certificate", ex);
-        }
+        File certFile = getCertFileForUser(username);
+
+        X509Certificate ret = readCertificate(certFile);
+        LOGGER.exiting("GridCAImpl", "getCertificate");
+        return ret;
     }
     
     /**
@@ -307,29 +308,11 @@ public class GridCAImpl implements GridCA {
      */
     public X509Certificate getDaemonCertificate(String daemon) throws GridCAException {
         LOGGER.entering("GridCAImpl", "getDaemonCertificate");
-        try {
-            File certFile = getCertFileForDaemon(daemon);
-            
-            if(!certFile.exists()) {
-                throw new GridCAException("cert file for daemon not found in ca");
-            }
-            if(!certFile.canRead()) {
-                throw new GridCAException("cert file for daemon is not accessible");
-            }
-            
-            FileInputStream in = new FileInputStream(certFile);
-            try {
-                LOGGER.exiting("GridCAImpl", "getDaemonCertificate");
-                return (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(in);
-            } finally {
-                in.close();
-            }
-        } catch(IOException ioe) {
-            throw new GridCAException("I/O Error while reading cert file", ioe);
-        } catch(CertificateException ex) {
-            throw new GridCAException("cert file of daemon " + daemon + " does not contain a valid certificate", ex);
-        }
-        
+        File certFile = getCertFileForDaemon(daemon);
+
+        X509Certificate ret = readCertificate(certFile);
+        LOGGER.exiting("GridCAImpl", "getDaemonCertificate");
+        return ret;
     }
     
     
@@ -385,7 +368,8 @@ public class GridCAImpl implements GridCA {
         try {
             return File.createTempFile(prefix, suffix, config.getTmpDir());
         } catch(IOException ioe) {
-            throw new GridCAException("Can not create tmp file in directory " + config.getTmpDir(), ioe);
+            throw RB.newGridCAException(ioe, "gridCAImpl.error.tmpFile",
+                                        new Object [] { config.getTmpDir(), ioe.getLocalizedMessage() });
         }
     }
     
@@ -398,7 +382,7 @@ public class GridCAImpl implements GridCA {
      *  @throws GridCAException if the keystore could not be created
      */
     public KeyStore createKeyStore(String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
-         return createKeyStore("user", username, keystorePassword, privateKeyPassword);
+         return createKeyStore(TYPE_USER, username, keystorePassword, privateKeyPassword);
     }
     
     /**
@@ -412,44 +396,51 @@ public class GridCAImpl implements GridCA {
      * @return the keystore of the daemon
      */
     public KeyStore createDaemonKeyStore(String daemon) throws GridCAException {
-         return createKeyStore("grm_daemon", daemon, new char[0], new char[0]);
+         return createKeyStore(TYPE_GRM_DAEMON, daemon, new char[0], new char[0]);
     }
     
-        
-    private KeyStore createKeyStore(String type, String username, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
+    private final static String TYPE_GRM_DAEMON = "grm_daemon";
+    private final static String TYPE_USER       = "user";
+    
+    private KeyStore createKeyStore(String type, String entity, char[] keystorePassword, char[] privateKeyPassword) throws GridCAException {
         LOGGER.entering("GridCAImpl", "createKeyStore");
         
         if(keystorePassword == null) {
-            throw new GridCAException("need a keystore password");
+            throw RB.newGridCAException("gridCAImpl.error.emptyKeystorePassword", GridCAConstants.BUNDLE);
         }
         if(privateKeyPassword == null) {
-            throw new GridCAException("need a private key password");
+            throw RB.newGridCAException("gridCAImpl.error.emptyPKPassword", GridCAConstants.BUNDLE);
         }
         
         KeyStore ks;
         try {
             ks = KeyStore.getInstance("JKS");
         } catch (KeyStoreException ex) {
-            throw new GridCAException("Can not create JKS keystore", ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.error.createKS",
+                                        ex.getLocalizedMessage());
         }
         
         char [] pkcs12PW = "changeit".toCharArray();
         try {
             ks.load(null, keystorePassword);
         } catch (NoSuchAlgorithmException ex) {
-            throw new GridCAException("Can not load pkcs21 keystore" ,ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.error.ksInit",
+                                        ex.getLocalizedMessage());
         } catch (CertificateException ex) {
-            throw new GridCAException("Can not load pkcs21 keystore" ,ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.error.ksInit",
+                                        ex.getLocalizedMessage());
         } catch (IOException ex) {
-            throw new GridCAException("Can not load pkcs21 keystore" ,ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.error.ksInit",
+                                        ex.getLocalizedMessage());
         }
 
-        KeyStore pkcs12Ks = createPKCS12KeyStore(type, username, pkcs12PW);
+        KeyStore pkcs12Ks = createPKCS12KeyStore(type, entity, pkcs12PW);
         Enumeration aliases;
         try {
             aliases = pkcs12Ks.aliases();
         } catch (KeyStoreException ex) {
-            throw new GridCAException("Can not get alias from pkcs12 keystore", ex);
+            throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.aliases",
+                                        ex.getLocalizedMessage());
         }
 
         while(aliases.hasMoreElements()) {
@@ -459,52 +450,66 @@ public class GridCAImpl implements GridCA {
             try {
                 isKeyEntry = pkcs12Ks.isKeyEntry(alias);
             } catch (KeyStoreException ex) {
-                throw new GridCAException("can not determin wether alias is a key", ex);
+                throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.isKeyEntry",
+                                            new Object [] { alias, ex.getLocalizedMessage() });
             }
             if (isKeyEntry) {
-                LOGGER.log(Level.FINE, "Adding key for alias {0}", alias);
+                LOGGER.log(Level.FINE, "gridCAImpl.addKey", alias);
 
                 Key key = null;
                 try {
                     key = pkcs12Ks.getKey(alias, pkcs12PW);
                 } catch(NoSuchAlgorithmException ex) {
-                    throw new GridCAException("invalid algorithm in pkcs12 keystore", ex);
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.getKey",
+                                                new Object [] { alias, ex.getLocalizedMessage() });
                 } catch(UnrecoverableKeyException ex) {
-                    throw new GridCAException("Can not access private key in pkcs12 file", ex);
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.getKey",
+                                                new Object [] { alias, ex.getLocalizedMessage() });
                 } catch (KeyStoreException ex) {
-                    throw new GridCAException("Can not access private key in pkcs12 file", ex);
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.getKey",
+                                                new Object [] { alias, ex.getLocalizedMessage() });
                 }
                 Certificate[] chain;
                 try {
                     chain = pkcs12Ks.getCertificateChain(alias);
                 } catch (KeyStoreException ex) {
-                    throw new GridCAException("Can not access certificate in pkcs12 file", ex);
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.getCert",
+                                                new Object [] { alias, ex.getLocalizedMessage() });
                 }
 
                 if(!(chain[0] instanceof X509Certificate)) {
-                    throw new IllegalArgumentException("can only handle X509 Certificates");
+                    throw RB.newGridCAException("gridCAImpl.error.pkcs12.invalidCert",
+                                                alias);
                 }
                 X509Certificate cert = (X509Certificate)chain[0];
 
-                String name = cert.getSubjectX500Principal().getName();
+                GridCAX500Name name = GridCAX500Name.parse(cert.getSubjectX500Principal().getName());
 
-                int uidIndex = name.indexOf("UID=");
-                if(uidIndex < 0) {
-                    throw new GridCAException("UID not found in dnname");
+                
+                if(TYPE_GRM_DAEMON.equals(type)) {
+                    if(!name.isDaemon()) {
+                        throw RB.newGridCAException("gridCAImpl.error.notADaemonCert", 
+                                                    cert.getSubjectX500Principal().getName());
+                    }
+                    alias = name.getDaemonName();
+                } else if (TYPE_USER.endsWith(type)) {
+                    if(name.isDaemon()) {
+                        throw RB.newGridCAException("gridCAImpl.error.notAUserCert", 
+                                                    cert.getSubjectX500Principal().getName());
+                    }
+                    alias = name.getUsername();
                 }
-                uidIndex += 4;
-                int endIndex = name.indexOf(",",uidIndex);
-                alias = name.substring(uidIndex, endIndex);
                 try {
                     ks.setKeyEntry(alias,key,privateKeyPassword,chain);
                 } catch (KeyStoreException ex) {
-                    throw new GridCAException("Can not add alias to JKS keystore", ex);
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.ks.setKeyEntry",
+                                                new Object [] { alias, ex.getLocalizedMessage() });
                 }
                 LOGGER.exiting("GridCAImpl", "createKeyStore");
                 return ks;
             }
         }
-        throw new GridCAException("alias for user " + username + " not found in pkcs12 keystore");
+        throw RB.newGridCAException("gridCaImpl.error.pkcs12.entityNotFound", entity);
     }
     
     
@@ -513,12 +518,6 @@ public class GridCAImpl implements GridCA {
         LOGGER.entering("GridCAImpl", "createPKCS12KeyStore");
         File userFile = null;
         File passwordFile = null;
-        if(!config.getTmpDir().exists()) {
-            throw new GridCAException("tmpdir " + config.getTmpDir() + " does not exist");
-        }
-        if(!config.getTmpDir().canWrite()) {
-            throw new GridCAException("can not write int tmpdir " + config.getTmpDir());
-        }
         File pkcs12File = new File(config.getTmpDir(), username + ".p12");        
 
         try {
@@ -532,7 +531,7 @@ public class GridCAImpl implements GridCA {
                     pw.flush();
                     pw.close();
                 } catch(IOException ex) {
-                    throw new GridCAException("IO error while writing password file: " + ex.getLocalizedMessage());
+                    throw RB.newGridCAException(ex, "gridCAImpl.error.io",ex.getLocalizedMessage());
                 }
 
                 Expect pb = createProcess();
@@ -551,12 +550,12 @@ public class GridCAImpl implements GridCA {
                 execute(pb);
 
             } finally {
-//                if(userFile != null) {
-//                    userFile.delete();
-//                }
-//                if(passwordFile != null) {
-//                    passwordFile.delete();
-//                }
+                if(userFile != null) {
+                    userFile.delete();
+                }
+                if(passwordFile != null) {
+                    passwordFile.delete();
+                }
             }
             try {
                 KeyStore kspkcs12 = KeyStore.getInstance("PKCS12");
@@ -565,19 +564,22 @@ public class GridCAImpl implements GridCA {
                 LOGGER.exiting("GridCAImpl", "createPKCS12KeyStore");
                 return kspkcs12;
             } catch (CertificateException ex) {
-                throw new GridCAException("Certificate error", ex);
+                throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.load",
+                                            new Object [] { pkcs12File, ex.getLocalizedMessage() } );
             } catch (IOException ex) {
-                LOGGER.throwing("GridCAImpl", "createPKCS12KeyStore", ex);
-                throw new GridCAException("Can not load pkcs12 keystore", ex);
+                throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.load",
+                                            new Object [] { pkcs12File, ex.getLocalizedMessage() } );
             } catch (NoSuchAlgorithmException ex) {
-                throw new GridCAException("PKCS12 Algorithm unknown", ex);
+                throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.load",
+                                            new Object [] { pkcs12File, ex.getLocalizedMessage() } );
             } catch (KeyStoreException ex) {
-                throw new GridCAException("KeyStore Error", ex);
+                throw RB.newGridCAException(ex, "gridCAImpl.error.pkcs12.load",
+                                            new Object [] { pkcs12File, ex.getLocalizedMessage() } );
             }        
         } finally {
             if(pkcs12File.exists()) {
                 if(!pkcs12File.delete()) {
-                    LOGGER.log(Level.WARNING,"Can not delete pkcs12 file {0}", pkcs12File);
+                    LOGGER.log(Level.WARNING,"gridCAImpl.warn.pkcs12.delete", pkcs12File);
                 }
             }
         }
@@ -620,7 +622,7 @@ public class GridCAImpl implements GridCA {
                     }
                 }
             } catch(IOException ioe) {
-                LOGGER.log(Level.SEVERE, "IO error in sge_ca output handler", ioe);
+                LOGGER.log(Level.SEVERE, "gridCAImpl.error.outputIO", ioe);
             } finally {
                 epw.close();
                 pw.close();

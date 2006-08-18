@@ -31,12 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.ca;
 
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
+
 /**
  * This exception wraps all errors of the GridCA
  *
  * @author  richard.hierlmeier@sun.com
  */
 public class GridCAException extends Exception {
+
     
     /**
      * Creates a new instance of CAException
@@ -45,15 +49,60 @@ public class GridCAException extends Exception {
     public GridCAException(String message) {
         super(message);
     }
+    
 
     /**
-     * Creates a new instance of CAException.
+     * Creates a new instance of GridCAException.
      *
      * @param message the message
      * @param cause   the cause of the exception
      */
     public GridCAException(String message, Throwable cause) {
         super(message, cause);
+    }
+    
+    /**
+     * Creates a new instance of GridCAException with
+     * a localized message
+     *
+     * @param message the message
+     * @param bundle  the resource bundle
+     */
+    public GridCAException(String message, String bundle) {
+        this(message, bundle, null);
+    }
+    
+    /**
+     * Creates a new instance of GridCAException with
+     * a localized message
+     *
+     * @param message the message
+     * @param bundle  the resource bundle
+     * @param params  parameters for the message
+     */
+    public GridCAException(String message, String bundle, Object [] params) {
+        super(format(message, bundle, params));
+    }
+    
+    /**
+     * Creates a new instance of GridCAException with
+     * a localized message
+     *
+     * @param message the message
+     * @param cause   the cause of the error
+     * @param bundle  the resource bundle
+     * @param params  parameters for the message
+     */
+    public GridCAException(String message, Throwable cause, String bundle, Object [] params) {
+        super(format(message, bundle, params), cause);
+    }
+    
+    private static String format(String message, String bundle, Object [] params) {
+        String msg = ResourceBundle.getBundle(bundle).getString(message);
+        if(params != null) {
+            msg = MessageFormat.format(msg, params);
+        }
+        return msg;
     }
     
 }

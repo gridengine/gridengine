@@ -1,3 +1,8 @@
+RH-2006-08-18-0: Enhancem:  o i18n for juti
+                            o strong argument checking for GridCAImpl.initCA
+                            o aimk.site contains JUNIT_JAR parameter
+                 Review:    MD
+
 RD-2006-08-16-0: Enhancem:  - rewrite of limitation rule matching code to handle
                               all kind of wildcard searches
                             - added module test for limitation rule matching code

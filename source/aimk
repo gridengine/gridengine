@@ -2361,7 +2361,7 @@ if ( "$JAVA" > 0 ) then
 
    echo _________J_U_T_I__C_L_A_S_S__F_I_L_E_S___
    cd libs/juti
-   ant -f build.xml $argv
+   ant -Dlibs.junit.classpath=$JUNIT_JAR -f build.xml jar
    if ( $status != 0 ) then
       echo not done
       exit 1

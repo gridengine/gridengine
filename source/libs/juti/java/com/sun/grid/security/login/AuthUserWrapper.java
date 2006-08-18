@@ -40,6 +40,7 @@ import com.sun.security.auth.UnixNumericGroupPrincipal;
 import com.sun.security.auth.UnixNumericUserPrincipal;
 import com.sun.security.auth.UnixPrincipal;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +56,7 @@ import javax.security.auth.login.LoginException;
  */
 class AuthUserWrapper {
     
-    private static final Logger LOGGER = Logger.getLogger(AuthUserWrapper.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AuthUserWrapper.class.getName(), RB.BUNDLE);
         
     private String [] command;
     
@@ -136,22 +137,25 @@ class AuthUserWrapper {
             // 2 means error
             switch(exitCode) {
                 case 0:  // success
+                    LOGGER.log(Level.FINE, "authuser.success", username);
                     return principalHandler.getPrinicipals();
-                case 1: // authentication failed  
+                case 1: // authentication failed
+                    LOGGER.log(Level.FINE, "authuser.failed", username);
                     return null;
                 default:
                     if(errorHandler.getError() == null) {
-                        throw new LoginException("authuser command failed (" + exitCode + ")");
+                        throw RB.newLoginException("authuser.error.unknown",
+                                                   new Object [] { new Integer(exitCode) });
                     } else {
-                        throw new LoginException("authuser command failed: " + errorHandler.getError());
+                        throw RB.newLoginException("authuser.error",
+                                                   new Object [] { errorHandler.getError() });
                     }
             }
         } catch (InterruptedException ex) {
-            throw new LoginException("login has been interrupted");
+            throw RB.newLoginException("authuser.error.interrupted");
         } catch (IOException ex) {
-            LoginException le = new LoginException("io error");
-            le.initCause(ex);
-            throw le;
+            throw RB.newLoginException("authuser.error.io", ex,
+                                       new Object [] { ex.getLocalizedMessage() });
         }
         
     }

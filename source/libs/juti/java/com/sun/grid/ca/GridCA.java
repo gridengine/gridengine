@@ -46,20 +46,10 @@ public interface GridCA {
     /**
      *  Initialize the Grid CA
      * 
-     * @param countryCode       the two letter country code
-     * @param state             the state
-     * @param location          the location, e.g city or your buildingcode
-     * @param organization      the organization (e.g. your company name)
-     * @param organizationUnit  the organizational unit, e.g. your department
-     * @param adminMailAddress  the email address of the CA administrator (you!)
+     * @param  params  parmeters for the CA
      * @throws com.sun.grid.ca.GridCAException 
      */
-    public void init(String countryCode,
-                     String state,
-                     String location,
-                     String organization,
-                     String organizationUnit,
-                     String adminMailAddress) throws GridCAException;
+    public void init(InitCAParameters params) throws GridCAException;
     
     /**
      *  Create private key and certificate for a user.

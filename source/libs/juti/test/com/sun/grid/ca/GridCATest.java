@@ -11,11 +11,11 @@ package com.sun.grid.ca;
 
 import com.sun.grid.TestConfiguration;
 import java.io.File;
-import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
 import junit.framework.*;
 
 /**
@@ -36,10 +36,9 @@ public class GridCATest extends TestCase {
     
     protected void setUp() throws Exception {
         super.setUp();
-        String basedirStr = "build/test/" + System.currentTimeMillis();
-        basedirStr = basedirStr.replace('/', File.separatorChar);
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
         
-        baseDir = new File(basedirStr);
+        baseDir = new File(tmpDir, System.getProperty("user.name") + "_" + System.currentTimeMillis());
         baseDir.mkdirs();
         
         catop = new File(baseDir, "catop");
@@ -60,32 +59,72 @@ public class GridCATest extends TestCase {
         ca = GridCAFactory.newInstance(config);
     }
     
+    private void initCA() throws Exception {
+        
+        InitCAParameters params = new InitCAParameters();
+        params.setCountry("de");
+        params.setState("Bayern");
+        params.setLocation("Regensburg");
+        params.setOrganization("Sun");
+        params.setOrganizationUnit("Software Engineering");
+        params.setAdminEmailAddress("admin@blubber");
+        ca.init(params);
+    } 
     
-    public void test1() throws Exception {
+    public void testUser() throws Exception {
         
         String username = "test";
+        initCA();
         
-        String country = "de";
-        String state = "Bayern";
-        String location = "Regensburg";
-        String org = "Sun";
-        String orgUnit = "Gridengine";
-        String adminEmailAddress = "admin@blubber";
-        ca.init(country, state, location, org, orgUnit, adminEmailAddress);
         ca.createUser(username, "test", "test@blubber");
         
-        X509Certificate cert = ca.getCertificate("test");
+        X509Certificate cert = ca.getCertificate(username);
         
         char [] pw = "changeit".toCharArray();
         KeyStore ks = ca.createKeyStore("test", pw, pw);
         
-        Certificate [] chain =  ks.getCertificateChain("test");
+        Certificate [] chain =  ks.getCertificateChain(username);
         
-        assertNotNull("certificate chain for user " + username + " not found in keystore", chain);
+        assertNotNull("certificate chain for user " + username + " not found", chain);
         
-        if(System.getProperty("user.name").equals("root")) {
-            ca.renewCertificate(username, 10);
-        }
+        Calendar cal = Calendar.getInstance();
+        int days = 10;
+        ca.renewCertificate(username, days);
+        
+        X509Certificate renewedCert =  ca.getCertificate(username);
+        assertNotNull("renewed certificate chain for user " + username + " not found", renewedCert);
+        
+        cal.add(Calendar.DAY_OF_YEAR, days + 1);
+        assertTrue( cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
+    }
+    
+    public void testDaemon() throws Exception {
+        
+        String daemon = "test";
+        String user = System.getProperty("user.name");
+        initCA();
+        
+        ca.createDaemon(daemon, user, user + "@blubber");
+        
+        X509Certificate cert = ca.getDaemonCertificate("test");
+        
+        char [] pw = "changeit".toCharArray();
+        KeyStore ks = ca.createDaemonKeyStore(daemon);
+        
+        
+        Certificate [] chain =  ks.getCertificateChain(daemon);
+        
+        assertNotNull("certificate chain for daemon " + daemon + " not found is keystore", chain);
+        
+        Calendar cal = Calendar.getInstance();
+        int days = 10;
+        ca.renewDaemonCertificate(daemon, days);
+        
+        X509Certificate renewedCert =  ca.getDaemonCertificate(daemon);
+        assertNotNull("renewed certificate chain for daemon " + daemon + " not found", renewedCert);
+        
+        cal.add(Calendar.DAY_OF_YEAR, days + 1);
+        assertTrue( cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
     }
     
 }

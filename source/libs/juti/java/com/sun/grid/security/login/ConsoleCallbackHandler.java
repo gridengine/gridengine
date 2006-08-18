@@ -84,24 +84,38 @@ public class ConsoleCallbackHandler implements CallbackHandler {
             if(callbacks[i] instanceof NameCallback) {
                 NameCallback cb = (NameCallback)callbacks[i];
                 System.out.print(cb.getPrompt());
-                cb.setName(readLine());
+                if(cb.getDefaultName() != null) {
+                    System.out.print(" [" + cb.getDefaultName() + "] ");
+                }
+                String name = readLine();
+                if(name.length() == 0) {
+                    name = cb.getDefaultName();
+                }
+                cb.setName(name);
             } else if(callbacks[i] instanceof TextOutputCallback) {
                 TextOutputCallback cb = (TextOutputCallback)callbacks[i];
                 switch(cb.getMessageType()) {
                     case TextOutputCallback.ERROR:
-                        System.out.print("Error: ");
+                        System.out.print(RB.rb().getString("ccb.error"));
                         break;
                     case TextOutputCallback.WARNING:
-                        System.out.print("Error: ");
+                        System.out.print(RB.rb().getString("ccb.warning"));
                         break;
                     default:
                         // do nothing
                 }
-                System.out.print(cb.getMessage());
+                System.out.println(cb.getMessage());
             } else if(callbacks[i] instanceof TextInputCallback) {
                 TextInputCallback cb = (TextInputCallback)callbacks[i];
                 System.out.print(cb.getPrompt());
-                cb.setText(readLine());
+                if(cb.getDefaultText() != null) {
+                    System.out.print(" [" + cb.getDefaultText() + "] ");
+                }
+                String text = readLine();
+                if(text.length() == 0) {
+                    text = cb.getDefaultText();
+                }
+                cb.setText(text);
             } else if(callbacks[i] instanceof PasswordCallback) {
                 PasswordCallback cb = (PasswordCallback)callbacks[i];
                 cb.setPassword(SGEUtil.getInstance().getPassword(cb.getPrompt()));

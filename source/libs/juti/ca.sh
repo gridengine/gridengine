@@ -10,4 +10,4 @@ CA_ARGS="$CA_ARGS -cascript $SGE_ROOT/util/sgeCA/sge_ca"
 JVM_ARGS=""
 JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=src/logging.properties"
 
-java $JVM_ARGS -jar $PWD/dist/sgeca.jar $CA_ARGS $*
+java $JVM_ARGS -cp $PWD/../../CLASSES/juti/juti.jar com.sun.grid.ca.Main $CA_ARGS $*

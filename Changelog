@@ -1,3 +1,9 @@
+AH-2006-08-30-0: Bugfix:    - Fix problems with qsub -w e|w|v resulting from
+                              uninitialized hgrp_list and lirs_list in
+                              sge_assignment_t
+                            - Fix issue with cl_com_ssl_func__ERR_get_error
+                              being NULL
+                            
 RH-2006-08-18-2: Cleanup:   o invalid pathes in aimk.site
 
 RH-2006-08-18-1: Cleanup:   o wrong checkin (sge_passwd.c)

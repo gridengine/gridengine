@@ -3994,6 +3994,8 @@ int *trigger
             a.host_list        = *object_base[SGE_TYPE_EXECHOST].list;
             a.centry_list      = *object_base[SGE_TYPE_CENTRY].list;
             a.acl_list         = *object_base[SGE_TYPE_USERSET].list;
+            a.hgrp_list        = *object_base[SGE_TYPE_HGROUP].list;
+            a.lirs_list        = *object_base[SGE_TYPE_LIRS].list;
             a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
             a.start            = DISPATCH_TIME_NOW;
             a.duration         = 0;

@@ -947,16 +947,20 @@ spool_classic_default_write_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
    switch (object_type) {
       case SGE_TYPE_ADMINHOST:
-         write_host(1, 2, object, AH_name, NULL);
+         if (!write_host(1, 2, object, AH_name, NULL))
+            ret = false;
          break;
       case SGE_TYPE_CALENDAR:
-         write_cal(1, 2, object);
+         if (!write_cal(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_CKPT:
-         write_ckpt(1, 2, object);
+         if (!write_ckpt(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_CENTRY:
-         write_centry(1, 2, object);
+         if (!write_centry(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_CONFIG:
          {
@@ -992,7 +996,8 @@ spool_classic_default_write_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_EXECHOST:
-         write_host(1, 2, object, EH_name, NULL);
+         if (!write_host(1, 2, object, EH_name, NULL))
+            ret = false;
          break;
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
@@ -1058,7 +1063,8 @@ spool_classic_default_write_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_PE:
-         write_pe(1, 2, object);
+         if (!write_pe(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_PROJECT:
          {
@@ -1083,16 +1089,20 @@ spool_classic_default_write_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_CQUEUE:
-         write_cqueue(1, 2, object);
+         if (!write_cqueue(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_QINSTANCE:
-         write_qinstance(1, 2, object);
+         if (!write_qinstance(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_SCHEDD_CONF:
-         write_sched_configuration(1, 2, lGetString(rule, SPR_url), object);
+         if (!write_sched_configuration(1, 2, lGetString(rule, SPR_url), object))
+            ret = false;
          break;
       case SGE_TYPE_SUBMITHOST:
-         write_host(1, 2, object, SH_name, NULL);
+         if (!write_host(1, 2, object, SH_name, NULL))
+            ret = false;
          break;
       case SGE_TYPE_USER:
          {
@@ -1140,14 +1150,17 @@ spool_classic_default_write_func(lList **answer_list,
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case SGE_TYPE_CUSER:
-         write_ume(1, 2, object);
+         if (!write_ume(1, 2, object))
+            ret = false;
          break;
 #endif
       case SGE_TYPE_HGROUP:
-         write_host_group(1, 2, object);
+         if (!write_host_group(1, 2, object))
+            ret = false;
          break;
       case SGE_TYPE_LIRS:
-         write_limit_rule_set(1, 2, object);
+         if (!write_limit_rule_set(1, 2, object))
+            ret = false;
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

@@ -1,3 +1,8 @@
+JG-2006-08-31-0: Enhancem.: Added means to output a build number with the 
+                            version string.
+                 Cleanup:   Fixed broken ADOC headers.
+                 Review:    SG
+
 RD-2006-08-11-0: Cleanup:   Moved gdi version defines to libs/gdi/version.c
                             removed inclusion of c-files
                  Review:    JG

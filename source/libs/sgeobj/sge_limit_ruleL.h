@@ -74,7 +74,8 @@ enum {
    LIR_filter_pes,
    LIR_filter_queues,
    LIR_filter_hosts,
-   LIR_limit
+   LIR_limit,
+   LIR_level
 };
 
 LISTDEF(LIR_Type)
@@ -85,6 +86,7 @@ LISTDEF(LIR_Type)
  SGE_OBJECT(LIR_filter_queues, LIRF_Type, CULL_DEFAULT | CULL_SPOOL)
  SGE_OBJECT(LIR_filter_hosts, LIRF_Type, CULL_DEFAULT | CULL_SPOOL)
  SGE_LIST(LIR_limit, LIRL_Type, CULL_DEFAULT | CULL_SPOOL)
+ SGE_ULONG(LIR_level, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(LIRN)
@@ -95,9 +97,26 @@ NAMEDEF(LIRN)
    NAME("LIR_filter_queues")
    NAME("LIR_filter_hosts")
    NAME("LIR_limit")
+   NAME("LIR_level")
 NAMEEND
 
 #define LIRS sizeof(LIRN)/sizeof(char*)
+
+enum {
+   FILTER_USERS = 0,
+   FILTER_PROJECTS,
+   FILTER_PES,
+   FILTER_QUEUES,
+   FILTER_HOSTS
+};
+
+enum {
+   LIR_ALL = 0,
+   LIR_GLOBAL,
+   LIR_CQUEUE,
+   LIR_HOST,
+   LIR_QUEUEI
+};
 
 /* Rule Filter Object */
 enum {
@@ -126,15 +145,17 @@ enum {
    LIRL_value,
    LIRL_type,
    LIRL_dvalue,
-   LIRL_usage
+   LIRL_usage,
+   LIRL_dynamic
 };
 
 LISTDEF(LIRL_Type)
  SGE_STRING(LIRL_name, CULL_PRIMARY_KEY | CULL_UNIQUE | CULL_SPOOL)
  SGE_STRING(LIRL_value, CULL_DEFAULT | CULL_SPOOL)
- SGE_STRING(LIRL_type, CULL_DEFAULT | CULL_SPOOL)
+ SGE_ULONG(LIRL_type, CULL_DEFAULT | CULL_SPOOL)
  SGE_DOUBLE(LIRL_dvalue, CULL_DEFAULT | CULL_SPOOL)
  SGE_LIST(LIRL_usage, RUE_Type, CULL_DEFAULT)
+ SGE_BOOL(LIRL_dynamic, CULL_DEFAULT)
 LISTEND
  
 NAMEDEF(LIRLN)
@@ -143,6 +164,7 @@ NAMEDEF(LIRLN)
    NAME("LIRL_type")
    NAME("LIRL_dvalue")
    NAME("LIRL_usage")
+   NAME("LIRL_dynamic")
 NAMEEND
 
 #define LIRLS sizeof(LIRLN)/sizeof(char*)

@@ -1700,6 +1700,12 @@ proc config_execd_hosts { only_check name config_array } {
    # create a list of nodes unique per architecture
    set config(unique_arch_nodes) [host_conf_get_unique_arch_nodes $config(unique_execd_nodes)]
 
+   # now sort these lists for convenience
+   set config(all_nodes) [lsort -dictionary $config(all_nodes)]
+   set config(execd_nodes) [lsort -dictionary $config(execd_nodes)]
+   set config(unique_execd_nodes) [lsort -dictionary $config(unique_execd_nodes)]
+   set config(unique_arch_nodes) [lsort -dictionary $config(unique_arch_nodes)]
+
    # for compatibility, we set CHECK_CORE_EXECD to the node list
    # TODO: should be eliminated, use $ts_config(execd_nodes) instead
    set CHECK_CORE_EXECD $config(execd_nodes)

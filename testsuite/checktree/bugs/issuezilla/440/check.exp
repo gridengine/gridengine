@@ -144,14 +144,14 @@ proc issue_440_check_qsub {} {
       puts $CHECK_OUTPUT "submitting job with command line length: [string length $command_line]"
 
       # submit job and wait for jobend
-      set jobid [ submit_job $command_line 1 60 $check_440_host "" "" 0 ]
+      set jobid [submit_job $command_line 1 60 $check_440_host "" "" 0]
       wait_for_jobstart  $jobid "long_cmd" 60 1 1
       wait_for_jobend $jobid "long_cmd" 60
       
-
       # read job output/error files
-      read_file $output_file f_output
-      read_file $error_file  f_error
+      # wait for the file to appear - this might take some time due to slow NFS
+      read_file $output_file f_output 60
+      read_file $error_file  f_error 60
    
 
       set nr_of_lines $f_output(0)

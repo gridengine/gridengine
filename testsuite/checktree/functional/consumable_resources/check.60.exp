@@ -1122,7 +1122,7 @@ proc consumable_resources_test {} {
       set test1_complex(test1) ""
       set_complex test1_complex
 
-      catch {  eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link.sh" } output
+      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link.sh" } output
       puts $CHECK_OUTPUT $output
 
       puts $CHECK_OUTPUT "done"

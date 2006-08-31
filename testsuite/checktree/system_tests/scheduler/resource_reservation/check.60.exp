@@ -201,7 +201,7 @@ proc resource_reservation_setup {} {
 
    set binary_arch "[resolve_arch $rr_host]"
 
-   set compile_arch_mt [resolve_build_arch_installed_libs $rr_host]
+   set compile_arch_mt [resolve_build_arch_installed_libs $rr_host 0]
    
    set binary_path "$CHECK_SOURCE_DIR/$compile_arch_mt"
   

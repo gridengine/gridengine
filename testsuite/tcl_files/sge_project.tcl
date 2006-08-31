@@ -31,73 +31,86 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+proc set_project_defaults {change_array} {
+   global ts_config CHECK_OUTPUT
+
+   upvar $change_array prj
+
+   set prj(name) template
+   set prj(oticket) 0
+   set prj(fshare) 0
+   set prj(acl) NONE
+   set prj(xacl) NONE
+}
+
 #                                                             max. column:     |
 #****** sge_procedures/add_prj() ******
 # 
 #  NAME
-#     add_prj -- ??? 
+#     add_prj -- add a project
 #
 #  SYNOPSIS
-#     add_prj { change_array } 
+#     add_prj {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
 #
 #  FUNCTION
-#     ??? 
+#     Add a project to the Grid Engine cluster.
+#     Supports fast (qconf -Aprj) and slow (qconf -aprj) mode.
 #
 #  INPUTS
-#     change_array - ??? 
+#     change_array    - the project description
+#     {fast_add 1}    -  use fast mode
+#     {on_host ""}    - execute qconf on this host (default: qmaster host)
+#     {as_user ""}    - execute qconf as this user (default: CHECK_USER)
+#     {raise_error 1} - raise error condition in case of errors?
 #
 #  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
+#       0 - success
+#     < 0 - error:
+#           -1 : timeout error (in editor called by qconf -aprj)
+#           -2 : project already exists
+#           -9 : we are in sge mode where we don't have projects
+#           ...: other errors, see sge_procedures/get_sge_error()
 #
 #  SEE ALSO
-#     ???/???
-#*******************************
-proc add_prj { change_array } {
-  global ts_config
+#     sge_procedures/get_sge_error()
+#*******************************************************************************
+proc add_prj {change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_ARCH 
 
-# returns 
-# -100 on unknown error
-# -1   on timeout
-# -2   if queue allready exists
-# 0    if ok
+   upvar $change_array chgar
 
-# name      template
-# oticket   0
-# fshare    0
-# acl       NONE
-# xacl      NONE  
-# 
-  global CHECK_ARCH 
-  global CHECK_CORE_MASTER CHECK_USER
+   if {[string compare $ts_config(product_type) "sge"] == 0} {
+      add_proc_error "add_prj" -1 "not possible for sge systems"
+      return -9
+   }
 
-  upvar $change_array chgar
+   set PROJECT [translate_macro MSG_PROJECT]
+   set ADDED [translate_macro MSG_SGETEXT_ADDEDTOLIST_SSSS "*" "*" "*" $PROJECT]
+   set ALREADY_EXISTS [translate_macro MSG_SGETEXT_ALREADYEXISTS_SS "*" "*"]
 
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     add_proc_error "add_prj" -1 "not possible for sge systems"
-     return
-  }
+   if {$fast_add} {
+      set_project_defaults old_config
+      foreach elem [array names chgar] {
+         set old_config($elem) $chgar($elem)
+      }
+      set tmpfile [dump_array_to_tmpfile old_config]
+      set result [start_sge_bin "qconf" "-Aprj $tmpfile" $on_host $as_user]
+      set messages(index) {0 -2}
+      set messages(0) $ADDED
+      set messages(-2) $ALREADY_EXISTS
+      set ret [handle_sge_errors "add_prj" "qconf -Aprj" $result messages $raise_error]
+   } else {
+      set vi_commands [build_vi_command chgar]
 
-  set vi_commands [build_vi_command chgar]
-
-#  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
+      set ret [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS]
   
-  if {$result == -1 } { add_proc_error "add_prj" -1 "timeout error" }
-  if {$result == -2 } { add_proc_error "add_prj" -1 "\"[set chgar(name)]\" already exists" }
-  if {$result != 0  } { add_proc_error "add_prj" -1 "could not add project \"[set chgar(name)]\"" }
+      if {$ret == -1} { add_proc_error "add_prj" -1 "timeout error" $raise_error }
+      if {$ret == -2} { add_proc_error "add_prj" -1 "project \"$chgar(name)\" already exists" $raise_error }
+      if {$ret != 0 } { add_proc_error "add_prj" -1 "could not add project \"$chgar(name)\"" $raise_error }
+   }
 
-  return $result
+   return $ret
 }
 
 proc get_prj { prj_name change_array } {
@@ -253,7 +266,7 @@ proc get_project_list {{output_var result} {on_host ""} {as_user ""} {raise_erro
 # returns
 # -100 on unknown error from handle_vi_edit
 # -1   on timeout
-# -2   if queue allready exists
+# -2   if queue already exists
 # -3   if value not  u_long32
 # -4   if unknown attribute
 # 0    if ok
@@ -385,3 +398,27 @@ proc mod_project_error {result tmpfile raise_error} {
 
    return $ret
 }
+
+proc test_project {} {
+   global ts_config CHECK_OUTPUT
+
+   # test adding projects
+   set project(name) "test1"
+
+   add_prj project 0 "" "" 0 ;# slow add
+   del_prj "test1"
+
+   add_prj project 1 "" "" 0 ;# fast add
+
+   # test adding duplicates (must fail)
+   add_prj project 0 "" "" 0 ;# slow add duplicate
+   add_prj project 1 "" "" 0 ;# fast add duplicate
+
+   del_prj "test1"
+
+   # test other errors
+   set project(name) "default"
+   add_prj project 0 "" "" 0 ;# slow add incorrect prj (name is keyword)
+   add_prj project 1 "" "" 0 ;# fast add incorrect prj (name is keyword)
+}
+

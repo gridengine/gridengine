@@ -895,33 +895,33 @@ int err_length) {
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDIN, stdin_path, SGE_PATH_MAX);
 
-   DPRINTF(( "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "\"\"" ));
-   DPRINTF(( "fs_stdin_path=%s\n", fs_stdin_path ? fs_stdin_path : "" ));
+   DPRINTF(( "fs_stdin_host=%s\n", fs_stdin_host));
+   DPRINTF(( "fs_stdin_path=%s\n", fs_stdin_path));
    DPRINTF(( "fs_stdin_tmp_path=%s/%s\n", tmpdir, fs_stdin_file ? fs_stdin_file : "" ));
    DPRINTF(( "fs_stdin_file_staging=%d\n", bInputFileStaging ));
 
-   DPRINTF(( "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"\"\"" ));
-   DPRINTF(( "fs_stdout_path=%s\n", fs_stdout_path ? fs_stdout_path:"" ));
+   DPRINTF(( "fs_stdout_host=%s\n", fs_stdout_host));
+   DPRINTF(( "fs_stdout_path=%s\n", fs_stdout_path));
    DPRINTF(( "fs_stdout_tmp_path=%s/%s\n", tmpdir, fs_stdout_file ? fs_stdout_file : "" ));
    DPRINTF(( "fs_stdout_file_staging=%d\n", bOutputFileStaging ));
 
-   DPRINTF(( "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"\"\"" ));
-   DPRINTF(( "fs_stderr_path=%s\n", fs_stderr_path ? fs_stderr_path:"" ));
+   DPRINTF(( "fs_stderr_host=%s\n", fs_stderr_host));
+   DPRINTF(( "fs_stderr_path=%s\n", fs_stderr_path));
    DPRINTF(( "fs_stderr_tmp_path=%s/%s\n", tmpdir, fs_stderr_file ? fs_stderr_file : "" ));
    DPRINTF(( "fs_stderr_file_staging=%d\n", bErrorFileStaging ));
 
-   fprintf(fp, "fs_stdin_host=%s\n", fs_stdin_host ? fs_stdin_host : "\"\"" );
-   fprintf(fp, "fs_stdin_path=%s\n", fs_stdin_path ? fs_stdin_path:"" );
+   fprintf(fp, "fs_stdin_host=%s\n", fs_stdin_host);
+   fprintf(fp, "fs_stdin_path=%s\n", fs_stdin_path);
    fprintf(fp, "fs_stdin_tmp_path=%s/%s\n", tmpdir, fs_stdin_file ? fs_stdin_file:"" );
    fprintf(fp, "fs_stdin_file_staging=%d\n", bInputFileStaging );
 
-   fprintf(fp, "fs_stdout_host=%s\n", fs_stdout_host ? fs_stdout_host:"\"\"" );
-   fprintf(fp, "fs_stdout_path=%s\n", fs_stdout_path ? fs_stdout_path:"" );
+   fprintf(fp, "fs_stdout_host=%s\n", fs_stdout_host);
+   fprintf(fp, "fs_stdout_path=%s\n", fs_stdout_path);
    fprintf(fp, "fs_stdout_tmp_path=%s/%s\n", tmpdir, fs_stdout_file ? fs_stdout_file:"" );
    fprintf(fp, "fs_stdout_file_staging=%d\n", bOutputFileStaging );
 
-   fprintf(fp, "fs_stderr_host=%s\n", fs_stderr_host ? fs_stderr_host:"\"\"" );
-   fprintf(fp, "fs_stderr_path=%s\n", fs_stderr_path ? fs_stderr_path:"" );
+   fprintf(fp, "fs_stderr_host=%s\n", fs_stderr_host);
+   fprintf(fp, "fs_stderr_path=%s\n", fs_stderr_path);
    fprintf(fp, "fs_stderr_tmp_path=%s/%s\n", tmpdir, fs_stderr_file ? fs_stderr_file:"" );
    fprintf(fp, "fs_stderr_file_staging=%d\n", bErrorFileStaging );
 
@@ -1370,6 +1370,27 @@ int err_length) {
 
    /* should the addgrp-id be used to kill processes */
    fprintf(fp, "enable_addgrp_kill=%d\n", (int)mconf_get_enable_addgrp_kill());
+
+#ifdef INTERIX
+   /* should the job display it's gui to the visible desktop? */
+   {
+      const char *s;
+      ulong      ultemp = 0;
+      lListElem  *ep    = job_get_request(jep, "display_win_gui");
+   
+      if(ep != NULL) {
+         s = lGetString(ep, CE_stringval);
+         if(s == NULL ||
+            !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
+            lFreeList(&environmentList);
+            FCLOSE(fp);
+            DEXIT;
+            return -3;
+         }
+      }
+      fprintf(fp, "display_win_gui="sge_u32"\n", ultemp);
+   }
+#endif
 
    lFreeList(&environmentList);
    FCLOSE(fp);

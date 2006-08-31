@@ -96,6 +96,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST; 
      case OA_LISTNAME_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST; 
+     case OA_LIRS_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_LIRS_LIST; 
      case OA_MAIL_ADDRESS:
          return MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS; 
      case OA_MAIL_LIST:
@@ -294,6 +296,16 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Ahgrp_OPT, MSG_GDI_UTEXT_Ahgrp_OPT);
    }
 
+   if (VALID_OPT(alrs_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_alrs_OPT, MSG_GDI_UTEXT_alrs_OPT);
+      MARK(OA_LIRS_LIST);
+   }
+
+   if (VALID_OPT(Alrs_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_Alrs_OPT, MSG_GDI_UTEXT_Alrs_OPT);
+      MARK(OA_LIRS_LIST);
+   }
+
    if (VALID_OPT(am_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_am_OPT_USER_LIST, MSG_GDI_UTEXT_am_OPT_USER_LIST);
       MARK(OA_USER_LIST);
@@ -474,6 +486,11 @@ FILE *fp
    if (VALID_OPT(dl_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_dl_OPT_DATE_TIME , MSG_GDI_UTEXT_dl_OPT_DATE_TIME );
       MARK(OA_DATE_TIME);
+   }
+
+   if (VALID_OPT(dlrs_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_dlrs_OPT, MSG_GDI_UTEXT_dlrs_OPT);
+      MARK(OA_LIRS_LIST);
    }
 
    if (VALID_OPT(dm_OPT, uti_state_get_mewho())) {
@@ -698,14 +715,6 @@ FILE *fp
          MSG_GDI_UTEXT_mconf_OPT_HOSTLISTORGLOBAL);
    }
 
-   if (VALID_OPT(msconf_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_msconf_OPT, MSG_GDI_UTEXT_msconf_OPT);
-   }
-   
-   if (VALID_OPT(Msconf_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_Msconf_OPT, MSG_GDI_UTEXT_Msconf_OPT);
-   }
-   
    if (VALID_OPT(me_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_me_OPT_SERVER, MSG_GDI_UTEXT_me_OPT_SERVER);
    }
@@ -720,6 +729,16 @@ FILE *fp
 
    if (VALID_OPT(Mhgrp_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_Mhgrp_OPT, MSG_GDI_UTEXT_Mhgrp_OPT);
+   }
+
+   if (VALID_OPT(mlrs_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_mlrs_OPT, MSG_GDI_UTEXT_mlrs_OPT);
+      MARK(OA_LIRS_LIST);
+   }
+
+   if (VALID_OPT(Mlrs_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_Mlrs_OPT, MSG_GDI_UTEXT_Mlrs_OPT);
+      MARK(OA_LIRS_LIST);
    }
 
    if (VALID_OPT(mp_OPT, uti_state_get_mewho())) {
@@ -746,6 +765,14 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Mq_OPT_FNAME, MSG_GDI_UTEXT_Mq_OPT_FNAME);
    }
 
+   if (VALID_OPT(msconf_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_msconf_OPT, MSG_GDI_UTEXT_msconf_OPT);
+   }
+   
+   if (VALID_OPT(Msconf_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_Msconf_OPT, MSG_GDI_UTEXT_Msconf_OPT);
+   }
+   
    if (VALID_OPT(mstnode_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_MSTNODE_NODE_SHARES_LIST, 
          MSG_GDI_UTEXT_MSTNODE_NODE_SHARES_LIST );
@@ -991,6 +1018,16 @@ FILE *fp
  
    if (VALID_OPT(sick_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_sick_OPT , MSG_GDI_UTEXT_sick_OPT );
+   }
+
+   if (VALID_OPT(slrs_OPT,  uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_slrs_OPT , MSG_GDI_UTEXT_slrs_OPT );
+      MARK(OA_LIRS_LIST);
+   }
+
+   if (VALID_OPT(slrsl_OPT,  uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_slrsl_OPT , MSG_GDI_UTEXT_slrsl_OPT );
+      MARK(OA_LIRS_LIST);
    }
 
    if (VALID_OPT(sm_OPT, uti_state_get_mewho())) {

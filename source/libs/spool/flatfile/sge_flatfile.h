@@ -113,6 +113,7 @@ typedef struct spool_flatfile_instr {
    bool align_data;
    bool record_start_end_newline;
    bool show_empty_fields;
+   bool ignore_list_name;
    const char name_value_delimiter;
    const char field_delimiter;
    const char record_delimiter;

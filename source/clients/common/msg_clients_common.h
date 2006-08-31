@@ -48,6 +48,10 @@
 #define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED                 _MESSAGE(1012, _("scheduler configuration: sge_gdi failed"))
 #define MSG_GDI_HGRPCONFIGGDIFAILED                      _MESSAGE(1013, _("host group configuration: sge_gdi failed"))
 #define MSG_GDI_GLOBALCONFIGGDIFAILED                    _MESSAGE(1014, _("global configuration: sge_gdi failed"))
+
+#define MSG_COMMON_help_OPT_USAGE                        _MESSAGE(1015, _("print this help"))
+#define MSG_COMMON_xml_OPT_USAGE                         _MESSAGE(1016, _("display the information in XML-Format"))
+
 /*
  * qstat_printing.c
  */
@@ -84,6 +88,9 @@
 
 #define MSG_CENTRY_NULL_NAME          _MESSAGE(1041, _("Invalid complex attribute definition"))
 #define MSG_CENTRY_NULL_SHORTCUT_S    _MESSAGE(1042, _("Complex attribute "SFQ" has no shortcut defined"))
+
+#define MSG_LIRSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("limitation rule set "SFQ" not found in file "SFQ))
+#define MSG_NOLIRSFOUND              _MESSAGE(1044, _("No limitation rule set found"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

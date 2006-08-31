@@ -73,6 +73,9 @@
 #include "sge_signal.h"
 #include "sge_mtutil.h"
 
+#include "sge_userprj_qmaster.h"
+#include "sge_userset_qmaster.h"
+
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
@@ -111,6 +114,9 @@ cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, 
 static lListElem * 
 qinstance_create(const lListElem *cqueue, lList **answer_list,
                  const char *hostname, bool *is_ambiguous, monitoring_t *monitor);
+
+static void
+cqueue_update_categories(const lListElem *new_cq, const lListElem *old_cq);
 
 u_long32
 sge_get_qinstance_number(void)
@@ -720,7 +726,9 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    lList *qinstances;
    lListElem *qinstance; 
    DENTER(TOP_LAYER, "cqueue_success");
-   
+  
+   cqueue_update_categories(cqueue, old_cqueue);
+
    /*
     * CQ modify or add event
     */
@@ -986,6 +994,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
                                    0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
+                  cqueue_update_categories(NULL, cqueue);
                   lRemoveElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), &cqueue);
 
                   INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
@@ -1126,4 +1135,172 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
 }
 
                         
+/****** sge_cqueue_qmaster/cqueue_diff_sublist() *******************************
+*  NAME
+*     cqueue_diff_sublist() -- Diff cluster queue sublists
+*
+*  SYNOPSIS
+*     static void cqueue_diff_sublist(const lListElem *new, const lListElem
+*     *old, int snm1, int snm2, int sublist_nm, int key_nm, const lDescr *dp,
+*     lList **new_sublist, lList **old_sublist)
+*
+*  FUNCTION
+*     Determine new/old refereneces in a cluster queue configuration sublist.
+*
+*  INPUTS
+*     const lListElem *new - New cluster queue (CQ_Type)
+*     const lListElem *old - Old cluster queue (CQ_Type)
+*     int snm1             - First cluster queue sublist field
+*     int snm2             - Second cluster queue sublist field
+*     int sublist_nm       - Subsub list field
+*     int key_nm           - Field with key in subsublist
+*     const lDescr *dp     - Type for outgoing sublist arguments
+*     lList **new_sublist  - List of new references
+*     lList **old_sublist  - List of old references
+*
+*  NOTES
+*     MT-NOTE: cqueue_diff_sublist() is MT safe
+*******************************************************************************/
+static void cqueue_diff_sublist(const lListElem *new, const lListElem *old,
+      int snm1, int snm2, int sublist_nm, int key_nm, const lDescr *dp,
+      lList **new_sublist, lList **old_sublist)
+{
+   const lListElem *qc, *ep;
+   const char *p;
+
+   DENTER(TOP_LAYER, "cqueue_diff_sublist");
+
+   /* collect 'old' entries in 'old_sublist' */
+   if (old && old_sublist) {
+      for_each (qc, lGetList(old, snm1)) {
+         for_each (ep, lGetList(qc, sublist_nm)) {
+            p = lGetString(ep, key_nm);
+            if (!lGetElemStr(*old_sublist, key_nm, p))
+               lAddElemStr(old_sublist, key_nm, p, dp);
+         }
+      }
+      for_each (qc, lGetList(old, snm2)) {
+         for_each (ep, lGetList(qc, sublist_nm)) {
+            p = lGetString(ep, key_nm);
+            if (!lGetElemStr(*old_sublist, key_nm, p))
+               lAddElemStr(old_sublist, key_nm, p, dp);
+         }
+      }
+   }
+
+   /* collect 'new' entries in 'new_sublist' */
+   if (new && new_sublist) {
+      for_each (qc, lGetList(new, snm1)) {
+         for_each (ep, lGetList(qc, sublist_nm)) {
+            p = lGetString(ep, key_nm);
+            if (!lGetElemStr(*new_sublist, key_nm, p))
+               lAddElemStr(new_sublist, key_nm, p, dp);
+         }
+      }
+      for_each (qc, lGetList(new, snm2)) {
+         for_each (ep, lGetList(qc, sublist_nm)) {
+            p = lGetString(ep, key_nm);
+            if (!lGetElemStr(*new_sublist, key_nm, p))
+               lAddElemStr(new_sublist, key_nm, p, dp);
+         }
+      }
+   }
+
+   DEXIT;
+   return;
+}
+
+/****** sge_cqueue_qmaster/cqueue_diff_projects() ******************************
+*  NAME
+*     cqueue_diff_projects() -- Diff old/new cluster queue projects
+*
+*  SYNOPSIS
+*     void cqueue_diff_projects(const lListElem *new, const lListElem *old,
+*     lList **new_prj, lList **old_prj)
+*
+*  FUNCTION
+*     A diff new/old is made regarding cluster queue projects/xprojects.
+*     Project references are returned in new_prj/old_prj.
+*
+*  INPUTS
+*     const lListElem *new - New cluster queue (CQ_Type)
+*     const lListElem *old - Old cluster queue (CQ_Type)
+*     lList **new_prj      - New project references (UP_Type)
+*     lList **old_prj      - Old project references (UP_Type)
+*
+*  NOTES
+*     MT-NOTE: cqueue_diff_projects() is MT safe
+*******************************************************************************/
+void cqueue_diff_projects(const lListElem *new,
+         const lListElem *old, lList **new_prj, lList **old_prj)
+{
+   cqueue_diff_sublist(new, old, CQ_projects, CQ_xprojects,
+         APRJLIST_value, UP_name, UP_Type, new_prj, old_prj);
+   lDiffListStr(UP_name, new_prj, old_prj);
+}
+
+/****** sge_cqueue_qmaster/cqueue_diff_usersets() ******************************
+*  NAME
+*     cqueue_diff_projects() -- Diff old/new cluster queue usersets
+*
+*  SYNOPSIS
+*     void cqueue_diff_projects(const lListElem *new, const lListElem *old,
+*     lList **new_prj, lList **old_prj)
+*
+*  FUNCTION
+*     A diff new/old is made regarding cluster queue acl/xacl.
+*     Userset references are returned in new_acl/old_acl.
+*
+*  INPUTS
+*     const lListElem *new - New cluster queue (CQ_Type)
+*     const lListElem *old - Old cluster queue (CQ_Type)
+*     lList **new_acl      - New userset references (US_Type)
+*     lList **old_acl      - Old userset references (US_Type)
+*
+*  NOTES
+*     MT-NOTE: cqueue_diff_usersets() is MT safe
+*******************************************************************************/
+void cqueue_diff_usersets(const lListElem *new,
+      const lListElem *old, lList **new_acl, lList **old_acl)
+{
+   cqueue_diff_sublist(new, old, CQ_acl, CQ_xacl,
+         AUSRLIST_value, US_name, US_Type, new_acl, old_acl);
+   lDiffListStr(US_name, new_acl, old_acl);
+}
+
+
+/****** sge_cqueue_qmaster/cqueue_update_categories() **************************
+*  NAME
+*     cqueue_update_categories() -- Update categories wrts userset/project
+*
+*  SYNOPSIS
+*     static void cqueue_update_categories(const lListElem *new_cq, const
+*     lListElem *old_cq)
+*
+*  FUNCTION
+*     The userset/project information wrts categories is updated based
+*     on new/old cluster queue configuration and events are sent upon
+*     changes.
+*
+*  INPUTS
+*     const lListElem *new_cq - New cluster queue (CQ_Type)
+*     const lListElem *old_cq - Old cluster queue (CQ_Type)
+*
+*  NOTES
+*     MT-NOTE: cqueue_update_categories() is not MT safe
+*******************************************************************************/
+static void cqueue_update_categories(const lListElem *new_cq, const lListElem *old_cq)
+{
+   lList *old = NULL, *new = NULL;
+
+   cqueue_diff_projects(new_cq, old_cq, &new, &old);
+   project_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+
+   cqueue_diff_usersets(new_cq, old_cq, &new, &old);
+   userset_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+}
 

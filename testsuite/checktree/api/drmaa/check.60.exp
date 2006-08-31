@@ -57,9 +57,9 @@ set check_highest_level   205
 set check_description(200)  "tests to verify DRMAA 0.95 library: single threaded"
 set check_description(201)  "tests to verify DRMAA 0.95 library: multi threaded"
 set check_description(202)  "tests to verify DRMAA 0.95 library: additional interfaces"
-set check_description(200)  "tests to verify DRMAA 1.0 library: single threaded"
-set check_description(201)  "tests to verify DRMAA 1.0 library: multi threaded"
-set check_description(202)  "tests to verify DRMAA 1.0 library: additional interfaces"
+set check_description(203)  "tests to verify DRMAA 1.0 library: single threaded"
+set check_description(204)  "tests to verify DRMAA 1.0 library: multi threaded"
+set check_description(205)  "tests to verify DRMAA 1.0 library: additional interfaces"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -247,7 +247,7 @@ proc drmaa_check {} {
             # puts "starting single threaded test ST_ATTRIBUTE_CHECK"
             # drmaa_test $host $binary_path ST_ATTRIBUTE_CHECK $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh "$CHECK_USER@localhost"
             # need to remove "-m a" from sge_request file 
-            # need to remove entry "test.cat -N ExitTest -h" to users .qtask file
+            # need to move entry "test.cat -N ExitTest -h" to users .qtask file
             # -- 
          } 
          "201" { 
@@ -264,7 +264,7 @@ proc drmaa_check {} {
             shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir] 
 
             # this test must fail when qmaster is down
-            set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa ST_SUBMIT_WAIT prg_exit_state 500]
+            set test_output [start_remote_prog $host $CHECK_USER $binary_path/test_drmaa "ST_SUBMIT_WAIT $ts_config(product_root)/examples/jobs/sleeper.sh" prg_exit_state 500]
 
             puts $CHECK_OUTPUT "exit status was $prg_exit_state"
             puts $CHECK_OUTPUT "output was\n$test_output"
@@ -423,7 +423,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [start_sge_bin "qdel" $job_id "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
@@ -457,7 +457,7 @@ proc drmaa_test_failing_control_operations { host binary_path } {
    drmaa_test $host $binary_path ST_DRMAA_CONTROL "DRMAA_CONTROL_RESUME  DRMAA_ERRNO_RESUME_INCONSISTENT_STATE $job_id.2" $CHECK_FIRST_FOREIGN_SYSTEM_USER
 
    # delete job as user1
-   set result [ run_command_as_user "$ts_config(master_host)" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "$job_id" 1 ]
+   set result [start_sge_bin "qdel" $job_id "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
    puts $CHECK_OUTPUT "qdel_output = \n$result"
     
    # ensure control operation isused as user1 on no longer existing job results in a DRMAA_ERRNO_INVALID_JOB 
@@ -482,3 +482,4 @@ proc drmaa_redirect_lib {version {host CHECK_HOST}} {
    start_remote_prog $CHECK_HOST "root" "/bin/rm" "$ts_config(source_dir)/$compile_arch/test_drmaa"
    start_remote_prog $CHECK_HOST "root" "/bin/ln" "-s test_drmaa.$version $ts_config(source_dir)/$compile_arch/test_drmaa"
 }
+

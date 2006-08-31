@@ -60,58 +60,6 @@
 #include "msg_qstat.h"
 #include "msg_clients_common.h"
 
-const char *
-get_root_qstat_file_path(dstring *file_path) 
-{
-   const char *ret;
-
-   DENTER (TOP_LAYER, "get_root_qstat_file_path");
-   sge_dstring_sprintf (file_path, "%s/%s", path_state_get_cell_root(),
-                        SGE_COMMON_DEF_QSTAT_FILE);
-   ret = sge_dstring_get_string(file_path);
-   DEXIT;
-   return ret;
-}
-
-const char *
-get_home_qstat_file_path(dstring *file_path, lList **answer_list) 
-{
-   const char *ret;
-   struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
-
-   DENTER (TOP_LAYER, "get_home_qstat_file_path");
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, 
-                        buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
-  if (!pwd) {
-      answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
-                              ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S,
-                              uti_state_get_user_name());
-      DEXIT;
-      return NULL;
-   }
-   if (!pwd->pw_dir) {
-      answer_list_add_sprintf(answer_list, STATUS_EDISK, ANSWER_QUALITY_ERROR,
-                              MSG_USER_NOHOMEDIRFORUSERX_S, 
-                              uti_state_get_user_name());
-      DEXIT;
-      return NULL;
-   }
-
-   sge_dstring_sprintf (file_path, "%s/%s", pwd->pw_dir,
-                        SGE_HOME_DEF_QSTAT_FILE);
-   ret = sge_dstring_get_string(file_path);
-   DEXIT;
-   return ret;
-}
-
 bool
 switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
                                   int mode, const char *file)
@@ -313,7 +261,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
          fprintf(fp, "        [-g {d}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS);
          fprintf(fp, "        [-g {t}]                          %s\n",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
       }
-      fprintf(fp, "        [-help]                           %s\n",MSG_QSTAT_USAGE_PRINTTHISHELP);
+      fprintf(fp, "        [-help]                           %s\n",MSG_COMMON_help_OPT_USAGE);
       if (!qselect_mode)
          fprintf(fp, "        [-j job_identifier_list ]         %s\n",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
       fprintf(fp, "        [-l resource_list]                %s\n",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
@@ -341,7 +289,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       if (!qselect_mode) {
          fprintf(fp, "        [-urg]                            %s\n",MSG_QSTAT_URGENCYINFO );
          fprintf(fp, "        [-pri]                            %s\n",MSG_QSTAT_PRIORITYINFO );
-         fprintf(fp, "        [-xml]                            %s\n", MSG_QSTAT_XML_OUTPUT );
+         fprintf(fp, "        [-xml]                            %s\n", MSG_COMMON_xml_OPT_USAGE);
       }   
       
       if (getenv("MORE_INFO")) {

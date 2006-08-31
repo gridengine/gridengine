@@ -60,7 +60,9 @@ SPOOLFLIB_ADD_OBJS = $(SPOOLFLIB_ADD_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoolflib: $(SPOOLFLIB) $(SPOOLFLIB_TEST_PROGS)
+spoolflib: $(SPOOLFLIB) 
+
+spoolflib_all: $(SPOOLFLIB) $(SPOOLFLIB_TEST_PROGS)
 
 spoolflib_clean:
 		$(RM) $(SPOOLFLIB_OBJS) libspoolf.a libspoolf$(SHAREDEXT) $(SPOOLFLIB_TEST_PROGS) \

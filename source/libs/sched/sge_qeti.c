@@ -204,23 +204,20 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    return 0;
 }
 
-sge_qeti_t *sge_qeti_allocate2(lListElem *cr)
+sge_qeti_t *sge_qeti_allocate2(lList *cr_list)
 {
    sge_qeti_t *iter;
-   lList *rue_list;
 
    if (!(iter = calloc(1, sizeof(sge_qeti_t)))) {
       return NULL;
    }
 
-   rue_list = lCreateList("", lGetElemDescr(cr));
-   lAppendElem(rue_list, cr);
-   sge_qeti_list_add(&iter->cr_refs_pe, "slots", rue_list, 10, true);
+   sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, cr_list, 10, true);
    return iter;
 }
 
 sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, 
-      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list)
+      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, lList *hgrp_list)
 {
    sge_qeti_t *iter = NULL;
    lListElem *next_queue, *qep, *hep;
@@ -281,7 +278,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          }
 
          /* consider only those queues that match this job (statically) */
-         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
+         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list, hgrp_list) != DISPATCH_OK) { 
             continue;
          }   
 

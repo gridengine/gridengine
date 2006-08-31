@@ -1243,45 +1243,12 @@ int sge_hostcmp(const char *h1, const char*h2)
       sge_hostcpy(h1_cpy,h1);
       sge_hostcpy(h2_cpy,h2);
  
-      if (h1_cpy && h2_cpy) {
-        cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
- 
-        DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
-      }
+      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
+
+      DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
    }
  
    DEXIT;
    return cmp;
 }
-
-/****** uti/hostname/sge_is_hgroup_ref() **************************************
-*  NAME
-*     sge_is_hgroup_ref() -- Is string a valid hgroup name 
-*
-*  SYNOPSIS
-*     bool sge_is_hgroup_ref(const char *string) 
-*
-*  FUNCTION
-*     Is string a valid hgroup name 
-*
-*  INPUTS
-*     const char *string - hostname or hostgroup name 
-*
-*  RESULT
-*     bool - Result
-*        true  - hostgroup
-*        false - no hostgroup (hostname)
-*******************************************************************************/
-bool sge_is_hgroup_ref(const char *string)
-{
-   bool ret = false;
-
-   if (string != NULL) {
-      if (string[0] == HOSTGROUP_INITIAL_CHAR) {
-         ret = true;
-      } 
-   }
-   return ret;
-}
-
 

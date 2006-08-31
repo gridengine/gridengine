@@ -1841,7 +1841,7 @@ static int test(int *argc, char **argv[], int parse_args)
          }
 
          /* wait job */
-         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, 
+         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_NO_WAIT, NULL, 
                diagnosis, sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
             printf("drmaa_wait() failed %s: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
             return 1;

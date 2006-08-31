@@ -41,7 +41,7 @@ depend:
 	@echo No dependencies for 3rd_party remote 
 
 clean: 
-	$(RM) $(REMOTE_TARGETS) $(RSH_OBJS) $(RSHD_OBJS) $(RLOGIN_OBJS)
+	$(RM) $(REMOTE_TARGETS) $(RSH_OBJS) $(RSHD_OBJS) $(RLOGIN_OBJS) sgessh.o
 
 messages:
 

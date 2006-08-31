@@ -63,6 +63,7 @@
 
 static char object_name[] = "parallel environment";
 
+static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe);
 
 int pe_mod(
 lList **alpp,
@@ -242,6 +243,7 @@ int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **p
 
    pe_name = lGetString(ep, PE_name);
 
+   pe_update_categories(ep, old_ep);
 
    sge_add_event( 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
                  pe_name, NULL, NULL, ep);
@@ -318,6 +320,8 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EEXIST;
    }
 
+   pe_update_categories(NULL, ep);
+
    /* delete found pe element */
    lRemoveElem(master_pe_list, &ep);
 
@@ -362,7 +366,89 @@ lList *pe_list
    return;
 }
 
+/****** sge_pe_qmaster/pe_diff_usersets() **************************************
+*  NAME
+*     pe_diff_usersets() -- Diff old/new PE usersets
+*
+*  SYNOPSIS
+*     void pe_diff_usersets(const lListElem *new, const lListElem *old, lList
+*     **new_acl, lList **old_acl)
+*
+*  FUNCTION
+*     A diff new/old is made regarding PE acl/xacl.
+*     Userset references are returned in new_acl/old_acl.
+*
+*  INPUTS
+*     const lListElem *new - New PE (PE_Type)
+*     const lListElem *old - Old PE (PE_Type)
+*     lList **new_acl      - New userset references (US_Type)
+*     lList **old_acl      - Old userset references (US_Type)
+*
+*  NOTES
+*     MT-NOTE: pe_diff_usersets() is not MT safe
+*******************************************************************************/
+void pe_diff_usersets(const lListElem *new,
+      const lListElem *old, lList **new_acl, lList **old_acl)
+{
+   const lListElem *ep;
+   const char *u;
+
+   if (old && old_acl) {
+      for_each (ep, lGetList(old, PE_user_list)) {
+         u = lGetString(ep, US_name);
+         if (!lGetElemStr(*old_acl, US_name, u))
+            lAddElemStr(old_acl, US_name, u, US_Type);
+      }
+      for_each (ep, lGetList(old, PE_xuser_list)) {
+         u = lGetString(ep, US_name);
+         if (!lGetElemStr(*old_acl, US_name, u))
+            lAddElemStr(old_acl, US_name, u, US_Type);
+      }
+   }
+
+   if (new && new_acl) {
+      for_each (ep, lGetList(new, PE_user_list)) {
+         u = lGetString(ep, US_name);
+         if (!lGetElemStr(*new_acl, US_name, u))
+            lAddElemStr(new_acl, US_name, u, US_Type);
+      }
+      for_each (ep, lGetList(new, PE_xuser_list)) {
+         u = lGetString(ep, US_name);
+         if (!lGetElemStr(*new_acl, US_name, u))
+            lAddElemStr(new_acl, US_name, u, US_Type);
+      }
+   }
+
+   lDiffListStr(US_name, new_acl, old_acl);
+}
 
 
+/****** sge_pe_qmaster/pe_update_categories() **********************************
+*  NAME
+*     pe_update_categories() -- Update categories wrts userset
+*
+*  SYNOPSIS
+*     static void pe_update_categories(const lListElem *new_pe, const lListElem
+*     *old_pe)
+*
+*  FUNCTION
+*     The userset information wrts categories is updated based
+*      on new/old PE configuration and events are sent upon changes.
+*
+*  INPUTS
+*     const lListElem *new_pe - New PE (PE_Type)
+*     const lListElem *old_pe - Old PE (PE_Type)
+*
+*  NOTES
+*     MT-NOTE: pe_update_categories() is not MT safe
+*******************************************************************************/
+static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe)
+{
+   lList *old = NULL, *new = NULL;
 
+   pe_diff_usersets(new_pe, old_pe, &new, &old);
+   userset_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+}
 

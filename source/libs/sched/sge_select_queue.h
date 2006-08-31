@@ -103,7 +103,9 @@ typedef struct {
    lList      *queue_list;        /* the queues (QU_Type)                           */
    lList      *centry_list;       /* the complex entries (CE_Type)                  */
    lList      *acl_list;          /* the user sets (US_Type)                        */
-   bool       is_reservation;      /* true, if a reservation for this job should be done */
+   lList      *hgrp_list;         /* the host group list (HGRP_Type)                */
+   lList      *lirs_list;         /* the limitation rule set list (LIRS_Type)       */ 
+   bool       is_reservation;     /* true, if a reservation for this job should be done */
    /* ------ this section is the resulting assignment ----------------------------- */
    lListElem  *pe;                /* the parallel environment (PE_Type)             */
    lList      *gdil;              /* the resources (JG_Type)                        */
@@ -112,7 +114,7 @@ typedef struct {
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
+#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
@@ -142,7 +144,7 @@ bool is_requested(lList *req, const char *attr);
 
 dispatch_t 
 sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
-                       const lListElem *ckpt, lList *centry_list, lList *acl_list);
+                       const lListElem *ckpt, lList *centry_list, lList *acl_list, lList *hgrp_list);
 
 dispatch_t
 sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, lList *centry_list, 

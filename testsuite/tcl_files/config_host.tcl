@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.6"
+set    actual_ts_host_config_version "1.8"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -358,10 +358,22 @@ proc host_config_hostlist_show_hosts {array_name} {
       for { set i 0 } { $i < [ expr ( $max_length - [ string length $host ]  ) ] } { incr i 1 } {  
           append space " "
       }
+      set c_comp 0
+      set j_comp 0
+      set all_comp {}
       if {[host_conf_is_compile_host $host config]} {
-          set comp_host "(compile host)"
+         set c_comp 1
+         lappend all_comp "c"
+      }
+      if {[host_conf_is_java_compile_host $host config]} {
+         set j_comp 1
+         lappend all_comp "java"
+      }
+
+      if {$c_comp || $j_comp} {
+         set comp_host "(compile host: $all_comp)"
       } else {
-          set comp_host "              "
+         set comp_host "                      "
       }
 
       set conf_arch [host_conf_get_arch $host config]
@@ -554,12 +566,20 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
       set java_bin "" 
    }
 
+   set myenv(EN_QUIET) "1"
+   set java15_bin [ start_remote_prog $new_host $CHECK_USER "/bin/csh" "-c \"source /vol2/resources/en_jdk15 ; which java\"" prg_exit_state 12 0 myenv 1 0 ]
+
+   if { $prg_exit_state != 0 } {
+      set java15_bin "" 
+   }
+
    set config($new_host,expect)        [string trim $expect_bin]
    set config($new_host,vim)           [string trim $vim_bin]
    set config($new_host,tar)           [string trim $tar_bin]
    set config($new_host,gzip)          [string trim $gzip_bin]
    set config($new_host,ssh)           [string trim $ssh_bin]
    set config($new_host,java)          [string trim $java_bin]
+   set config($new_host,java15)        [string trim $java15_bin]
    set config($new_host,loadsensor)    ""
    set config($new_host,processors)    1
    set config($new_host,spooldir)      ""
@@ -570,6 +590,9 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    set config($new_host,compile,53)    0
    set config($new_host,compile,60)    0
    set config($new_host,compile,65)    0
+   set config($new_host,java_compile,53)    0
+   set config($new_host,java_compile,60)    0
+   set config($new_host,java_compile,65)    0
    set config($new_host,compile_time)  0
    set config($new_host,response_time) [ expr ( [timestamp] - $time ) ]
    set config($new_host,fr_locale)     ""
@@ -658,6 +681,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "   gzip          : $config($host,gzip)"
       puts $CHECK_OUTPUT "   ssh           : $config($host,ssh)"
       puts $CHECK_OUTPUT "   java          : $config($host,java)"
+      puts $CHECK_OUTPUT "   java15        : $config($host,java15)"
       puts $CHECK_OUTPUT "   loadsensor    : $config($host,loadsensor)"
       puts $CHECK_OUTPUT "   processors    : $config($host,processors)"
       puts $CHECK_OUTPUT "   spooldir      : $config($host,spooldir)"
@@ -670,6 +694,11 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          puts $CHECK_OUTPUT "   compile       : compile host for \"$arch\" binaries ($ts_config(gridengine_version))"
       } else {
          puts $CHECK_OUTPUT "   compile       : not a compile host"
+      }
+      if {[host_conf_is_java_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   java_compile  : compile host for java ($ts_config(gridengine_version))"
+      } else {
+         puts $CHECK_OUTPUT "   java_compile  : not a java compile host"
       }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
@@ -697,6 +726,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          "gzip" -
          "ssh" -
          "java" -
+         "java15" -
          "loadsensor" { 
             set input_type "simple"
             set isfile 1
@@ -707,7 +737,8 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
             set isdir 1 
          }
 
-         "compile" { 
+         "compile" -
+         "java_compile" { 
             set input_type "compile"
          }
 
@@ -760,8 +791,8 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          }
 
          "compile" {
-            set input "compile,$ts_config(gridengine_version)"
-            puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for compilation of $ts_config(gridengine_version) version (y/n) :"
+            puts -nonewline $CHECK_OUTPUT "\nShould testsuite use this host for $input of $ts_config(gridengine_version) version (y/n) :"
+            set input "$input,$ts_config(gridengine_version)"
             set value [wait_for_enter 1]
             if {[string compare "y" $value] == 0} {
                set value 1
@@ -925,6 +956,11 @@ proc host_config_hostlist_delete_host { array_name } {
       } else {
          puts $CHECK_OUTPUT "   compile       : not a compile host"
       }
+      if {[host_conf_is_java_compile_host $host config]} {
+         puts $CHECK_OUTPUT "   compile_java  : compile host for java ($ts_config(gridengine_version))"
+      } else {
+         puts $CHECK_OUTPUT "   compile_java  : not a java compile host"
+      }
       puts $CHECK_OUTPUT "   compile_time  : $config($host,compile_time)"
       puts $CHECK_OUTPUT "   response_time : $config($host,response_time)"
 
@@ -950,6 +986,7 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,gzip)
          unset config($host,ssh)
          unset config($host,java)
+         unset config($host,java15)
          unset config($host,loadsensor)
          unset config($host,processors)
          unset config($host,spooldir)
@@ -959,6 +996,9 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,compile,53)
          unset config($host,compile,60)
          unset config($host,compile,65)
+         unset config($host,java_compile,53)
+         unset config($host,java_compile,60)
+         unset config($host,java_compile,65)
          unset config($host,compile_time)
          unset config($host,response_time)
          continue
@@ -1004,17 +1044,17 @@ proc verify_host_config { config_array only_check parameter_error_list { force 0
    set errors 0
    set error_list ""
 
-   if { [ info exists config(version) ] != 1 } {
+   if {[info exists config(version)] != 1} {
       puts $CHECK_OUTPUT "Could not find version info in host configuration file"
       lappend error_list "no version info"
       incr errors 1
       return -1
    }
 
-   if { $config(version) != $actual_ts_host_config_version } {
+   if {$config(version) != $actual_ts_host_config_version} {
       puts $CHECK_OUTPUT "Host configuration file version \"$config(version)\" not supported."
       puts $CHECK_OUTPUT "Expected version is \"$actual_ts_host_config_version\""
-      lappend error_list "unexpected host config file version $version"
+      lappend error_list "unexpected host config file version $config(version)"
       incr errors 1
       return -1
    } else {
@@ -1517,9 +1557,10 @@ proc host_conf_get_unused_host {{raise_error 1}} {
 #     }
 #
 #  NOTES
+#     TODO: store JAVA_HOME in host config!
 #
 #  BUGS
-#
+#     Doesn't work for MAC OS X
 #  SEE ALSO
 #*******************************************************************************
 proc get_java_home_for_host { host } {
@@ -1536,6 +1577,56 @@ proc get_java_home_for_host { host } {
     
     return $res
 }
+
+#****** config_host/get_java15_home_for_host() **************************************************
+#  NAME
+#    get_java15_home_for_host() -- Get the java15 home directory for a host
+#
+#  SYNOPSIS
+#    get_java15_home_for_host { host } 
+#
+#  FUNCTION
+#     Reads the java15 home directory for a host from the host configuration
+#
+#  INPUTS
+#    host -- name of the host
+#
+#  RESULT
+#     
+#     the java15 home directory of an empty string if the java15 is not set 
+#     in the host configuration
+#
+#  EXAMPLE
+#
+#     set java15_home [get_java15_home_for_host $CHECK_HOST]
+#
+#     if { $java15_home == "" } {
+#         puts "java15 not configurated for host $CHECK_HOST"
+#     }
+#
+#  NOTES
+#     TODO: store JAVA_HOME in host config!
+#
+#  BUGS
+#     Doesn't work for MAC OS X
+#
+#  SEE ALSO
+#*******************************************************************************
+proc get_java15_home_for_host { host } {
+   global ts_host_config CHECK_OUTPUT
+   
+    set input $ts_host_config($host,java15)
+    
+    set input_len [ string length $input ]
+    set java_len  [ string length "/bin/java" ]
+    
+    set last [ expr ( $input_len - $java_len -1 ) ]
+    
+    set res [ string range $input 0 $last]
+    
+    return $res
+}
+
 
 #****** config_host/host_conf_get_cluster_hosts() ******************************
 #  NAME
@@ -1562,7 +1653,7 @@ proc host_conf_get_cluster_hosts {} {
    global ts_config CHECK_OUTPUT
 
    set hosts "$ts_config(master_host) $ts_config(execd_hosts) $ts_config(execd_nodes) $ts_config(submit_only_hosts) $ts_config(bdb_server)"
-   set cluster_hosts [lsort -unique $hosts]
+   set cluster_hosts [lsort -dictionary -unique $hosts]
    set none_elem [lsearch $cluster_hosts "none"]
    if {$none_elem >= 0} {
       set cluster_hosts [lreplace $cluster_hosts $none_elem $none_elem]
@@ -1605,6 +1696,45 @@ proc host_conf_is_compile_host {host {config_var ""}} {
 
    if {[info exists config($host,compile,$ts_config(gridengine_version))]} {
       set ret $config($host,compile,$ts_config(gridengine_version))
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_is_java_compile_host() ********************************
+#  NAME
+#     host_conf_is_java_compile_host() -- is a given host compile host for java?
+#
+#  SYNOPSIS
+#     host_conf_is_java_compile_host { host {config_var ""} } 
+#
+#  FUNCTION
+#     Returns if a given host is used as java compile host.
+#     The information is retrieved from the ts_host_config array,
+#     unless another array is specified (e.g. during configuration).
+#
+#  INPUTS
+#     host            - the host
+#     {config_var ""} - configuration array, default ts_host_config
+#
+#  RESULT
+#     0: is not java compile host
+#     1: is compile host
+#*******************************************************************************
+proc host_conf_is_java_compile_host {host {config_var ""}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+   
+   # we might work on a temporary config
+   if {$config_var == ""} { 
+      upvar 0 ts_host_config config
+   } else {
+      upvar 1 $config_var config
+   }
+
+   set ret 0
+
+   if {[info exists config($host,java_compile,$ts_config(gridengine_version))]} {
+      set ret $config($host,java_compile,$ts_config(gridengine_version))
    }
 
    return $ret
@@ -1929,3 +2059,150 @@ proc host_conf_65_arch {arch} {
    return "unsupported"
 }
 
+#****** config_host/host_conf_have_windows() ***********************************
+#  NAME
+#     host_conf_have_windows() -- do we have a windows host
+#
+#  SYNOPSIS
+#     host_conf_have_windows { } 
+#
+#  FUNCTION
+#     Returns whether we have a windows host in our testsuite cluster 
+#     configuration.
+#
+#  RESULT
+#     1 - if we have a windows host, else 0
+#
+#  SEE ALSO
+#     config_host/host_conf_have_windows()
+#     config_host/host_conf_get_cluster_hosts()
+#     config_host/host_conf_get_arch()
+#*******************************************************************************
+proc host_conf_have_windows {} {
+   set ret 0
+
+   # get a list of all hosts referenced in the cluster
+   set cluster_hosts [host_conf_get_cluster_hosts]
+
+   # search for a windows host
+   foreach host $cluster_hosts {
+      if {[host_conf_get_arch $host] == "win32-x86"} {
+         set ret 1
+         break
+      }
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_get_windows_host() *******************************
+#  NAME
+#     host_conf_get_windows_host() -- get a windows host
+#
+#  SYNOPSIS
+#     host_conf_get_windows_host { } 
+#
+#  FUNCTION
+#     Returns the hostname of the first windows host in our testsuite cluster
+#     configuration.
+#
+#  RESULT
+#     A hostname of a windows host, or an empty string, if we don't have a 
+#     windows host in our cluster.
+#
+#  SEE ALSO
+#     config_host/host_conf_have_windows()
+#     config_host/host_conf_get_cluster_hosts()
+#     config_host/host_conf_get_arch()
+#*******************************************************************************
+proc host_conf_get_windows_host {} {
+   set ret ""
+
+   # get a list of all hosts referenced in the cluster
+   set cluster_hosts [host_conf_get_cluster_hosts]
+   
+   # search and return the first windows host
+   foreach host $cluster_hosts {
+      if {[host_conf_get_arch $host] == "win32-x86"} {
+         set ret $host
+         break
+      }
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_get_windows_exec_host() **************************
+#  NAME
+#     host_conf_get_windows_exec_host() -- get a windows exec host
+#
+#  SYNOPSIS
+#     host_conf_get_windows_exec_host { } 
+#
+#  FUNCTION
+#     Returns the hostname of the first windows exec host in our testsuite
+#     cluster configuration.
+#
+#  RESULT
+#     A hostname of a windows exec host, or an empty string, if we don't have a 
+#     windows exec host in our cluster.
+#
+#  SEE ALSO
+#     config_host/host_conf_get_arch()
+#*******************************************************************************
+proc host_conf_get_windows_exec_host {} {
+   global ts_config CHECK_OUTPUT
+   set ret ""
+
+   # get a list of all exec hosts referenced in the cluster
+   set exec_hosts $ts_config(execd_nodes)
+
+   # search for a windows host
+   foreach host $exec_hosts {
+      if {[host_conf_get_arch $host] == "win32-x86"} {
+         set ret $host
+         break
+      }
+   }
+
+   return $ret
+}
+
+#****** config_host/host_conf_get_java_compile_host() **************************
+#  NAME
+#     host_conf_get_java_compile_host() -- get java compile host
+#
+#  SYNOPSIS
+#     host_conf_get_java_compile_host { {raise_error 1} } 
+#
+#  FUNCTION
+#     Returns the name of the java compile host configured in the host config.
+#     If no compile host is found, an error is raised and an empty string
+#     is returned.
+#
+#  INPUTS
+#     {raise_error 1} - raise error condition or just output error message
+#
+#  RESULT
+#     name of compile host or "", if no compile host was found
+#
+#  SEE ALSO
+#     config_host/host_conf_is_java_compile_host()
+#*******************************************************************************
+proc host_conf_get_java_compile_host {{raise_error 1}} {
+   global ts_config ts_host_config CHECK_OUTPUT
+
+   set compile_host ""
+   foreach host $ts_host_config(hostlist) {
+      if {[host_conf_is_java_compile_host $host]} {
+         set compile_host $host
+         break
+      }
+   }
+
+   if {$compile_host == ""} {
+      add_proc_error "host_conf_get_java_compile_host" -1 "didn't find java compile host in host configuration" $raise_error
+   }
+
+   return $compile_host
+}

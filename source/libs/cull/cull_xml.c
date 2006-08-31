@@ -58,7 +58,6 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp);
 static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp); 
 static bool lAttributesToString_(const lList *attr_list, dstring *attr);
 static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp);
-static bool escape_string(const char *string, dstring *target);
 static lListElem *append_Attr_S(lList *attributeList, const char *name, const char *value);
 
 lListElem* xml_getHead(const char *name, lList *list, lList *attributes) {
@@ -117,12 +116,12 @@ void xml_addAttribute(lListElem *xml_elem, const char *name, const char *value){
    if (attr_elem) {
       lSetString(attr_elem, XMLA_Name, name);
       lSetString(attr_elem, XMLA_Value, (is_mod_value?sge_dstring_get_string(&mod_value):""));
-      if (lGetPosViaElem(xml_elem, XMLH_Attribute, SGE_NO_ABORT ) != -1) {   
+      if (lGetPosViaElem(xml_elem, XMLH_Attribute, SGE_NO_ABORT) != -1) {   
          attr_list = lGetList(xml_elem, XMLH_Attribute);
          if (!attr_list)
             lSetList(xml_elem, XMLH_Attribute, (attr_list = lCreateList("Attributes", XMLA_Type)));
       }
-      else if (lGetPosViaElem(xml_elem, XMLE_Attribute, SGE_NO_ABORT ) != -1) {
+      else if (lGetPosViaElem(xml_elem, XMLE_Attribute, SGE_NO_ABORT) != -1) {
          attr_list = lGetList(xml_elem, XMLE_Attribute);
          if (!attr_list)
             lSetList(xml_elem, XMLE_Attribute, (attr_list = lCreateList("Attributes", XMLA_Type)));
@@ -632,7 +631,7 @@ static lListElem *append_Attr_S(lList *attributeList, const char *name, const ch
    return parent;
 }
 
-static bool escape_string(const char *string, dstring *target){
+bool escape_string(const char *string, dstring *target){
    int size;
    int i;
  

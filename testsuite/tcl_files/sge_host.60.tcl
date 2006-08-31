@@ -502,8 +502,7 @@ proc mod_hostgroup_error {result attribute value tmpfile raise_error} {
 #     sge_procedures/get_sge_error()
 #     sge_procedures/get_qconf_list()
 #*******************************************************************************
-proc add_hostgroup { group change_array {fast_add 1} {on_host ""} {as_user ""} } {
-
+proc add_hostgroup {group change_array {fast_add 1} {on_host ""} {as_user ""}} {
    global ts_config CHECK_OUTPUT
    global env CHECK_ARCH
    global CHECK_CORE_MASTER
@@ -516,7 +515,7 @@ proc add_hostgroup { group change_array {fast_add 1} {on_host ""} {as_user ""} }
       set result [start_sge_bin "qconf" "-Ahgrp ${tmpfile}" $on_host $as_user ]
 
    } else {
-   # User vi
+   # Use vi
       set vi_commands [build_vi_command chgar]
       set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXE
 CLIST_S] "*" ]
@@ -533,3 +532,37 @@ CLIST_S] "*" ]
 
 }
 
+#****** sge_host.60/del_hostgroup() ********************************************
+#  NAME
+#     del_hostgroup() -- delete a hostgroup
+#
+#  SYNOPSIS
+#     del_hostgroup { group } 
+#
+#  FUNCTION
+#     Deletes the given hostgroup.
+#
+#  INPUTS
+#     group - name of the hostgroup
+#
+#  RESULT
+#     0 on success, 
+#     <0 on error
+#
+#  SEE ALSO
+#     sge_host.60/add_hostgroup()
+#     sge_host.60/mod_hostgroup()
+#     sge_procedures/handle_sge_errors()
+#*******************************************************************************
+proc del_hostgroup {group} {
+   global ts_config
+   global CHECK_USER
+
+   set messages(index) "0"
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $group "*"]
+
+   set output [start_sge_bin "qconf" "-dhgrp $group"]
+
+   set ret [handle_sge_errors "del_hostgroup" "qconf -dhgrp $group" $output messages]
+   return $ret
+}

@@ -65,12 +65,12 @@ proc vdep_set_queue_defaults { change_array } {
    }
 }
 
-#****** sge_procedures.53/queue/validate_queue_type() ********************************
+#****** sge_procedures.53/queue/validate_queue() ********************************
 #  NAME
-#     validate_queue_type() -- validate the settings for queue_type
+#     validate_queue() -- validate the settings for queue_type
 #
 #  SYNOPSIS
-#     validate_queue_type { change_array } 
+#     validate_queue { change_array } 
 #
 #  FUNCTION
 #     No action for SGE 5.3.
@@ -79,8 +79,11 @@ proc vdep_set_queue_defaults { change_array } {
 #     change_array - array containing queue definitions
 #
 #*******************************************************************************
-proc validate_queue_type { change_array } {
-   # nothing to be done for SGE 5.3
+proc validate_queue { change_array } {
+   upvar $change_array chgar
+
+   # create cluster dependent tmpdir
+   set chgar(tmpdir) "/tmp/testsuite_$ts_config(commd_port)"
 }
 
 
@@ -112,7 +115,7 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {
@@ -217,7 +220,7 @@ proc set_queue { qname hostlist change_array } {
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {

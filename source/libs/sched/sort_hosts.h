@@ -40,5 +40,6 @@ int debit_job_from_hosts(lListElem *job, lList *granted, lList *host_list, lList
       int *sort_hostlist);
 int debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots);
 
+double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem *host, const lList *centry_list);
 #endif /* _SORT_HOSTS_H */
 

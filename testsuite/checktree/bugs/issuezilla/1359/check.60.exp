@@ -85,19 +85,19 @@ proc issue_1359_run  {} {
    set vi_commands ""
    lappend vi_commands "/NONE\ncw1[format "%c" 27]"
 
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" }
+   del_sharetree
 
    puts $CHECK_OUTPUT "Creating dangling child reference in sharetree with -astree"
 
    handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands $INVALID
 
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" }
+   del_sharetree
 
    puts $CHECK_OUTPUT "Creating dangling child reference in sharetree with -mstree"
 
    handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mstree" $vi_commands $INVALID
 
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" }
+   del_sharetree
 
    puts $CHECK_OUTPUT "Creating dangling child reference in sharetree with -Astree"
 
@@ -111,7 +111,7 @@ proc issue_1359_run  {} {
       set_error -1 "Issue 1359: qconf allowed dangling child reference in sharetree"
    }
 
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" }
+   del_sharetree
 
    puts $CHECK_OUTPUT "Creating dangling child reference in sharetree with -Mstree"
 

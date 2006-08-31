@@ -101,6 +101,7 @@ static lList *Master_Operator_List = NULL;
 static lList *Master_Sharetree_List = NULL;
 static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
+static lList *Master_LIRS_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -138,6 +139,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
    { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       JB_Type,   SU_name           },
+   { &Master_LIRS_List,            NULL,                   "LIRS",              LIRS_Type, LIRS_name         },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif
@@ -2487,7 +2489,11 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
          DPRINTF(("Descriptor size is not equivalent\n"));
          ret = true;
       } 
-   }    
+   } else if (this_elem != NULL || old_elem != NULL) {
+      /* One of both elems is not NULL */
+      ret = true;
+   }
+
    DRETURN(ret);   
 }
                    

@@ -61,12 +61,12 @@ proc vdep_set_queue_defaults { change_array } {
    set chgar(ckpt_list)             "NONE"
 }
 
-#****** sge_procedures.60/queue/validate_queue_type() ********************************
+#****** sge_procedures.60/queue/validate_queue() ********************************
 #  NAME
-#     validate_queue_type() -- validate the settings for queue_type
+#     validate_queue() -- validate the settings for queue_type
 #
 #  SYNOPSIS
-#     validate_queue_type { change_array } 
+#     validate_queue { change_array } 
 #
 #  FUNCTION
 #     Removes the queue types PARALLEL and CHECKPOINTING from the queue_types
@@ -74,16 +74,19 @@ proc vdep_set_queue_defaults { change_array } {
 #     These attributes are implicitly set in SGE 6.0 by setting the attributes
 #     ckpt_list and pe_list.
 #
+#     Sets a cluster dependent tmpdir to avoid problems when running multiple
+#     testsuite clusters in parallel shareing hosts.
+#
 #  INPUTS
 #     change_array - array containing queue definitions
 #
 #*******************************************************************************
-proc validate_queue_type { change_array } {
-   global CHECK_OUTPUT
+proc validate_queue { change_array } {
+   global ts_config CHECK_OUTPUT
 
    upvar $change_array chgar
 
-   if { [info exists chgar(qtype)] } {
+   if {[info exists chgar(qtype)]} {
       if { [string match "*CHECKPOINTING*" $chgar(qtype)] ||
            [string match "*PARALLEL*" $chgar(qtype)] } { 
 
@@ -103,6 +106,9 @@ proc validate_queue_type { change_array } {
          puts $CHECK_OUTPUT "using qtype=$chgar(qtype)" 
       }
    }
+
+   # create cluster dependent tmpdir
+   set chgar(tmpdir) "/tmp/testsuite_$ts_config(commd_port)"
 }
 
 proc qinstance_to_cqueue { change_array } {
@@ -144,7 +150,7 @@ proc add_queue { qname hostlist change_array {fast_add 1} } {
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
 
    puts $CHECK_OUTPUT "creating queue \"$qname\" for hostlist \"$hostlist\""
 
@@ -363,7 +369,7 @@ proc set_queue { qname hostlist change_array {fast_add 1}  {on_host ""} {as_user
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
    qinstance_to_cqueue chgar
 
    get_queue $qname currar

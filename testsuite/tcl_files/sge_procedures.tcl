@@ -707,8 +707,19 @@ proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {t
 proc get_sge_error_generic {messages_var} {
    upvar $messages_var messages
 
-   lappend messages(index) "-200"
-   set messages(-200) [translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]
+   # messages indicating insufficient host privileges
+   lappend messages(index) -200
+   lappend messages(index) -201
+   lappend messages(index) -202
+   set messages(-200) "*[translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]"
+   set messages(-201) "*[translate_macro MSG_SGETEXT_NOADMINHOST_S "*"]"
+   set messages(-202) "*[translate_macro MSG_SGETEXT_NOSUBMITHOST_S "*"]"
+
+   # messages indicating insufficient user privileges
+   lappend messages(index) -210
+   lappend messages(index) -211
+   set messages(-210) "*[translate_macro MSG_SGETEXT_MUSTBEMANAGER_S "*"]"
+   set messages(-211) "*[translate_macro MSG_SGETEXT_MUSTBEOPERATOR_S "*"]"
 
    get_sge_error_generic_vdep messages
 }
@@ -738,6 +749,10 @@ proc get_sge_error_generic {messages_var} {
 #        -100: sge_qmaster cannot be contacted
 #
 #        -200: host executing command is no admin or submit host
+#        -201: host executing command is no admin host
+#        -202: host executing command is no submit host
+#        -210: user executing command is no manager
+#        -210: user executing command is no operator
 #
 #  INPUTS
 #     procedure       - name of the calling procedure (for error message)
@@ -2032,7 +2047,7 @@ proc compare_complex {a b} {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   host allready exists
+#     -2   host already exists
 #      0   ok 
 #
 #  EXAMPLE
@@ -2708,81 +2723,6 @@ proc del_pe { mype_name } {
   }
   return $result
 
-}
-
-#                                                             max. column:     |
-#****** sge_procedures/del_user() ******
-# 
-#  NAME
-#     del_user -- ??? 
-#
-#  SYNOPSIS
-#     del_user { myuser_name } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     myuser_name - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc del_user { myuser_name } {
-  global ts_config
-  global CHECK_ARCH CHECK_HOST CHECK_USER CHECK_OUTPUT
-
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
-     set_error -1 "del_user - not possible for sge systems"
-     return
-  }
-
-  set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
-
-  log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
-   
-
-  set sp_id [ lindex $id 1 ]
-  set result -1
-  set timeout 30 	
-  log_user 0 
-
-  expect {
-    -i $sp_id full_buffer {
-      set result -1
-      add_proc_error "del_user" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-    }
-    -i $sp_id "removed" {
-      set result 0
-    }
-    -i $sp_id $REMOVED {
-      set result 0
-    }
-    -i $sp_id default {
-      set result -1
-    }
-  }
-  close_spawn_process $id
-  log_user 1
-  if { $result != 0 } {
-     add_proc_error "del_user" -1 "could not delete user \"$myuser_name\""
-  } else {
-     puts $CHECK_OUTPUT "removed user \"$myuser_name\""
-  }
-  return $result
 }
 
 #                                                             max. column:     |
@@ -6076,7 +6016,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     jobid   - job identification number
 #     jobname - name of the job
 #     seconds - timeout value in seconds
-#     { or_running 0 } - if job is allready running, report no error
+#     { or_running 0 } - if job is already running, report no error
 #
 #  RESULT
 #     -1  on timeout
@@ -6095,15 +6035,12 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
-  global ts_config
-  
-  global CHECK_OUTPUT
+proc wait_for_jobpending {jobid jobname seconds {or_running 0}} {
+  global ts_config CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "Waiting for job $jobid ($jobname) to get in pending state"
- 
 
-  if { [is_job_id $jobid] != 1} {
+  if {[is_job_id $jobid] != 1} {
      puts $CHECK_OUTPUT "job is not integer"
      add_proc_error "wait_for_jobpending" -1 "unexpected job id: $jobid"
      return -1
@@ -6564,7 +6501,7 @@ proc startup_execd_raw { hostname {envlist ""}} {
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
    if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      add_proc_error "startup_execd" -1 "execd on host $hostname is already running"
       return -1
    }
    return 0
@@ -7332,7 +7269,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_core_system {} {
+proc shutdown_core_system { { only_hooks 0 } } {
    global ts_config
    global CHECK_ARCH 
    global CHECK_CORE_MASTER 
@@ -7341,6 +7278,11 @@ proc shutdown_core_system {} {
    global CHECK_ADMIN_USER_SYSTEM do_compile
 
    exec_shutdown_hooks
+
+   if { $only_hooks != 0 } {
+      puts $CHECK_OUTPUT "skip shutdown core system, I am in only hooks mode"
+      return
+   }
    
    foreach sh_host $ts_config(shadowd_hosts) {
       shutdown_all_shadowd $sh_host
@@ -7791,7 +7733,8 @@ if { [info exists argc ] != 0 } {
 #     ???/???
 #*******************************************************************************
 proc copy_certificates { host } {
-   global CHECK_OUTPUT ts_config CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global ts_config ts_user_config
+   global CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    set remote_arch [resolve_arch $host]
    
@@ -7807,6 +7750,11 @@ proc copy_certificates { host } {
       puts $CHECK_OUTPUT "we have root access, fine !"
       set CA_ROOT_DIR "/var/sgeCA"
       set TAR_FILE "${CA_ROOT_DIR}/port${ts_config(commd_port)}.tar"
+      if {$remote_arch == "win32-x86"} {
+         set UNTAR_OPTS "-xvf"
+      } else {
+         set UNTAR_OPTS "-xpvf"
+      }
 
       puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
@@ -7814,7 +7762,7 @@ proc copy_certificates { host } {
 
       puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
       set tar_bin [get_binary_path $ts_config(master_host) "tar"]
-      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${ts_config(commd_port)}/*"
+      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cpvf $TAR_FILE ./port${ts_config(commd_port)}/*"
       set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$remote_command_param" ]
       puts $CHECK_OUTPUT $result
 
@@ -7840,7 +7788,7 @@ proc copy_certificates { host } {
             set result [ start_remote_prog "$host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
          }   
 
-         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
+         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} $UNTAR_OPTS $TAR_FILE" prg_exit_state 300 ]
          puts $CHECK_OUTPUT $result
          if { $prg_exit_state != 0 } {
             add_proc_error "copy_certificates" -2 "could not untar \"$TAR_FILE\" on host $host;\ntar-bin:$tar_bin"
@@ -7859,6 +7807,15 @@ proc copy_certificates { host } {
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
       puts $CHECK_OUTPUT $result
 
+      # on windows, we have to correct the file permissions
+      if {$remote_arch == "win32-x86"} {
+         puts $CHECK_OUTPUT "correcting certificate file permissions on windows host"
+         set users "$CHECK_USER $ts_user_config(first_foreign_user) $ts_user_config(second_foreign_user)"
+         foreach user $users {
+            start_remote_prog $host "root" "chown" "-R $user /var/sgeCA/port${ts_config(commd_port)}/default/userkeys/$user"
+         }
+      }
+
       # check for syncron clock times
       set my_timeout [timestamp]
       incr my_timeout 600
@@ -7875,7 +7832,7 @@ proc copy_certificates { host } {
          if { [timestamp] > $my_timeout } {
             add_proc_error "copy_certificates" -2 "$host: timeout while waiting for qstat to work (please check hosts for synchron clock times)"
          }
-      } 
+      }
    } else {
       puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
       puts $CHECK_OUTPUT "installation error"
@@ -8228,5 +8185,49 @@ proc trigger_scheduling {} {
    set output [start_sge_bin "qconf" "-tsm"]
    if {$prg_exit_state != 0} {
       add_proc_error "trigger_scheduling" -1 "qconf -tsm failed:\n$output"
+   }
+}
+
+#****** sge_procedures/wait_for_job_end() **************************************
+#  NAME
+#     wait_for_job_end() -- waits for a job to leave qmaster
+#
+#  SYNOPSIS
+#     wait_for_job_end { job_id {timeout 60} } 
+#
+#  FUNCTION
+#     Waits until a job is no longer referenced in qmaster (after sge_schedd
+#     has sent a job delete order to sge_qmaster).
+#
+#  INPUTS
+#     job_id       - job id to wait for
+#     {timeout 60} - how long to wait
+#
+#  SEE ALSO
+#     sge_procedures/get_qstat_j_info()
+#*******************************************************************************
+proc wait_for_job_end {job_id {timeout 60}} {
+   global ts_config CHECK_OUTPUT
+
+   # we wait until now + timeout
+   set my_timeout [expr [timestamp] + $timeout]
+
+   # if the job is still in qmaster, wait until it leaves qmaster
+   if {[get_qstat_j_info $job_id] != 0} {
+      puts -nonewline $CHECK_OUTPUT "waiting for job $job_id to leave qmaster ..."
+      flush $CHECK_OUTPUT
+
+      sleep 1
+      while {[get_qstat_j_info $job_id] != 0} {
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
+         if {[timestamp] > $my_timeout} {
+            add_proc_error "delete_job" -1 "timeout while waiting for job $job_id leave qmaster"
+            break
+         }
+
+         sleep 1
+      }
+      puts $CHECK_OUTPUT ""
    }
 }

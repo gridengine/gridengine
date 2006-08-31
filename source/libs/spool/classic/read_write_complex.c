@@ -302,20 +302,23 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          case TYPE_MEM:
          case TYPE_BOO:
          case TYPE_DOUBLE:
-            if (!parse_ulong_val(&dval, NULL, type, s, SGE_EVENT, sizeof(SGE_EVENT)-1)) {
-               SGE_LOG(LOG_ERR, SGE_EVENT);
-               ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lFreeList(&lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
+            {
+               char tmp_err[1024];
+               if (!parse_ulong_val(&dval, NULL, type, s, tmp_err, sizeof(tmp_err))) {
+                  SGE_LOG(LOG_ERR, tmp_err);
+                  ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
+                  if (alpp) {
+                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     lFreeList(&lp);
+                     DEXIT;
+                     return NULL;
+                  }
+                  else
+                     SGE_EXIT(1);
 
+               }
+               break;
             }
-            break;
          }
       }
 

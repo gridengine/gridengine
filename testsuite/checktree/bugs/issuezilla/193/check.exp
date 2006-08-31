@@ -227,7 +227,7 @@ proc issue193_submit_jobs {} {
 
    # send qmod -r to each job
    puts $CHECK_OUTPUT "sending qmod -r to jobs $jobs_string"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r $jobs_string" 1]
+   set result [start_sge_bin "qmod" "-r $jobs_string" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT "qmod -r output: $result"
 
    set sched_jobs    "[lindex $jobs 0] [lindex $jobs 2] [lindex $jobs 4 ]"
@@ -244,7 +244,7 @@ proc issue193_submit_jobs {} {
 
    set qmod_arg [lindex $jobs 1]
    puts $CHECK_OUTPUT "using force flag for job $qmod_arg ..."
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r $qmod_arg" 1]
+   set result [start_sge_bin "qmod" "-f -r $qmod_arg" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
    puts $CHECK_OUTPUT "waiting for job $qmod_arg to get in pending state ..."
    wait_for_jobpending $qmod_arg "Sleeper" 300
@@ -264,7 +264,7 @@ proc issue193_submit_jobs {} {
 
    # send qmod -r to each job in queue 
    puts $CHECK_OUTPUT "sending qmod -r to queues $no_rerun_queue and $rerun_queue"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r [get_queue_instance $no_rerun_queue $no_rerun_host] [get_queue_instance $rerun_queue $rerun_host]" 1]
+   set result [start_sge_bin "qmod" "-r [get_queue_instance $no_rerun_queue $no_rerun_host] [get_queue_instance $rerun_queue $rerun_host]" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
 
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
@@ -279,7 +279,7 @@ proc issue193_submit_jobs {} {
 
    set qmod_arg [lindex $jobs 1]
    puts $CHECK_OUTPUT "using force flag for job $qmod_arg ..."
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r $qmod_arg" 1]
+   set result [start_sge_bin "qmod" "-f -r $qmod_arg" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
    puts $CHECK_OUTPUT "waiting for job $qmod_arg to get in pending state ..."
    wait_for_jobpending $qmod_arg "Sleeper" 60
@@ -334,7 +334,7 @@ proc issue193_checkpointing {} {
    
    # send qmod -r to each job
    puts $CHECK_OUTPUT "sending qmod -r to jobs $jobs_string"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r $jobs_string" 1]
+   set result [start_sge_bin "qmod" "-r $jobs_string" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
   
    set sched_jobs    "[lindex $jobs 0]"
@@ -360,7 +360,7 @@ proc issue193_checkpointing {} {
 
    # send qmod -r to each job in queue 
    puts $CHECK_OUTPUT "sending qmod -r to queue $rerun_queue"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r [get_queue_instance $rerun_queue $rerun_host]" 1]
+   set result [start_sge_bin "qmod" "-r [get_queue_instance $rerun_queue $rerun_host]" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
 
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
@@ -423,7 +423,7 @@ proc issue193_checkpointing_forced {} {
    
    # send qmod -r to each job
    puts $CHECK_OUTPUT "sending qmod -f -r to jobs $jobs_string"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r $jobs_string" 1]
+   set result [start_sge_bin "qmod" "-f -r $jobs_string" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
   
    set sched_jobs    "[lindex $jobs 0] [lindex $jobs 1] [lindex $jobs 2] [lindex $jobs 3]"
@@ -449,7 +449,7 @@ proc issue193_checkpointing_forced {} {
 
    # send qmod -r to each job in queue 
    puts $CHECK_OUTPUT "sending qmod -f -r to queue $rerun_queue"   
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r [get_queue_instance $rerun_queue $rerun_host]" 1]
+   set result [start_sge_bin "qmod" "-f -r [get_queue_instance $rerun_queue $rerun_host]" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
 
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
@@ -571,7 +571,7 @@ proc issue193_pe_jobs {} {
 
        if { [ string compare $slave_queue $master_queue ] != 0 } {
           puts $CHECK_OUTPUT "rescheduling SLAVE task queue \"$slave_queue\""     
-          set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r $slave_queue_instance" 1]
+          set result [start_sge_bin "qmod" "-r $slave_queue_instance" "" $ts_user_config(first_foreign_user)]
           puts $CHECK_OUTPUT $result
 
           sleep 10          
@@ -581,7 +581,7 @@ proc issue193_pe_jobs {} {
        } 
  
        puts $CHECK_OUTPUT "rescheduling MASTER task queue \"$master_queue\""     
-       set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r $master_queue_instance" 1]
+       set result [start_sge_bin "qmod" "-r $master_queue_instance" "" $ts_user_config(first_foreign_user)]
        puts $CHECK_OUTPUT $result
 
        wait_for_jobpending $job "Sleeper" 100
@@ -693,7 +693,7 @@ proc issue193_deleted_job {} {
    # Write a function rerun_job, that deliveres a status (true, false) and an
    # error message.
    puts $CHECK_OUTPUT "reschedule of job $job_id ..."
-   set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-r $job_id" 1]
+   set result [start_sge_bin "qmod" "-r $job_id" "" $ts_user_config(first_foreign_user)]
    puts $CHECK_OUTPUT $result
  
    # restart execd

@@ -273,7 +273,6 @@ qinstance_increase_qversion(lListElem *this_elem)
 bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
 {
    bool ret = false;
-   lListElem *ep;
 
    DENTER(TOP_LAYER, "qinstance_check_owner");
    if (this_elem == NULL) {
@@ -283,17 +282,12 @@ bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
    } else if (manop_is_operator(user_name)) {
       ret = true;
    } else {
-      for_each(ep, lGetList(this_elem, QU_owner_list)) {
-         DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n",
-                  user_name, lGetString(ep, US_name)));
-         if (!strcmp(user_name, lGetString(ep, US_name))) {
-            ret = true;
-            break;
-         }
+      lList *owner_list = lGetList(this_elem, QU_owner_list);
+      if (lGetElemStr(owner_list, US_name, user_name) != NULL) {
+         ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_pe_referenced() *************************
@@ -444,18 +438,13 @@ bool
 qinstance_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
 {
    bool ret = false;
-   lListElem *re_ref_elem;
+   lList *ckpt_list = lGetList(this_elem, QU_ckpt_list);
 
    DENTER(TOP_LAYER, "qinstance_is_ckpt_referenced");
-   for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
-      if (!strcmp(lGetString(ckpt, CK_name), 
-                  lGetString(re_ref_elem, ST_name))) {
-         ret = true;
-         break;
-      }
+   if (lGetElemStr(ckpt_list, ST_name, lGetString(ckpt, CK_name)) != NULL) {
+      ret = true;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_a_ckpt_referenced() *********************

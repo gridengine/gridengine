@@ -73,12 +73,17 @@
 #include <openssl/evp.h>
 #endif
 
+#ifdef INTERIX
+#include "misc.h"
+#endif
+
 #define SGE_SEC_BUFSIZE 1024
 
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
 #ifdef SECURE
+
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
 
 static pthread_mutex_t sec_ssl_setup_config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -89,8 +94,6 @@ static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
 static bool is_daemon(const char* progname);
 static bool is_master(const char* progname);
-
-
 
 #endif
 
@@ -160,16 +163,16 @@ static bool is_daemon(const char* progname) {
    return false;
 }
 
+#ifdef SECURE
+
 static bool is_master(const char* progname) {
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER],progname)) {
          return true;
-      } 
+      }
    }
    return false;
 }
-
-#ifdef SECURE
 
 /* int 0 on success, -1 on failure */
 int sge_ssl_setup_security_path(const char *progname) {
@@ -211,6 +214,11 @@ int sge_ssl_setup_security_path(const char *progname) {
    char *cert_file      = NULL; 
    char *reconnect_file = NULL;
    char *crl_file       = NULL;
+
+   char *user_name = sge_strdup(NULL, uti_state_get_user_name());
+#ifdef INTERIX
+   user_name = wl_strip_hostname(user_name);
+#endif
 
    DENTER(TOP_LAYER, "setup_ssl_security_path");
 
@@ -345,8 +353,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
       key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
+                              strlen(user_name) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserKey);
    }   
 
    rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
@@ -355,8 +363,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(rand_file, &sbuf)) { 
       free(rand_file);
       rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
-      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
+                              strlen(user_name) + strlen(RandFile) + 4);
+      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, user_name, RandFile);
    }   
 
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -381,8 +389,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
       cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
+                              strlen(user_name) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 
@@ -440,6 +448,7 @@ int sge_ssl_setup_security_path(const char *progname) {
    free(rand_file);
    free(cert_file); 
    free(reconnect_file);
+   free(crl_file);
 
    DEXIT;
    return return_value;

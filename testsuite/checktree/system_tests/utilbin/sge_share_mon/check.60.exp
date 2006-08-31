@@ -1,0 +1,321 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_category 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+# define a level initialization procedure:
+set check_init_level_procedure "sge_share_mon_init_level"
+
+# define test's name and run level descriptions
+set check_name            "sge_share_mon"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_highest_level   1
+set check_description(0)  "test sge_share_mon without sharetree"
+set check_description(1)  "test sge_share_mon with sharetree"
+
+# define test's dependencies
+set check_needs           "init_core_system"
+
+# setup and cleanup functions
+set check_setup_level_function sge_share_mon_setup
+set check_cleanup_level_function sge_share_mon_cleanup
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "share_mon_sharetree"
+lappend check_functions "share_mon_permissions"
+
+
+global sge_share_mon_test_hosts
+global sge_share_mon_saved_slot_count
+
+proc sge_share_mon_init_level {} {
+   global CHECK_ACT_LEVEL
+   global have_share_tree
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" {
+         set have_share_tree 0
+         return 0
+      } 
+      "1" {
+         set have_share_tree 1
+         return 0
+      }
+   } 
+
+   return -1  ;# no other level 
+}
+
+
+# -------- local test procedures: initialization------------------------------
+
+
+proc sge_share_mon_setup  {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global have_share_tree submitted_jobs
+
+   # here we remember the job ids of submitted jobs to be able
+   # to wait until they really left qmaster in the cleanup method
+   # required to be able to delete the sharetree and the users
+   set submitted_jobs {}
+
+   # make sure there is no sharetree in the beginning
+   del_sharetree
+
+   if {$have_share_tree} {
+      # we want to reference the CHECK_USER in a sharetree
+      del_user $CHECK_USER "" "" 0
+      set user_conf(name) $CHECK_USER
+      add_user user_conf
+      
+      # first and second foreign user will be created after submitting jobs under default nodes
+      del_user $CHECK_FIRST_FOREIGN_SYSTEM_USER "" "" 0
+      del_user $CHECK_SECOND_FOREIGN_SYSTEM_USER "" "" 0
+
+      # makes sure, sge_schedd knows about deletion of users
+      trigger_scheduling
+
+      # create a sharetree
+      stree_buffer_init stree
+      stree_buffer_add_node stree "/default" 10
+      stree_buffer_add_node stree "/$CHECK_USER" 20
+      stree_buffer_add_node stree "/mytestproject" 30
+      stree_buffer_add_node stree "/mytestproject/default" 40
+      stree_buffer_add_node stree "/mytestproject/$CHECK_USER" 50
+      stree_buffer_commit stree
+   }
+
+   set_error 0 "ok"
+}
+
+proc sge_share_mon_cleanup  {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global have_share_tree submitted_jobs
+
+   foreach job $submitted_jobs {
+      wait_for_job_end $job
+   }
+
+   if {$have_share_tree} {
+      del_sharetree
+      del_user $CHECK_USER
+      del_user $CHECK_FIRST_FOREIGN_SYSTEM_USER
+      del_user $CHECK_SECOND_FOREIGN_SYSTEM_USER
+
+      # makes sure, sge_schedd knows about deletion of users and sharetree
+      trigger_scheduling
+   }
+
+   set_error 0 "ok"
+}
+
+#****** sge_share_mon/share_mon_sharetree_check_node() ******************************
+#  NAME
+#     share_mon_sharetree_check_node() -- check modes delivered by sge_share_mon
+#
+#  SYNOPSIS
+#     share_mon_sharetree_check_node { sharetree_var node exists {shares -1} } 
+#
+#  FUNCTION
+#     Checks if certain nodes exist / do not exist in sge_share_mon output.
+#     Validates, if they contain the correct number of shares.
+#
+#  INPUTS
+#     sharetree_var - the sharetree given by sge_share_mon
+#     node          - name of the node to test
+#     exists        - do we expect the node to exist (1) or not (0)
+#     {shares -1}   - expected number of shares. -1 means: do not check
+#
+#  RESULT
+#     No return code. Errors are reported via add_proc_error.
+#
+#  SEE ALSO
+#     sge_sharetree/sge_share_mon()
+#*******************************************************************************
+proc share_mon_sharetree_check_node {sharetree_var node exists {shares -1}} {
+   global ts_config CHECK_OUTPUT
+
+   upvar $sharetree_var sharetree
+   
+   set pos [lsearch -exact $sharetree(index) $node]
+
+   # expect that node exists, but didn't find it?
+   if {$exists && $pos < 0} {
+      add_proc_error "share_mon_sharetree_contains" -1 "couldn't find node $node in sge_share_mon output"
+   }
+
+   # expect that node does not exists, but found it?
+   if {!$exists && $pos >= 0} {
+      add_proc_error "share_mon_sharetree_contains" -1 "found node $node in sge_share_mon output, which was not expected to be there"
+   }
+
+   # verify if the shares are reported correctly
+   if {$exists && $pos >= 0 && $shares >= 0} {
+      if {$sharetree($node,shares) != $shares} {
+         add_proc_error "share_mon_sharetree_contains" -1 "node $node in sge_share_mon output contains incorrect shares:\nexpected $shares, but sge_share_mon reported $sharetree($node,shares)" 
+      }
+   }
+}
+
+#****** sge_share_mon/share_mon_sharetree() *****************************************
+#  NAME
+#     share_mon_sharetree() -- test if sge_share_mon deliveres correct data
+#
+#  SYNOPSIS
+#     share_mon_sharetree { } 
+#
+#  FUNCTION
+#     Tests, if the sharetree setup in the check setup function is reported correctly
+#     by sge_share_mon.
+#     Jobs are submitted under user id's handled by the "default" sharetree node and
+#     verified that nodes are created under default for these users.
+#*******************************************************************************
+proc share_mon_sharetree {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global have_share_tree
+   global submitted_jobs
+
+   if {!$have_share_tree} {
+      # sge_share_mon must fail with an error message
+      set result [sge_share_mon sharetree "" "" 0]
+      if {$result != -1} {
+         add_proc_error "share_mon_sharetree" -1 "sge_share_mon should have reported \"No share tree\""
+      }
+   } else {
+      # call sge_share_mon
+      sge_share_mon sharetree
+
+      # the following nodes must be contained in share_mon output:
+      share_mon_sharetree_check_node sharetree "/" 1
+      share_mon_sharetree_check_node sharetree "/default" 1 10
+      share_mon_sharetree_check_node sharetree "/$CHECK_USER" 1 20
+      share_mon_sharetree_check_node sharetree "/mytestproject" 1 30
+      share_mon_sharetree_check_node sharetree "/mytestproject/default" 1 40
+      share_mon_sharetree_check_node sharetree "/mytestproject/$CHECK_USER" 1 50
+
+      # the following nodes shall not yet be contained in share_mon output:
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 0
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 0
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 0
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 0
+
+      # now run jobs as the different users
+      set args "$ts_config(product_root)/examples/jobs/sleeper.sh 10"
+      set job_id [submit_job $args 1 60 "" $CHECK_USER]
+      lappend submitted_jobs $job_id
+      set job_id [submit_job $args 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
+      lappend submitted_jobs $job_id
+      set job_id [submit_job $args 1 60 "" $CHECK_SECOND_FOREIGN_SYSTEM_USER]
+      lappend submitted_jobs $job_id
+
+      # now we shall have the first/second foreign user under the default nodes
+      sge_share_mon sharetree
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 1 10
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 1 10
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 1 40
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 1 40
+
+      # now submit jobs with project
+      set args "-P mytestproject $ts_config(product_root)/examples/jobs/sleeper.sh 10"
+      set job_id [submit_job $args 1 60 "" $CHECK_USER]
+      lappend submitted_jobs $job_id
+      set job_id [submit_job $args 1 60 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER]
+      lappend submitted_jobs $job_id
+      set job_id [submit_job $args 1 60 "" $CHECK_SECOND_FOREIGN_SYSTEM_USER]
+      lappend submitted_jobs $job_id
+
+      # again verify checktree
+      sge_share_mon sharetree
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 1 10
+      share_mon_sharetree_check_node sharetree "/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 1 10
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_FIRST_FOREIGN_SYSTEM_USER" 1 40
+      share_mon_sharetree_check_node sharetree "/mytestproject/default/$CHECK_SECOND_FOREIGN_SYSTEM_USER" 1 40
+   }
+
+   set_error 0 "ok"
+}
+
+
+#****** sge_share_mon/share_mon_permissions() ***************************************
+#  NAME
+#     share_mon_permissions() -- checks sge_share_mon qmaster access
+#
+#  SYNOPSIS
+#     share_mon_permissions { } 
+#
+#  FUNCTION
+#     Verifies that sge_qmaster correctly handles access permissions
+#     for the sge_share_mon client command:
+#        - all users may call sge_share_mon
+#        - must be on an admin or submit host
+#*******************************************************************************
+proc share_mon_permissions {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global have_share_tree
+
+   if {$have_share_tree} {
+      # sge_share_mon must also work as non admin user user
+      sge_share_mon sharetree "" $CHECK_FIRST_FOREIGN_SYSTEM_USER
+   }
+
+   # on a non admin/submit host, the request has to be rejected,
+   # with and without sharetree
+   set non_cluster_host [host_conf_get_unused_host]
+   set result [sge_share_mon sharetree $non_cluster_host "" 0]
+   if {$result != -200} {
+      add_proc_error "share_mon_permissions" -1 "sge_share_mon request should have been rejected from non cluster host $non_cluster_host"
+   }
+
+   set_error 0 "ok"
+}
+
+

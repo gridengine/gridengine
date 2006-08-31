@@ -324,7 +324,7 @@ int truncate_stderr_out
 #if defined(INTERIX)
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       char *pass = NULL;
       uid_t uid;
 
@@ -1433,7 +1433,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
 
 #if defined(INTERIX)
    if(strcmp(childname, "job") == 0 
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       int  ret;
       int  win32_exit_status = 0;
       char **env;

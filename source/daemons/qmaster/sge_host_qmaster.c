@@ -98,6 +98,8 @@ static void notify(lListElem *lel, sge_gdi_request *answer, int kill_jobs, int f
 
 static int verify_scaling_list(lList **alpp, lListElem *host); 
 
+static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep);
+
 /****** qmaster/host/host_trash_nonstatic_load_values() ***********************
 *  NAME
 *     host_trash_nonstatic_load_values() -- Trash old load values 
@@ -363,6 +365,8 @@ const lList* master_hGroup_List
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
+	 host_update_categories(NULL, ep);
+
          break;
       case SGE_SUBMITHOST_LIST:
          {
@@ -610,6 +614,7 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
             host_merge(ep, global_ep);
          }
 
+         host_update_categories(ep, old_ep);
          sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
                        0, 0, host, NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
@@ -1372,3 +1377,164 @@ static int verify_scaling_list(lList **answer_list, lListElem *host)
    DEXIT;
    return ret ? STATUS_OK : STATUS_EUNKNOWN;
 }
+
+/****** sge_host_qmaster/host_diff_sublist() ***********************************
+*  NAME
+*     host_diff_sublist() -- Diff exechost sublists
+*
+*  SYNOPSIS
+*     static void host_diff_sublist(const lListElem *new, const lListElem *old,
+*     int snm1, int snm2, int key_nm, const lDescr *dp, lList **new_sublist,
+*     lList **old_sublist)
+*
+*  FUNCTION
+*     Makes a diff userset/project sublists of an exec host.
+*
+*  INPUTS
+*     const lListElem *new - New exec host (EH_Type)
+*     const lListElem *old - Pld exec host (EH_Type)
+*     int snm1             - First exec host sublist field
+*     int snm2             - Second exec host sublist field
+*     int key_nm           - Field with key in sublist
+*     const lDescr *dp     - Type for outgoing sublist arguments
+*     lList **new_sublist  - List of new references
+*     lList **old_sublist  - List of old references
+*
+*  NOTES
+*     MT-NOTE: host_diff_sublist() is MT safe
+*******************************************************************************/
+static void host_diff_sublist(const lListElem *new, const lListElem *old,
+      int snm1, int snm2, int key_nm, const lDescr *dp,
+      lList **new_sublist, lList **old_sublist)
+{
+   const lListElem *ep;
+   const char *p;
+
+   /* collect 'old' entries in 'old_sublist' */
+   if (old && old_sublist) {
+      for_each (ep, lGetList(old, snm1)) {
+         p = lGetString(ep, key_nm);
+         if (!lGetElemStr(*old_sublist, key_nm, p))
+            lAddElemStr(old_sublist, key_nm, p, dp);
+      }
+      for_each (ep, lGetList(old, snm2)) {
+         p = lGetString(ep, key_nm);
+         if (!lGetElemStr(*old_sublist, key_nm, p))
+            lAddElemStr(old_sublist, key_nm, p, dp);
+      }
+   }
+
+   /* collect 'new' entries in 'new_sublist' */
+   if (new && new_sublist) {
+      for_each (ep, lGetList(new, snm1)) {
+         p = lGetString(ep, key_nm);
+         if (!lGetElemStr(*new_sublist, key_nm, p))
+            lAddElemStr(new_sublist, key_nm, p, dp);
+      }
+      for_each (ep, lGetList(new, snm2)) {
+         p = lGetString(ep, key_nm);
+         if (!lGetElemStr(*new_sublist, key_nm, p))
+            lAddElemStr(new_sublist, key_nm, p, dp);
+      }
+   }
+
+   return;
+}
+
+
+/****** sge_host_qmaster/host_diff_projects() **********************************
+*  NAME
+*     host_diff_projects() -- Diff old/new exec host projects
+*
+*  SYNOPSIS
+*     void host_diff_projects(const lListElem *new, const lListElem *old, lList
+*     **new_prj, lList **old_prj)
+*
+*  FUNCTION
+*     A diff new/old is made regarding exec host projects/xprojects.
+*     Project references are returned in new_prj/old_prj.
+*
+*  INPUTS
+*     const lListElem *new - New exec host (EH_Type)
+*     const lListElem *old - Old exec host (EH_Type)
+*     lList **new_prj      - New project references (US_Type)
+*     lList **old_prj      - Old project references (US_Type)
+*
+*  NOTES
+*     MT-NOTE: host_diff_projects() is not MT safe
+*******************************************************************************/
+void host_diff_projects(const lListElem *new,
+         const lListElem *old, lList **new_prj, lList **old_prj)
+{
+   host_diff_sublist(new, old, EH_prj, EH_xprj,
+         UP_name, UP_Type, new_prj, old_prj);
+   lDiffListStr(UP_name, new_prj, old_prj);
+}
+
+/****** sge_host_qmaster/host_diff_usersets() **********************************
+*  NAME
+*     host_diff_usersets() -- Diff old/new exec host usersets
+*
+*  SYNOPSIS
+*     void host_diff_usersets(const lListElem *new, const lListElem *old, lList
+*     **new_acl, lList **old_acl)
+*
+*  FUNCTION
+*     A diff new/old is made regarding exec host acl/xacl.
+*     Userset references are returned in new_acl/old_acl.
+*
+*  INPUTS
+*     const lListElem *new - New exec host (EH_Type)
+*     const lListElem *old - Old exec host (EH_Type)
+*     lList **new_acl      - New userset references (US_Type)
+*     lList **old_acl      - Old userset references (US_Type)
+*
+*  NOTES
+*     MT-NOTE: host_diff_usersets() is not MT safe
+*******************************************************************************/
+void host_diff_usersets(const lListElem *new,
+      const lListElem *old, lList **new_acl, lList **old_acl)
+{
+   host_diff_sublist(new, old, EH_acl, EH_xacl,
+         US_name, US_Type, new_acl, old_acl);
+   lDiffListStr(US_name, new_acl, old_acl);
+}
+
+
+
+/****** sge_host_qmaster/host_update_categories() ******************************
+*  NAME
+*     host_update_categories() --  Update categories wrts userset/project
+*
+*  SYNOPSIS
+*     static void host_update_categories(const lListElem *new_hep, const
+*     lListElem *old_hep)
+*
+*  FUNCTION
+*     The userset/project information wrts categories is updated based
+*     on new/old exec host configuration and events are sent upon
+*     changes.
+*
+*
+*  INPUTS
+*     const lListElem *new_hep - New exec host (EH_Type)
+*     const lListElem *old_hep - Old exec host (EH_Type)
+*
+*  NOTES
+*     MT-NOTE: host_update_categories() is not MT safe
+*******************************************************************************/
+static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep)
+{
+   lList *old = NULL, *new = NULL;
+
+   host_diff_projects(new_hep, old_hep, &new, &old);
+   project_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+
+   host_diff_usersets(new_hep, old_hep, &new, &old);
+   userset_update_categories(new, old);
+   lFreeList(&old);
+   lFreeList(&new);
+}
+

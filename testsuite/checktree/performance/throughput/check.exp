@@ -491,9 +491,7 @@ proc throughput_setup_sharetree {} {
    lappend vi_commands "1Gdddddddddd"
   
    # delete a possibly existing sharetree
-   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ] 
+   del_sharetree
  
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
@@ -528,12 +526,7 @@ proc throughput_cleanup_sharetree {} {
    reset_schedd_config
 
    # delete sharetree
-   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ]
-
-   puts "qconf -dstree result: $result"
-   puts "qconf -dstree exit value: $catch_return "
+   del_sharetree
 
    # remove projects
    puts $CHECK_OUTPUT "   removing projects ..."

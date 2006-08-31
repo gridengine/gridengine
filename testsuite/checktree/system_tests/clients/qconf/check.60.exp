@@ -36,14 +36,19 @@
 global check_functions 
 
 # define test's procedure order
+lappend check_functions "qconf_de_check"
 lappend check_functions "qconf_backslash_default_space_check"  ;# functions to call (in order)
 lappend check_functions "qconf_backslash_default_comma_check"
 lappend check_functions "qconf_backslash_custom_space_check"
 lappend check_functions "qconf_backslash_custom_comma_check"
 lappend check_functions "qconf_backslash_space_output_check"
 lappend check_functions "qconf_backslash_comma_output_check"
+
 lappend check_functions "qconf_issue1767"
+lappend check_functions "qconf_shgrp_tree_check"	;# List tree like structure of hosts
+lappend check_functions "qconf_shgrp_resolved_check"	;# List  hosts in a group
 lappend check_functions "qconf_modify_hostgroup"
+
 lappend check_functions "qconf_purge_queue"
 
 #                                                             max. column:     |
@@ -965,6 +970,90 @@ proc qconf_issue1767 {} {
    set_error 0 "ok"
 }
 
+#                                                             max. column:     |
+#****** qconf/qconf_shgrp_tree_check() ******
+#
+#  NAME
+#     qconf_shgrp_tree_check - Display tree like structure of host group 
+#
+#  SYNOPSIS
+#     qconf_shgrp_tree_check { } - Call get_shgrp_tree_error for group "@qconf_test"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host.60/get_hostgroup_tree()
+# sge_host.60/get_hostgroup_tree_error()
+#*******************************
+proc qconf_shgrp_tree_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_tree ...\n"
+   set result0 [get_hostgroup_tree "@qconf_test" ]
+
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_tree @qconf_test succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # next do a negative test
+   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_tree ...\n"
+   set result1 [get_hostgroup_tree "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_tree wrong_hostgroup succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   set_error 0 "ok"
+}
+#                                                             max. column:     |
+#****** qconf/qconf_shgrp_resolved_check() ******
+#
+#  NAME
+#     qconf_shgrp_resolved_check - Display list of host group 
+#
+#  SYNOPSIS
+#     qconf_shgrp_resolved_check { } - Call "qconf -shgrp_resolved @qconf_test"
+#                            Check that the output contains   "$CHECK_HOST"
+#
+#  FUNCTION
+#     Check basic functionality of qconf
+#
+#  SEE ALSO
+# sge_host.60/get_hostgroup_resolved()
+# sge_host.60/get_hostgroup_resolved_error()
+#*******************************
+proc qconf_shgrp_resolved_check {} {
+   global ts_config env
+   global CHECK_OUTPUT CHECK_USER CHECK_HOST CHECK_ARCH
+
+   # First do a positive test
+   puts $CHECK_OUTPUT "Positive test for qconf -shgrp_resolved ...\n"
+   set result0 [get_hostgroup_resolved "@qconf_test" ]
+   if { ( $result0 == 0 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_resolved @qconf_test  succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result0"
+   }
+
+   # next do a negative test
+   puts $CHECK_OUTPUT "Negative test for qconf -shgrp_resolved ...\n"
+   set result1 [get_hostgroup_resolved "wrong_hostgroup" result $CHECK_HOST $CHECK_USER 0]
+
+   if { ( $result1 == -1 ) } {
+      puts $CHECK_OUTPUT "qconf -shgrp_resolved wrong_hostgroup succeded"
+   } else {
+      puts $CHECK_OUTPUT "result is $result1"
+   }
+
+   set_error 0 "ok"
+}
 #****** qconf/check.60.exp/qconf_modify_hostgroup() ******
 #  NAME
 #     qconf_modify_hostgroup - Modify host group
@@ -986,24 +1075,24 @@ proc qconf_modify_hostgroup {} {
    set host [lindex $ts_config(execd_nodes) 0]
 
    # Now modify the host list
-   puts $CHECK_OUTPUT "Modify host group  @allhosts  from file ...\n"
+   puts $CHECK_OUTPUT "Modify host group  @qconf_test  from file ...\n"
    set attribute "hostlist"
    set value "$host"
-   set result1 [mod_hostgroup "@allhosts" $attribute $value ]
+   set result1 [mod_hostgroup "@qconf_test" $attribute $value ]
 
-  if { ( $result1 == 0 ) } {
+   if { ( $result1 == 0 ) } {
       puts $CHECK_OUTPUT "qconf -Mhgrp succeded\n"
    } else {
       puts $CHECK_OUTPUT "result is $result1"
    }
 
    # Now do it with a wrong parameter
-   puts $CHECK_OUTPUT "Modify host group  @allhosts wrongly from file ...\n"
+   puts $CHECK_OUTPUT "Modify host group  @qconf_test wrongly from file ...\n"
    set attribute "stuff"
    set value "$host"
-   set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
+   set result11 [mod_hostgroup "@qconf_test" $attribute $value 1 $host $CHECK_USER 0]
 
-  if { ( $result11 == -1 ) } {
+   if { ( $result11 == -1 ) } {
       puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly\n"
    } else {
       # See IZ 1968 on why this does not fail as expected
@@ -1011,12 +1100,12 @@ proc qconf_modify_hostgroup {} {
    }
 
     # Now do it with a wrong parameter again
-   puts $CHECK_OUTPUT "Modify host group  @allhosts wrongly from file  again...\n"
+   puts $CHECK_OUTPUT "Modify host group  @qconf_test wrongly from file  again...\n"
    set attribute "hostlist"
    set value "whatever"
-   set result11 [mod_hostgroup "@allhosts" $attribute $value 1 $host $CHECK_USER 0]
+   set result11 [mod_hostgroup "@qconf_test" $attribute $value 1 $host $CHECK_USER 0]
 
-  if { ( $result11 == -3 ) } {
+   if { ( $result11 == -3 ) } {
       puts $CHECK_OUTPUT "qconf -Mhgrp failed  correctly again \n"
    } else {
       # See IZ 1968 on why this does not fail as expected
@@ -1026,8 +1115,8 @@ proc qconf_modify_hostgroup {} {
    # Now do it from CLI with wrong param again
    set attribute "hostlist"
    set value "stuff"
-   puts $CHECK_OUTPUT "Modify host group  @allhosts  wrongly from CLI again...\n"
-   set result21 [mod_hostgroup "@allhosts" $attribute $value 0 $host $CHECK_USER 0]
+   puts $CHECK_OUTPUT "Modify host group  @qconf_test  wrongly from CLI again...\n"
+   set result21 [mod_hostgroup "@qconf_test" $attribute $value 0 $host $CHECK_USER 0]
 
    if { ( $result21 == -3 ) } {
       puts $CHECK_OUTPUT "qconf -mhgrp failed  correctly\n"
@@ -1121,5 +1210,89 @@ proc qconf_purge_queue {} {
 
    set_error 0 "ok"
 
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_de_check() ******
+# 
+#  NAME
+#     qconf_de_check -- ??? 
+#
+#  SYNOPSIS
+#     qconf_de_check { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qconf_de_check {} {
+   global ts_config
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER CHECK env
+   puts $CHECK_OUTPUT "testing qconf -de ..."
+
+   # Setup
+   set execd [lindex $ts_config(execd_nodes) 0]
+   set arch [resolve_arch $ts_config(master_host)]
+
+   puts $CHECK_OUTPUT "using execd host $execd"
+
+   # the tmp_file is automatically removed from testsuite
+   set tmp_file [get_tmp_file_name]
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > $tmp_file" } result ]
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not store execd config: $result"
+   }
+   puts $CHECK_OUTPUT "tmp file is: $tmp_file"
+   puts $CHECK_OUTPUT "doing qconf -dattr hostgroup hostlist $execd @allhosts:"
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts @qconf_test" } result ]
+   puts $CHECK_OUTPUT $result
+ 
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts: $result"
+   }
+
+ 
+   # Test
+   puts $CHECK_OUTPUT "doing qconf -de $execd"
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
+   puts $CHECK_OUTPUT $result
+   
+   set EXEC_HOST_REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER [resolve_host $ts_config(master_host) 1] [resolve_host $execd 1] "execution host"]
+
+   puts $CHECK_OUTPUT "looking for : \"$EXEC_HOST_REMOVED\""
+   puts $CHECK_OUTPUT "answer was  : \"$result\""
+
+   if { [ string match "*$EXEC_HOST_REMOVED*" $result ] == 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not delete live execd: $result\nBug 1269: qconf -de still crashes qmaster"
+   }
+   puts $CHECK_OUTPUT "removed execd $execd from cluster"
+
+   puts $CHECK_OUTPUT "doing qconf -Ae $tmp_file"
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae $tmp_file" } result 
+   puts $CHECK_OUTPUT $result
+
+   puts $CHECK_OUTPUT "doing qconf -aattr hostgroup hostlist $execd @allhosts"
+   catch { eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result
+   puts $CHECK_OUTPUT $result
+
+   puts $CHECK_OUTPUT "added execd $execd to cluster"
+
+   set_error 0 "ok"
 }
 

@@ -67,4 +67,8 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
 
 int string_base_cmp(u_long32 type, const char *s1, const char *s2);
 
+bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
+      const lList *centry_list, dstring *unsatisfied);
+
+
 #endif /* __SGE_COMPLEX_SCHEDD_H */

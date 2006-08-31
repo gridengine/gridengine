@@ -33,6 +33,49 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#****** coverage/coverage_enabled() ********************************************
+#  NAME
+#     coverage_enabled() -- code coverage enabled?
+#
+#  SYNOPSIS
+#     coverage_enabled { } 
+#
+#  FUNCTION
+#     Returns if code coverage is enabled for the current testsuite run.
+#
+#     One or multiple code coverage methods can be enabled at a time, 
+#     "tcov", or "insure" for C/C++ code coverage analysis, 
+#     or "emma" for Java code coverage analyis.
+#
+#     The procedure can check if any coverage method is enabled (parameter
+#     method == ""), or a specific one.
+#
+#  INPUTS
+#     {method ""} - coverage method to look for, or "" (default) to check if
+#                   any coverage analyis is done
+#
+#  RESULT
+#     0 - if coverage analysis is disabled
+#     1 - if coverage analysis is enabled
+#*******************************************************************************
+proc coverage_enabled {{method ""}} {
+   global CHECK_COVERAGE
+
+   set ret 0
+
+   if {$method == ""} {
+      if {$CHECK_COVERAGE != {}} {
+         set ret 1
+      }
+   } else {
+      if {[lsearch -exact $CHECK_COVERAGE $method] >= 0} {
+         set ret 1
+      }
+   }
+
+   return $ret
+}
+
 #****** coverage/coverage_initialize() *****************************************
 #  NAME
 #     coverage_initialize() -- initialize code coverage analysis
@@ -55,12 +98,11 @@
 proc coverage_initialize {{clean 0}} {
    global CHECK_COVERAGE
 
-   if {$CHECK_COVERAGE == "tcov"} {
-      tcov_initialize $clean
-   }
-
-   if {$CHECK_COVERAGE == "insure"} {
-      insure_initialize $clean
+   foreach cov $CHECK_COVERAGE {
+      set procname "${cov}_initialize"
+      if {[info procs $procname] != {}} {
+         $procname $clean
+      }
    }
 }
 
@@ -87,10 +129,11 @@ proc coverage_initialize {{clean 0}} {
 proc coverage_per_process_setup {host user env_var} {
    global CHECK_COVERAGE
   
-   if {$CHECK_COVERAGE == "tcov"} {
-      upvar $env_var env
-
-      tcov_per_process_setup $host $user env
+   foreach cov $CHECK_COVERAGE {
+      set procname "${cov}_per_process_setup"
+      if {[info procs $procname] != {}} {
+         $procname $host $user env
+      }
    }
 }
 
@@ -116,12 +159,11 @@ proc coverage_per_process_setup {host user env_var} {
 proc coverage_join_dirs {} {
    global CHECK_COVERAGE
 
-   if {$CHECK_COVERAGE == "tcov"} {
-      tcov_join_dirs
-   }
-
-   if {$CHECK_COVERAGE == "insure"} {
-      insure_join_dirs
+   foreach cov $CHECK_COVERAGE {
+      set procname "${cov}_join_dirs"
+      if {[info procs $procname] != {}} {
+         $procname
+      }
    }
 }
 
@@ -144,12 +186,11 @@ proc coverage_join_dirs {} {
 proc coverage_compute_coverage {} {
    global CHECK_COVERAGE
 
-   if {$CHECK_COVERAGE == "tcov"} {
-      tcov_compute_coverage
-   }
-
-   if {$CHECK_COVERAGE == "insure"} {
-      insure_compute_coverage
+   foreach cov $CHECK_COVERAGE {
+      set procname "${cov}_compute_coverage"
+      if {[info procs $procname] != {}} {
+         $procname
+      }
    }
 }
 

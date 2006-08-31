@@ -744,17 +744,32 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag) {
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
                      u_long32 feature_set;
-                     lListElem* list_elem = NULL;
+                     lListElem *job = NULL, *pe = NULL;
+                     lList *qlist = NULL;
                      if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
                         printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
                         printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
                      }
-                     if (cull_unpack_elem(&buf, &list_elem, NULL) == PACK_SUCCESS) {
-                        lWriteElemTo(list_elem,stdout);
+                     if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
+                        lWriteElemTo(job,stdout); /* job */
                      } else {
-                        printf("could not unpack list elem\n");
+                        printf("could not unpack job\n");
                      }
-                     lFreeElem(&list_elem);
+                     if (cull_unpack_list(&buf, &qlist) == PACK_SUCCESS) {
+                        lWriteListTo(qlist,stdout); /* jobs master queue */
+                     } else {
+                        printf("could not unpack queue list\n");
+                     }
+                     if (job && lGetString(lFirst(lGetList(job, JB_ja_tasks)), JAT_granted_pe)) {
+                        if (cull_unpack_elem(&buf, &pe, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(pe,stdout); /* pe elem */
+                        } else {
+                           printf("could not unpack PE elem\n");
+                        }
+                     }
+                     lFreeList(&qlist);
+                     lFreeElem(&job);
+                     lFreeElem(&pe);
                      clear_packbuffer(&buf);
                   }
                }
@@ -1255,7 +1270,7 @@ int main(int argc, char *argv[]) {
 
    /* set alias file */
    if ( !option_noalias ) {
-      char *alias_path = sge_get_alias_path();
+      const char *alias_path = sge_get_alias_path();
       if (alias_path != NULL) {
          retval = cl_com_set_alias_file(alias_path);
          if (retval != CL_RETVAL_OK) {
@@ -1315,6 +1330,7 @@ int main(int argc, char *argv[]) {
             ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
             ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
             ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
+            ssl_config.ssl_crl_file         = NULL;                       /*  file for revocation list */
             ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
             ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
             ssl_config.ssl_verify_func      = NULL;                       /*  function callback for peer user/name check  */

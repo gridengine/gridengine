@@ -32,6 +32,7 @@
 
 /* system */
 #include <errno.h>
+#include <string.h>
 
 #include "sge.h"
 #include "setup_path.h"
@@ -66,7 +67,8 @@
 
 #include "sort_hosts.h"
 #include "sge_complex_schedd.h"
-#include "sge_select_queue.c"
+#include "sge_select_queue.h"
+#include "sgeobj/sge_job.h"
 
 /* includes for old job spooling */
 #include "spool/classic/read_write_job.h"
@@ -81,8 +83,11 @@
 
 static const char *spooling_method = "flatfile";
 
-const char *
-get_spooling_method(void)
+#ifdef SPOOLING_flatfile
+const char *get_spooling_method(void)
+#else
+const char *get_flatfile_spooling_method(void)
+#endif
 {
    return spooling_method;
 }

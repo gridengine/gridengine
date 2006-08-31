@@ -310,7 +310,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
       bool created_list = false;
 
       href = lGetHost(*attr, href_nm);
-      is_hgroup = sge_is_hgroup_ref(href);
+      is_hgroup = is_hgroup_name(href);
       attr_elem = attr_list_locate(*this_list, href, href_nm);
 
       if (*this_list == NULL) {
@@ -373,7 +373,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
                   const char *href = lGetHost(attr_elem, ASTR_href); 
 
                   if (strcmp(href, HOSTREF_DEFAULT) && 
-                      sge_is_hgroup_ref(href)) {
+                      is_hgroup_name(href)) {
                      lret &= href_list_add(&href_list, NULL, href);
                   }
                }
@@ -536,7 +536,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
             bool lret = true;
 
             if (strcmp(href_name, HOSTREF_DEFAULT) && 
-                sge_is_hgroup_ref(href_name)) {
+                is_hgroup_name(href_name)) {
                lList *tmp_href_list = NULL;
                lListElem *tmp_href = NULL;
                lList *host_list = NULL;
@@ -683,7 +683,7 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
          object_append_field_to_dstring(attr, NULL, &default_string, value_nm,
                                         '\0');
          found_default = true;
-      } else if (sge_is_hgroup_ref(href)) {
+      } else if (is_hgroup_name(href)) {
          if (found_group) {
             sge_dstring_append(&group_string, comma);
             

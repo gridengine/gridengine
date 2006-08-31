@@ -288,7 +288,7 @@ proc startup_execd { hostname } {
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
    if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      add_proc_error "startup_execd" -1 "execd on host $hostname is already running"
       return -1
    }
 

@@ -264,7 +264,7 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
       hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
                                       HGRP_fields, fields_out, true, &qconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);
-            
+
       if (answer_list_output (answer_list)) {
          lFreeElem(&hgroup);
       }
@@ -276,18 +276,20 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
       if (missing_field != NoName) {
          lFreeElem(&hgroup);
          answer_list_output (answer_list);
-      }      
+      }
 
       if (hgroup == NULL) {
          ret = false;
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
-      } 
-   }  
-  
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD);
+      }
+
+      lFreeElem(&hgroup);
+   }
+
    DEXIT;
-   return ret; 
+   return ret;
 }
 
 bool hgroup_modify(lList **answer_list, const char *name)

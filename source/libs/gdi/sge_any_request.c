@@ -518,7 +518,7 @@ int prepare_enroll(const char *name, int* last_commlib_error)
  
    /* set alias file */
    {
-      char *alias_path = sge_get_alias_path();
+      const char *alias_path = sge_get_alias_path();
       ret_val = cl_com_set_alias_file(alias_path);
       if (ret_val != CL_RETVAL_OK && ret_val != *last_commlib_error) {
          ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );

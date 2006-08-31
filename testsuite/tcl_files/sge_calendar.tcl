@@ -179,7 +179,7 @@ proc get_calender_list { {on_host ""} {as_user ""} {raise_error 1}} {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   calendar allready exists
+#     -2   calendar already exists
 #      0   ok
 #
 #  EXAMPLE
@@ -337,7 +337,7 @@ proc add_calender_error {result tmpfile calendar raise_error} {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   calendar allready exists
+#     -2   calendar already exists
 #      0   ok
 #
 #  EXAMPLE

@@ -48,7 +48,6 @@
 #define MSG_QSTAT_USAGE_FULLOUTPUT                       _MESSAGE(19012, _("full output"))
 #define MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES    _MESSAGE(19013, _("full output and show (selected) resources of queue(s)"))
 #define MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS    _MESSAGE(19014, _("display all job-array tasks (do not group)"))
-#define MSG_QSTAT_USAGE_PRINTTHISHELP    _MESSAGE(19015, _("print this help"))
 #define MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO    _MESSAGE(19016, _("show scheduler job information"))
 #define MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES    _MESSAGE(19017, _("request the given resources"))
 #define MSG_QSTAT_USAGE_HIDEEMPTYQUEUES    _MESSAGE(19018, _("hide empty queues"))
@@ -75,7 +74,6 @@
 /* #define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _message(19039, _("unable to get reply on "SFN" request from "SFN"@"SFN": "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QSTAT_FOLLOWINGDONOTEXIST _MESSAGE(19040, _("Following jobs do not exist: "))
 #define MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS    _MESSAGE(19041, _("display all parallel job tasks (do not group)"))
-#define MSG_QSTAT_XML_OUTPUT                          _MESSAGE(19042, _("display the information in XML-Format"))
 #define MSG_QSTAT_USAGE_DISPLAYCQUEUESUMMARY          _MESSAGE(19043, _("display cluster queue summary"))
 #define MSG_QSTAT_URGENCYINFO                         _MESSAGE(19044, _("display job urgency information"))
 #define MSG_QSTAT_PRIORITYINFO                        _MESSAGE(19045, _("display job priority information"))

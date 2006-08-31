@@ -587,7 +587,7 @@ reporting_create_acct_record(lList **answer_list,
                        sizeof(category_buffer));
 
       sge_build_job_category_dstring(&category_dstring, job, 
-                                     *(userset_list_get_master_list()));
+                                     *(userset_list_get_master_list()), *object_type_get_master_list(SGE_TYPE_PROJECT), NULL);
       category_string = sge_dstring_get_string(&category_dstring);                                          
 
       /* accounting records will only be written at job end, not for intermediate
@@ -1031,6 +1031,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
          sge_sharetree_print(&data_dstring, *object_base[SGE_TYPE_SHARETREE].list, 
                              *object_base[SGE_TYPE_USER].list,
                              *object_base[SGE_TYPE_PROJECT].list,
+                             *object_base[SGE_TYPE_USERSET].list,
                              true,
                              false,
                              NULL,

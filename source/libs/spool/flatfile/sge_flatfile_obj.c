@@ -1484,7 +1484,7 @@ static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
 *
 *  RESULT
 *     static int - 1 on success
-                   0 on error
+*                  0 on error
 *
 *  NOTES
 *     MT-NOTE: read_LIR_obj() is MT safe 

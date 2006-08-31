@@ -34,9 +34,11 @@
 
 #include "sge_object.h"
 
-bool ja_task_update_master_list(sge_object_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
+sge_callback_result
+ja_task_update_master_list(object_description *object_base, sge_object_type type, 
+                           sge_event_action action, lListElem *event, void *clientdata);
 
-bool ja_task_update_master_list_usage(lListElem *event);
+sge_callback_result
+ja_task_update_master_list_usage(lList *job_list, lListElem *event);
 
 #endif /* __SGE_JA_TASK_MIRROR_H */

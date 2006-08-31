@@ -99,7 +99,6 @@ proc issue_141_check {} {
    
    puts $CHECK_OUTPUT "Delete array job $job_id.1-250:2"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.1-250:2"]
-#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
    set    qdel_output "qdel ${job_id}.1-250:2\n"
    append qdel_output $output
  
@@ -136,14 +135,12 @@ proc issue_141_check {} {
 
    puts $CHECK_OUTPUT "Delete array job $job_id.1-250:3"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.1-250:3"]
-#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
    append qdel_output "qdel ${job_id}.1-250:3\n"
    append qdel_output $output
 
 
    puts $CHECK_OUTPUT "Delete array job $job_id.2-250:2"
    set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.2-250:2"]
-#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
    append qdel_output "qdel ${job_id}.2-250:2\n"
    append qdel_output $output
 

@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -64,12 +65,12 @@ proc vdep_set_queue_defaults { change_array } {
    }
 }
 
-#****** sge_procedures.53/queue/validate_queue_type() ********************************
+#****** sge_procedures.53/queue/validate_queue() ********************************
 #  NAME
-#     validate_queue_type() -- validate the settings for queue_type
+#     validate_queue() -- validate the settings for queue_type
 #
 #  SYNOPSIS
-#     validate_queue_type { change_array } 
+#     validate_queue { change_array } 
 #
 #  FUNCTION
 #     No action for SGE 5.3.
@@ -78,8 +79,11 @@ proc vdep_set_queue_defaults { change_array } {
 #     change_array - array containing queue definitions
 #
 #*******************************************************************************
-proc validate_queue_type { change_array } {
-   # nothing to be done for SGE 5.3
+proc validate_queue { change_array } {
+   upvar $change_array chgar
+
+   # create cluster dependent tmpdir
+   set chgar(tmpdir) "/tmp/testsuite_$ts_config(commd_port)"
 }
 
 
@@ -88,7 +92,7 @@ proc validate_queue_type { change_array } {
 #     add_queue() -- add a SGE 5.3 queue
 #
 #  SYNOPSIS
-#     add_queue { qname hostlist change_array {fast_add 0} } 
+#     add_queue { qname hostlist change_array {fast_add 1} } 
 #
 #  FUNCTION
 #     Adds one or multiple queues to a SGE 5.3 system.
@@ -98,21 +102,20 @@ proc validate_queue_type { change_array } {
 #     qname        - name for the (cluster) queue
 #     hostlist     - list of hostnames, or "@allhosts" to create a queue on each host.
 #     change_array - array containing attributes that differ from defaults
-#     {fast_add 0} - 0: add the queue using qconf -aq,
+#     {fast_add 1} - 0: add the queue using qconf -aq,
 #                    1: add the queue using qconf -Aq, much faster!
 #
 #  RESULT
 #
 #*******************************************************************************
-proc add_queue { qname hostlist change_array {fast_add 0} } {
+proc add_queue { qname hostlist change_array {fast_add 1} } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
-   global open_spawn_buffer
 
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {
@@ -139,14 +142,15 @@ proc add_queue { qname hostlist change_array {fast_add 0} } {
 
          set tmpfile [dump_array_to_tmpfile default_array]
 
-         set result ""
+         set result 0
          set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
          puts $CHECK_OUTPUT $result
 
          if { [string match "*$ADDED" $result ] == 0 } {
             add_proc_error "add_queue" "-1" "qconf error or binary not found"
+            set result -1
             break
-         } 
+         }
       } else {
          # add by handling vi
          set vi_commands [build_vi_command chgar]
@@ -212,12 +216,11 @@ proc set_queue_work { qname change_array } {
 proc set_queue { qname hostlist change_array } {
    global ts_config
    global CHECK_ARCH CHECK_OUTPUT CHECK_USER
-   global open_spawn_buffer
 
    upvar $change_array chgar
 
    # queue_type is version dependent
-   validate_queue_type chgar
+   validate_queue chgar
 
    # non cluster queue: set queue and hostnames
    if { $hostlist == "@allhosts" || $hostlist == "" } {
@@ -232,9 +235,14 @@ proc set_queue { qname hostlist change_array } {
    return $result
 }
 
+proc mod_queue { qname hostlist change_array {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
+   upvar $change_array chgar
+   return [set_queue $qname $hostlist chgar]
+}
+
 proc del_queue { q_name hostlist {ignore_hostlist 0} {del_cqueue 0}} {
   global ts_config
-  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
    # we just get one queue name (queue instance)
    set queue_list {}
@@ -310,3 +318,15 @@ proc get_cluster_queue {queue_instance} {
 
    return $cqueue
 }
+
+proc get_clear_queue_error_vdep {messages_var host} {
+   upvar $messages_var messages
+
+   #lappend messages(index) "-3"
+   #set messages(-3) [translate_macro MSG_XYZ_S $host] #; another exechost specific er
+ror message
+   #set messages(-3,description) "a highlevel description of the error"    ;# optional
+ parameter
+   #set messages(-3,level) -2  ;# optional parameter: we only want to raise a warning
+}
+

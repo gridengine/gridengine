@@ -988,6 +988,9 @@ static int cl_com_ssl_build_symbol_table(void) {
    {
       char* func_name = NULL;
       int had_errors = 0;
+#if defined(FREEBSD)
+      void* cl_com_ssl_crypto_handle_saved = NULL;
+#endif
 
 
       CL_LOG(CL_LOG_INFO,"loading ssl library functions with dlopen() ...");
@@ -1002,9 +1005,16 @@ static int cl_com_ssl_build_symbol_table(void) {
 
 #if defined(DARWIN)
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.bundle", RTLD_NOW | RTLD_GLOBAL );
+      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL );
+#endif /* RTLD_NODELETE */
+
+#elif defined(FREEBSD)
+#ifdef RTLD_NODELETE
+      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
+#else
+      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif /* RTLD_NODELETE */
 
 #elif defined(HP11)
@@ -1029,6 +1039,10 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
       }
       
+#if defined(FREEBSD)
+      cl_com_ssl_crypto_handle_saved = cl_com_ssl_crypto_handle;
+      cl_com_ssl_crypto_handle = RTLD_DEFAULT;
+#endif
 
 
       /* setting up crypto function pointers */
@@ -1649,6 +1663,10 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS;
       }
 
+#if defined(FREEBSD)
+      cl_com_ssl_crypto_handle = cl_com_ssl_crypto_handle_saved;
+#endif
+
       pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
       CL_LOG(CL_LOG_INFO,"loading ssl library functions with dlopen() done");
 
@@ -1944,6 +1962,11 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       func_name = function_name;
    }
 
+   if (cl_com_ssl_func__ERR_get_error == NULL) {
+      CL_LOG(CL_LOG_ERROR, "no cl_com_ssl_func__ERR_get_error available");
+      return CL_RETVAL_OK;
+   }   
+
    while( (ssl_error = cl_com_ssl_func__ERR_get_error()) ) {
       cl_com_ssl_func__ERR_error_string_n(ssl_error,buffer,512);
       snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, ssl_error, func_name, buffer);
@@ -2191,8 +2214,8 @@ int cl_com_ssl_framework_cleanup(void) {
             and/or SSL_load_error_strings() */
 
          
-         cl_com_ssl_func__CRYPTO_set_locking_callback( NULL );
-         cl_com_ssl_func__CRYPTO_set_id_callback( NULL );
+         cl_com_ssl_func__CRYPTO_set_locking_callback(NULL);
+         cl_com_ssl_func__CRYPTO_set_id_callback(NULL);
 
          cl_com_ssl_func__ERR_free_strings();
          cl_com_ssl_destroy_symbol_table();
@@ -2503,8 +2526,8 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
          }
 
          /* structures are freed at cl_com_ssl_framework_cleanup() */
-         cl_com_ssl_func__CRYPTO_set_id_callback( cl_com_ssl_get_thread_id );
-         cl_com_ssl_func__CRYPTO_set_locking_callback( cl_com_ssl_locking_callback );
+         cl_com_ssl_func__CRYPTO_set_id_callback(cl_com_ssl_get_thread_id);
+         cl_com_ssl_func__CRYPTO_set_locking_callback(cl_com_ssl_locking_callback);
 
          /* 
           * SSL_library_init() only registers ciphers. Another important
@@ -3041,10 +3064,10 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          struct timeval now;
          int socket_error = 0;
 
-#if defined(AIX)
-         socklen_t socklen = sizeof(socket_error);
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
          int socklen = sizeof(socket_error);
+#else
+         socklen_t socklen = sizeof(socket_error);
 #endif
 
          if (only_once == 0) {
@@ -3409,10 +3432,10 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
    }
 
    if (private->server_port == 0) {
-#if defined(AIX43) || defined(AIX51)
-      size_t length;
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
       int length;
+#else
+      socklen_t length;
 #endif
       length = sizeof(serv_addr);
       /* find out assigned port number and pass it to caller */
@@ -3456,10 +3479,10 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(AIX43) || defined(AIX51)
-   size_t fromlen = 0;
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int fromlen = 0;
+#else
+   socklen_t fromlen = 0;
 #endif
    int retval;
    int server_fd = -1;
@@ -3604,10 +3627,10 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(AIX)
-   socklen_t socklen = sizeof(socket_error);
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int socklen = sizeof(socket_error);
+#else
+   socklen_t socklen = sizeof(socket_error);
 #endif
 
 #ifdef USE_POLL

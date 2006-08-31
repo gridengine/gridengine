@@ -52,6 +52,7 @@
 #include "sge_gdi_request.h"
 #include "sge_gdi.h"
 #include "sge_usageL.h"
+#include "sge_attrL.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"
@@ -70,6 +71,8 @@
 #include "sge_cqueue.h"
 #include "sge_suser.h"
 #include "sge_lock.h"
+#include "sgeobj/sge_limit_rule.h"
+#include "sge_limit_rule_qmaster.h"
 
 #include "uti/sge_bootstrap.h"
 
@@ -114,8 +117,8 @@ int sub_command, monitoring_t *monitor
          goto Error;
       }
       /* may not add user with same name as an existing project */
-      if (lGetElemStr(user_flag?Master_Project_List:Master_User_List, 
-                        UP_name, userprj)) {
+      if (lGetElemStr(user_flag?*object_type_get_master_list(SGE_TYPE_PROJECT):
+                      *object_type_get_master_list(SGE_TYPE_USER), UP_name, userprj)) {
          ERROR((SGE_EVENT, MSG_UP_ALREADYEXISTS_SS,user_flag ? MSG_OBJ_PRJ : MSG_OBJ_USER , userprj));
 
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -167,8 +170,9 @@ int sub_command, monitoring_t *monitor
 
          /* make sure default project exists */
          if ((dproj = lGetPosString(ep, pos))) {
-            if (!Master_Project_List ||
-                !userprj_list_locate(Master_Project_List, dproj)) {
+             lList *master_project_list = *object_type_get_master_list(SGE_TYPE_PROJECT);
+            if (master_project_list == NULL||
+                !userprj_list_locate(master_project_list, dproj)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_PRJ, dproj));
                answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
                goto Error;
@@ -222,8 +226,17 @@ Error:
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
+   lListElem *lirs;
    
    DENTER(TOP_LAYER, "userprj_success");
+
+   for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
+      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, lGetString(ep, UP_name))) {
+         lSetBool(ep, UP_consider_with_categories, true);
+         break;
+      }
+   }
+
    sge_add_event( 0, old_ep?
                  (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
                  (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
@@ -279,7 +292,8 @@ int user        /* =1 user, =0 project */
    lListElem *ep;
    lListElem *myep;
    lList* projects;
-
+   object_description *object_base = object_type_get_object_description();
+   
    DENTER(TOP_LAYER, "sge_del_userprj");
 
    if ( !up_ep || !ruser || !rhost ) {
@@ -300,7 +314,7 @@ int user        /* =1 user, =0 project */
    }
 
    /* ensure this u/p object is not referenced in actual share tree */
-   if (getNode(Master_Sharetree_List, name, user ? STT_USER : STT_PROJECT, 0)) {
+   if (getNode(*object_base[SGE_TYPE_SHARETREE].list, name, user ? STT_USER : STT_PROJECT, 0)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANT_DELETE_UP_IN_SHARE_TREE_SS, user?MSG_OBJ_USER:MSG_OBJ_PRJ, name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -339,7 +353,7 @@ int user        /* =1 user, =0 project */
       }
 
       /* check hosts */
-      for_each (ep, Master_Exechost_List) {
+      for_each (ep, *object_base[SGE_TYPE_EXECHOST].list) {
          if (userprj_list_locate(lGetList(ep, EH_prj), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                   MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
@@ -379,7 +393,7 @@ int user        /* =1 user, =0 project */
       lFreeList(&projects);
 
       /* check user list for reference */
-      if ((myep = lGetElemStr(Master_User_List, UP_default_project, name))) {
+      if ((myep = lGetElemStr(*object_base[SGE_TYPE_USER].list, UP_default_project, name))) {
          ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString (myep, UP_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -447,7 +461,8 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
    /* shall auto users be deleted again? */
    if (auto_user_delete_time > 0) {
       lListElem *user, *next;
-
+      object_description *object_base = object_type_get_object_description();
+      lList **master_user_list = object_base[SGE_TYPE_USER].list;
       u_long32 now = sge_get_gmt();
       u_long32 next_delete = now + auto_user_delete_time;
 
@@ -458,7 +473,7 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
        * Check each user for deletion time. We don't use for_each()
        * because we are deleting entries.
        */
-      for (user=lFirst(Master_User_List); user; user=next) {
+      for (user=lFirst(*master_user_list); user; user=next) {
          u_long32 delete_time = lGetUlong(user, UP_delete_time);
          next = lNext(user);
 
@@ -470,13 +485,13 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
             const char *name = lGetString(user, UP_name);
 
             /* if the user has jobs, we increment the delete time */
-            if (suser_get_job_counter(suser_list_find(Master_SUser_List, name)) > 0) {
+            if (suser_get_job_counter(suser_list_find(*object_base[SGE_TYPE_SUSER].list, name)) > 0) {
                lSetUlong(user, UP_delete_time, next_delete);
             } else {
                /* if the delete time has expired, delete user */
                if (delete_time <= now) {
                   lList *answer_list = NULL;
-                  if (sge_del_userprj(user, &answer_list, &Master_User_List, admin,
+                  if (sge_del_userprj(user, &answer_list, master_user_list, admin,
                                        (char *)qmaster_host, 1) != STATUS_OK) {
                      /* 
                       * if deleting the user failes (due to user being referenced
@@ -510,7 +525,7 @@ sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor)
 
    DENTER(TOP_LAYER, "sge_add_auto_user");
 
-   uep = userprj_list_locate(Master_User_List, user);
+   uep = userprj_list_locate(*object_type_get_master_list(SGE_TYPE_USER), user);
 
    /* if the user already exists */
    if (uep != NULL) {
@@ -635,19 +650,20 @@ void sge_userprj_spool(void) {
    lList *answer_list = NULL;
    const char *name = NULL;
    u_long32 now = sge_get_gmt();
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_userprj_spool");
 
    /* this function is used on qmaster shutdown, no need to monitor this lock */
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
 
-   for_each(elem, Master_User_List) {
+   for_each(elem, *object_base[SGE_TYPE_USER].list) {
       name = lGetString(elem, UP_name);
       sge_event_spool(&answer_list, now, sgeE_USER_MOD, 0, 0, name, NULL, NULL,
                       elem, NULL, NULL, false, true);
    }
 
-   for_each(elem, Master_Project_List) {
+   for_each(elem, *object_base[SGE_TYPE_PROJECT].list) {
       name = lGetString(elem, UP_name);
       sge_event_spool(&answer_list, now, sgeE_PROJECT_MOD, 0, 0, name, NULL, NULL,
                       elem, NULL, NULL, false, true);   
@@ -660,4 +676,105 @@ void sge_userprj_spool(void) {
    DEXIT;
    return;
 }
+
+/****** sge_userprj_qmaster/project_still_used() *******************************
+*  NAME
+*     project_still_used() -- True, if project still used
+*
+*  SYNOPSIS
+*     static bool project_still_used(const char *p)
+*
+*  FUNCTION
+*     Returns true, if project is still used as ACL with host_conf(5),
+*     queue_conf(5).
+*
+*  INPUTS
+*     const char *p - the project
+*
+*  RESULT
+*     static bool - True, if project still used
+*
+*  NOTES
+*     MT-NOTE: project_still_used() is not MT safe
+*******************************************************************************/
+static bool project_still_used(const char *p)
+{
+   const lListElem *qc, *cq, *hep, *lirs;
+
+   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
+      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, p)) {
+         return true;
+      }
+   }
+
+   for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST))
+      if (lGetSubStr(hep, UP_name, p, EH_prj) ||
+          lGetSubStr(hep, UP_name, p, EH_xprj))
+         return true;
+
+   for_each (cq, *object_type_get_master_list(SGE_TYPE_CQUEUE)) {
+      for_each (qc, lGetList(cq, CQ_projects))
+         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
+            return true;
+      for_each (qc, lGetList(cq, CQ_xprojects))
+         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
+            return true;
+   }
+
+   return false;
+}
+
+
+/****** sge_userprj_qmaster/project_update_categories() ************************
+*  NAME
+*     project_update_categories() -- Update all projects wrts categories
+*
+*  SYNOPSIS
+*     void project_update_categories(const lList *added, const lList *removed)
+*
+*  FUNCTION
+*     Each added/removed project is verified whether it is used first
+*     time/still as ACL for host_conf(5)/queue_conf(5). If so an event
+*     is sent.
+*
+*  INPUTS
+*     const lList *added   - List of added project references (UP_Type)
+*     const lList *removed - List of removed project references (UP_Type)
+*
+*  NOTES
+*     MT-NOTE: project_update_categories() is not MT safe
+*******************************************************************************/
+void project_update_categories(const lList *added, const lList *removed)
+{
+   const lListElem *ep;
+   const char *p;
+   lListElem *prj;
+
+   DENTER(TOP_LAYER, "project_update_categories");
+
+   for_each (ep, added) {
+      p = lGetString(ep, UP_name);
+      DPRINTF(("added project: \"%s\"\n", p));
+      prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
+      if (lGetBool(prj, UP_consider_with_categories)==false) {
+         lSetBool(prj, UP_consider_with_categories, true);
+         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
+      }
+   }
+
+   for_each (ep, removed) {
+      p = lGetString(ep, UP_name);
+      DPRINTF(("removed project: \"%s\"\n", p));
+      prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
+
+      if (!project_still_used(p)) {
+         lSetBool(prj, UP_consider_with_categories, false);
+         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
+      }
+   }
+
+   DEXIT;
+   return;
+}
+
 

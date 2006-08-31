@@ -240,22 +240,19 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
    unset old_values(processors)
 
    # Modify exechost from file?
-   if { $fast_add } {
-
-     set tmpfile [dump_array_to_tmpfile old_values]
-     set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]
+   if {$fast_add} {
+      set tmpfile [dump_array_to_tmpfile old_values]
+      set result [start_sge_bin "qconf" "-Me $tmpfile" $on_host $as_user]
 
       # parse output or raise error
-     if {$prg_exit_state == 0} {
-         parse_simple_record result out
+      if {$prg_exit_state == 0} {
          set ret 0
       } else {
          set ret [set_exechost_error $result old_values $tmpfile $raise_error]
       }
 
    } else {
-   # User vi
-
+      # Use vi
       set vi_commands [build_vi_command old_values]
       set ret 0
 
@@ -323,10 +320,18 @@ proc set_exechost { change_array host {fast_add 1} {on_host ""} {as_user ""} {ra
 proc set_exechost_error {result old_values tmpfile  raise_error} {
 
    # build up needed vars
-   set project "$old_values(projects)"
+   if {[info exists old_values(projects)]} {
+      set project "$old_values(projects)"
+   } else {
+      set project "unknown"
+   }
    set attributes "projects"
    set elem "exechost"
-   set host "$old_values(hostname)"
+   if {[info exists old_values(hostname)]} {
+      set host "$old_values(hostname)"
+   } else {
+      set host "unknown"
+   }
 
    set messages(index) "-1"
    set messages(-1) [translate_macro MSG_SGETEXT_UNKNOWNPROJECT_SSSS $attributes $project $elem $host ]
@@ -711,3 +716,135 @@ proc add_adminhost_error {result host on_host raise_error} {
    return $ret
 }
 
+#****** sge_host/host_get_suspended_states() ***********************************
+#  NAME
+#     host_get_suspended_states() -- return ps suspended states
+#
+#  SYNOPSIS
+#     host_get_suspended_states { host } 
+#
+#  FUNCTION
+#     Returns the states characters used by ps to express the suspended state.
+#     Depends on the given hosts architecture.
+#
+#  INPUTS
+#     host - host name
+#
+#  RESULT
+#     state characters
+#
+#  SEE ALSO
+#     sge_host/host_get_running_states()
+#*******************************************************************************
+proc host_get_suspended_states {host} {
+   set arch [resolve_arch $host]
+
+   switch -exact $arch {
+      "aix42" -
+      "aix43" -
+      "aix51" {
+         set states T
+      }
+      "darwin" -
+      "darwin-ppc" -
+      "darwin-x86" {
+         set states ST
+      }
+      default {
+         set states T
+      }
+   }
+
+   return $states
+}
+
+#****** sge_host/host_get_running_states() ***********************************
+#  NAME
+#     host_get_running_states() -- return ps running states
+#
+#  SYNOPSIS
+#     host_get_running_states { host } 
+#
+#  FUNCTION
+#     Returns the states characters used by ps to express the running state.
+#     Depends on the given hosts architecture.
+#
+#  INPUTS
+#     host - host name
+#
+#  RESULT
+#     state characters
+#
+#  SEE ALSO
+#     sge_host/host_get_suspended_states()
+#*******************************************************************************
+proc host_get_running_states {host} {
+   set arch [resolve_arch $host]
+
+   switch -exact $arch {
+      "aix42" -
+      "aix43" -
+      "aix51" {
+         set states AWI
+      }
+      "darwin" -
+      "darwin-ppc" -
+      "darwin-x86" {
+         set states R
+      }
+      default {
+         set states OSR
+      }
+   }
+
+   return $states
+}
+
+#****** sge_host/host_list_compare() *******************************************
+#  NAME
+#     host_list_compare() -- compare two host lists
+#
+#  SYNOPSIS
+#     host_list_compare { list_1 list_2 {raise_error 1} } 
+#
+#  FUNCTION
+#     Compares two host lists.
+#     Only the short host names are compared.
+#
+#  INPUTS
+#     list_1          - first list
+#     list_2          - second list
+#     {raise_error 1} - raise an error condition if the lists differ?
+#
+#  RESULT
+#     0   on success
+#     < 0 if the lists differ
+#*******************************************************************************
+proc host_list_compare {list_1 list_2 {raise_error 1}} {
+   # lists have to have same length
+   if {[llength $list_1] != [llength $list_2]} {
+      add_proc_error "host_list_compare" -1 "host lists have different length:\n$list_1\n$list_2" $raise_error
+      return -1
+   }
+
+   # sort lists to compare them host by host
+   set list_1 [lsort $list_1]
+   set list_2 [lsort $list_2]
+
+   set len [llength $list_1]
+   for {set i 0} {$i < $len} {incr i} {
+      set host_1 [lindex $list_1 $i]
+      set host_2 [lindex $list_2 $i]
+
+      # compare only short hosts
+      set short_1 [lindex [split $host_1 "."] 0]
+      set short_2 [lindex [split $host_2 "."] 0]
+
+      if {[string compare -nocase $short_1 $short_2] != 0} {
+         add_proc_error "host_list_compare" -1 "host lists differ:\n$list_1\n$list_2" $raise_error
+         return -2
+      }
+   }
+
+   return 0
+}

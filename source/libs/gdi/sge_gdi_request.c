@@ -63,6 +63,7 @@
 #endif
 #include "msg_common.h"
 #include "msg_gdilib.h"
+#include "gdi/version.h"
 
 static bool
 gdi_send_multi_async(lList **alpp, state_gdi_multi *state);
@@ -83,13 +84,10 @@ sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_shor
 static bool
 sge_pack_gdi_info(u_long32 command);
 
-static int sge_send_receive_gdi_request(int *commlib_error,
-                                        const char *rhost,
-                                        const char *commproc,
-                                        u_short id,
-                                        sge_gdi_request *out,
-                                        sge_gdi_request **in,
-                                        lList **alpp);
+static int 
+sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
+                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
+                             lList **alpp);
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -306,7 +304,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           variable must be initialized with STATE_GDI_MULTI_INIT 
 *           before a series of calls to sge_gdi_multi()
 *
-*     bool do_copy - indicates, if the passed in data needs to be copyed or not
+*     bool do_copy - indicates, if the passed in data needs to be copied or not
 *
 *     bool do_sync - indicates, if the gdi request should be send sync or async.
 *
@@ -346,7 +344,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    char username[128];
    char groupname[128];
 
-   DENTER(GDI_LAYER, "sge_gdi_multi");
+   DENTER(GDI_LAYER, "sge_gdi_multi_sync");
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI);
 
@@ -427,8 +425,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    }
 #endif
    gid = getegid();
-   if (sge_gid2group(gid, groupname, sizeof(groupname), 
-         MAX_NIS_RETRIES)) {
+   if(sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
                              sge_u32c(gid)));
       goto error; 
@@ -639,7 +636,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    }
    else {
       /* nothing todo... */
-      return true;
+      DRETURN(true);
    }
   
    /* recive answer */
@@ -688,8 +685,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
          }   
          gdi_state_clear_last_gdi_request(); 
       }
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
  
    for (an = (*answer); an; an = an->next) { 
@@ -712,7 +708,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
 
    gdi_state_clear_last_gdi_request();
    
-   return true;
+   DRETURN(true);
 }
 
 /****** sge_gdi_request/gdi_send_multi_sync() **********************************
@@ -969,13 +965,10 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *  NOTES
 *     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
-static int sge_send_receive_gdi_request(int *commlib_error,
-                                        const char *rhost, 
-                                        const char *commproc, 
-                                        u_short id, 
-                                        sge_gdi_request *out,
-                                        sge_gdi_request **in,
-                                        lList **alpp)
+static int 
+sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
+                             u_short id, sge_gdi_request *out, sge_gdi_request **in,
+                             lList **alpp)
 {
    int ret;
    char rcv_rhost[CL_MAXHOSTLEN+1];

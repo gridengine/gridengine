@@ -37,4 +37,29 @@
 bool LIRF_object_parse_from_string(lListElem **filter, const char* buffer, lList **alp);
 bool LIRF_object_append_to_dstring(const lListElem *filter, dstring *buffer, lList **alp);
 
+lListElem* limit_rule_set_create(lList **answer_list, const char *name);
+lListElem* limit_rule_set_defaults(lListElem* lirs);
+
+bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool in_master);
+bool limit_rule_sets_verify_attributes(lList *lirs_list, lList **answer_list, bool in_master);
+
+lListElem *limit_rule_set_list_locate(lList *lp, const char *name);
+lListElem *limit_rule_locate(lList *lp, const char *name);
+
+bool lir_xattr_pre_gdi(lList *this_list, lList **answer_list);
+
+bool limit_rule_get_rue_string(dstring *name, const lListElem *rule, const char *user, const char *project, const char *host, const char *queue, const char* pe);
+
+int
+lirs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slots, lList *centry_list, const char *obj_name);
+
+int
+lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const char *pename, lList *centry_list, lList *acl_list, lList *hgrp_list, int slots);
+
+lListElem *lirs_get_matching_rule(const lListElem *lirs, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *userset_list, lList* hgroup_list, dstring *rule_name);
+
+bool lirs_is_matching_rule(lListElem *rule, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list);
+
+bool limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list);
+
 #endif /* __SGE_LIMIT_RULE_H */

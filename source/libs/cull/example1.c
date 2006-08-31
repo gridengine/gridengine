@@ -50,6 +50,8 @@
 /* THIS ARE THE LIST STRUCTURE DEFINITIONS AND THE NAMESPACES */
 #include "example1.h"
 
+#include "sge_stdio.h"
+
 /* DIRECTORY CONTAINING DATA FILES */
 #define DATA_DIR "./"
 
@@ -312,7 +314,7 @@ int main(int argc, char *argv[])
          printf("unable to dump into dump.dmp\n");
          break;
       }
-      fclose(fp);
+      FCLOSE(fp);
 
       break;
 
@@ -505,7 +507,7 @@ int main(int argc, char *argv[])
          printf("unable to dump into dump.dmp\n");
          break;
       }
-      fclose(fp);
+      FCLOSE(fp);
 
       break;
 
@@ -636,7 +638,7 @@ int main(int argc, char *argv[])
       /* open dump file and read information */
       fp = fopen(DATA_DIR "dump.dmp", "r");
       joinedlist = lUndumpList(fp, NULL, NULL /*QueueT */ );
-      fclose(fp);
+      FCLOSE(fp);
 
       /* show the undumped list */
       lWriteListTo(joinedlist, stdout);
@@ -831,6 +833,9 @@ int main(int argc, char *argv[])
    if (allOwnerFields)
       lFreeWhat(&allOwnerFields);
 
+   DCLOSE;
+   return 0;
+FCLOSE_ERROR:
    DCLOSE;
    return 0;
 }

@@ -9,7 +9,19 @@
 	<META NAME="CHANGED" CONTENT="20020313;14391400">
 </HEAD>
 <BODY>
-<H1><FONT COLOR="#666699">Submitting binaries in Grid Engine</FONT></H1>
+<H1><FONT COLOR="#666699">Submitting binaries in Grid Engine 6</FONT></H1>
+<P STYLE="margin-bottom: 0cm">
+Grid Engine 6 supports the direct submission of binaries via <B>qsub</B> and <B>qrsh</b>
+via the new argument <B>-b y|n</B>. The default behavior assumes <B>-b n</B>, use <B>-b y</B>
+to directly invoke a binary executable.
+<BLOCKQUOTE><CODE>
+workgroupcluster:~ www$ <B>qrsh -b y /usr/bin/uptime</B><BR/>
+ 7:49  up 107 days, 35 mins, 0 users, load averages: 0.12 0.03 0.01<BR/>
+workgroupcluster:~ www$
+</CODE>
+</BLOCKQUOTE>
+</P
+<H1><FONT COLOR="#666699">Submitting binaries in Grid Engine 5.x</FONT></H1>
 <P STYLE="margin-bottom: 0cm">The command <B>qsub(1) </B>cannot be
 used to directly submit binary files as jobs. Although one could
 write a small wrapper script around binaries to submit them, there

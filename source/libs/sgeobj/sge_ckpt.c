@@ -48,11 +48,10 @@
 #include "sge_ckpt.h"
 #include "symbols.h"
 #include "sge_str.h"
+#include "sgeobj/sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-lList *Master_Ckpt_List = NULL;
 
 /****** sgeobj/ckpt/ckpt_is_referenced() **************************************
 *  NAME
@@ -336,7 +335,7 @@ int ckpt_validate(const lListElem *this_elem, lList **alpp)
 lList **
 ckpt_list_get_master_list(void)
 {
-   return &Master_Ckpt_List;
+   return object_type_get_master_list(SGE_TYPE_CKPT);
 }
 
 /****** sgeobj/ckpt/ckpt_list_do_all_exist() **********************************

@@ -45,7 +45,11 @@
 
 static const char *spooling_method = "template";
 
+#ifdef SPOOLING_template
 const char *get_spooling_method(void)
+#else
+const char *get_template_spooling_method(void)
+#endif
 {
    return spooling_method;
 }

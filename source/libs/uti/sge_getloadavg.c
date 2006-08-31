@@ -290,7 +290,7 @@ kernel_fd_type *fd
       kernel_fd = open("/dev/kmem", 0);
       if (kernel_fd != -1) 
 #else 
-      kernel_fd = kvm_open (NULL, NULL, NULL, O_RDONLY, prefix);
+      kernel_fd = kvm_open(NULL, NULL, NULL, O_RDONLY, prefix);
       if (kernel_fd != NULL) 
 #endif
       {
@@ -315,7 +315,7 @@ char *refstr
 
 #if defined(FREEBSD)
    if (sge_get_kernel_fd(&kernel_fd)
-       && kvm_read (kernel_fd, offset, (char *) ptr, size) != size) {
+       && kvm_read(kernel_fd, offset, (char *)ptr, size) != size) {
       if (*refstr == '!') {
          return 0;
       } else {
@@ -330,7 +330,7 @@ char *refstr
          }
          return -1;
       }
-      if (read(kernel_fd, (char *) ptr, size) == -1) {
+      if (read(kernel_fd, (char *)ptr, size) == -1) {
          if (*refstr == '!') {
             return 0;
          } else {
@@ -476,9 +476,8 @@ int kupdate(int avenrun[3])
       kn = kstat_data_lookup(ks, "ncpus");
       if (kn && kn->value.ui32 > ncpus) {
          ncpus = kn->value.ui32;
-         cpu_ks = (kstat_t **) realloc (cpu_ks, ncpus * sizeof (kstat_t *));
-         cpu_stat = (cpu_stat_t *) realloc (cpu_stat,
-         ncpus * sizeof (cpu_stat_t));
+         cpu_ks = (kstat_t **)realloc(cpu_ks, ncpus * sizeof(kstat_t *));
+         cpu_stat = (cpu_stat_t *)realloc(cpu_stat, ncpus * sizeof(cpu_stat_t));
       }
 
       for (ks = kc->kc_chain; ks; ks = ks->ks_next) {
@@ -568,9 +567,7 @@ double get_cpu_load(void) {
 }
 #elif defined(LINUX)
 
-static char* skip_token(
-char *p 
-) {
+static char* skip_token(char *p) {
    while (isspace(*p)) {
       p++;
    }
@@ -673,7 +670,7 @@ double get_cpu_load()
       cpu_new[i] = sys_info.cpu[i];
    }
 
-   percentages (CPUSTATES, cpu_states, cpu_new, cpu_old, cpu_diff);
+   percentages(CPUSTATES, cpu_states, cpu_new, cpu_old, cpu_diff);
 
    cpu_load = cpu_states[1] + cpu_states[2] + cpu_states[3] 
       + cpu_states[4] + cpu_states[5];
@@ -697,7 +694,7 @@ static double get_cpu_load()
 
    if (sge_get_kernel_fd(&kernel_fd)
        && sge_get_kernel_address("cp_time", &address)) {
-      getkval(address, (int*)&cpu_time, sizeof(cpu_time), "cp_time"); 
+      getkval(address, (void*)&cpu_time, sizeof(cpu_time), "cp_time"); 
       percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
       cpu_load = cpu_states[0] + cpu_states[1] + cpu_states[2];
       if (cpu_load < 0.0) {
@@ -752,7 +749,7 @@ double get_cpu_load()
 
    kern_return_t error;
    struct host_cpu_load_info cpu_load_data;
-   int host_count = sizeof(cpu_load_data)/sizeof(integer_t);
+   mach_msg_type_number_t host_count = sizeof(cpu_load_data)/sizeof(integer_t);
    mach_port_t host_priv_port = mach_host_self();
 
    error = host_statistics(host_priv_port, HOST_CPU_LOAD_INFO,

@@ -37,10 +37,10 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <errno.h>
 
 #include "sge_lock.h"
 #include "sge_bootstrap.h"
-#include "sge_unistd.h"
 #include "sge.h"
 #include "setup.h"
 #include "sge_all_listsL.h"
@@ -70,18 +70,25 @@
 #include "sge_string.h"
 #include "setup_path.h" 
 #include "sge_time.h" 
-#include "sge_uidgid.h"
-#include "sge_io.h"
 #include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
-#include "sge_answer.h"
 #include "sge_profiling.h"
 #include "sge_serf.h"
 #include "sge_mt_init.h"
 #include "sge_category.h"
 
-#include <sgeobj/sge_schedd_conf.h>
+#include "uti/sge_io.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_schedd_conf.h"
+
+#include "msg_common.h"
+#include "msg_schedd.h"
+#include "msg_daemons_common.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -128,6 +135,7 @@ char *argv[]
    time_t next_prof_output = 0;
    bool done = false;
    int schedd_exit_state = 0;
+   lListElem *event_client = NULL;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -197,6 +205,7 @@ char *argv[]
 
    /* prepare event client/mirror mechanism */
    sge_schedd_mirror_register();
+   event_client = ec_get_event_client();
 
    master_host = sge_get_master(0);
    if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
@@ -224,7 +233,8 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
-   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
+   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), 
+                                       (int) (sconf_get_schedule_interval() * 2) );
 
    sge_sig_handler_in_main_loop = 1;
 
@@ -274,10 +284,13 @@ char *argv[]
             }
          }
 
-         if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
+         if(sge_mirror_process_events(event_client) == SGE_EM_TIMEOUT) {
             check_qmaster = true;
             continue;
          }
+         /* we must re-initialize 'event_client' as it might have been 
+            freed deep down in sge_mirror_process_events() */
+         event_client = ec_get_event_client();
 
          if(ec_need_new_registration()) {
             check_qmaster = true;
@@ -342,7 +355,7 @@ char *argv[]
       }
    }
 
-   sge_mirror_shutdown();
+   sge_mirror_shutdown(&event_client);
 
    sge_teardown_lock_service();
    
@@ -660,23 +673,24 @@ int sge_before_dispatch(void)
    }
    
    if (sconf_is_new_config()) {
+      lListElem *event_client = ec_get_event_client();
       int interval = sconf_get_flush_finish_sec();
       bool flush = (interval > 0) ? true : false;
       interval--;
-      if (ec_get_flush(sgeE_JOB_DEL) != interval) {
-         ec_set_flush(sgeE_JOB_DEL,flush, interval);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
-         ec_set_flush(sgeE_JATASK_MOD, flush, interval);
-         ec_set_flush(sgeE_JATASK_DEL, flush, interval);
+      if (ec_get_flush(event_client, sgeE_JOB_DEL) != interval) {
+         ec_set_flush(event_client, sgeE_JOB_DEL,flush, interval);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE,flush, interval);
+         ec_set_flush(event_client, sgeE_JATASK_MOD, flush, interval);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, flush, interval);
       }
 
       interval= sconf_get_flush_submit_sec();
       flush = (interval > 0) ? true : false;
       interval--;      
-      if(ec_get_flush(sgeE_JOB_ADD) != interval) {
-         ec_set_flush(sgeE_JOB_ADD, flush, interval);
+      if(ec_get_flush(event_client, sgeE_JOB_ADD) != interval) {
+         ec_set_flush(event_client, sgeE_JOB_ADD, flush, interval);
       }
-      ec_commit();
+      ec_commit(event_client);
    }
 
    /*
@@ -693,9 +707,11 @@ int sge_before_dispatch(void)
 
 void sge_schedd_mirror_register()
 {
+   lListElem *event_client = NULL;
    /* register as event mirror */
-   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
-   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
+   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler", true);
+   event_client = ec_get_event_client();
+   ec_set_busy_handling(event_client, EV_BUSY_UNTIL_RELEASED);
 
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();
@@ -707,16 +723,11 @@ static char schedule_log_path[SGE_PATH_MAX + 1] = "";
 const char *schedule_log_file = "schedule";
 
 /* MT-NOTE: schedd_serf_record_func() is not MT safe */
-static void schedd_serf_record_func(
-u_long32 job_id,
-u_long32 ja_taskid,
-const char *state,
-u_long32 start_time,
-u_long32 end_time,
-char level_char,
-const char *object_name,
-const char *name,
-double utilization)
+static void 
+schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, const char *state,
+                        u_long32 start_time, u_long32 end_time, 
+                        char level_char, const char *object_name, 
+                        const char *name, double utilization)
 {
    FILE *fp;
 
@@ -733,13 +744,17 @@ double utilization)
    }
 
    /* a new record */
-   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"sge_U32CFormat":%c:%s:%s:%f\n",
-      sge_u32c(job_id), sge_u32c(ja_taskid), state, sge_u32c(start_time), sge_u32c(end_time - start_time), 
-         level_char, object_name, name, utilization);
-   fclose(fp);
+   fprintf(fp, sge_U32CFormat":"sge_U32CFormat":%s:"sge_U32CFormat":"
+           sge_U32CFormat":%c:%s:%s:%f\n", sge_u32c(job_id), 
+           sge_u32c(ja_taskid), state, sge_u32c(start_time), 
+           sge_u32c(end_time - start_time), 
+           level_char, object_name, name, utilization);
+   FCLOSE(fp);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
 }
 
 /* MT-NOTE: schedd_serf_newline() is not MT safe */
@@ -747,6 +762,7 @@ static void schedd_serf_newline(u_long32 time)
 {
    FILE *fp;
 
+   DENTER(TOP_LAYER, "schedd_serf_newline");
    if (!*schedule_log_path) {
       sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
    }
@@ -755,7 +771,11 @@ static void schedd_serf_newline(u_long32 time)
    if (fp) {
       /* well, some kind of new line indicating a new schedule run */
       fprintf(fp, "::::::::\n");
-      fclose(fp);
+      FCLOSE(fp);
    }
+   DRETURN_VOID;
+FCLOSE_ERROR:
+   DPRINTF((MSG_FILE_ERRORCLOSEINGXY_SS, schedule_log_path, strerror(errno)));
+   DRETURN_VOID;
 }
 

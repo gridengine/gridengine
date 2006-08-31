@@ -34,6 +34,7 @@
 
 #include "qmon_proto.h"
 
-lList* qmonReadFile(char *filename);
+lList* qmonReadFile(const char *filename);
+char *qmonReadText(const char *filename, lList **alpp);
 
 #endif /* __QMON_FILE_H */

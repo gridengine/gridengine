@@ -36,6 +36,8 @@
 #define SGE_HOME_DEF_REQ_FILE       ".sge_request"
 #define SGE_COMMON_DEF_QSTAT_FILE   "common/sge_qstat"
 #define SGE_HOME_DEF_QSTAT_FILE     ".sge_qstat"
+#define SGE_COMMON_DEF_QLIMIT_FILE   "common/sge_qlimit"
+#define SGE_HOME_DEF_QLIMIT_FILE     ".sge_qlimit"
 
 void opt_list_append_opts_from_default_files(lList **pcmdline,  
                                              lList **answer_list,
@@ -69,6 +71,12 @@ void opt_list_merge_command_lines(lList **opts_all,
 bool opt_list_has_X(lList *opts, const char *option);
 
 bool opt_list_is_X_true(lList *opts, const char *option);
+
+bool get_user_home_file_path(dstring *absolut_filename, const char *filename, const char *user, lList **answer_list);
+
+const char *get_root_file_path(dstring *absolut_filename, const char *cell_root, const char *filename);
+
+bool get_user_home(dstring *home_dir, const char *user, lList **answer_list);
 
 #endif /* __READ_DEFAULTS_H */
 

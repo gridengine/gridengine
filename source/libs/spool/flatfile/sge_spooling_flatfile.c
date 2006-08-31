@@ -32,6 +32,7 @@
 
 /* system */
 #include <errno.h>
+#include <string.h>
 
 #include "sge.h"
 #include "setup_path.h"
@@ -66,7 +67,8 @@
 
 #include "sort_hosts.h"
 #include "sge_complex_schedd.h"
-#include "sge_select_queue.c"
+#include "sge_select_queue.h"
+#include "sgeobj/sge_job.h"
 
 /* includes for old job spooling */
 #include "spool/classic/read_write_job.h"
@@ -81,8 +83,11 @@
 
 static const char *spooling_method = "flatfile";
 
-const char *
-get_spooling_method(void)
+#ifdef SPOOLING_flatfile
+const char *get_spooling_method(void)
+#else
+const char *get_flatfile_spooling_method(void)
+#endif
 {
    return spooling_method;
 }
@@ -617,9 +622,9 @@ spool_flatfile_default_list_func(lList **answer_list,
             filename = SCHED_CONF_FILE;
             break;
          case SGE_TYPE_JOB:
-            job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+            job_list_read_from_disk(object_type_get_master_list(SGE_TYPE_JOB), "Master_Job_List", 0,
                                     SPOOL_DEFAULT, NULL);
-            job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
+            job_list_read_from_disk(object_type_get_master_list(SGE_TYPE_ZOMBIE), "Master_Zombie_List", 0,
                                     SPOOL_HANDLE_AS_ZOMBIE, NULL);
             break;
          default:

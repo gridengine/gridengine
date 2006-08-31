@@ -83,8 +83,11 @@
 */
 static const char *spooling_method = "postgres";
 
-const char *
-get_spooling_method(void)
+#ifdef SPOOLING_postgres
+const char *get_spooling_method(void)
+#else
+const char *get_postgres_spooling_method(void)
+#endif
 {
    return spooling_method;
 }

@@ -42,8 +42,8 @@
 #include "sge_log.h"
 #include "symbols.h"
 #include "msg_execd.h"
-#include "sge_feature.h"
 #include "sge_job.h"
+#include "sgeobj/sge_object.h"
 
 extern int shut_me_down;
 
@@ -67,7 +67,7 @@ int answer_error;
 
    DPRINTF(("===>KILL EXECD%s\n", kill_jobs?" and jobs":""));
    if (kill_jobs) {
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if (lGetUlong(jep, JB_checkpoint_attr) & CHECKPOINT_AT_SHUTDOWN) {
                WARNING((SGE_EVENT, MSG_JOB_INITCKPTSHUTDOWN_U, sge_u32c(lGetUlong(jep, JB_job_number))));
@@ -87,22 +87,5 @@ int answer_error;
 
    DEXIT;
    return 0;
-}
-
-int execd_new_features(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb;
-u_long *rcvtimeout;
-int *synchron;
-char *err_str;
-int answer_error;
-{                  
-   u_long32 featureset_id;
-   DENTER(TOP_LAYER, "execd_new_features");
- 
-   unpackint(pb, &featureset_id);
-
-   DEXIT;
-   return 0;             
 }
 

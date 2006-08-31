@@ -38,6 +38,7 @@ include $(SDIR)/clients/qalter/Makefile
 include $(SDIR)/clients/qconf/Makefile
 include $(SDIR)/clients/qdel/Makefile
 include $(SDIR)/clients/qhost/Makefile
+include $(SDIR)/clients/qlimit/Makefile
 include $(SDIR)/clients/qmod/Makefile
 include $(SDIR)/clients/qrsh/Makefile
 include $(SDIR)/clients/qsh/Makefile
@@ -48,11 +49,11 @@ include $(SDIR)/clients/qevent/Makefile
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-clients: clients_common qacct qalter qconf qdel qhost qmod qrsh qsh qstat qsub qevent
+clients: clients_common qacct qalter qconf qdel qhost qlimit qmod qrsh qsh qstat qsub qevent
 
-clients_clean: clients_common_clean qacct_clean qalter_clean qconf_clean qdel_clean qhost_clean qmod_clean qrsh_clean qsh_clean qstat_clean qsub_clean qevent_clean
+clients_clean: clients_common_clean qacct_clean qalter_clean qconf_clean qdel_clean qhost_clean qlimit_clean qmod_clean qrsh_clean qsh_clean qstat_clean qsub_clean qevent_clean
 
-clients_depend: clients_common_depend qacct_depend qalter_depend qconf_depend qdel_depend qhost_depend qmod_depend qrsh_depend qsh_depend qstat_depend qsub_depend qevent_depend
+clients_depend: clients_common_depend qacct_depend qalter_depend qconf_depend qdel_depend qhost_depend qlimit_depend qmod_depend qrsh_depend qsh_depend qstat_depend qsub_depend qevent_depend
 
-clients_messages: clients_common_messages qacct_messages qalter_messages qconf_messages qdel_messages qhost_messages qmod_messages qrsh_messages qsh_messages qstat_messages qsub_messages qevent_messages
+clients_messages: clients_common_messages qacct_messages qalter_messages qconf_messages qdel_messages qhost_messages qlimit_messages qmod_messages qrsh_messages qsh_messages qstat_messages qsub_messages qevent_messages
 

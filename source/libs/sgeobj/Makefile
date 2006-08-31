@@ -63,6 +63,7 @@ SGEOBJLIB_SRC = \
          sge_id.c \
          sge_ja_task.c \
          sge_job.c \
+         sge_limit_rule.c \
          sge_load.c \
          sge_order.c \
          sge_mailrec.c \
@@ -89,7 +90,7 @@ SGEOBJLIB_SRC = \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
-         sge_var.c 
+         sge_var.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
 
@@ -99,13 +100,15 @@ SGEOBJLIB_TEST_PROGS = \
               test_sge_object \
               test_sge_range \
               test_sge_schedd_conf \
-              test_sge_utility
+              test_sge_utility \
+              test_sge_limit_rule
 
 SGEOBJLIB_TEST_PROGS_OBJS = \
               test_sge_object.o \
               test_sge_range.o \
               test_sge_schedd_conf.o \
-              test_sge_utility.o
+              test_sge_utility.o \
+              test_sge_limit_rule.o
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -210,6 +213,9 @@ sge_job.o: $(SGEOBJLIB_DIR)/sge_job.c
 
 sge_load.o: $(SGEOBJLIB_DIR)/sge_load.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_load.c
+
+sge_limit_rule.o: $(SGEOBJLIB_DIR)/sge_limit_rule.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_limit_rule.c
 
 sge_mailrec.o: $(SGEOBJLIB_DIR)/sge_mailrec.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_mailrec.c
@@ -329,6 +335,8 @@ test_sge_schedd_conf: test_sge_schedd_conf.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLI
 test_sge_utility: test_sge_utility.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_utility $(LFLAGS) test_sge_utility.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
 
+test_sge_limit_rule: test_sge_limit_rule.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_limit_rule $(LFLAGS) test_sge_limit_rule.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
    
 test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_object.c
@@ -345,4 +353,5 @@ test_sge_schedd_conf.o: $(SGEOBJLIB_DIR)/test_sge_schedd_conf.c
 test_sge_utility.o: $(SGEOBJLIB_DIR)/test_sge_utility.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_utility.c
 
-   
+test_sge_limit_rule.o: $(SGEOBJLIB_DIR)/test_sge_limit_rule.c
+	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_limit_rule.c

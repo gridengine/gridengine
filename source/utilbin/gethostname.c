@@ -105,7 +105,9 @@ int main(int argc,char *argv[]) {
   }
 
   if (sge_aliasing ) {
-     cl_com_set_alias_file(sge_get_alias_path());
+     const char *alias_path = sge_get_alias_path();
+     cl_com_set_alias_file(alias_path);
+     FREE(alias_path);
   }
 
   retval = cl_com_gethostname(&resolved_name, NULL, &he, &system_error);

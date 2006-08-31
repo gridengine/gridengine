@@ -42,8 +42,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "sge_unistd.h"
-#include "sge_os.h"
+#include "uti/sge_os.h"
+#include "uti/sge_unistd.h"
 
 volatile int should_stop = 0;
 

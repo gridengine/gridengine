@@ -407,7 +407,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
                                                JB_owner, jc_user_name, 
                                                &user_iterator);
-               if (monitor_next_run) {
+               if (schedd_is_monitor_next_run()) {
                   schedd_mes_add(lGetUlong(user_job, JB_job_number),
                                      SCHEDD_INFO_USRGRPLIMIT_);
                }
@@ -878,7 +878,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
             if (is_first_of_category) {
                schedd_mes_add(job_id, SCHEDD_INFO_JOBINERROR_);
             }
-            if (monitor_next_run) {
+            if (schedd_is_monitor_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
                                *job_list, JB_job_number);
             }
@@ -887,7 +887,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
             if (is_first_of_category) {
                schedd_mes_add(job_id, SCHEDD_INFO_JOBHOLD_);
             }
-            if (monitor_next_run) {
+            if (schedd_is_monitor_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
                                *job_list, JB_job_number);
             }
@@ -896,7 +896,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
             if (is_first_of_category) {
                schedd_mes_add(job_id, SCHEDD_INFO_EXECTIME_);
             }
-            if (monitor_next_run) {
+            if (schedd_is_monitor_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
                                *job_list, JB_job_number);
             }
@@ -905,7 +905,7 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
             if (is_first_of_category) {
                schedd_mes_add(job_id, SCHEDD_INFO_JOBDEPEND_);
             }
-            if (monitor_next_run) {
+            if (schedd_is_monitor_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
                                *job_list, JB_job_number);
             }
@@ -1075,11 +1075,10 @@ lList *job_list
    DENTER(TOP_LAYER, "trace_job_sort");
 
    for_each (job, job_list) {
-      DPRINTF(("JOB "sge_u32" %d %s %d "sge_u32"\n",
+      DPRINTF(("JOB "sge_u32" %d %s "sge_u32"\n",
          lGetUlong(job, JB_job_number),
          (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
          lGetString(job, JB_owner),
-         lGetUlong(job, JB_nrunning),
          lGetUlong(job, JB_submission_time)));
    }
 

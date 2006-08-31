@@ -78,21 +78,21 @@ include $(UTILBIN_DIR)/utilbin_dependencies
 ###############################################################################
 # rules to build object codes and binaries
 ###############################################################################
-uidgid:		uidgid.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
+uidgid:		uidgid.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
 		$(CC) -o $@  uidgid.o version.o $(LFLAGS) -luti $(WINGRIDLIB) -llck -lrmon $(LIBS)
 
 uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+gethostname:	gethostname.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) 
 		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
-gethostbyname:	gethostbyname.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+gethostbyname:	gethostbyname.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 		$(CC) -o $@ gethostbyname.o version.o $(LFLAGS) -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) $(DLLIB) $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
@@ -163,8 +163,8 @@ range.o:	$(UTILBIN_DIR)/range.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/range.c
 
 #---------------------------------------------------------------------
-signals:	signals.o version.o $(WINGRIDLIB_DEP)
-		$(CC) -o $@ signals.o version.o  $(WINGRIDLIB) $(LFLAGS)
+signals:	signals.o version.o 
+		$(CC) -o $@ signals.o version.o $(LFLAGS)
 
 signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
@@ -218,7 +218,7 @@ testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 
 #---------------------------------------------------------------------
 work:	work.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
-	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(LCKLIB) $(WINGRIDLIB) $(RMONLIB) $(LIBS)
+	$(CC) -o $@ work.o version.o $(LFLAGS) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c

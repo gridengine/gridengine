@@ -62,8 +62,6 @@
 
 #define HGROUP_LAYER TOP_LAYER
 
-lList *Master_HGroup_List = NULL;
-
 /****** sgeobj/hgroup/is_hgroup_name() ****************************************
 *  NAME
 *     is_hgroup_name() -- Is the given name a hostgroup name 
@@ -74,11 +72,14 @@ lList *Master_HGroup_List = NULL;
 *  FUNCTION
 *     Is the given name a hostgroup name 
 *
+*  NOTE
+*     This function is also used for usergroup in limitation rule sets
+*
 *  INPUTS
 *     const char *name - hostname or hostgroup name 
 *
 *  RESULT
-*     bool - true for hostgroupnames otherwise faslse
+*     bool - true for hostgroupnames otherwise false
 ******************************************************************************/
 bool 
 is_hgroup_name(const char *name)
@@ -151,7 +152,10 @@ bool hgroup_check_name(lList **answer_list, const char* name)
 lList **
 hgroup_list_get_master_list(void) 
 {
-   return &Master_HGroup_List;
+    /* depending on the setting, we want to return the local thread setting and
+       not the global master list. The object_type_get_master_list knows, which
+       one to get */
+    return object_type_get_master_list(SGE_TYPE_HGROUP);
 }
 
 /****** sgeobj/hgroup/hgroup_list_locate() ************************************
@@ -547,13 +551,13 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
    bool ret = true;
 
    DENTER(HGROUP_LAYER, "hgroup_list_exists");
-   if (href_list != NULL) {
+   if (href_list != NULL && this_list != NULL) {
       lListElem *href;
 
       for_each(href, href_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (sge_is_hgroup_ref(name)) {
+         if (is_hgroup_name(name)) {
             lListElem *hgroup = hgroup_list_locate(this_list, name);
          
             if (hgroup == NULL) {

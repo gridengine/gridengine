@@ -66,7 +66,7 @@
 #include "sgeee.h"
 #include "sgeobj/sge_range.h"
 #include "sge_support.h"
-#include "interactive_sched.h"
+#include "sge_interactive_sched.h"
 #include "shutdown.h"
 #include "schedd_message.h"
 #include "sge_process_events.h"
@@ -87,10 +87,11 @@
 #include "sge_qinstance_state.h"
 /*#include "sge_qinstance_type.h" */
 #include "sig_handlers.h"
+#include "sched/sge_lirs_schedd.h"
 
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
-{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int 
 dispatch_jobs(sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
@@ -100,7 +101,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, 
                     lList *acl_list, lList **user_list, lList **group_list, order_t *orders, 
                     double *total_running_job_tickets, int *sort_hostlist, bool is_start, 
-                    bool is_reserve, lList **load_lis);
+                    bool is_reserve, lList **load_list, lList *hgrp_list, lList *lirs_list);
 
 static bool 
 job_get_duration(u_long32 *duration, const lListElem *jep);
@@ -108,7 +109,7 @@ job_get_duration(u_long32 *duration, const lListElem *jep);
 static void 
 prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
                            lList *pe_list, lList *host_list, lList *queue_list, 
-                           lList *centry_list);
+                           lList *lirs_list, lList *centry_list, lList *acl_list, lList *hgroup_list);
 
 
 static void 
@@ -480,7 +481,8 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                                  *(splitted_job_lists[SPLIT_SUSPENDED]),
                                  lists->pe_list, lists->host_list, lists->queue_list, 
-                                 lists->centry_list);
+                                 lists->lirs_list, lists->centry_list, lists->acl_list,
+                                 lists->hgrp_list);
 
       if (dis_queue_elem != NULL) {
          lDechainList(lists->queue_list, &(lists->dis_queue_list), dis_queue_elem);
@@ -784,7 +786,9 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                   &sort_hostlist, 
                   is_start,
                   is_reserve,
-                  &consumable_load_list);
+                  &consumable_load_list,
+                  lists->hgrp_list,
+                  lists->lirs_list);
             } 
             lFreeElem(&job);
          }     
@@ -981,12 +985,13 @@ static dispatch_t
 select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, lListElem *ja_task,
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, lList *acl_list,
                     lList **user_list, lList **group_list, order_t *orders, double *total_running_job_tickets,
-                    int *sort_hostlist, bool is_start,  bool is_reserve, lList **load_list) 
+                    int *sort_hostlist, bool is_start,  bool is_reserve, lList **load_list, lList *hgrp_list,
+                    lList *lirs_list) 
 {
    lListElem *granted_el;     
    dispatch_t result = DISPATCH_NOT_AT_TIME;
    const char *pe_name, *ckpt_name;
-   sge_assignment_t a;
+   sge_assignment_t a = SGE_ASSIGNMENT_INIT;
    bool is_computed_reservation = false;
 
    DENTER(TOP_LAYER, "select_assign_debit");
@@ -996,6 +1001,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    a.host_list        = host_list;
    a.centry_list      = centry_list;
    a.acl_list         = acl_list;
+   a.hgrp_list        = hgrp_list;
+   a.lirs_list        = lirs_list;
 
    /* in reservation scheduling mode a non-zero duration always must be defined */
    if ( !job_get_duration(&a.duration, job) ) {
@@ -1339,7 +1346,8 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
 
 static int 
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
-                         lList *host_list, lList *queue_list, lList *centry_list)
+                         lList *host_list, lList *queue_list, lList *lirs_list,
+                         lList *centry_list, lList *acl_list, lList *hgroup_list)
 {
    lListElem *jep, *ja_task;
    const char *pe_name;
@@ -1358,7 +1366,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
 
    for_each (jep, job_list) {
       for_each (ja_task, lGetList(jep, JB_ja_tasks)) {  
-         sge_assignment_t a;
+         sge_assignment_t a = SGE_ASSIGNMENT_INIT;
 
          assignment_init(&a, jep, ja_task, false);
 
@@ -1402,6 +1410,9 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.host_list = host_list;
          a.queue_list = queue_list;
          a.centry_list = centry_list;
+         a.lirs_list = lirs_list;
+         a.acl_list = acl_list;
+         a.hgrp_list = hgroup_list;
 
          DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
                   sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
@@ -1631,7 +1642,7 @@ static lListElem *newResourceElem(u_long32 time, double amount)
 *  SYNOPSIS
 *     static void prepare_resource_schedules(const lList *running_jobs, const 
 *     lList *suspended_jobs, lList *pe_list, lList *host_list, lList 
-*     *queue_list, const lList *centry_list) 
+*     *queue_list, lList *centry_list, lList *lirs_list) 
 *
 *  FUNCTION
 *     In order to reflect current and future resource utilization of running 
@@ -1644,18 +1655,19 @@ static lListElem *newResourceElem(u_long32 time, double amount)
 *     lList *pe_list              - ??? 
 *     lList *host_list            - ??? 
 *     lList *queue_list           - ??? 
-*     const lList *centry_list    - ??? 
+*     lList *centry_list          - ??? 
+*     lList *lirs_list            - configured limitation rule sets
 *
 *  NOTES
 *     MT-NOTE: prepare_resource_schedules() is not MT safe 
 *******************************************************************************/
 static void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
-   lList *pe_list, lList *host_list, lList *queue_list, lList *centry_list)
+   lList *pe_list, lList *host_list, lList *queue_list, lList *lirs_list, lList *centry_list, lList *acl_list, lList *hgroup_list)
 {
    DENTER(TOP_LAYER, "prepare_resource_schedules");
 
-   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, centry_list);
-   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, centry_list);
+   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, lirs_list, centry_list, acl_list, hgroup_list);
+   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, lirs_list, centry_list, acl_list, hgroup_list);
    add_calendar_to_schedule(queue_list); 
 
 #ifdef SGE_LOCK_DEBUG /* just for information purposes... */

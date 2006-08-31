@@ -56,7 +56,7 @@ enum {
    SCT_job_ref               /* contains all other jobs, could also be pending ones */
 };
 
-ILISTDEF(SCT_Type, SCategories, SGE_SCT_LIST)
+LISTDEF(SCT_Type)
    SGE_STRING(SCT_str, CULL_HASH | CULL_UNIQUE)
    SGE_LIST(SCT_job_pending_ref, REF_Type, CULL_DEFAULT)
    SGE_LIST(SCT_job_ref, REF_Type, CULL_DEFAULT)
@@ -74,7 +74,7 @@ enum {
    REF_ref = REF_LOWERBOUND /*reference to an object */
 };
 
-ILISTDEF(REF_Type, references, SGE_REF_LIST)
+LISTDEF(REF_Type)
    SGE_REF(REF_ref, JB_Type, CULL_DEFAULT)
 LISTEND
 
@@ -96,12 +96,10 @@ enum {
    CT_messages_added,         /* if true, the scheduler info messages have been added for this category */
    CT_resource_contribution,  /* resource request dependent contribution on urgency 
                                  this value is common with all jobs of a category */
-   CT_rc_valid,               /* indicates whether cached CT_resource_contribution is valid */
-   CT_cached_hard_queue_list, /* stores the resolved hard queue request list */
-   CT_cached_master_hard_queue_list /* stores teh resolved master queue request list for pe jobs */
+   CT_rc_valid                /* indicates whether cached CT_resource_contribution is valid */
 };
 
-ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
+LISTDEF(CT_Type)
    SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
    SGE_INT(CT_count, CULL_DEFAULT)
@@ -110,8 +108,6 @@ ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_BOOL(CT_messages_added, CULL_DEFAULT)
    SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
    SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
-   SGE_LIST(CT_cached_hard_queue_list, QR_Type, CULL_DEFAULT)
-   SGE_LIST(CT_cached_master_hard_queue_list, QR_Type, CULL_DEFAULT)
 
 LISTEND 
 
@@ -124,8 +120,6 @@ NAMEDEF(CTN)
    NAME("CT_messages_added")
    NAME("CT_resource_contribution")
    NAME("CT_rc_valid")
-   NAME("CT_cached_hard_queue_list")
-   NAME("CT_cached_master_hard_queue_list")
 NAMEEND
 
 #define CTS sizeof(CTN)/sizeof(char*)
@@ -146,7 +140,7 @@ enum {
    CCT_pe_job_slot_count      /* number of values in the array */   
 };
 
-ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)
+LISTDEF(CCT_Type)
    SGE_STRING(CCT_pe_name, CULL_HASH | CULL_UNIQUE)
    SGE_LIST(CCT_ignore_queues, CTI_Type, CULL_DEFAULT)
    SGE_LIST(CCT_ignore_hosts, CTI_Type, CULL_DEFAULT)
@@ -162,7 +156,7 @@ NAMEDEF(CCTN)
    NAME("CCT_ignore_hosts")
    NAME("CCT_queue_violations")
    NAME("CCT_job_messages")
-   NAME("CCT_pe_name")
+   NAME("CCT_pe_job_slots")
    NAME("CCT_pe_job_slot_count")
 NAMEEND
 

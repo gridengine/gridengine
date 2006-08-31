@@ -119,7 +119,7 @@ void sge_c_report(char *rhost, char *commproc, int id, lList *report_list, monit
    
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
    /* need exec host for all types of reports */
-   if (!(hep = host_list_locate(Master_Exechost_List, rhost))) {
+   if (!(hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost))) {
       ERROR((SGE_EVENT, MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S, rhost));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;

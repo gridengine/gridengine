@@ -124,18 +124,14 @@ proc job_state_handling_hold_pending_running_finished {} {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "job $result not pending"  
    }
 
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
+   trigger_scheduling
 
    set job_state [ get_job_state $result ]
    if { [ string compare $job_state "hqw" ] != 0 } {
       add_proc_error "job_state_handling_hold_pending_running_finished" -1 "job state not \"hqw\": $job_state"  
    }
  
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
+   trigger_scheduling
 
    set scheduling_info_result [ get_scheduling_info $result ]
    set correct_info [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_JOBHOLD_]]
@@ -226,9 +222,7 @@ proc job_state_handling_error_timehold_jobhold {} {
    set time_job    [submit_time_job  $jobargs]
    set waitjob_job [submit_waitjob_job $jobargs $time_job]
 
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
+   trigger_scheduling
 
    wait_for_jobpending $error_job "leeper" 300
    wait_for_jobpending $time_job "leeper" 300
@@ -236,9 +230,7 @@ proc job_state_handling_error_timehold_jobhold {} {
 
    sleep 2
 
-   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
+   trigger_scheduling
 
    wait_for_jobpending $error_job "leeper" 300
    wait_for_jobpending $time_job "leeper" 300
@@ -316,10 +308,7 @@ proc job_state_handling_max_aj_instances {} {
       set jobargs "-t 1-10 -o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10"
       set result [submit_job $jobargs]
  
-      puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-      puts $CHECK_OUTPUT $catch_result
-
+      trigger_scheduling
 
       set array_states 0
       set tasks_done ""

@@ -192,7 +192,7 @@ ___INFO__MARK_END__-->
 		</xs:sequence>
 	</xs:complexType>
 
-	
+   
 	<xs:complexType name="JB_ja_structure_element_t">
 		<xs:sequence >
 			<xs:element name="RN_min" type="xs:unsignedInt"/>

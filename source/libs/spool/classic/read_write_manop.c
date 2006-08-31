@@ -45,6 +45,7 @@
 #include "sge_feature.h"
 #include "sge_manop.h"
 #include "sge_spool.h"
+#include "sgeobj/sge_object.h"
 
 /* ------------------------------------------------------------
 
@@ -67,12 +68,12 @@ int target
 
    switch (target) {
    case SGE_MANAGER_LIST:
-      lpp = &Master_Manager_List;      
+      lpp = object_type_get_master_list(SGE_TYPE_MANAGER);      
       strcpy(filename, MAN_FILE);
       break;
       
    case SGE_OPERATOR_LIST:
-      lpp = &Master_Operator_List;      
+      lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);      
       strcpy(filename, OP_FILE);
       break;
 
@@ -112,7 +113,7 @@ int target
    DEXIT;
    return 0;
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSINGX_S, filename));
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGX_S, filename));
    DEXIT;
    return 1;
 }
@@ -147,14 +148,14 @@ int target
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    switch (target) {
    case SGE_MANAGER_LIST:
-      lp = Master_Manager_List;      
+      lp = *object_type_get_master_list(SGE_TYPE_MANAGER);      
       strcpy(filename, ".");
       strcat(filename, MAN_FILE);
       strcpy(real_filename, MAN_FILE);
       break;
       
    case SGE_OPERATOR_LIST:
-      lp = Master_Operator_List;      
+      lp = *object_type_get_master_list(SGE_TYPE_OPERATOR);      
       strcpy(filename, ".");
       strcat(filename, OP_FILE);
       strcpy(real_filename, OP_FILE);

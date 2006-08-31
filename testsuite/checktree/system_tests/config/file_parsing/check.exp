@@ -48,7 +48,7 @@ global env
 
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "file_parsing_init_level"
 
 # define test's name and run level descriptions
 set check_name            "file_parsing"
@@ -71,9 +71,10 @@ global file_parsing_request_test
 global file_parsing_cluster_request_file
 global file_parsing_home_request_file
 global file_parsing_local_request_file
+global file_parsing_job_host
 
-proc init_level {} {
-   global ts_config
+proc file_parsing_init_level {} {
+   global ts_config CHECK_OUTPUT
   global CHECK_ACT_LEVEL
   global CHECK_PRODUCT_ROOT
   global env
@@ -83,12 +84,14 @@ proc init_level {} {
   global file_parsing_home_request_file
   global file_parsing_local_request_file
   global file_parsing_job_script
+  global file_parsing_job_host
 
  
   set file_parsing_cluster_request_file "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_request"
   set file_parsing_home_request_file    "$env(HOME)/.sge_request"
   set file_parsing_local_request_file   "$CHECK_JOB_OUTPUT_DIR/.sge_request"
   set file_parsing_job_script           "$CHECK_JOB_OUTPUT_DIR/request_job.sh"
+  set file_parsing_job_host             [lindex $ts_config(execd_nodes) 0]
 
   switch -- $CHECK_ACT_LEVEL {
      "0" { set file_parsing_single_test 1 ; return 0    } 
@@ -102,37 +105,37 @@ proc init_level {} {
 
 
 proc create_job_script { option } {
-   global CHECK_OUTPUT
-   global file_parsing_job_script
+   global CHECK_OUTPUT CHECK_USER
+   global file_parsing_job_script file_parsing_job_host
 
-   file delete $file_parsing_job_script
-   set fp [ open $file_parsing_job_script "w" ]
-   puts $fp "#!/bin/sh"
-   puts $fp "#$ $option"
-   puts $fp "sleep 15"
-   flush $fp
-   close $fp
+   delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_job_script
+   start_remote_prog $file_parsing_job_host $CHECK_USER "echo" "\"#!/bin/sh\" > $file_parsing_job_script"
+   start_remote_prog $file_parsing_job_host $CHECK_USER "echo" "\"#$ $option\" >> $file_parsing_job_script"
+   start_remote_prog $file_parsing_job_host $CHECK_USER "echo" "\"sleep 15\" >> $file_parsing_job_script"
+   start_remote_prog $file_parsing_job_host $CHECK_USER "chmod" "755 $file_parsing_job_script"
+   wait_for_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_job_script
+   set output [start_remote_prog $file_parsing_job_host $CHECK_USER "cat" "$file_parsing_job_script"]
+   puts $CHECK_OUTPUT $output
+   puts $CHECK_OUTPUT "$file_parsing_job_script"
 } 
 
 proc prepare_file_and_start_job { request_file_name option_parameter job_script { start_directory "" }} {
-
    global file_parsing_cluster_request_file
    global file_parsing_home_request_file
    global file_parsing_local_request_file
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_USER
+   global global file_parsing_job_host
 
-   puts $CHECK_OUTPUT "creating file $request_file_name"
-   set fp [ open $request_file_name "w"]
+   puts $CHECK_OUTPUT "creating file $request_file_name on host $file_parsing_job_host"
 
-   puts $CHECK_OUTPUT "option paramter is\n$option_parameter"
-   puts $fp "$option_parameter -e /dev/null -o /dev/null"
-   flush $fp
-   close $fp
+   start_remote_prog $file_parsing_job_host $CHECK_USER "echo" "$option_parameter -e /dev/null -o /dev/null -S /bin/sh > $request_file_name"
 
+   wait_for_remote_file $file_parsing_job_host $CHECK_USER $request_file_name
 
    puts $CHECK_OUTPUT "request file: $request_file_name"
+
    puts $CHECK_OUTPUT "submitting job $job_script from directory $start_directory"
-   set return_value [ submit_job $job_script 0 30 "" "" $start_directory ]
+   set return_value [submit_job "-l h=$file_parsing_job_host $job_script" 0 30 $file_parsing_job_host "" $start_directory]
    puts $CHECK_OUTPUT "return value of submit_job: $return_value"
    return $return_value
 }
@@ -143,16 +146,15 @@ proc file_parsing_N_option {} {
    global file_parsing_single_test
    global file_parsing_cluster_request_file
    global file_parsing_home_request_file
-   global file_parsing_local_request_file
-   global file_parsing_job_script
+   global file_parsing_local_request_file CHECK_USER
+   global file_parsing_job_script file_parsing_job_host
 
-   set accouting_jobs ""
+   set accounting_jobs ""
 
     puts $CHECK_OUTPUT "Testing overwrite options ..."
-
-    file delete $file_parsing_cluster_request_file
-    file delete $file_parsing_home_request_file
-    file delete $file_parsing_local_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_local_request_file
 
     create_job_script ""
     
@@ -163,7 +165,7 @@ proc file_parsing_N_option {} {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "GLOBAL" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "home directory .sge_request file"
@@ -174,7 +176,7 @@ proc file_parsing_N_option {} {
     }       
     wait_for_jobstart $back "HOME" 30 1 1
  
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
@@ -184,48 +186,48 @@ proc file_parsing_N_option {} {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "LOCAL" 30 1 1
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "script options"
     set option_parameter "-N SCRIPT"
     create_job_script "$option_parameter"
-    set back [ submit_job $file_parsing_job_script ]
+    set back [ submit_job "-l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host]
     if { $back < 0 } {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "SCRIPT" 30 1 1
 
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
     puts $CHECK_OUTPUT "command_line"
     set option_parameter "-N COMLINE"
     create_job_script ""
-    set back [ submit_job "$option_parameter $file_parsing_job_script" ]
+    set back [ submit_job "$option_parameter -l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host ]
     if { $back < 0 } {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }
     wait_for_jobstart $back "COMLINE" 30 1 1
 
-    lappend accouting_jobs $back
+    lappend accounting_jobs $back
 
 
-   file delete $file_parsing_cluster_request_file
-   file delete $file_parsing_home_request_file
-   file delete $file_parsing_local_request_file
+   delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
+   delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
+   delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_local_request_file
 
    
    wait_for_end_of_all_jobs 60
 
-   foreach elem $accouting_jobs {
+   foreach elem $accounting_jobs {
       set timeout_time [timestamp]
       incr timeout_time 120
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem]
+         set result [get_qacct $elem qacct_info "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
-         if { $result != 1 } {
+         if { $result != 0 } {
             if { [timestamp] < $timeout_time } {
                continue
             } else {
@@ -235,7 +237,7 @@ proc file_parsing_N_option {} {
             break
          }
       } 
-      if { $result != 1 } {
+      if { $result != 0 } {
          add_proc_error "file_parsing_N_option" "-1" "No accounting information for job $elem available" 
       } else {
          set names [array names qacct_info]
@@ -264,32 +266,34 @@ proc file_parsing_long_option_verify {back long case} {
 
 proc file_parsing_long_option {} {
    global ts_config
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_USER
    global CHECK_TESTSUITE_ROOT
    global file_parsing_single_test
    global file_parsing_cluster_request_file
    global file_parsing_home_request_file
    global file_parsing_local_request_file
-   global file_parsing_job_script
+   global file_parsing_job_script file_parsing_job_host
 
-   set accouting_jobs ""
+   set accounting_jobs ""
 
     puts $CHECK_OUTPUT "Testing overwrite options ..."
 
-    file delete $file_parsing_cluster_request_file
-    file delete $file_parsing_home_request_file
-    file delete $file_parsing_local_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_local_request_file
 
     create_job_script ""
   
     puts $CHECK_OUTPUT "creating lines with more than 4300 chars"
  
-    set option_parameter "-N "
-    for {set i 3} {$i < 4300 } { incr i 1 } {
-       append option_parameter "_"
-    }   
-    incr i 5 
-    append option_parameter "$i "
+   set option_parameter ""
+   for {set i 0} {$i < 80} {incr i} {
+      append option_parameter "-N TEST_$i"
+      for {set j 0} {$j < 50} {incr j} {
+         append option_parameter "_"
+      }
+      append option_parameter " "
+   }
 
     puts $CHECK_OUTPUT "global sge_request file"
     set back [ prepare_file_and_start_job $file_parsing_cluster_request_file $option_parameter $file_parsing_job_script]
@@ -305,80 +309,82 @@ proc file_parsing_long_option {} {
     
     puts $CHECK_OUTPUT "script options"
     create_job_script "$option_parameter"
-    set back [ submit_job $file_parsing_job_script 0]
+    set back [ submit_job "-l h=$file_parsing_job_host $file_parsing_job_script" 0 60 $file_parsing_job_host]
     file_parsing_long_option_verify $back 1 "script options"
 
     puts $CHECK_OUTPUT "command_line"
     create_job_script ""
-    set back [ submit_job "$option_parameter $file_parsing_job_script" 0 ]
+    set back [ submit_job "$option_parameter -l h=$file_parsing_job_host $file_parsing_job_script" 0 60 $file_parsing_job_host]
     file_parsing_long_option_verify $back 1 "command_line"
 
-    file delete $file_parsing_cluster_request_file
-    file delete $file_parsing_home_request_file
-    file delete $file_parsing_local_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_local_request_file
 
     create_job_script ""
   
     puts $CHECK_OUTPUT "creating lines with more than 2023 chars"
  
-    set option_parameter ""
-    for {set i 3} {$i < 2023 } { incr i 1 } {
-       append option_parameter "_"
-    }   
-    incr i 12  ;# parameter length is 2035 char/byte
-    append option_parameter "$i "
-    set opt_parameter "-N GLOBAL${option_parameter}"
+   set option_parameter ""
+   for {set i 0} {$i < 40} {incr i} {
+      append option_parameter "-N TEST_$i"
+      for {set j 0} {$j < 50} {incr j} {
+         append option_parameter "_"
+      }
+      append option_parameter " "
+   }
+    set opt_parameter "$option_parameter -N GLOBAL"
     puts $CHECK_OUTPUT "global sge_request file"
     set back [ prepare_file_and_start_job $file_parsing_cluster_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "global sge_request file"
-    wait_for_jobstart $back "GLOBAL____" 30  1 1
-    lappend accouting_jobs $back
+    wait_for_jobstart $back "GLOBAL" 30  1 1
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "home directory .sge_request file"
-    set opt_parameter "-N HOME__${option_parameter}"
+    set opt_parameter "$option_parameter -N HOME"
     set back [ prepare_file_and_start_job $file_parsing_home_request_file $opt_parameter $file_parsing_job_script]
     file_parsing_long_option_verify $back 0 "home directory .sge_request file"
-    wait_for_jobstart $back "HOME______" 30 1 1
-    lappend accouting_jobs $back
+    wait_for_jobstart $back "HOME" 30 1 1
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
-    set opt_parameter "-N LOCAL_${option_parameter}"
+    set opt_parameter "$option_parameter -N LOCAL"
     set back [ prepare_file_and_start_job $file_parsing_local_request_file $opt_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file]]
     file_parsing_long_option_verify $back 0 "local directory .sge_request file"
-    wait_for_jobstart $back "LOCAL_____" 30 1 1
-    lappend accouting_jobs $back
+    wait_for_jobstart $back "LOCAL" 30 1 1
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "script options"
-    set opt_parameter "-N SCRIPT${option_parameter}"
+    set opt_parameter "$option_parameter -N SCRIPT"
     create_job_script "$opt_parameter"
-    set back [ submit_job $file_parsing_job_script ]
+    set back [ submit_job "-l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host ]
     file_parsing_long_option_verify $back 0 "script options"
-    wait_for_jobstart $back "SCRIPT____" 30 1 1
-    lappend accouting_jobs $back
+    wait_for_jobstart $back "SCRIPT" 30 1 1
+    lappend accounting_jobs $back
 
     puts $CHECK_OUTPUT "command_line"
-    set opt_parameter "-N COMLIN${option_parameter}"
+    set opt_parameter "$option_parameter -N COMLIN"
     create_job_script ""
-    set back [ submit_job "$opt_parameter $file_parsing_job_script" ]
+    set back [ submit_job "$opt_parameter -l h=$file_parsing_job_host $file_parsing_job_script" 1 60 $file_parsing_job_host ]
     file_parsing_long_option_verify $back 0 "command_line"
-    wait_for_jobstart $back "COMLIN____" 30 1 1
-    lappend accouting_jobs $back
+    wait_for_jobstart $back "COMLIN" 30 1 1
+    lappend accounting_jobs $back
 
-    file delete $file_parsing_cluster_request_file
-    file delete $file_parsing_home_request_file
-    file delete $file_parsing_local_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_cluster_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_home_request_file
+    delete_remote_file $file_parsing_job_host $CHECK_USER $file_parsing_local_request_file
 
     wait_for_end_of_all_jobs 60
 
-    foreach elem $accouting_jobs {
+    foreach elem $accounting_jobs {
       set timeout_time [timestamp]
       incr timeout_time 120
       while { 1 } {
          sleep 1
          puts $CHECK_OUTPUT "try to get accounting info for job $elem ..."
-         set result [get_qacct $elem]
+         set result [get_qacct $elem qacct_info "" "" 0]
          puts $CHECK_OUTPUT "result: $result"
-         if { $result != 1 } {
+         if { $result != 0 } {
             if { [timestamp] < $timeout_time } {
                continue
             } else {
@@ -388,7 +394,7 @@ proc file_parsing_long_option {} {
             break
          }
       } 
-      if { $result != 1 } {
+      if { $result != 0 } {
          add_proc_error "file_parsing_long_option" "-1" "No accounting information for job $elem available" 
       } ;# else {
          # set names [array names qacct_info]
@@ -413,6 +419,4 @@ proc file_parsing_cleanup {} {
 
    set_error 0 "ok"
 }
-
-
 

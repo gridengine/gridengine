@@ -41,18 +41,27 @@
 /* this timeout is in effect with SGE commprocs */
 #define SGE_COMMPROC_TIMEOUT 60*5
 
-#include "drmaa.h"
-#include "cull_list.h"
-#include "sge_gdi.h"
-#include "sge_jobL.h"
-#include "sge_answer.h"
+#include "japi/drmaa.h"
+#include "japi/japi.h"
+#include "japi/japiP.h"
+
+#include "cull/cull_list.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "sgeobj/sge_jobL.h"
+#include "sgeobj/sge_answer.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+
+#include "comm/commlib.h"
+
 #include "show_job.h"
-#include "japiP.h"
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
 
-#include "uti/sge_profiling.h"
-#include "commlib.h"
+#include "msg_common.h"
 
 #define JOB_CHUNK 8
 #define NTHREADS 3
@@ -407,7 +416,7 @@ enum {
          - drmaa_set_vector_attribute() is called for an invalid attribute
          - then drmaa_exit() is called */
    
-   ST_SYNCHRONIZE_NONEXISTANT
+   ST_SYNCHRONIZE_NONEXISTANT,
       /* - Init session.
          - Create job template.
          - Run job.
@@ -416,6 +425,19 @@ enum {
          - Synchronize against unknown id.
          - Wait for real job to finish.
          - Exit session. */
+   
+   ST_RECOVERABLE_SESSION,
+      /* - Init session.
+         - Create job template.
+         - Run job.
+         - Delete job template.
+         - Exit session.
+         - Init session.
+         - Wait for job to finish.
+         - Exit session. */
+   
+   ST_ERROR_CODES
+      /* - Test that each error code has the right value. */
 };
 
 const struct test_name2number_map {
@@ -426,9 +448,10 @@ const struct test_name2number_map {
 } test_map[] = {
 
    /* all automated tests - ST_* and MT_* tests */
-   { "ALL_AUTOMATED",                            ALL_TESTS,                              3, "<sleeper_job> <exit_arg_job> <email_addr>" },
+   { "ALL_AUTOMATED",                            ALL_TESTS,                                  3, "<sleeper_job> <exit_arg_job> <email_addr>" },
 
    /* one application thread - automated tests only */
+   { "ST_ERROR_CODES",                            ST_ERROR_CODES,                            0, "" },
    { "ST_MULT_INIT",                              ST_MULT_INIT,                              0, "" },
    { "ST_MULT_EXIT",                              ST_MULT_EXIT,                              0, "" },
    { "ST_SUPPORTED_ATTR",                         ST_SUPPORTED_ATTR,                         0, "" },
@@ -464,6 +487,10 @@ const struct test_name2number_map {
    { "ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT",        ST_SUBMIT_POLLING_WAIT_ZEROTIMEOUT,        1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT",     ST_SUBMIT_POLLING_SYNCHRONIZE_TIMEOUT,     1, "<sleeper_job>" },
    { "ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT", ST_SUBMIT_POLLING_SYNCHRONIZE_ZEROTIMEOUT, 1, "<sleeper_job>" },
+   { "ST_UNSUPPORTED_ATTR",                       ST_UNSUPPORTED_ATTR,                       0, "" },
+   { "ST_UNSUPPORTED_VATTR",                      ST_UNSUPPORTED_VATTR,                      0, "" },
+   { "ST_SYNCHRONIZE_NONEXISTANT",                ST_SYNCHRONIZE_NONEXISTANT,                1, "<sleeper_job>" },
+   { "ST_RECOVERABLE_SESSION",                    ST_RECOVERABLE_SESSION,                    1, "<sleeper_job>" },
 
    /* multiple application threads - automated tests only */
    { "MT_SUBMIT_WAIT",                           MT_SUBMIT_WAIT,                             1, "<sleeper_job>" },
@@ -490,12 +517,10 @@ const struct test_name2number_map {
    { "ST_TRANSFER_FILES_BULK_JOB",               ST_TRANSFER_FILES_BULK_JOB,                 6, "<sleeper_job> <file_staging_flags "
          "{\"i\"|\"o\"|\"e\" }> <<merge_stderr {\"y\"|\"n\"}> [inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
 
+   /* tests that have nothing to do with drmaa */
    { "ST_RESERVATION_FINISH_ORDER",              ST_RESERVATION_FINISH_ORDER,                4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_BACKFILL_FINISH_ORDER",                 ST_BACKFILL_FINISH_ORDER,                   4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
    { "ST_WILD_PARALLEL",                         ST_WILD_PARALLEL,                           4, "<sleeper_job> <native_spec0> <native_spec1> <native_spec2>" },
-   { "ST_UNSUPPORTED_ATTR",                      ST_UNSUPPORTED_ATTR,                        0, "" },
-   { "ST_UNSUPPORTED_VATTR",                     ST_UNSUPPORTED_VATTR,                       0, "" },
-   { "ST_SYNCHRONIZE_NONEXISTANT",               ST_SYNCHRONIZE_NONEXISTANT,                 1, "<sleeper_job>" },
 
    { NULL,                                       0 }
 };
@@ -528,21 +553,17 @@ static const char *drmaa_errno2str(int ctrl);
 
 static void array_job_run_sequence_adapt(int **sequence, int job_id, int count); 
 
-static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
-   const char *value, char *error_diagnosis, size_t error_diag_len);
-
-
-static int set_path_attribute_plus_colon(drmaa_job_template_t *jt, const char *name, 
-   const char *value, char *error_diagnosis, size_t error_diag_len)
-{
-   char path_buffer[10000];
-   strcpy(path_buffer, ":"); 
-   strcat(path_buffer, value);
-   return drmaa_set_attribute(jt, name, path_buffer, error_diagnosis, error_diag_len);         
-}
-
-
-static void report_wrong_job_finish(const char *comment, const char *jobid, int stat);
+static int set_path_attribute_plus_colon(drmaa_job_template_t *jt,
+                                         const char *name, const char *value,
+                                         char *error_diagnosis,
+                                         size_t error_diag_len);
+static int set_path_attribute_plus_colon(drmaa_job_template_t *jt,
+                                         const char *name, const char *value,
+                                         char *error_diagnosis,
+                                         size_t error_diag_len);
+static bool test_error_code(char *name, int code, int expected);
+static void report_wrong_job_finish(const char *comment, const char *jobid,
+                                    int stat);
 
 typedef struct {
    char *native;
@@ -606,10 +627,7 @@ int main(int argc, char *argv[])
       usage();
    
    /* Print out an adivsory */
-   printf ("The DRMAA test suite is now starting.  Once it has begun execution,\n");
-   printf ("please do not interrupt (CTRL-C) it.  If the program is interrupted\n");
-   printf ("before drmaa_exit() is called, session state information will be\n");
-   printf ("left behind in the JAPI session directory, ~/.sge/session.\n");
+   printf ("The DRMAA test suite is now starting.\n");
 
    /* figure out which DRM system we are using */
    {
@@ -619,7 +637,7 @@ int main(int argc, char *argv[])
          sge_prof_cleanup();
          return 1;
       }
-      printf("Connected to DRM system \"%s\"\n", drm_name);
+      printf("Connecting to DRM system \"%s\"\n", drm_name);
       if (!strncmp(drm_name, "SGE", 3))
          is_sun_grid_engine = 1;
       else
@@ -714,6 +732,59 @@ static int test(int *argc, char **argv[], int parse_args)
    int do_while_end = 0;
 
    switch (test_case) {
+   case ST_ERROR_CODES:
+      {
+         if (test_error_code("DRMAA_ERRNO_SUCCESS", DRMAA_ERRNO_SUCCESS, 0) &&
+             test_error_code("DRMAA_ERRNO_INTERNAL_ERROR", DRMAA_ERRNO_INTERNAL_ERROR, 1) &&
+             test_error_code("DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE", DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE, 2) &&
+             test_error_code("DRMAA_ERRNO_AUTH_FAILURE", DRMAA_ERRNO_AUTH_FAILURE, 3) &&
+             test_error_code("DRMAA_ERRNO_INVALID_ARGUMENT", DRMAA_ERRNO_INVALID_ARGUMENT, 4) &&
+             test_error_code("DRMAA_ERRNO_NO_ACTIVE_SESSION", DRMAA_ERRNO_NO_ACTIVE_SESSION, 5) &&
+             test_error_code("DRMAA_ERRNO_NO_MEMORY", DRMAA_ERRNO_NO_MEMORY, 6) &&
+             test_error_code("DRMAA_ERRNO_INVALID_CONTACT_STRING", DRMAA_ERRNO_INVALID_CONTACT_STRING, 7) &&
+             test_error_code("DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR", DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, 8) &&
+#ifdef DRMAA_10
+             test_error_code("DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED", DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, 9) &&
+             test_error_code("DRMAA_ERRNO_DRMS_INIT_FAILED", DRMAA_ERRNO_DRMS_INIT_FAILED, 10) &&
+             test_error_code("DRMAA_ERRNO_ALREADY_ACTIVE_SESSION", DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, 11) &&
+             test_error_code("DRMAA_ERRNO_DRMS_EXIT_ERROR", DRMAA_ERRNO_DRMS_EXIT_ERROR, 12) &&
+             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT", DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT, 13) &&
+             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE", DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE, 14) &&
+             test_error_code("DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES", DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, 15) &&
+             test_error_code("DRMAA_ERRNO_TRY_LATER", DRMAA_ERRNO_TRY_LATER, 16) &&
+             test_error_code("DRMAA_ERRNO_DENIED_BY_DRM", DRMAA_ERRNO_DENIED_BY_DRM, 17) &&
+             test_error_code("DRMAA_ERRNO_INVALID_JOB", DRMAA_ERRNO_INVALID_JOB, 18) &&
+             test_error_code("DRMAA_ERRNO_RESUME_INCONSISTENT_STATE", DRMAA_ERRNO_RESUME_INCONSISTENT_STATE, 19) &&
+             test_error_code("DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE", DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, 20) &&
+             test_error_code("DRMAA_ERRNO_HOLD_INCONSISTENT_STATE", DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, 21) &&
+             test_error_code("DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE", DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, 22) &&
+             test_error_code("DRMAA_ERRNO_EXIT_TIMEOUT", DRMAA_ERRNO_EXIT_TIMEOUT, 23) &&
+             test_error_code("DRMAA_ERRNO_NO_RUSAGE", DRMAA_ERRNO_NO_RUSAGE, 24) &&
+             test_error_code("DRMAA_ERRNO_NO_MORE_ELEMENTS", DRMAA_ERRNO_NO_MORE_ELEMENTS, 25)
+#else
+             test_error_code("DRMAA_ERRNO_DRMS_INIT_FAILED", DRMAA_ERRNO_DRMS_INIT_FAILED, 9) &&
+             test_error_code("DRMAA_ERRNO_ALREADY_ACTIVE_SESSION", DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, 10) &&
+             test_error_code("DRMAA_ERRNO_DRMS_EXIT_ERROR", DRMAA_ERRNO_DRMS_EXIT_ERROR, 11) &&
+             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT", DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT, 12) &&
+             test_error_code("DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE", DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE, 13) &&
+             test_error_code("DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES", DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, 14) &&
+             test_error_code("DRMAA_ERRNO_TRY_LATER", DRMAA_ERRNO_TRY_LATER, 15) &&
+             test_error_code("DRMAA_ERRNO_DENIED_BY_DRM", DRMAA_ERRNO_DENIED_BY_DRM, 16) &&
+             test_error_code("DRMAA_ERRNO_INVALID_JOB", DRMAA_ERRNO_INVALID_JOB, 17) &&
+             test_error_code("DRMAA_ERRNO_RESUME_INCONSISTENT_STATE", DRMAA_ERRNO_RESUME_INCONSISTENT_STATE, 18) &&
+             test_error_code("DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE", DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, 19) &&
+             test_error_code("DRMAA_ERRNO_HOLD_INCONSISTENT_STATE", DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, 20) &&
+             test_error_code("DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE", DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, 21) &&
+             test_error_code("DRMAA_ERRNO_EXIT_TIMEOUT", DRMAA_ERRNO_EXIT_TIMEOUT, 22) &&
+             test_error_code("DRMAA_ERRNO_NO_RUSAGE", DRMAA_ERRNO_NO_RUSAGE, 23)
+#endif
+         ) {
+            break;
+         }
+         else {
+            return 1;
+         }
+      }
    case ST_MULT_INIT:
       { 
          /* no test case arguments */
@@ -1059,16 +1130,51 @@ static int test(int *argc, char **argv[], int parse_args)
          for (i=0; i<NBULKS; i++) {
             char jobid[100];
             drmaa_job_ids_t *jobids;
-            int j;
+            int j = 0 ;
+            int size = 0;
+            
             if ((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, JOB_CHUNK, 1, diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
                printf("failed submitting bulk job (%s): %s\n", drmaa_strerror(drmaa_errno), diagnosis);
                return 1;
             } 
+            
             printf("submitted bulk job with jobids:\n");
-            for (j=0; j<JOB_CHUNK; j++) {
-               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+
+#ifdef DRMAA_10
+            drmaa_errno = drmaa_get_num_job_ids(jobids, &size);
+            
+            if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "failed getting # job ids: %s\n", drmaa_strerror(drmaa_errno));
+               return 1;
+            }
+#else
+            size = JOB_CHUNK;
+#endif
+            
+            for (j = 0; j < size; j++) {
+               drmaa_errno = drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               
+               if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+                  printf("failed getting job id: %s\n", drmaa_strerror(drmaa_errno));
+               }
+               
                printf("\t \"%s\"\n", jobid);
-            } 
+            }
+
+            drmaa_errno = drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+
+#ifdef DRMAA_10
+            if (drmaa_errno != DRMAA_ERRNO_NO_MORE_ELEMENTS) {
+               fprintf(stderr, "Got incorrect return value from drmaa_get_next_job_id()\n");
+               return 1;
+            }
+#else
+            if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+               fprintf(stderr, "Got incorrect return value from drmaa_get_next_job_id()\n");
+               return 1;
+            }
+#endif
+
             drmaa_release_job_ids(jobids);
          }
          drmaa_delete_job_template(jt, NULL, 0);
@@ -1735,7 +1841,7 @@ static int test(int *argc, char **argv[], int parse_args)
          }
 
          /* wait job */
-         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, 
+         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_NO_WAIT, NULL, 
                diagnosis, sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
             printf("drmaa_wait() failed %s: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
             return 1;
@@ -1766,6 +1872,7 @@ static int test(int *argc, char **argv[], int parse_args)
       {
          drmaa_attr_names_t *vector;
          char attr_name[DRMAA_ATTR_BUFFER];
+         int size = 0;
          
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -1783,14 +1890,37 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }             
 
-         while ((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name, sizeof(attr_name)-1))==DRMAA_ERRNO_SUCCESS)
-            printf("%s\n", attr_name);
-
-         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
-            fprintf(stderr, "drmaa_get_next_attr_name() failed: %s\n", 
-                     diagnosis);
+#ifdef DRMAA_10
+         drmaa_errno = drmaa_get_num_attr_names(vector, &size);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_get_num_attr_names() failed: %s\n", drmaa_strerror(drmaa_errno));
             return 1;
          }
+#endif
+
+         while ((drmaa_errno=drmaa_get_next_attr_name(vector, attr_name, sizeof(attr_name)-1))==DRMAA_ERRNO_SUCCESS) {
+            size--;
+            printf("%s\n", attr_name);
+         }
+
+
+#ifdef DRMAA_10
+         if (size != 0) {
+            fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_names()\n");
+            return 1;
+         }
+         
+         if (drmaa_errno != DRMAA_ERRNO_NO_MORE_ELEMENTS) {
+            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_name()\n");
+            return 1;
+         }
+#else
+         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_name()\n");
+            return 1;
+         }
+#endif
 
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -1804,12 +1934,26 @@ static int test(int *argc, char **argv[], int parse_args)
          - version information is printed */
       {
          unsigned int major, minor;
+
          if (drmaa_version(&major, &minor, diagnosis, sizeof(diagnosis)-1)
                !=DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_version() failed: %s\n", diagnosis);
             return 1;
          }
+
          printf("version %d.%d\n", major, minor);
+
+#ifdef DRMAA_10
+         if ((major != 1) || (minor != 0)) {
+            fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
+            return 1;
+         }
+#else
+         if ((major != 0) || (minor != 95)) {
+            fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
+            return 1;
+         }
+#endif
       }
       break;
 
@@ -1895,7 +2039,7 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
          fprintf(fp, "%s\n", mirror_text);
-         fclose(fp);
+         FCLOSE(fp);
 
          if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
@@ -2795,7 +2939,7 @@ static int test(int *argc, char **argv[], int parse_args)
             }
 
             fprintf(fp, "%s\n", mirror_text);
-            fclose(fp);
+            FCLOSE(fp);
             
             printf ("Clearing output file\n");
             strcpy (abs_path, "/tmp/");
@@ -3921,6 +4065,7 @@ static int test(int *argc, char **argv[], int parse_args)
          char jobid[1024], value[128], new_jobid[1024];
          drmaa_attr_values_t *rusage = NULL;
          int status;
+         int size = 0;
 
          if (parse_args)
             exit_job = NEXT_ARGV(argc, argv);
@@ -3973,9 +4118,36 @@ static int test(int *argc, char **argv[], int parse_args)
             return 1;
          }
          
+#ifdef DRMAA_10
+         drmaa_errno = drmaa_get_num_attr_values(rusage, &size);
+         
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_get_num_attr_values() failed: %s\n", drmaa_strerror(drmaa_errno));
+            return 1;
+         }
+#endif
+         
          while ((drmaa_errno=drmaa_get_next_attr_value(rusage, value, 127))==DRMAA_ERRNO_SUCCESS) {
+            size--;
             printf("%s\n", value);
          }
+      
+#ifdef DRMAA_10
+         if (size != 0) {
+            fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_values()\n");
+            return 1;
+         }
+         
+         if (drmaa_errno != DRMAA_ERRNO_NO_MORE_ELEMENTS) {
+            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_value()\n");
+            return 1;
+         }
+#else
+         if (drmaa_errno != DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE) {
+            fprintf(stderr, "Got incorrect return value from drmaa_get_next_attr_value()\n");
+            return 1;
+         }
+#endif
          
          break;
       }
@@ -4289,11 +4461,211 @@ static int test(int *argc, char **argv[], int parse_args)
       }
       break;
 
+   case ST_RECOVERABLE_SESSION:
+      {
+         char jobid1[DRMAA_JOBNAME_BUFFER + 1];
+         char jobid2[DRMAA_JOBNAME_BUFFER + 1];
+         char jobid3[DRMAA_JOBNAME_BUFFER + 1];
+         char jobid4[DRMAA_JOBNAME_BUFFER + 1];
+         char buffer[DRMAA_JOBNAME_BUFFER + 1];
+         char contact[DRMAA_CONTACT_BUFFER + 1];
+         int drmaa_errno = DRMAA_ERRNO_SUCCESS;
+         int exit_code = 0;
+         int stat = 0;
+         drmaa_job_ids_t *bulk_job_ids = NULL;
+         drmaa_attr_values_t *rusage = NULL;
+
+         if (parse_args) {
+            sleeper_job = NEXT_ARGV(argc, argv);
+         }
+         
+         if (drmaa_init("", diagnosis, DRMAA_ERROR_STRING_BUFFER) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         
+         if (drmaa_get_contact(contact, DRMAA_CONTACT_BUFFER, diagnosis,
+                               DRMAA_ERROR_STRING_BUFFER) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_get_contact() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         printf ("Contact string is \"%s\"\n", contact);
+         
+         /* Run long job. */
+         jt = create_sleeper_job_template(120, 0, 0);
+
+         if (jt == NULL) {
+            fprintf(stderr, "create_job_template() failed\n");
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_errno = drmaa_run_job(jobid1, DRMAA_JOBNAME_BUFFER, jt, diagnosis,
+                                     DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s %s\n", diagnosis,
+                    drmaa_strerror(drmaa_errno));
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_delete_job_template(jt, diagnosis, DRMAA_ERROR_STRING_BUFFER);
+
+         /* Run short job. */
+         jt = create_sleeper_job_template(10, 0, 0);
+
+         if (jt == NULL) {
+            fprintf(stderr, "create_job_template() failed\n");
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_errno = drmaa_run_job(jobid2, DRMAA_JOBNAME_BUFFER, jt, diagnosis,
+                                     DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_job() failed: %s %s\n", diagnosis,
+                    drmaa_strerror(drmaa_errno));
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_delete_job_template(jt, diagnosis, DRMAA_ERROR_STRING_BUFFER);
+
+         /* Run bulk job. */
+         jt = create_sleeper_job_template(10, 1, 1);
+
+         if (jt == NULL) {
+            fprintf(stderr, "create_job_template() failed\n");
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_errno = drmaa_run_bulk_jobs(&bulk_job_ids, jt, 1, 2, 1,
+                                           diagnosis,
+                                           DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_run_bulk_jobs() failed: %s %s\n", diagnosis,
+                    drmaa_strerror(drmaa_errno));
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_delete_job_template(jt, diagnosis, DRMAA_ERROR_STRING_BUFFER);
+
+         /* Release one of the bulk jobs */
+         drmaa_get_next_job_id(bulk_job_ids, jobid3, DRMAA_JOBNAME_BUFFER);
+         drmaa_get_next_job_id(bulk_job_ids, jobid4, DRMAA_JOBNAME_BUFFER);
+         drmaa_release_job_ids(bulk_job_ids);
+         
+         drmaa_errno = drmaa_control(jobid3, DRMAA_CONTROL_RELEASE, diagnosis,
+                                     DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_control() failed: %s %s\n", diagnosis,
+                    drmaa_strerror(drmaa_errno));
+            exit_code = 1;
+            goto error;
+         }
+         
+         /* Stop and restart the session. */
+         if (drmaa_exit(diagnosis, DRMAA_ERROR_STRING_BUFFER) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /* Sleep long enough for the short jobs to finish. */
+         printf ("Sleeping for 60 seconds\n");
+         sleep(60);
+         printf ("Done sleeping\n");
+         
+         if (drmaa_init(contact, diagnosis, DRMAA_ERROR_STRING_BUFFER) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+
+         /* Wait for the long job to finish. */
+         drmaa_errno = drmaa_wait(jobid1, buffer, DRMAA_JOBNAME_BUFFER, &stat,
+                                  DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
+                                  DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_wait() failed: %s\n", diagnosis);
+            exit_code = 1;
+            goto error;
+         }
+
+         /* Wait for the short job to finish. */
+         drmaa_errno = drmaa_wait(jobid2, buffer, DRMAA_JOBNAME_BUFFER, &stat,
+                                  DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
+                                  DRMAA_ERROR_STRING_BUFFER);
+
+         if ((drmaa_errno != DRMAA_ERRNO_INVALID_JOB) &&
+             (drmaa_errno != DRMAA_ERRNO_NO_RUSAGE)) {
+            fprintf(stderr, "drmaa_wait() did not fail as expected: %s\n",
+                    diagnosis);
+            exit_code = 1;
+            goto error;
+         }
+
+         /* Wait for the bulk jobs to finish. */
+         drmaa_errno = drmaa_wait(jobid3, buffer, DRMAA_JOBNAME_BUFFER, &stat,
+                                  DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, diagnosis,
+                                  DRMAA_ERROR_STRING_BUFFER);
+
+         /* This one must be found, because another task in this job is still
+          * held.  The only option is to complain about no rusage info. */
+         if (drmaa_errno != DRMAA_ERRNO_NO_RUSAGE) {
+            fprintf(stderr, "drmaa_wait() did not fail as expected: %s\n",
+                    diagnosis);
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_errno = drmaa_wait(jobid4, buffer, DRMAA_JOBNAME_BUFFER, &stat,
+                                  DRMAA_TIMEOUT_NO_WAIT, &rusage, diagnosis,
+                                  DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_EXIT_TIMEOUT) {
+            fprintf(stderr, "drmaa_wait() did not fail as expected: %s\n",
+                    diagnosis);
+            exit_code = 1;
+            goto error;
+         }
+
+         drmaa_errno = drmaa_control(jobid4, DRMAA_CONTROL_TERMINATE, diagnosis,
+                                     DRMAA_ERROR_STRING_BUFFER);
+
+         if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_control() failed: %s %s\n", diagnosis,
+                    drmaa_strerror(drmaa_errno));
+            exit_code = 1;
+            goto error;
+         }
+
+      error:
+         if (drmaa_exit(diagnosis, DRMAA_ERROR_STRING_BUFFER) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            exit_code = 1;
+         }
+
+         if (exit_code != 0) {
+            return exit_code;
+         }
+      }
+      break;
+
    default:
       break;
    }
 
    return 0;
+FCLOSE_ERROR:
+   fprintf(stderr, MSG_FILE_ERRORCLOSEINGXY_SS, input_path, strerror(errno));
+   return 1;
 }
 
 
@@ -4589,9 +4961,10 @@ static int wait_all_jobs(int n)
    char jobid[100];
    int drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int stat;
+   drmaa_attr_values_t *rusage = NULL;
 
    do {
-      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, NULL, 0);
+      drmaa_errno = drmaa_wait(DRMAA_JOB_IDS_SESSION_ANY, jobid, sizeof(jobid)-1, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, &rusage, NULL, 0);
       
       if (drmaa_errno == DRMAA_ERRNO_SUCCESS) {
          printf("waited job \"%s\"\n", jobid);
@@ -4611,8 +4984,10 @@ static int wait_all_jobs(int n)
       printf("no more jobs to wait\n");
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }
-   else if ((drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) &&
-            (test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT)) {
+   else if (((drmaa_errno == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) &&
+             (test_case == MT_EXIT_DURING_SUBMIT_OR_WAIT)) ||
+            ((drmaa_errno == DRMAA_ERRNO_NO_RUSAGE) &&
+             (test_case == ST_SUBMIT_NO_RUN_WAIT))) {
       /* It's supposed to do that. */
       drmaa_errno = DRMAA_ERRNO_SUCCESS;
    }
@@ -5318,3 +5693,25 @@ static void array_job_run_sequence_adapt(int **sequence, int job_id, int count)
    }
 }
 
+static int set_path_attribute_plus_colon(drmaa_job_template_t *jt,
+                                         const char *name, const char *value,
+                                         char *error_diagnosis,
+                                         size_t error_diag_len)
+{
+   char path_buffer[10000];
+   strcpy(path_buffer, ":"); 
+   strcat(path_buffer, value);
+   return drmaa_set_attribute(jt, name, path_buffer, error_diagnosis,
+                              error_diag_len);         
+}
+
+static bool test_error_code(char *name, int code, int expected)
+{
+   if (code != expected) {
+      fprintf(stderr, "%s = %d; should be %d\n", name, code, expected);
+      return false;
+   }
+   else {
+      return true;
+   }
+}

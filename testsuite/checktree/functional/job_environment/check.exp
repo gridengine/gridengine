@@ -42,7 +42,6 @@ global check_errstr
 global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
-global env
 
 # set check_root_access_needs "yes"
 
@@ -65,13 +64,22 @@ set check_cleanup_function "job_environment_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "job_environment_amount"
-lappend check_functions "job_environment_amount_uninherited"
-lappend check_functions "job_environment_JOB_NAME"
-lappend check_functions "job_environment_JOB_NAME_uninherited"
-lappend check_functions "job_environment_INHERIT_ENV"
-lappend check_functions "job_environment_SET_LIB_PATH"
+#lappend check_functions "job_environment_amount"
+#lappend check_functions "job_environment_JOB_NAME"
 
+####### job_environment_init_level() ###########################################
+#  NAME
+#     job_environment_init_level() -- init the job env test
+#
+#  SYNOPSIS
+#     job_environment_init_level {}
+#
+#  FUNCTION
+#     Initialize the job environment test
+#
+#  RESULT
+#     0 -> ok   1 -> error
+################################################################################
 proc job_environment_init_level {} {
    global CHECK_ACT_LEVEL
    global CHECK_PRODUCT_TYPE
@@ -91,18 +99,60 @@ proc job_environment_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 
+####### job_environment_setup() ################################################
+#  NAME
+#     job_environment_setup() -- setup the job env test
+#
+#  SYNOPSIS
+#     job_environment_setup { } 
+#
+#  FUNCTION
+#     Do required setup for the job environment test, including running the 6.0
+#     setup routine if appropriate.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_setup_60()
+################################################################################
 proc job_environment_setup  {} {
    global ts_config
    global CHECK_OUTPUT
-   global queue test_host
+   global queue job_environment_exec_host job_environment_config
 
    puts $CHECK_OUTPUT "setup ..."
-   set test_host [lindex $ts_config(execd_nodes) 0]
-   set queue [get_queue_instance "all.q" $test_host]
+   set job_environment_exec_host [lindex $ts_config(execd_hosts) 0]
+   set queue [get_queue_instance "all.q" $job_environment_exec_host]
+
+   get_config job_environment_config
+
+   if {$ts_config(gridengine_version) >= 60} {
+      job_environment_setup_60
+   }
 
    set_error 0 "ok"
 }
 
+####### job_environment_parse_env_test_output() ################################
+#  NAME
+#     job_environment_parse_env_test_output() -- parse jobenv.sh output
+#
+#  SYNOPSIS
+#     job_environment_parse_env_test_output { file array } 
+#
+#  FUNCTION
+#     Parses the output file from the jobenv.sh script and places the results
+#     in the given array.  This function will wait until the output file is
+#     available if it does not exist at the time this function is run.
+#
+#  INPUTS
+#     file     the name of the jobenv.sh output file
+#     array    the name of the array in which results will be placed
+#
+#  RESULT
+#     0 -> ok   1 -> error
+################################################################################
 proc job_environment_parse_env_test_output { file array } {
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
 
@@ -136,6 +186,27 @@ proc job_environment_parse_env_test_output { file array } {
    }
 }
 
+####### job_environment_qsub_job() #############################################
+#  NAME
+#     job_environment_qsub_job() -- qsub jobenv.sh
+#
+#  SYNOPSIS
+#     job_environment_qsub_job { jobname array arguments } 
+#
+#  FUNCTION
+#     Submit the jobenv.sh script via qsub and parse the resulting output file.
+#
+#  INPUTS
+#     jobname     the name the job will have when submitted
+#     array       the name of the array in which results will be placed
+#     arguments   switches to be passed to qsub
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_parse_env_test_output()
+################################################################################
 proc job_environment_qsub_job { jobname array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_SCRIPT_FILE_DIR
    global queue CHECK_OUTPUT
@@ -143,9 +214,9 @@ proc job_environment_qsub_job { jobname array arguments } {
 
    set ret 1
    puts $CHECK_OUTPUT "job environment should be written to $CHECK_PROTOCOL_DIR"
-   set job_id [ submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR" ]
+   set job_id [submit_job "$arguments -q $queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/jobenv.sh $CHECK_PROTOCOL_DIR"]
 
-   if { $job_id <= 0 } {
+   if {$job_id <= 0} {
       set ret 0
    }
 
@@ -166,6 +237,28 @@ proc job_environment_qsub_job { jobname array arguments } {
    return $ret
 }
 
+####### job_environment_qresub_job() ###########################################
+#  NAME
+#     job_environment_qresub_job() -- qresub jobenv.sh
+#
+#  SYNOPSIS
+#     job_environment_qresub_job { jobname array arguments } 
+#
+#  FUNCTION
+#     Submit the jobenv.sh script via qsub, then again via qresub, and parse the
+#     resulting output file.
+#
+#  INPUTS
+#     jobname     the name the job will have when submitted
+#     array       the name of the array in which results will be placed
+#     arguments   switches to be passed to qsub
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_parse_env_test_output()
+################################################################################
 proc job_environment_qresub_job { jobname array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
@@ -183,6 +276,29 @@ proc job_environment_qresub_job { jobname array arguments } {
    delete_job $job_id
 }
 
+####### job_environment_qalter_job() ###########################################
+#  NAME
+#     job_environment_qalter_job() -- qalter jobenv.sh
+#
+#  SYNOPSIS
+#     job_environment_qalter_job { jobname array qsub_args qalter_args } 
+#
+#  FUNCTION
+#     Submit the jobenv.sh script via qsub in a hold state, change it via
+#     qalter, then release is via qrls, and parse the resulting output file.
+#
+#  INPUTS
+#     jobname        the name the job will have when submitted
+#     array          the name of the array in which results will be placed
+#     qsub_args      switches to be passed to qsub
+#     qalter_args    switches to be passed to qalter
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_parse_env_test_output()
+################################################################################
 proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_SCRIPT_FILE_DIR
    global CHECK_OUTPUT
@@ -199,6 +315,27 @@ proc job_environment_qalter_job { jobname array qsub_args qalter_args } {
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
 }
 
+####### job_environment_qrsh_job() #############################################
+#  NAME
+#     job_environment_qrsh_job() -- qrsh jobenv.sh
+#
+#  SYNOPSIS
+#     job_environment_qrsh_job { jobname array arguments } 
+#
+#  FUNCTION
+#     Submit the jobenv.sh script via qrsh and parse the resulting output file.
+#
+#  INPUTS
+#     jobname     the name the job will have when submitted
+#     array       the name of the array in which results will be placed
+#     arguments   switches to be passed to qrsh
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_parse_env_test_output()
+################################################################################
 proc job_environment_qrsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH 
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
@@ -211,10 +348,31 @@ proc job_environment_qrsh_job { array arguments } {
    job_environment_parse_env_test_output $CHECK_PROTOCOL_DIR/job_env.out job_env_array
 }
 
+####### job_environment_qsh_job() ##############################################
+#  NAME
+#     job_environment_qsh_job() -- qsh jobenv.sh
+#
+#  SYNOPSIS
+#     job_environment_qsh_job { array arguments } 
+#
+#  FUNCTION
+#     Submit the jobenv.sh script via execution with qsh and parse the resulting
+#     output file.
+#
+#  INPUTS
+#     array       the name of the array in which results will be placed
+#     arguments   switches to be passed to qsh
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_parse_env_test_output()
+################################################################################
 proc job_environment_qsh_job { array arguments } {
    global CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_SCRIPT_FILE_DIR
-   global queue test_host
+   global queue job_environment_exec_host
 
    upvar $array job_env_array
 
@@ -226,7 +384,7 @@ proc job_environment_qsh_job { array arguments } {
    close $f
 
    # wait for host to appear on the remote host
-   wait_for_remote_file $test_host $CHECK_USER $script_name
+   wait_for_remote_file $job_environment_exec_host $CHECK_USER $script_name
 
    puts $CHECK_OUTPUT "starting qsh $arguments -q $queue -S $script_name ..."
    set output [start_remote_prog $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsh" "$arguments -q $queue -S $script_name"]
@@ -239,41 +397,78 @@ proc job_environment_qsh_job { array arguments } {
    file delete $script_name
 }
 
-
-
+#****** job_environment_amount() ***********************************************
+#  NAME
+#     job_environment_amount() -- test job environment
+#
+#  SYNOPSIS
+#     job_environment_amount { } 
+#
+#  FUNCTION
+#     Check that all required environment variables are set by the shepherd
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_var_test()
+#*******************************************************************************
 proc job_environment_amount {} {
-   job_environment_var_test 0
-}
-
-
-proc job_environment_amount_uninherited {} {
-   get_config old_config
-   set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
-
-   # Sleep for 20 seconds to give the coniguration time to propogate to the
-   # Execds
-   job_environment_sleep
-
-   job_environment_var_test 1
-
-   # undo configuration changes that were made for this test
-   set_config old_config
-}
-
-
-proc job_environment_sleep {} {
    global CHECK_OUTPUT
+   set errors ""
 
-   puts $CHECK_OUTPUT "Waiting for environment change to propogate to execds"
-   after 20000
+   puts $CHECK_OUTPUT "Testing list of environment variables with execd_param=none"
+
+   # Set exced_params=none
+   set new_config(execd_params) "none"
+   set_config_and_propogate new_config
+
+   job_environment_var_test missing
+
+   if {[llength $missing] != 0} {
+      set missing_vars ""
+
+      foreach missing_var $missing {
+         append missing_vars " $missing_var"
+      }
+
+      add_proc_error "job_environment_amount" -1 "The following environment variables should have been set but were not, with execd_params=none: [string trim $missing_vars]"
+   }
+
+   set_error 0 "ok"
 }
 
-
-proc job_environment_var_test {exclusive} {
+####### job_environment_var_test() #############################################
+#  NAME
+#     job_environment_var_test() -- test job environment
+#
+#  SYNOPSIS
+#     job_environment_var_test { missing {extra ""} } 
+#
+#  FUNCTION
+#     Check that all required environment variables are set by the shepherd.
+#     Variables which should be present but are not, are placed in the missing
+#     array.  If the extra array is given, variables which are unrecognised are
+#     placed in the extra array.
+#
+#  INPUTS
+#     missing     the name of the array in which to place missing env vars
+#     extra       the name of the array in which to place extra env vars
+#
+#  RESULT
+#     0 -> ok   1 -> error
+################################################################################
+proc job_environment_var_test {missing {extra ""}} {
+   global ts_config
    global CHECK_OUTPUT env
+   upvar $missing missing_variables
+   upvar $extra extra_variables
 
-   set known_variables "SGE_ROOT"
+   set missing_variables ""
+   set extra_variables ""
+
+   set known_variables ""
+   lappend known_variables "SGE_ROOT"
    lappend known_variables "SGE_CELL"
    lappend known_variables "SGE_ARCH"
    lappend known_variables "SGE_O_HOME"
@@ -296,7 +491,6 @@ proc job_environment_var_test {exclusive} {
    lappend known_variables "SGE_CKPT_ENV"
    lappend known_variables "SGE_CKPT_DIR"
    lappend known_variables "SGE_CWD_PATH"
-   lappend known_variables "SGE_STDIN_PATH"
    lappend known_variables "SGE_STDERR_PATH"
    lappend known_variables "SGE_STDOUT_PATH"
    lappend known_variables "SGE_BINARY_PATH"
@@ -324,9 +518,17 @@ proc job_environment_var_test {exclusive} {
    lappend known_variables "TMPDIR"
    lappend known_variables "TMP"
    lappend known_variables "USER"
-   lappend known_variables "SGE_QMASTER_PORT"
-   lappend known_variables "SGE_EXECD_PORT"
    lappend known_variables "RESTARTED"
+
+   if { $ts_config(gridengine_version) == 53} {
+      lappend known_variables "COMMD_PORT"
+      lappend known_variables "FIRST_HOST"
+      lappend known_variables "LAST_HOST"
+   } else {
+      lappend known_variables "SGE_STDIN_PATH"
+      lappend known_variables "SGE_QMASTER_PORT"
+      lappend known_variables "SGE_EXECD_PORT"
+   }
 
    # Build list of allowed_variables
    set allowed_variables "TZ"
@@ -341,18 +543,18 @@ proc job_environment_var_test {exclusive} {
             set value $job_env($var)
 
             if { [string length $value] == 0 } {
-               add_proc_error "job_environment_amount" "-1" "$var is set to \"$value\""
-            } else {
-               # Remove each known_variable from job_env
-               array unset job_env $var
+               lappend missing_variables $var
             }
+
+            # Remove each known_variable from job_env
+            array unset job_env $var
          } else {
-            add_proc_error "job_environment_amount" "-1" "environment variable $var is not set"
+            lappend missing_variables $var
          }
       }
 
       # If doing exclusive test...
-      if { $exclusive == 1 } {
+      if { $extra != "" } {
          # Remove each allowed_variable from job_env
          foreach var $allowed_variables {
             if { [info exists job_env($var)] } {
@@ -365,15 +567,32 @@ proc job_environment_var_test {exclusive} {
          # Test if job_env contains any extra variables
          foreach var [array names job_env] {
             if { [string compare $var "index"] != 0 } {
-                add_proc_error "job_environment_amount" "-1" "unexpected environment variables set: $var"
+                lappend extra_variables $var
             }
          }
       }
    }
-
-   set_error 0 "ok"
 }
 
+####### job_environment_check_env_value() ######################################
+#  NAME
+#     job_environment_check_env_value() -- test an env var value
+#
+#  SYNOPSIS
+#     job_environment_check_env_value { env_name should_be is_name } 
+#
+#  FUNCTION
+#     The value of the environment value is tested against the expected value.
+#
+#  INPUTS
+#     env_name    the name of the environment variable
+#     should_be   the value of the environment variable should have
+#     is_name     the name of the variable containing the actual value of the
+#                 environment variable
+#
+#  RESULT
+#     0 -> ok   1 -> error
+################################################################################
 proc job_environment_check_env_value { env_name should_be is_name } {
    global ts_config
    global CHECK_OUTPUT
@@ -407,9 +626,35 @@ proc job_environment_check_env_value { env_name should_be is_name } {
    }
 }
 
-proc job_environment_JOB_NAME {} {
+#****** job_environment_JOB_NAME() *********************************************
+#  NAME
+#     job_environment_JOB_NAME() -- test the job name env vars
+#
+#  SYNOPSIS
+#     job_environment_JOB_NAME { {stand_alone 1} } 
+#
+#  FUNCTION
+#     Tests whether the shepherd correctly sets the job name environment
+#     variables
+#
+#  INPUTS
+#     stand_alone    whether this test is running directly or being called from
+#                    another test
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#*******************************************************************************
+proc job_environment_JOB_NAME {{stand_alone 1}} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PROTOCOL_DIR
   
+   if {$stand_alone == 1} {
+      puts $CHECK_OUTPUT "Testing presence of job env vars with execd_params=none"
+
+      # Set exced_params=none
+      set new_config(execd_params) "none"
+      set_config_and_propogate new_config
+   }
+
    puts $CHECK_OUTPUT "\nqsub ..."
    if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
       job_environment_check_env_value "JOB_NAME" "jobenv.sh" job_env(JOB_NAME)
@@ -455,203 +700,36 @@ proc job_environment_JOB_NAME {} {
    set_error 0 "ok"
 }
 
-################################################################################
-# The point of this test is to check that all the job submission methods       #
-# continue to function when INHERIT_ENV=false.  Whether or not the job name    #
-# env vars are properly set is actually irrelevant.  The                       #
-# job_environment_JOB_NAME test checks that.                                   #
-################################################################################
-proc job_environment_JOB_NAME_uninherited {} {
-   # Set INHERIT_ENV=false
-   get_config old_config
-   set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
-   job_environment_sleep
-
-   # Run JOB_NAME test
-   job_environment_JOB_NAME
-}
-
-proc job_environment_INHERIT_ENV {} {
-   # Set INHERIT_ENV=false
-   get_config old_config
-   set new_config(execd_params) "INHERIT_ENV=false"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {[info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for INHERIT_ENV=false"
-      }
-   } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
-   }
-
-   # Set exced_params=none
-   set new_config(execd_params) "none"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after INHERIT_ENV=false"
-      }
-   } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
-   }
-
-   # Set INHERIT_ENV=true
-   set new_config(execd_params) "INHERIT_ENV=true"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for INHERIT_ENV=true"
-      }
-   } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
-   }
-
-   # Set exced_params=none
-   set new_config(execd_params) "none"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Check for presence of TERM env var
-      if {![info exists job_env(TERM)]} {
-         add_proc_error "job_environment_INHERIT_ENV" -1 "Failed for none after INHERIT_ENV=true"
-      }
-   } else {
-      add_proc_error "job_environment_INHERIT_ENV" -1 "Failed submitting job"
-   }
-
-   # Undo configuration changes that were made for this test
-   set_config old_config
-
-   set_error 0 "ok"
-}
-
-proc job_environment_get_shlib_path_var { array } {
-   global ts_config CHECK_OUTPUT
-
-   upvar $array job_env
-
-   puts $CHECK_OUTPUT "Finding shared library path..."
-
-   if { [info exists job_env(LD_LIBRARY_PATH)] == 1 } {
-      puts $CHECK_OUTPUT "LD_LIBRARY_PATH is set."
-      return "LD_LIBRARY_PATH"
-   } elseif { [info exists job_env(SHLIB_PATH)] == 1} {
-      puts $CHECK_OUTPUT "SHLIB_PATH is set."
-      return "SHLIB_PATH"
-   } elseif { [info exists job_env(DYLD_LIBRARY_PATH)] == 1} {
-      puts $CHECK_OUTPUT "DYLD_LIBRARY_PATH is set."
-      return "DYLD_LIBRARY_PATH"
-   } else {
-      puts $CHECK_OUTPUT "No shared library path is set."
-      return ""
-   }
-}
-
-proc job_environment_SET_LIB_PATH {} {
-   global ts_config CHECK_ARCH CHECK_OUTPUT
-
-   set sge_path "$ts_config(product_root)/lib/$CHECK_ARCH"
-   puts $CHECK_OUTPUT "SGE lib path is $sge_path"
-
-   # Set INHERIT_ENV=true, SET_LIB_PATH=true
-   get_config old_config
-   set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=true"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Find lib path env var
-      set lib_path [job_environment_get_shlib_path_var job_env]
-      puts $CHECK_OUTPUT "lib path var is $lib_path"
-
-      # Test that lib path starts with SGE lib path
-      puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-      if {[string first $sge_path $job_env($lib_path)] != 0} {
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=true,SET_LIB_PATH=true"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
-   }
-
-# This can only be tested if we know whether the execd has a shared lib path set
-#   # Set INHERIT_ENV=true, SET_LIB_PATH=false
-#   set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=false"
-#   set_config new_config
-#   job_environment_sleep
+####### job_environment_cleanup() ##############################################
+#  NAME
+#     job_environment_cleanup() -- clean up after the job env test
 #
-#   # Submit job
-#   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-#      # Test that lib path exists
-#      if {![info exists job_env($lib_path)]} {
-#         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=true,SET_LIB_PATH=false"
-#      }
-#   } else {
-#      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
-#   }
-
-   # Set INHERIT_ENV=false, SET_LIB_PATH=true
-   set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=true"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Test that lib path contains only SGE lib path
-      puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-      if {[string compare $job_env($lib_path) $sge_path] != 0} {
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=false,SET_LIB_PATH=true"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
-   }
-
-   # Set INHERIT_ENV=false, SET_LIB_PATH=false
-   set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=false"
-   set_config new_config
-   job_environment_sleep
-
-   # Submit job
-   if {[job_environment_qsub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"]} {
-      # Test that lib path doesn't exist
-      if {[info exists job_env($lib_path)]} {
-         puts $CHECK_OUTPUT "lib path is $job_env($lib_path)"
-         add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed for INHERIT_ENV=false,SET_LIB_PATH=false"
-      }
-   } else {
-      add_proc_error "job_environment_SET_LIB_PATH" -1 "Failed submitting job"
-   }
-
-   # Undo configuration changes that were made for this test
-   set_config old_config
-
-   set_error 0 "ok"
-}
-
-proc job_environment_cleanup  {} {
+#  SYNOPSIS
+#     job_environment_cleanup { } 
+#
+#  FUNCTION
+#     Clean up changes made during the job environment test.  This function
+#     calls the 6.0 cleanup function if appropriate.
+#
+#  RESULT
+#     0 -> ok   1 -> error
+#
+#  SEE ALSO
+#     job_environment_cleanup_60()
+################################################################################
+proc job_environment_cleanup {} {
    global CHECK_OUTPUT
+   global ts_config job_environment_config
 
    puts $CHECK_OUTPUT "cleanup ..."
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 
+   set_config job_environment_config
+
+   if {$ts_config(gridengine_version) >= 60} {
+      job_environment_cleanup_60
+   }
+
    set_error 0 "ok"
 }
-
-
-

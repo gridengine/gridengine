@@ -36,11 +36,9 @@
 #include "cull_list.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
+#include "sgeobj/sge_object.h"
 
 #include "msg_sgeobjlib.h"
-
-lList *Master_Project_List = NULL;
-lList *Master_User_List = NULL;
 
 /****** sgeobj/userprj/userprj_list_locate() **********************************
 *  NAME
@@ -120,7 +118,7 @@ prj_list_do_all_exist(const lList *this_list, lList **answer_list,
 lList **
 prj_list_get_master_list(void)
 {
-   return &Master_Project_List;
+   return object_type_get_master_list(SGE_TYPE_PROJECT);
 }
 
 /***************************************************

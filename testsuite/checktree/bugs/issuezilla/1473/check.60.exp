@@ -128,7 +128,7 @@ proc issue_1473_cleanup  {} {
 
 proc modify_complex_from_file {filename {time_var dummy}} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER CHECK_HOST
-   global CHECK_CORE_MASTER
+   global CHECK_CORE_MASTER ts_config
 
    upvar $time_var time
 
@@ -138,7 +138,8 @@ proc modify_complex_from_file {filename {time_var dummy}} {
    } else {
       puts $CHECK_OUTPUT "modify complex from file $filename"
       set time_start [clock clicks -milliseconds]
-      set ret [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Mc $filename" } output]
+      puts $CHECK_OUTPUT "start ..."
+      set output [start_remote_prog $ts_config(master_host) $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-Mc $filename" ]
       set time_end [clock clicks -milliseconds]
       set time [expr ($time_end - $time_start) / 1000.0]
 
@@ -150,7 +151,7 @@ proc modify_complex_from_file {filename {time_var dummy}} {
       set MSG_INVALID_CENTRY_DEL_S [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_INVALID_CENTRY_DEL_S] "*"]
       set output_list [split $output "\n"]
       set changed 0
-      puts $output
+#      puts $output
       foreach line $output_list {
          set line [string trim $line]
          if {[string length $line] > 0} {
@@ -185,7 +186,9 @@ proc issue_1473_do_qconf {message filename} {
    modify_complex_from_file $filename time
    puts "time required: $time s"
 
-   if {$time > 2.0} {
+   set max_time [scale_timeout 4.0]
+
+   if {$time > $max_time} {
       add_proc_error "issue_1473_do_qconf" -1 "$message may not take that long ($time s)"
    }
 }

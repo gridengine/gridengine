@@ -34,9 +34,6 @@
 
 #include "sge_userprjL.h"
 
-extern lList *Master_Project_List;
-extern lList *Master_User_List;
-
 lList **
 prj_list_get_master_list(void);
 

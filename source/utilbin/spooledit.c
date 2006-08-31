@@ -35,6 +35,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "rmon/sgermon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
 #include "sge_all_listsL.h"
@@ -302,13 +303,10 @@ load_object(bdb_info info, const char *key, const char *fname)
    }
 
    lFreeElem(&object);
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, fname, strerror(errno)));
-   DEXIT;
-   return EXIT_FAILURE;
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, fname, strerror(errno)));
+   DRETURN(EXIT_FAILURE);
 }
 
 static int 

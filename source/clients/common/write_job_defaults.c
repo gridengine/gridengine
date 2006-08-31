@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
+
+#include "uti/sge_stdio.h"
 
 #include "symbols.h"
 #include "sge_ja_task.h"
@@ -45,6 +48,7 @@
 #include "sgermon.h"                       
 #include "unparse_job_cull.h"
 #include "write_job_defaults.h"
+
 #include "msg_common.h"
 
 static lList *write_defaults_file(lList *lp, char *filename, int flags);
@@ -194,8 +198,9 @@ int flags
       if ((*cp == '-') && (i != (int) strlen(cp) + 1)) {
          sprintf(str, MSG_FILE_ERRORWRITETOFILEX_S, filename);
          answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         if (filename)
-            fclose(fp);
+         if (filename) {
+            FCLOSE(fp);
+         }
          DEXIT;
          return answer;
       }
@@ -206,7 +211,7 @@ int flags
                     lGetString(ep, SPA_switch));
             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             if (filename)
-               fclose(fp);
+               FCLOSE(fp);
             DEXIT;
             return answer;
          }
@@ -215,7 +220,7 @@ int flags
             sprintf(str, MSG_FILE_ERRORWRITETOFILEX_S, filename);
             answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             if (filename)
-               fclose(fp);
+               FCLOSE(fp);
             DEXIT;
             return answer;
          }
@@ -225,9 +230,14 @@ int flags
    fprintf(fp, "\n");
 
    if (filename) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
+   DEXIT;
+   return answer;
+FCLOSE_ERROR:
+   sprintf(str, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    DEXIT;
    return answer;
 }

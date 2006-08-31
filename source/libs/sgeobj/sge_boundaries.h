@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "cull/cull_list.h"
+
 /*----------------------------------------------------
  *
  * 1. sge_boundaries.h
@@ -51,7 +53,10 @@
 extern "C" {
 #endif
 
-#define BASIC_UNIT 50         /* Don't touch */
+/*
+ * BASIC_UNIT and MAX_DESCR_SIZE is defined in cull/cull_list.h
+ */
+
 enum NameSpaceBoundaries {
 
    /* cull version of sge_list_type */
@@ -59,11 +64,11 @@ enum NameSpaceBoundaries {
       
    /* job list */
    JB_LOWERBOUND = 1*BASIC_UNIT,
-   JB_UPPERBOUND = JB_LOWERBOUND + 4*BASIC_UNIT - 1,
+   JB_UPPERBOUND = JB_LOWERBOUND + MAX_DESCR_SIZE - 1,
 
    /* queue list */
    QU_LOWERBOUND = JB_UPPERBOUND + 1,
-   QU_UPPERBOUND = QU_LOWERBOUND + 4*BASIC_UNIT - 1,
+   QU_UPPERBOUND = QU_LOWERBOUND + MAX_DESCR_SIZE - 1,
 
    /* exec host list */
    EH_LOWERBOUND = QU_UPPERBOUND + 1,
@@ -478,10 +483,10 @@ enum NameSpaceBoundaries {
    AQTLIST_UPPERBOUND = AQTLIST_LOWERBOUND + 1 * BASIC_UNIT -1,
 
    CQ_LOWERBOUND = AQTLIST_UPPERBOUND + 1,
-   CQ_UPPERBOUND = CQ_LOWERBOUND + 4 * BASIC_UNIT -1,
+   CQ_UPPERBOUND = CQ_LOWERBOUND + MAX_DESCR_SIZE -1,
 
    QIM_LOWERBOUND = CQ_UPPERBOUND + 1,
-   QIM_UPPERBOUND = QIM_LOWERBOUND + 4 * BASIC_UNIT -1,
+   QIM_UPPERBOUND = QIM_LOWERBOUND + MAX_DESCR_SIZE -1,
 
    FCAT_LOWERBOUND = QIM_UPPERBOUND + 1,
    FCAT_UPPERBOUND = FCAT_LOWERBOUND + 1 * BASIC_UNIT - 1,     
@@ -544,9 +549,21 @@ enum NameSpaceBoundaries {
    SCT_UPPERBOUND = SCT_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
    REF_LOWERBOUND = SCT_UPPERBOUND + 1,
-   REF_UPPERBOUND = REF_LOWERBOUND + 1 * BASIC_UNIT - 1 
+   REF_UPPERBOUND = REF_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   LIRS_LOWERBOUND = REF_UPPERBOUND + 1,
+   LIRS_UPPERBOUND = LIRS_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   LIR_LOWERBOUND = LIRS_UPPERBOUND + 1,
+   LIR_UPPERBOUND = LIR_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   LIRF_LOWERBOUND = LIR_UPPERBOUND + 1,
+   LIRF_UPPERBOUND = LIRF_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   LIRL_LOWERBOUND = LIRF_UPPERBOUND + 1,
+   LIRL_UPPERBOUND = LIRL_LOWERBOUND + 1 * BASIC_UNIT - 1
       
-#  define LAST_UPPERBOUND REF_UPPERBOUND
+#  define LAST_UPPERBOUND LIRL_UPPERBOUND
 
 };
 

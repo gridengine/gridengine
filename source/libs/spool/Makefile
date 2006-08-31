@@ -49,7 +49,7 @@ SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoollib: $(SPOOLLIB)
+spoollib: $(SPOOLLIB) spoolflib_all
 
 spoollib_clean: spoolloaderlib_clean spooldlib_clean spoolblib_clean spoolclib_clean spoolflib_clean spoolplib_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT)

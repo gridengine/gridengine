@@ -43,14 +43,15 @@
 #include <signal.h>
 #include <fcntl.h>
  
-#include "sge_unistd.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
 #include "sgermon.h"
 #include "basis_types.h"
+#include "sge_log.h"     
+
 #include "msg_common.h"
 #include "msg_utilib.h"
-#include "sge_log.h"     
-#include "sge_uidgid.h"
-#include "sge_stdio.h"
 
 #ifdef NO_SGE_COMPILE_DEBUG
 #   undef SGE_EXIT
@@ -382,7 +383,6 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
    DEXIT;
    return (status&0xff00) >> 8;  /* return exitcode */
 FCLOSE_ERROR:
-   DEXIT;
    return -1;
 }
 

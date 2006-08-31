@@ -160,7 +160,6 @@ lList
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
    u_long32 qslots;
-   static order_pos_t *order_pos = NULL;
   
    DENTER(TOP_LAYER, "sge_create_orders");
    
@@ -206,6 +205,9 @@ lList
    }
    
    if (type == ORT_tickets || type == ORT_ptickets) {
+      
+      static order_pos_t *order_pos = NULL;
+      
       const lDescr tixDesc[] = {
                             {JAT_task_number, lUlongT},
                             {JAT_tix, lDoubleT},
@@ -328,7 +330,7 @@ lList
   
  *************************************************************/
 int 
-sge_send_orders2master( lList **orders ) 
+sge_send_orders2master(lList **orders) 
 {
    int ret = STATUS_OK;
    lList *alp = NULL;
@@ -336,11 +338,12 @@ sge_send_orders2master( lList **orders )
 
    int set_busy, order_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
+   lListElem *event_client = ec_get_event_client();
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
    /* do we have to set event client to "not busy"? */
-   set_busy = (ec_get_busy_handling() == EV_BUSY_UNTIL_RELEASED);
+   set_busy = (ec_get_busy_handling(event_client) == EV_BUSY_UNTIL_RELEASED);
 
    if (*orders != NULL) {
       DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(*orders)));
@@ -363,8 +366,8 @@ sge_send_orders2master( lList **orders )
    /* if necessary, set busy state to "not busy" */
    if(set_busy) {
       DPRINTF(("RESETTING BUSY STATE OF EVENT CLIENT\n"));
-      ec_set_busy(0);
-      ec_commit_multi(&malp, &state);
+      ec_set_busy(event_client, 0);
+      ec_commit_multi(event_client, &malp, &state);
    }
 
    /* check result of orders */

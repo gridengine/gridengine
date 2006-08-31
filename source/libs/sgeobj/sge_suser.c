@@ -40,6 +40,7 @@
 #include "sge_suserL.h"
 #include "sge_job.h"
 #include "sge_suser.h"
+#include "sgeobj/sge_object.h"
 
 #include "msg_qmaster.h"
 
@@ -60,7 +61,7 @@
 *  SEE ALSO
 *     sgeobj/suser/SU_Type
 ******************************************************************************/
-lList *Master_SUser_List = NULL;
+
 
 /****** sgeobj/suser/suser_list_add() *****************************************
 *  NAME
@@ -263,7 +264,7 @@ int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs)
 
    DENTER(TOP_LAYER, "suser_check_new_job");
    submit_user = lGetString(job, JB_owner);
-   suser = suser_list_add(&Master_SUser_List, NULL, submit_user);
+   suser = suser_list_add(object_type_get_master_list(SGE_TYPE_SUSER), NULL, submit_user);
    if (suser != NULL) {
       if(max_u_jobs == 0 ||  
          max_u_jobs > suser_get_job_counter(suser))
@@ -323,7 +324,7 @@ int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
    }
    if( ret == 0){    
       submit_user = lGetString(job, JB_owner);
-      suser = suser_list_add(&Master_SUser_List, NULL, submit_user);
+      suser = suser_list_add(object_type_get_master_list(SGE_TYPE_SUSER), NULL, submit_user);
       suser_increase_job_counter(suser);
    }
 
@@ -355,7 +356,7 @@ int suser_job_count(const lListElem *job)
 
    DENTER(TOP_LAYER, "suser_job_job");
    submit_user = lGetString(job, JB_owner);  
-   suser = suser_list_find(Master_SUser_List, submit_user);
+   suser = suser_list_find(*object_type_get_master_list(SGE_TYPE_SUSER), submit_user);
    if (suser != NULL) {
       ret = suser_get_job_counter(suser);
    }
@@ -390,7 +391,7 @@ void suser_unregister_job(const lListElem *job)
 
    DENTER(TOP_LAYER, "suser_unregister_job");
    submit_user = lGetString(job, JB_owner);  
-   suser = suser_list_find(Master_SUser_List, submit_user);
+   suser = suser_list_find(*object_type_get_master_list(SGE_TYPE_SUSER), submit_user);
    if (suser != NULL) {
       suser_decrease_job_counter(suser);
    }

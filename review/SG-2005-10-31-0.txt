@@ -12,7 +12,7 @@ SG-2005-10-31-0: Bugfix:    - a sched conf change with a sharetree can result
                             - minor perf. improv on job submit
                  Issue:     1848
                  Bugtraq:   6342005
-                 Changed:   qmaster, scheduler
+                 Changed:   qmaster, scheduler, testsuite
                  Review:    AA
 
 2 Conforms to specification

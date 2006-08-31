@@ -153,6 +153,10 @@ int event_handler_default_scheduler()
    char buffer[128];
    lList *orders = NULL;
    double prof_copy=0, prof_event=0, prof_init=0, prof_free=0, prof_run=0;
+   lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
+   lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
+   lList *master_exechost_list= *object_type_get_master_list(SGE_TYPE_EXECHOST);
+   
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
@@ -169,7 +173,9 @@ int event_handler_default_scheduler()
 
    if (rebuild_categories) {
       DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
-      sge_rebuild_job_category(Master_Job_List, Master_Userset_List);
+      sge_rebuild_job_category(*object_type_get_master_list(SGE_TYPE_JOB), 
+            *object_type_get_master_list(SGE_TYPE_USERSET), 
+            *object_type_get_master_list(SGE_TYPE_PROJECT));
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
@@ -187,8 +193,7 @@ int event_handler_default_scheduler()
    ensure_valid_what_and_where();
 
    /* the scheduler functions have to work with a reduced copy .. */
-   copy.host_list = lSelect("", Master_Exechost_List,
-                            where_host, what_host);
+   copy.host_list = lSelect("", master_exechost_list, where_host, what_host);
    /* 
     * Within the scheduler we do only need QIs
     */
@@ -219,29 +224,31 @@ int event_handler_default_scheduler()
       copy.job_list = sge_category_job_copy(copy.queue_list, &orders); 
    }
    else {
-      copy.job_list = lCopyList("test", Master_Job_List);                         
+      copy.job_list = lCopyList("test", master_job_list);                         
    }   
 
-   copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
-   copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
+   copy.dept_list = lSelect("", master_userset_list, where_dept, what_dept);
+   copy.acl_list = lSelect("", master_userset_list, where_acl, what_acl);
 
    /* .. but not in all cases */
-   copy.centry_list = lCopyList("", Master_CEntry_List);
-   copy.pe_list = lCopyList("", Master_Pe_List);
-   copy.share_tree = lCopyList("", Master_Sharetree_List);
-   copy.user_list = lCopyList("", Master_User_List);
-   copy.project_list = lCopyList("", Master_Project_List);
-   copy.ckpt_list = lCopyList("", Master_Ckpt_List);
+   copy.centry_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CENTRY));
+   copy.pe_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PE));
+   copy.share_tree = lCopyList("", *object_type_get_master_list(SGE_TYPE_SHARETREE));
+   copy.user_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_USER));
+   copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
+   copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
+   copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
+   copy.lirs_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_LIRS));
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-            "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
+            "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(copy.all_queue_list),
             lGetNumberOfElem(copy.job_list),
-            lGetNumberOfElem(Master_Job_List),
+            lGetNumberOfElem(master_job_list),
             lGetNumberOfElem(copy.host_list),
-            lGetNumberOfElem(Master_Exechost_List),
+            lGetNumberOfElem(master_exechost_list),
 
             lGetNumberOfElem(copy.centry_list),
             lGetNumberOfElem(copy.acl_list),
@@ -250,19 +257,20 @@ int event_handler_default_scheduler()
             lGetNumberOfElem(copy.ckpt_list),
             lGetNumberOfElem(copy.user_list),
             lGetNumberOfElem(copy.project_list),
+            lGetNumberOfElem(copy.lirs_list),
             lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
             lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
            ));
 
    if (getenv("SGE_ND")) {
       printf("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-         "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d \n",
+         "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(copy.all_queue_list),
          lGetNumberOfElem(copy.job_list),
-         lGetNumberOfElem(Master_Job_List),
+         lGetNumberOfElem(master_job_list),
          lGetNumberOfElem(copy.host_list),
-         lGetNumberOfElem(Master_Exechost_List),
+         lGetNumberOfElem(master_exechost_list),
 
          lGetNumberOfElem(copy.centry_list),
          lGetNumberOfElem(copy.acl_list),
@@ -271,6 +279,7 @@ int event_handler_default_scheduler()
          lGetNumberOfElem(copy.ckpt_list),
          lGetNumberOfElem(copy.user_list),
          lGetNumberOfElem(copy.project_list),
+         lGetNumberOfElem(copy.lirs_list),
          lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
@@ -301,7 +310,7 @@ int event_handler_default_scheduler()
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);
    
-   monitor_next_run = 0;
+   schedd_set_monitor_next_run(false);
 
    /* .. which gets deleted after using */
    lFreeList(&(copy.host_list));
@@ -319,6 +328,8 @@ int event_handler_default_scheduler()
    lFreeList(&(copy.user_list));
    lFreeList(&(copy.project_list));
    lFreeList(&(copy.ckpt_list));
+   lFreeList(&(copy.hgrp_list));
+   lFreeList(&(copy.lirs_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -328,7 +339,7 @@ int event_handler_default_scheduler()
  
    if(prof_is_active(SGE_PROF_CUSTOM6)){
       PROFILING((SGE_EVENT, "PROF: schedd run took: %.3f s (init: %.3f s, copy: %.3f s, run:%.3f, free: %.3f s, jobs: %d, categories: %d/%d)",
-            prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(Master_Job_List), sge_category_count(), sge_cs_category_count() ));
+            prof_event, prof_init, prof_copy, prof_run, prof_free, lGetNumberOfElem(master_job_list), sge_category_count(), sge_cs_category_count() ));
 
    }
 
@@ -406,24 +417,42 @@ DTRACE;
          CQ_name,  
          CQ_hostlist,
          CQ_qinstances,
-
+         CQ_consumable_config_list,
+         CQ_projects,
+         CQ_xprojects,
+         CQ_qtype,
+         CQ_pe_list,
          CQ_nsuspend,
          CQ_job_slots,
          NoName
       };
 
       const int queue_nm[] = {
-         QU_qname,
-         QU_qhostname,
          QU_full_name,
-         QU_seq_no,
+         QU_qhostname,
+         QU_tag,
+         QU_qname,
+         QU_acl,
+         QU_xacl,
+         QU_projects,
+         QU_xprojects,
+         QU_resource_utilization,
+         QU_job_slots,
          QU_load_thresholds,
          QU_suspend_thresholds,
+         QU_host_seq_no,
+         QU_seq_no,
+         QU_state,
+         QU_tagged4schedule,
          QU_nsuspend,
          QU_suspend_interval,
-         QU_qtype,
-         QU_job_slots,
+         QU_consumable_config_list,
+         QU_available_at,
+         QU_soft_violation,
+         QU_version,
+         QU_subordinate_list,
 
+         QU_qtype,
          QU_calendar,
          QU_s_rt,
          QU_h_rt,
@@ -434,7 +463,6 @@ DTRACE;
          QU_s_data,
          QU_h_data,
          QU_s_stack,
-
          QU_h_stack,
          QU_s_core,
          QU_h_core,
@@ -443,33 +471,17 @@ DTRACE;
          QU_s_vmem,
          QU_h_vmem,
          QU_min_cpu_interval,
-         QU_state,
          QU_notify,
 
-         QU_acl,
-         QU_xacl,
-         QU_subordinate_list,
-         QU_consumable_config_list,
-         QU_projects,
-         QU_xprojects,
-
-         QU_resource_utilization,
-         QU_tagged4schedule,
-         QU_available_at,
-         QU_tag,
-
-         QU_version,
          QU_suspended_on_subordinate,
          QU_last_suspend_threshold_ckeck,
          QU_job_cnt,
          QU_pending_job_cnt,
-         QU_soft_violation,
-         QU_host_seq_no,
          QU_pe_list,
          QU_ckpt_list,
 
          QU_state_changes,
-         
+
          NoName
       };
    
@@ -572,51 +584,47 @@ DTRACE;
    /* ---------------------------------------- */
    if (what_job == NULL) {
       const int job_nm[] = {         
-/*SGE*/     JB_job_number, 
-            JB_script_file,
-            JB_submission_time,
-            JB_owner,
-            JB_group,
-            JB_nrunning,
-            JB_execution_time,
-            JB_checkpoint_name,   
-            JB_hard_resource_list,
-            JB_soft_resource_list,
-            JB_priority,
+            JB_job_number,
+            JB_category,
             JB_hard_queue_list,
-            JB_soft_queue_list,
-
-            JB_master_hard_queue_list,
-            JB_pe,
-            JB_pe_range,
-            JB_jid_predecessor_list,
-            JB_soft_wallclock_gmt,
-            JB_hard_wallclock_gmt,
-            JB_version,
-            JB_type,
-            JB_reserve,
-            JB_project,
-/* SGEEE */ JB_department,
-            JB_deadline,
-            JB_host,
-            JB_override_tickets,
-            JB_jobshare,
-            JB_ja_structure,
+            JB_owner,
+            JB_hard_resource_list,
+            JB_group,
             JB_ja_n_h_ids,
+            JB_soft_resource_list,
+            JB_ja_template,
+            JB_soft_queue_list,
+            JB_type,
             JB_ja_u_h_ids,
             JB_ja_s_h_ids,
-            JB_ja_o_h_ids,   
-	         JB_ja_tasks,
-   
-	         JB_nppri,
-	         JB_urg,
-	         JB_nurg,
-	         JB_dlcontr,
-	         JB_wtcontr,
-	         JB_rrcontr,
-
-/*SGE*/     JB_ja_template,
-            JB_category,
+            JB_ja_o_h_ids,
+            JB_pe,
+            JB_project,
+            JB_department,
+            JB_execution_time,
+            JB_override_tickets,
+            JB_jid_predecessor_list,
+            JB_deadline,
+            JB_submission_time,
+            JB_checkpoint_name,
+            JB_version,
+            JB_priority,
+            JB_host,
+            JB_ja_structure,
+            JB_jobshare,
+            JB_master_hard_queue_list,
+            JB_pe_range,
+            JB_nppri,
+            JB_urg,
+            JB_nurg,
+            JB_dlcontr,
+            JB_wtcontr,
+            JB_rrcontr,
+            JB_script_file,
+            JB_soft_wallclock_gmt,
+            JB_hard_wallclock_gmt,
+            JB_reserve,
+            JB_ja_tasks,
             NoName
          };
   
@@ -639,22 +647,22 @@ DTRACE;
    if (what_jat == NULL) {
   
       const int jat_nm[] = {         
-         JAT_task_number, 
-         JAT_status,     
+         JAT_task_number,
+         JAT_tix,
+         JAT_state,
+         JAT_fshare,
+         JAT_status,
+         JAT_granted_pe,
+         JAT_scaled_usage_list,
+         JAT_task_list,
          JAT_start_time,
          JAT_hold,
-         JAT_granted_pe,
          JAT_granted_destin_identifier_list,
-         JAT_master_queue,                 
-         JAT_state,                       
-         JAT_scaled_usage_list,
-         JAT_fshare,          
-         JAT_tix,            
-         JAT_oticket,       
-         JAT_fticket,     
-         JAT_sticket,    
-         JAT_share,     
-         JAT_task_list,  
+         JAT_master_queue,
+         JAT_oticket,
+         JAT_fticket,
+         JAT_sticket,
+         JAT_share,
          JAT_prio,
          JAT_ntix,
          NoName
@@ -699,54 +707,58 @@ void cleanup_default_scheduler(void)
    sge_free_job_category();
 }
 
-bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
-                                         lListElem *event, void *clientdata){
+sge_callback_result
+sge_process_schedd_conf_event_after(object_description *object_base, sge_object_type type, 
+                                    sge_event_action action, lListElem *event, void *clientdata){
    sconf_print_config();
 
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool 
-sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_schedd_conf_event_before(object_description *object_base, sge_object_type type, 
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
-   lListElem *new;
+   lListElem *new = NULL;
+   lListElem *event_client = ec_get_event_client();
 
    DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
    new = lFirst(lGetList(event, ET_new_version));
 
-   ec_set_busy(1);
+   ec_set_busy(event_client, 1);
 
    if (new == NULL) {
       ERROR((SGE_EVENT, "> > > > > no scheduler configuration available < < < < <\n"));
       DEXIT;
-      return false;
+      return SGE_EMA_FAILURE;
    }
    /* check for valid load formula */ 
    {
       lListElem *old = sconf_get_config(); 
       const char *new_load_formula = lGetString(new, SC_load_formula);
       lList *alpp = NULL;
+      lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
-      if (Master_CEntry_List != NULL &&
-          !sconf_is_valid_load_formula(new, &alpp, Master_CEntry_List)) {
-            ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
-            answer_list_output(&alpp);
-            if (old)
-               lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
-            else
-               lSetString(new, SC_load_formula, "none");
-
+      if (master_centry_list != NULL &&
+          !validate_load_formula(new_load_formula, &alpp, master_centry_list, SGE_ATTR_LOAD_FORMULA)) {
+            
+         ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
+         answer_list_output(&alpp);
+         if (old) {
+            lSetString(new, SC_load_formula, lGetString(old, SC_load_formula) );
+         }   
+         else {
+            lSetString(new, SC_load_formula, "none");
+         }   
       }
       else {
-
          int n = strlen(new_load_formula);
+
          if (n > 0) {
             char *copy = NULL;  
 
-         
             copy = malloc(n + 1);
             if (copy != NULL) {
                strcpy(copy, new_load_formula);
@@ -754,6 +766,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
                sge_strip_blanks(copy);
                lSetString(new, SC_load_formula, copy);
             }
+            
             FREE(copy);
          }
       }
@@ -764,10 +777,10 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    {
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
-      
+
       if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
-         if (ec_get_edtime() != schedule_interval) {
-           ec_set_edtime(schedule_interval);
+         if (ec_get_edtime(event_client) != schedule_interval) {
+           ec_set_edtime(event_client, schedule_interval);
          }
       }
    }
@@ -776,19 +789,19 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
       /* changings on event handler or schedule interval can take effect 
        * only after a new registration of schedd at qmaster 
        */
-      sge_mirror_shutdown();
+      sge_mirror_shutdown(&event_client);
       sge_schedd_mirror_register();
       DEXIT;
-      return true;
+      return SGE_EMA_OK;
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool 
-sge_process_job_event_before(sge_object_type type, sge_event_action action, 
-                             lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_job_event_before(object_description *object_base, sge_object_type type, 
+                             sge_event_action action, lListElem *event, void *clientdata)
 {
    u_long32 job_id = 0;
    lListElem *job = NULL;
@@ -798,16 +811,16 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
 
    if (action == SGE_EMA_DEL || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
    } else {
       DEXIT;
-      return true;
+      return SGE_EMA_OK;
    }
    
    switch (action) {
@@ -837,11 +850,12 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_job_event_after(sge_object_type type, sge_event_action action, 
-                                lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_job_event_after(object_description *object_base, sge_object_type type, 
+                            sge_event_action action, lListElem *event, void *clientdata)
 {
    u_long32 job_id = 0;
    lListElem *job  = NULL;
@@ -851,12 +865,12 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
       sge_do_priority_job(job); /* job got added or modified, recompute the priorities */
    }
@@ -864,7 +878,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    switch (action) {
       case SGE_EMA_LIST:
          rebuild_categories = true;
-         sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
+         sge_do_priority(*object_type_get_master_list(SGE_TYPE_JOB), NULL); /* recompute the priorities */
          break;
 
       case SGE_EMA_ADD:
@@ -872,7 +886,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
             u_long32 start, end, step;
 
             /* add job category */
-            sge_add_job_category(job, Master_Userset_List);
+            sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET), *object_type_get_master_list(SGE_TYPE_PROJECT));
 
             job_get_submit_task_ids(job, &start, &end, &step);
 
@@ -893,7 +907,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                ** for changed job
                */
 
-               sge_add_job_category(job, Master_Userset_List);
+               sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET), *object_type_get_master_list(SGE_TYPE_PROJECT));
                break;
 
             case sgeE_JOB_FINAL_USAGE:
@@ -914,7 +928,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                         ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, 
                                sge_u32c(ja_task_id), sge_u32c(job_id)));
                         DEXIT;
-                        return false;
+                        return SGE_EMA_FAILURE;
                      }
 
                      lSetUlong(ja_task, JAT_status, JFINISHED);
@@ -935,32 +949,31 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
 
-bool 
-sge_process_ja_task_event_before(sge_object_type type, 
-                                 sge_event_action action, 
-                                 lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_ja_task_event_before(object_description *object_base, sge_object_type type, 
+                                 sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_ja_task_event_before");
    
    DPRINTF(("callback processing ja_task event before default rule\n"));
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }  
 
-bool sge_process_global_config_event(sge_object_type type, 
-                                    sge_event_action action, 
-                                    lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_global_config_event(object_description *object_base, sge_object_type type, 
+                                sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_process_global_config_event");
    DPRINTF(("notification about new global configuration\n"));
    new_global_config = 1;
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }   
 
 /* If the last ja task of a job is deleted, 
@@ -968,9 +981,9 @@ bool sge_process_global_config_event(sge_object_type type,
  * Do we really need it?
  * Isn't a job delete event sent after the last array task exited?
  */
-bool sge_process_ja_task_event_after(sge_object_type type, 
-                                    sge_event_action action, 
-                                    lListElem *event, void *clientdata)
+sge_callback_result
+sge_process_ja_task_event_after(object_description *object_base, sge_object_type type, 
+                                sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_ja_task_event_after");
 
@@ -980,119 +993,246 @@ bool sge_process_ja_task_event_after(sge_object_type type,
       DPRINTF(("callback processing ja_task event after default rule SGE_EMA_DEL\n"));
 
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(Master_Job_List, job_id);
+      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
          DEXIT;
-         return false;
+         return SGE_EMA_FAILURE;
       }   
    }
    else
       DPRINTF(("callback processing ja_task event after default rule\n"));
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_userset_event_after(sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+/****** sge_process_events/sge_process_project_event_before() ******************
+*  NAME
+*     sge_process_project_event_before() -- ???
+*
+*  SYNOPSIS
+*     bool sge_process_project_event_before(sge_object_type type,
+*     sge_event_action action, lListElem *event, void *clientdata)
+*
+*  FUNCTION
+*     Determine whether categories need to be rebuilt. Rebuilding
+*     categories is necessary, if a project (a) gets used first
+*     time as ACL or (b) is no longer used as ACL.
+*
+*  NOTES
+*     MT-NOTE: sge_process_project_event_before() is not MT safe
+*******************************************************************************/
+sge_callback_result
+sge_process_project_event_before(object_description *object_base, sge_object_type type,
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
-   DENTER(GDI_LAYER, "sge_process_userset_event");
-   DPRINTF(("callback processing userset event after default rule\n"));
-   rebuild_categories = true;
+   const lListElem *new, *old;
+   const char *p;
+
+   DENTER(TOP_LAYER, "sge_process_project_event_before");
+
+   if (action != SGE_EMA_ADD &&
+       action != SGE_EMA_MOD &&
+       action != SGE_EMA_DEL) {
+      DEXIT;
+      return SGE_EMA_OK;
+   }
+
+   p = lGetString(event, ET_strkey);
+   new = lFirst(lGetList(event, ET_new_version));
+   old = userprj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), p);
+
+   switch (action) {
+   case SGE_EMA_ADD:
+      if (lGetBool(new, UP_consider_with_categories) == true) {
+         rebuild_categories = true;
+         DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_ADD(%s)\n", p));
+      }
+      break;
+   case SGE_EMA_MOD:
+      if (lGetBool(new, UP_consider_with_categories) != lGetBool(old, UP_consider_with_categories)) {
+         rebuild_categories = true;
+         DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_MOD(%s)\n", p));
+      }
+      break;
+   case SGE_EMA_DEL:
+      if (lGetBool(old, UP_consider_with_categories) == true) {
+         rebuild_categories = true;
+         DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_DEL(%s)\n", p));
+      }
+      break;
+   default:
+      break;
+   }
+
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
-bool sge_process_schedd_monitor_event(sge_object_type type, 
-                                     sge_event_action action, 
-                                     lListElem *event, void *clientdata)
+
+/****** sge_process_events/sge_process_userset_event_before() ******************
+*  NAME
+*     sge_process_userset_event_before() -- ???
+*
+*  SYNOPSIS
+*     bool sge_process_userset_event_before(sge_object_type type,
+*     sge_event_action action, lListElem *event, void *clientdata)
+*
+*  FUNCTION
+*     Determine whether categories need to be rebuilt. Rebuilding
+*     categories is necessary, if a userset (a) gets used first
+*     time as ACL or (b) is no longer used as ACL. Also categories
+*     must be rebuild if entries change with a userset is used as ACL.
+*
+*  NOTES
+*     MT-NOTE: sge_process_userset_event_before() is not MT safe
+*******************************************************************************/
+sge_callback_result sge_process_userset_event_before(object_description *object_base,
+      sge_object_type type, sge_event_action action, lListElem *event, void *clientdata)
+{
+   const lListElem *new, *old;
+   const char *u;
+
+   DENTER(TOP_LAYER, "sge_process_userset_event_before");
+
+   if (action != SGE_EMA_ADD &&
+       action != SGE_EMA_MOD &&
+       action != SGE_EMA_DEL) {
+      DEXIT;
+      return SGE_EMA_OK;
+   }
+
+   u = lGetString(event, ET_strkey);
+   new = lFirst(lGetList(event, ET_new_version));
+   old = userset_list_locate(*object_type_get_master_list(SGE_TYPE_USERSET), u);
+
+   switch (action) {
+   case SGE_EMA_ADD:
+      if (lGetBool(new, US_consider_with_categories) == true) {
+         rebuild_categories = true;
+         DPRINTF(("callback before userset event: rebuild categories due to SGE_EMA_ADD(%s)\n", u));
+      }
+      break;
+   case SGE_EMA_MOD:
+      /* need to redo categories if certain changes occur:
+         --> it gets used or was used as ACL with queue_conf(5)/host_conf(5)/sge_pe(5)
+         --> it is in use as ACL with queue_conf(5)/host_conf(5)/sge_pe(5)
+             and a change with users/groups occured */
+
+      if ((lGetBool(new, US_consider_with_categories) != lGetBool(old, US_consider_with_categories))
+          || ( lGetBool(old, US_consider_with_categories) == true &&
+            object_list_has_differences(lGetList(old, US_entries), NULL, lGetList(new, US_entries), false))) {
+         rebuild_categories = true;
+         DPRINTF(("callback before userset event: rebuild categories due to SGE_EMA_MOD(%s)\n", u));
+      }
+
+      break;
+   case SGE_EMA_DEL:
+      if (lGetBool(old, US_consider_with_categories) == true) {
+         rebuild_categories = true;
+         DPRINTF(("callback before userset event: rebuild categories due to SGE_EMA_DEL(%s)\n", u));
+      }
+      break;
+   default:
+      break;
+   }
+
+   DEXIT;
+   return SGE_EMA_OK;
+}
+
+
+sge_callback_result
+sge_process_schedd_monitor_event(object_description *object_base, sge_object_type type, 
+                                     sge_event_action action, lListElem *event, void *clientdata)
 {
    DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
-   monitor_next_run = 1;
+   schedd_set_monitor_next_run(true);
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }   
 
 int subscribe_default_scheduler(void)
 {
+   lListElem *event_client = ec_get_event_client();
    ensure_valid_what_and_where();
    
    /* subscribe event types for the mirroring interface */
-   sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
-   sge_mirror_subscribe(SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
-   sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_PROJECT,        sge_process_project_event_before, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_cqueue, what_cqueue);
+   sge_mirror_subscribe(event_client, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
+   sge_mirror_subscribe(event_client, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_LIRS,           NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/
-/*   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet); */
-   sge_mirror_subscribe(SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
+/*   sge_mirror_subscribe(event_client,SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, what_pet); */
+   sge_mirror_subscribe(event_client, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */
 
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before , 
+   sge_mirror_subscribe(event_client, SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before , 
                         sge_process_schedd_conf_event_after,      NULL, NULL, NULL);
                                                 
-   sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL, NULL, NULL);
    
-   sge_mirror_subscribe(SGE_TYPE_GLOBAL_CONFIG,  NULL, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_GLOBAL_CONFIG,  NULL, 
                         sge_process_global_config_event,    NULL, NULL, NULL);
    
-   sge_mirror_subscribe(SGE_TYPE_JOB,            sge_process_job_event_before, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_JOB,            sge_process_job_event_before, 
                         sge_process_job_event_after,        NULL, where_job, what_job);
                         
-   sge_mirror_subscribe(SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
+   sge_mirror_subscribe(event_client, SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
                         sge_process_ja_task_event_after,    NULL, where_jat, what_jat);
-                                                
-   sge_mirror_subscribe(SGE_TYPE_USERSET,        NULL, 
-                        sge_process_userset_event_after,    NULL, NULL, NULL);
+                                               
+   sge_mirror_subscribe(event_client, SGE_TYPE_USERSET, sge_process_userset_event_before, 
+                        NULL, NULL, NULL, NULL); 
 
    /* set flush parameters for job */
    {
       int temp = sconf_get_flush_submit_sec();
       if (temp <= 0) {
-         ec_set_flush(sgeE_JOB_ADD, false, -1);        
+         ec_set_flush(event_client, sgeE_JOB_ADD, false, -1);        
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
       }   
       else {
          temp--;
-         ec_set_flush(sgeE_JOB_ADD, true, temp);
+         ec_set_flush(event_client, sgeE_JOB_ADD, true, temp);
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
       }   
          
       temp = sconf_get_flush_finish_sec();
       if (temp <= 0){
-         ec_set_flush(sgeE_JOB_DEL, false,         -1);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
-         ec_set_flush(sgeE_JATASK_DEL, false,      -1);
+         ec_set_flush(event_client, sgeE_JOB_DEL, false,         -1);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE, false, -1);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, false,      -1);
       }
       else {
          temp--;
-         ec_set_flush(sgeE_JOB_DEL, true,         temp);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
-         ec_set_flush(sgeE_JATASK_DEL, true,      temp);
+         ec_set_flush(event_client, sgeE_JOB_DEL, true,         temp);
+         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE, true, temp);
+         ec_set_flush(event_client, sgeE_JATASK_DEL, true,      temp);
       }
    }
    /* for some reason we flush sharetree changes */
-   ec_set_flush(sgeE_NEW_SHARETREE, true,  0);
+   ec_set_flush(event_client, sgeE_NEW_SHARETREE, true,  0);
 
    /* configuration changes and trigger should have immediate effect */
-   ec_set_flush(sgeE_SCHED_CONF, true,     0);
-   ec_set_flush(sgeE_SCHEDDMONITOR, true,  0);
-   ec_set_flush(sgeE_GLOBAL_CONFIG,true,   0);
+   ec_set_flush(event_client, sgeE_SCHED_CONF, true,     0);
+   ec_set_flush(event_client, sgeE_SCHEDDMONITOR, true,  0);
+   ec_set_flush(event_client, sgeE_GLOBAL_CONFIG,true,   0);
 
    return true;
 }

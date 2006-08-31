@@ -90,11 +90,7 @@ lListElem *sconf_create_default(void);
 
 bool sconf_set_config(lList **config, lList **answer_list);
 
-bool sconf_is_valid_load_formula_( lList **answer_list,
-                                       lList *cmplx_list);
-
-bool sconf_is_valid_load_formula(lListElem *sc_ep,
-                                       lList **answer_list,
+bool sconf_is_valid_load_formula(lList **answer_list,
                                        lList *cmplx_list);
 
 bool
@@ -222,6 +218,9 @@ int sconf_get_fast_jobs(void);
    
 void sconf_inc_comprehensive_jobs(void); 
 int sconf_get_comprehensive_jobs(void);
+
+void sconf_set_decay_constant(double decay);
+double sconf_get_decay_constant(void);
 
 void sconf_reset_jobs(void);
 

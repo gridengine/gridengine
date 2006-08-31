@@ -168,11 +168,13 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
          if (!error_str[0]) /* err msg written ? */
             retval = 1; /* no error */
          else {
-            if (type==TYPE_TIM)
+            if (type==TYPE_INT)
+               sge_strlcpy(error_str, "integer value", error_len); 
+            else if (type==TYPE_TIM)
                sge_strlcpy(error_str, "time value", error_len); 
-            else if (type==TYPE_BOO )
+            else if (type==TYPE_BOO)
                sge_strlcpy(error_str, "boolean value", error_len); 
-            else if (type==TYPE_DOUBLE )
+            else if (type==TYPE_DOUBLE)
                sge_strlcpy(error_str, "double value", error_len); 
             else
                sge_strlcpy(error_str, "memory value", error_len); 

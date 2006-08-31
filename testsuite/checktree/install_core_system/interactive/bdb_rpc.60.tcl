@@ -65,7 +65,6 @@ proc install_bdb_rpc {} {
    global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_DEBUG_LEVEL CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
-   global CHECK_COVERAGE
 
    set CORE_INSTALLED "" 
 
@@ -128,17 +127,17 @@ proc install_bdb_rpc {} {
 
    if {[file isfile "$ts_config(product_root)/$ts_config(cell)/common/sgebdb"] == 1} {
       puts $CHECK_OUTPUT "--> shutting down BDB RPC Server <--"
-      start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop"
+      start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop" prg_exit_state 60 0 "" 1 1 1 1 1
    }
 
-   start_remote_prog "$bdb_host" "root" "rm" "-fR $spooldir" prg_exit_state 60 0 "" 1 0
+   start_remote_prog "$bdb_host" "root" "rm" "-fR $spooldir" prg_exit_state 60 0 "" 1 0 1 1 1
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
       set inst_user "root"
    } else {
       set inst_user $CHECK_USER
       puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
    }
-   set id [open_remote_spawn_process $bdb_host $inst_user "cd $$prod_type_var;./inst_sge" "-db" 0 "" 0]
+   set id [open_remote_spawn_process $bdb_host $inst_user "cd $$prod_type_var;./inst_sge" "-db" 0 "" 0 15 1 1 1]
 
    log_user 1
    puts $CHECK_OUTPUT "cd $$prod_type_var;./inst_sge -db"
@@ -363,7 +362,7 @@ proc install_bdb_rpc {} {
             # wait a little bit before closing the connection.
             # Otherwise the last command executed (infotext)
             # will leave a lockfile lying around.
-            if {$CHECK_COVERAGE != ""} {
+            if {[coverage_enabled]} {
                sleep 2
             }
             continue

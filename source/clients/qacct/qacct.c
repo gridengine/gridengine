@@ -35,12 +35,19 @@
 #include <grp.h>
 #include <time.h>
 #include <fnmatch.h>
+#include <errno.h>
 
-#include "sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+
 #include "sge.h"
 #include "sge_any_request.h"
 #include "sge_all_listsL.h"
-#include "sge_string.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
 #include "sge_sched.h"
@@ -54,21 +61,20 @@
 #include "sge_log.h"
 #include "qm_name.h"
 #include "basis_types.h"
-#include "sge_dstring.h"
 #include "sge_time.h"
-#include "msg_history.h"
-#include "msg_clients_common.h"
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_stdlib.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
 
-#include "uti/sge_spool.h"
+#include "msg_common.h"
+#include "msg_history.h"
+#include "msg_clients_common.h"
+
 #include "sge_profiling.h"
 
 typedef struct {
@@ -175,10 +181,12 @@ char **argv
    u_long32 line = 0;
    dstring ds;
    char buffer[128];
+   const char *acct_file = NULL; 
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
    sge_prof_setup();
+   sc_init_mt();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -245,13 +253,13 @@ char **argv
                u_long32 gid;
 
                if (sscanf(argv[++ii], sge_u32, &gid) == 1) {
-                  struct group *pg;
-
-                  pg = getgrgid((gid_t)gid);
-                  strcpy(group, (pg ? pg->gr_name : argv[ii]));
+                  if(sge_gid2group((gid_t)gid, group, 
+                                   MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
+                     sge_strlcpy(group, argv[ii], MAX_STRING_SIZE);
+                  }
                }
                else {
-                  strcpy(group, argv[ii]);
+                  sge_strlcpy(group, argv[ii], MAX_STRING_SIZE);
                }
             }
          }
@@ -512,13 +520,12 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
-     const char *acct_file = path_state_get_acct_file();
-
-     DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
-     strcpy(acctfile, acct_file);
+      acct_file = path_state_get_acct_file();
+      DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
+      strcpy(acctfile, acct_file);
      
-     sge_setup_sig_handlers(QACCT);
-     is_path_setup = 1;
+      sge_setup_sig_handlers(QACCT);
+      is_path_setup = 1;
    }
 
    {
@@ -998,10 +1005,10 @@ char **argv
    /*
    ** exit routine attempts to close file if not NULL
    */
-   fclose(fp);
+   FCLOSE(fp)
    fp = NULL;
 
-   if ( shut_me_down ) {
+   if (shut_me_down) {
       printf("%s\n", MSG_USER_ABORT);
       SGE_EXIT(1);
    }
@@ -1226,6 +1233,11 @@ char **argv
    SGE_EXIT(0);
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, acct_file, strerror(errno)));
+   SGE_EXIT(1);
+   DEXIT;
+   return 1;
 }
 
 static void print_full_ulong(int full_length, u_long32 value) {

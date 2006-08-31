@@ -23,9 +23,8 @@
 typedef struct {
    record_schedule_entry_func_t record_schedule_entry;   
    new_schedule_func_t new_schedule;   
-/*    bool do_monitoring;  ... temporarily kept in sge_schedd_conf.c */
 } sge_serf_t;
-static sge_serf_t current_serf = { NULL, NULL };
+static sge_serf_t current_serf = { NULL, NULL }; /* thread local */
 
 
 /****** sge_resource_utilization/serf_init() ***********************************

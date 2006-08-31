@@ -49,14 +49,13 @@
 #include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
 #include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER
-
-lList *Master_CEntry_List = NULL;
 
 /* EB: ADOC: add commets */
 
@@ -385,7 +384,6 @@ centry_create(lList **answer_list, const char *name)
 *     lList **answer_list               - AN_Type 
 *     const lList *master_cqueue_list   - CQ_Type 
 *     const lList *master_exechost_list - EH_Type 
-*     const lList *master_sconf_list    - SC_Type 
 *
 *  RESULT
 *     bool - true or false
@@ -519,7 +517,7 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
 lList **
 centry_list_get_master_list(void)
 {
-   return &Master_CEntry_List;
+   return object_type_get_master_list(SGE_TYPE_CENTRY);
 }
 
 /****** sgeobj/centry/centry_list_locate() ************************************
@@ -1280,12 +1278,10 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
 
    DENTER(TOP_LAYER, "ensure_attrib_available");
    if (ep != NULL) {
-      DTRACE;
       for_each (attr, lGetList(ep, nm)) {
          const char *name = lGetString(attr, CE_name);
-         lListElem *centry = centry_list_locate(Master_CEntry_List, name);
+         lListElem *centry = centry_list_locate(*object_type_get_master_list(SGE_TYPE_CENTRY), name);
 
-         DTRACE;
          if (centry == NULL) {
             ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, 
                    name != NULL ? name : "<noname>"));
@@ -1298,9 +1294,7 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
             /*
              * Replace shortcuts by the fullname silently 
              */
-            DTRACE;
-            if (fullname != NULL && name != NULL &&
-                strcmp(fullname, name) != 0) {
+            if (strcmp(fullname, name) != 0) {
                lSetString(attr, CE_name, fullname);
             }
          }
@@ -1310,3 +1304,110 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
    return ret;
 }
 
+/****** sge_centry/validate_load_formula() ********************
+*  NAME
+*     validate_load_formula() 
+*
+*  SYNOPSIS
+*     bool validate_load_formula(lListElem *schedd_conf, lList 
+*     **answer_list, lList *centry_list, const char *name) 
+*
+*  FUNCTION
+*     The function validates a load formula string.
+*
+*  INPUTS
+*     const char *load_formula - string that should be a valid load formula
+*     lList **answer_list      - error messages
+*     lList *centry_list       - list of defined complex values 
+*     const char*              - name (used for error messages)
+*
+*  RESULT
+*     bool - true if valid
+*            false if unvalid 
+*
+* MT-NOTE: is MT-safe, works only on the passed in data
+*
+*******************************************************************************/
+bool validate_load_formula(const char *load_formula, lList **answer_list, lList *centry_list, const char *name) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "validate_load_formual");
+
+   /* Check for keyword 'none' */
+   if (!strcasecmp(load_formula, "none")) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NONE_NOT_ALLOWED_S, name));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
+                      ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+
+   /* Check complex attributes and type */
+   if (ret == true) {
+      const char *term_delim = "+-";
+      const char *term, *next_term;
+      struct saved_vars_s *term_context = NULL;
+
+      next_term = sge_strtok_r(load_formula, term_delim, &term_context);
+      while ((term = next_term) && ret == true) {
+         const char *fact_delim = "*";
+         const char *fact, *next_fact, *end;
+         lListElem *cmplx_attr = NULL;
+         struct saved_vars_s *fact_context = NULL;
+         
+         next_term = sge_strtok_r(NULL, term_delim, &term_context);
+
+         fact = sge_strtok_r(term, fact_delim, &fact_context);
+         next_fact = sge_strtok_r(NULL, fact_delim, &fact_context);
+         end = sge_strtok_r(NULL, fact_delim, &fact_context);
+
+         /* first factor has to be a complex attr */
+         if (fact != NULL) {
+            if (strchr(fact, '$')) {
+               fact++;
+            }
+            cmplx_attr = centry_list_locate(centry_list, fact);
+
+            if (cmplx_attr != NULL) {
+               int type = lGetUlong(cmplx_attr, CE_valtype);
+
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_SS, name,
+                                         fact));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+            } 
+            else {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, 
+                              fact, name));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+         /* is weighting factor a number? */
+         if (next_fact != NULL) {
+            if (!sge_str_is_number(next_fact)) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_SS, name,
+                              next_fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+
+         /* multiple weighting factors? */
+         if (end != NULL) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT_S, name));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
+         sge_free_saved_vars(fact_context);
+      }
+      sge_free_saved_vars(term_context);
+   }
+
+   DRETURN(ret);
+}

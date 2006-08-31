@@ -35,7 +35,7 @@
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
 
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "scheduler_perf_init_level"
 set check_category            "PERFORMANCE"
 set check_name                "scheduler"
 set check_description(0)      "Functional test"
@@ -60,7 +60,7 @@ global scheduler_test_level
 global scheduler_queue_list
 global scheduler_complex_count
 
-proc init_level {} {
+proc scheduler_perf_init_level {} {
    global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
    global scheduler_test_level scheduler_complex_count
 
@@ -337,7 +337,7 @@ proc scheduler_measurement { repeat_count job_count } {
          scheduler_setup_test_conditions $job_count
          puts $CHECK_OUTPUT "sleeping ..."
          sleep 5
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+         trigger_scheduling
          set wait_for_schedd_nr $schedd_nr
          incr wait_for_schedd_nr 1 
       }

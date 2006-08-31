@@ -152,5 +152,12 @@ int main(int argc, char *argv[])
     * EB: TEST: add additional tests
     */
 
+   if (failed) {
+      printf("failed\n");
+   }
+   else {
+      printf("successful\n");
+   }
+   
    return failed ? 1 : 0;
 }

@@ -33,13 +33,13 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "sge_profiling.h"
-
 #include "sge_answer.h"
 
 #include "spool/msg_spoollib.h"
-
 #include "spool/sge_spooling.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_bootstrap.h"
 
 static lListElem *Default_Spool_Context;
 
@@ -496,7 +496,7 @@ spool_trigger_context(lList **answer_list, lListElem *context,
          }
       }
    }
-   
+
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
    return ret;
@@ -534,7 +534,7 @@ bool spool_transaction(lList **answer_list, lListElem *context,
          }
       }
    }
-   
+
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
    DEXIT;
    return ret;
@@ -982,7 +982,7 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *     int - true, on success, false, if an error occured
 *
 *  EXAMPLE
-*     spool_read_list(context, &Master_Job_List, SGE_TYPE_JOB);
+*     spool_read_list(context, object_type_get_master_list(SGE_TYPE_JOB), SGE_TYPE_JOB);
 *     will read the job list.
 *
 *  SEE ALSO
@@ -1168,8 +1168,21 @@ spool_write_object(lList **answer_list, const lListElem *context,
                    const sge_object_type object_type)
 {
    bool ret = false;
-
    DENTER(TOP_LAYER, "spool_write_object");
+
+   switch (object_type) {
+
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+            if (!bootstrap_get_job_spooling()) {
+               DRETURN(true);
+            }
+         break;
+      default : 
+         break;
+   }
+
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
    if (context == NULL) {
@@ -1270,8 +1283,22 @@ spool_delete_object(lList **answer_list, const lListElem *context,
                     const sge_object_type object_type, const char *key)
 {
    bool ret = false;
-
+   
    DENTER(TOP_LAYER, "spool_delete_object");
+
+   switch (object_type) {
+
+      case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
+            if (!bootstrap_get_job_spooling()) {
+               DRETURN(true);
+            }
+         break;
+      default : 
+         break;
+   }
+   
    PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
 
    if (context == NULL) {

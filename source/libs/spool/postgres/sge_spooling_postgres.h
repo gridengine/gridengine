@@ -56,8 +56,11 @@
 ****************************************************************************
 */
 
-const char *
-get_spooling_method(void);
+#ifdef SPOOLING_postgres
+const char *get_spooling_method(void);
+#else
+const char *get_postgres_spooling_method(void);
+#endif
 
 lListElem *
 spool_postgres_create_context(lList **answer_list, const char *args);

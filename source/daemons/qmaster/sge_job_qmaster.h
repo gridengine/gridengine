@@ -73,4 +73,6 @@ void get_rid_of_job_due_to_qdel(lListElem *j, lListElem *t, lList **answer_list,
 
 void job_mark_job_as_deleted(lListElem *j, lListElem *t);
 
+void sge_job_spool(void);
+
 #endif /* __SGE_JOB_QMASTER_H */

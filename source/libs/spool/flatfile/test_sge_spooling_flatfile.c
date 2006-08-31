@@ -44,15 +44,28 @@
 
 #include "sge_answer.h"
 
+#include "spool/flatfile//sge_flatfile.h"
 #include "spool/sge_spooling_utilities.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
+#include "spool/flatfile//sge_flatfile_obj.h"
+
+#include "sgeobj/sge_cqueue.h"
+#include "sge_mt_init.h"
+
+/* 
+ * RD 05/10/2006
+ * This test does not work! It's only necessary if flatfile code is used for qmaster spooling.
+ * Currently the classic spooling code is used so there is no need to use this test.
+ */
+   
 
 int main(int argc, char *argv[])
 {
-   lListElem *queue, *copy;
-   lList *queue_list;
+   lList* lp = NULL;
+   lList* cqueue_list = NULL;
+   lListElem* ep = NULL;
+   lListElem *cqueue = NULL;
    lList *answer_list = NULL;
-   const lDescr *descr;
    spooling_field *fields;
    const char *filepath;
 
@@ -63,21 +76,28 @@ int main(int argc, char *argv[])
    int width;
    char format[100];
 
+   sge_mt_init();
+
    lInit(nmv);
 
-   queue = queue_create_template();
-   lSetString(queue, QU_terminate_method, "/tmp/myterminate_method.sh");
-   lAddSubStr(queue, CE_name, "foo", QU_suspend_thresholds, CE_Type);
-   lAddSubStr(queue, CE_name, "bar", QU_suspend_thresholds, CE_Type);
-   copy  = lCreateElem(QU_Type);
+   cqueue = cqueue_create(NULL, "template");
+   cqueue_set_template_attributes(cqueue, &answer_list);
 
-   queue_list = lCreateList("queue_list", QU_Type);
-   lAppendElem(queue_list, queue);
-   lAppendElem(queue_list, copy);
+   lSetString(cqueue, CQ_name, "foobar");
 
-   descr = lGetElemDescr(queue);
-   
+   lp = lCreateList ("Shell Terminate Methods", ASTR_Type);
+   ep = lCreateElem(ASTR_Type);
+   lSetHost(ep, ASTR_href, "global");
+   lSetString(ep, ASTR_value, "/tmp/myterminate_method.sh");
+   lAppendElem(lp, ep);
+   lSetList(cqueue, CQ_terminate_method, lp);
+
+   cqueue_list = lCreateList("CQ List", CQ_Type);
+   lAppendElem(cqueue_list, cqueue);
+ 
    fields = spool_get_fields_to_spool(&answer_list, QU_Type, &spool_config_instr);
+   answer_list_output(&answer_list);
+   lFreeList(&answer_list);
    printf("\nthe following fields are spooled:");
    for(i = 0; fields[i].nm != NoName; i++) {
       printf(" %s", lNm2Str(fields[i].nm));
@@ -85,10 +105,14 @@ int main(int argc, char *argv[])
    printf("\n");
 
    spool_flatfile_align_object(&answer_list, fields);
+   answer_list_output(&answer_list);
+   lFreeList(&answer_list);
    width = fields[0].width;
    printf("alignment for attribute names is %d\n", width);
 
-   spool_flatfile_align_list(&answer_list, queue_list, fields);
+   spool_flatfile_align_list(&answer_list, cqueue_list, fields, 0);
+   answer_list_output(&answer_list);
+   lFreeList(&answer_list);
    printf("field widths for list output is as follows:\n");
    
    sprintf(format, "%%%ds: %%d\n", width);
@@ -97,10 +121,10 @@ int main(int argc, char *argv[])
       printf(format, lNm2Str(fields[i].nm), fields[i].width);
    }
 
-   filepath = spool_flatfile_write_object(&answer_list, queue,
-                                          NULL,
-                                          &spool_flatfile_instr_config,
-                                          SP_DEST_STDOUT, SP_FORM_ASCII, NULL);
+   filepath = spool_flatfile_write_object(&answer_list, (const lListElem *)cqueue, false,
+                                          CQ_fields,
+                                          &qconf_sfi,
+                                          SP_DEST_STDOUT, SP_FORM_ASCII, NULL, false);
    if(filepath != NULL) {
       printf("\ndata successfully written to stdout\n");
       FREE(filepath);
@@ -110,10 +134,10 @@ int main(int argc, char *argv[])
                                
    printf("\n");
 
-   filepath = spool_flatfile_write_object(&answer_list, queue,
-                               NULL,
-                               &spool_flatfile_instr_config,
-                               SP_DEST_TMP, SP_FORM_ASCII, NULL);
+   filepath = spool_flatfile_write_object(&answer_list, cqueue, false,
+                               CQ_fields,
+                               &qconf_sfi,
+                               SP_DEST_TMP, SP_FORM_ASCII, NULL, false);
    if(filepath != NULL) {
       printf("temporary file %s successfully written\n", filepath);
       sge_unlink(NULL, filepath);
@@ -122,19 +146,20 @@ int main(int argc, char *argv[])
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
                                
-   filepath = spool_flatfile_write_object(&answer_list, queue,
-                               NULL,
-                               &spool_flatfile_instr_config,
+   filepath = spool_flatfile_write_object(&answer_list, cqueue, false,
+                               CQ_fields,
+                               &qconf_sfi,
                                SP_DEST_SPOOL, SP_FORM_ASCII, 
-                               "test_sge_spooling_flatfile.dat");
+                               "test_sge_spooling_flatfile.dat", false);
    if(filepath != NULL) {
+      int fields_out[MAX_NUM_FIELDS];
       lListElem *reread_queue;
 
       printf("spool file %s successfully written\n", filepath);
 
       /* reread queue from file */
-      reread_queue = spool_flatfile_read_object(&answer_list, QU_Type, NULL, NULL,
-                                                &spool_flatfile_instr_config, 
+      reread_queue = spool_flatfile_read_object(&answer_list, QU_Type, NULL, CQ_fields, fields_out, true,
+                                                &qconf_sfi, 
                                                 SP_FORM_ASCII, NULL, 
                                                 "test_sge_spooling_flatfile.dat");
      
@@ -150,12 +175,12 @@ int main(int argc, char *argv[])
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
-   
-   filepath = spool_flatfile_write_list(&answer_list, queue_list,
-                                        NULL,
-                                        &spool_flatfile_instr_config_list,
+  
+   filepath = spool_flatfile_write_list(&answer_list, cqueue_list,
+                                        CQ_fields,
+                                        &qconf_ce_list_sfi,
                                         SP_DEST_STDOUT, SP_FORM_ASCII, 
-                                        NULL);
+                                        NULL, false);
    if(filepath != NULL) {
       printf("\ndata successfully written to stdout\n");
       FREE(filepath);
@@ -163,22 +188,24 @@ int main(int argc, char *argv[])
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
    
-   filepath = spool_flatfile_write_list(&answer_list, queue_list,
-                                        NULL,
-                                        &spool_flatfile_instr_config_list,
+   filepath = spool_flatfile_write_list(&answer_list, cqueue_list,
+                                        CQ_fields,
+                                        &qconf_ce_list_sfi,
                                         SP_DEST_SPOOL, SP_FORM_ASCII, 
-                                        "test_sge_spooling_flatfile.dat");
+                                        "test_sge_spooling_flatfile.dat", false);
    if(filepath != NULL) {
+      int fields_out[MAX_NUM_FIELDS];
       lList *reread_list;
 
       printf("spool file %s successfully written\n", filepath);
 
-      reread_list = spool_flatfile_read_list(&answer_list, QU_Type, NULL, NULL, &spool_flatfile_instr_config_list, SP_FORM_ASCII, NULL, "test_sge_spooling_flatfile.dat");
+      reread_list = spool_flatfile_read_list(&answer_list, QU_Type, CQ_fields, fields_out, true,
+                                             &qconf_ce_list_sfi, SP_FORM_ASCII, NULL, "test_sge_spooling_flatfile.dat");
       if (reread_list == NULL) {
          answer_list_print_err_warn(&answer_list, NULL, NULL);
       } else {
          lWriteListTo(reread_list, stdout);
-         reread_list = lFreeList(reread_list);
+         lFreeList(&reread_list);
       }
 /*       sge_unlink(NULL, filepath); */
       FREE(filepath);
@@ -192,12 +219,12 @@ int main(int argc, char *argv[])
    /* test behaviour with NULL-pointer passed */
    printf("\n\ntesting error handling, the next calls have to fail\n");
    spool_flatfile_align_object(&answer_list, NULL);
-   spool_flatfile_align_list(&answer_list, NULL, fields);
-   spool_flatfile_align_list(&answer_list, queue_list, NULL);
+   spool_flatfile_align_list(&answer_list, NULL, fields, 0);
+   spool_flatfile_align_list(&answer_list, cqueue_list, NULL, 0);
    answer_list_print_err_warn(&answer_list, NULL, NULL);
 
    /* cleanup */
-   queue_list = lFreeList(queue_list);
+   lFreeList(&cqueue_list);
 
    sge_dstring_free(&queue_str);
    sge_dstring_free(&copy_str);

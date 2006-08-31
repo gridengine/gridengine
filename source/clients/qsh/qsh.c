@@ -76,6 +76,7 @@
 #include "sge_var.h"
 #include "sge_gdi.h"
 #include "sge_profiling.h"
+#include "sge_stdio.h"
 #include "sge_mt_init.h"
 
 #include "msg_clients_common.h"
@@ -261,10 +262,10 @@ static void forward_signal(int sig)
 static int open_qrsh_socket(int *port) {
    int sock;
    struct sockaddr_in server;
-#if AIX51
-   size_t length;
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
+#else
+   socklen_t length;
 #endif
  
    DENTER(TOP_LAYER, "open_qrsh_socket");
@@ -360,11 +361,12 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-#if AIX51
-            msgsock = accept(sock,(struct sockaddr *) 0,(size_t *) NULL);
-#else
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
             msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
+#else
+            msgsock = accept(sock,(struct sockaddr *) 0,(socklen_t *) NULL);
 #endif
+
             if (msgsock == -1) {
                ERROR((SGE_EVENT, MSG_QSH_ERRORINACCEPTONSOCKET_S, strerror(errno)));
             }
@@ -679,11 +681,16 @@ static int start_client_program(const char *client_name,
 
    if (child_pid) {
       bool done;
+      struct sigaction forward_action;
 
+      forward_action.sa_handler = forward_signal;
+      sigemptyset(&forward_action.sa_mask);
+      forward_action.sa_flags=0;
+
+      sigaction(SIGINT, &forward_action, NULL);
+      sigaction(SIGQUIT, &forward_action, NULL);
+      sigaction(SIGTERM, &forward_action, NULL);
       sge_unblock_all_signals();
-      signal(SIGINT,  forward_signal);
-      signal(SIGQUIT, forward_signal);
-      signal(SIGTERM, forward_signal);
   
       done = false;
       while (!done) {
@@ -969,18 +976,18 @@ get_client_name(int is_rsh, int is_rlogin, int inherit_job)
          sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
          cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
                                           tmpdir, QRSH_CLIENT_CACHE);
-         /* try to read cache file */
+         /* try to read cache file - TODO: better call stat before? */
          cache = fopen(cache_name, "r");
          if (cache != NULL) {
             char cached_command[SGE_PATH_MAX];
 
             if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
-               fclose(cache);
+               FCLOSE(cache);
                DPRINTF(("found cached client name: %s\n", cached_command));
                DEXIT;
                return strdup(cached_command);
             }
-            fclose(cache);
+            FCLOSE(cache);
          }
       }
    }
@@ -1055,6 +1062,10 @@ get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    lFreeElem(&local);
 
    return client_name;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, cache_name, strerror(errno)));
+   DEXIT;
+   return NULL;
 }
 
 /****** Interactive/qsh/write_client_name_cache() ******************************
@@ -1097,9 +1108,13 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
    
       if((cache = fopen(cache_path, "w")) != NULL) {
          fprintf(cache, client_name);
-         fclose(cache);
+         FCLOSE(cache);
       }
    }
+   return;
+FCLOSE_ERROR:
+   /* TODO: error handling */
+   return;
 }
 
 /****** Interactive/qsh/set_job_info() ****************************************
@@ -1127,7 +1142,7 @@ void write_client_name_cache(const char *cache_path, const char *client_name)
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, 
                          int is_rsh, int is_rlogin)
 {
-   lList* stdout_stderr_path = NULL;
+   lList *stdout_stderr_path = NULL;
    u_long32 jb_now = lGetUlong(job, JB_type);
    const char *job_name  = lGetString(job, JB_job_name);
    
@@ -1163,6 +1178,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
    cull_parse_path_list(&stdout_stderr_path, "/dev/null");
    lSetList(job, JB_stdout_path_list, lCopyList("stdout_path_list", stdout_stderr_path));
    lSetList(job, JB_stderr_path_list, lCopyList("stderr_path_list", stdout_stderr_path));
+   lFreeList(&stdout_stderr_path);
 }
 
 /****** Interactive/qsh/set_command_to_env() ***************************************

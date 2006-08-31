@@ -570,8 +570,7 @@ lList *read_sched_configuration(const char *common_dir, const char *fname, int s
    if (ep) {
       confl = lCreateList("scheduler config", SC_Type);
       lAppendElem(confl, ep);
-   }
-   else {
+   } else {
       CRITICAL((SGE_EVENT, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;

@@ -111,6 +111,9 @@ typedef struct spool_flatfile_instr {
    bool show_footer;
    bool align_names;
    bool align_data;
+   bool record_start_end_newline;
+   bool show_empty_fields;
+   bool ignore_list_name;
    const char name_value_delimiter;
    const char field_delimiter;
    const char record_delimiter;
@@ -124,6 +127,21 @@ typedef struct flatfile_info {
    spooling_field *fields;
    const spool_flatfile_instr *instr;
 } flatfile_info;
+
+extern const spool_flatfile_instr qconf_sub_name_value_space_sfi;
+extern const spool_flatfile_instr qconf_sfi;
+extern const spool_flatfile_instr qconf_sub_comma_list_sfi;
+extern const spool_flatfile_instr qconf_name_value_list_sfi;
+extern const spool_flatfile_instr qconf_sub_name_value_comma_sfi;
+extern const spool_flatfile_instr qconf_sub_comma_sfi;
+extern const spool_flatfile_instr qconf_param_sfi;
+extern const spool_flatfile_instr qconf_sub_param_sfi;
+extern const spool_flatfile_instr qconf_comma_sfi;
+extern const spool_flatfile_instr qconf_ce_sfi;
+extern const spool_flatfile_instr qconf_ce_list_sfi;
+extern const spool_flatfile_instr qconf_sub_limit_rule_sfi;
+extern const spool_flatfile_instr qconf_limit_rule_set_sfi;
+extern const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi;
 
 const char *
 spool_flatfile_write_object(lList **answer_list, const lListElem *object,

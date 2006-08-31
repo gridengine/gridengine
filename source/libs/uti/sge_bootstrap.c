@@ -57,6 +57,8 @@ struct bootstrap_state_t {
     const char* binary_path;
     const char* qmaster_spool_dir;
     const char* security_mode;
+    int         gdi_count;
+    bool        is_job_spooling;
 };
 
 static pthread_once_t bootstrap_once = PTHREAD_ONCE_INIT;
@@ -228,6 +230,46 @@ void bootstrap_set_security_mode(const char *value)
                                            value);
 }
 
+void bootstrap_set_gdi_thread_count(const char *value)
+{
+   GET_SPECIFIC(struct bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+                "bootstrap_set_gdi_thread_count");
+   
+   bootstrap->gdi_count = atoi(value);
+   if (bootstrap->gdi_count <= 0) {
+      bootstrap->gdi_count = 2;
+   }
+   else if (bootstrap->gdi_count > 4) {
+      bootstrap->gdi_count = 4;
+   }
+}
+
+int bootstrap_get_gdi_thread_count(void)
+{
+   GET_SPECIFIC(struct bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+                "bootstrap_get_gdi_thread_count");
+   if (bootstrap->gdi_count == 0) {
+      bootstrap->gdi_count = 2;
+   }
+
+   return bootstrap->gdi_count;
+}
+
+void bootstrap_set_job_spooling(const char *value)
+{
+   GET_SPECIFIC(struct bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+                "bootstrap_set_job_spooling");
+
+   bootstrap->is_job_spooling = (strcasecmp(value, "false") != 0)?true:false;
+}
+
+bool bootstrap_get_job_spooling() 
+{
+   GET_SPECIFIC(struct bootstrap_state_t, bootstrap, bootstrap_state_init, bootstrap_state_key, 
+                "bootstrap_get_job_spooling");
+   return bootstrap->is_job_spooling;
+}
+
 /****** sge_bootstrap/sge_bootstrap() ******************************************
 *  NAME
 *     sge_bootstrap() -- read and process bootstrap file 
@@ -253,25 +295,33 @@ void bootstrap_set_security_mode(const char *value)
 *  NOTES
 *     MT-NOTE: sge_bootstrap() is MT safe
 *******************************************************************************/
-#define NUM_BOOTSTRAP 9
+#define NUM_BOOTSTRAP 11
+#define NUM_REQ_BOOTSTRAP 9
 bool sge_bootstrap(dstring *error_dstring) 
 {
    bool ret = true;
-
+   int i = 0;
    const char *bootstrap_file;
-   const char *name[NUM_BOOTSTRAP] = { "admin_user",
-                                       "default_domain",
-                                       "ignore_fqdn",
-                                       "spooling_method",
-                                       "spooling_lib", 
-                                       "spooling_params",
-                                       "binary_path", 
-                                       "qmaster_spool_dir",
-                                       "security_mode"
+   /*const char **/
+   bootstrap_entry_t name[NUM_BOOTSTRAP] = { {"admin_user", true},
+                                             {"default_domain", true},
+                                             {"ignore_fqdn", true},
+                                             {"spooling_method", true},
+                                             {"spooling_lib", true}, 
+                                             {"spooling_params", true},
+                                             {"binary_path", true}, 
+                                             {"qmaster_spool_dir", true},
+                                             {"security_mode", true},
+                                             {"job_spooling", false},
+                                             {"gdi_threads", false},
                                      };
    char value[NUM_BOOTSTRAP][1025];
 
    DENTER(TOP_LAYER, "sge_bootstrap");
+
+   for (i = 0; i < NUM_BOOTSTRAP; i++) {
+      value[i][0] = '\0';
+   }
 
    /* get filepath of bootstrap file */
    bootstrap_file = path_state_get_bootstrap_file();
@@ -283,16 +333,8 @@ bool sge_bootstrap(dstring *error_dstring)
       }
       ret = false;
    /* read bootstrapping information */   
-   } else if (sge_get_confval_array(bootstrap_file, NUM_BOOTSTRAP, name, 
+   } else if (sge_get_confval_array(bootstrap_file, NUM_BOOTSTRAP, NUM_REQ_BOOTSTRAP, name, 
                                     value, error_dstring)) {
-      /*
-      if (error_dstring == NULL) {
-         CRITICAL((SGE_EVENT, MSG_UTI_CANNOTBOOTSTRAP_S, bootstrap_file));
-      } else {
-         sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTBOOTSTRAP_S, 
-                             bootstrap_file);
-      }
-      */
       ret = false;
    } else {
       /* store bootstrapping information */
@@ -304,6 +346,8 @@ bool sge_bootstrap(dstring *error_dstring)
       bootstrap_set_binary_path(value[6]);
       bootstrap_set_qmaster_spool_dir(value[7]);
       bootstrap_set_security_mode(value[8]);
+      bootstrap_set_job_spooling(value[9]);
+      bootstrap_set_gdi_thread_count(value[10]);
       {
          u_long32 uval;
          parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], 
@@ -411,4 +455,5 @@ static void bootstrap_state_destroy(void* theState)
 static void bootstrap_state_init(struct bootstrap_state_t* theState)
 {
    memset(theState, 0, sizeof(struct bootstrap_state_t));
+   theState->is_job_spooling = true;
 }

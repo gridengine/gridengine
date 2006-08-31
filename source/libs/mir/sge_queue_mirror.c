@@ -44,11 +44,11 @@
 #include "sge_mirror.h"
 #include "sge_queue_mirror.h"
 
-bool 
-cqueue_update_master_list(sge_object_type type, sge_event_action action,
-                          lListElem *event, void *clientdata)
+sge_callback_result
+cqueue_update_master_list(object_description *object_base, sge_object_type type, 
+                          sge_event_action action, lListElem *event, void *clientdata)
 {
-   bool ret = true;
+   sge_callback_result ret = SGE_EMA_OK;
    const char *name = NULL;
    lList *qinstance_list = NULL;
    lListElem *cqueue = NULL;
@@ -57,7 +57,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
 
    DENTER(TOP_LAYER, "cqueue_update_master_list");
    name = lGetString(event, ET_strkey);
-   list = object_type_get_master_list(SGE_TYPE_CQUEUE); 
+   list = sge_master_list(object_base, SGE_TYPE_CQUEUE); 
    list_descr = lGetListDescr(lGetList(event, ET_new_version));
    cqueue = cqueue_list_locate(*list, name);
 
@@ -71,7 +71,7 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
    }
    
    ret &= (sge_mirror_update_master_list(list, list_descr, cqueue,
-                         name, action, event) == SGE_EM_OK) ? true : false;
+                         name, action, event) == SGE_EM_OK) ? SGE_EMA_OK : SGE_EMA_FAILURE;
    cqueue = cqueue_list_locate(*list, name);
 
    if ((action == SGE_EMA_MOD || action == SGE_EMA_ADD)
@@ -87,11 +87,11 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
    return ret;
 }
 
-bool 
-qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
-                             lListElem *event, void *clientdata)
+sge_callback_result
+qinstance_update_cqueue_list(object_description *object_base, sge_object_type type, 
+                             sge_event_action action, lListElem *event, void *clientdata)
 {
-   bool ret = true;
+   sge_callback_result ret = SGE_EMA_OK;
    const char *name = NULL;
    const char *hostname = NULL;
    lListElem *cqueue = NULL;
@@ -100,7 +100,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
    name = lGetString(event, ET_strkey);
    hostname = lGetString(event, ET_strkey2);
 
-   cqueue = cqueue_list_locate( *(object_type_get_master_list(SGE_TYPE_CQUEUE)), name);
+   cqueue = cqueue_list_locate( *(sge_master_list(object_base, SGE_TYPE_CQUEUE)), name);
                         
    if (cqueue != NULL) {
       dstring key_buffer = DSTRING_INIT;
@@ -128,11 +128,11 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
             } else {
                ERROR((SGE_EVENT, MSG_QINSTANCE_CANTFINDFORUPDATEIN_SS, key,
                       SGE_FUNC));
-               ret = false;
+               ret = SGE_EMA_FAILURE;
             }
             sge_dstring_free(&key_buffer);
             DEXIT;
-            return true;
+            return ret;
          }
       }
       ret &= (sge_mirror_update_master_list(&list, list_descr, qinstance, key,
@@ -143,7 +143,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       }
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_CANTFINDFORUPDATEIN_SS, name, SGE_FUNC));
-      ret = false;
+      ret = SGE_EMA_FAILURE;
    }
 
    DEXIT;

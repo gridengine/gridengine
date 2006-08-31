@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2006/03/01 22:05:53 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_submit 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_submit 3 "$Date: 2006/03/01 22:05:53 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -74,6 +74,18 @@ size_t error_diag_len\fB
 .\"
 .\"
 .nf
+\fBint drmaa_get_num_job_ids(\fB
+.RS
+\fBdrmaa_job_ids_t* values,\fB
+\fBint *size\fB
+.RE
+.fi
+);\fB
+.PP
+.\"
+.\"
+.\"
+.nf
 \fBvoid drmaa_release_job_ids(\fB
 .RS
 \fBdrmaa_job_ids_t* values\fB
@@ -103,6 +115,9 @@ vector containing job identifiers for each array job task is returned into \fIjo
 The job identifiers in the job id string
 vector can be extracted using
 .M drmaa_get_next_job_id 3 .
+The number of identifiers in the job id string vector can be determined using
+.M drmaa_get_num_job_ids 3 .
+Note that this function is only available in the 1.0 implementation.
 The caller is responsible for releasing the job id string
 vector returned into \fIjobids\fP using
 .M drmaa_release_job_ids 3 .

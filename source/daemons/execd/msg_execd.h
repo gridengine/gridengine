@@ -295,5 +295,10 @@
 #define MSG_EXECD_INVALIDJOBREQUEST_SS    _MESSAGE(29188, _("invalid job start order from commproc "SFQ" on host"SFQ))
 #define MSG_EXECD_INVALIDTASKREQUEST_SS    _MESSAGE(29189, _("invalid pe task start order from commproc "SFQ" on host"SFQ))
 
+/*
+ *
+ */
+/* #define MSG_EXECD_CMDNEXISTS          _message(29186, _("The given command does not exist")) __TS Removed automatically from testsuite!! TS__*/
+
 #endif /* __MSG_EXECD_H */
 

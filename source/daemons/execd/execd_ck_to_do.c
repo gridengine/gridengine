@@ -62,7 +62,8 @@
 #include "spool/classic/read_write_job.h"
 #include "execution_states.h"
 #include "msg_execd.h"
-#include "sge_string.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "sge_feature.h"
 #include "sge_uidgid.h"
 #include "sge_security.h"
@@ -71,6 +72,7 @@
 #include "sge_prog.h"
 #include "get_path.h"
 #include "sge_report.h"
+#include "sgeobj/sge_object.h"
 #include "sig_handlers.h"
 
 #ifdef COMPILE_DC
@@ -119,7 +121,7 @@ static void notify_ptf()
    if (waiting4osjid) {
       waiting4osjid = 0;
 
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          lListElem* jatep;
          
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -197,7 +199,7 @@ void force_job_rlimit()
 
    DENTER(TOP_LAYER, "force_job_rlimit");
 
-   for_each (jep, Master_Job_List) {
+   for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
          u_long32 jataskid;
          int nslots=0;
@@ -384,7 +386,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
     * jobs/tasks on this execution host.
     * do this at maximum once per second
     */
-   if (lGetNumberOfElem(Master_Job_List) > 0 &&
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 &&
        next_usage <= now) {
       next_usage = now + USAGE_INTERVAL;
 #ifdef COMPILE_DC
@@ -409,7 +411,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
 
             sge_switch2start_user();
 
-            for_each(job, Master_Job_List) {
+            for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
                lListElem *master_queue;
 
                for_each (jatask, lGetList(job, JB_ja_tasks)) {
@@ -486,7 +488,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    if (next_signal <= now) {
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
             /* don't start wallclock before job acutally started */
@@ -551,7 +553,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
 
    /* check for end of simulated jobs */
    if(mconf_get_simulate_hosts()) {
-      for_each(jep, Master_Job_List) {
+      for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
          for_each (jatep, lGetList(jep, JB_ja_tasks)) {
             if((lGetUlong(jatep, JAT_status) & JSIMULATED) && lGetUlong(jatep, JAT_end_time) <= now) {
                lListElem *jr = NULL;
@@ -619,7 +621,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
             reaped jobs will be reported to qmaster 
             since sge_get_flush_flag() is set in this case
          */
-         if (!Master_Job_List || !lGetNumberOfElem(Master_Job_List)) { /* no need to delay shutdown */
+         if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0) { /* no need to delay shutdown */
             return_value = 1;
          } else {
             DPRINTF(("DELAYED SHUTDOWN\n"));
@@ -726,13 +728,13 @@ static int sge_start_jobs()
 
    DENTER(TOP_LAYER, "sge_start_jobs");
 
-   if (!Master_Job_List || !lGetNumberOfElem(Master_Job_List)) {
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0) {
       DPRINTF(("No jobs to start\n"));
       DEXIT;
       return 0;
    }
 
-   for_each(jep, Master_Job_List) {
+   for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
          state_changed = exec_job_or_task(jep, jatep, NULL);
 
@@ -913,7 +915,7 @@ lListElem *pe_task
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) 
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
    gid_t addgrpid;
    dstring addgrpid_path = DSTRING_INIT;
 #else   
@@ -928,9 +930,13 @@ lListElem *pe_task
       pe_task_id = lGetString(pe_task, PET_id);
    }
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
    /**
     ** read additional group id and use it as osjobid 
+    **/
+
+   /**
+    ** we use the process group ID as osjobid on HP-UX and AIX
     **/
    
    /* open addgrpid file */
@@ -959,7 +965,7 @@ lListElem *pe_task
 
    /* read addgrpid */
    success = (fscanf(fp, gid_t_fmt, &addgrpid)==1);
-   fclose(fp);
+   FCLOSE(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
       DEXIT;
@@ -1017,7 +1023,7 @@ lListElem *pe_task
    sge_dstring_free(&osjobid_path);      
 
    success = (fscanf(fp, OSJOBID_FMT, &osjobid)==1);
-   fclose(fp);
+   FCLOSE(fp);
    if (!success) {
       /* can happen that shepherd has opend the file but not written */
       DEXIT;
@@ -1051,6 +1057,9 @@ lListElem *pe_task
 
    DEXIT;
    return 0;
+FCLOSE_ERROR:
+   DEXIT;
+   return 1;
 }
 #endif
 

@@ -48,7 +48,7 @@ global env
 set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "qmod_auto_reschedule_init_level"
 
 # define test's name and run level descriptions
 set check_name            "qmod_auto_reschedule"
@@ -130,47 +130,23 @@ global auto_reschedule_host1 auto_reschedule_host2 queue1 queue2 global_resch
 global stored_configuration
 global stored_auto_reschedule_host1_config
 
-#
-#                                                             max. column:     |
-#
-#****** check/init_level() ******
-#  NAME
-#     init_level -- ??? 
-#
-#  SYNOPSIS
-#     init_level { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-#
-proc init_level {} {
-   global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL
+
+proc qmod_auto_reschedule_init_level {} {
+   global ts_config CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
    global global_resch auto_reschedule_host1 auto_reschedule_host2
   
-   if { [ llength $ts_config(execd_hosts) ] < 2 } {
+   if { [ llength $ts_config(execd_nodes) ] < 2 } {
       return -1
    }
 
-   set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 0  ]
-   set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 1  ]
+   # This test only works if auto_reschedule_host2 is not the testsuite host
+   if { [lindex $ts_config(execd_nodes) 0] != $CHECK_HOST } {
+      set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 0  ]
+      set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 1  ]
+   } else {
+      set auto_reschedule_host2  [ lindex $ts_config(execd_nodes) 1  ]
+      set auto_reschedule_host1  [ lindex $ts_config(execd_nodes) 0 ]
+   }
 
    set global_resch 1
 
@@ -215,8 +191,10 @@ proc auto_reschedule_setup {} {
    get_config stored_configuration
    get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
-         get_config tmp_config
+      get_config tmp_config
    }
+
+   puts $CHECK_OUTPUT "waiting for change on host $auto_reschedule_host2 ..."
    set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
    set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
    set sp_id [ lindex $tail_id 1 ] 
@@ -258,18 +236,17 @@ proc auto_reschedule_setup {} {
    puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
-       close_spawn_process $tail_id
        add_proc_error "auto_reschedule_setup" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
-     -i $sp_id default {
-         close_spawn_process $tail_id
-         add_proc_error "auto_reschedule_setup" -1 "setup failed"
+     -i $sp_id timeout {
+         add_proc_error "auto_reschedule_setup" -1 "setup failed (timeout waiting for config to change)"
       }
       -i $sp_id "using*${global_reschedule_value}*reschedule_unknown" {
          puts $CHECK_OUTPUT "configuration changed"
-         close_spawn_process $tail_id
       }
    }
+
+   close_spawn_process $tail_id
 
    wait_for_load_from_all_queues 200 
    puts $CHECK_OUTPUT "submitting job to queue $queue1 ..."
@@ -459,7 +436,6 @@ proc auto_reschedule_cleanup {} {
 
    set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
    set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
-
    set sp_id [ lindex $tail_id 1 ] 
    
    set_config stored_configuration
@@ -479,18 +455,17 @@ proc auto_reschedule_cleanup {} {
    puts $CHECK_OUTPUT "waiting for configuration change ..."
    expect {
      -i $sp_id full_buffer {
-       close_spawn_process $tail_id
        add_proc_error "auto_reschedule_cleanup" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
       }
      -i $sp_id default {
-         close_spawn_process $tail_id
          add_proc_error "auto_reschedule_cleanup" -1 "setup failed"
       }
       -i $sp_id "using*00:00:00*reschedule_unknown" {
          puts $CHECK_OUTPUT "configuration changed"
-         close_spawn_process $tail_id
       }
    }
+
+   close_spawn_process $tail_id
 
    wait_for_load_from_all_queues 200 
 

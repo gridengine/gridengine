@@ -1,3 +1,4 @@
+#!/usr/local/bin/tclsh
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -30,14 +31,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-proc unassign_queues_with_pe_object { pe_obj } {
-   # nothing to be done for SGE 5.3
-}
-
-proc unassign_queues_with_ckpt_object { ckpt_obj } {
-   # nothing to be done for SGE 5.3
-}
-
 
 #****** sge_procedures/set_complex() *******************************************
 #  NAME
@@ -69,7 +62,7 @@ proc unassign_queues_with_ckpt_object { ckpt_obj } {
 #*******************************************************************************
 proc set_complex { change_array complex_list { create 0 } } {
   global ts_config
-  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global env CHECK_ARCH CHECK_OUTPUT
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]
@@ -98,8 +91,7 @@ proc set_complex { change_array complex_list { create 0 } } {
         }
      } else {
         # if the config entry didn't exist in old config: append a new line
-        lappend vi_commands "A\n$elem  $newVal"
-        lappend vi_commands [format "%c" 27]
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
      }
   } 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
@@ -168,75 +160,6 @@ proc get_complex { change_array complex_list } {
 }
 
 
-proc assign_queues_with_ckpt_object { qname hostlist ckpt_obj } {
-   global ts_config
-   global CHECK_OUTPUT
-
-   if { $hostlist == "" } {
-      set hostlist $ts_config(execd_nodes)
-   }
-
-   # set queue_list in checkpoint object
-   set q_list ""
-   foreach host $hostlist {
-      set queue [get_queue_instance $qname $host]
-      if { [string length $q_list] > 0} {
-         set q_list "$q_list,$queue"
-      } else {
-         set q_list "$queue"
-      }
-   }
-
-   # workaround for very long queue lists: use all parameter
-   if {[string length $q_list] > 256} {
-      set q_list "all"
-   }
-
-   get_checkpointobj $ckpt_obj curr_ckpt
-   if { $q_list == "all" || $curr_ckpt(queue_list) == "all" || $curr_ckpt(queue_list) == "NONE" } {
-      set my_change(queue_list) $q_list
-   } else {
-      set my_change(queue_list) "$curr_ckpt(queue_list) $q_list"
-   }
-   set_checkpointobj $ckpt_obj my_change
-}
-
-proc assign_queues_with_pe_object { qname hostlist pe_obj } {
-   global ts_config
-   global CHECK_OUTPUT
-
-   if { $hostlist == "" } {
-      set hostlist $ts_config(execd_nodes)
-   }
-
-   # set queue_list in checkpoint object
-   set q_list ""
-   foreach host $hostlist {
-      set queue [get_queue_instance $qname $host]
-      if { [string length $q_list] > 0} {
-         set q_list "$q_list,$queue"
-      } else {
-         set q_list "$queue"
-      }
-   }
-
-   # workaround for very long queue lists: use all parameter
-   if {[string length $q_list] > 256} {
-      set q_list "all"
-   }
-
-   get_pe $pe_obj curr_pe
-   if { $q_list == "all" || $curr_pe(queue_list) == "all" || $curr_pe(queue_list) == "NONE" } {
-      set my_change(queue_list) "$q_list"
-   } else {
-      set my_change(queue_list) "$curr_pe(queue_list) $q_list"
-   }
-   set_pe $pe_obj my_change
-}
-
-proc validate_checkpointobj { change_array } {
-# nothing to be done for SGE 5.3
-}
 
 #                                                             max. column:     |
 #****** sge_procedures/startup_shadowd() ******
@@ -274,10 +197,14 @@ proc validate_checkpointobj { change_array } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc startup_shadowd { hostname } {
+proc startup_shadowd { hostname {env_list ""} } {
   global ts_config
    global CHECK_OUTPUT
    global CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
+
+   if {$env_list != ""} {
+      upvar $env_list envlist
+   }
 
 
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {  
@@ -293,7 +220,7 @@ proc startup_shadowd { hostname } {
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/rcsge" "-shadowd"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/rcsge" "-shadowd" prg_exit_state 60 0 envlist]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
@@ -361,10 +288,18 @@ proc startup_execd { hostname } {
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
    if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
+      add_proc_error "startup_execd" -1 "execd on host $hostname is already running"
       return -1
    }
 
    return 0
 }
 
+# ADOC see sge_procedures/get_sge_error_generic()
+proc get_sge_error_generic_vdep {messages_var} {
+   upvar $messages_var messages
+
+   lappend messages(index) "-100"
+   set messages(-100) [translate_macro MSG_SGETEXT_NOQMASTER_PORT_ENV_SI "*" "*"]
+   set messages(-100,description) "probably sge_commd and/or sge_qmaster are down"
+}

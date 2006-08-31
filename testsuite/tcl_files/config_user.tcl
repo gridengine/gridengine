@@ -613,7 +613,7 @@ proc user_config_userlist_add_user { array_name { have_user "" } } {
    }
      
    if { [ lsearch $config(userlist) $new_user ] >= 0 } {
-      puts $CHECK_OUTPUT "user \"$new_user\" is allready in list"
+      puts $CHECK_OUTPUT "user \"$new_user\" is already in list"
       return -1
    }
 
@@ -796,7 +796,7 @@ proc user_config_userlist_set_portlist { array_name user value } {
       } 
       if { [info exists config($port)] } {
          if { [ string compare $config($port) $user ] != 0 } {
-            puts $CHECK_OUTPUT "user \"$config($port)\" has allready reserved port $port"
+            puts $CHECK_OUTPUT "user \"$config($port)\" has already reserved port $port"
             set had_error 1
          }
       } 
@@ -1235,3 +1235,30 @@ proc setup_user_config { file { force 0 }} {
    }
 }
 
+#****** config_user/user_conf_get_cluster_users() ******************************
+#  NAME
+#     user_conf_get_cluster_users() -- get a list of cluster users
+#
+#  SYNOPSIS
+#     user_conf_get_cluster_users { } 
+#
+#  FUNCTION
+#     Returns a list of all users that will be used in the given test cluster.
+#     The lists consists of
+#     - the CHECK_USER
+#     - root
+#     - first and second "foreign" user
+#
+#  RESULT
+#     user list
+#*******************************************************************************
+proc user_conf_get_cluster_users {} {
+   global ts_user_config CHECK_USER
+
+   set user_list $CHECK_USER
+   lappend user_list "root"
+   lappend user_list $ts_user_config(first_foreign_user)
+   lappend user_list $ts_user_config(second_foreign_user)
+
+   return $user_list
+}

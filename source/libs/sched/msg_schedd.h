@@ -74,18 +74,18 @@
 #define MSG_SCHEDD_INFO_HASNOPRJ_S                    _MESSAGE(47045, _("(no project) does not have the correct project to run in "SFN" "SFQ""))
 #define MSG_SCHEDD_INFO_EXCLPRJ_SSS                    _MESSAGE(47046, _("(project "SFN") is not allowed to run in "SFN" "SFQ" based on the excluded project list") )   
 #define MSG_SCHEDD_INFO_QUEUENOTREQUESTABLE_S         _MESSAGE(47047, _("cannot run in queue instance "SFQ" because queues are non requestable"))
-#define MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S           _MESSAGE(47048, _("cannot run in queue instance "SFQ" because it is not contained in its hard queue list (-q)"))
+#define MSG_SCHEDD_INFO_NOTINHARDQUEUELST_S           _MESSAGE(47048, _("cannot run in queue "SFQ" because it is not contained in its hard queue list (-q)"))
 #define MSG_SCHEDD_INFO_NOTPARALLELQUEUE_S            _MESSAGE(47049, _("cannot run in queue instance "SFQ" because it is not of parallel type") ) 
-#define MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS          _MESSAGE(47050, _("cannot run in queue instance "SFQ" because PE "SFQ" is not in pe list") ) 
+#define MSG_SCHEDD_INFO_NOTINQUEUELSTOFPE_SS          _MESSAGE(47050, _("cannot run in queue "SFQ" because PE "SFQ" is not in pe list") ) 
 #define MSG_SCHEDD_INFO_NOTACKPTQUEUE_SS              _MESSAGE(47051, _("cannot run in queue instance "SFQ" because it is not of type checkpointing") ) 
 #define MSG_SCHEDD_INFO_NOTINQUEUELSTOFCKPT_SS        _MESSAGE(47052, _("cannot run in queue instance "SFQ" because ckpt object "SFQ" is not in ckpt list of queue"))
-#define MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S         _MESSAGE(47053, _("cannot run in queue instance "SFQ" because it is not of type interactive"))
+#define MSG_SCHEDD_INFO_QUEUENOTINTERACTIVE_S         _MESSAGE(47053, _("cannot run in queue "SFQ" because it is not of type interactive"))
 #define MSG_SCHEDD_INFO_NOTASERIALQUEUE_S             _MESSAGE(47054, _("cannot run in queue instance "SFQ" because it is not of type batch"))
 #define MSG_SCHEDD_INFO_NOTPARALLELJOB_S              _MESSAGE(47055, _("cannot run in queue instance "SFQ" because the job is not parallel"))
 #define MSG_SCHEDD_INFO_NOTREQFORCEDRES_SS            _MESSAGE(47056, _("does not request 'forced' resource "SFQ" of queue instance "SFN""))
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM_IS        _MESSAGE(47057, _("(%d slots) would set queue instance "SFQ" in load alarm state") ) 
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S              _MESSAGE(47058, _("cannot run in queue instance "SFQ" because it has \"0\" slots"))
-#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l "SFN") cannot run in queue instance "SFQ" because "SFN"") ) 
+#define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l "SFN") cannot run in queue "SFQ" because "SFN""))
 #define MSG_SCHEDD_INFO_NORESOURCESPE_                _MESSAGE(47060, _("cannot run because resources requested are not available for parallel job"))
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l "SFN") cannot run globally because "SFN) ) 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47062, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
@@ -170,6 +170,8 @@
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "sge_U32CFormat" sec. is too long") ) 
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
+#define MSG_SCHEDD_INFO_CANNOTRUNLIRS_SSS             _MESSAGE(47140, _("Job cannot run in queue instance \""SFN"@"SFN"\" because exceeds limit in rule "SFN)) 
+#define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS          _MESSAGE(47141, _("Job dropped because of invalid dynamical limit "SFN" in rule "SFN)) 
 
 
 /* 
@@ -223,15 +225,20 @@
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORHOSTFAILED     _MESSAGE(47223, _("ensure_valid_where(): lWhere() for host failed"))
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORDEPTFAILED     _MESSAGE(47224, _("ensure_valid_where(): lWhere() for dept failed"))
 #define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORACLFAILED      _MESSAGE(47225, _("ensure_valid_where(): lWhere() for acl failed"))
-#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47227, _("ensure_valid_where(): lWhat() for job failed"))
+#define MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORJOBFAILED      _MESSAGE(47228, _("ensure_valid_where(): lWhat() for job failed"))
 
 /* 
 ** schedd/scheduler.c
 */ 
-#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47228, _("queues dropped because they are temporarily not available: "))
+#define MSG_SCHEDD_LOGLIST_QUEUESTEMPORARLYNOTAVAILABLEDROPPED _MESSAGE(47227, _("queues dropped because they are temporarily not available: "))
 #define MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON         _MESSAGE(47229, _("no pending jobs to perform scheduling on"))
 #define MSG_SCHEDD_SHOULDHAVEFINISHED_UUU                      _MESSAGE(47289, _("job "sge_U32CFormat"."sge_U32CFormat" should have finished since "sge_U32CFormat"s"))
 
+/* 
+** schedd/sge.c
+*/ 
+/* #define MSG_FILE_OPENSTDOUTASFILEFAILED            _message(47229, _("Could not open stdout as file")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SGE_UNABLETODUMPJOBLIST                _message(47230, _("Unable to dump job list")) __TS Removed automatically from testsuite!! TS__*/
 
 /* 
 ** schedd/sge_share_mon.c

@@ -70,7 +70,7 @@ set check_cleanup_function "share_tree_cleanup"
 # define test's procedure order
 set check_functions ""
 lappend check_functions "share_tree_test"
-
+lappend check_functions "issue_751"
 
 global share_tree_job_counter 
 global share_tree_percentage_variation
@@ -113,8 +113,10 @@ proc wait_for_job_tickes { job_id } {
    set last_job_tickets 0
    while { $last_job_tickets == 0 && [timestamp] < $my_timeout } {
       get_extended_job_info $job_id job_info_var
-      set last_job_tickets $job_info_var(tckts)
-      puts $CHECK_OUTPUT "waiting for job $job_id to get his tickets ..."
+      if {[info exists job_info_var(tckts)]} {
+         set last_job_tickets $job_info_var(tckts)
+      }
+      puts $CHECK_OUTPUT "waiting for job $job_id to get its tickets ..."
       sleep 1
    }
    if { [timestamp] >= $my_timeout } {
@@ -306,7 +308,7 @@ proc share_tree_setup  {} {
     
    get_config sharetree_stored_configuration
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
-   if { [string compare "none" $sharetree_stored_configuration(execd_params)] != 0 } {
+   if { [string compare -nocase "none" $sharetree_stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$sharetree_stored_configuration(execd_params)"
    }
    set myconfig(execd_params) "$my_execd_params"
@@ -332,17 +334,15 @@ proc share_tree_setup  {} {
    set prj_setup(name) "project3"
    add_prj prj_setup
 
-   set vi_commands "i" 
    set s_tree [set_share_tree]
+
+   set vi_commands ""
    foreach elem $s_tree {
-      lappend vi_commands "${elem}\n"
-   } 
-   lappend vi_commands [format "%c" 27]
-   lappend  vi_commands "dddddddddddd"
-   
-   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ] 
+      lappend vi_commands "GA${elem}[format "%c" 27]"
+   }
+   lappend vi_commands "1Gdddddddddd"
+
+   del_sharetree
  
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
@@ -400,7 +400,7 @@ proc share_tree_test {} {
       return 
    }
    
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   trigger_scheduling
 
    disable_queue "$test_queue"
 
@@ -418,8 +418,7 @@ proc share_tree_test {} {
 
    wait_for_jobpending $last_job "leeper" 60
 
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-   puts $CHECK_OUTPUT $result
+   trigger_scheduling
    
    wait_for_job_tickes $last_job
    
@@ -512,9 +511,7 @@ proc share_tree_test {} {
          incr running_jobs -2 ;# 2 header lines
       }
       if { $running_jobs == 0 } {
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
-         puts -nonewline $CHECK_OUTPUT "."
-         flush $CHECK_OUTPUT
+         trigger_scheduling
       }
       sleep 2
    }
@@ -623,12 +620,7 @@ proc share_tree_cleanup  {} {
 
    del_queue test $test_host 0 1
 
-   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
-   } result ]
-
-  puts "qconf -dstree result: $result"
-  puts "qconf -dstree exit value: $catch_return "
+   del_sharetree
 
   del_prj "project1"
   del_prj "project2"
@@ -640,4 +632,36 @@ proc share_tree_cleanup  {} {
 }
 
 
+proc issue_751 {} {
+  global ts_config CHECK_USER CHECK_OUTPUT  
+  global prj1_id_list prj2_id_list prj3_id_list
 
+  set prj1_id_list ""
+  set prj2_id_list ""
+  set prj3_id_list ""
+
+  set host $ts_config(master_host) 
+
+   # the bug has only be fixed in maintrunk for 6.5
+   # do only raise a warning for ealier versions
+   set error_level -1
+   set additional_message ""
+   if {$ts_config(gridengine_version) <= 60} {
+      set error_level -3
+      set additional_message "\nhas been fixed only for 6.5 and higher"
+   }
+
+  set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode /" exit_state 30]
+  puts $CHECK_OUTPUT $output
+  if { $exit_state != 0 } {
+      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode / broken$additional_message"
+  }
+
+  set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode Root" exit_state 30]
+  puts $CHECK_OUTPUT $output
+  if { $exit_state != 0 } {
+      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode Root broken$additional_message"
+  }
+
+  set_error 0 "ok"
+}

@@ -30,17 +30,24 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+proc delete_all_jobs {{clear_queues 1}} {
+   global ts_config CHECK_OUTPUT CHECK_USER
 
-proc delete_all_jobs {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
-
-   set ret 1
-   
    puts $CHECK_OUTPUT "deleting all jobs"
-   if {[catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-u" "*" } catch_result] != 0} {
+   set output [start_sge_bin "qdel" "-u '*' '*'"]
+   puts $CHECK_OUTPUT $output
+
+   if {$prg_exit_state == 0} {
+      set ret 1
+   } else {
       set ret 0
    }
 
-   puts $CHECK_OUTPUT $catch_result
-   return $catch_result
+   if {$clear_queues} {
+      puts $CHECK_OUTPUT "do a qmod -c \"*\" ..."
+      set output [start_sge_bin "qmod" "-c \"*\""]
+      puts $CHECK_OUTPUT $output
+   }
+
+   return $ret
 }

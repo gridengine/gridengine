@@ -58,6 +58,19 @@ information in case of job execution errors. Since both the queue and the job er
 result from a failed job execution the diagnosis possibilities are applicable to both types
 of error states:</P>
 <UL>
+	<LI><P>query for job error reason (not before 6.0)</P>
+	<P>Since Grid Engine 6.0 for jobs in error state a one-line error reason is available through</P>
+   <PRE>qstat -j <jobid> | grep error</PRE>
+   <P>With a 6.0 this is the recommended first source of diagnosis information for the end
+   user.<P>
+</UL>
+<UL>
+	<LI><P>query for queue error reason (not before 6.0)</P>
+	<P>Since Grid Engine 6.0 for queues in error state a one-line error reason is available through</P>
+   <PRE>qstat -explain E</PRE>
+   <P>With a 6.0 this is the recommended first source of diagnosis information for administrators in case of queue errors.<P>
+</UL>
+<UL>
 	<LI><P>user abort mail</P>
 	<P>If jobs are submitted with the submit option &quot;-m a&quot; a abort mail is
    sent to the adress specified with the &quot;-M user[@host]&quot; option. The abort

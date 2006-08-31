@@ -68,8 +68,11 @@
  * spooling framework functions
  */
 
-const char *
-get_spooling_method(void);
+#ifdef SPOOLING_flatfile
+const char *get_spooling_method(void);
+#else
+const char *get_flatfile_spooling_method(void);
+#endif
 
 lListElem *
 spool_flatfile_create_context(lList **answer_list, const char *args);

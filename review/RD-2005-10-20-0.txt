@@ -10,6 +10,7 @@ RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                               correctly
                             - default PATH variable set for job insufficient
                               for non-login shell jobs
+                            - fixed system_tests/shepherd/job_start
                  Issue:     1772, 1695
                  Bugtraq:   6318018, 6288626
                  Changed:   shepherd, execd

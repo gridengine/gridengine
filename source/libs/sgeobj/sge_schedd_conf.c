@@ -138,6 +138,7 @@ typedef struct {
    int        search_alg[SCHEDD_PE_ALG_MAX]; /* stores the weighting for the different algorithms*/
    int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
    int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
+   double     decay_constant;            /* used in the share tree */
 }  sc_state_t; 
 
 /****** sge_schedd_conf/sc_state_init() ****************************************
@@ -173,6 +174,7 @@ static void sc_state_init(sc_state_t* state)
    state->search_alg[SCHEDD_PE_BINARY] = 0;
    state->scheduled_fast_jobs = 0;
    state->scheduled_comprehensive_jobs = 0;
+   state->decay_constant = 0.0;
 }
 
 static void sc_state_destroy(void* state) 
@@ -568,9 +570,9 @@ bool sconf_set_config(lList **config, lList **answer_list)
    DRETURN(ret);
 }
 
-/****** sge_schedd_conf/sconf_is_valid_load_formula_() *******************
+/****** sge_schedd_conf/sconf_is_valid_load_formula() *******************
 *  NAME
-*     sconf_is_valid_load_formula_() -- ??? 
+*     sconf_is_valid_load_formula() -- ??? 
 *
 *  SYNOPSIS
 *     bool sconf_is_valid_load_formula_(lList **answer_list, lList 
@@ -586,138 +588,26 @@ bool sconf_set_config(lList **config, lList **answer_list)
 *  MT-NOTE:  is MT safe, uses LOCK_SCHED_CONF(read)
 *
 *******************************************************************************/
-bool sconf_is_valid_load_formula_(lList **answer_list,
+bool sconf_is_valid_load_formula(lList **answer_list,
                                   lList *centry_list)
 {
    bool is_valid = false;
+   lListElem *schedd_conf = NULL;
+   const char *load_formula = NULL;
 
    DENTER(TOP_LAYER, "sconf_is_valid_load_formula");
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
-   
-   is_valid = sconf_is_valid_load_formula(lFirst(Master_Sched_Config_List),
-                                      answer_list, centry_list);
+
+   schedd_conf = lFirst(Master_Sched_Config_List);
+   /* Modify input */
+   load_formula = lGetString(schedd_conf, SC_load_formula);
+   sge_strip_blanks((char *)load_formula);
+
+   is_valid = validate_load_formula(load_formula, answer_list, centry_list, SGE_ATTR_LOAD_FORMULA);
 
    sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
    DRETURN(is_valid);
 }
-/****** sge_schedd_conf/sconf_is_valid_load_formula() ********************
-*  NAME
-*     sconf_is_valid_load_formula() -- ??? 
-*
-*  SYNOPSIS
-*     bool sconf_is_valid_load_formula(lListElem *schedd_conf, lList 
-*     **answer_list, lList *centry_list) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lListElem *schedd_conf - ??? 
-*     lList **answer_list    - ??? 
-*     lList *centry_list     - ??? 
-*
-*  RESULT
-*     bool - 
-*
-* MT-NOTE: is MT-safe, works only on the passed in data
-*
-*******************************************************************************/
-bool sconf_is_valid_load_formula(lListElem *schedd_conf,
-                                       lList **answer_list,
-                                       lList *centry_list)
-{
-   const char *load_formula = NULL;
-   bool ret = true;
-   char *new_load_formula = NULL;
-   
-   DENTER(TOP_LAYER, "sconf_is_valid_load_formula");
-
-   /* Modify input */
-   load_formula = lGetString(schedd_conf, SC_load_formula);
-   new_load_formula = sge_strdup(new_load_formula, load_formula);
-   sge_strip_blanks(new_load_formula);
-   lSetString(schedd_conf, SC_load_formula, new_load_formula);
-   sge_free(new_load_formula);
-   
-   load_formula = lGetString(schedd_conf, SC_load_formula);
-
-   /* Check for keyword 'none' */
-   if (ret == true) {
-      if (!strcasecmp(load_formula, "none")) {
-         answer_list_add(answer_list, MSG_NONE_NOT_ALLOWED, STATUS_ESYNTAX, 
-                         ANSWER_QUALITY_ERROR);
-         ret = false;
-      }
-   }
-
-   /* Check complex attributes and type */
-   if (ret == true) {
-      const char *term_delim = "+-";
-      const char *term, *next_term;
-      struct saved_vars_s *term_context = NULL;
-
-      next_term = sge_strtok_r(load_formula, term_delim, &term_context);
-      while ((term = next_term) && ret == true) {
-         const char *fact_delim = "*";
-         const char *fact, *next_fact, *end;
-         lListElem *cmplx_attr = NULL;
-         struct saved_vars_s *fact_context = NULL;
-         
-         next_term = sge_strtok_r(NULL, term_delim, &term_context);
-
-         fact = sge_strtok_r(term, fact_delim, &fact_context);
-         next_fact = sge_strtok_r(NULL, fact_delim, &fact_context);
-         end = sge_strtok_r(NULL, fact_delim, &fact_context);
-
-         /* first factor has to be a complex attr */
-         if (fact != NULL) {
-            cmplx_attr = centry_list_locate(centry_list, fact);
-
-            if (cmplx_attr != NULL) {
-               int type = lGetUlong(cmplx_attr, CE_valtype);
-
-               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, 
-                                         fact));
-                  answer_list_add(answer_list, SGE_EVENT, 
-                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
-            } 
-            else {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, 
-                              fact));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false;
-            }
-         }
-         /* is weighting factor a number? */
-         if (next_fact != NULL) {
-            if (!sge_str_is_number(next_fact)) {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_S, 
-                              next_fact));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               ret = false;
-            }
-         }
-
-         /* multiple weighting factors? */
-         if (end != NULL) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT));
-            answer_list_add(answer_list, SGE_EVENT, 
-                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            ret = false;
-         }
-         sge_free_saved_vars(fact_context);
-      }
-      sge_free_saved_vars(term_context);
-   }
-   
-   DRETURN(ret);
-}
-
 
 /****** sge_schedd_conf/sconf_create_default() ***************************
 *  NAME
@@ -2540,7 +2430,8 @@ static bool is_config_set(void)
 *  MT-NOTE:   is MT save, uses LOCK_SCHED_CONF(read)
 *
 *******************************************************************************/
-bool sconf_is(void) {
+bool sconf_is(void) 
+{
    bool is = false;
   
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
@@ -3142,7 +3033,7 @@ bool sconf_validate_config_(lList **answer_list)
    /* --- SC_load_formula */
    {
       lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-      if (master_centry_list != NULL && !sconf_is_valid_load_formula_(answer_list, master_centry_list )) {
+      if (master_centry_list != NULL && !sconf_is_valid_load_formula(answer_list, master_centry_list)) {
          ret = false; 
       }
    }
@@ -3761,6 +3652,17 @@ void sconf_set_last_dispatch_type(int last)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_last_dispatch_type");
    sc_state->last_dispatch_type = last;
+}
+
+void sconf_set_decay_constant(double decay) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_decay_constant");
+   sc_state->decay_constant = decay;
+}
+double sconf_get_decay_constant(void) 
+{
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_decay_constant");
+   return sc_state->decay_constant;
 }
 
 u_long32 sconf_get_duration_offset(void)

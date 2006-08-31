@@ -74,10 +74,9 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-bool 
-schedd_conf_update_master_list(sge_object_type type, 
-                               sge_event_action action,
-                               lListElem *event, void *clientdata)
+sge_callback_result
+schedd_conf_update_master_list(object_description *object_base, sge_object_type type, 
+                               sge_event_action action, lListElem *event, void *clientdata)
 {
    lList *list = NULL;
    lList *answer_list = NULL;
@@ -108,5 +107,5 @@ schedd_conf_update_master_list(sge_object_type type,
    }
 
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }

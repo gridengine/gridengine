@@ -41,7 +41,6 @@
 
 #include "sge_gdi.h"
 #include "sge_answer.h"
-#include "sge_stdio.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -52,6 +51,7 @@
 #include "sge_prog.h"
 #include "sge_conf.h"
 #include "lck/sge_mtutil.h"
+#include "uti/sge_stdio.h"
 #include "sge_string.h"
 
 #include "msg_common.h"
@@ -81,7 +81,8 @@ static int init_qtask_config(lList **alpp, print_func_t ostream);
 *     print_func_t ostream - ??? 
 *
 *  RESULT
-*     static int - 
+*     static int - 0 - success
+*                 -1 - failed
 *
 *  EXAMPLE
 *     ??? 
@@ -251,8 +252,8 @@ print_func_t ostream
 
    return 0;
 
-Error:
 FCLOSE_ERROR:
+Error:
    lFreeList(&clp_cluster);
    lFreeList(&clp_user);
    return -1;
@@ -513,8 +514,8 @@ print_func_t ostream
    lList *alp = NULL;
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if (sge_gdi_setup("qtcsh", NULL)==AE_OK) {
-      if (init_qtask_config(&alp, ostream)) {
+   if (sge_gdi_setup("qtcsh", NULL) == AE_OK) {
+      if ( init_qtask_config(&alp, ostream) != 0 ) {
          mode_remote = 0;          
       } else {
          /* Remote execution is default.
@@ -528,7 +529,9 @@ print_func_t ostream
             submission via SGE/SGE in case qtcsh
             is the login shell at the execution server.
           */
-         mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
+         if ( mode_remote != 0 ) {
+            mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
+         }
 /*          (*ostream) ("mode_remote = %d\n", mode_remote); */
       }
       lFreeList(&alp);

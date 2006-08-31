@@ -79,5 +79,8 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
 u_long32
 sge_get_qinstance_number(void);
 
+void cqueue_diff_projects(const lListElem *new, const lListElem *old, lList **new_prj, lList **old_prj);
+void cqueue_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);
+
 #endif /* _SGE_CQUEUE_QMASTER_H_ */
 

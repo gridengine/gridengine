@@ -38,7 +38,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <errno.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -50,11 +50,14 @@
 #include <sys/types.h>
 
 #include "basis_types.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
 #include "config_file.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_stdio.h"
+
+#include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_qrsh.h"
 
@@ -225,8 +228,8 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-            fclose(envFile);
             FREE(line);
+            FCLOSE(envFile);
             return NULL;
          }
          strcpy(command, line + 13);
@@ -237,8 +240,8 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          } else {
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-               fclose(envFile); 
                FREE(line);
+               FCLOSE(envFile); 
                return NULL;
             }
             strcpy(*wrapper, line + 13);
@@ -246,15 +249,15 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       } else {
          /* set variable */
          if (!sge_putenv(line)) {
-            fclose(envFile); 
             FREE(line);
+            FCLOSE(envFile); 
             return NULL;
          }
       }
    }
 
-   fclose(envFile); 
    FREE(line);
+   FCLOSE(envFile); 
 
    /* 
     * Use starter_method if it is supplied
@@ -273,6 +276,9 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    }
    
    return command;
+FCLOSE_ERROR:
+   qrsh_error(MSG_FILE_ERRORCLOSEINGXY_SS, envFileName, strerror(errno));
+   return NULL;
 }
 
 /****** Interactive/qrsh/readConfig() *****************************************
@@ -392,7 +398,7 @@ static int write_pid_file(pid_t pid)
    snprintf(pid_str, 20, pid_t_fmt, pid);
 
    write(pid_file, pid_str, strlen(pid_str));
-   close(pid_file);
+   SGE_CLOSE(pid_file);
    return 1;
 }
 
@@ -788,8 +794,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
  
    snprintf(exitCode_str, 20, "%d", exitCode);
    write(file, exitCode_str, strlen(exitCode_str));
-
-   close(file);
+   SGE_CLOSE(file);
    
    return EXIT_SUCCESS;
 }

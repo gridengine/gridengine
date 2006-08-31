@@ -92,19 +92,16 @@
 
  for functions regarding rusage see sge_rusage.c
  ************************************************************************/
-void sge_job_exit(
-lListElem *jr,
-lListElem *jep,
-lListElem *jatep,
-monitoring_t *monitor
-) {
-   lListElem *queueep;
-   const char *err_str;
-   const char *qname; 
+void sge_job_exit( lListElem *jr, lListElem *jep, lListElem *jatep, monitoring_t *monitor) 
+{
+   lListElem *queueep = NULL;
+   const char *err_str = NULL;
+   const char *qname = NULL;  
    const char *hostname = MSG_OBJ_UNKNOWNHOST;
    u_long32 jobid, jataskid;
-   lListElem *hep;
+   lListElem *hep = NULL;
    u_long32 timestamp;
+   object_description *object_base = object_type_get_object_description();
 
    u_long32 failed, general_failure;
 
@@ -135,7 +132,7 @@ monitoring_t *monitor
    DPRINTF(("reaping job "sge_u32"."sge_u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname))) {
+   if (!(queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname))) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
 
@@ -271,40 +268,25 @@ monitoring_t *monitor
    }
 
    if (queueep != NULL) {
+      bool found_host = false;
       bool spool_queueep = false;
       lList *answer_list = NULL;
       /*
-      ** to be sure this queue is halted even if the host 
-      ** is not found in the next statement
-      */
-      if (general_failure && general_failure != GFSTATE_JOB) {  
-         dstring error = DSTRING_INIT; 
-
-         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
-                             lGetString(queueep, QU_qname), sge_u32c(jobid),
-                             hostname);
-         
-         /* general error -> this queue cant run any job */
-         qinstance_state_set_error(queueep, true);
-         reporting_create_queue_record(NULL, queueep, timestamp);
-         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
-         spool_queueep = true;
-         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
-         sge_dstring_free(&error);
-      }
-      /*
       ** in this case we have to halt all queues on this host
       */
-      if (general_failure == GFSTATE_HOST) {
+      if (general_failure && general_failure == GFSTATE_HOST) {
          spool_queueep = true;
-         hep = host_list_locate(Master_Exechost_List, 
+         hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, 
                                 lGetHost(queueep, QU_qhostname));
          if (hep != NULL) {
             lListElem *cqueue = NULL;
             const char *host = lGetHost(hep, EH_name);
             dstring error = DSTRING_INIT;
-         
-            for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+
+            found_host = true;
+
+            for_each(cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
+
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
                lListElem *qinstance = NULL;
                lListElem *next_qinstance = NULL;
@@ -335,13 +317,32 @@ monitoring_t *monitor
             sge_dstring_free(&error);
          }
       }
+      /*
+      ** to be sure this queue is halted even if the host 
+      ** is not found in the next statement
+      */
+      if (general_failure && general_failure != GFSTATE_JOB && found_host == false) {  
+         dstring error = DSTRING_INIT; 
+
+         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
+                             lGetString(queueep, QU_qname), sge_u32c(jobid),
+                             hostname);
+         
+         /* general error -> this queue cant run any job */
+         qinstance_state_set_error(queueep, true);
+         reporting_create_queue_record(NULL, queueep, timestamp);
+         qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
+         spool_queueep = true;
+         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         sge_dstring_free(&error);
+      }
 
       sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
                       0, 0, lGetString(queueep, QU_qname), 
                       lGetHost(queueep, QU_qhostname), NULL,
                       queueep, NULL, NULL, true, spool_queueep);
 
-      cqueue_list_del_all_orphaned(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), &answer_list);
+      cqueue_list_del_all_orphaned(*object_base[SGE_TYPE_CQUEUE].list, &answer_list);
 
       answer_list_output(&answer_list);
    }

@@ -55,7 +55,6 @@
 #include "sge_range.h"
 #include "sge_qinstance.h"
 #include "sge_str.h"
-#include "sge_string.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -64,6 +63,7 @@
 #include "qmon_submit.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
+#include "uti/sge_string.h"
 
 #if 0
 #include "Outline.h"
@@ -448,7 +448,6 @@ Cardinal size
          if (str1) {
             if (!str2)
                sge_strlcpy(buf, str1, BUFSIZ);
-
             else
                snprintf(buf, BUFSIZ, "%s@%s", str1, str2);
             str_table[i] = XtNewString(buf);

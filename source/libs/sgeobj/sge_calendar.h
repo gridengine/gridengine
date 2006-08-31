@@ -34,9 +34,6 @@
 
 #include "sge_calendarL.h"
 
-extern lList *Master_Calendar_List;
-
-/* */
 
 bool 
 calendar_parse_year(lListElem *this_elem, lList **answer_list);

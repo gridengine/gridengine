@@ -32,8 +32,7 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-#$-S /bin/sh
-
+#$ -S /bin/sh
 
 if [ $# -ne 1 ]; then
    echo "need path for output file"
@@ -41,8 +40,8 @@ if [ $# -ne 1 ]; then
 fi
 
 while [ -f $1/job_env.out ]; do
-   sleep 1
    rm $1/job_env.out
+   sleep 1
 done
 #echo "JOB_NAME $JOB_NAME" > $1/job_env.out
 env > $1/job_env.out

@@ -66,15 +66,15 @@ while [ $end = false ]; do
 
    echo "begin"
 
-   echo "$HOST:test_arch:TEST_ARCH"
+   echo "$HOST:test_string:TEST_ARCH"
 
    echo "$HOST:test_hostname:$HOST.$TEST_HOSTNAME"
 
-   echo "$HOST:test_load:55.55"
+   echo "$HOST:test_double:55.55"
 
    echo "$HOST:test_integer:123456"
   
-   echo "$HOST:test_memory:123321"
+   echo "$HOST:test_memory:123456789"
 
    echo "end"
 done

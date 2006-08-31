@@ -40,11 +40,15 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_signal.h"
-#include "sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_unistd.h"
 #include "setosjobid.h"
+#include "sge_fileio.h"
+
+#include "msg_common.h"
 
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
@@ -320,7 +324,7 @@ int truncate_stderr_out
 #if defined(INTERIX)
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       char *pass = NULL;
       uid_t uid;
 
@@ -399,7 +403,7 @@ int truncate_stderr_out
 
       for (i = 0; i < fdmax; i++) {
          if( !is_shepherd_trace_fd( i )) {
-         	close(i);
+         	SGE_CLOSE(i);
          }
       }
    }
@@ -795,7 +799,7 @@ int truncate_stderr_out
    if (!is_qlogin && !atoi(get_conf_val("handle_as_binary"))) {
       if (strcasecmp(shell_start_mode, "raw_exec")) {
          SGE_STRUCT_STAT sbuf;
-         char file[SGE_PATH_MAX + 1];
+         char file[SGE_PATH_MAX+1];
          char *pc;
    
          sge_strlcpy(file, script_file, SGE_PATH_MAX);
@@ -848,67 +852,40 @@ int truncate_stderr_out
 *******************************************************************************/
 int sge_set_environment()
 {
+   const char *const filename = "environment";
    FILE *fp;
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   char help_str[100] = "";
+#if (IRIX)
+   ash_t jobid;
+#elif defined(NECSX4) || defined(NECSX5)
+   id_t jobid;
+#elif defined(CRAY)
+   int jobid;
+#endif
+#endif
 
-   setup_environment ();
+   setup_environment();
    
-   if (!(fp = fopen("environment", "r"))) {
+   if (!(fp = fopen(filename, "r"))) {
       sprintf(err_str, "can't open environment file: %s",
               strerror(errno));
       shepherd_error(err_str);
       return 1;
    }
 
-#if defined(IRIX)
-   {
-      FILE *fp;
-      ash_t ash;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%lld", &ash);
-         fclose(fp);
-         if (ash) {
-            char s[100];
-            sprintf(s, "%lld", ash);
-            sge_set_env_value("OSJOBID", s);
-         }
-      }
-   }
-#elif defined(CRAY)
-   {
-      FILE *fp;
-      int jobid;
-      int i;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%d", &jobid);
-         fclose(fp);
-         if (jobid) {
-            char s[100];
-            sprintf(s, "%d", jobid);
-            sge_set_env_value("OSJOBID", s);
-         }
-      }
-   }
-#elif defined(NECSX4) || defined(NECSX5)
-   {
-      FILE *fp;
-      id_t jobid;
-
-      fp = fopen("osjobid", "r");
-      if (fp) {
-         fscanf(fp, "%d", &jobid);
-         fclose(fp);
-         if (jobid) {
-            char s[100];
-            sprintf(s, "%ld", jobid);
-            sge_set_env_value("OSJOBID", s);
-         }                            
-      }
+#if defined(IRIX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5)
+   if (shepherd_read_osjobid_file(&jobid, false)) {
+#  if defined(IRIX)
+      snprintf(help_str, 100, "%lld", jobid);
+#  elif defined(CRAY)
+      snprintf(help_str, 100, "%d", jobid);
+#  elif defined(NECSX4) || defined(NECSX5)
+      snprintf(help_str, 100, "%ld", jobid);
+#  endif
+      sge_set_env_value("OSJOBID", help_str);
    }
 #endif
 
@@ -921,7 +898,7 @@ int sge_set_environment()
 
       name = strtok(buf, "=");
       if (!name) {
-         fclose(fp);
+         FCLOSE(fp);
          sprintf(err_str, 
                  "error reading environment file: line=%d, contents:%s",
                  line, buf);
@@ -935,8 +912,11 @@ int sge_set_environment()
       sge_set_env_value(name, value);
    }
 
-   fclose(fp);
+   FCLOSE(fp);
    return 0;
+FCLOSE_ERROR:
+   sprintf(err_str, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   return 1;
 }
 
 /****** Shepherd/setup_environment() *******************************************
@@ -1453,7 +1433,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
 
 #if defined(INTERIX)
    if(strcmp(childname, "job") == 0 
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
+      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       int  ret;
       int  win32_exit_status = 0;
       char **env;
@@ -1644,11 +1624,11 @@ parse_script_params(char **script_file)
 
 /****** Shepherd/inherit_env() *************************************************
 *  NAME
-*     inherit_env () -- Test whether the evironment should be inherited from the
+*     inherit_env() -- Test whether the evironment should be inherited from the
 *                       parent process or not
 *
 *  SYNOPSIS
-*     static bool inherit_env ()
+*     static bool inherit_env()
 *
 *  FUNCTION
 *     Tests the INHERIT_ENV execd param to see if the job should inherit the
@@ -1660,17 +1640,17 @@ parse_script_params(char **script_file)
 *  NOTES
 *      MT-NOTE: inherit_env() is not MT safe
 *******************************************************************************/
-static bool inherit_env ()
+static bool inherit_env()
 {
    if (inherit_environ == -1) {
       /* We have to use search_conf_val() instead of get_conf_val() because this
        * change is happening in a patch, and we can't break backward
        * compatibility.  In a later release, this should probably be changed to
        * use get_conf_val() instead. */
-      char *inherit = search_conf_val ("inherit_env");
+      char *inherit = search_conf_val("inherit_env");
       
       if (inherit != NULL) {
-         inherit_environ = (strcmp (inherit, "1") == 0);
+         inherit_environ = (strcmp(inherit, "1") == 0);
       }
       else {
          /* This should match the default set in sgeobj/sge_conf.c. */
@@ -1684,7 +1664,7 @@ static bool inherit_env ()
 #if 0 /* Not currently used, but looks kinda useful... */
 /****** Shepherd/set_inherit_env() *********************************************
 *  NAME
-*     set_inherit_env () -- Set whether the evironment should be inherited from
+*     set_inherit_env() -- Set whether the evironment should be inherited from
 *                           the parent process or not
 *
 *  SYNOPSIS

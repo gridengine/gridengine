@@ -130,9 +130,6 @@
 #define JOB_TYPE_IS_NO_ERROR(jb_now)       (jb_now & JOB_TYPE_NO_ERROR)
 #define JOB_TYPE_IS_NO_SHELL(jb_now)       (jb_now & JOB_TYPE_NO_SHELL)
 
-extern lList *Master_Job_List;
-extern lList *Master_Zombie_List;
-extern lList *Master_Job_Schedd_Info_List;
 
 bool job_is_enrolled(const lListElem *job, 
                      u_long32 ja_task_number);
@@ -264,7 +261,7 @@ int job_check_qsh_display(const lListElem *job,
                           lList **answer_list, 
                           bool output_warning);
 
-int job_check_owner(const char *user_name, u_long32 job_id);
+int job_check_owner(const char *user_name, u_long32 job_id, lList *master_job_list);
 
 int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, int name);
 

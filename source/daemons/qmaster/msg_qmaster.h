@@ -156,8 +156,7 @@
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 #define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
-#define MSG_GDI_KEYSTR_LENGTH_I        _MESSAGE(33104, _("string is longer than %d, this is not allowed for objectnames") )
-
+#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33104, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames"))
 
 /*
 ** ck_to_do_qmaster.c
@@ -304,7 +303,7 @@
 #define MSG_JOB_PRJNOSUBMITPERMS_S    _MESSAGE(33222, _("job rejected: project "SFQ" is not allowed to submit jobs"))
 #define MSG_JOB_PRJREQUIRED           _MESSAGE(33223, _("job rejected: no project was supplied and only certain projects are allowed to submit jobs"))
 #define MSG_JOB_NODEADLINEUSER_S      _MESSAGE(33224, _("job rejected: the user "SFQ" is no deadline initiation user"))
-/* #define MSG_JOB_TASKIDZERO_U          _message(33225, _("job "sge_U32CFormat" was rejected cause the job contains a task with id 0")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_JOB_NONADMINPRIO          _MESSAGE(33225, _("job rejected: positive submission priority requires operator privileges"))
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "sge_U32CFormat" was rejected cause there is no job_name in the request"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "sge_U32CFormat" was rejected cause it can't be written: "SFN))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "sge_U32CFormat" was rejected cause it couldn't be written"))
@@ -387,6 +386,7 @@
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots"))
+#define MSG_JOB_NOSEQFILECLOSE_SS     _MESSAGE(33305, _("can't close sequence number file "SFQ": for reading: "SFN))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request"))
@@ -487,7 +487,6 @@
 #define MSG_EVE_RESENTSIGNALTASK_UU   _MESSAGE(33436, _("got resend signal timer event for unknown array task "sge_U32CFormat"."sge_U32CFormat)) 
 #define MSG_EVE_RESENTSIGNALQ_S       _MESSAGE(33437, _("got resend signal timer event for unknown queue "SFN))
 #define MSG_COM_NOUPDATEQSTATE_IS     _MESSAGE(33438, _("can't update remote queue state (%d) on queue "SFQ))
-#define MSG_JOB_POSTPONESIG_II        _MESSAGE(33439, _("Postponed signal for job "sge_U32CFormat"."sge_U32CFormat))
 /*
 ** sge_queue_qmaster.c
 */
@@ -751,6 +750,10 @@
 
 #define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
 #define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
+
+/* sge_qmaster_threads.c */
+#define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))
+   
 
 #endif
 

@@ -86,6 +86,8 @@
 #include "cull/cull_xml.h"
 
 #include "sge_mt_init.h"
+#include "read_defaults.h"
+#include "setup_path.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -175,11 +177,18 @@ char **argv
 
    {
       dstring file = DSTRING_INIT;
+      const char *user = uti_state_get_user_name();
+      const char *cell_root = path_state_get_cell_root();
+
       if (qselect_mode == 0) { /* the .sge_qstat file should only be used in the qstat mode */
+         get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QSTAT_FILE);
          switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           get_root_qstat_file_path(&file));
-         switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           get_home_qstat_file_path(&file, &alp));
+                                           sge_dstring_get_string(&file));
+         if (get_user_home_file_path(&file, SGE_HOME_DEF_QSTAT_FILE, user,
+                                     &alp)) {
+            switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
+                                           sge_dstring_get_string(&file));
+         }
       }                                  
       switch_list_qstat_parse_from_cmdline(&pcmdline, &alp, qselect_mode, argv);
       sge_dstring_free(&file);
@@ -311,6 +320,8 @@ char **argv
    /* unseclect all queues not selected by a -q (if exist) */
    if (lGetNumberOfElem(queueref_list)>0) {
       if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list))<0) {
+         fprintf(stderr, MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S,"-q");
+         fprintf(stderr, "\n");
          SGE_EXIT(1);
       }
       if (nqueues==0) {

@@ -137,28 +137,20 @@ proc usage_setup  {} {
    global CHECK_OUTPUT
    global saved_config
 
-   # modify config and remember old values
-   get_config config
-   if {[info exists saved_config]} {
-      unset saved_config
-   }
-   if { $ts_config(gridengine_version) == 53 } {
-      foreach attrib "load_report_time execd_params schedd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
-      set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
+   # backup old config
+   get_config saved_config
 
+   # set scheduler flushing params
+   if { $ts_config(gridengine_version) == 53 } {
+      set new_config(schedd_params) "$saved_config(schedd_params) flush_submit_secs=0"
    } else {
-      foreach attrib "load_report_time execd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
 
+   # set global config params
    set new_config(load_report_time) "0:0:5"
-   
-   set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
+   set new_config(execd_params) "$saved_config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    set_config new_config
    after 15000
 
@@ -205,6 +197,7 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
+
    if {$ts_config(gridengine_version) != 53} {
       reset_schedd_config;
    }
@@ -465,7 +458,7 @@ proc usage_monitor_check {id test_name slots} {
       wait_for_jobend $jobid usage 60 0 1
 
       # now wait for some time - accounting file might not be flushed yet
-      after 20000
+      sleep 20
 
       if {!$job_finished} {
          add_proc_error test_name -1 "job terminated abnormally"
@@ -506,15 +499,20 @@ proc usage_tight {} {
    global submit_command
    global master_host
 
-   foreach master_host $ts_config(unique_arch_nodes) {
-      puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command, master_host is $master_host"
+   # tight integration with csp is not working in SGE(EE) 5.3
+   if {$ts_config(gridengine_version) == 53 && $ts_config(product_feature) == "csp"} {
+      add_proc_error usage_tight -3 "tight integration is not available in SGE(EE) 5.3 with CSP enabled"
+   } else {
+      foreach master_host $ts_config(unique_arch_nodes) {
+         puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command, master_host is $master_host"
 
-      set queue [get_queue_instance "usage.q" $master_host]
-      set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120" $master_host]
+         set queue [get_queue_instance "usage.q" $master_host]
+         set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120" $master_host]
 
-      usage_monitor_check $id "usage_tight" 5
+         usage_monitor_check $id "usage_tight" 5
+      }
    }
-
+   
    set_error 0 "ok"
 }
 

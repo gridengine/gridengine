@@ -45,11 +45,6 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
                   const lList *cqueue_list, const lList *hgroup_list, 
                   bool resolve_cqueue, bool resolve_qdomain);
 
-#ifdef COMPILE_CQ_OPT
-bool
-qref_list_cq_rejected(const lList *qref_list, const char *cqname);
-#endif
-
 bool
 qref_list_trash_some_elemts(lList **this_list, const char *full_name);
 
@@ -61,6 +56,12 @@ qref_resolve_hostname(lListElem *this_elem);
 
 void
 qref_list_resolve_hostname(lList *this_list); 
+
+bool
+qref_cq_rejected(const char *qref_pattern, const char *cqname,
+      const char *hostname, const lList *hgroup_list);
+bool
+qref_list_cq_rejected(const lList *qref_list, const char *cqname, const char *hostname, const lList *hgroup_list);
 
 #endif /* __SGE_QREF_H__ */
 

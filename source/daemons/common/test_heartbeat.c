@@ -65,10 +65,10 @@ int main(int argc, char* argv[])
    int beat_val;
    int only_write = 0;
 
-
-
-
    DENTER_MAIN(TOP_LAYER, "test_sge_qmaster_heartbeat");
+
+   /* initialize last_time */
+   gettimeofday(&last_time, NULL);
 
    if (argc==3) {
       if (strcmp(argv[1],"-only-write") == 0) {

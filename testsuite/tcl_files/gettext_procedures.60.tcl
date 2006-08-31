@@ -62,12 +62,15 @@ proc sge_macro { macro_name {raise_error 1} } {
 
    # special handling for install macros
    switch -exact $macro_name {
-      "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 
+      "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >>" } 
       "DISTINST_HOSTNAME_KNOWN_AT_MASTER" { set value "\nThis hostname is known at qmaster as an administrative host.\n\nHit <RETURN> to continue >>" }
+      "DISTINST_CHECK_AGAIN" { set value "Check again (y/n) ('n' will abort) \[y\] >> " }
       "DISTINST_NOT_COMPILED_IN_SECURE_MODE" { set value "\n>sge_qmaster< binary is not compiled with >-secure< option!\n" }
       "DISTINST_ENTER_HOSTS" { set value "Host(s): " }
-      "DISTINST_VERIFY_FILE_PERMISSIONS" { set value "\nWe may now verify and set the file permissions of your Grid Engine\ndistribution.\n\nThis may be useful since due to unpacking and copying of your distribution\nyour files may be unaccessible to other users.\n\nWe will set the permissions of directories and binaries to\n\n   755 - that means executable are accessible for the world\n\nand for ordinary files to\n\n   644 - that means readable for the world\n\nDo you want to verify and set your file permissions (y/n) \[y\] >> " }
+      "DISTINST_VERIFY_FILE_PERMISSIONS1" { set value "\nWe may now verify and set the file permissions of your Grid Engine\ndistribution.\n\nThis may be useful since due to unpacking and copying of your distribution\nyour files may be unaccessible to other users.\n\nWe will set the permissions of directories and binaries to\n\n   755 - that means executable are accessible for the world\n\nand for ordinary files to\n\n   644 - that means readable for the world\n\nDo you want to verify and set your file permissions (y/n) \[y\] >> " }
+      "DISTINST_VERIFY_FILE_PERMISSIONS2" { set value "\nDid you install this version with >pkgadd< or did you already\nverify and set the file permissions of your distribution (enter: y)\n\nIn some cases, eg: the binaries are stored on a NTFS or on any other\nfilesystem, which provides additional file permissions, the UNIX file\npermissions can be wrong. In this case we would advise to verfiy and\nto set the file permissions (enter: n) (y/n) \[n\] >> " }
       "DISTINST_WILL_NOT_VERIFY_FILE_PERMISSIONS" { set value "We will not verify your file permissions. Hit <RETURN> to continue >>" }
+      "DISTINST_DO_NOT_VERIFY_FILE_PERMISSIONS" { set value "We do not verify file permissions. Hit <RETURN> to continue >> " }
       "DISTINST_MASTER_INSTALLATION_COMPLETE" { set value "\nYour Grid Engine qmaster installation is now completed" }
       "DISTINST_ENTER_A_RANGE" { set value "Please enter a range >> " }
       "DISTINST_PREVIOUS_SCREEN" { set value "Do you want to see previous screen about using Grid Engine again (y/n) \[n\] >> " }
@@ -140,15 +143,23 @@ proc sge_macro { macro_name {raise_error 1} } {
       "DISTINST_RPC_INSTALL_AS_ADMIN" { set value "Do you want to install Grid Engine as admin user >%s< (y/n) \[y\] >> " }     
       "DISTINST_RPC_SGE_ROOT" { set value "If this directory is not correct (e.g. it may contain an automounter\nprefix) enter the correct path to this directory or hit <RETURN>\nto use default \[%s\] >> " }     
       "DISTINST_RPC_HIT_RETURN_TO_CONTINUE" { set value "Hit <RETURN> to continue >> " }     
-      "DISTINST_RPC_SGE_CELL" { set value "Enter cell name \[default\] >> " }     
+      "DISTINST_RPC_SGE_CELL" { set value "Enter cell name \[%s\] >> " }     
       "DISTINST_RPC_SERVER" { set value "\nEnter database server name or \nhit <RETURN> to use default \[%s\] >> " }     
       "DISTINST_RPC_DIRECTORY" { set value "\nEnter the database directory\nor hit <RETURN> to use default \[%s\] >> " }     
       "DISTINST_RPC_DIRECTORY_EXISTS" { set value "The spooling directory already exists! Do you want to delete it? (y/n) \[n\] >> " }     
       "DISTINST_RPC_START_SERVER" { set value "Shall the installation script try to start the RPC server? (y/n) \[y\] >>" }     
       "DISTINST_RPC_SERVER_STARTED" { set value "Please remember these values, during Qmaster installation\n you will be asked for! Hit <RETURN> to continue!" }     
       "DISTINST_RPC_INSTALL_RC_SCRIPT" { set value "We can install the startup script that\nGrid Engine is started at machine boot (y/n) \[y\] >> " }     
-      "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }     
-
+      "DISTINST_RPC_SERVER_COMPLETE" { set value "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" }
+      "DISTINST_CSP_COPY_CERTS" { set value "Should the script try to copy the cert files, for you, to each\nexecution host? (y/n) \[y\] >>" }     
+      "DISTINST_CSP_COPY_CMD" { set value "Do you want to use rsh/rcp instead of ssh/scp? (y/n) \[n\] >>" }
+      "DISTINST_CSP_COPY_FAILED" { set value "The certificate copy failed!" }
+      "DISTINST_CSP_COPY_RSH_FAILED" { set value "Certificates couldn't be copied!"}
+      "DISTINST_EXECD_UNINST_NO_ADMIN" { set value "This host is not an admin host. Uninstallation is not allowed\nfrom this host!" }
+      "DISTINST_EXECD_UNINST_ERROR_CASE" { set value "Disabling queues now!" }
+      "DISTINST_QMASTER_WINDOWS_DOMAIN_USER" { set value "or are you going to use local Windows Users (answer: n) (y/n) \[y\] >> " }
+      "DISTINST_QMASTER_WINDOWS_MANAGER" { set value "Please, enter the Windows Administrator name \[Default: Administrator\] >> " }
+      "DISTINST_EXECD_WINDOWS_HELPER_SERVICE" { set value "Do you want to install the Windows Helper Service? (y/n) \[n\] >> " }
    }
 
    # if it was no install macro, try to find it from messages files

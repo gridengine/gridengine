@@ -273,7 +273,6 @@ qinstance_increase_qversion(lListElem *this_elem)
 bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
 {
    bool ret = false;
-   lListElem *ep;
 
    DENTER(TOP_LAYER, "qinstance_check_owner");
    if (this_elem == NULL) {
@@ -283,17 +282,12 @@ bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
    } else if (manop_is_operator(user_name)) {
       ret = true;
    } else {
-      for_each(ep, lGetList(this_elem, QU_owner_list)) {
-         DPRINTF(("comparing user >>%s<< vs. owner_list entry >>%s<<\n",
-                  user_name, lGetString(ep, US_name)));
-         if (!strcmp(user_name, lGetString(ep, US_name))) {
-            ret = true;
-            break;
-         }
+      lList *owner_list = lGetList(this_elem, QU_owner_list);
+      if (lGetElemStr(owner_list, US_name, user_name) != NULL) {
+         ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_pe_referenced() *************************
@@ -444,18 +438,13 @@ bool
 qinstance_is_ckpt_referenced(const lListElem *this_elem, const lListElem *ckpt)
 {
    bool ret = false;
-   lListElem *re_ref_elem;
+   lList *ckpt_list = lGetList(this_elem, QU_ckpt_list);
 
    DENTER(TOP_LAYER, "qinstance_is_ckpt_referenced");
-   for_each(re_ref_elem, lGetList(this_elem, QU_ckpt_list)) {
-      if (!strcmp(lGetString(ckpt, CK_name), 
-                  lGetString(re_ref_elem, ST_name))) {
-         ret = true;
-         break;
-      }
+   if (lGetElemStr(ckpt_list, ST_name, lGetString(ckpt, CK_name)) != NULL) {
+      ret = true;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_a_ckpt_referenced() *********************
@@ -695,7 +684,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-         if (!fnmatch(hostname_pattern, hostname, 0)) {
+         if ( !sge_hostcmp(hostname_pattern, hostname) || !fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
                dstring buffer = DSTRING_INIT;
                const char *qi_name = qinstance_get_name(qinstance, &buffer);
@@ -810,7 +799,7 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
 *     MT-NOTE: qinstance_check_unknown_state() is MT safe 
 *******************************************************************************/
 void
-qinstance_check_unknown_state(lListElem *this_elem)
+qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
 {
    const char *hostname = NULL;
    lList *load_list = NULL;
@@ -819,7 +808,7 @@ qinstance_check_unknown_state(lListElem *this_elem)
 
    DENTER(QINSTANCE_LAYER, "qinstance_check_unknown_state");
    hostname = lGetHost(this_elem, QU_qhostname);
-   host = host_list_locate(Master_Exechost_List, hostname);
+   host = host_list_locate(master_exechost_list, hostname);
    if (host != NULL) {
       load_list = lGetList(host, EH_load_list);
 
@@ -1011,7 +1000,7 @@ qinstance_set_full_name(lListElem *this_elem)
 *     MT-NOTE: qinstance_validate() is MT safe 
 *******************************************************************************/
 bool
-qinstance_validate(lListElem *this_elem, lList **answer_list)
+qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exechost_list)
 {
    bool ret = true;
    lList *centry_master_list = *(centry_list_get_master_list());
@@ -1057,7 +1046,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list)
       qinstance_state_set_cal_suspended(this_elem, false);
       qinstance_set_slots_used(this_elem, 0);
       
-      if (host_list_locate(Master_Exechost_List, 
+      if (host_list_locate(master_exechost_list, 
                            lGetHost(this_elem, QU_qhostname)) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
@@ -1096,7 +1085,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list)
 *     MT-NOTE: qinstance_list_validate() is MT safe 
 *******************************************************************************/
 bool
-qinstance_list_validate(lList *this_list, lList **answer_list)
+qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exechost_list)
 {
    bool ret = true;
    lListElem *qinstance;
@@ -1104,7 +1093,7 @@ qinstance_list_validate(lList *this_list, lList **answer_list)
    DENTER(TOP_LAYER, "qinstance_list_validate");
 
    for_each(qinstance, this_list) {
-      if (!qinstance_validate(qinstance, answer_list)) {
+      if (!qinstance_validate(qinstance, answer_list, master_exechost_list)) {
          ret = false;
          break;
       }

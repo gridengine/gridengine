@@ -34,8 +34,6 @@
 
 #include "sge_cuserL.h"
 
-extern lList *Master_Cuser_List;
-
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user);
 

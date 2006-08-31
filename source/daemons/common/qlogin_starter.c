@@ -48,12 +48,16 @@
 #include <string.h>
 #include <netdb.h>
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
+
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
-#include "sge_uidgid.h"
+
+#include "msg_common.h"
 
 #if defined(INTERIX)
 #  include "misc.h"
@@ -106,7 +110,7 @@ int delete_qrsh_pid_file()
 *     write_to_qrsh -- short description
 *
 *  SYNOPSIS
-*     void write_to_qrsh(char *data);
+*    int write_to_qrsh(const char *data);
 *
 *  FUNCTION
 *     Writes the contents of <data> to an other (remote) process over
@@ -292,27 +296,30 @@ int get_exit_code_of_qrsh_starter(int* exit_code)
          }
 
          errorfile = fopen(buffer, "r");
-         if (errorfile) {
+         if (errorfile != NULL) {
             ret = 0;
             if (fscanf(errorfile, "%d", exit_code) == 1) {
                SHEPHERD_TRACE((err_str, "error code from remote command "
                   "is %d", *exit_code));
             }
-            fclose(errorfile);
+            FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
                SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
             }
          } else {
-            SHEPHERD_TRACE((err_str, "can't open file %s", buffer ));
+            SHEPHERD_TRACE((err_str, "can't open file %s: %s", buffer, strerror(errno)));
          }
       } else {
         SHEPHERD_TRACE((err_str, "unable to get qrsh_tmpdir"));
       }
    }
    return ret;        
+FCLOSE_ERROR:
+   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   return ret;
 }
 
-/****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
+/****** shepherd/qrsh/get_error_of_qrsh_starter() *************************
 *  NAME
 *     get_error_of_qrsh_starter -- get error message from qrsh_starter
 *
@@ -369,15 +376,18 @@ const char *get_error_of_qrsh_starter(void)
                   "is %s", buffer));
                ret = strdup(buffer);
             }
-            fclose(errorfile);
+            FCLOSE(errorfile);
             if (unlink(buffer) != 0) {
                SHEPHERD_TRACE((err_str, "can't delete %s", buffer));
             }
          }
       }
    }
-
    return ret;  
+FCLOSE_ERROR:
+   SHEPHERD_TRACE((err_str, MSG_FILE_NOCLOSE_SS, buffer, strerror(errno)));
+   return ret;
+
 }
 
 /****** shepherd/qrsh/qlogin_starter() ****************************************
@@ -436,12 +446,13 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    int argc = 0;
    const char *sge_root = NULL;
    const char *arch = NULL;
-#if AIX51
-   size_t length;
-   size_t len;
-#else
+
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
    int len;
+#else
+   socklen_t length;
+   socklen_t len;
 #endif
 
    len = sizeof(serv_addr);
@@ -514,7 +525,9 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
       return 9;
    }
   
-   sprintf(buffer, "0:%d:%s/utilbin/%s:%s:%s", port, sge_root, arch, cwd, get_conf_val("host"));
+   snprintf(buffer, 2048, "0:%d:%s/utilbin/%s:%s:%s", 
+                    port, sge_root, arch, cwd, get_conf_val("host"));
+
    if (write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
       shutdown(sockfd, 2);

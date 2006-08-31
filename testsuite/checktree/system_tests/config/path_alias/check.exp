@@ -48,7 +48,7 @@ global env
 
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "path_alias_init_level"
 
 
 # define test's name and run level descriptions
@@ -75,7 +75,7 @@ global PATH_ALIAS_OUTPUT2
 global path_alias_test
 set path_alias_test 0
 
-proc init_level {} {
+proc path_alias_init_level {} {
   global CHECK_ACT_LEVEL
   global path_alias_test
 
@@ -229,19 +229,14 @@ proc path_alias_main {} {
       set script_name "$PATH_ALIAS_OUTPUT1/global_qsub_alias_$elem.sh"
       set command     "qsub -cwd -l h=${elem}"
 
-      create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command $job_script" "" "/bin/sh" 0 1 1 1
-      start_remote_prog $elem $CHECK_USER $script_name "" 
       start_remote_prog $elem $CHECK_USER "cd" "$PATH_ALIAS_OUTPUT1 ; $command $job_script" 
 
       puts $CHECK_OUTPUT "qrsh ..."
 
-      set script_name "$PATH_ALIAS_OUTPUT1/global_rqsh_alias_$elem.sh"
+      set script_name "$PATH_ALIAS_OUTPUT1/global_qrsh_alias_$elem.sh"
       set command     "qrsh -cwd -l h=${elem} \"pwd\""
 
-      create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command " "" "/bin/sh" 0 1 1 1
-      set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       set output [start_remote_prog $elem $CHECK_USER "cd" "$PATH_ALIAS_OUTPUT1 ; $command " ]
-
       set output [ split $output "\n" ]
       set output [ lindex $output 0 ]
       set output [ split $output "\r" ]
@@ -251,19 +246,14 @@ proc path_alias_main {} {
       }
 
       puts $CHECK_OUTPUT "qsh ..."
-      set script_name "$PATH_ALIAS_OUTPUT1/global_pwdscript_$elem.sh"
+      set pwd_script "$PATH_ALIAS_OUTPUT1/global_pwdscript_$elem.sh"
       set command     "> qsh_pwd_output_$elem.txt ; sleep 10"
-      create_shell_script $script_name $elem "pwd" "$command " "" "/bin/sh" 0 1 1 1
+      create_shell_script $pwd_script $elem "pwd" "$command " "" "/bin/sh" 0 1 1 1
 
-      set pwd_script $script_name
-      
-      set script_name "$PATH_ALIAS_OUTPUT1/global_qsh_alias_$elem.sh"
       set command     "qsh -cwd -l h=${elem} -- -e $pwd_script"
-      create_shell_script $script_name $elem "cd" "$PATH_ALIAS_OUTPUT1 ; $command " "" "/bin/sh" 0 1 1 1
 
-      set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
+      set output [start_remote_prog $elem $CHECK_USER "cd" "$PATH_ALIAS_OUTPUT1 ; $command" ]
       puts $CHECK_OUTPUT $output
-      puts $CHECK_OUTPUT "output generated from $script_name"
    }
  
    wait_for_end_of_all_jobs 100 
@@ -283,24 +273,24 @@ proc path_alias_main {} {
 
    set nr_hosts [ llength $ts_config(unique_arch_nodes)]
    puts $CHECK_OUTPUT "nr_hosts: $nr_hosts"
-   set nr_hosts_x2 [ expr ( $nr_hosts * 4 ) ]
-   puts $CHECK_OUTPUT "nr_hosts_x2: $nr_hosts_x2"
 
-   if { $nr_new_files1 != $nr_hosts_x2 } {
+   if { $nr_new_files1 != $nr_hosts } {
       add_proc_error "path_alias_main" -1 "there are $nr_new_files1 new files in directory $PATH_ALIAS_OUTPUT1, should be $nr_hosts (case 1)"
-   } 
+   }
+
    set nr_hosts_x2 [ expr ( $nr_hosts * 3 ) ]
    if { $nr_new_files2 != $nr_hosts_x2 } {
       add_proc_error "path_alias_main" -1 "there are $nr_new_files2 new files in directory $PATH_ALIAS_OUTPUT2, should be $nr_hosts_x2 (case 2)"
    } 
 
    foreach elem $files1 {
+      #puts $CHECK_OUTPUT "deleting $elem"
       file delete $PATH_ALIAS_OUTPUT1/$elem
    }
    foreach elem $files2 {
+      #puts $CHECK_OUTPUT "deleting $elem"
       file delete $PATH_ALIAS_OUTPUT2/$elem
    }
-   
    
    set_error 0 "ok"
 }
@@ -356,6 +346,4 @@ proc path_alias_cleanup {} {
 
    set_error 0 "ok"
 }
-
-
 

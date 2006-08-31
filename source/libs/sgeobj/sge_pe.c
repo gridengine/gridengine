@@ -65,8 +65,6 @@
 #include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
-lList *Master_Pe_List = NULL;
-
 static bool pe_name_is_matching(const char *pe_name, const char *wildcard)
 {
    return fnmatch(wildcard, pe_name, 0) == 0 ? true : false;

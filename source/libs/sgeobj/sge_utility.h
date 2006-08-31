@@ -39,8 +39,7 @@
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
                               ANSWER_QUALITY_ERROR,                  \
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
-      DEXIT;                                                         \
-      return NULL;                                                   \
+      DRETURN(NULL);                                                   \
    }
 
 #define SGE_CHECK_POINTER_FALSE(pointer)                             \
@@ -48,8 +47,7 @@
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,          \
                               ANSWER_QUALITY_ERROR,                  \
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);  \
-      DEXIT;                                                         \
-      return false;                                                  \
+      DRETURN(false);                                                  \
    }
 
 an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name);

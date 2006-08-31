@@ -8,7 +8,6 @@ Date:
 
 MD-2005-10-13-0: Bugfix:    sge qmaster startup and shutdown (non critical) 
                             error message as non root
-                 Changed:   rc-templates
                  Issue:     1823
                  Bugtraq:   6252471
                  Review:    CR

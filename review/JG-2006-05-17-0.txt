@@ -11,6 +11,10 @@ JG-2006-05-17-0: Bugfix:    Jobs with negative -p priority were rejected by
                  Bugtraq:   6424565
                             Fixed a memory leak in execd job request 
                             verification.
+                 Enhancem.: Jobs with positive -p priority submitted by a non
+                            operator user are rejected. In earlier versions, the
+                            priority is silently set to 0.
+                 Testsuite: Enhanced checktree/system_tests/clients/qsub.
                  Review:    RD
 
 2 Conforms to specification

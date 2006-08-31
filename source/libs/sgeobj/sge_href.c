@@ -201,7 +201,7 @@ href_list_compare(const lList *this_list, lList **answer_list,
       const char *host_or_group = lGetHost(this_elem, HR_name);
 
       if (!href_list_has_member(list, host_or_group)) {
-         if (sge_is_hgroup_ref(host_or_group)) {
+         if (is_hgroup_name(host_or_group)) {
             if (add_groups != NULL) {
                ret &= href_list_add(add_groups, answer_list, host_or_group);
             }
@@ -211,7 +211,7 @@ href_list_compare(const lList *this_list, lList **answer_list,
             }
          }
       } else {
-         if (sge_is_hgroup_ref(host_or_group)) {
+         if (is_hgroup_name(host_or_group)) {
             if (equity_groups != NULL) {
                ret &= href_list_add(equity_groups, answer_list, host_or_group);
             }
@@ -430,7 +430,7 @@ href_list_find_references(const lList *this_list, lList **answer_list,
        */
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
-         bool is_group = sge_is_hgroup_ref(name);
+         bool is_group = is_hgroup_name(name);
          lListElem *hgroup = NULL;  /* HGRP_name */
 
          /*
@@ -456,7 +456,7 @@ href_list_find_references(const lList *this_list, lList **answer_list,
             for_each(href2, href_list2) {
                const char *name2 = lGetHost(href2, HR_name);
 
-               if (sge_is_hgroup_ref(name2)) {
+               if (is_hgroup_name(name2)) {
                   if (used_groups != NULL) {
                      href_list_add(used_groups, answer_list, name2); 
                   }
@@ -610,7 +610,7 @@ href_list_find_referencees(const lList *this_list, lList **answer_list,
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (sge_is_hgroup_ref(name)) {
+         if (is_hgroup_name(name)) {
             lListElem *hgroup;   /* HGRP_Type */
 
             for_each(hgroup, master_list) {
@@ -714,12 +714,12 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *  SYNOPSIS
 *     bool 
 *     href_list_resolve_hostnames(lList *this_list, 
-*                                 lList **answer_list, bool ignore_errors) 
+*                                 lList **answer_list, bool ignore_errors
 *
 *  FUNCTION
 *     Resolve hostnames contained in 'this_list'. Depending on the
 *     'ignore_errors' parameter the function will either fail if a
-*     host is not resolvable or this will be ignored. 
+*     host is not resolvable or this will be ignored.
 *
 *  INPUTS
 *     lList *this_list    - HR_Type list 
@@ -732,20 +732,19 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *        false - Error
 *******************************************************************************/
 bool 
-href_list_resolve_hostnames(lList *this_list, 
-                            lList **answer_list, bool ignore_errors) 
+href_list_resolve_hostnames(lList *this_list, lList **answer_list,
+                            bool ignore_errors) 
 {
    bool ret = true;
 
    DENTER(HOSTREF_LAYER, "href_list_resolve_hostnames");
-
    if (this_list != NULL) {
       lListElem *href = NULL;
 
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (!sge_is_hgroup_ref(name)) {
+         if (!is_hgroup_name(name)) {
             char resolved_name[CL_MAXHOSTLEN+1];
             int back = getuniquehostname(name, resolved_name, 0);
 
@@ -756,14 +755,14 @@ href_list_resolve_hostnames(lList *this_list,
                   INFO((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
                   answer_list_add(answer_list, SGE_EVENT, 
                                   STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-
                   ret = false;
                }
             }
          }
       }
    }
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/href/href_list_append_to_dstring() *****************************

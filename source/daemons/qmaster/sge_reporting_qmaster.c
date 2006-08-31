@@ -40,15 +40,15 @@
 #include "rmon/sgermon.h"
 
 /* uti */
-#include "uti/sge_log.h"
-#include "uti/sge_string.h"
-#include "uti/sge_stdio.h"
-#include "uti/sge_dstring.h"
 #include "uti/setup_path.h"
-#include "uti/sge_stdlib.h"
-#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
 #include "uti/sge_spool.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
 #include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
 
 /* lck */
 #include "lck/sge_lock.h"
@@ -587,7 +587,7 @@ reporting_create_acct_record(lList **answer_list,
                        sizeof(category_buffer));
 
       sge_build_job_category_dstring(&category_dstring, job, 
-                                     *(userset_list_get_master_list()));
+                                     *(userset_list_get_master_list()), *object_type_get_master_list(SGE_TYPE_PROJECT), NULL);
       category_string = sge_dstring_get_string(&category_dstring);                                          
 
       /* accounting records will only be written at job end, not for intermediate
@@ -995,12 +995,13 @@ static bool
 reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 {
    bool ret = true;
+   object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "reporting_create_sharelog_record");
 
    if (mconf_get_do_reporting() && mconf_get_sharelog_time() > 0) {
       /* only create sharelog entries if we have a sharetree */
-      if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
+      if (lGetNumberOfElem(*object_base[SGE_TYPE_SHARETREE].list) > 0) {
          rep_buf_t *buf;
          dstring prefix_dstring = DSTRING_INIT;
          dstring data_dstring   = DSTRING_INIT;
@@ -1027,9 +1028,10 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
          /* dump the sharetree data */
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
-         sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
-                             Master_User_List,
-                             Master_Project_List,
+         sge_sharetree_print(&data_dstring, *object_base[SGE_TYPE_SHARETREE].list, 
+                             *object_base[SGE_TYPE_USER].list,
+                             *object_base[SGE_TYPE_PROJECT].list,
+                             *object_base[SGE_TYPE_USERSET].list,
                              true,
                              false,
                              NULL,
@@ -1355,21 +1357,21 @@ static bool reporting_flush_report_file(lList **answer_list,
                                         const char *filename, rep_buf_t *buf)
 {
    bool ret = true;
-   dstring error_dstring;
-   char error_buffer[MAX_STRING_SIZE];
    size_t size;
+   char error_buffer[MAX_STRING_SIZE];
+   dstring error_dstring;
 
    DENTER(TOP_LAYER, "reporting_flush_report_file");
 
-   sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
-
    size = sge_dstring_strlen(&(buf->buffer));
+   sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
    /* do we have anything to write? */ 
    if (size > 0) {
       FILE *fp;
       bool write_comment = false;
       SGE_STRUCT_STAT statbuf;
+
 
       /* if file doesn't exist: write a comment after creating it */
       if (SGE_STAT(filename, &statbuf)) {
@@ -1454,8 +1456,7 @@ static bool reporting_flush_report_file(lList **answer_list,
       sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 
 FCLOSE_ERROR:
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
@@ -1468,8 +1469,8 @@ FCLOSE_ERROR:
                               MSG_ERRORCLOSINGFILE_SS, filename, 
                               sge_strerror(errno, &error_dstring));
    }
-   DEXIT;
-   return false;
+
+   DRETURN(false);
 }
 
 /****** qmaster/reporting_flush() **********************************************

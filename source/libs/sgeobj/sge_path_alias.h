@@ -33,7 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
-#include "sge_stdio.h"
 
 #include "sge_path_aliasL.h"
 

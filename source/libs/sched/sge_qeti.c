@@ -204,25 +204,22 @@ static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list,
    return 0;
 }
 
-sge_qeti_t *sge_qeti_allocate2(lListElem *cr)
+sge_qeti_t *sge_qeti_allocate2(lList *cr_list)
 {
    sge_qeti_t *iter;
-   lList *rue_list;
 
    if (!(iter = calloc(1, sizeof(sge_qeti_t)))) {
       return NULL;
    }
 
-   rue_list = lCreateList("", lGetElemDescr(cr));
-   lAppendElem(rue_list, cr);
-   sge_qeti_list_add(&iter->cr_refs_pe, "slots", rue_list, 10, true);
+   sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, cr_list, 10, true);
    return iter;
 }
 
 sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, 
-      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list)
+      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, lList *hgrp_list)
 {
-   sge_qeti_t *iter;
+   sge_qeti_t *iter = NULL;
    lListElem *next_queue, *qep, *hep;
    lList *requests = lGetList(job, JB_hard_resource_list);
 
@@ -236,7 +233,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
    /* add "slot" resource utilization entry of parallel environment */
    if (sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, 
                   lGetList(pe, PE_resource_utilization), lGetUlong(pe, PE_slots), true)) {
-      sge_qeti_release(iter);
+      sge_qeti_release(&iter);
       DEXIT;
       return NULL;
    }
@@ -247,7 +244,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       if (sge_add_qeti_resource_container(&iter->cr_refs_global, 
                lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
                centry_list, requests, false)!=0) {
-         sge_qeti_release(iter);
+         sge_qeti_release(&iter);
          DEXIT;
          return NULL;
       }
@@ -281,14 +278,14 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          }
 
          /* consider only those queues that match this job (statically) */
-         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list) != DISPATCH_OK) { 
+         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list, hgrp_list) != DISPATCH_OK) { 
             continue;
          }   
 
          if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
                   lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
                         centry_list, requests, false)!=0) {
-            sge_qeti_release(iter);
+            sge_qeti_release(&iter);
             DEXIT;
             return NULL;
          }
@@ -301,7 +298,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          if (sge_add_qeti_resource_container(&iter->cr_refs_host, 
                   lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
                         centry_list, requests, false)!=0) {
-            sge_qeti_release(iter);
+            sge_qeti_release(&iter);
             DEXIT;
             return NULL;
          }
@@ -540,14 +537,15 @@ u_long32 sge_qeti_next(sge_qeti_t *qeti)
 *  NOTES
 *     MT-NOTE: sge_qeti_release() is MT safe 
 *******************************************************************************/
-void sge_qeti_release(sge_qeti_t *qeti)
+void sge_qeti_release(sge_qeti_t **qeti)
 {
-   if (!qeti)
+   if (qeti == NULL || *qeti == NULL) {
       return;
+   }   
 
-   lFreeList(&(qeti->cr_refs_pe));
-   lFreeList(&(qeti->cr_refs_global));
-   lFreeList(&(qeti->cr_refs_host));
-   lFreeList(&(qeti->cr_refs_queue));
-   free(qeti);
+   lFreeList(&((*qeti)->cr_refs_pe));
+   lFreeList(&((*qeti)->cr_refs_global));
+   lFreeList(&((*qeti)->cr_refs_host));
+   lFreeList(&((*qeti)->cr_refs_queue));
+   FREE(*qeti);
 }

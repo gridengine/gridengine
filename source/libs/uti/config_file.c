@@ -34,9 +34,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_stdio.h"
 #include "basis_types.h"
 #include "sge_string.h"
 #include "err_trace.h"

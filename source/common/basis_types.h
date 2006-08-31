@@ -74,7 +74,7 @@ typedef enum {
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 
-#if defined(FREEBSD) || defined(NETBSD) || defined(LINUXAMD64)
+#if defined(NETBSD) || defined(LINUXAMD64)
 #  define sge_U32CFormat "%u"  
 #  define sge_u32c(x)  (unsigned int)(x)
 
@@ -214,7 +214,6 @@ typedef char stringT[MAX_STRING_SIZE];
 #if defined(INTERIX)
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
-#  define getgrgid_r getgrgid_nomembers_r
 #endif
     
 
@@ -253,12 +252,10 @@ typedef char stringT[MAX_STRING_SIZE];
    else \
       variable = pthread_getspecific(key)
 
-#if !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
-#endif
 
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R

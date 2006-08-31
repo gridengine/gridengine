@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "uti/sge_stdio.h"
 #include "sge_gdi_request.h"
 #include "config.h"
 #include "read_object.h"
@@ -41,7 +42,6 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_stdio.h"
 #include "sge_conf.h"
 
 #include "msg_common.h"
@@ -62,16 +62,9 @@
       for incorporating all possible cull names.
          
  ****/
-lListElem* read_object(
-const char *dirname,
-const char *filename,
-int spool,
-int flag,
-int read_config_list_flag,
-struct read_object_args *args,
-int *tag,
-int fields[]  
-) {
+lListElem* read_object( const char *dirname, const char *filename, int spool, int flag,
+                        int read_config_list_flag, struct read_object_args *args,
+                        int *tag, int fields[]) {
    int ret;
    stringT fullname;
    FILE *fp;

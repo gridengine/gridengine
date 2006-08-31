@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <locale.h>
 
 #include <Xm/Xm.h>
 
@@ -65,92 +64,6 @@
 #include "sge_prog.h"
 #include "sge_mt_init.h"
 #include "version.h"
-
-#ifdef REPLAY_XT
-#include "ReplayXt.h"
-/************************************
- ************************************
- * start of replay resource data defs
- ************************************
- ************************************/
-typedef struct {
-  String replay_rules;
-  String replay_data;
-  Boolean verbose;
-  Boolean record;
-  String recordFile;
-  Boolean safe;
-} ReplayType, *ReplayTypePtr;
-
-static ReplayType replay_resource_values;
-
-static XrmOptionDescRec replay_options[] = {
-  {"-rulesFile", "rulesFile", XrmoptionSepArg, "replay.rules"},
-  {"-dataFile", "dataFile", XrmoptionSepArg, "replay.data"},
-  {"-verbose", "Verbose", XrmoptionNoArg, (XtPointer) "on"},
-  {"-record", "Record", XrmoptionNoArg, (XtPointer) "on"},
-  {"-recordFile", "RecordFile", XrmoptionSepArg, "replay.data"},
-  {"-safe", "Safe", XrmoptionNoArg, (XtPointer) "on"},
-};
-
-XtResource replay_resources[] =
-{
-  {"rulesFile",
-   "RulesFile",
-   XmRString,
-   sizeof(String),
-   XtOffset(ReplayTypePtr, replay_rules),
-   XtRImmediate,
-   (XtPointer) "replay.rules"
-  },
-  {"dataFile",
-   "DataFile",
-   XmRString,
-   sizeof(String),
-   XtOffset(ReplayTypePtr, replay_data),
-   XtRImmediate,
-   (XtPointer) "replay.data"
-  },
-  {"verbose",
-   "Verbose",
-   XmRBoolean,
-   sizeof(Boolean),
-   XtOffset(ReplayTypePtr, verbose),
-   XtRImmediate,
-   (XtPointer) FALSE
-  },
-  {"safe",
-   "Safe",
-   XmRBoolean,
-   sizeof(Boolean),
-   XtOffset(ReplayTypePtr, safe),
-   XtRImmediate,
-   (XtPointer) FALSE
-  },
-  {"record",
-   "Record",
-   XmRBoolean,
-   sizeof(Boolean),
-   XtOffset(ReplayTypePtr, record),
-   XtRImmediate,
-   (XtPointer) False
-  },
-  {"recordFile",
-   "RecordFile",
-   XmRString,
-   sizeof(String),
-   XtOffset(ReplayTypePtr, recordFile),
-   XtRImmediate,
-   (XtPointer) "replay.data"
-  },
-};
-/**********************************
- **********************************
- * end of replay resource data defs
- **********************************
- **********************************/
-
-#endif
 
 
 
@@ -196,9 +109,7 @@ char **argv
    Widget StartupWindow = 0;
    Arg  args[10];
    Cardinal ac = 0;
-#ifdef L10N
    char *lang;
-#endif   
    static char progname[256];
 /*    static char app_name[1024]; */
 
@@ -207,11 +118,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
 
-#ifndef L10N
-   setlocale(LC_ALL, "C");
-   putenv("LANG=C"); 
-   putenv("LC_ALL=C"); 
-#endif
    sge_mt_init();
 
    /* INSTALL SIGNAL HANDLER */
@@ -243,43 +149,11 @@ char **argv
    ** SETUP XMT, here qmon_version is checked, 
    ** so here an exit is possible 
    */
-#ifdef REPLAY_XT
-   AppShell = XmtInitialize( &AppContext, APP_NAME,
-                             replay_options, XtNumber(replay_options),
-                             &argc, argv, 
-                             qmon_fallbacks,
-                             args, ac);
-  /******************************
-   ******************************
-   * Get the replay app resources
-   ******************************
-   ******************************/
-   XtGetApplicationResources(AppShell, &replay_resource_values,
-      replay_resources, XtNumber(replay_resources),
-      NULL, 0);
-
-
-   /****************************
-    ****************************
-    * Register the replay system
-    ****************************
-    ****************************/
-   if (replay_resource_values.record)
-      RXt_StartRecorder(XtWidgetToApplicationContext(AppShell),
-                           replay_resource_values.recordFile);
-   else
-      RXt_RegisterPlayer(AppShell,
-                     replay_resource_values.replay_rules,
-                     replay_resource_values.replay_data,
-                     replay_resource_values.verbose,
-                     replay_resource_values.safe);
-#else
    AppShell = XmtInitialize( &AppContext, APP_NAME,
                              NULL, 0,
                              &argc, argv, 
                              qmon_fallbacks,
                              args, ac);
-#endif
 
    sigint_id = XtAppAddSignal(AppContext, sigint_callback, NULL);
    
@@ -290,7 +164,6 @@ char **argv
    XtAppAddActionHook(AppContext, TraceActions, NULL);
 #endif
 
-#ifdef L10N
    /*
    ** Internationalization:
    ** The qmon_messages.ad file is installed under 
@@ -305,8 +178,6 @@ char **argv
          lang = "C";
       XmtLoadResourceFile(AppShell, "qmon_messages", False, True);
    }   
-#endif
-
 #if 0   
    strcpy(app_name, "QMON +++ Main Control");
    if (strcmp(uti_state_get_default_cell(), "default")) {
@@ -388,21 +259,6 @@ char **argv
    ** CREATE MainControl 
    */
    MainControl = qmonCreateMainControl(AppShell);
-
-   /*
-   ** create qcontrol it takes a long time
-   */
-
-#ifdef REPLAY_XT
-   /****************************
-    ****************************
-    * Add another top widget, name is  menu_bar
-    ****************************
-    ****************************/
-   RXt_RegisterTopWidget(MainControl);
-
-
-#endif
 
    /* 
    ** install context help 

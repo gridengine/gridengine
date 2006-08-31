@@ -464,7 +464,21 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* cu_OPT - SGEEE sharetree - clear all user/project usage */ 
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* R_OPT - reservation desired */ 
- {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1}
+ {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1},
+/* slrs_OPT - show limitation rule set */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* slrsl_OPT - show limitation rule set list */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* alrs_OPT - add limitation rule set */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* Alrs_OPT - add limitation rule set from file */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* mlrs_OPT - modify limitation rule set */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* Mlrs_OPT - modify limitation rule set from file */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* dlrs_OPT - delete limitation rule set */ 
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 /*                  
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  c  q  n  A
   o  a  c  d  h  i  m  m  m  m  r  r  s  s  r  l  s  s  s  o  e  o  L

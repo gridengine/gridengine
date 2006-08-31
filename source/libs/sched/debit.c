@@ -48,6 +48,7 @@
 #include "sge_orderL.h"
 #include "sge_log.h"
 #include "msg_schedd.h"
+#include "sched/sge_lirs_schedd.h"
 
 static int 
 debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
@@ -80,6 +81,9 @@ debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_
          - needed to warn on jobs that were dispatched into 
            queues and get suspended on subordinate in the very 
            same interval
+
+      limitation_rule_set_list
+         - the load gets increased according the granted list
 
    The other objects get not changed and are needed to present
    and interprete the debitations on the upper objects:
@@ -136,6 +140,7 @@ debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,
       }   
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
       debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
+      debit_job_from_lirs(a->job, a->gdil, a->lirs_list, a->pe, a->centry_list, a->acl_list, a->hgrp_list);
    }
 
    add_job_utilization(a, type);
@@ -169,7 +174,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
    lListElem *gel, *qep, *so;
    int ret = 0;
 
-   DENTER(TOP_LAYER, "debit_job_from_queue");
+   DENTER(TOP_LAYER, "debit_job_from_queues");
 
    /* use each entry in sel_q_list as reference into the global_queue_list */
    for_each(gel, granted ) {
@@ -186,7 +191,6 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
          /* precompute suspensions for subordinated queues */
          total = lGetUlong(qep, QU_job_slots);
          for_each (so, lGetList(qep, QU_subordinate_list)) {
-            
             if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, so)) {   /* but now                */
                lListElem *order = NULL;

@@ -163,21 +163,8 @@ proc cleanup_system { } {
    } 
 
    # SGEEE: remove sharetree
-   if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
-      puts $CHECK_OUTPUT "\nremoving share tree ..."
-      set SHARETREE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
-      set DOES_NOT_EXISTS [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
-      set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
-      catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dstree" } result
-      if { [string match "*$DOES_NOT_EXISTS" $result] } {
-         puts $CHECK_OUTPUT "sharetree does not exist"
-      } else {
-         if { [string match "*$REMOVED" $result] } {
-            puts $CHECK_OUTPUT "sharetree removed"
-         } else {
-            puts $CHECK_OUTPUT $result
-         }
-      }
+   if {[string compare $ts_config(product_type) "sgeee"] == 0} {
+      del_sharetree
    }
 
    # remove all checkpoint environments
@@ -264,6 +251,9 @@ proc cleanup_system { } {
       puts $CHECK_OUTPUT "removing queue $elem."
       del_queue $elem "" 1 1
    }
+
+   # cleanup the tmpdir's referenced in queues
+   cleanup_tmpdirs 
 
    # add new testsuite queues
   puts $CHECK_OUTPUT "\nadding testsuite queues ..."
@@ -415,7 +405,36 @@ proc setup_testcheckpointobject {} {
    set_error 0 "ok"
 }
 
+proc setup_limitationrulesobjects {} {
+   global ts_config
 
+   # limitation rule set max_jobs
+   set lirs_name "max_jobs"
+   set rules ""
+   lappend rules "to slots=30000"
+
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   # limitation rule set per_host
+   set lirs_name "per_host"
+   set rules ""
+   lappend rules "hosts `*` to slots=30000"
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   # limitation rule set per_host
+   set lirs_name "per_queue"
+   set rules ""
+   lappend rules "queues `*` to slots=30000"
+   set lirs_charray($lirs_name,limit) "$rules"
+   set lirs_charray($lirs_name,enabled) "true"
+   add_lirs lirs_charray
+
+   set_error 0 "ok"
+}
 
 #                                                             max. column:     |
 #****** install_core_system/setup_conf() ******
@@ -531,8 +550,6 @@ proc setup_conf {} {
   
   set arrays_old [ array names old_config ]
   set arrays_new [ array names new_config ]
-#  foreach elem $arrays_old { puts "old elem: \"$elem\"" }
-#  foreach elem $arrays_new { puts "new elem: \"$elem\"" }
 
   if { [ llength $arrays_old] == [ llength $arrays_new ] } {
     foreach param $arrays_old {
@@ -546,15 +563,6 @@ proc setup_conf {} {
           if { [ string compare $param "finished_jobs" ] == 0 } { continue }
           if { [ string compare $param "max_unheard" ] == 0 } { continue }
           if { [ string compare $param "reporting_params" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-#          if { [ string compare $param "" ] == 0 } { continue }
-
-
 
           add_proc_error "setup_conf" -3 "config parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
        }
@@ -632,23 +640,42 @@ proc setup_execd_conf {} {
      set have_exec_spool_dir [get_local_spool_dir $host execd 0] 
      set spool_dir 0
      set expected_entries 4
-     if { $have_exec_spool_dir != "" } {
+     if {$have_exec_spool_dir != ""} {
         puts $CHECK_OUTPUT "host $host has spooldir in \"$have_exec_spool_dir\""
         set spool_dir 1
         incr expected_entries 1
      }
 
      set spool_dir_found 0
+     set win_execd_params_found 0
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
         incr counter 1
         switch $elem {
-           "execd_params" { continue }
            "mailer" { continue }
            "qlogin_daemon" { continue }
            "rlogin_daemon" { continue }
            "xterm" { continue }
-           "execd_spool_dir" { 
+           "load_sensor" {
+              # on windows, we have a load sensor, on other platforms not
+              if {[host_conf_get_arch $host] == "win32-x86"} {
+                 incr expected_entries 1
+              } else {
+                 lappend removed $elem
+              }
+           }
+           "execd_params" {
+              # on windows, we need a special execd param for use of domain users
+              if {[host_conf_get_arch $host] == "win32-x86"} {
+                 incr expected_entries 1
+                 if {$tmp_config(execd_params) == "enable_windomacc=true"} {
+                    set win_execd_params_found 1
+                 }
+              } else {
+                 lappend removed $elem
+              }
+           }
+           "execd_spool_dir" {
               if { [string compare $have_exec_spool_dir $tmp_config(execd_spool_dir)] == 0 } {
                   set spool_dir_found 1
               }
@@ -660,8 +687,9 @@ proc setup_execd_conf {} {
               lappend removed $elem
            }
         }
-        
      }
+
+     # execd_spool_dir has to be set correctly (depending on testsuite configuration)
      if { $spool_dir == 1 && $spool_dir_found == 0 } {
         add_proc_error "setup_execd_conf" -3 "host $host should have spool dir entry \"$have_exec_spool_dir\"\nADDING: execd_spool_dir $have_exec_spool_dir"
         if {[info exists tmp_config(execd_spool_dir)]} {
@@ -676,9 +704,18 @@ proc setup_execd_conf {} {
      if { $counter != $expected_entries } {
         add_proc_error "setup_execd_conf" -1 "host $host has $counter from $expected_entries expected entries:\n$output"
      }
+
+     # we need execd params for windows hosts
+     if {[host_conf_get_arch $host] == "win32-x86" && !$win_execd_params_found} {
+        set tmp_config(execd_params) "enable_windomacc=true"
+     }
+    
+     # remove unexpected options
      foreach elem $removed {
         set tmp_config($elem) ""
      }
+
+     # now set the new config
      set_config tmp_config $host
   }
 
@@ -1133,3 +1170,122 @@ proc setup_inhouse_cluster {} {
   set_error 0 "ok"
 }
 
+#****** init_cluster/setup_win_users() *****************************************
+#  NAME
+#     setup_win_users() -- special setup for windows users
+#
+#  SYNOPSIS
+#     setup_win_users { } 
+#
+#  FUNCTION
+#     If we have windows hosts in the cluster, this procedure does special setup
+#     required for windows users.
+#     The passwords of the following users will be registered through the
+#     sgepasswd utilbin binary:
+#        - CHECK_USER
+#        - Administrator
+#        - CHECK_FIRST_FOREIGN_SYSTEM_USER
+#        - CHECK_SECOND_FOREIGN_SYSTEM_USER
+#
+#  SEE ALSO
+#     init_cluster/setup_win_user()
+#*******************************************************************************
+proc setup_win_users {} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+
+   if {[host_conf_have_windows]} {
+      set win_users "$CHECK_USER Administrator $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_SECOND_FOREIGN_SYSTEM_USER"
+      foreach user $win_users {
+         setup_win_user_passwd $user
+      }
+   }
+
+   set_error 0 "ok"
+}
+
+#****** init_cluster/setup_win_user_passwd() ***********************************
+#  NAME
+#     setup_win_user_passwd() -- register the passwd of a windows user
+#
+#  SYNOPSIS
+#     setup_win_user_passwd { user } 
+#
+#  FUNCTION
+#     Registeres the passwd of a given windows user by calling the sgepasswd
+#     utilbin binary and answering the password questions.
+#  
+#     Requires that passwords have been interactively entered through the
+#     set_root_passwd procedure.
+#
+#  INPUTS
+#     user - user whose passwd shall be registered
+#
+#  SEE ALSO
+#     init_cluster/setup_win_users()
+#     check/set_root_passwd()
+#*******************************************************************************
+proc setup_win_user_passwd {user} {
+   global ts_config CHECK_OUTPUT
+   global CHECK_USER CHECK_DEBUG_LEVEL
+
+   puts -nonewline $CHECK_OUTPUT "setting sgepasswd of user $user ..."
+   
+   set id [open_remote_spawn_process $ts_config(master_host) $CHECK_USER "sgepasswd" $user]
+   set sp_id [lindex $id 1]
+
+   # in debug mode we want to see all the shell output
+   log_user 0
+   if {$CHECK_DEBUG_LEVEL != 0} {
+      log_user 1
+      puts $CHECK_OUTPUT ""
+   }
+
+   # wait for and answer passwd questions
+   set timeout 60
+   expect {
+      -i $sp_id full_buffer {
+         add_proc_error "setup_win_user_passwd" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+         close_spawn_process $id
+         return
+      }   
+
+      -i $sp_id eof { 
+         add_proc_error "setup_win_user_passwd" "-1" "unexpected eof"
+         close_spawn_process $id
+         return
+      }
+
+      -i $sp_id timeout { 
+         add_proc_error "setup_win_user_passwd" "-1" "timeout while waiting for password question"
+         close_spawn_process $id;
+         return
+      }
+
+      -i $sp_id "password:" {
+         send -i $sp_id "[get_passwd $user]\n"
+         exp_continue
+      }
+      -i $sp_id "Password changed" {
+         puts -nonewline $CHECK_OUTPUT " + "
+         exp_continue
+      }
+      -i $sp_id "_exit_status_:" {
+         puts $CHECK_OUTPUT "done"
+      }
+   }
+
+   # cleanup
+   close_spawn_process $id
+}
+
+proc cleanup_tmpdirs {} {
+   global ts_config CHECK_OUTPUT
+
+   set tmpdir "/tmp/testsuite_$ts_config(commd_port)"
+
+   foreach node $ts_config(execd_nodes) {
+      puts $CHECK_OUTPUT "cleaning tmpdir ($tmpdir) on node $node"
+      start_remote_prog $node "root" "rm" "-rf $tmpdir"
+   }
+}

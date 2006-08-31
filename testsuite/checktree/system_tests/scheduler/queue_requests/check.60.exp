@@ -69,8 +69,13 @@ set check_cleanup_function scheduler_queue_requests_cleanup
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "scheduler_queue_requests_q"
-lappend check_functions "scheduler_queue_requests_masterq"
+
+lappend check_functions "scheduler_queue_requests_qi"
+lappend check_functions "scheduler_queue_requests_masterqi"
+lappend check_functions "scheduler_queue_requests_cq"
+lappend check_functions "scheduler_queue_requests_mastercq"
+lappend check_functions "scheduler_queue_requests_softqi"
+lappend check_functions "scheduler_queue_requests_softcq"
 
 proc scheduler_queue_requests_init_level {} {
    global CHECK_ACT_LEVEL
@@ -182,15 +187,38 @@ proc scheduler_queue_requests_sched_time {} {
    return $duration
 }
 
-proc scheduler_queue_requests_q {} {
-   scheduler_queue_requests "scheduler_queue_requests_q"
+# -q qi_list
+proc scheduler_queue_requests_qi {} {
+   scheduler_queue_requests "scheduler_queue_requests_qi"
 }
 
-proc scheduler_queue_requests_masterq {} {
-   scheduler_queue_requests "scheduler_queue_requests_masterq" 1
+# -masterq qi_list
+proc scheduler_queue_requests_masterqi {} {
+   scheduler_queue_requests "scheduler_queue_requests_masterqi" 1
 }
 
-proc scheduler_queue_requests {scenario {parallel 0}} {
+# -q clusterqueue_list
+proc scheduler_queue_requests_cq {} {
+   scheduler_queue_requests "scheduler_queue_requests_cq" 0 1
+}
+
+# -masterq cq_list
+proc scheduler_queue_requests_mastercq {} {
+   scheduler_queue_requests "scheduler_queue_requests_mastercq" 1 1
+}
+
+# -soft -q qi_list
+proc scheduler_queue_requests_softqi {} {
+   scheduler_queue_requests "scheduler_queue_requests_softqi" 0 0 1
+}
+
+# -soft -q cq_list
+proc scheduler_queue_requests_softcq {} {
+   scheduler_queue_requests "scheduler_queue_requests_softcq" 0 1 1
+}
+
+
+proc scheduler_queue_requests {scenario {parallel 0} {cq 0} {soft 0}} {
    global CHECK_OUTPUT ts_config
    global queue_count queue_request_count
 
@@ -217,9 +245,13 @@ proc scheduler_queue_requests {scenario {parallel 0}} {
    set queue_request_list {}
    for {set i 0} {$i < $queue_request_count} {incr i} {
       set cqueue [scheduler_queue_requests_get_qname [expr $queue_count -$i -1]]
-      foreach host $ts_config(execd_nodes) {
-         set qinstance [get_queue_instance $cqueue $host]
-         lappend queue_request_list $qinstance
+      if {$cq} {
+         lappend queue_request_list $cqueue
+      } else {
+         foreach host $ts_config(execd_nodes) {
+            set qinstance [get_queue_instance $cqueue $host]
+            lappend queue_request_list $qinstance
+         }
       }
    }
 
@@ -227,10 +259,14 @@ proc scheduler_queue_requests {scenario {parallel 0}} {
    puts $CHECK_OUTPUT $queue_request_list
    
    # submit a job and request this queue list
-   if {$parallel} {
-      set q_options "-masterq $queue_request"
+   if {$soft} {
+      set q_options "-soft -q $queue_request"
    } else {
-      set q_options "-q $queue_request"
+      if {$parallel} {
+         set q_options "-masterq $queue_request"
+      } else {
+         set q_options "-q $queue_request"
+      }
    }
    set job_id [submit_job "$options $q_options $ts_config(product_root)/examples/jobs/sleeper.sh 60"]
 
@@ -239,18 +275,38 @@ proc scheduler_queue_requests {scenario {parallel 0}} {
    get_extended_job_info $job_id
    puts $CHECK_OUTPUT "job is running in queue $job_info(queue)"
 
-   foreach queue $job_info(queue) {
-      if {$queue != ""} {
-         if {[lsearch -exact $queue_request_list $queue] < 0} {
-            add_proc_error $scenario -1 "job is running in queue $queue, expected it to run in one of $queue_request_list"
+   if {$soft == 0} {
+      foreach queue $job_info(queue) {
+         if {$queue != ""} {
+            if { $cq } {
+               set at_pos [string first "@" $queue]
+               incr at_pos -1
+               set cqueue [string range $queue 0 $at_pos]
+               puts $CHECK_OUTPUT "substring of $queue is $cqueue"
+               if {[lsearch -exact $queue_request_list $cqueue] < 0} {
+                  add_proc_error $scenario -1 "job is running in queue $cqueue, expected it to run in one of $queue_request_list"
+               }
+            } else {
+               if {[lsearch -exact $queue_request_list $queue] < 0} {
+                  add_proc_error $scenario -1 "job is running in queue $queue, expected it to run in one of $queue_request_list"
+               }
+            }
          }
       }
    }
 
    # measure time and compare to scheduling time without requests
-   # it may not be more than 10 times slower
+   # it may not be more than 5 times slower
+   # unfortunately, if soft requests are used the difference is 
+   # much higher since "fast-track" scheduling can't be done here
    set duration [scheduler_queue_requests_sched_time]
-   if {$default_duration < [expr $duration / 5.0]} {
+   if {$soft == 0} {
+      set factor 5.0
+   } else {
+      set factor 20.0
+   }
+
+   if {$default_duration < [expr $duration / $factor ]} {
       add_proc_error $scenario -1 "scheduling of job with queue requests took too long ($duration vs. $default_duration without requests). This is probably IZ 1981"
    }
 

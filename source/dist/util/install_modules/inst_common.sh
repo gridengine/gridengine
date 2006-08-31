@@ -288,7 +288,7 @@ WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-           testsuidroot uidgid infotext"
+           testsuidroot authuser uidgid infotext"
 
 WINUTILFILES="SGE_Helper_Service.exe"
 
@@ -342,9 +342,9 @@ fi
          "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-         "checkprog      gethostbyname  now            rsh            infotext\n" \
-         "checkuser      gethostname    openssl        rshd           filestat\n" \
-         "getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
+         "authuser	 checkprog      gethostbyname  now            rsh\n" \
+         "infotext	 checkuser      gethostname    openssl        rshd\n" \
+         "filestat	 getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
@@ -1005,7 +1005,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u8"
+      $ECHO "# Version: 6.0u8_1"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -1387,6 +1387,8 @@ MoveLog()
    if [ "$AUTO" = "false" ]; then
       return
    fi
+
+   GetAdminUser
 
    #due to problems with adminrun and ADMINUSER permissions, on windows systems
    #the auto install log files couldn't be copied to qmaster_spool_dir

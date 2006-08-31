@@ -46,4 +46,6 @@ int sge_verify_department_entries(lList *userset_list, lListElem *new_userset,
 
 int set_department(lList **alpp, lListElem *job, lList *userset_list);
 
+void userset_update_categories(const lList *added, const lList *removed);
+
 #endif

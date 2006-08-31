@@ -659,7 +659,7 @@ lList **alpp
    return 0;
 }
 
-/*-------------------------------------------------------------------------*/
+
 /*-------------------------------------------------------------------------*/
 static int sge_unparse_resource_list(
 lListElem *job,
@@ -711,7 +711,7 @@ lList **alpp
 }
 
 /*-------------------------------------------------------------------------*/
-static int sge_unparse_pe(
+int sge_unparse_pe(
 lListElem *job,
 lList **pcmdline,
 lList **alpp 

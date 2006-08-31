@@ -349,7 +349,7 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckCSP
-      CheckHostNameResolving
+      CheckHostNameResolving install
       AddSGEStartUpScript $euid execd
       StartExecd
       AddQueue
@@ -537,7 +537,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckQmasterInstallation
       CheckCellDirectory
       CheckCSP
-      CheckHostNameResolving
+      CheckHostNameResolving install
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
@@ -570,7 +570,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckWinAdminUser
       CheckCSP
-      CheckHostNameResolving
+      CheckHostNameResolving install
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
@@ -632,6 +632,11 @@ fi
 
 if [ "$EXECD" = "uninstall" ]; then
 
+   if [ "$AUTO" = "true" ]; then
+      Stdout2Log
+      $INFOTEXT -log "Starting execution host uninstallation!"
+   fi
+
    WelcomeUninstall 
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
@@ -648,7 +653,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
 
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
-   CheckHostNameResolving 1
+   CheckHostNameResolving uninstall
    if [ "$?" = "1" ]; then
       $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
       $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
@@ -733,7 +738,7 @@ if [ $SHADOW = "install" ]; then
       export SGE_CELL
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
    
-      CheckHostNameResolving
+      CheckHostNameResolving install
  
       if [ $HOST != "" ]; then
          $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null

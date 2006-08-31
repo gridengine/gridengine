@@ -398,3 +398,55 @@ proc get_user_list {output_var {on_host ""} {as_user ""} {raise_error 1}} {
    return [get_qconf_list "get_user_list" "-suserl" out $on_host $as_user $raise_error]
 }
 
+proc get_user {output_var user {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+
+   upvar $output_var out
+
+   # clear output variable
+   if {[info exists out]} {
+      unset out
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-suser $user" $on_host $as_user]
+
+   # parse output or raise error
+   set messages(index) {-1}
+   set messages(-1) [translate_macro MSG_USER_XISNOKNOWNUSER_S $user]
+
+   if {$prg_exit_state == 0} {
+      # qconf is buggy. If the user is not known, it still exits 0
+      if {[string first $messages(-1) $result] >= 0} {
+         add_proc_error "get_user" -1 $result $raise_error
+         set ret -1
+      } else {
+         parse_simple_record result out
+      }
+   } else {
+      set ret [handle_sge_errors "get_user" "qconf -suser $user" $result messages $raise_error]
+   }
+
+   return $ret
+}
+
+proc del_user {user {on_host ""} {as_user ""} {raise_error 1}} {
+   global ts_config CHECK_OUTPUT
+
+   if {$ts_config(product_type) == "sge"} {
+      add_proc_error "" -3 "del_user (qconf -duser) not available for sge systems" $raise_error
+      return -1
+   }
+
+   set ret 0
+   set result [start_sge_bin "qconf" "-duser $user" $on_host $as_user]
+
+   # parse output or raise error
+   set messages(index) {0}
+   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS "*" "*" $user [translate_macro MSG_OBJ_USER]]
+
+   set ret [handle_sge_errors "del_user" "qconf -duser $user" $result messages $raise_error]
+
+   return $ret
+}
+

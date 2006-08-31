@@ -321,7 +321,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    lListElem *found;
    int pos;
    const char *ckpt_name;
-   lList **lpp = &Master_Ckpt_List;
+   lList **lpp = object_type_get_master_list(SGE_TYPE_CKPT);
 
    DENTER(TOP_LAYER, "sge_del_ckpt");
 
@@ -363,7 +363,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    {
       lList *local_answer_list = NULL;
 
-      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List,
+      if (ckpt_is_referenced(found, &local_answer_list, *(object_type_get_master_list(SGE_TYPE_JOB)),
                              *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
          lListElem *answer = lFirst(local_answer_list);
 

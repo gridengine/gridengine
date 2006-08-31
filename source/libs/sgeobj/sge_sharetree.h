@@ -34,9 +34,6 @@
 
 #include "sge_sharetreeL.h"
 
-extern lList *Master_Sharetree_List;
-
-
 typedef struct {
    int depth;
    lListElem **nodes;

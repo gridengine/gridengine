@@ -51,7 +51,6 @@
 #include "sge_gdi.h"
 #include "sge_host.h"
 #include "sge_all_listsL.h"
-#include "sge_string.h"
 #include "qmon_cull.h"
 #include "qmon_request.h"
 #include "qmon_submit.h"
@@ -62,6 +61,7 @@
 #include "qmon_message.h"
 #include "AskForTime.h"
 #include "IconList.h"
+#include "uti/sge_string.h"
 
 
 

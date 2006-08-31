@@ -57,7 +57,7 @@ enum {
    PREF_queue_filter_state
 };
 
-ILISTDEF(PREF_Type, QmonPreferences, QMON_PREF_LIST)
+LISTDEF(PREF_Type)
    /* ------ internal fields ----------------------------------- */
    SGE_LIST(PREF_job_filter_resources, CE_Type, CULL_DEFAULT)
    SGE_LIST(PREF_job_filter_owners, ST_Type, CULL_DEFAULT)

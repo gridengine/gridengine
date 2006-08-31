@@ -72,6 +72,7 @@ enum {
    DOMINANT_LAYER_GLOBAL = 0x0001,
    DOMINANT_LAYER_HOST = 0x0002,
    DOMINANT_LAYER_QUEUE = 0x0004,
+   DOMINANT_LAYER_LIRS = 0x0008,
    DOMINANT_LAYER_MASK = 0x00ff,        /* all layers */
 
    DOMINANT_TYPE_VALUE = 0x0100,        /* value from complex template */
@@ -90,10 +91,11 @@ enum{
    HOST_TAG,
    GLOBAL_TAG,
    PE_TAG,     /* not really used as a tag */
+   LIRS_TAG,
    MAX_TAG
 };
 
-#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPM"[level]
+#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPLM"[level]
 
 enum {
    CE_name = CE_LOWERBOUND,
@@ -113,7 +115,7 @@ enum {
    CE_urgency_weight
 };
 
-SLISTDEF(CE_Type, ComplexEntry)
+LISTDEF(CE_Type)
    SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)          /* full name of attribute */
    SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */

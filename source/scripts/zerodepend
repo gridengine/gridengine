@@ -38,6 +38,7 @@ files=" \
        clients/qconf/qconf_dependencies  \
        clients/qdel/qdel_dependencies  \
        clients/qhost/qhost_dependencies  \
+       clients/qlimit/qlimit_dependencies  \
        clients/qmod/qmod_dependencies  \
        clients/qmon/qmon_dependencies  \
        clients/qsh/qsh_dependencies  \
@@ -68,6 +69,7 @@ files=" \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
+       libs/juti/juti_dependencies  \
        libs/rmon/rmon_dependencies  \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \
@@ -93,8 +95,6 @@ fi
 if [ -d experimental/wingrid ]; then
    rm -f experimental/wingrid/qloadsensor/exp_wingrid_dependencies
    touch experimental/wingrid/qloadsensor/exp_wingrid_dependencies
-   rm -f experimental/wingrid/SGE_Helper_Service/SGE_Helper_Service_dependencies
-   touch experimental/wingrid/SGE_Helper_Service/SGE_Helper_Service_dependencies
 fi
 
 if [ -d experimental/culltrans ]; then

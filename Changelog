@@ -1,49 +1,373 @@
-RD-2006-08-01-0: CVS        Created V60u8_1_win_BRANCH
-------------------------------------------------------
+AH-2006-08-30-1: Bugfix:    Fix problem with classic spooling write object
+                            return codes not be checked
+                 Review:    JG
 
-MD-2006-06-14-0: CVS        Created V60u8_1_TAG
------------------------------------------------
+AH-2006-08-30-0: Bugfix:    - Fix problems with qsub -w e|w|v resulting from
+                              uninitialized hgrp_list and lirs_list in
+                              sge_assignment_t
+                            - Fix issue with cl_com_ssl_func__ERR_get_error
+                              being NULL
+                            
+RH-2006-08-18-2: Cleanup:   o invalid pathes in aimk.site
 
-HP-2006-06-08-1: Enhancem.: Build targets depend and clean are now problerly for-
+RH-2006-08-18-1: Cleanup:   o wrong checkin (sge_passwd.c)
+
+RH-2006-08-18-0: Enhancem:  o i18n for juti
+                            o strong argument checking for GridCAImpl.initCA
+                            o aimk.site contains JUNIT_JAR parameter
+                 Review:    MD
+
+RD-2006-08-16-0: Enhancem:  - rewrite of limitation rule matching code to handle
+                              all kind of wildcard searches
+                            - added module test for limitation rule matching code
+                            - added module test for resource utilization
+                            - added generic functions for qlimit/qsub/qstat request files
+                 Changed:   qlimit, qstat, qsub, qmaster, schedd
+                 Review:    AA
+
+HP-2006-08-11-1: Enhancem:  Improved starting and stopping of 
+                            N1 Grid Engine Helper Service during test.
+                 Changed:   checktree/system_tests/windows/gui/check.60.exp
+                         
+HP-2006-08-11-0: Bugfix:    Now loading key and rand file for Administrator, not 
+                            longer for HOST+Administrator.
+                 Changed:   libs/gdi/sge_security.c
+                 Review:    JG
+
+RD-2006-08-11-0: Enhancem:  Added reservation code for limitation rule sets
+                            Moved gdi version defines to libs/gdi/version.c
+                 Changed:   all
+                 Review:    SG
+
+JG-2006-08-11-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
+MD-2006-08-10-0: Bugfix:    The autoinstall need ssh daemon
+                            when the autouninstall is done local 
+                 Issue:     2095 
+                 Bugtraq:   6453427 
+                 Changed:   install 
+                 Review:    SG
+
+JG-2006-08-10-1: Bugfix:    Fixed memory leaks and access errors.
+                 Review:    AH, RD
+
+JG-2006-08-10-0: Testsuite: Introduced host configuration parameter 
+                            "java compile host"
+                            Allow multiple code coverage methods to be used
+                            in a single testsuite run (e.g. for c and for java).
+                 Review:    RD
+
+RD-2006-08-10-0: Enhancem:  Raised gdi version to be incompatible with 6.0
+                            Added 6.0u8_2 to gdi version array
+                 Review:    JG
+
+AH-2006-08-08-0: Enhancem.: Prepared relative path $ORIGIN/../../lib/$buildarch
+                            be used rather than LD_LIBRARY_PATH for Solaris/Linux 
+                 Bugster:   6456290
+                 Issue:     2090
+                 Review:    AA, JG
+
+RD-2006-08-07-0: Enhancem.: Enabled category scalability improvement for usersets and
+                            projects (was disabled by RD-2006-08-03-0)
+                 Review:    AH
+
+EB-2006-08-07-0: Enhancem.: Enabled pam support in juti for DARWIN_PPC AND DARWIN_X86
+                 Review:    AA 
+
+JG-2006-08-04-0: Testsuite: Added function parse_properties_file to parse
+                            Java properties files, as well as the execd/shepherd
+                            config or environment file.
+                            Minor fixes and cleanup.
+                 Review:    RD
+
+RD-2006-08-03-1: Enhancem.: o Added qlimit
+                 Changed:   qlimit
+                 Review:    AA
+
+RD-2006-08-03-0: Enhancem.: o Added limitation rule set scheduling code for
+                              - sequential jobs
+                              - parallel jobs
+                              - dynamical limits 
+                            o Added qmaster limitation rule set verification
+                            o Added qmaster debiting code
+                            o fixed some minor memory leaks and bugs
+                 Changed:   all
+                 Review:    JG
+
+HP-2006-08-03-1: Enhancem.: Added a reserved complex variable "display_win_gui"
+                            that allows submitter to request the GUI of the job
+                            to be displayed to the visible desktop and allows
+                            the scheduler to make the right decisions.
+                            Added a test for it to the testsuite
+                 Changed:   execd, shepherd, testsuite
+                 Added:     centry/display_win_gui, system_tests/windows/gui test
+                 Bugster:   6428621
+                 Review:    JG, MD
+
+HP-2006-08-03-0: Bugfix:    o fixed mixed short/long hostnames for
+                              ignore_fqdn=false systems in load report
+                 Changed:   interix-loadsensor.sh
+                 Review:    JG
+
+CR-2006-08-03-0: Bugfix:    o fixed bug in sge_ca script
+                 Review:    RH
+
+RH-2006-08-02-0: Enhancem.: o multipurpose sge_ca script
+                            o bugfixes in juti
+                 Review:    AA
+                              
+AH-2006-08-02-0: Enhancem.: Added comment to dist/util/arch about alternative
+                            means for determining GNU C library version.
+
+AA-2006-08-01-0: Enhancem.: Preliminary version of LIRS code for qmon added
+                 Review:    RD
+
+RD-2006-07-31-2: Cleanup:   Fixed gcc42 compiler warnings
+                 Review:    AA
+
+RD-2006-07-31-1: Bufix:     Fixed broken build with option -spool-classic
+                 Review:    JG
+
+RD-2006-07-31-0: Testsuite: Added basic functions for limitation rule sets
+                            fixed some testsuite tests
+                 Review:    JG
+
+JG-2006-07-31-0: Testsuite: Minor fix for qrsh check (qconf vi handling)
+                 Review:    RD
+
+HP-2006-07-26-0: Bugfix:    Fixed broken build due to adding of juti/removing of
+                            classes
+                 Changed:   scripts/zerodepend, aimk, Makefile.global, juti
+
+RH-2006-07-26-0: Enhancem.: First version of libs/juti added
+                 Review:    AA
+
+JG-2006-07-25-0: Bugfix:    sge_share_mon did not work with automatic policy 
+                            enforcement ("default" nodes in sharetree).
+                 Bugfix:    sharetree node names in sge_share_mon and in 
+                            reporting did not contain the whole path.
+                            Merge of JG-2006-07-24-0 from V60s2_BRANCH.
+                 Bugfix:    sge_share_mon was broken (missing MT init).
+                 Bugster:   6448704, 6449439
+                 Review:    RD
+
+JG-2006-07-25-0: Testsuite: Use sharetree infrastructure provided by
+                            JG-2006-07-24-0 in bugs/issuezilla/1848.
+                            Extended qconf test to test creation, modification,
+                            and deletion of sharetree, as well as adding 
+                            projects.
+                            Add generic error messages (user/host permissions)
+                            to handle_sge_errors.
+                 Review:    RD
+
+
+JG-2006-07-24-0: Testsuite: Added test for sge_share_mon.
+                            Added utility functions to create and modify
+                            sharetree. Use these functions in various checks
+                            instead of calling and handling qconf.
+                            Fixed get_ps_info for darwin.
+                            Fixed qmod_general test.
+                            Have testsuite unique tmpdir in queue config to 
+                            avoid problems with multiple testsuites running in 
+                            parallel on the same hosts.
+                 Review:    RD
+
+AH-2006-07-19-0: Testsuite: Enhanced system_tests/scheduler/queue_requests
+                            to cover 
+                            -q cqueue_list 
+                            -masterq cqueue_list
+                            -soft -q qinstance_list 
+                            -soft -q cqueue_list
+                 IZ:        2085
+                 Review:    JG
+
+RD-2006-07-17-0: Bugfix:    - Fixed berkeleydb spooling and CSP mode on
+                              freebsd
+                            - removed libssl.bundle for MacOS (no longer
+                              necessary since MacOS 10.4) 
+                 Review:    AA
+
+JG-2006-07-11-0: Bugfix:    Fixed typos in complexes man page.
+                            Fixed version mismatch in jni build on darwin.
+                 Review:    RD
+
+AA-2006-07-05-0: scripts:   Added OPENSSLSOVERSION to distinst.site to support
+                            use of other SSL versions
+                 Review:    RD
+                 Changed:   scripts/distinst[.site] aimk.site
+
+AH-2006-07-04-0: Bugfix:    Fixed problem with host_update_categories() being 
+                            wrongly called upon qconf -dh/-ds <host> due to 
+                            AH-2006-06-23-1
+
+CR-2006-07-04-0: Testsuite: fixed bug when only 1 execd is set in configuration
+                            fixed bug when adding (discovering) a new host into
+                            testsuite host configuration file
+
+CR-2006-07-03-0: Testsuite: new menu item 50 - compile and install
+                            only checktree hooks
+                 Review:    JG
+
+AA-2006-06-30-0: Bugifx:    qping segfaults in ssl mode
+                 CR:        6445469
+                 IZ:        2081
+                 Review:    CR
+
+CR-2006-06-30-0: Testsuite: added java15 settings to host configuration
+                            added passwd hook for additional checktree
+                 Review:    JG
+
+JG-2006-06-28-0: Testsuite: Add execd_param required for windows domain users
+                            in install_core_system check.
+                            Fixes and cleanup for qconf and qrsh check.
+                            Cleanup of testsuite password query.
+                 Review:    CR
+
+AA-2006-06-28-0: Testsuite: test_category fixed
+                 Review:    AH
+                 Changed:   test_category
+
+OJ-2006-06-27-0: Testsuite: Added test case for qstat -ext, qstat -f -ext,
+                            qstat -t, qstat -pri, qstat -urg, qstat -j ERROR,
+                            qstat -f -r, qstat -f -urg, qstat -f -qs E, qstat -j.
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
+AA-2006-06-27-0: Cleanup:   Removal of unused zlib and XtReplay 3rdparty code
+                 Review:    AH
+                 Changed:   qmon
+
+JG-2006-06-26-0: Testsuite: Added support for windows hosts.
+                 Review:    CR
+
+AH-2006-06-23-1: Docs:      Fixed sge_conf(5) reprioritize and related 
+                            paragraph in queue_conf(5)
+                 Review:    AA
+                 Changed:   man pages
+
+AH-2006-06-23-1: Enhancem.  Merged scalability enhancements from S3 branch
+
+AH-2006-06-23-0: Enhancem.  Forgot to check-in aimk changes required for 
+                            AH-2006-05-29-1
+
+JG-2006-06-23-0: Enhancem.: Build on darwin-x86 platform (fixed duplicate
+                            symbols in spooling libs).
+                            Build on tru64.
+                 Review:    RD
+
+AH-2006-06-22-1: Enhancem.: Completized qping output for job execution
+                            requests sent from qmaster to execd
+                 Review:    CR
+
+JG-2006-06-21-0: Enhancem.: Separate darwin platform into darwin-ppc and
+                            darwin-x86.
+                            darwin-x86 port still to be done!
+                            Fixed build for MacOS 1.4 (ppc) with gcc-4.
+                 Review:    RD
+
+DT-2006-06-20-0: Testsuite: o Fixed test 1529
+                            o Improved test_drmaa
+                 Changed:   test_drmaa, test_drmaa_no_bin
+
+OJ-2006-06-15-0: Testsuite: Added test case for qstat -explain E, qstat -ne,
+                            qstat -f -q all.q, qstat -f -ne, qstat -l q=all.q, 
+                            qstat -s r, qstat -s s, qstat -s z, qstat -s hs,
+                            qstat -s hu, qstat -u wrong_user, qstat -U 
+                            $CHECK_USER with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
+RD-2006-06-14-0: Bugfix:    fixed several potential security issues
+                 Bugtraq:   6438475 
+                 Changed:   cull
+                 Review:    JG,AA
+
+RD-2006-06-13-0: Enhancem.: - new qconf switches for limitation rule sets
+                            - new GDI calls for limitation rule sets 
+                 Changed:   aimk, qmaster, qconf
+                 Review:    JG 
+
+HP-2006-06-08-1: Enhancem.: Build targets depend and clean are now properly for-
                             warded to Makefiles for Win32 applications.
                  Changed:   aimk
 
 HP-2006-06-08-0: Enhancem.: Added man page for SGE_Helper_Service.exe
 
-MD-2006-06-08-0: Enhancem.: Added some logging output
-                 Changed:   inst_execd.sh
+OJ-2006-06-06-0: Testsuite: Added test case for qstat -g c, qstat -g d,      
+                            qstat -g t, qstat -s a, qstat -s p, qstat -u user
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
 
 HP-2006-06-02-0: Bugfix:    Fixed wrong function declaration
                  Changed:   sge_uidgid.c
    
-AH-2006-05-29-0: Bugfix:    Enhanced build process to set library name (soname)
+JG-2006-06-01-0: Testsuite: Minor enhancements, fixes, cleanup.
+                 Review:    RH
+
+AH-2006-05-31-0: Enhancem.: analyze.rb utility can now deal with array jobs and 
+                            rescheduled jobs.
+
+AH-2006-05-29-2: Cleanup:   Removed pointless code in qdel  
+                 Review:    JG
+
+AH-2006-05-29-1: Bugfix:    Enhanced build process to set library name (soname) 
                             with 0.95/1.0 libdrmaa for Solaris and Linux.
                  Changed:   libdrmaa
                  Issue:     2059
                  Bugtraq:   6429305
                  Review:    JG
 
-MD-2006-05-24-0: Enhancem.: windows service installation
-                            - added standalone service installation
-                            - added standalone service uninstallation
-                            - added service uninstallation with execd uninstall
-                            - changed some user text
-                 Changed:   inst_sge, inst_common.sh, inst_execd.sh
-                 Review:    HP
+JG-2006-05-26-0: Testsuite: Made testsuite host configuration Grid Engine 
+                            version aware. It is now possible to use one host 
+                            config file for various Grid Engine versions.
+                            The architecture string and the compile host 
+                            property for a host are Grid Engine version 
+                            dependent.
+                            Cleanup and minor fixes.
+                 Review:    CR
 
-HP-2006-05-24-0: Bugfix:    usage values of non-GUI Windows jobs where not 
-                            retrieved
-                 Enhancem.: added SGE_Helper_Service dependiencies to 
-                            scripts/zerodepend, fixed Windows related bug in aimk.
-                 Changed:   aimk, scripts/zerodepend, shepherd.c
-                 Review:    MD
+AH-2006-05-23-0: Bugfix:    Changed drmaa.c to ensure there are no DRMAA 1.0 
+                            specific linking symbol in libdrmaa.so.0.95. As
+                            a result DRMAA applications build with 1.0 will 
+                            not start any longer if LD_LIBRARY_PATH points 
+                            to 0.95 library.
+                 Review:    RD
+                 Changed:   libdrmaa
+                 Issue:     2059
+                 Bugtraq:   6429305
 
-RD-2006-05-17-0: Bugfix:    - qconf rejects configuration, when attribute
-                              value ends with a space character
-                            - fixed two cases of reading past allocated memory
-                 Bugtraq:   6407525
-                 Issue:     2023 
-                 Review:    JG
+HP-2006-05-23-0: Cleanup:   Removed unneccessary dependencies from libdrmaa,
+                            removed libjapi.a, removed unneccessary dependencies of
+                            libjapi.a from several binaries.
+                 Review:    AH
+                 Changed    libdrmaa Makefile, qsub Makefile
+
+AH-2006-05-20-0: Bugfix:    Added shared library dependency to libdrmaa.so build rule 
+                            to overcome problem of -ldl -lpthread required at stage 
+                            for DRMAA applications.
+                 Review:    AA, JG
+                 Changed:   libdrmaa
+                 Issue:     2057
+                 Bugtraq:   6428050
+
+JG-2006-05-19-0: Testsuite: Prepared testsuite framework for N1GE 6.5.
+                            Enhancements and cleanup of qsub test.
+                 Review:    CR
+
+HP-2006-05-18-0: Enhancem.: Added support for SGE_Helper_Service.exe on Windows
+                 Changed:   sge_execd, sge_shepherd, libwingrid, libuti, 
+                            distinst
+                 Bugtraq:   6363237
+                 Review:    MD, CR
 
 JG-2006-05-17-0: Bugfix:    Jobs with negative -p priority were rejected by
                             sge_qmaster.
@@ -51,33 +375,33 @@ JG-2006-05-17-0: Bugfix:    Jobs with negative -p priority were rejected by
                  Bugtraq:   6424565
                             Fixed a memory leak in execd job request 
                             verification.
+                 Enhancem.: Jobs with positive -p priority submitted by a non
+                            operator user are rejected. In earlier versions, the
+                            priority is silently set to 0.
                  Review:    RD
 
-MD-2006-05-17-0: Enhancem.: - Added error handling for SGE_Helper_Service.exe 
-                            installation
-                            - binary check -> SGE_Helper_Service.exe
-                 Changed:   inst_execd.sh, inst_common.sh
-                 Review:    HP
-
-HP-2006-05-16-0: Enhancem.: Added support for SGE_Helper_Service.exe on Windows
-                 Changed:   sge_execd, sge_shepherd, libwingrid, libuti, 
-                            distinst
-                 Bugtraq:   6363237
-                 Review:    MD, CR
+RD-2006-05-17-0: Enhancem.: - Added flatfile and classic spooling code
+                              for Resource Limitation Rules
+                 Bugfix:    - qconf rejects configuration, when attribute
+                              value ends with a space character
+                            - fixed two cases of reading past allocated memory
+                 Bugtraq:   6407525
+                 Issue:     2023 
+                 Review:    JG
 
 JG-2006-05-15-0: Enhancem.: Improved verification of incoming job requests
                             in execd.
                  Review:    RD
 
-AH-2006-05-11-0: Enhancem.: Addes new test_drmaa_perf switches
-                            -scenario {queue|type|number}.{hostgroup|resource|none}
-                            -quiet    {yes|no}
-                 Changed:   test_drmaa_perf
-                 Review:    TBD
-
-MD-2006-05-10-0: Enhancem.: Instalation for Windows Helper Service
-                 Changed:   install
-                 Review:    HP
+OJ-2006-05-12-0: Testsuite: Added test case for qstat -F, qstat -F rerun,h_vmem
+                            with XML parsing. in client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+JG-2006-05-10-0: Testsuite: Fixed incorrect parsing of qstat output.
+                 Issue:     2052
+                 Review:    RD
 
 MD-2006-05-08-0: Bugfix:    during QMaster installation, creation of local 
                             database directory fails on hp11 
@@ -86,54 +410,69 @@ MD-2006-05-08-0: Bugfix:    during QMaster installation, creation of local
                  Changed:   install 
                  Review:    HP
 
-AH-2006-04-28-0: Enhancem.: Added scheduler quick exit for sequential jobs 
-                            based on -q clusterq. Until now the optimization 
-                            is available only if code was compiled with 
-                            -DCOMPILE_CQ_OPT.
-                 Changed:   sge_schedd
-                 Review:    TBD
+JG-2006-05-02-0: Enhancem.: Use Berkeley DB 4.4.20 for berkeleydb spooling.
+                            Port to Mac OS 10.4, enable build with gcc-4.
+                 Review:    RD
 
-CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
-                 Changed:   cl_ssl_framework.c => commlib
+OJ-2006-04-26-0: Testsuite: Added test case for qstat -f with XML parsing. in
+                            client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
+
+JG-2006-04-26-0: Testsuite: Minor enhancements, fixes, and cleanup.
                  Review:    AA
 
-RD-2006-04-19-1: CVS        Created V60u8_TAG
----------------------------------------------
-
 RD-2006-04-19-0: Bugfix:    fixed qmon for lx24-ia64
-                            disabled optimization because compiler is broken
+                             disabled optimization because compiler is broken
                  Changed:   all
                  Review:    AA, JG
 
+JG-2006-04-19-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
+CR-2006-04-19-0: Cleanup:   cleanup of RAND file reading in commlib SSL mode
+                 Changed:   cl_ssl_framework.c => commlib (merge from 
+                            V60s2_BRANCH)
+                 Review:    AA
+
 CR-2006-04-18-0: Bugfix:    added fix for aix and hp in ssl module
-                 Changed:   cl_ssl_framework.c => commlib
+                 Changed:   cl_ssl_framework.c => commlib (merge from 
+                            V60s2_BRANCH)
                  Review:    RD
 
-HP-2006-04-12-0: Bugfix:    sgepasswd encryption didn't work on some architectures
-                            because rand.seed file wasn't loaded automatically.
-                 Issue:     ToDo
-                 Bugtraq:   ToDo
-                 Changed:   sgepasswd, sge_shepherd
-                 Review:    RD
-
-RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the memory specifier 'G'
+RH-2006-04-12-0: Bugfix:    The man page QUEUE_CONF(5) does not describe the 
+                            memory specifier 'G'
                  Issue:     2029
                  Bugtraq:   6411660
                  Review:    RD
 
-AH-2006-04-11-0: Bugfix:    Job sequence number got screwed up when 
+AH-2006-04-11-1: Bugfix:    Job sequence number got screwed up when
                             restarting qmaster daemon
                  Issue:     2028
                  Bugtraq:   6411230
                  Review:    RD,JG
 
+JG-2006-04-11-0: Testsuite: Added test for issue 2028.
+                 Review:    RD
+
+MD-2006-04-07-0: Testsuite: Issue_1330 test. Check for existing bdb spooldir
+                 Review:    JG
+
+JG-2006-04-07-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
 RD-2006-04-06-0: Bugfix:    execd on windows can't to connect to qmaster
                             (introduced by security enhancm. RD-2006-03-17-0)
                  Review:    MD
 
-AH-2006-04-06-0: Bugfix:    Fix reservation for array tasks (CR 6260656) 
+AH-2006-04-06-1: Bugfix:    Fix reservation for array tasks (CR 6260656)
                             broken by SG-2006-03-29-0
                  Review:    RD,JG
+
+AH-2006-04-05-0: Bugfix:    Fix schedd abort() upon qconf -ks
+                 Review:    RD
 
 RD-2006-04-04-0: Bugfix:    CSP installation with admin user = root broken
                             fixed broken build on AIX43
@@ -143,19 +482,25 @@ RD-2006-04-04-0: Bugfix:    CSP installation with admin user = root broken
                  Review:    CR
 
 JG-2006-04-04-0: Bugfix:    Fixed too restrictive job name verification.
-                            Fixed nonunique message ids.
+                 Testsuite: Fixed broken testsuite.
                  Review:    RD
 
-DT-2006-04-03-0: Docs:	    o Updated qselect man page
-                            - Merged from DT-2006-01-04-0
-		           Issue:     1955
-		           Bugtraq:   6368942
-		           Changed:   qselect(1)
+OJ-2006-04-03-0: Testsuite: Added test case for qstat with XML parsing. in 
+                            client/qstat.
+                            Added new file tcl_files/parser_xml.tcl with new
+                            XML parsing procedures.
+                 Issue:     1206
+                 Review:    DT
 
 JG-2006-04-03-0: Bugfix:    Scheduler tuning during qmaster installation broken.
+                 Testsuite: Added testsuite test for IZ 2022.
+                            Changed default testsuite product_type to "sgeee".
                  Issue:     2022
                  Bugtraq:   6407523
                  Review:    MD
+                 
+RD-2006-04-03-0: Testsuite: Enabled uncommented tests
+                 Review:    JG
 
 SG-2006-04-03-0: Bugfix:    Scheduler hangs after a qmaster crash and restart
                  Issue:     2021
@@ -176,20 +521,25 @@ RD-2006-03-29-0: Enhancem.: Improved verification of incoming job requests
                  Review:    AA
 
 SG-2006-03-29-0: Bugfix:    - Unclear share caclulation of running jobs
-                            - Job tickets are not correctly shown in qstat for 
-                              none running jobs with a reservation
-                            - slow scheduler performance for jobs with hard 
-                              queue requests
-                            - Tickets are not reseted for running jobs after 
+                            - Job tickets are not correctly shown in qstat for
+                              none running jobs
+                            - slow scheduler performance for jobs with hard queue
+                              requests
+                            - Tickets are not reseted for running jobs after
                               disableing the ticket policy
                  Issue:     1550, 1956, 1981, 2003
                  Bugtraq:   6291033, 6368747, 6384709, 6398723
                  Changed:   scheduling
                  Review:    RD
 
-AA-2006-03-28-0: Enhancem.: - empty_job_list_filter() check 
+
+AA-2006-03-28-0: Enhancem.: - feature_activate code removed
+                            - handling of sge_get_auth_info
+                            - sge_remove_event_client() index out of bounds
+                            - EV_update_func check
+                            - empty_job_list_filter check
                  Review:    RD
-                 
+                            
 MD-2006-03-28-0: Bugfix:    schedulers mem use growing, if pe jobs are running
                  Issue:     1980
                  Bugtraq:   6384698
@@ -202,21 +552,17 @@ MD-2006-03-27-0: Bugfix:    RPC Berkeley DB install failed due to FQDN hostname
                  Changed:   install 
                  Review:    HP 
 
-AA-2006-03-27-0: Enhancem.: - feature_activate code removed
-                            - handling of sge_get_auth_info
-                            - sge_remove_event_client() index out of bounds
-                 Review:    RD
-                            
-MD-2006-03-24-0: Bugfix:    fixed broken build
-
-JG-2006-03-24-0: Enhancem.: Improved verification of incoming event client 
-                            requests in sge_qmaster (JG-2006-03-17-0 continued).
+JG-2006-03-27-0: Enhancem.: Improved verification of incoming event client 
+                            requests in sge_qmaster (merged JG-2006-03-24-0 from
+                            V60s2_BRANCH).
                  Review:    AA
+
+MD-2006-03-24-0: Bugfix:    fixed broken build
 
 MD-2006-03-23-0: Enhancem.: - security enhancement, improved string
                               verification.
                  Review:    RD
- 
+
 RD-2006-03-22-1: Bugfix:    - qrsh does not accept -o/-e/-j
                             - qrsh issue with interactive jobs and directory
                               write permissions
@@ -226,17 +572,26 @@ RD-2006-03-22-1: Bugfix:    - qrsh does not accept -o/-e/-j
                  Bugtraq:   6391238, 6390494, 4737342
                  Review:    JG
 
+JG-2006-03-22-1: Testsuite: Insure code coverage analysis continued, cleanup
+                            and minor fixes.
+                 Review:    RD
+
 RD-2006-03-22-0: Bugfix:    qstat -u <user> crashes
                  Bugtraq:   6401993
                  Issue:     2010
                  Review:    JG
 
-JG-2006-03-21-0: Enhancem.: Improved verification of incoming petask requests in
-                            sge_execd (JG-2006-03-17-0 continued).
+JG-2006-03-22-0: Enhancem.: Improved verification of incoming petask requests in
+                            sge_execd (merged JG-2006-03-21-0 from 
+                            V60s2_BRANCH).
                  Review:    RD
 
-RD-2006-03-20-0: Cleanup:   Removed uncommented code introduced by 
-                            RD-2006-03-17-0
+RD-2006-03-20-1: Bugfix:    fixed broken build
+
+RD-2006-03-20-0: Enhancem.: Added additional permission checking in CSP mode
+                            (Merge of V60s2_BRANCH, RD-2006-03-17-0)
+                 Bugtraq:   6400729
+                 Review:    AA
 
 JG-2006-03-20-1: Bugfix:    Fixed a deadlock in qmaster when writing (closing) 
                             the reporting file failed.
@@ -244,47 +599,49 @@ JG-2006-03-20-1: Bugfix:    Fixed a deadlock in qmaster when writing (closing)
                  Issue:     2007
                  Review:    RD
 
-RD-2006-03-17-0: Enhancem.: Added additional permission checking in CSP mode
-                 Bugtraq:   6400729
-                 Review:    AA
-
-JG-2006-03-17-0: Enhancem.: Added verification of incoming job and petask 
+JG-2006-03-20-0: Enhancem.: Added verification of incoming job and petask 
                             request in qmaster and execd (no full check yet).
+                            (Merge of V60s2_BRANCH, JG-2006-03-17-0)
                  Review:    AA
 
-SD-2006-03-16-0: Bugfix:    Fixed typo compile problem in SGE PQS API
-                 Issue:     2006
-
-AH-2006-03-16-1: Bugfix:    Applied patch to fix qstat -j XML output for
-                            mail list.
-                 Issue:     2005
-                 Review:    Craffi, MD
-
-RD-2006-03-15-0: Bugfix:    fixed broken build introduced by
-                            AA-2006-03-14-0
-                 Review:    AA
-
-CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
-                 Bugtraq:   6398008
-                 Review:    RD
-                 Changed:   commlib
-
-AA-2006-03-14-0: Bugfix:    several buffer overruns
+AA-2006-03-17-0: Bugfix:    several buffer overruns, merge from V60s2_BRANCH
                  Bugtraq:   6397987
                  Review:    RD
                  Changed:   all
 
+SD-2006-03-16-0: Bugfix:    Fixed typo compile problem in SGE PQS API
+                 Issue:     2006
+
+AH-2006-03-16-0: Bugfix:    Applied patch to fix qstat -j XML output for
+                            mail list.
+                 Issue:     2005
+                 Review:    Craffi, MD
+
+OJ-2006-03-14-0: Testsuite: Moved purge_queue in sge_queue.60.tcl, moved test
+                            cases with -purge queue in check.60.exp; fixed
+                            bugs in purge_queue ().
+                 Issue:     477
+                 Review:    DT
+
+CR-2006-03-14-0: Cleanup:   Off-by-one overrun in communication library
+                            (merged from V60s2_BRANCH)
+                 Bugtraq:   6398008
+                 Review:    RD
+                 Changed:   commlib
+
 CR-2006-03-13-0: Cleanup:   code cleanup and logging in commlib ssl module
+                            (merged from V60s2_BRANCH)
                  Review:    AA
 
 RC-2006-03-12-0: Bugfix:    make sure SGE is always 32-bit on PPC Linux
                  Review:    AH
                  Changed:   aimk
 
-DT-2006-03-10-0: Bugfix:    o Fixed man page bug
-                 Issue:     1999
-                 Bugtraq:   6396851
-                 Changed:   sched_conf man page
+JG-2006-03-10-0: Testsuite: fixes for file_parsing and complex tests.
+                 Review:    RD
+
+RD-2006-03-10-0: Testsuite: fixed mod_queue with fast_add option
+                 Review:    JG
 
 RC-2006-03-10-0: Enhancem.: allow execd to run on Scyld Beowulf
                             - Contributed by RH (Scyld also provided the same fix)
@@ -299,10 +656,17 @@ MD-2006-03-09-0: Bugfix:    The parallel automatic install may overload machines
                  Review:    HP 
 
 RD-2006-03-09-0: Bugfix:    - fixed race conditions for sge_ca -renew
-                            - fixed qmaster core dump with invalid revocation
-                              list
+                             - fixed qmaster core dump with invalid revocation
+                               list
                  Changed:   sge_ca, commlib
                  Review:    AA
+
+OJ-2006-03-06-0: Testsuite: Moved purge_queue in sge_queue.60.tcl, moved test
+                            cases with -purge queue in check.60.exp; fixed
+                            bugs in purge_queue ().
+                 Issue:     477
+                 Review:    DT
+
 
 MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to 
                             missing spooldefaults 
@@ -311,9 +675,50 @@ MD-2006-02-22-0: Bugfix:    execd installation on Windows fails due to
                  Changed:   install 
                  Review:    RD
 
+DT-2006-03-02-0: Bugfix:    o Fixed errors in DT-2006-03-01-0
+                 Changed:   JAPI, testsuite
+
+DT-2006-03-01-0: Enhancem.: o Completed DRMAA 0.95 => 1.0
+                            o Made DRMAA sessions reconnectable
+                 Bugfix:    o Fixed illegal memory access
+                            o Fixed DRMAA implementation string
+                            o Added missing man page
+                            o Removed INIT_ALPP macro
+                            o Fixed DRMAA memory leak
+                 Issue:     1740, 1993, 1994
+                 Bugtraq:   6365045, 6391930, 6391947
+                 Changed:   JAPI, man pages, testsuite, qsub, qconf
+                 Review:    AH
+
+OJ-2006-02-27-0: Testsuite: Restored old calls to set_cqueue_default_values
+                            set_cqueue_specific_values,
+                            in sge_queue.60.tcl; fixed mod_queue
+                 Review:    DT
+
 RC-2006-02-25-0: Bugfix:    mem_free 4GB wraparound on MacOSX
                  Changed:   libs/uti/sge_loadmem.c
                  Review:    HP
+
+HP-2005-02-24-0: Bugfix:    on some Windows execution hosts, execd hangs
+                            after the job has finished 
+                 Bugtraq:   6363245
+                 Changed:   source/clients/qacct/qacct.c
+                            source/common/basis_types.h
+                            source/daemons/execd/reaper_execd.c
+                            source/libs/gdi/sge_gdi_request.c
+                            source/libs/uti/sge_uidgid.c
+                            source/libs/uti/sge_uidgid.h
+                 Review:    CR             
+
+RD-2006-02-24-0: Testsuite: fixed several testuite tests
+                 Review:    JG
+
+RD-2006-02-23-0: Bugfix:    Merged EB-2005-12-15-0 from V60s2_BRANCH
+                            subordinate properties lost on qmaster restart
+                 Issue:     1741
+                 Bugtraq:   6319223
+                 Changed:   sge_qmaster
+                 Review:    SG
 
 RD-2006-02-23-0: Bugfix:    commlib closes wrong connection on SSL error 
                             performance enhancement for certificate revocation
@@ -321,15 +726,42 @@ RD-2006-02-23-0: Bugfix:    commlib closes wrong connection on SSL error
                  Bugtraq:   6389526, 6387206
                  Review:    CR 
 
+RD-2006-02-23-0: Testsuite: Fixed broken install_core_system
+                 Review:    CR
+
 MD-2006-02-22-0: Bugfix:    -  "qstat -j" aborts
                  Issue:     1972
                  Bugtraq:   6384682 
                  Changed:   qstat 
-                 Review:    JG 
+                 Review:    JG
 
-AA-2006-02-21-0: Bugfix:    Certificate Revocation
-                 Bugtraq:   6387206
-                 Review:    RD, pending
+HP-2006-02-22-0: Bugfix:    Fixed broken update_ts_config_version
+                            Removed unused string from msg_daemons_common.h
+                 Changed:   testsuite/check.exp
+                            daemons/common/msg_daemons_common.h
+                 Review:    CR
+
+JG-2006-02-22-0: Testsuite: New check system_tests/scheduler/queue_requests,
+                            covering also IZ 1981.
+                 Review:    SG
+
+HP-2006-02-21-0: Bugfix:    Fixed broken build
+                 Changed:   libs/japi/Makefile
+
+DT-2006-02-17-0: Bugfix:    o Added missing howto info.
+                            - Contributed by Chris Dagdigian
+                 Changed:   www
+                 Review:    DT
+
+OJ-2006-02-16-0: Testsuite: Added test cases for *prj, *q, *u, *sconf for qconf
+                            in  sge_queue.60.tcl, sge_host.tcl, 
+                            sge_sched_conf.tcl sge_users.tcl, sge_project.tcl
+                            as error handling for these tests.
+                 Review:    DT
+
+JG-2006-02-16-0: Enhancem.: Enhanced the DRMAA example "compile" to delete the
+                            compile jobs at CTRL-C.
+                 Review:    CR
 
 RD-2006-02-14-0: Bugfix:    Interrupting qrsh while pending does not remove job
                  Bugtraq:   6287945
@@ -346,21 +778,124 @@ RD-2006-02-13-0: Bugfix:    resource filtering in qselect broken
                  Issue:     1977
                  Review:    JG
 
-JG-2006-01-30-0: Enhancem.: cleanup aimk code coverage options
+OJ-2006-02-10-0: Testsuite: Added test cases for *hgrp, *prj for qconf 
+                            in  sge_host.60.tcl, sge_project.tcl as well
+                            as error handling for these tests.
+                 Review:    DT
+
+JG-2006-02-10-0: Testsuite: Minor fixes and cleanup.
+                 Review:    RD
+
+HP-2006-02-09-0: Bugfix:    qrsh now adds a '\n' to error output recieved from
+                            shepherd.
+                            While fixing this, I replaced some
+                            strcpy()/strcat() with snprintf().
+                 Bugtraq:   6383256
+                 Issue:     1978
+                 Changed:   qsh.c, err_trace.c, qlogin_starter.c
+                 Review:    RD
+
+OJ-2006-02-06-0: Testsuite: Added error handling in *ckpt, *e routines
+                            in  sge_checkpoint.60.tcl, sge_host.tcl
+                            and control_procedures.tcl
+                 Review:    DT
+
+JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called 
+                            from testsuite.
+                            Code coverage analysis using Solaris cc/tcov.
+                            Fixed testsuite option execute_func and qping test.
+                 Review:    RD
+
+OJ-2006-01-31-0: Testsuite: Added error handling in *attr routines
+                            in sge_procedures.tcl; modified *cal routines
+			                   in sge_calendar.tcl
+                 Review:    DT
+                 Issue:     477
+
+JG-2006-01-31-0: Enhancem.: Merged JG-2006-01-30-0 from V60s2_BRANCH:
+                            cleanup aimk code coverage options
                             cleanup of daemonizing including insure related
                             actions.
                  Review:    RD
 
-JG-2005-12-28-0: Bugfix:    qrsh always did verbose output (no CR/IZ, as the
-                            bug did not appear in any released product).
+AH-2006-01-26-0: Enhancem.: Added more relevant information to starting up
+                            info message in daemon messages files
+                 Changed:   sge_qmaster, sge_execd, sge_schedd
+                 Review:    JG
+
+JG-2006-01-25-0: Testsuite: Fixes and cleanup in testsuite framework.
+                 Review:    RD
+
+OJ-2006-01-18-0: Testsuite: Added -M(m)ckpt functionality to
+                            in sge_checkpoint.tcl, modified set_exechost.tcl
+		                      to support fast add
+                 Review:    DT, JG
+                 Issue:     477
+
+JG-2006-01-16-0: Testsuite: Enhanced testsuite framework by "busy connection" 
+                            detection (missing close_spawn_process calls).
+                            Additional menu item dumping open connections.
+                            Cleanup in remote_procedures.
                  Review:    CR
 
-JG-2005-12-27-0: Bugfix:    Merged JG-2005-12-23-0 from maintrunk:
-                            - fixed arch script for ia64 architecture
-                            - fixed a minor memory access problem in japi
-                            - fixed a bug in rsh client
-                 Bugtraq:   6366691
-                 Review:    RD
+OJ-2006-01-13-0: Testsuite: Fixed return codes for *attr procedures
+	                    in sge_procedures.tcl
+                 Review:    pending
+                 Issue:     477
+
+JG-2006-01-12-0: Testsuite: Fixed broken testsuite (install).
+
+SG-2006-01-12-0: Bugfix:    fixed SG-2006-01-06-0, local
+                            event clients did not work
+                 Changed:   qmaster
+                 Review:    JG
+
+JG-2006-01-11-0: Testsuite: Cleanup of remote_procedures.
+                 Review:    CR
+
+OJ-2006-01-11-0: Testsuite: cleaned up add_* del_* procedures for qconf tests
+                 Changed:   testsuite
+                 Review:    JG
+                 Issue:     477
+
+SG-2006-01-06-0: Enhancem.: enables process loal event clients
+                            enables 1 event client per thread
+                 Changed:   all
+                 Review:    JG
+
+DT-2006-01-04-0: Docs:      o Updated qselect man page
+                 Issue:     1955
+                 Bugtraq:   6368942
+                 Changed:   qselect(1)
+
+DT-2006-01-04-0: Testsuite: o Enhanced drmaa_wait() tests
+                 Changed:   test_drmaa
+
+SG-2006-01-04-0: Bugfix:    fixed the build
+
+OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to 
+			                   qconf test
+                            added sge_sharetree*, sge_event_client in tcl_files
+                 Changed:   testsuite
+                 Review:    pending
+                 Issue:     477
+
+
+JG-2005-12-28-0: Bugfix:    - qrsh always did verbose output (no CR/IZ, as the
+                              bug did not appear in any released product).
+                 Testsuite: - fixed broken testsuite for 5.3
+                            - shadow only hosts were not added to admin host 
+                              list
+                            - enhancements to remote connection handling
+                 Review:    CR
+
+DT-2005-12-23-0: Enhancem.: o Cleaned up DRMAA 0.95/1.0 transition
+                            o Moved ARCo utils into libutil
+                            o distinst defaults to current architecture
+                 Review:    pending (AH)
+                 Changed:   JAPI, classes, distinst, aimk
+
+JG-2005-12-23-1: Testsuite: Fixed broken testsuite.
 
 RD-2005-12-23-0: Bugfix:    modification of hgrp results in glibc error message
                             printed by qconf and abort
@@ -368,32 +903,155 @@ RD-2005-12-23-0: Bugfix:    modification of hgrp results in glibc error message
                  Issue:     1947
                  Review:    JG
 
+JG-2005-12-23-0: Bugfix:    - fixed arch script for ia64 architecture
+                            - fixed a minor memory access problem in japi
+                            - fixed a bug in rsh client
+                 Bugtraq:   6366691
+                 Testsuite: make testsuite run on lx24_ia64 and lx26_ia64.
+                 Review:    RD
+
+OJ-2005-12-22-0: Testsuite: moved procedues in sge_pe, sge_host, sge_calendar,
+                            sge_qconf_config, sge_users, sge_userset
+                 Review:    DT
+		 Issue:     477
+
+OJ-2005-12-22-1: Testsuite: added files sge_calendar.*, sge_users.* 
+			    sge_userset.* which contain procedures
+  			    to be used by new qconf tests.
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-2: Testsuite: new procedures to test qconf -pe
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-3: Testsuite: new files from sge_procedures.* containing 
+			    procedures for checkpointing.
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-4: Testsuite: new procedure for qconf -sconfl
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-4: Testsuite: new  procedures for qconf
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-5: Testsuite: new qconf tests in clients/qconf
+                 Review:    DT
+                 Issue:     477
+
+OJ-2005-12-22-6: Testsuite: new procedure for qconf -sprjl
+                 Review:    DT
+                 Issue:     477
+
+JG-2005-12-21-0: Bugfix:    - fixed broken build
+                            - fixed broken distinst for multiple architectures
+                 Enhancem.: - compilation with code coverage (tcov) on Solaris
+                 Testsuite: - don't create error/output files in qacct test
+                 Review:    SG
+
+DT-2005-12-20-0: Bugfix:    o Fixed broken build
+                 Changed:   japi/Makefile
+
 RD-2005-12-20-0: Bugfix:    qsub -w w changes -sync behavior
-                            (merged from maintrunk)
                  Issue:     1945
                  Bugtraq:   6363823
                  Review:    SG
 
 CR-2005-12-20-1: Cleanup:   fixed potential buffer overflows in sge_exec_job()
-                            (merged from maintrunk)
                  Issue:     1950
                  Bugtraq:   6365380
-                 Changed:   execd
                  Review:    RD
 
-EB-2005-12-15-0: Bugfix:    subordinate properties lost on qmaster restart
-                 Issue:     1741
-                 Bugtraq:   6319223
-                 Changed:   sge_qmaster
-                 Review:    SG 
+CR-2005-12-20-0: Testsuite: - changed handle_vi_edit() time measurement
+                 Review:    RH
 
-MD-2005-12-12-1: Bugfix:    Edits to settings.csh and settings.sh
-                            user-unfriendly error messages when attempting 
-                            to install on incorrect platform
-                 Bugtraq:   5109725, 4828799
-                 Issue:     1934, 1935  
-                 Changed:   create_settings.sh, inst_common.sh
-                 Review:    HP      
+SG-2005-12-19-0: Enhancem.: - second part of making the libs thread safe
+                              and removing the master lists. All master
+                              lists have been removed.
+                            - fixed a bug in the event mirror. Introduced
+                              with SG-2005-12-08-0
+                 Changed:   all
+                 Review:    RD
+
+DT-2005-12-17-2: Bugfix:    o Fixed DENTER in sge_conf for INHERIT_ENV
+                 Changed:   sge_conf.c
+
+DT-2005-12-17-1: Bugfix:    o Added missing DRMAA error code
+                 Enhancem.: o Added versioning to DRMAA libs
+                 Review:    pending (AH)
+                 Changed:   DRMAA, distinst
+
+DT-2005-12-17-0: Testsuite: o Added missing test_drmaa tests
+                            o Added preflight check for drmaaj test
+                            o Added back excluded jUnit tests
+                            o Added suspendable sleeper script
+                            o Added env param to startup_execd{}
+                            o Added function to get shared lib var name
+                            o Added function to wait for a config change to
+                              propogate
+                            o Fixed job_environment test
+                 Issue:     1388, 1795
+                 Review:    CR
+                 Changed:   testsuite
+
+CR-2005-12-16-1: Testsuite: removed waiting times in startup_qmaster()
+                 Review:    TBD
+
+CR-2005-12-16-0: Testsuite: o made handle_vi_edit() more stable
+                            o additional cleanup
+                 Review:    TBD
+
+EB-2005-12-16-0: Testsuite: added test for issue 1741
+                 Review:    TBD
+
+JG-2005-12-15-0: Testsuite: Extended system_tests/clients/qacct,
+                            cleanup of get_qacct function.
+                 Review:    RD
+
+CR-2005-12-15-2: Testsuite: some additional code cleanup for remote procedures
+                 Review:    RD
+
+CR-2005-12-15-1: Testsuite: modified issue 126 test to allow a time range 
+                            for job to get into suspend state
+                 Review:    RH
+
+RD-2005-12-15-0: Bugfix:    qtcsh behaves differently in direct mode from qrshmode
+                 Bugtraq:   6344960
+                 Issue:     1858
+                 Review:    CR
+
+CR-2005-12-15-0: Testsuite: - fixed some problems with handle_vi_edit()     
+                            - improved shell spawn procedures
+                            - new procedure: delete_remote_file()
+                            - fixed file_parsing test
+                            - fixed qtcsh test
+                            - fixed qconf test
+                 Review:    RD
+
+RD-2005-12-13-0: Bugfix:    - incorrect qsub error message, if an invalid
+                              integer value is passed to the -l option
+                            - qconf -sstnode cannot find root
+                            - qstat -qs doesn't work
+                            - "qstat -explain E" displays explanation of the
+                              same error two times.
+                            - qstat -q filter does compare hosts in queue
+                              instances
+                 Bugtraq:   6329378, 6291047, 5086007, 6349037, 6362523
+                 Issue:     1930, 751, 1941, 1933, 1940
+                 Review:    MD
+
+CR-2005-12-13-0: Testsuite: o fixed check some descriptions and added check
+                              description check at testsuite startup
+                            o fixed drmaaj test (export LD_LIBRARYN32_PATH)
+                            o install_core_system (interactive) can be aborted
+                              when running in testsuite debug mode
+                            o fixed qrsh test which sometimes killed qrsh
+                              job while qrsh_exit_status file is not written
+                              (with CTRL-C)
+                 Review:    MD           
 
 MD-2005-12-12-0: Bugfix:    INSTALL: screen not cleared
                  Bugtraq:   5063318
@@ -401,53 +1059,138 @@ MD-2005-12-12-0: Bugfix:    INSTALL: screen not cleared
                  Changed:   sge_ca
                  Review:    AA
 
-MD-2005-12-12-0: Bugfix:    fixed typo in Changelog
+MD-2005-12-12-0: Bugfix:    merged from S2_BRANCH incuded in u7
+                 Changed:   inst_sge, install_modules
 
-SG-2005-12-09-0: Bugfix:    fixed a memory leak in the qmaster
-                 Review:    JG
+SG-2005-12-12-0: Bugfix:    fixed a bug added in SG-2005-12-08-0
+                            In case of a qconf -ke all -ks with a not
+                            existing scheduler, one would only see the
+                            scheduler error message, but not the execd
+                            messages.
                  Changed:   qmaster
+                 Review:    EB
+
+HP-2005-12-09-0: Bugfix:    fixed broken build on alinux
+                 Changed:   daemons/qmaster/sge_qmaster_threads.c
+                 Review:    Not needed
+
+CR-2005-12-09-0: Testsuite: Using longer timeouts for spool directory
+                            removal
+                 Review:    RH
+
+SG-2005-12-08-0: Enhancem.: - first part of making the libs thread safe
+                              and removing the master lists
+                            - fixed a memory leak in c_gdi, related to
+                              qconf -ks
+                            - fixed a bug in job number spooling
+                 Review:    DT
+                 Changed:   all
+
+JG-2005-12-08-0: Testsuite: Added test cases for qconf -se and -sel.
+                            Additional utility functions and cleanup.
+                 Review:    CR
 
 CR-2005-12-08-0: Bugfix:    Fixed minor memory leaks from insure test
                  Review:    AA
 
-RD-2005-12-07-0: CVS        Created V60u7_TAG
----------------------------------------------
+RD-2005-12-08-0: Bugfix:    fixed broken shepherd on irix
+                            introduced due to FCLOSE cleanup 
+                 Changed:   qrsh_starter, shepherd, execd
+                 Review:    CR
 
-RD-2005-12-01-0: Bugfix:    disabled job error in case qrsh_exit code can't be
-                            read
+JG-2005-12-07-0: Testsuite: New module tcl_files/sge_host.tcl.
+                            Cleanup of get_exechost.
+                            New functions for calling SGE commands and 
+                            error handling.
+                 Review:    CR
+
+JG-2005-12-06-0: Bugfix:    parsing error in cluster config, qmaster_params 
+                 Review:    SG
+
+DT-2005-12-06-0: Bugfix:    o Fixed DRMAA C binding version number
+                            o Fixed DRMAA memory leak
+                 Changed:   DRMAA, test_drmaa
+                 Issue:     1931
+                 Bugtraq:   6359575
+                 Review:    RD, AH
+
+RD-2005-12-06-0: Bugfix:    Fixed broken bins on irix65
+                            removed 3rdparty/snprintf from irix65 build
+                 Changed:   all
+                 Review:    RH
+
+HP-2005-12-06-1: Bugfix:    Fixed broken build on win32-x86
+                 Changed    utilbin/Makefile
+
+HP-2005-12-06-0: Bugfix:    Removed weird line of code
+                 Changed:   daemons/execd/exec_job.c
+                 Bugtraq:   6291049
+                 Issue:     1032
+                 Review:    Not needed
+
+RD-2005-12-05-0: Enhancem:  returns errno message if qrsh_exit_code can't be
+                            opened
+                            added SGE_CLOSE macro
+                 Review:    AA
+
+CR-2005-12-02-0: Testsuite: enhanced executable file check procedure 
+                            at testsuite startup
+                 Review:    AA
+
+JG-2005-12-02-0: Testsuite: Minor fixes for bugs/issuezilla/540, 
+                            system_tests/scheduler/sharetree, 
+                            system_tests/shadowd/migrate, auto install with bdb
+                            server, auto_install with Solaris zones.
+                            Use fast option (e.g. -Aq instead of -aq) where 
+                            possible.
+                 Review:    CR
+
+CR-2005-12-02-0: Testsuite: o redo of some changes by CR-2005-12-01-0
+
+CR-2005-12-01-0: Testsuite: o Fixed some testsuite errors
+                 Review:    MD
 
 DT-2005-11-30-0: Bugfix:    o Fixed broken INHERIT_ENV
-                            - Merged from DT-2005-11-30-0 (Maintrunk)
                  Changed:   sge_conf.c
                  Review:    pending
 
-RD-2005-11-30-0: Bugfix:    fixed broken build on Irix 6.5
-                            changed version string to 6.0u7
+EB-2005-11-30-0: Testsuite: create a test for issue 1877
+                 Issue:     1879
+                 Review:    CR 
 
-CR-2005-11-30-0: Bugfix:    a second started schedd/execd daemons may not stop
-                            if started when qmaster is down
-                            (enhancement for CR-2005-11-24-1)
-                 Bugtraq:   6349818
-                 Issue:     1891
-                 Changed:   libgdi
-                 Review:    AA
+CR-2005-11-30-0: Testsuite: modified system_test/execd/startup test to produce
+                            warning message and skipp second startup execd
+                            test on diffent port. Test has do be re-activated
+                            when BT: 6350264 (IZ: 1893) is fixed
+                 Review:    JG
 
-MD-2005-11-29-0: Bugfix:    fixed a typo in inst_sge file
-                 Changed:   inst_sge
+EB-2005-11-29-0: Bugfix:    Merged following from V60s2_BRANCH:
+                            - job finish although terminate method is still
+                              running (EB-2005-11-16-1)
+                            - job finish does not terminate all processes
+                              of a job (EB-2005-11-16-0)
+                            - qconf -mstree aborts (EB-2005-11-18-0)
+                 Issue:     1874, 1876, 1877
+                 Bugtraq:   6348299, 6348516, 6348517
+                 Changed:   qconf, sge_shepherd, sge_execd, sge_qmaster,
+                            worker
+                 Review:    JG 
 
 DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
-                            - Merged from DT-2005-11-29-0 (Maintrunk)
                  Changed:   shepherd
-                 Review:    pending (RD)
+                 Review:    RD
 
-MD-2005-11-29-0: Bugfix:    fixed a typo in inst_template.conf file
-                            which is used for autoinstallation
-                 Review:    AS
-                 Changed:   inst_common.sh, sge_ca, inst_template.conf
+RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
+	              Review:    DT
 
-DT-2005-11-29-0: Docs:      o Checked in missing changes to sge_conf
-                            - Merged from DT-2005-11-04-0 (Maintrunk)
-                 Changed:   man5/sge_conf
+CR-2005-11-29-1: Testsuite: added queue error check for 
+                            checktree/system_tests/clients/qrsh/check.exp
+                 Review:    RD
+
+RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first
+                            fixed testsuite test qconf, file_parsing & complex 
+                 Changed:   shepherd
+                 Review:    CR
 
 CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib AND after get_sock_opt() errors
@@ -455,15 +1198,56 @@ CR-2005-11-29-0: Bugfix:    o check file descriptor errors after select()
                  Review:    RD
                  Changed:   commlib
 
-RD-2005-11-29-0: Bugfix:    deleting a qrsh job kills the rshd first 
-                 Changed:   shepherd
-                 Review:    CR 
+JG-2005-11-28-1: Testsuite: Fixed check system_tests/shadowd/migrate.
+                 Review:    CR
 
 HP-2005-11-28-0: Bugfix:    removed spool* binaries and libraries from distinst
                  Changed:   scripts/distins
                  Review:    AS
 
-RD-2005-11-24-0: Bugfix:    fixed man page format tags
+JG-2005-11-28-0: Testsuite: Fixed installation on lx26-* and hp11-64.
+                            Cleanup and fixes for bdb server installation.
+                 Review:    CR
+
+CR-2005-11-27-2: Testsuite: modified system_tests/clients/qtcsh test
+                            to be more error tolerant
+                 Review:    RD
+
+CR-2005-11-27-1: Testsuite: fixed shutdown_system_daemon() procedure for
+                            linux kernel 2.4 systems
+                 Review:    RD
+
+CR-2005-11-27-0: Testsuite: fixed checktree/system_tests/clients/qconf:
+                               o removed L10N check category
+                                 (test expects english qconf output)
+                               o output parsing did not work for long
+                                 hostnames
+                 Review:    RD 
+
+CR-2005-11-26-0: Testsuite: fixed bug in issue test bugs/issuezilla/1802
+                 Review:    RD
+
+CR-2005-11-25-3: Testsuite: fixed bug in issue test bugs/issuezilla/1451
+                 Review:    RD
+
+CR-2005-11-25-2: Testsuite: qacct test depends on qsub test
+
+SG-2005-11-25-0: Testsuite: added test for issue 1916
+                 Review:    JG
+                 Changed:   functional/tight_integration/check.exp
+
+CR-2005-11-25-1: Testsuite: o added some waits because of timing problems
+                            o fixed variable setting for issue 126 test
+                 Review:    JG
+
+CR-2005-11-25-0: Testsuite: removed wait_for_enter call in 
+                            checktree/functional/subordinate
+
+SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
+                 Issue:     1916
+                 Bugster:   6355263
+                 Changed:   qmaster
+                 Review:    RD, JG
 
 CR-2005-11-24-1: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
@@ -473,16 +1257,15 @@ CR-2005-11-24-1: Bugfix:    a second started schedd/execd daemons may not stop
                  Changed:   libgdi, execd
                  Review:    AA
 
-SG-2005-11-24-1: Bugfix:    Reschedule of a parallel job crashes the qmaster
-                 Issue:     1916
-                 Bugster:   6355263
-                 Changed:   qmaster
-                 Review:    RD, JG
+CR-2005-11-24-0: Testsuite: o fixed shadowd migrate test
+                            o removed which call at create_shell_script()
+                 Review:    AA
 
-MD-2005-11-24-0: Bugfix:    On Linux archs the shadow_masters file became 
-                            corrupt by shadowhost installation
-                 Changed:   inst_sge
-                 Review:    CR
+RD-2005-11-24-0: Bugfix:    merge from s2_branch (RD-2005-11-07-1)
+                            qrsh -V doesn't always work.
+                 Issue:     1845
+                 Bugtraq:   6346704
+                 Review:    AH 
 
 RH-2005-11-24-0: Enhancm.:  New arguments for scripts mk_catman and mk_ascman
                  Changed:   mk_catman and mk_ascman
@@ -490,30 +1273,26 @@ RH-2005-11-24-0: Enhancm.:  New arguments for scripts mk_catman and mk_ascman
 
 SG-2005-11-24-0: Bugfix:    fixed scheduler crash
                  Changed:   scheduler
-                 Review:    RD
-   
-DT-2005-11-23-2: Docs:      o Fixed several man page issues
-                            - Merged from DT-2005-11-23-2 (Maintrunk)
+                 Review:     RD
+
+DT-2005-11-23-2: Docs:      o Fixed several man page issues.
                  Issue:     1265, 1631, 1527, ?, ?, ?, ?
                  Bugtraq:   6287860, 6287940, 6287910, 6353555, 4919544,
                             6314301, 4780562
                  Changed:   Man pages
 
 DT-2005-11-23-1: Bugfix:    o Fixed DRMAA Java language binding on HP
-                            - Merged from DT-2005-11-23-1 (Maintrunk)
                  Changed:   aimk.site
 
-DT-2005-11-23-0: Testsuite: o Fixed output/error files for drmaaj test
-                            - Merged from DT-2005-11-23-0 (Maintrunk)
-                 Changed:   testsuite
+DT-2005-11-23-0: Cleanup:   o Added missing SISSL header.
+                            o Created script to find env vars
+                            - Merged from DT-2005-11-22-0 (V60s2_BRANCH)
+                 Testsuite: o Fixed output/error files for drmaaj test
+                 Changed:   testsuite, drmaaj
 
-MD-2005-11-23-0: Bugfix:    auto install ignores DB_SPOOLING_SERVER setting
-                 Issue:     1913
-                 Bugster:   6354236
-                 Review:    JG
-                 Changed:   install_modules
-
-RD-2005-11-23-0: Bugfix:    Fixed broken build on irix
+CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
+                            o Fixed wrong use of strncpy
+                 Review:    AA, SG
 
 SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother 
                               simultaneously
@@ -523,16 +1302,22 @@ SG-2005-11-23-0: Bugfix:    - mutually subordinating queues suspend eachother
                  Review:    JG
                  Changed:   scheduler
 
+SG-2005-11-23-0: Testsuite: added test for issue 1894
+                 Review:    JG
+                 Changed:   checktree/functional/consumable_resources/
+                            check.60.exp
+
+RH-2005-11-23-0: Testsuite: Required host for additional checktrees added
+                 Changed:   testsuite
+                 Review:    CR
+
 JG-2005-11-23-0: Bugfix:    Fixed broken upgrade from 5.3 to 6.0.
                  Review:    MD
 
-CR-2005-11-23-0: Bugfix:    o Fixed Insure memory leaks
-                            o Fixed wrong use of strncpy
-                 Review:    AA, SG
-                            
-
-DT-2005-11-22-0: Cleanup:   o Added missing SISSL header.
-                            o Created script to find env vars
+EB-2005-11-22-0: Testsuite: create a testsuite test for issue 1874
+                 Issue:     1911
+                 Changed:   testsuite
+                 Review:    TBD
 
 CR-2005-11-22-0: Bugfix:    o Fixed Insure memory leaks
                             o removed obsolete start_commd variable
@@ -547,35 +1332,50 @@ RD-2005-11-22-0: Bugfix:    default process priority on windows freezes the
                  Bugtraq:   6353638
                  Review:    AH
 
-AH-2005-11-22-0: Bugfix:    Disable problematic schedd logging for jobs not
+RD-2005-11-16-0: Testsuite: Fixed qtcsh test
+
+JG-2005-11-22-1: Testsuite: Use HP11 test binaries on HP1164 platform, if 
+                            $SGE_ROOT/util/arch reports hp11 as binary platform.
+                            This is the case for our binary distribution.
+                 Review:    CR
+
+JG-2005-11-22-0: Bugfix:    libdrmaa.sl did not work on HP11 (link error)
+                 Issue:     1912
+                 Bugtraq:   6354164
+                 Review:    SG
+
+AH-2005-11-22-1: Bugfix:    Disable problematic schedd logging for jobs not
                             finished as foreseen by reservation schedule
-                            Minor cleanup in spool lib error handling code 
+                            Minor cleanup in spool lib error handling code
                             that reads in sge_conf(5) and host_conf(5)
                  Changed:   scheduler
                  Review:    RD
                  Bugtraq:   6353792
-
-JG-2005-11-22-0: Bugfix:    - parsing error in cluster config, qmaster_params 
-                              (introduced after s2 snapshot1)
-                            - libdrmaa.sl did not work on HP11 (link error)
-                 Issue:     1912
-                 Bugtraq:   6354164
-                 Review:    EB, SG
 
 SG-2005-11-22-0: Bugfix:    qstat incorrectly reports job scheduling failure
                  Issue:     1894
                  Changed:   scheduler
                  Review:    JG
 
-EB-2005-11-18-0: Bugfix:    qconf -mstree aborts
-                 Issue:     1874
-                 Bugtraq:   6348299
-                 Changed:   qconf   
-                 Review:    JG
+CR-2005-11-21-0: Testsuite: o enhanced issue 540 to support not NFS shared
+                              user home directory
+                            o fixed automatic install test to use default
+                              db and execd spool directory from manual 
+                              installation
+                            o performance improvements for start_remote_prog
+                              and handle_vi_edit
+                 Review:    MD
 
-DT-2005-11-18-0: Bugfix:    o Checked in missing changes
-                            - Merged from DT-2005-09-09-0
-                 Changed:   classes/build.xml
+JG-2005-11-18-1: Testsuite: Cleanup/fixes for bugs/issuezilla/1768 and 
+                            bugs/issuezilla/1837.
+                            Added utility functions for handling of qtask file.
+                 Review:    RD
+
+JG-2005-11-18-0: Testsuite: Fixed checks api/drmaa and bugs/issuezilla/1780.
+                 Review:    CR
+
+CR-2005-11-18-0: Testsuite: fixed another problem with start_remote_prog
+                 Review:    JG
 
 MD-2005-11-17-0: Bugfix:    - installation of qmaster failed when using 
                               /etc/services
@@ -583,70 +1383,67 @@ MD-2005-11-17-0: Bugfix:    - installation of qmaster failed when using
                  Bugtraq:   6351728
                  Changed:   util lib
                  Review:    CR
-                        
+
+CR-2005-11-17-2: Testsuite: - fixed tcl in issue test 1330
+                 Review:    RD
+
+CR-2005-11-17-1: Testsuite: - disabled file check of start_remote_prog
+                            - added file check to generated script
+                 Review:    MD
+
+CR-2005-11-17-0: Testsuite: fixed unsupported warning message create for
+                            test checktree/bugs/issuezilla/1096/ 
+                 Review:    RD
+
+JG-2005-11-17-0: Bugfix:    Fixed memory leaks in module test and qmaster
+                            (introduced during s2 development)
+                            Merge from V60s2_BRANCH, JG-2005-11-16-0
+                 Review:    CR
+
+RD-2005-11-16-0: Testsuite: Fixed qtcsh test
+                 Review:    CR
+
 DT-2005-11-16-0: Bugfix:    o Clearly explained -purge in qconf man page
                             o Added -rsstree to qconf man page
                             o Sorted options in qconf man page in alphabetical
                               order
-                            - Merged from DT-2005-11-16-0 (Maintrunk)
                  Issue:     1783, 1897, 1898
                  Bugtraq:   6351174, 6351240, 6351278
                  Changed:   man/man1/qconf.1
 
-AA-2005-11-15-0: Bugfix:   - qmon cluster conf reprioritize field missing
-                           - qmon cluster conf add can destroy existing cluster conf 
-                 Issue:    1904
-                 Bugtraq:  6353526
-                 Review:   MD
-                 Changed:  qmon
-                 
-RD-2005-11-15-0: Bugfix:   - qtcsh on linux may not execute local command
-                           - fixed broken build on win32-x86
-                 Changed   qtcsh
-                 Review:   AA
+HP-2005-11-16-0: Bugfix:    Fixed broken build on non-Solaris-non-Linux archs
+                 Review:    EB
+                 Changed:   shepherd, cull Makefile, ...
 
 CR-2005-11-16-0: Bugfix:    o check file descriptor errors after select()
                               errors in commlib
-                            o see also CR-2005-11-29-0
                  Review:    RD
                  Changed:   commlib
 
-EB-2005-11-16-1: Bugfix:    job finish although terminate method is still 
-                            running 
-                 Bugtraq:   6348517
-                 Issue:     1877
-                 Changed:   sge_shepherd 
-                 Review:    JG
-
-EB-2005-11-16-0: Bugfix:    job finish does not terminate all processes
-                            of a job
-                 Bugtraq:   6348516
-                 Issue:     1876
-                 Changed:   sge_execd, sge_qmaster, sge_shepherd, worker
-                 Review:    JG
-
-JG-2005-11-16-0: Bugfix:    Fixed memory leaks in module test and qmaster
-                            (introduced during s2 development)
-                 Review:    CR
-
-DT-2005-11-15-1: Bugfix:    o Clarified regex in complex man page
+DT-2005-11-15-2: Bugfix:    o Clarified regex in complex man page
                             o First pass at improving qconf -purge man entry
                             o Uncommented -mhgrp in qconf man page
                             o Fixed help output for qconf -purge
-                            - Merged from DT-2005-11-15-2 (Maintrunk)
                  Issue:     1782, 1783, 1872, 1895
                  Bugtraq:   6350714, N/A, 6347840, 6349351
                  Changed:   man1, man5, qconf
 
+DT-2005-11-15-1: Testsuite: o Fixed test for IZ 1760
+                 Changed:   Test for IZ 1760
+                 Review:    pending
+
 DT-2005-11-15-0: Bugfix:    o Fixed abort in drmaa_job_ps()
-                            - Merged from DT-2005-11-15-0 (Maintrunk)
                  Issue:     1892
                  Bugtraq:   6349972
                  Changed:   JAPI
                  Review:    AH
 
-HP-2005-11-15-0: Bugfix:    Fixed broken build
-                 Changed:   libs/cull/Makefile
+JG-2005-11-15-1: Testsuite: Fixed start of binaries (start_remote_prog) with
+                            user defined environment.
+                 Review:    CR
+
+CR-2005-11-15-1: Testsuite: Fixed execd startup test
+                 Review:    RD
 
 CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
                             if started when qmaster is down
@@ -656,20 +1453,11 @@ CR-2005-11-15-0: Bugfix:    a second started schedd/execd daemons may not stop
                  Review:    RD
                  Changed:   commlib, gdi, schedd, execd, qping 
 
-CR-2005-11-14-1: Bugfix:    a second started schedd/execd daemons may not stop
-                            if started when qmaster is down
-                 Bugtraq:   6349818
-                 Issue:     1891
-                 Review:    RD
-                 Changed:   commlib, gdi, schedd, execd, qping 
-
-CR-2005-11-14-0: Cleanup:   fixed broken build (sge_schedd.c)
-
-MD-2005-11-14-0: Enhancem:  - creating user cert for windows administrator
-                            - enhanced the autoinstall log file moving
-                            - enhanced the stdout redirection for autoinstall
-                 Changed:   install_modules
-                 Review:    AA, HP
+JG-2005-11-15-0: Testsuite: Fixed invalid use of upvar with empty var name.
+                            Fixes and cleanup for checks
+                            bugs/issuezilla/1096, system_tests/clients/qdel,
+                            system_tests/clients/qstat, 
+                 Review:    CR
 
 RD-2005-11-14-0: Bugfix:    qconf -ae hostname segfaults
                  Changed:   qconf
@@ -677,108 +1465,70 @@ RD-2005-11-14-0: Bugfix:    qconf -ae hostname segfaults
                  Issue:     1884
                  Review:    CR 
 
+CR-2005-11-14-1: Bugfix:    a second started schedd/execd daemons may not stop
+                            if started when qmaster is down
+                 Bugtraq:   6349818
+                 Issue:     1891
+                 Review:    RD
+                 Changed:   commlib, gd, schedd, execd, qping 
+
+
 JG-2005-11-14-0: Bugfix:    Update from 5.3 to 6.0 failed if the 5.3 cluster 
                             contained an empty complex.
                  Bugtraq:   6349768
                  Issue:     1890
-                 Review:    MD 
+                 Review:    MD
 
-AA-2005-11-14-0: Bugfix:    sge_ca script fails when no /dev/random present due
-                            to permission problem
-                            -addition of -user option
-                 Bugtraq:   6347267
-                 Issue:     1869
-                 Changed:   sge_ca
-                 Review:    MD 
+RD-2005-11-14-0: Testsuite: - fixed autoinstallation spool dirs
+                            - fixed tests 1330, 1451, 1803 
+                 Review:    CR
+
+CR-2005-11-14-0: Testsuite: new procedure check_all_system_times():
+                               test sytem time on each cluster host before
+                               starting install_core_system.
+                 Review:    RH
 
 DT-2005-11-11-0: Testsuite: o Added missing variable to Settings
                  Bug:       o Fixed problem with CR-2005-11-10-0
-                            - Merged from DT-2005-11-11-0 (Maintrunk)
                  Changed:   jUnit, commlib
                  Review:    CR
 
-JG-2005-11-11-0: Enhancem.: Fixed a number of compile errors in some module
-                            tests and made them part of a standard build.
-                            They are called by testsuite.
-                            Merge from maintrunk JG-2005-09-23-0.
+CR-2005-11-11-1: Testsuite: o fixed incorrect change from CR-2005-11-11-0
+
+CR-2005-11-11-0: Testsuite: o better remote file checking for start_remote_prog()
                  Review:    RD
 
+OJ-2005-11-11-0: Testsuite: Extended complex_global_host{} to test for regular 
+                            expressions in complex values for test_restring; 
+                            modified complex_run_job to account 
+                            for issues found with qsub.
+                 Issue number: 461 
 
-DT-2005-11-10-0: Testsuite: o Added test for IZ1768
+DT-2005-11-10-0: Testsuite: o Fixed test for qsub -ac
                             o Removed test for IZ1709
                             o Fixed version test in drmaaj
                             o Expanded drmaa & drmaaj tests
-                            - Merged from DT-2005-11-10-0 (Maintrunk)
-                 Changed:   jUnit tests, DRMAA unit tests
+                 Changed:   Testsuite, jUnit tests, DRMAA unit tests
                  Review:    pending
 
-MD-2005-11-10-0: Bugfix:    - nonadmin user installation of qmaster fails
+CR-2005-11-10-3: Testsuite: fixed tcl error in system_tests/shepherd/job_start
+                 Review:    RD
+
+CR-2005-11-10-2: Testsuite: fixed problem for start_remote_prog which and file
+                            test
+                 Review:    RD
+
+CR-2005-11-10-1: Testsuite: fixed /system_tests/clients/qstat
+                 Review:    RD
+
+MD-2005-11-10-0: Bugfix:    merged from S2_BRANCH
+                            - nonadmin user installation of qmaster fails
                             - SHADOW host install not able to install shadowd 
                               on more than one given shadowhost
                  Bugtraq:   6347954
                  Issue:     1873
                  Changed:   install_modules
                  Review:    RD 
-
-CR-2005-11-10-0: Enhancem.: - added possibility to influence host name resolving
-                              by setting environment variables
-                            - added new commlib error: 
-                              CL_RETVAL_CLOSE_ALIAS_FILE_FAILED
-                 Review:    MD
-
-RD-2005-11-10-0: Bugfix:    - sgeCA may be inconsistent after new installation
-                            - install script sets rsh_daemon to 
-                              /usr/sbin/in.rshd on win32-x86 
-                            - qconf -mconf/-sconf does not resolve aliased host
-                            - lock initialisation for qsh
-                 Changed:   install scripts, qconf, qsh
-                 Bugtraq:   6347351, 6348478
-                 Issue:     1880 
-                 Review:    MD
-
-DT-2005-11-09-0: Docs:      o Cleaned up man pages
-                            o Removed -uall from qhold and qrls
-                            o Added list of ignored options for DRMAA
-                            - Merged from DT-2005-11-09-0 (Maintrunk)
-                 Issue:     1870
-                 Changed:   man pages
-
-RD-2005-11-08-0: Bugfix:    fixed broken build on sol-*, lx24-*, darwin & 
-                            win32-x86
-
-MD-2005-11-07-0: Bugfix:    - permission problems with ADMINUSER and adminrun
-                            - cleanups
-                            - text output
-                            - moved function from inst_execd.sh to inst_common.sh
-                 Changed:   inst_sge, install_modules
-                 Review:    HP
-
-AA-2005-11-07-0: Bugfix:    - qmon startup and queue add/modify warning messages
-                            - Makefile fix
-                 Issue:     1378
-                 Bugtraq:   6291016
-                 Review:    JG
-
-RD-2005-11-07-1: Bugfix:    qrsh -V doesn't always work.
-                 Issue:     1845 
-                 Bugtraq:   6346704
-                 Review:    AH
-
-CR-2005-11-07-2: Cleanup:   fixed broken build
-
-JG-2005-11-07-0: Bugfix:    Connection between sge_qmaster and a Berkeley DB
-                            RPC server could timeout.
-                 Issue:     1866
-                 Bugtraq:   6346696
-                 Review:    RD
-
-CR-2005-11-07-1: Cleanup:   removed unused message macro
-
-RD-2005-11-07-0: Bugfix:    qconf and qmaster accept invalid settings for
-                            queue complex_values
-                 Issue:     1847
-                 Bugtraq:   6329832
-                 Review:    JG 
 
 EB-2005-11-07-0: Bugfix:    unable to delete a configuration of a non
                             existing host
@@ -791,10 +1541,136 @@ EB-2005-11-04-0: Bugfix:    qmod -sq can kill a pe job in t state
                  Bugtraq:   6287935
                  Issue:     1619
                  Changed:   sge_qmaster, sge_execd
-                 Review:    AH 
+                 Review:    AH
+
+EB-2005-09-12-0: Cleanup:   replaced fclose by FCLOSE in qmaster
+                 Issue:     1179, 185
+                 Review:    JG
+
+RD-2005-11-10-0: Bugfix:    - sgeCA may be inconsistent after new installation
+                             - install script sets rsh_daemon to 
+                               /usr/sbin/in.rshd on win32-x86 
+                             - qconf -mconf/-sconf does not resolve aliased host
+                             - lock initialisation for qsh
+                  Changed:   install scripts, qconf, qsh
+                  Bugtraq:   6347351, 6348478
+                  Issue:     1880 
+                  Review:    MD
+
+CR-2005-11-10-0: Enhancem.: - added possibility to influence host name resolving
+                              by setting environment variables
+                            - added new commlib error: 
+                              CL_RETVAL_CLOSE_ALIAS_FILE_FAILED
+                 Review:    MD
+
+CR-2005-11-10-1: Testsuite: fixed bugs/issuezilla/1768 again
+                 Review:    RD
+
+CR-2005-11-10-0: Testsuite: wait for pidfile on remote hosts in function
+                            get_grppid_of_job{}
+                 Review:    JG
+
+OJ-2005-11-09-0: Testsuite: Created qtcsh test
+                            to test both in-line options and
+                            interactive options. Resides in checktree/system_tests/clients
+                 Changed:   testsuite
+                 Issue:     419
+                 Reviewed by:   DT, JG
+
+DT-2005-11-09-1: Testsuite: o Hopefully fixed qsub -ac test
+                 Changed:   qsub testsuite test
+
+DT-2005-11-09-0: Docs:      o Cleaned up man pages
+                            o Removed -uall from qhold and qrls
+                            o Added list of ignored options for DRMAA
+                 Issue:     1870
+                 Changed:   man pages
+
+CR-2005-11-09-2: Testsuite: - Fixed problem for darwin hosts: ls doesn't return
+                              exit state != 0 when file is not existing, using
+                              test -f now
+                            - Fixed bugs/issuezilla/1768/
+                 Review:    AA, JG
+
+JG-2005-11-09-0: Testsuite: Fixes and cleanup in system_tests/execd/startup,
+                            system_tests/qmaster/reporting, 
+                            system_tests/scheduler/soft_requests.
+                            Disabled test bugs/issuezilla/1760.
+                 Review:    CR
+
+RH-2005-11-09-0: Testsuite: - Enhancements in the report procedures
+                            - Cleanup hooks for additional checktrees added
+                 Review:    CR
+
+CR-2005-11-09-1: Testsuite: Fixes and cleanup for bugs/issuezilla/1760/
+                            and /system_tests/clients/qconf/check.60.exp
+
+JG-2005-11-09-0: Testsuite: Fixes and cleanup for bugs/issuezilla/1768,
+                            bugs/issuezilla/1803, bugs/issuezilla/1848,
+                            module_tests/generic
+                 Review:    CR
+
+CR-2005-11-09-0: Testsuite: Don't close connections which are ok after a
+                            failed test run.
+
+JG-2005-11-08-2: Testsuite: Fixed installation of Berkeley DB RPC server in
+                            non default cell.
+                            Fixed bugs/issuezilla/1803 and bugs/issuezilla/1848.
+
+JG-2005-11-08-1: Testsuite: Enhancements and cleanup in handle_vi_edit.
+                 Review:    CR
+
+CR-2005-11-08-1: Testsuite: - enhanced shadowd migrate test. Test will now
+                              parse the qmaster messages file for qmaster
+                              exit value 100 state message
+                 Review:    RD
+
+JG-2005-11-08-0: Testsuite: - fixed installation with bdb rpc server and default
+                              location for database directory.
+                            - some fixes and cleanup for qdel test
+                            - fixed deletion of jobs in reporting test
+                 Review:    CR
+
+CR-2005-11-08-0: Testsuite: - added test for issue 1802
+                            - increased cvs update timeout from 
+                              300 to 600 seconds
+                 Review:    RH
+
+CR-2005-11-07-2: Testsuite: fixed wrong compile option setting from check-in
+                            CR-2005-11-07-0 ( when compile options are set to
+                            "none" )
+
+CR-2005-11-07-1: Testsuite: fixed wrong compile option setting from check-in
+                            CR-2005-11-07-0
+
+JG-2005-11-07-0: Bugfix:    Connection between sge_qmaster and a Berkeley DB
+                            RPC server could timeout.
+                 Issue:     1866
+                 Bugtraq:   6346696
+                 Review:    RD
+
+CR-2005-11-07-0: Testsuite: add -spool-classic compile option automatically 
+                            when spool method "classic" is selected
+                 Review:    RH
+
+RD-2005-11-07-0: Bugfix:    qconf and qmaster accept invalid settings for
+                            queue complex_values
+                 Issue:     1847
+                 Bugtraq:   6329832
+                 Review:    JG 
+
+RC-2005-11-07-0: Enhance.:  Tight SGE-SSH integration
+                 Issue:     1788
+                 Changed:   aimk, 3rdparty/remote/Makefile, sgessh.c
+                 Review:    RD
+
+DT-2005-11-07-0: Testsuite: o Added test for issue 1760
+                            o Added new operational locking routine
+                            o Fixed bugs in add_exechost
+                 Issue:     1839
+                 Changed:   Testsuite
 
 DT-2005-11-04-1: Bugfix:    o Fixed issues from review of DT-2005-11-04-0
-                            - Merged from DT-2005-11-04-1 (maintrunk)
                  Issue:     1750
                  Bugtraq:   6250692
                  Changed:   qmaster, config
@@ -802,11 +1678,11 @@ DT-2005-11-04-1: Bugfix:    o Fixed issues from review of DT-2005-11-04-0
 
 DT-2005-11-04-0: Bugfix:    o Added separate reporting parameter for accounting
                               flush interval
-                            - Merged from DT-2005-11-04-0 (maintrunk)
+                            o Fixed broken build on IRIX
                  Issue:     1750
                  Bugtraq:   6250692
                  Changed:   qmaster, config
-                 Review:    AA, OJ
+                 Review:    AA
 
 CR-2005-11-04-0: Bugfix:    additional cleanup/enhancement for CR-2005-11-04-0:
                                - old qmaster will not spool spool data on
@@ -821,6 +1697,9 @@ CR-2005-11-04-1: Bugfix:    CSP consolidate error output if cert CA on client an
                  Bugtraq:   6294875
                  Review:    AA           
 
+DT-2005-11-03-0: Testsuite: o Added test for reporting/IZ1750
+                 Changed:   system_tests/qmaster
+
 MD-2005-11-03-0: Bugfix:    - autoinstall does not support csp installation mode
                             - inst_sge -ux -host <host> might be incomplete if 
                               not run from an admin host
@@ -831,6 +1710,13 @@ MD-2005-11-03-0: Bugfix:    - autoinstall does not support csp installation mode
                  Changed:   inst_sge, install_modules
                  Review:    HP, CR
 
+RH-2005-11-03-0: Testsuite: Integration of additional checktrees implemented
+                 Changed:   testsuite
+                 Review:    CR
+
+RD-2005-11-03-0: Testsuite: fixed test for IZ 1803, 1780 and jobstart test
+                 Review:    CR
+
 CR-2005-11-02-0: Bugfix:    occasional "failed to deliver job" errors due to
                             SIGPIPE in sge_execd
                  Issue:     1856
@@ -838,25 +1724,45 @@ CR-2005-11-02-0: Bugfix:    occasional "failed to deliver job" errors due to
                  Changed:   commlib, execd
                  Review:    AA
 
+HP-2005-11-02-0: Bugfix:    Fixed broken build
+                 Changed:   libs/lck/Makefile
+
 SG-2005-10-31-0: Bugfix:    - a sched conf change with a sharetree can result 
                               in a usage leak
                             - sched conf changes master conf only when needed
                             - minor perf. improv on job submit
                  Issue:     1848
                  Bugtraq:   6342005
-                 Changed:   qmaster, scheduler
+                 Changed:   qmaster, scheduler, testsuite
                  Review:    AA
-
-DT-2005-10-28-0: Bugfix:    o Fixed handling of single-quotes
-                            - Merged from DT-2005-10-27-0 (maintrunk)
-                 Issue:     1762
-                 Bugtraq:   6319233
-                 Changed:   sge_string.c
-                 Review:    RD
 
 RD-2005-10-28-0: Bugfix:    fixed lock cleanup by SG-2005-10-25-0
                             lock was not initialized for non mt binaries
                  Review:    SG
+
+JG-2005-10-28-0: Testsuite: Prevent recursive calls of add_proc_error (when 
+                            errors occur in error reporting)
+                            Fixed rlogin connection leaks.
+                            Cleanup.
+                 Review:    CR
+
+OJ-2005-10-28-0: Testsuite: Extended qdel test to cover test cases described in IZ 125
+                 Issue number:  125
+                 Reviewed by:   JG
+
+DT-2005-10-27-0: Bugfix:    o Fixed handling of single-quotes
+                 Changed:   sge_string.c
+                 Issue:     1762
+                 Bugtraq:   6319233
+                 Review:    RD
+
+JG-2005-10-27-0: Testsuite: Avoid defunct processes after closing rlogin
+                            sessions.
+                 Changed:   remote_procedures.tcl
+                 Review:    RD
+
+DT-2005-10-26-0: Testsuite: o Improved test for qsub -ac for IZ1850
+                 Changed:   qsub test
 
 MD-2005-10-26-0: Bugfix:    - typo in install script text
                             - added autoinstall debug output
@@ -864,12 +1770,19 @@ MD-2005-10-26-0: Bugfix:    - typo in install script text
                  Changed:   inst_qmaster.sh, inst_berkeley.sh, 
                             inst_execd_uninst.sh
 
-DT-2005-10-25-0: Bugfix:    o Fixed quoted qtask arg handing
-                            - Merged from DT-2005-10-25-1 (maintrunk)
+DT-2005-10-25-2: Testsuite: o Improved test for qalter -[ads]c for IZ1762
+                 Changed:   qalter test
+
+DT-2005-10-25-1: Bugfix:    o Fixed quoted qtask arg handing
                  Issue:     1768, 1837
                  Bugtraq:   6317028, 6339756
                  Changed:   sge_qtcsh.c
                  Review:    RD, OJ
+
+RD-2005-10-25-1: Bugfix:    Fixed broken build on Solaris
+
+DT-2005-10-25-0: Testsuite: o Fixed init method for 1709
+                 Changed:   Test for IZ1709
 
 SG-2005-10-25-0: Enhance.:  - lock cleanup
                             - schedd_config lock cleanup
@@ -879,21 +1792,21 @@ SG-2005-10-25-0: Enhance.:  - lock cleanup
                  Changed:   qmaster, scheduler, ...
                  Review:    JG
 
-RD-2005-10-25-1: Bugfix:    Double error message (merged from maintrunk)
-                 Issue:     1767
-                 Bugtraq:   6316995
-                 Review:    RH
-
 RD-2005-10-25-0: Bugfix:    - Binary jobs are problematic for starter and epilog
                               scripts
                             - wording with qconf -cq should be changed
+                            - testsuite does no recognize successfull tests
                  Bugtraq:   6255111, 6207868
                  Issue:     1803, 1842
                  Review:    HP, AH
 
+CR-2005-10-25-2: Cleanup:   removed unused message macros
+
 CR-2005-10-25-1: Bugfix:    fixed broken aimk clean option for some test binaries
-                            (merge from maintrunk)
                  Review:    RD
+
+CR-2005-10-25-0: Bugfix:    added test_heartbeat.c which was missing by 
+                            CR-2005-10-24-0
 
 CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock file 
                               and may break shadowd functionality
@@ -901,10 +1814,14 @@ CR-2005-10-24-0: Bugfix:    - sgemaster -migrate may not delete qmaster lock fil
                               and shadow nodes after a long network failure
                             - added test_heartbeat test binary
                             - INFO text wasn't localized
-                            - see also CR-2005-11-04-0
+                            - testsuite test checktree/system_tests/shadowd/migrate
+                            - see also CR-2005-10-25-0
                  Bugtraq:   6333467, 6320869
                  Issue:     1828, 1820
-                 Review:    AH (RD)       
+                 Review:    AH       
+
+JG-2005-10-24-0: Bugfix:    Fixed broken build on hp11.
+                 Review:    CR
 
 AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effect
                  Issue:     1838
@@ -912,37 +1829,54 @@ AA-2005-10-24-0: Bugfix:    - Changing the cwd flag in qmon - qalter has no effe
                  Changed:   qmon
                  Review:    SG
 
+CR-2005-10-21-0: Testsuite: fixed login problem on fast hosts for root login password
+                            question
+
 DT-2005-10-20-0: Bugfix:    o Fixed NullPointerException in property setters and
                               getters
                  Issue:     1831
                  Changed:   DRMAA-J
                  Review:    SG
 
+CR-2005-10-20-1: Testsuite: - testsuite performance tests
+                              (checktree/testsuite/check.60.exp) now tests 
+                              all possible users on all possible hosts
+                            - new testsuite functions:
+                              file_procedures/print_xy_array()
+                              file_procedures/is_remote_file()
+                 Review:    RH
+
 RD-2005-10-20-0: Bugfix:    - shepherd doesn't handle qrlogin/qrsh jobs
                               correctly
                             - default PATH variable set for job insufficient
                               for non-login shell jobs
+                            - fixed system_tests/shepherd/job_start
                  Issue:     1772, 1695
                  Bugtraq:   6318018, 6288626
                  Changed:   shepherd, execd
                  Review:    HP, CR
 
+CR-2005-10-20-0: Testsuite: fixed bug in testsuite checktree setup
+                 Review:    RH           
+
 DT-2005-10-19-0: Bugfix:    o Fixed DRMAA memory leaks
                             o Fixed handing of -b in DRMAA
                             o Moved messages into header file
-                            - Merged from DT-2005-10-19-0 (Maintrunk)
+                 Testsuite: o Added test for 1709 for C binding
+                            o Added test for 1770
+                            o Clean up in TCL for Java language binding test
                  Issue:     1763, 1770
                  Bugtraq:   6317048, 6320683
                  Changed:   DRMAA
                  Review:    AH
 
-HP-2005-10-19-0: Bugfix:    Fixed broken build on win32-x86
-                 Changed:   qtcsh, libsgeobj 
-
 MD-2005-10-19-0: Bugfix:    - added reprioritize param to default config
                             - reprioritize man page description
                  Changed:   inst_qmaster.sh
                  Review:    SG, MD
+ 
+HP-2005-10-18-0: Bugfix:    Fixed broken builds on aix43, irix65 and win32-x86
+                 Changed:   qtcsh, pdc, libsgeobj
 
 EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
                             qconf -[dm]attr gets confused by shortcuts
@@ -951,15 +1885,27 @@ EB-2005-10-17-0: Bugfix:    qconf -mattr can crash qmaster
                  Changed:   sge_qmaster
                  Review:    SG
 
+DT-2005-10-14-0: Bugfix:    o Fixed message number conflict
+                 Changed:   msg_common.h
+
+CR-2005-10-14-2: Testsuite: enhancement: make a real install_core_system call when
+                            the first install (re-init active) fails after a 
+                            check has failed
+
+CR-2005-10-14-1: Testsuite: fixed problem for additional checktrees config when
+                            creating a config from scratch
+
+CR-2005-10-13-1: Testsuite: added support for additional checktrees
+                            (better "change directory" search)
+
 MD-2005-10-13-0: Bugfix:    sge qmaster startup and shutdown (non critical) 
                             error message as non root
-                 Changed:   rc-templates
                  Issue:     1823
                  Bugtraq:   6252471
                  Review:    CR
 
-RD-2005-10-13-0: Bugfix:    fixed broken builds 
-                 Review:    MD   
+CR-2005-10-13-0: Testsuite: added support for additional checktrees
+                 Review:    RH (MD)
 
 SG-2005-10-13-0: Bugfix:    configuring the halflife_decay_list crashes the qmaster
                  Changed:   qmaster, scheduler, qstat
@@ -967,11 +1913,19 @@ SG-2005-10-13-0: Bugfix:    configuring the halflife_decay_list crashes the qmas
                  Bugtraq:   6333407
                  Review:    RD
 
+RD-2005-10-12-0: Bugfix:    fixed broken builds 
+                 Review:    MD    
+
 SG-2005-10-12-0: Bugfix:    Doing a qalter -l rsc=val on running jobs breaks consumable debitation
                  Changed:   sge_qmaster
                  Issue:     1761
                  Bugtraq:   6315111
                  Review:    RD
+
+MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status
+                            to the testsuite
+                 Changed:   inst_sge
+                 Review:    HP
 
 RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
                               error state setting does not work
@@ -982,31 +1936,85 @@ RD-2005-10-10-1: Bugfix:    - admin mail information is incorrect or queue
                  Bugtraq:   6292751, 6292742 
                  Review:    HP
 
-MD-2005-10-10-1: Enhancem:  changed inst_sge to provide a clear exit status
-                            to the testsuite
-                 Changed:   inst_sge
-                 Review:    HP
-
 RD-2005-10-10-0: Bugfix:    gcc build on solaris
                  Changed:   aimk
                  Review:    JG
 
-RD-2005-10-06-0: Bugfix:    fstype does not recognize nfs4 share in all cases
-                            - merge from maintrunc RD-2005-09-26-0
-                 Issue:     1814
-                 Bugtraq:   6328703
-                 Review:    JG
+MD-2005-10-10-0: Testsuite: added missing autoinst config line
+                 Changed:   install_core_system/automatic/qmaster.60.tcl
+                 Review:    RD
+
+RC-2005-10-08-1: Enhancem:  support gcc4 as the build compiler (con't)
+                 Changed:   3rdparty/remote/rshd.c
+                 Review  :  pending
+
+RC-2005-10-08-0: Enhancem:  PDC for AIX
+                 Changed :  execd, shepherd
+                 Review  :  pending
+
+RC-2005-10-07-0: Enhancem:  PDC for HP-UX
+                 Changed :  execd, shepherd
+                 Review  :  AH
 
 RD-2005-10-05-0: Bugfix:    - qstat -s p doesn't show pending array tasks while 
                               there are tasks of this job running
                             - stat -U does not consider queue access for job
                               and project access for queues
                             - qstat -pe filter does not work
-                            - fixed typo in inst_qmaster.sh
-                 Changed:   qstat, qhost, qacct, inst_qmaster.sh
+                            - cull cleanup, removed XLISTDEF, ILISTDEF and 
+                              SLISTDEF
+                            - fixed typo in JB_Type & inst_qmaster.sh
+                 Changed:   inst_qmaster.sh, cull, qstat, qhost, qacct
                  Issue:     1800, 1821, 1822
                  Bugtraq:   6301047, 6332876, 6332877
                  Review:    EB
+
+CR-2005-10-05-0: Testsuite: make testsuite configuration more steady. Checking
+                            directory path names.
+                 Review:    MD
+
+MD-2005-09-30-0: Testsuite: - used wrong local spooldirectory in autoinstall
+                            - adding exechosts to submithost list in autoinstall
+                 Changed:   automatic/qmaster.60.tcl
+                 Review:    CR
+ 
+CR-2005-09-29-0: Testsuite: - added new host configuration parameters:
+                              NFS-ROOT2NOBODY and NFS-ROOT2ROOT
+                            - added new global variable actual_user_system
+                              (install_core_system should use this to install
+                               an admin/normal/root user system)
+                            - removed parameter initialization for bdb_server,
+                              bdb_dir, spooling_method and cell to force this
+                              installation setup questions when running 
+                              testsuite from scratch.
+                            - added additional optional parameter to 
+                              handle_vi_edit (additional_expected_result4)
+                            - transform_date_time() had tcl error when the
+                              transform value was "-/-" (empty)
+                            - improved timing of remote procedures
+                            - do a qmod -c "*" in delete_all_jobs() for 60 systems
+                            - get_config() did not return error values
+                            - set_config() now supports also a change of spool
+                              directories
+                            - new optional parameter for is_job_running():
+                                 turn off job name parsing
+                            - shutdown_system_daemon(): improved shutdown
+                            - added new functions:
+                                 get_string_value_between()
+                                 get_uid()
+                                 get_gid()
+                                 get_execd_spooldir()
+                                 get_file_uid()
+                                 get_file_gid()
+                                 switch_execd_spool_dir()
+                                 submit_wait_type_job()
+                            - following functions should be implemented soon:
+                                 switch_to_normal_user_system()
+                                 switch_to_admin_user_system()
+                                 switch_to_root_user_system()
+                            - added new test: /system_tests/shepherd/job_start
+                 Review:    JG, HP (job_start_test)
+                 Issue:     1753
 
 MD-2005-09-29-0: Bugfix:    Using "-bup" with "-auto" breaks with later 
                             update release
@@ -1015,22 +2023,62 @@ MD-2005-09-29-0: Bugfix:    Using "-bup" with "-auto" breaks with later
                  Changed:   inst_backup.sh   
                  Review:    CR
 
+JG-2005-09-29-0: Testsuite: Added documentation (ADOC) for use of Solaris zones
+                            in testsuite.
+                 Review:    CR
+                 Issue:     1503
+
 CR-2005-09-28-0: Bugfix:    qping core dump with enabled message content dump
-                            (merged)
                  Issue:     1810
                  Bugtraq:   6327427
                  Review:    AA
+
+JG-2005-09-28-1: Testsuite: Added documentation (ADOC) for setup and cleanup 
+                            functions.
+                 Review:    CR
+                 Issue:     888
+
+JG-2005-09-28-0: Testsuite: Added test system_tests/qmaster/complex.
+                            Cleanup.
+                 Issue:     117
+                 Review:    CR
+
+MD-2005-09-27-0: Testsuite: using a default dbd spooling dir, if not
+                            configured in testsuite config.
+                 Changed:   autoinstall configfile creation
+                 Review:    CR
+
+RD-2005-09-26-0: Bugfix:    fstype does not recognize nfs4 share in all cases
+                 Issue:     1814
+                 Bugtraq:   6328703
+                 Review:    JG
+
+MD-2005-09-23-1: Enhancem:  - Added autoinstall support to testsuite
+                            - added test for Issue 1330, only possible
+                              with autoinstall support
+                 Changed:   install_core_system
+                 Review:    CR
 
 MD-2005-09-23-0: Enhancem:  Check in inst_qmaster.sh, which I have forgotten
                             with check in MD-2005-09-08-0
                  Changed:   inst_qmaster.sh
 
-CR-2005-09-23-2: Cleanup:   fixed/removed message macros
+JG-2005-09-23-0: Testsuite: Added a testsuite test calling our module tests
+                            on all platforms.
+                            Fixed a number of compile errors in some module 
+                            tests and made them part of a standard build.
+                 Review:    RD
 
 CR-2005-09-23-1: Cleanup:   updated comments in header files
 
+CR-2005-09-23-0: Bugfix:    fixed duplicate message id entries
+
+RD-2005-09-23-1: Testsuite: qconf_issue1800 cleanup
+                 Review:    JG
+
 CR-2005-09-22-2: Bugfix:    confusing execd startup messages and delays 
-                            in case of problems (merged from maintrunk)
+                            in case of problems
+                 Testsuite: added test: system_tests/execd/startup
                  Bugtraq:   6268799
                  Issue:     1801
                  Review:    MD
@@ -1040,6 +2088,15 @@ RD-2005-09-22-0: Bugfix:    qstat -s p doesn't show pending array tasks while
                  Issue:     1800
                  Bugtraq:   6301047
                  Review:    AH
+
+CR-2005-09-22-0: Testsuite: bugs/issuezilla/193:
+                            - test now is verifying if the remote execd is
+                              down after qconf -ke in scenario
+                              "issue193_deleted_job"
+
+CR-2005-09-22-0: Testsuite: new optional parameter for shutdown_system_daemon():
+                            do_term_signal_kill_first: if 0 the procedure sends
+                            immediately a SIG_KILL signal
 
 SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category 
                               string for job N"
@@ -1051,16 +2108,28 @@ SG-2005-09-22-0: Bugfix:    - getting many E messages "failed building category
                  Issue:     1652
                  Review:    RD
 
-MD-2005-09-21-0: Enhancem:  support gcc4 as the build compiler 
-                            (merged: RC-2005-09-17-0)
+JG-2005-09-22-0: QA:        Updated review template and doc.
+                 Review:    RD
+
+RD-2005-09-21-0: Bugfix:    Double error message
+                 Issue:     1767
+                 Bugtraq:   6316995
+                 Review:    RH
 
 RD-2005-09-20-0: Bugfix:    qacct -o -D output hard to parse
                  Issue:     1686
                  Bugtraq:   6326150
                  Review:    SG 
 
-RD-2005-09-19-0: CVS        Created V60s2snapshot1_TAG
-------------------------------------------------------
+CR-2005-09-19-0: Testsuite: extended cvs update timeout
+
+JG-2005-09-17-0: Testsuite: Fixed check system_tests/config/path_alias.
+                 Review:    CR
+
+RC-2005-09-17-0: Enhancem:  support gcc4 as the build compiler
+
+JG-2005-09-15-0: Testsuite: Fixed checks functional/job_environment and
+                            system_tests/qmaster/monitoring.
 
 CR-2005-09-15-1: Testsuite: fixed commlib module test binaries 
                             test_virtual_event_client and 
@@ -1068,18 +2137,33 @@ CR-2005-09-15-1: Testsuite: fixed commlib module test binaries
                             failed because of long shutdown timeouts for
                             virtual qmaster module test binary.
 
+CR-2005-09-15-0: Testsuite: modified testsuite commlib test to wait between
+                            single test runs
+
 SG-2005-09-15-0: Bugfix:    fixed the qmaster calendar crash
                  Issue:     1787
                  Bugtraq:   6322498
                  Review:    RD
 
-JG-2005-09-14-0: Bugfix:    Fixed broken build and install 
-                            (aimk.site, distinst.site).
+SG-2005-09-14-0: Testsuite: fixed resource_consumable test
+
+RD-2005-09-14-0: Testsuite: fixed qmod_auto_reschedule test
+                 Review:    CR
+
+SG-2005-09-14-0: Testsuite: added a qmaster monitoring test.
+                 Issue:     1765
+
+JG-2005-09-14-0: Testsuite: Fixed check bugs/issuezilla/1780.
+
+RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
+                 Changed:   qmaster
+                 Issue:     1665 
+                 Bugtraq:   6286510
+                 Review:    AH
 
 SG-2005-09-13-1: Bugfix:    - fixed the timed event module test
-                            - fixed a script removal issue (performance)
-                            - fixed the loss of tasks in system hold (memory 
-                              leak)
+                            - fixed a script removel issue (performance)
+                            - fixed the los of tasks in system hold (memory leak)
                  Issue:     1773
                  Bugtraq:   6318660
                  Review:    JG
@@ -1091,32 +2175,29 @@ SG-2005-09-13-0: Bugfix:    second part of SG-2005-08-02-0, Tasks in hold
                  Bugtraq:   6305095
                  Review:    RD
 
-RD-2005-09-13-1: Bugfix:    qmaster keeps sending signals to execds
-                 Changed:   qmaster
-                 Issue:     1665 
-                 Bugtraq:   6286510
-                 Review:    AH
-
 RD-2005-09-13-0: Bugfix:    qstat output for alarm state reasons broken
                  Changed    qstat, qmon
                  Issue:     1775
                  Bugtraq:   6323047
                  Review:    CR
 
-AA-2005-09-12-0: Bugfix:   merge from maintrunc AA-2005-09-12-0
-                 Changed:  sge_ca
-                 Review:   MD
-
-EB-2005-09-12-0: Cleanup:  replaced fclose by FCLOSE in qmaster
-                 Issue:    1179, 185
-                 Review:   JG
-
+AA-2005-09-12-0: Bugfix:    ooops, removing /dev/null in sge_ca
+                 Changed:   sge_ca
+                 Review:    MD
+                 
 DT-2005-09-12-1: Bugfix:    o Fixed quote processing
-                            - Merged from DT-2005-09-12-1
                  Changed:   sge_string.c
                  Issue:     1556
                  Bugtraq:   6253860
                  Review:    EB
+
+DT-2005-09-12-0: Testsuite: o Added test for issue 1556
+
+DT-2005-09-09-0: Testsuite: o Reworked TS/jUnit integration to pass in env vars
+                            o Updated SessionImplJobTest to use new env vars
+                            o Added jUnit test for Issue 1770
+                            o Updated drmaaj test to use drmaa-test.jar from
+                              source directory
 
 JG-2005-09-09-0: Bugfix:    Fixed fix for IZ 1758, some cleanup.
                             Fixed broken build on irix65.
@@ -1133,20 +2214,33 @@ MD-2005-09-08-0: Enhancem:  - sge_ca auto enabled
                  Changed:   sge_ca
                  Review:    AA
 
-AH-2005-09-07-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
-                 Issue:     1764
-                 Changed:   all
-                 Review:    JG
+DT-2005-09-08-0: Testsuite: o Fixed test for Issue 1780
 
-DT-2005-09-07-0: Bugfix:    o Rewrote Flex parser for qconf
+DT-2005-09-07-2: Bugfix:    o Fixed broken build
+                 Changed:   flatfile spooling
+
+DT-2005-09-07-1: Testsuite: o Added test for issue 1780
+
+DT-2005-09-07-0: Bugfix:    o Fixed broken build on IRIX 6.5
+                 Changed:   flatfile spooling
+
+EB-2005-09-05-0: Bugfix:    eleminated static buffer in dstring implementation
+                 Issue:     265
+                 Review:    AH 
+
+DT-2005-09-05-0: Bugfix:    o Rewrote Flex parser for qconf
                             o Fixed backslash line breaks in output from qconf
-                            - Merged from DT-2005-09-05-0
-                            o Fixed broken build
-                            - Merged from DT-2005-09-07-1 and DT-2005-09-07-2
+                            o Added test cases
+                            o Cleaned up test comments
                  Issue:     1749, 1780
                  Bugtraq:   6319228, 6256590
                  Changed:   flatfile spooling
                  Review:    JG*2
+
+AH-2005-09-05-0: Bugfix:    aimk -spool-classic doesn't compile on linux/solaris
+                 Issue:     1764
+                 Changed:   all
+                 Review:    JG
 
 AA-2005-09-05-0: Bugfix:    sge_ca -usercert
                  Bugtraq:   6318659
@@ -1154,50 +2248,60 @@ AA-2005-09-05-0: Bugfix:    sge_ca -usercert
                  Changed:   sge_ca
                  Review:    CR
 
-CR-2005-09-02-1: Bugfix:    - fixed possible wrong errno usage
+CR-2005-09-02-1: Bugfix:    Merged  CR-2005-09-02-1 from V60s2_BRANCH
+                            - fixed possible wrong errno usage
                  Changed:   commlib
                  Review:    AA
 
-CR-2005-09-02-0: Bugfix:    - fixed memory leak in gethostbyaddr binary
+
+CR-2005-09-02-0: Bugfix:    Merged CR-2005-09-02-0 from V60s2_BRANCH
+                            - fixed memory leak in gethostbyaddr binary
                  Changed:   gethostbyaddr
                  Review:    AA
 
-CR-2005-09-01-1: Testsuite: - modified test_cl_commlib module test to support
+CR-2005-09-01-1: Testsuite: Merged CR-2005-09-01-1 from V60s2_BRANCH
+                            - modified test_cl_commlib module test to support
                               environment variable CL_RUNS which is used to
                               stop the program execution after $CL_RUNS times.
                  Changed:   test_cl_commlib
 
-
-CR-2005-09-01-0: Bugfix:    - fixed message macro typos and output formats
+CR-2005-09-01-0: Bugfix:    Merged CR-2005-09-01-0 from V60s2_BRANCH
+                            (- fixed message macro typos and output formats)
                  Changed:   qmod, qsub, qmaster, schedd, spoollib, utilib
                             (all binaries have to be re-builded)
                  Review:    AA
 
-MD-2005-08-31-1: Bugfix:    auto installation doesn't provide 
+JG-2005-09-01-0: Testsuite: Fixed checks for SGE(EE) 5.3 (with CSP security):
+                            - functional/job_environment
+                            - functional/tight_integration
+                            - functional/usage
+                            - install_core_system
+                            - system_tests/clients/qalter
+                            - system_tests/clients/qdel
+                            - system_tests/qmaster/spooling
+
+MD-2005-08-31-1: Bugfix:    auto installation doesn't provide
                             sufficient diagnosis output
                  Issue:     1330
                  Bugtraq:   6239653
                  Changed:   autoinstall
                  Review:    CR
 
-MD-2005-08-31-0: Bugfix:    - added some help text in inst_template.conf comment
-                            - a new line was missing
-                 Changed:   inst_template.conf, inst_execd_uninst.conf         
-
-CR-2005-08-29-0: Cleanup:   - removed unused message macros and double message
-                              ids.
+CR-2005-08-30-0: Testsuite: added new command line switch to parse message macro
+                            dump files:
+                            check_macros DUMPFILE_A DUMPFILE_B IGNORE_BACKSLASH
 
 SG-2005-08-26-0: Cleanup:   - fixed the build for irix 6.5
-                            - enhanced RD-2005-08-16-0 (some global variables were
-                              missing)
+                            - enhanced RD-2005-08-16-0 (some global variables 
+                              were missing)
                             - extended the monitoring output
                  Review:    EB, (JG)
                  Changed:   qmaster, man-page
 
-EB-2005-08-25-0: Bugfix:    fixed build for irix 6.5
-                 Review:    SG 
+SG-2005-08-25-0: Cleanup:   Fixed build for linux 2.6
 
-SG-2005-08-25-0: fixed build for linux 2.6
+JG-2005-08-24-0: Testsuite: Removed debug code requiring user input during 
+                            cluster installation.
 
 EB-2005-08-23-1: CVS        Created V60s2_BRANCH
 ---------------------------------------------------------
@@ -7384,4 +8488,3 @@ JG-2004-04-06-0: Enhancem.: write intermediate accounting records to reporting
 MD-2004-04-06-0: Bugfix:    - Improper variable comparison
                             - autoinstall does not work
                             - changed logfile dir
-

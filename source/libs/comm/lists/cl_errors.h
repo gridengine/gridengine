@@ -156,7 +156,6 @@
 #define CL_RETVAL_DO_IGNORE                        (CL_RETVAL_START_ID + 119)
 #define CL_RETVAL_CLOSE_ALIAS_FILE_FAILED          (CL_RETVAL_START_ID + 120)
 
-
 #define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 121)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "undefined commlib error code"
 

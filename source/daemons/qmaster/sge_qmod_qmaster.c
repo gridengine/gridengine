@@ -132,6 +132,8 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
    gid_t gid;
    char user[128];
    char group[128];
+   lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
+   lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
@@ -143,7 +145,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
       return;
    }
 
-   if (!request->host || !user || !request->commproc || !request->id) {
+   if (!request->host || (strlen(user) == 0) || !request->commproc || !request->id) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(&(answer->alp), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -156,7 +158,6 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
    ** if necessary
    */
    for_each(dep, request->lp) {
-      lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
       lList *tmp_list = NULL;
       lList *qref_list = NULL;
       bool found_something = true;
@@ -169,7 +170,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
          qref_list_resolve_hostname(qref_list);
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,
-                           *(object_type_get_master_list(SGE_TYPE_HGROUP)), 
+                           master_hgroup_list,
                            true, true);
          if (found_something) { 
             lListElem *qref = NULL;
@@ -250,7 +251,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
                alltasks = 1;
             }
 
-            job = job_list_locate(Master_Job_List, jobid);
+            job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid);
             if (job) {
                jatask = lFirst(lGetList(job, JB_ja_tasks));
 
@@ -366,7 +367,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
             const char *job_name = lGetString(dep, ID_str);
             const lListElem *job;
             lListElem *mod = NULL;
-            for_each(job, Master_Job_List) {
+            for_each(job, *(object_type_get_master_list(SGE_TYPE_JOB))) {
                if (!fnmatch(job_name, lGetString(job, JB_job_name), 0)) {
                   char job_id[40];
                   mod = lCopyElem(dep);
@@ -627,7 +628,7 @@ monitoring_t *monitor
 
    /* using sge_commit_job(j, COMMIT_ST_FINISHED_FAILED) q->job_list
       could get modified so we have to be careful when iterating through the job list */
-   nextjep = lFirst(Master_Job_List);
+   nextjep = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
    while ((jep=nextjep)) {
       lListElem* jatep;
       nextjep = lNext(jep);
@@ -968,7 +969,7 @@ void rebuild_signal_events()
    DENTER(TOP_LAYER, "rebuild_signal_events");
 
    /* J O B */
-   for_each(jep, Master_Job_List)
+   for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB)))
    {
       for_each (jatep, lGetList(jep, JB_ja_tasks))
       { 
@@ -1026,7 +1027,7 @@ void resend_signal_event(te_event_t anEvent, monitoring_t *monitor)
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    if (queue == NULL) {
-      if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
+      if (!(jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
       {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1098,7 +1099,7 @@ monitoring_t *monitor
          lListElem *hep = NULL;
          const lListElem *simhost = NULL;
 
-         hep = host_list_locate(Master_Exechost_List, hnm);
+         hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), hnm);
          if(hep != NULL) {
             simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
             if(simhost != NULL) {
@@ -1115,23 +1116,22 @@ monitoring_t *monitor
          /* identifier for acknowledgement */
          if (jep) {
             /*
-             * Due to IZ 1619: pack signal only if 
+             * Due to IZ 1619: pack signal only if
              *    job is a non-parallel job
              *    or all slaves of the parallel job have been acknowledged
              */
-            if (!lGetString(jatep, JAT_master_queue) || 
+            if (!lGetString(jatep, JAT_master_queue) ||
                 is_pe_master_task_send(jatep)) {
                /* TAG_SIGJOB */
-               packint(&pb, lGetUlong(jep, JB_job_number));    /* one for acknowledgement */
+               /* one for acknowledgement */
+               packint(&pb, lGetUlong(jep, JB_job_number));    
                packint(&pb, lGetUlong(jatep, JAT_task_number)); 
-               packint(&pb, lGetUlong(jep, JB_job_number));    /* and one for processing */
+               /* and one for processing */
+               packint(&pb, lGetUlong(jep, JB_job_number));   
                packint(&pb, lGetUlong(jatep, JAT_task_number));
-            } else {
-               INFO((SGE_EVENT, MSG_JOB_POSTPONESIG_II,
-                     sge_u32c(lGetUlong(jep, JB_job_number)),
-                     sge_u32c(lGetUlong(jatep, JAT_task_number))));
             }
-         } else {
+         }
+         else {
             /* TAG_SIGQUEUE */
             packint(&pb, lGetUlong(qep, QU_queue_number));
             packint(&pb, 0); 
@@ -1230,7 +1230,7 @@ monitoring_t *monitor
    /* test whether there are parallel jobs 
       with a slave slot in this queue 
       if so then signal this job */
-   for_each (jep, Master_Job_List) {
+   for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
 
          /* skip sequential and not running jobs */
@@ -1242,7 +1242,7 @@ monitoring_t *monitor
             since they are not known to the apropriate execd - we should
             omit signalling in this case to prevent waste of communication bandwith */ 
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-             !pe_list_locate(Master_Pe_List, pe_name))
+             !pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name))
             continue;
 
          for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
@@ -1286,7 +1286,7 @@ static void signal_slave_tasks_of_job(int how, lListElem *jep, lListElem *jatep,
       in case of slave controlled jobs */
    if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
-         !(pe=pe_list_locate(Master_Pe_List, pe_name)) ||
+         !(pe=pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name)) ||
          !lGetBool(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname = lGetString(gdil_ep, JG_qname)))) {

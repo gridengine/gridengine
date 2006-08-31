@@ -45,9 +45,9 @@ QSUB_ADD_SRC = parse_job_cull.c parse_qsub.c \
 
 QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
-QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
+QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) japi.1.0.o
 
-QSUB_ADD_LIBS = -ljapi -levc -lgdi -lsgeobj -lsgeobjd  \
+QSUB_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd  \
                 -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon \
                 $(SECLIB) $(KRBLIB) $(DLLIB) 
 
@@ -55,7 +55,7 @@ QSUB_LIB_DEPENDS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(SECLIBS) $(KRBLIBS) \
                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                    $(WINGRIDLIB_DEP) $(LCKLIB) $(UTILIB) $(RMONLIB) \
-                   $(TPLIB) $(JAPILIB)
+                   $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -87,5 +87,5 @@ include $(QSUB_DIR)/qsub_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-qsub.o: 	$(QSUB_DIR)/qsub.c $(JAPILIB)
+qsub.o: 	$(QSUB_DIR)/qsub.c
 		$(CC) $(CFLAGS) -c $(QSUB_DIR)/qsub.c

@@ -67,7 +67,6 @@ proc install_shadowd {} {
    global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
    global CHECK_COMMD_PORT CHECK_CORE_MASTER
    global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
-   global CHECK_COVERAGE
 
    set CORE_INSTALLED "" 
    read_install_list
@@ -141,10 +140,10 @@ proc install_shadowd {} {
       set prod_type_var "SGE_ROOT"
   
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set id [open_remote_spawn_process "$shadow_host" "root"  "cd $$prod_type_var;./inst_sge" "-sm" ]
+         set id [open_remote_spawn_process "$shadow_host" "root"  "cd $$prod_type_var;./inst_sge" "-sm" 0 "" 1 15 1 1 1]
       } else {
          puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set id [open_remote_spawn_process "$shadow_host" "$CHECK_USER"  "cd $$prod_type_var;./inst_sge" "-sm" ]
+         set id [open_remote_spawn_process "$shadow_host" "$CHECK_USER"  "cd $$prod_type_var;./inst_sge" "-sm" 0 "" 1 15 1 1 1]
       }
 
 
@@ -308,7 +307,7 @@ proc install_shadowd {} {
                # wait a little bit before closing the connection.
                # Otherwise the last command executed (infotext)
                # will leave a lockfile lying around.
-               if {$CHECK_COVERAGE != ""} {
+               if {[coverage_enabled]} {
                   sleep 2
                }
                continue

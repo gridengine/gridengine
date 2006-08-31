@@ -34,7 +34,7 @@
 # define global variable in this namespace
 
 # define a level initialization procedure:
-set check_init_level_procedure "init_level"
+set check_init_level_procedure "backup_restore_init_level"
 
 # define test's name and run level descriptions
 set check_name            "backup_restore"
@@ -55,7 +55,7 @@ set check_fuctions   ""
 lappend check_functions "backup_restore_setup"
 set check_highest_level       0
 
-proc init_level {} {
+proc backup_restore_init_level {} {
    global ts_config
    global CHECK_ACT_LEVEL
 
@@ -103,12 +103,10 @@ proc backup_restore_setup {} {
       set timeout 30
       log_user 1
       expect {
-         flush stdout
-         flush $CHECK_OUTPUT
          -i $sp_id "Please enter your SGE_ROOT directory." {
             puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(product_root)"
             send -i $sp_id "$ts_config(product_root)\n"
-            continue;
+            continue
          }
          -i $sp_id "Please enter your SGE_CELL name.*" {
             puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(cell)"
@@ -160,16 +158,20 @@ proc backup_restore_setup {} {
          -i $sp_id "error:\n" {
             set_error "-1" "backup_restore_setup - $expect_out(0,string)"
             close_spawn_process $id
-            return;
+            return
          }
         
          # End of loop
          -i $sp_id "All information is saved in*" {
-            close_spawn_process $id
-            break;
+            break
          } 
       }
+
+      flush $CHECK_OUTPUT
    }
+
+   # close the connection to inst_sge
+   close_spawn_process $id
   
    # TODO Try to restore the database with running master (should not be possible) 
 
@@ -197,12 +199,10 @@ proc backup_restore_setup {} {
       set timeout 30
       log_user 1
       expect {
-         flush stdout
-         flush $CHECK_OUTPUT
          -i $sp_id "Hit, <ENTER> to continue!" {
             puts $CHECK_OUTPUT "\n --> testsuite: sending >RETURN<"
             send -i $sp_id "\n"
-            continue;
+            continue
          }
          -i $sp_id "Please enter your SGE_ROOT directory." {
             puts $CHECK_OUTPUT "\n --> testsuite: sending $ts_config(product_root)"
@@ -259,17 +259,22 @@ proc backup_restore_setup {} {
          -i $sp_id "does not exist*" {
             set_error "-1" "backup_restore_setup - $expect_out(0,string)"
             close_spawn_process $id
-            return;
+            return
          }
          
          # End of loop
          -i $sp_id "Your configuration has been restored" {
-            close_spawn_process $id
-            break;
+            break
          }
       }
+
+      flush $CHECK_OUTPUT
    }
    
+   # close connection to inst_sge
+   close_spawn_process $id
+
+   # restart the restored cluster
    startup_core_system  
    
    wait_for_load_from_all_queues 60

@@ -57,7 +57,6 @@
 #include "msg_qmon.h"
 
 #include "sge_unistd.h"
-#include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
 #include "sge_userset.h"
@@ -96,6 +95,8 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_ulong.h"
+
+#include "uti/sge_string.h"
 
 extern char **environ;
 
@@ -361,7 +362,7 @@ static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitBinary(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckInput(Widget w, XtPointer cld, XtPointer cad);
-static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad);
+/* static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad); */
 static void qmonSubmitOutputMerge(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitShellList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitMailList(Widget w, XtPointer cld, XtPointer cad);
@@ -2430,6 +2431,7 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonSubmitCommitInput(w, cld, cad)
 Widget w;
@@ -2445,6 +2447,7 @@ XtPointer cld, cad;
 
    DEXIT;
 }
+#endif
 
 	
 /*-------------------------------------------------------------------------*/

@@ -34,8 +34,6 @@
 
 #include "sge_peL.h"
 
-extern lList *Master_Pe_List;
-
 bool 
 pe_is_matching(const lListElem *pe, const char *wildcard);
 

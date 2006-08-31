@@ -67,23 +67,22 @@ typedef struct {
  * - lUlongT
  */
 static schedd_conf_t conf_tests[] = {
-                                      {SC_halflife_decay_list, lStringT,"test the halflife_decay_list settings"},
-                                      {0,0,NULL}
-                                    };
+   {SC_halflife_decay_list, lStringT,"test the halflife_decay_list settings"},
+   {0,0,NULL}
+};
 
 static conf_settings_t tests[] = {
-                                    {0, "NONE", true},
-                                    {0, "nonesense", false},
-                                    {0, "what:ever=this_is", false},
-                                    {0, "cpu=1", true},
-                                    {0, "cpu=1:", true},
-                                    {0, "cpu=1:io=-1", true},
-                                    {0, "cpu=1:io=0:", true},
-                                    {0, "cpu=1:io=-1:mem=0", true},
-                                    {0, "cpu=1:io=-1:mem=0:help=-1", true},
-
-                                    {-1, NULL, false}
-                                  };
+   {0, "NONE", true},
+   {0, "nonesense", false},
+   {0, "what:ever=this_is", false},
+   {0, "cpu=1", true},
+   {0, "cpu=1:", true},
+   {0, "cpu=1:io=-1", true},
+   {0, "cpu=1:io=0:", true},
+   {0, "cpu=1:io=-1:mem=0", true},
+   {0, "cpu=1:io=-1:mem=0:help=-1", true},
+   {-1, NULL, false}
+};
 
 static int
 test(conf_settings_t *setting, schedd_conf_t *test, int test_counter) 

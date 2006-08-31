@@ -72,7 +72,7 @@ global check_init_level_procedure
 global check_root_access_needs
 global env
 
-#set check_root_access_needs "yes"
+set check_root_access_needs "yes"
 
 # define a level initialization procedure:
 set check_init_level_procedure "ts_performance_test_init_level"
@@ -80,18 +80,10 @@ set check_init_level_procedure "ts_performance_test_init_level"
 # define test's name and run level descriptions
 set check_name            "ts_performance_test"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
-set check_highest_level   8
-set check_description(0)  "test testsuite average execution time on each cluster host"
-set check_description(1)  ""
-set check_description(2)  ""
-set check_description(3)  ""
-set check_description(4)  ""
-set check_description(5)  ""
-set check_description(6)  ""
-set check_description(7)  ""
-set check_description(8)  ""
-
-
+set check_highest_level   2
+set check_description(2)  "dummy test"
+set check_description(1)  "test testsuite average execution time on each cluster host"
+set check_description(0)  "test system time on each cluster daemon host"
 
 
 
@@ -121,29 +113,12 @@ proc ts_performance_test_init_level {} {
          return 0
       } 
       "1" {
-         return -1
+         return 0
       }
       "2" {
-         return -1
+         return 0
       }
-      "3" {
-         return -1
-      }
-      "4" {
-         return -1
-      }
-      "5" {
-         return -1
-      }
-      "6" {
-         return -1
-      }
-      "7" {
-         return -1
-      }
-      "8" {
-         return -1
-      }
+
    } 
 
    return -1  ;# no other level 
@@ -177,29 +152,74 @@ proc ts_performance_test_cleanup  {} {
 proc ts_performance_test_test {} {
    global ts_performance_test_test_hosts check_description CHECK_ARCH CHECK_USER CHECK_HOST
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
-
-
-   foreach host $ts_config(execd_hosts) {
-      puts $CHECK_OUTPUT "open connection to host $host ..."
-      start_remote_prog $host $CHECK_USER "echo" "hallo"
-   }
+   global ts_user_config
 
    puts $CHECK_OUTPUT $check_description($CHECK_ACT_LEVEL)
-   foreach host $ts_config(execd_hosts) {
-      puts $CHECK_OUTPUT "host: $host"
-      set starttime [clock clicks -milliseconds]
-      set runs 10
-      set run $runs
-      while { $run > 0 } {
-         puts $CHECK_OUTPUT "start remote prog ...\[$run\]"
-         set result [start_remote_prog $host $CHECK_USER "echo" "hallo"]
-         incr run -1
+
+   if {$CHECK_ACT_LEVEL == 1} {
+      set max_user_len 0
+      set max_host_len 0
+
+      set host_list [host_conf_get_cluster_hosts]
+      set user_list [user_conf_get_cluster_users]
+   
+      foreach user $user_list {
+         if { $max_user_len < [string length $user] } {
+            set max_user_len [string length $user]
+         }
       }
-      set endtime [clock clicks -milliseconds]
-      set endtime [expr $endtime - $starttime]
-      set result [expr $endtime / $runs ]
+
+      foreach host $host_list {
+         if { $max_host_len < [string length $host] } {
+            set max_host_len [string length $host]
+         }
+      }
+
+      foreach user $user_list {
+         foreach host $host_list {
+            puts $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: open connection ..." $user $host]
+            start_remote_prog $host $user "echo" "hallo"
+         }
+      }
+
+
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "starting performance test ..."
+      foreach user $user_list {
+         foreach host $host_list {
+            puts -nonewline $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: " $user $host]
+    
+            set starttime [clock clicks -milliseconds]
+            set runs 5
+            set run $runs
+            while { $run > 0 } {
+               set result [start_remote_prog $host $user "echo" "hallo_$run"]
+#               set result [start_remote_prog $host $user "echo" "hallo"]
+               incr run -1
+            }
+            set endtime [clock clicks -milliseconds]
+            set endtime [expr $endtime - $starttime]
+            set result [expr $endtime / $runs ]
+            if { [string length $result ] > $max_user_len } {
+               set max_user_len [string length $result ]
+            }
+            set result_array($user,$host) $result
+            puts $CHECK_OUTPUT [format "average execution time: %5s ms" $result]
+         }
+      }
       
-      puts $CHECK_OUTPUT "average command execution time: $result milliseconds"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT [print_xy_array $user_list $host_list result_array]
+      puts $CHECK_OUTPUT ""
+   }
+
+   if {$CHECK_ACT_LEVEL == 0} {
+      check_all_system_times
+   }
+
+   if {$CHECK_ACT_LEVEL == 2} {
+      dump_spawn_rlogin_sessions
+#      reset_schedd_config
    }
 
    set_error 0 "ok"

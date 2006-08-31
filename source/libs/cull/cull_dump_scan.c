@@ -45,9 +45,10 @@
 #include "cull_multitypeP.h"
 #include "cull_lerrnoP.h"
 #include "basis_types.h"
-#include "sge_dstring.h"
-#include "sge_string.h"
-#include "sge_stdio.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
 
 #define READ_LINE_LENGHT 255
 
@@ -229,19 +230,20 @@ lDescr *lUndumpDescr(FILE *fp)
 ******************************************************************************/
 int lDumpElem(const char *fname, const lListElem *ep, int indent) 
 {
-   FILE *fp;
    int ret;
+   FILE *fp;
 
-   if (!(fp = fopen(fname, "w"))) {
+   fp = fopen(fname, "w");
+   if (fp != NULL) {
+      ret = lDumpElemFp(fp, ep, indent);
+      FCLOSE(fp);
+   } else {
       LERROR(LEOPEN);
-      return -1;
+      ret = -1;
    }
-
-   ret = lDumpElemFp(fp, ep, indent);
-   FCLOSE(fp);
-
    return ret;
 FCLOSE_ERROR:
+   LERROR(LECLOSE);
    return -1;
 }
 

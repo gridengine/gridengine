@@ -307,8 +307,7 @@ proc urgency_check_values { jobs job_count value_names } {
    
    upvar $jobs tmp_jobs
    
-   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-   puts $CHECK_OUTPUT $catch_result
+   trigger_scheduling
    after 5000
    
    set error_count 0

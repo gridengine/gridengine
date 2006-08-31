@@ -54,7 +54,7 @@ void sge_mark_unheard(lListElem *hep, const char *target);
 
 int sge_add_host_of_type(const char *hostname, u_long32 target, monitoring_t *monitor);
 
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer, uid_t uid, gid_t gid, char *user, char *group);
+void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 void sge_update_load_values(char *rhost, lList *lp);
 
@@ -78,9 +78,6 @@ int host_notify_about_X(lListElem *host,
 bool
 host_list_add_missing_href(lList *this_list, lList **answer_list, const lList *href_list, 
                            monitoring_t *monitor);
-
-void host_diff_projects(const lListElem *new, const lListElem *old, lList **new_prj, lList **old_prj);
-void host_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);
 
 #endif /* __SGE_HOST_QMASTER_H */
 

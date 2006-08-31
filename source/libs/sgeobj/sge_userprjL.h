@@ -64,8 +64,7 @@ enum {
    UP_xacl,
    UP_debited_job_usage,
    UP_default_project,
-   UP_version,
-   UP_consider_with_categories
+   UP_version
 };
 
 enum {
@@ -129,7 +128,6 @@ LISTDEF(UP_Type)
    SGE_STRING(UP_default_project, CULL_DEFAULT | CULL_SPOOL_USER)     /* default project for user */
    SGE_ULONG(UP_version, CULL_DEFAULT)     /* user/project version, increments when usage
                                * is updated, stored to qmaster, not spooled */
-   SGE_BOOL(UP_consider_with_categories, CULL_DEFAULT) /* true, if project plays role with categories */
 LISTEND 
 
 NAMEDEF(UPN)
@@ -149,7 +147,6 @@ NAMEDEF(UPN)
    NAME("UP_debited_job_usage")
    NAME("UP_default_project")
    NAME("UP_version")
-   NAME("UP_consider_with_categories")
 NAMEEND
 
 

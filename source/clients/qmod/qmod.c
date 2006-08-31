@@ -460,7 +460,7 @@ char *what
       fprintf(fp, "   [-d wc_queue_list]      %s\n", MSG_QMOD_d_OPT_USAGE);
       fprintf(fp, "   [-e wc_queue_list]      %s\n", MSG_QMOD_e_OPT_USAGE);
       fprintf(fp, "   [-f]                    %s\n", MSG_QMOD_f_OPT_USAGE);
-      fprintf(fp, "   [-help]                 %s\n", MSG_COMMON_help_OPT_USAGE);
+      fprintf(fp, "   [-help]                 %s\n", MSG_QMOD_help_OPT_USAGE);
       fprintf(fp, "   [-r job_wc_queue_list]  %s\n", MSG_QMOD_r_OPT_USAGE);
       fprintf(fp, "   [-rj job_list]          %s\n", MSG_QMOD_r_OPT_USAGE_J);
       fprintf(fp, "   [-rq wc_queue_list]     %s\n", MSG_QMOD_r_OPT_USAGE_Q);

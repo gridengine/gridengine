@@ -264,19 +264,10 @@ enum {
 
    /* added for event clients */
    secl_OPT,     /* show event client list */
-   kec_OPT,      /* kill event client */
+   kec_OPT,       /* kill event client */
 
-   cu_OPT,       /* SGEEE sharetree - clear all user/project usage */
-   R_OPT,        /* SGEEE sharetree - clear all user/project usage */
-
-   /* added for limitation rule sets */
-   slrs_OPT,     /* show limitation rule set */
-   slrsl_OPT,    /* show limitation rule set list */
-   alrs_OPT,     /* add limitation rule set */
-   Alrs_OPT,     /* add limitation rule set from file */
-   mlrs_OPT,     /* modfiy limitation rule set */
-   Mlrs_OPT,     /* modify limitation rule set from file */
-   dlrs_OPT      /* delete limitation rule set */
+   cu_OPT,        /* SGEEE sharetree - clear all user/project usage */
+   R_OPT         /* SGEEE sharetree - clear all user/project usage */
 };
 
 /* macros used in parsing */

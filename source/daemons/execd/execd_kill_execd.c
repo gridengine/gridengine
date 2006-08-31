@@ -42,6 +42,7 @@
 #include "sge_log.h"
 #include "symbols.h"
 #include "msg_execd.h"
+#include "sge_feature.h"
 #include "sge_job.h"
 #include "sgeobj/sge_object.h"
 
@@ -87,5 +88,23 @@ int answer_error;
 
    DEXIT;
    return 0;
+}
+
+int execd_new_features(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
+struct dispatch_entry *de;
+sge_pack_buffer *pb, *apb;
+u_long *rcvtimeout;
+int *synchron;
+char *err_str;
+int answer_error;
+{                  
+   u_long32 featureset_id;
+   DENTER(TOP_LAYER, "execd_new_features");
+ 
+   unpackint(pb, &featureset_id);
+   feature_activate((feature_id_t)featureset_id); 
+
+   DEXIT;
+   return 0;             
 }
 

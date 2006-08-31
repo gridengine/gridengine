@@ -427,12 +427,7 @@ char **allowed
       just_check = 1;
    }
 
-   /* handle NULL string as src */
-   if (src == NULL) {
-      sp = "";
-   } else {
-      sp=src; 
-   }
+   sp=src; 
    while (*sp) {
       switch (*sp) {
       case '$':

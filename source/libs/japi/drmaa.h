@@ -229,11 +229,7 @@ enum {
    DRMAA_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a
                              job has finished but no rusage and stat data could
                              be provided. */
-#ifdef DRMAA_10
-   DRMAA_ERRNO_NO_MORE_ELEMENTS, /* There are no more elements in the opaque
-                                    string vector. */
-#endif
-
+   
    DRMAA_NO_ERRNO
 };
 
@@ -294,27 +290,15 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value,
 int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value,
                           size_t value_len);
 
-#ifdef DRMAA_10
-/*
- * get element count of opaque string vector
- *
- * Gives the number of elements in the opaque string vector.  Useful for
- * copying the contents into an array.
- */
-int drmaa_get_num_attr_names(drmaa_attr_names_t* values, int *size);
-int drmaa_get_num_attr_values(drmaa_attr_values_t* values, int *size);
-int drmaa_get_num_job_ids(drmaa_job_ids_t* values, int *size);
-#endif
-
 /* 
  * release opaque string vector 
  *
  * Opaque string vectors can be used without any constraint
  * until the release function has been called.
  */
-void drmaa_release_attr_names(drmaa_attr_names_t* values);
-void drmaa_release_attr_values(drmaa_attr_values_t* values);
-void drmaa_release_job_ids(drmaa_job_ids_t* values);
+void drmaa_release_attr_names( drmaa_attr_names_t* values );
+void drmaa_release_attr_values( drmaa_attr_values_t* values );
+void drmaa_release_job_ids( drmaa_job_ids_t* values );
 
 /* ------------------- init/exit routines ------------------- */
 /*
@@ -328,14 +312,6 @@ void drmaa_release_job_ids(drmaa_job_ids_t* values);
  * return the DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED error. drmaa_init()
  * SHOULD be called by only one of the threads. The main thread is RECOMMENDED.
  * A call by another thread SHALL return DRMAA_ERRNO_ALREADY_ACTIVE_SESSION.
- * When 'contact' is a a semi-colon separated list of name=value strings, the
- * strings will be parsed and interpreted.  The current list of accepted names
- * is:
- *    session -- the id of the session to which to reconnect
-#if 0
- *    sge_root -- the SGE_ROOT to use
- *    sge_cell -- the SGE_CELL to use
-#endif
  *
  * drmaa_init() SHALL return DRMAA_ERRNO_SUCCESS on success, otherwise:
  *    DRMAA_ERRNO_INVALID_CONTACT_STRING,

@@ -43,20 +43,18 @@
 #include "sge_answer.h"
 #include "sge_utility.h"
 
-#include "cl_communication.h" /* CL_MAXHOSTNAMELEN_LENGTH */
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_sgeobjlib.h"
 
-an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name) 
+int verify_str_key(lList **alpp, const char *str, const char *name) 
 {
    static char begin_chars[3] = { '.', '#', 0 };
    static const char *begin_strings[3];
 
-   static const char mid_characters[19] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
-      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0};
-   static const char *mid_strings[19];
+   static const char mid_characters[18] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
+      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', 0 };
+   static const char *mid_strings[18];
 
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];
@@ -87,26 +85,12 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
       mid_strings[14] = MSG_GDI_KEYSTR_PARENTHESIS;
       mid_strings[15] = MSG_GDI_KEYSTR_PARENTHESIS;
       mid_strings[16] = MSG_GDI_KEYSTR_AT;
-      mid_strings[17] = MSG_GDI_KEYSTR_PERCENT;
-      mid_strings[18] = NULL;
+      mid_strings[17] = NULL;
       keyword_strings[0] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[1] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[2] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[3] = NULL;
       initialized = 1;
-   }
-
-   if (str == NULL) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_NULL_S, name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      return STATUS_EUNKNOWN;
-   }
-
-   /* check string length first, if too long -> error */
-   if (strlen(str) > str_length) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_LENGTH_U, sge_u32c(str_length)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      return STATUS_EUNKNOWN;
    }
 
    /* check first character */
@@ -153,49 +137,6 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
       }
    }
 
-   return STATUS_OK;
+   return 0;
 }
 
-/****** sge_utility/verify_host_name() *****************************************
-*  NAME
-*     verify_host_name() -- verify a hostname
-*
-*  SYNOPSIS
-*     bool 
-*     verify_host_name(lList **answer_list, const char *host_name) 
-*
-*  FUNCTION
-*     Verifies if a hostname is correct (regarding maximum length etc.).
-*
-*  INPUTS
-*     lList **answer_list   - answer list to pass back error messages
-*     const char *host_name - the hostname to verify
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: verify_host_name() is MT safe 
-*******************************************************************************/
-bool verify_host_name(lList **answer_list, const char *host_name)
-{
-   bool ret = true;
-
-   if (host_name == NULL || *host_name == '\0') {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_HOSTNAME_NOT_EMPTY);
-      ret = false;
-   }
-
-   if (ret) {
-      if (strlen(host_name) > CL_MAXHOSTNAMELEN_LENGTH) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_HOSTNAME_NOT_EMPTY);
-      }
-   }
-
-   /* TODO: further verification (e.g. character set) */
-
-   return ret;
-}

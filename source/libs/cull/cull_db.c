@@ -987,30 +987,19 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
       }
       break;
    default:
-      {
-         int maxpos = 0;
-         maxpos = lCountDescr(sdp);
-
-         /* copy and check descr */
-         for (i = 0; ep[i].mt != lEndT; i++) {
-            if (mt_get_type(ep[i].mt) == mt_get_type(sdp[ep[i].pos].mt) &&
-                ep[i].nm == sdp[ep[i].pos].nm) {
-
-               if (ep[i].pos > maxpos || ep[i].pos < 0) {
-                  LERROR(LEENUMDESCR);
-                  DEXIT;
-                  return -1;
-               }
-               ddp[*indexp].mt = sdp[ep[i].pos].mt;
-               ddp[*indexp].nm = sdp[ep[i].pos].nm;
-               ddp[*indexp].ht = NULL;
-    
-               (*indexp)++;
-            } else {
-               LERROR(LEENUMDESCR);
-               DEXIT;
-               return -1;
-            }
+      /* copy and check descr */
+      for (i = 0; ep[i].mt != lEndT; i++) {
+         if (mt_get_type(ep[i].mt) == mt_get_type(sdp[ep[i].pos].mt) &&
+             ep[i].nm == sdp[ep[i].pos].nm) {
+            ddp[*indexp].mt = sdp[ep[i].pos].mt;
+            ddp[*indexp].nm = sdp[ep[i].pos].nm;
+            ddp[*indexp].ht = NULL;
+ 
+            (*indexp)++;
+         } else {
+            LERROR(LEENUMDESCR);
+            DEXIT;
+            return -1;
          }
       }
    }

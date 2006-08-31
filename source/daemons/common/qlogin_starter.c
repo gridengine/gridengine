@@ -110,7 +110,7 @@ int delete_qrsh_pid_file()
 *     write_to_qrsh -- short description
 *
 *  SYNOPSIS
-*    int write_to_qrsh(const char *data);
+*     void write_to_qrsh(char *data);
 *
 *  FUNCTION
 *     Writes the contents of <data> to an other (remote) process over
@@ -319,7 +319,7 @@ FCLOSE_ERROR:
    return ret;
 }
 
-/****** shepherd/qrsh/get_error_of_qrsh_starter() *************************
+/****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
 *  NAME
 *     get_error_of_qrsh_starter -- get error message from qrsh_starter
 *
@@ -446,13 +446,12 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    int argc = 0;
    const char *sge_root = NULL;
    const char *arch = NULL;
-
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
+#if AIX51
+   size_t length;
+   size_t len;
+#else
    int length;
    int len;
-#else
-   socklen_t length;
-   socklen_t len;
 #endif
 
    len = sizeof(serv_addr);
@@ -525,9 +524,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
       return 9;
    }
   
-   snprintf(buffer, 2048, "0:%d:%s/utilbin/%s:%s:%s", 
-                    port, sge_root, arch, cwd, get_conf_val("host"));
-
+   sprintf(buffer, "0:%d:%s/utilbin/%s:%s:%s", port, sge_root, arch, cwd, get_conf_val("host"));
    if (write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));
       shutdown(sockfd, 2);

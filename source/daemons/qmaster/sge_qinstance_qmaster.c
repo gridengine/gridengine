@@ -435,16 +435,16 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 
                   /*
                    * If this queue instance itself is a subordinated queue
-                   * than it might be necessary to set the sos state.
+                   * than it might we necessary to set the sos state.
                    * We have to check the subordinated list of all
                    * other queue instances to intitialize the state.
                    *
-                   * This queue can't be subordinated if the queue was 
-                   * freshly added.
+                   * This queue can't be subordinated if the queue was freshly added.
                    */
                   if (initial_modify == false) {
                      qinstance_initialize_sos_attr(this_elem, monitor);
                   }
+   
 
                   /*
                    * Find list of subordinates that are suspended currently 
@@ -476,11 +476,9 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                    * (Un)suspend subordinated queue instances
                    */
                   cqueue_list_x_on_subordinate_so(master_list, answer_list, 
-                                                  false, unsuspended_so, false,
-                                                  monitor);
+                                                  false, unsuspended_so, false, monitor);
                   cqueue_list_x_on_subordinate_so(master_list, answer_list, 
-                                                  true, suspended_so, false, 
-                                                  monitor);
+                                                  true, suspended_so, false, monitor);
 
                   /*
                    * Cleanup

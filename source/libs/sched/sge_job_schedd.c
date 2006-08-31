@@ -242,7 +242,7 @@ job_move_first_pending_to_running(lListElem **pending_job, lList **splitted_jobs
    /*
     * Remove pending job if there are no pending tasks anymore
     */
-   if (job_count_pending_tasks(*pending_job, false)==0) {
+   if (!job_has_pending_tasks(*pending_job)) {
       lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
       lFreeElem(pending_job);
       ret = true;
@@ -1075,10 +1075,11 @@ lList *job_list
    DENTER(TOP_LAYER, "trace_job_sort");
 
    for_each (job, job_list) {
-      DPRINTF(("JOB "sge_u32" %d %s "sge_u32"\n",
+      DPRINTF(("JOB "sge_u32" %d %s %d "sge_u32"\n",
          lGetUlong(job, JB_job_number),
          (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
          lGetString(job, JB_owner),
+         lGetUlong(job, JB_nrunning),
          lGetUlong(job, JB_submission_time)));
    }
 

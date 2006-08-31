@@ -90,7 +90,11 @@ lListElem *sconf_create_default(void);
 
 bool sconf_set_config(lList **config, lList **answer_list);
 
-bool sconf_is_valid_load_formula(lList **answer_list,
+bool sconf_is_valid_load_formula_( lList **answer_list,
+                                       lList *cmplx_list);
+
+bool sconf_is_valid_load_formula(lListElem *sc_ep,
+                                       lList **answer_list,
                                        lList *cmplx_list);
 
 bool

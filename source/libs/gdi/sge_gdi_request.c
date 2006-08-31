@@ -63,7 +63,6 @@
 #endif
 #include "msg_common.h"
 #include "msg_gdilib.h"
-#include "gdi/version.h"
 
 static bool
 gdi_send_multi_async(lList **alpp, state_gdi_multi *state);
@@ -304,7 +303,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *           variable must be initialized with STATE_GDI_MULTI_INIT 
 *           before a series of calls to sge_gdi_multi()
 *
-*     bool do_copy - indicates, if the passed in data needs to be copied or not
+*     bool do_copy - indicates, if the passed in data needs to be copyed or not
 *
 *     bool do_sync - indicates, if the gdi request should be send sync or async.
 *
@@ -344,7 +343,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    char username[128];
    char groupname[128];
 
-   DENTER(GDI_LAYER, "sge_gdi_multi_sync");
+   DENTER(GDI_LAYER, "sge_gdi_multi");
 
    PROF_START_MEASUREMENT(SGE_PROF_GDI);
 
@@ -406,7 +405,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    /* 
    ** user info
    */
-   uid = geteuid();
+   uid = getuid();
    if (sge_uid2user(uid, username, sizeof(username), MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FUNC_GETPWUIDXFAILED_IS , 
               (int)uid, strerror(errno)));
@@ -424,8 +423,9 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
    }
 #endif
-   gid = getegid();
-   if(sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
+   gid = getgid();
+   if (sge_gid2group(gid, groupname, sizeof(groupname), 
+         MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
                              sge_u32c(gid)));
       goto error; 
@@ -636,7 +636,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    }
    else {
       /* nothing todo... */
-      DRETURN(true);
+      return true;
    }
   
    /* recive answer */
@@ -683,9 +683,9 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
          }   
-         gdi_state_clear_last_gdi_request(); 
       }
-      DRETURN(false);
+      DEXIT;
+      return false;
    }
  
    for (an = (*answer); an; an = an->next) { 
@@ -708,7 +708,7 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
 
    gdi_state_clear_last_gdi_request();
    
-   DRETURN(true);
+   return true;
 }
 
 /****** sge_gdi_request/gdi_send_multi_sync() **********************************
@@ -1612,16 +1612,16 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
       /* save next pointer */
       next = ar->next;
 
-      FREE(ar->host);
-      FREE(ar->commproc);
-      FREE(ar->auth_info);
+      if (ar->host) free(ar->host);
+      if (ar->commproc) free(ar->commproc);
+      if (ar->auth_info) free(ar->auth_info);
 
       lFreeList(&(ar->lp));
       lFreeList(&(ar->alp));
       lFreeWhere(&(ar->cp));
       lFreeWhat(&(ar->enp));
 
-      FREE(ar);
+      free(ar);
 
       ar = next;
    }

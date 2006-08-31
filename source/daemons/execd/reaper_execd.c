@@ -748,8 +748,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
    case SSTATE_APPERROR:
-   case SSTATE_PASSWD_ERROR:
-   case SSTATE_SERVICE_ERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -796,6 +794,67 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    DPRINTF(("job report for job "SFN": general_failure = %ld\n", 
             job_get_id_string(job_id, ja_task_id, pe_task_id),
             general_failure));
+
+   /* Check whether a message about tasks exit has to be sent.
+      We need job data to know whether an ack about exit status was requested */
+   /* JG: TODO (257): This message will never be read by anybody. 
+    *           We should store the host and port of qrsh -inherit in PET_source
+    *           and send data there, or, perhaps better, always use comlib for 
+    *           communication of qrsh with other components instead of qrsh socket.
+    */
+   if (pe_task_id != NULL) {
+#if 0
+      lListElem *petep = NULL, *uep = NULL;
+#endif
+      lListElem *jep = NULL, *jatep = NULL;
+      const void *iterator;
+
+      jep = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
+      while(jep != NULL) {
+         jatep = job_search_task(jep, NULL, ja_task_id);
+         if(jatep != NULL) {
+            break;
+         }
+         jep = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
+      }
+
+      /* CR: TODO: This code is not active because there is no one who calls 
+       *           sge_qwaittid() to receive task exit message. Activate this
+       *           code when sge_qwaittid() is needed.
+       */
+#if 0
+      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, JAT_task_list))) {
+         const char *host, *commproc;
+         u_short id;
+         sge_pack_buffer pb;
+         u_long32 exit_status = 1;
+         u_long32 dummymid = 0;
+         int ret;
+
+         /* extract address from JB_job_source */
+         host = sge_strtok(lGetString(petep, PET_source), ":"); 
+         commproc = sge_strtok(NULL, ":"); 
+         id = atoi(sge_strtok(NULL, ":")); 
+
+         /* extract exit status from job report */
+         if ((uep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
+            exit_status = lGetDouble(uep, UA_value);         
+        
+         /* fill in pack buffer */
+         if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
+            packstr(&pb, pe_task_id);
+            packint(&pb, exit_status);
+
+            /* send a task exit message to the submitter of this task */
+            ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
+            DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
+                  (ret!=CL_RETVAL_OK)?"failed":"success", pe_task_id, 
+                  lGetString(petep, PET_source), cl_get_error_text(ret)));
+            clear_packbuffer(&pb);
+         }
+      }
+#endif
+   }
 
    sge_dstring_free(&fname);
    sge_dstring_free(&jobdir);
@@ -1494,21 +1553,19 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
       lSetString(jr, JR_owner, owner = get_conf_val("job_owner"));
       if (owner) {
          struct passwd *pw;
+         struct group *pg;
          struct passwd pw_struct;
-         stringT buffer_pw;
-         stringT buffer_pg;
+         char buffer[2048];
 
-         pw = sge_getpwnam_r(owner, &pw_struct, buffer_pw, MAX_STRING_SIZE);
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer, sizeof(buffer));
          if (pw) {
             if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
-            }
-
-            if(sge_gid2group(pw->pw_gid, buffer_pg, 
-                             MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
-               lSetString(jr, JR_group, buffer_pg);
-            }
+            } 
+            pg = getgrgid(pw->pw_gid);
+            if (pg && pg->gr_name)
+               lSetString(jr, JR_group, pg->gr_name);
          }
       }
 

@@ -453,17 +453,14 @@ proc qtcsh_evaluate { { result "" } { option "" } { command "hostname"} { mode "
 
    set ret_value -1
 
-   set result [string trim $result]
-
    set hostname [lindex $ts_config(execd_nodes) 0]
-   if {[string compare $option "-L"] == 0} {
+   if { [ string compare $option "-L" ] == 0 } {
       set hostname_remote $hostname
    } else {
       set hostname_remote [lindex $ts_config(execd_nodes) 1]
    }
 
    puts $CHECK_OUTPUT "try to find out what I expect for \nresult $result, option $option, command $command and mode $mode ..."
-   puts $CHECK_OUTPUT "hostname = $hostname, hostname_remote = $hostname_remote"
    # Now when we need to map out what to expect for the different combinations
    # of flag:"{} -A -B -L -B"; command:"hostname {uname -n}"; level: "0 1 2 3".
    # There are a total of 5x2x4 = 40 total number of possibilities: 

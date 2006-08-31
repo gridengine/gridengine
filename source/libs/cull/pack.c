@@ -838,12 +838,6 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
       return ret;
    }
 
-   /* bitfield size must match descr size */
-   if (size != descr_size) {
-      DEXIT;
-      return PACK_ENOMEM;
-   }
-
    /* unpack contents of the bitfield */
    char_size = sge_bitfield_get_size_bytes(size);
    if((ret = unpackbuf(pb, &buffer, char_size)) != PACK_SUCCESS) {
@@ -852,7 +846,10 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
       return ret;
    }
    
-   memcpy(sge_bitfield_get_buffer(bitfield), buffer, char_size);
+   /* if bitfield matches descr, copy bitfield */
+   if (size == descr_size) {
+      memcpy(sge_bitfield_get_buffer(bitfield), buffer, char_size);
+   }
 
    /* free unpacked bitfield buffer */
    FREE(buffer);

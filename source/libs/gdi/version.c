@@ -30,31 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <stdio.h>
-
-#include "version.h"
-
 const char GDI_VERSION[] = "maintrunk";
-
-const gdi_ulong32 GRM_GDI_VERSION = 0x10002000;
-
-vdict_t GRM_GDI_VERSION_ARRAY[] = 
-{
-      { 0x10000000, "5.0"  },
-      { 0x10000001, "5.1"  },
-      { 0x10000002, "5.2"  },
-      { 0x10000003, "5.2.3"  },
-      { 0x100000F0, "5.3alpha1" },
-      { 0x100000F1, "5.3beta1 without hashing" },
-      { 0x100000F2, "5.3beta1" },
-      { 0x100000F3, "5.3beta2" },
-      { 0x100000F4, "5.3" },
-      { 0x10000FFF, "6.0"   },
-      { 0x10001000, "6.0u3" },
-      { 0x10001001, "6.0u4" },
-      { 0x10001002, "6.0u8_2" },
-      { 0, NULL}
-};
 
 #ifdef ADD_SUN_COPYRIGHT
 const char GE_LONGNAME[] = "N1 Grid Engine";

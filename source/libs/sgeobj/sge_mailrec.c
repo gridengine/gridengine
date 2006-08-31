@@ -99,7 +99,7 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    }
 
    if (!*lpp) {
-      *lpp = lCreateList("mail_list", MR_Type);
+      *lpp = lCreateList("mail list", MR_Type);
       if (!*lpp) {
          FREE(mail);
          FREE(str_str);

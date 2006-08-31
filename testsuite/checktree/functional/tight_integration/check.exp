@@ -488,7 +488,7 @@ proc tight_integration_function {} {
       add_proc_error tight_integration_functional -1 "only $finished tasks out of $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS ran through successfully"
    }
    set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
+   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
    close_spawn_process $id
 
    wait_for_jobend $jobid tightf 60 0 1
@@ -653,7 +653,7 @@ proc tight_integration_iz_575 {} {
       }
    }
    set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
+   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
    close_spawn_process $id
 
    wait_for_jobend $jobid tightf 60 0 1
@@ -686,7 +686,7 @@ proc tight_integration_iz_578 {} {
       set job_finished [tight_integration_job_finished $job_state]
    }
    set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
+   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
    close_spawn_process $id
 
@@ -733,7 +733,7 @@ proc tight_integration_master_killed {} {
       }
    }
    set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
+   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
    close_spawn_process $id
 
@@ -781,7 +781,7 @@ proc tight_integration_slave_killed {} {
    }
 
    set sp_id [lindex $id 1]
-   send -i $sp_id "\003" ;# send CTRL+C to stop poss. running processes in that shell
+   send -i $sp_id "\003" ;# send CTRL+C to stop evtl. running processes in that shell
 
    close_spawn_process $id
 

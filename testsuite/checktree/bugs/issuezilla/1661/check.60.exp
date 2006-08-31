@@ -109,6 +109,8 @@ set check_cleanup_function issue_1661_cleanup
 # define test's procedure order
 set check_functions ""
 lappend check_functions "issue_1661_test1"
+#lappend check_functions "issue_1661_test2"
+#lappend check_functions "issue_1661_test3"
 
 
 global issue_1661_test_hosts

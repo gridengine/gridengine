@@ -92,6 +92,14 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       return answer;
    }
 
+   if (!lGetUlong(*pjob, JB_submission_time)) {
+      lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
+   }
+   if (!lGetString(*pjob, JB_owner)) {
+      lSetString(*pjob, JB_owner, uti_state_get_user_name());
+   }
+   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
+
    /*
    ** path aliasing
    */
@@ -250,11 +258,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       return answer;
    }
 
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-e"))) {
-      lSetList(*pjob, JB_stderr_path_list, lCopyList("stderr_path_list", lGetList(ep, SPA_argval_lListT)));
-      lRemoveElem(cmdline, &ep);
-   }
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       if (lGetInt(ep, SPA_argval_lIntT) & MINUS_H_TGT_USER) {
          lSetList(*pjob, JB_ja_u_h_ids, lCopyList("task_id_range",
@@ -291,11 +294,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
       answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DEXIT;
       return answer;
-   }
-
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
-      lSetBool(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
-      lRemoveElem(cmdline, &ep);
    }
 
    parse_list_hardsoft(cmdline, "-l", *pjob, 
@@ -340,11 +338,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
 
       lSetUlong(*pjob, JB_type, jb_now);
 
-      lRemoveElem(cmdline, &ep);
-   }
-
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-o"))) {
-      lSetList(*pjob, JB_stdout_path_list, lCopyList("stdout_path_list", lGetList(ep, SPA_argval_lListT))); 
       lRemoveElem(cmdline, &ep);
    }
 

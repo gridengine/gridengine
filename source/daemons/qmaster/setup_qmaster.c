@@ -63,7 +63,6 @@
 #include "sge_feature.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
-#include "sge_answer.h"
 #include "sge_utility.h"
 #include "setup_qmaster.h"
 #include "sge_prog.h"
@@ -80,6 +79,7 @@
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_io.h"
+#include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
@@ -106,8 +106,6 @@
 #include "sge_event_master.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
 
 
 static void   process_cmdline(char**);
@@ -123,7 +121,6 @@ static int
 remove_invalid_job_references(int user, object_description *object_base);
 
 static int    debit_all_jobs_from_qs(void);
-static void   init_categories(void);
 
 
 /****** qmaster/setup_qmaster/sge_setup_qmaster() ******************************
@@ -615,7 +612,7 @@ static void communication_setup(void)
 
          CRITICAL((SGE_EVENT, MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S, ((CL_RETVAL_OK == res ) ? host : "unknown")));
 
-         if (CL_RETVAL_OK == res) { FREE(host); }
+         if (CL_RETVAL_OK == res) { free(host); }
       }
 
       SGE_EXIT(1);
@@ -896,10 +893,6 @@ static int setup_qmaster(void)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CALENDAR].list, SGE_TYPE_CALENDAR);
    answer_list_output(&answer_list);
 
-   DPRINTF(("limitation rule list -----------------------\n"));
-   spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_LIRS].list, SGE_TYPE_LIRS);
-   answer_list_output(&answer_list);
-
 #ifndef __SGE_NO_USERMAPPING__
    DPRINTF(("administrator user mapping-----------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CUSER].list, SGE_TYPE_CUSER);
@@ -984,38 +977,23 @@ static int setup_qmaster(void)
    /* 
       if the job is in state running 
       we have to register each slot 
-      in a queue, in the limitation rule sets
-      and in the parallel 
+      in a queue and in the parallel 
       environment if the job is a 
       parallel one
    */
    debit_all_jobs_from_qs(); 
    debit_all_jobs_from_pes(*object_base[SGE_TYPE_PE].list); 
 
-   /*
-    * Initialize cached values for each qinstance:
-    *    - fullname
-    *    - clear suspend on subordinate flag
-    */
+   /* clear suspend on subordinate flag in QU_state */ 
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
       lListElem *qinstance;
 
       for_each(qinstance, qinstance_list) {
-         qinstance_set_full_name(qinstance);
          qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
 
-   /* 
-    * Initialize
-    *    - suspend on subordinate state 
-    *    - cached QI values.
-    */
-   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true, &monitor);
-   }
-        
    /* 
     * initialize QU_queue_number if the value is 0 
     *
@@ -1041,6 +1019,15 @@ static int setup_qmaster(void)
       }
    }
 
+   /* 
+    * Initialize
+    *    - suspend on subordinate state 
+    *    - cached QI values.
+    */
+   for_each(tmpqep, *object_base[SGE_TYPE_CQUEUE].list) {
+      cqueue_mod_qinstances(tmpqep, NULL, tmpqep, true, &monitor);
+   }
+        
    /* calendar */
    {
       lListElem *cep;
@@ -1111,8 +1098,6 @@ static int setup_qmaster(void)
          }
       }
    }
-
-   init_categories();
 
    DEXIT;
    return 0;
@@ -1192,7 +1177,6 @@ static int debit_all_jobs_from_qs()
    int ret = 0;
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
-   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
 
@@ -1220,18 +1204,12 @@ static int debit_all_jobs_from_qs()
                lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
             } else {
                /* debit in all layers */
-               lListElem *lirs = NULL;
                debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
                                      "global"), master_centry_list, slots);
                debit_host_consumable(jep, host_list_locate(
                         *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)), 
                         master_centry_list, slots);
                qinstance_debit_consumable(qep, jep, master_centry_list, slots);
-               for_each (lirs, master_lirs_list) {
-                  lirs_debit_consumable(lirs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
-                                        *(object_type_get_master_list(SGE_TYPE_USERSET)), *(object_type_get_master_list(SGE_TYPE_HGROUP)), slots);
-               }
-
             }
          }
       }
@@ -1240,76 +1218,3 @@ static int debit_all_jobs_from_qs()
    DEXIT;
    return ret;
 }
-
-/****** setup_qmaster/init_categories() ****************************************
-*  NAME
-*     init_categories() -- Initialize usersets/projects wrts categories
-*
-*  SYNOPSIS
-*     static void init_categories(void)
-*
-*  FUNCTION
-*     Initialize usersets/projects wrts categories.
-*
-*  NOTES
-*     MT-NOTE: init_categories() is not MT safe
-*******************************************************************************/
-static void init_categories(void)
-{
-   const lListElem *cq, *pe, *hep, *ep;
-   lListElem *acl, *prj, *lirs;
-   lList *u_list = NULL, *p_list = NULL;
-   lList *master_project_list = (*object_type_get_master_list(SGE_TYPE_PROJECT));
-   lList *master_userset_list = (*object_type_get_master_list(SGE_TYPE_USERSET));
-   bool all_projects = false;
-   bool all_usersets = false;
-
-   /*
-    * collect a list of references to usersets/projects used in
-    * the limitation rule sets
-    */
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (!all_projects && !lirs_diff_projects(lirs, NULL, &p_list, NULL, master_project_list)) {
-         all_projects = true;
-      }
-      if (!all_usersets && !lirs_diff_usersets(lirs, NULL, &u_list, NULL, master_userset_list)) {
-         all_usersets = true;
-      }
-      if (all_usersets && all_projects) {
-         break;
-      }
-   }
-
-   /*
-    * collect list of references to usersets/projects used as ACL
-    * with queue_conf(5), host_conf(5) and sge_pe(5)
-    */
-   for_each (cq, *object_type_get_master_list(SGE_TYPE_CQUEUE)) {
-      cqueue_diff_projects(cq, NULL, &p_list, NULL);
-      cqueue_diff_usersets(cq, NULL, &u_list, NULL);
-   }
-
-   for_each (pe, *object_type_get_master_list(SGE_TYPE_PE)) {
-      pe_diff_usersets(pe, NULL, &u_list, NULL);
-   }
-
-   for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {
-      host_diff_projects(hep, NULL, &p_list, NULL);
-      host_diff_usersets(hep, NULL, &u_list, NULL);
-   }
-
-   /*
-    * now set categories flag with usersets/projects used as ACL
-    */
-   for_each(ep, p_list)
-      if ((prj = userprj_list_locate(master_project_list, lGetString(ep, UP_name))))
-         lSetBool(prj, UP_consider_with_categories, true);
-
-   for_each(ep, u_list)
-      if ((acl = userset_list_locate(master_userset_list, lGetString(ep, US_name))))
-         lSetBool(acl, US_consider_with_categories, true);
-   
-   lFreeList(&p_list);
-   lFreeList(&u_list);
-}
-

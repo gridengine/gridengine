@@ -162,11 +162,7 @@ const char *sge_get_arch(void)
 #    pragma "Define a NetBSD architecture for SGE"
 # endif
 #elif defined(DARWIN)
-#   if defined(DARWIN_PPC) 
-#      define ARCHBIN "darwin-ppc"
-#   elif defined(DARWIN_X86)
-#      define ARCHBIN "darwin-x86"
-#   endif
+#   define ARCHBIN "darwin"   
 #elif defined(INTERIX)
 #   define ARCHBIN "win32-x86"
 #else
@@ -318,7 +314,7 @@ const char *sge_get_default_cell(void)
 *     sge_get_alias_path() -- Return the path of the 'alias_file' 
 *
 *  SYNOPSIS
-*     const char* sge_get_alias_path(void) 
+*     char* sge_get_alias_path(void) 
 *
 *  FUNCTION
 *     Return the path of the 'alias_file' 
@@ -327,7 +323,7 @@ const char *sge_get_default_cell(void)
 *     MT-NOTE: sge_get_alias_path() is MT safe
 *
 ******************************************************************************/
-const char *sge_get_alias_path(void) 
+char *sge_get_alias_path(void) 
 {
    const char *sge_root, *sge_cell;
    char *cp;

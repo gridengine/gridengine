@@ -405,10 +405,10 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          int select_back = 0;
          struct timeval now;
          int socket_error = 0;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-         int socklen = sizeof(socket_error);
-#else
+#if defined(AIX)
          socklen_t socklen = sizeof(socket_error);
+#else
+         int socklen = sizeof(socket_error);
 #endif
 
          if (only_once == 0) {
@@ -1024,22 +1024,17 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
    }
 
    /* now read complete header */
-   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ||
-           connection->data_read_buffer[connection->data_read_buffer_pos - 2] != 'h'   ) {
-
-      /* check buffer overflow */
+   while ( connection->data_read_buffer[connection->data_read_buffer_pos - 1] != '>' ) {
       if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
-         CL_LOG(CL_LOG_WARNING,"buffer overflow");
+         CL_LOG(CL_LOG_INFO,"buffer overflow");
          return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
       }
-
       if (only_one_read != NULL) {
          data_read = 0;
          retval = cl_com_tcp_read(connection, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
                                   1,
                                   &data_read);
-
          connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
          *only_one_read = data_read;
       } else {
@@ -1055,15 +1050,9 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
       }
    }
 
-   if ( connection->data_read_buffer_pos >= connection->data_buffer_size) {
-      CL_LOG(CL_LOG_WARNING,"buffer overflow (2)");
-      return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
-   }
-
    connection->data_read_buffer[connection->data_read_buffer_pos] = 0;
    /* header should be now complete */
    if ( strcmp((char*)&(connection->data_read_buffer[connection->data_read_buffer_pos - 7]) ,"</gmsh>") != 0) {
-      CL_LOG(CL_LOG_WARNING,"can't find gmsh end tag");
       return CL_RETVAL_GMSH_ERROR;
    }
    
@@ -1172,10 +1161,10 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection 
    }
 
    if (private->server_port == 0) {
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-      int length;
+#if defined(AIX43) || defined(AIX51)
+      size_t length;
 #else
-      socklen_t length;
+      int length;
 #endif
       length = sizeof(serv_addr);
       /* find out assigned port number and pass it to caller */
@@ -1306,10 +1295,10 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-   int fromlen = 0;
+#if defined(AIX43) || defined(AIX51)
+   size_t fromlen = 0;
 #else
-   socklen_t fromlen;
+   int fromlen = 0;
 #endif
    int retval;
    int server_fd = -1;
@@ -1501,10 +1490,10 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-   int socklen = sizeof(socket_error);
-#else
+#if defined(AIX)
    socklen_t socklen = sizeof(socket_error);
+#else
+   int socklen = sizeof(socket_error);
 #endif
 
 #ifdef USE_POLL

@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
-#include <fnmatch.h>
 
 #include "basis_types.h"
 #include "sgermon.h" 
@@ -54,10 +53,6 @@
 #include "msg_sgeobjlib.h"
 
 #define QREF_LAYER TOP_LAYER
-
-static bool
-qref_list_host_rejected(const char *href, const char *hostname, 
-                                 const lList *hgroup_list);
 
 static bool
 qref_list_resolve_cqueue_names(const lList *cq_qref_list, 
@@ -413,187 +408,6 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
    return ret;
 }
 
-/****** sge_qref/qref_cq_rejected() ********************************************
-*  NAME
-*     qref_cq_rejected() --  Check, if -q qref_list rejects (cluster) queue
-*
-*  SYNOPSIS
-*     bool qref_cq_rejected(const char *qref_pattern, const char *cqname, const
-*     char *hostname, const lList *hgroup_list)
-*
-*  FUNCTION
-*     Check if patter in -q qref_list rejects cluster queue and hostname,
-*     if passed. If NULL is passed as hostname, cluster queue verfication
-*     is performed only.
-*
-*  INPUTS
-*     const char *qref_pattern - a wildcard pattern as defined for -q qref_list
-*     const char *cqname       - cluster queue name
-*     const char *hostname     - exeuction hostname
-*     const lList *hgroup_list - host group list
-*
-*  RESULT
-*     bool - true if rejected
-*
-*  NOTES
-*     MT-NOTE: qref_cq_rejected() is MT safe
-*******************************************************************************/
-bool
-qref_cq_rejected(const char *qref_pattern, const char *cqname,
-      const char *hostname, const lList *hgroup_list)
-{
-   const char *s;
-
-   DENTER(TOP_LAYER, "qref_cq_rejected");
-
-   if ((s=strchr(qref_pattern, '@'))) {
-      /* use qref part before '@' as wc_cqueue pattern */
-      int boo;
-      char *wc_cqueue = strdup(qref_pattern);
-      wc_cqueue[ s - qref_pattern ] = '\0';
-      boo = fnmatch(wc_cqueue, cqname, 0);
-      free(wc_cqueue);
-      if (!boo) {
-         if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
-            DEXIT;
-            return false;
-         }
-      }
-   } else {
-      /* use entire qref as wc_queue */
-      if (!fnmatch(qref_pattern, cqname, 0)) {
-         DEXIT;
-         return false;
-      }
-   }
-
-   DEXIT;
-   return true;
-}
-
-
-/****** sge_qref/qref_list_cq_rejected() ***************************************
-*  NAME
-*     qref_list_cq_rejected() -- Check, if -q qref_list rejects (cluster) queue
-*
-*  SYNOPSIS
-*     bool qref_list_cq_rejected(const lList *qref_list, const char *cqname,
-*                        const char *hostname, const lList *hgroup_list)
-*
-*  FUNCTION
-*     Check if -q qref_list rejects cluster queue and hostname, if passed.
-*     If NULL is passed as hostname, cluster queue verfication is performed
-*     only.
-*
-*  INPUTS
-*     const lList *qref_list - QR_Type list as usef for -q qref_list
-*     const char *cqname     - cluster queue name
-*     const char *hostname     - exeuction hostname
-*     const lList *hgroup_list - host group list
-*
-*  RESULT
-*     bool - true if rejected
-*
-*  NOTES
-*     MT-NOTE: qref_list_cq_rejected() is MT safe
-*******************************************************************************/
-bool
-qref_list_cq_rejected(const lList *qref_list, const char *cqname,
-      const char *hostname, const lList *hgroup_list)
-{
-   lListElem *qref_pattern = NULL;
-
-   DENTER(TOP_LAYER, "qref_list_cq_rejected");
-
-   if (!cqname) {
-      DEXIT;
-      return true;
-   }
-
-   if (!qref_list) {
-      DEXIT;
-      return false;
-   }
-
-   for_each(qref_pattern, qref_list) {
-      const char *name = lGetString(qref_pattern, QR_name);
-      if (qref_cq_rejected(name, cqname, hostname, hgroup_list)==false) {
-         DEXIT;
-         return false;
-      }
-   }
-
-   DEXIT;
-   return true;
-}
-
-
-/****** sge_qref/qref_list_host_rejected() *************************************
-*  NAME
-*     qref_list_host_rejected() -- Check if -q ??@href rejects host
-*
-*  SYNOPSIS
-*     static bool qref_list_host_rejected(const char *href, const char
-*     *hostname, const lList *hgroup_list)
-*
-*  FUNCTION
-*     Checks if a -q ??@href rejects host. The href may be either
-*     wc_hostgroup or wc_host.
-*
-*  INPUTS
-*     const char *href         - Host reference from -q ??@href
-*     const char *hostname     - the host in question
-*     const lList *hgroup_list - hostgroup list (HGRP_Type)
-*
-*  RESULT
-*     static bool - True if rejected.
-*
-*  NOTES
-*     MT-NOTE: qref_list_host_rejected() is MT safe
-*******************************************************************************/
-static bool
-qref_list_host_rejected(const char *href, const char *hostname, const lList *hgroup_list)
-{
-   DENTER(TOP_LAYER, "qref_list_host_rejected");
-
-   if (href[0] == '@') { /* wc_hostgroup */
-      const char *wc_hostgroup = &href[1];
-      const lListElem *hgroup;
-      for_each(hgroup, hgroup_list) {
-         const char *hgroup_name = lGetHost(hgroup, HGRP_name);
-         DPRINTF(("found hostgroup \"%s\" wc_hostgroup: \"%s\"\n",
-               hgroup_name, wc_hostgroup));
-         if (fnmatch(wc_hostgroup, &hgroup_name[1], 0) == 0) {
-            const lListElem *h;
-            for_each (h, lGetList(hgroup, HGRP_host_list)) {
-               if (!qref_list_host_rejected(lGetHost(h, HR_name), hostname, hgroup_list)) {
-                  DEXIT;
-                  return false;
-               }
-            }
-         }
-      }
-   } else { /* wc_host */
-      const char *wc_host = href;
-      if (sge_is_pattern(wc_host)) {
-         if (fnmatch(wc_host, hostname, 0) == 0) {
-            DEXIT;
-            return false;
-         }
-      } else {
-         if (sge_hostcmp(hostname, wc_host) == 0) {
-            DEXIT;
-            return false;
-         }
-      }
-   }
-
-   DPRINTF(("-q ?@%s rejected by \"%s\"\n", hostname, href));
-
-   DEXIT;
-   return true;
-}
-
 /****** sgeobj/qref/qref_list_trash_some_elemts() *****************************
 *  NAME
 *     qref_list_trash_some_elemts() -- Remove some elements from list 
@@ -828,3 +642,4 @@ qref_resolve_hostname(lListElem *this_elem)
    DEXIT;
    return;
 }
+

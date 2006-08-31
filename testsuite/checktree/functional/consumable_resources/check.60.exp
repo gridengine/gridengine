@@ -284,7 +284,7 @@ proc consumable_resources_submit_jobs_and_alter { job_arguments resource resourc
    set job_id [submit_job "$job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
 
@@ -357,7 +357,7 @@ proc consumable_resources_submit_pejobs_and_wait { job_arguments job_count run_j
    set job_id [submit_job "-pe round_robin 1-$job_count $job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       
@@ -405,7 +405,7 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
    }
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       for { set i 0 } { $i < $job_count } { incr i 1 } {
@@ -437,7 +437,7 @@ proc consumable_resources_submit_jobs_and_wait { job_arguments job_count run_job
          set sched_info_tries 10
          set ok 0
          while { $sched_info_tries > 0 } {      
-            trigger_scheduling
+            catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
             for { set i 0 } { $i < $job_count } { incr i 1 } {
                if { $job_id($i,running) == 0 } {
                   puts $CHECK_OUTPUT "job $job_id($i) is not running, checking schedd job info message ..."
@@ -1122,7 +1122,7 @@ proc consumable_resources_test {} {
       set test1_complex(test1) ""
       set_complex test1_complex
 
-      catch { eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link.sh" } output
+      catch {  eval exec "rm $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/resource_loadsensor_link.sh" } output
       puts $CHECK_OUTPUT $output
 
       puts $CHECK_OUTPUT "done"

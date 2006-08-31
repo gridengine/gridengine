@@ -54,10 +54,10 @@ global env
 #set check_root_access_needs "yes"
 
 # define a level initialization procedure:
-set check_init_level_procedure "subordinate_init_level"
+set check_init_level_procedure "subordiante_init_level"
 
 # define test's name and run level descriptions
-set check_name            "subordinate"
+set check_name            "subordiante"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   8
 set check_description(0)  "Consumable resources on global level"
@@ -66,17 +66,17 @@ set check_description(0)  "Consumable resources on global level"
 set check_needs           "init_core_system" 
 
 # setup and cleanup functions
-set check_setup_function subordinate_setup
-set check_cleanup_function subordinate_cleanup
+set check_setup_function subordiante_setup
+set check_cleanup_function subordiante_cleanup
 
 # define test's procedure order
-set check_functions "subordinate_test"
+set check_functions "subordiante_test"
 
 
-global subordinate_test_hosts
-global subordinate_saved_slot_count
+global subordiante_test_hosts
+global subordiante_saved_slot_count
 
-proc subordinate_init_level {} {
+proc subordiante_init_level {} {
    global CHECK_ACT_LEVEL
 
    switch -- $CHECK_ACT_LEVEL {
@@ -90,23 +90,23 @@ proc subordinate_init_level {} {
 
 # -------- local test procedures: initialization------------------------------
 
-proc subordinate_setup  {} {
+proc subordiante_setup  {} {
    global ts_config
-   global subordinate_test_hosts
-   global subordinate_saved_slot_count
+   global subordiante_test_hosts
+   global subordiante_saved_slot_count
    global consumable_complex_backup
    global CHECK_OUTPUT
 
    # backup complex - we will modify it during the test
    get_complex consumable_complex_backup
 
-   set subordinate_test_hosts {}
-   set subordinate_saved_slot_count ""
+   set subordiante_test_hosts {}
+   set subordiante_saved_slot_count ""
    set execd_count 0
    foreach host $ts_config(execd_nodes) {
       if { $execd_count < 2 } {
          incr execd_count 1
-         lappend subordinate_test_hosts "$host"
+         lappend subordiante_test_hosts "$host"
          puts $CHECK_OUTPUT "using host $host"
       } 
    }
@@ -122,30 +122,30 @@ proc subordinate_setup  {} {
    set queue_settings(slots) 1
    set queue_settings(load_thresholds) "np_load_avg=11.75"
    set qname "res.q"
-   add_queue $qname $subordinate_test_hosts queue_settings
-   puts $CHECK_OUTPUT "added queue $qname for hosts $subordinate_test_hosts"
+   add_queue $qname $subordiante_test_hosts queue_settings
+   puts $CHECK_OUTPUT "added queue $qname for hosts $subordiante_test_hosts"
 
    unset queue_settings
    set queue_settings(slots) 1
    set queue_settings(load_thresholds) "np_load_avg=11.75"
    set queue_settings(subordinate_list) "res.q=1"
    set qname "res1.q"
-   add_queue $qname $subordinate_test_hosts queue_settings
-   puts $CHECK_OUTPUT "added queue $qname for hosts $subordinate_test_hosts"
+   add_queue $qname $subordiante_test_hosts queue_settings
+   puts $CHECK_OUTPUT "added queue $qname for hosts $subordiante_test_hosts"
    
    unset queue_settings
    set qname "res.q"
    set queue_settings(subordinate_list) "res1.q=1"
    set_queue $qname "" queue_settings
-   puts $CHECK_OUTPUT "mod queue $qname for hosts $subordinate_test_hosts"
+   puts $CHECK_OUTPUT "mod queue $qname for hosts $subordiante_test_hosts"
    
    set_error 0 "ok"
 }
 
-proc subordinate_cleanup  {} {
+proc subordiante_cleanup  {} {
    global CHECK_OUTPUT ts_config
-   global subordinate_test_hosts
-   global subordinate_saved_slot_count
+   global subordiante_test_hosts
+   global subordiante_saved_slot_count
    global consumable_complex_backup
 
    delete_all_jobs
@@ -163,10 +163,10 @@ proc subordinate_cleanup  {} {
    set_queue $qname "" queue_settings
 
    set qname "res.q"
-   del_queue $qname $subordinate_test_hosts  0 1
+   del_queue $qname $subordiante_test_hosts  0 1
 
    set qname "res1.q"
-   del_queue $qname $subordinate_test_hosts  0 1
+   del_queue $qname $subordiante_test_hosts  0 1
 
    # restore complex
    set_complex consumable_complex_backup
@@ -174,7 +174,7 @@ proc subordinate_cleanup  {} {
    set_error 0 "ok"
 }
 
-proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 case { schedd_info "" } { queue_state "" } { schedd_info_err "" } } {
+proc subordiante_submit_jobs_and_wait { job_arguments job_count run_job_count job_arguments2 case { schedd_info "" } { queue_state "" } { schedd_info_err "" } } {
    global ts_config CHECK_OUTPUT CHECK_ARCH
 
    if { $job_arguments2 == "" } {
@@ -190,7 +190,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
    }
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       for { set i 0 } { $i < $job_count } { incr i 1 } {
@@ -200,7 +200,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
             incr running_jobs 1
          }
          if { $job_state == -1 } {
-            add_proc_error "case $case) subordinate_submit_jobs_and_wait" -2 "job was not submitted - stop"
+            add_proc_error "case $case) subordiante_submit_jobs_and_wait" -2 "job was not submitted - stop"
             set error 1
             break
          }
@@ -217,12 +217,12 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
 
    if { $job_count != $run_job_count } {
       if { $schedd_info == "" } {
-         add_proc_error "case $case) subordinate_submit_jobs_and_wait" -2 "got not running job, but no schedule info to search for"
+         add_proc_error "case $case) subordiante_submit_jobs_and_wait" -2 "got not running job, but no schedule info to search for"
       } else {
          set sched_info_tries 10
          set ok 0
          while { $sched_info_tries > 0 } {      
-            trigger_scheduling
+            catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
             for { set i 0 } { $i < $job_count } { incr i 1 } {
                if { $job_id($i,running) == 0 } {
                   puts $CHECK_OUTPUT "job $job_id($i) is not running, checking schedd job info message ..."
@@ -230,7 +230,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
                   get_qstat_j_info $job_id($i)
                   if { $schedd_info_err != "" } {
                      if { [string match "*$schedd_info_err*" $qstat_j_info(scheduling info)] } {
-                        add_proc_error "subordinate_submit_jobs_and_wait_error" -2 "found issue 1894 (scheduling info contains: $schedd_info_err) - stop"
+                        add_proc_error "subordiante_submit_jobs_and_wait_error" -2 "found issue 1894 (scheduling info contains: $schedd_info_err) - stop"
                         set error 1
                         set ok 1
                      }
@@ -248,7 +248,7 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
             after 1000
          }
          if { $ok != 1 } {
-            add_proc_error "case $case) subordinate_submit_jobs_and_wait" -2 "can't find matching scheduler info:\nexpected: $schedd_info\ngot: $qstat_j_info(scheduling info)"
+            add_proc_error "case $case) subordiante_submit_jobs_and_wait" -2 "can't find matching scheduler info:\nexpected: $schedd_info\ngot: $qstat_j_info(scheduling info)"
          }
       }
    }
@@ -256,8 +256,8 @@ proc subordinate_submit_jobs_and_wait { job_arguments job_count run_job_count jo
    wait_for_end_of_all_jobs 60
 }
 
-proc subordinate_test {} {
-   global subordinate_test_hosts check_description CHECK_ARCH
+proc subordiante_test {} {
+   global subordiante_test_hosts check_description CHECK_ARCH
    global CHECK_OUTPUT ts_config CHECK_CORE_MASTER CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR
 
 
@@ -269,7 +269,7 @@ proc subordinate_test {} {
       set job_arguments "-o /dev/null -e /dev/null"
       set job_count 4
       set run_job_count 2
-      subordinate_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a" $RUNATHOST
+      subordiante_submit_jobs_and_wait $job_arguments $job_count $run_job_count "" "a" $RUNATHOST
    }
    
    set_error 0 "ok"

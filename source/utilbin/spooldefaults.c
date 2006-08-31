@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "spooldefaults");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    log_state_set_log_gui(0);
 
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if ((ret != EXIT_FAILURE) && (spool_get_default_context() != NULL)) {
+   if (spool_get_default_context() != NULL) {
       time_t next_trigger = 0;
 
       if (!spool_trigger_context(&answer_list, spool_get_default_context(), 

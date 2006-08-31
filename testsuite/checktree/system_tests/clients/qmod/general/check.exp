@@ -712,7 +712,7 @@ proc qmod_clear_all_error_states {} {
 # 1) set running job to suspend
 # 2) manualy (kill command) set job to running
 # 3) set suspended job to suspend 
-# 4) command must write something like (job already suspended)
+# 4) command must write something like (job allready suspended)
 # 5) manualy check if job is still running (should run)
 # 6) use -f flag (force) to suspend job again
 # 7) manualy check if job is still running (should be suspended again)
@@ -749,9 +749,6 @@ proc qmod_forceaction {} {
    global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER test_host test_queue CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
 
-   # the characters used in ps output for the suspenede state may vary from arch to arch
-   set suspended_states [host_get_suspended_states $test_host]
-
    # submit testjob to set the queue in error
    set job_id [ submit_job "-N QMOD -q $test_queue -o /dev/null -e /dev/null $ts_config(testsuite_root_dir)/scripts/work_pid.sh 300" ] 
    # now wait for jobstart
@@ -763,8 +760,8 @@ proc qmod_forceaction {} {
    set time_out [ expr ( [timestamp] + 60 ) ]
    set procgroup_ok 0
    while { [timestamp] < $time_out } {
-      set state [get_suspend_state_of_job $job_id $test_host "pid_list" 0] 
-      set grppid [get_grppid_of_job $job_id $test_host]
+      set state [ get_suspend_state_of_job $job_id $test_host "pid_list" 0] 
+      set grppid [ get_grppid_of_job $job_id $test_host]
       puts $CHECK_OUTPUT "Job has real state \"$state\""
       puts $CHECK_OUTPUT "Job has grp pid \"$grppid\""
       puts $CHECK_OUTPUT "pid_list is $pid_list and has length [llength $pid_list]"
@@ -783,13 +780,12 @@ proc qmod_forceaction {} {
    puts $CHECK_OUTPUT "suspend job ..."
    suspend_job $job_id
  
-   set state [string index [get_suspend_state_of_job $job_id $test_host] 0]
+   set state [ get_suspend_state_of_job $job_id $test_host]
    set grppid [ get_grppid_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    puts $CHECK_OUTPUT "Job has grp pid \"$grppid\""
-  
-   puts $CHECK_OUTPUT "Suspend states for host $test_host are \"$suspended_states\""
-   if {[string first $state $suspended_states] == -1} {
+   
+   if { [string compare "T" $state] != 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is not in suspend state"
    }
 
@@ -817,32 +813,32 @@ proc qmod_forceaction {} {
 
 #   sleep 5
 
-   set state [string index [get_suspend_state_of_job $job_id $test_host] 0]
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
 
-   if {[string first $state $suspended_states] >= 0} {
+   if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state"
    }   
 
-   # set job in suspend mode (is already in suspend (in SGE system))
+   # set job in suspend mode (is allready in suspend (in SGE system))
    puts $CHECK_OUTPUT "suspend job (queueing system thinks it is still suspended) ..."
    suspend_job $job_id 0 0
 
-   set state [string index [get_suspend_state_of_job $job_id $test_host] 0]
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    
-   if {[string first $state $suspended_states] >= 0} {
+   if { [string compare "T" $state] == 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still in suspend state without force flag"
    }    
  
-   # set job in suspend mode (is already in suspend (in SGE system)) with force flag set
+   # set job in suspend mode (is allready in suspend (in SGE system)) with force flag set
    puts $CHECK_OUTPUT "suspend job with force flag ..." 
    suspend_job $job_id 1
 
-   set state [string index [get_suspend_state_of_job $job_id $test_host] 0]
+   set state [ get_suspend_state_of_job $job_id $test_host]
    puts $CHECK_OUTPUT "Job has real state \"$state\""
    
-   if {[string first $state $suspended_states] == -1} {
+   if { [string compare "T" $state] != 0 } {
       set_error -1 "job $job_id (grppid: $grppid) is still not in suspend state with using force flag"
    }    
 

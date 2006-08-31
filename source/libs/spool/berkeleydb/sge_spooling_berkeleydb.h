@@ -52,11 +52,8 @@
 ****************************************************************************
 */
 
-#ifdef SPOOLING_berkeleydb
-const char *get_spooling_method(void);
-#else
-const char *get_berkeleydb_spooling_method(void);
-#endif
+const char *
+get_spooling_method(void);
 
 lListElem *
 spool_berkeleydb_create_context(lList **answer_list, const char *args);

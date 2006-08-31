@@ -47,19 +47,16 @@
 #include "sge_unistd.h"
 #include "sge_job.h"
 #include "sge.h"
-#include "sge_string.h"
 
 
 static int getHomeDir(char *exp_path, const char *user);
 
 int sge_get_path(lList *lp, const char *cwd, const char *owner, 
                  const char *job_name, u_long32 job_number, 
-                 u_long32 ja_task_number, int type, 
-                 char *pathstr, size_t pathstr_len) 
+                 u_long32 ja_task_number, int type, char *pathstr) 
 {
-   lListElem *ep = NULL;
-   const char *path = NULL, *host = NULL;
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   lListElem *ep;
+   const char *path = NULL, *host;
 
    DENTER(TOP_LAYER, "sge_get_path");
 
@@ -68,10 +65,10 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
    /*
     * check if there's a path for this host
     */
-   ep = lGetElemHost(lp, PN_host, qualified_hostname);
+   ep = lGetElemHost(lp, PN_host, uti_state_get_qualified_hostname());
    if (ep != NULL) {
       path = expand_path(lGetString(ep, PN_path), job_number, 
-         ja_task_number, job_name, owner, qualified_hostname);
+         ja_task_number, job_name, owner, uti_state_get_qualified_hostname());
       host = lGetHost(ep, PN_host);
    } else {
       /* 
@@ -80,7 +77,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
       for_each(ep, lp) {
          path = expand_path(lGetString(ep, PN_path), job_number, 
                             ja_task_number, job_name, owner, 
-                            qualified_hostname);
+                            uti_state_get_qualified_hostname());
          host = lGetHost(ep, PN_host);
          if (host == NULL) {
             break;
@@ -93,15 +90,15 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
     */
    if (path && path[0]!='\0' && path[0] != '/') {
       /* got relative path from -e/-o */
-      snprintf(pathstr, pathstr_len, "%s/%s", cwd, path);
+      sprintf(pathstr, "%s/%s", cwd, path);
    } else if (path && path[0]!='\0' ) { 
       /* got absolute path from -e/-o */
-      sge_strlcpy(pathstr, path, pathstr_len);
+      strcpy(pathstr, path);
    } else if (type == SGE_STDIN) {
-      sge_strlcpy(pathstr, "/dev/null", pathstr_len);
+      strcpy(pathstr, "/dev/null");
    } else if (type != SGE_SHELL) {
       /* no -e/-o directive (but not for shells) */
-      sge_strlcpy(pathstr, cwd, pathstr_len);
+      strcpy(pathstr, cwd);
    }
 
    DEXIT;
@@ -134,23 +131,27 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
 *
 *  SEE ALSO
 *******************************************************************************/
-bool sge_get_fs_path( lList* lp, char* fs_host, size_t fs_host_len, 
-                                 char* fs_path, size_t fs_path_len)
+bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
 {
    lListElem* ep;
    bool       bFileStaging=false;
 
    DENTER(TOP_LAYER, "sge_get_fs_path");
 
-   if( lp && (ep=lFirst(lp))) {
-      bFileStaging = (bool)lGetBool(ep, PN_file_staging);
+   if( lp && (ep=lFirst( lp ))) {
+      bFileStaging = (bool)lGetBool( ep, PN_file_staging );
  
       if( bFileStaging ) {
-         if( lGetHost(ep, PN_file_host)) {
-            sge_strlcpy(fs_host, lGetHost(ep, PN_file_host), fs_host_len);
+         if( lGetHost( ep, PN_file_host )) {
+            strcpy( fs_host, lGetHost( ep, PN_file_host ));
          }
-         if( lGetString(ep, PN_path)) {
-            sge_strlcpy(fs_path, lGetString(ep, PN_path), fs_path_len);
+         /*else {
+            strcpy( fs_host, 
+               var_list_get_string( lGetList( lpJobList, JB_env_list ), VAR_PREFIX "O_HOST" ));
+         }
+         */
+         if( lGetString( ep, PN_path )) {
+            strcpy( fs_path, lGetString( ep, PN_path ));
          }
       }
    }

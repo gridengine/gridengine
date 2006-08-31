@@ -65,8 +65,9 @@ lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
 lappend check_functions {check_idle}                   ;# wait for system to stabilize 
-lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
-lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+# JG: TODO: check setup with zombies in an additional runlevel
+# lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
+#lappend check_functions {check_idle}                   ;# wait for system to stabilize 
 lappend check_functions {check_miniworm}               ;# run miniworms
 lappend check_functions {check_idle}                   ;# wait for system to stabilize
 lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
@@ -325,8 +326,6 @@ proc init_ps {} {
       aix43 -
       aix51 -
       darwin -
-      darwin-ppc -
-      darwin-x86 -
       irix6 -
       irix65 -
       osf4 -
@@ -374,7 +373,7 @@ proc init_ps {} {
    }
 
    # try to execute ps command
-   set result [catch {set size [get_size master]} output]
+   set result [ catch { set size [get_size master] } output ]
 
    if { $result != 0 } {
       set_error 3 "executing ps command\n$cmd_ps(master)\nfailed\n$output"
@@ -1198,22 +1197,17 @@ proc check_flood {} {
 #*******************************
 proc check_size_config {} {
    global ts_config
-   global config_backup
 
    upvar SCHEDULE_INTERVAL        schedule_interval
 
-   get_config config_backup
+   set default_array(schedule_interval)   $schedule_interval
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set new_config(schedd_params) "flush_submit_sec=0,flush_finish_sec=0"
-      set_config new_config
-   } else {
-      set schedd_conf(flush_submit_sec) 1
-      set schedd_conf(flush_finish_sec) 1
+   if { $ts_config(gridengine_version) != 53 } {
+      set default_array(flush_submit_sec) 1
+      set default_array(flush_finish_sec) 1
    }
 
-   set schedd_conf(schedule_interval)   $schedule_interval
-   set_schedd_config schedd_conf
+   set_schedd_config default_array
 
    monitor_size [get_job_count] "set initial parameters"
 
@@ -1290,14 +1284,13 @@ proc check_size_config_zombies {} {
 #     ???/???
 #*******************************
 proc qmaster_size_cleanup {} {
-   global config_backup
-
    delete_all_jobs
    wait_for_end_of_all_jobs 180
 
    reset_schedd_config
 
-   set_config config_backup
+   set default_array(finished_jobs)   0
+   set_config default_array
 
    del_queue interactive "" 0 1
 

@@ -204,8 +204,8 @@ lListElem *search_named_node( lListElem *ep,  /* root of the tree */
    }
 
    if (sn_name_pos == -1) {
-      sn_children_pos = lGetPosViaElem(ep, STN_children, SGE_NO_ABORT);
-      sn_name_pos = lGetPosViaElem(ep, STN_name, SGE_NO_ABORT);
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
    }
 
    if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
@@ -350,8 +350,8 @@ search_ancestors( lListElem *ep,
    }
 
    if (sn_name_pos == -1) {
-      sn_children_pos = lGetPosViaElem(ep, STN_children, SGE_NO_ABORT);
-      sn_name_pos = lGetPosViaElem(ep, STN_name, SGE_NO_ABORT);
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
    }
    if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
       ancestors->depth = depth;

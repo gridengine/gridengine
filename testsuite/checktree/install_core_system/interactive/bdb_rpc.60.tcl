@@ -115,7 +115,6 @@ proc install_bdb_rpc {} {
    set RPC_SERVER_COMPLETE          [translate $bdb_host 0 1 0 [sge_macro DISTINST_RPC_SERVER_COMPLETE] ]
    set HIT_RETURN_TO_CONTINUE       [translate $bdb_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
    set INSTALL_SCRIPT               [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] "*" ]
-   set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ]
 
    set prod_type_var "SGE_ROOT"
 
@@ -127,17 +126,17 @@ proc install_bdb_rpc {} {
 
    if {[file isfile "$ts_config(product_root)/$ts_config(cell)/common/sgebdb"] == 1} {
       puts $CHECK_OUTPUT "--> shutting down BDB RPC Server <--"
-      start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop" prg_exit_state 60 0 "" 1 1 1 1 1
+      start_remote_prog "$bdb_host" "root" "$ts_config(product_root)/$ts_config(cell)/common/sgebdb" "stop"
    }
 
-   start_remote_prog "$bdb_host" "root" "rm" "-fR $spooldir" prg_exit_state 60 0 "" 1 0 1 1 1
+   start_remote_prog "$bdb_host" "root" "rm" "-fR $spooldir" prg_exit_state 60 0 "" 1 0
    if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
       set inst_user "root"
    } else {
       set inst_user $CHECK_USER
       puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
    }
-   set id [open_remote_spawn_process $bdb_host $inst_user "cd $$prod_type_var;./inst_sge" "-db" 0 "" 0 15 1 1 1]
+   set id [open_remote_spawn_process $bdb_host $inst_user "cd $$prod_type_var;./inst_sge" "-db" 0 "" 0]
 
    log_user 1
    puts $CHECK_OUTPUT "cd $$prod_type_var;./inst_sge -db"
@@ -258,16 +257,6 @@ proc install_bdb_rpc {} {
             continue
          } 
 
-         -i $sp_id $DNS_DOMAIN_QUESTION { 
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(4)"
-            if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
-            }
-            send -i $sp_id "$ANSWER_YES\n"
-            continue
-         }
-
          -i $sp_id $RPC_DIRECTORY {
             puts $CHECK_OUTPUT "\n -->testsuite: sending $spooldir"
 
@@ -358,13 +347,6 @@ proc install_bdb_rpc {} {
             lappend CORE_INSTALLED $bdb_host
             write_install_list
             set do_stop 1
-            # If we compiled with code coverage, we have to 
-            # wait a little bit before closing the connection.
-            # Otherwise the last command executed (infotext)
-            # will leave a lockfile lying around.
-            if {[coverage_enabled]} {
-               sleep 2
-            }
             continue
          }
 

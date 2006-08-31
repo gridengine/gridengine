@@ -60,8 +60,7 @@ suspend_job_in_queues( lList *susp_queues, lList *job_list, order_t *orders)
 {
    u_long32 now;
    int i, found;
-   lListElem *jep = NULL, *ja_task = NULL;
-   lListElem *qep;
+   lListElem *jep, *qep, *ja_task;
 
    DENTER(TOP_LAYER, "suspend_job_in_queues");
 
@@ -122,8 +121,7 @@ unsuspend_job_in_queues( lList *queue_list, lList *job_list, order_t *orders)
 {
    u_long32 now;
    int i, found;
-   lListElem *jep = NULL, *ja_task = NULL;
-   lListElem *qep;
+   lListElem *jep, *qep, *ja_task;
 
    DENTER(TOP_LAYER, "unsuspend_job_in_queues");
 

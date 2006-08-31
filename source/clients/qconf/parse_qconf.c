@@ -85,10 +85,8 @@
 #include "sge_cuser_qconf.h"
 #include "sge_centry_qconf.h"
 #include "sge_cqueue_qconf.h"
-#include "sge_limit_rule_qconf.h"
 #include "sge_edit.h"
 #include "sge_cqueue.h"
-#include "sge_limit_rule.h"
 #include "sge_qinstance.h"
 #include "sge_href.h"
 #include "sge_qref.h"
@@ -143,7 +141,164 @@ static int sge_gdi_is_adminhost(const char *host);
 /************************************************************************/
 
 static const char *write_attr_tmp_file (const char *name, const char *value, 
-                                        const char *delimiter);
+                                        char delimiter);
+
+static const spool_flatfile_instr qconf_sub_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &qconf_sub_sfi,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_sfi,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_sub_comma_list_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   ',',
+   '\0',
+   '\0',
+   '\0',
+   NULL,
+   {NoName, NoName, NoName}
+};
+
+static const spool_flatfile_instr qconf_name_value_list_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   false,
+   false,
+   '=',
+   '\n',
+   ',',
+   '\0',
+   '\0',
+   &qconf_sub_comma_list_sfi,
+   {
+      STN_children,
+      STN_id,
+      STN_version
+   }
+};
+
+static const spool_flatfile_instr qconf_sub_name_value_comma_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ',',
+   '\0',
+   '\0',
+   NULL,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_sub_comma_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '\0',
+   ',',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_param_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_comma_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr qconf_comma_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_name_value_comma_sfi,
+   { NoName, NoName, NoName }
+};
 
 /***************************************************************************/
 static char **sge_parser_get_next(char **arg) 
@@ -604,45 +759,6 @@ char *argv[]
          }
          
          lFreeList(&lp);
-
-         spp++;
-         continue;
-      }
-/*-----------------------------------------------------------------------------*/
-      /* "-alrs lrs_name" */
-      if (strcmp("-alrs", *spp) == 0) {
-         const char *name = "template";
-
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-            name = *spp;
-         }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-         limit_rule_set_add(&alp, name);
-         answer_list_on_error_print_or_exit(&alp, stderr);
-         lFreeList(&alp);
-
-         spp++;
-         continue;
-      }
-/*-----------------------------------------------------------------------------*/
-      /* "-Alrs fname" */
-      if(strcmp("-Alrs", *spp) == 0) {
-         const char *file = NULL;
-
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-            file = *spp;
-         } else {
-            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
-         }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-
-         limit_rule_set_add_from_file(&alp, file);
-         answer_list_on_error_print_or_exit(&alp, stderr);
-         lFreeList(&alp);
 
          spp++;
          continue;
@@ -1431,21 +1547,7 @@ char *argv[]
          spp++;
          continue;
       }
-/*----------------------------------------------------------------------------*/
-      /* "-dlrs lrs_name[,lrs_name,...]" */
-      if (strcmp("-dlrs", *spp) == 0) {
-         /* no adminhost/manager check needed here */
-         spp = sge_parser_get_next(spp);
 
-         lString2List(*spp, &lp, LIRS_Type, LIRS_name, ", ");
-         alp = sge_gdi(SGE_LIRS_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-         answer_list_on_error_print_or_exit(&alp, stderr);
-         lFreeList(&alp);
-         lFreeList(&lp);
-
-         spp++;
-         continue;
-      }
 /*----------------------------------------------------------------------------*/
       /* "-dm user_list" */
 
@@ -2262,50 +2364,7 @@ char *argv[]
          }
          continue;
       }
-/*-----------------------------------------------------------------------------*/
-      /* "-mlrs lrs_name" */
-      if (strcmp("-mlrs", *spp) == 0) { 
-         const char *name = NULL; 
 
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-            name = *spp;
-         }
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-         limit_rule_set_modify(&alp, name);
-         answer_list_on_error_print_or_exit(&alp, stderr);
-         lFreeList(&alp);
-
-         spp++;
-         continue;
-      }
-/*-----------------------------------------------------------------------------*/
-      /* "-Mlrs fname [lrs_name,...]" */
-      if (strcmp("-Mlrs", *spp) == 0) {
-         const char *file = NULL;
-         const char *name = NULL;
-
-         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
-         sge_gdi_is_manager(uti_state_get_user_name());
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-            file = *spp;
-         } else {
-            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
-         }
-
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp); 
-            name = *spp;
-         }
-
-         limit_rule_set_modify_from_file(&alp, file, name);
-         answer_list_on_error_print_or_exit(&alp, stderr);
-
-         spp++;
-         continue;
-      }
 /*-----------------------------------------------------------------------------*/
       /* "-mp pe_name" */
 
@@ -2832,13 +2891,12 @@ char *argv[]
      
 /* *INDENT-OFF* */ 
       static object_info_entry info_entry[] = {
-         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    CQ_Type,   SGE_ATTR_QNAME,     CQ_name,   NULL,     &qconf_sfi,        cqueue_xattr_pre_gdi},
-         {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   NULL,     &qconf_sfi,        NULL},
-         {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   NULL,     &qconf_sfi,        NULL},
-         {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   NULL,     &qconf_sfi,        NULL},
-         {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, NULL,     &qconf_sfi,        NULL},
-         {SGE_LIRS_LIST,       SGE_OBJ_LIRS,      LIRS_Type, SGE_ATTR_LIRS_NAME, LIRS_name, NULL,     &qconf_limit_rule_set_sfi,        lir_xattr_pre_gdi},
-         {0,                   NULL,              0,         NULL,               0,         NULL,     NULL,        NULL}
+         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    CQ_Type,   SGE_ATTR_QNAME,     CQ_name,   NULL,        cqueue_xattr_pre_gdi},
+         {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   NULL,        NULL},
+         {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   NULL,        NULL},
+         {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   NULL,        NULL},
+         {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, NULL,        NULL},
+         {0,                   NULL,              0,         NULL,               0,         NULL,        NULL}
       }; 
 /* *INDENT-ON* */
       
@@ -2852,7 +2910,6 @@ char *argv[]
       /* These have to be freed later */
       info_entry[1].fields = sge_build_EH_field_list (false, false, false);
       info_entry[2].fields = sge_build_PE_field_list (false, false);
-      info_entry[5].fields = sge_build_LIRS_field_list (false, false);
       /* These do not */
       info_entry[3].fields = CK_fields;
       info_entry[4].fields = HGRP_fields;
@@ -2891,9 +2948,8 @@ char *argv[]
 
       if (!info_entry[index].object_name) {
          fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
-         FREE(info_entry[1].fields);
-         FREE(info_entry[2].fields);
-         FREE(info_entry[5].fields);
+         FREE (info_entry[1].fields);
+         FREE (info_entry[2].fields);
          SGE_EXIT(1);
       } 
 
@@ -2921,14 +2977,12 @@ char *argv[]
          if (exit) {
             FREE (info_entry[1].fields);
             FREE (info_entry[2].fields);
-            FREE (info_entry[5].fields);
             SGE_EXIT(1);
          }
       }
       
       FREE (info_entry[1].fields);
       FREE (info_entry[2].fields);
-      FREE (info_entry[5].fields);
       
       continue;
    }
@@ -2939,9 +2993,9 @@ char *argv[]
    if (strcmp("-purge", *spp) == 0) {
 
       static object_info_entry info_entry[] = {
-         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    QR_Type,   SGE_ATTR_QNAME,     QR_name,   NULL,        &qconf_sfi,    cqueue_xattr_pre_gdi},
+         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    QR_Type,   SGE_ATTR_QNAME,     QR_name,   NULL,        cqueue_xattr_pre_gdi},
 #ifndef __SGE_NO_USERMAPPING__
-         {SGE_USER_MAPPING_LIST, SGE_OBJ_USER_MAPPING, CU_Type, NULL,            CU_name,   NULL,        &qconf_sfi,    cqueue_xattr_pre_gdi},
+         {SGE_USER_MAPPING_LIST,     SGE_OBJ_USER_MAPPING,    CU_Type,   NULL,     CU_name,   NULL,        cqueue_xattr_pre_gdi},
 #endif
          {0,                   NULL,              0,         NULL,               0,         NULL,        NULL}
       };
@@ -4125,33 +4179,6 @@ char *argv[]
          continue;
       }
 /*----------------------------------------------------------------------------*/
-      /* "-slrs [lrs_name,...]" */
-      if (strcmp("-slrs", *spp) == 0) {
-         const char *name = NULL;
-         bool ret = true;
-
-         if (!sge_next_is_an_opt(spp)) {
-            spp = sge_parser_get_next(spp);
-            name = *spp;
-         }
-         ret = limit_rule_show(&alp, name);
-         if (!ret) {
-            show_gdi_request_answer(alp);
-         }
-         lFreeList(&alp);
-         sge_parse_return = ret ? 0 : 1;
-
-         spp++;
-         continue;
-      }
-/*----------------------------------------------------------------------------*/
-      /* "-slrsl " */
-      if (strcmp("-slrsl", *spp) == 0) {
-         show_object_list(SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list");
-         spp++;
-         continue;
-      }
-/*----------------------------------------------------------------------------*/
       /* "-sm" */
 
       if (strcmp("-sm", *spp) == 0) {
@@ -5296,7 +5323,7 @@ char *argv[]
          
          /* print to stdout */
          fields = sge_build_UP_field_list (false, false);
-         filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
+         filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_param_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII, 
                                               NULL, false);
          lFreeList(&alp);
@@ -6357,7 +6384,7 @@ const char *config_name
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
    if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      fprintf(stderr, lGetString(ep, AN_text));
       fail = 1;
    } else {
       const char *filename_stdout;
@@ -6820,7 +6847,7 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       DTRACE;
       *epp = spool_flatfile_read_object(alpp, info_entry->cull_descriptor,
                                         NULL, info_entry->fields, fields,
-                                        true, info_entry->instr, SP_FORM_ASCII,
+                                        true, &qconf_sfi, SP_FORM_ASCII,
                                         NULL, **spp);
             
       if (answer_list_output(alpp)) {
@@ -6832,25 +6859,20 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       const char *name = NULL;
       const char *value = NULL;
       const char *filename = NULL;
-      dstring delim = DSTRING_INIT;
 
       name = (const char *)strdup (**spp);
       *spp = sge_parser_get_next (*spp);
       value = (const char *)strdup (**spp);
 
-      if (!strcmp(info_entry->object_name, SGE_OBJ_LIRS)) {
-         sge_dstring_append(&delim, " to ");
-      } else {
-         sge_dstring_append_char(&delim, info_entry->instr->name_value_delimiter);
-      }
-      filename = write_attr_tmp_file(name, value, sge_dstring_get_string(&delim));
+      filename = write_attr_tmp_file (name, value,
+                                      qconf_sfi.name_value_delimiter);
 
       *epp = spool_flatfile_read_object(alpp, info_entry->cull_descriptor, NULL,
-                                info_entry->fields, fields, true, info_entry->instr,
+                                info_entry->fields, fields, true, &qconf_sfi,
                                 SP_FORM_ASCII, NULL, filename);
-     
-      unlink(filename);
-      FREE(filename);
+      
+      unlink (filename);
+      FREE (filename);
 
       /* Bugfix: Issuezilla #1005
        * Since we're writing the information from the command line to a file so
@@ -6858,26 +6880,26 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
        * spooling will sound a little odd.  To avoid this, we hijack the answer
        * list and replace the error messages with ones that will make better
        * sense. */
-      if (answer_list_has_error(alpp)) {
+      if (answer_list_has_error (alpp)) {
          lListElem *aep = NULL;
          
-         for_each(aep, *alpp) {
-            if (answer_has_quality(aep, ANSWER_QUALITY_ERROR) &&
-                (answer_get_status(aep) == STATUS_ESYNTAX)) {
-               sprintf(SGE_EVENT, MSG_PARSE_BAD_ATTR_ARGS_SS, name, value);
-               lSetString(aep, AN_text, SGE_EVENT);
+         for_each (aep, *alpp) {
+            if (answer_has_quality (aep, ANSWER_QUALITY_ERROR) &&
+                (answer_get_status (aep) == STATUS_ESYNTAX)) {
+               sprintf (SGE_EVENT, MSG_PARSE_BAD_ATTR_ARGS_SS, name, value);
+               lSetString (aep, AN_text, SGE_EVENT);
             }
          }
          
-         FREE(name);
-         FREE(value);
+         FREE (name);
+         FREE (value);
          
          DEXIT;
          return 1;
       }
       
-      FREE(name);
-      FREE(value);
+      FREE (name);
+      FREE (value);
    }
 
    /* add object name to int vector and transform
@@ -6993,7 +7015,7 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
 }
 
 static const char *write_attr_tmp_file (const char *name, const char *value, 
-                                        const char *delimiter)
+                                        char delimiter)
 {
    char *filename = (char *)malloc (sizeof (char) * SGE_PATH_MAX);
    FILE *fp = NULL;
@@ -7009,7 +7031,7 @@ static const char *write_attr_tmp_file (const char *name, const char *value,
    }
    
    fprintf(fp, "%s", name);
-   fprintf(fp, "%s", delimiter);
+   fprintf(fp, "%c", delimiter);
    fprintf(fp, "%s\n", value);
    
    FCLOSE(fp);

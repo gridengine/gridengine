@@ -1975,7 +1975,7 @@ cl_thread_mode_t cl_commlib_get_thread_state(void) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_set_alias_file()"
-int cl_com_set_alias_file(const char* alias_file) {
+int cl_com_set_alias_file(char* alias_file) {
    int ret_val;
    if (alias_file == NULL) {
       return CL_RETVAL_PARAMS;

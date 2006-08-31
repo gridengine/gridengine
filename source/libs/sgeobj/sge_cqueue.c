@@ -908,7 +908,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(reduced_elem,
-                                  cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
+                                  cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
             lList *list = NULL;
@@ -960,7 +960,7 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                      ret = false;
                      break;
                   }
-                  if (is_hgroup_name(hostname)) {
+                  if (sge_is_hgroup_ref(hostname)) {
                      if (in_master && strcmp(hostname, HOSTREF_DEFAULT)) {
                         const lList *master_list = 
                               *(object_type_get_master_list(SGE_TYPE_HGROUP));
@@ -1078,7 +1078,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
 
    DENTER(CQUEUE_LAYER, "cqueue_mod_sublist");
  
-   pos = lGetPosViaElem(reduced_elem, attribute_name, SGE_NO_ABORT);
+   pos = lGetPosViaElem(reduced_elem, attribute_name);
    if (pos >= 0) {
       lList *mod_list = lGetPosList(reduced_elem, pos);
       lList *org_list = lGetList(this_elem, attribute_name);
@@ -1289,7 +1289,7 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
              */
             while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
                int pos = lGetPosViaElem(cqueue,
-                                  cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
+                                  cqueue_attribute_array[index].cqueue_attr);
 
                if (pos >= 0) {
                   lList *list = lGetPosList(cqueue, pos);
@@ -1569,7 +1569,7 @@ cqueue_find_used_href(lListElem *this_elem, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,
-                            cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
+                            cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
             lList *list = lGetPosList(this_elem, pos);
@@ -1629,7 +1629,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
          int pos = lGetPosViaElem(this_elem,
-                            cqueue_attribute_array[index].cqueue_attr, SGE_NO_ABORT);
+                            cqueue_attribute_array[index].cqueue_attr);
 
          if (pos >= 0) {
             lList *list = lGetPosList(this_elem, pos);

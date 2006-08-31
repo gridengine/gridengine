@@ -262,10 +262,10 @@ static void forward_signal(int sig)
 static int open_qrsh_socket(int *port) {
    int sock;
    struct sockaddr_in server;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-   int length;
+#if AIX51
+   size_t length;
 #else
-   socklen_t length;
+   int length;
 #endif
  
    DENTER(TOP_LAYER, "open_qrsh_socket");
@@ -361,12 +361,11 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
-            msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
+#if AIX51
+            msgsock = accept(sock,(struct sockaddr *) 0,(size_t *) NULL);
 #else
-            msgsock = accept(sock,(struct sockaddr *) 0,(socklen_t *) NULL);
+            msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
 #endif
-
             if (msgsock == -1) {
                ERROR((SGE_EVENT, MSG_QSH_ERRORINACCEPTONSOCKET_S, strerror(errno)));
             }
@@ -430,7 +429,6 @@ static char *read_from_qrsh_socket(int msgsock)
    } while (*c++ != 0); 
 
    close(msgsock);
-   DEXIT;
    return buffer;
 }
 
@@ -481,7 +479,7 @@ static int get_remote_exit_code(int sock)
       if(s_ret && *s_ret) {
          char *message = strchr(s_ret, ':');
          if(message != NULL && strlen(message) > 0) {
-            fprintf(stderr, "%s\n", message + 1);
+            fprintf(stderr, message + 1);
             *message = 0;
          }
          VERBOSE_LOG((stderr, "%s\n", s_ret));
@@ -681,16 +679,11 @@ static int start_client_program(const char *client_name,
 
    if (child_pid) {
       bool done;
-      struct sigaction forward_action;
 
-      forward_action.sa_handler = forward_signal;
-      sigemptyset(&forward_action.sa_mask);
-      forward_action.sa_flags=0;
-
-      sigaction(SIGINT, &forward_action, NULL);
-      sigaction(SIGQUIT, &forward_action, NULL);
-      sigaction(SIGTERM, &forward_action, NULL);
       sge_unblock_all_signals();
+      signal(SIGINT,  forward_signal);
+      signal(SIGQUIT, forward_signal);
+      signal(SIGTERM, forward_signal);
   
       done = false;
       while (!done) {
@@ -1142,7 +1135,6 @@ FCLOSE_ERROR:
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, 
                          int is_rsh, int is_rlogin)
 {
-   lList *stdout_stderr_path = NULL;
    u_long32 jb_now = lGetUlong(job, JB_type);
    const char *job_name  = lGetString(job, JB_job_name);
    
@@ -1174,11 +1166,6 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
 
    lSetUlong(job, JB_type, jb_now);
    lSetString(job, JB_job_name, job_name);
-
-   cull_parse_path_list(&stdout_stderr_path, "/dev/null");
-   lSetList(job, JB_stdout_path_list, lCopyList("stdout_path_list", stdout_stderr_path));
-   lSetList(job, JB_stderr_path_list, lCopyList("stderr_path_list", stdout_stderr_path));
-   lFreeList(&stdout_stderr_path);
 }
 
 /****** Interactive/qsh/set_command_to_env() ***************************************
@@ -1544,6 +1531,7 @@ int main(int argc, char **argv)
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
+   
 
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
@@ -1563,6 +1551,7 @@ int main(int argc, char **argv)
    }   
    
    if (!existing_job) {
+      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
       if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
@@ -1728,9 +1717,7 @@ int main(int argc, char **argv)
          else if (quality == ANSWER_QUALITY_WARNING) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            if (log_state_get_log_verbose()) {
-               fprintf(stdout, "%s\n", lGetString(aep, AN_text));
-            }
+            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
          }
       }
 
@@ -1779,13 +1766,8 @@ int main(int argc, char **argv)
             msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
             /* qlogin_starter reports "ready to start" */
-            if(msgsock >= 0) {
+            if(msgsock > 0) {
                if(!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
-                  cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
-                                     (char*) sge_get_master(0),
-                                     (char*) prognames[QMASTER],
-                                     1);
                   delete_job(job_id, lp_jobs);
                   do_exit = 1;
                   exit_status = 1;
@@ -1802,11 +1784,6 @@ int main(int argc, char **argv)
                                                   is_rsh, is_rlogin, nostdin, noshell, sock);
                if(exit_status < 0) {
                   WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
-                  cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
-                                     (char*) sge_get_master(0),
-                                     (char*) prognames[QMASTER],
-                                     1);
                   delete_job(job_id, lp_jobs);
                   exit_status = EXIT_FAILURE;
                }
@@ -1818,11 +1795,7 @@ int main(int argc, char **argv)
             /* wait for qsh job to be scheduled */
             sleep(random_poll);
          }   
-         cl_com_ignore_timeouts(CL_FALSE);
-         cl_commlib_open_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
-                                   (char*) sge_get_master(0),
-                                   (char*) prognames[QMASTER],
-                                    1);
+   
          /* get job from qmaster: to handle qsh and to detect deleted qrsh job */
          what = lWhat("%T(%I)", JB_Type, JB_ja_tasks); 
          where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id); 
@@ -1992,8 +1965,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
-            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
-            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j")
+            strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

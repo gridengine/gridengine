@@ -88,8 +88,7 @@ host_list_locate(const lList *host_list, const char *hostname)
 *  SYNOPSIS
 *     bool host_is_referenced(const lListElem *host, 
 *                             lList **answer_list, 
-*                             const lList *queue_list
-*                             const lList *hgrp_list) 
+*                             const lList *queue_list) 
 *
 *  FUNCTION
 *     This function returns true if the given "host" is referenced
@@ -225,7 +224,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    }
 
    /* ep is no host element, if ep has no nm */
-   if ((pos = lGetPosViaElem(ep, nm, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, nm)) < 0) {
       DEXIT;
       return -1;
    }

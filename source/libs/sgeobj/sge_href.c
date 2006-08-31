@@ -201,7 +201,7 @@ href_list_compare(const lList *this_list, lList **answer_list,
       const char *host_or_group = lGetHost(this_elem, HR_name);
 
       if (!href_list_has_member(list, host_or_group)) {
-         if (is_hgroup_name(host_or_group)) {
+         if (sge_is_hgroup_ref(host_or_group)) {
             if (add_groups != NULL) {
                ret &= href_list_add(add_groups, answer_list, host_or_group);
             }
@@ -211,7 +211,7 @@ href_list_compare(const lList *this_list, lList **answer_list,
             }
          }
       } else {
-         if (is_hgroup_name(host_or_group)) {
+         if (sge_is_hgroup_ref(host_or_group)) {
             if (equity_groups != NULL) {
                ret &= href_list_add(equity_groups, answer_list, host_or_group);
             }
@@ -430,7 +430,7 @@ href_list_find_references(const lList *this_list, lList **answer_list,
        */
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
-         bool is_group = is_hgroup_name(name);
+         bool is_group = sge_is_hgroup_ref(name);
          lListElem *hgroup = NULL;  /* HGRP_name */
 
          /*
@@ -456,7 +456,7 @@ href_list_find_references(const lList *this_list, lList **answer_list,
             for_each(href2, href_list2) {
                const char *name2 = lGetHost(href2, HR_name);
 
-               if (is_hgroup_name(name2)) {
+               if (sge_is_hgroup_ref(name2)) {
                   if (used_groups != NULL) {
                      href_list_add(used_groups, answer_list, name2); 
                   }
@@ -610,7 +610,7 @@ href_list_find_referencees(const lList *this_list, lList **answer_list,
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (is_hgroup_name(name)) {
+         if (sge_is_hgroup_ref(name)) {
             lListElem *hgroup;   /* HGRP_Type */
 
             for_each(hgroup, master_list) {
@@ -744,7 +744,7 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list,
       for_each(href, this_list) {
          const char *name = lGetHost(href, HR_name);
 
-         if (!is_hgroup_name(name)) {
+         if (!sge_is_hgroup_ref(name)) {
             char resolved_name[CL_MAXHOSTLEN+1];
             int back = getuniquehostname(name, resolved_name, 0);
 

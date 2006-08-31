@@ -329,19 +329,13 @@ lDescr **dpp
       return ret;
    }
 
-   if ( n+1 > MAX_DESCR_SIZE) {
+   if ((dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1))) == NULL) {
       LERROR(LEMALLOC);
       DEXIT;
       return PACK_ENOMEM;
    }
 
-   if ((dp = (lDescr *) malloc(sizeof(lDescr) * (n+1))) == NULL) {
-      LERROR(LEMALLOC);
-      DEXIT;
-      return PACK_ENOMEM;
-   }
-
-   memset(dp, 0, sizeof(lDescr) * (n+1));
+   memset(dp, 0, sizeof(lDescr) * (n + 1));
 
    dp[n].nm = NoName;
    dp[n].mt = lEndT;
@@ -914,14 +908,13 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
    DENTER(CULL_LAYER, "cull_pack_list_partial");
 
    PROF_START_MEASUREMENT(SGE_PROF_PACKING);
+   if((ret = packint(pb, lp != NULL)) != PACK_SUCCESS) {
+      PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+      DEXIT;
+      return ret;
+   }
 
    if (lp != NULL) {
-      if((ret = packint(pb, 1)) != PACK_SUCCESS) {
-         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-         DEXIT;
-         return ret;
-      }
-
       if((ret = packint(pb, lp->nelem)) != PACK_SUCCESS) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
@@ -954,14 +947,7 @@ int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp,
             return ret;
          }
       }
-   } else {
-      if((ret = packint(pb, 0)) != PACK_SUCCESS) {
-         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-         DEXIT;
-         return ret;
-      }
    }
-
    if (lp != NULL) {
       /* pack each list element */
       for_each(ep, lp) {
@@ -1293,12 +1279,6 @@ lEnumeration **enpp
       /* read in number of lEnumeration fields (without end mark) */
       if ((ret = unpackint(pb, &n)))
          goto error;
-
-      if ( n+1 > MAX_DESCR_SIZE ) {
-         LERROR(LEMALLOC);
-         DEXIT;
-         return PACK_ENOMEM;
-      }
 
       if (!(enp = (lEnumeration *) malloc(sizeof(lEnumeration) * (n + 1)))) {
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);

@@ -44,8 +44,8 @@
 #include "sge_log.h"
 #include "sge_c_gdi.h"
 #include "sge_string.h"
-#include "sge_answer.h"
 #include "sge_utility.h"
+#include "sge_answer.h"
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
@@ -70,12 +70,12 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    DENTER(TOP_LAYER, "usermap_mod");
    
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_name, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_name);
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);
 
          if (add) {
-            if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, "cuser") == STATUS_OK) {
+            if (!verify_str_key(answer_list, name, "cuser")) {
                lSetString(cuser, CU_name, name);
             } else {
                ERROR((SGE_EVENT, MSG_UM_CLUSTERUSERXNOTGUILTY_S, name));
@@ -103,7 +103,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_ruser_list, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_ruser_list);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -113,7 +113,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
    
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_ulong32, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_ulong32);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -123,7 +123,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_bool, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_bool);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -133,7 +133,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_time, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_time);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -143,7 +143,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_mem, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_mem);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);
@@ -153,7 +153,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CU_inter, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CU_inter);
    
       if (pos >= 0) {
          lList *hostattr_list = lGetPosList(reduced_elem, pos);

@@ -738,7 +738,7 @@ proc large_cluster_setup_sharetree {size} {
    global project_list
 
    # delete old sharetree
-   del_sharetree
+   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dstree" }
 
    # delete all projects
    puts $CHECK_OUTPUT "removing all projects"

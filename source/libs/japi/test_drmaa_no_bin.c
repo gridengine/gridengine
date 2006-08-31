@@ -3,6 +3,7 @@
 #include "drmaa.h"
 
 #define WD "/tmp"
+#define CELL "none"
 
 int handle_code(int code, char *msg);
 
@@ -17,7 +18,7 @@ int main(int argc, char **argv) {
        exit(1);
     }
     
-    ret = drmaa_init("", error, DRMAA_ERROR_STRING_BUFFER);
+    ret = drmaa_init(CELL, error, DRMAA_ERROR_STRING_BUFFER);
     if (handle_code(ret, error) == 1) {
         exit(1);
     }

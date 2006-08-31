@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_misc.3,v $     Last Update: $Date: 2006/03/01 22:05:53 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: drmaa_misc.3,v $     Last Update: $Date: 2004/11/12 15:40:05 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_misc 3 "$Date: 2006/03/01 22:05:53 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_misc 3 "$Date: 2004/11/12 15:40:05 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -94,9 +94,7 @@ The drmaa_strerror() function returns a message text associated with the DRMAA e
 The drmaa_get_contact() returns an opaque string containing contact 
 information related to the current DRMAA session to be used with the
 .M drmaa_init 3
-function. In the 1.0 implementation, the opaque string contains the information
-required by drmaa_init() to reconnect to the current session instead of creating
-a new session. In the 0.95 implemenation, however,
+function. In the current implementation, however,
 the drmaa_get_contact() function returns an empty string, and the \fIcontact\fP
 parameter has no effect on the
 .M drmaa_init 3
@@ -113,8 +111,7 @@ is called.
 The drmaa_version() function returns into the integers pointed to by \fImajor\fP 
 and \fIminor\fP, the major and minor version numbers of the DRMAA library.
 For a DRMAA 1.0 compliant 
-implementation `1' and `0' will be returned in \fImajor\fP and \fIminor\fP,
-respectively.
+implementation `1' and `0' will be returned in \fImajor\fP and \fIminor\fP, respectively.
 .PP
 .\"
 .\" 

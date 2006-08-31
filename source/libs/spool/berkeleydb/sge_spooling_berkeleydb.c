@@ -64,11 +64,7 @@
 
 static const char *spooling_method = "berkeleydb";
 
-#ifdef SPOOLING_berkeleydb
 const char *get_spooling_method(void)
-#else
-const char *get_berkeleydb_spooling_method(void)
-#endif
 {
    return spooling_method;
 }

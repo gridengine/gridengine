@@ -50,11 +50,8 @@
 ****************************************************************************
 */
 
-#ifdef SPOOLING_template
-const char *get_spooling_method(void);
-#else
-const char *get_template_spooling_method(void);
-#endif
+const char *
+get_spooling_method(void);
 
 lListElem *
 spool_template_create_context(lList **answer_list, const char *args);

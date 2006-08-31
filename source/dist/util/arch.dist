@@ -103,18 +103,7 @@ CRSOS)
    fi
    ;;
 Darwin)
-   case $osmachine in
-      i386)
-         darwin_machine=x86
-         ;;
-      Power*)
-         darwin_machine=ppc
-         ;;
-      *)
-         darwin_machine=unsupported
-         ;;
-   esac
-   ARCH=darwin-$darwin_machine
+   ARCH=darwin
    ;;
 FreeBSD|DragonFly)
    ARCH=fbsd-$osmachine
@@ -315,7 +304,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=/usr/man
       SHARED_LIBRARY_PATH="LIBPATH"
       ;;
-   darwin-*)
+   darwin)
       DEFAULTMANPATH=`/usr/bin/manpath -q`
       SHARED_LIBRARY_PATH="DYLD_LIBRARY_PATH"
       ;;

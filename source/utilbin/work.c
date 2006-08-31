@@ -106,7 +106,7 @@ static void usage(int exit_code)
    fprintf(fp, "   [-block_sigxcpu]  ignore SIGXCPU\n");
    fprintf(fp, "   [-block_sigxfsz]  ignore SIGXFSZ\n");
    fprintf(fp, "   [-change_pgrp]    change process group\n");  
-   fprintf(fp, "   [-daemonize]      daemonize\n");
+   fprintf(fp, "   [-daemonize]      daeminize\n");
 
    exit(exit_code);
 }

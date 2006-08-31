@@ -101,7 +101,6 @@ static lList *Master_Operator_List = NULL;
 static lList *Master_Sharetree_List = NULL;
 static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
-static lList *Master_LIRS_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -139,7 +138,6 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
    { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       JB_Type,   SU_name           },
-   { &Master_LIRS_List,            NULL,                   "LIRS",              LIRS_Type, LIRS_name         },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif
@@ -369,7 +367,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
     *
     * --> make sure that your object is handled in object_get_primary_key() 
     */
-   if (object != NULL && descr != NULL &&
+   if (object != NULL &&
        lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
       ret = true;
    }
@@ -462,15 +460,12 @@ int
 object_get_primary_key(const lDescr *descr)
 {
    int ret = NoName;
+   int i;
 
-   if (descr != NULL) {
-      int i;
-
-      for (i = 0; descr[i].nm != NoName; i++) {
-         if (descr[i].mt & CULL_PRIMARY_KEY) {
-            ret = descr[i].nm;
-            break;
-         }
+   for (i = 0; descr[i].nm != NoName; i++) {
+      if (descr[i].mt & CULL_PRIMARY_KEY) {
+         ret = descr[i].nm;
+         break;
       }
    }
 
@@ -728,7 +723,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_append_raw_field_to_dstring");
 
-   pos = lGetPosViaElem(object, nm, SGE_NO_ABORT);
+   pos = lGetPosViaElem(object, nm);
 
    if (pos < 0) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1012,7 +1007,7 @@ object_parse_raw_field_from_string(lListElem *object, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_raw_field_from_string");
 
-   pos = lGetPosViaElem(object, nm, SGE_NO_ABORT);
+   pos = lGetPosViaElem(object, nm);
    if (pos < 0) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, MSG_NMNOTINELEMENT_S, 
@@ -1200,7 +1195,7 @@ lList **object_type_get_master_list(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_master_list");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
+   if (type >= 0 || type < SGE_TYPE_ALL) {
       GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_master_list");
       
       if (obj_state->object_base[type].list != NULL) {
@@ -1255,7 +1250,7 @@ lList **sge_master_list(const object_description *object_base, const sge_object_
 
    DENTER(OBJECT_LAYER, "sge_master_list");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
+   if (type >= 0 || type < SGE_TYPE_ALL) {
       
       if (object_base[type].list != NULL) {
          ret = object_base[type].list;
@@ -1298,40 +1293,10 @@ object_description *object_type_get_object_description(void)
 
    DENTER(OBJECT_LAYER, "object_type_get_object_description");
    {
-      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, 
-                   "object_type_get_object_description");
-
+      GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, "object_type_get_object_description");
+    
       ret = obj_state->object_base;
    } 
-   DRETURN(ret);
-}
-
-/****** sge_object/object_type_get_global_object_description() *****************
-*  NAME
-*     object_type_get_global_object_description() -- grands access to the global 
-*                                                    master lists
-*
-*  SYNOPSIS
-*     object_description* object_type_get_global_object_description(void) 
-*
-*  RESULT
-*     object_description* - the global object description / master lists
-*
-*  NOTES
-*     MT-NOTE: object_type_get_global_object_description() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_type_get_global_object_description()
-*
-*******************************************************************************/
-object_description *object_type_get_global_object_description(void)
-{
-   object_description *ret = NULL;
-
-   DENTER(OBJECT_LAYER, "object_type_get_object_description");
-  
-   ret = object_base;
- 
    DRETURN(ret);
 }
 
@@ -1342,7 +1307,7 @@ bool object_type_commit_master_list(const sge_object_type type, lList **answer_l
    
    DENTER(OBJECT_LAYER, "object_type_set_master_list");
    
-   if (type >= 0 && type < SGE_TYPE_ALL) {
+   if (type >= 0 || type < SGE_TYPE_ALL) {
       
       if (object_base[type].commitMasterList) {
          ret = object_base[type].commitMasterList(answer_list);
@@ -1384,7 +1349,7 @@ bool object_type_free_master_list(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_free_master_list");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
+   if (type >= 0 || type < SGE_TYPE_ALL) {
       GET_SPECIFIC(obj_state_t, obj_state, obj_state_global_init, obj_state_key, SGE_FUNC);
       
       if (obj_state->object_base[type].list) {
@@ -1428,7 +1393,7 @@ const char *object_type_get_name(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_name");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
+   if (type >= 0 || type < SGE_TYPE_ALL) {
       ret = object_base[type].type_name;
    } else if (type == SGE_TYPE_ALL) {
       ret = "default";
@@ -1511,10 +1476,10 @@ const lDescr *object_type_get_descr(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_descr");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
-      ret = object_base[type].descr;
-   } else {
+   if (type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else {
+      ret = object_base[type].descr;
    }
 
    DRETURN(ret);
@@ -1553,10 +1518,10 @@ int object_type_get_key_nm(const sge_object_type type)
 
    DENTER(OBJECT_LAYER, "object_type_get_key_nm");
 
-   if (type >= 0 && type < SGE_TYPE_ALL) {
-      ret = object_base[type].key_nm;
-   } else {
+   if (type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+   } else {
+      ret = object_base[type].key_nm;
    }
    
    DRETURN(ret);
@@ -1570,7 +1535,7 @@ object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_bool_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (!strcasecmp(string, "true") || !strcasecmp(string, "t") || 
           !strcmp(string, "1") ||
@@ -1603,7 +1568,7 @@ object_parse_time_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_time_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1630,7 +1595,7 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_inter_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (parse_ulong_val(NULL, NULL, TYPE_TIM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1659,7 +1624,7 @@ object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(OBJECT_LAYER, "object_parse_strlist_from_string");
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       lString2List(string, &tmp_list, descr, nm, "\t \v\r,");
       if (tmp_list != NULL) {
@@ -1697,7 +1662,7 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
 
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (!cull_parse_definition_list((char *)string, &tmp_list, "", CE_Type, rule)) {
          lSetPosList(this_elem, pos, tmp_list);
@@ -1727,7 +1692,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
       lListElem *tmp_elem = NULL;
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
       if (tmp_list != NULL) {
@@ -1782,7 +1747,7 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
    DENTER(TOP_LAYER, "object_parse_qtlist_from_string");
    if (this_elem != NULL && string != NULL) {
       u_long32 value;
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (sge_parse_bitfield_str(string, queue_types, &value, "", 
                                  answer_list, true)) {
@@ -1811,7 +1776,7 @@ object_parse_mem_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_mem_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (parse_ulong_val(NULL, NULL, TYPE_MEM, string, NULL, 0)) {
          lSetPosString(this_elem, pos, string);
@@ -1838,7 +1803,7 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
    
    DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
 
       if (strlen(string) == 0) {
          /*
@@ -1891,7 +1856,7 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_int_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
       int value;
 
       if (sscanf(string, "%d", &value) == 1) {
@@ -1919,7 +1884,7 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_char_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
       char value;
 
       if (sscanf(string, "%c", &value) == 1) {
@@ -1947,7 +1912,7 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_long_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
       long value;
 
       if (sscanf(string, "%ld", &value) == 1) {
@@ -1975,7 +1940,7 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_double_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
       double value;
 
       if (sscanf(string, "%lf", &value) == 1) {
@@ -2003,7 +1968,7 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_float_from_string");
    if (this_elem != NULL && string != NULL) {
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      int pos = lGetPosViaElem(this_elem, name);
       float value;
 
       if (sscanf(string, "%f", &value) == 1) {
@@ -2027,7 +1992,7 @@ bool
 object_set_any_type(lListElem *this_elem, int name, void *value)
 {
    int cull_ret = 0;
-   int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+   int pos = lGetPosViaElem(this_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_set_any_type");
@@ -2067,8 +2032,8 @@ bool
 object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 {
    int cull_ret = 0;
-   int out_pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
-   int in_pos = lGetPosViaElem(org_elem, name, SGE_NO_ABORT);
+   int out_pos = lGetPosViaElem(this_elem, name);
+   int in_pos = lGetPosViaElem(org_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), out_pos);
 
    DENTER(OBJECT_LAYER, "object_replace_any_type");
@@ -2126,7 +2091,7 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem)
 void 
 object_get_any_type(lListElem *this_elem, int name, void *value)
 {
-   int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+   int pos = lGetPosViaElem(this_elem, name);
    int type = lGetPosType(lGetElemDescr(this_elem), pos);
 
    DENTER(OBJECT_LAYER, "object_get_any_type");
@@ -2173,7 +2138,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    bool ret = true;
 
    DENTER(TOP_LAYER, "attr_mod_sub_list");
-   if (lGetPosViaElem(delta_elem, this_elem_name, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(delta_elem, this_elem_name) >= 0) {
       if (sub_command == SGE_GDI_CHANGE ||
           sub_command == SGE_GDI_APPEND ||
           sub_command == SGE_GDI_REMOVE) {
@@ -2201,7 +2166,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                next_full_element = lNext(full_element);
 
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
+               pos = lGetPosViaElem(reduced_element, this_elem_primary_key);
                type = lGetPosType(lGetElemDescr(reduced_element), pos);            
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);
@@ -2217,7 +2182,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;
                }
-
+      
                if (ret && 
                    (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
                    ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
@@ -2265,8 +2230,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
          if (ret && (sub_command == SGE_GDI_CHANGE ||
              sub_command == SGE_GDI_APPEND ||
              sub_command == SGE_GDI_REMOVE)) {
-             next_reduced_element = lFirst(reduced_sublist);
-
+            next_reduced_element = lFirst(reduced_sublist);
             while ((reduced_element = next_reduced_element)) {
                int pos, type;
                const char *rstring = NULL;
@@ -2274,7 +2238,7 @@ attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                next_reduced_element = lNext(reduced_element);
 
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
+               pos = lGetPosViaElem(reduced_element, this_elem_primary_key);
                type = lGetPosType(lGetElemDescr(reduced_element), pos);            
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);
@@ -2489,11 +2453,7 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
          DPRINTF(("Descriptor size is not equivalent\n"));
          ret = true;
       } 
-   } else if (this_elem != NULL || old_elem != NULL) {
-      /* One of both elems is not NULL */
-      ret = true;
-   }
-
+   }    
    DRETURN(ret);   
 }
                    
@@ -2527,320 +2487,4 @@ object_list_has_differences(const lList *this_list, lList **answer_list,
    }
 
    DRETURN(ret);
-}
-
-/****** sge_object/object_list_verify_cull() ***********************************
-*  NAME
-*     object_list_verify_cull() -- verify cull list structure
-*
-*  SYNOPSIS
-*     bool 
-*     object_list_verify_cull(const lList *lp, const lDescr *descr) 
-*
-*  FUNCTION
-*     Verifies that a cull list, including all its objects and sublists,
-*     is a valid object of a defined type.
-*  
-*     There are cases, where the type of a list cannot be verified, when the
-*     type of a sublist is set to CULL_ANY_SUBTYPE in the cull list definition.
-*     In this case, the list descriptor is not checked, but still all list
-*     objects and there sublists are verified.
-*
-*  INPUTS
-*     const lList *lp     - list to verify
-*     const lDescr *descr - expected descriptor (or NULL, see above)
-*
-*  RESULT
-*     bool - true, if the object is OK, else false
-*
-*  NOTES
-*     MT-NOTE: object_list_verify_cull() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_cull()
-*     cull/list/lCompListDescr()
-*******************************************************************************/
-bool 
-object_list_verify_cull(const lList *lp, const lDescr *descr)
-{
-   bool ret = true;
-
-   /* 
-    * valid input parameters?
-    * descr may be NULL, if sublist is defined as CULL_ANY_SUBTYPE
-    */
-   if (lp == NULL) {
-      ret = false;
-   }
-
-   /* does list descriptor match expected descriptor? */
-   if (ret) {
-      if (descr != NULL) {
-         if (lCompListDescr(lp->descr, descr) != 0) {
-            ret = false;
-         }
-      }
-   }
-
-   /* recursively check sublists and subobjects */
-   if (ret) {
-      const lListElem *ep;
-      for_each (ep, lp) {
-         if (!object_verify_cull(ep, NULL)) {
-            ret = false;
-            break;
-         }
-      }
-   }
-
-   return ret;
-}
-
-/****** sge_object/object_verify_cull() ****************************************
-*  NAME
-*     object_verify_cull() -- verify cull object structure
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_cull(const lListElem *ep, const lDescr *descr) 
-*
-*  FUNCTION
-*     Verifies that a cull object, including all its sublists and subobjects,
-*     is a valid object of a defined type.
-*  
-*     The type (descr) argument may be zero in two cases:
-*        - the descriptor has already been checked. This is the case when called
-*          from object_list_verify_cull().
-*        - we don't know the type of a subobject (if it is defined as 
-*          CULL_ANY_SUBTYPE in the cull object definition
-*
-*  INPUTS
-*     const lListElem *ep - the object to verify
-*     const lDescr *descr - expected object type, or NULL (see above)
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     MT-NOTE: object_verify_cull() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_cull()
-*     cull/list/lCompListDescr()
-*******************************************************************************/
-bool 
-object_verify_cull(const lListElem *ep, const lDescr *descr)
-{
-   bool ret = true;
-
-   /* 
-    * valid input parameters?
-    * descr may be NULL, if subobject is defined as CULL_ANY_SUBTYPE
-    */
-   if (ep == NULL) {
-      ret = false;
-   }
-
-   /* does object descriptor match expected descriptor? */
-   if (ret) {
-      if (descr != NULL) {
-         if (lCompListDescr(ep->descr, descr) != 0) {
-            ret = false;
-         }
-      }
-   }
-
-   /* check contents of subobject */
-   if (ret) {
-      int i = 0;
-      while (ep->descr[i].nm != NoName) {
-         int type = mt_get_type(ep->descr[i].mt);
-         if (type == lListT) {
-            lList *lp = lGetList(ep, ep->descr[i].nm);
-            if (lp != NULL) {
-               const lDescr *subdescr = object_get_subtype(ep->descr[i].nm);
-               if (!object_list_verify_cull(lp, subdescr)) {
-                  ret = false;
-                  break;
-               }
-            }
-         } else if (type == lObjectT) {
-            lListElem *sub_ep = lGetObject(ep, ep->descr[i].nm);
-            if (sub_ep != NULL) {
-               const lDescr *subdescr = object_get_subtype(ep->descr[i].nm);
-               if (!object_verify_cull(sub_ep, subdescr)) {
-                  ret = false;
-                  break;
-               }
-            }
-         } 
-         i++;
-      }
-   }
-
-   return ret;
-}
-
-/****** sge_object/object_verify_ulong_not_null() ******************************
-*  NAME
-*     object_verify_ulong_not_null() -- verify ulong attribute not null
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, 
-*                                  int nm) 
-*
-*  FUNCTION
-*     Verify that a certain ulong attribute in an object is not 0
-*
-*  INPUTS
-*     const lListElem *ep - object to verify
-*     lList **answer_list - answer list to pass back error messages
-*     int nm              - the attribute to verify
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: object_verify_ulong_not_null() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_string_not_null()
-*******************************************************************************/
-bool 
-object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int nm)
-{
-   bool ret = true;
-
-   if (lGetUlong(ep, nm) == 0) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_OBJECT_ULONG_NOT_NULL, lNm2Str(nm));
-      ret = false;
-   }
-
-   return ret;
-}
-
-/****** sge_object/object_verify_ulong_null() ******************************
-*  NAME
-*     object_verify_ulong_null() -- verify ulong attribute null
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_ulong_null(const lListElem *ep, lList **answer_list, 
-*                                  int nm) 
-*
-*  FUNCTION
-*     Verify that a certain ulong attribute in an object is 0
-*
-*  INPUTS
-*     const lListElem *ep - object to verify
-*     lList **answer_list - answer list to pass back error messages
-*     int nm              - the attribute to verify
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: object_verify_ulong_null() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_string_not_null()
-*******************************************************************************/
-bool 
-object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm)
-{
-   bool ret = true;
-
-   if (lGetUlong(ep, nm) != 0) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_OBJECT_ULONG_NULL, lNm2Str(nm));
-      ret = false;
-   }
-
-   return ret;
-}
-
-/****** sge_object/object_verify_ulong_null() ******************************
-*  NAME
-*     object_verify_double_null() -- verify double attribute null
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_ulong_null(const lListElem *ep, lList **answer_list, 
-*                                  int nm) 
-*
-*  FUNCTION
-*     Verify that a certain double attribute in an object is 0
-*
-*  INPUTS
-*     const lListElem *ep - object to verify
-*     lList **answer_list - answer list to pass back error messages
-*     int nm              - the attribute to verify
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: object_verify_double_null() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_string_not_null()
-*******************************************************************************/
-bool 
-object_verify_double_null(const lListElem *ep, lList **answer_list, int nm)
-{
-   bool ret = true;
-
-   if (lGetDouble(ep, nm) != 0.0) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_OBJECT_DOUBLE_NULL, lNm2Str(nm));
-      ret = false;
-   }
-
-   return ret;
-}
-
-/****** sge_object/object_verify_string_not_null() *****************************
-*  NAME
-*     object_verify_string_not_null() -- verify string attribute not null
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_string_not_null(const lListElem *ep, lList **answer_list, 
-*                                   int nm) 
-*
-*  FUNCTION
-*     Verifies that a string attribute of a certain object is not NULL.
-*
-*  INPUTS
-*     const lListElem *ep - the object to verify
-*     lList **answer_list - answer list to pass back error messages
-*     int nm              - the attribute to verify
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: object_verify_string_not_null() is MT safe 
-*
-*  SEE ALSO
-*     sge_object/object_verify_ulong_not_null()
-*******************************************************************************/
-bool 
-object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm)
-{
-   bool ret = true;
-
-   if (lGetString(ep, nm) == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                              MSG_OBJECT_STRING_NOT_NULL, lNm2Str(nm));
-      ret = false;
-   }
-
-   return ret;
 }

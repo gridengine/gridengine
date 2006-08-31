@@ -124,7 +124,7 @@ proc issue_1874_cleanup  {} {
    global stree tmp_name
 
    # delete sharetree
-   del_sharetree
+   set output [start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "qconf" "-dstree"]
    # add user
    set result [ del_user "1874_usr1" ]
    set result [ del_user "1874_usr2" ]

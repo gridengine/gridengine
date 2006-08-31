@@ -76,29 +76,20 @@ BasicSettings()
 
   unset SGE_NOMSG
 
-  if [ ! -d $SGE_BIN ]; then
-     $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
-     $ECHO "Please check your binaries. Installation failed!"
-     $ECHO "Exiting installation."
+  # set spooldefaults binary path
+  SPOOLDEFAULTS=$SGE_UTILBIN/spooldefaults
+  if [ ! -f $SPOOLDEFAULTS ]; then
+     $ECHO "can't find \"$SPOOLDEFAULTS\""
+     $ECHO "Installation failed."
      exit 1
   fi
 
-   if [ "$SGE_ARCH" != "win32-x86" ]; then
-      # set spooldefaults binary path
-      SPOOLDEFAULTS=$SGE_UTILBIN/spooldefaults
-      if [ ! -f $SPOOLDEFAULTS ]; then
-         $ECHO "can't find \"$SPOOLDEFAULTS\""
-         $ECHO "Installation failed."
-         exit 1
-      fi
-
-      SPOOLINIT=$SGE_UTILBIN/spoolinit
-      if [ ! -f $SPOOLINIT ]; then
-         $ECHO "can't find \"$SPOOLINIT\""
-         $ECHO "Installation failed."
-         exit 1
-      fi
-   fi
+  SPOOLINIT=$SGE_UTILBIN/spoolinit
+  if [ ! -f $SPOOLINIT ]; then
+     $ECHO "can't find \"$SPOOLINIT\""
+     $ECHO "Installation failed."
+     exit 1
+  fi
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
@@ -163,17 +154,10 @@ Enter()
 Makedir()
 {
    dir=$1
-   tmp_dir=$1
 
    if [ ! -d $dir ]; then
-
-      while [ ! -d $tmp_dir ]; do
-         tmp_dir2=`dirname $tmp_dir`
-         tmp_dir=$tmp_dir2
-      done
-
        $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+       if [ "`$SGE_UTILBIN/filestat -owner $SGE_ROOT`" != "$ADMINUSER" ]; then
          Execute $MKDIR -p $dir
          if [ "$ADMINUSER" = "default" ]; then
             Execute $CHOWN root $dir
@@ -228,9 +212,8 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
       MoveLog
-      if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
-         exit 1
-      fi
+
+      exit 1
    fi
    return 0
 }
@@ -288,17 +271,12 @@ WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-           testsuidroot authuser uidgid infotext"
-
-WINUTILFILES="SGE_Helper_Service.exe"
-
-#SUIDFILES="rsh rlogin testsuidroot sgepasswd"
+           testsuidroot uidgid infotext"
 
 THIRD_PARTY_FILES="openssl"
 
 if [ $SGE_ARCH = "win32-x86" ]; then
    BINFILES="$WINBINFILES"
-   UTILFILES="$UTILFILES $WINUTILFILES"
 fi
 
    missing=false
@@ -342,9 +320,9 @@ fi
          "qtcsh           qping           sgepasswd       qloadsensor.exe\n\n" \
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-         "authuser	 checkprog      gethostbyname  now            rsh\n" \
-         "infotext	 checkuser      gethostname    openssl        rshd\n" \
-         "filestat	 getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
+         "checkprog      gethostbyname  now            rsh            infotext\n" \
+         "checkuser      gethostname    openssl        rshd\n" \
+         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
@@ -397,8 +375,8 @@ ErrUsage()
    myname=`basename $0`
    $INFOTEXT -e \
              "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] | [-winupdate] \\\n" \
-             "       [-csp] [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
+             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] [-csp] \\\n" \
+             "       [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -414,11 +392,8 @@ ErrUsage()
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
-             "   -resport   the install script does not allow SGE_QMASTER_PORT numbers \n" \
-             "              higher than 1024\n" \
              "   -rsh       use rsh instead of ssh (default is ssh)\n" \
              "   -auto      full automatic installation (qmaster and exec hosts)\n" \
-             "   -winupdate update to add gui features to a existing execd installation\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -afs       install system with AFS functionality\n" \
@@ -495,7 +470,7 @@ ResolveHosts()
          else
             if [ -f $host ]; then
                for fhost in `cat $host`; do
-                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $fhost`"
+                  HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`"
                done
             fi
             HOSTS="$HOSTS `$SGE_UTILBIN/gethostbyname -name $host`" 
@@ -600,63 +575,6 @@ WelcomeTheUserUpgrade()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
-
-#--------------------------------------------------------------------------
-#
-WelcomeTheUserWinUpdate()
-{
-   if [ "$SGE_ARCH" != "win32-x86" ]; then
-      return
-   fi
-
-   $INFOTEXT -u "\nWelcome to the Grid Engine Win Update"
-   $INFOTEXT "\nBefore you continue with the update please read these hints:\n\n" \
-             "   - Your terminal window should have a size of at least\n" \
-             "     80x24 characters\n\n" \
-             "   - The INTR character is often bound to the key Ctrl-C.\n" \
-             "     The term >Ctrl-C< is used during the udate if you\n" \
-             "     have the possibility to abort the upgrade\n\n" \
-             "The update procedure will take approximately 1-2 minutes.\n" \
-             "After this update you will get a enhanced windows execd\n" \
-             "installation, with gui support."
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-   $CLEAR
-}
-
-#--------------------------------------------------------------------------
-#
-WelcomeTheUserWinSvc()
-{
-   mode=$1
-   if [ "$SGE_ARCH" != "win32-x86" ]; then
-      return
-   fi
-
-   if [ "$mode" = "install" ]; then
-      installation_id="installation"   
-      install_id="install"
-   elif [ "$mode" = "uninstall" ]; then 
-      installation_id="uninstallation"
-      install_id="uninstall"
-   else
-      installation_id="process"
-      install_id="process"
-   fi
-
-   $INFOTEXT -u "\nWelcome to the Grid Engine Windows Helper Service %s" $installation_id
-   $INFOTEXT "\nBefore you continue with the %s please read these hints:\n\n" \
-             "   - Your terminal window should have a size of at least\n" \
-             "     80x24 characters\n\n" \
-             "   - The INTR character is often bound to the key Ctrl-C.\n" \
-             "     The term >Ctrl-C< is used during the %s if you\n" \
-             "     have the possibility to abort the %s\n\n" \
-             "The %s procedure will take approximately 1-2 minutes.\n" \
-             "After this %s you will get a enhanced windows execd\n" \
-             "installation, with gui support." $installation_id $install_id $installation_id $install_id $install_id
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-   $CLEAR
-}
-
 
 #-------------------------------------------------------------------------
 # CheckWhoInstallsSGE
@@ -1005,7 +923,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u8_1"
+      $ECHO "# Version: 6.0u7"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -1387,8 +1305,6 @@ MoveLog()
    if [ "$AUTO" = "false" ]; then
       return
    fi
-
-   GetAdminUser
 
    #due to problems with adminrun and ADMINUSER permissions, on windows systems
    #the auto install log files couldn't be copied to qmaster_spool_dir
@@ -2608,7 +2524,4 @@ GetAdminUser()
 }
 
 
-PreInstallCheck()
-{
-   CheckBinaries
-}
+   

@@ -79,7 +79,6 @@ ADD_TO_RC=false
 REMOVE_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
-WIN_UPDATE=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -95,9 +94,6 @@ COPY_COMMAND="scp"
 EXEC_HOST_LIST="undef"
 CONFIG_FILE="undef"
 STDOUT2LOG="0"
-PAR_EXECD_INST_COUNT="20"
-JAVA_VERSION="undef"
-WIN_SVC="undef"
 
 SGE_NOMSG="undef"
 
@@ -116,7 +112,7 @@ CSP_MAIL_ADDRESS="undef"
 
 BasicSettings
 SetUpInfoText
-PreInstallCheck
+CheckBinaries
 
 
 ARGC=$#
@@ -226,24 +222,6 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_update.sh
      #update from 5.3 to 6.0
      ;;
-   -winupdate)
-     #update to new Gridengine Helper Service
-     WIN_UPDATE="true"
-     . ./util/install_modules/inst_common.sh
-     . ./util/install_modules/inst_execd.sh
-     ;;
-   -winsvc)
-     #install the windows helper service only
-     WIN_SVC="install"
-     . ./util/install_modules/inst_common.sh
-     . ./util/install_modules/inst_execd.sh
-    ;;
-   -uwinsvc)
-     #uninstall the windows helper service only
-     WIN_SVC="uninstall"
-     . ./util/install_modules/inst_common.sh
-     . ./util/install_modules/inst_execd.sh
-    ;;
    -rccreate)
      MAKE_RC=true
      #Generate new rc scripts from settings file
@@ -290,24 +268,6 @@ if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "i
    ErrUsage
 fi
 
-if [ $WIN_UPDATE = "true" ]; then
-   WelcomeTheUserWinUpdate
-   SetupWinSvc update #service install due to an update -> param: update
-   exit 0
-fi
-
-if [ $WIN_SVC = "install" ]; then
-   WelcomeTheUserWinSvc install #install text param
-   SetupWinSvc install #service install due to service install switch -> param install
-   exit 0
-fi
-
-if [ $WIN_SVC = "uninstall" ]; then
-   WelcomeTheUserWinSvc uninstall #uninstall text param
-   SetupWinSvc uninstall #service install due to service uninstall switch -> param uninstall
-   exit 0
-fi
-
 
 if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" -a "$EXECD" != "install" ]; then
    WelcomeTheUserUpgrade
@@ -349,7 +309,7 @@ if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckCSP
-      CheckHostNameResolving install
+      CheckHostNameResolving
       AddSGEStartUpScript $euid execd
       StartExecd
       AddQueue
@@ -447,13 +407,6 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
-   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
-      ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
-      default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
-   fi
-
-    TMP_EXEC_HOST_LIST=$EXEC_HOST_LIST
-
     if [ "$NOREMOTE" = false ]; then
 
       LOCALINST=false
@@ -464,8 +417,8 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          installed=$?
    
          if [ "$installed" = 0 ]; then
-            if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
-	            LOCALINST=true
+	         if [ $h = `$SGE_UTILBIN/gethostname -name` ]; then
+		      LOCALINST=true
             else
                CheckRSHConnection $h
                if [ "$?" = 0 ]; then 
@@ -481,49 +434,10 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
          fi
 
          inst_counter=`expr $inst_counter + 1`
-         is_done=0
-         #removing already installed execd host from TMP_EXEC_HOST_LIST,
-         #if inst_counter equal to configured parallel install limit
-         while [ "$inst_counter" -ge "$PAR_EXECD_INST_COUNT" ]; do
-            is_done=`expr $is_done + 1`
-            for e in $TMP_EXEC_HOST_LIST; do
-               #checking if fqdn is ignored
-               #if ignored, use short hostname -> cut after first dot
-               if [ "$ignore_fqdn" = "true" ]; then
-                  ExecdAlreadyInstalled `echo $e | cut -d"." -f1`
-                  installed=$?
-               else
-                  #if not ignored check, if a default domain is entered
-                  if [ "$default_domain" != "none" ]; then
-                     #default_domain is entered, check if given hostname is long or not
-                     #given hostname is long the defualt domain won't be added
-                     #given hostname is short, default_domain will be added
-                     hasdot=`echo $e|grep '\.'`
-                     if [ "$hasdot" = "" ]; then
-                        e=$e.$default_domain
-                     fi
-                  fi      
-                  ExecdAlreadyInstalled $e
-                  installed=$?    
-               fi
-
-               if [ "$installed" = 1 ]; then
-                  inst_counter=`expr $inst_counter - 1`
-                  is_done=0
-                  help_list=""
-                  for hh in $TMP_EXEC_HOST_LIST; do
-                     if [ $e != $hh ]; then
-                        help_list="$help_list $hh"
-                     fi
-                  done
-                  TMP_EXEC_HOST_LIST="$help_list"
-               fi
-            done
-            sleep 3
-            if [ "$is_done" -ge "20" ]; then
-               inst_counter=0
-            fi 
-         done 
+         if [ "$inst_counter" = "25" ]; then
+            sleep 5
+            inst_counter=0
+         fi
       done
 
    else
@@ -537,11 +451,10 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckQmasterInstallation
       CheckCellDirectory
       CheckCSP
-      CheckHostNameResolving install
+      CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
-      AddSGEStartUpScript $euid execd
-      SetupWinSvc execinst #service install during execd installation -> param: execinst
+      AddSGEStartUpScript $euid execd 
       StartExecd
       AddQueue
       GiveHints
@@ -570,11 +483,10 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       CheckWinAdminUser
       CheckCSP
-      CheckHostNameResolving install
+      CheckHostNameResolving
       GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
-      SetupWinSvc execinst  #service install during execd installation -> param: execinst
       StartExecd
       AddQueue
       GiveHints
@@ -632,11 +544,6 @@ fi
 
 if [ "$EXECD" = "uninstall" ]; then
 
-   if [ "$AUTO" = "true" ]; then
-      Stdout2Log
-      $INFOTEXT -log "Starting execution host uninstallation!"
-   fi
-
    WelcomeUninstall 
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
@@ -653,7 +560,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
 
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
-   CheckHostNameResolving uninstall
+   CheckHostNameResolving 1
    if [ "$?" = "1" ]; then
       $INFOTEXT "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
       $INFOTEXT -log "This host is not an admin host. Uninstallation is not allowed\nfrom this host!"
@@ -661,7 +568,6 @@ if [ "$EXECD" = "uninstall" ]; then
       exit 1
    fi
    FetchHostname
-   SetupWinSvc uninstall
    
    MoveLog
    
@@ -738,7 +644,7 @@ if [ $SHADOW = "install" ]; then
       export SGE_CELL
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
    
-      CheckHostNameResolving install
+      CheckHostNameResolving
  
       if [ $HOST != "" ]; then
          $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null

@@ -342,7 +342,9 @@ proc share_tree_setup  {} {
    }
    lappend vi_commands "1Gdddddddddd"
 
-   del_sharetree
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result]
  
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
@@ -400,7 +402,7 @@ proc share_tree_test {} {
       return 
    }
    
-   trigger_scheduling
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
 
    disable_queue "$test_queue"
 
@@ -418,7 +420,8 @@ proc share_tree_test {} {
 
    wait_for_jobpending $last_job "leeper" 60
 
-   trigger_scheduling
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   puts $CHECK_OUTPUT $result
    
    wait_for_job_tickes $last_job
    
@@ -511,7 +514,9 @@ proc share_tree_test {} {
          incr running_jobs -2 ;# 2 header lines
       }
       if { $running_jobs == 0 } {
-         trigger_scheduling
+         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+         puts -nonewline $CHECK_OUTPUT "."
+         flush $CHECK_OUTPUT
       }
       sleep 2
    }
@@ -620,7 +625,12 @@ proc share_tree_cleanup  {} {
 
    del_queue test $test_host 0 1
 
-   del_sharetree
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ]
+
+  puts "qconf -dstree result: $result"
+  puts "qconf -dstree exit value: $catch_return "
 
   del_prj "project1"
   del_prj "project2"
@@ -642,25 +652,16 @@ proc issue_751 {} {
 
   set host $ts_config(master_host) 
 
-   # the bug has only be fixed in maintrunk for 6.5
-   # do only raise a warning for ealier versions
-   set error_level -1
-   set additional_message ""
-   if {$ts_config(gridengine_version) <= 60} {
-      set error_level -3
-      set additional_message "\nhas been fixed only for 6.5 and higher"
-   }
-
   set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode /" exit_state 30]
   puts $CHECK_OUTPUT $output
   if { $exit_state != 0 } {
-      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode / broken$additional_message"
+      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree / broken"
   }
 
   set output [start_remote_prog $host $CHECK_USER "qconf" "-sstnode Root" exit_state 30]
   puts $CHECK_OUTPUT $output
   if { $exit_state != 0 } {
-      add_proc_error "issue_751" $error_level "Issue 751: qconf -sstnode Root broken$additional_message"
+      add_proc_error "issue_751" -1 "Issue 751: qstat -sstree Root broken"
   }
 
   set_error 0 "ok"

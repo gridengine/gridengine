@@ -461,6 +461,7 @@ lCondition *lWhereFromElem(const lListElem *where){
    DENTER(CULL_LAYER, "lWhereFromCull");
 
    if (lGetUlong(where, PACK_id) == SGE_WHERE) {
+
       size = getByteArray(&buffer, where, PACK_string);
       if (size <= 0){
          ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
@@ -1216,20 +1217,17 @@ void lFreeWhere(lCondition **cp)
    case STRCASECMP:
    case PATTERNCMP:
    case HOSTNAMECMP:
+
       if (mt_get_type((*cp)->operand.cmp.mt) == lStringT) {
          if ((*cp)->operand.cmp.val.str) {
-            FREE((*cp)->operand.cmp.val.str);
+            free((*cp)->operand.cmp.val.str);
          }
       }
       if (mt_get_type((*cp)->operand.cmp.mt) == lHostT) {
          if ((*cp)->operand.cmp.val.host) {
-            FREE((*cp)->operand.cmp.val.host);
+            free((*cp)->operand.cmp.val.host);
          }
       }
-      if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
-         lFreeWhere(&((*cp)->operand.cmp.val.cp));
-      }
-      break;
    case SUBSCOPE:
       if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
          lFreeWhere(&((*cp)->operand.cmp.val.cp));
@@ -1237,9 +1235,7 @@ void lFreeWhere(lCondition **cp)
       break;
    case AND:
    case OR:
-      lFreeWhere(&((*cp)->operand.log.first));
       lFreeWhere(&((*cp)->operand.log.second));
-      break;
    case NEG:
       lFreeWhere(&((*cp)->operand.log.first));
       break;
@@ -1409,32 +1405,28 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          DEXIT;
          return 0;
       }
-
       if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
-         str1 = lGetPosString(ep, cp->operand.cmp.pos);
-      } else {
-         str1 = lGetPosHost(ep, cp->operand.cmp.pos);
+         if (cp->op == STRCASECMP ) {
+            result = SGE_STRCASECMP(lGetPosString(ep, cp->operand.cmp.pos),
+                                cp->operand.cmp.val.str);
+         } else {
+            result = sge_hostcmp(lGetPosString(ep, cp->operand.cmp.pos),
+                             cp->operand.cmp.val.str);
+         }
+         result = (result == 0);
       }
-      if (str1 == NULL) {
-          LERROR(LENULLSTRING);
-          DPRINTF(("lGetPosString in lCompare\n"));
-          DEXIT;
-          return 0;
+      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
+         if (cp->op == STRCASECMP ) {
+            result = SGE_STRCASECMP(lGetPosHost(ep, cp->operand.cmp.pos),
+                                cp->operand.cmp.val.host);
+         } else {
+            result = sge_hostcmp(lGetPosHost(ep, cp->operand.cmp.pos),
+                             cp->operand.cmp.val.host);
+         }
+         result = (result == 0);
       }
 
-      if (!(str2 = cp->operand.cmp.val.str)) {
-         DPRINTF(("cp->operand.cmp.val.str in lCompare\n"));
-         LERROR(LENULLSTRING);
-         DEXIT;
-         return 0;
-      }
 
-      if (cp->op == STRCASECMP ) {
-         result = SGE_STRCASECMP(str1, str2);
-      } else {
-         result = sge_hostcmp(str1, str2);
-      }
-      result = (result == 0);
       break;
 
    case PATTERNCMP:

@@ -491,7 +491,9 @@ proc throughput_setup_sharetree {} {
    lappend vi_commands "1Gdddddddddd"
   
    # delete a possibly existing sharetree
-   del_sharetree
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ] 
  
    set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
    set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
@@ -505,7 +507,9 @@ proc throughput_setup_sharetree {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) != 53 } {
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }
@@ -526,7 +530,12 @@ proc throughput_cleanup_sharetree {} {
    reset_schedd_config
 
    # delete sharetree
-   del_sharetree
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ]
+
+   puts "qconf -dstree result: $result"
+   puts "qconf -dstree exit value: $catch_return "
 
    # remove projects
    puts $CHECK_OUTPUT "   removing projects ..."
@@ -557,7 +566,9 @@ proc throughput_setup_functional_policy {} {
    # setup policy weighting for sharetree
    get_schedd_config my_config 
 
-   if { $ts_config(gridengine_version) != 53 } {
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
       set my_config(weight_ticket) "1.0"
       set my_config(weight_waiting_time) "0.0"
    }

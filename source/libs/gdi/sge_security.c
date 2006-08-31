@@ -58,8 +58,6 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "sge_time.h"
-#include "sge_bootstrap.h"
-#include "sge_string.h"
 
 
 #include "msg_common.h"
@@ -73,17 +71,12 @@
 #include <openssl/evp.h>
 #endif
 
-#ifdef INTERIX
-#include "misc.h"
-#endif
-
 #define SGE_SEC_BUFSIZE 1024
 
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
 #ifdef SECURE
-
 const char* sge_dummy_sec_string = "AIMK_SECURE_OPTION_ENABLED";
 
 static pthread_mutex_t sec_ssl_setup_config_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -94,6 +87,8 @@ static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
 static bool is_daemon(const char* progname);
 static bool is_master(const char* progname);
+
+
 
 #endif
 
@@ -151,6 +146,7 @@ static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsi
 }
 
 
+#ifdef SECURE
 
 static bool is_daemon(const char* progname) {
    if (progname != NULL) {
@@ -163,16 +159,16 @@ static bool is_daemon(const char* progname) {
    return false;
 }
 
-#ifdef SECURE
-
 static bool is_master(const char* progname) {
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER],progname)) {
          return true;
-      }
+      } 
    }
    return false;
 }
+
+
 
 /* int 0 on success, -1 on failure */
 int sge_ssl_setup_security_path(const char *progname) {
@@ -200,7 +196,6 @@ int sge_ssl_setup_security_path(const char *progname) {
 #define UserKey         "key.pem"
 #define RandFile        "rand.seed"
 #define UserCert        "cert.pem"
-#define CrlFile         "ca-crl.pem"
 #define ReconnectFile   "private/reconnect.dat"
 #define VALID_MINUTES    7          /* expiry of connection        */
 
@@ -213,12 +208,6 @@ int sge_ssl_setup_security_path(const char *progname) {
    char *rand_file      = NULL;
    char *cert_file      = NULL; 
    char *reconnect_file = NULL;
-   char *crl_file       = NULL;
-
-   char *user_name = sge_strdup(NULL, uti_state_get_user_name());
-#ifdef INTERIX
-   user_name = wl_strip_hostname(user_name);
-#endif
 
    DENTER(TOP_LAYER, "setup_ssl_security_path");
 
@@ -302,11 +291,6 @@ int sge_ssl_setup_security_path(const char *progname) {
    }
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
 
-	crl_file = sge_malloc(strlen(ca_root) + strlen(CrlFile) + 2);
-	sprintf(crl_file, "%s/%s", ca_root, CrlFile);
-
-   DPRINTF(("crl_file: %s\n", crl_file));
-
    /*
    ** determine userdir: 
    ** - ca_root, ca_local_root for daemons 
@@ -353,8 +337,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
       key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(user_name) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserKey);
+                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
    }   
 
    rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
@@ -363,8 +347,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(rand_file, &sbuf)) { 
       free(rand_file);
       rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(user_name) + strlen(RandFile) + 4);
-      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, user_name, RandFile);
+                              strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
+      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
    }   
 
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -389,8 +373,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
       cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(user_name) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserCert);
+                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 
@@ -424,7 +408,6 @@ int sge_ssl_setup_security_path(const char *progname) {
                                            key_file,              /* ssl_key_pem_file     */
                                            rand_file,             /* ssl_rand_file        */
                                            reconnect_file,        /* ssl_reconnect_file   */
-                                           crl_file,              /* ssl_reconnect_file   */
                                            60 * VALID_MINUTES,    /* ssl_refresh_time     */
                                            NULL,                  /* ssl_password         */
                                            ssl_cert_verify_func); /* ssl_verify_func (cl_ssl_verify_func_t)  */
@@ -448,7 +431,6 @@ int sge_ssl_setup_security_path(const char *progname) {
    free(rand_file);
    free(cert_file); 
    free(reconnect_file);
-   free(crl_file);
 
    DEXIT;
    return return_value;
@@ -1636,14 +1618,11 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
 ** NOTES
 **    MT-NOTE: sge_decrypt() is MT safe (assumptions)
 */
-int sge_get_auth_info(sge_gdi_request *request, 
-                      uid_t *uid, char *user, size_t user_len, 
-                      gid_t *gid, char *group, size_t group_len)
+int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
+                        gid_t *gid, char *group)
 {
    char dbuffer[2*SGE_SEC_BUFSIZE];
    int dlen = 0;
-   char userbuf[2*SGE_SEC_BUFSIZE];
-   char groupbuf[2*SGE_SEC_BUFSIZE];
 
    DENTER(TOP_LAYER, "sge_get_auth_info");
 
@@ -1652,21 +1631,10 @@ int sge_get_auth_info(sge_gdi_request *request,
       return -1;
    }   
 
-   if (sscanf(dbuffer, uid_t_fmt" "gid_t_fmt" %s %s", uid, gid, userbuf, groupbuf) != 4) {
+   if (sscanf(dbuffer, pid_t_fmt" "pid_t_fmt" %s %s", uid, gid, user, group) != 4) {
       DEXIT;
       return -1;
    }   
-
-   if (strlen(userbuf) > user_len) {
-      DEXIT;
-      return -1;
-   }   
-   if (strlen(groupbuf) > group_len) {
-      DEXIT;
-      return -1;
-   }   
-   sge_strlcpy(user, userbuf, user_len);
-   sge_strlcpy(group, groupbuf, group_len);
 
    DEXIT;
    return 0;
@@ -1884,33 +1852,58 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 /* MT-NOTE: sge_security_verify_user() is MT safe (assumptions) */
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *gdi_user) 
 {
-   const char *admin_user = bootstrap_get_admin_user();
-
    DENTER(TOP_LAYER, "sge_security_verify_user");
 
-   if (gdi_user == NULL || host == NULL || commproc == NULL) {
-     DPRINTF(("gdi user name or host or commproc is NULL\n"));
-     DEXIT;
-     return False;
-   }
+#ifdef SECURE
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      const char* dummy_host = "NULL";
+      const char* dummy_commproc = "NULL";
+      const char* dummy_gdi_user = "NULL";
+      char* dummy_unique_user = "NULL";
+      cl_com_handle_t* handle = NULL;
+      char* unique_identifier = NULL;
 
-   if (is_daemon(commproc) && (strcmp(gdi_user, admin_user) != 0) && (strcmp(gdi_user, "root") != 0)) {
-     DEXIT;
-     return False;
-   }
-   if (!is_daemon(commproc)) {
-      if (false == sge_security_verify_unique_identifier(false, gdi_user, uti_state_get_sge_formal_prog_name(), 0,
-                                            host, commproc, id)) {
-         DEXIT;
-         return False;
+      if (gdi_user != NULL) {
+         dummy_gdi_user = gdi_user;
       }
-   } else {
-      if (false == sge_security_verify_unique_identifier(true, admin_user, uti_state_get_sge_formal_prog_name(), 0,
-                                            host, commproc, id)) {
-         DEXIT;
-         return False;
+      if (commproc != NULL) {
+         dummy_commproc = commproc;
       }
-   }
+      if (host != NULL) {
+         dummy_host = host;
+      }
+
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      if (cl_com_ssl_get_unique_id(handle, (char*)host, (char*)commproc, (unsigned long)id, &unique_identifier) == CL_RETVAL_OK) {
+         dummy_unique_user = unique_identifier;
+         DPRINTF(("unique identifier = "SFQ"\n", dummy_unique_user));
+      }
+
+      
+
+      /* TODO: This is only a workaround for the problem that daemons are not always started
+               as root, they also can be stared as admin user */
+
+      if (!is_daemon(commproc)) {
+         DPRINTF(("endpoint "SFN"/"SFN"/"sge_U32CFormat" has the unique identifier "SFQ", gdi user = "SFQ"\n", 
+                  dummy_host, dummy_commproc, sge_u32c(id), dummy_unique_user, dummy_gdi_user));
+         if (strcmp(dummy_gdi_user,dummy_unique_user) != 0) {
+            DPRINTF(("endpoint certificate user name doesn't match gdi user name\n"));
+            free(unique_identifier);
+            unique_identifier = NULL;
+            DEXIT;
+            return False;
+         }
+      } else {
+         DPRINTF(("ignoring verify user request for endpoint "SFN"/"SFN"/"sge_U32CFormat", gdi user = "SFQ"\n",
+                  dummy_host, dummy_commproc, sge_u32c(id), dummy_gdi_user));
+      }
+      if (unique_identifier != NULL) {
+         free(unique_identifier);
+         unique_identifier = NULL;
+      }
+   }  
+#endif
 
 #ifdef KERBEROS
 
@@ -1925,64 +1918,17 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
    return True;
 }   
 
-bool sge_security_verify_unique_identifier(bool check_admin_user, const char* user, const char* progname,
-        unsigned long progid, const char* hostname, const char* commproc, unsigned long commid) {
-
-   DENTER(TOP_LAYER, "sge_security_verify_unique_identifier");
-
-#ifdef SECURE
-
-   if (user == NULL || progname == NULL || hostname == NULL || commproc == NULL) {
-      DEXIT;
-      return false;
-   }
-
-   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-     cl_com_handle_t* handle = NULL;
-     char* unique_identifier = NULL;
-
-     handle = cl_com_get_handle((char*)progname, progid);
-     if (cl_com_ssl_get_unique_id(handle, (char*)hostname, (char*)commproc, commid, &unique_identifier) == CL_RETVAL_OK) {
-         DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ));
-         DPRINTF(("user = "SFQ"\n", user));
-     }
-
-     if ( unique_identifier == NULL ) {
-         DPRINTF(("unique_identifier is NULL\n"));
-         DEXIT;
-         return false;
-      }
-
-      if (check_admin_user) {
-        if ( strcmp(unique_identifier, user) != 0 &&
-             strcmp(unique_identifier, "root") != 0) {
-            DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            FREE(unique_identifier);
-            DEXIT;
-            return false;
-        }     
-      } else {
-         if (strcmp(unique_identifier, user) != 0) {
-            DPRINTF((MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            WARNING((SGE_EVENT, MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            FREE(unique_identifier);
-            DEXIT;
-            return false;
-         }
-      }
-      
-      FREE(unique_identifier);
-   }
-#endif
-   DEXIT;
-   return true;
-}
-
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
 void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor)
 {
-  
+#ifdef SECURE
+#if 0
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      sec_clear_connectionlist();
+   } 
+#endif  
+#endif
+   
 #ifdef KERBEROS
    krb_check_for_idle_clients();
 #endif

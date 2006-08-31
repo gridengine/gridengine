@@ -33,8 +33,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_data_types.h"
-#include "cl_list_types.h"
 #include "cl_xml_parsing.h"
 
 #define CL_DEFINE_READ_TIMEOUT                       30
@@ -105,7 +103,6 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
                             char*            ssl_key_pem_file,
                             char*            ssl_rand_file,
                             char*            ssl_reconnect_file,
-                            char*            ssl_crl_file,
                             unsigned long    ssl_refresh_time,
                             char*            ssl_password,
                             cl_ssl_verify_func_t  ssl_verify_func);

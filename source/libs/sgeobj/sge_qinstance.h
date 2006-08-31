@@ -139,12 +139,4 @@ bool
 qinstance_list_find_matching(const lList *this_list, lList **answer_list,
                              const char *hostname_pattern, lList **qref_list);
 
-bool
-qinstance_list_verify_execd_job(const lList *queue_list, lList **answer_list);
-
-bool
-qinstance_verify(const lListElem *qep, lList **answer_list);
-
-bool
-qinstance_verify_full_name(lList **answer_list, const char *full_name);
 #endif /* __SGE_QINSTANCE_H */

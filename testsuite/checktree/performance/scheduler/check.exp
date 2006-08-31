@@ -337,7 +337,7 @@ proc scheduler_measurement { repeat_count job_count } {
          scheduler_setup_test_conditions $job_count
          puts $CHECK_OUTPUT "sleeping ..."
          sleep 5
-         trigger_scheduling
+         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
          set wait_for_schedd_nr $schedd_nr
          incr wait_for_schedd_nr 1 
       }

@@ -97,7 +97,7 @@ proc install_execd {} {
              puts $CHECK_OUTPUT "we have root access, fine !"
              set CA_ROOT_DIR "/var/sgeCA/"
 
-             puts $CHECK_OUTPUT "removing poss. existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+             puts $CHECK_OUTPUT "removing evtl. existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
              set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
              puts $CHECK_OUTPUT $result
 

@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- *
+ * 
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- *
+ * 
  *  Sun Microsystems Inc., March, 2001
- *
- *
+ * 
+ * 
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- *
+ * 
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- *
+ * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- *
+ * 
  *   Copyright: 2001 by Sun Microsystems, Inc.
- *
+ * 
  *   All Rights Reserved.
- *
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa;
@@ -48,21 +48,23 @@ import org.ggf.drmaa.*;
  * @since 0.5
  */
 public class SessionImpl implements Session {
-   private String sessionId = null;
-   
-   static {
-      AccessController.doPrivileged (new PrivilegedAction () {
-         public Object run () {
-            System.loadLibrary ("drmaa");
-            return null;
-         }
-      });
-   }
-   
-   /** Creates a new instance of SessionImpl */
-   SessionImpl () {
-   }
-   
+   /* String to return from getDRMAAImplementation() */
+   /** The name of this DRMAA implementation. */   
+   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java language binding 0.5 -- ";
+	
+	static {
+		AccessController.doPrivileged (new PrivilegedAction () {
+			public Object run () {
+				System.loadLibrary ("drmaa");
+				return null;
+			}
+		});
+	}
+		
+	/** Creates a new instance of SessionImpl */
+	SessionImpl () {
+	}
+	
    /** <p>Hold, release, suspend, resume, or kill the job identified by jobId.
     * If jobId is <code>JOB_IDS_SESSION_ALL</code>, then this routine acts on all jobs
     * <B>submitted</B> during this DRMAA session up to the moment control() is
@@ -104,12 +106,12 @@ public class SessionImpl implements Session {
     * <LI>InvalidJobException</LI>
     * </UL>
     */
-   public void control (String jobId, int action) throws DrmaaException {
-      this.nativeControl (jobId, action);
-   }
-   
-   private native void nativeControl (String jobId, int action) throws DrmaaException;
-   
+	public void control (String jobId, int action) throws DrmaaException {
+		this.nativeControl (jobId, action);
+	}
+	
+	private native void nativeControl (String jobId, int action) throws DrmaaException;
+	
    /** <p>The exit() method closes the DRMAA session for all threads and must be
     * called before process termination.  The exit() method may be called only
     * once by a single thread in the process and may only be called after the
@@ -128,50 +130,40 @@ public class SessionImpl implements Session {
     * <LI>NoActiveSessionException</LI>
     * </UL>
     */
-   public void exit () throws DrmaaException {
-      this.nativeExit ();
-   }
-   
-   private native void nativeExit () throws DrmaaException;
-   
-   /**
-    * <p>getContact() returns an opaque string containing contact information
+	public void exit () throws DrmaaException {
+		this.nativeExit ();
+	}
+	
+	private native void nativeExit () throws DrmaaException;
+	
+   /** <p>getContact() returns an opaque string containing contact information
     * related to the current DRMAA session to be used with the init() method.
-    * The contact string takes the form <code>name=value[;name=value]*</code>,
-    * where name and value are both strings, and the supported values of name
-    * are:</p>
-    * <ul>
-    *    <li><code>session</code> - if used, indicates to which session id
-    *        to reconnect.</li>
-    * </ul>
-    * <p>Before the init() method has been called, this method will always
-    * return an empty string.  After the init() method has been called, this
-    * method will return the set of name=value pairs which represent the
-    * currently active session.  The value returned for <code>session</code>
-    * can be used with the init() method to reconnect to the current session
-    * after exit() has been called.</p>
-    * @return current contact information for DRM system or a comma delimited
+    * In the current implemention, however, the getContact() function returns an
+    * empty string, and the contact parameter has no effect on the init()
+    * method.</p>
+    * <p>The getContact() method returns the same value before and after init()
+    * is called.</p>
+	 * @return current contact information for DRM system or a comma delimited
     * list of possible contact Strings
-    * @see #init(String)
-    */
-   public String getContact () {
-      return this.nativeGetContact ();
-   }
-   
-   private native String nativeGetContact ();
-   
-   /** The getDRMSystem() method returns a string containing the DRM product and
+	 */	
+	public String getContact () {
+		return this.nativeGetContact ();
+	}
+	
+	private native String nativeGetContact ();
+	
+   /** The getDRMSystem() method returns a string containing the DRM product and 
     * version information.  The getDRMSystem() function returns the same value
     * before and after init() is called.
-    * @return DRM system implementation information
-    */
-   public String getDrmSystem () {
-      return this.nativeGetDRMSInfo ();
-   }
-   
-   private native String nativeGetDRMSInfo ();
-   
-   /** <p>Get the program status of the job identified by jobId.
+	 * @return DRM system implementation information
+	 */	
+	public String getDrmSystem () {
+		return this.nativeGetDRMSInfo ();
+	}
+	
+	private native String nativeGetDRMSInfo ();
+	
+	/** <p>Get the program status of the job identified by jobId.
     * The possible return values and their meanings are:</p>
     * <UL>
     * <LI><code>UNDETERMINED</code>: process status cannot be determined</LI>
@@ -202,26 +194,26 @@ public class SessionImpl implements Session {
     * <LI>InvalidJobException</LI>
     * </UL>
     */
-   public int getJobProgramStatus (String jobId) throws DrmaaException {
-      return this.nativeGetJobProgramStatus (jobId);
-   }
-   
-   private native int nativeGetJobProgramStatus (String jobId) throws DrmaaException;
-   
-   /** Get a new job template.  The job template is used to set the
-    * environment for submitted jobs.
-    * @throws DrmaaException May be one of the following:
-    * <UL>
-    * <LI>DrmCommunicationException</LI>
-    * </UL>
-    * @return a blank JobTemplate object
-    */
-   public JobTemplate createJobTemplate () throws DrmaaException {
-      int id = nativeAllocateJobTemplate ();
-      
-      return new JobTemplateImpl (this, id);
-   }
-   
+	public int getJobProgramStatus (String jobId) throws DrmaaException {
+		return this.nativeGetJobProgramStatus (jobId);
+	}
+	
+	private native int nativeGetJobProgramStatus (String jobId) throws DrmaaException;
+	
+	/** Get a new job template.  The job template is used to set the
+	 * environment for submitted jobs.
+	 * @throws DrmaaException May be one of the following:
+	 * <UL>
+	 * <LI>DrmCommunicationException</LI>
+	 * </UL>
+	 * @return a blank JobTemplate object
+	 */
+	public JobTemplate createJobTemplate () throws DrmaaException {
+		int id = nativeAllocateJobTemplate ();
+		
+		return new JobTemplateImpl (this, id);
+	}
+	   
    /** The deleteJobTemplate() method releases all resources associated with the DRMAA
     * JobTemplate.  Jobs that were submitted using the JobTemplate are not
     * affected.
@@ -234,40 +226,34 @@ public class SessionImpl implements Session {
    public void deleteJobTemplate (JobTemplate jt) throws DrmaaException {
       if (jt == null) {
          throw new NullPointerException ("JobTemplate is null");
-      } else if (jt instanceof JobTemplateImpl) {
+      }
+      else if (jt instanceof JobTemplateImpl) {
          nativeDeleteJobTemplate (((JobTemplateImpl)jt).getId ());
-      } else {
+      }
+      else {
          throw new InvalidJobTemplateException ();
       }
    }
-   
-   /** The getVersion() method returns a Version object containing
+
+	/** The getVersion() method returns a Version object containing
     * the major and minor version numbers of the DRMAA library. For a DRMAA
     * Java language binding specification 0.5 compliant implementation (e.g.
     * this binding) `0' and `5' will be the major and minor numbers,
     * respectively.
     * @return the version number as a Version object
-    */
-   public Version getVersion () {
-      return new Version (0, 5);
-   }
-   
-   /**
-    * <p>The init() method initializes the Grid Engine DRMAA API library for
+    */	
+	public Version getVersion () {
+		return new Version (0, 5);
+	}
+	
+   /** <p>The init() method initializes the Grid Engine DRMAA API library for
     * all threads of the process and creates a new DRMAA Session. This routine
     * must be called once before any other DRMAA call, except for
     * getDRMSystem(), getContact(), and getDRMAAImplementation().</p>
     * <p><i>contact</i> is an implementation dependent string which may be used
-    * to specify which Grid Engine cell to use.  The contact string is composed
-    * of a series of name=value pairs separated by semicolons.  The supported
-    * name=value pairs are:</p>
-    * <ul>
-    *    <li>
-    *      <code>session</code>: the id of the session to which to reconnect
-    *    </li>
-    * </ul>
-    * <p>If <i>contact</i> is null or empty, the default Grid Engine cell will
-    * be used.</p>
+    * to specify which Grid Engine cell to use. If <i>contact</i> is null or
+    * empty, the default Grid Engine cell will be used.  In the current
+    * implementation setting <i>contact</i> has no effect.</p>
     * <p>Except for the above listed methods, no DRMAA methods may be called
     * before the init() function <b>completes</b>.  Any DRMAA method which is
     * called before the init() method completes will throw a
@@ -286,14 +272,13 @@ public class SessionImpl implements Session {
     * <LI>DefaultContactStringException</LI>
     * <LI>NoDefaultContactStringSelectedException</LI>
     * </UL>
-    * @see #getContact()
     */
-   public void init (String contact) throws DrmaaException {
-      this.nativeInit (contact);
-   }
-   
-   private native void nativeInit (String contact) throws DrmaaException;
-   
+	public void init (String contact) throws DrmaaException {
+		this.nativeInit (contact);
+	}
+	
+	private native void nativeInit (String contact) throws DrmaaException;
+	
    /** <p>The runBulkJobs() method submits a Grid Engine array job very much as if
     * the qsub option `-t <i>start</i>-<i>end</i>:<i>incr</i>' had been used
     * with the corresponding attributes defined in the DRMAA JobTemplate
@@ -316,47 +301,51 @@ public class SessionImpl implements Session {
     * <LI>AuthorizationException</LI>
     * </UL>
     */
-   public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
+	public List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException {
       if (jt == null) {
          throw new NullPointerException ("JobTemplate is null");
-      } else if (jt instanceof JobTemplateImpl) {
+      }
+      else if (jt instanceof JobTemplateImpl) {
          String[] jobIds = this.nativeRunBulkJobs (((JobTemplateImpl)jt).getId (), start, end, incr);
-         
+
          return Arrays.asList (jobIds);
-      } else {
+      }
+      else {
          throw new InvalidJobTemplateException ();
       }
-   }
-   
-   private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DrmaaException;
-   
+	}
+	
+	private native String[] nativeRunBulkJobs (int jtId, int start, int end, int incr) throws DrmaaException;
+	
    /** The runJob() method submits a Grid Engine job with attributes defined in
     * the DRMAA JobTemplate <i>jt</i>. On success, the job identifier is
     * returned.
-    * @param jt the job template to be used to create the job
-    * @throws DrmaaException May be one of the following:
-    * <UL>
-    * <LI>TryLaterException</LI>
-    * <LI>DeniedByDrmException</LI>
-    * <LI>DrmCommunicationException</LI>
-    * <LI>AuthorizationException</LI>
-    * </UL>
-    * @return job identifier String identical to that returned by the
-    * underlying DRM system
-    */
-   public String runJob (JobTemplate jt) throws DrmaaException {
+	 * @param jt the job template to be used to create the job
+	 * @throws DrmaaException May be one of the following:
+	 * <UL>
+	 * <LI>TryLaterException</LI>
+	 * <LI>DeniedByDrmException</LI>
+	 * <LI>DrmCommunicationException</LI>
+	 * <LI>AuthorizationException</LI>
+	 * </UL>
+	 * @return job identifier String identical to that returned by the
+	 * underlying DRM system
+	 */
+	public String runJob (JobTemplate jt) throws DrmaaException {
       if (jt == null) {
          throw new NullPointerException ("JobTemplate is null");
-      } else if (jt instanceof JobTemplateImpl) {
-         return this.nativeRunJob (((JobTemplateImpl)jt).getId ());
-      } else {
+      }
+      else if (jt instanceof JobTemplateImpl) {
+   		return this.nativeRunJob (((JobTemplateImpl)jt).getId ());
+      }
+      else {
          throw new InvalidJobTemplateException ();
       }
-   }
-   
-   private native String nativeRunJob (int jtId) throws DrmaaException;
-   
-   /** <p>The synchronize() method blocks the calling thread until all jobs
+	}
+	
+	private native String nativeRunJob (int jtId) throws DrmaaException;
+	
+	/** <p>The synchronize() method blocks the calling thread until all jobs
     * specified in <i>jobIds</i> have failed or finished execution. If
     * <i>jobIds</i> contains <code>JOB_IDS_SESSION_ALL</code>, then this method waits for
     * all jobs submitted during this DRMAA session.</p>
@@ -385,12 +374,12 @@ public class SessionImpl implements Session {
     * <LI>InvalidJobException</LI>
     * </UL>
     */
-   public void synchronize (List jobIds, long timeout, boolean dispose) throws DrmaaException {
-      this.nativeSynchronize ((String[])jobIds.toArray (new String[jobIds.size ()]), timeout, dispose);
-   }
-   
-   private native void nativeSynchronize (String[] jobIds, long timeout, boolean dispose) throws DrmaaException;
-   
+	public void synchronize (List jobIds, long timeout, boolean dispose) throws DrmaaException {
+		this.nativeSynchronize ((String[])jobIds.toArray (new String[jobIds.size ()]), timeout, dispose);
+	}
+	
+	private native void nativeSynchronize (String[] jobIds, long timeout, boolean dispose) throws DrmaaException;
+	
    /** <p>The wait() function blocks the calling thread until a job fails or
     * finishes execution.  This routine is modeled on the UNIX wait4(3) routine.
     * If the special string <code>JOB_IDS_SESSION_ANY</code> is passed as <i>jobId</i>,
@@ -427,37 +416,33 @@ public class SessionImpl implements Session {
     * <LI>InvalidJobException</LI>
     * </UL>
     */
-   public JobInfo wait (String jobId, long timeout) throws DrmaaException {
-      JobInfoImpl jobInfo = this.nativeWait (jobId, timeout);
-      
-      return jobInfo;
-   }
-   
-   private native JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException;
-   
-   private native int nativeAllocateJobTemplate ();
-   
-   native void nativeSetAttributeValue (int jtId, String name, String value);
-   
-   native void nativeSetAttributeValues (int jtId, String name, String[] values);
-   
-   native String[] nativeGetAttributeNames (int jtId);
-   
-   native String[] nativeGetAttribute (int jtId, String name);
-   
-   native void nativeDeleteJobTemplate (int jtId);
-   
+	public JobInfo wait (String jobId, long timeout) throws DrmaaException {
+		JobInfoImpl jobInfo = this.nativeWait (jobId, timeout);
+		
+		return jobInfo;
+	}
+	
+	private native JobInfoImpl nativeWait (String jobId, long timeout) throws DrmaaException;
+	
+	private native int nativeAllocateJobTemplate ();
+	
+	native void nativeSetAttributeValue (int jtId, String name, String value);
+	
+	native void nativeSetAttributeValues (int jtId, String name, String[] values);
+	
+	native String[] nativeGetAttributeNames (int jtId);
+	
+	native String[] nativeGetAttribute (int jtId, String name);
+	
+	native void nativeDeleteJobTemplate (int jtId);
+	
    /** The getDRMAAImplementation() method returns a string containing the DRMAA
     * Java language binding implementation version information.  The
     * getDRMAAImplementation() method returns the same value before and after
     * init() is called.
     * @return DRMAA implementation information
-    * @see #getVersion()
     */
-   public String getDrmaaImplementation () {
-      /* Because the DRMAA implementation is tightly bound to the DRM, there's
-       * no need to distinguish between them.  Version information can be gotten
-       * from getVersion() and language information is self-evident. */
-      return this.getDrmSystem ();
-   }
+	public String getDrmaaImplementation () {
+		return IMPLEMENTATION_STRING + this.getDrmSystem ();
+	}
 }

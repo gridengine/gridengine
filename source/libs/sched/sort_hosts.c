@@ -78,6 +78,7 @@ enum {
 };
 
 /* prototypes */
+static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list);
 static int get_load_value(double *dvalp, lListElem *global, lListElem *host, const lList *centry_list, const char *attrname);
 
 /*************************************************************************
@@ -106,28 +107,27 @@ lList *centry_list   /* CE_Type */
    lListElem *hlp = NULL;
    lListElem *global = NULL;
    const char *host = NULL;
-   const char *load_formula = NULL;
    double load;
    
    DENTER(TOP_LAYER, "sort_host_list");
 
-   global = host_list_locate(hl, SGE_GLOBAL_NAME);
+   global = host_list_locate(hl, "global");
 
-   load_formula = sconf_get_load_formula();
    for_each (hlp, hl) {
       host = lGetHost(hlp,EH_name);
-      if (strcmp(host, SGE_GLOBAL_NAME) && strcmp(host, SGE_TEMPLATE_NAME)) { /* don't treat global */
+      if (strcmp(host,"global")) { /* don't treat global */
          /* build complexes for that host */
-         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(load_formula, global, hlp, centry_list));
+         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(global, hlp, centry_list));
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
    }
-   FREE(load_formula);
 
    if (lPSortList(hl,"%I+",EH_sort_value)) {
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    } else {
-      DRETURN(0);
+      DEXIT;
+      return 0;
    }
 }
 
@@ -155,7 +155,7 @@ lList *centry_list   /* CE_Type */
                        0 means no load correction, 
                        n load correction for n new jobs
 *************************************************************************/
-double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem *host, const lList *centry_list)
+static double scaled_mixed_load( lListElem *global, lListElem *host, const lList *centry_list)
 {
    char *cp = NULL;
    char *tf = NULL; 
@@ -167,12 +167,14 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
    double val=0, val2=0;
    double load=0;
    int op_pos, next_op=LOAD_OP_NONE;
+   char *load_formula = sconf_get_load_formula();
    char *lasts = NULL;
 
    DENTER(TOP_LAYER, "scaled_mixed_load");
 
    /* we'll use strtok ==> we need a safety copy */
-   if ((tf = strdup(load_formula)) == NULL) {
+   if ((tf = sconf_get_load_formula()) == NULL) {
+      FREE(load_formula);
       DEXIT;
       return ERROR_LOAD_VAL;
    }
@@ -198,6 +200,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
                get_load_value(&val, global, host, centry_list, par_name)) {
             FREE(par_name);
             FREE(tf);
+            FREE(load_formula);
 
             DEXIT;
             return ERROR_LOAD_VAL;
@@ -212,6 +215,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
             FREE(tf);
+            FREE(load_formula);
             DEXIT;
             return ERROR_LOAD_VAL;
          }
@@ -227,6 +231,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
                get_load_value(&val2, global, host, centry_list, par_name)) {
                FREE(par_name);
                FREE(tf);
+               FREE(load_formula);
                DEXIT;
                return ERROR_LOAD_VAL;
             }
@@ -293,9 +298,11 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
       }   
    }
 
+   FREE(load_formula);
    FREE(tf);
 
-   DRETURN(load);
+   DEXIT;
+   return load;
 }
 
 
@@ -312,9 +319,6 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
    DENTER(TOP_LAYER, "get_load_value");
    
    /* search complex */
-   if (strchr(attrname, '$')) {
-      attrname++;
-   }
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
       /* neither load or consumable available for that host */
@@ -349,10 +353,8 @@ int *sort_hostlist
    lSortOrder *so = NULL;
    lListElem *gel, *hep;
    lListElem *global;
-   const char *hnm = NULL;
-   const char *load_formula = NULL;
+   const char *hnm;
    lList *job_load_adjustments = sconf_get_job_load_adjustments();
-   u_long32 load_adjustment_decay_time = sconf_get_load_adjustment_decay_time();
 
    double old_sort_value, new_sort_value;
 
@@ -362,8 +364,6 @@ int *sort_hostlist
 
    global = host_list_locate(host_list, "global");
 
-   load_formula = sconf_get_load_formula(); 
-
    /* debit from hosts */
    for_each(gel, granted) {  
       u_long32 ulc_factor;
@@ -372,7 +372,7 @@ int *sort_hostlist
       hnm = lGetHost(gel, JG_qhostname);
       hep = host_list_locate(host_list, hnm); 
 
-      if (load_adjustment_decay_time && lGetNumberOfElem(job_load_adjustments)) {
+      if (sconf_get_load_adjustment_decay_time() && lGetNumberOfElem(job_load_adjustments)) {
          /* increase host load for each scheduled job slot */
          ulc_factor = lGetUlong(hep, EH_load_correction_factor);
          ulc_factor += 100*slots;
@@ -385,7 +385,7 @@ int *sort_hostlist
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
 
-      new_sort_value = scaled_mixed_load(load_formula, global, hep, centry_list);
+      new_sort_value = scaled_mixed_load(global, hep, centry_list);
 
       if(new_sort_value != old_sort_value) {
          lSetDouble(hep, EH_sort_value, new_sort_value);
@@ -397,7 +397,6 @@ int *sort_hostlist
 
       lResortElem(so, hep, host_list);
    }
-   FREE(load_formula);
 
    lFreeSortOrder(&so);
    lFreeList(&job_load_adjustments);

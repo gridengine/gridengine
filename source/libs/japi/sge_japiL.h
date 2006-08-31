@@ -74,7 +74,7 @@ enum {
 };
 
 LISTDEF(JJ_Type)
-   SGE_ULONG(JJ_jobid, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(JJ_jobid, CULL_DEFAULT)
    SGE_ULONG(JJ_type, CULL_DEFAULT)
    SGE_LIST(JJ_finished_tasks, JJAT_Type, CULL_DEFAULT)
    SGE_LIST(JJ_not_yet_finished_ids, RN_Type, CULL_DEFAULT)

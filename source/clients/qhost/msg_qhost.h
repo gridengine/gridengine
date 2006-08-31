@@ -47,6 +47,7 @@
 #define MSG_HEADER_MEMUSE                "MEMUSE"
 #define MSG_HEADER_SWAPTO                "SWAPTO"
 #define MSG_HEADER_SWAPUS                "SWAPUS"
+#define MSG_QHOST_help_OPT_USAGE     _MESSAGE(9000, _("display this message"))
 #define MSG_QHOST_h_OPT_USAGE        _MESSAGE(9001, _("display only selected hosts"))
 #define MSG_QHOST_q_OPT_USAGE        _MESSAGE(9002, _("display queues hosted by host"))
 #define MSG_QHOST_j_OPT_USAGE        _MESSAGE(9003, _("display jobs hosted by host"))

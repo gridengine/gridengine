@@ -30,7 +30,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-proc delete_all_jobs {{clear_queues 1}} {
+proc delete_all_jobs {} {
    global ts_config CHECK_OUTPUT CHECK_USER
 
    puts $CHECK_OUTPUT "deleting all jobs"

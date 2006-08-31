@@ -91,7 +91,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * At least the centry name has to be available (CE_name)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_name, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_name);
 
       if (pos >= 0) {
          const char *name = lGetPosString(reduced_elem, pos);
@@ -108,7 +108,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Shortcut (CE_shortcut)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_shortcut, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_shortcut);
 
       if (pos >= 0) {
          const char *shortcut = lGetPosString(reduced_elem, pos);
@@ -122,7 +122,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Type (CE_valtype)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_valtype, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_valtype);
 
       if (pos >= 0) {
          u_long32 type = lGetPosUlong(reduced_elem, pos);
@@ -139,7 +139,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Operator (CE_relop)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_relop, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_relop);
 
       if (pos >= 0) {
          u_long32 relop = lGetPosUlong(reduced_elem, pos);
@@ -156,7 +156,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Requestable (CE_request)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_requestable, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_requestable);
 
       if (pos >= 0) {
          u_long32 request = lGetPosUlong(reduced_elem, pos);
@@ -173,7 +173,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Consumable (CE_consumable)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_consumable, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_consumable);
 
       if (pos >= 0) {
          bool consumable = lGetPosBool(reduced_elem, pos) ? true : false;
@@ -190,7 +190,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Default (CE_default)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_default, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_default);
 
       if (pos >= 0) {
          const char *defaultval = lGetPosString(reduced_elem, pos);
@@ -207,7 +207,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
     * Default (CE_urgency_weight)
     */
    if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight, SGE_NO_ABORT);
+      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight);
 
       if (pos >= 0) {
          const char *urgency_weight = lGetPosString(reduced_elem, pos);

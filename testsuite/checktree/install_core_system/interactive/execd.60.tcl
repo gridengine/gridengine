@@ -76,21 +76,17 @@ proc install_execd {} {
 
    set_error "0" "install_execd - no errors"
 
-   # does cluster contain windows hosts?
-   # if yes, we'll have to copy the certificates, regardless of csp mode or not
-   set have_windows_host [host_conf_have_windows]
-
    set catch_result [ catch { eval exec "cat $ts_config(product_root)/inst_sge | grep \"SCRIPT_VERSION\" | cut -d\" -f2" } INST_VERSION ]
    puts $CHECK_OUTPUT "inst_sge version: $INST_VERSION"
 
-   if {!$check_use_installed_system} {
+   if {! $check_use_installed_system} {
       set feature_install_options ""
       foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
          puts $CHECK_OUTPUT "do a qconf -as $elem ..."
          catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-as $elem" } result
          puts $CHECK_OUTPUT $result
       }
-      if {$ts_config(product_feature) == "csp" || $have_windows_host} {
+      if { $ts_config(product_feature) == "csp" } {
          set feature_install_options "-csp"
          set my_csp_host_list $ts_config(execd_nodes)
          foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
@@ -141,7 +137,7 @@ proc install_execd {} {
          puts $CHECK_OUTPUT "target:       $ts_config(product_root)/bin/$remote_arch/qloadsensor"
          if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
             set arguments "$sensor_file $ts_config(product_root)/bin/$remote_arch/qloadsensor"
-            set result [start_remote_prog $ts_config(master_host) "root" "cp" "$arguments" prg_exit_state 60 0 "" 1 1 1 1 1] 
+            set result [ start_remote_prog $ts_config(master_host) "root" "cp" "$arguments" ] 
             puts $CHECK_OUTPUT "result: $result"
             puts $CHECK_OUTPUT "copy exit state: $prg_exit_state" 
          } else {
@@ -173,19 +169,16 @@ proc install_execd {} {
       set ENTER_LOCAL_EXECD_SPOOL_DIR_ASK [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ASK] ]
       set ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER [translate $exec_host 0 1 0 [sge_macro DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER] ]
       set HOSTNAME_KNOWN_AT_MASTER [translate $exec_host 0 1 0 [sge_macro DISTINST_HOSTNAME_KNOWN_AT_MASTER] ]
-
-      # windows
-      set WINDOWS_HELPER_SERVICE       [translate_macro DISTINST_EXECD_WINDOWS_HELPER_SERVICE]
       
       cd "$ts_config(product_root)"
 
       set prod_type_var "SGE_ROOT"
   
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set id [open_remote_spawn_process "$exec_host" "root"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" 0 "" 1 15 1 1 1]
+         set id [open_remote_spawn_process "$exec_host" "root"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
       } else {
          puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" 0 "" 1 15 1 1 1]
+         set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
       }
 
       log_user 1
@@ -476,13 +469,6 @@ proc install_execd {} {
                lappend CORE_INSTALLED $exec_host
                write_install_list
                set do_stop 1
-               # If we compiled with code coverage, we have to 
-               # wait a little bit before closing the connection.
-               # Otherwise the last command executed (infotext)
-               # will leave a lockfile lying around.
-               if {[coverage_enabled]} {
-                  sleep 2
-               }
                continue
             }
 
@@ -503,16 +489,6 @@ proc install_execd {} {
                     set anykey [wait_for_enter 1]
                }
      
-               send -i $sp_id "\n"
-               continue
-            }
-
-            -i $sp_id $WINDOWS_HELPER_SERVICE {
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(4)"
-               if {$do_log_output == 1} {
-                    puts "press RETURN"
-                    set anykey [wait_for_enter 1]
-               }
                send -i $sp_id "\n"
                continue
             }

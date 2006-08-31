@@ -131,7 +131,7 @@
 #define MSG_GDI_VALUE_S              _MESSAGE(33075, _("denied: attribute "SFQ" contains invalid value (null)"))
 #define MSG_GDI_TYPE_MEM_SS          _MESSAGE(33076, _("value for attribute "SFN" "SFQ" is not a memory value"))
 #define MSG_GDI_TYPE_TIME_SS         _MESSAGE(33077, _("value for attribute "SFN" "SFQ" is not a time value"))
-#define MSG_GDI_KEYSTR_NULL_S        _MESSAGE(33078, _("NULL pointer passed as object name for "SFQ))
+/* #define MSG_GDI_KEYSTR_SS            _message(33078, _("invalid "SFN" "SFQ)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_GDI_MULTIPLE_OCCUR_SSSS  _MESSAGE(33079, _("denied: multiple occurances of "SFN" "SFQ" in "SFN" "SFQ))
 #define MSG_GDI_KEYSTR_FIRSTCHAR_SC  _MESSAGE(33081, _(SFN" (\'%c\') not allowed as first character of objectname") ) 
 #define MSG_GDI_KEYSTR_FIRSTCHAR_S   _MESSAGE(33082, _(SFN" not allowed as first character of objectname") ) 
@@ -155,8 +155,6 @@
 #define MSG_GDI_KEYSTR_PARENTHESIS     _MESSAGE(33100, _("Parenthesis"))
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
-#define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33104, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames"))
 
 /*
 ** ck_to_do_qmaster.c
@@ -303,7 +301,7 @@
 #define MSG_JOB_PRJNOSUBMITPERMS_S    _MESSAGE(33222, _("job rejected: project "SFQ" is not allowed to submit jobs"))
 #define MSG_JOB_PRJREQUIRED           _MESSAGE(33223, _("job rejected: no project was supplied and only certain projects are allowed to submit jobs"))
 #define MSG_JOB_NODEADLINEUSER_S      _MESSAGE(33224, _("job rejected: the user "SFQ" is no deadline initiation user"))
-#define MSG_JOB_NONADMINPRIO          _MESSAGE(33225, _("job rejected: positive submission priority requires operator privileges"))
+/* #define MSG_JOB_TASKIDZERO_U          _message(33225, _("job "sge_U32CFormat" was rejected cause the job contains a task with id 0")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "sge_U32CFormat" was rejected cause there is no job_name in the request"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "sge_U32CFormat" was rejected cause it can't be written: "SFN))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "sge_U32CFormat" was rejected cause it couldn't be written"))
@@ -748,8 +746,6 @@
 
 #define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
-#define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
-#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
 
 /* sge_qmaster_threads.c */
 #define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))

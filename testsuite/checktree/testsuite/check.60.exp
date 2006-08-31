@@ -160,23 +160,25 @@ proc ts_performance_test_test {} {
       set max_user_len 0
       set max_host_len 0
 
-      set host_list [host_conf_get_cluster_hosts]
-      set user_list [user_conf_get_cluster_users]
-   
+      set user_list $ts_user_config(first_foreign_user)
+      lappend user_list $ts_user_config(second_foreign_user)
+      lappend user_list "root"
+      lappend user_list $CHECK_USER
+
       foreach user $user_list {
          if { $max_user_len < [string length $user] } {
             set max_user_len [string length $user]
          }
       }
 
-      foreach host $host_list {
+      foreach host $ts_config(execd_nodes) {
          if { $max_host_len < [string length $host] } {
             set max_host_len [string length $host]
          }
       }
 
       foreach user $user_list {
-         foreach host $host_list {
+         foreach host $ts_config(execd_nodes) {
             puts $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: open connection ..." $user $host]
             start_remote_prog $host $user "echo" "hallo"
          }
@@ -186,7 +188,7 @@ proc ts_performance_test_test {} {
       puts $CHECK_OUTPUT ""
       puts $CHECK_OUTPUT "starting performance test ..."
       foreach user $user_list {
-         foreach host $host_list {
+         foreach host $ts_config(execd_nodes) {
             puts -nonewline $CHECK_OUTPUT [format "%-${max_user_len}s on %-${max_host_len}s: " $user $host]
     
             set starttime [clock clicks -milliseconds]
@@ -209,7 +211,7 @@ proc ts_performance_test_test {} {
       }
       
       puts $CHECK_OUTPUT ""
-      puts $CHECK_OUTPUT [print_xy_array $user_list $host_list result_array]
+      puts $CHECK_OUTPUT [print_xy_array $user_list $ts_config(execd_nodes) result_array]
       puts $CHECK_OUTPUT ""
    }
 
@@ -218,7 +220,6 @@ proc ts_performance_test_test {} {
    }
 
    if {$CHECK_ACT_LEVEL == 2} {
-      dump_spawn_rlogin_sessions
 #      reset_schedd_config
    }
 

@@ -39,17 +39,6 @@
 
 SpoolingQueryChange()
 {
-   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
-      ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
-      default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
-   else
-      if [ "$IGNORE_FQDN_DEFAULT" != "true" -a "$IGNORE_FQDN_DEFAULT" != "false" ]; then
-         SelectHostNameResolving
-      fi
-      ignore_fqdn=$IGNORE_FQDN_DEFAULT
-      default_domain=$CFG_DEFAULT_DOMAIN
-   fi
-
    if [ "$BERKELEY" = "install" ]; then
       $INFOTEXT -u "\nBerkeley Database spooling parameters"
       $INFOTEXT "\nYou are going to install a RPC Client/Server machanism!" \
@@ -57,7 +46,7 @@ SpoolingQueryChange()
                 "\ncontact a RPC server running on a separate server machine." \
                 "\nIf you want to use the SGE shadowd, you have to use the " \
                 "\nRPC Client/Server mechanism.\n"
-                SPOOLING_SERVER=`$SGE_UTILBIN/gethostname -aname`
+                SPOOLING_SERVER=`hostname`
    $INFOTEXT -n "\nEnter database server name or \nhit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
                 SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
@@ -110,34 +99,6 @@ SpoolingCheckParams()
       fi
    else
       if [ "$BERKELEY" = "install" ]; then
-         if [ "$ignore_fqdn" = "true" ]; then
-            tmp_host=`echo $HOST | cut -d. -f1 | tr "[A-Z]" "[a-z]"`
-            tmp_spooling=`echo $SPOOLING_SERVER | cut -d. -f1 | tr "[A-Z]" "[a-z]"`
-            HOST=$tmp_host
-            SPOOLING_SERVER=$tmp_spooling
-         else
-	         tmp_host=`echo $HOST | tr "[A-Z]" "[a-z]"`
-            tmp_spooling=`echo $SPOOLING_SERVER | tr "[A-Z]" "[a-z]"`
-            if [ "$default_domain" != "none" ]; then
-               hasdot=`echo $tmp_host|grep '\.'`
-               if [ "$hasdot" = "" ]; then
-                  HOST=$tmp_host.$default_domain
-               else
-                  HOST=$tmp_host
-               fi
-
-               hasdot=`echo $tmp_spooling|grep '\.'`
-               if [ "$hasdot" = "" ]; then
-                  SPOOLING_SERVER=$tmp_spooling.$default_domain
-               else
-                  SPOOLING_SERVER=$tmp_spooling
-               fi
-            else
-               HOST=$tmp_host
-               SPOOLING_SERVER=$tmp_spooling
-            fi 
-         fi
-
          if [ "$SPOOLING_SERVER" = "$HOST" ]; then
             # TODO: we should check if the hostname can be resolved
             # create a script to start the rpc server

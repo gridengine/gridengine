@@ -79,7 +79,7 @@ int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source);  /* m
 /* thread list functions that will lock the list */
 int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* newhost, int lock_list);
 int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* delhost, int lock_list);
-int cl_host_list_set_alias_file(cl_raw_list_t* list_p, const char *host_alias_file);
+int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file);
 int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p);
 
 

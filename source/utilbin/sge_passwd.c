@@ -32,7 +32,6 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include <pwd.h>
 
 #ifdef SECURE
 #include <netinet/in.h>
@@ -49,7 +48,6 @@
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
-#include <openssl/rand.h>
 
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
@@ -60,19 +58,18 @@
 #include "uti/setup_path.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_stdio.h"
-#include "uti/sge_string.h"
 #if defined(DEFINE_SGE_PASSWD_MAIN)
 #include "sgermon.h"
 #endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
-#include "msg_gdilib.h"
 
 #if !defined(DEFINE_SGE_PASSWD_MAIN)
 #define DENTER(x,y)
 #define DPRINTF(x)
 #define DEXIT
+#define DRETURN(ret) return ret;
 #endif
 
 static void (*shared_ssl_func__X509_free)(X509 *a);
@@ -92,7 +89,6 @@ static EVP_PKEY* (*shared_ssl_func__X509_get_pubkey)(X509 *x);
 static char* (*shared_ssl_func__PEM_ASN1_read)(char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u);
 EVP_PKEY* (*shared_ssl_func__d2i_AutoPrivateKey)(EVP_PKEY **a, unsigned char **pp, long length);
 static X509* (*shared_ssl_func__d2i_X509)(X509 **a, unsigned char **in, long len);
-static int (*shared_ssl_func__RAND_load_file)(const char *filename, long max_bytes);
 
 #define shared_ssl_func__EVP_OpenUpdate(a,b,c,d,e) shared_ssl_func__EVP_DecryptUpdate(a,b,c,d,e)
 #define shared_ssl_func__EVP_SealUpdate(a,b,c,d,e) shared_ssl_func__EVP_EncryptUpdate(a,b,c,d,e)
@@ -153,7 +149,6 @@ sge_init_shared_ssl_lib(void)
             "PEM_ASN1_read",
             "d2i_AutoPrivateKey",
             "d2i_X509",
-            "RAND_load_file",
             NULL
          };
 
@@ -178,8 +173,6 @@ sge_init_shared_ssl_lib(void)
 
             &shared_ssl_func__d2i_AutoPrivateKey,
             &shared_ssl_func__d2i_X509,
-
-            &shared_ssl_func__RAND_load_file,
 
             NULL
          };
@@ -209,28 +202,26 @@ sge_init_shared_ssl_lib(void)
       ret = 1;
    }
 #else
-   shared_ssl_func__X509_free = X509_free;
-   shared_ssl_func__EVP_PKEY_free = EVP_PKEY_free;
-   shared_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp;
-   shared_ssl_func__EVP_PKEY_size = EVP_PKEY_size;
-   shared_ssl_func__EVP_rc4 = EVP_rc4;
+   shared_ssl_func__X509_free = X509_free,
+   shared_ssl_func__EVP_PKEY_free = EVP_PKEY_free,
+   shared_ssl_func__ERR_print_errors_fp = ERR_print_errors_fp,
+   shared_ssl_func__EVP_PKEY_size = EVP_PKEY_size,
+   shared_ssl_func__EVP_rc4 = EVP_rc4,
 
-   shared_ssl_func__EVP_OpenInit = EVP_OpenInit;
-   shared_ssl_func__EVP_DecryptUpdate = EVP_DecryptUpdate;
-   shared_ssl_func__EVP_EncryptUpdate = EVP_EncryptUpdate;
-   shared_ssl_func__EVP_SealFinal = EVP_SealFinal;
-   shared_ssl_func__EVP_SealInit = EVP_SealInit;
+   shared_ssl_func__EVP_OpenInit = EVP_OpenInit,
+   shared_ssl_func__EVP_DecryptUpdate = EVP_DecryptUpdate,
+   shared_ssl_func__EVP_EncryptUpdate = EVP_EncryptUpdate,
+   shared_ssl_func__EVP_SealFinal = EVP_SealFinal,
+   shared_ssl_func__EVP_SealInit = EVP_SealInit,
 
-   shared_ssl_func__EVP_OpenFinal = EVP_OpenFinal;
-   shared_ssl_func__EVP_read_pw_string = EVP_read_pw_string;
-   shared_ssl_func__ERR_load_crypto_strings = ERR_load_crypto_strings;
-   shared_ssl_func__X509_get_pubkey = X509_get_pubkey;
-   shared_ssl_func__PEM_ASN1_read = PEM_ASN1_read;
+   shared_ssl_func__EVP_OpenFinal = EVP_OpenFinal,
+   shared_ssl_func__EVP_read_pw_string = EVP_read_pw_string,
+   shared_ssl_func__ERR_load_crypto_strings = ERR_load_crypto_strings,
+   shared_ssl_func__X509_get_pubkey = X509_get_pubkey,
+   shared_ssl_func__PEM_ASN1_read = PEM_ASN1_read,
 
-   shared_ssl_func__d2i_AutoPrivateKey = d2i_AutoPrivateKey;
-   shared_ssl_func__d2i_X509 = d2i_X509;
-
-   shared_ssl_func__RAND_load_file = RAND_load_file;
+   shared_ssl_func__d2i_AutoPrivateKey = d2i_AutoPrivateKey,
+   shared_ssl_func__d2i_X509 = d2i_X509,
    ret = 0;
 #endif
    DEXIT;
@@ -262,7 +253,6 @@ sge_done_shared_ssl_lib(void)
       shared_ssl_func__PEM_ASN1_read = NULL;
       shared_ssl_func__d2i_AutoPrivateKey = NULL;
       shared_ssl_func__d2i_X509 = NULL;
-      shared_ssl_func__RAND_load_file = NULL;
       dlclose(shared_ssl_lib);
       shared_ssl_lib = NULL;
       ret = 0;
@@ -335,36 +325,30 @@ static EVP_PKEY *
 read_public_key(const char *certfile)
 {
    FILE *fp = NULL;
-   X509 *x509;
    EVP_PKEY *pkey = NULL;
 
    DENTER(TOP_LAYER, "read_public_key");
    fp = fopen(certfile, "r");
-   if (!fp) {
-      DEXIT;
-      return NULL;
-   }
-   x509 = shared_ssl_func__PEM_read_X509(fp, NULL, 0, NULL);
-   if (x509 == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
-      DEXIT;
-      return NULL;
-   }
-   FCLOSE (fp);
-   pkey = shared_ssl_func__X509_extract_key(x509);
-   shared_ssl_func__X509_free(x509);
-   if (pkey == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
+   if (fp) {
+      X509 *x509 = shared_ssl_func__PEM_read_X509(fp, NULL, 0, NULL);
+      if (x509 == NULL) {
+         shared_ssl_func__ERR_print_errors_fp(stderr);
+      } else {
+         FCLOSE(fp);
+         pkey = shared_ssl_func__X509_extract_key(x509);
+         shared_ssl_func__X509_free(x509);
+         if (pkey == NULL) {
+            shared_ssl_func__ERR_print_errors_fp(stderr);
+         }
+      }
    }
 FCLOSE_ERROR:
-   DEXIT;
-   return pkey;
+   DRETURN(pkey);
 }
 
 static EVP_PKEY *
 read_private_key(const char *keyfile)
 {
-   EVP_PKEY *ret = NULL;
    FILE *fp = NULL;
    union {
       EVP_PKEY *pkey;
@@ -372,28 +356,25 @@ read_private_key(const char *keyfile)
    } pku;   
 
    DENTER(TOP_LAYER, "read_private_key");
-   fp = fopen(keyfile, "r");
-   if (!fp) {
-      DEXIT;
-      return NULL;
-   }
-   
    pku.pointer = NULL;
-   
+   fp = fopen(keyfile, "r");
+   if (fp != NULL) {
 #if 1
-   /* pointer to pkey must passed into function and will not be returned by function! */
-   shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
+      /* 
+       * pointer to pkey must passed into function and will not 
+       * be returned by function! 
+       */
+      shared_ssl_func__PEM_read_PrivateKey(fp, &pku.pointer, NULL, NULL);
 #else
-   pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
+      pku.pkey = PEM_read_PrivateKey(fp, NULL, 0, NULL);
 #endif
-   FCLOSE(fp);
-   if (pku.pkey == NULL) {
-      shared_ssl_func__ERR_print_errors_fp(stderr);
+      FCLOSE(fp);
+      if (pku.pkey == NULL) {
+         shared_ssl_func__ERR_print_errors_fp(stderr);
+      }
    }
-   ret = pku.pkey;
 FCLOSE_ERROR:
-   DEXIT;
-   return ret;
+   DRETURN(pku.pkey);
 }
 
 static void
@@ -472,41 +453,6 @@ buffer_write_to_stdout(const char *buffer, size_t length)
 
 #endif
 
-int sge_ssl_get_rand_file_path(char *rand_file)
-{
-   const char *key = getenv("SGE_RANDFILE");
-   DENTER(TOP_LAYER, "sge_ssl_get_rand_file_path");
-   
-   if (key != NULL) {
-      sge_strlcpy(rand_file, key, SGE_PATH_MAX);
-   } else {
-      const char *ca_local_dir = "/var/sgeCA"; 
-      const char *sge_cell = sge_get_default_cell();
-      const char *user_key = "private/rand.seed";
-      const char *sge_qmaster_port = getenv("SGE_QMASTER_PORT");
-
-      if (sge_qmaster_port != NULL) { 
-         snprintf(rand_file, SGE_PATH_MAX, "%s/port%s/%s/%s", 
-                             ca_local_dir, sge_qmaster_port, sge_cell, user_key);
-      } else {
-         snprintf(rand_file, SGE_PATH_MAX, "%s/sge_qmaster/%s/%s", 
-                             ca_local_dir, sge_cell, user_key);
-      }
-   }
-   DEXIT;
-   return 0;
-}
-
-
-int sge_ssl_rand_load_file(char *rand_file, int max_byte)
-{
-   int ret;
-
-   ret = shared_ssl_func__RAND_load_file(rand_file, max_byte);
-
-   return ret;
-}
-
 void 
 buffer_encrypt(const char *buffer_in, size_t buffer_in_length, 
                char **buffer_out, size_t *buffer_out_size, 
@@ -520,8 +466,6 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 	EVP_PKEY *pubKey[1];
 	char ebuf[512];
    int ret = 0;
-   char rand_file[SGE_PATH_MAX];
-   char err_str[4096];
 
    DENTER(TOP_LAYER, "buffer_encrypt");
    pubKey[0] = read_public_key(sge_get_file_pub_key());
@@ -540,23 +484,6 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
       DEXIT;
 	   exit(1);
 	}
-
-   /*
-    * Read rand.seed file
-    */
-   sge_ssl_get_rand_file_path(rand_file);
-   ret = sge_ssl_rand_load_file(rand_file, 2048);
-
-   if(ret <= 0) {
-      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
-              prognames[SGE_PASSWD], rand_file);
-
-#ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, err_str);
-#endif
-      DEXIT;
-      return;
-   }
 
  	memset(iv, '\0', sizeof(iv));
 #if 0
@@ -619,7 +546,6 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
 	EVP_PKEY *privateKey;
    char *curr_ptr = (char*)buffer_in;
    const char *file_priv_key=NULL;
-   char rand_file[SGE_PATH_MAX];
    int ret = 0;
 
    DENTER(TOP_LAYER, "buffer_decrypt");
@@ -660,23 +586,6 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
       DEXIT;
       return 1;
 	}
-
-   /*
-    * Read rand.seed file
-    */
-   sge_ssl_get_rand_file_path(rand_file);
-   ret = sge_ssl_rand_load_file(rand_file, 2048);
-
-   if(ret <= 0) {
-      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
-              prognames[SGE_PASSWD], rand_file);
-
-#ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, err_str);
-#endif
-      DEXIT;
-      return 1;
-   }
 
    memcpy(encryptKey, curr_ptr, ekeylen);
    curr_ptr += ekeylen;

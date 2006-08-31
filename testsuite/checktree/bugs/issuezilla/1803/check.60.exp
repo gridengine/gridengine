@@ -88,12 +88,12 @@ proc issue_1803_init_level {} {
    global CHECK_ACT_LEVEL
 
    switch -- $CHECK_ACT_LEVEL {
-      "0" {
+      "0" { 
          return 0
-      }
-   }
+      } 
+   } 
 
-   return -1  ;# no other level
+   return -1  ;# no other level 
 }
 
 
@@ -114,7 +114,7 @@ proc issue_1803_setup {} {
    # set prolog and epilog in all.q
    set my_conf(prolog) "/bin/true prolog"
    set my_conf(epilog) "/bin/true epilog" 
-   mod_queue all.q  "" my_conf
+   set_queue all.q  "" my_conf
 
    # set KEEP_ACTIVE and short load_report_time in execd params
    get_config act_configuration
@@ -127,9 +127,6 @@ proc issue_1803_setup {} {
    set myconfig(load_report_time) "00:00:01"
    puts $CHECK_OUTPUT "setting execd_param to \"$my_execd_params\" ..."
    set_config myconfig
-
-   # wait some time for config to be known at exec hosts
-   sleep 15
 
    set_error 0 "ok"
 }
@@ -147,7 +144,7 @@ proc issue_1803_cleanup {} {
 
    set my_conf(prolog) "none"
    set my_conf(epilog) "none"
-   mod_queue all.q "" my_conf
+   set_queue all.q "" my_conf
 
    switch_to_admin_user_system
 
@@ -172,7 +169,7 @@ proc issue_1803_test {} {
       # Setting execd_params to KEEP_ACTIVE=true
       set myconfig(starter_method) "$starter_method"
       puts $CHECK_OUTPUT "setting starter_method to \"$starter_method\" ..."
-      mod_queue all.q "" myconfig
+      set_queue all.q "" myconfig
       
       # init_logfile_wait instead of sleep
 
@@ -194,7 +191,7 @@ proc issue_1803_test {} {
          set starter_method_split [ split $starter_method "/" ]
          set starter_bin [lindex $starter_method_split [ expr ([llength $starter_method_split] -1) ]]
 
-         set jobs_dir $spool_dir/active_jobs/$job_id.1
+         set jobs_dir $spool_dir/$host/active_jobs/$job_id.1
          set trace_file        $jobs_dir/trace
          puts $CHECK_OUTPUT "trace file:       $trace_file"
          wait_for_remote_file $host $ts_user_config(second_foreign_user) $trace_file
@@ -234,7 +231,7 @@ proc issue_1803_test {} {
                      # job
                      set expected_binary  "/bin/csh"
                      set expected_argument1        "-csh"
-                     set expected_argument2        "$spool_dir/job_scripts/$job_id"
+                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
                      set expected_argument3        "1"
                   } elseif { $starter_method != "none" && $counter == 1 && [string first "-b y" $job_args] >= 0 } {
                      # job
@@ -246,7 +243,7 @@ proc issue_1803_test {} {
                      # job
                      set expected_binary  "$starter_method"
                      set expected_argument1        "-$starter_bin"
-                     set expected_argument2        "$spool_dir/job_scripts/$job_id"
+                     set expected_argument2        "$spool_dir/$host/job_scripts/$job_id"
                      set expected_argument3        "1"
                   } elseif { $counter == 2} {
                      # epilog

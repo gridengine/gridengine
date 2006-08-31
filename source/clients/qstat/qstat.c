@@ -86,8 +86,6 @@
 #include "cull/cull_xml.h"
 
 #include "sge_mt_init.h"
-#include "read_defaults.h"
-#include "setup_path.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -177,18 +175,11 @@ char **argv
 
    {
       dstring file = DSTRING_INIT;
-      const char *user = uti_state_get_user_name();
-      const char *cell_root = path_state_get_cell_root();
-
       if (qselect_mode == 0) { /* the .sge_qstat file should only be used in the qstat mode */
-         get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QSTAT_FILE);
          switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           sge_dstring_get_string(&file));
-         if (get_user_home_file_path(&file, SGE_HOME_DEF_QSTAT_FILE, user,
-                                     &alp)) {
-            switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                           sge_dstring_get_string(&file));
-         }
+                                           get_root_qstat_file_path(&file));
+         switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
+                                           get_home_qstat_file_path(&file, &alp));
       }                                  
       switch_list_qstat_parse_from_cmdline(&pcmdline, &alp, qselect_mode, argv);
       sge_dstring_free(&file);
@@ -1771,7 +1762,7 @@ static int qstat_show_job_info(u_long32 isXML)
    lListElem *sme;
    lListElem *jid_ulng = NULL; 
 
-   DENTER(TOP_LAYER, "qstat_show_job_info");
+   DENTER(TOP_LAYER, "qstat_show_job");
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
@@ -1847,7 +1838,6 @@ static int qstat_show_job_info(u_long32 isXML)
                             lGetUlong(flt_jid, ULNG)) {
                            lRemoveElem(lGetList(flt_msg, MES_job_number_list), &flt_jid);
                            found_jid = 1;
-                           break;
                         }
                      }
                      if (!found_jid) { 

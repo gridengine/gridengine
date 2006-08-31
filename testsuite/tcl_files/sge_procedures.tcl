@@ -614,64 +614,6 @@ proc start_sge_utilbin {bin args {host ""} {user ""} {exit_var prg_exit_state}} 
    return [start_sge_bin $bin $args $host $user exit_state 60 "utilbin"]
 }
 
-#****** sge_procedures/start_source_bin() *****************************************
-#  NAME
-#     start_source_bin() -- start a binary in compile directory
-#
-#  SYNOPSIS
-#     start_source_bin { bin args {host ""} {user ""} {exit_var prg_exit_state} 
-#     {timeout 60} {sub_path "bin"} } 
-#
-#  FUNCTION
-#     Starts a binary in the compile directory (gridengine/source/$buildarch).
-#
-#  INPUTS
-#     bin                       - binary to start, e.g. test_drmaa
-#     args                      - arguments, e.g. "-sel"
-#     {host ""}                 - host on which to execute command
-#     {user ""}                 - user who shall call command
-#     {exit_var prg_exit_state} - variable for returning command exit code
-#     {timeout 60}              - timeout for command execution
-#
-#  RESULT
-#     Output of called command.
-#     The exit code will be placed in exit_var.
-#
-#  SEE ALSO
-#     sge_procedures/start_sge_bin()
-#     remote_procedures/start_remote_prog()
-#*******************************************************************************
-proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {timeout 60} {background 0} {envlist ""}} {
-   global ts_config CHECK_OUTPUT CHECK_USER
-
-   upvar $exit_var exit_state
-  
-   # pass on environment
-   set env_var ""
-   if {$envlist != ""} {
-      upvar $envlist env
-      set env_var env
-   }
-
-   if {$host == ""} {
-      set host $ts_config(master_host)
-   }
-
-   if {$user == ""} {
-      set user $CHECK_USER
-   }
-
-   set arch [resolve_build_arch_installed_libs $host]
-   set ret 0
-   set binary "$ts_config(source_dir)/$arch/$bin"
-
-   debug_puts "executing $binary $args\nas user $user on host $host"
-   # Add " around $args if there are more the 1 args....
-   set result [start_remote_prog $host $user $binary "$args" exit_state $timeout $background $env_var]
-
-   return $result
-}
-
 #****** sge_procedures/get_sge_error_generic() *********************************
 #  NAME
 #     get_sge_error_generic() -- provide a list of generic error messages
@@ -707,19 +649,8 @@ proc start_source_bin {bin args {host ""} {user ""} {exit_var prg_exit_state} {t
 proc get_sge_error_generic {messages_var} {
    upvar $messages_var messages
 
-   # messages indicating insufficient host privileges
-   lappend messages(index) -200
-   lappend messages(index) -201
-   lappend messages(index) -202
-   set messages(-200) "*[translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]"
-   set messages(-201) "*[translate_macro MSG_SGETEXT_NOADMINHOST_S "*"]"
-   set messages(-202) "*[translate_macro MSG_SGETEXT_NOSUBMITHOST_S "*"]"
-
-   # messages indicating insufficient user privileges
-   lappend messages(index) -210
-   lappend messages(index) -211
-   set messages(-210) "*[translate_macro MSG_SGETEXT_MUSTBEMANAGER_S "*"]"
-   set messages(-211) "*[translate_macro MSG_SGETEXT_MUSTBEOPERATOR_S "*"]"
+   lappend messages(index) "-200"
+   set messages(-200) [translate_macro MSG_SGETEXT_NOSUBMITORADMINHOST_S "*"]
 
    get_sge_error_generic_vdep messages
 }
@@ -749,10 +680,6 @@ proc get_sge_error_generic {messages_var} {
 #        -100: sge_qmaster cannot be contacted
 #
 #        -200: host executing command is no admin or submit host
-#        -201: host executing command is no admin host
-#        -202: host executing command is no submit host
-#        -210: user executing command is no manager
-#        -210: user executing command is no operator
 #
 #  INPUTS
 #     procedure       - name of the calling procedure (for error message)
@@ -811,7 +738,6 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     messages_var    - array with possible messages and info how to handle them
 #     {raise_error 1} - whether to raise an error condition (add_proc_error) 
 #                       or not
-#     {prg_exit_state ""} - exit state of sge command
 #
 #  RESULT
 #     error code, for recognized messages the corresponding error code from 
@@ -831,8 +757,10 @@ proc get_sge_error {procedure command result {raise_error 1}} {
 #     check/add_proc_error()
 #     sge_procedures/get_sge_error()
 #*******************************************************************************
+# if {[string match $messages($errno) $result]} {
+# if { ( [string first "$messages($errno)" $result] >= 0 ) } {
 
-proc handle_sge_errors {procedure command result messages_var {raise_error 1} {prg_exit_state ""}} {
+proc handle_sge_errors {procedure command result messages_var {raise_error 1}} {
    upvar $messages_var messages
 
    set ret -999
@@ -853,37 +781,37 @@ proc handle_sge_errors {procedure command result messages_var {raise_error 1} {p
    # in case of errors, do error reporting
    if {$ret < 0} {
       set error_level -1
-      set error_message "$command failed ($ret):\n"
+   } else {
+      set error_level 0
+   }
 
-      if {$ret == -999} {
-         append error_message "$result"
-      } else {
-         # we might have a high level error description
-         if {[info exists messages($ret,description)]} {
-            append error_message "$messages($ret,description)\n"
-            append error_message "command output was:\n"
-         }
+   set error_message "$command failed ($ret):\n"
 
-         append error_message "$result"
-
-         # we might have a special error level (error, warning, unsupported)
-         if {[info exists messages($ret,level)]} {
-            set error_level $messages($ret,level)
-         }
+   if {$ret == -999} {
+      append error_message "$result"
+   } else {
+      # we might have a high level error description
+      if {[info exists messages($ret,description)]} {
+         append error_message "$messages($ret,description)\n"
+         append error_message "command output was:\n"
       }
 
-      # generate error message or just informational/error output
-      add_proc_error $procedure $error_level $error_message $raise_error
+      append error_message "$result"
 
-      if {$prg_exit_state != ""} {
-         if {$prg_exit_state == 0 && $ret < 0} {
-            add_proc_error $procedure -3 "qconf returned 0 while reporting the error message:\n$result"
-         }
-         if {$prg_exit_state != 0 && $ret >= 0} {
-            add_proc_error $procedure -3 "qconf returned error state while its output reports success:\n$result"
-         }
+      # we might have a special error level (error, warning, unsupported)
+      if {[info exists messages($ret,level)]} {
+         set error_level $messages($ret,level)
       }
    }
+
+   # in case of success (errno >= 0), we just want to see the output, not
+   # raise an error
+   if {$ret >= 0} {
+      set raise_error 0
+   }
+
+   # generate error message or just informational/error output
+   add_proc_error $procedure $error_level $error_message $raise_error
 
    return $ret
 }
@@ -945,9 +873,8 @@ proc submit_error_job { jobargs } {
 #
 #*******************************************************************************
 proc submit_wait_type_job { job_type host user {variable qacct_info} } {
-   global ts_config CHECK_OUTPUT
-   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
-   global CHECK_DISPLAY_OUTPUT CHECK_SCRIPT_FILE_DIR
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
+   global CHECK_DISPLAY_OUTPUT ts_config
    upvar $variable qacctinfo
 
 
@@ -1533,6 +1460,146 @@ proc submit_waitjob_job { jobargs wait_job_id} {
 }
 
 
+
+#                                                             max. column:     |
+#****** sge_procedures/set_exechost() ******
+# 
+#  NAME
+#     set_exechost -- set/change exec host configuration
+#
+#  SYNOPSIS
+#     set_exechost { change_array host } 
+#
+#  FUNCTION
+#     Set the exec host configuration corresponding to the content of the 
+#     change_array.
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by set_exechost
+#     host         - name of an execution host
+#
+#  RESULT
+#     The array should look like follows:
+#
+#     set change_array(user_list)   "deadlineusers"
+#     set change_array(load_scaling) "NONE"
+#     ....
+#     (every value that is set will be changed)
+#
+#
+#     Here the possible change_array values with some typical settings:
+#
+#     hostname                   myhost.mydomain
+#     load_scaling               NONE
+#     complex_list               test
+#     complex_values             NONE
+#     user_lists                 deadlineusers
+#     xuser_lists                NONE
+#     projects                   NONE
+#     xprojects                  NONE
+#     usage_scaling              NONE
+#     resource_capability_factor 0.000000       
+# 
+#     return value:
+#     -100 :	unknown error
+#     -1   :	on timeout
+#        0 :	ok
+#
+#  EXAMPLE
+#     get_exechost myconfig expo1
+#     set myconfig(user_lists) NONE
+#     set_exechost myconfig expo1
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     sge_procedures/get_exechost()
+#*******************************
+proc set_exechost { change_array host } {
+   global ts_config
+# the array should look like this:
+#
+# set change_array(load_scaling) NONE
+# ....
+# (every value that is set will be changed)
+# hostname                   myhostname
+# load_scaling               NONE
+# complex_list               test
+# complex_values             NONE
+# user_lists                 deadlineusers
+# xuser_lists                NONE
+# projects                   NONE
+# xprojects                  NONE
+# usage_scaling              NONE
+# resource_capability_factor 0.000000       
+#
+# returns 
+# -1   on timeout
+# 0    if ok
+
+  global env CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER
+
+  upvar $change_array chgar
+
+  set values [array names chgar]
+
+  get_exechost old_values $host
+
+  set vi_commands ""
+  foreach elem $values {
+     # continue on unchangeable values
+     if { [string compare $elem "load_values"] == 0 } {
+        continue;
+     } 
+     if { [string compare $elem "processors"] == 0 } {
+        continue;
+     } 
+     if { [string compare $elem "reschedule_unknown_list"] == 0 } {
+        continue;
+     } 
+
+     # this will quote any / to \/  (for vi - search and replace)
+     set newVal $chgar($elem)
+   
+     if {[info exists old_values($elem)]} {
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [string compare $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$//\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
+        }
+     } else {
+        # if the config entry didn't exist in old config: append a new line
+        lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
+     }
+  } 
+  set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
+  set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
+  if { $result == -2 } {
+     set result 0
+  }
+  if { $result != 0 } {
+     add_proc_error "set_exechost" -1 "could not modifiy exechost $host"
+     set result -1
+  }
+  return $result
+}
+
+
+
+
 #****** sge_procedures/get_loadsensor_path() ***********************************
 #  NAME
 #     get_loadsensor_path() -- get loadsensor for host
@@ -1889,7 +1956,7 @@ proc get_config { change_array {host global}} {
 #*******************************
 proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   global ts_config
-  global env CHECK_ARCH CHECK_OUTPUT
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER
 
    upvar $change_array chgar
@@ -1910,15 +1977,16 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
-  if { $ts_config(gridengine_version) == 53 } {
-     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
-     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
-     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
-  } else {
+  if { $ts_config(gridengine_version) == 60 } {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set EFFECT   [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS] "execd_spool_dir"]
      set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE $EFFECT]
+
+  } else {
+     set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
+     set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "$qconf_cmd $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   }
 
   if { ($ignore_error == 1) && ($result == -4) } {
@@ -1931,16 +1999,16 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   return $result
 }
 
-#****** set_config_and_propagate() *********************************************
+#****** set_config_and_propogate() *********************************************
 #  NAME
-#     set_config_and_propagate() -- set the config for the given host
+#     set_config_and_propogate() -- set the config for the given host
 #
 #  SYNOPSIS
-#     set_config_and_propagate { my_config {host global} } 
+#     set_config_and_propogate { my_config {host global} } 
 #
 #  FUNCTION
 #     Set the given config for the given host, and wait until the change has
-#     propagated.  It knows that the change has progated when the last config
+#     propogated.  It knows that the change has progated when the last config
 #     entry change appears in an execd's messages file.  If the host is global,
 #     an execd is selected from the list of execution daemons.  This method
 #     opens a remote process as $ts_user_config(first_foreign_user).
@@ -1950,7 +2018,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 #     host      the host for which the configuration should be set.  Defaults
 #               to global
 #*******************************************************************************
-proc set_config_and_propagate { config {host global} } {
+proc set_config_and_propogate { config {host global} } {
    global CHECK_OUTPUT CHECK_USER CHECK_HOST ts_config ts_user_config
    global job_environment_config 
 
@@ -1977,8 +2045,8 @@ proc set_config_and_propagate { config {host global} } {
       # Make configuration change
       set_config my_config $host
 
-      # Wait for change to propagate
-      puts $CHECK_OUTPUT "Waiting for configuration change to propagate to execd"
+      # Wait for change to propogate
+      puts $CHECK_OUTPUT "Waiting for configuration change to propogate to execd"
 
       set last_name [lindex [array names my_config] end]
 
@@ -2015,6 +2083,7 @@ proc compare_complex {a b} {
    }
    # compare the complex entry element by element
    for {set i 1} {$i < $len} {incr i} {
+      puts "comparing [lindex $a $i] with [lindex $b $i]"
       if {[string compare -nocase [lindex $a $i] [lindex $b $i]] != 0} {
          return 1
       }
@@ -2047,7 +2116,7 @@ proc compare_complex {a b} {
 #
 #  RESULT
 #     -1   timeout error
-#     -2   host already exists
+#     -2   host allready exists
 #      0   ok 
 #
 #  EXAMPLE
@@ -2078,7 +2147,7 @@ proc compare_complex {a b} {
 #*******************************
 proc add_exechost { change_array {fast_add 1} } {
   global ts_config
-  global env CHECK_ARCH
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
   global CHECK_CORE_MASTER
 
@@ -2179,7 +2248,10 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
          return "job not pending"
       }
    }
-   trigger_scheduling
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
+   # timeout 120
 
    set my_timeout [ expr ( [timestamp] + 30 ) ] 
    puts $CHECK_OUTPUT "waiting for scheduling info information ..."
@@ -2218,7 +2290,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
 }
 
 #                                                             max. column:     |
-#****** sge_procedures/add_userset() ******
+#****** sge_procedures/add_user() ******
 # 
 #  NAME
 #     add_userset -- add a userset with qconf -Au
@@ -2302,10 +2374,10 @@ proc add_userset { change_array } {
      return 0
    }
    if { [ string match "*$ALREADY_EXISTS" $result] } {
-     add_proc_error "add_userset" -1 "\"[set chgar(name)]\" already exists"
+     add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists"
      return -2
    }
-   add_proc_error "add_userset" -1 "\"error adding [set chgar(name)]\""
+   add_proc_error "add_user" -1 "\"error adding [set chgar(name)]\""
    return -100
 }
 
@@ -2486,7 +2558,7 @@ proc del_access_list { list_name } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc add_user {change_array {from_file 0}} {
+proc add_user { change_array { from_file 0 } } {
   global ts_config
   global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
@@ -2549,12 +2621,15 @@ proc add_user {change_array {from_file 0}} {
   return $result
 }
 
+
+
+
 #****** sge_procedures/mod_user() **********************************************
 #  NAME
-#     mod_user() -- ???
+#     mod_user() -- ??? 
 #
 #  SYNOPSIS
-#     mod_user { change_array { from_file 0 } }
+#     mod_user { change_array { from_file 0 } } 
 #
 #  FUNCTION
 #     modify user with qconf -muser or -Muser
@@ -2574,7 +2649,7 @@ proc add_user {change_array {from_file 0}} {
 #*******************************************************************************
 proc mod_user { change_array { from_file 0 } } {
   global ts_config
-  global CHECK_ARCH
+  global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
   upvar $change_array chgar
   set values [array names chgar]
@@ -2626,7 +2701,7 @@ proc mod_user { change_array { from_file 0 } } {
         puts $CHECK_OUTPUT "$elem $org_struct($elem)"
         puts $fd "$elem $org_struct($elem)"
      }
-     close $fd
+     close $fd 
      puts $CHECK_OUTPUT "using file $f_name"
      set result [start_remote_prog $CHECK_HOST $CHECK_USER "qconf" "-Muser $f_name"]
      if { $prg_exit_state != 0 } {
@@ -2634,7 +2709,7 @@ proc mod_user { change_array { from_file 0 } } {
      }
      set result [string trim $result]
      puts $CHECK_OUTPUT "\"$result\""
-     puts $CHECK_OUTPUT "\"$MODIFIED\""
+     puts $CHECK_OUTPUT "\"$MODIFIED\"" 
      if { [ string match "*$MODIFIED" $result] } {
         return 0
      }
@@ -2648,14 +2723,15 @@ proc mod_user { change_array { from_file 0 } } {
 
   set vi_commands [build_vi_command chgar]
 
-  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" " -muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
-
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
+  
   if {$result == -1 } { add_proc_error "mod_user" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "mod_user" -1 "\"[set chgar(name)]\" already exists" }
   if {$result != 0  } { add_proc_error "mod_user" -1 "could not mod user \"[set chgar(name)]\"" }
 
   return $result
 }
+
 
 
 #                                                             max. column:     |
@@ -2683,7 +2759,7 @@ proc mod_user { change_array { from_file 0 } } {
 #*******************************
 proc del_pe { mype_name } {
    global ts_config 
-  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   global CHECK_OUTPUT
 
    unassign_queues_with_pe_object $mype_name
@@ -2726,6 +2802,81 @@ proc del_pe { mype_name } {
 }
 
 #                                                             max. column:     |
+#****** sge_procedures/del_user() ******
+# 
+#  NAME
+#     del_user -- ??? 
+#
+#  SYNOPSIS
+#     del_user { myuser_name } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     myuser_name - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc del_user { myuser_name } {
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER CHECK_OUTPUT
+
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
+     set_error -1 "del_user - not possible for sge systems"
+     return
+  }
+
+  set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
+
+  log_user 0
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
+   
+
+  set sp_id [ lindex $id 1 ]
+  set result -1
+  set timeout 30 	
+  log_user 0 
+
+  expect {
+    -i $sp_id full_buffer {
+      set result -1
+      add_proc_error "del_user" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+    }
+    -i $sp_id "removed" {
+      set result 0
+    }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
+    -i $sp_id default {
+      set result -1
+    }
+  }
+  close_spawn_process $id
+  log_user 1
+  if { $result != 0 } {
+     add_proc_error "del_user" -1 "could not delete user \"$myuser_name\""
+  } else {
+     puts $CHECK_OUTPUT "removed user \"$myuser_name\""
+  }
+  return $result
+}
+
+#                                                             max. column:     |
 #****** sge_procedures/del_calendar() ******
 # 
 #  NAME
@@ -2757,7 +2908,7 @@ proc del_pe { mype_name } {
 #*******************************
 proc del_calendar { mycal_name } {
   global ts_config
-  global CHECK_ARCH CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mycal_name "*" ]
 
@@ -2796,6 +2947,74 @@ proc del_calendar { mycal_name } {
   return $result
 }
 
+
+
+
+#                                                             max. column:     |
+#****** sge_procedures/add_calendar() ******
+# 
+#  NAME
+#     add_calendar -- add new calendar definition object
+#
+#  SYNOPSIS
+#     add_calendar { change_array } 
+#
+#  FUNCTION
+#     This procedure will add/define a new calendar definition object
+#
+#  INPUTS
+#     change_array - name of an array variable that will be set by add_calendar
+#
+#  RESULT
+#     -1   timeout error
+#     -2   calendar allready exists
+#      0   ok
+#
+#  EXAMPLE
+#     set new_cal(calendar_name)  "always_suspend"
+#     set new_cal(year)           "NONE"
+#     set new_cal(week)           "mon-sun=0-24=suspended" 
+#
+#  NOTES
+#     The array should look like this:
+#
+#     set change_array(calendar_name) "mycalendar"
+#     set change_array(year) 	        "NONE"
+#     set change-array(week)          "mon-sun=0-24=suspended"
+#     ....
+#     (every value that is set will be changed)
+#
+#     Here the possible change_array values with some typical settings:
+#
+#     attribute(calendar_name) "test"
+#     attribute(year)          "NONE"
+#     attribute(week)          "NONE"
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc add_calendar { change_array } {
+  global ts_config
+  global env CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+
+  upvar $change_array chgar
+
+  puts $CHECK_OUTPUT "adding calendar $chgar(calendar_name)"
+
+  set vi_commands [build_vi_command chgar]
+
+  # xyz is neccessary, as there is no template for calendards existing!!!
+  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
+  if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
+  if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
+  if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add calendar \"[set chgar(calendar_name)]\"" }
+  return $result
+}
+
+
 #                                                             max. column:     |
 #****** sge_procedures/was_job_running() ******
 # 
@@ -2824,7 +3043,7 @@ proc del_calendar { mycal_name } {
 #*******************************
 proc was_job_running {jobid {do_errorcheck 1} } {
   global ts_config
-  global CHECK_ARCH check_timestamp CHECK_OUTPUT
+  global CHECK_ARCH open_spawn_buffer check_timestamp CHECK_OUTPUT
 # returns
 # -1 on error
 # qacct in listform else
@@ -2849,6 +3068,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 
   set return_value [lreplace $result 0 0]
   return $return_value
+
 }
 
 
@@ -3556,517 +3776,7 @@ proc mhattr { attribute entry host_name { add_error 1 } } {
 }
 
 
-#****** sge_procedures/mod_attr() ******************************************
-#  NAME
-#     mod_attr() -- modify an attribute 
-#
-#  SYNOPSIS
-#     mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
-#
-#  FUNCTION
-#     Modifies attribute of object with value for object_instance
-#
-#  INPUTS
-#     object       - object we are modifying 
-#     attribute    - attribute of object we are modifying 
-#     value        - value of attribute of object we are modifying 
-#     target       - target object
-#     {fast_add 1} - 0: modify the attribute using qconf -mattr, 
-#                  - 1: modify the attribute using qconf -Mattr, faster
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     integer value  0 on success, -2 on error
-#
-#*******************************************************************************
-proc mod_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
-   global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
 
-   puts $CHECK_OUTPUT "Modifying object \"$object\" attribute  \"$attribute\" value \"$value\" for target \"$target\" "
-
-   # add queue from file?
-    if { $fast_add } {
-      set default_array($attribute) "$value"
-      set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Mattr $object $tmpfile $target"  $on_host $as_user]
-  
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [mod_attr_file_error $result $object $attribute $tmpfile $target $raise_error]   
-      }
-
-   } else {
-      # add by -mattr
-
-      set result [start_sge_bin "qconf" "-mattr  $object $attribute $value $target" $on_host $as_user ] 
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [mod_attr_error $result $object $attribute $value $target $raise_error]
-      }
-
-   }
-
-   return $ret
-}
-
-#****** sge_procedures/mod_attr_error() ***************************************
-#  NAME
-#     mod_attr_error() -- error handling for mod_attr
-#
-#  SYNOPSIS
-#     mod_attr_error {result object attribute value target raise_error }
-#
-#  FUNCTION
-#     Does the error handling for mod_attr.
-#     Translates possible error messages of qconf -mattr,
-#     builds the datastructure required for the handle_sge_errors
-#     function call.
-#
-#     The error handling function has been intentionally separated from
-#     mod_attr. While the qconf call and parsing the result is
-#     version independent, the error messages (macros) usually are version
-#     dependent.
-#
-#  INPUTS
-#     result      - qconf output
-#     object      - object qconf is modifying
-#     tmpfile     - temp file for qconf -Mattr
-#     attribute    - attribute of object we are modifying
-#     value        - value of attribute of object we are modifying
-#     target      - target object
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     Returncode for mod_attr function:
-#      -1: "wrong_attr" is not an attribute
-#     -99: other error
-#
-#  SEE ALSO
-#     sge_calendar/get_calendar
-#     sge_procedures/handle_sge_errors
-#*******************************************************************************
-proc mod_attr_file_error {result object attribute tmpfile target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]"
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "mod_attr" "qconf -Mattr $object $tmpfile $target" $result messages $raise_error]
-
-   return $ret
-}
-
-proc mod_attr_error {result object attribute value target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "mod_attr" "qconf -mattr $object $attribute $value $target" $result messages $raise_error]
-
-   return $ret
-}
-
-
-
-#****** sge_procedures/get_attr() ******************************************
-#  NAME
-#     get_attr() -- get an attribute
-#
-#  SYNOPSIS
-#     get_attr {object attribute  target {on_host ""} {as_user ""} {raise_error 1}}
-#
-#  FUNCTION
-#     Get attribute of object 
-#
-#  INPUTS
-#     object       - object we are getting 
-#     attribute    - attribute of object we are modifying
-#     target       - target object
-#     {on_host ""}    - execute qconf on this host, default is master host
-#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
-#     {raise_error 1} - raise an error condition on error (default), or just
-#                       output the error message to stdout
-#
-#  RESULT
-#     array of attribute information
-#
-#*******************************************************************************
-proc get_attr { object attribute target {on_host ""} {as_user ""} {raise_error 1} } {
-
-   return [get_qconf_list "get_attr" "-sobjl $object $attribute $target " out $on_host $as_user $raise_error]
-
-}
-#****** sge_procedures/del_attr() ******************************************
-#  NAME
-#     del_attr() -- Delete an attribute
-#
-#  SYNOPSIS
-#     del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
-#
-#  FUNCTION
-#     Delete attribute of object
-#
-#  INPUTS
-#     object       - object we are deleting 
-#     attribute    - attribute of queue we are deleting 
-#     value        - value of attribute we are deleting 
-#     target       - target object
-#     {on_host ""}    - execute qconf on this host, default is master host
-#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
-#     {fast_add 1} - 0: modify the attribute using qconf -dattr,
-#                  - 1: modify the attribute using qconf -Dattr, faster
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     integer value  0 on success, -2 on error
-#
-#*******************************************************************************
-proc del_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
-   global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
-
-   puts $CHECK_OUTPUT "Deleting attribute \"$attribute\" for object \"$object\""
-
-   # add queue from file?
-    if { $fast_add } {
-      set default_array($attribute) "$value"
-      set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Dattr $object $tmpfile $target" $on_host $as_user]
-
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [del_attr_file_error $result $object $tmpfile  $attribute $target $raise_error]
-      }
-
-
-   } else {
-   # add by -dattr
-
-      set result [start_sge_bin "qconf" "-dattr $object $attribute $value $target" $on_host $as_user]
-
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [del_attr_error $result $object $attribute $value $target $raise_error]
-      }
-
-   }
- 
-   return $ret
-}
-
-#****** sge_procedures/del_attr_error() ***************************************
-#  NAME
-#     del_attr_error() -- error handling for del_attr_
-#
-#  SYNOPSIS
-#     del_attr_error {result object attribute value target raise_error }
-#
-#  FUNCTION
-#     Does the error handling for mod_attr.
-#     Translates possible error messages of qconf -dattr,
-#     builds the datastructure required for the handle_sge_errors
-#     function call.
-#
-#     The error handling function has been intentionally separated from
-#     mod_attr. While the qconf call and parsing the result is
-#     version independent, the error messages (macros) usually are version
-#     dependent.
-#
-#  INPUTS
-#     result      - qconf output
-#     object      - object qconf is modifying
-#     attribute    - attribute of object we are modifying
-#     value        - value of attribute of object we are modifying
-#     target      - target object
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     Returncode for del_attr function:
-#      -1: "wrong_attr" is not an attribute
-#     -99: other error
-#
-#  SEE ALSO
-#     sge_calendar/get_calendar
-#     sge_procedures/handle_sge_errors
-#*******************************************************************************
-proc del_attr_error {result object attribute value target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "del_attr" "qconf -dattr $object $attribute $value $target" $result messages $raise_error]
-
-   return $ret
-}
-
-proc del_attr_file_error {result object tmpfile attribute target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "del_attr" "qconf -Dattr $object $tmpfile $target " $result messages $raise_error]
-
-   return $ret
-}
-
-
-#****** sge_procedures/add_attr() ******************************************
-#  NAME
-#    add_attr () -- add an attribute
-#
-#  SYNOPSIS
-#     add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}}
-#
-#  FUNCTION
-#     Modifies attribute of object with value for object_instance
-#
-#  INPUTS
-#     object       - object we are modifying 
-#     attribute    - attribute of queue we are modifying 
-#     value        - value of attribute of object we are modifying 
-#     target       - target object
-#     {on_host ""}    - execute qconf on this host, default is master host
-#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
-#     {fast_add 1} - 0: modify the attribute using qconf -aattr,
-#                  - 1: modify the attribute using qconf -Aattr, faster
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     integer value  0 on success, -2 on error
-#
-#*******************************************************************************
-proc add_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1}} {
-   global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
-
-   puts $CHECK_OUTPUT "Adding attribute \"$attribute\" for object \"$object\""
-
-   # add queue from file?
-    if { $fast_add } {
-      set default_array($attribute) "$value"
-      set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Aattr $object $tmpfile $target" $on_host $as_user]
-
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [add_attr_file_error $result $object $tmpfile  $attribute $target $raise_error]
-      }
-
-
-   } else {
-      # add by -aattr
-
-      set result [start_sge_bin "qconf" "-aattr  $object $attribute $value $target" $on_host $as_user]
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [add_attr_error $result $object $attribute $value $target $raise_error]
-      }
-
-   }
-
-   return $ret
-}
-
-#****** sge_procedures/add_attr_error() ***************************************
-#  NAME
-#     add_attr_error() -- error handling for add_attr
-#
-#  SYNOPSIS
-#     add_attr_error {result object attribute value target raise_error }
-#
-#  FUNCTION
-#     Does the error handling for add_attr.
-#     Translates possible error messages of qconf -aattr,
-#     builds the datastructure required for the handle_sge_errors
-#     function call.
-#
-#     The error handling function has been intentionally separated from
-#     add_attr. While the qconf call and parsing the result is
-#     version independent, the error messages (macros) usually are version
-#     dependent.
-#
-#  INPUTS
-#     result      - qconf output
-#     object      - object qconf is modifying
-#     attribute    - attribute of object we are modifying
-#     value        - value of attribute of object we are modifying
-#     target      - target object
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     Returncode for add_attr function:
-#      -1: "wrong_attr" is not an attribute
-#     -99: other error
-#
-#  SEE ALSO
-#     sge_calendar/get_calendar
-#     sge_procedures/handle_sge_errors
-#*******************************************************************************
-proc add_attr_error {result object attribute value target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "add_attr" "qconf -aattr $object $attribute $value $target" $result messages $raise_error]
-
-   return $ret
-}
-
-proc add_attr_file_error {result object tmpfile attribute target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "add_attr" "qconf -Aattr $object $tmpfile $target " $result messages $raise_error]
-
-   return $ret
-}
-
-
-#****** sge_procedures/replace_attr() ******************************************
-#  NAME
-#     replace_attr() -- Replace an attribute
-#
-#  SYNOPSIS
-#     replace_attr {object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} }
-#
-#  FUNCTION
-#     Replace attribute of object
-#
-#  INPUTS
-#     object       - object we are deleting 
-#     attribute    - attribute of object we are deleting 
-#     value        - value of attribute we are deleting
-#     target       - target object
-#     {fast_add 1} - 0: modify the attribute using qconf -rattr,
-#                  - 1: modify the attribute using qconf -Rattr, faster
-#     {on_host ""}    - execute qconf on this host, default is master host
-#     {as_user ""}    - execute qconf as this user, default is $CHECK_USER
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     integer value  0 on success, -2 on error
-#
-#*******************************************************************************
-proc replace_attr { object attribute value target {fast_add 1} {on_host ""} {as_user ""} {raise_error 1} } {
-   global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_USER CHECK_HOST
-
-   puts $CHECK_OUTPUT "Replacing attribute \"$attribute\" of object \"$object\""
-
-   # add queue from file?
-    if { $fast_add } {
-      set default_array($attribute) "$value"
-      set tmpfile [dump_array_to_tmpfile default_array]
-      set result [start_sge_bin "qconf" "-Rattr $object $tmpfile $target" $on_host $as_user]
-
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [replace_attr_file_error $result $object $attribute $tmpfile $target $raise_error] }
-
-   } else {
-   # add by -rattr
-
-   set result [start_sge_bin "qconf" "-rattr $object $attribute $value $target" $on_host $as_user ]
-
-      if {$prg_exit_state == 0} {
-         set ret 0
-      } else {
-         set ret [replace_attr_error $result $object $attribute $value $target $raise_error]
-      }
-
-   }
-
-   return $ret
-
-}
-
-#****** sge_procedures/replace_attr_error() ***************************************
-#  NAME
-#     replace_attr_error() -- error handling for replace_attr
-#
-#  SYNOPSIS
-#     replace_attr_error {result object attribute value target raise_error }
-#
-#  FUNCTION
-#     Does the error handling for mod_attr.
-#     Translates possible error messages of qconf -rattr,
-#     builds the datastructure required for the handle_sge_errors
-#     function call.
-#
-#     The error handling function has been intentionally separated from
-#     replace_attr. While the qconf call and parsing the result is
-#     version independent, the error messages (macros) usually are version
-#     dependent.
-#
-#  INPUTS
-#     result      - qconf output
-#     object      - object qconf is modifying
-#     attribute    - attribute of object we are modifying
-#     value        - value of attribute of object we are modifying
-#     target      - target object
-#     raise_error - do add_proc_error in case of errors
-#
-#  RESULT
-#     Returncode for replace_attr function:
-#      -1: "wrong_attr" is not an attribute
-#     -99: other error
-#
-#  SEE ALSO
-#     sge_calendar/get_calendar
-#     sge_procedures/handle_sge_errors
-#*******************************************************************************
-proc replace_attr_error {result object attribute value target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) [translate_macro MSG_PARSE_BAD_ATTR_ARGS_SS $attribute $value]
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "replace_attr" "qconf -rattr $object $attribute $value $target" $result messages $raise_error]
-
-   return $ret
-}
-
-
-proc replace_attr_file_error {result object attribute tmpfile target raise_error} {
-
-   # recognize certain error messages and return special return code
-   set messages(index) "-1"
-   set messages(-1) "error: [translate_macro MSG_UNKNOWNATTRIBUTENAME_S $attribute ]"
-
-   set ret 0
-   # now evaluate return code and raise errors
-   set ret [handle_sge_errors "replace_attr" "qconf -Rattr $object $tmpfile $target" $result messages $raise_error]
-
-   return $ret
-}
 
 #                                                             max. column:     |
 #****** sge_procedures/suspend_job() ******
@@ -4094,7 +3804,7 @@ proc replace_attr_file_error {result object attribute tmpfile target raise_error
 #*******************************
 proc suspend_job { id {force 0} {error_check 1}} {
    global ts_config
-   global CHECK_OUTPUT CHECK_ARCH CHECK_USER CHECK_HOST
+   global CHECK_OUTPUT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
 
    set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] $CHECK_USER $id "*" ]
    set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] $CHECK_USER $id ]
@@ -4190,7 +3900,7 @@ proc suspend_job { id {force 0} {error_check 1}} {
 #*******************************
 proc unsuspend_job { job } {
   global ts_config
-  global CHECK_ARCH CHECK_HOST CHECK_USER
+  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
 
 
   set UNSUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDTASK_SUU] "*" "*" "*" ]
@@ -4307,7 +4017,7 @@ proc is_job_id { job_id } {
 #*******************************
 proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
    global ts_config
-   global CHECK_ARCH CHECK_OUTPUT CHECK_HOST
+   global CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
    global CHECK_USER
 
 
@@ -4461,7 +4171,6 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 #       -13   unkown option - error
 #       -22   user tries to submit a job with a deadline, but the user is not in
 #             the deadline user access list
-#
 #      -100   on error 
 #     
 #
@@ -4478,7 +4187,7 @@ proc delete_job { jobid {wait_for_end 0} {all_users 0}} {
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
   global ts_config
   global CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
-  global CHECK_DEBUG_LEVEL
+  global open_spawn_buffer CHECK_DEBUG_LEVEL
 
   set return_value " "
 
@@ -4492,40 +4201,26 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 
   set arch [resolve_arch $host]
 
-  if { $ts_config(gridengine_version) == 53 } {
-     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
-     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
-     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_U] "*"]
-     set NAMETOOLONG         "blah blah blah no NAMETOOLONG in 5.3"
-     set INVALID_JOB_REQUEST "blah blah blah no INVALID_JOB_REQUEST in 5.3"
-     set UNKNOWN_QUEUE [translate_macro MSG_JOB_QUNKNOWN_S "*"]
-     set POSITIVE_PRIO "blah blah blah no POSITIVE_PRIO in 5.3"
-  } else {
-     # 6.0 and higher
+  if { $ts_config(gridengine_version) == 60 } {
      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
      set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_S] "*"]
      set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE_S] ]
-     set NAMETOOLONG         [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NAMETOOLONG_I] "*"]
-     set JOBALREADYEXISTS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_JOBALREADYEXISTS_S] "*"]
-     set INVALID_JOB_REQUEST [translate $CHECK_HOST 1 0 0 [sge_macro MSG_INVALIDJOB_REQUEST_S] "*"]
-     set UNKNOWN_QUEUE [translate_macro MSG_QREF_QUNKNOWN_S "*"]
-     if {$ts_config(gridengine_version) == 60} {
-        set POSITIVE_PRIO "blah blah blah no POSITIVE_PRIO in 6.0"
-     } else {
-        # 6.5 and higher
-        set POSITIVE_PRIO [translate_macro MSG_JOB_NONADMINPRIO]
-     }
+     set WRONG_TYPE          [translate $CHECK_HOST 0 0 0 [sge_macro MSG_QSUB_COULDNOTRUNJOB_S] "*"]
+  } else {
+     set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+     set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
+     set SUCCESSFULLY        [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U] "*"]
+     set UNKNOWN_RESOURCE2   [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
+     set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   }
 
-  set INVALID_PRIORITY [translate_macro MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024]
-  set WRONG_TYPE          [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CPLX_WRONGTYPE_SSS] "*" "*" "*"]
   set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
   set NO_DEADLINE_USER    [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NODEADLINEUSER_S] $user ]
 
+
+  
 
   set JOB_ARRAY_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "*" "*" "*" "*" "*" "*" ]
   set JOB_ARRAY_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "__JOB_ID__" "" "" "" "__JOB_NAME__" "__JOB_ARG__"]
@@ -4558,8 +4253,19 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set GDI_INITIALPORTIONSTRINGNODECIMAL_S [translate $CHECK_HOST 0 0 0 [sge_macro MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S] "*" ] 
 
 
-  set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
-  set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":"]
+  if { $ts_config(gridengine_version) == 60 } {
+#     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED]]
+#     "Colon (':') not allowed in account string"
+
+#      "Unable to run job: : not allowed in objectname."
+      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_S] ":" ]
+
+
+  } else {
+     set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
+  }
+
 
   append USAGE " qsub"
 
@@ -4596,7 +4302,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           }
           -i $sp_id timeout {
              puts $CHECK_OUTPUT "submit_job - timeout(1)"
-             add_proc_error "submit_job" "-1" "got timeout(1) error"
+             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\""
              set return_value -1 
           }
           -i $sp_id eof {
@@ -4706,7 +4412,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                    add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                 }
                 -i $sp_id timeout {
-                   puts $CHECK_OUTPUT "submit_job - timeout(3)"
+                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
                    set return_value -1 
                 }
                 -i $sp_id "_exit_status_" {
@@ -4749,7 +4455,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                    add_proc_error "submit_job" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                 }
                 -i $sp_id timeout {
-                   puts $CHECK_OUTPUT "submit_job - timeout(4)"
+                   puts $CHECK_OUTPUT "submit_job - timeout(2)"
                    set return_value -1 
                 }
                 -i $sp_id "_exit_status_" {
@@ -4772,7 +4478,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
    
           }
    
-          -i $sp_id "usage: qsub" {
+          -i $sp_id -- "usage: qsub" {
              puts $CHECK_OUTPUT "got usage ..."
              if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
                 set return_value -2 
@@ -4780,7 +4486,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
                 set return_value -3
              }
           } 
-          -i $sp_id $USAGE {
+          -i $sp_id -- $USAGE {
              puts $CHECK_OUTPUT "got usage ..."
              if {([string first "help" $args] >= 0 ) || ([string first "commandfile" $args] >= 0)} {
                 set return_value -2 
@@ -4789,125 +4495,107 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
              }
           } 
    
-          -i $sp_id "job_number" {
+          -i $sp_id -- "job_number" {
             if {[string first "verify" $args] >= 0 } {
                set return_value -4
             } else {
                set return_value -5
             } 
           }
-          -i $sp_id $TO_MUCH_TASKS {
+          -i $sp_id --  $TO_MUCH_TASKS {
              set return_value -7
           }
-          -i $sp_id "submit a job with more than" {
+          -i $sp_id -- "submit a job with more than" {
              set return_value -7
           }
-          -i $sp_id $UNKNOWN_RESOURCE1 {
+          -i $sp_id -- $UNKNOWN_RESOURCE1 {
              set return_value -8
           }
-          -i $sp_id $UNKNOWN_RESOURCE2 {
+          -i $sp_id -- $UNKNOWN_RESOURCE2 {
              set return_value -8
           }
-          -i $sp_id "unknown resource" {
+          -i $sp_id -- "unknown resource" {
              set return_value -8
           }
-          -i $sp_id $CAN_T_RESOLVE {
+          -i $sp_id --  $CAN_T_RESOLVE {
              set return_value -9
           }
-          -i $sp_id "can't resolve hostname" {
+          -i $sp_id -- "can't resolve hostname" {
              set return_value -9
           }
-          -i $sp_id $NOT_REQUESTABLE {
+          -i $sp_id --  $NOT_REQUESTABLE {
              set return_value -10
           }
-          -i $sp_id "configured as non requestable" {
+          -i $sp_id -- "configured as non requestable" {
              set return_value -10
           }
           
-          -i $sp_id $NOT_ALLOWED1 {
+          -i $sp_id --  $NOT_ALLOWED1 {
              set return_value -11
           }       
-          -i $sp_id $NOT_ALLOWED2 {
+          -i $sp_id --  $NOT_ALLOWED2 {
              set return_value -11
           }       
-          -i $sp_id "not allowed to submit jobs" {
+          -i $sp_id -- "not allowed to submit jobs" {
              set return_value -11
           }
-          -i $sp_id $NO_ACC_TO_PRJ1 {
+          -i $sp_id --  $NO_ACC_TO_PRJ1 {
              puts $CHECK_OUTPUT "got string(2): \"$expect_out(0,string)\""
              set return_value -12
           }
-          -i $sp_id $NO_ACC_TO_PRJ2 {
+          -i $sp_id --  $NO_ACC_TO_PRJ2 {
          
              set return_value -12
           }
-          -i $sp_id "no access to project" {
+          -i $sp_id -- "no access to project" {
              set return_value -12
           }
-          -i $sp_id $UNKNOWN_OPTION {
+          -i $sp_id -- $UNKNOWN_OPTION {
              set return_value -13
           }
-          -i $sp_id "Unknown option" {
+          -i $sp_id -- "Unknown option" {
              set return_value -13
           }
-          -i $sp_id $NON_AMBIGUOUS {
+          -i $sp_id -- $NON_AMBIGUOUS {
              set return_value -14
           }
-          -i $sp_id "non-ambiguous jobnet predecessor" {
+          -i $sp_id -- "non-ambiguous jobnet predecessor" {
              set return_value -14
           }
-          -i $sp_id $UNAMBIGUOUSNESS {
+          -i $sp_id -- $UNAMBIGUOUSNESS {
              set return_value -15
           }
-          -i $sp_id "using job name \"*\" for*violates reference unambiguousness" {
+          -i $sp_id -- "using job name \"*\" for*violates reference unambiguousness" {
              set return_value -15
           }
-          -i $sp_id $ERROR_OPENING {
+          -i $sp_id -- $ERROR_OPENING {
              set return_value -16
           }
-          -i $sp_id $COLON_NOT_ALLOWED {
+          -i $sp_id -- $COLON_NOT_ALLOWED {
              set return_value -17
           }
-          -i $sp_id $ONLY_ONE_RANGE {
+          -i $sp_id -- $ONLY_ONE_RANGE {
              set return_value -18
           }
-          -i $sp_id "$PARSE_DUPLICATEHOSTINFILESPEC" { 
+          -i $sp_id -- "$PARSE_DUPLICATEHOSTINFILESPEC" { 
              set return_value -19
           }
-          -i $sp_id "two files are specified for the same host" { 
+          -i $sp_id -- "two files are specified for the same host" { 
              set return_value -19
           }
          
-          -i $sp_id $GDI_NEGATIVSTEP { 
+          -i $sp_id -- $GDI_NEGATIVSTEP { 
              set return_value -20
           }
 
-          -i $sp_id $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
+          -i $sp_id -- $GDI_INITIALPORTIONSTRINGNODECIMAL_S { 
              set return_value -21
           }
-          -i $sp_id $NO_DEADLINE_USER {
+          -i $sp_id -- $NO_DEADLINE_USER {
              set return_value -22
           }
-          -i $sp_id $WRONG_TYPE {
+          -i $sp_id -- $WRONG_TYPE {
              set return_value -23
-          }
-          -i $sp_id $NAMETOOLONG {
-             set return_value -24
-          }
-          -i $sp_id $JOBALREADYEXISTS {
-             set return_value -25
-          }
-          -i $sp_id $INVALID_JOB_REQUEST {
-             set return_value -26
-          }
-          -i $sp_id $INVALID_PRIORITY {
-             set return_value -27
-          }
-          -i $sp_id $UNKNOWN_QUEUE {
-             set return_value -28
-          }
-          -i $sp_id -- $POSITIVE_PRIO {
-             set return_value -29
           }
         }
      }
@@ -4945,12 +4633,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-21" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-22" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-23" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-24" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-25" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-26" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-27" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-28" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
-          "-29" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -5010,12 +4693,6 @@ proc get_submit_error { error_id } {
       "-21" { return "-t step of range must be a decimal number" }
       "-22" { return "user is not in access list deadlineusers" }
       "-23" { return "wrong type for submit -l option" }
-      "-24" { return "the job name (-N option) is too long" }
-      "-25" { return "duplicate job id found - issue 2028?" }
-      "-26" { return "general job verification error?" }
-      "-27" { return "invalid priority given with -p switch" }
-      "-28" { return "unknown queue requested" }
-      "-29" { return "positive priority requested as non operator" }
 
       default { return "unknown error" }
    }
@@ -5890,9 +5567,11 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
      return -1
   }
 
-   if {$do_tsm == 1} {
-      trigger_scheduling
-   }
+  if { $do_tsm == 1 } {
+     puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+     catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
+     puts $CHECK_OUTPUT $result
+  }
 
   puts $CHECK_OUTPUT "Waiting for start of job $jobid ($jobname)"
   if { $do_errorcheck != 1 } {
@@ -6016,7 +5695,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     jobid   - job identification number
 #     jobname - name of the job
 #     seconds - timeout value in seconds
-#     { or_running 0 } - if job is already running, report no error
+#     { or_running 0 } - if job is allready running, report no error
 #
 #  RESULT
 #     -1  on timeout
@@ -6035,12 +5714,15 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobpending {jobid jobname seconds {or_running 0}} {
-  global ts_config CHECK_OUTPUT
+proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
+  global ts_config
+  
+  global CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "Waiting for job $jobid ($jobname) to get in pending state"
+ 
 
-  if {[is_job_id $jobid] != 1} {
+  if { [is_job_id $jobid] != 1} {
      puts $CHECK_OUTPUT "job is not integer"
      add_proc_error "wait_for_jobpending" -1 "unexpected job id: $jobid"
      return -1
@@ -6094,7 +5776,7 @@ proc wait_for_jobpending {jobid jobname seconds {or_running 0}} {
 proc hold_job { jobid } {
   global ts_config
 
-   global CHECK_ARCH  CHECK_HOST CHECK_USER
+   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
 
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
 
@@ -6162,7 +5844,7 @@ proc hold_job { jobid } {
 proc release_job { jobid } {
   global ts_config
 
-   global CHECK_ARCH  CHECK_HOST CHECK_USER
+   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
  
    # spawn process
    log_user 0
@@ -6501,7 +6183,7 @@ proc startup_execd_raw { hostname {envlist ""}} {
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
    if { [string match "*$ALREADY_RUNNING" $output ] } {
-      add_proc_error "startup_execd" -1 "execd on host $hostname is already running"
+      add_proc_error "startup_execd" -1 "execd on host $hostname is allready running"
       return -1
    }
    return 0
@@ -7269,7 +6951,7 @@ proc shutdown_system_daemon { host typelist { do_term_signal_kill_first 1 } } {
 #     sge_procedures/startup_execd()
 #     sge_procedures/startup_shadowd()
 #*******************************
-proc shutdown_core_system { { only_hooks 0 } } {
+proc shutdown_core_system {} {
    global ts_config
    global CHECK_ARCH 
    global CHECK_CORE_MASTER 
@@ -7278,11 +6960,6 @@ proc shutdown_core_system { { only_hooks 0 } } {
    global CHECK_ADMIN_USER_SYSTEM do_compile
 
    exec_shutdown_hooks
-
-   if { $only_hooks != 0 } {
-      puts $CHECK_OUTPUT "skip shutdown core system, I am in only hooks mode"
-      return
-   }
    
    foreach sh_host $ts_config(shadowd_hosts) {
       shutdown_all_shadowd $sh_host
@@ -7399,7 +7076,7 @@ proc shutdown_core_system { { only_hooks 0 } } {
    # core files in execd spool directories
    foreach host $ts_config(execd_nodes) { 
       set spooldir [get_spool_dir $host execd] 
-      check_for_core_files $host "$spooldir"
+      check_for_core_files $host "$spooldir/$host"
    }
 }
 
@@ -7510,7 +7187,7 @@ proc wait_till_qmaster_is_down { host } {
 
    set process_names "sge_qmaster" 
    
-   set my_timeout [ expr ( [timestamp] + 60 ) ] 
+   set my_timeout [ expr ( [timestamp] + 180 ) ] 
 
    while { 1 } {
       set found_p [ ps_grep "$ts_config(product_root)/" $host ]
@@ -7733,8 +7410,7 @@ if { [info exists argc ] != 0 } {
 #     ???/???
 #*******************************************************************************
 proc copy_certificates { host } {
-   global ts_config ts_user_config
-   global CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_OUTPUT ts_config CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    set remote_arch [resolve_arch $host]
    
@@ -7750,11 +7426,6 @@ proc copy_certificates { host } {
       puts $CHECK_OUTPUT "we have root access, fine !"
       set CA_ROOT_DIR "/var/sgeCA"
       set TAR_FILE "${CA_ROOT_DIR}/port${ts_config(commd_port)}.tar"
-      if {$remote_arch == "win32-x86"} {
-         set UNTAR_OPTS "-xvf"
-      } else {
-         set UNTAR_OPTS "-xpvf"
-      }
 
       puts $CHECK_OUTPUT "removing existing tar file \"$TAR_FILE\" ..."
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
@@ -7762,7 +7433,7 @@ proc copy_certificates { host } {
 
       puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$TAR_FILE\""
       set tar_bin [get_binary_path $ts_config(master_host) "tar"]
-      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cpvf $TAR_FILE ./port${ts_config(commd_port)}/*"
+      set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf $TAR_FILE ./port${ts_config(commd_port)}/*"
       set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$remote_command_param" ]
       puts $CHECK_OUTPUT $result
 
@@ -7788,7 +7459,7 @@ proc copy_certificates { host } {
             set result [ start_remote_prog "$host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
          }   
 
-         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} $UNTAR_OPTS $TAR_FILE" prg_exit_state 300 ]
+         set result [ start_remote_prog "$host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" prg_exit_state 300 ]
          puts $CHECK_OUTPUT $result
          if { $prg_exit_state != 0 } {
             add_proc_error "copy_certificates" -2 "could not untar \"$TAR_FILE\" on host $host;\ntar-bin:$tar_bin"
@@ -7807,15 +7478,6 @@ proc copy_certificates { host } {
       set result [ start_remote_prog "$ts_config(master_host)" "root" "rm" "$TAR_FILE" ]
       puts $CHECK_OUTPUT $result
 
-      # on windows, we have to correct the file permissions
-      if {$remote_arch == "win32-x86"} {
-         puts $CHECK_OUTPUT "correcting certificate file permissions on windows host"
-         set users "$CHECK_USER $ts_user_config(first_foreign_user) $ts_user_config(second_foreign_user)"
-         foreach user $users {
-            start_remote_prog $host "root" "chown" "-R $user /var/sgeCA/port${ts_config(commd_port)}/default/userkeys/$user"
-         }
-      }
-
       # check for syncron clock times
       set my_timeout [timestamp]
       incr my_timeout 600
@@ -7832,7 +7494,7 @@ proc copy_certificates { host } {
          if { [timestamp] > $my_timeout } {
             add_proc_error "copy_certificates" -2 "$host: timeout while waiting for qstat to work (please check hosts for synchron clock times)"
          }
-      }
+      } 
    } else {
       puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
       puts $CHECK_OUTPUT "installation error"
@@ -8167,67 +7829,3 @@ proc get_event_client_list {{output_var result} {on_host ""} {as_user ""} {raise
 
 }
 
-#****** sge_procedures/trigger_scheduling() ************************************
-#  NAME
-#     trigger_scheduling() -- trigger a scheduler run
-#
-#  SYNOPSIS
-#     trigger_scheduling { } 
-#
-#  FUNCTION
-#     Triggers a scheduler run by calling qconf -tsm.
-#*******************************************************************************
-proc trigger_scheduling {} {
-   global CHECK_OUTPUT
-
-   puts $CHECK_OUTPUT "triggering scheduler run"
-
-   set output [start_sge_bin "qconf" "-tsm"]
-   if {$prg_exit_state != 0} {
-      add_proc_error "trigger_scheduling" -1 "qconf -tsm failed:\n$output"
-   }
-}
-
-#****** sge_procedures/wait_for_job_end() **************************************
-#  NAME
-#     wait_for_job_end() -- waits for a job to leave qmaster
-#
-#  SYNOPSIS
-#     wait_for_job_end { job_id {timeout 60} } 
-#
-#  FUNCTION
-#     Waits until a job is no longer referenced in qmaster (after sge_schedd
-#     has sent a job delete order to sge_qmaster).
-#
-#  INPUTS
-#     job_id       - job id to wait for
-#     {timeout 60} - how long to wait
-#
-#  SEE ALSO
-#     sge_procedures/get_qstat_j_info()
-#*******************************************************************************
-proc wait_for_job_end {job_id {timeout 60}} {
-   global ts_config CHECK_OUTPUT
-
-   # we wait until now + timeout
-   set my_timeout [expr [timestamp] + $timeout]
-
-   # if the job is still in qmaster, wait until it leaves qmaster
-   if {[get_qstat_j_info $job_id] != 0} {
-      puts -nonewline $CHECK_OUTPUT "waiting for job $job_id to leave qmaster ..."
-      flush $CHECK_OUTPUT
-
-      sleep 1
-      while {[get_qstat_j_info $job_id] != 0} {
-         puts -nonewline $CHECK_OUTPUT "."
-         flush $CHECK_OUTPUT
-         if {[timestamp] > $my_timeout} {
-            add_proc_error "delete_job" -1 "timeout while waiting for job $job_id leave qmaster"
-            break
-         }
-
-         sleep 1
-      }
-      puts $CHECK_OUTPUT ""
-   }
-}

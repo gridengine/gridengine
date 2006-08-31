@@ -43,8 +43,8 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_answer.h"
 #include "sge_utility.h"
+#include "sge_answer.h"
 #include "version.h"
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -137,7 +137,7 @@ int feature_get_already_read_from_file(void)
    return feature_state->already_read_from_file;
 }
 
-/****** sgeobj/feature/feature_get_master_featureset_list() *******************
+/****** sgeobj/feature/feature_get_already_read_from_file() *******************
 *  NAME
 *     feature_get_master_featureset_list()
 *
@@ -511,10 +511,6 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
          ret = short_name;
          break;
    }
-#ifdef DAILY_BUILD_NUMBER
-   sge_dstring_sprintf_append(buffer, " (build %d)", DAILY_BUILD_NUMBER);
-#endif
-
    DEXIT;
    return ret;
 }

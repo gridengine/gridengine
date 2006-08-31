@@ -449,7 +449,6 @@ create_checkpointed_file(int ckpt_is_in_arena)
    } else {
       shepherd_error_sprintf(MSG_FILE_NOOPEN_SS, filename, strerror(errno));
    }
-   return;
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    shepherd_error_sprintf(MSG_FILE_NOCLOSE_SS, filename, strerror(errno));

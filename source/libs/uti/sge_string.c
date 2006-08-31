@@ -185,7 +185,7 @@ const char *sge_jobname(const char *name) {
 ******************************************************************************/
 char *sge_dirname(const char *name, int delim) 
 {
-   char *cp, *cp2;
+   char *cp, * cp2;
 
    DENTER(BASIS_LAYER, "sge_dirname");
 
@@ -208,7 +208,7 @@ char *sge_dirname(const char *name, int delim)
    } else {
       if ((cp2 = malloc((cp - name) + 1)) == NULL) {
          DEXIT;
-         return NULL;
+         return 0;
       } else {
          strncpy(cp2, name, cp - name);
          cp2[cp - name] = '\0';
@@ -523,6 +523,7 @@ char *sge_strdup(char *old, const char *s)
 
    /* free and NULL the old pointer */
    FREE(old);
+   old = NULL;
 
    if (!s) {
       return NULL;
@@ -825,15 +826,15 @@ int sge_strnullcasecmp(const char *a, const char *b)
 *  NOTES
 *     MT-NOTE: sge_is_pattern() is MT safe
 ******************************************************************************/
-bool sge_is_pattern(const char *s) 
+int sge_is_pattern(const char *s) 
 {
    char c;
    while ((c = *s++)) {
       if (strchr("*?[]", c)) {
-         return true;
+         return 1;
       }
    }
-   return false;
+   return 0;
 }
 
 /****** uti/string/sge_strisint() *********************************************

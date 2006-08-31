@@ -43,7 +43,7 @@ typedef enum {
 /* 
  * valid values for AN_status 
  */
-typedef enum {
+enum {
    STATUS_OK = 1,            /* everything was fine */
    STATUS_ESEMANTIC,         /* semantic error */
    STATUS_EEXIST,            /* elem does not exist OR it exists for a
@@ -79,7 +79,7 @@ typedef enum {
                               * (value will be used as return value for
                               * qsub)
                               */
-} an_status_t;
+};
 
 
 bool answer_has_quality(const lListElem *answer, answer_quality_t quality);

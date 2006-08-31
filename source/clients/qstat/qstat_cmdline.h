@@ -32,6 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+const char *
+get_root_qstat_file_path(dstring *file_path);
+
+const char *
+get_home_qstat_file_path(dstring *file_path, lList **answer_list);
+
 int 
 qstat_usage(int qselect_mode, FILE *fp, char *what);
 

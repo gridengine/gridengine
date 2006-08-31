@@ -59,8 +59,6 @@
 
 #include "sge_complex_schedd.h"
 #include "sge_resource_utilization.h"
-#include "sge_attrL.h"
-#include "sge_cqueueL.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
@@ -439,19 +437,26 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
       }
      
  
-      if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
-         lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
-         lSetDouble(queue_elem,CE_doubleval , dval);
+      if(value || as_str){
+         if (!is_attr_prior2(queue_elem, dval, CE_doubleval, CE_dominant)){
+            lSetUlong(queue_elem,CE_dominant , DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
+            lSetDouble(queue_elem,CE_doubleval , dval);
 
-         if(value){
-            lSetString(queue_elem, CE_stringval, value);
-         } 
-         else{
-            lSetString(queue_elem,CE_stringval , as_str);
+            if(value){
+               lSetString(queue_elem, CE_stringval, value);
+            } 
+            else{
+               lSetString(queue_elem,CE_stringval , as_str);
+            }
          }
       }
-
-      DRETURN(true);
+      else{ 
+         lFreeElem(&queue_elem);
+         DPRINTF(("the sytem queue element %s has no value!\n", attrname));
+         /* error */
+      }
+      DEXIT;
+      return true;
 }
 
 
@@ -1248,7 +1253,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
-      if (lGetPosViaElem(global, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
+      if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
          if ((lc_factor=lGetUlong(global, EH_load_correction_factor)) != 0) {
             lc_factor = ((double)lc_factor)/100;
          }   
@@ -1268,7 +1273,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
       actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
-      if (lGetPosViaElem(host, EH_load_correction_factor, SGE_NO_ABORT) >= 0) {
+      if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
          if ((lc_factor=lGetUlong(host, EH_load_correction_factor)) != 0) {
             lc_factor = ((double)lc_factor)/100;
          }
@@ -1365,7 +1370,7 @@ char *object_name
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
    /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(qep, nm)>=0) {
       lListElem *tmp_elem = NULL;
 
       DPRINTF(("got new %s\n", attr_name));
@@ -1401,120 +1406,3 @@ char *object_name
    return 0;
 }
 
-
-/****** sge_complex_schedd/request_cq_rejected() *******************************
-*  NAME
-*     request_cq_rejected() -- Check, if -l request forecloses cluster queue
-*
-*  SYNOPSIS
-*     bool request_cq_rejected(const lList* hard_resource_list, const lListElem
-*     *cq, const lList *centry_list, dstring *unsatisfied)
-*
-*  FUNCTION
-*     Do -l matching with the aim to foreclose the entire cluster queue.
-*     Only non-consumable complex_values are considered. Each cluster queue
-*     configuration profile must specify a fixed value -- otherwise we can't
-*     rule out a cluster queue.
-*
-*  INPUTS
-*     const lList* hard_resource_list - resource list -l (CE_Type)
-*     const lListElem *cq             - cluster queue (CQ_Type)
-*     const lList *centry_list        - complex entry list (CE_Type)
-*     dstring *unsatisfied            - diagnosis information, if rejected
-*
-*  RESULT
-*     bool - true, if the cluster queue is ruled out
-*
-*  NOTES
-*     MT-NOTE: request_cq_rejected() is MT safe
-*
-*     Builtin complex attributes such as non-consumable -l h_vmem
-*     also could be checked here.
-*******************************************************************************/
-bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
-      const lList *centry_list, dstring *unsatisfied)
-{
-   const lListElem *req, *val_ce, *ce; /* CE_Type */
-   const lListElem *alist;
-   const char *name, *request, *offer;
-   u_long32 type, relop;
-   bool rejected;
-   int match;
-
-   DENTER(TOP_LAYER, "request_cq_rejected");
-
-   for_each (req, hard_resource_list) {
-      name = lGetString(req, CE_name);
-
-      if (!(ce = lGetElemStr(centry_list, CE_name, name))) {
-         sge_dstring_sprintf(unsatisfied, "unknown: "SFN, name);
-         DEXIT;
-         return true;
-      }
-
-      /* on cluster queue level we don't deal with consumable attributes */
-      if (lGetBool(ce, CE_consumable))
-         continue;
-
-      type = lGetUlong(ce, CE_valtype);
-
-      request = lGetString(req, CE_stringval);
-      relop = lGetUlong(ce, CE_relop);
-
-      rejected = true;
-      for_each (alist, lGetList(cq, CQ_consumable_config_list)) {
-
-         val_ce = lGetSubStr(alist, CE_name, name, ACELIST_value);
-         if (!val_ce) {
-            rejected = false;
-            break;
-         }
-
-         switch (type) {
-         case TYPE_STR:
-         case TYPE_CSTR:
-         case TYPE_HOST:
-         case TYPE_RESTR:
-            offer = lGetString(val_ce, CE_stringval);
-            match = string_cmp(type, relop, request, offer);
-            break;
-
-         case TYPE_INT:
-         case TYPE_TIM:
-         case TYPE_MEM:
-         case TYPE_BOO:
-         case TYPE_DOUBLE:
-            {
-               double req_dl, off_dl;
-               offer = lGetString(val_ce, CE_stringval);
-               if (!parse_ulong_val(&req_dl, NULL, type, request, NULL, 0) ||
-                   !parse_ulong_val(&off_dl, NULL, type, offer, NULL, 0)) {
-                  DPRINTF(("%s is not of type %s\n", request, map_type2str(type)));
-                  match = 0;
-               } else
-                  match = resource_cmp(relop, req_dl, off_dl);
-            }
-            break;
-
-         default:
-            match = true; /* well */
-            break;
-         }
-         if (match) {
-            rejected = false;
-            break;
-         }
-      }
-
-      if (rejected) {
-         DPRINTF(("cluster queue \"%s\" will never match due to -l %s=%s\n",
-            lGetString(cq, CQ_name), name, request));
-         sge_dstring_sprintf(unsatisfied, SFN"="SFN, name, request);
-         DEXIT;
-         return true;
-      }
-   }
-
-   DEXIT;
-   return false;
-}

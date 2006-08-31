@@ -587,7 +587,7 @@ reporting_create_acct_record(lList **answer_list,
                        sizeof(category_buffer));
 
       sge_build_job_category_dstring(&category_dstring, job, 
-                                     *(userset_list_get_master_list()), *object_type_get_master_list(SGE_TYPE_PROJECT), NULL);
+                                     *(userset_list_get_master_list()));
       category_string = sge_dstring_get_string(&category_dstring);                                          
 
       /* accounting records will only be written at job end, not for intermediate
@@ -1031,7 +1031,6 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
          sge_sharetree_print(&data_dstring, *object_base[SGE_TYPE_SHARETREE].list, 
                              *object_base[SGE_TYPE_USER].list,
                              *object_base[SGE_TYPE_PROJECT].list,
-                             *object_base[SGE_TYPE_USERSET].list,
                              true,
                              false,
                              NULL,
@@ -1442,24 +1441,22 @@ static bool reporting_flush_report_file(lList **answer_list,
          }
       }
 
+      /* close file */
+      if (fp != NULL) {
+         FCLOSE(fp);
+      }
+
       /* clear the buffer. We do this regardless of the result of
        * the writing command. Otherwise, if writing the report file failed
        * over a longer time period, the reporting buffer could grow endlessly.
        */
       sge_dstring_clear(&(buf->buffer));
 
-      /* close file */
-      if (fp != NULL) {
-         FCLOSE(fp);
-      }
-
       sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    }
 
    DRETURN(ret);
-
 FCLOSE_ERROR:
-   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    if (answer_list == NULL) {
       ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
              sge_strerror(errno, &error_dstring)));
@@ -1469,7 +1466,6 @@ FCLOSE_ERROR:
                               MSG_ERRORCLOSINGFILE_SS, filename, 
                               sge_strerror(errno, &error_dstring));
    }
-
    DRETURN(false);
 }
 

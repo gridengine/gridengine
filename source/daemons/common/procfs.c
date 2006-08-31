@@ -150,10 +150,12 @@ static struct dirent *dent;
 
 int groups_in_proc (void) 
 {
+   char procnam[256];
    char buf[1024];
    FILE* fd = (FILE*) NULL;
    
-   if (!(fd = fopen(PROC_DIR "/self/status", "r"))) {
+   sprintf(procnam, "%s/1/status", PROC_DIR);
+   if (!(fd = fopen(procnam, "r"))) {
       return 0;
    }
    while (fgets(buf, sizeof(buf), fd)) {

@@ -63,7 +63,6 @@
 
 static char object_name[] = "parallel environment";
 
-static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe);
 
 int pe_mod(
 lList **alpp,
@@ -88,7 +87,7 @@ int sub_command, monitoring_t *monitor
    pe_name = lGetString(new_pe, PE_name);
 
    /* Name has to be a valid filename without pathchanges */
-   if (add && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
+   if (add && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -103,7 +102,7 @@ int sub_command, monitoring_t *monitor
    attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_user_list */
-   if (lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_user_list)>=0) {
       DPRINTF(("got new PE_user_list\n"));
       /* check user_lists */
       normalize_sublist(pe, PE_user_list);
@@ -115,7 +114,7 @@ int sub_command, monitoring_t *monitor
    }
 
    /* ---- PE_xuser_list */
-   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list)>=0) {
       DPRINTF(("got new QU_axcl\n"));
       /* check xuser_lists */
       normalize_sublist(pe, PE_xuser_list);
@@ -125,7 +124,7 @@ int sub_command, monitoring_t *monitor
          US_name, pe, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);      
    }
 
-   if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT)>=0 || lGetPosViaElem(pe, PE_user_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_xuser_list)>=0 || lGetPosViaElem(pe, PE_user_list)>=0) {
       if (multiple_occurances(
             alpp,
             lGetList(new_pe, PE_user_list),
@@ -140,7 +139,7 @@ int sub_command, monitoring_t *monitor
    if (attr_mod_procedure(alpp, pe, new_pe, PE_stop_proc_args, "stop_proc_args", pe_variables)) goto ERROR;
 
    /* -------- PE_allocation_rule */
-   if (lGetPosViaElem(pe, PE_allocation_rule, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_allocation_rule)>=0) {
       s = lGetString(pe, PE_allocation_rule);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -160,7 +159,7 @@ int sub_command, monitoring_t *monitor
    }
 
    /* -------- PE_urgency_slots */
-   if (lGetPosViaElem(pe, PE_urgency_slots, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_urgency_slots)>=0) {
       s = lGetString(pe, PE_urgency_slots);
       if (!s)  {
          ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
@@ -179,7 +178,7 @@ int sub_command, monitoring_t *monitor
 
 #ifdef SGE_PQS_API
    /* -------- PE_qsort_args */
-   if (lGetPosViaElem(pe, PE_qsort_args, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(pe, PE_qsort_args)>=0) {
       void *handle=NULL, *fn=NULL;
 
       s = lGetString(pe, PE_qsort_args);
@@ -243,7 +242,6 @@ int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **p
 
    pe_name = lGetString(ep, PE_name);
 
-   pe_update_categories(ep, old_ep);
 
    sge_add_event( 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, 
                  pe_name, NULL, NULL, ep);
@@ -269,7 +267,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EUNKNOWN;
    }
 
-   if ((pos = lGetPosViaElem(pep, PE_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(pep, PE_name)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(PE_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -320,8 +318,6 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EEXIST;
    }
 
-   pe_update_categories(NULL, ep);
-
    /* delete found pe element */
    lRemoveElem(master_pe_list, &ep);
 
@@ -366,89 +362,7 @@ lList *pe_list
    return;
 }
 
-/****** sge_pe_qmaster/pe_diff_usersets() **************************************
-*  NAME
-*     pe_diff_usersets() -- Diff old/new PE usersets
-*
-*  SYNOPSIS
-*     void pe_diff_usersets(const lListElem *new, const lListElem *old, lList
-*     **new_acl, lList **old_acl)
-*
-*  FUNCTION
-*     A diff new/old is made regarding PE acl/xacl.
-*     Userset references are returned in new_acl/old_acl.
-*
-*  INPUTS
-*     const lListElem *new - New PE (PE_Type)
-*     const lListElem *old - Old PE (PE_Type)
-*     lList **new_acl      - New userset references (US_Type)
-*     lList **old_acl      - Old userset references (US_Type)
-*
-*  NOTES
-*     MT-NOTE: pe_diff_usersets() is not MT safe
-*******************************************************************************/
-void pe_diff_usersets(const lListElem *new,
-      const lListElem *old, lList **new_acl, lList **old_acl)
-{
-   const lListElem *ep;
-   const char *u;
-
-   if (old && old_acl) {
-      for_each (ep, lGetList(old, PE_user_list)) {
-         u = lGetString(ep, US_name);
-         if (!lGetElemStr(*old_acl, US_name, u))
-            lAddElemStr(old_acl, US_name, u, US_Type);
-      }
-      for_each (ep, lGetList(old, PE_xuser_list)) {
-         u = lGetString(ep, US_name);
-         if (!lGetElemStr(*old_acl, US_name, u))
-            lAddElemStr(old_acl, US_name, u, US_Type);
-      }
-   }
-
-   if (new && new_acl) {
-      for_each (ep, lGetList(new, PE_user_list)) {
-         u = lGetString(ep, US_name);
-         if (!lGetElemStr(*new_acl, US_name, u))
-            lAddElemStr(new_acl, US_name, u, US_Type);
-      }
-      for_each (ep, lGetList(new, PE_xuser_list)) {
-         u = lGetString(ep, US_name);
-         if (!lGetElemStr(*new_acl, US_name, u))
-            lAddElemStr(new_acl, US_name, u, US_Type);
-      }
-   }
-
-   lDiffListStr(US_name, new_acl, old_acl);
-}
 
 
-/****** sge_pe_qmaster/pe_update_categories() **********************************
-*  NAME
-*     pe_update_categories() -- Update categories wrts userset
-*
-*  SYNOPSIS
-*     static void pe_update_categories(const lListElem *new_pe, const lListElem
-*     *old_pe)
-*
-*  FUNCTION
-*     The userset information wrts categories is updated based
-*      on new/old PE configuration and events are sent upon changes.
-*
-*  INPUTS
-*     const lListElem *new_pe - New PE (PE_Type)
-*     const lListElem *old_pe - Old PE (PE_Type)
-*
-*  NOTES
-*     MT-NOTE: pe_update_categories() is not MT safe
-*******************************************************************************/
-static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe)
-{
-   lList *old = NULL, *new = NULL;
 
-   pe_diff_usersets(new_pe, old_pe, &new, &old);
-   userset_update_categories(new, old);
-   lFreeList(&old);
-   lFreeList(&new);
-}
 

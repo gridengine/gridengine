@@ -619,7 +619,6 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    puts $CHECK_OUTPUT "try to $CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q [get_queue_instance $rerun_queue $rerun_host]"
 
    set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -now no -q [get_queue_instance $rerun_queue $rerun_host]" ]
-   set qlogin_spawn_id [lindex $qlogin_id 1]
    set no_jobs 4
    set result ""
    set my_timeout [timestamp]
@@ -639,15 +638,15 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       if { [ string first "login:" $result] < 0 } {
           add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error, expected login:, received $result"
       }
-     
-      send -i $qlogin_spawn_id -- "$CHECK_USER\n"
+      
+      send "$CHECK_USER\n"
       set timeout 5
       expect {
-         -i $qlogin_spawn_id eof { 
+         eof { 
              puts $CHECK_OUTPUT "got eof" 
              add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin unexpected eof"
          }
-         -i $qlogin_spawn_id timeout {
+         timeout {
              puts $CHECK_OUTPUT "got timeout"
          }
       }
@@ -730,7 +729,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    close_spawn_process $qrsh_id2 1
    close_spawn_process $qsh_id 1
    if { $qlogin_id != -1 } {
-      send -i $qlogin_spawn_id -- "\003"
+      send -i $qlogin_id "\003"
       close_spawn_process $qlogin_id 1
    }
 

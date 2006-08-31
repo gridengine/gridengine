@@ -110,7 +110,6 @@
 *        SGE_TYPE_CENTRY   
 *        SGE_TYPE_ZOMBIE
 *        SGE_TYPE_SUSER
-*        SGE_TYPE_LIRS
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -146,7 +145,6 @@ typedef enum {
    SGE_TYPE_CENTRY,           /*25*/   
    SGE_TYPE_ZOMBIE,           /*26*/
    SGE_TYPE_SUSER,            /*27*/
-   SGE_TYPE_LIRS,             /*28*/
 
 
    /*
@@ -210,8 +208,6 @@ object_type_get_descr(const sge_object_type type);
 int
 object_type_get_key_nm(const sge_object_type type);
 
-object_description *
-object_type_get_global_object_description(void);
 
 /* JG: TODO: rename to object_has_descr, make function object_has_type 
              and call this function where possible */
@@ -335,13 +331,5 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
 bool
 object_list_has_differences(const lList *this_elem, lList **answer_list,
                             const lList *old_elem, bool modify_changed_flag);
-
-bool object_list_verify_cull(const lList *lp, const lDescr *descr);
-bool object_verify_cull(const lListElem *ep, const lDescr *descr);
-
-bool object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int nm);
-bool object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm);
-bool object_verify_double_null(const lListElem *ep, lList **answer_list, int nm);
-bool object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm);
 
 #endif /* __SGE_OBJECT_H */

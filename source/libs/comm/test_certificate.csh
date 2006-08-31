@@ -32,7 +32,6 @@ if ( $argument1 == "service" ) then
    setenv SSL_CERT_FILE "$SGE_ROOT/default/common/sgeCA/certs/cert.pem"
    setenv SSL_KEY_FILE "/var/sgeCA/port$SGE_QMASTER_PORT/default/private/key.pem"
    setenv SSL_RAND_FILE "/var/sgeCA/port$SGE_QMASTER_PORT/default/private/rand.seed"
-   setenv SSL_CRL_FILE "$SGE_ROOT/default/common/sgeCA/ca-crl.pem"
    exit 0
 endif
 

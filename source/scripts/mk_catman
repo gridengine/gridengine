@@ -47,13 +47,9 @@ if ( $#argv > 2 ) then
    set MANBUILDDIR = $3
 endif
 
-#if ( `/sbin/uname` != IRIX && `/sbin/uname` != IRIX64 ) then
-#        echo "Error: need to be executed on an SGI - we need pack."
-#        exit 1
-#endif
-if ( ! -f `which pack`) then
-   echo "Error: the command 'pack' was not found!"
-   exit 1
+if ( `/sbin/uname` != IRIX && `/sbin/uname` != IRIX64 ) then
+        echo "Error: need to be executed on an SGI - we need pack."
+        exit 1
 endif
 
 echo Building catman pages in $MANBUILDDIR/ASCMAN/man

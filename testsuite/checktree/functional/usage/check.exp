@@ -137,20 +137,28 @@ proc usage_setup  {} {
    global CHECK_OUTPUT
    global saved_config
 
-   # backup old config
-   get_config saved_config
-
-   # set scheduler flushing params
+   # modify config and remember old values
+   get_config config
+   if {[info exists saved_config]} {
+      unset saved_config
+   }
    if { $ts_config(gridengine_version) == 53 } {
-      set new_config(schedd_params) "$saved_config(schedd_params) flush_submit_secs=0"
+      foreach attrib "load_report_time execd_params schedd_params" {
+         set saved_config($attrib) $config($attrib)
+      }
+      set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
+
    } else {
+      foreach attrib "load_report_time execd_params" {
+         set saved_config($attrib) $config($attrib)
+      }
       set my_schedd_conf(flush_submit_sec) "1"
       set_schedd_config my_schedd_conf 
    }
 
-   # set global config params
    set new_config(load_report_time) "0:0:5"
-   set new_config(execd_params) "$saved_config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
+   
+   set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    set_config new_config
    after 15000
 
@@ -197,7 +205,6 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
-
    if {$ts_config(gridengine_version) != 53} {
       reset_schedd_config;
    }
@@ -458,7 +465,7 @@ proc usage_monitor_check {id test_name slots} {
       wait_for_jobend $jobid usage 60 0 1
 
       # now wait for some time - accounting file might not be flushed yet
-      sleep 20
+      after 20000
 
       if {!$job_finished} {
          add_proc_error test_name -1 "job terminated abnormally"

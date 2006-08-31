@@ -118,13 +118,13 @@ proc add_pe { change_array { version_check 1 } } {
 # job_is_first_task TRUE
 
    global ts_config
-  global env CHECK_ARCH
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
 
   if { $version_check == 1 } {
-     if { $ts_config(gridengine_version) >= 60 && [info exists chgar(queue_list) ]} {
+     if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list) ]} {
         if { [ info exists chgar(queue_list) ] } {
            puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
            add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
@@ -186,17 +186,8 @@ proc get_pe {pe_name change_array} {
 #     Set a pe configuration corresponding to the content of the change_array.
 #
 #  INPUTS
-#     pe_obj         - name of the pe.
-#     change_array   - TCL array specifying the pe object to configure
-#                      The following array members can be set:
-#                        - slots             optional, default 0
-#                        - user_lists        optional, default NONE
-#                        - xuser_lists       optional, default NONE
-#                        - start_proc_args   optional, default /bin/true
-#                        - stop_proc_args    optional, default /bin/true
-#                        - allocation_rule   optional, default $pe_slots
-#                        - control_slaves    optional, default FALSE
-#                        - job_is_first_task optional, default TRUE
+#     pe_obj       - name of pe object to configure
+#     change_array - name of an array variable that will be set by set_pe()
 #
 #  RESULT
 #     0  : ok
@@ -205,27 +196,41 @@ proc get_pe {pe_name change_array} {
 #  SEE ALSO
 #     sge_procedures/add_pe()
 #*******************************************************************************
-proc set_pe {pe_obj change_array} {
+proc set_pe { pe_obj change_array } {
+# pe_name           testpe
+# queue_list        NONE
+# slots             0
+# user_lists        NONE
+# xuser_lists       NONE
+# start_proc_args   /bin/true
+# stop_proc_args    /bin/true
+# allocation_rule   $pe_slots
+# control_slaves    FALSE
+# job_is_first_task TRUE
 
    global ts_config
-   global env CHECK_ARCH
-   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
+  global env CHECK_ARCH open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
-   upvar $change_array chgar
+  upvar $change_array chgar
 
-   if {$ts_config(gridengine_version) >= 60 && [info exists chgar(queue_list)]} {
-      if {[info exists chgar(queue_list)]} {
-         add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
-         unset chgar(queue_list)
-      }
-   }
 
-   set vi_commands [build_vi_command chgar]
 
-   set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
-   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]}
+{
+     if { [ info exists chgar(queue_list) ] } {
+        puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
+        add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
+        unset chgar(queue_list)
+     }
+  }
 
-   if { $ts_config(gridengine_version) == 53 } {
+  set vi_commands [build_vi_command chgar]
+
+  set MODIFIED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
+  set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
+
+  if { $ts_config(gridengine_version) == 53 } {
       set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
    } else {
       # JG: TODO: is it the right message? It's the only one mentioning non 
@@ -233,14 +238,14 @@ proc set_pe {pe_obj change_array} {
       set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CQUEUE_UNKNOWNUSERSET_S] "*" ]
    }
 
-   set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
 
-   if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
-   if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
-   if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
-   if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
+  if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
+  if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
+  if {$result == -3 } { add_proc_error "set_pe" -1 "something (perhaps a queue) does not exist" }
+  if {$result != 0  } { add_proc_error "set_pe" -1 "could not change parallel environment \"$pe_obj\"" }
 
-   return $result
+  return $result
 }
 
 #                                                             max. column:     |
@@ -250,7 +255,7 @@ proc set_pe {pe_obj change_array} {
 #     del_pe -- delete parallel environment object definition
 #
 #  SYNOPSIS
-#     del_pe { pe_name }
+#     del_pe { mype_name }
 #
 #  FUNCTION
 #     This procedure will delete a existing parallel environment, defined with
@@ -261,23 +266,52 @@ proc set_pe {pe_obj change_array} {
 #
 #  RESULT
 #     0  - ok
-#     <0 - error
+#     -1 - timeout error
 #
 #  SEE ALSO
 #     sge_procedures/add_pe()
 #*******************************
-proc del_pe {pe_name} {
+proc del_pe { mype_name } {
    global ts_config
-   global CHECK_USER
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global CHECK_OUTPUT
 
-   unassign_queues_with_pe_object $pe_name
+   unassign_queues_with_pe_object $mype_name
 
-   set messages(index) "0"
-   set messages(0) [translate_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS $CHECK_USER "*" $pe_name "*"]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
 
-   set output [start_sge_bin "qconf" "-dp $pe_name"]
+  log_user 0
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dp $mype_name"]
+  set sp_id [ lindex $id 1 ]
 
-   set ret [handle_sge_errors "del_pe" "qconf -dp $pe_name" $output messages]
-   return $ret
+  set result -1
+  set timeout 30
+  log_user 0
+
+  expect {
+    -i $sp_id full_buffer {
+      set result -1
+      add_proc_error "del_pe" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+    }
+    -i $sp_id $REMOVED {
+      set result 0
+    }
+    -i $sp_id "removed" {
+      set result 0
+    }
+
+    -i $sp_id default {
+      set result -1
+    }
+
+  }
+  close_spawn_process $id
+
+  log_user 1
+  if { $result != 0 } {
+     add_proc_error "del_pe" -1 "could not delete pe \"$mype_name\""
+  }
+  return $result
+
 }
 

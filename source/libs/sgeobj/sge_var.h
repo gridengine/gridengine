@@ -78,6 +78,4 @@ void var_list_split_prefix_vars(lList **varl,
 
 int var_list_add_as_set(lList *varl, lList *vars);
 
-bool var_list_verify(const lList *lp, lList **answer_list);
-
 #endif /* __SGE_VAR_H */

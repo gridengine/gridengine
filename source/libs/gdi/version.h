@@ -32,21 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(TARGET_64BIT)
-   #define gdi_ulong32 int
-#else
-   #define gdi_ulong32 unsigned long
-#endif
-
-typedef struct {
-      gdi_ulong32 version;
-      char *release;
-} vdict_t;
-
 extern const char GDI_VERSION[]; /* set in version.c */
+
 extern const char GE_LONGNAME[]; /* set in version.c */
 extern const char GE_SHORTNAME[]; /* set in version.c */
-extern const gdi_ulong32 GRM_GDI_VERSION; /* set in version.c */
-extern vdict_t GRM_GDI_VERSION_ARRAY[]; /* set in version.c */
 
 #endif /* __VERISON_H */

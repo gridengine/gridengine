@@ -296,16 +296,7 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
 
    default:                     /* copy only the in enp enumerated elems */
       if (pb == NULL) {
-         int maxpos = 0;
-         maxpos = lCountDescr(src->descr);
-
          for (i = 0; enp[i].nm != NoName; i++, (*jp)++) {
-            if (enp[i].pos > maxpos || enp[i].pos < 0) {
-               LERROR(LEENUMDESCR);
-               DEXIT;
-               return -1;
-            }
-
             if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
                LERROR(LECOPYSWITCH);
                DEXIT;
@@ -1937,12 +1928,20 @@ lListElem *lDechainObject(lListElem *parent, int name)
       return NULL;
    }
 
-   pos = lGetPosViaElem(parent, name, SGE_DO_ABORT);
+   pos = lGetPosViaElem(parent, name);
+   if (pos < 0) {
+      /* someone has called lDechainObject() with an invalid name */
+      CRITICAL((SGE_EVENT, MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
 
    if(mt_get_type(parent->descr[pos].mt) != lObjectT) {
       incompatibleType2(MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S,
                         lNm2Str(name));
       DEXIT;
+      abort();
    }
   
    dep = (lListElem *) parent->cont[pos].obj;
@@ -2648,4 +2647,3 @@ lListElem_clear_changed_info(lListElem *ep)
 
    return ret;
 }
-

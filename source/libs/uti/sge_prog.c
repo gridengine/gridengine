@@ -97,8 +97,7 @@ const char *prognames[] =
    "japi_ec"   ,       /* 41  */
    "drmaa"     ,       /* 42  */
    "qping"     ,       /* 43  */ 
-   "sgepasswd" ,       /* 44  */
-   "qlimit"            /* 45  */
+   "sgepasswd"         /* 44  */
 };
  
 typedef struct {
@@ -482,7 +481,7 @@ void sge_getme(u_long32 program_number)
    uti_state_set_qualified_hostname(hent->h_name);
    s = sge_dirname(hent->h_name, '.');
    uti_state_set_unqualified_hostname(s);
-   FREE(s);
+   free(s);
 
    DTRACE;
  
@@ -492,13 +491,13 @@ void sge_getme(u_long32 program_number)
       struct hostent *hent2 = NULL;
       memcpy(tmp_addr, hent->h_addr, hent->h_length);
       DTRACE;
-      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)tmp_addr, NULL)) != NULL));
+      SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr, NULL)) != NULL));
       DTRACE;
 
       uti_state_set_qualified_hostname(hent2->h_name);
       s = sge_dirname(hent2->h_name, '.');
       uti_state_set_unqualified_hostname(s);
-      FREE(s);
+      free(s);
       sge_free_hostent(&hent2);
    }
 

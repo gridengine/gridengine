@@ -50,6 +50,40 @@
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "sgeobj/sge_hgroupL.h"
 
+static const spool_flatfile_instr hgqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &hgqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr hgqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &hgqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
 static void 
 hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);
 
@@ -147,7 +181,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
       char *filename = NULL;
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, HGRP_fields,
-                                                     &qconf_sfi,
+                                                     &hgqconf_sfi,
                                                      SP_DEST_TMP, SP_FORM_ASCII,
                                                      filename, false);
       if (answer_list_output(answer_list)) {
@@ -162,7 +196,7 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
          fields_out[0] = NoName;
          hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
-                                         HGRP_fields, fields_out, true, &qconf_sfi,
+                                         HGRP_fields, fields_out, true, &hgqconf_sfi,
                                          SP_FORM_ASCII, NULL, filename);
             
          if (answer_list_output (answer_list)) {
@@ -262,9 +296,9 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
-                                      HGRP_fields, fields_out, true, &qconf_sfi,
+                                      HGRP_fields, fields_out, true, &hgqconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);
-
+            
       if (answer_list_output (answer_list)) {
          lFreeElem(&hgroup);
       }
@@ -276,20 +310,18 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
       if (missing_field != NoName) {
          lFreeElem(&hgroup);
          answer_list_output (answer_list);
-      }
+      }      
 
       if (hgroup == NULL) {
          ret = false;
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD);
-      }
-
-      lFreeElem(&hgroup);
-   }
-
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
+      } 
+   }  
+  
    DEXIT;
-   return ret;
+   return ret; 
 }
 
 bool hgroup_modify(lList **answer_list, const char *name)
@@ -331,7 +363,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
 
       fields_out[0] = NoName;
       hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
-                                      HGRP_fields, fields_out, true, &qconf_sfi,
+                                      HGRP_fields, fields_out, true, &hgqconf_sfi,
                                       SP_FORM_ASCII, NULL, filename);
             
       if (answer_list_output (answer_list)) {
@@ -391,7 +423,7 @@ bool hgroup_show(lList **answer_list, const char *name)
    
       if (hgroup != NULL) {
          spool_flatfile_write_object(answer_list, hgroup, false, HGRP_fields,
-                                     &qconf_sfi, SP_DEST_STDOUT,
+                                     &hgqconf_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
       
          if (answer_list_output(answer_list)) {

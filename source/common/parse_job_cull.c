@@ -151,6 +151,14 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetList(*pjob, JB_ja_tasks, tmpl_task_list); 
    }
 
+   if (!lGetUlong(*pjob, JB_submission_time)) {
+      lSetUlong(*pjob, JB_submission_time, sge_get_gmt());
+   }
+   if (!lGetString(*pjob, JB_owner)) {
+      lSetString(*pjob, JB_owner, uti_state_get_user_name());
+   }
+   lSetUlong(*pjob, JB_uid, uti_state_get_uid());
+
    /*
    ** path aliasing
    */

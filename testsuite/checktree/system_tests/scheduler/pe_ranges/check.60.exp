@@ -138,7 +138,6 @@ proc pe_ranges_cleanup  {} {
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60
-   trigger_scheduling
 
    set queue_list {}
    foreach host $ts_config(execd_nodes) {
@@ -165,7 +164,7 @@ proc pe_ranges_submit_pejobs_and_wait { job_arguments job_count job_count_max ru
    set job_id [submit_job "-pe round_robin $job_count-$job_count_max $job_arguments $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       
@@ -283,7 +282,7 @@ proc pe_ranges_test {} {
 
       #clean up
       set queue_settings(load_thresholds) "np_load_avg=11.75"
-      mod_queue "res.q" $pe_ranges_test_hosts queue_settings
+      set_queue "res.q" $pe_ranges_test_hosts queue_settings
       
       set global_host(complex_values) $orig_global_host(complex_values)
       set_exechost global_host global

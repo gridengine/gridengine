@@ -98,15 +98,12 @@ enum _enum_lMultiType {
 #define CULL_SPOOL_PROJECT 0x00020000
 #define CULL_SPOOL_USER    0x00040000
 
-#define BASIC_UNIT 50         /* Don't touch */
-#define MAX_DESCR_SIZE  4*BASIC_UNIT
-
 #ifdef __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 
 #define LISTDEF( name ) lDescr name[] = {
 #define LISTEND {NoName, lEndT, NULL}};
 
-#define SGE_INT(name,flags)         { name, lIntT    | flags, NULL }, /* don't use it, not implemented on gdi level */
+#define SGE_INT(name,flags)         { name, lIntT    | flags, NULL },
 #define SGE_HOST(name,flags)        { name, lHostT   | flags, NULL },
 #define SGE_STRING(name,flags)      { name, lStringT | flags, NULL },
 #define SGE_FLOAT(name,flags)       { name, lFloatT  | flags, NULL },

@@ -51,7 +51,7 @@ set check_root_access_needs "yes"
 set check_init_level_procedure "LSB_lockfile_test_init_level"
 
 # define test's name and run level descriptions
-set check_name            "issue_1823"
+set check_name            "LSB_lockfile_test"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level  0 
 set check_description(0)    "This test checks the sens of error message which is printed out, "

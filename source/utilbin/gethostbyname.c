@@ -102,14 +102,12 @@ int main(int argc, char *argv[]) {
      
   retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
   if (retval != CL_RETVAL_OK) {
-     fprintf(stderr,"%s\n", cl_get_error_text(retval));
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
      exit(1);
   }
 
   if (sge_aliasing ) {
-     const char *alias_path = sge_get_alias_path();
-     cl_com_set_alias_file(alias_path);
-     FREE(alias_path);
+     cl_com_set_alias_file(sge_get_alias_path());
   }
 
   retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he, &system_error);

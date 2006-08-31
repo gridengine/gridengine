@@ -44,7 +44,6 @@
 #include "sge_manop.h"
 #include "sge_host_qmaster.h"
 #include "sge_gdi_request.h"
-#include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
@@ -66,6 +65,7 @@
 #include "sge_security.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
@@ -97,8 +97,6 @@ static void host_trash_nonstatic_load_values(lListElem *host);
 static void notify(lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
 
 static int verify_scaling_list(lList **alpp, lListElem *host); 
-
-static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep);
 
 /****** qmaster/host/host_trash_nonstatic_load_values() ***********************
 *  NAME
@@ -265,7 +263,7 @@ const lList* master_hGroup_List
      return STATUS_EUNKNOWN;
    }
    /* ep is no host element, if ep has no nm */
-   if ((pos = lGetPosViaElem(hep, nm, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(hep, nm)) < 0) {
       ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(nm), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -365,8 +363,6 @@ const lList* master_hGroup_List
                             NULL, NULL, NULL, true, true);
             answer_list_output(&answer_list);
          }
-	 host_update_categories(NULL, ep);
-
          break;
       case SGE_SUBMITHOST_LIST:
          {
@@ -417,7 +413,7 @@ int sub_command, monitoring_t *monitor
          goto ERROR;
       }
    }
-   pos = lGetPosViaElem(new_host, nm, SGE_NO_ABORT);
+   pos = lGetPosViaElem(new_host, nm);
    dataType = lGetPosType(lGetElemDescr(new_host),pos);
    if (dataType == lHostT) {
       host = lGetHost(new_host, nm);
@@ -426,7 +422,7 @@ int sub_command, monitoring_t *monitor
    }
    if (nm == EH_name) {
       /* ---- EH_scaling_list */
-      if (lGetPosViaElem(ep, EH_scaling_list, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_scaling_list)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_scaling_list, HS_name, ep,
                            sub_command, SGE_ATTR_LOAD_SCALING, SGE_OBJ_EXECHOST, 0);
          if (verify_scaling_list(alpp, new_host)!=STATUS_OK) {
@@ -442,31 +438,30 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_acl */
-      if (lGetPosViaElem(ep, EH_acl, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_acl)>=0) {
          DPRINTF(("got new EH_acl\n"));
          /* check acl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp)!=STATUS_OK) {
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
-                           sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
+         sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
       }
 
       /* ---- EH_xacl */
-      if (lGetPosViaElem(ep, EH_xacl, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_xacl)>=0) {
          DPRINTF(("got new EH_xacl\n"));
          /* check xacl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp)!=STATUS_OK) {
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
-                           sub_command, SGE_ATTR_XUSER_LISTS, 
-                           SGE_OBJ_EXECHOST, 0);
+         sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_EXECHOST, 0);
       }
 
 
       /* ---- EH_prj */
-      if (lGetPosViaElem(ep, EH_prj, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_prj)>=0) {
          DPRINTF(("got new EH_prj\n"));
          /* check prj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
@@ -475,12 +470,11 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_prj, UP_name, ep,
-                           sub_command, SGE_ATTR_PROJECTS, 
-                           SGE_OBJ_EXECHOST, 0);    
+         sub_command, SGE_ATTR_PROJECTS, SGE_OBJ_EXECHOST, 0);    
       }
 
       /* ---- EH_xprj */
-      if (lGetPosViaElem(ep, EH_xprj, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_xprj)>=0) {
          DPRINTF(("got new EH_xprj\n"));
          /* check xprj list */
          if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
@@ -489,22 +483,20 @@ int sub_command, monitoring_t *monitor
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_xprj, UP_name, ep,
-                           sub_command, SGE_ATTR_XPROJECTS, 
-                           SGE_OBJ_EXECHOST, 0);   
+         sub_command, SGE_ATTR_XPROJECTS, SGE_OBJ_EXECHOST, 0);   
       }
 
       /* ---- EH_usage_scaling_list */
-      if (lGetPosViaElem(ep, EH_usage_scaling_list, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_usage_scaling_list)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
          sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
       }
 
-      if (lGetPosViaElem(ep, EH_report_variables, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(ep, EH_report_variables)>=0) {
          const lListElem *var;
 
          attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
-                           sub_command, "report_variables", 
-                           SGE_OBJ_EXECHOST, 0);
+         sub_command, "report_variables", SGE_OBJ_EXECHOST, 0);
      
          /* check if all report_variables are valid complex variables */
          for_each(var, lGetList(ep, EH_report_variables)) {
@@ -542,7 +534,7 @@ gdi_object_t *object
 
    DENTER(TOP_LAYER, "host_spool");
 
-   pos = lGetPosViaElem(ep, object->key_nm, SGE_NO_ABORT );
+   pos = lGetPosViaElem(ep, object->key_nm );
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    if (dataType == lHostT ) { 
       key = lGetHost(ep, object->key_nm);
@@ -592,6 +584,7 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 
          lSetList(ep, EH_resource_utilization, NULL);
          debit_host_consumable(NULL, ep, master_centry_list, 0);
+
          for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -614,7 +607,6 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
             host_merge(ep, global_ep);
          }
 
-         host_update_categories(ep, old_ep);
          sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
                        0, 0, host, NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
@@ -1052,12 +1044,24 @@ sge_change_queue_version_exechost(const char *exechost_name)
  **** Actutally only the permission is checked here
  **** and master_kill_execds is called to do the work.
  ****/
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer,
-                           uid_t uid, gid_t gid, char *user, char *group)
+void sge_gdi_kill_exechost(char *host, 
+                           sge_gdi_request *request, 
+                           sge_gdi_request *answer)
 {
+   uid_t uid;
+   gid_t gid;
+   char user[128];
+   char group[128];
 
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
+   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
+      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
+                      ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return;
+   }
 
    if (!manop_is_manager(user)) {
       ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
@@ -1377,164 +1381,3 @@ static int verify_scaling_list(lList **answer_list, lListElem *host)
    DEXIT;
    return ret ? STATUS_OK : STATUS_EUNKNOWN;
 }
-
-/****** sge_host_qmaster/host_diff_sublist() ***********************************
-*  NAME
-*     host_diff_sublist() -- Diff exechost sublists
-*
-*  SYNOPSIS
-*     static void host_diff_sublist(const lListElem *new, const lListElem *old,
-*     int snm1, int snm2, int key_nm, const lDescr *dp, lList **new_sublist,
-*     lList **old_sublist)
-*
-*  FUNCTION
-*     Makes a diff userset/project sublists of an exec host.
-*
-*  INPUTS
-*     const lListElem *new - New exec host (EH_Type)
-*     const lListElem *old - Pld exec host (EH_Type)
-*     int snm1             - First exec host sublist field
-*     int snm2             - Second exec host sublist field
-*     int key_nm           - Field with key in sublist
-*     const lDescr *dp     - Type for outgoing sublist arguments
-*     lList **new_sublist  - List of new references
-*     lList **old_sublist  - List of old references
-*
-*  NOTES
-*     MT-NOTE: host_diff_sublist() is MT safe
-*******************************************************************************/
-static void host_diff_sublist(const lListElem *new, const lListElem *old,
-      int snm1, int snm2, int key_nm, const lDescr *dp,
-      lList **new_sublist, lList **old_sublist)
-{
-   const lListElem *ep;
-   const char *p;
-
-   /* collect 'old' entries in 'old_sublist' */
-   if (old && old_sublist) {
-      for_each (ep, lGetList(old, snm1)) {
-         p = lGetString(ep, key_nm);
-         if (!lGetElemStr(*old_sublist, key_nm, p))
-            lAddElemStr(old_sublist, key_nm, p, dp);
-      }
-      for_each (ep, lGetList(old, snm2)) {
-         p = lGetString(ep, key_nm);
-         if (!lGetElemStr(*old_sublist, key_nm, p))
-            lAddElemStr(old_sublist, key_nm, p, dp);
-      }
-   }
-
-   /* collect 'new' entries in 'new_sublist' */
-   if (new && new_sublist) {
-      for_each (ep, lGetList(new, snm1)) {
-         p = lGetString(ep, key_nm);
-         if (!lGetElemStr(*new_sublist, key_nm, p))
-            lAddElemStr(new_sublist, key_nm, p, dp);
-      }
-      for_each (ep, lGetList(new, snm2)) {
-         p = lGetString(ep, key_nm);
-         if (!lGetElemStr(*new_sublist, key_nm, p))
-            lAddElemStr(new_sublist, key_nm, p, dp);
-      }
-   }
-
-   return;
-}
-
-
-/****** sge_host_qmaster/host_diff_projects() **********************************
-*  NAME
-*     host_diff_projects() -- Diff old/new exec host projects
-*
-*  SYNOPSIS
-*     void host_diff_projects(const lListElem *new, const lListElem *old, lList
-*     **new_prj, lList **old_prj)
-*
-*  FUNCTION
-*     A diff new/old is made regarding exec host projects/xprojects.
-*     Project references are returned in new_prj/old_prj.
-*
-*  INPUTS
-*     const lListElem *new - New exec host (EH_Type)
-*     const lListElem *old - Old exec host (EH_Type)
-*     lList **new_prj      - New project references (US_Type)
-*     lList **old_prj      - Old project references (US_Type)
-*
-*  NOTES
-*     MT-NOTE: host_diff_projects() is not MT safe
-*******************************************************************************/
-void host_diff_projects(const lListElem *new,
-         const lListElem *old, lList **new_prj, lList **old_prj)
-{
-   host_diff_sublist(new, old, EH_prj, EH_xprj,
-         UP_name, UP_Type, new_prj, old_prj);
-   lDiffListStr(UP_name, new_prj, old_prj);
-}
-
-/****** sge_host_qmaster/host_diff_usersets() **********************************
-*  NAME
-*     host_diff_usersets() -- Diff old/new exec host usersets
-*
-*  SYNOPSIS
-*     void host_diff_usersets(const lListElem *new, const lListElem *old, lList
-*     **new_acl, lList **old_acl)
-*
-*  FUNCTION
-*     A diff new/old is made regarding exec host acl/xacl.
-*     Userset references are returned in new_acl/old_acl.
-*
-*  INPUTS
-*     const lListElem *new - New exec host (EH_Type)
-*     const lListElem *old - Old exec host (EH_Type)
-*     lList **new_acl      - New userset references (US_Type)
-*     lList **old_acl      - Old userset references (US_Type)
-*
-*  NOTES
-*     MT-NOTE: host_diff_usersets() is not MT safe
-*******************************************************************************/
-void host_diff_usersets(const lListElem *new,
-      const lListElem *old, lList **new_acl, lList **old_acl)
-{
-   host_diff_sublist(new, old, EH_acl, EH_xacl,
-         US_name, US_Type, new_acl, old_acl);
-   lDiffListStr(US_name, new_acl, old_acl);
-}
-
-
-
-/****** sge_host_qmaster/host_update_categories() ******************************
-*  NAME
-*     host_update_categories() --  Update categories wrts userset/project
-*
-*  SYNOPSIS
-*     static void host_update_categories(const lListElem *new_hep, const
-*     lListElem *old_hep)
-*
-*  FUNCTION
-*     The userset/project information wrts categories is updated based
-*     on new/old exec host configuration and events are sent upon
-*     changes.
-*
-*
-*  INPUTS
-*     const lListElem *new_hep - New exec host (EH_Type)
-*     const lListElem *old_hep - Old exec host (EH_Type)
-*
-*  NOTES
-*     MT-NOTE: host_update_categories() is not MT safe
-*******************************************************************************/
-static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep)
-{
-   lList *old = NULL, *new = NULL;
-
-   host_diff_projects(new_hep, old_hep, &new, &old);
-   project_update_categories(new, old);
-   lFreeList(&old);
-   lFreeList(&new);
-
-   host_diff_usersets(new_hep, old_hep, &new, &old);
-   userset_update_categories(new, old);
-   lFreeList(&old);
-   lFreeList(&new);
-}
-

@@ -444,48 +444,48 @@ static bool calc_pos(void)
       if (config) {
          pos.empty = false;
 
-         ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm, SGE_NO_ABORT )) != -1; 
-         ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval, SGE_NO_ABORT)) != -1; 
-         ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs, SGE_NO_ABORT)) != -1;
-         ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method, SGE_NO_ABORT)) != -1;
+         ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm )) != -1; 
+         ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
+         ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
+         ret &= (pos.queue_sort_method = lGetPosViaElem(config, SC_queue_sort_method)) != -1;
 
-         ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments, SGE_NO_ABORT )) != -1;
-         ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time, SGE_NO_ABORT)) != -1;
-         ret &= (pos.load_formula = lGetPosViaElem(config, SC_load_formula, SGE_NO_ABORT)) != -1;
-         ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info, SGE_NO_ABORT)) != -1;
-         ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec, SGE_NO_ABORT)) != -1;
-         ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec, SGE_NO_ABORT)) != -1;
-         ret &= (pos.params = lGetPosViaElem(config, SC_params, SGE_NO_ABORT)) != -1;
+         ret &= (pos.job_load_adjustments = lGetPosViaElem(config,SC_job_load_adjustments )) != -1;
+         ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time)) != -1;
+         ret &= (pos.load_formula = lGetPosViaElem(config, SC_load_formula)) != -1;
+         ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info)) != -1;
+         ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec)) != -1;
+         ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec)) != -1;
+         ret &= (pos.params = lGetPosViaElem(config, SC_params)) != -1;
 
-         ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval, SGE_NO_ABORT)) != -1;
-         ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime, SGE_NO_ABORT)) != -1;
-         ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list, SGE_NO_ABORT)) != -1;
+         ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval)) != -1;
+         ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime)) != -1;
+         ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list)) != -1;
 
-         ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job, SGE_NO_ABORT)) != -1;
+         ret &= (pos.compensation_factor = lGetPosViaElem(config, SC_compensation_factor)) != -1;
+         ret &= (pos.weight_user = lGetPosViaElem(config, SC_weight_user)) != -1;
+         ret &= (pos.weight_project = lGetPosViaElem(config, SC_weight_project)) != -1;
+         ret &= (pos.weight_department = lGetPosViaElem(config, SC_weight_department)) != -1;
+         ret &= (pos.weight_job = lGetPosViaElem(config, SC_weight_job)) != -1;
 
-         ret &= (pos.weight_tickets_functional = lGetPosViaElem(config, SC_weight_tickets_functional, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_tickets_share = lGetPosViaElem(config, SC_weight_tickets_share, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_tickets_functional = lGetPosViaElem(config, SC_weight_tickets_functional)) != -1;
+         ret &= (pos.weight_tickets_share = lGetPosViaElem(config, SC_weight_tickets_share)) != -1;
+         ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override)) != -1;
 
-         ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets, SGE_NO_ABORT)) != -1;
-         ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares, SGE_NO_ABORT)) != -1;
-         ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule, SGE_NO_ABORT)) != -1;
-         ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets, SGE_NO_ABORT)) != -1;
-         ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job, SGE_NO_ABORT)) != -1;
-         ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list, SGE_NO_ABORT)) != -1;
-         ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy, SGE_NO_ABORT)) != -1;
+         ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets)) != -1;
+         ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares)) != -1;
+         ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule)) != -1;
+         ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets)) != -1;
+         ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job)) != -1;
+         ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list)) != -1;
+         ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy)) != -1;
 
-         ret &= (pos.weight_ticket = lGetPosViaElem(config, SC_weight_ticket, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency, SGE_NO_ABORT)) != -1;
-         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority, SGE_NO_ABORT)) != -1;
-         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation, SGE_NO_ABORT)) != -1;
-         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration, SGE_NO_ABORT)) != -1;
+         ret &= (pos.weight_ticket = lGetPosViaElem(config, SC_weight_ticket)) != -1;
+         ret &= (pos.weight_waiting_time = lGetPosViaElem(config, SC_weight_waiting_time)) != -1;
+         ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
+         ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
+         ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
+         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation)) != -1;
+         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration)) != -1;
       }
       else {
          ret = false;
@@ -570,9 +570,9 @@ bool sconf_set_config(lList **config, lList **answer_list)
    DRETURN(ret);
 }
 
-/****** sge_schedd_conf/sconf_is_valid_load_formula() *******************
+/****** sge_schedd_conf/sconf_is_valid_load_formula_() *******************
 *  NAME
-*     sconf_is_valid_load_formula() -- ??? 
+*     sconf_is_valid_load_formula_() -- ??? 
 *
 *  SYNOPSIS
 *     bool sconf_is_valid_load_formula_(lList **answer_list, lList 
@@ -588,26 +588,138 @@ bool sconf_set_config(lList **config, lList **answer_list)
 *  MT-NOTE:  is MT safe, uses LOCK_SCHED_CONF(read)
 *
 *******************************************************************************/
-bool sconf_is_valid_load_formula(lList **answer_list,
+bool sconf_is_valid_load_formula_(lList **answer_list,
                                   lList *centry_list)
 {
    bool is_valid = false;
-   lListElem *schedd_conf = NULL;
-   const char *load_formula = NULL;
 
    DENTER(TOP_LAYER, "sconf_is_valid_load_formula");
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
-
-   schedd_conf = lFirst(Master_Sched_Config_List);
-   /* Modify input */
-   load_formula = lGetString(schedd_conf, SC_load_formula);
-   sge_strip_blanks((char *)load_formula);
-
-   is_valid = validate_load_formula(load_formula, answer_list, centry_list, SGE_ATTR_LOAD_FORMULA);
+   
+   is_valid = sconf_is_valid_load_formula(lFirst(Master_Sched_Config_List),
+                                      answer_list, centry_list);
 
    sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
    DRETURN(is_valid);
 }
+/****** sge_schedd_conf/sconf_is_valid_load_formula() ********************
+*  NAME
+*     sconf_is_valid_load_formula() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_is_valid_load_formula(lListElem *schedd_conf, lList 
+*     **answer_list, lList *centry_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lListElem *schedd_conf - ??? 
+*     lList **answer_list    - ??? 
+*     lList *centry_list     - ??? 
+*
+*  RESULT
+*     bool - 
+*
+* MT-NOTE: is MT-safe, works only on the passed in data
+*
+*******************************************************************************/
+bool sconf_is_valid_load_formula(lListElem *schedd_conf,
+                                       lList **answer_list,
+                                       lList *centry_list)
+{
+   const char *load_formula = NULL;
+   bool ret = true;
+   char *new_load_formula = NULL;
+   
+   DENTER(TOP_LAYER, "sconf_is_valid_load_formula");
+
+   /* Modify input */
+   load_formula = lGetString(schedd_conf, SC_load_formula);
+   new_load_formula = sge_strdup(new_load_formula, load_formula);
+   sge_strip_blanks(new_load_formula);
+   lSetString(schedd_conf, SC_load_formula, new_load_formula);
+   sge_free(new_load_formula);
+   
+   load_formula = lGetString(schedd_conf, SC_load_formula);
+
+   /* Check for keyword 'none' */
+   if (ret == true) {
+      if (!strcasecmp(load_formula, "none")) {
+         answer_list_add(answer_list, MSG_NONE_NOT_ALLOWED, STATUS_ESYNTAX, 
+                         ANSWER_QUALITY_ERROR);
+         ret = false;
+      }
+   }
+
+   /* Check complex attributes and type */
+   if (ret == true) {
+      const char *term_delim = "+-";
+      const char *term, *next_term;
+      struct saved_vars_s *term_context = NULL;
+
+      next_term = sge_strtok_r(load_formula, term_delim, &term_context);
+      while ((term = next_term) && ret == true) {
+         const char *fact_delim = "*";
+         const char *fact, *next_fact, *end;
+         lListElem *cmplx_attr = NULL;
+         struct saved_vars_s *fact_context = NULL;
+         
+         next_term = sge_strtok_r(NULL, term_delim, &term_context);
+
+         fact = sge_strtok_r(term, fact_delim, &fact_context);
+         next_fact = sge_strtok_r(NULL, fact_delim, &fact_context);
+         end = sge_strtok_r(NULL, fact_delim, &fact_context);
+
+         /* first factor has to be a complex attr */
+         if (fact != NULL) {
+            cmplx_attr = centry_list_locate(centry_list, fact);
+
+            if (cmplx_attr != NULL) {
+               int type = lGetUlong(cmplx_attr, CE_valtype);
+
+               if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WRONGTYPE_ATTRIBUTE_S, 
+                                         fact));
+                  answer_list_add(answer_list, SGE_EVENT, 
+                                  STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  ret = false;
+               }
+            } 
+            else {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_S, 
+                              fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+         /* is weighting factor a number? */
+         if (next_fact != NULL) {
+            if (!sge_str_is_number(next_fact)) {
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_WEIGHTFACTNONUMB_S, 
+                              next_fact));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+            }
+         }
+
+         /* multiple weighting factors? */
+         if (end != NULL) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_MULTIPLEWEIGHTFACT));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
+         sge_free_saved_vars(fact_context);
+      }
+      sge_free_saved_vars(term_context);
+   }
+   
+   DRETURN(ret);
+}
+
 
 /****** sge_schedd_conf/sconf_create_default() ***************************
 *  NAME
@@ -2954,7 +3066,7 @@ bool sconf_validate_config_(lList **answer_list)
                             ANSWER_QUALITY_ERROR); 
             ret = false;
          }
-
+         
          pos.c_halflife_decay_list = halflife_decay_list;   
       } 
    }
@@ -3033,7 +3145,7 @@ bool sconf_validate_config_(lList **answer_list)
    /* --- SC_load_formula */
    {
       lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-      if (master_centry_list != NULL && !sconf_is_valid_load_formula(answer_list, master_centry_list)) {
+      if (master_centry_list != NULL && !sconf_is_valid_load_formula_(answer_list, master_centry_list )) {
          ret = false; 
       }
    }

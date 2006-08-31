@@ -296,7 +296,7 @@ int name_nm
       return fields?true:false;
    }
 
-   pos = lGetPosViaElem(ep, name_nm, SGE_NO_ABORT);
+   pos = lGetPosViaElem(ep, name_nm);
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    switch (dataType) {
       case lStringT:
@@ -832,7 +832,7 @@ bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key,
       int pos, dataType;
       lListElem *lep = lFirst(tmplp);
 
-      pos = lGetPosViaElem(lep, sub_name_nm, SGE_NO_ABORT);
+      pos = lGetPosViaElem(lep, sub_name_nm);
       dataType = lGetPosType(lGetElemDescr(lep),pos);
       switch (dataType) {
          case lStringT:

@@ -36,9 +36,9 @@
 ** ------------ to be called from within the data model layer 
 */
 
-int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list);
+int sge_add_job_category(lListElem *job, lList *acl_list);
 int sge_delete_job_category(lListElem *job);
-int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_list);
+int sge_rebuild_job_category(lList *job_list, lList *acl_list);
 void sge_free_job_category(void);
 lList *sge_category_job_copy(lList *queue_list, lList **orders);
 

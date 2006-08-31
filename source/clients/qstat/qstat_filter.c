@@ -338,14 +338,13 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
     */
    {
       lListElem *ep = NULL;
-      lCondition *tmp_nw = NULL;
 
       for_each(ep, user_list) {
-         tmp_nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
+         nw = lWhere("%T(%I p= %s)", JB_Type, JB_owner, lGetString(ep, ST_name));
          if (jw == NULL) {
-            jw = tmp_nw;
+            jw = nw;
          } else {
-            jw = lOrWhere(jw, tmp_nw);
+            jw = lOrWhere(jw, nw);
          }
       }
    }
@@ -565,14 +564,13 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
             nw = lOrWhere(nw, tmp_nw);
          } 
       }
+
+      if (jw == NULL) {
+         jw = nw;
+      } else {
+         jw = lAndWhere(jw, nw);
+      } 
    }
-
-   if (jw == NULL) {
-      jw = nw;
-   } else {
-      jw = lAndWhere(jw, nw);
-   } 
-
    return jw;
 }
 

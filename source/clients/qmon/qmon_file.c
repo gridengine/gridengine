@@ -46,38 +46,22 @@
 #include "qmon_file.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 
-lList* qmonReadFile(const char *filename)
-{
-   char *text = NULL;
-   lList *alp = NULL;
+lList* qmonReadFile(
+char *filename 
+) {
+   char *text;
+   SGE_STRUCT_STAT statb;
+   FILE *fp;
+   lList *answer = NULL;
+   char buf[BUFSIZ];
 
    DENTER(GUI_LAYER, "qmonReadFile");
 
-   text = qmonReadText(filename, &alp);
-
-   /* insert file contents in browser */
-   qmonBrowserShow(text);
-
-   /* free all allocated space and close */
-   XtFree(text);
-
-   DRETURN(alp);
-}   
-
-char *qmonReadText(const char *filename, lList **alpp)
-{
-   char *text = NULL;
-   SGE_STRUCT_STAT statb;
-   FILE *fp = NULL;
-
-   DENTER(GUI_LAYER, "qmonReadText");
-
-   if (filename == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                              "No filename specified");
-      DRETURN(NULL);
+   if (!filename) {
+      answer_list_add(&answer, "No filename specified", 
+                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(answer);
    }
 
    /* 
@@ -86,9 +70,9 @@ char *qmonReadText(const char *filename, lList **alpp)
    if (SGE_STAT(filename, &statb) == -1 
        || (statb.st_mode & S_IFMT) != S_IFREG 
        || !(fp = fopen(filename, "r"))) {
-      answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                      MSG_FILE_OPENFAILED_S, filename);
-      DRETURN(NULL);
+      sprintf(buf, "Cant open file '%s' for reading !", filename);
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(answer);
    }
 
    /* 
@@ -96,25 +80,30 @@ char *qmonReadText(const char *filename, lList **alpp)
    ** enough space for the entire file, reading the file into the
    ** allocated space, and using XmTextFieldSetString() to show the file.
    */
-   if ((text = XtMalloc((unsigned)(statb.st_size + 1))) == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                              MSG_MEMORY_MALLOCFAILED);
+   if (!(text = XtMalloc((unsigned)(statb.st_size + 1)))) {
+      sprintf(buf, "Cant alloc enough space for %s", filename);
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       FCLOSE(fp);
-      DRETURN(NULL);
+      DRETURN(answer);
    }
 
    if (!fread(text, sizeof (char), statb.st_size + 1, fp)) {
-      answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                              MSG_FILE_FREADFAILED_SS, filename, strerror(errno));
+      sprintf(buf, "May not have read entire file!\n");
+      answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
    }
 
    text[statb.st_size] = 0; /* be sure to NULL-terminate */
 
-   FCLOSE(fp);
-   DRETURN(text);
-FCLOSE_ERROR:
+   /* insert file contents in browser */
+   qmonBrowserShow(text);
+
+   /* free all allocated space and close */
    XtFree(text);
-   answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                           MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
-   DRETURN(NULL);
+   FCLOSE(fp);
+
+   DRETURN(answer);
+FCLOSE_ERROR:
+   sprintf(buf, MSG_FILE_NOCLOSE_SS, filename, strerror(errno));
+   answer_list_add(&answer, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+   DRETURN(answer);
 }

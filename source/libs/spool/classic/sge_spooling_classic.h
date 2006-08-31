@@ -34,11 +34,7 @@
 
 #include "spool/sge_spooling.h"
 
-#ifdef SPOOLING_classic
 const char *get_spooling_method(void);
-#else
-const char *get_classic_spooling_method(void);
-#endif
 
 lListElem *
 spool_classic_create_context(lList **answer_list, const char *args);

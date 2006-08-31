@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2006/03/01 22:05:52 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2005/11/09 17:44:40 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2006/03/01 22:05:52 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2005/11/09 17:44:40 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -69,31 +69,6 @@ drmaa_release_attr_names \- DRMAA job template attributes
 .\"
 .\"
 .nf
-\fBint drmaa_get_next_attr_value(\fB
-.RS
-\fBdrmaa_attr_values_t* values,\fB
-\fBchar *value,\fB
-\fBint value_len\fB
-.RE
-.fi
-);\fB
-.PP
-.\"
-.\"
-.\"
-.nf
-\fBint drmaa_get_num_attr_names(\fB
-.RS
-\fBdrmaa_attr_names_t* values,\fB
-\fBint *size\fB
-.RE
-.fi
-);\fB
-.PP
-.\"
-.\"
-.\"
-.nf
 \fBvoid drmaa_release_attr_names(\fB
 .RS
 \fBdrmaa_attr_names_t* values\fB
@@ -112,9 +87,6 @@ attribute names. The set includes supported DRMAA reserved attribute names
 and xxQS_NAMExx native attribute names. The names in the names string 
 vector can be extracted using 
 .M drmaa_get_next_attr_name 3 . 
-The number of names in the names string vector can be determined using
-.M drmaa_get_num_attr_names 3 .
-Note that this function is only available in the 1.0 implementation.
 The caller is responsible for releasing the names string 
 vector returned into \fIvalues\fP using 
 .M drmaa_release_attr_names 3 .

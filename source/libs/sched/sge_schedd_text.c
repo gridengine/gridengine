@@ -36,6 +36,8 @@
 #include "sgermon.h"
 #include "msg_schedd.h"
 
+
+
 /*
 ** Prototype for internationalized messages
 ** translation (used in sge_schedd_text() )
@@ -211,15 +213,9 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_MAX_AJ_INSTANCES_:
          return MSG_SCHEDD_INFO_MAX_AJ_INSTANCES_;
 
-      case SCHEDD_INFO_JOB_CATEGORY_FILTER_     :
-         return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_      ;
+      case SCHEDD_INFO_JOB_CATEGORY_FILTER_:
+         return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_;
 
-      case SCHEDD_INFO_CANNOTRUNLIRS_SSS        :
-         return MSG_SCHEDD_INFO_CANNOTRUNLIRS_SSS         ;
-
-      case SCHEDD_INFO_JOBDYNAMICALLIMIT_SS   :
-         return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS      ;
-            
 /* */
 
       case SCHEDD_INFO_CANNOTRUNATHOST          :

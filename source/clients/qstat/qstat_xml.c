@@ -525,16 +525,23 @@ static int xml_jobs_not_enrolled(lListElem *job, lListElem *qep,
    return STATUS_OK;
 }     
 
-static lListElem* sge_job_to_XML(lListElem *job, lListElem *jatep, lListElem *qep,
-                                 int print_jobid, char *master, dstring *dyn_task_str,
-                                 u_long32 full_listing, int slots, int slot,
-                                 const lList *exechost_list, const lList *centry_list,
-                                 const lList *pe_list, u_long32 group_opt,
-                                 int slots_per_line  /* number of slots to be printed
-                                                        in slots column when 0 is passed
-                                                        the number of requested slots
-                                                        printed */) 
-{
+static lListElem* sge_job_to_XML(
+lListElem *job,
+lListElem *jatep,
+lListElem *qep,
+int print_jobid,
+char *master,
+dstring *dyn_task_str,
+u_long32 full_listing,
+int slots,
+int slot,
+const lList *exechost_list,
+const lList *centry_list,
+const lList *pe_list,
+u_long32 group_opt,
+int slots_per_line  /* number of slots to be printed in slots column 
+                       when 0 is passed the number of requested slots printed */
+) {
    char state_string[8];
    u_long32 jstate;
    int sge_urg, sge_ext, sge_pri, sge_time;

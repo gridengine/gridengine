@@ -49,7 +49,66 @@
 #include "sge_resource_utilization.h"
 #include "sge_schedd_conf.h"
 #include "sge_serf.h"
-#include "sgeobj/sge_limit_rule.h"
+
+#ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
+
+#include "sge_qeti.h"
+/*
+cc -o sge_resource_utilization -Isecurity/sec -Icommon -Ilibs -Ilibs/uti -Ilibs/gdi -Ilibs/japi -Ilibs/sgeobj -Ilibs/cull
+-Ilibs/rmon -Ilibs/comm -Ilibs/comm/lists -Ilibs/sched -DMODULE_TEST_SGE_RESOURCE_UTILIZATION
+libs/sched/sge_resource_utilization.c -xarch=v9 -xildoff -L/vol2/SW/db-4.2.52/sol-sparc64/lib -LSOLARIS64 -g -lpthread -lsched
+-lmir -levc -lgdi -lsgeobj -lsgeobjd -lsec -lcull -lrmon -lcomm -lcommlists -luti -llck -ldl -lsocket -lnsl -lm
+*/
+int main(int argc, char *argv[]) 
+{
+   lListElem *cr;
+   sge_qeti_t *iter;
+   u_long32 pe_time;
+   extern sge_qeti_t *sge_qeti_allocate2(lListElem *cr);
+
+
+   DENTER_MAIN(TOP_LAYER, "sge_resource_utilization");
+
+   cr = lCreateElem(RUE_Type);
+   lSetString(cr, RUE_name, "slots");
+
+   printf("adding a 200s now assignment of 8 starting at 800\n");
+   utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING");   
+   utilization_print(cr, "pe_slots");
+
+   printf("adding a 100s now assignment of 4 starting at 1000\n");
+   utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING");   
+   utilization_print(cr, "pe_slots");
+
+   printf("adding a 100s reservation of 8 starting at 1100\n");
+   utilization_add(cr, 1100, 100, 8, 102, 1, PE_TAG, "pe_slots", "RESERVING");   
+   utilization_print(cr, "pe_slots");
+
+   printf("max utilization starting at 1000 for a 100s job: %f\n",
+      utilization_max(cr, 1000, 100));
+
+   printf("max utilization starting at 1200 for a 1000s job: %f\n",
+      utilization_max(cr, 1200, 1000));
+
+   printf("max utilization starting at 700 for a 150s job: %f\n",
+      utilization_max(cr, 700, 150));
+
+   /* use a QETI to iterate through times */
+
+   /* sge_qeti_allocate() */
+   iter = sge_qeti_allocate2(cr);
+
+   /* sge_qeti_first() */
+   for (pe_time = sge_qeti_first(iter); pe_time; pe_time = sge_qeti_next(iter)) {
+      printf("QETI returns "sge_u32"\n", pe_time);
+   }
+
+   return 0;
+}
+
+
+
+#endif
 
 static void utilization_normalize(lList *diagram);
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration);
@@ -60,12 +119,6 @@ static int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *
 
 static void utilization_find_time_or_prevstart_or_prev(lList *diagram, 
       u_long32 time, lListElem **hit, lListElem **before);
-
-static int 
-lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
-                         lListElem *rule, dstring rue_name, lList *centry_list,
-                         int slots, const char *obj_name, u_long32 start_time,
-                         u_long32 end_time);
 
 /****** sge_resource_utilization/utilization_print_to_dstring() ****************
 *  NAME
@@ -157,7 +210,7 @@ void utilization_print(const lListElem *cr, const char *object_name)
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
 #ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-      printf("\t"sge_u32"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
+      printf("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
 #endif
    }
 
@@ -297,6 +350,8 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    the element before it is returned or NULL if no such exists.
 
 */
+
+
 static void utilization_find_time_or_prevstart_or_prev(lList *diagram, u_long32 time, lListElem **hit, lListElem **before)
 { 
    lListElem *start, *this, *prev;
@@ -511,9 +566,8 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
 *
 *  FUNCTION
 *     The resouce utilization of an assignment is debited into the schedules 
-*     of global, host and queue instance resource containers and limitation
-*     rule sets. For parallel jobs debitation is made also with the parallel
-*     environement schedule.
+*     of global, host and queue instance resource containers. For parallel
+*     jobs debitation is made also with the parallel environement schedule.
 *
 *  INPUTS
 *     const sge_assignment_t *a - The assignement
@@ -530,7 +584,6 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
 {
    lListElem *gel, *qep, *hep; 
    int slots = 0;
-   dstring rue_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "add_job_utilization");
 
@@ -597,58 +650,14 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
                a->duration, QUEUE_TAG);
    }
 
-   /* limitation rule sets */
-   for_each(gel, a->gdil) {
-      int slots = lGetUlong(gel, JG_slots);
-      const char* user = lGetString(a->job, JB_owner);
-      const char* project = lGetString(a->job, JB_project);
-      const char* pe = lGetString(a->job, JB_pe);
-      const char* host = lGetHost(gel, JG_qhostname);
-      char *queue = NULL;
-      const char *queue_instance = lGetString(gel, JG_qname);
-
-      char *at_sign = NULL;
-      lListElem *lirs = NULL;
-
-      if ((at_sign = strchr(queue_instance, '@'))) {
-         int size = at_sign - queue_instance;
-         queue = malloc(sizeof(char)*size);
-         queue = strncpy(queue, queue_instance, size);
-      } else {
-         queue = strdup(lGetString(gel, JG_qname));
-      }
-      
-      for_each(lirs, a->lirs_list) {
-         lListElem *rule = NULL;
-
-         if (!lGetBool(lirs, LIRS_enabled)) {
-            continue;
-         }
-
-         rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list,
-                                       a->hgrp_list, NULL);
-         if (rule != NULL) {
-
-            limit_rule_get_rue_string(&rue_name, rule, user, project,
-                                host, queue, pe);
-
-            lirs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
-                                     a->centry_list, slots, lGetString(lirs, LIRS_name),
-                                     a->start, a->duration);
-         }
-      }
-      FREE(queue);
-   }
-
-   sge_dstring_free(&rue_name);
-
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 static int 
 rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
-   lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
-   const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag) 
+      lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
+      const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -707,91 +716,6 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       }
    }
 
-   DRETURN(mods);
-}
-
-/****** sge_resource_utilization/lirs_add_job_utilization() ********************
-*  NAME
-*     lirs_add_job_utilization() -- Debit assignment's utilization in a limitation
-*                                   rule
-*
-*  SYNOPSIS
-*     static int lirs_add_job_utilization(lListElem *jep, u_long32 task_id, 
-*     const char *type, lListElem *rule, dstring rue_name, lList *centry_list, 
-*     int slots, const char *obj_name, u_long32 start_time, u_long32 end_time) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lListElem *jep       - job element (JB_Type)
-*     u_long32 task_id     - task id to debit
-*     const char *type     - String denoting type of utilization entry 
-*     lListElem *rule      - limitation rule (LIR_Type)
-*     dstring rue_name     - rue_name where to debit
-*     lList *centry_list   - master centry list (CE_Type)
-*     int slots            - slots to debit
-*     const char *obj_name - name of the object where to debit
-*     u_long32 start_time  - start time of utilization
-*     u_long32 end_time    - end time of utilization
-*
-*  RESULT
-*     static int - amount of modified limits
-*
-*  NOTES
-*     MT-NOTE: lirs_add_job_utilization() is MT safe 
-*
-*  SEE ALSO
-*     sge_resource_utilization/rc_add_job_utilization()
-*     sge_resource_utilization/add_job_utilization()
-*******************************************************************************/
-static int 
-lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
-   lListElem *rule, dstring rue_name, lList *centry_list, int slots, const char *obj_name,
-   u_long32 start_time, u_long32 end_time)
-{
-   lList *limit_list;
-   lListElem *limit;
-   const char *centry_name;
-   int mods = 0;
-
-   DENTER(TOP_LAYER, "lirs_add_job_utilization");
-
-   if (jep != NULL) {
-      limit_list = lGetList(rule, LIR_limit);
-
-      for_each(limit, limit_list) {
-         bool tmp_ret;
-         lListElem *raw_centry;
-         lListElem *rue_elem;
-         double dval;
-
-         centry_name = lGetString(limit, LIRL_name);
-         
-         if (!(raw_centry = centry_list_locate(centry_list, centry_name))) {
-            /* ignoring not defined centry */
-            continue;
-         }
-
-         if (!lGetBool(raw_centry, CE_consumable)) {
-            continue;
-         }
-
-         rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage);
-         if(rue_elem == NULL) {
-            rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage, RUE_Type);
-            /* RUE_utilized_now is implicitly set to zero */
-         }
-
-         tmp_ret = job_get_contribution(jep, NULL, centry_name, &dval, raw_centry);
-         if (tmp_ret && dval != 0.0) {
-            /* update RUE_utilized resource diagram to reflect jobs utilization */
-            utilization_add(rue_elem, start_time, end_time, slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, LIRS_TAG, obj_name, type);
-            mods++;
-         }
-      }
-   }
-
-   DRETURN(mods);
+   DEXIT;
+   return mods;
 }

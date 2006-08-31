@@ -54,7 +54,6 @@ ___INFO__MARK_END__-->
 	<xs:complexType name="cqueue_summary_t">
 		<xs:sequence>
 			<xs:element name="name" type="xs:string"/>
-        	<xs:element name="load" type="xs:float" minOccurs="0"/>
 			<xs:element name="used" type="xs:unsignedInt"/>
 			<xs:element name="available" type="xs:unsignedInt"/>
 			<xs:element name="total" type="xs:unsignedInt"/>

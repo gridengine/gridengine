@@ -6,6 +6,8 @@
 #
 FILE=$1
 
+echo "__ my id is ->`id`<-"
+
 if [ -x $FILE ]; then
   if [ -s $FILE ]; then
      tail -1 $FILE|grep _END_OF_FILE_ > /dev/null
@@ -15,6 +17,4 @@ if [ -x $FILE ]; then
      fi
   fi
 fi
-
 echo "file not found"
-exit 1

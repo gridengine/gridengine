@@ -141,14 +141,13 @@ void sge_print_categories(void) {
 /*                                                                         */
 /*  TODO SG: split this into seperate functions                            */
 /*-------------------------------------------------------------------------*/
-int sge_add_job_category( lListElem *job, lList *acl_list, const lList *prj_list) {
+int sge_add_job_category( lListElem *job, lList *acl_list ) {
 
    lListElem *cat = NULL;
    const char *cstr = NULL;
    u_long32 rc = 0;
    static const char no_requests[] = "no-requests";
    dstring category_str = DSTRING_INIT;
-   bool did_project;
 
    DENTER(TOP_LAYER, "sge_add_job_category");
   
@@ -156,7 +155,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list, const lList *prj_list
       Builds the category for the resource matching
    */   
    
-   sge_build_job_category_dstring(&category_str, job, acl_list, prj_list, &did_project);
+   sge_build_job_category_dstring(&category_str, job, acl_list);
 
    if (sge_dstring_strlen(&category_str) == 0) {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
@@ -194,7 +193,7 @@ int sge_add_job_category( lListElem *job, lList *acl_list, const lList *prj_list
       lListElem *job_ref = NULL; 
       lList *job_ref_list = NULL;
       
-      cstr = sge_build_job_cs_category(&category_str, job, cat, did_project);
+      cstr = sge_build_job_cs_category(&category_str, job, cat);
 
       cat = NULL; 
       if (cstr == NULL)  {
@@ -375,18 +374,16 @@ void sge_set_job_category_message_added( lRef cat ) {
 /*-------------------------------------------------------------------------*/
 /* rebuild the category references                                         */
 /*-------------------------------------------------------------------------*/
-int sge_rebuild_job_category( lList *job_list, lList *acl_list, const lList *prj_list) {
+int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
    lListElem *job;
 
    DENTER(TOP_LAYER, "sge_rebuild_job_category");
-
-   DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
 
    lFreeList(&CATEGORY_LIST);
    lFreeList(&CS_CATEGORY_LIST);
 
    for_each (job, job_list) {
-      sge_add_job_category(job, acl_list, prj_list);
+      sge_add_job_category(job, acl_list);
    } 
    DEXIT;
    return 0;
@@ -413,7 +410,9 @@ int sge_cs_category_count(void) {
 *     Some information in the category should only life throu one scheduling run.
 *     These informations are reseted in the call:
 *     - dispatching messages
+*     - not suitable queues
 *     - soft violations
+*     - not suitable hosts
 *     - not suitable cluster
 *     - the flag that identifies, if the messages are already added to the schedd infos
 *     - something with the resource reservation

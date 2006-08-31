@@ -433,7 +433,7 @@ int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_set_alias_file()"
-int cl_host_list_set_alias_file(cl_raw_list_t* list_p, const char *host_alias_file) {
+int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file) {
    int ret_val;
    cl_host_list_data_t* ldata = NULL;
 

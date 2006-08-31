@@ -39,7 +39,8 @@ SCHEDD_TARGETS = sge_schedd sge_share_mon
 SCHEDD_SRC  = sge_schedd.c \
              scheduler.c \
              sge_category.c \
-             sge_process_events.c 
+             sge_process_events.c \
+             interactive_sched.c 
 
 SCHEDD_ADD_SRC = category.c \
              read_write_complex.c \
@@ -120,6 +121,10 @@ sge_category.o : $(SCHEDD_SDIR)/sge_category.c
 
 sge_process_events.o : $(SCHEDD_SDIR)/sge_process_events.c
 	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/sge_process_events.c
+
+interactive_sched.o : $(SCHEDD_SDIR)/interactive_sched.c
+	$(CC) $(CFLAGS) -c $(SCHEDD_SDIR)/interactive_sched.c
+
 
 # -------------------------------------------------
 # this modules belong into a scheduling library

@@ -70,7 +70,6 @@
 #include "qmon_cplx.h"
 #include "qmon_calendar.h"
 #include "sge_feature.h"
-#include "qmon_lirs.h"
 
 /*-------------------------------------------------------------------------*/
 #ifdef QMON_DEBUG
@@ -130,8 +129,6 @@ static XmtMenuItem task_menu_items[] = {
 
    {XmtMenuItemPushButton, "@{Browser Dialog}", 'B', "Alt<Key>B", "Alt+B",
          qmonBrowserOpen, NULL},
-   {XmtMenuItemPushButton, "@{Limit Rule Configuration}", 'L', "Alt<Key>L", "Alt+L",
-         qmonLIRSPopup, NULL},
    {XmtMenuItemEnd}
 };
 
@@ -214,7 +211,6 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupCkptConfig, NULL, "@{@fBCheckpoint Configuration}" },
    { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
-   { qmonLIRSPopup, NULL, "@{@fBLimit Rule Configuration}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }
 };
@@ -265,7 +261,6 @@ Widget parent
       "CKPT_CONFIG",
       "TICKET_OVERVIEW",
       "PROJECT_CONFIG",
-      "LIMITRULE_CONFIG",
       "BROWSER",
       "EXIT" };
 #define AUTOMATIC_MAINBAR   

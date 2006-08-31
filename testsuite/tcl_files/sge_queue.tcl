@@ -81,6 +81,7 @@
 #     change_array(qtype)                "BATCH INTERACTIVE" 
 #     change_array(rerun)                "FALSE"
 #     change_array(slots)                "1"
+#     change_array(tmpdir)               "/tmp"
 #     change_array(shell)                "/bin/csh"
 #     change_array(shell_start_mode)     "NONE"
 #     change_array(prolog)               "NONE"
@@ -150,7 +151,7 @@
 #
 #  RESULT
 #     -1   timeout error
-#     -2   queue already exists
+#     -2   queue allready exists
 #      0   ok 
 #
 #  EXAMPLE
@@ -181,6 +182,7 @@
 #     change_array(qtype)                "BATCH INTERACTIVE" 
 #     change_array(rerun)                "FALSE"
 #     change_array(slots)                "1"
+#     change_array(tmpdir)               "/tmp"
 #     change_array(shell)                "/bin/csh"
 #     change_array(shell_start_mode)     "NONE"
 #     change_array(prolog)               "NONE"
@@ -244,6 +246,7 @@ proc set_queue_defaults { change_array } {
    set chgar(processors)           "UNDEFINED"
    set chgar(rerun)                "FALSE"
    set chgar(slots)                "10"
+   set chgar(tmpdir)               "/tmp"
    set chgar(shell)                "/bin/csh"
    set chgar(shell_start_mode)     "posix_compliant"
    set chgar(prolog)               "NONE"
@@ -363,7 +366,7 @@ proc set_queue_defaults { change_array } {
 #     change_array(qtype)                "BATCH INTERACTIVE" 
 #     change_array(rerun)                "FALSE"
 #     change_array(slots)                "1"
-#     change_array(tmpdir)               "/tmp/testsuite_1234"
+#     change_array(tmpdir)               "/tmp"
 #     change_array(shell)                "/bin/csh"
 #     change_array(shell_start_mode)     "NONE"
 #     change_array(prolog)               "NONE"
@@ -474,7 +477,7 @@ proc get_queue { q_name change_array } {
 #*******************************
 proc suspend_queue { qname } {
   global ts_config
- global CHECK_ARCH CHECK_HOST CHECK_USER
+ global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
  global CHECK_OUTPUT
   log_user 0 
    if { $ts_config(gridengine_version) == 53 } {
@@ -551,7 +554,7 @@ proc suspend_queue { qname } {
 #*******************************
 proc unsuspend_queue { queue } {
   global ts_config
-   global CHECK_ARCH CHECK_HOST CHECK_USER
+   global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
    global CHECK_OUTPUT
 
   set timeout 30
@@ -628,7 +631,7 @@ proc unsuspend_queue { queue } {
 #*******************************
 proc disable_queue { queuelist } {
   global ts_config
- global CHECK_ARCH
+ global CHECK_ARCH open_spawn_buffer 
   global CHECK_OUTPUT CHECK_HOST CHECK_USER
   global CHECK_CORE_MASTER CHECK_USER
   
@@ -722,7 +725,7 @@ proc disable_queue { queuelist } {
 #*******************************
 proc enable_queue { queuelist } {
   global ts_config
-  global CHECK_ARCH
+  global CHECK_ARCH open_spawn_buffer 
   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_CORE_MASTER 
   
   set return_value ""
@@ -913,25 +916,26 @@ proc clear_queue {queue {output_var result}  {on_host ""} {as_user ""} {raise_er
 #
 #  RESULT
 #     Returncode for clear_queue function:
-#      -1:  invalid queue or job "queue"
+#      -1:  cluster queue "queue" does not exist
 #     -99: other error
 #
 #  SEE ALSO
 #     sge_calendar/get_calendar
 #     sge_procedures/handle_sge_errors
 #*******************************************************************************
-proc clear_queue_error {result queue raise_error} {
+proc clear_queue_error {result calendar raise_error} {
 
    # recognize certain error messages and return special return code
-   set messages(index) "-1 "
-   set messages(-1) [translate_macro MSG_QUEUE_INVALIDQORJOB_S $queue]
+   set messages(index) "-1"
+   set messages(-1) [translate_macro MSG_CALENDAR_XISNOTACALENDAR_S $calendar]
 
    # we might have version dependent, calendar specific error messages
-   get_clear_queue_error_vdep messages $queue
+   get_calendar_error_vdep messages $calendar
 
    set ret 0
    # now evaluate return code and raise errors
-   set ret [handle_sge_errors "get_calendar" "qconf -cq $queue" $result messages $raise_error]
+   set ret [handle_sge_errors "get_calendar" "qconf -cq $calendar" $result messages
+$raise_error]
 
    return $ret
 }

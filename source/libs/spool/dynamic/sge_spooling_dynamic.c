@@ -55,11 +55,7 @@
 
 static const char *spooling_method = "dynamic";
 
-#ifdef SPOOLING_dynamic
 const char *get_spooling_method(void)
-#else
-const char *get_dynamic_spooling_method(void)
-#endif
 {
    return spooling_method;
 }
@@ -112,18 +108,8 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
 
    /* retrieve function pointer of get_method function in shared lib */
    if (ok) {
-      char buffer[MAX_STRING_SIZE];
-      dstring get_spooling_method_func_name;
-
-      sge_dstring_init(&get_spooling_method_func_name, buffer, 
-                       MAX_STRING_SIZE);
-
-      sge_dstring_sprintf(&get_spooling_method_func_name,
-                          "get_%s_spooling_method", method);
-
       get_spooling_method = (spooling_get_method_func)
-                            dlsym(shlib_handle, 
-                            sge_dstring_get_string(&get_spooling_method_func_name));
+                            dlsym(shlib_handle, "get_spooling_method");
       if (get_spooling_method == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 

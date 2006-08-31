@@ -130,12 +130,12 @@ proc submit_del_test { } {
    wait_for_end_of_all_jobs 180
 
    if { $CHECK_L10N == 1 } {
-         if { $ts_config(gridengine_version) == 53 } {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-         } else {
+         if { $ts_config(gridengine_version) == 60 } {
             set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
             set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
+         } else {
+            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
          }
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]

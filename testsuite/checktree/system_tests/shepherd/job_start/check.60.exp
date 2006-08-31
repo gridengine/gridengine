@@ -242,6 +242,7 @@ proc job_start_test {} {
    }
 
    foreach spool_type $type_list {
+
       # set correct spool type for all execd hosts
       puts $CHECK_OUTPUT "using \"$spool_type\" spool directory for:"
       foreach host $hosts_to_check {
@@ -606,9 +607,7 @@ proc job_start_test {} {
                               add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file execvp output arg 2 doesn't match \"-display\": $trace_argument2"
                            }
                            if { $trace_argument3 != "$CHECK_DISPLAY_OUTPUT" } {
-                              # make this an "unsupported" warning - it depends on testsuite user config
-                              # and user shell setup
-                              add_proc_error "job_start_test" -3 "$current_run_text shepherd trace file execvp output arg 3 doesn't match \"$CHECK_DISPLAY_OUTPUT\": $trace_argument3"
+                              add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file execvp output arg 3 doesn't match \"$CHECK_DISPLAY_OUTPUT\": $trace_argument3"
                            }
                            if { $trace_argument4 != "-n" } {
                               add_proc_error "job_start_test" -1 "$current_run_text shepherd trace file execvp output arg 4 doesn't match \"-n\": $trace_argument4"

@@ -74,7 +74,7 @@ typedef enum {
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 
-#if defined(NETBSD) || defined(LINUXAMD64)
+#if defined(FREEBSD) || defined(NETBSD) || defined(LINUXAMD64)
 #  define sge_U32CFormat "%u"  
 #  define sge_u32c(x)  (unsigned int)(x)
 
@@ -162,8 +162,6 @@ extern "C" {
 #define MAX_STRING_SIZE 2048
 typedef char stringT[MAX_STRING_SIZE];
 
-#define MAX_VERIFY_STRING 512
-
 #define INTSIZE     4           /* (4) 8 bit bytes */
 #if defined(_UNICOS)
 #define INTOFF      4           /* big endian 64-bit machines where sizeof(int) = 8 */
@@ -214,6 +212,7 @@ typedef char stringT[MAX_STRING_SIZE];
 #if defined(INTERIX)
 #  define seteuid(euid) setreuid(-1, euid)
 #  define setegid(egid) setregid(-1, egid)
+#  define getgrgid_r getgrgid_nomembers_r
 #endif
     
 

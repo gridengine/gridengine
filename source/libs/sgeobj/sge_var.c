@@ -44,8 +44,6 @@
 #include "sge_stdlib.h"
 #include "sge_string.h"
 #include "sge_centry.h"
-#include "sge_answer.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/var/-VariableList **********************************************
 *  NAME
@@ -753,48 +751,3 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    DEXIT;
    return 0;
 }
-
-/****** sge_var/var_list_verify() **********************************************
-*  NAME
-*     var_list_verify() -- verify contents of a variable list
-*
-*  SYNOPSIS
-*     bool 
-*     var_list_verify(const lList *lp, lList **answer_list) 
-*
-*  FUNCTION
-*     Verifies the contents of a variable list.
-*     Variable names may not be NULL or empty strings.
-*
-*  INPUTS
-*     const lList *lp     - the list to verify
-*     lList **answer_list - answer list to pass back error messages
-*
-*  RESULT
-*     bool - true on success, 
-*            false in case of errors, error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: var_list_verify() is MT safe 
-*******************************************************************************/
-bool 
-var_list_verify(const lList *lp, lList **answer_list)
-{
-   bool ret = true;
-   lListElem *ep;
-
-   for_each (ep, lp) {
-      const char *variable = lGetString(ep, VA_variable);
-      if (variable == NULL || variable[0] == '\0') {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_OBJECT_VARIABLENAME_NOT_EMPTY);
-         ret = false;
-         break;
-      }
-   }
-
-   /* TODO: further checks, e.g. length, format strings */
-
-   return ret;
-}
-

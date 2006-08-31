@@ -137,7 +137,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
    
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
-   if (sge_get_auth_info(request, &uid, user, sizeof(user), &gid, group, sizeof(group)) == -1) {
+   if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
@@ -145,7 +145,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer, moni
       return;
    }
 
-   if (!request->host || (strlen(user) == 0) || !request->commproc || !request->id) {
+   if (!request->host || !user || !request->commproc || !request->id) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(&(answer->alp), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

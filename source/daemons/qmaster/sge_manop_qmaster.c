@@ -95,7 +95,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    }
 
    /* ep is no acl element, if ep has no MO_name */
-   if ((pos = lGetPosViaElem(ep, MO_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, MO_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(MO_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -186,7 +186,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    }
 
    /* ep is no manop element, if ep has no MO_name */
-   if ((pos = lGetPosViaElem(ep, MO_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, MO_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(MO_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

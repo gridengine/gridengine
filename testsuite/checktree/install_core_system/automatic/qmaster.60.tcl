@@ -91,15 +91,13 @@ proc install_qmaster {} {
    }
 
    #dump hostlist to file
-   set admin_hosts "$ts_config(all_nodes) $ts_config(shadowd_hosts)"
-   set admin_hosts [lsort -unique $admin_hosts]
-
    set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
    set f [open $host_file_name w]
-   foreach host $admin_hosts {
-      puts $f $host
+   foreach exechost $ts_config(execd_nodes) {
+    puts $f "${exechost}"
    }
    close $f
+
 
    cd "$ts_config(product_root)"
 
@@ -155,14 +153,7 @@ proc write_autoinst_config { filename host { do_cleanup 1 } } {
    set bdb_server $ts_config(bdb_server)
    if {$bdb_server == "none"} {
       set db_dir [get_bdb_spooldir $ts_config(master_host) 1]
-      # deleting berkeley db spool dir. autoinstall will stop, if
-      # bdb spooldir exists.
-      if {[file isdirectory "$db_dir"] == 1} {
-         delete_directory "$db_dir"
-      }
    } else {
-      # in this case, the berkeley db rpc server spool dir will be removed,
-      # by rpc server install procedure
       set db_dir [get_bdb_spooldir $bdb_server 1]
    }
    puts $CHECK_OUTPUT "db_dir is $db_dir"

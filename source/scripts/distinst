@@ -43,13 +43,13 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
              qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
-             qloadsensor.exe sgepasswd qlimit"
+             qloadsensor.exe sgepasswd"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot authuser \
+                 adminrun qrsh_starter testsuidroot \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
-                 fstype SGE_Helper_Service.exe"
+                 fstype"
 
 BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
@@ -68,15 +68,13 @@ QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
 QMON_NEED_SHARED_LIBRARIES="libXltree"
 OPENSSL_SHARED_LIBRARIES="libcrypto libssl"
 
-BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
+BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
 DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 DRMAAJ_FILES="CLASSES/drmaa.jar"
-
-JUTIJ_FILES="CLASSES/juti/dist/juti.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -223,10 +221,8 @@ SetArchBin()
       ARCHBIN=NECSX5
    elif [ $i = sx ]; then
       ARCHBIN=NECSX5
-   elif [ $i = darwin-ppc ]; then
-      ARCHBIN=DARWIN_PPC
-   elif [ $i = darwin-x86 ]; then
-      ARCHBIN=DARWIN_X86
+   elif [ $i = darwin ]; then
+      ARCHBIN=DARWIN
    elif [ $i = fbsd-alpha ]; then
       ARCHBIN=FREEBSD_ALPHA
    elif [ $i = fbsd-amd64 ]; then
@@ -298,8 +294,7 @@ ArchTable()
    echo "necsx5                NECSX 5.x"
    echo "sx                    NECSX 5.x"
    echo "necsx6                NECSX 6.x"
-   echo "darwin-ppc            MacOS 10.x PowerPC"
-   echo "darwin-x86            MacOS 10.x x86"
+   echo "darwin                MacOS 10.x"
    echo "fbsd-alpha            Alpha FreeBSD"
    echo "fbsd-amd64            AMD64 FreeBSD"
    echo "fbsd-i386             x86 FreeBSD"
@@ -446,7 +441,7 @@ fi
 # VERSIONDIR   -> directory below $BASEDIR where distribution is installed
 # MANSRCDIR    -> directory from which proprocessed man pages are taken
 # ARCH         -> list of binary architectures
-# PROG         -> list of programs and special install targets
+# PROG         -> list of programs ans special install targets
 # localinst    -> Use $SGE_ROOT for target directory
 BASEDIR=undefined
 VERSIONDIR=undefined
@@ -975,7 +970,7 @@ if [ $instcommon = true ]; then
          Execute cp $f $DEST_SGE_ROOT/include
       done
 
-      for filename in $DRMAAJ_FILES $JUTIJ_FILES; do
+      for filename in $DRMAAJ_FILES; do
          if [ -f $filename ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
@@ -1240,7 +1235,7 @@ for i in $ARCH; do
                else
                   echo \"openssl\" binary not found
                fi
-            elif [ $prog = testsuidroot -o $prog = authuser ]; then
+            elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
             elif [ $prog = berkeley_db_svc -o $prog = db_archive \
                    -o $prog = db_checkpoint -o $prog = db_deadlock \
@@ -1249,11 +1244,7 @@ for i in $ARCH; do
                    -o $prog = db_stat -o $prog = db_upgrade \
                    -o $prog = db_verify ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
-                  if [ -f $BERKELEYDBBASE/$DSTARCH/bin/$prog ]; then
-                     InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
-                  elif [ -f $BERKELEYDBBASE/bin/$prog ]; then
-                     InstallProg $BERKELEYDBBASE/bin/$prog
-                  fi
+                  InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi
             elif [ $prog = spoolinit -o $prog = spooldefaults ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
@@ -1271,12 +1262,8 @@ for i in $ARCH; do
                      InstallProg $prog
                   fi
                fi
-            elif [ "$prog" = "SGE_Helper_Service.exe" ]; then
-               if [ "$DSTARCH" = "win32-x86" ]; then
-                  InstallProg $prog
-               fi
             elif [ "$DSTARCH" != "win32-x86" -o "$prog" != "spooledit" ]; then
-               InstallProg $prog
+                  InstallProg $prog
             fi
          done
          for prog in $REMOTEBINARIES; do
@@ -1313,7 +1300,7 @@ for i in $ARCH; do
             shlibext="sl"
             jnilibext="sl"
             ;;
-         darwin-*)
+         darwin)
             shlibext="dylib"
             jnilibext="jnilib"
             ;;
@@ -1365,27 +1352,30 @@ for i in $ARCH; do
 
                if [ $DSTARCH = tru64 ]; then
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
-               elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$OPENSSLSOVERSION.$shlibext"
+               elif [ $DSTARCH = darwin ];  then
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
                else
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.$OPENSSLSOVERSION"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
                fi
 
                if [ -f $libname ]; then
                   InstallProg $libname
                   if [ $DSTARCH = tru64 ]; then
                      :
-                  elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
+                  elif [ $DSTARCH = darwin ]; then
                      (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
-                      ln -s $lib.$OPENSSLSOVERSION.$shlibext $lib.$shlibext)
+                      ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
                   else
-                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.$OPENSSLSOVERSION $lib.$shlibext)
+                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
                   fi
                elif [ $exit_on_error = true ]; then
                   echo "\"$libname\" not found. Installation failed."
                   exit 1
                fi
             done
+            if [ $DSTARCH = darwin ]; then
+               InstallProg "$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
+            fi   
          fi
 
          if [ $DSTARCH != win32-x86 ]; then

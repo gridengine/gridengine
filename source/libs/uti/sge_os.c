@@ -67,13 +67,12 @@
 #include "sge_log.h"
 #include "sig_handlers.h"
 
-#include "msg_common.h"
 #include "msg_utilib.h"
 
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
 static int fd_pipe[2];
 
-/****** sge_os/sge_get_pids() *************************************************
+/****** uti/os/sge_get_pids() *************************************************
 *  NAME
 *     sge_get_pids() -- Return all "pids" of a running processes 
 *
@@ -87,8 +86,8 @@ static int fd_pipe[2];
 *     Checks only basename of command after "/".
 *
 *  INPUTS
-*     pid_t *pids           - pid array
-*     int max_pids          - size of pid array
+*     pid_t *pids           - pid list 
+*     int max_pids          - size of pid list 
 *     const char *name      - name 
 *     const char *pscommand - ps commandline
 *
@@ -119,7 +118,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
       return -1;
    }
 
-   while (!feof(fp_out) && num_of_pids<max_pids) {
+   while (!feof(fp_out)) {
       if ((fgets(buf, sizeof(buf), fp_out))) {
          if ((len = strlen(buf))) {
 
@@ -159,7 +158,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    return num_of_pids;
 }
 
-/****** sge_os/sge_contains_pid() *********************************************
+/****** uti/os/sge_contains_pid() *********************************************
 *  NAME
 *     sge_contains_pid() -- Checks whether pid array contains pid 
 *
@@ -194,7 +193,7 @@ int sge_contains_pid(pid_t pid, pid_t *pids, int npids)
    return 0;
 }
 
-/****** sge_os/sge_checkprog() ************************************************
+/****** uti/os/sge_checkprog() ************************************************
 *  NAME
 *     sge_checkprog() -- Has "pid" of a running process the given "name" 
 *
@@ -552,7 +551,7 @@ int sge_daemonize_finalize(void) {
 
 
 
-/****** sge_os/sge_daemonize() ************************************************
+/****** uti/os/sge_daemonize() ************************************************
 *  NAME
 *     sge_daemonize() -- Daemonize the current application
 *
@@ -588,7 +587,6 @@ int sge_daemonize(fd_set *keep_open)
    char domname[256];
 #endif
    pid_t pid;
-   int failed_fd;
  
    DENTER(TOP_LAYER, "sge_daemonize");
  
@@ -638,16 +636,19 @@ int sge_daemonize(fd_set *keep_open)
   yp_unbind(domname);
 #endif
  
+#ifndef __INSURE__
    /* close all file descriptors */
    sge_close_all_fds(keep_open);
  
    /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
-   failed_fd = sge_occupy_first_three();
-   if (failed_fd  != -1) {
-      CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
+   if (open("/dev/null",O_RDONLY,0)!=0)
       SGE_EXIT(0);
-   }
-
+   if (open("/dev/null",O_WRONLY,0)!=1)
+      SGE_EXIT(0);
+   if (open("/dev/null",O_WRONLY,0)!=2)
+      SGE_EXIT(0);
+#endif
+ 
    SETPGRP;
  
    uti_state_set_daemonized(1);
@@ -656,42 +657,7 @@ int sge_daemonize(fd_set *keep_open)
    return 1;
 }     
 
-/****** sge_os/redirect_to_dev_null() ******************************************
-*  NAME
-*     redirect_to_dev_null() -- redirect a channel to /dev/null
-*
-*  SYNOPSIS
-*     int redirect_to_dev_null(int target, int mode) 
-*
-*  FUNCTION
-*     Attaches a certain filedescriptor to /dev/null.
-*
-*  INPUTS
-*     int target - file descriptor
-*     int mode   - mode for open
-*
-*  RESULT
-*     int - target fd number if everything was ok,
-*           else -1
-*
-*  NOTES
-*     MT-NOTE: redirect_to_dev_null() is MT safe 
-*
-*******************************************************************************/
-int redirect_to_dev_null(int target, int mode)
-{
-   SGE_STRUCT_STAT buf;
-
-   if (SGE_FSTAT(target, &buf)) {
-      if ((open("/dev/null", mode, 0)) != target) {
-         return target;
-      }
-   }
-
-   return -1;
-}
-
-/****** sge_os/sge_occupy_first_three() ***************************************
+/****** uti/os/sge_occupy_first_three() ***************************************
 *  NAME
 *     sge_occupy_first_three() -- Open descriptor 0, 1, 2 to /dev/null
 *
@@ -712,32 +678,43 @@ int redirect_to_dev_null(int target, int mode)
 *
 *  NOTES
 *     MT-NOTE: sge_occupy_first_three() is MT safe
-*
-*  SEE ALSO
-*     sge_os/redirect_to_dev_null()
-*     sge_os/sge_close_all_fds()
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
-   int ret = -1;
-
+#ifndef __INSURE__
+   SGE_STRUCT_STAT buf;
+#endif
+ 
    DENTER(TOP_LAYER, "occupy_first_three");
-
-   ret = redirect_to_dev_null(0, O_RDONLY);
-
-   if (ret == -1) {
-      ret = redirect_to_dev_null(1, O_WRONLY);
+ 
+#ifndef __INSURE__
+   if (SGE_FSTAT(0, &buf)) {
+      if ((open("/dev/null",O_RDONLY,0))!=0) {
+         DEXIT;
+         return 0;
+      }
    }
-
-   if (ret == -1) {
-      ret = redirect_to_dev_null(2, O_WRONLY);
+ 
+   if (SGE_FSTAT(1, &buf)) {
+      if ((open("/dev/null",O_WRONLY,0))!=1) {
+         DEXIT;
+         return 1;
+      }
    }
-
+ 
+   if (SGE_FSTAT(2, &buf)) {
+      if ((open("/dev/null",O_WRONLY,0))!=2) {
+         DEXIT;
+         return 2;
+      }
+   }
+#endif
+ 
    DEXIT;
-   return ret;
+   return -1;
 }  
 
-/****** sge_os/sge_close_all_fds() ********************************************
+/****** uti/os/sge_close_all_fds() ********************************************
 *  NAME
 *     sge_close_all_fds() -- close (all) file descriptors
 *
@@ -753,22 +730,14 @@ int sge_occupy_first_three(void)
 *
 *  NOTES
 *     MT-NOTE: sge_close_all_fds() is MT safe
-*
-*  SEE ALSO
-*     sge_os/sge_occupy_first_three()
 ******************************************************************************/
-#ifdef __INSURE__
-extern int _insure_is_internal_fd(int);
-#endif
-
 void sge_close_all_fds(fd_set *keep_open)
 {
+/* JG: trying to close insights (insure) internal fd will be rejected */
    int fd;
    int maxfd;
    bool ignore = false;
-
-   DENTER(TOP_LAYER, "sge_close_all_fds");
-
+ 
 #ifndef WIN32NATIVE
    maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
      FD_SETSIZE : sysconf(_SC_OPEN_MAX);
@@ -786,10 +755,7 @@ void sge_close_all_fds(fd_set *keep_open)
          }
       }
 #ifdef __INSURE__
-      if (_insure_is_internal_fd(fd)) {
-         WARNING((SGE_EVENT, "INSURE: fd %d will not be closed", fd));
-         ignore = true;
-      }
+      ignore = true;
 #endif
 
       if (ignore == false) {
@@ -800,8 +766,6 @@ void sge_close_all_fds(fd_set *keep_open)
 #endif /* WIN32NATIVE */
       }
    }
-
-   DEXIT;
    return;
 }  
 

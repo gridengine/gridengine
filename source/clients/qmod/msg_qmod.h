@@ -48,6 +48,7 @@
 #define MSG_QMOD_d_OPT_USAGE      _MESSAGE(11014, _("disable"))
 #define MSG_QMOD_e_OPT_USAGE      _MESSAGE(11015, _("enable"))
 #define MSG_QMOD_f_OPT_USAGE      _MESSAGE(11016, _("force action"))
+#define MSG_QMOD_help_OPT_USAGE   _MESSAGE(11017, _("print this help"))
 #define MSG_QMOD_s_OPT_USAGE      _MESSAGE(11018, _("suspend"))
 #define MSG_QMOD_s_OPT_USAGE_J    _MESSAGE(11019, _("suspend jobs"))
 #define MSG_QMOD_s_OPT_USAGE_Q    _MESSAGE(11020, _("suspend queues"))

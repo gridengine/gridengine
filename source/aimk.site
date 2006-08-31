@@ -54,14 +54,7 @@ setenv TMPDIR /tmp
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_SOVERSION = 0.9.7e
-set OPENSSL_HOME = /vol2/tools/SW/openssl-$OPENSSL_SOVERSION/$buildarch
-
-
-#
-# set junit jar file, needed for juti
-#
-set JUNIT_JAR = '/vol2/tools/SW/java/junit3.8.1/junit.jar'
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7e/$buildarch
 
 # 
 # POSTGRES_HOME the directory where the include and lib directory of 
@@ -73,7 +66,8 @@ set POSTGRES_HOME = /vol2/tools/SW/postgresql-7.3.2/$buildarch
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed
 #
-set BERKELEYDB_HOME = /vol2/SW/db-4.4.20/$buildarch
+set BERKELEYDB_HOME = /vol2/SW/db-4.2.52/$buildarch
+#set BERKELEYDB_HOME = /vol2/SW/db-4.3.3/$buildarch
 set BDB_INCLUDE_SUBDIR =
 set BDB_LIB_SUBDIR =
 set BDB_LIB_SUFFIX =
@@ -170,19 +164,15 @@ switch($buildarch)
       set WIN32_VS_BASE = "C:\VisualStudio"
       set WIN32_VS_I1 = "${WIN32_VS_BASE}\Vc7\include"
       set WIN32_VS_I2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Include"
-      set WIN32_VS_I3 = "${WIN32_VS_BASE}\Vc7\atlmfc\include"
       set WIN32_VS_L1 = "${WIN32_VS_BASE}\Vc7\Lib"
       set WIN32_VS_L2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Lib"
-      set WIN32_VS_L3 = "${WIN32_VS_BASE}\Vc7\atlmfc\lib"
       breaksw
    deafult:
       set WIN32_VS_BASE = ""
       set WIN32_VS_I1 = ""
       set WIN32_VS_I2 = ""
-      set WIN32_VS_I3 = ""
       set WIN32_VS_L1 = ""
       set WIN32_VS_L2 = ""
-      set WIN32_VS_L3 = ""
       breaksw
 endsw
 

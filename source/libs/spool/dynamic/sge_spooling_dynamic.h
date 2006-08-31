@@ -53,11 +53,8 @@
 ****************************************************************************
 */
 
-#ifdef SPOOLING_dynamic
-const char *get_spooling_method(void);
-#else
-const char *get_dynamic_spooling_method(void);
-#endif
+const char *
+get_spooling_method(void);
 
 lListElem *
 spool_dynamic_create_context(lList **answer_list, const char *method,

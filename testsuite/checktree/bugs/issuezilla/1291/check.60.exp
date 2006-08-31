@@ -65,7 +65,7 @@ proc issue_1291_init_level {} {
 }
 
 proc issue_1291_run  {} {
-   global CHECK_OUTPUT ts_config
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT ts_config
 
    set name "\"\""
 
@@ -77,13 +77,14 @@ proc issue_1291_run  {} {
    set errstr "ok"
    
    # Test
-   set result [start_sge_bin "qdel" "$name" ]
+   set catch_result [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" $name "2>/dev/null" } result]
+
    if { $result == "" } {
       set errno -1
-      set errstr "qdel exited with exit code $prg_exit_state and didn't do any output"
+      set errstr "qdel exited with exit code $catch_result and didn't do any output"
    } else {
-      if { ! [string match "*${INVALID_AT_QDEL}*" $result] } {
-         if { [string match "*${INVALID_AT_QMASTER}*" $result] } {
+      if { ! [string match "${INVALID_AT_QDEL}*" $result] } {
+         if { [string match "${INVALID_AT_QMASTER}*" $result] } {
             set errno -1
             set errstr "qdel allows $name as a valid job id, but qmaster rejects it.\nqdel output: $result"
          } else {

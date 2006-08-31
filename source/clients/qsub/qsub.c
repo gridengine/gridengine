@@ -279,10 +279,7 @@ char **argv
 
       DPRINTF(("job id is: %ld\n", jobids->it.ji.jobid));
       
-      jobid_string = get_bulk_jobid_string ((long)jobids->it.ji.jobid,
-                                            jobids->it.ji.start,
-                                            jobids->it.ji.end,
-                                            jobids->it.ji.incr);
+      jobid_string = get_bulk_jobid_string ((long)jobids->it.ji.jobid, start, end, step);
    }
    else if (num_tasks == 1) {
       int error = japi_run_job(&jobid, job, &diag);
@@ -310,7 +307,7 @@ char **argv
          goto Error;
       }
 
-      jobid_string = strdup(sge_dstring_get_string(&jobid));
+      jobid_string = strdup (sge_dstring_get_string (&jobid));
       DPRINTF(("job id is: %s\n", jobid_string));
 
       sge_dstring_free (&jobid);
@@ -328,7 +325,7 @@ char **argv
       const char *output = sge_dstring_get_string(&diag); 
 
       if (output != NULL) {
-        printf("%s", output);
+        printf(output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
       }
@@ -425,7 +422,7 @@ Error:
    lFreeList(&alp);
    lFreeList(&opts_all);
    
-   if ((tmp_ret = japi_exit(JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
+   if ((tmp_ret = japi_exit (true, JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
          fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
@@ -541,7 +538,7 @@ static void qsub_terminate(void)
    fprintf(stderr, "\n%s\n", MSG_QSUB_INTERRUPTED);
    fprintf(stderr, "%s\n", MSG_QSUB_TERMINATING);
 
-   tmp_ret = japi_exit(JAPI_EXIT_KILL_PENDING, &diag);
+   tmp_ret = japi_exit (true, JAPI_EXIT_KILL_PENDING, &diag);
    
    /* No active session here means that the main thread beat us to exiting,
       in which case, we just quietly give up and go away. */
@@ -655,7 +652,7 @@ static int report_exit_status (int stat, const char *jobid)
          exit_status = 1;
       }
    }
-   printf("\n");
+  printf("\n");
    
    return exit_status;
 }

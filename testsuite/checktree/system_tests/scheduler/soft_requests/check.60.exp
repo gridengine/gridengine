@@ -134,7 +134,7 @@ proc soft_requests_cleanup  {} {
    # left qmaster
    delete_all_jobs
    wait_for_end_of_all_jobs 60
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    sleep 5
 
    # enable all.q
@@ -162,7 +162,7 @@ proc soft_requests_submit_pejobs_and_wait { request host_list } {
    set job_id [submit_job "-o /dev/null -e /dev/null -pe round_robin 2 -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -208,7 +208,7 @@ proc soft_requests_submit_jobs_and_wait { request host_list } {
    set job_id [submit_job "-o /dev/null -e /dev/null -soft -l $request $ts_config(product_root)/examples/jobs/sleeper.sh 100"]
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -256,7 +256,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
       lappend map($arch) $host
    }
      
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
      
    set submited_jobs 0
    set job_id_list {}
@@ -271,7 +271,7 @@ proc soft_requests_submit_pejobs_and_wait2 { } {
    }   
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0
@@ -327,7 +327,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
       lappend map($arch) $host
    }
      
-   trigger_scheduling
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
      
    set submited_jobs 0
    set job_id_list {}
@@ -342,7 +342,7 @@ proc soft_requests_submit_jobs_and_wait2 { } {
    }   
 
    while { 1 } {
-      trigger_scheduling
+      catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
       set running_jobs 0
       set error 0
       set match 0

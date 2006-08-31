@@ -50,15 +50,13 @@
 #define MSG_SEC_KRBENCRYPTTGT_SSIS    _MESSAGE(43020, _("could not encrypt TGT for client <"SFN","SFN",%d> - "SFN))
 #define MSG_SEC_KRBENCRYPTTGTUSER_SUS _MESSAGE(43021, _("could not encrypt TGT for user "SFN", job "sge_U32CFormat" - "SFN))
 #define MSG_SEC_NOUID_SU              _MESSAGE(43022, _("could not get user ID for "SFN", job "sge_U32CFormat))
-#define MSG_REQUEST_DENIED_FOR_USER_S _MESSAGE(43023, _("request denied for user "SFN))
-#define MSG_ADMIN_REQUEST_DENIED_FOR_USER_S _MESSAGE(43024, _("admin request denied for user "SFN))
 
 /* 
 ** gdilib/sge_any_request.c
 */ 
 #define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data"))
 #define MSG_GDI_INITCOMMLIBFAILED                     _MESSAGE(43046, _("failed initialize communication library"))
-#define MSG_GDI_NO_VALID_PROGRAMM_NAME                _MESSAGE(43047, _("got no valid program name"))
+#define MSG_GDI_NO_VALID_PROGRAMM_NAME                _MESSAGE(43047, _("got no valid programname"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))

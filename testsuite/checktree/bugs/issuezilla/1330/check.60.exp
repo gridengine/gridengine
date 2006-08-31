@@ -59,7 +59,7 @@ set check_root_access_needs "yes"
 set check_init_level_procedure "Autoinstall_test_init_level"
 
 # define test's name and run level descriptions
-set check_name            "issue_1330"
+set check_name            "Issue_1330"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level  0 
 set check_description(0)  "This test installs sge using the automatic installation"
@@ -107,7 +107,6 @@ lappend check_functions "setup_schedconf"
 lappend check_functions "setup_default_calendars"
 lappend check_functions "setup_check_user_permissions"
 lappend check_functions "setup_check_messages_files"
-lappend check_functions "setup_win_users"
 lappend check_functions "setup_inhouse_cluster"
 
 global Autoinstall_test_test_hosts

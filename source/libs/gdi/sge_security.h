@@ -96,19 +96,10 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target);
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group);
 
-int sge_get_auth_info(sge_gdi_request *request, 
-                      uid_t *uid, char *user, size_t user_len,
-                      gid_t *gid, char *group, size_t group_len);
+int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
+                        gid_t *gid, char *group);
 
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
-
-bool sge_security_verify_unique_identifier(bool check_admin_user, 
-                                           const char* user, 
-                                           const char* progname,
-                                           unsigned long progid, 
-                                           const char* hostname, 
-                                           const char* commproc, 
-                                           unsigned long commid);
 
 void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor);
 

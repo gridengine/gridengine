@@ -416,14 +416,6 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          element = object;
          object_type = SGE_TYPE_USERSET;
          break;
-      case sgeE_LIRS_LIST:
-      case sgeE_LIRS_ADD:
-      case sgeE_LIRS_DEL:
-      case sgeE_LIRS_MOD:
-         key = strkey;
-         element = object;
-         object_type = SGE_TYPE_LIRS;
-         break;
 #ifndef __SGE_NO_USERMAPPING__
       case sgeE_CUSER_LIST:
       case sgeE_CUSER_ADD:
@@ -472,7 +464,6 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
          case sgeE_USERSET_DEL:
-         case sgeE_LIRS_DEL:
 #ifndef __SGE_NO_USERMAPPING__
          case sgeE_CUSER_DEL:
 #endif

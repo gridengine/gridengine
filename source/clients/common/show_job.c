@@ -82,38 +82,38 @@ void cull_show_job(lListElem *job, int flags)
          printf("job_number:                 %s\n", MSG_JOB_UNASSIGNED);
    }
 
-   if (lGetPosViaElem(job, JB_exec_file, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_exec_file)>=0)
       if (lGetString(job, JB_exec_file))
          printf("exec_file:                  %s\n", lGetString(job, JB_exec_file));
 
-   if (lGetPosViaElem(job, JB_submission_time, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_submission_time)>=0)
       if ((ultime = (time_t)lGetUlong(job, JB_submission_time))) {
          printf("submission_time:            %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_deadline, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_deadline)>=0)
       if ((ultime = (time_t)lGetUlong(job, JB_deadline))) {
          printf("deadline:                   %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_owner, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_owner)>=0) {
       if (lGetString(job, JB_owner))
          printf("owner:                      %s\n", lGetString(job, JB_owner));
       else
          printf("owner:                      %s\n", "");
    }
    
-   if (lGetPosViaElem(job, JB_uid, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_uid)>=0)
       printf("uid:                        %d\n", (int) lGetUlong(job, JB_uid));
 
-   if (lGetPosViaElem(job, JB_group, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_group)>=0) {
       if (lGetString(job, JB_group))
          printf("group:                      %s\n", lGetString(job, JB_group));
       else
          printf("group:                      %s\n", "");
    }
    
-   if (lGetPosViaElem(job, JB_gid, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_gid)>=0)
       printf("gid:                        %d\n", (int) lGetUlong(job, JB_gid));
 
    {
@@ -151,35 +151,35 @@ void cull_show_job(lListElem *job, int flags)
       }
    }
 
-   if (lGetPosViaElem(job, JB_execution_time, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_execution_time)>=0)
       if ((ultime = (time_t)lGetUlong(job, JB_execution_time)))
          printf("execution_time:             %s", ctime((time_t *) &ultime));
 
-   if (lGetPosViaElem(job, JB_account, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_account)>=0)
       if (lGetString(job, JB_account))
          printf("account:                    %s\n", lGetString(job, JB_account));
 
-   if (lGetPosViaElem(job, JB_checkpoint_name, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_checkpoint_name)>=0)
       if (lGetString(job, JB_checkpoint_name))
          printf("checkpoint_object:          %s\n", lGetString(job, JB_checkpoint_name));
 
-   if (lGetPosViaElem(job, JB_checkpoint_attr, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_checkpoint_attr)>=0)
       if (lGetUlong(job, JB_checkpoint_attr)) {
          printf("checkpoint_attr:            ");
          sge_show_checkpoint(SGE_STDOUT, lGetUlong(job, JB_checkpoint_attr));
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_checkpoint_interval, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_checkpoint_interval)>=0)
       if (lGetUlong(job, JB_checkpoint_interval)) {
          printf("checkpoint_interval:        ");
          printf("%d seconds\n", (int) lGetUlong(job, JB_checkpoint_interval));
       }
 
-   if (lGetPosViaElem(job, JB_cwd, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_cwd)>=0) {
       if (lGetString(job, JB_cwd))
          printf("cwd:                        %s\n", lGetString(job, JB_cwd));
-      if (lGetPosViaElem(job, JB_path_aliases, SGE_NO_ABORT)>=0)
+      if (lGetPosViaElem(job, JB_path_aliases)>=0)
          if (lGetList(job, JB_path_aliases)) {
             int fields[] = { PA_origin, PA_submit_host, PA_exec_host,
                                        PA_translation, 0 };
@@ -191,11 +191,11 @@ void cull_show_job(lListElem *job, int flags)
          }
    }
 
-   if (lGetPosViaElem(job, JB_directive_prefix, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_directive_prefix)>=0)
       if (lGetString(job, JB_directive_prefix))
          printf("directive_prefix:           %s\n", lGetString(job, JB_directive_prefix));
 
-   if (lGetPosViaElem(job, JB_stderr_path_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_stderr_path_list)>=0)
       if (lGetList(job, JB_stderr_path_list)) {
          int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
@@ -206,42 +206,42 @@ void cull_show_job(lListElem *job, int flags)
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_reserve, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_reserve)>=0)
       if (lGetBool(job, JB_reserve)) {
          printf("reserve:                    ");
          sge_show_y_n(lGetBool(job, JB_reserve), SGE_STDOUT);
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_merge_stderr, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_merge_stderr)>=0)
       if (lGetBool(job, JB_merge_stderr)) {
          printf("merge:                      ");
          sge_show_y_n(lGetBool(job, JB_merge_stderr), SGE_STDOUT);
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_hard_resource_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_hard_resource_list)>=0)
       if (lGetList(job, JB_hard_resource_list)) {
          printf("hard resource_list:         ");
          sge_show_ce_type_list(lGetList(job, JB_hard_resource_list));
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_soft_resource_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_soft_resource_list)>=0)
       if (lGetList(job, JB_soft_resource_list)) {
          printf("soft resource_list:         ");
          sge_show_ce_type_list(lGetList(job, JB_soft_resource_list));
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_mail_options, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_mail_options)>=0)
       if (lGetUlong(job, JB_mail_options)) {
          printf("mail_options:               ");
          sge_show_mail_options(lGetUlong(job, JB_mail_options), SGE_STDOUT);
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_mail_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_mail_list)>=0)
       if (lGetList(job, JB_mail_list)) {
          int fields[] = { MR_user, MR_host, 0 };
 
@@ -251,17 +251,17 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_notify, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_notify)>=0)
       printf("notify:                     %s\n", (lGetBool(job, JB_notify) ? "TRUE" : "FALSE"));
 
-   if (lGetPosViaElem(job, JB_job_name, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_job_name)>=0) {
       if (lGetString(job, JB_job_name))
          printf("job_name:                   %s\n", lGetString(job, JB_job_name));
       else
          printf("job_name:                   %s\n", "");
    }
    
-   if (lGetPosViaElem(job, JB_stdout_path_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_stdout_path_list)>=0)
       if (lGetList(job, JB_stdout_path_list)) {
          int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
@@ -272,7 +272,7 @@ void cull_show_job(lListElem *job, int flags)
          printf("\n");
       }
    
-   if (lGetPosViaElem(job, JB_stdin_path_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
       if (lGetList(job, JB_stdin_path_list)) {
          int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
@@ -283,18 +283,18 @@ void cull_show_job(lListElem *job, int flags)
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_priority, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_priority)>=0)
       if (lGetUlong(job, JB_priority) != BASE_PRIORITY) {
          printf("priority:                   ");
          printf("%d\n", (int) lGetUlong(job, JB_priority) - BASE_PRIORITY);
       }
 
-   if (lGetPosViaElem(job, JB_jobshare, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_jobshare)>=0) {
       printf("jobshare:                   ");
       printf(sge_u32"\n", lGetUlong(job, JB_jobshare));
    }
 
-   if (lGetPosViaElem(job, JB_hard_queue_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_hard_queue_list)>=0)
       if (lGetList(job, JB_hard_queue_list)) {
          int fields[] = {QR_name, 0 };
 
@@ -304,7 +304,7 @@ void cull_show_job(lListElem *job, int flags)
                         fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_soft_queue_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_soft_queue_list)>=0)
       if (lGetList(job, JB_soft_queue_list)) {
          int fields[] = {QR_name, 0 };
 
@@ -314,14 +314,14 @@ void cull_show_job(lListElem *job, int flags)
                         fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_restart, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_restart)>=0)
       if (lGetUlong(job, JB_restart)) {
          printf("restart:                    ");
          sge_show_y_n((lGetUlong(job, JB_restart)==2)?0:1, SGE_STDOUT);
          printf("\n");
       }
 
-   if (lGetPosViaElem(job, JB_shell_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_shell_list)>=0)
       if (lGetList(job, JB_shell_list)) {
          int fields[] = {PN_host, PN_path, 0 };
 
@@ -331,11 +331,11 @@ void cull_show_job(lListElem *job, int flags)
             delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_verify, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_verify)>=0)
       if (lGetUlong(job, JB_verify))
          printf("verify:                     %s\n", "-verify");
 
-   if (lGetPosViaElem(job, JB_env_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_env_list)>=0) {
       int print_new_line = 1;
 
       if (lGetList(job, JB_env_list)) {
@@ -361,7 +361,7 @@ void cull_show_job(lListElem *job, int flags)
    } 
    
 
-   if (lGetPosViaElem(job, JB_job_args, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_job_args)>=0)
       if (lGetList(job, JB_job_args) || (flags & FLG_QALTER)) {
          int fields[] = {ST_name, 0 };
 
@@ -371,7 +371,7 @@ void cull_show_job(lListElem *job, int flags)
                            delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_qs_args, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_qs_args)>=0)
       if (lGetList(job, JB_qs_args) || (flags & FLG_QALTER)) {
          int fields[] = {ST_name, 0 };
          delis[0] = "";
@@ -380,7 +380,7 @@ void cull_show_job(lListElem *job, int flags)
                            delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_master_hard_queue_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_master_hard_queue_list)>=0)
       if (lGetList(job, JB_master_hard_queue_list)) {
          int fields[] = {QR_name, 0 };
          delis[0] = " ";
@@ -389,7 +389,7 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
-   if (lGetPosViaElem(job, JB_job_identifier_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_job_identifier_list)>=0)
       if (lGetList(job, JB_job_identifier_list)) {
          int fields[] = { JRE_job_number, 0 };
 
@@ -399,19 +399,23 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_script_size, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_script_size)>=0)
       if (lGetUlong(job, JB_script_size))
          printf("script_size:                "sge_uu32"\n", lGetUlong(job, JB_script_size));
 
-   if (lGetPosViaElem(job, JB_script_file, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_script_file)>=0)
       if (lGetString(job, JB_script_file))
          printf("script_file:                %s\n", lGetString(job, JB_script_file));
 
-   if (lGetPosViaElem(job, JB_script_ptr, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_script_ptr)>=0)
       if (lGetString(job, JB_script_ptr))
          printf("script_ptr:            \n%s\n", lGetString(job, JB_script_ptr));
 
-   if (lGetPosViaElem(job, JB_pe, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_job_source)>=0)
+      if (lGetString(job, JB_job_source))
+         printf("job_source:                 %s\n", lGetString(job, JB_job_source));
+
+   if (lGetPosViaElem(job, JB_pe)>=0)
       if (lGetString(job, JB_pe)) {
          dstring range_string = DSTRING_INIT;
 
@@ -422,7 +426,7 @@ void cull_show_job(lListElem *job, int flags)
          sge_dstring_free(&range_string);
       }
 
-   if (lGetPosViaElem(job, JB_jid_request_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_jid_request_list)>=0)
       if (lGetList(job, JB_jid_request_list) ) {
          int fields[] = { JRE_job_name, 0 };
 
@@ -433,7 +437,7 @@ void cull_show_job(lListElem *job, int flags)
       }
 
 
-   if (lGetPosViaElem(job, JB_jid_predecessor_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
          int fields[] = { JRE_job_number, 0 };
 
@@ -443,7 +447,7 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_jid_successor_list, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_jid_successor_list)>=0)
       if (lGetList(job, JB_jid_successor_list)) {
          int fields[] = { JRE_job_number, 0 };
 
@@ -453,36 +457,36 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_verify_suitable_queues, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_verify_suitable_queues)>=0)
       if (lGetUlong(job, JB_verify_suitable_queues))
          printf("verify_suitable_queues:     %d\n", (int)lGetUlong(job, JB_verify_suitable_queues));
 
-   if (lGetPosViaElem(job, JB_soft_wallclock_gmt, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_soft_wallclock_gmt)>=0)
       if ((ultime = (time_t)lGetUlong(job, JB_soft_wallclock_gmt))) {
          printf("soft_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_hard_wallclock_gmt, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_hard_wallclock_gmt)>=0)
       if ((ultime = (time_t)lGetUlong(job, JB_hard_wallclock_gmt))) {
          printf("hard_wallclock_gmt:         %s", ctime((time_t *) &ultime));
       }
 
-   if (lGetPosViaElem(job, JB_version, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_version)>=0)
       if (lGetUlong(job, JB_version))
          printf("version:                    %d\n", (int) lGetUlong(job, JB_version));
       /*
       ** problem: found no format anywhere
       */
 
-   if (lGetPosViaElem(job, JB_override_tickets, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_override_tickets)>=0)
       if (lGetUlong(job, JB_override_tickets))
          printf("oticket:                    %d\n", (int) lGetUlong(job, JB_override_tickets));
 
-   if (lGetPosViaElem(job, JB_project, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_project)>=0)
       if (lGetString(job, JB_project))
          printf("project:                    %s\n", lGetString(job, JB_project));
 
-   if (lGetPosViaElem(job, JB_ja_structure, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(job, JB_ja_structure)>=0) {
       u_long32 start, end, step;
 
       job_get_submit_task_ids(job, &start, &end, &step);
@@ -490,7 +494,7 @@ void cull_show_job(lListElem *job, int flags)
          printf("job-array tasks:            "sge_u32"-"sge_u32":"sge_u32"\n", start, end, step);
    }
 
-   if (lGetPosViaElem(job, JB_context, SGE_NO_ABORT)>=0)
+   if (lGetPosViaElem(job, JB_context)>=0)
       if (lGetList(job, JB_context)) {
          int fields[] = {VA_variable, VA_value, 0 };
 
@@ -511,7 +515,7 @@ void cull_show_job(lListElem *job, int flags)
          dst += lGetDouble(uep, UA_value); \
       }
 
-   if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(job, JB_ja_tasks) >= 0) {
       lListElem *uep, *jatep, *pe_task_ep;
 
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
@@ -571,7 +575,7 @@ void cull_show_job(lListElem *job, int flags)
          }
       }
    }
-   if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(job, JB_ja_tasks) >= 0) {
       lListElem *jatep;
 
       for_each (jatep, lGetList(job, JB_ja_tasks)) {

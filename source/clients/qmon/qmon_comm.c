@@ -41,9 +41,9 @@
 #include "commlib.h"
 #include "sge_gdi.h"
 #include "sge_any_request.h"
-#include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_all_listsL.h"
+#include "sge_answer.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
@@ -94,8 +94,7 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_JOB_SCHEDD_INFO, JOB_SCHEDD_INFO_T, NULL, 0, NULL, NULL },
    { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL },
    { 0, SGE_USER_MAPPING_LIST, USER_MAPPING_T, NULL, 0, NULL, NULL },
-   { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL },
-   { 0, SGE_LIRS_LIST, LIRS_T, NULL, 0, NULL, NULL }
+   { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL }
 };
    
 static char *sge_gdi_list_types[] = {
@@ -123,8 +122,7 @@ static char *sge_gdi_list_types[] = {
    "JOB_SCHEDD_INFO",
    "ZOMBIE_JOBS",
    "USER_MAPPING",
-   "HGROUP",
-   "LIRS"
+   "HGROUP"
 };
 
 
@@ -159,7 +157,6 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_ZOMBIE_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
    QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
-   QmonMirrorList[SGE_LIRS_LIST].what = lWhat("%T(ALL)", LIRS_Type);
 
    DEXIT;
 }

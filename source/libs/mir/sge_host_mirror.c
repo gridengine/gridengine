@@ -45,9 +45,9 @@
 *     host_update_master_list() -- update the master hostlists
 *
 *  SYNOPSIS
-*     sge_callback_result lirs_update_master_list(object_description 
-*     *object_base, sge_object_type type, sge_event_action action, lListElem 
-*     *event, void *clientdata) 
+*     bool 
+*     host_update_master_list(sge_object_type type, sge_event_action action,
+*                             lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the global master lists of hosts
@@ -57,7 +57,6 @@
 *     on the event received.
 *
 *  INPUTS
-*     object_description *object_base - base object
 *     sge_object_type type     - event type
 *     sge_event_action action - action to perform
 *     lListElem *event        - the raw event
@@ -74,31 +73,53 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-sge_callback_result
-host_update_master_list(object_description *object_base, sge_object_type type, 
-                        sge_event_action action, lListElem *event, void *clientdata)
+bool 
+host_update_master_list(sge_object_type type, sge_event_action action,
+                        lListElem *event, void *clientdata)
 {
    lList **list;
    const lDescr *list_descr;
    int     key_nm;
 
    const char *key;
+   object_description *object_base = object_type_get_object_description();
+
 
    DENTER(TOP_LAYER, "host_update_master_list");
-   list = sge_master_list(object_base, type);
+   
    list_descr = lGetListDescr(lGetList(event, ET_new_version));
-   key_nm = object_type_get_key_nm(type); 
-
+   
+   switch (type) {
+      case SGE_TYPE_ADMINHOST:
+         list = object_base[SGE_TYPE_ADMINHOST].list;
+         key_nm = AH_name;
+         break;
+      case SGE_TYPE_EXECHOST:
+         list = object_base[SGE_TYPE_EXECHOST].list;
+         key_nm = EH_name;
+         break;
+      case SGE_TYPE_SUBMITHOST:
+         list = object_base[SGE_TYPE_SUBMITHOST].list;
+         key_nm = SH_name;
+         break;
+      case SGE_TYPE_HGROUP:
+         list = object_base[SGE_TYPE_HGROUP].list;
+         key_nm = HGRP_name;
+         break;
+      default:
+         return false;
+   }
+ 
    key = lGetString(event, ET_strkey);
 
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
 
       DEXIT;
-      return SGE_EMA_FAILURE;
+      return false;
    }
 
    DEXIT;
-   return SGE_EMA_OK;
+   return true;
 }
 

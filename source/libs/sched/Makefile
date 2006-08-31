@@ -59,28 +59,17 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sge_orders.c \
               sge_schedd_text.c \
               sge_ssi.c \
-              sge_sharetree_printing.c \
-              sge_interactive_sched.c \
-              sge_lirs_schedd.c
+              sge_sharetree_printing.c
 
 SCHEDLIB_OBJS = $(SCHEDLIB_SRC:.c=.o)
 
-SCHEDLIB_TEST_PROGS = \
-              test_resource_utilization
-
-SCHEDLIB_TEST_PROGS_OBJS = \
-              test_resource_utilization.o \
-              sge_resource_utilization_test.o
-              
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-schedlib_all:  $(SCHEDLIB) $(SCHEDLIB_TEST_PROGS)
-
 schedlib: $(SCHEDLIB)
 
 schedlib_clean:
-	$(RM) libsched.a libsched$(SHAREDEXT) $(SCHEDLIB_OBJS) $(SCHEDLIB_TEST_PROGS) $(SCHEDLIB_TEST_PROGS_OBJS)
+	$(RM) libsched.a libsched$(SHAREDEXT) $(SCHEDLIB_OBJS)
 
 schedlib_depend:
 		$(DEPEND) -f$(SCHEDLIB_DIR)/sched_dependencies $(SCHEDLIB_DIR)/*.c
@@ -182,27 +171,12 @@ sge_ssi.o: $(SCHEDLIB_DIR)/sge_ssi.c
 sge_sharetree_printing.o: $(SCHEDLIB_DIR)/sge_sharetree_printing.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_sharetree_printing.c
 
-sge_interactive_sched.o : $(SCHEDLIB_DIR)/sge_interactive_sched.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_interactive_sched.c
 
-sge_lirs_schedd.o : $(SCHEDLIB_DIR)/sge_lirs_schedd.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_lirs_schedd.c
-
-###############################################################################
-# rules to build test applications 
-###############################################################################
-
+#---------------------------------------------------------------------
+# test programs
 simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LIBS)
-
-test_resource_utilization: test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(GDILIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_resource_utilization $(LFLAGS) test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB)  $(GDILIB) $(CULLLIB) $(DLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(SECLIB)
 
 simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c
 
-test_resource_utilization.o: $(SCHEDLIB_DIR)/test_resource_utilization.c
-	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/test_resource_utilization.c
-
-sge_resource_utilization_test.o: $(SCHEDLIB_DIR)/sge_resource_utilization.c
-	$(CC) -o sge_resource_utilization_test.o $(CFLAGS) $(SHARED_CFLAGS) -DMODULE_TEST_SGE_RESOURCE_UTILIZATION -c $(SCHEDLIB_DIR)/sge_resource_utilization.c

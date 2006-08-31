@@ -401,7 +401,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
       char buffer[4096];
 
       /* No need to malloc he because it will end up pointing to re. */
-      gethostbyname_r(name, &re, buffer, 4096, &he, &l_errno);
+      gethostbyname_r (name, &re, buffer, 4096, &he, &l_errno);
       
       /* Since re contains pointers into buffer, and both re and the buffer go
        * away when we exit this code block, we make a deep copy to return. */
@@ -558,12 +558,13 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
 *******************************************************************************/
 struct hostent *sge_copy_hostent(struct hostent *orig)
 {
-   struct hostent *copy = (struct hostent *)malloc(sizeof(struct hostent));
+   struct hostent *copy = (struct hostent *)malloc (sizeof (struct hostent));
    char **p = NULL;
    int count = 0;
 
    DENTER (GDI_LAYER, "sge_copy_hostent");
  
+
    if (copy != NULL) {  
       /* reset the malloced memory */
       memset(copy, 0, sizeof(struct hostent));
@@ -575,7 +576,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
       
       /* Count the number of entries */
       count = 0;
-      for (p = orig->h_addr_list; *p != NULL; p++) {
+      for (p = orig->h_addr_list; *p != 0; p++) {
          count++;
       }
       
@@ -585,7 +586,7 @@ struct hostent *sge_copy_hostent(struct hostent *orig)
       
       /* Copy the entries */
       count = 0;
-      for (p = orig->h_addr_list; *p != NULL; p++) {
+      for (p = orig->h_addr_list; *p != 0; p++) {
 
 #ifndef in_addr_t
          int tmp_size = sizeof (uint32_t); /* POSIX definition for AF_INET */
@@ -692,26 +693,26 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R7
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for Solaris */
-   DPRINTF(("Getting host by addr - Solaris\n"));
+   DPRINTF (("Getting host by addr - Solaris\n"));
    {
       char buffer[4096];
       struct hostent *help_he = NULL;
-      he = (struct hostent *)malloc(sizeof(struct hostent));
+      he = (struct hostent *)malloc (sizeof (struct hostent));
       if (he != NULL) {
          memset(he, 0, sizeof(struct hostent));
 
          /* On Solaris, this function returns the pointer to my struct on success
           * and NULL on failure. */
-         help_he = gethostbyaddr_r((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+         help_he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
       
          /* Since he contains pointers into buffer, and buffer goes away when we
           * exit this code block, we make a deep copy to return. */
          if (help_he != NULL) {
-            struct hostent *new_he = sge_copy_hostent(help_he);
-            FREE(he);
+            struct hostent *new_he = sge_copy_hostent (help_he);
+            FREE (he);
             he = new_he;
          } else {
-            FREE(he);
+            FREE (he);
             he = NULL;
          }
       }
@@ -721,7 +722,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR_R5
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX < 11 */
-   DPRINTF(("Getting host by addr - 3 arg\n"));
+   DPRINTF (("Getting host by addr - 3 arg\n"));
    
    {
       struct hostent_data he_data;
@@ -1243,12 +1244,45 @@ int sge_hostcmp(const char *h1, const char*h2)
       sge_hostcpy(h1_cpy,h1);
       sge_hostcpy(h2_cpy,h2);
  
-      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
-
-      DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
+      if (h1_cpy && h2_cpy) {
+        cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
+ 
+        DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
+      }
    }
  
    DEXIT;
    return cmp;
 }
+
+/****** uti/hostname/sge_is_hgroup_ref() **************************************
+*  NAME
+*     sge_is_hgroup_ref() -- Is string a valid hgroup name 
+*
+*  SYNOPSIS
+*     bool sge_is_hgroup_ref(const char *string) 
+*
+*  FUNCTION
+*     Is string a valid hgroup name 
+*
+*  INPUTS
+*     const char *string - hostname or hostgroup name 
+*
+*  RESULT
+*     bool - Result
+*        true  - hostgroup
+*        false - no hostgroup (hostname)
+*******************************************************************************/
+bool sge_is_hgroup_ref(const char *string)
+{
+   bool ret = false;
+
+   if (string != NULL) {
+      if (string[0] == HOSTGROUP_INITIAL_CHAR) {
+         ret = true;
+      } 
+   }
+   return ret;
+}
+
 

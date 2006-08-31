@@ -64,7 +64,7 @@ proc install_qmaster {} {
  global ts_config
  global CHECK_USER check_errstr 
  global CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
- global CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
+ global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
  global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
  global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_COMMD_PORT
  global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
@@ -94,27 +94,19 @@ proc install_qmaster {} {
  }
 
  #dump hostlist to file
- set admin_hosts "$ts_config(all_nodes) $ts_config(shadowd_hosts)"
- set admin_hosts [lsort -unique $admin_hosts]
-
  set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
  set f [open $host_file_name w]
- foreach host $admin_hosts {
-    puts $f $host
+ foreach exechost $ts_config(execd_nodes) {
+    puts $f "${exechost}"
  }
  close $f
 
-   # does cluster contain windows hosts?
-   # install_qmaster will ask us about this
-   set have_windows_host [host_conf_have_windows]
 
  set HIT_RETURN_TO_CONTINUE       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
  set CURRENT_GRID_ROOT_DIRECTORY  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
  set CELL_NAME_FOR_QMASTER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] "*"]
- set VERIFY_FILE_PERMISSIONS1      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS1] ]
- set VERIFY_FILE_PERMISSIONS2      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS2] ]
+ set VERIFY_FILE_PERMISSIONS      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS] ]
  set WILL_NOT_VERIFY_FILE_PERMISSIONS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_WILL_NOT_VERIFY_FILE_PERMISSIONS] ]
- set DO_NOT_VERIFY_FILE_PERMISSIONS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DO_NOT_VERIFY_FILE_PERMISSIONS] ]
  set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
  set ENTER_HOSTS                  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_HOSTS] ]
  set MASTER_INSTALLATION_COMPLETE [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_MASTER_INSTALLATION_COMPLETE] ]
@@ -141,6 +133,7 @@ proc install_qmaster {} {
  set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
  set ENTER_SPOOL_DIR   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
+ set WINDOWS_SUPPORT              [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_WINDOWS_SUPPORT] ]
  set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
  set EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER]]
  set EXECD_SPOOLING_DIR_NOROOT           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT] "*"]
@@ -168,17 +161,10 @@ proc install_qmaster {} {
  set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
  set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER]]
  set DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS]]
-
- # csp
  set CSP_COPY_CERTS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_CERTS]]
  set CSP_COPY_CMD [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_CMD]]
  set CSP_COPY_FAILED [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_FAILED]]
  set CSP_COPY_RSH_FAILED [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CSP_COPY_RSH_FAILED]]
-
- # windows
- set WINDOWS_SUPPORT              [translate_macro DISTINST_WINDOWS_SUPPORT]
- set WINDOWS_DOMAIN_USER          [translate_macro DISTINST_QMASTER_WINDOWS_DOMAIN_USER]
- set WINDOWS_MANAGER              [translate_macro DISTINST_QMASTER_WINDOWS_MANAGER]
 
  cd "$ts_config(product_root)"
 
@@ -189,11 +175,11 @@ proc install_qmaster {} {
     append feature_install_options "-csp"
  }
 
- if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" 0 "" 1 15 1 1 1]
+ if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
  } else {
     puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" 0 "" 1 15 1 1 1]
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
  }
  set sp_id [ lindex $id 1 ] 
  
@@ -201,6 +187,7 @@ proc install_qmaster {} {
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 
  set hostcount 0
+
  set do_log_output 0 ;# _LOG
  if { $CHECK_DEBUG_LEVEL == 2 } {
    set do_log_output  1 ;# 1
@@ -274,11 +261,6 @@ proc install_qmaster {} {
              return
           }
 
-          continue
-       }
-
-       -i $sp_id $DNS_DOMAIN_QUESTION {
-          send -i $sp_id "\n"
           continue
        }
 
@@ -407,25 +389,11 @@ proc install_qmaster {} {
           continue
        }
 
-       -i $sp_id $VERIFY_FILE_PERMISSIONS1 {
+       -i $sp_id $VERIFY_FILE_PERMISSIONS { 
          if { $ts_config(package_type) == "tar" || $ts_config(package_type) == "create_tar" } {
             set input "$ANSWER_YES"
          } else {
             set input "$ANSWER_NO"
-         }
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$input<(5)"
-          if {$do_log_output == 1} {
-             puts "press RETURN"
-             set anykey [wait_for_enter 1]
-          }
-          send -i $sp_id "$input\n"
-          continue
-       }
-       -i $sp_id $VERIFY_FILE_PERMISSIONS2 { 
-         if { $ts_config(package_type) == "tar" || $ts_config(package_type) == "create_tar" } {
-            set input "$ANSWER_NO"
-         } else {
-            set input "$ANSWER_YES"
          }
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$input<(5)"
           if {$do_log_output == 1} {
@@ -436,8 +404,7 @@ proc install_qmaster {} {
           continue
        }
 
-      -i $sp_id $WILL_NOT_VERIFY_FILE_PERMISSIONS -
-      -i $sp_id $DO_NOT_VERIFY_FILE_PERMISSIONS {
+      -i $sp_id $WILL_NOT_VERIFY_FILE_PERMISSIONS {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(21)"
           if {$do_log_output == 1} {
                puts "press RETURN"
@@ -494,41 +461,15 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $WINDOWS_SUPPORT {
-          if {$have_windows_host} {
-            set answer $ANSWER_YES
-          } else {
-            set answer $ANSWER_NO
-          }
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$answer<(4)"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$answer\n"
+          send -i $sp_id "$ANSWER_NO\n"
           continue
        }
-
-       -i $sp_id $WINDOWS_DOMAIN_USER {
-          set answer $ANSWER_YES
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$answer<(4)"
-          if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
-          }
-          send -i $sp_id "$answer\n"
-          continue
-       }
-
-       -i $sp_id $WINDOWS_MANAGER {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(4)"
-          if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
-          }
-          send -i $sp_id "\n"
-          continue
-       }
-
+       
        -i $sp_id $OTHER_USER_ID_THAN_ROOT {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
           if {$do_log_output == 1} {
@@ -750,28 +691,18 @@ proc install_qmaster {} {
           write_install_list
           set_error "0" "install_qmaster - no errors"
           set do_stop 1
-          # If we compiled with code coverage, we have to 
-          # wait a little bit before closing the connection.
-          # Otherwise the last command executed (infotext)
-          # will leave a lockfile lying around.
-          if {[coverage_enabled]} {
-             sleep 1
-             # inst_sge expects a RETURN
-             send -i $sp_id "\n"
-             sleep 5
-          }
           continue
        }
 
        -i $sp_id $ENTER_HOSTS {
-         if {$hostcount >= [llength $admin_hosts]} {
+         if {$hostcount >= [llength $ts_config(all_nodes)]} {
              puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<(8)"
              send -i $sp_id "\n"
          } else {
-            set admin_host [lindex $admin_hosts $hostcount]
+            set exechost [lindex $ts_config(all_nodes) $hostcount]
             incr hostcount
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >${admin_host}<"
-            send -i $sp_id "$admin_host\n"
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
+            send -i $sp_id "$exechost\n"
          }
          continue
        }
@@ -1094,19 +1025,12 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $CSP_COPY_CERTS {
-          # On windows hosts, rcp / scp doesn't work.
-          # So if we have windows hosts in the cluster, testsuite has to copy the certificates itself
-          if {$have_windows_host} {
-            set answer $ANSWER_NO
-          } else {
-            set answer $ANSWER_YES
-          }
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$answer<(14)"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(14)"
           if {$do_log_output == 1} {
-            puts "press RETURN"
-            set anykey [wait_for_enter 1]
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$answer\n"
+          send -i $sp_id "$ANSWER_YES\n"
           continue
        }
        -i $sp_id $CSP_COPY_CMD {

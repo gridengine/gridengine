@@ -185,7 +185,7 @@ proc complex_setup  {} {
    set_config new_config $complex_host
 
    # wait for loadsensor to have effect
-   sleep 40
+   sleep 35
 
    # create a test queue
    set queue(slots)           10
@@ -586,7 +586,6 @@ proc complex_host {} {
    set check_highest_level 0
    # set a consumable in global host, to be overwritten by specific host
    set config(complex_values)    "test_integer=1"
-   append config(complex_values) ",ts=global"
    set_exechost config "global"
 
    # set host specific complexes
@@ -595,7 +594,7 @@ proc complex_host {} {
    append config(complex_values) ",tt=600"
    append config(complex_values) ",tm=104857600"
    append config(complex_values) ",tb=FALSE"
-   append config(complex_values) ",ts=host"
+   append config(complex_values) ",ts=global"
    append config(complex_values) ",th=$ts_config(master_host)"
    set_exechost config $complex_host
 
@@ -618,12 +617,11 @@ proc complex_host {} {
    complex_run_job "host"   "tb"           "1"       1           1
    complex_run_job "host"   "test_bool"    "0"       1           0
 
-   complex_run_job "host" "ts"           "global"  1           1
-   complex_run_job "host" "ts"           "host"    1           1 
-   complex_run_job "host" "ts"           "Global"  1           1
+   complex_run_job "global" "ts"           "global"  1           0
+   complex_run_job "global" "ts"           "Global"  1           1
   
-   complex_run_job "host" "th"           "$ts_config(master_host)"      1           0
-   complex_run_job "host" "th"           "this_host_is_not_resolvable"  0           0
+   complex_run_job "global" "th"           "$ts_config(master_host)"      1           0
+   complex_run_job "global" "th"           "this_host_is_not_resolvable"  0           0
   
    # cleanup
    set config(complex_values) "NONE"
@@ -640,12 +638,10 @@ proc complex_queue {} {
    set check_highest_level 0
    # set a consumable in global host, to be overwritten by specific host
    set config(complex_values)    "test_integer=3"
-   append config(complex_values) ",ts=global"
    set_exechost config "global"
 
    # set host specific complexes
    set config(complex_values)    "ti=2"
-   append config(complex_values) ",ts=host"
    set_exechost config $complex_host
 
    set config(complex_values)    "ti=1"
@@ -653,7 +649,6 @@ proc complex_queue {} {
    append config(complex_values) ",tt=0:10:0"
    append config(complex_values) ",tm=102400K"
    append config(complex_values) ",tb=1"
-   append config(complex_values) ",ts=queue"
    mqattr "complex_values" $config(complex_values) [get_queue_instance "complex" $complex_host]
 
    #               szenario variable       value     submittable pending
@@ -672,10 +667,6 @@ proc complex_queue {} {
    complex_run_job "queue"  "test_bool"    "FALSE"   1           1
    complex_run_job "queue"  "tb"           "1"       1           0
    complex_run_job "queue"  "test_bool"    "0"       1           1
-
-   complex_run_job "queue" "ts"           "global"   1           1  
-   complex_run_job "queue" "ts"           "host"     1           1 
-   complex_run_job "queue" "ts"           "queue"    1           1
  
    # cleanup
    set config(complex_values) "NONE"

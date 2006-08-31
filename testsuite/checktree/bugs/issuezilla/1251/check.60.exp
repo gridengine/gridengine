@@ -46,8 +46,6 @@ set check_needs               "init_core_system"      ;# dependencies of this ch
 set check_root_access_needs   "no"
 
 # setup and cleanup functions
-set check_setup_function issue_1251_setup
-set check_cleanup_function issue_1251_cleanup
 
 # define test's procedure order
 set check_functions           ""
@@ -57,42 +55,16 @@ set my_pid [pid]
 set tmp_name "/tmp/tmp1251.$my_pid"
 
 proc issue_1251_init_level {} {
-   global CHECK_ACT_LEVEL
+   global CHECK_ACT_LEVEL ts_config
 
    # setup levels 
    switch -- $CHECK_ACT_LEVEL {
-      "0"  {
+      "0"  { 
          return 0
       }
    }
 
    return -1
-}
-
-proc issue_1251_setup {} {
-   global project_names
-
-   # here we'll remember which projects were created during the test
-   set project_names {}
-
-   # delete a possibly existing sharetree
-   del_sharetree
-
-   set_error 0 "ok"
-}
-
-proc issue_1251_cleanup {} {
-   global project_names
-
-   # delete the sharetree
-   del_sharetree
-
-   # delete the projects that were created during the test
-   foreach project $project_names {
-      del_prj $project
-   }
-
-   set_error 0 "ok"
 }
 
 proc issue_1251_run  {} {
@@ -102,11 +74,14 @@ proc issue_1251_run  {} {
    set node_count 0
    set stree ""
 
-   issue_1251_build_share_tree 5
+   build_share_tree 5
 
    set f [ open "$tmp_name" w ]
    puts $f $stree
    close $f
+
+   # Delete share tree
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" } result
 
    # Add new share tree
    catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Astree $tmp_name" } result
@@ -125,7 +100,7 @@ proc issue_1251_run  {} {
    }
 }
 
-proc issue_1251_build_share_tree { depth } {
+proc build_share_tree { depth } {
    global prj_count node_count stree
 
    set parent $node_count
@@ -140,10 +115,10 @@ proc issue_1251_build_share_tree { depth } {
       set stree "${stree}shares=1\n"
       set stree "${stree}childnodes=$child1,$child2\n"
 
-      issue_1251_build_share_tree [ expr $depth - 1 ]
-      issue_1251_build_share_tree [ expr $depth - 1 ]
+      build_share_tree [ expr $depth - 1 ]
+      build_share_tree [ expr $depth - 1 ]
    } else {
-      issue_1251_add_project "prj$prj_count"
+      add_project "prj$prj_count"
 
       set stree "${stree}id=$parent\n"
       set stree "${stree}name=prj$prj_count\n"
@@ -155,11 +130,8 @@ proc issue_1251_build_share_tree { depth } {
    }
 }
 
-proc issue_1251_add_project { name } {
+proc add_project { name } {
    global tmp_name CHECK_PRODUCT_ROOT CHECK_ARCH
-   global project_names
-
-   lappend project_names $name
 
    set f [ open "$tmp_name" w ]
    puts $f "name $name"

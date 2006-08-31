@@ -72,28 +72,26 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-sge_callback_result
-sharetree_update_master_list(object_description *object_base, sge_object_type type, sge_event_action action,
+bool 
+sharetree_update_master_list(sge_object_type type, sge_event_action action,
                              lListElem *event, void *clientdata)
 {
-   lList **list = NULL;
    lList *src = NULL;
+   lList **master_sharetree_list = object_type_get_master_list(SGE_TYPE_SHARETREE);
 
    DENTER(TOP_LAYER, "sharetree_update_master_list");
 
    /* remove old share tree */
-   list = sge_master_list(object_base, type); /*<== need update */
-   lFreeList(list);
-   
+   lFreeList(master_sharetree_list);
 
    if ((src = lGetList(event, ET_new_version))) {
-      
       /* install new one */
-      *list = lCreateList("share tree", lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
-      lAppendElem(*list, lDechainElem(src, lFirst(src)));
+      *master_sharetree_list = lCreateList("share tree",
+                                          lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
+      lAppendElem(*master_sharetree_list, lDechainElem(src, lFirst(src)));
    }
 
    DEXIT;
-   return SGE_EMA_OK;
+   return true;
 }
 

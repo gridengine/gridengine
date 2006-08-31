@@ -256,7 +256,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
    DENTER(TOP_LAYER, "pe_validate");
    pe_name = lGetString(pep, PE_name);
-   if (pe_name && verify_str_key(alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE) != STATUS_OK) {
+   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
       if (alpp == NULL) { 
          ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
       } else {
@@ -752,7 +752,7 @@ int pe_validate_qsort_args(lList **alpp, const char *qsort_args, lListElem *pe,
               lib_name, lGetString(pe, PE_name), dlerror()));
       } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
-                                 MSG_PQS_UNABLETOOPENLIBRARY_SSS, lib_name, 
+                                 MSG_PQS_UNABLETOOPENLIBRARY_SSSlib_name, 
                                  lGetString(pe, PE_name), dlerror());
       }
       ret = STATUS_EEXIST;

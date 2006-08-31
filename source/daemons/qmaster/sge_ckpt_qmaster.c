@@ -119,14 +119,14 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    DENTER(TOP_LAYER, "ckpt_mod");
 
    /* ---- CK_name */
-   if (lGetPosViaElem(ckpt, CK_name, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(ckpt, CK_name) >= 0) {
       if (add) {
          if (attr_mod_str(alpp, ckpt, new_ckpt, CK_name, SGE_ATTR_CKPT_NAME)) {
             goto ERROR;
          }
       }
       ckpt_name = lGetString(new_ckpt, CK_name);
-      if (add && verify_str_key(alpp, ckpt_name, MAX_VERIFY_STRING, SGE_ATTR_CKPT_NAME) != STATUS_OK) {
+      if (add && verify_str_key(alpp, ckpt_name, SGE_ATTR_CKPT_NAME)) {
          DEXIT;
          return STATUS_EUNKNOWN;
       }
@@ -154,7 +154,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
    attr_mod_str(alpp, ckpt, new_ckpt, CK_ckpt_dir, SGE_ATTR_CKPT_DIR);
   
    /* ---- CK_when */
-   if (lGetPosViaElem(ckpt, CK_when, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(ckpt, CK_when) >= 0) {
       int new_flags, flags;
 
       new_flags = sge_parse_checkpoint_attr(lGetString(new_ckpt, CK_when));
@@ -333,7 +333,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* ep is no ckpt element, if ep has no CK_name */
-   if ((pos = lGetPosViaElem(ep, CK_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, CK_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(CK_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

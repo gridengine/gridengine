@@ -218,9 +218,8 @@ NL       \r?\n
 } 
 
 [ \t\r]*{NL} {
-   sprintf(yytext, "\n");
-   spool_line++;
-   return SPFT_NEWLINE;
+   unput('\n');
+   break;
 } 
 
  /* In order to make sure that whitespace gets compressed into a

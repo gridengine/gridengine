@@ -39,11 +39,9 @@ QSTAT_TARGETS = qstat
 QSTAT_SRC = qstat.c
 
 QSTAT_ADD_SRC = \
-               parse_job_cull.c \
-               parse_qsub.c \
-               read_defaults.c \
                qstat_printing.c \
                sge_cqueue_qstat.c \
+               read_write_complex.c \
                show_job.c \
                sig_handlers.c \
                usage.c sge_options.c \

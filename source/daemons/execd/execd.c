@@ -118,6 +118,7 @@ dispatch_entry execd_dispatcher_table[] = {
    { TAG_SIGJOB,        NULL, NULL, 0, execd_signal_queue },
    { TAG_SIGQUEUE,      NULL, NULL, 0, execd_signal_queue },
    { TAG_KILL_EXECD,    NULL, NULL, 0, execd_kill_execd  },
+   { TAG_NEW_FEATURES,  NULL, NULL, 0, execd_new_features },
    { TAG_GET_NEW_CONF,  NULL, NULL, 0, execd_get_new_conf },
    { -1,                NULL, NULL, 0, execd_ck_to_do}
 };

@@ -46,7 +46,7 @@ set check_category            "COMPATIBILITY SYSTEM VERIFIED"
 set check_name                "issue_1741"
 set check_description(0)      "subordinate properties lost on qmaster restart"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
-set check_root_access_needs   "yes"
+set check_root_access_needs   "no"
 
 # setup and cleanup functions
 set check_setup_function "issue_1741_setup"

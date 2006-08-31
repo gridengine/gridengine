@@ -62,8 +62,7 @@ enum {
    US_oticket,               /* SGEEE override tickets */
    US_job_cnt,               /* SGEEE job count (internal to schedd) */
    US_pending_job_cnt,       /* SGEEE job count (internal to schedd) */
-   US_entries,
-   US_consider_with_categories /* true, if userset plays role with categories */
+   US_entries
 };
 
 LISTDEF(US_Type)
@@ -74,7 +73,6 @@ LISTDEF(US_Type)
    SGE_ULONG(US_job_cnt, CULL_DEFAULT)     /* local to schedd */
    SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
    SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
-   SGE_BOOL(US_consider_with_categories, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(USEN)
@@ -85,7 +83,6 @@ NAMEDEF(USEN)
    NAME("US_job_cnt")
    NAME("US_pending_job_cnt")
    NAME("US_entries")
-   NAME("US_consider_with_categories")
 NAMEEND
 
 #define USES sizeof(USEN)/sizeof(char*)

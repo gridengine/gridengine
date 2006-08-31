@@ -140,10 +140,10 @@ proc install_shadowd {} {
       set prod_type_var "SGE_ROOT"
   
       if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-         set id [open_remote_spawn_process "$shadow_host" "root"  "cd $$prod_type_var;./inst_sge" "-sm" 0 "" 1 15 1 1 1]
+         set id [open_remote_spawn_process "$shadow_host" "root"  "cd $$prod_type_var;./inst_sge" "-sm" ]
       } else {
          puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-         set id [open_remote_spawn_process "$shadow_host" "$CHECK_USER"  "cd $$prod_type_var;./inst_sge" "-sm" 0 "" 1 15 1 1 1]
+         set id [open_remote_spawn_process "$shadow_host" "$CHECK_USER"  "cd $$prod_type_var;./inst_sge" "-sm" ]
       }
 
 
@@ -303,13 +303,6 @@ proc install_shadowd {} {
                lappend CORE_INSTALLED $shadow_host
                write_install_list
                set do_stop 1
-               # If we compiled with code coverage, we have to 
-               # wait a little bit before closing the connection.
-               # Otherwise the last command executed (infotext)
-               # will leave a lockfile lying around.
-               if {[coverage_enabled]} {
-                  sleep 2
-               }
                continue
             }
 

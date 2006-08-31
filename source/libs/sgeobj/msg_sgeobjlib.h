@@ -85,9 +85,9 @@
 #define MSG_GDI_NEGATIVSTEP                              _MESSAGE(64064, _("Negative or zero step in range is not allowed" ))
 #define MSG_PARSE_NOALLOCATTRLIST     _MESSAGE(64065, _("unable to alloc space for attrib. list"))
 #define MSG_PARSE_NOALLOCATTRELEM     _MESSAGE(64068, _("unable to alloc space for attrib. element"))
-#define MSG_NONE_NOT_ALLOWED_S                  _MESSAGE(64079, _("The keyword \"none\" is not allowed in "SFQ))
-#define MSG_NOTEXISTING_ATTRIBUTE_SS            _MESSAGE(64080, _("Referenced complex attribute "SFQ" does not exist in "SFN))
-#define MSG_WRONGTYPE_ATTRIBUTE_SS              _MESSAGE(64081, _("String, CString, ReString or Host attributes are not allowed in "SFQ": " SFQ))
+#define MSG_NONE_NOT_ALLOWED                    _MESSAGE(64079, _("The keyword \"none\" is not allowed in \"load_formula\""))
+#define MSG_NOTEXISTING_ATTRIBUTE_S             _MESSAGE(64080, _("\"load_formula\" references not existing complex attribute "SFQ))
+#define MSG_WRONGTYPE_ATTRIBUTE_S               _MESSAGE(64081, _("String, CString or Host attributes are not allowed in \"load_formula\": " SFQ))
 #define MSG_US_INVALIDUSERNAME                  _MESSAGE(64083, _("userset contains invalid (null) user name"))
 
 /*
@@ -288,8 +288,8 @@
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value"))
 #define MSG_CQUEUE_INVALIDDOMSETTING_SS _MESSAGE(64305, _("Did not modify "SFQ" for host group "SFQ" which does not exist."))
 #define MSG_HGRP_INVALIDHOSTGROUPNAME_S   _MESSAGE(64306, _("host group name "SFQ" is not valid"))
-#define MSG_WEIGHTFACTNONUMB_SS         _MESSAGE(64307, _(SFQ" uses "SFQ" as weighting factor (only numbers are allowed)"))
-#define MSG_MULTIPLEWEIGHTFACT_S        _MESSAGE(64308, _(SFQ" may not use multiple weighting factors"))
+#define MSG_WEIGHTFACTNONUMB_S         _MESSAGE(64307, _("\"load_formula\" uses "SFQ" as weighting factor (only numbers are allowed)"))
+#define MSG_MULTIPLEWEIGHTFACT         _MESSAGE(64308, _("\"load_formula\" may not use multiple weighting factors"))
 
 #define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known"))
 #define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64311, _("Invalid character in pe name of pe "SFQ))
@@ -305,48 +305,7 @@
 #define MSG_CQUEUE_CQUEUEISNULL_SSSII      _MESSAGE(64317, _("cqueue_list_locate_qinstance("SFQ"): cqueue == NULL("SFQ", "SFQ", %d, %d"))
 #define MSG_CQUEUE_FULLNAMEISNULL        _MESSAGE(64318, _("cqueue_list_locate_qinstance(): full_name == NULL"))
 #define MSG_PE_REJECTINGURGENCYSLOTS_S  _MESSAGE(64319, _("rejecting invalid urgency_slots setting "SFQ))
-#define MSG_CALENDAR_CALCTERMINATED    _MESSAGE(64320, _("Calendar calculation terminated due to inf. loop!"))
+#define MSG_CALENDAR_CALCTERMINATED    _MESSAGE(64310, _("Calendar calculation terminated due to inf. loop!"))
 
-#define MSG_OBJECT_STRUCTURE_ERROR     _MESSAGE(64321, _("corrupted cull structure or reduced element"))
-#define MSG_OBJECT_ULONG_NOT_NULL            _MESSAGE(64322, _("object attribute "SFQ" may not be 0"))
-#define MSG_OBJECT_ULONG_NULL            _MESSAGE(64323, _("object attribute "SFQ" may only be 0"))
-#define MSG_OBJECT_DOUBLE_NULL            _MESSAGE(64324, _("object attribute "SFQ" may only be 0"))
-#define MSG_OBJECT_STRING_NOT_NULL            _MESSAGE(64325, _("object attribute "SFQ" may not be NULL"))
-#define MSG_OBJECT_VARIABLENAME_NOT_EMPTY            _MESSAGE(64326, _("variable names may not be empty"))
-
-#define MSG_PATH_TOOLONG_I _MESSAGE(64330, _("a path or filename may not exceed %d characters"))
-#define MSG_PATH_ALIAS_INVALID_PATH _MESSAGE(64331, _("paths may not be empty strings"))
-#define MSG_HOSTNAME_NOT_EMPTY _MESSAGE(64332, _("hostnames may not be empty string"))
-#define MSG_HOSTNAME_TOOLONG _MESSAGE(64333, _("hostnames too long"))
-
-#define MSG_EVENT_INVALIDNAME _MESSAGE(64340, _("invalid event client name"))
-#define MSG_EVENT_ONLYADMINMAYSTARTSPECIALEVC _MESSAGE(64341, _("only admin user or root may start special event clients"))
-#define MSG_EVENT_INVALIDDTIME_II _MESSAGE(64342, _("invalid event delivery time %d. It has to be between 1 and %d"))
-#define MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME _MESSAGE(64343, _("event flush delay may not be greater than event delivery time"))
-#define MSG_EVENT_INVALIDBUSYHANDLING _MESSAGE(64344, _("invalid value for event client busy handling"))
-#define MSG_EVENT_INVALIDSESSIONKEY _MESSAGE(64345, _("invalid session key for event client"))
-#define MSG_EVENT_INVALIDEVENT _MESSAGE(64346, _("invalid event id in event client subscription"))
-
-#define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script lenght does not match declared length"))
-#define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64352, _("invalid "SFQ" value in job request"))
-
-#define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
-
-#define MSG_INVALIDJATASK_REQUEST _MESSAGE(64354, _("invalid task list in job start request"))
-
-#define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
-
-#define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
-
-#define MSG_LIMITRULE_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
-
-#define MSG_EVENT_LIRSLISTXELEMENTS_II           _MESSAGE(64371, _("%d. EVENT LIRS ENTRY LIST %d Elements"))
-#define MSG_EVENT_DELLIRSX_IS                    _MESSAGE(64372, _("%d. EVENT DEL LIRS ENTRY "SFN""))
-#define MSG_EVENT_ADDLIRSX_IS                    _MESSAGE(64373, _("%d. EVENT ADD LIRS ENTRY "SFN""))
-#define MSG_EVENT_MODLIRSX_IS                    _MESSAGE(64374, _("%d. EVENT MOD LIRS ENTRY "SFN""))
-#define MSG_LIMITRULE_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
-#define MSG_LIMITRULE_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
-#define MSG_LIMITRULE_NORULES                    _MESSAGE(64377, _("limitation rule set has no rules"))
-#define MSG_LIMITRULE_NONAME                     _MESSAGE(64378, _("limitation rule set has no name"))
 
 #endif /* __MSG_SGEOBJLIB_H */

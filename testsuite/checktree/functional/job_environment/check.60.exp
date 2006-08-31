@@ -38,10 +38,10 @@ global job_environment_libvar
 set check_root_access_needs "yes"
 
 # additional checks for N1GE 6
-lappend check_functions "job_environment_amount_uninherited"
-lappend check_functions "job_environment_JOB_NAME_uninherited"
+#lappend check_functions "job_environment_amount_uninherited"
+#lappend check_functions "job_environment_JOB_NAME_uninherited"
 lappend check_functions "job_environment_INHERIT_ENV"
-lappend check_functions "job_environment_SET_LIB_PATH"
+#lappend check_functions "job_environment_SET_LIB_PATH"
 
 ####### job_environment_setup_60() #############################################
 #  NAME
@@ -108,7 +108,7 @@ proc job_environment_amount_uninherited {} {
    puts $CHECK_OUTPUT "Testing list of environment variables with INHERIT_ENV=false"
 
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    set errors ""
 
@@ -164,7 +164,7 @@ proc job_environment_JOB_NAME_uninherited {} {
 
    # Set INHERIT_ENV=false
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Run JOB_NAME test
    job_environment_JOB_NAME 0
@@ -197,7 +197,7 @@ proc job_environment_INHERIT_ENV {} {
 
    # Set INHERIT_ENV=false
    set new_config(execd_params) "INHERIT_ENV=false"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Submit job
    if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
@@ -213,7 +213,7 @@ proc job_environment_INHERIT_ENV {} {
 
    # Set exced_params=none
    set new_config(execd_params) "none"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Submit job
    if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
@@ -229,7 +229,7 @@ proc job_environment_INHERIT_ENV {} {
 
    # Set INHERIT_ENV=true
    set new_config(execd_params) "INHERIT_ENV=true"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Submit job
    if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
@@ -245,7 +245,7 @@ proc job_environment_INHERIT_ENV {} {
 
    # Set exced_params=none
    set new_config(execd_params) "none"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Submit job
    if {[job_environment_qsub_job "jobenv.sh" job_env $args]} {
@@ -294,7 +294,7 @@ proc job_environment_SET_LIB_PATH {} {
 
    # Set INHERIT_ENV=true, SET_LIB_PATH=true
    set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=true"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    set errors ""
 
@@ -311,7 +311,7 @@ proc job_environment_SET_LIB_PATH {} {
 
    # Set INHERIT_ENV=true, SET_LIB_PATH=false
    set new_config(execd_params) "INHERIT_ENV=true,SET_LIB_PATH=false"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Test that lib path contains only the execd's lib path
    if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
@@ -326,7 +326,7 @@ proc job_environment_SET_LIB_PATH {} {
 
    # Set INHERIT_ENV=false, SET_LIB_PATH=true
    set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=true"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Test that lib path contains only SGE lib path
    if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {
@@ -341,7 +341,7 @@ proc job_environment_SET_LIB_PATH {} {
 
    # Set INHERIT_ENV=false, SET_LIB_PATH=false
    set new_config(execd_params) "INHERIT_ENV=false,SET_LIB_PATH=false"
-   set_config_and_propagate new_config
+   set_config_and_propogate new_config
 
    # Test that lib path doesn't exist
    if {[job_environment_qsub_job "jobenv.sh" job_env $args] == 0} {

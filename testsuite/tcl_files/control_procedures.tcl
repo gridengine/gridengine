@@ -57,63 +57,21 @@ proc dump_array_to_tmpfile { change_array } {
 
    upvar $change_array chgar
 
-   set tmpfile [ get_tmp_file_name ]
+   if { ! [file isdirectory "$ts_config(testsuite_root_dir)/testsuite_trash"] } {
+      file mkdir "$ts_config(testsuite_root_dir)/testsuite_trash"
+   }
+
+   set tmpfile "$ts_config(testsuite_root_dir)/testsuite_trash/tmpfile"
    set file [open $tmpfile "w"]
 
    if [info exists chgar] {
       foreach elem [array names chgar] {
-         set value $chgar($elem)
-         puts $file "$elem $value"
+         set value [set chgar($elem)]
+         puts $file "$elem                   $value"
       }
    }
 
    close $file
-
-   return $tmpfile
-}
-
-proc dump_lirs_array_to_tmpfile { change_array } {
-   global ts_config CHECK_OUTPUT
-
-   upvar $change_array chgar
-
-
-   if [info exists chgar] {
-      set old_name ""
-      set first "true"
-
-      set tmpfile [ get_tmp_file_name ]
-      set file [open $tmpfile "w"]
-
-      foreach elem [lsort [array names chgar]] {
-         set help [split $elem ","]
-         set name [lindex $help 0]
-         set field [lindex $help 1]
-         set value $chgar($elem)
-
-         if { $old_name != $name} {
-            # new lirs
-            set old_name $name
-            if { $first == "false" } {
-               puts $file "\}"
-            } else {
-               set first "false"
-            }
-            puts $file "\{" 
-            puts $file "name $name"
-         }
-         if { $field == "limit" } {
-            foreach limit $value {
-               puts $file "limit  $limit"
-            }
-         } else {
-            puts $file "$field  $value"
-         }
-      } 
-
-      puts $file "\}"
-      close $file
-   }
 
    return $tmpfile
 }
@@ -181,7 +139,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
            # if old and new config have the same value, create no vi command,
            # if they differ, add vi command to ...
            if { [string compare $curar($elem) $newVal] != 0 } {
-              if {$newVal == ""} {
+              if { $newVal == "" } {
                  # ... delete config entry (replace by comment)
                  lappend vi_commands ":%s/^$elem .*$/#/\n"
               } else {
@@ -193,21 +151,17 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
            }
         } else {
            # if the config entry didn't exist in old config: append a new line
-           if {$newVal != ""} {
-              lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
-           }
+           lappend vi_commands "A\n$elem  $newVal[format "%c" 27]"
         }
-     }
+     }   
    } else {
       # we have no current values - just create a replace statement for each attribute
       foreach elem [array names chgar] {
          # this will quote any / to \/  (for vi - search and replace)
-         set newVal $chgar($elem)
-         if {$newVal != ""} {
-            set newVal1 [split $newVal {/}]
-            set newVal [join $newVal1 {\/}]
-            lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-         }
+         set newVal [set chgar($elem)]
+         set newVal1 [split $newVal {/}]
+         set newVal [join $newVal1 {\/}]
+         lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
       }
    }
 
@@ -226,9 +180,6 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     expected_result {additional_expected_result "___ABCDEFG___"} 
 #     {additional_expected_result2 "___ABCDEFG___"} 
 #     {additional_expected_result3 "___ABCDEFG___"}} 
-#     {qconf_error_msg "___ABCDEFG___"}
-#     {raise_error  1} }
-#
 #
 #  FUNCTION
 #     Start an application which and send special command strings to it. Wait
@@ -247,9 +198,6 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #     {additional_expected_result "___ABCDEFG___"}  - additional expected_result 
 #     {additional_expected_result2 "___ABCDEFG___"} - additional expected_result 
 #     {additional_expected_result3 "___ABCDEFG___"} - additional expected_result
-#     {qconf_error_msg "___ABCDEFG___"}            - qconf error message 
-#     {raise_error  1}                                - do add_proc_error in case of errors
-#
 #
 #  RESULT
 #     0 when the output of the application contents the expected_result 
@@ -257,7 +205,6 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #    -2 on additional_expected_result
 #    -3 on additional_expected_result2 
 #    -4 on additional_expected_result3
-#    -9 on chekcpointing qconf_error_msg
 #
 #  EXAMPLE
 #     ??? 
@@ -271,7 +218,7 @@ proc build_vi_command { change_array {current_array no_current_array_has_been_pa
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"} {qconf_error_msg "___ABCDEFG___"} {raise_error 1}} {
+proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result {additional_expected_result "___ABCDEFG___"} {additional_expected_result2 "___ABCDEFG___"} {additional_expected_result3 "___ABCDEFG___"} {additional_expected_result4 "___ABCDEFG___"}} {
    global CHECK_OUTPUT env CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
 
    set expected_result              [string trimright $expected_result "*"]
@@ -279,13 +226,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
    set additional_expected_result2  [string trimright $additional_expected_result2 "*"]
    set additional_expected_result3  [string trimright $additional_expected_result3 "*"]
    set additional_expected_result4  [string trimright $additional_expected_result4 "*"]
-   set qconf_error_msg  [string trimright $qconf_error_msg "*"]
 
    # we want to start a certain configured vi, and have no backslash continued lines
    set vi_env(EDITOR) [get_binary_path "$CHECK_HOST" "vim"]
    set result -100
 
-   debug_puts "using EDITOR=$vi_env(EDITOR)"
+   puts $CHECK_OUTPUT "using EDITOR=$vi_env(EDITOR)"
    # start program (e.g. qconf)
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $prog_binary "$prog_args" 0 vi_env]
    set sp_id [ lindex $id 1 ] 
@@ -317,8 +263,8 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set error 1
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
-      -i $sp_id  "_start_mark_*\n" {
-         debug_puts "starting now!"
+      -i $sp_id -- "_start_mark_*\n" {
+         puts $CHECK_OUTPUT "starting now!"
       }
    }
 
@@ -334,21 +280,12 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          add_proc_error "handle_vi_edit" -1 "unexpected end of file"
       }
 
-
-      -i $sp_id "$qconf_error_msg" {
-         set error $raise_error
-         add_proc_error "handle_vi_edit"  -1 "$qconf_error_msg" $raise_error
-         set result -9
-         close_spawn_process $id
-         return -9
-      }
-
       -i $sp_id timeout {  
          set error 1
          add_proc_error "handle_vi_edit" -2 "timeout - can't start vi"
       }
-      -i $sp_id  {[A-Za-z]*} {
-         debug_puts "vi should run now ..."
+      -i $sp_id -- {[A-Za-z]*} {
+         puts $CHECK_OUTPUT "vi should run now ..."
       }
    }
 
@@ -381,13 +318,13 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
       }
 
-      -i $sp_id  "100%" {
+      -i $sp_id -- "100%" {
       }
       
-      -i $sp_id  "o lines in buffer" {
+      -i $sp_id -- "o lines in buffer" {
       }
       
-      -i $sp_id  "erminal too wide" {
+      -i $sp_id -- "erminal too wide" {
          add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
          set error 1
       }
@@ -407,12 +344,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          -i $sp_id eof {
             add_proc_error "handle_vi_edit" -1 "unexpected end of file"
          }
-
          -i $sp_id "_exit_status*\n" {
-            debug_puts "vi terminated! (1)"
-            exp_continue
+            puts $CHECK_OUTPUT "vi terminated! (1)"
          }
-
       }
 
 
@@ -455,9 +389,10 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          }
          -i $sp_id "*Hit return*" {
             send -s -i $sp_id -- "\n"
-            debug_puts "found Hit return"
+            puts $CHECK_OUTPUT "found Hit return"
             exp_continue
          }
+
          -i $sp_id timeout {
             incr timeout_count 1
             if { $timeout_count > 15 } {
@@ -514,16 +449,13 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set result -1
             }
             -i $sp_id "_exit_status_" {
-               debug_puts "vi terminated! (2) (rt=$run_time)"
+               puts $CHECK_OUTPUT "vi terminated! (2) (rt=$run_time)"
                set result 0
-               exp_continue
             }
-
         }
       } else {
          # we do expect certain result(s)
          # wait for result and/or exit status
-
          expect {
             -i $sp_id full_buffer {
                add_proc_error "handle_vi_edit" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
@@ -537,29 +469,29 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                add_proc_error "handle_vi_edit" -1 "eof error:$expect_out(buffer)"
                set result -1
             }
-            -i $sp_id  "$expected_result" {
+            -i $sp_id -- "$expected_result" {
                set result 0
                exp_continue
             }
-            -i $sp_id  "$additional_expected_result" {
+            -i $sp_id -- "$additional_expected_result" {
                set result -2
                exp_continue
             }
-            -i $sp_id  "$additional_expected_result2" {
+            -i $sp_id -- "$additional_expected_result2" {
                set result -3
                exp_continue
             }
-            -i $sp_id  "$additional_expected_result3" {
+            -i $sp_id -- "$additional_expected_result3" {
                set result -4
                exp_continue
             }
-            -i $sp_id  "$additional_expected_result4" {
+            -i $sp_id -- "$additional_expected_result4" {
                set result -5
                exp_continue
             }
-            
+
             -i $sp_id "_exit_status_" {
-               debug_puts "vi terminated! (3)  (rt=$run_time)"
+               puts $CHECK_OUTPUT "vi terminated! (3)  (rt=$run_time)"
                if { $result == -100 } {
                   set pos [string last "\n" $expect_out(buffer)]
                   incr pos -2
@@ -585,7 +517,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
       debug_puts "sent_vi_commands = $sent_vi_commands"
       if { $sent_vi_commands == 0 } {
-         debug_puts "INFO: there was NO vi command sent!"
+         puts $CHECK_OUTPUT "INFO: there was NO vi command sent!"
       }
    } else {
       if { $error == 2 } {
@@ -594,7 +526,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          send -s -i $sp_id -- ":q!\n"            ;# exit without saving
          set timeout 10
          expect -i $sp_id "_exit_status_"
-         debug_puts "vi terminated! (4)"
+         puts $CHECK_OUTPUT "vi terminated! (4)"
          close_spawn_process $id
          set error_text ""
          append error_text "got timeout while sending vi commands\n"
@@ -638,24 +570,25 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set value [ split $value "\\" ]
          set value [ join $value "" ]
          if { [ string compare $value "*$/" ] == 0 || [ string compare $value "*$/#" ] == 0 } {
-            debug_puts "--> removing \"$var\" entry"
+            puts $CHECK_OUTPUT "--> removing \"$var\" entry"
          } else {
             if { [ string compare $var "" ] != 0 && [ string compare $value "" ] != 0  } {         
-               debug_puts "--> setting \"$var\" to \"${value}\""
+               puts $CHECK_OUTPUT "--> setting \"$var\" to \"${value}\""
             } else {
                if { [string compare $elem [format "%c" 27]] == 0 } {
-                  debug_puts "--> vi command: \"ESC\""    
+                  puts $CHECK_OUTPUT "--> vi command: \"ESC\""    
                } else {
                   set output [replace_string $elem "\n" "\\n"]
-                  debug_puts "--> vi command: \"$output\"" 
+                  puts $CHECK_OUTPUT "--> vi command: \"$output\"" 
                }
             }
          }
       } else {
          set add_output [ string range $elem 2 end ]
-         debug_puts "--> adding [string trim $add_output "[format "%c" 27] ^"]"
+         puts $CHECK_OUTPUT "--> adding [string trim $add_output "[format "%c" 27] ^"]"
       }
    }
+   flush $CHECK_OUTPUT
 
    # debug output end
    if {$CHECK_DEBUG_LEVEL != 0} {
@@ -921,6 +854,7 @@ proc ps_grep { forwhat { host "local" } { variable ps_info } } {
 #     control_procedures/ps_grep
 #*******************************
 proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_run 0} } {
+
    global CHECK_OUTPUT CHECK_HOST CHECK_USER
    upvar $variable psinfo
 
@@ -963,11 +897,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set command_pos 8
       }
      
-      "darwin" -
-      "darwin-ppc" -
-      "darwin-x86" {
+      "darwin" {
          set myenvironment(COLUMNS) "500"
-         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-awwx -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-e -o \"pid=_____pid\" -o \"pgid=_____pgid\" -o \"ppid=_____ppid\" -o \"uid=_____uid\" -o \"state=_____s\" -o \"stime=_____stime\" -o \"vsz=_____vsz\" -o \"time=_____time\" -o \"command=_____args\"" prg_exit_state 60 0 myenvironment]
          set index_names "_____pid _____pgid _____ppid _____uid _____s _____stime _____vsz _____time _____args"
          set pid_pos     0
          set gid_pos     1
@@ -1449,9 +1381,9 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global ts_config CHECK_ARCH CHECK_OUTPUT env
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
 
-  set catch_return [ catch { exec "$ts_config(product_root)/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
      set result [split $result "."]
      set newname [lindex $result 0]
@@ -1521,25 +1453,25 @@ proc gethostname {} {
 #     control_procedures/resolve_arch_clear_cache()
 #*******************************
 proc resolve_arch {{node "none"} {use_source_arch 0}} {
-   global ts_config CHECK_OUTPUT
-   global CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
-   global arch_cache
+   global ts_config
+  global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
    set host [node_get_host $node]
 
-   if {[info exists arch_cache($host)]} {
-      return $arch_cache($host)
-   }
+  if { [ info exists arch_cache($host) ] } {
+     return $arch_cache($host)
+  }
 
-   if { [ info exists CHECK_USER ] == 0 } {
-      puts $CHECK_OUTPUT "user not set, aborting"
-      return "unknown"
-   }
+  if { [ info exists CHECK_USER ] == 0 } {
+     puts $CHECK_OUTPUT "user not set, aborting"
+     return "unknown"
+  }
   
-   if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
-      debug_puts "source directory not set, aborting"
-      return "unknown"
-   }
+  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
+     debug_puts "source directory not set, aborting"
+     return "unknown"
+  }
 
    if {$host == "none"} {
       set host $CHECK_HOST
@@ -1589,6 +1521,10 @@ proc resolve_arch {{node "none"} {use_source_arch 0}} {
 
   set arch_cache($host) [lindex $result 0]
   
+  if { [info exists arch_cache($host) ] != 1 } {
+     return "unknown"
+  }
+
   return $arch_cache($host)
 }
 
@@ -1674,9 +1610,7 @@ proc resolve_build_arch { host } {
   return $build_arch_cache($host)
 }
 
-proc resolve_build_arch_installed_libs {host {raise_error 1}} {
-   global ts_config CHECK_OUTPUT
-
+proc resolve_build_arch_installed_libs {host} {
    set build_arch [resolve_build_arch $host]
 
    # we need special handling for some architectures, e.g. HP11 64bit
@@ -1684,15 +1618,8 @@ proc resolve_build_arch_installed_libs {host {raise_error 1}} {
       "HP1164" {
          set arch [resolve_arch $host]
          if {$arch == "hp11"} {
-            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries" $raise_error
+            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on hp11 64bit platform (build platform HP1164) with 32bit binaries installed.\nUsing hp11 (build platform HP11) test binaries"
             set build_arch "HP11"
-         }
-      }
-      "LINUX86_26" {
-         set arch [resolve_arch $host]
-         if {$arch == "lx24-x86"} {
-            add_proc_error "resolve_build_arch_installed_lib" -3 "We are on lx26-x86 platform (build platform LINUX86_26) with lx24-x86 binaries installed.\nUsing lx24-x86 (build platform LINUX86_24) test binaries" $raise_error
-            set build_arch "LINUX86_24"
          }
       }
    }
@@ -1815,7 +1742,7 @@ proc resolve_queue { queue } {
          puts $CHECK_OUTPUT "can't resolve host \"$host_name\""
       }
    }
-   debug_puts "queue \"$queue\" resolved to \"$new_queue_name\""
+   puts $CHECK_OUTPUT "queue \"$queue\" resolved to \"$new_queue_name\""
 
    if { [string length $new_queue_name] > 30 } {
       add_proc_error "resolve_queue" -3 "The length of the queue name \"$new_queue_name\" will exceed qstat queue name output"
@@ -2032,84 +1959,3 @@ proc operational_unlock {operation_name {host ""} {lock_location "/tmp"}} {
 
    return 0
 }
-
-
-#****** control_procedures/scale_timeout() *************************************
-#  NAME
-#     scale_timeout() -- scale timeout values
-#
-#  SYNOPSIS
-#     scale_timeout { timeout {does_computation 1} {does_spooling 1} 
-#     {process_invocations 1} } 
-#
-#  FUNCTION
-#     Scales a given timeout value depending on setup.
-#     The given timeout is increased, when
-#        o we use classic spooling
-#        o we spool on a NFS filesystem
-#        o we run with code coverage
-#
-#  INPUTS
-#     timeout                 - base timeout
-#     {does_computation 1}    - is the tested
-#     {does_spooling 1}       - ??? 
-#     {process_invocations 1} - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************************************************************
-proc scale_timeout {timeout {does_computation 1} {does_spooling 1} {process_invocations 1}} {
-   global ts_config
-
-   set ret $timeout
-
-   # respect spooling influence
-   if {$does_spooling} {
-      # if we use a RPC server, assume 100% slower spooling
-      if {$ts_config(bdb_server) != "none"} {
-         set ret [expr $ret * 2.0]
-      } else {
-         # classic spooling is slower than BDB, assume 100% slower spooling
-         if {$ts_config(spooling_method) == "classic"} {
-            set ret [expr $ret * 2.0]
-            set spool_dir [get_qmaster_spool_dir]
-         } else {
-            set spool_dir [get_bdb_spooldir]
-         }
-
-         # spooling on NFS mounted filesystem, assume 50% slower spooling
-         set fstype [get_fstype $spool_dir]
-         if {[string match "nfs*" $spool_dir]} {
-            set ret [expr $ret * 1.5]
-         }
-      }
-   }
-
-   # respect code coverage influence
-   # we assume that the process will run slightly slower
-   if {[coverage_enabled]} {
-      # computation will be slower - add 10% overhead
-      if {$does_computation} {
-         set ret [expr $ret * 1.10]
-      }
-
-      # coverage profiles are written per process invocation
-      # add 1 second overhead per process invocation
-      set ret [expr $ret + $process_invocations * 1]
-   }
-
-   return [format "%.0f" [expr ceil($ret)]]
-}
-

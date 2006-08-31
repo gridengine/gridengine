@@ -38,6 +38,7 @@ QMASTER_DIR = $(SDIR)/daemons/qmaster
 QMASTER_TARGETS = sge_qmaster
 
 QMASTER_SRC = sge_qmaster_threads.c \
+              sge_c_ack.c \
               sge_c_gdi.c \
               sge_follow.c \
               sge_give_jobs.c \
@@ -70,8 +71,7 @@ QMASTER_SRC = sge_qmaster_threads.c \
               sge_persistence_qmaster.c \
               sge_qmaster_process_message.c \
               sge_c_report.c \
-              sge_reporting_qmaster.c \
-              sge_limit_rule_qmaster.c
+              sge_reporting_qmaster.c
              
 QMASTER_ADD_SRC = usage.c sge_options.c \
               startprog.c shutdown.c \
@@ -162,6 +162,9 @@ sge_qmod_qmaster.o:	$(QMASTER_DIR)/sge_qmod_qmaster.c
 
 sge_userset_qmaster.o:	$(QMASTER_DIR)/sge_userset_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_userset_qmaster.c
+
+sge_c_ack.o:    $(QMASTER_DIR)/sge_c_ack.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_c_ack.c
 
 sge_c_gdi.o:	$(QMASTER_DIR)/sge_c_gdi.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_c_gdi.c
@@ -261,9 +264,6 @@ sge_c_report.o : $(QMASTER_DIR)/sge_c_report.c
 
 sge_reporting_qmaster.o : $(QMASTER_DIR)/sge_reporting_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_reporting_qmaster.c
-
-sge_limit_rule_qmaster.o : $(QMASTER_DIR)/sge_limit_rule_qmaster.c
-		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_limit_rule_qmaster.c
 
 test_sge_qmaster_timed_event.o : $(QMASTER_DIR)/test_sge_qmaster_timed_event.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/test_sge_qmaster_timed_event.c

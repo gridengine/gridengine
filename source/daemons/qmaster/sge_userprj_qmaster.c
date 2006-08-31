@@ -52,7 +52,6 @@
 #include "sge_gdi_request.h"
 #include "sge_gdi.h"
 #include "sge_usageL.h"
-#include "sge_attrL.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"
@@ -71,8 +70,6 @@
 #include "sge_cqueue.h"
 #include "sge_suser.h"
 #include "sge_lock.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
 
 #include "uti/sge_bootstrap.h"
 
@@ -124,25 +121,25 @@ int sub_command, monitoring_t *monitor
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          goto Error;
       }
-      if (verify_str_key(alpp, userprj, MAX_VERIFY_STRING, obj_name) != STATUS_OK)
+      if (verify_str_key(alpp, userprj, obj_name))
          goto Error;
       lSetString(modp, UP_name, userprj);
    }
 
    /* ---- UP_oticket */
-   if ((pos=lGetPosViaElem(ep, UP_oticket, SGE_NO_ABORT))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_oticket))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_oticket, uval);
    }
 
    /* ---- UP_fshare */
-   if ((pos=lGetPosViaElem(ep, UP_fshare, SGE_NO_ABORT))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
    }
 
    /* ---- UP_delete_time */
-   if ((pos=lGetPosViaElem(ep, UP_delete_time, SGE_NO_ABORT))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_delete_time))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_delete_time, uval);
    }
@@ -150,14 +147,14 @@ int sub_command, monitoring_t *monitor
    up_new_version = lGetUlong(modp, UP_version)+1;
 
    /* ---- UP_usage */
-   if ((pos=lGetPosViaElem(ep, UP_usage, SGE_NO_ABORT))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_usage))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_usage, lCopyList("usage", lp));
       lSetUlong(modp, UP_version, up_new_version);
    }
 
    /* ---- UP_project */
-   if ((pos=lGetPosViaElem(ep, UP_project, SGE_NO_ABORT))>=0) {
+   if ((pos=lGetPosViaElem(ep, UP_project))>=0) {
       lp = lGetPosList(ep, pos);
       lSetList(modp, UP_project, lCopyList("project", lp));
       lSetUlong(modp, UP_version, up_new_version);
@@ -165,7 +162,7 @@ int sub_command, monitoring_t *monitor
 
    if (user_flag) {
       /* ---- UP_default_project */
-      if ((pos=lGetPosViaElem(ep, UP_default_project, SGE_NO_ABORT))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_default_project))>=0) {
          const char *dproj;
 
          /* make sure default project exists */
@@ -183,7 +180,7 @@ int sub_command, monitoring_t *monitor
       }
    } else {
       /* ---- UP_acl */
-      if ((pos=lGetPosViaElem(ep, UP_acl, SGE_NO_ABORT))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_acl))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_acl, lCopyList("acl", lp));
 
@@ -194,7 +191,7 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- UP_xacl */
-      if ((pos=lGetPosViaElem(ep, UP_xacl, SGE_NO_ABORT))>=0) {
+      if ((pos=lGetPosViaElem(ep, UP_xacl))>=0) {
          lp = lGetPosList(ep, pos);
          lSetList(modp, UP_xacl, lCopyList("xacl", lp));
          if (userset_list_validate_acl_list(lGetList(ep, UP_xacl), alpp)!=STATUS_OK) {
@@ -203,8 +200,8 @@ int sub_command, monitoring_t *monitor
          }
       }
 
-      if (lGetPosViaElem(modp, UP_xacl, SGE_NO_ABORT)>=0 || 
-          lGetPosViaElem(modp, UP_acl, SGE_NO_ABORT)>=0) {
+      if (lGetPosViaElem(modp, UP_xacl)>=0 || 
+          lGetPosViaElem(modp, UP_acl)>=0) {
          if (multiple_occurances( alpp,
                lGetList(modp, UP_acl),
                lGetList(modp, UP_xacl),
@@ -226,17 +223,8 @@ Error:
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
-   lListElem *lirs;
    
    DENTER(TOP_LAYER, "userprj_success");
-
-   for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, lGetString(ep, UP_name))) {
-         lSetBool(ep, UP_consider_with_categories, true);
-         break;
-      }
-   }
-
    sge_add_event( 0, old_ep?
                  (user_flag?sgeE_USER_MOD:sgeE_PROJECT_MOD) :
                  (user_flag?sgeE_USER_ADD:sgeE_PROJECT_ADD), 
@@ -676,105 +664,4 @@ void sge_userprj_spool(void) {
    DEXIT;
    return;
 }
-
-/****** sge_userprj_qmaster/project_still_used() *******************************
-*  NAME
-*     project_still_used() -- True, if project still used
-*
-*  SYNOPSIS
-*     static bool project_still_used(const char *p)
-*
-*  FUNCTION
-*     Returns true, if project is still used as ACL with host_conf(5),
-*     queue_conf(5).
-*
-*  INPUTS
-*     const char *p - the project
-*
-*  RESULT
-*     static bool - True, if project still used
-*
-*  NOTES
-*     MT-NOTE: project_still_used() is not MT safe
-*******************************************************************************/
-static bool project_still_used(const char *p)
-{
-   const lListElem *qc, *cq, *hep, *lirs;
-
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, p)) {
-         return true;
-      }
-   }
-
-   for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST))
-      if (lGetSubStr(hep, UP_name, p, EH_prj) ||
-          lGetSubStr(hep, UP_name, p, EH_xprj))
-         return true;
-
-   for_each (cq, *object_type_get_master_list(SGE_TYPE_CQUEUE)) {
-      for_each (qc, lGetList(cq, CQ_projects))
-         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
-            return true;
-      for_each (qc, lGetList(cq, CQ_xprojects))
-         if (lGetSubStr(qc, UP_name, p, APRJLIST_value))
-            return true;
-   }
-
-   return false;
-}
-
-
-/****** sge_userprj_qmaster/project_update_categories() ************************
-*  NAME
-*     project_update_categories() -- Update all projects wrts categories
-*
-*  SYNOPSIS
-*     void project_update_categories(const lList *added, const lList *removed)
-*
-*  FUNCTION
-*     Each added/removed project is verified whether it is used first
-*     time/still as ACL for host_conf(5)/queue_conf(5). If so an event
-*     is sent.
-*
-*  INPUTS
-*     const lList *added   - List of added project references (UP_Type)
-*     const lList *removed - List of removed project references (UP_Type)
-*
-*  NOTES
-*     MT-NOTE: project_update_categories() is not MT safe
-*******************************************************************************/
-void project_update_categories(const lList *added, const lList *removed)
-{
-   const lListElem *ep;
-   const char *p;
-   lListElem *prj;
-
-   DENTER(TOP_LAYER, "project_update_categories");
-
-   for_each (ep, added) {
-      p = lGetString(ep, UP_name);
-      DPRINTF(("added project: \"%s\"\n", p));
-      prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
-      if (lGetBool(prj, UP_consider_with_categories)==false) {
-         lSetBool(prj, UP_consider_with_categories, true);
-         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
-      }
-   }
-
-   for_each (ep, removed) {
-      p = lGetString(ep, UP_name);
-      DPRINTF(("removed project: \"%s\"\n", p));
-      prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
-
-      if (!project_still_used(p)) {
-         lSetBool(prj, UP_consider_with_categories, false);
-         sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
-      }
-   }
-
-   DEXIT;
-   return;
-}
-
 

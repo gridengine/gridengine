@@ -72,7 +72,7 @@ calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add,
    /* ---- CAL_name cannot get changed - we just ignore it */
    if (add) {
       cal_name = lGetString(cep, CAL_name);
-      if (verify_str_key(alpp, cal_name, MAX_VERIFY_STRING, "calendar") != STATUS_OK)
+      if (verify_str_key(alpp, cal_name, "calendar"))
          goto ERROR;
       lSetString(new_cal, CAL_name, cal_name);
    } else {
@@ -81,14 +81,14 @@ calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add,
 
    /* ---- CAL_year_calendar */
    attr_mod_zerostr(cep, new_cal, CAL_year_calendar, "year calendar");
-   if (lGetPosViaElem(cep, CAL_year_calendar, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(cep, CAL_year_calendar)>=0) {
       if (!calendar_parse_year(new_cal, alpp)) 
          goto ERROR;
    }
 
    /* ---- CAL_week_calendar */
    attr_mod_zerostr(cep, new_cal, CAL_week_calendar, "week calendar");
-   if (lGetPosViaElem(cep, CAL_week_calendar, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(cep, CAL_week_calendar)>=0) {
       if (!calendar_parse_week(new_cal, alpp))
          goto ERROR;
    }
@@ -140,7 +140,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* ep is no calendar element, if cep has no CAL_name */
-   if (lGetPosViaElem(cep, CAL_name, SGE_NO_ABORT)<0) {
+   if (lGetPosViaElem(cep, CAL_name)<0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(QU_qname), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

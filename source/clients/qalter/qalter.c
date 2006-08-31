@@ -795,7 +795,7 @@ int *all_users
             } 
          }
       }
-      if ((lGetPosViaElem(rep, JB_ja_tasks, SGE_NO_ABORT) == -1) && (lGetNumberOfElem(task_list))){
+      if ((lGetPosViaElem(rep, JB_ja_tasks) == -1) && (lGetNumberOfElem(task_list))){
          sprintf(SGE_EVENT, MSG_OPTIONWORKSONLYONJOB);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -860,22 +860,22 @@ int *all_users
 
          /* copy all strings */
          for (i=0; str_nm[i]!=NoName; i++)
-            if (lGetPosViaElem(job, str_nm[i], SGE_NO_ABORT) != -1 && lGetPosViaElem(rep, str_nm[i], SGE_NO_ABORT) != -1)
+            if (lGetPosViaElem(job, str_nm[i]) != -1 && lGetPosViaElem(rep, str_nm[i]) != -1)
                lSetString(rep, str_nm[i], lGetString(job, str_nm[i]));
 
          /* copy all ulongs */
          for (i=0; ulong_nm[i]!=NoName; i++)
-            if (lGetPosViaElem(job, ulong_nm[i], SGE_NO_ABORT) != -1 && lGetPosViaElem(rep, ulong_nm[i], SGE_NO_ABORT) != -1)
+            if (lGetPosViaElem(job, ulong_nm[i]) != -1 && lGetPosViaElem(rep, ulong_nm[i]) != -1)
                lSetUlong(rep, ulong_nm[i], lGetUlong(job, ulong_nm[i]));
 
          /* copy all bools */
          for (i=0; bool_nm[i]!=NoName; i++)
-            if (lGetPosViaElem(job, bool_nm[i], SGE_NO_ABORT) != -1 && lGetPosViaElem(rep, bool_nm[i], SGE_NO_ABORT) != -1)
+            if (lGetPosViaElem(job, bool_nm[i]) != -1 && lGetPosViaElem(rep, bool_nm[i]) != -1)
                lSetBool(rep, bool_nm[i], lGetBool(job, bool_nm[i]));
 
          /* copy all lists */
          for (i=0; list_nm[i]!=NoName; i++)
-            if (lGetPosViaElem(job, list_nm[i], SGE_NO_ABORT) != -1  && lGetPosViaElem(rep, list_nm[i], SGE_NO_ABORT) != -1)
+            if (lGetPosViaElem(job, list_nm[i]) != -1  && lGetPosViaElem(rep, list_nm[i]) != -1)
                lSetList(rep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
 
       }

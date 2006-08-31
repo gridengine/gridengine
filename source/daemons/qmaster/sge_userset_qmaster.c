@@ -50,9 +50,6 @@
 #include "sge_host.h"
 #include "sge_utility.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -82,7 +79,7 @@ char *rhost
    int pos, ret;
    lListElem *found;
 
-   DENTER(TOP_LAYER, "sge_add_userset");
+   DENTER(TOP_LAYER, "sge_add_acl");
 
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -92,7 +89,7 @@ char *rhost
    }
 
    /* ep is no acl element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -110,7 +107,7 @@ char *rhost
 
    /* Name has to be a valid filename without pathchanges, because we use it
       for storing user/project to disk */
-   if (verify_str_key(alpp, userset_name, MAX_VERIFY_STRING, MSG_OBJ_USERSET) != STATUS_OK) {
+   if (verify_str_key(alpp, userset_name, MSG_OBJ_USERSET)) {
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -147,27 +144,17 @@ char *rhost
       return ret;
    }
 
-   {
-      dstring ds = DSTRING_INIT;
-      lListElem *lirs;
-
-      sge_dstring_sprintf(&ds, "@%s", userset_name);
-
-      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
-            lSetBool(ep, US_consider_with_categories, true);
-            break;
-         }
-      }
-      sge_dstring_free(&ds);
-   }
-
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
                         0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EUNKNOWN;
-   }
+   }   
+   /* change queue versions */
+   /* isn't this unnecessary? since the userset hast just been created
+    * it CANNOT by used by any queue in its (x)acl.  (Archie)
+    */
+   sge_change_queue_version_acl(userset_name);
 
    /* update in interal lists */
    if (!*userset_list)
@@ -207,7 +194,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -281,7 +268,7 @@ char *rhost
    }
 
    /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
+   if ((pos = lGetPosViaElem(ep, US_name)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -335,21 +322,6 @@ char *rhost
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
-
-   {
-      dstring ds = DSTRING_INIT;
-      lListElem *lirs;
-
-      sge_dstring_sprintf(&ds, "@%s", userset_name);
-
-      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
-            lSetBool(ep, US_consider_with_categories, true);
-            break;
-         }
-      }
-      sge_dstring_free(&ds);
-   }
 
    /* update on file */
    if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
@@ -802,115 +774,3 @@ const char *userset_name
    DEXIT;
    return ret;
 }
-
-/****** sge_userset_qmaster/userset_still_used() *******************************
-*  NAME
-*     userset_still_used() -- True, if userset still used
-*
-*  SYNOPSIS
-*     static bool userset_still_used(const char *u)
-*
-*  FUNCTION
-*     Returns true, if userset is still used as ACL with host_conf(5),
-*     queue_conf(5), or sge_pe(5).
-*
-*  INPUTS
-*     const char *p - the userset
-*
-*  RESULT
-*     static bool - True, if userset still used
-*
-*  NOTES
-*     MT-NOTE: userset_still_used() is not MT safe
-*******************************************************************************/
-static bool userset_still_used(const char *u)
-{
-   const lListElem *qc, *cq, *hep, *lirs;
-   dstring ds = DSTRING_INIT;
-
-   sge_dstring_sprintf(&ds, "@%s", u);
-
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
-         sge_dstring_free(&ds);
-         return true;
-      }
-   }
-   sge_dstring_free(&ds);
-
-   for_each (hep, *object_type_get_master_list(SGE_TYPE_PE)) 
-      if (lGetSubStr(hep, US_name, u, PE_user_list) ||
-          lGetSubStr(hep, US_name, u, PE_xuser_list))
-         return true;
-
-   for_each (hep, *object_type_get_master_list(SGE_TYPE_EXECHOST))
-      if (lGetSubStr(hep, US_name, u, EH_acl) ||
-          lGetSubStr(hep, US_name, u, EH_xacl))
-         return true;
-
-   for_each (cq, *object_type_get_master_list(SGE_TYPE_CQUEUE)) {
-      for_each (qc, lGetList(cq, CQ_acl))
-         if (lGetSubStr(qc, US_name, u, AUSRLIST_value))
-            return true;
-      for_each (qc, lGetList(cq, CQ_xacl))
-         if (lGetSubStr(qc, US_name, u, AUSRLIST_value))
-            return true;
-   }
-
-   return false;
-}
-
-
-/****** sge_userset_qmaster/userset_update_categories() ************************
-*  NAME
-*     userset_update_categories() -- Update all usersets wrts categories
-*
-*  SYNOPSIS
-*     void userset_update_categories(const lList *added, const lList *removed)
-*
-*  FUNCTION
-*     Each added/removed userset is verified whether it is used first
-*     time/still as ACL for host_conf(5)/queue_conf(5)/sge_pe(5). If
-*     so an event is sent.
-*
-*  INPUTS
-*     const lList *added   - List of added userset references (US_Type)
-*     const lList *removed - List of removed userset references (US_Type)
-*
-*  NOTES
-*     MT-NOTE: userset_update_categories() is not MT safe
-*******************************************************************************/
-void userset_update_categories(const lList *added, const lList *removed)
-{
-   const lListElem *ep;
-   const char *u;
-   lListElem *acl;
-
-   DENTER(TOP_LAYER, "userset_update_categories");
-
-   for_each (ep, added) {
-      u = lGetString(ep, US_name);
-      DPRINTF(("added userset: \"%s\"\n", u));
-      acl = lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, u);
-      if (lGetBool(acl, US_consider_with_categories)==false) {
-         lSetBool(acl, US_consider_with_categories, true);
-         sge_add_event(0, sgeE_USERSET_MOD, 0, 0, u, NULL, NULL, acl);
-      }
-   }
-
-   for_each (ep, removed) {
-      u = lGetString(ep, US_name);
-      DPRINTF(("removed userset: \"%s\"\n", u));
-      acl = lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, u);
-
-
-      if (!userset_still_used(u)) {
-         lSetBool(acl, US_consider_with_categories, false);
-         sge_add_event(0, sgeE_USERSET_MOD, 0, 0, u, NULL, NULL, acl);
-      }
-   }
-
-   DEXIT;
-   return;
-}
-

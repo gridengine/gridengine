@@ -319,7 +319,7 @@ FCLOSE_ERROR:
    return ret;
 }
 
-/****** shepherd/qrsh/get_exit_code_of_qrsh_starter() *************************
+/****** shepherd/qrsh/get_error_of_qrsh_starter() *************************
 *  NAME
 *     get_error_of_qrsh_starter -- get error message from qrsh_starter
 *

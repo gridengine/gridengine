@@ -80,7 +80,8 @@
 /* name of this thread */
 static const char THREAD_NAME[] = "EDT";
 
-/****** transaction handling implementation ************
+/*
+ ***** transaction handling implementation ************
  *
  * Well, one cannot realy the transaction implementation
  * transaction handling. First of all, there is no role
@@ -107,10 +108,12 @@ static const char THREAD_NAME[] = "EDT";
  *  sge_is_commit_required()
  *  sge_commit() 
  *
- *******************************************************/
+ ******************************************************
+ */
 
 
-/****** subscription_t definition **********************
+/*
+ ***** subscription_t definition **********************
  *
  * This is a subscription entry in a two dimensional 
  * definition. The first dimension is for the event
@@ -118,7 +121,8 @@ static const char THREAD_NAME[] = "EDT";
  * changes. The second dimension is of fixed size and 
  * contains one element for each posible event.
  *
- *******************************************************/
+ ******************************************************
+ */
 typedef struct {
       bool         subscription; /* true -> the event is subscribed           */
       bool         blocked;      /* true -> no events will be accepted before */
@@ -131,13 +135,15 @@ typedef struct {
 } subscription_t;
 
 
-/****** event_master_control_t definition ********************
+/*
+ ***** event_master_control_t definition ********************
  *
  * This struct contains all the control information needed
  * to have the event master running. It contains the references
  * to all lists, mutexes, and booleans.
  *
- ************************************************************/
+ ***********************************************************
+ */
 typedef struct {
    pthread_mutex_t  transaction_mutex;    /* a mutix ensuring that only one transaction is running at a time */
    lList            *transaction_events;  /* a list storing all events happening, while a transaction is open, a
@@ -176,32 +182,41 @@ typedef struct {
                                            /* protected by send_mutex                                   */
    lList*           change_evc;            /* evc change requests                                       */
 
-   /* A client locked via the lockfield is only locked for content.  Any changes
+   /* 
+    * A client locked via the lockfield is only locked for content.  Any changes
     * to the clients list, such as adding and removing clients, requires the
-    * locking of the mutex. */
+    * locking of the mutex.
+    */
    bitfield         *lockfield;            /* bitfield of locks for event clients                       */     
                                            /* protected by mutex                                        */
-   /* In order to allow the locking of individual clients, I have added an array
+   /* 
+    * In order to allow the locking of individual clients, I have added an array
     * of pointers to the client entries in the clients list.  This was needed
     * because otherwise looping through the registered clients requires the
     * locking of the entire list.  (Without the array, the id, which is the key
     * for the lockfield, is part of the content of the client, which has to be
     * locked to be accessed, which is what we're trying to double in the first
-    * place!) */
-   /* For simplicity's sake, rather than completely replacing the clients list
+    * place!
+    */
+
+   /* 
+    * For simplicity's sake, rather than completely replacing the clients list
     * with an array, I have made the array an overlay for the list.  This allows
     * all the old code to function while permitting new code to use the array
     * for faster access.  Specifically, the lSelect in add_list_event_direct()
-    * continues to work without modification. */
+    * continues to work without modification.
+    */
    lListElem**      clients_array;         /* array of pointers to event clients                        */
                                            /* protected by lockfield/mutex                              */
-   /* In order better optimize for the normal case, i.e. few event clients, I
+   /* 
+    * In order better optimize for the normal case, i.e. few event clients, I
     * have added this indices array.  It contains the indices for the non-NULL
     * entries in the clients_array.  It gets rebuilt by the event thread
     * whenever an event client is added or removed.  Now, instead of having to
     * search through 109 (99 dynamic + 10 static) entries to find the 2 or 3
     * that aren't NULL, *every* time through the loop, the event thread only has
-    * to search for the non-NULL entries when something changes. */
+    * to search for the non-NULL entries when something changes.
+    */
    int*             clients_indices;       /* array of currently active entries in the clients_array    */
                                            /* unprotected -- only used by event thread                  */
    bool             indices_dirty;         /* whether the clients_indices array needs to be updated     */
@@ -215,7 +230,7 @@ typedef struct {
 typedef struct {
    pthread_mutex_t  subscribed_events_mutex;
    int   subscribed_events[sgeE_EVENTSIZE];
-}subscribed_control_t;
+} subscribed_control_t;
 
 /****** Eventclient/Server/-Event_Client_Server_Defines ************************
 *  NAME
@@ -243,7 +258,8 @@ typedef struct {
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
-/********************************************************************
+/*
+ *******************************************************************
  *
  * The next three array are important for lists, which can be
  * subscripted by the event client and which contain a sub-list
@@ -283,7 +299,8 @@ typedef struct {
  *     evm/sge_event_master/add_list_event
  *     evm/sge_event_master/add_event
  *
- *********************************************************************/
+ ********************************************************************
+ */
 #define LIST_MAX 3
 
 const int EVENT_LIST[LIST_MAX][6] = {
@@ -304,7 +321,8 @@ const int SOURCE_LIST[LIST_MAX][3] = {
    {sgeE_PETASK_ADD, -1, -1}
 };
 
-/******************************************************
+/*
+ *****************************************************
  *
  * The next two array are needed for blocking events
  * for a given client, when a total update is pending
@@ -321,7 +339,8 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  *   total_update 
  *   add_list_event_direct
  *
- ******************************************************/
+ *****************************************************
+ */
 
 #ifndef __SGE_NO_USERMAPPING__
 #define total_update_eventsMAX 21
@@ -382,7 +401,8 @@ const int SOURCE_LIST[LIST_MAX][3] = {
                                  };
 
 
-/********************************************************************
+/*
+ *******************************************************************
  *
  * Some events have to be delivered even so they have no date left
  * after filtering for them. These are for example all update list
@@ -401,7 +421,8 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  * - Init function:
  *    evm/sge_event_master/sge_init_send_events()
  *
- *******************************************************************/
+ ******************************************************************
+ */
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
 static subscribed_control_t Subscribed_Control;

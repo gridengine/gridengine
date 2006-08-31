@@ -1316,7 +1316,7 @@ proc config_source_cvs_hostname { only_check name config_array } {
 #     check/setup2()
 #     check/verify_config()
 #*******************************************************************************
-proc config_source_cvs_release { only_check name config_array } {
+proc config_source_cvs_release {only_check name config_array} {
    global CHECK_OUTPUT 
    global CHECK_USER 
    global CHECK_SOURCE_CVS_RELEASE
@@ -1326,11 +1326,11 @@ proc config_source_cvs_release { only_check name config_array } {
    upvar $config_array config
 
    # fix "maintrunc" typo - it will be written the next time the config is modified
-   if { $config($name) == "maintrunc" } {
+   if {$config($name) == "maintrunc"} {
       set config($name) "maintrunk"
    }
 
-   if { ! [file isdirectory $config(source_dir)] } {
+   if {![file isdirectory $config(source_dir)]} {
       puts $CHECK_OUTPUT "source directory $config(source_dir) doesn't exist"
       return -1
    }
@@ -1339,29 +1339,29 @@ proc config_source_cvs_release { only_check name config_array } {
    set default_value $config($name,default)
    set description   $config($name,desc)
    set value $actual_value
-   if { $actual_value == "" } {
+   if {$actual_value == ""} {
       set value $default_value
-      if { $default_value == "" } {
+      if {$default_value == ""} {
          set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
          set result [string trim $result]
-         if { $prg_exit_state == 0 } {
-            if { [ string first "T" $result ] == 0 } {
-               set value [ string range $result 1 end ]
+         if {$prg_exit_state == 0} {
+            if {[string first "T" $result] == 0} {
+               set value [string range $result 1 end]
             }
          } else {
             set value "maintrunk" 
          }
       }
    }
-   if { $only_check == 0 } {
+   if {$only_check == 0} {
       # do setup  
       puts $CHECK_OUTPUT "" 
       puts $CHECK_OUTPUT "Please enter cvs release tag (\"maintrunk\" specifies no tag)"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
       puts $CHECK_OUTPUT "(default: $value)"
       puts -nonewline $CHECK_OUTPUT "> "
-      set input [ wait_for_enter 1]
-      if { [ string length $input] > 0 } {
+      set input [wait_for_enter 1]
+      if {[string length $input] > 0} {
          set value $input 
       } else {
          puts $CHECK_OUTPUT "using default value"
@@ -1371,8 +1371,8 @@ proc config_source_cvs_release { only_check name config_array } {
    if {!$fast_setup} {
       set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
       set result [string trim $result]
-      if { $prg_exit_state == 0 } {
-         if { [ string compare $result "T$value" ] != 0 && [string compare $result "N$value"] != 0 } {
+      if {$prg_exit_state == 0} {
+         if {[string compare $result "T$value"] != 0 && [string compare $result "N$value"] != 0} {
             puts $CHECK_OUTPUT "CVS/Tag entry doesn't match cvs release tag \"$value\" in directory $CHECK_SOURCE_HOSTNAME"
             return -1
          }

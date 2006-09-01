@@ -1,3 +1,6 @@
+JG-2006-09-01-0: Testsuite: Fixed a TCL error in SGE 5.3 related code.
+                            Fixed broken ADOC headers.
+
 JG-2006-08-31-1: Testsuite: Always add a build number to builds done by 
                             testsuite.
                             Minor fix for setups without root access.

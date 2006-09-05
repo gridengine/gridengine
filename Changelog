@@ -1,3 +1,6 @@
+SG-2006-09-05-0: Enhancm.:  added a document describing the profiling
+                            output
+
 JG-2006-09-01-0: Testsuite: Fixed a TCL error in SGE 5.3 related code.
                             Fixed broken ADOC headers.
 

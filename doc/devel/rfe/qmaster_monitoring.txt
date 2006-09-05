@@ -1,4 +1,4 @@
-          Specification of the Grid Engine Master monitoring
+             Specification of the Grid Engine Master monitoring
                             output format
    
                              Stephan Grell

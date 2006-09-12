@@ -1,3 +1,8 @@
+JG-2006-09-12-0: Bugfix:    Intermediate accounting records for pe slave tasks
+                            contained invalid submission time.
+                 Bugtraq:   6457900
+                 Review:    RH
+
 SG-2006-09-05-0: Enhancm.:  added a document describing the profiling
                             output
 

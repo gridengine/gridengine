@@ -259,7 +259,7 @@ sge_write_rusage(dstring *buffer,
    }
 
    if (intermediate) {
-      if (job != NULL) {
+      if (job != NULL && pe_task == NULL) {
          submission_time = lGetUlong(job, JB_submission_time);
       }
       if (ja_task != NULL) {

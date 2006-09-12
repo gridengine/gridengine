@@ -1281,11 +1281,22 @@ proc setup_win_user_passwd {user} {
 
 proc cleanup_tmpdirs {} {
    global ts_config CHECK_OUTPUT
+   global CHECK_ADMIN_USER_SYSTEM CHECK_USER
 
    set tmpdir "/tmp/testsuite_$ts_config(commd_port)"
 
+   # in an admin user system (no root password available)
+   # we have to cleanup the tmpdir as CHECK_USER
+   # this shouldn't matter, as there shouldn't be subdirectories
+   # created by another user than CHECK_USER
+   if {$CHECK_ADMIN_USER_SYSTEM} {
+      set clean_user $CHECK_USER
+   } else {
+      set clean_user "root"
+   }
+
    foreach node $ts_config(execd_nodes) {
       puts $CHECK_OUTPUT "cleaning tmpdir ($tmpdir) on node $node"
-      start_remote_prog $node "root" "rm" "-rf $tmpdir"
+      start_remote_prog $node $clean_user "rm" "-rf $tmpdir"
    }
 }

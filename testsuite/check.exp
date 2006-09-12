@@ -6804,7 +6804,7 @@ proc compile_source { { do_only_install 0 } { do_only_hooks 0} } {
 
          # start build process
          if { $do_only_hooks == 0 } {
-            if { [compile_with_aimk $compile_hosts report "compile"] != 0 } {
+            if {[compile_with_aimk $compile_hosts report "compile"] != 0} {
                incr error_count
             }
          } else {
@@ -7149,14 +7149,22 @@ proc compile_with_aimk { host_list a_report task_name { aimk_options "" }  } {
       set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
    }
 
+   # we'll pass a build number into aimk to distinguish our binaries
+   # from official builds.
+   set build_number [get_build_number]
+
    set table_row 2
    foreach elem $host_list {
+      # we have to make sure that the build number is compiled into 
+      # the object code (therefore delete the appropriate object module).
+      delete_build_number_object $elem $build_number
+
       # compile the staff
       puts $CHECK_OUTPUT "-> starting $task_name on host $elem ..."
 
       set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
       set par1 "$CHECK_SOURCE_DIR"
-      set par2 "$my_compile_options"
+      set par2 "$my_compile_options -DDAILY_BUILD_NUMBER=$build_number"
       
       puts $CHECK_OUTPUT "$prog $par1 '$par2'"
       set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" 0 "" 0 ]
@@ -7180,9 +7188,8 @@ proc compile_with_aimk { host_list a_report task_name { aimk_options "" }  } {
    set org_spawn_list $spawn_list
    
    while { [llength $spawn_list] > 0 } {
-      
       if {[info exists spawn_id]} {
-            unset spawn_id
+         unset spawn_id
       }
       
       if { $show_info == 1 } {
@@ -7271,6 +7278,63 @@ proc compile_with_aimk { host_list a_report task_name { aimk_options "" }  } {
    }
 
    return $compile_error
+}
+
+#****** check/get_build_number() ***********************************************
+#  NAME
+#     get_build_number() -- create a build number
+#
+#  SYNOPSIS
+#     get_build_number { } 
+#
+#  FUNCTION
+#     Creates a build number.
+#     Currently, we use the date (formatted as yyyymmdd) as build number.
+#
+#  INPUTS
+#
+#  RESULT
+#     build number
+#*******************************************************************************
+proc get_build_number {} {
+   set build [clock format [clock seconds] -format "%Y%m%d" -gmt 1]
+   return $build
+}
+
+#****** check/delete_build_number_object() *************************************
+#  NAME
+#     delete_build_number_object() -- delete object code containing build num
+#
+#  SYNOPSIS
+#     delete_build_number_object { host build } 
+#
+#  FUNCTION
+#     The function deletes the object code file from the build directory
+#     which has the build number compiled in.
+#
+#     Currently this is the file sge_feature.o.
+#
+#     As we use the date as build number, the file is only deleted - and
+#     therefore will be rebuilt with a new build number - when it has been
+#     created or modified earlier than today.
+#
+#  INPUTS
+#     host  - the host for whose architecture the object module will be deleted
+#     build - the build number
+#*******************************************************************************
+proc delete_build_number_object {host build} {
+   global ts_config
+
+   set arch [resolve_build_arch $host]
+   set filename "$ts_config(source_dir)/$arch/sge_feature.o"
+
+   # only delete the file, if it is older than 00:00 today
+   if {[file exists $filename]} {
+      set midnight [clock scan $build -gmt 1]
+      if {[file mtime $filename] < $midnight} {
+         file delete $filename
+      }
+   }
 }
 
 #****** check/update_source() ******************************************************

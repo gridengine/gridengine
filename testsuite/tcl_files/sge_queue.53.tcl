@@ -80,6 +80,8 @@ proc vdep_set_queue_defaults { change_array } {
 #
 #*******************************************************************************
 proc validate_queue { change_array } {
+   global ts_config
+
    upvar $change_array chgar
 
    # create cluster dependent tmpdir

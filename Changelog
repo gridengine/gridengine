@@ -1,3 +1,24 @@
+JG-2006-09-12-0: Bugfix:    Intermediate accounting records for pe slave tasks
+                            contained invalid submission time.
+                 Bugtraq:   6457900
+                 Review:    RH
+
+SG-2006-09-05-0: Enhancm.:  added a document describing the profiling
+                            output
+
+JG-2006-09-01-0: Testsuite: Fixed a TCL error in SGE 5.3 related code.
+                            Fixed broken ADOC headers.
+
+JG-2006-08-31-1: Testsuite: Always add a build number to builds done by 
+                            testsuite.
+                            Minor fix for setups without root access.
+                 Review:    CR
+
+JG-2006-08-31-0: Enhancem.: Added means to output a build number with the 
+                            version string.
+                 Cleanup:   Fixed broken ADOC headers.
+                 Review:    SG
+
 AH-2006-08-30-1: Bugfix:    Fix problem with classic spooling write object
                             return codes not be checked
                  Review:    JG

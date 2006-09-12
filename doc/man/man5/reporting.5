@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2004/11/12 15:40:06 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2006/09/12 09:12:02 $     Revision: $Revision: 1.3.10.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2004/11/12 15:40:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2006/09/12 09:12:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -145,6 +145,8 @@ parameter in the queue configuration (see
 .M queue_conf 5 ).
 .IP "\fBsubmission_time\fP"
 Submission time in seconds (since epoch format).
+For slave tasks of tightly integrated parallel jobs, the submission_time is 
+always set to 0.
 .IP "\fBstart_time\fP"
 Start time in seconds (since epoch format).
 .IP "\fBend_time\fP"

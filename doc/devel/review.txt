@@ -35,7 +35,7 @@ Date:
 3.5 [ ] yes
 3.5 [ ] no - comment:
 
-3.6 Bugster CR and Issuezilla
+3.6 Bugster CR
 3.6 [ ] yes
 3.6 [ ] no - comment:
 

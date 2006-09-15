@@ -1440,8 +1440,10 @@ case LINUXPPC:
       endif
    endif
 
-   # set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
-   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -Wno-strict-aliasing -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   if ( $buildarch == "lx26-x86" ) then
+      set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
+   endif
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
    endif

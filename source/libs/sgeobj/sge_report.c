@@ -40,6 +40,11 @@
 
 #include "msg_sgeobjlib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
+
 #define REPORT_LAYER TOP_LAYER
 
 /****** sgeobj/report/job_report_print_usage() *******************************

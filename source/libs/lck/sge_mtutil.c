@@ -107,7 +107,7 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
    }   
 #endif  
 
-   return;
+   DRETURN_VOID;
 } /* sge_mutex_lock() */
 #else
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
@@ -180,7 +180,7 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
    
    DLOCKPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));
    
-   return;
+   DRETURN_VOID;
 } /* sge_mutex_unlock() */
 #else
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)

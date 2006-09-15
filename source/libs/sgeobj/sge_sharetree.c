@@ -41,32 +41,44 @@
 #include "uti/sge_unistd.h"
 
 #include "sge_sharetree.h"
+#include "sge_answer.h"
 
 /************************************************************************
    id_sharetree - set the sharetree node id
 ************************************************************************/
-int id_sharetree(
+bool id_sharetree(
+lList **alpp,
 lListElem *ep,
-int id  
+int id,  
+int *ret_id
 ) {
    lListElem *cep = NULL;
+   int my_id = id;
 
    DENTER(TOP_LAYER, "id_sharetree");
 
    if (ep == NULL) {
       ERROR((SGE_EVENT, MSG_OBJ_NOSTREEELEM));
-      SGE_EXIT(1);
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                              MSG_OBJ_NOSTREEELEM);
+/*       SGE_EXIT(NULL, 1); */
+      DRETURN(false);
    }
    
-   lSetUlong(ep, STN_id, id++);
+   lSetUlong(ep, STN_id, my_id++);
 
    /* handle the children */
    for_each(cep, lGetList(ep, STN_children)) {     
-      id = id_sharetree(cep, id);
+      if (false == id_sharetree(alpp, cep, my_id, &my_id)) {
+         DRETURN(false);
+      }
    }
 
-   DEXIT;
-   return id;
+   if (ret_id) {
+      *ret_id = my_id;
+   }   
+
+   DRETURN(true);
 }  
 
 /************************************************************************

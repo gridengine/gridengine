@@ -182,7 +182,7 @@ int main(int argc, char** argv)
 
       while (test_array[i] != NULL) {
          if (test_array[i]() != 0) {
-            SGE_EXIT(1);
+            SGE_EXIT(NULL, 1);
          }
          i++;
       }
@@ -1147,7 +1147,7 @@ static int diff(const char *file1, const char *file2)
 
    if(file1 == NULL || file2 == NULL) {
       printf("file pointer is <NULL>\n");
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
    
    if(!fork()) {
@@ -1839,11 +1839,11 @@ static int CQ_test(void) {
    lSetList(ep2, ACELIST_value, lp2);
    
    lAppendElem(lp, ep2);
- 
+
    lSetList(ep, CQ_load_thresholds, lp);
    
    lp = lCreateList("Suspend Thresholds", ACELIST_Type);
-  
+
    ep2 = lCreateElem(ACELIST_Type);
    lSetHost(ep2, ACELIST_href, "Test_Name15");
 
@@ -2189,7 +2189,7 @@ static int CQ_test(void) {
    
    lSetList(ep2, AUSRLIST_value, lp2);
    lAppendElem(lp, ep2);
-  
+
    lSetList(ep, CQ_acl, lp);
 
    lp = lCreateList("XUser List", AUSRLIST_Type);
@@ -2246,7 +2246,7 @@ static int CQ_test(void) {
    lSetString(ep3, CE_name, "Test_Name94");
    lSetString(ep3, CE_stringval, "stringval");
    lAppendElem(lp2, ep3);
-  
+
    lSetList(ep2, ACELIST_value, lp2);
    
    lAppendElem(lp, ep2);
@@ -2270,7 +2270,7 @@ static int CQ_test(void) {
    
    lSetList(ep2, APRJLIST_value, lp2);
    lAppendElem(lp, ep2);
-  
+
    lSetList(ep, CQ_projects, lp);
 
    lp = lCreateList("XProjects List", APRJLIST_Type);
@@ -3027,7 +3027,7 @@ static int CONF_test(void) {
    FREE(file2);
    
    file2 = strdup("/var/tmp/CONF_ff");
-   write_configuration(0, &alp,(char *)file2, ep, NULL, 0L);
+   ret = write_configuration(0, &alp,(char *)file2, ep, NULL, 0L);
    
    ret = diff(file1, file2);
    

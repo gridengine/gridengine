@@ -172,8 +172,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       else {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, name));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -186,8 +185,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          if (!parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
          lSetDouble(this_elem, CE_doubleval, dval);
 
@@ -196,8 +194,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
             && !parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
 
          /* negative values are not allowed for consumable attributes */
@@ -206,8 +203,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
 
          /* normalize time values, so that the string value is based on seconds */
@@ -233,8 +229,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
                ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             }
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
          break;
       case TYPE_STR:
@@ -246,12 +241,10 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       default:
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type)));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 const char *
@@ -358,8 +351,7 @@ centry_create(lList **answer_list, const char *name)
       answer_list_add_sprintf(answer_list, STATUS_ERROR1, ANSWER_QUALITY_ERROR,
                               MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_is_referenced() **********************************
@@ -444,8 +436,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
          }
       } 
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_print_resource_to_dstring() **********************
@@ -494,8 +485,7 @@ centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_list_get_master_list() ***************************
@@ -549,8 +539,7 @@ centry_list_locate(const lList *this_list, const char *name)
          ret = lGetElemStr(this_list, CE_shortcut, name);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_list_sort() **************************************
@@ -584,8 +573,7 @@ centry_list_sort(lList *this_list)
       lSortList(this_list, order);
       lFreeSortOrder(&order);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_list_init_double() *******************************
@@ -623,8 +611,7 @@ centry_list_init_double(lList *this_list)
          lSetDouble(centry, CE_doubleval, new_val);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/centry/centry_list_fill_request() ******************************
@@ -685,8 +672,7 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
          if (!allow_non_requestable && requestable == REQU_NO) {
             ERROR((SGE_EVENT, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
 
          /* replace name in request/threshold/consumable list,
@@ -702,21 +688,18 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
 
          if (centry_fill_and_check(entry, answer_list, allow_empty_boolean, allow_neg_consumable)) {
             /* no error msg here - centry_fill_and_check() makes it */
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
       } else {
          /* CLEANUP: message should be put into answer_list and
             returned via argument. */
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 bool
@@ -732,8 +715,7 @@ centry_list_are_queues_requestable(const lList *this_list)
          ret = (lGetUlong(centry, CE_requestable) != REQU_NO) ? true : false;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 const char *
@@ -765,8 +747,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
       }
       ret = sge_dstring_get_string(string);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* CLEANUP: should be replaced by centry_list_append_to_dstring() */
@@ -787,12 +768,10 @@ centry_list_append_to_string(lList *this_list, char *buff,
 
    ret = uni_print_list(NULL, buff, max_len, this_list, attr_fields, attr_delis, 0);
    if (ret) {
-      DEXIT;
-      return ret;
+      DRETURN(ret);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* CLEANUP: add answer_list remove SGE_EVENT */
@@ -813,8 +792,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    if (complex_attributes == NULL) {
       if ((complex_attributes = lCreateList("qstat_l_requests", CE_Type)) == NULL) {
          ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRLIST));
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
    }
 
@@ -838,16 +816,14 @@ centry_list_parse_from_string(lList *complex_attributes,
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
          lFreeList(&complex_attributes);
          sge_free_saved_vars(context);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       if ((check_value) && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
          lFreeList(&complex_attributes);
          sge_free_saved_vars(context);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
    /* create new element, fill in the values and append it */
@@ -856,8 +832,7 @@ centry_list_parse_from_string(lList *complex_attributes,
             ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
             lFreeList(&complex_attributes);
             sge_free_saved_vars(context);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          else {
             lSetString(complex_attribute, CE_name, attr);
@@ -870,8 +845,7 @@ centry_list_parse_from_string(lList *complex_attributes,
 
    sge_free_saved_vars(context);
 
-   DEXIT;
-   return complex_attributes;
+   DRETURN(complex_attributes);
 }
 
 void
@@ -879,8 +853,7 @@ centry_list_remove_duplicates(lList *this_list)
 {
    DENTER(TOP_LAYER, "centry_list_remove_duplicates");
    cull_compress_definition_list(this_list, CE_name, CE_stringval, 0);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
@@ -1144,8 +1117,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
          ret = false;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* EB: CLEANUP: change order of parameter */
@@ -1190,7 +1162,7 @@ centry_urgency_contribution(int slots, const char *name, double value,
        !(strval = lGetString(centry, CE_urgency_weight)) ||
        !(parse_ulong_val(&weight, NULL, TYPE_INT, strval, NULL, 0))) {
       DPRINTF(("no contribution for attribute\n"));
-      return 0;
+      DRETURN(0);
    }
 
    switch ((complex_type=lGetUlong(centry, CE_valtype))) {
@@ -1217,8 +1189,7 @@ centry_urgency_contribution(int slots, const char *name, double value,
       break;
    }
 
-   DEXIT;
-   return contribution;
+   DRETURN(contribution);
 }
 
 bool
@@ -1241,8 +1212,7 @@ centry_list_do_all_exists(const lList *this_list, lList **answer_list,
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -1266,8 +1236,7 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
          } 
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int 
@@ -1300,8 +1269,7 @@ ensure_attrib_available(lList **alpp, lListElem *ep, int nm)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_centry/validate_load_formula() ********************

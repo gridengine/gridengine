@@ -57,5 +57,7 @@ char* schedd_get_log_string(void);
 
 #define SCHED_MON(x) (sprintf x,schedd_log(log_string))
 
+void schedd_set_schedd_log_file(void *context);
+
 #endif /* __SCHEDD_MONITOR_H */
 

@@ -61,7 +61,9 @@ enum {
    CK_clean_command
 };
 
+#if 0
 LISTDEF(CK_Type)
+   JGDI_ROOT_OBJ(Checkpoint, SGE_CKPT_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    SGE_STRING(CK_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_STRING(CK_interface, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CK_ckpt_command, CULL_DEFAULT | CULL_SPOOL)
@@ -73,6 +75,21 @@ LISTDEF(CK_Type)
    SGE_ULONG(CK_job_pid, CULL_DEFAULT)
    SGE_STRING(CK_clean_command, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
+#else
+LISTDEF(CK_Type)
+   JGDI_ROOT_OBJ(Checkpoint, SGE_CKPT_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   SGE_STRING_D(CK_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "template")
+   SGE_STRING_D(CK_interface, CULL_DEFAULT | CULL_SPOOL, "userdefined")
+   SGE_STRING_D(CK_ckpt_command, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_STRING_D(CK_migr_command, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_STRING_D(CK_rest_command, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_STRING_D(CK_ckpt_dir, CULL_DEFAULT | CULL_SPOOL, "/tmp")
+   SGE_STRING_D(CK_when, CULL_DEFAULT | CULL_SPOOL, "xs")
+   SGE_STRING_D(CK_signal, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_ULONG_D(CK_job_pid, CULL_DEFAULT, 0)
+   SGE_STRING_D(CK_clean_command, CULL_DEFAULT | CULL_SPOOL, "none")
+LISTEND 
+#endif
 
 NAMEDEF(CKN)
    NAME("CK_name")

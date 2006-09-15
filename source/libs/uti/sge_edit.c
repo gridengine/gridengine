@@ -44,7 +44,7 @@
 #include "sge_edit.h"
 #include "sge_unistd.h"
 
-int sge_edit(const char *fname)
+int sge_edit(const char *fname, uid_t myuid, gid_t mygid)
 {
    SGE_STRUCT_STAT before, after;
    pid_t pid;
@@ -64,7 +64,7 @@ int sge_edit(const char *fname)
       return -1;
    }
 
-   chown(fname, (uid_t)uti_state_get_uid(), (gid_t)uti_state_get_gid());
+   chown(fname, myuid, mygid);
 
    pid = fork();
    if (pid) {
@@ -119,7 +119,7 @@ int sge_edit(const char *fname)
          
       execlp(cp, cp, fname, (char *) 0);
       ERROR((SGE_EVENT, MSG_QCONF_CANTSTARTEDITORX_S, cp));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    DEXIT;

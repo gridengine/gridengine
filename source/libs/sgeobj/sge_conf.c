@@ -224,6 +224,7 @@ typedef struct {
   char *envp;              /* pointer to environment variable */
 } tConfEntry;
 
+static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg);
 static void setConfFromCull(lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
 static void clean_conf(void);
@@ -304,7 +305,7 @@ static tConfEntry conf_entries[] = {
  * Initialize config list with compiled in values
  * set spool directorys from cell 
  *-------------------------------------------------------*/
-void sge_set_defined_defaults(lList **lpCfg)
+static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg)
 {
    int i = 0; 
    lListElem *ep = NULL;
@@ -314,10 +315,10 @@ void sge_set_defined_defaults(lList **lpCfg)
 
    pConf = getConfEntry("execd_spool_dir", conf_entries);
    if ( pConf->value == NULL ) {
-      int size = strlen(path_state_get_cell_root()) + strlen(SPOOL_DIR) + 2;
+      int size = strlen(cell_root) + strlen(SPOOL_DIR) + 2;
       
       pConf->value = (char *)malloc(size * sizeof(char));
-      snprintf(pConf->value, size, "%s/%s", path_state_get_cell_root(),
+      snprintf(pConf->value, size, "%s/%s", cell_root,
                SPOOL_DIR);
    }
 
@@ -332,7 +333,7 @@ void sge_set_defined_defaults(lList **lpCfg)
       i++;
    }      
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /*----------------------------------------------------*
@@ -480,7 +481,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "auto_user_default_project", &Master_Config.auto_user_default_project, NULL, 0);
    chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &Master_Config.auto_user_delete_time, TYPE_TIM);
    chg_conf_val(lpCfg, "delegated_file_staging", &Master_Config.delegated_file_staging, NULL, 0);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /*----------------------------------------------------*
@@ -497,13 +498,11 @@ tConfEntry conf[]
 
  for (i = 0; conf[i].name; i++) {
     if (!strcasecmp(conf[i].name,name)) {   
-       DEXIT;
-       return &conf[i];
+       DRETURN(&conf[i]);
     }
  }   
      
- DEXIT;
- return NULL;
+ DRETURN(NULL);
 }
 
 /****** sge_conf/merge_configuration() *****************************************
@@ -530,15 +529,16 @@ tConfEntry conf[]
 *     MT-NOTE: merge_configuration() is MT safe 
 *
 *******************************************************************************/
-int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
+int merge_configuration(u_long32 progid, const char *cell_root, lListElem *global, lListElem *local, lList **lpp) {
    lList *cl;
    lListElem *elem, *ep2;
    lList *mlist = NULL;
+   
    DENTER(TOP_LAYER, "merge_configuration");
    if (lpp == NULL) {
       lpp = &mlist;
    }
-   sge_set_defined_defaults(lpp);
+   sge_set_defined_defaults(cell_root, lpp);
 
    /* Merge global configuration */
    /*
@@ -693,7 +693,7 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
          if (parse_bool_param(s, "USE_QIDLE", &use_qidle)) {
             continue;
          }
-         if (uti_state_get_mewho() == EXECD) {
+         if (progid == EXECD) {
             if (parse_bool_param(s, "NO_SECURITY", &do_credentials)) { 
                /* reversed logic */
                do_credentials = do_credentials ? false : true;
@@ -826,12 +826,10 @@ int merge_configuration(lListElem *global, lListElem *local, lList **lpp) {
 
    if (!global) {
       WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
-      DEXIT;
-      return -2;
+      DRETURN(-2);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sge_conf/sge_show_conf() ***********************************************
@@ -917,8 +915,7 @@ void sge_show_conf()
    }
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
@@ -970,8 +967,7 @@ static void clean_conf(void) {
    
    memset(&Master_Config, 0, sizeof(sge_conf_type));
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sge_conf/conf_update_thread_profiling() ********************************
@@ -1016,7 +1012,7 @@ void conf_update_thread_profiling(const char *thread_name)
       }
    }
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /* returned pointer needs to be freed */
@@ -1438,7 +1434,7 @@ void mconf_set_new_config(bool new_config)
    is_new_config = new_config;
    
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /* make chached values from configuration invalid. */
@@ -1891,7 +1887,7 @@ void mconf_set_max_dynamic_event_clients(int value) {
    max_dynamic_event_clients = value;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 int mconf_get_max_dynamic_event_clients(void) {

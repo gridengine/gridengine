@@ -739,7 +739,7 @@ unsigned long flags
    int type;
    const lDescr *descr;
    int begin = 1;
-   int cb;
+   int cb = 0;
    u_long32 cb_sum = 0;
    char str[256];
    const char *cp;

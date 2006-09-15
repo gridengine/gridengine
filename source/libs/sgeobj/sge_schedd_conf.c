@@ -182,7 +182,7 @@ static void sc_state_destroy(void* state)
    free(state);
 }
 
-void sc_init_mt(void) 
+void sc_mt_init(void) 
 {
    pthread_key_create(&sc_state_key, &sc_state_destroy);
 } 

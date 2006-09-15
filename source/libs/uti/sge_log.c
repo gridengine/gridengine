@@ -48,6 +48,9 @@
 #include "sge_mtutil.h"
 #include "msg_utilib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
 typedef struct {
    pthread_mutex_t  mutex;
@@ -56,6 +59,7 @@ typedef struct {
    int              log_as_admin_user;
    int              verbose;
    int              gui_log;
+   void             *context;
 } log_state_t;
 
 typedef struct {
@@ -63,7 +67,7 @@ typedef struct {
 } log_buffer_t;
 
 
-static log_state_t Log_State = {PTHREAD_MUTEX_INITIALIZER, TMP_ERR_FILE_SNBU, LOG_WARNING, 0, 1, 1};
+static log_state_t Log_State = {PTHREAD_MUTEX_INITIALIZER, TMP_ERR_FILE_SNBU, LOG_WARNING, 0, 1, 1, NULL};
 
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  log_buffer_key;
@@ -72,7 +76,11 @@ static void          log_once_init(void);
 static void          log_buffer_destroy(void* theState);
 static log_buffer_t* log_buffer_getspecific(pthread_key_t aKey);
 
-static void sge_do_log(int, const char*); 
+static void sge_do_log(u_long32 prog_number,
+                       const char *progname,
+                       const char *unqualified_hostname,
+                       int aLevel, 
+                       const char* aMessage); 
 
 
 /****** uti/log/log_get_log_buffer() ******************************************
@@ -382,6 +390,35 @@ void log_state_set_log_as_admin_user(int i)
    return;
 }
 
+#ifdef TEST_GDI2
+
+void* log_state_get_log_context(void)
+{
+   void* log_context = NULL;
+
+   sge_mutex_lock("Log_State_Lock", "log_state_get_log_context", __LINE__, &Log_State.mutex);
+
+   log_context = Log_State.context;
+
+   sge_mutex_unlock("Log_State_Lock", "log_state_get_log_context", __LINE__, &Log_State.mutex);
+
+   return log_context;
+}
+
+void log_state_set_log_context(void* context)
+{
+   sge_mutex_lock("Log_State_Lock", "log_state_set_log_context", __LINE__, &Log_State.mutex);
+   
+   Log_State.context = context;
+
+   sge_mutex_unlock("Log_State_Lock", "log_state_set_log_context", __LINE__, &Log_State.mutex);
+
+   return;
+}
+
+#endif
+
+
 /****** uti/log/sge_log() *****************************************************
 *  NAME
 *     sge_log() -- Low level logging function 
@@ -425,8 +462,41 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    char buf[128*4];
    int levelchar;
    char levelstring[32*4];
+   
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)log_state_get_log_context(); 
+   /* TODO: this must be kept for qmaster and should be done in a different
+            way (qmaster context) !!! */
+#ifdef TEST_QMASTER_GDI2
+   u_long32 me = 0;
+   const char *progname = NULL;
+   const char *unqualified_hostname = NULL;
+   int is_daemonized = 0; 
+#else
+   u_long32 me = uti_state_get_mewho();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
+   int is_daemonized = uti_state_get_daemonized();
+#endif   
+#else
+   u_long32 me = uti_state_get_mewho();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
+   int is_daemonized = uti_state_get_daemonized();
+#endif   
 
    DENTER(TOP_LAYER, "sge_log");
+   
+#ifdef TEST_GDI2
+   if (ctx != NULL) {
+      me = ctx->get_who(ctx);
+      progname = ctx->get_progname(ctx);
+      unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+      is_daemonized = ctx->is_daemonized(ctx);
+   } else {
+      DPRINTF(("sge_log: ctx is NULL\n"));
+   }   
+#endif
 
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {
@@ -482,18 +552,12 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    }
 
    /* avoid double output in debug mode */
-   if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
+   if (!is_daemonized && !rmon_condition(TOP_LAYER, INFOPRINT) && 
        (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
       fprintf(stderr, "%s%s\n", levelstring, mesg);
    }
 
-   {
-      u_long32 me = uti_state_get_mewho();
-      if (me == QMASTER || me == EXECD    || me == QSTD ||
-          me == SCHEDD  ||  me == SHADOWD || me == COMMD) {
-         sge_do_log(levelchar, mesg);
-      }
-   }
+   sge_do_log(me, progname, unqualified_hostname, levelchar, mesg);
 
    DRETURN(0);
 } /* sge_log() */
@@ -519,27 +583,31 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *     MT-NOTE: sge_do_log() is MT safe.
 *
 *******************************************************************************/
-static void sge_do_log(int aLevel, const char *aMessage) 
+static void sge_do_log(u_long32 me, const char* progname, const char* unqualified_hostname,
+                       int aLevel, const char *aMessage) 
 {
    int fd;
 
-   if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
-      char msg2log[4*MAX_STRING_SIZE];
-      dstring msg;
-      
-      sge_dstring_init(&msg, msg2log, sizeof(msg2log));
+   if (me == QMASTER || me == EXECD    || me == QSTD ||
+       me == SCHEDD  ||  me == SHADOWD || me == COMMD) {
+      if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
+         char msg2log[4*MAX_STRING_SIZE];
+         dstring msg;
+         
+         sge_dstring_init(&msg, msg2log, sizeof(msg2log));
 
-      append_time((time_t)sge_get_gmt(), &msg); 
+         append_time((time_t)sge_get_gmt(), &msg); 
 
-      sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
-              uti_state_get_sge_formal_prog_name(),
-              uti_state_get_unqualified_hostname(),
-              aLevel,
-              aMessage);
+         sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
+                 progname,
+                 unqualified_hostname,
+                 aLevel,
+                 aMessage);
 
-      write(fd, msg2log, strlen(msg2log));
-      close(fd);
-   }
+         write(fd, msg2log, strlen(msg2log));
+         close(fd);
+      }
+   }   
 
    return;
 } /* sge_do_log() */

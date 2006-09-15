@@ -315,13 +315,17 @@ feature_id_t feature_get_active_featureset_id(void)
 {
    lListElem *feature;
    feature_id_t ret = FEATURE_UNINITIALIZED;
+   lList **featurelist_pp = NULL;
 
    DENTER(TOP_LAYER, "feature_get_active_featureset_id");
 
-   for_each(feature, *feature_get_master_featureset_list()) {
-      if (lGetUlong(feature, FES_active)) {
-         ret = (feature_id_t)lGetUlong(feature, FES_id);
-         break;
+   featurelist_pp = feature_get_master_featureset_list();
+   if (featurelist_pp != NULL) {
+      for_each(feature, *featurelist_pp) {
+         if (lGetUlong(feature, FES_active)) {
+            ret = (feature_id_t)lGetUlong(feature, FES_id);
+            break;
+         }
       }
    }
    DEXIT;

@@ -65,7 +65,10 @@ UTILIB_DRMAA_SRC = \
          sge_time.c \
          sge_tmpnam.c \
          sge_uidgid.c \
-         sge_unistd.c
+         sge_unistd.c \
+         sge_env.c \
+         sge_error_class.c \
+         sge_csp_path.c
 
 UTILIB_SRC = sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
@@ -218,6 +221,15 @@ sge_edit.o:	$(UTILIB_DIR)/sge_edit.c
 
 sge_monitor.o:	$(UTILIB_DIR)/sge_monitor.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_monitor.c
+
+sge_env.o:	$(UTILIB_DIR)/sge_env.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_env.c
+
+sge_error_class.o:	$(UTILIB_DIR)/sge_error_class.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_error_class.c
+
+sge_csp_path.o:	$(UTILIB_DIR)/sge_csp_path.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_csp_path.c
 
 ###############################################################################
 # test targets

@@ -527,6 +527,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
       ret = false;
    }
 
+#if 1
    if (ret) {
       if (!object_verify_cull(event_client, EV_Type)) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
@@ -534,6 +535,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
          ret = false;
       }
    }
+#endif   
 
    if (ret) {
       /* get the event delivery time - we'll need it in later checks */
@@ -549,6 +551,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDNAME);
          ret = false;
+         DPRINTF(("EV name false\n"));
       }
    }
 
@@ -558,11 +561,14 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
     * If a special id is requested, it must come from admin/root
     */
    if (ret) {
+#if 1      
+      /* TODO: jgdi does not work with the check fix needed */
       u_long32 id = lGetUlong(event_client, EV_id);
       if (add && id >= EV_ID_FIRST_DYNAMIC) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_EVENT_INVALIDNAME);
+                                 MSG_EVENT_INVALIDID);
          ret = false;
+         DPRINTF(("EV_id false: "sge_u32"\n", id));
 #if 0
       /* 
        * useless check - EV_uid is set by client 
@@ -578,6 +584,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
          }
 #endif
       }
+#endif
    }
 
    /* Event delivery time may not be gt commlib timeout */
@@ -587,10 +594,10 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
                                  MSG_EVENT_INVALIDDTIME_II, d_time,
                                  CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5);
          ret = false;
+         DPRINTF(("d_time false\n"));         
       }
    }
 
-#if 0
    /* 
     * flush delay cannot be gt event delivery time 
     * We can very easily run into this problem by configuring scheduler interval
@@ -601,13 +608,18 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_FLUSHDELAYCANNOTBEGTDTIME);
          ret = false;
+/* printf("EV_flush_delay false\n");          */
       }
    }
-#endif
 
    /* subscription */
    if (ret) {
       ret = event_client_verify_subscription(event_client, answer_list, (int)d_time);
+#if 0      
+if (ret == false) {
+   printf("event_client_verify_subscription false\n");         
+}
+#endif
    }
 
    /* busy handling comes from an enum with defined set of values */
@@ -618,6 +630,7 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDBUSYHANDLING);
          ret = false;
+/* printf("EV_busy_handling false\n");          */
       }
    }
 
@@ -630,7 +643,18 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
             answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                     MSG_EVENT_INVALIDSESSIONKEY);
             ret = false;
+/* printf("EV_session false\n");          */
          }
+      }
+   }
+
+   /* disallow an EV_update_function from event_client request */
+   if (ret) {
+      if (lGetRef(event_client, EV_update_function) != NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_EVENT_INVALIDUPDATEFUNCTION);
+         ret = false;
+/* printf("EV_update_function false\n");          */
       }
    }
 

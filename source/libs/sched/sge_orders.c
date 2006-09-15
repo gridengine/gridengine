@@ -47,6 +47,10 @@
 #include "sge_profiling.h"
 #include "sge_order.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#include "sge_event_client2.h"
+#endif
 
 /****** sge_orders/sge_add_schedd_info() ***************************************
 *  NAME
@@ -330,7 +334,7 @@ lList
   
  *************************************************************/
 int 
-sge_send_orders2master(lList **orders) 
+sge_send_orders2master(void *evc_context, lList **orders) 
 {
    int ret = STATUS_OK;
    lList *alp = NULL;
@@ -338,16 +342,33 @@ sge_send_orders2master(lList **orders)
 
    int set_busy, order_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
+#ifdef TEST_GDI2
+   sge_evc_class_t *evc = (sge_evc_class_t *)evc_context;
+   sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
+#else
    lListElem *event_client = ec_get_event_client();
+#endif   
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
    /* do we have to set event client to "not busy"? */
+#ifdef TEST_GDI2
+   set_busy = (evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED);
+#else
    set_busy = (ec_get_busy_handling(event_client) == EV_BUSY_UNTIL_RELEASED);
+#endif   
 
    if (*orders != NULL) {
       DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(*orders)));
-
+#ifdef TEST_GDI2
+      if(set_busy) {
+         order_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders, NULL, NULL, NULL, &state, false);
+      } else {
+         order_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                                  orders, NULL, NULL, &malp, &state, false);
+      }
+#else
       if(set_busy) {
          order_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
                                   orders, NULL, NULL, NULL, &state, false);
@@ -355,6 +376,7 @@ sge_send_orders2master(lList **orders)
          order_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                                   orders, NULL, NULL, &malp, &state, false);
       }
+#endif      
 
       if (alp != NULL) {
          ret = answer_list_handle_request_answer_list(&alp, stderr);
@@ -366,13 +388,18 @@ sge_send_orders2master(lList **orders)
    /* if necessary, set busy state to "not busy" */
    if(set_busy) {
       DPRINTF(("RESETTING BUSY STATE OF EVENT CLIENT\n"));
+#ifdef TEST_GDI2
+      evc->ec_set_busy(evc, 0);
+      evc->ec_commit_multi(evc, &malp, &state);
+#else
       ec_set_busy(event_client, 0);
       ec_commit_multi(event_client, &malp, &state);
+#endif      
    }
 
    /* check result of orders */
    if(order_id > 0) {
-      alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, order_id, malp, NULL);
+      sge_gdi_extract_answer(&alp, SGE_GDI_ADD, SGE_ORDER_LIST, order_id, malp, NULL);
 
       ret = answer_list_handle_request_answer_list(&alp, stderr);
    }
@@ -522,16 +549,30 @@ int sge_GetNumberOfOrders(order_t *orders) {
 *     MT-NOTE: sge_send_job_start_orders() is MT safe 
 *
 *******************************************************************************/
-int sge_send_job_start_orders(order_t *orders) {
+int sge_send_job_start_orders(void *evc_context, order_t *orders) {
    lList *alp = NULL;
    lList *malp = NULL;
    sge_gdi_request *answer= NULL;
    int config_mode = SGE_GDI_RECORD;
    int start_mode = SGE_GDI_RECORD;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
+#ifdef TEST_GDI2
+   sge_evc_class_t *evc = (sge_evc_class_t *)evc_context;
+   sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
+#endif
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
+#ifdef TEST_GDI2
+   if(!ctx->gdi_receive_multi_async(ctx, &answer, &malp, false)) {
+      DEXIT;
+      return false;
+   }
+   else {
+      /* check for a sucessful send */
+      lFreeList(&malp); 
+   }
+#else   
    if(!gdi_receive_multi_async(&answer, &malp, false)) {
       DEXIT;
       return false;
@@ -540,6 +581,7 @@ int sge_send_job_start_orders(order_t *orders) {
       /* check for a sucessful send */
       lFreeList(&malp); 
    }
+#endif   
    
    /* figure out, what needs to be recorded, and what needs to be send */
    if (lGetNumberOfElem(orders->pendingOrderList) == 0 ) {
@@ -554,8 +596,13 @@ int sge_send_job_start_orders(order_t *orders) {
     /* send orders */
    if (lGetNumberOfElem(orders->configOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->configOrderList);
+#ifdef TEST_GDI2
+      ctx->gdi_multi_sync(ctx, &alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
+                         &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
+#else
       sge_gdi_multi_sync(&alp, config_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                          &orders->configOrderList, NULL, NULL, &malp, &state, false, false);
+#endif                         
       if (config_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -563,8 +610,13 @@ int sge_send_job_start_orders(order_t *orders) {
    
    if (lGetNumberOfElem(orders->jobStartOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->jobStartOrderList);
+#ifdef TEST_GDI2      
+      ctx->gdi_multi_sync(ctx, &alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
+                         &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
+#else
       sge_gdi_multi_sync(&alp, start_mode, SGE_ORDER_LIST, SGE_GDI_ADD,
                          &orders->jobStartOrderList, NULL, NULL, &malp, &state, false, false);
+#endif                         
       if (start_mode == SGE_GDI_SEND) {
          orders->numberSendPackages++;     
       }
@@ -572,8 +624,13 @@ int sge_send_job_start_orders(order_t *orders) {
 
    if (lGetNumberOfElem(orders->pendingOrderList) > 0) {
       orders->numberSendOrders += lGetNumberOfElem(orders->pendingOrderList);
+#ifdef TEST_GDI2      
+      ctx->gdi_multi_sync(ctx, &alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                         &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
+#else
       sge_gdi_multi_sync(&alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
                          &orders->pendingOrderList, NULL, NULL, &malp, &state, false, false);
+#endif                         
       orders->numberSendPackages++;                      
    }
 

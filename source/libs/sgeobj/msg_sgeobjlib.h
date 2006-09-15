@@ -83,12 +83,12 @@
 #define MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED        _MESSAGE(64062, _("unexpected range following \"UNDEFINED\""))
 #define MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE        _MESSAGE(64063, _("unexpected \"UNDEFINED\" following range"))
 #define MSG_GDI_NEGATIVSTEP                              _MESSAGE(64064, _("Negative or zero step in range is not allowed" ))
-#define MSG_PARSE_NOALLOCATTRLIST     _MESSAGE(64065, _("unable to alloc space for attrib. list"))
-#define MSG_PARSE_NOALLOCATTRELEM     _MESSAGE(64068, _("unable to alloc space for attrib. element"))
-#define MSG_NONE_NOT_ALLOWED_S                  _MESSAGE(64079, _("The keyword \"none\" is not allowed in "SFQ))
-#define MSG_NOTEXISTING_ATTRIBUTE_SS            _MESSAGE(64080, _("Referenced complex attribute "SFQ" does not exist in "SFN))
-#define MSG_WRONGTYPE_ATTRIBUTE_SS              _MESSAGE(64081, _("String, CString, ReString or Host attributes are not allowed in "SFQ": " SFQ))
-#define MSG_US_INVALIDUSERNAME                  _MESSAGE(64083, _("userset contains invalid (null) user name"))
+#define MSG_PARSE_NOALLOCATTRLIST                        _MESSAGE(64065, _("unable to alloc space for attrib. list"))
+#define MSG_PARSE_NOALLOCATTRELEM                        _MESSAGE(64068, _("unable to alloc space for attrib. element"))
+#define MSG_NONE_NOT_ALLOWED_S                           _MESSAGE(64079, _("The keyword \"none\" is not allowed in "SFQ))
+#define MSG_NOTEXISTING_ATTRIBUTE_SS                     _MESSAGE(64080, _("Referenced complex attribute "SFQ" does not exist in "SFN))
+#define MSG_WRONGTYPE_ATTRIBUTE_SS                       _MESSAGE(64081, _("String, CString, ReString or Host attributes are not allowed in "SFQ": " SFQ))
+#define MSG_US_INVALIDUSERNAME                           _MESSAGE(64083, _("userset contains invalid (null) user name"))
 
 /*
  * sge_event.c
@@ -211,7 +211,7 @@
 #define MSG_INVALID_CENTRY_CONSUMABLE_REQ2_S       _MESSAGE(64208, _("Consumable "SFQ" cannot have a default value because it is forced.")) 
 #define MSG_INVALID_CENTRY_TYPE_CHANGE_S           _MESSAGE(64209, _("The type of the complex "SFQ" cannot be changed due to its built in status"))
 
-#define MSG_CQUEUE_NONDEFNOTALLOWED                _MESSAGE(64210, _("Queue domain/instance values are only allowed for cluster queues."))
+#define MSG_CQUEUE_NONDEFNOTALLOWED    _MESSAGE(64210, _("Queue domain/instance values are only allowed for cluster queues."))
 #define MSG_CQUEUE_PRIORITYNOTINRANGE  _MESSAGE(64211, _("Priority not in range -20 to +20"))
 #define MSG_CQUEUE_UNKNOWNUSERSET_S    _MESSAGE(64213, _("Userset "SFQ" does not exist") )
 #define MSG_CQUEUE_UNKNOWNPROJECT_S    _MESSAGE(64214, _("Project "SFQ" does not exist"))
@@ -287,19 +287,19 @@
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value"))
 #define MSG_CQUEUE_INVALIDDOMSETTING_SS _MESSAGE(64305, _("Did not modify "SFQ" for host group "SFQ" which does not exist."))
-#define MSG_HGRP_INVALIDHOSTGROUPNAME_S   _MESSAGE(64306, _("host group name "SFQ" is not valid"))
+#define MSG_HGRP_INVALIDHOSTGROUPNAME_S _MESSAGE(64306, _("host group name "SFQ" is not valid"))
 #define MSG_WEIGHTFACTNONUMB_SS         _MESSAGE(64307, _(SFQ" uses "SFQ" as weighting factor (only numbers are allowed)"))
 #define MSG_MULTIPLEWEIGHTFACT_S        _MESSAGE(64308, _(SFQ" may not use multiple weighting factors"))
 
 #define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known"))
-#define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64311, _("Invalid character in pe name of pe "SFQ))
-#define MSG_PE_UNKNOWN_URGENCY_SLOT_SS  _MESSAGE(64312, _("unknown urgency_slot_setting "SFQ" for PE "SFQ))
+#define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64310, _("Invalid character in pe name of pe "SFQ))
+#define MSG_PE_UNKNOWN_URGENCY_SLOT_SS  _MESSAGE(64311, _("unknown urgency_slot_setting "SFQ" for PE "SFQ))
 
 #ifdef SGE_PQS_API
-#define MSG_PQS_NODYNAMICLIBRARY_S       _MESSAGE(64313, _("No dynamic library specified for pe_qsort_args for PE "SFQ))
-#define MSG_PQS_UNABLETOOPENLIBRARY_SSS  _MESSAGE(64314, _("Unable to open "SFQ" library in pe_qsort_args for PE "SFQ" - "SFQ))
-#define MSG_PQS_NOFUNCTIONNAME_S         _MESSAGE(64315, _("No function name specified in pe_qsort_args for PE "SFQ))
-#define MSG_PQS_UNABLELOCATESYMBOL_SSSS  _MESSAGE(64316, _("Unable to locate "SFQ" symbol in "SFQ" library for pe_qsort_args in PE "SFQ" - "SFQ))
+#define MSG_PQS_NODYNAMICLIBRARY_S       _MESSAGE(64312, _("No dynamic library specified for pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLETOOPENLIBRARY_SSS  _MESSAGE(64313, _("Unable to open "SFQ" library in pe_qsort_args for PE "SFQ" - "SFQ))
+#define MSG_PQS_NOFUNCTIONNAME_S         _MESSAGE(64314, _("No function name specified in pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLELOCATESYMBOL_SSSS  _MESSAGE(64315, _("Unable to locate "SFQ" symbol in "SFQ" library for pe_qsort_args in PE "SFQ" - "SFQ))
 #endif
 
 #define MSG_CQUEUE_CQUEUEISNULL_SSSII      _MESSAGE(64317, _("cqueue_list_locate_qinstance("SFQ"): cqueue == NULL("SFQ", "SFQ", %d, %d"))
@@ -326,6 +326,8 @@
 #define MSG_EVENT_INVALIDBUSYHANDLING _MESSAGE(64344, _("invalid value for event client busy handling"))
 #define MSG_EVENT_INVALIDSESSIONKEY _MESSAGE(64345, _("invalid session key for event client"))
 #define MSG_EVENT_INVALIDEVENT _MESSAGE(64346, _("invalid event id in event client subscription"))
+#define MSG_EVENT_INVALIDID _MESSAGE(64347, _("invalid event client id"))
+#define MSG_EVENT_INVALIDUPDATEFUNCTION _MESSAGE(64348, _("invalid event client update function"))
 
 #define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script lenght does not match declared length"))
 #define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64352, _("invalid "SFQ" value in job request"))

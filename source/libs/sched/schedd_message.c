@@ -166,7 +166,7 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
 *******************************************************************************/
 void schedd_mes_initialize(void)
 {
-   DENTER(TOP_LAYER, "schedd_initialize_messages");
+   DENTER(TOP_LAYER, "schedd_mes_initialize");
    if (!sme) {
       lList *tmp_list;
 

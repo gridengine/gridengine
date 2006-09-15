@@ -148,7 +148,7 @@ pe_task_update_master_list_usage(lList *job_list, lListElem *event)
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
 sge_callback_result
-pe_task_update_master_list(object_description *object_base, sge_object_type type, 
+pe_task_update_master_list(void *context, object_description *object_base, sge_object_type type, 
                            sge_event_action action, lListElem *event, void *clientdata)
 {
    u_long32 job_id; 

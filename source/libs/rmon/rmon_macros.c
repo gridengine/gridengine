@@ -43,6 +43,7 @@
 #include "msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
+#define RMON_USE_CTX
 
 /* ALPHA (osf4 and tru64) have f(un)lockfile, but prototype is missing */
 #if defined (ALPHA)
@@ -53,7 +54,7 @@ extern void funlockfile(FILE *);
 enum {
    RMON_NONE     = 0,   /* monitoring off */
    RMON_LOCAL    = 1,   /* monitoring on */
-   RMON_BUF_SIZE = 512  /* size of buffer used for monitoring messages */
+   RMON_BUF_SIZE = 5120  /* size of buffer used for monitoring messages */
 };
 
 monitoring_level DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
@@ -70,6 +71,7 @@ static FILE* rmon_fp;
 static void mwrite(char *message);
 static int set_debug_level_from_env(void);
 static int set_debug_target_from_env(void);
+static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args);
 
 #ifdef DEBUG_CLIENT_SUPPORT
 static pthread_mutex_t rmon_print_callback_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -80,6 +82,38 @@ static rmon_print_callback_func_t rmon_print_callback = NULL;
 #define RMON_CONDITION_LOCK()          pthread_mutex_lock(&rmon_condition_mutex)
 #define RMON_CONDITION_UNLOCK()        pthread_mutex_unlock(&rmon_condition_mutex)
 #endif
+
+
+static pthread_key_t rmon_ctx_key;
+
+static pthread_once_t rmon_ctx_key_once = PTHREAD_ONCE_INIT;
+
+
+static void rmon_ctx_key_init(void);
+static void rmon_ctx_key_destroy(void * ctx);
+
+rmon_ctx_t* rmon_get_thread_ctx(void)
+{
+  pthread_once(&rmon_ctx_key_once, rmon_ctx_key_init);
+  return (rmon_ctx_t*) pthread_getspecific(rmon_ctx_key);
+}
+
+void rmon_set_thread_ctx(rmon_ctx_t* ctx) {
+   pthread_once(&rmon_ctx_key_once, rmon_ctx_key_init);
+   pthread_setspecific(rmon_ctx_key, ctx);
+}
+
+/* Allocate the key */
+static void rmon_ctx_key_init(void)
+{
+  pthread_key_create(&rmon_ctx_key, rmon_ctx_key_destroy);
+}
+
+/* Free the thread-specific buffer */
+static void rmon_ctx_key_destroy(void * ctx)
+{
+  /* Nothing to destroy */
+}
 
 /****** rmon/Introduction ******************************************************
 *  NAME
@@ -139,6 +173,12 @@ static rmon_print_callback_func_t rmon_print_callback = NULL;
 int rmon_condition(int layer, int class)
 {
    int ret_val;
+#ifdef RMON_USE_CTX   
+   rmon_ctx_t *ctx = rmon_get_thread_ctx();
+   if (ctx) {
+      return ctx->is_loggable(ctx, layer, class);
+   }
+#endif   
 #define MLGETL(s, i) ((s)->ml[i]) /* for the sake of speed */
    /*
     * NOTE:
@@ -324,15 +364,22 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
 *     MT-NOTE: 'rmon_menter()' is MT safe with exceptions. See introduction! 
 *
 *******************************************************************************/
+
 void rmon_menter(const char *func)
 {
    char msgbuf[RMON_BUF_SIZE];
-
+#ifdef RMON_USE_CTX
+   rmon_ctx_t *ctx = rmon_get_thread_ctx();
+   if (ctx) {
+      ctx->menter(ctx, func);
+      return;
+   }
+#endif      
    sprintf(msgbuf, "--> %s() {\n", func);
    mwrite(msgbuf);
-
-   return;
 } /* rmon_enter() */
+
+
 
 /****** rmon_macros/rmon_mexit() ***********************************************
 *  NAME
@@ -359,11 +406,16 @@ void rmon_menter(const char *func)
 void rmon_mexit(const char *func, const char *file, int line)
 {
    char msgbuf[RMON_BUF_SIZE];
-
+#ifdef RMON_USE_CTX   
+   rmon_ctx_t *ctx = rmon_get_thread_ctx();
+   if (ctx) {
+      ctx->mexit(ctx, func, file, line);
+      return;
+   }
+#endif
    sprintf(msgbuf, "<-- %s() %s %d }\n", func, file, line);
    mwrite(msgbuf);
 
-   return;
 } /* rmon_mexit() */
 
 /****** rmon_macros/rmon_mtrace() **********************************************
@@ -391,12 +443,16 @@ void rmon_mexit(const char *func, const char *file, int line)
 void rmon_mtrace(const char *func, const char *file, int line)
 {
    char msgbuf[RMON_BUF_SIZE];
-
+#ifdef RMON_USE_CTX   
+   rmon_ctx_t *ctx = rmon_get_thread_ctx();
+   if (ctx) {
+      ctx->mtrace(ctx, func, file, line);
+      return;
+   }
+#endif      
    strcpy(msgbuf, empty);
    sprintf(&msgbuf[4], "%s:%s:%d\n", func, file, line);
    mwrite(msgbuf);
-
-   return;
 } /* rmon_mtrace() */
 
 /****** rmon_macros/rmon_mprintf() *********************************************
@@ -420,20 +476,59 @@ void rmon_mtrace(const char *func, const char *file, int line)
 *     MT-NOTE: 'rmon_mprintf()' is MT safe with exceptions. See introduction! 
 *
 *******************************************************************************/
-void rmon_mprintf(const char *fmt,...)
+void rmon_mprintf(int debug_class, const char *fmt,...)
 {
-   char msgbuf[RMON_BUF_SIZE];
    va_list args;
-
+   
    va_start(args, fmt);
+   rmon_mprintf_va(debug_class, fmt, args);
+   va_end(args);
+   
+   return;
+} /* rmon_mprintf() */
 
+
+void rmon_mprintf_lock(const char* fmt, ...) {
+   va_list args;
+   va_start(args, fmt);
+   rmon_mprintf_va(LOCK, fmt, args);
+   va_end(args);
+}
+
+void rmon_mprintf_info(const char* fmt, ...) {
+   va_list args;
+   va_start(args, fmt);
+   rmon_mprintf_va(INFOPRINT, fmt, args);
+   va_end(args);
+}
+
+void rmon_mprintf_timing(const char* fmt, ...) {
+   va_list args;
+   va_start(args, fmt);
+   rmon_mprintf_va(TIMING, fmt, args);
+   va_end(args);
+}
+
+void rmon_mprintf_special(const char* fmt, ...) {
+   va_list args;
+   va_start(args, fmt);
+   rmon_mprintf_va(SPECIAL, fmt, args);
+   va_end(args);
+}
+
+static void rmon_mprintf_va(int debug_class, const char* fmt, va_list args) {
+   char msgbuf[RMON_BUF_SIZE];
+#ifdef RMON_USE_CTX   
+   rmon_ctx_t *ctx = rmon_get_thread_ctx();
+   if (ctx) {
+      ctx->mprintf(ctx, debug_class, fmt, args);
+      return;
+   }
+#endif
    strcpy(msgbuf, empty);
    vsnprintf(&msgbuf[4], (RMON_BUF_SIZE) - 10 , fmt, args);
    mwrite(msgbuf);
-
-   va_end(args);
-   return;
-} /* rmon_mprintf() */
+}
 
 /****** rmon_macros/mwrite() ***************************************************
 *  NAME

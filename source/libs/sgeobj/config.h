@@ -32,10 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef __CULL_H
-#   include "cull.h"
-#endif
-
+#include "cull.h"
 #include "cull_parse_util.h"
 
 enum {

@@ -78,8 +78,7 @@ lListElem *cull_read_in_userset(const char *dirname, const char *filename,
 
    ep = read_object(dirname, filename, spool, 0, 0,&args, tag?tag:&intern_tag, NULL);
   
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 
@@ -98,37 +97,31 @@ int parsing_type
 
    /* --------- US_name */
    if (!set_conf_string(alpp, clpp, fields, "name", ep, US_name)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    /* --------- US_type */
    if (!set_conf_enum(alpp, clpp, fields, "type", ep, US_type, userset_types)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- US_oticket */
    if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, US_oticket)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- US_fshare */
    if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, US_fshare)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- US_entries */
    if (!set_conf_list(alpp, clpp, fields, "entries", ep, US_entries, 
                         UE_Type, UE_name)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /************************************************************/
@@ -153,28 +146,17 @@ int spool
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (!ep) {
-      if (!alpp) {
-         ERROR((SGE_EVENT, MSG_USERSET_NOUSERETELEMENT));
-         SGE_EXIT(1);
-      } else {
-         answer_list_add(alpp, MSG_USERSET_NOUSERETELEMENT, 
-                         STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
+      answer_list_add(alpp, MSG_USERSET_NOUSERETELEMENT, 
+                      STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DRETURN(-1);
    }
    if (fname) {
       strcpy(filename, fname);
       if (!(fp = fopen(filename, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-         if (!alpp) {
-            SGE_EXIT(1);
-         } else {
-            answer_list_add(alpp, SGE_EVENT, 
-                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
+         answer_list_add(alpp, SGE_EVENT, 
+                         STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
       }
    } else {
       fp = fpout;
@@ -214,12 +196,10 @@ int spool
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 

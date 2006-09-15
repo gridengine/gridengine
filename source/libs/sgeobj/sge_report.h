@@ -35,14 +35,7 @@
 #include "cull.h"
 #include "sge_reportL.h"
 
-/* This is a duplicate definition to the one in sge_todo.h.  One of them should
- * be removed. */
-int report_list_send(const lList *report_list, const char *rhost, 
-                     const char *commproc, int id, 
-                     int synchron, u_long32 *mid);
-
 void job_report_print_usage(const lListElem *jr, FILE *fp);
-
 void job_report_init_from_job(lListElem *jr, const lListElem *jep, 
                               const lListElem *jatep, const lListElem *petep);
 

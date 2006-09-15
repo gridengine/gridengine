@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <time.h>
 #include "sge_calendarL.h"
 
 
@@ -55,5 +56,9 @@ lListElem *
 calendar_list_locate(lList *this_list, const char *cal_name);
 
 lListElem* sge_generic_cal(char *cal_name);
+
+void cullify_tm(lListElem *tm_ep, struct tm *tm_now);
+void uncullify_tm(const lListElem *tm_ep, struct tm *tm_now);
+
 
 #endif /* __SGE_CALENDAR_H */

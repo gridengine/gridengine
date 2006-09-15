@@ -164,7 +164,7 @@ int sge_get_qmaster_port(void) {
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    } else {
       DPRINTF(("returning port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
@@ -231,7 +231,7 @@ int sge_get_execd_port(void) {
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    } else {
       DPRINTF(("returning port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
@@ -1176,10 +1176,13 @@ char *sge_host_get_mainname(host *h)
 ******************************************************************************/
 void sge_hostcpy(char *dst, const char *raw)
 {
+   bool ignore_fqdn = bootstrap_get_ignore_fqdn();
+   const char *default_domain = bootstrap_get_default_domain();
+
    if (dst == NULL || raw == NULL) {
       return;
    }
-   if (bootstrap_get_ignore_fqdn()) {
+   if (ignore_fqdn) {
       char *s = NULL;
       /* standard: simply ignore FQDN */
  
@@ -1187,13 +1190,13 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (bootstrap_get_default_domain() != NULL && 
-              SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
+   } else if (default_domain != NULL && 
+              SGE_STRCASECMP(default_domain, "none") != 0) {
  
       /* exotic: honor FQDN but use default_domain */
  
       if (!strchr(raw, '.')) {
-         snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, bootstrap_get_default_domain());
+         snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, default_domain);
       } else {
          sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
       }

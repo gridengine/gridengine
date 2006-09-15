@@ -66,7 +66,9 @@ enum {
    US_consider_with_categories /* true, if userset plays role with categories */
 };
 
+#if 0
 LISTDEF(US_Type)
+   JGDI_ROOT_OBJ(UserSet, SGE_USERSET_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
    SGE_ULONG(US_type, CULL_DEFAULT | CULL_SPOOL)         /* configured type spooled */
    SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
@@ -76,6 +78,20 @@ LISTDEF(US_Type)
    SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
    SGE_BOOL(US_consider_with_categories, CULL_DEFAULT)
 LISTEND 
+#else
+
+LISTDEF(US_Type)
+   JGDI_ROOT_OBJ(UserSet, SGE_USERSET_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)       /* configured name spooled */
+   SGE_ULONG_D(US_type, CULL_DEFAULT | CULL_SPOOL, 1)         /* configured type spooled */
+   SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL)       /* configured share spooled */
+   SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL)      /* configured override tickets spooled */
+   SGE_ULONG(US_job_cnt, CULL_DEFAULT)     /* local to schedd */
+   SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT) /* local to schedd */
+   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL)     /* UE_Type */
+   SGE_BOOL(US_consider_with_categories, CULL_DEFAULT)
+LISTEND 
+#endif
 
 NAMEDEF(USEN)
    NAME("US_name")
@@ -106,6 +122,7 @@ enum {
 };
 
 LISTDEF(UE_Type)
+   JGDI_PRIMITIVE_OBJ(UE_name)
    SGE_STRING(UE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 

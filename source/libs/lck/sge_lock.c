@@ -168,8 +168,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
    }   
 #endif   
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_lock */
 
 #else
@@ -243,8 +242,7 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
    }   
 #endif
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_unlock */
 #else
 void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID)
@@ -427,8 +425,7 @@ void sge_setup_lock_service(void)
 
    sge_set_id_callback(id_callback_impl);
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_setup_lock_service() */
 
 /****** libs/lck/sge_teardown_lock_service() ***********************
@@ -455,8 +452,7 @@ void sge_teardown_lock_service(void)
 {
    DENTER(BASIS_LAYER, "sge_teardown_lock_service");
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_teardown_lock_service() */
 
 /****** libs/lck/id_callback_impl() *********************************

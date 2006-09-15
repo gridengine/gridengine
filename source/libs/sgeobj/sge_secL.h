@@ -33,9 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef __CULL_H
 #include "cull.h"
-#endif
 #include "sge_boundaries.h"
 
 #ifdef  __cplusplus

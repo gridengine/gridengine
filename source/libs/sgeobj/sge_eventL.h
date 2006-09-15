@@ -167,7 +167,10 @@ enum {
 };
 
 LISTDEF(EV_Type)
-   SGE_ULONG(EV_id, CULL_DEFAULT)
+   JGDI_ROOT_OBJ(EventClient, SGE_EVENT_LIST, GET_LIST)
+
+/*    SGE_ULONG(EV_id, CULL_DEFAULT) */
+   SGE_ULONG(EV_id, CULL_PRIMARY_KEY | CULL_UNIQUE | CULL_DEFAULT)
    SGE_STRING(EV_name, CULL_DEFAULT)
    
    SGE_HOST(EV_host, CULL_DEFAULT)
@@ -254,14 +257,14 @@ typedef enum {
    sgeE_CALENDAR_DEL,               /*7 + event delete calendar */
    sgeE_CALENDAR_MOD,               /*8 + event modify calendar */
 
-   sgeE_CKPT_LIST,                  /*9 + send ckpt list at registration */
+   sgeE_CKPT_LIST,                  /*9  + send ckpt list at registration */
    sgeE_CKPT_ADD,                   /*10 + event add ckpt */
    sgeE_CKPT_DEL,                   /*11 + event delete ckpt */
    sgeE_CKPT_MOD,                   /*12 + event modify ckpt */
 
    sgeE_CENTRY_LIST,                /*13 + send complex list at registration */
    sgeE_CENTRY_ADD,                 /*14 + event add complex */
-   sgeE_CENTRY_DEL,                 /*15+ event delete complex */
+   sgeE_CENTRY_DEL,                 /*15 + event delete complex */
    sgeE_CENTRY_MOD,                 /*16 + event modify complex */
 
    sgeE_CONFIG_LIST,                /*17 + send config list at registration */
@@ -300,59 +303,59 @@ typedef enum {
    sgeE_MANAGER_LIST,               /*43 + send manager list at registration */
    sgeE_MANAGER_ADD,                /*44 + event add manager */
    sgeE_MANAGER_DEL,                /*45 + event delete manager */
-   sgeE_MANAGER_MOD,                /*46- event modify manager */
+   sgeE_MANAGER_MOD,                /*46 - event modify manager */
 
-   sgeE_OPERATOR_LIST,              /* + send operator list at registration */
-   sgeE_OPERATOR_ADD,               /* + event add operator */
-   sgeE_OPERATOR_DEL,               /* + event delete operator */
-   sgeE_OPERATOR_MOD,               /* - event modify operator */
+   sgeE_OPERATOR_LIST,              /*47 + send operator list at registration */
+   sgeE_OPERATOR_ADD,               /*48 + event add operator */
+   sgeE_OPERATOR_DEL,               /*49 + event delete operator */
+   sgeE_OPERATOR_MOD,               /*50 - event modify operator */
 
-   sgeE_NEW_SHARETREE,              /* + replace possibly existing share tree */
+   sgeE_NEW_SHARETREE,              /*51 + replace possibly existing share tree */
 
-   sgeE_PE_LIST,                    /* + send pe list at registration */
-   sgeE_PE_ADD,                     /* + event pe add */
-   sgeE_PE_DEL,                     /* + event pe delete */
-   sgeE_PE_MOD,                     /* + event pe modify */
+   sgeE_PE_LIST,                    /*52 + send pe list at registration */
+   sgeE_PE_ADD,                     /*53 + event pe add */
+   sgeE_PE_DEL,                     /*54 + event pe delete */
+   sgeE_PE_MOD,                     /*55 + event pe modify */
 
-   sgeE_PROJECT_LIST,               /* + send project list at registration */
-   sgeE_PROJECT_ADD,                /* + event project add */
-   sgeE_PROJECT_DEL,                /* + event project delete */
-   sgeE_PROJECT_MOD,                /* + event project modify */
+   sgeE_PROJECT_LIST,               /*56 + send project list at registration */
+   sgeE_PROJECT_ADD,                /*57 + event project add */
+   sgeE_PROJECT_DEL,                /*58 + event project delete */
+   sgeE_PROJECT_MOD,                /*59 + event project modify */
 
-   sgeE_QMASTER_GOES_DOWN,          /* + qmaster notifies all event clients, before
+   sgeE_QMASTER_GOES_DOWN,          /*60 + qmaster notifies all event clients, before
                                          it exits */
 
-   sgeE_CQUEUE_LIST,                /* + send cluster queue list at registration */
-   sgeE_CQUEUE_ADD,                 /* + event cluster queue add */
-   sgeE_CQUEUE_DEL,                 /* + event cluster queue delete */
-   sgeE_CQUEUE_MOD,                 /* + event cluster queue modify */
+   sgeE_CQUEUE_LIST,                /*61 + send cluster queue list at registration */
+   sgeE_CQUEUE_ADD,                 /*62 + event cluster queue add */
+   sgeE_CQUEUE_DEL,                 /*63 + event cluster queue delete */
+   sgeE_CQUEUE_MOD,                 /*64 + event cluster queue modify */
 
-   sgeE_QINSTANCE_ADD,              /* + event queue instance add */
-   sgeE_QINSTANCE_DEL,              /* + event queue instance delete */
-   sgeE_QINSTANCE_MOD,              /* + event queue instance mod */
-   sgeE_QINSTANCE_SOS,              /* + event queue instance sos */
-   sgeE_QINSTANCE_USOS,             /* + event queue instance usos */
+   sgeE_QINSTANCE_ADD,              /*65 + event queue instance add */
+   sgeE_QINSTANCE_DEL,              /*66 + event queue instance delete */
+   sgeE_QINSTANCE_MOD,              /*67 + event queue instance mod */
+   sgeE_QINSTANCE_SOS,              /*68 + event queue instance sos */
+   sgeE_QINSTANCE_USOS,             /*69 + event queue instance usos */
 
-   sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
+   sgeE_SCHED_CONF,                 /*70 + replace existing (sge) scheduler configuration */
 
-   sgeE_SCHEDDMONITOR,              /* + trigger scheduling run */
+   sgeE_SCHEDDMONITOR,              /*71 + trigger scheduling run */
 
-   sgeE_SHUTDOWN,                   /* + request shutdown of an event client */
+   sgeE_SHUTDOWN,                   /*72 + request shutdown of an event client */
 
-   sgeE_SUBMITHOST_LIST,            /* + send submit host list at registration */
-   sgeE_SUBMITHOST_ADD,             /* + event add submit host */
-   sgeE_SUBMITHOST_DEL,             /* + event delete submit host */
-   sgeE_SUBMITHOST_MOD,             /* - event modify submit host */
+   sgeE_SUBMITHOST_LIST,            /*73 + send submit host list at registration */
+   sgeE_SUBMITHOST_ADD,             /*74 + event add submit host */
+   sgeE_SUBMITHOST_DEL,             /*75 + event delete submit host */
+   sgeE_SUBMITHOST_MOD,             /*76 - event modify submit host */
 
-   sgeE_USER_LIST,                  /* + send user list at registration */
-   sgeE_USER_ADD,                   /* + event user add */
-   sgeE_USER_DEL,                   /* + event user delete */
-   sgeE_USER_MOD,                   /* + event user modify */
+   sgeE_USER_LIST,                  /*77 + send user list at registration */
+   sgeE_USER_ADD,                   /*78 + event user add */
+   sgeE_USER_DEL,                   /*79 + event user delete */
+   sgeE_USER_MOD,                   /*80 + event user modify */
 
-   sgeE_USERSET_LIST,               /* + send userset list at registration */
-   sgeE_USERSET_ADD,                /* + event userset add */
-   sgeE_USERSET_DEL,                /* + event userset delete */
-   sgeE_USERSET_MOD,                /* + event userset modify */
+   sgeE_USERSET_LIST,               /*81 + send userset list at registration */
+   sgeE_USERSET_ADD,                /*82 + event userset add */
+   sgeE_USERSET_DEL,                /*83 + event userset delete */
+   sgeE_USERSET_MOD,                /*84 + event userset modify */
    
 #ifndef __SGE_NO_USERMAPPING__
    sgeE_CUSER_LIST,
@@ -424,6 +427,7 @@ enum {
 };
 
 LISTDEF(ET_Type)
+   JGDI_OBJ(Event)
    SGE_ULONG(ET_number, CULL_DEFAULT)
    SGE_ULONG(ET_timestamp, CULL_DEFAULT)
    SGE_ULONG(ET_type, CULL_DEFAULT)
@@ -455,6 +459,7 @@ enum {
 };
 
 LISTDEF(EVS_Type)
+   JGDI_OBJ(EventSubcribtion)
    SGE_ULONG(EVS_id, CULL_DEFAULT)
    SGE_BOOL(EVS_flush, CULL_DEFAULT)
    SGE_ULONG(EVS_interval, CULL_DEFAULT)

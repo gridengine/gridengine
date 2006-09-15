@@ -46,6 +46,7 @@
 #include "sge_unistd.h"
 #include "sge_log.h"
 #include "sge_arch.h"
+#include "sge_string.h"
 #include "sge_mtutil.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
@@ -692,6 +693,64 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 } /* sge_gid2group() */
 
 
+
+int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
+{
+   struct group *gr;
+   struct group grentry;
+
+   DENTER(TOP_LAYER, "_sge_gid2group");
+
+   if (!groupnamep || !last_gid) {
+      DEXIT;
+      return 1;
+   }
+
+   if ( !(*groupnamep) || *last_gid != gid) {
+      char *buf = NULL;
+      int size = 0;
+      
+      size = get_group_buffer_size();
+      buf = sge_malloc(size);
+      
+     /* max retries that are made resolving group name */
+#if defined (INTERIX)
+      while (getgrgid_nomembers_r(gid, &grentry, buf, size, &gr) != 0)
+#else
+      while (getgrgid_r(gid, &grentry, buf, size, &gr) != 0)
+#endif
+      {
+         if (!retries--) {
+            sge_free(buf);
+            
+            DEXIT;
+            return 1;
+         }
+         
+         sleep(1);
+      }
+      
+      /* Bugfix: Issuezilla 1256
+       * We need to handle the case when the OS is unable to resolve the GID to
+       * a name. [DT] */
+      if (gr == NULL) {
+         sge_free(buf);
+         DEXIT;
+         return 1;
+      }
+      
+      /* cache group name */
+      *groupnamep = sge_strdup(*groupnamep, gr->gr_name);
+      *last_gid = gid;
+
+      sge_free(buf);
+   }
+   
+   DEXIT; 
+   return 0;
+} /* _sge_gid2group() */
+
+
 static int get_group_buffer_size(void)
 {
    enum { buf_size = 20480 };  /* default is 20 KB */
@@ -707,6 +766,7 @@ static int get_group_buffer_size(void)
 
    return sz;
 }
+
 
 /****** uti/uidgid/sge_set_uid_gid_addgrp() ***********************************
 *  NAME

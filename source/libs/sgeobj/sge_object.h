@@ -180,7 +180,7 @@ typedef struct {
 } object_description;
 
 
-void obj_init_mt(void);
+void obj_mt_init(void);
 void obj_init(bool is_global);
 
 lList **

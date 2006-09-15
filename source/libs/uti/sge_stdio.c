@@ -181,7 +181,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                     strerror(errno));
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
-            SGE_EXIT(1);
+            SGE_EXIT(NULL, 1);
          }
 
          /* set stderr to /dev/null */
@@ -211,7 +211,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
-            SGE_EXIT(1);
+            SGE_EXIT(NULL, 1);
          }
  
          myuid = geteuid();
@@ -221,7 +221,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             /* Only change user if we differ from the wanted user */
             if(myuid != SGE_SUPERUSER_UID) {
                write(2, not_root, sizeof(not_root));
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }                             
             sprintf(err_str, "%s %d\n", pw->pw_name, (int)pw->pw_gid);
             write(2, err_str, strlen(err_str));
@@ -237,7 +237,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      res, user, strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }
 #endif /* WIN32 */
  
@@ -246,7 +246,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }
          }
  
@@ -270,7 +270,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       execlp(shell, arg0, "-c", command, NULL);
  
       write(2, could_not, sizeof(could_not));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
  
    if (pid == -1) {

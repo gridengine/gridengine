@@ -100,28 +100,15 @@ int root_node
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (!ep) {
-      if (!alpp) {
-         ERROR((SGE_EVENT, MSG_OBJ_NOSTREEELEM));
-         SGE_EXIT(1);
-      } 
-      else {
-         answer_list_add(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
+      answer_list_add(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DRETURN(-1);
    }
 
    if (fname) {
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-         if (!alpp) {
-            SGE_EXIT(1);
-         } 
-         else {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
       }
    }
    else
@@ -136,7 +123,8 @@ int root_node
       FPRINTF((fp, "id=" sge_u32 "\n", lGetUlong(ep, STN_id)));
   
    if (root_node) {
-      id_sharetree((lListElem *)ep, 0);   /* JG: TODO: spooling changes object! */
+      /* TODO: what to do in case of error ? */
+      id_sharetree(alpp, (lListElem *)ep, 0, NULL);   /* JG: TODO: spooling changes object! */
       if (spool)
          FPRINTF((fp, "version=" sge_u32 "\n", lGetUlong(ep, STN_version)));
    }
@@ -152,8 +140,7 @@ int root_node
                      delis, 0);
       if (fret < 0) {
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       FPRINTF((fp, "\n"));
    }
@@ -162,8 +149,7 @@ int root_node
    if (recurse) {
       for_each(cep, lGetList(ep, STN_children)) {     
          if ((i = write_sharetree(alpp, cep, NULL, fp, spool, recurse, 0))) {
-            DEXIT;
-            return i;
+            DRETURN(i);
          }
       }
    }
@@ -172,16 +158,14 @@ int root_node
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 FPRINTF_ERROR:
    if (fname) {
       FCLOSE(fp); 
    }
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
 FCLOSE_ERROR:
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 
 /***************************************************
@@ -215,8 +199,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
 
    if (!fp && !(fp = fopen(fname, "r"))) {
       sprintf(errstr, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    while (!complete && fgets(buf, sizeof(buf), fp)) {
@@ -232,8 +215,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
       if (!strcmp(name, "name")) {
          if (!ep && recurse) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDNAMEFIELD);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          else if (!ep) {
             ep = lCreateElem(STN_Type);
@@ -243,8 +225,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
          }
          else if ((lGetString(ep, STN_name))) {
             sprintf(errstr, MSG_STREE_NAMETWICE_I, line);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          else {
             lSetString(ep, STN_name, val);
@@ -257,8 +238,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
             ep = search_nodeSN(rootelem, id);
             if (!ep) {
                sprintf(errstr, MSG_STREE_NOFATHERNODE_U, sge_u32c(id));
-               DEXIT;
-               return NULL;
+               DRETURN(NULL);
             }
          }
          else
@@ -272,49 +252,41 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
       } else if (!strcmp(name, "type")) {
          if (!ep) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDTYPEFIELD);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          if ((lGetUlong(ep, STN_type))) {
             sprintf(errstr, MSG_STREE_TYPETWICE_I, line);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          lSetUlong(ep, STN_type, strtol(val, NULL, 10));
       } else if (!strcmp(name, "version")) {
          if (!rootelem && !spool && !ep) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDVERSIONFIELD);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          if ((lGetUlong(ep, STN_version))) {
             sprintf(errstr, MSG_STREE_TYPETWICE_I, line);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          lSetUlong(ep, STN_version, strtol(val, NULL, 10));
       } else if (!strcmp(name, "shares")) {
          if (!ep) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDSHARESFIELD);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          if ((lGetUlong(ep, STN_shares))) {
             sprintf(errstr, MSG_STREE_SHARESTWICE_I, line);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          lSetUlong(ep, STN_shares, strtol(val, NULL, 10));
       } else if (!strcmp(name, "childnodes")) {
          if (!ep) {
             sprintf(errstr, MSG_STREE_UNEXPECTEDCHILDNODEFIELD);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          if ((lGetList(ep, STN_children))) {
             sprintf(errstr, MSG_STREE_CHILDNODETWICE_I, line);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          complete = 1;
          child_list = NULL;
@@ -323,8 +295,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
          if (i) {
             lFreeElem(&ep);
             strcpy(errstr, MSG_STREE_NOPARSECHILDNODES);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          lSetList(ep, STN_children, child_list);
          
@@ -335,16 +306,14 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
                if (!rootelem) { /* we are at the root level */
                   lFreeElem(&ep);
                }
-               DEXIT;
-               return NULL;
+               DRETURN(NULL);
             }
          }
       }   
       else {
          /* unknown line */
          sprintf(errstr, MSG_STREE_NOPARSELINE_I, line);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
    }
 
@@ -355,16 +324,14 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
       sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, sge_u32c(lGetUlong(unspecified, STN_id)));
 
       lFreeElem(&ep);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!rootelem && line<=1) {
       strcpy(errstr, MSG_FILE_FILEEMPTY);
    }
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /********************************************************
@@ -379,22 +346,18 @@ u_long32 id
    DENTER(TOP_LAYER, "search_nodeSN");
 
    if (!ep) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (lGetUlong(ep, STN_id) == id) {
-      DEXIT;
-      return ep;
+      DRETURN(ep);
    }
 
    for_each(cep, lGetList(ep, STN_children)) {
       if ((fep = search_nodeSN(cep, id))) {
-         DEXIT;
-         return fep;
+         DRETURN(fep);
       }
    }
       
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }

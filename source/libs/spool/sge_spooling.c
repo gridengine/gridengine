@@ -95,8 +95,7 @@ spool_create_context(lList **answer_list, const char *name)
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /****** spool/spool_free_context() **************************************
@@ -144,8 +143,7 @@ spool_free_context(lList **answer_list, lListElem *context)
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return context;
+   DRETURN(context);
 }
 
 bool
@@ -181,8 +179,7 @@ spool_set_option(lList **answer_list, lListElem *context, const char *option)
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/spool_startup_context() ***********************************
@@ -319,8 +316,7 @@ spool_startup_context(lList **answer_list, lListElem *context, bool check)
 
 error:
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/spool_maintain_context() **********************************
@@ -391,8 +387,7 @@ spool_maintain_context(lList **answer_list, lListElem *context,
    }
    
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -459,8 +454,7 @@ spool_shutdown_context(lList **answer_list, lListElem *context)
    }
    
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -498,8 +492,7 @@ spool_trigger_context(lList **answer_list, lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool spool_transaction(lList **answer_list, lListElem *context, 
@@ -536,8 +529,7 @@ bool spool_transaction(lList **answer_list, lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -732,8 +724,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT; 
-   return ep;
+   DRETURN(ep);
 }
 
 /****** spool/spool_context_search_type() *******************************
@@ -840,8 +831,7 @@ spool_context_create_type(lList **answer_list, lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /****** spool/spool_type_search_default_rule() **************************
@@ -952,8 +942,7 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /****** spool/spool_read_list() *****************************************
@@ -1043,8 +1032,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/spool_read_object() ***************************************
@@ -1130,8 +1118,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return result;
+   DRETURN(result);
 }
 
 /****** spool/spool_write_object() **************************************
@@ -1142,7 +1129,8 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     bool 
 *     spool_write_object(lList **answer_list, const lListElem *context, 
 *                             const lListElem *object, const char *key, 
-*                             const sge_object_type object_type) 
+*                             const sge_object_type object_type,
+*                             bool do_job_spooling) 
 *
 *  FUNCTION
 *     Writes a single object using the given spooling context.
@@ -1155,6 +1143,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
 *     const sge_object_type object_type - type of the object
+*     bool  do_job_spooling - flag whether job_spooling shall be done
 *
 *  RESULT
 *     bool - true, if writing was successfull, else false
@@ -1165,9 +1154,11 @@ spool_read_object(lList **answer_list, const lListElem *context,
 bool 
 spool_write_object(lList **answer_list, const lListElem *context, 
                    const lListElem *object, const char *key, 
-                   const sge_object_type object_type)
+                   const sge_object_type object_type,
+                   bool do_job_spooling)
 {
    bool ret = false;
+ 
    DENTER(TOP_LAYER, "spool_write_object");
 
    switch (object_type) {
@@ -1175,9 +1166,9 @@ spool_write_object(lList **answer_list, const lListElem *context,
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
-            if (!bootstrap_get_job_spooling()) {
-               DRETURN(true);
-            }
+         if (!do_job_spooling) {
+            DRETURN(true);
+         }
          break;
       default : 
          break;
@@ -1247,8 +1238,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/spool_delete_object() *************************************
@@ -1258,7 +1248,8 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *  SYNOPSIS
 *     bool 
 *     spool_delete_object(lList **answer_list, const lListElem *context, 
-*                         const sge_object_type object_type, const char *key) 
+*                         const sge_object_type object_type, const char *key,
+*                         bool do_job_spooling) 
 *
 *  FUNCTION
 *     Deletes a certain object characterized by type and a unique key
@@ -1271,6 +1262,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *     const lListElem *context        - the context to use
 *     const sge_object_type object_type - object type
 *     const char *key                 - unique key
+*     bool  do_job_spooling - flag if job_spooling shall be done
 *
 *  RESULT
 *     bool - true, if all rules reported success, else false
@@ -1280,7 +1272,8 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *******************************************************************************/
 bool 
 spool_delete_object(lList **answer_list, const lListElem *context, 
-                    const sge_object_type object_type, const char *key)
+                    const sge_object_type object_type, const char *key,
+                    bool do_job_spooling)
 {
    bool ret = false;
    
@@ -1291,7 +1284,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
-            if (!bootstrap_get_job_spooling()) {
+            if (!do_job_spooling) {
                DRETURN(true);
             }
          break;
@@ -1363,8 +1356,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/spool_compare_objects() ***********************************
@@ -1416,7 +1408,6 @@ spool_compare_objects(lList **answer_list, const lListElem *context,
 
    ret = true;
 
-   DEXIT; 
-   return ret;
+   DRETURN(ret);
 }
 

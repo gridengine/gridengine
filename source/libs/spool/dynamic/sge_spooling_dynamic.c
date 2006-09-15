@@ -192,7 +192,6 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
       }
    }
 
-   DEXIT;
-   return context;
+   DRETURN(context);
 }
 

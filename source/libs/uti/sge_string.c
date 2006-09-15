@@ -79,27 +79,22 @@ const char *sge_basename(const char *name, int delim)
    DENTER(BASIS_LAYER, "sge_basename");
 
    if (!name) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    if (name[0] == '\0') {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    cp = strrchr(name, delim);
    if (!cp) {
-      DEXIT;
-      return name; 
+      DRETURN(name); 
    } else {
       cp++;
       if (*cp == '\0') {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       else {
-         DEXIT;
-         return cp;
+         DRETURN(cp);
       }
    }
 }
@@ -154,8 +149,7 @@ const char *sge_jobname(const char *name) {
 
    }
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 /****** uti/string/sge_dirname() **********************************************
@@ -190,30 +184,25 @@ char *sge_dirname(const char *name, int delim)
    DENTER(BASIS_LAYER, "sge_dirname");
 
    if (!name) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (name[0] == '\0' || name[0] == delim) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    cp = strchr(name, delim);
 
    if (!cp) {                   /* no occurence of delim */
       cp2 = strdup(name);
-      DEXIT;
-      return cp2;
+      DRETURN(cp2);
    } else {
       if ((cp2 = malloc((cp - name) + 1)) == NULL) {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       } else {
          strncpy(cp2, name, cp - name);
          cp2[cp - name] = '\0';
-         DEXIT;
-         return cp2;
+         DRETURN(cp2);
       }
    }
 }
@@ -279,8 +268,7 @@ char *sge_strtok(const char *str, const char *delimitor)
 
       /* found end of string */
       if (saved_cp == NULL || *saved_cp == '\0') {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       /* eat white spaces */
@@ -299,8 +287,7 @@ char *sge_strtok(const char *str, const char *delimitor)
       if (!cp[0]) {
          static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
 
       /* test if we found a delimitor */
@@ -309,14 +296,12 @@ char *sge_strtok(const char *str, const char *delimitor)
          cp++;
          static_cp = cp;
 
-         DEXIT;
-         return saved_cp;
+         DRETURN(saved_cp);
       }
       cp++;
    }
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /****** uti/string/sge_strlcpy() ***********************************************
@@ -564,8 +549,7 @@ void sge_strip_blanks(char *str)
    DENTER(BASIS_LAYER, "sge_strip_blanks");
 
    if (!str) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    while (*str) {
@@ -578,8 +562,7 @@ void sge_strip_blanks(char *str)
    };
    *cp = '\0';
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** uti/string/sge_strip_white_space_at_eol() ******************************
@@ -613,8 +596,7 @@ void sge_strip_white_space_at_eol(char *str)
          length--;
       }
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** uti/string/sge_delim_str() *******************************************
@@ -660,8 +642,7 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
 
    /* we want it non-destructive --> we need a copy of str */
    if ((tstr = strdup(str)) == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* walk through str to find a character contained in delim or a
@@ -684,8 +665,7 @@ char *sge_delim_str(char *str, char **delim_pos, const char *delim)
    }
    /* delim_pos either points to the delimiter or the closing \0 in str */
 
-   DEXIT;
-   return tstr;
+   DRETURN(tstr);
 }
 
 /****** uti/string/sge_strnullcmp() *******************************************
@@ -898,7 +878,7 @@ void sge_strtoupper(char *buffer, int max_len)
          buffer[i] = toupper(buffer[i]); 
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 } 
 
 /****** uti/string/sge_stradup() **********************************************
@@ -1152,7 +1132,7 @@ void sge_compress_slashes(char *str)
          compressed = 0;
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** uti/string/sge_strip_quotes() *****************************************
@@ -1179,8 +1159,7 @@ void sge_strip_quotes(char **pstr)
    DENTER(TOP_LAYER, "sge_strip_quotes");
    
    if (!pstr) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    for (; *pstr; pstr++) {
@@ -1193,8 +1172,7 @@ void sge_strip_quotes(char **pstr)
       *cp2 = '\0';
    }
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** uti/string/sge_strlen() ***********************************************
@@ -1264,16 +1242,14 @@ char **string_list(char *str, char *delis, char **pstr)
    DENTER(BASIS_LAYER, "string_list");
 
    if (!str) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    while (strchr(delis, str[0])) {
       str++;
    }
    if (str[0] == '\0') {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /*
@@ -1282,8 +1258,7 @@ char **string_list(char *str, char *delis, char **pstr)
    if (!pstr) {
       head = malloc((sizeof(void *)) * (strlen(str) + 1));
       if (!head) {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
    }
    else {
@@ -1340,8 +1315,7 @@ char **string_list(char *str, char *delis, char **pstr)
    
    head[j] = NULL;
 
-   DEXIT;
-   return head;
+   DRETURN(head);
 }
 
 /****** uti/string/sge_strerror() **********************************************

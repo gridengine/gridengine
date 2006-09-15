@@ -90,6 +90,7 @@ SGEOBJLIB_SRC = \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
+         str2nm_converter.c \
          sge_var.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
@@ -303,6 +304,9 @@ sge_utility.o: $(SGEOBJLIB_DIR)/sge_utility.c
 sge_var.o: $(SGEOBJLIB_DIR)/sge_var.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_var.c
 
+str2nm_converter.o: $(SGEOBJLIB_DIR)/str2nm_converter.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/str2nm_converter.c
+		
 ###############################################################################
 # rules to build object codes for CULL data types
 ###############################################################################

@@ -117,8 +117,7 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    if (template_task) {
       lSetUlong(template_task, JAT_task_number, ja_task_id);  
    }
-   DEXIT;
-   return template_task;
+   DRETURN(template_task);
 }
 
    
@@ -174,8 +173,7 @@ lListElem *job_get_ja_task_template_hold(const lListElem *job,
       }
       lSetUlong(template_task, JAT_state, state);
    }
-   DEXIT;
-   return template_task;                                                        }
+   DRETURN(template_task);                                                        }
 
 /****** sgeobj/job/job_is_zombie_job() ****************************************
 *  NAME
@@ -265,8 +263,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), ja_task_id)) {
       ret |= MINUS_H_TGT_SYSTEM;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_create_hold_id_lists() *********************************
@@ -359,7 +356,7 @@ void job_create_hold_id_lists(const lListElem *job, lList *id_list[8],
    for (i = 0; i < 7; i++) {
       lFreeList(&(list[i]));
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/job/job_destroy_hold_id_lists() ********************************
@@ -389,7 +386,7 @@ void job_destroy_hold_id_lists(const lListElem *job, lList *id_list[8])
    for (i = 0; i < 8; i++) {
       lFreeList(&(id_list[i]));
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/job/job_is_enrolled() ******************************************
@@ -422,8 +419,7 @@ bool job_is_enrolled(const lListElem *job, u_long32 task_number)
        range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), task_number)) {
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_is_ja_task_defined() ***********************************
@@ -491,8 +487,7 @@ u_long32 job_get_ja_tasks(const lListElem *job)
    n = job_get_enrolled_ja_tasks(job);
    ret += n;
    DPRINTF(("Enrolled ja_tasks: "sge_u32"\n", n));
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_get_not_enrolled_ja_tasks() ****************************
@@ -539,8 +534,7 @@ u_long32 job_get_not_enrolled_ja_tasks(const lListElem *job)
    lFreeList(&uos_ids);
    lFreeList(&uo_ids);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_get_enrolled_ja_tasks() ********************************
@@ -646,9 +640,8 @@ lListElem *job_enroll(lListElem *job, lList **answer_list,
       ja_task = lCopyElem(template_task);
       lAppendElem(ja_task_list, ja_task); 
    }
-   DEXIT;
 
-   return ja_task;
+   DRETURN(ja_task);
 }  
 
 /****** sge_job/job_count_rescheduled_ja_tasks() *******************************
@@ -723,8 +716,7 @@ int job_count_pending_tasks(lListElem *job, bool count_all)
          n = 1;
    }
 
-   DEXIT;
-   return n;
+   DRETURN(n);
 }
 
 
@@ -760,7 +752,7 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
    for (i = 0; i < attributes; i++) { 
       object_delete_range_id(job, answer_list, attribute[i], ja_task_number);
    }
-   DEXIT;
+   DRETURN_VOID;
 } 
 
 /****** sgeobj/job/job_add_as_zombie() ****************************************
@@ -792,7 +784,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
    range_list_insert_id(&z_ids, NULL, ja_task_id);
    range_list_compress(z_ids);
    lXchgList(zombie, JB_ja_z_ids, &z_ids);    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/job/job_has_soft_requests() ********************************
@@ -893,7 +885,7 @@ void job_set_hold_state(lListElem *job, lList **answer_list,
          }
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/job/job_get_hold_state() ***************************************
@@ -940,8 +932,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_search_task() ******************************************
@@ -980,8 +971,7 @@ lListElem *job_search_task(const lListElem *job, lList **answer_list,
    if (job != NULL) {
       ja_task = lGetSubUlong(job, JAT_task_number, ja_task_id, JB_ja_tasks);
    }
-   DEXIT;
-   return ja_task;
+   DRETURN(ja_task);
 }
 
 /****** sgeobj/job/job_create_task() ******************************************
@@ -1023,8 +1013,7 @@ lListElem *job_create_task(lListElem *job, lList **answer_list, u_long32 ja_task
       }
    }
 
-   DEXIT;
-   return ja_task;
+   DRETURN(ja_task);
 }
 
 /****** sgeobj/job/job_get_shell_start_mode() *********************************
@@ -1100,13 +1089,11 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    if (!job_list) {
       ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
    if (!job) {
       ERROR((SGE_EVENT, MSG_JOB_JEPNULL));
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    if(!*job_list) {
@@ -1117,14 +1104,12 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
        job_list_locate(*job_list, lGetUlong(job, JB_job_number))) {
       ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_S, 
              job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    lAppendElem(*job_list, job);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }     
 
 /****** sgeobj/job/job_is_array() *********************************************
@@ -1228,8 +1213,7 @@ bool job_is_tight_parallel(const lListElem *job, const lList *pe_list)
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_might_be_tight_parallel() ******************************
@@ -1286,8 +1270,7 @@ bool job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_get_submit_task_ids() **********************************
@@ -1582,8 +1565,7 @@ int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
    } else {
       ret = 0;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }                
 
 
@@ -1625,16 +1607,14 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
       sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
       answer_list_add(answer_list, SGE_EVENT, 
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      DEXIT; 
-      return -1;
+      DRETURN(-1);
    } else {
       lSetList(job, JB_ja_n_h_ids, n_h_list);
       lSetList(job, JB_ja_u_h_ids, NULL);
       lSetList(job, JB_ja_o_h_ids, NULL);
       lSetList(job, JB_ja_s_h_ids, NULL);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sgeobj/job/job_initialize_env() ***************************************
@@ -1672,7 +1652,9 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
 *     const lList* path_alias_list - PA_Type list 
 ******************************************************************************/
 void job_initialize_env(lListElem *job, lList **answer_list, 
-                        const lList* path_alias_list)
+                        const lList* path_alias_list, 
+                        const char *unqualified_hostname,
+                        const char *qualified_hostname)
 {
    lList *env_list = NULL;
    DENTER(TOP_LAYER, "job_initialize_env");  
@@ -1699,7 +1681,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       const char* host = sge_getenv("HOST"); /* ??? */
 
       if (host == NULL) {
-         host = uti_state_get_unqualified_hostname();
+         host = unqualified_hostname;
       }
       var_list_set_string(&env_list, VAR_PREFIX "O_HOST", host);
    } 
@@ -1713,7 +1695,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
          goto error;
       }
       path_alias_list_get_path(path_alias_list, NULL, 
-                               tmp_str, uti_state_get_qualified_hostname(),
+                               tmp_str, qualified_hostname,
                                &cwd_out);
       var_list_set_string(&env_list, VAR_PREFIX "O_WORKDIR", 
                           sge_dstring_get_string(&cwd_out));
@@ -1722,7 +1704,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
 
 error:
    lXchgList(job, JB_env_list, &env_list);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/job/job_get_env_string() ***************************************
@@ -1756,10 +1738,8 @@ const char *job_get_env_string(const lListElem *job, const char *variable)
 {
    const char *ret = NULL;
    DENTER(TOP_LAYER, "job_get_env_value");
-
    ret = var_list_get_string(lGetList(job, JB_env_list), variable);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/job/job_set_env_string() ***************************************
@@ -1796,7 +1776,7 @@ void job_set_env_string(lListElem *job, const char* variable, const char* value)
    lXchgList(job, JB_env_list, &env_list);
    var_list_set_string(&env_list, variable, value);
    lXchgList(job, JB_env_list, &env_list);
-   DEXIT; 
+   DRETURN_VOID; 
 }
 
 /****** sgeobj/job/job_check_correct_id_sublists() ****************************
@@ -1850,8 +1830,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
                ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return;
+               DRETURN_VOID;
             }
          }
       }
@@ -1885,14 +1864,13 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          ERROR((SGE_EVENT, MSG_JOB_NOIDNOTALLOWED));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return;
+         DRETURN_VOID;
       } else if (!has_x_ids) {
          job_initialize_id_lists(job, answer_list);
       }
    }
   
-   DEXIT; 
+   DRETURN_VOID; 
 }
 
 /****** sgeobj/job/job_get_id_string() ****************************************
@@ -1943,8 +1921,7 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
       }
    }   
    
-   DEXIT;
-   return sge_dstring_get_string(&id);
+   DRETURN(sge_dstring_get_string(&id));
 }
 
 /****** sgeobj/job/job_is_pe_referenced() *************************************
@@ -2059,8 +2036,7 @@ lListElem *job_list_locate(lList *job_list, u_long32 job_id)
 
    job = lGetElemUlong(job_list, JB_job_number, job_id);
 
-   DEXIT;
-   return job;
+   DRETURN(job);
 }
 
 /****** sgeobj/job/job_add_parent_id_to_context() *****************************
@@ -2147,8 +2123,7 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
          sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* check value of display variable, if it is an empty string,
@@ -2162,8 +2137,7 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
          sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* check value of display variable, if it has the form :<id> (local display)
@@ -2176,12 +2150,10 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
          sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /****** sgeobj/job/job_check_owner() ******************************************
@@ -2212,28 +2184,23 @@ int job_check_owner(const char *user_name, u_long32 job_id, lList *master_job_li
    DENTER(TOP_LAYER, "job_check_owner");
 
    if (!user_name) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (manop_is_operator(user_name)) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    job = job_list_locate(master_job_list, job_id);
    if (job == NULL) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (strcmp(user_name, lGetString(job, JB_owner)) != 0) {
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sgeobj/job/job_get_job_key() **********************************************
@@ -2455,11 +2422,11 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
       }
    }/*end for*/
 
-   DEXIT;
-   if(ret_error)
-      return STATUS_EUNKNOWN;
-   else
-      return STATUS_OK;
+   if(ret_error) {
+      DRETURN(STATUS_EUNKNOWN);
+   } else {
+      DRETURN(STATUS_OK);
+   }     
 }
 
 /****** sgeobj/job/job_get_request() ******************************************
@@ -2498,8 +2465,7 @@ job_get_request(const lListElem *this_elem, const char *centry_name)
 
       ret = lGetElemStr(soft_centry_list, CE_name, centry_name);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* EB: ADOC: add commets */
@@ -2530,8 +2496,7 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
       ret = false; 
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* JG: TODO: use dstring! */
@@ -2588,8 +2553,7 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op)
 
    str[count++] = '\0';
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 

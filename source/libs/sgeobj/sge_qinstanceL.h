@@ -143,6 +143,7 @@ enum {
 };
 
 LISTDEF(QU_Type)
+   JGDI_OBJ(QueueInstance)
    SGE_HOST(QU_qhostname, CULL_HASH | CULL_SPOOL) 
    SGE_STRING(QU_qname, CULL_SPOOL)
    SGE_STRING(QU_full_name, CULL_PRIMARY_KEY)

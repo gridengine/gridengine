@@ -173,8 +173,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
 
    /* we'll use strtok ==> we need a safety copy */
    if ((tf = strdup(load_formula)) == NULL) {
-      DEXIT;
-      return ERROR_LOAD_VAL;
+      DRETURN(ERROR_LOAD_VAL);
    }
 
    /* 
@@ -199,8 +198,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
             FREE(par_name);
             FREE(tf);
 
-            DEXIT;
-            return ERROR_LOAD_VAL;
+            DRETURN(ERROR_LOAD_VAL);
          }
          FREE(par_name);
       }
@@ -212,8 +210,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
             FREE(tf);
-            DEXIT;
-            return ERROR_LOAD_VAL;
+            DRETURN(ERROR_LOAD_VAL);
          }
          op_pos = (int) (op_ptr - load_ops);
 
@@ -227,8 +224,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
                get_load_value(&val2, global, host, centry_list, par_name)) {
                FREE(par_name);
                FREE(tf);
-               DEXIT;
-               return ERROR_LOAD_VAL;
+               DRETURN(ERROR_LOAD_VAL);
             }
             FREE(par_name);
          }
@@ -318,8 +314,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
 
    if(!(cep = get_attribute_by_name(global, host, NULL, attrname, centry_list, DISPATCH_TIME_NOW, 0))){
       /* neither load or consumable available for that host */
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    if (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_VALUE) {
@@ -334,8 +329,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
     * No value available.
     */
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -402,8 +396,7 @@ int *sort_hostlist
    lFreeSortOrder(&so);
    lFreeList(&job_load_adjustments);
 
-   DEXIT; 
-   return 0;
+   DRETURN(0);
 }
 
 /*

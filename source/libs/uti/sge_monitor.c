@@ -116,7 +116,7 @@ static void ext_tet_output(dstring *message, void *monitoring_extension, double 
 *******************************************************************************/
 void sge_monitor_free(monitoring_t *monitor)
 {
-   DENTER(TOP_LAYER, "sge_monitor_free");
+   DENTER(GDI_LAYER, "sge_monitor_free");
   
    if(monitor->pos != -1) {
       sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
@@ -176,7 +176,7 @@ void
 sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext, 
                  thread_warning_t warning_timeout, thread_error_t error_timeout)
 {
-   DENTER(TOP_LAYER, "sge_monitor_init");
+   DENTER(GDI_LAYER, "sge_monitor_init");
 
    monitor->thread_name = thread_name;
  
@@ -317,7 +317,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
    char date[40];
    dstring ddate;
    
-   DENTER(TOP_LAYER, "sge_monitor_status");
+   DENTER(GDI_LAYER, "sge_monitor_status");
 
    if (info_message == NULL) {
       DEXIT;
@@ -425,7 +425,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
 *******************************************************************************/
 void sge_set_last_wait_time(monitoring_t *monitor, struct timeval wait_time) 
 {
-   DENTER(TOP_LAYER, "sge_set_last_wait_time");
+   DENTER(GDI_LAYER, "sge_set_last_wait_time");
 
    if (monitor->pos != -1) {
       sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
@@ -467,7 +467,7 @@ void sge_set_last_wait_time(monitoring_t *monitor, struct timeval wait_time)
 *******************************************************************************/
 void sge_monitor_output(monitoring_t *monitor) 
 {
-   DENTER(TOP_LAYER, "sge_monitor_output");
+   DENTER(GDI_LAYER, "sge_monitor_output");
 
    if ((monitor != NULL) && (monitor->output == true)) {
       struct timeval after;
@@ -537,7 +537,7 @@ void sge_monitor_output(monitoring_t *monitor)
 *******************************************************************************/
 void sge_monitor_reset(monitoring_t *monitor) 
 {
-   DENTER(TOP_LAYER, "sge_monitor_reset");
+   DENTER(GDI_LAYER, "sge_monitor_reset");
 
    monitor->monitor_time = 0;
    monitor->now.tv_sec = 0;

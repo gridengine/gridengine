@@ -196,6 +196,7 @@ enum {
 
 
 LISTDEF(STN_Type)
+/*   JGDI_ROOT_OBJ( ShareTree, SGE_SHARETREE_LIST , ADD | MODIFY | DELETE | GET ) */
    SGE_STRING(STN_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(STN_type, CULL_DEFAULT | CULL_SPOOL)        /* 960624 svd - changed to STN_type */
    SGE_ULONG(STN_id, CULL_DEFAULT)         /* Unique node id for storing to disk */
@@ -229,7 +230,7 @@ LISTDEF(STN_Type)
    SGE_DOUBLE(STN_tickets, CULL_DEFAULT)                                                    
    SGE_ULONG(STN_jobid, CULL_DEFAULT)                                                  
    SGE_ULONG(STN_taskid, CULL_DEFAULT)                                                 
-   SGE_LIST(STN_usage_list,UA_Type, CULL_DEFAULT)                                     
+   SGE_MAP(STN_usage_list,UA_Type, CULL_DEFAULT)                                     
    SGE_ULONG(STN_version, CULL_DEFAULT)
 LISTEND 
 

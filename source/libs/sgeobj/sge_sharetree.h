@@ -42,7 +42,7 @@ typedef struct {
 /************************************************************************
    id_sharetree - set the sharetree node id
 ************************************************************************/
-int id_sharetree(lListElem *ep, int id);
+bool id_sharetree(lList **alpp, lListElem *ep, int id, int *ret_id);
 int show_sharetree_path(lListElem *root, const char *path);
 int show_sharetree(lListElem *ep, char *indent);
 lListElem *getSNTemplate(void);

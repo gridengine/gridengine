@@ -61,7 +61,7 @@ const lListElem *epc,
 FILE *fpout,
 u_long32 flags 
 ) {
-   FILE *fp;
+   FILE *fp = fpout;
    lListElem *ep = NULL;
    lList *cfl;
    dstring ds;
@@ -72,20 +72,11 @@ u_long32 flags
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (fname) {
       if (!(fp = fopen(fname, "w"))) {
-         ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, 
-                strerror(errno)));
-         if (!alpp) {
-            SGE_EXIT(1);
-         } else {
-            answer_list_add(alpp, SGE_EVENT, 
-                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;  
-         }
+         ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
       }
    }
-   else
-      fp = fpout;
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
              feature_get_product_name(FS_VERSION, &ds)) < 0) {
@@ -113,13 +104,11 @@ u_long32 flags
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 
 /*---------------------------------------------------------
@@ -149,8 +138,7 @@ u_long32 flags
 
    if (!(fp = fopen(fname, "r"))) {
       WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERROROPENINGSPOOLFILE_SS, fname, strerror(errno)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
    lp = NULL;
@@ -174,8 +162,7 @@ u_long32 flags
             if (!(value = strtok_r(NULL, " \t\n", &lasts))) {
                WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
                FCLOSE(fp);
-               DEXIT;
-               return NULL;
+               DRETURN(NULL);
             }
             sscanf(value, sge_u32, &conf_version);
             DPRINTF(("read conf %s version " sge_u32"\n", conf_name, conf_version));
@@ -190,8 +177,7 @@ u_long32 flags
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S, name));
          lFreeList(&lp);
          FCLOSE(fp);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       /* validate input */
@@ -209,8 +195,7 @@ u_long32 flags
                   lFreeList(&alp);
                   lFreeList(&lp);
                   FCLOSE(fp);
-                  DEXIT;
-                  return NULL;
+                  DRETURN(NULL);
                } else {
                   lListElem *rep;
 
@@ -223,8 +208,7 @@ u_long32 flags
                         lFreeList(&alp);
                         lFreeList(&lp);
                         FCLOSE(fp);
-                        DEXIT;
-                        return (NULL);
+                        DRETURN(NULL);
                      }                  
                   }
                   lFreeList(&alp);
@@ -244,8 +228,7 @@ u_long32 flags
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
             FCLOSE(fp);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       } 
       else if (!strcmp(name, "user_lists") || 
@@ -272,8 +255,7 @@ u_long32 flags
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
             FCLOSE(fp);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          /* skip leading delimitors */
          while (value[0] && isspace((int) value[0]))
@@ -285,8 +267,7 @@ u_long32 flags
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
             FCLOSE(fp);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
            
          lSetString(ep, CF_value, value);
@@ -296,8 +277,7 @@ u_long32 flags
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S, name));
             lFreeList(&lp);
             FCLOSE(fp);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       }
    }
@@ -309,10 +289,8 @@ u_long32 flags
    lSetUlong(epc, CONF_version, conf_version);
    lSetList(epc, CONF_entries, lp);
 
-   DEXIT;
-   return epc;
+   DRETURN(epc);
 FCLOSE_ERROR:
    WARNING((SGE_EVENT, MSG_CONFIG_CONF_ERRORCLOSEINGSPOOLFILE_SS, fname, strerror(errno)));
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }

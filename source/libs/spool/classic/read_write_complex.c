@@ -141,14 +141,9 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
    
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         lFreeList(&lp);
-         DEXIT;
-         return NULL;
-      }
-      else
-         SGE_EXIT(1);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      lFreeList(&lp);
+      DRETURN(NULL);
    }
    
    while (fgets(buf, sizeof(buf), fp)) {
@@ -177,14 +172,9 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       }
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
 
       /* TYPE */
@@ -198,27 +188,17 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          }
          if (!type) {
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXTYPE_SS, fname, s));
-         if (alpp) {
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+            DRETURN(NULL);
          }
          lSetUlong(ep, CE_valtype, type);
       }
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
       
       /* RELOP */
@@ -232,47 +212,29 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          }
          if (!relop) {
             ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXRELOP_SS, fname, s));
-            if (alpp) {
-               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               lFreeList(&lp);
-               DEXIT;
-               return NULL;
-            }
-            else
-               SGE_EXIT(1);
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            lFreeList(&lp);
+            DRETURN(NULL);
          }
          lSetUlong(ep, CE_relop, relop);
       }
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
       
       /* REQUESTABLE */
       if (parse_requestable(alpp, cp, ep, fname, line)) {
          lFreeList(&lp);
-         if (alpp) {
-            DEXIT;
-            return NULL;
-         } else
-            SGE_EXIT(1);
+         DRETURN(NULL);
       }
 
       /* CONSUMABLE */
       if (parse_flag(alpp, cp, ep, CE_consumable, "consumable", fname, line)) {
          lFreeList(&lp);
-         if (alpp) {
-            DEXIT;
-            return NULL;
-         } else
-            SGE_EXIT(1);
+         DRETURN(NULL);
       }
       /* do not allow string types being consumable */
       if (lGetBool(ep, CE_consumable) && 
@@ -281,14 +243,9 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
           type==TYPE_RESTR ||
           type==TYPE_CSTR)) {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXCONSUM_SSS, fname, lGetString(ep, CE_name), map_type2str(type)));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
 
       /* DEFAULT */
@@ -307,15 +264,9 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
                if (!parse_ulong_val(&dval, NULL, type, s, tmp_err, sizeof(tmp_err))) {
                   SGE_LOG(LOG_ERR, tmp_err);
                   ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-                  if (alpp) {
-                     answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                     lFreeList(&lp);
-                     DEXIT;
-                     return NULL;
-                  }
-                  else
-                     SGE_EXIT(1);
-
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeList(&lp);
+                  DRETURN(NULL);
                }
                break;
             }
@@ -336,55 +287,37 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
             if (!parse_ulong_val(&dval, NULL, type, s, SGE_EVENT, sizeof(SGE_EVENT)-1)) {
                SGE_LOG(LOG_ERR, SGE_EVENT);
                ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lFreeList(&lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
-
+               answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               lFreeList(&lp);
+               DRETURN(NULL);
             }
             break;
          }
       }
       else {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
       
       /* ANYTHING ELSE ? */
       if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {
          ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            lFreeList(&lp);
-            DEXIT;
-            return NULL;
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeList(&lp);
+         DRETURN(NULL);
       }
       lAppendElem(lp, ep);
    }
 
    FCLOSE(fp);
 
-   DEXIT;
-   return lp;
+   DRETURN(lp);
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_NOCLOSE_SS, fname, strerror(errno)));
    answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 static int parse_flag(
@@ -408,23 +341,18 @@ int line
          flag = FALSE;
       else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXENTRY_SSS, fname, name, s));
-         if (alpp)
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return 1;
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DRETURN(1);
       }
       lSetBool(ep, nm, flag);
    }
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-      if (alpp) 
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
       
 static int parse_requestable(
@@ -448,24 +376,19 @@ int line
          flag = REQU_FORCED;
       } else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXREQ_SS, fname, s));
-         if (alpp)
-            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return 1;
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DRETURN(1);
       }
 
       lSetUlong(ep, CE_requestable, flag);
    }
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
-      if (alpp) 
-         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
       
 /**********************************************************************
@@ -490,13 +413,8 @@ lList **alpp
    if (fname) {
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-         if (alpp) {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
-            DEXIT;
-            return -1; 
-         }
-         else
-            SGE_EXIT(1);
+         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
+         DRETURN(-1); 
       }
    }
    else
@@ -534,15 +452,11 @@ lList **alpp
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, fname, strerror(errno)));
-   if (alpp) {
-      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
-   }
-   DEXIT;
-   return -1;
+   answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR); 
+   DRETURN(-1);
 }

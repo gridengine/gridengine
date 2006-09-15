@@ -135,14 +135,9 @@ lList *cull_read_in_limit_rule_sets(const char *fname, lList **alpp)
 
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-      if (alpp) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         lFreeList(&lp);
-         DEXIT;
-         return NULL;
-      }
-      else
-         SGE_EXIT(1);
+      answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      lFreeList(&lp);
+      DRETURN(NULL);
    }
 
    while (fgets(buffer, sizeof(buffer), fp)) {
@@ -283,13 +278,12 @@ lList *cull_read_in_limit_rule_sets(const char *fname, lList **alpp)
 
    FCLOSE(fp);
 
-   DEXIT;
-   return lp;
+   DRETURN(lp);
+
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_NOCLOSE_SS, fname, strerror(errno)));
    answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /****** read_write_limit_rule/sge_create_limit_rule_filter_scope() *************
@@ -484,8 +478,7 @@ char *write_limit_rule_set(int spool, int how, const lListElem *ep) {
       if (how==1) {
          if (!sge_tmpnam(filename)) {
             CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       } else  {
          sprintf(filename, "%s/.%s", LIMITRULESETS_DIR, 
@@ -497,13 +490,11 @@ char *write_limit_rule_set(int spool, int how, const lListElem *ep) {
       fp = fopen(filename, "w");
       if (!fp) {
          CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, strerror(errno)));
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       break;
    default:
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    _write_limit_rule_set(spool, ep, &dbuffer);
@@ -516,20 +507,17 @@ char *write_limit_rule_set(int spool, int how, const lListElem *ep) {
    }
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       } else {
          strcpy(filename, real_filename);
       }
    }          
 
-   DEXIT;
-   return how==1?sge_strdup(NULL, filename):filename;
+   DRETURN((how==1?sge_strdup(NULL, filename):filename));
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    sge_dstring_free(&dbuffer);
-   DEXIT;
-   return NULL; 
+   DRETURN(NULL); 
 }
 
 /****** read_write_limit_rule/write_limit_rule_sets() **************************
@@ -581,8 +569,7 @@ char *write_limit_rule_sets(int spool, int how, const lList *lp) {
       if (how==1) {
          if (!sge_tmpnam(filename)) {
             CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       } 
       /* 
@@ -597,13 +584,11 @@ char *write_limit_rule_sets(int spool, int how, const lList *lp) {
       fp = fopen(filename, "w");
       if (!fp) {
          CRITICAL((SGE_EVENT, MSG_ERRORWRITINGFILE_SS, filename, strerror(errno)));
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       break;
    default:
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    for_each(ep, lp) {
@@ -619,19 +604,17 @@ char *write_limit_rule_sets(int spool, int how, const lList *lp) {
    /*
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       } else {
          strcpy(filename, real_filename);
       }
    }          
    */
 
-   DEXIT;
-   return how==1?sge_strdup(NULL, filename):filename;
+   DRETURN((how==1?sge_strdup(NULL, filename):filename));
+
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    sge_dstring_free(&dbuffer);
-   DEXIT;
-   return NULL; 
+   DRETURN(NULL); 
 }

@@ -53,7 +53,9 @@ enum {
    CAL_parsed_week_calendar
 };
 
+#if 0
 LISTDEF(CAL_Type)
+   JGDI_ROOT_OBJ(Calendar, SGE_CALENDAR_LIST, ADD | MODIFY | DELETE | GET | GET_LIST )
    SGE_STRING(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_STRING(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL)
@@ -61,6 +63,19 @@ LISTDEF(CAL_Type)
    SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
    SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
 LISTEND 
+#else
+LISTDEF(CAL_Type) 
+   JGDI_ROOT_OBJ(Calendar, SGE_CALENDAR_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   SGE_STRING_D(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "template")
+   SGE_STRING_D(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
+   SGE_STRING_D(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
+   /* non spooling fields */
+   SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
+   SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
+LISTEND 
+
+#endif
+
 
 NAMEDEF(CALN)
    NAME("CAL_name")
@@ -83,6 +98,7 @@ enum {
 };
 
 LISTDEF(CA_Type)
+   JGDI_OBJ(ParsedCalendar)
    SGE_LIST(CA_yday_range_list, TMR_Type, CULL_DEFAULT)       /* TMR_Type with begin/end of type *
                                        * TM_Type using *
                                        * TM_mday/TM_mon/TM_year */
@@ -112,6 +128,7 @@ enum {
 };
 
 LISTDEF(TMR_Type)
+   JGDI_OBJ(TimeRange)
    SGE_LIST(TMR_begin, TM_Type, CULL_DEFAULT)        /* TM_Type */
    SGE_LIST(TMR_end, TM_Type, CULL_DEFAULT)          /* TM_Type */
 LISTEND 
@@ -136,6 +153,7 @@ enum {
 };
 
 LISTDEF(CQU_Type)
+   JGDI_OBJ(CalendarQueueState)
    SGE_ULONG(CQU_state, CULL_DEFAULT)        /* current state*/
    SGE_ULONG(CQU_till, CULL_DEFAULT)          /* point in time for the next state change*/
 LISTEND 
@@ -176,6 +194,7 @@ enum {
 };
 
 LISTDEF(TM_Type)
+   JGDI_MAPPED_OBJ(java.util.Calendar)
    SGE_ULONG(TM_mday, CULL_DEFAULT)         /* 1-32 */
    SGE_ULONG(TM_mon, CULL_DEFAULT)          /* 0-11 */
    SGE_ULONG(TM_year, CULL_DEFAULT)         /* The number of years since 1900. */

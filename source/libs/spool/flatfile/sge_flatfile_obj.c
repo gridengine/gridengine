@@ -785,8 +785,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                         name, value));
    
                FREE (buffer);
-               DEXIT;
-               return 0;
+               DRETURN(0);
             } else {
                lListElem *rep;
 
@@ -799,8 +798,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
    
                      FREE(buffer);
                      lFreeList(&rlp);
-                     DEXIT;
-                     return 0;
+                     DRETURN(0);
                   }                  
                }
                lFreeList(&rlp);
@@ -819,8 +817,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          FREE (buffer);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
    } 
    else if (!strcmp(name, "user_lists") || 
@@ -847,8 +844,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          FREE (buffer);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
       /* skip leading delimitors */
       while (value[0] && isspace((int) value[0]))
@@ -860,8 +856,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          FREE (buffer);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
 
       lSetString(ep, CF_value, value);
@@ -872,14 +867,12 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                   name));
    
          FREE (buffer);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
    }
 
    FREE (buffer);
-   DEXIT;
-   return 1;
+   DRETURN(1);
 }
 
 spooling_field *sge_build_CONF_field_list(bool spool_config)

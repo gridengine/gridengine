@@ -142,7 +142,7 @@ int sge_read_host_group_entries_from_disk()
            ep = cull_read_in_host_group(HGROUP_DIR, hostGroupEntry , 1, 0, NULL, NULL); 
            if (strcmp(hostGroupEntry, lGetHost(ep, HGRP_name))) {
                ERROR((SGE_EVENT, MSG_HGROUP_INCFILE_S, hostGroupEntry));
-               return -1;
+               DRETURN(-1);
            }
            lAppendElem(*master_hgroup_list, ep);
         } else {
@@ -153,8 +153,7 @@ int sge_read_host_group_entries_from_disk()
   }
 
   /* everything is done very well ! */
-  DEXIT; 
-  return ret;
+  DRETURN(ret);
 }
 
 #ifndef __SGE_NO_USERMAPPING__
@@ -206,13 +205,12 @@ int sge_read_user_mapping_entries_from_disk()
   }
   
   /* everything is done very well ! */
-  DEXIT; 
-  return ret;
+  DRETURN(ret);
 }
 
 #endif
 
-int sge_read_exechost_list_from_disk(lList **list, const char *directory)
+int sge_read_exechost_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -244,16 +242,14 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
                                    NULL, NULL);
             if (!ep) {
                lFreeList(&direntries);
-               DEXIT; 
-               return -1;
+               DRETURN(-1);
             }
 
            /* resolve hostname anew */
             if (reresolve_host(ep, EH_name, "exec host", directory)) {
                lFreeElem(&ep);
                lFreeList(&direntries);
-               DEXIT;
-               return -1; /* general problems */
+               DRETURN(-1); /* general problems */
             }
 
             /* necessary to setup actual list of exechost */
@@ -266,8 +262,7 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
             if (ensure_attrib_available(NULL, ep, EH_consumable_config_list)) {
                lFreeElem(&ep);
                lFreeList(&direntries);
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
 
             lAppendElem(*list, ep);
@@ -282,11 +277,10 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int sge_read_adminhost_list_from_disk(lList **list, const char *directory)
+int sge_read_adminhost_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -313,15 +307,13 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory)
             ep = cull_read_in_host(directory, host, CULL_READ_SPOOL, AH_name, NULL, NULL);
             if (!ep) {
                lFreeList(&direntries);
-               DEXIT; 
-               return -1;
+               DRETURN(-1);
             } 
 
             /* resolve hostname anew */
             if (reresolve_host(ep, AH_name, "admin host", directory)) {
                lFreeList(&direntries);
-               DEXIT;
-               return -1; /* general problems */
+               DRETURN(-1); /* general problems */
             }
 
             lAppendElem(*list, ep);
@@ -332,11 +324,10 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int sge_read_submithost_list_from_disk(lList **list, const char *directory)
+int sge_read_submithost_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -363,14 +354,12 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory)
                SH_name, NULL, NULL);
             if (!ep) {
                lFreeList(&direntries);
-               DEXIT; 
-               return -1;
+               DRETURN(-1);
             } 
 
             /* resolve hostname anew */
             if (reresolve_host(ep, SH_name, "submit host", directory)) {
-               DEXIT;
-               return -1; /* general problems */
+               DRETURN(-1); /* general problems */
             }
 
             lAppendElem(*list, ep);
@@ -381,11 +370,10 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int sge_read_pe_list_from_disk(lList **list, const char *directory)
+int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -412,8 +400,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
                printf("\n");
             }
             if (verify_str_key(NULL, pe, MAX_VERIFY_STRING, "pe") != STATUS_OK) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }       
             ep = cull_read_in_pe(directory, pe, 1, 0, NULL, NULL);
             if (!ep) {
@@ -433,13 +420,12 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
 
-int sge_read_cal_list_from_disk(lList **list, const char *directory)
+int sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *alp = NULL;
    lList *direntries;
@@ -468,8 +454,7 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
                printf("\n");
             }
             if (verify_str_key(NULL, cal, MAX_VERIFY_STRING, "cal") != STATUS_OK) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }      
             ep = cull_read_in_cal(directory, cal, 1, 0, NULL, NULL);
             if (!ep) {
@@ -496,11 +481,10 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
+int sge_read_ckpt_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -527,14 +511,12 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
             }
             ep = cull_read_in_ckpt(directory, ckpt, 1, 0, NULL, NULL);
             if (!ep) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
 
             if (ckpt_validate(ep, NULL)!=STATUS_OK) {
                lFreeElem(&ep);
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
             
             lAppendElem(*list, ep);
@@ -544,8 +526,7 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory)
       }
       lFreeList(&direntries);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 int sge_read_qinstance_list_from_disk(lListElem *cqueue)
@@ -574,8 +555,7 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
                if (qinstance == NULL) {
                   ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, 
                          sge_dstring_get_string(&qinstance_dir), hostname));
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
              
                if (qinstance_list == NULL) {
@@ -592,11 +572,10 @@ int sge_read_qinstance_list_from_disk(lListElem *cqueue)
    }
    sge_dstring_free(&qinstance_dir);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }   
 
-int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
+int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *qep, *direntry;
@@ -625,8 +604,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                printf("\n");
             }
             if (verify_str_key(NULL, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }   
             qep = cull_read_in_cqueue(directory, 
                                       queue_str, 1, 
@@ -634,8 +612,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
             if (!qep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                       queue_str));
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
             
             if (!strcmp(lGetString(direntry, ST_name), SGE_TEMPLATE_NAME) && 
@@ -680,8 +657,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                       ensure_attrib_available(NULL, qinstance, QU_suspend_thresholds) ||
                       ensure_attrib_available(NULL, qinstance, QU_consumable_config_list)) {
                      lFreeElem(&qep);
-                     DEXIT;
-                     return -1;
+                     DRETURN(-1);
                   }
                   qinstance_state_set_unknown(qinstance, true);
                   qinstance_state_set_cal_disabled(qinstance, false);
@@ -696,8 +672,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                             lGetHost(qinstance, QU_qhostname)));
                      lFreeElem(&qep);
                      lFreeList(&direntries);
-                     DEXIT;
-                     return -1;
+                     DRETURN(-1);
                   } 
                }
                cqueue_list_add_cqueue(*list, qep);
@@ -710,11 +685,10 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
    }
    
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
+int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *dir_entries = NULL;
    DENTER(TOP_LAYER, "sge_read_limit_rule_set_list_from_disk");
@@ -750,7 +724,7 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
                DRETURN(-1);
            }
            sge_dstring_sprintf(&filename, "%s/%s", directory, lirs_name);
-           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), NULL);
+           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), alpp);
            lirs = lCopyElem(lFirst(tmp_lirs_list));
            lFreeList(&tmp_lirs_list);
 
@@ -762,7 +736,7 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
                DRETURN(-1);
            }
 
-           if (!limit_rule_set_verify_attributes(lirs, NULL, true)) {
+           if (!limit_rule_set_verify_attributes(lirs, alpp, true)) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                       lirs_name));
                lFreeElem(&lirs);
@@ -780,11 +754,11 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory)
       }
       lFreeList(&dir_entries);
    }
-  
+
    DRETURN(0);
 }
 
-int sge_read_project_list_from_disk(lList **list, const char *directory)
+int sge_read_project_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -813,22 +787,19 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
                printf("\n");
             }
             if (verify_str_key(NULL, userprj_str, MAX_VERIFY_STRING, "project") != STATUS_OK) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }  
             ep = cull_read_in_userprj(directory, lGetString(direntry, ST_name), 1,
                                        0, &config_tag);
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                       lGetString(direntry, ST_name)));
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
             if (strcmp(lGetString(ep, UP_name), lGetString(direntry, ST_name))) {
                ERROR((SGE_EVENT, MSG_QMASTER_PRJINCORRECT_S,
                       lGetString(direntry, ST_name)));
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
             lAppendElem(*list, ep);
          } else {
@@ -838,11 +809,10 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }   
 
-int sge_read_user_list_from_disk(lList **list, const char *directory)
+int sge_read_user_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -876,8 +846,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory)
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                         lGetString(direntry, ST_name)));
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
 
             lAppendElem(*list, ep);
@@ -888,11 +857,10 @@ int sge_read_user_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int sge_read_userset_list_from_disk(lList **list, const char *directory)
+int sge_read_userset_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *direntries;
    lListElem *ep, *direntry;
@@ -918,16 +886,14 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
                printf("\n");
             }
             if (verify_str_key(NULL, userset, MAX_VERIFY_STRING, "userset") != STATUS_OK) {
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }  
 
             ep = cull_read_in_userset(directory, userset, 1, 0, NULL); 
             if (!ep) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                         userset));
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
 
             if(userset_validate_entries(ep, NULL, 1) == STATUS_OK) {
@@ -942,8 +908,7 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
       lFreeList(&direntries);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -961,7 +926,6 @@ const char *object_dir
 
    DENTER(TOP_LAYER, "reresolve_host");
 
-
    pos = lGetPosViaElem(ep, nm, SGE_DO_ABORT);
    dataType = lGetPosType(lGetElemDescr(ep),pos);
    if (dataType == lHostT) {
@@ -978,8 +942,7 @@ const char *object_dir
             a host, e.g. when DNS times out */
          ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, object_name, old_name, cl_get_error_text(ret)));
          free(old_name);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, object_name, old_name));
    }
@@ -994,18 +957,16 @@ const char *object_dir
       if (!write_host(1, 2, ep, nm, NULL)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, new_name));
          free(old_name);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       sge_unlink(object_dir, old_name);
    }
    free(old_name);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
-int read_all_centries(lList **list, const char *directory)
+int read_all_centries(lList **list, const char *directory, lList **alpp)
 {
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
@@ -1025,8 +986,7 @@ int read_all_centries(lList **list, const char *directory)
    dir = opendir(directory);
    if (!dir) {
       ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, directory));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    if (!sge_silent_get())
       printf("%s\n", MSG_CONFIG_READINGINCOMPLEXATTRS);
@@ -1059,8 +1019,7 @@ int read_all_centries(lList **list, const char *directory)
       if (answer) {
          ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
          lFreeList(&answer);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       if (el) {
          lAppendElem(*list, el);
@@ -1071,8 +1030,7 @@ int read_all_centries(lList **list, const char *directory)
 
    centry_list_sort(*list);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /*----------------------------------------------------
@@ -1083,7 +1041,8 @@ int read_all_centries(lList **list, const char *directory)
  *----------------------------------------------------*/
 
  
-int read_all_configurations(lList **lpp, 
+int read_all_configurations(lList **alpp,
+                            lList **lpp, 
                             const char *global_config_file, 
                             const char *local_config_dir)
 {
@@ -1093,18 +1052,18 @@ int read_all_configurations(lList **lpp,
    char fstr[256];
    lListElem *el;
    int ret;
+#ifndef TEST_QMASTER_GDI2   
    static int admin_user_initialized = 0;
+#endif   
 
    DENTER(TOP_LAYER, "read_all_configurations");
 
    if (!lpp) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (local_config_dir == NULL) {
-      DEXIT;
-      SGE_EXIT(1);
+      DRETURN(-1);
    }
 
    if (!*lpp) {
@@ -1116,10 +1075,10 @@ int read_all_configurations(lList **lpp,
    if (el)
       lAppendElem(*lpp, el);
    else {
-      DEXIT;
-      SGE_EXIT(1);
+      DRETURN(-1);
    }
 
+#ifndef TEST_QMASTER_GDI2   
    if (!admin_user_initialized) {
       const char *admin_user = NULL;
       char err_str[MAX_STRING_SIZE];
@@ -1129,19 +1088,17 @@ int read_all_configurations(lList **lpp,
       lret = sge_set_admin_username(admin_user, err_str);
       if (lret == -1) {
          ERROR((SGE_EVENT, err_str));
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       admin_user_initialized = 1;
    }
+#endif   
 
    
    /* read local configurations from local_conf_dir */ 
-
    dir = opendir(local_config_dir);
    if (!dir) {
-      DEXIT;
-      return -2;
+      DRETURN(-2);
    }
 
    while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
@@ -1173,8 +1130,7 @@ int read_all_configurations(lList **lpp,
             if (ret != CL_RETVAL_GETHOSTNAME_ERROR  ) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, "local configuration", old_name, cl_get_error_text(ret)));
                free(old_name);
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             }
             WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, "local configuration", old_name));
          }
@@ -1199,20 +1155,17 @@ int read_all_configurations(lList **lpp,
                free(old_name);
                sge_switch2start_user();
                lFreeList(&alp);
-               DEXIT;
-               return -1;
+               DRETURN(-1);
             } else {
                char old_fname[SGE_PATH_MAX];
 
                if (rename(fname, real_fname) == -1) {
                   free(old_name);
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
                sprintf(old_fname, "%s/%s", local_config_dir, old_name);
                if (!sge_unlink(NULL, old_fname)) {
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
             }
          }
@@ -1225,8 +1178,7 @@ int read_all_configurations(lList **lpp,
 
    closedir(dir);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 

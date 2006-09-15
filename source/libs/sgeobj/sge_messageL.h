@@ -50,6 +50,7 @@ enum {
 };
 
 LISTDEF(SME_Type)
+   JGDI_ROOT_OBJ(JobSchedulingInfo, SGE_JOB_SCHEDD_INFO_LIST, /* ADD | MODIFY | DELETE | */ GET )
    SGE_LIST(SME_message_list, MES_Type, CULL_DEFAULT)         /* MES_Type */
    SGE_LIST(SME_global_message_list, MES_Type, CULL_DEFAULT)  /* MES_Type */
 LISTEND 
@@ -71,6 +72,7 @@ enum {
 };
 
 LISTDEF(MES_Type)
+   JGDI_OBJ(JobSchedulingMessage)
    SGE_LIST(MES_job_number_list, ULNG_Type, CULL_DEFAULT)
    SGE_ULONG(MES_message_number, CULL_DEFAULT)
    SGE_STRING(MES_message, CULL_DEFAULT)

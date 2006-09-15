@@ -87,6 +87,7 @@ enum {
 };
 
 LISTDEF(RDE_Type)
+   JGDI_OBJ(ResourceDiagramEntry)
    SGE_ULONG(RDE_time, CULL_DEFAULT)
    SGE_DOUBLE(RDE_amount, CULL_DEFAULT)
 LISTEND 
@@ -165,6 +166,7 @@ enum {
 };
 
 LISTDEF(RUE_Type)
+   JGDI_OBJ(ResourceUtilization)
    SGE_STRING(RUE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)
    SGE_DOUBLE(RUE_utilized_now, CULL_DEFAULT)
    SGE_LIST(RUE_utilized, RDE_Type, CULL_DEFAULT)

@@ -51,6 +51,7 @@ enum {
 };
 
 LISTDEF(QIM_Type)
+   JGDI_OBJ(QueueInstanceMessage)
    SGE_ULONG(QIM_type, CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(QIM_message, CULL_DEFAULT | CULL_SPOOL)
 LISTEND

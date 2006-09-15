@@ -148,7 +148,7 @@ LISTDEF(JO_Type)
    SGE_ULONG(JO_ja_task_ID, CULL_DEFAULT)   /* job array task id */
    SGE_STRING(JO_task_id_str, CULL_DEFAULT) /* task ID string */
    SGE_ULONG(JO_state, CULL_DEFAULT)        /* job state (JL_JOB_*) */
-   SGE_LIST(JO_usage_list, UA_Type, CULL_DEFAULT)    /* ptf interval usage */
+   SGE_MAP(JO_usage_list, UA_Type, CULL_DEFAULT)    /* ptf interval usage */
    SGE_LIST(JO_pid_list, JP_Type, CULL_DEFAULT)      /* process ID list */
 LISTEND 
 

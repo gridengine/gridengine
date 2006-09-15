@@ -584,32 +584,32 @@ spool_classic_default_list_func(lList **answer_list,
 
    switch (object_type) {
       case SGE_TYPE_ADMINHOST:
-         if (sge_read_adminhost_list_from_disk(list, ADMINHOST_DIR) != 0) {
+         if (sge_read_adminhost_list_from_disk(list, ADMINHOST_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_EXECHOST:
-         if (sge_read_exechost_list_from_disk(list, EXECHOST_DIR) != 0) {
+         if (sge_read_exechost_list_from_disk(list, EXECHOST_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_SUBMITHOST:
-         if (sge_read_submithost_list_from_disk(list, SUBMITHOST_DIR) != 0) {
+         if (sge_read_submithost_list_from_disk(list, SUBMITHOST_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_CALENDAR:
-         if (sge_read_cal_list_from_disk(list, CAL_DIR) != 0) {
+         if (sge_read_cal_list_from_disk(list, CAL_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_CKPT:
-         if (sge_read_ckpt_list_from_disk(list, CKPTOBJ_DIR) != 0) {
+         if (sge_read_ckpt_list_from_disk(list, CKPTOBJ_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_CENTRY:
-         if (read_all_centries(list, CENTRY_DIR) != 0) {
+         if (read_all_centries(list, CENTRY_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
@@ -626,7 +626,8 @@ spool_classic_default_list_func(lList **answer_list,
                                 lGetString(rule, SPR_url), CONF_FILE);
             sge_dstring_sprintf(&dir_name, "%s/%s",
                                 lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-            if (read_all_configurations(list,
+            if (read_all_configurations(answer_list,
+                                        list,
                                         sge_dstring_get_string(&file_name), 
                                         sge_dstring_get_string(&dir_name)) 
                 != 0) {
@@ -671,17 +672,17 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_PE:
-         if (sge_read_pe_list_from_disk(list, PE_DIR) != 0) {
+         if (sge_read_pe_list_from_disk(list, PE_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_PROJECT:
-         if (sge_read_project_list_from_disk(list, PROJECT_DIR) != 0) {
+         if (sge_read_project_list_from_disk(list, PROJECT_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_CQUEUE:
-         if (sge_read_cqueue_list_from_disk(list, CQUEUE_DIR) != 0) {
+         if (sge_read_cqueue_list_from_disk(list, CQUEUE_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
@@ -702,12 +703,12 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_USER:
-         if (sge_read_user_list_from_disk(list, USER_DIR) != 0) {
+         if (sge_read_user_list_from_disk(list, USER_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_USERSET:
-         if (sge_read_userset_list_from_disk(list, USERSET_DIR) != 0) {
+         if (sge_read_userset_list_from_disk(list, USERSET_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
@@ -724,7 +725,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_LIRS:
-         if (sge_read_limit_rule_set_list_from_disk(list, LIMITRULESETS_DIR) != 0) {
+         if (sge_read_limit_rule_set_list_from_disk(list, LIMITRULESETS_DIR, answer_list) != 0) {
             ret = false;
          }
          break;

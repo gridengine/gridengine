@@ -110,26 +110,16 @@ int user        /* =1 user, =0 project */
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (!ep) {
       CRITICAL((SGE_EVENT, MSG_RWUSERPRJ_EPISNULLNOUSERORPROJECTELEMENT));
-      if (!alpp) {
-         SGE_EXIT(1);
-      } else {
-         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
-      }
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DRETURN(-1);
    }
 
    if (fname) {
       strcpy(filename, fname);
       if (!(fp = fopen(filename, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
-         if (!alpp) {
-            SGE_EXIT(1);
-         } else {
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
-         }
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
       }
    } else {
       fp = fpout;
@@ -245,14 +235,12 @@ int user        /* =1 user, =0 project */
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 
 FPRINTF_ERROR:
 FCLOSE_ERROR:
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR); 
-   DEXIT;
-   return -1;   
+   DRETURN(-1);   
 }
 
 /****
@@ -280,20 +268,17 @@ int parsing_type
 
    /* --------- UP_name */
    if (!set_conf_string(alpp, clpp, fields, "name", ep, UP_name)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- UP_oticket */
    if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, UP_oticket)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- UP_fshare */
    if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, UP_fshare)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* --------- UP_default_project */
@@ -301,16 +286,14 @@ int parsing_type
 
       if (!set_conf_string(alpp, clpp, fields, "default_project", ep,
              UP_default_project)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       NULL_OUT_NONE(ep, UP_default_project);
 
 #if defined(allow_delete_time_modification)
       if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
                UP_delete_time)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 #endif
    }
@@ -325,8 +308,7 @@ int parsing_type
       if (user) {
          if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
                   UP_delete_time)) {
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
       }
 #endif
@@ -334,22 +316,19 @@ int parsing_type
       /* --------- UP_usage */
       if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
                UP_usage, UA_Type, intprt_as_usage)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       /* --------- UP_usage_time_stamp */
       if (!set_conf_ulong(alpp, clpp, fields, "usage_time_stamp", ep, 
                UP_usage_time_stamp)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       /* --------- UP_long_term_usage */
       if (!set_conf_deflist(alpp, clpp, fields, "long_term_usage", ep, 
                UP_long_term_usage, UA_Type, intprt_as_usage)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       if ((sclp=get_conf_sublist(fields?NULL:alpp, *clpp, CF_name,
@@ -372,24 +351,21 @@ int parsing_type
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
                          ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
                add_nm_to_set(fields, UPP_name);
 
                /* --------- UPP_usage */
                if (!set_conf_deflist(alpp, &ssclp, fields, "usage", upp, 
                         UPP_usage, UA_Type, intprt_as_usage)) {
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
 
                /* --------- UPP_long_term_usage */
                if (!set_conf_deflist(alpp, &ssclp, fields,
                          "long_term_usage", upp, UPP_long_term_usage,
                          UA_Type, intprt_as_usage)) {
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
 
                if (ssclp)
@@ -403,8 +379,7 @@ int parsing_type
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_INVALIDPROJECTX_S, name));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
                          ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return -1;
+                  DRETURN(-1);
                }
 
             }
@@ -435,14 +410,12 @@ int parsing_type
    if (!user) {
       /* --------- UP_acl */
       if (!set_conf_list(alpp, clpp, fields, "acl", ep, UP_acl, US_Type, US_name)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       /* --------- UP_xacl */
       if (!set_conf_list(alpp, clpp, fields, "xacl", ep, UP_xacl, US_Type, US_name)) {
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -456,8 +429,7 @@ int parsing_type
          if (*rest != '\0') {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBWITHWRONGKEY_S, name));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
          add_nm_to_set(fields, UP_debited_job_usage);
 
@@ -465,20 +437,17 @@ int parsing_type
                                     UP_debited_job_usage, UPU_Type))) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBXTWICE_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
 
          if (!set_conf_deflist(alpp, clpp, fields, name, upu, 
                   UPU_old_usage_list, UA_Type, intprt_as_usage)) {
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****
@@ -499,8 +468,7 @@ int *tag
 
    ep = read_object(dirname, filename, spool, user, 0,&args, tag?tag:&intern_tag, NULL);
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 
@@ -567,7 +535,7 @@ int main(int argc, char *argv[])
    alp = lFreeList(alp);
 
    DCLOSE;
-   return 0;
+   DRETURN(0);
 }
 #endif
 

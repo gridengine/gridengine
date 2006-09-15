@@ -156,7 +156,7 @@ LISTDEF(JR_Type)
    SGE_ULONG(JR_failed, CULL_DEFAULT)       /* FAILED_... */
    SGE_ULONG(JR_general_failure, CULL_DEFAULT)      /* 1 -> general problem */
    SGE_STRING(JR_err_str, CULL_DEFAULT)     /* describes failure */
-   SGE_LIST(JR_usage, UA_Type, CULL_DEFAULT)         /* used resources UA_Type */
+   SGE_MAP(JR_usage, UA_Type, CULL_DEFAULT)         /* used resources UA_Type */
    SGE_ULONG(JR_job_pid, CULL_DEFAULT)      /* pid of job script */
    SGE_ULONG(JR_ckpt_arena, CULL_DEFAULT)   /* if there is a checkpoint in the arena */
    SGE_STRING(JR_pe_task_id_str, CULL_DEFAULT)

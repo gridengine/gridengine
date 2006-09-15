@@ -75,7 +75,7 @@
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
 sge_callback_result
-schedd_conf_update_master_list(object_description *object_base, sge_object_type type, 
+schedd_conf_update_master_list(void *context, object_description *object_base, sge_object_type type, 
                                sge_event_action action, lListElem *event, void *clientdata)
 {
    lList *list = NULL;

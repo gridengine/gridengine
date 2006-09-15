@@ -32,6 +32,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "cull.h"
 
 /* Definition of new names */
@@ -57,7 +58,7 @@
 #include "sge_time_eventL.h"
 #include "sge_qexecL.h"
 #include "sge_messageL.h"
-#include "sge_ja_task.h"
+#include "sge_ja_taskL.h"
 #include "sge_ctL.h"
 #include "sge_access_treeL.h"
 #include "sge_eejobL.h"

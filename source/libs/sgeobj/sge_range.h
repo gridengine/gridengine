@@ -106,7 +106,7 @@ void range_list_initialize(lList **this_list, lList **answer_list);
 
 u_long32 range_list_get_number_of_ids(const lList *this_list);
 
-void
+bool
 range_list_parse_from_string(lList **this_list, lList **answer_list,
                              const char *string, bool just_parse,
                              bool step_allowed, bool inf_allowed);

@@ -289,7 +289,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
                   if (qinstance != NULL) {
                      const char *qinstance_name = lGetString(qinstance,
                                                              QU_full_name);
-                     int threshold = lGetUlong (so, SO_threshold);
+                     int threshold = lGetUlong(so, SO_threshold);
 
                      ret = so_list_add(resolved_so_list, answer_list,
                                        qinstance_name, threshold);

@@ -306,12 +306,14 @@ spool_read_object(lList **answer_list, const lListElem *context,
 bool 
 spool_write_object(lList **answer_list, const lListElem *context, 
                    const lListElem *object, const char *key, 
-                   const sge_object_type object_type);
+                   const sge_object_type object_type,
+                   bool do_job_spooling);
 
 /* deleting */
 bool 
 spool_delete_object(lList **answer_list, const lListElem *context, 
-                    const sge_object_type object_type, const char *key);
+                    const sge_object_type object_type, const char *key,
+                    bool do_job_spooling);
 
 /* compare spooled attributes of 2 objects */
 bool

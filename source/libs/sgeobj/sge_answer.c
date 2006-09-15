@@ -208,7 +208,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
       fprintf(stderr, "%s: %s\n", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
       DEXIT;
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 }
 
@@ -874,7 +874,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
    bool ret = false;
    lListElem *answer;   /* AN_Type */
 
-   DENTER(ANSWER_LAYER, "answer_list_output");
+   DENTER(ANSWER_LAYER, "answer_list_log");
 
    if (answer_list != NULL && *answer_list != NULL) {
       for_each(answer, *answer_list) {

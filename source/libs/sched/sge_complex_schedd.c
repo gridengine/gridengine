@@ -173,8 +173,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){
             /* error */
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          lSetUlong(cplx_el, CE_dominant, layer | DOMINANT_TYPE_FIXED);
          lSetUlong(cplx_el, CE_pj_dominant, DOMINANT_TYPE_VALUE);  /* default, no value set */ 
@@ -213,8 +212,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          } else{
             sge_dstring_sprintf(reason, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S, attrname);
             lFreeElem(&cplx_el);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       } else{
          lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el, CE_doubleval)); 
@@ -234,9 +232,8 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
                if(!cplx_el){
-                  DEXIT;
                   /* error */
-                  return NULL;
+                  DRETURN(NULL);
                }         
             lSetUlong(cplx_el, CE_dominant, DOMINANT_TYPE_VALUE);
             lSetUlong(cplx_el, CE_pj_dominant, DOMINANT_TYPE_VALUE);
@@ -341,9 +338,8 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       if(!cplx_el){
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){
-            DEXIT;
             /* error */
-            return NULL;
+            DRETURN(NULL);
          }         
          lSetUlong(cplx_el, CE_dominant, DOMINANT_TYPE_VALUE);
          lSetUlong(cplx_el, CE_pj_dominant, DOMINANT_TYPE_VALUE);
@@ -352,8 +348,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       if (!get_queue_resource(cplx_el, queue, attrname) && created)
          lFreeElem(&cplx_el);
    }
-   DEXIT;
-   return cplx_el;
+   DRETURN(cplx_el);
 }
 
 
@@ -389,7 +384,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
 
       if(!queue_elem){
          /* error */
-         return false;
+         DRETURN(false);
       }
 
       { /* test, if its a valid queue resource */
@@ -402,8 +397,7 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
                
          if(!found){
             DPRINTF(("is not a system queue attribute: %s\n", attrname));
-            DEXIT;
-            return false;            
+            DRETURN(false);
          }
       }
 
@@ -497,23 +491,21 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el){
 
    /* the order is important must not be changed */   
    if(!upper_el){
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
    if(!lower_el){
-      DEXIT;
-      return true;
+      DRETURN(true);
    }
 
    relop = lGetUlong(upper_el, CE_relop);
    if ((relop == CMPLXEQ_OP || relop == CMPLXNE_OP)) {
-      DEXIT;
-      return true;
+      DRETURN(true);
   }
 
    /* if both elements are the same, than I can not say which one is more important */
-   if(upper_el == lower_el)
-      return false;
+   if(upper_el == lower_el) {
+      DRETURN(false);
+   }   
 
    if ((dom = lGetUlong(upper_el, CE_pj_dominant)) == 0 || (dom & DOMINANT_TYPE_VALUE) ){
       used_dom_val = CE_doubleval;
@@ -550,8 +542,7 @@ bool is_attr_prior(lListElem *upper_el, lListElem *lower_el){
       ret = upper_value <= lower_value ? true : false;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_complex_schedd/is_attr_prior2() ************************************
@@ -592,14 +583,12 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    DENTER(BASIS_LAYER, "is_attr_prior2");
 
    if ((dom = lGetUlong(upper_el, t_dominant)) == 0 || (dom & DOMINANT_TYPE_VALUE) ){
-      DEXIT; 
-      return false;
+      DRETURN(false);
    }
 
    relop = lGetUlong(upper_el, CE_relop);
    if ((relop == CMPLXEQ_OP || relop == CMPLXNE_OP)) {
-      DEXIT;
-      return true;
+      DRETURN(true);
    }
 
    upper_value = lGetDouble(upper_el, t_value); 
@@ -609,8 +598,7 @@ static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value,
    } else {
       ret = upper_value <= lower_value ? true : false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* provide a list of attributes containing all global attributes */
@@ -624,8 +612,7 @@ lList *centry_list
    lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(global_host, NULL, NULL, centry_list);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -645,8 +632,7 @@ lList *centry_list
    lFreeList(new_centry_list);
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), host, NULL, centry_list);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /**********************************************************************
@@ -669,8 +655,7 @@ const lList *centry_list
    *new_centry_list = get_attribute_list(host_list_locate(exechost_list, "global"), 
                                          queue ? host_list_locate(exechost_list, lGetHost(queue, QU_qhostname)) : NULL, 
                                          queue, centry_list);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sge_complex_schedd/get_attribute_list_by_names() ***********************
@@ -801,8 +786,7 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    free(filter);
    filter = NULL;
    
-   DEXIT;
-   return list; 
+   DRETURN(list); 
 
 }
 
@@ -949,8 +933,7 @@ double src_dl
 
    DPRINTF((" %f %s %f -> match = %d\n", req, map_op2str(relop), src_dl, match));
 
-   DEXIT;
-   return match;
+   DRETURN(match);
 }
 
 /*********************************************************************
@@ -1030,8 +1013,7 @@ int force_existence
             name, request, dom_str, name, map_op2str(relop),
             offer, match?"ok":"no match"));
 #endif
-      DEXIT;
-      return match;
+      DRETURN(match);
 
    case TYPE_INT:
    case TYPE_TIM:
@@ -1191,15 +1173,13 @@ int force_existence
             sge_strlcpy(availability_text, "", STR_LEN_AVAIL_TEXT);
          }
       }
-      DEXIT;
-      return match;
+      DRETURN(match);
 
    default:  /* should never reach this -> undefined type */
       *availability_text = '\0';
       break;
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sge_select_queue/get_attribute_by_Name() *******************************
@@ -1310,8 +1290,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
          }
       }
    }
-   DEXIT;
-   return ret_el;
+   DRETURN(ret_el);
 }
 
 
@@ -1325,6 +1304,7 @@ gcc -Wall -DLINUX -DTEST -o complex complex.c ../LINUX/sge_parse_num_par.o ../LI
 int main(int argc, char *argv[], char *envp[])
 {
    lListElem *l;
+   lList *alp = NULL;
   
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
@@ -1341,11 +1321,23 @@ int main(int argc, char *argv[], char *envp[])
       exit(1);
    }
 
-   l = read_cmplx(argv[1], "cmplx_name", NULL);
+   l = read_cmplx(argv[1], "cmplx_name", &alp);
 
-   write_cmplx(1, argv[2], l, NULL, NULL);
+   if (answer_list_has_error(&alp)) {
+      answer_list_output(&alp);
+      DRETURN(1);
+   }
+   
 
-   return 0;
+   write_cmplx(1, argv[2], l, NULL, &alp);
+
+   if (answer_list_has_error(&alp)) {
+      answer_list_output(&alp);
+      DRETURN(1);
+   }
+
+   lFreeList(&alp);
+   DRETURN(0);
 }
 #endif
 
@@ -1371,8 +1363,7 @@ char *object_name
       DPRINTF(("got new %s\n", attr_name));
 
       if (ensure_attrib_available(alpp, qep, nm)) {
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
 
       tmp_elem = lCopyElem(new_ep); 
@@ -1381,24 +1372,21 @@ char *object_name
                               sub_command, attr_name, object_name, 0);
       if (!ret) {
          lFreeElem(&tmp_elem);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
 
       ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
                                      *centry_list_get_master_list(), true, false, false);
       if (ret) {
          lFreeElem(&tmp_elem);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
 
       lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
       lFreeElem(&tmp_elem);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -1448,8 +1436,7 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
 
       if (!(ce = lGetElemStr(centry_list, CE_name, name))) {
          sge_dstring_sprintf(unsatisfied, "unknown: "SFN, name);
-         DEXIT;
-         return true;
+         DRETURN(true);
       }
 
       /* on cluster queue level we don't deal with consumable attributes */
@@ -1510,11 +1497,9 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
          DPRINTF(("cluster queue \"%s\" will never match due to -l %s=%s\n",
             lGetString(cq, CQ_name), name, request));
          sge_dstring_sprintf(unsatisfied, SFN"="SFN, name, request);
-         DEXIT;
-         return true;
+         DRETURN(true);
       }
    }
 
-   DEXIT;
-   return false;
+   DRETURN(false);
 }

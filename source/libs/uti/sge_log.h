@@ -54,6 +54,14 @@ int             log_state_get_log_verbose(void);
 int             log_state_get_log_gui(void);
 int             log_state_get_log_as_admin_user(void);
 
+#ifdef TEST_GDI2
+void log_state_set_log_context(void *context);
+void*           log_state_get_log_context(void);
+#endif
+
+int sge_log(int log_level, const char *mesg, const char *file__, 
+            const char *func__, int line__);
+
 /* extern stringTlong SGE_EVENT; */
 #define SGE_EVENT log_get_log_buffer()
 
@@ -278,9 +286,6 @@ int             log_state_get_log_as_admin_user(void);
       abort(); \
    }
 #endif
-
-int sge_log(int log_level, const char *mesg, const char *file__, 
-            const char *func__, int line__);
 
 #endif /* __SGE_LOG_H */
 

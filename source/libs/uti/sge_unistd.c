@@ -48,6 +48,11 @@
 #include "msg_utilib.h"
 #include "sge_prog.h"
 
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 typedef enum {
    FILE_TYPE_NOT_EXISTING,
    FILE_TYPE_FILE,
@@ -108,7 +113,7 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
       if (exit_on_error) {
          CRITICAL((SGE_EVENT, MSG_FILE_CREATEDIRFAILED_SS, path_, 
                    strerror(errno)));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       } else {
          ERROR((SGE_EVENT, MSG_FILE_CREATEDIRFAILED_SS, path_, 
                 strerror(errno)));
@@ -233,7 +238,7 @@ int sge_chdir_exit(const char *path, int exit_on_error)
    if (chdir(path)) {
       if (exit_on_error) {
          CRITICAL((SGE_EVENT, MSG_FILE_NOCDTODIRECTORY_S , path));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       } else {
          ERROR((SGE_EVENT, MSG_FILE_NOCDTODIRECTORY_S , path));
          return -1;
@@ -296,18 +301,32 @@ int sge_chdir(const char *dir)
 *     Calls 'exit_func' if installed. Stops monitoring with DCLOSE 
 *
 *  INPUTS
-*     int i - exit state 
+*     void **context - address of the context, the context is freed in exit_func
+*     int i          - exit state 
 *
 *  SEE ALSO
 *     uti/unistd/sge_install_exit_func()
 ******************************************************************************/
-void sge_exit(int i) 
+void sge_exit(void **context, int i) 
 {
    sge_exit_func_t exit_func = NULL;
+   
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t **ref_ctx = (sge_gdi_ctx_class_t**)context;
+#endif   
+   
    DENTER(TOP_LAYER, "sge_exit");
+#ifdef TEST_GDI2
+   if (ref_ctx && *ref_ctx) {
+      sge_gdi_ctx_class_t *ctx = *ref_ctx;
+      exit_func = ctx->get_exit_func(ctx);
+   }   
+#else
    exit_func = uti_state_get_exit_func();
+#endif   
    if (exit_func) {
-      exit_func(i);
+      exit_func(context, i);
    }
    DEXIT;
    exit(i);
@@ -346,7 +365,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
       if (exit_on_error) {
          CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
          DCLOSE;
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       } else {
          ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
          DEXIT;
@@ -391,7 +410,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
       if (exit_on_error) {
          CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
          DCLOSE;
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       } else {
          ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
          DEXIT;

@@ -116,20 +116,21 @@ enum {
 };
 
 LISTDEF(CE_Type)
+   JGDI_ROOT_OBJ(ComplexEntry, SGE_CENTRY_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)          /* full name of attribute */
-   SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
-   SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */
+   SGE_STRING_D(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "NONE")      /* shortcut name of attribute */
+   SGE_ULONG_D(CE_valtype, CULL_DEFAULT | CULL_SPOOL, TYPE_INT)        /* type */
    SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST)     /* non overwritten value */
-   SGE_DOUBLE(CE_doubleval, CULL_DEFAULT)    /* parsed CE_stringval */
+   SGE_DOUBLE(CE_doubleval, CULL_DEFAULT | CULL_JGDI_HIDDEN)    /* parsed CE_stringval */
    SGE_ULONG(CE_relop, CULL_DEFAULT | CULL_SPOOL)          /* relational operator */
    SGE_BOOL(CE_consumable, CULL_DEFAULT | CULL_SPOOL)      /* flag consumable */
    SGE_STRING(CE_default, CULL_DEFAULT | CULL_SPOOL)      /* default request for consumable */
-   SGE_ULONG(CE_dominant, CULL_DEFAULT)      /* monitoring facility */
-   SGE_STRING(CE_pj_stringval, CULL_DEFAULT) /* per job string value */
-   SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */
-   SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
+   SGE_ULONG(CE_dominant, CULL_DEFAULT | CULL_JGDI_HIDDEN)      /* monitoring facility */
+   SGE_STRING(CE_pj_stringval, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* per job string value */
+   SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* per job parsed CE_stringval */
+   SGE_ULONG(CE_pj_dominant, CULL_DEFAULT | CULL_JGDI_HIDDEN)   /* per job monitoring facility */
    SGE_ULONG(CE_requestable, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(CE_tagged, CULL_DEFAULT)        /* used to tag resource request, which can be fulfilled */
+   SGE_ULONG(CE_tagged, CULL_DEFAULT | CULL_JGDI_HIDDEN)        /* used to tag resource request, which can be fulfilled */
    SGE_STRING(CE_urgency_weight, CULL_DEFAULT|CULL_SPOOL) /* static weighting factor */
 LISTEND 
 

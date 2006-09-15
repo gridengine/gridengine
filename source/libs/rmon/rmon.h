@@ -45,10 +45,30 @@ int  rmon_is_enabled(void);
 void rmon_mopen(int *argc, char *argv[], char *programname);
 void rmon_menter(const char *func);
 void rmon_mtrace(const char *func, const char *file, int line);
-void rmon_mprintf(const char *fmt, ...);
+void rmon_mprintf(int debug_class, const char *fmt, ...);
 void rmon_mexit(const char *func, const char *file, int line);
 void rmon_debug_client_callback(int dc_connected, int debug_level);
 void rmon_set_print_callback(rmon_print_callback_func_t function_p);
+
+void rmon_mprintf_lock(const char* fmt, ...);
+void rmon_mprintf_info(const char* fmt, ...);
+void rmon_mprintf_timing(const char* fmt, ...);
+void rmon_mprintf_special(const char* fmt, ...);
+
+typedef struct rmon_ctx_str rmon_ctx_t;
+
+struct rmon_ctx_str {
+  void *ctx;
+  
+  int  (*is_loggable)(rmon_ctx_t *ctx, int layer, int debug_class);
+  void (*menter)(rmon_ctx_t *ctx, const char* func);
+  void (*mexit)(rmon_ctx_t *ctx, const char* func, const char *file, int line);
+  void (*mtrace)(rmon_ctx_t *ctx, const char *func, const char *file, int line);
+  void (*mprintf)(rmon_ctx_t *ctx, int debug_class, const char* fmt, va_list args);
+};
+
+void rmon_set_thread_ctx(rmon_ctx_t* ctx);
+rmon_ctx_t* rmon_get_thread_ctx(void);
 
 #define __CONDITION(x) rmon_condition(TOP_LAYER, x)
 

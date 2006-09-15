@@ -47,6 +47,7 @@ enum {
 };
 
 LISTDEF(ST_Type)
+   JGDI_PRIMITIVE_OBJ(ST_name)
    /* misc setup variables */
    /* JG: TODO: ST_name is not really a primary key! 
     * we have to check all uses of ST_Type and replace it by a new
@@ -69,6 +70,7 @@ enum {
 };
 
 LISTDEF(STU_Type)
+   JGDI_PRIMITIVE_OBJ(STU_name)
    SGE_STRING(STU_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 

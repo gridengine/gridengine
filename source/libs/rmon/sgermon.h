@@ -53,7 +53,7 @@
       rmon_menter (SGE_FUNC)
 
 #define DRETURN(ret)                            \
-   if (rmon_condition(xaybzc, TRACE))           \
+   if (rmon_condition(xaybzc, TRACE))         \
       rmon_mexit(SGE_FUNC, __FILE__, __LINE__); \
    return ret
 
@@ -72,19 +72,19 @@
 
 #define DLOCKPRINTF(msg)             \
    if (rmon_condition(xaybzc, LOCK)) \
-      rmon_mprintf msg
+      rmon_mprintf_lock msg
 
 #define DPRINTF(msg)                        \
    if (rmon_condition(xaybzc, INFOPRINT))   \
-      rmon_mprintf msg
+      rmon_mprintf_info msg
 
 #define DTIMEPRINTF(msg)                \
    if (rmon_condition(xaybzc, TIMING))  \
-      rmon_mprintf msg
+      rmon_mprintf_timing msg
 
 #define DSPECIALPRINTF(msg)              \
    if (rmon_condition(xaybzc, SPECIAL))  \
-      rmon_mprintf msg
+      rmon_mprintf_special msg
 
 #define ISTRACE (rmon_condition(xaybzc, TRACE))
 
@@ -92,7 +92,7 @@
 
 #define DCLOSE
 
-#define SGE_EXIT(x) sge_exit(x)
+#define SGE_EXIT(x, y) sge_exit((x), (y))
 
 #else /* NO_SGE_COMPILE_DEBUG */
 
@@ -109,7 +109,7 @@
 #define DCLOSE
 #define TRACEON
 #define ISTRACE
-#define SGE_EXIT(x)     sge_exit(x)
+#define SGE_EXIT(x, y)     sge_exit((x), (y))
 
 #endif /* NO_SGE_COMPILE_DEBUG */
 

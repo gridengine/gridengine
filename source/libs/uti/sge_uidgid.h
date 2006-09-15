@@ -71,6 +71,7 @@ int sge_user2uid(const char *user, uid_t *puid, gid_t *pgid, int retries);
 int sge_group2gid(const char *gname, gid_t *gidp, int retries);
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries); 
 int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries);
+int _sge_gid2group(gid_t gid, gid_t *last_gid, char **grpnamep, int retries);
 int sge_add_group(gid_t newgid, char *err_str); 
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, 

@@ -39,7 +39,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "basis_types.h"
-#include "sge_string.h"
 #include "err_trace.h"
 #include "sge_parse_num_par.h"
 #include "config_file.h"

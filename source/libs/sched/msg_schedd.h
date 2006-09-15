@@ -190,7 +190,7 @@
 #define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling"))
 #define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _MESSAGE(47199, _("host "SFQ" must be an admin host for scheduling"))
 #define MSG_SCHEDD_SCHEDD_ABORT_BY_USER                     _MESSAGE(47200, _("abort by user"))
-#define MSG_SCHEDD_ALRADY_RUNNING                           _MESSAGE(47201, _("scheduler already running"))
+#define MSG_SCHEDD_ALREADY_RUNNING                          _MESSAGE(47201, _("scheduler already running"))
 
 #define MSG_SCHEDD_CANTINSTALLALGORITHMXUSINGDEFAULT_S      _MESSAGE(47202, _("can't install scheduling algorithm "SFQ" - using \"default\" algorithm"))
 #define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47203, _("<unknown>"))

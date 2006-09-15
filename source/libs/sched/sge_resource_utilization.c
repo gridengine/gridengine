@@ -142,8 +142,7 @@ void utilization_print_all(const lList* pe_list, lList *host_list, const lList *
    }
    DPRINTF(("-------------------------------------------\n"));
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 void utilization_print(const lListElem *cr, const char *object_name) 
@@ -161,8 +160,7 @@ void utilization_print(const lListElem *cr, const char *object_name)
 #endif
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
@@ -224,8 +222,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
 
 #ifndef MODULE_TEST_SGE_RESOURCE_UTILIZATION
    if (sconf_get_max_reservations()==0 || duration==0) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 #endif
 
@@ -286,8 +283,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
 #endif
 
    utilization_normalize(resource_diagram);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* 
@@ -342,8 +338,6 @@ static void utilization_normalize(lList *diagram)
       else
          util_prev = lGetDouble(this, RDE_amount);
    }
-
-   return;
 }
 
 /****** sge_resource_utilization/utilization_queue_end() ***********************
@@ -410,8 +404,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 
    /* someone is asking for the current utilization */
    if (start_time == DISPATCH_TIME_NOW) {
-      DEXIT;
-      return lGetDouble(cr, RUE_utilized_now);
+      DRETURN(lGetDouble(cr, RUE_utilized_now));
    }
    
 #if 0
@@ -439,8 +432,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
       rde = lNext(rde);
    }
 
-   DEXIT;
-   return max; 
+   DRETURN(max); 
 }
 
 /****** sge_resource_utilization/utilization_below() ***************************
@@ -497,8 +489,7 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
          max_util, util, when));
    }
 
-   DEXIT;
-   return when; 
+   DRETURN(when); 
 }
 
 
@@ -661,16 +652,14 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       ERROR((SGE_EVENT, "rc_add_job_utilization NULL object "
             "(job "sge_u32" obj %s type %s) slots %d ep %p\n", 
             lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    if (!slots) {
       ERROR((SGE_EVENT, "rc_add_job_utilization 0 slot amount "
             "(job "sge_u32" obj %s type %s) slots %d ep %p\n", 
             lGetUlong(jep, JB_job_number), obj_name, type, slots, ep));
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for_each (cr_config, lGetList(ep, config_nm)) {
@@ -680,8 +669,7 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       /* search default request */  
       if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         DEXIT; 
-         return -1;
+         DRETURN(-1);
       } 
 
       if (!lGetBool(dcep, CE_consumable)) {

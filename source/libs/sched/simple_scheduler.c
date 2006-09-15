@@ -63,6 +63,11 @@
 #include "sge_event_client.h"
 #include "sge_event.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#include "sge_event_client2.h"
+#endif
+
 /* examples for retrieving information from SGE's master lists */
 static void print_load_value(lListElem *host, const char *name, const char *format);
 static void get_cluster_info(void);
@@ -70,17 +75,24 @@ static void get_workload_info(void);
 static void get_policy_info(void);
 
 /* implementation of a simple job scheduler */
-static int remove_finished_job(sge_object_type type, sge_event_action action, 
-                               lListElem *event, void *clientdata);
-static int queue_get_free_slots(lListElem *queue);
-static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_long32 *procs);
-static void simple_scheduler(void);
-static void delete_some_jobs(void);
+static sge_callback_result remove_finished_job(void *evc_context, 
+                                object_description *object_base, 
+                                sge_object_type type, 
+                                sge_event_action action, 
+                                lListElem *event, 
+                                void *clientdata);
+/* static int queue_get_free_slots(lListElem *queue); */
+/* static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_long32 *procs); */
+static void simple_scheduler(void *evc_context);
+/* static void delete_some_jobs(void *context); */
 
 
-static bool remove_finished_job(sge_object_type type, sge_event_action action, 
-                               lListElem *event, void *clientdata)
+static sge_callback_result remove_finished_job(void *evc_context, object_description *object_base, 
+                                sge_object_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata)
 {
+   DENTER(TOP_LAYER, "remove_finished_job");
+
    /* if we get a final usage event for a ja_task,
     * we have to send a job delete order to qmaster
     */
@@ -96,14 +108,15 @@ static bool remove_finished_job(sge_object_type type, sge_event_action action,
          DPRINTF(("got final usage for job %s\n", 
                   job_get_id_string(job_id, ja_task_id, NULL)));
 
-         job = job_list_locate(object_type_get_master_list_mt(SGE_TYPE_JOB), job_id);
+         job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
          ja_task = job_search_task(job, NULL, ja_task_id);
 
          order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL, false);
-         sge_send_orders2master(order_list);
+         sge_send_orders2master(evc_context, &order_list);
       }
    }
    
+   DEXIT;
    return true;
 }
 
@@ -130,7 +143,7 @@ static void get_cluster_info()
           "mem_total", "mem_free", "swap_total", "swap_free", "disk_total", "disk_free");
 
    /* loop over all exec hosts and output information */
-   for_each(host, object_type_get_master_list_mt(SGE_TYPE_EXECHOST)) {
+   for_each(host, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {
       const char *name = lGetHost(host, EH_name);
       printf("%-20s", name);
 
@@ -163,10 +176,10 @@ static void get_workload_info()
    printf("\n");
 
    /* loop over all jobs and output information */
-   for_each(job, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
       u_long32 job_id, procs;
       const char *user, *group, *pe;
-      lListElem *ja_task, *range, *ep;
+      lListElem *ja_task, *range;
       time_t start_time;
       double wclock = 0.0;
 
@@ -174,10 +187,13 @@ static void get_workload_info()
       job_id = lGetUlong(job, JB_job_number);
       user   = lGetString(job, JB_owner);
       group  = lGetString(job, JB_group);
+#if 0      
+      /* TODO: this doesnt work anymore */
       ep     = queue_or_job_get_states(job, "h_rt");
       if(ep != NULL) {
          wclock = lGetDouble(ep, CE_doubleval);
       }
+#endif      
 
       /* parallel processing.
        * SGE supports (multiple) ranges, build maximum
@@ -268,12 +284,14 @@ static void get_workload_info()
 
 static void get_policy_info()
 {
-   lListElem *pe;
 
    printf("%-15s %7s %-15s %s\n", "pe", "procs", "rule", "hosts");
 
+#if 0
+   lListElem *pe;
+
    /* output information for all parallel environments */
-   for_each(pe, object_type_get_master_list_mt(SGE_TYPE_PE)) {
+   for_each(pe, *object_type_get_master_list(SGE_TYPE_PE)) {
       const char *name, *allocation_rule;
       int procs; 
       lListElem *queue_ref;
@@ -287,7 +305,7 @@ static void get_policy_info()
       procs = lGetUlong(pe, PE_slots);
       allocation_rule = lGetString(pe, PE_allocation_rule);
 
-#if 0 /* TODO: PE <-> Queue relation is stored in Queue object */
+      /* TODO: PE <-> Queue relation is stored in Queue object */
       /* build a hostslist.
        * SGE pe's have a queuelist which may contain the keyword "all".
        * get the hostnames from the queues.
@@ -312,7 +330,6 @@ static void get_policy_info()
             }
          }
       }
-
       /* build a string containing all hosts */
       for_each(host, host_list) {
          sge_dstring_append(&hosts, lGetString(host, STR));
@@ -327,13 +344,16 @@ static void get_policy_info()
       sge_dstring_free(&hosts);
       lFreeList(&host_list);
    }
+#endif
+
 }
 
 static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
+#if 0
    lListElem *sjob;
 
    /* find a pending job */
-   for_each(sjob, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(sjob, *object_type_get_master_list(SGE_TYPE_JOB)) {
       lListElem *range;
 
       /* find non enrolled, pending ja_task_id */
@@ -352,14 +372,16 @@ static bool find_pending_ja_task(lListElem **job, lListElem **ja_task) {
          }
       }   
    }
+#endif   
 
    /* no pending job found */
    return false;
 }
 
+#if 0
 static int queue_get_free_slots(lListElem *queue)
 {
-   int slots;
+   int slots = 0;
    const char *name;
    lListElem *job;
 
@@ -407,15 +429,18 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
       lSetUlong(granted_queue, JG_slots, slots);
    }
 }
+#endif
 
-static void simple_scheduler()
+static void simple_scheduler(void *evc_context)
 {
-   lListElem *job, *ja_task, *queue;
+   lListElem *job, *ja_task;
    const char *pe_name;
    lListElem *pe = NULL;
    u_long32 procs = 1;
    lList *allocated_queues = NULL; /* JG_Type */
   
+   DENTER(TOP_LAYER, "simple_scheduler");
+
    /* find a pending job */
    if(!find_pending_ja_task(&job, &ja_task)) {
       return;
@@ -431,7 +456,7 @@ static void simple_scheduler()
    pe_name = lGetString(job, JB_pe);
    if(pe_name != NULL) {
       lListElem *range;
-      pe = lGetElemStr(object_type_get_master_list_mt(SGE_TYPE_PE), PE_name, pe_name);
+      pe = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PE), PE_name, pe_name);
       for_each(range, lGetList(job, JB_pe_range)) {
          procs = MAX(procs, lGetUlong(range, RN_max));
       }
@@ -474,6 +499,7 @@ static void simple_scheduler()
    if(procs > 0) {
       DPRINTF(("job could not be scheduled\n"));
       lFreeList(&allocated_queues);
+      DEXIT;
       return;
    }
 
@@ -501,14 +527,17 @@ static void simple_scheduler()
 
          sprintf(id, sge_U32CFormat"."sge_U32CFormat, sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(lGetUlong(ja_task, JAT_task_number)));
 
-         sge_ssi_job_start(id, pe_name, map);
+         sge_ssi_job_start(evc_context, id, pe_name, map);
 
          free(map);
       }   
    }
+
+   DEXIT;
 }
 
-static void delete_some_jobs()
+#if 0
+static void delete_some_jobs(void *evc_context)
 {
    /* delete jobs running longer than 2 minutes
     * to test the sge_ssi_job_cancel function 
@@ -516,67 +545,115 @@ static void delete_some_jobs()
    lListElem *job; 
    u_long32 now = sge_get_gmt();
 
-   for_each(job, object_type_get_master_list_mt(SGE_TYPE_JOB)) {
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
       lListElem *ja_task;
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
          if((lGetUlong(ja_task, JAT_start_time) + 120) < now) {
             char id[100];
             sprintf(id, sge_U32CFormat"."sge_U32CFormat, 
                     sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(lGetUlong(ja_task, JAT_task_number)));
-            sge_ssi_job_cancel(id, false);
+            sge_ssi_job_cancel(evc_context, id, false);
          }
       }
    }
 }
+#endif
 
-static bool register_scheduler()
+static lListElem* register_scheduler(void *evc_context)
 {
-   int cl_err = 0;
-   lList *alp = NULL;
+   lListElem *event_client = NULL;
+#ifdef TEST_GDI2   
+   sge_evc_class_t *evc = (sge_evc_class_t*)evc_context;
+#endif   
 
    DENTER(TOP_LAYER, "register_scheduler");
 
-   /* register at commd */
-   sge_gdi_param(SET_MEWHO, QSCHED, NULL);
-   if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
-      answer_list_output(&alp);
-      DEXIT;
-      return false;
-   }
-
-   /* setup signal handlers */
-   sge_setup_sig_handlers(QSCHED);
-
-   /* hostname resolving check */
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      DEXIT;
-      return false;
-   }
-
    /* initialize mirroring interface */
-   sge_mirror_initialize(EV_ID_SCHEDD, "simple_scheduler");
-   sge_mirror_subscribe(SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
+#ifdef TEST_GDI2   
+   sge_mirror_initialize(evc_context, EV_ID_SCHEDD, "simple_scheduler", true);
+   event_client = evc->ec_get_event_client(evc);
+   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
 
    /* in an sgeee system we have to explicitly remove finished jobs 
     * from qmaster 
     */
-   sge_mirror_subscribe(SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(event_client, SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
+#else
+   sge_mirror_initialize(NULL, EV_ID_SCHEDD, "simple_scheduler", true);
+   event_client = ec_get_event_client();
+   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
 
-   return true;
+   /* in an sgeee system we have to explicitly remove finished jobs 
+    * from qmaster 
+    */
+   sge_mirror_subscribe(event_client, SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
+#endif
+
+   return event_client;
 }
 
 int main(int argc, char *argv[])
 {
+   lListElem *event_client = NULL;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = NULL;
+   sge_evc_class_t *evc = NULL;
+   sge_error_class_t *eh = NULL;
+#else
+   void *ctx = NULL;
+   void *evc = NULL;
+#endif
+
    DENTER_MAIN(TOP_LAYER, "simple_scheduler");
 
-   if(!register_scheduler()) {
+   /* setup signal handlers */
+   sge_setup_sig_handlers(QSCHED);
+
+#ifdef TEST_GDI2
+   eh = sge_error_class_create();
+   if (!eh) {
+      fprintf(stderr, "couldn't create error handler\n");
+      SGE_EXIT(1);
+   }   
+
+   if (sge_gdi2_setup(&ctx, SCHEDD, eh) != AE_OK) {
+      showError(eh);
+      sge_error_class_destroy(&eh);
+      SGE_EXIT(1);
+   }
+
+   if (ctx && (ctx->reresolve_qualified_hostname(ctx) != CL_RETVAL_OK)) {
+      SGE_EXIT(1);
+   }   
+
+   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, eh); 
+
+   if (evc == NULL) {
+      showError(eh);
+   }
+
+#else
+   /* register at commd */
+   sge_gdi_param(SET_MEWHO, QSCHED, NULL);
+   if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT(1);
+   }
+   /* hostname resolving check */
+   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+      SGE_EXIT(1);
+   }
+#endif
+
+   event_client = register_scheduler(evc);
+   if (event_client == NULL) {
       SGE_EXIT(EXIT_FAILURE);
    }
 
    /* do processing until shutdown is requested */
    while(!shut_me_down) {
       /* get data */
-      sge_mirror_process_events();
+      sge_mirror_process_events(evc, event_client);
 
       if(!shut_me_down) {
          /* output some info */
@@ -584,12 +661,12 @@ int main(int argc, char *argv[])
          get_policy_info();
          get_workload_info();
 
-         /* schedule jobs -> test sge_ssi_job_start() */
-         simple_scheduler();
+         /* schedule jobs -> test sge_ssi_job_start(evc) */
+         simple_scheduler(evc);
 /*          sleep(60); */
          
-         /* test sge_ssi_job_cancel() */
-/*          delete_some_jobs(); */
+         /* test sge_ssi_job_cancel(evc) */
+/*          delete_some_jobs(evc); */
       }
    }
    

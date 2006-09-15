@@ -251,7 +251,7 @@ error:
 
    DEXIT;
    if (do_exit) {
-      SGE_EXIT(1);   
+      SGE_EXIT(NULL, 1);   
    }
    return NULL;
 }
@@ -341,13 +341,13 @@ const char *sge_get_alias_path(void)
 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(ALIAS_FILE) + 5;
    if (!(cp = malloc(len))) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOHOSTALIASFILE ));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE);

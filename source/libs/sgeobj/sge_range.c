@@ -189,8 +189,7 @@ static void expand_range_list(lListElem *r, lList **rl)
       lAppendElem(*rl, r);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_correct_end() **************************************
@@ -237,7 +236,7 @@ void range_correct_end(lListElem *this_range)
       }
       range_set_all_ids(this_range, start, end, step);
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_is_overlapping() ***********************************
@@ -286,8 +285,7 @@ static bool range_is_overlapping(const lListElem *this_elem,
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_list_initialize() **********************************
@@ -339,7 +337,7 @@ void range_list_initialize(lList **this_list, lList **answer_list)
          }
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_get_number_of_ids() ***************************
@@ -377,8 +375,7 @@ u_long32 range_list_get_number_of_ids(const lList *this_list)
    for_each(range, this_list) {
       ret += range_get_number_of_ids(range);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_get_number_of_ids() ********************************
@@ -411,8 +408,7 @@ u_long32 range_get_number_of_ids(const lListElem *this_elem)
    DENTER(RANGE_LAYER, "range_get_number_of_ids");
    range_get_all_ids(this_elem, &start, &end, &step);
    ret = 1 + (end - start) / step;
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_list_print_to_string() *****************************
@@ -459,7 +455,7 @@ range_list_print_to_string(const lList *this_list,
          sge_dstring_append(string, "UNDEFINED");
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_get_first_id() ********************************
@@ -506,8 +502,7 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
       answer_list_add(answer_list, "range_list containes no elements",
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
-   DEXIT;
-   return start;
+   DRETURN(start);
 }
 
 /****** sgeobj/range/range_list_get_last_id() *********************************
@@ -549,8 +544,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
       answer_list_add(answer_list, "range_list containes no elements",
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
-   DEXIT;
-   return end;
+   DRETURN(end);
 }
 
 /****** sgeobj/range/range_list_get_average() *********************************
@@ -577,14 +571,15 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 double range_list_get_average(const lList *this_list, u_long32 upperbound)
 {
    lListElem *range;
-   double sum = 0;
+   double sum = 0.0;
    u_long32 id, min, max, step;
    int n = 0;
 
    for_each (range, this_list) {
       range_get_all_ids(range, &min, &max, &step);
-      if (upperbound != 0)
+      if (upperbound != 0) {
          max = MIN(max, upperbound);
+      }   
       for (id=min; id<=max; id+= step) {
          sum += id;
          n++;
@@ -682,7 +677,7 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_compress() ************************************
@@ -764,7 +759,7 @@ void range_list_compress(lList *range_list)
          next_range2 = lNext(next_range1);
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_is_id_within() ********************************
@@ -804,8 +799,7 @@ bool range_list_is_id_within(const lList *range_list, u_long32 id)
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_list_containes_id_less_than() **********************
@@ -838,8 +832,7 @@ bool range_list_containes_id_less_than(const lList *range_list, u_long32 id)
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_list_is_empty() ************************************
@@ -898,8 +891,7 @@ bool range_containes_id_less_than(const lListElem *range, u_long32 id)
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_is_id_within() *************************************
@@ -938,8 +930,7 @@ bool range_is_id_within(const lListElem *range, u_long32 id)
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/range/range_list_remove_id() ***********************************
@@ -1009,7 +1000,7 @@ void range_list_remove_id(lList **range_list, lList **answer_list, u_long32 id)
          lFreeList(range_list);
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_move_first_n_ids() ****************************
@@ -1066,7 +1057,7 @@ void range_list_move_first_n_ids(lList **range_list, lList **answer_list,
          }
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_insert_id() ***********************************
@@ -1202,7 +1193,7 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
       lAppendElem(*range_list, new_range);
       inserted = 1;
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_get_all_ids() **************************************
@@ -1242,7 +1233,7 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
          *min = *max = *step = 0;
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_set_all_ids() **************************************
@@ -1284,7 +1275,7 @@ void range_set_all_ids(lListElem *range, u_long32 min, u_long32 max,
          lSetUlong(range, RN_step, 1);
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_calculate_union_set() *************************
@@ -1353,15 +1344,13 @@ void range_list_calculate_union_set(lList **range_list,
          range_list_compress(*range_list);
       }
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 
  error:
    lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_calculate_difference_set() ********************
@@ -1422,15 +1411,13 @@ void range_list_calculate_difference_set(lList **range_list,
          range_list_compress(*range_list);
       }
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 
  error:
    lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate union set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_list_calculate_intersection_set() ******************
@@ -1491,14 +1478,13 @@ void range_list_calculate_intersection_set(lList **range_list,
       }
       range_list_compress(*range_list);
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 
  error:
    lFreeList(range_list);
    answer_list_add(answer_list, "unable to calculate intersection set",
                    STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/range/range_to_dstring() **************************************
@@ -1564,9 +1550,8 @@ void range_parse_from_string(lListElem **range,
    old_str = rstr;
 
    if (!strcasecmp(rstr, "UNDEFINED")) {
-      DEXIT;
       *range = NULL;
-      return;
+      DRETURN_VOID;
    }
    r = lCreateElem(RN_Type);
 
@@ -1580,13 +1565,11 @@ void range_parse_from_string(lListElem **range,
             /* rstr is just "-" <==> "1-inf" */
             lSetUlong(r, RN_min, rmin);
             lSetUlong(r, RN_max, RANGE_INFINITY);
-            DEXIT;
             *range = r;
-            return;
+            DRETURN_VOID;
          } else {
-            DEXIT;
             *range = NULL;
-            return;
+            DRETURN_VOID;
          }
       }
    }
@@ -1597,9 +1580,8 @@ void range_parse_from_string(lListElem **range,
       sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S, rstr);
       answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       lFreeElem(&r);
-      DEXIT;
       *range = NULL;
-      return;
+      DRETURN_VOID;
    }
 
    if (rmin != 0) {
@@ -1611,9 +1593,8 @@ void range_parse_from_string(lListElem **range,
                  old_str, rstr);
          answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          lFreeElem(&r);
-         DEXIT;
          *range = NULL;
-         return;
+         DRETURN_VOID;
       }
       /* <n> is the max-value */
       rmax = ldummy;
@@ -1637,9 +1618,8 @@ void range_parse_from_string(lListElem **range,
                     old_str, dptr);
             answer_list_add(answer_list, msg, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&r);
-            DEXIT;
             *range = NULL;
-            return;
+            DRETURN_VOID;
          } else {
             /* it is. set min to ldummy. now, what's after the - */
             rmin = ldummy;
@@ -1649,9 +1629,8 @@ void range_parse_from_string(lListElem **range,
                if (inf_allowed) {
                   rmax = RANGE_INFINITY;
                } else {
-                  DEXIT;
                   *range = NULL;
-                  return;
+                  DRETURN_VOID;
                }
             } else {
                /* the trailer should contain a decimal - go for it */
@@ -1661,9 +1640,8 @@ void range_parse_from_string(lListElem **range,
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
                   lFreeElem(&r);
-                  DEXIT;
                   *range = NULL;
-                  return;
+                  DRETURN_VOID;
                }
 
                if (!(*dptr == '\0' || (step_allowed && *dptr == ':'))) {
@@ -1672,9 +1650,8 @@ void range_parse_from_string(lListElem **range,
                   answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                   ANSWER_QUALITY_ERROR);
                   lFreeElem(&r);
-                  DEXIT;
                   *range = NULL;
-                  return;
+                  DRETURN_VOID;
                }
                /* finally, we got the max-value in ldummy */
                rmax = ldummy;
@@ -1695,9 +1672,8 @@ void range_parse_from_string(lListElem **range,
                         answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                         ANSWER_QUALITY_ERROR);
                         lFreeElem(&r);
-                        DEXIT;
                         *range = NULL;
-                        return;
+                        DRETURN_VOID;
                      }
                   }
                   else if (dptr == rstr) {
@@ -1706,18 +1682,16 @@ void range_parse_from_string(lListElem **range,
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
                      lFreeElem(&r);
-                     DEXIT;
                      *range = NULL;
-                     return;
+                     DRETURN_VOID;
                   }
                   else {
                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
                      lFreeElem(&r);
-                     DEXIT;
                      *range = NULL;
-                     return;
+                     DRETURN_VOID;
                   }
                    
                   if (*dptr != '\0') {
@@ -1726,9 +1700,8 @@ void range_parse_from_string(lListElem **range,
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
                      lFreeElem(&r);
-                     DEXIT;
                      *range = NULL;
-                     return;
+                     DRETURN_VOID;
                   }
                   /* finally, we got the max-value in ldummy */
                   step = ldummy;
@@ -1752,9 +1725,8 @@ void range_parse_from_string(lListElem **range,
 
    /* Ughhhh! Done ... */
 
-   DEXIT;
    *range = r;
-   return;
+   DRETURN_VOID;
 }
 
 /* 
@@ -1768,7 +1740,7 @@ void range_parse_from_string(lListElem **range,
 
    MT-NOTE: range_list_parse_from_string() is MT safe
 */
-void 
+bool 
 range_list_parse_from_string(lList **this_list, lList **answer_list, 
                              const char *string, bool just_parse, 
                              bool step_allowed, bool inf_allowed)
@@ -1791,15 +1763,10 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
          /* first was undefined - no more ranges allowed */
          ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED));
          sge_free_saved_vars(context);
-         if (answer_list) {
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                            ANSWER_QUALITY_ERROR);
-            DEXIT;
-            *this_list = NULL;
-            return;
-         } else {
-            SGE_EXIT(1);
-         }
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                         ANSWER_QUALITY_ERROR);
+         *this_list = NULL;
+         DRETURN(false);
       }
 
       range_parse_from_string(&range, answer_list, s, 
@@ -1812,15 +1779,10 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
             /* second range may not be undefined ! */
             ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE));
             sge_free_saved_vars(context);
-            if (answer_list) {
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                               ANSWER_QUALITY_ERROR);
-               DEXIT;
-               *this_list = NULL;
-               return;
-            } else {
-               SGE_EXIT(1);
-            }
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                            ANSWER_QUALITY_ERROR);
+            *this_list = NULL;
+            DRETURN(false);
          }
       } else {
          if (just_parse) {
@@ -1835,6 +1797,5 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
    
    sge_free_saved_vars(context);
 
-   DEXIT;
-   return;
+   DRETURN(true);
 }

@@ -55,13 +55,14 @@ lList *sge_add_schedd_info(lList *or_list, int *global_mes_count, int *job_mes_c
 lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, 
                          lList *queue_list, bool update_execd);
 
-int sge_send_orders2master(lList **orders);
-
 lList *create_delete_job_orders(lList *finished_jobs, lList *order_list);
 
 lList *sge_join_orders(order_t *orders);
 int sge_GetNumberOfOrders(order_t *orders); 
-int sge_send_job_start_orders(order_t *orders);
+
+int sge_send_orders2master(void *evc_context, lList **orders);
+int sge_send_job_start_orders(void *evc_context, order_t *orders);
+
 #endif /* _SGE_ORDERS_H_ */
 
 

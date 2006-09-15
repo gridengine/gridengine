@@ -121,7 +121,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
    range_list_sort_uniq_compress(range_list, NULL); 
    range_list_print_to_string(range_list, range_string, false); 
    lFreeList(&range_list);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/ja_task/ja_task_list_split_group() ******************************
@@ -212,15 +212,13 @@ bool ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
    if (pe_task != NULL) {
       DPRINTF(("already handled exit of pe task "SFQ" in ja_task "sge_U32CFormat
                "\n", pe_task_id, lGetUlong(ja_task, JAT_task_number)));
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
 
    pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list, 
                         FPET_Type);
 
-   DEXIT;
-   return true;
+   DRETURN(true);
 }
 
 /****** sgeobj/ja_task/ja_task_clear_finished_pe_tasks() ***********************
@@ -262,8 +260,7 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
    if (pe_task_list == NULL) {
       DPRINTF(("no finished pe task list to clear in ja_task "sge_U32CFormat"\n",
                lGetUlong(ja_task, JAT_task_number)));
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
 
    /* if we have such a list, delete it (lSetList will free the list) */
@@ -272,8 +269,7 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
    DPRINTF(("cleared finished pe task list in ja_task "sge_U32CFormat"\n",
             lGetUlong(ja_task, JAT_task_number)));
 
-   DEXIT;
-   return true;
+   DRETURN(true);
 }
 
 /****** parse/sge_parse_jobtasks() *********************************************
@@ -380,8 +376,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    ** free the dupped string
    */
    FREE(job_str); 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/ja_task/ja_task_message_add() **********************************
@@ -421,8 +416,7 @@ ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message)
 
    DENTER(TOP_LAYER, "ja_task_message_add");
    ret = object_message_add(this_elem, JAT_message_list, type, message);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/ja_task/ja_task_message_trash_all_of_type_X() ******************
@@ -458,8 +452,7 @@ ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
 
    DENTER(TOP_LAYER, "ja_task_message_trash_all_of_type_X");
    ret = object_message_trash_all_of_type_X(this_elem, JAT_message_list, type);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_ja_task/ja_task_verify() *******************************************

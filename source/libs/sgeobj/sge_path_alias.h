@@ -41,6 +41,7 @@
 
 int path_alias_list_initialize(lList **path_alias_list,
                                lList **alpp,
+                               const char *cell_root,
                                const char *user,
                                const char *host);
 

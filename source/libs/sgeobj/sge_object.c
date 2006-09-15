@@ -138,7 +138,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_HGroup_List,          NULL,                   "HOSTGROUP",         HGRP_Type, HGRP_name         },
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
-   { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       JB_Type,   SU_name           },
+   { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       SU_Type,   SU_name           },
    { &Master_LIRS_List,            NULL,                   "LIRS",              LIRS_Type, LIRS_name         },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
@@ -180,7 +180,7 @@ static pthread_key_t   obj_state_key;
 *  SEE ALSO
 *     sge_object/obj_state_global_init
 *     sge_object/obj_state_destroy
-*     sge_object/obj_init_mt
+*     sge_object/obj_mt_init
 *******************************************************************************/
 static void obj_state_init(obj_state_t *state) 
 {
@@ -218,7 +218,7 @@ static void obj_state_init(obj_state_t *state)
 *  SEE ALSO
 *     sge_object/obj_state_init
 *     sge_object/obj_state_destroy
-*     sge_object/obj_init_mt
+*     sge_object/obj_mt_init
 *******************************************************************************/
 static void obj_state_global_init(obj_state_t* state) 
 {
@@ -258,7 +258,7 @@ static void obj_state_global_init(obj_state_t* state)
 *  SEE ALSO
 *     sge_object/obj_state_global_init
 *     sge_object/obj_state_init
-*     sge_object/obj_init_mt
+*     sge_object/obj_mt_init
 *******************************************************************************/
 static void obj_state_destroy(void* st) 
 {
@@ -272,19 +272,19 @@ static void obj_state_destroy(void* st)
    free(state);
 }
 
-/****** sge_object/obj_init_mt() ***********************************************
+/****** sge_object/obj_mt_init() ***********************************************
 *  NAME
-*     obj_init_mt() -- creats the pthread key
+*     obj_mt_init() -- creats the pthread key
 *
 *  SYNOPSIS
-*     void obj_init_mt(void) 
+*     void obj_mt_init(void) 
 *
 *  FUNCTION
 *     creats teh pthread key. Needs to be called when the daemon, clients
 *     starts up
 *
 *  NOTES
-*     MT-NOTE: obj_init_mt() is not MT safe 
+*     MT-NOTE: obj_mt_init() is not MT safe 
 *
 *
 *  SEE ALSO
@@ -292,7 +292,7 @@ static void obj_state_destroy(void* st)
 *     sge_object/obj_state_init
 *     sge_object/obj_state_destroy
 *******************************************************************************/
-void obj_init_mt(void) 
+void obj_mt_init(void) 
 {
    pthread_key_create(&obj_state_key, &obj_state_destroy);
 }

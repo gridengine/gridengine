@@ -227,8 +227,11 @@ lList* ja_task_list_split_group(lList **task_list);
 
 int job_initialize_id_lists(lListElem *job, lList **answer_list);
 
-void job_initialize_env(lListElem *job, lList **answer_list,
-                        const lList* path_alias_list);
+void job_initialize_env(lListElem *job, 
+                        lList **answer_list,
+                        const lList* path_alias_list,
+                        const char *unqualified_hostname,
+                        const char *qualified_hostname);
 
 const char* job_get_env_string(const lListElem *job, const char *variable);
 

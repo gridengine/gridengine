@@ -95,14 +95,12 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
 
    /* invalid input - nothing to do */
    if(container == NULL || pe_task == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* container and pe_task are the same element - nothing to do */
    if(container == pe_task) {
-      DEXIT;
-      return container;
+      DRETURN(container);
    }
 
    container_usage = lGetList(container, PET_scaled_usage);
@@ -110,8 +108,7 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
 
    /* empty usage in pe task - nothing to do */
    if(pe_task_usage == NULL) {
-      DEXIT;
-      return container;
+      DRETURN(container);
    }
 
    /* container has no usage list yet - create it */
@@ -138,8 +135,7 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
       }   
    }
 
-   DEXIT;
-   return container;
+   DRETURN(container);
 }
 
 /****** sgeobj/pe_task/pe_task_sum_past_usage_all() ***************************
@@ -174,8 +170,7 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
 
    /* no pe task list - nothing to do */
    if(pe_task_list == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* loop over all pe tasks and sum up usage */
@@ -187,8 +182,7 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
       }
    }
 
-   DEXIT;
-   return container;
+   DRETURN(container);
 }
 
 /****** sgeobj/pe_task/pe_task_sum_past_usage_list() **************************
@@ -226,8 +220,7 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
 
    /* no pe task list - nothing to do */
    if(pe_task_list == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* get container - if it does not yet exist, create it as first element in pe task list */
@@ -241,8 +234,7 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    /* sum up usage */
    pe_task_sum_past_usage(container, pe_task);
 
-   DEXIT;
-   return container;
+   DRETURN(container);
 }
 
 /****** sge_pe_task/pe_task_verify_request() ***********************************

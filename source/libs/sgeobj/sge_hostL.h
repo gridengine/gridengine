@@ -128,18 +128,19 @@ enum {
 };
 
 LISTDEF(EH_Type)
+   JGDI_ROOT_OBJ(ExecHost, SGE_EXECHOST_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    SGE_HOST(EH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
-   SGE_LIST(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_MAP(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_consumable_config_list, CE_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(EH_usage_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(EH_load_list, HL_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_MAP(EH_usage_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_MAP(EH_load_list, HL_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_lt_heard_from, CULL_DEFAULT)
    SGE_ULONG(EH_startup, CULL_DEFAULT)
    SGE_ULONG(EH_processors, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_acl, US_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(EH_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(EH_prj, UP_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_LIST(EH_xprj, UP_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_prj, Prj_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(EH_xprj, Prj_Type, CULL_DEFAULT | CULL_SPOOL)
 
    /* scheduling stuff */
    SGE_DOUBLE(EH_sort_value, CULL_DEFAULT)
@@ -156,8 +157,8 @@ LISTDEF(EH_Type)
 
    SGE_ULONG(EH_featureset_id, CULL_DEFAULT)
 
-   SGE_LIST(EH_scaled_usage_list, UA_Type, CULL_DEFAULT)
-   SGE_LIST(EH_scaled_usage_pct_list, UA_Type, CULL_DEFAULT)
+   SGE_MAP(EH_scaled_usage_list, UA_Type, CULL_DEFAULT)
+   SGE_MAP(EH_scaled_usage_pct_list, UA_Type, CULL_DEFAULT)
    SGE_ULONG(EH_num_running_jobs, CULL_DEFAULT)
 
    SGE_ULONG(EH_load_report_interval, CULL_DEFAULT)
@@ -229,6 +230,7 @@ enum {
 };
 
 LISTDEF(RU_Type)
+   JGDI_OBJ(RescheduleUnknown)
    SGE_ULONG(RU_job_number, CULL_DEFAULT)
    SGE_ULONG(RU_task_number, CULL_DEFAULT)
    SGE_ULONG(RU_state, CULL_DEFAULT)
@@ -250,6 +252,7 @@ enum {
 };
 
 LISTDEF(AH_Type)
+   JGDI_ROOT_OBJ(AdminHost, SGE_ADMINHOST_LIST, ADD | DELETE | GET_LIST)
    SGE_HOST(AH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
 LISTEND 
 
@@ -267,6 +270,7 @@ enum {
 };
 
 LISTDEF(SH_Type)
+   JGDI_ROOT_OBJ( SubmitHost, SGE_SUBMITHOST_LIST, ADD | DELETE | GET_LIST)
    SGE_HOST(SH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
 LISTEND 
 
@@ -318,6 +322,7 @@ enum {
 };
 
 LISTDEF(HL_Type)
+   JGDI_MAP_OBJ(HL_name, HL_value)
    SGE_STRING(HL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
    SGE_STRING(HL_value, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(HL_last_update, CULL_DEFAULT)
@@ -340,6 +345,7 @@ enum {
 };
 
 LISTDEF(HS_Type)
+   JGDI_MAP_OBJ(HS_name, HS_value)
    SGE_STRING(HS_name, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(HS_value, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND 

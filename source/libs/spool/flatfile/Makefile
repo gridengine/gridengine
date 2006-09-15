@@ -60,7 +60,7 @@ SPOOLFLIB_ADD_OBJS = $(SPOOLFLIB_ADD_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoolflib: $(SPOOLFLIB) 
+spoolflib: $(SPOOLFLIB)
 
 spoolflib_all: $(SPOOLFLIB) $(SPOOLFLIB_TEST_PROGS)
 

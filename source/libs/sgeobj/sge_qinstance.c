@@ -248,7 +248,7 @@ qinstance_increase_qversion(lListElem *this_elem)
    DENTER(TOP_LAYER, "qinstance_increase_qversion");
    current_version = lGetUlong(this_elem, QU_version);
    lSetUlong(this_elem, QU_version, current_version + 1);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/qinstance/qinstance_check_owner() ******************************
@@ -327,8 +327,7 @@ qinstance_is_pe_referenced(const lListElem *this_elem, const lListElem *pe)
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_calendar_referenced() *******************
@@ -371,8 +370,7 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
          ret = true;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_a_pe_referenced() ***********************
@@ -405,8 +403,7 @@ qinstance_is_a_pe_referenced(const lListElem *this_elem)
    if (lGetNumberOfElem(lGetList(this_elem, QU_pe_list))) {
       ret = true;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_ckpt_referenced() ***********************
@@ -477,8 +474,7 @@ qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
    if (lGetNumberOfElem(lGetList(this_elem, QU_ckpt_list))) {
       ret = true;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 } 
 
 /****** sgeobj/qinstance/qinstance_is_centry_referenced() *********************
@@ -531,8 +527,7 @@ qinstance_is_centry_referenced(const lListElem *this_elem,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_is_centry_a_complex_value() ****************
@@ -566,8 +561,7 @@ qinstance_is_centry_a_complex_value(const lListElem *this_elem,
 
    DENTER(TOP_LAYER, "qinstance_is_centry_a_complex_value");
    ret = qinstance_is_centry_referenced(this_elem, centry);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_reinit_consumable_actual_list() ************
@@ -632,8 +626,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_list_find_matching() ***********************
@@ -695,8 +688,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_slots_used() *******************************
@@ -734,8 +726,7 @@ qinstance_slots_used(const lListElem *this_elem)
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_set_slots_used() ***************************
@@ -773,7 +764,7 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/qinstance/qinstance_check_unknown_state() **********************
@@ -822,8 +813,7 @@ qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
          }
       } 
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sgeobj/qinstance/qinstance_debit_consumable() *************************
@@ -902,8 +892,7 @@ qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message)
 
    DENTER(TOP_LAYER, "qinstance_message_add");
    object_message_add(this_elem, QU_message_list, type, message);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_message_trash_all_of_type_X() **************
@@ -937,8 +926,7 @@ qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
 
    DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
    object_message_trash_all_of_type_X(this_elem, QU_message_list, type);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_set_full_name() ****************************
@@ -1057,8 +1045,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
       }
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_list_validate() ****************************
@@ -1099,8 +1086,7 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_list_get_max_qinstance_number() ************
@@ -1134,8 +1120,7 @@ qinstance_list_get_max_qinstance_number(lList *this_list)
    for_each(qinstance, this_list) {
       ret = MAX(ret, lGetUlong(qinstance, QU_queue_number));
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/qinstance/qinstance_list_number_is_used() **********************
@@ -1175,8 +1160,7 @@ qinstance_list_number_is_used(lList *this_list, u_long32 number)
          break;
       }
    } 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** lib/sgeobj/debit_consumable() ****************************************
@@ -1235,8 +1219,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
    DENTER(TOP_LAYER, "rc_debit_consumable");
 
    if (!ep) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for_each (cr_config, lGetList(ep, config_nm)) {
@@ -1246,8 +1229,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       /* search default request */  
       if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
-         DEXIT; 
-         return -1;
+         DRETURN(-1);
       } 
 
       if (!lGetBool(dcep, CE_consumable)) {
@@ -1274,8 +1256,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       }
    }
 
-   DEXIT;
-   return mods;
+   DRETURN(mods);
 }
 
 /* slots2config_list(lListElem *qep) */
@@ -1300,7 +1281,7 @@ qinstance_set_conf_slots_used(lListElem *this_elem)
       lSetString(slots, CE_stringval, sge_dstring_get_string(&buffer));
       sge_dstring_free(&buffer);
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sge_qinstance/qinstance_list_verify_execd_job() ************************

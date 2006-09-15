@@ -86,12 +86,10 @@ bool userset_is_deadline_user(lList *lp, const char *username)
 
    if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
          US_entries)) {
-      DEXIT;
-      return true; /* found user in deadline user list */
+      DRETURN(true); /* found user in deadline user list */
    }
 
-   DEXIT;
-   return false;
+   DRETURN(false);
 }
 
 /****** sgeobj/userset/userset_list_locate() **********************************
@@ -153,13 +151,11 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
          ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, 
                 lGetString(usp, US_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
    }
 
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /****** sgeobj/userset/userset_validate_entries() *******************************
@@ -202,13 +198,11 @@ int userset_validate_entries(lListElem *userset, lList **alpp, int start_up)
          ERROR((SGE_EVENT, MSG_US_INVALIDUSERNAME));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, 
                          ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_ESEMANTIC;
+         DRETURN(STATUS_ESEMANTIC);
       }
    }
 
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /****** sgeobj/userset/userset_get_type_string() **********************************
@@ -263,8 +257,7 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
    }
 
    ret = sge_dstring_get_string(buffer);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/userset/userset_set_type_string() ******************************
@@ -311,8 +304,7 @@ userset_set_type_string(lListElem *userset, lList **answer_list,
 
    lSetUlong(userset, US_type, type);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 const char *
@@ -337,8 +329,7 @@ userset_list_append_to_dstring(const lList *this_list, dstring *string)
       }
       ret = sge_dstring_get_string(string);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 

@@ -70,6 +70,10 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
 static int fd_pipe[2];
 
@@ -115,8 +119,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
                         &fp_in, &fp_out, &fp_err, false);
 
    if (command_pid == -1) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    while (!feof(fp_out) && num_of_pids<max_pids) {
@@ -156,7 +159,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    }            
 
    sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
-   return num_of_pids;
+   DRETURN(num_of_pids);
 }
 
 /****** sge_os/sge_contains_pid() *********************************************
@@ -234,8 +237,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
                         &fp_in, &fp_out, &fp_err, false);
 
    if (command_pid == -1) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    notfound = 1;
@@ -280,8 +282,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 
    sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
-   DEXIT;
-   return notfound;
+   DRETURN(notfound);
 }
 
 /****** sge_os/sge_daemonize_prepare() *****************************************
@@ -322,7 +323,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *  SEE ALSO
 *     sge_os/sge_daemonize_finalize()
 *******************************************************************************/
-int sge_daemonize_prepare(void) {
+int sge_daemonize_prepare(void *context) {
    pid_t pid;
    fd_set keep_open;
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
@@ -336,18 +337,23 @@ int sge_daemonize_prepare(void) {
    char domname[256];
 #endif
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   int is_daemonized = ctx->is_daemonized(ctx);
+#else
+   int is_daemonized = uti_state_get_daemonized();
+#endif   
+
    DENTER(TOP_LAYER, "sge_daemonize_prepare");
 
 #ifndef NO_SGE_COMPILE_DEBUG
    if (TRACEON) {
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
 #endif
 
-   if (uti_state_get_daemonized()) {
-      DEXIT;
-      return true;
+   if (is_daemonized) {
+      DRETURN(true);
    }
 
    /* create pipe */
@@ -502,15 +508,21 @@ int sge_daemonize_prepare(void) {
 *  SEE ALSO
 *     sge_os/sge_daemonize_prepare()
 *******************************************************************************/
-int sge_daemonize_finalize(void) {
+int sge_daemonize_finalize(void *context) 
+{
    char tmp_buffer[4];
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   int is_daemonized = ctx->is_daemonized(ctx);
+#else
+   int is_daemonized = uti_state_get_daemonized();
+#endif
 
    DENTER(TOP_LAYER, "sge_daemonize_finalize");
 
    /* don't call this function twice */
-   if (uti_state_get_daemonized()) {
-      DEXIT;
-      return true;
+   if (is_daemonized) {
+      DRETURN(true);
    }
 
    /* The response id has 4 byte, send it to father process */
@@ -530,20 +542,24 @@ int sge_daemonize_finalize(void) {
    
    /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
    if (open("/dev/null",O_RDONLY,0)!=0) {
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
    if (open("/dev/null",O_WRONLY,0)!=1) {
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
    if (open("/dev/null",O_WRONLY,0)!=2) {
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 #endif
 
    SETPGRP;
 
    /* now have finished daemonizing */
+#ifdef TEST_GDI2
+   ctx->set_daemonized(ctx, true);
+#else
    uti_state_set_daemonized(1);
+#endif   
 
    DRETURN(true);
 }
@@ -566,6 +582,7 @@ int sge_daemonize_finalize(void) {
 *
 *  INPUTS
 *     fd_set *keep_open - bitmask
+*     args   optional args
 *
 *  RESULT
 *     int - Successfull?
@@ -575,8 +592,12 @@ int sge_daemonize_finalize(void) {
 *  NOTES
 *     MT-NOTES: sge_daemonize() is not MT safe
 ******************************************************************************/
-int sge_daemonize(fd_set *keep_open)
+int sge_daemonize(fd_set *keep_open, void *context)
 {
+#ifdef TEST_GDI2
+ sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+#endif
+   
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    int fd;
 #endif
@@ -594,14 +615,16 @@ int sge_daemonize(fd_set *keep_open)
  
 #ifndef NO_SGE_COMPILE_DEBUG
    if (TRACEON) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 #endif
  
+#ifdef TEST_GDI2
+   if (ctx->is_daemonized(ctx)) {
+#else
    if (uti_state_get_daemonized()) {
-      DEXIT;
-      return 1;
+#endif
+      DRETURN(1);
    }
  
    if ((pid=fork())!= 0) {             /* 1st child not pgrp leader */
@@ -645,15 +668,18 @@ int sge_daemonize(fd_set *keep_open)
    failed_fd = sge_occupy_first_three();
    if (failed_fd  != -1) {
       CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
    SETPGRP;
  
+#ifdef TEST_GDI2
+   ctx->set_daemonized(ctx, true);
+#else
    uti_state_set_daemonized(1);
+#endif
  
-   DEXIT;
-   return 1;
+   DRETURN(1);
 }     
 
 /****** sge_os/redirect_to_dev_null() ******************************************
@@ -733,8 +759,7 @@ int sge_occupy_first_three(void)
       ret = redirect_to_dev_null(2, O_WRONLY);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }  
 
 /****** sge_os/sge_close_all_fds() ********************************************
@@ -801,7 +826,6 @@ void sge_close_all_fds(fd_set *keep_open)
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }  
 

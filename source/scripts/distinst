@@ -62,7 +62,8 @@ JOBBINARIES="work"
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti \
                   libspool libspoolb libspoold libspoolc libspoolf \
                   libsgeobj libsgeobjd \
-                  libevc libevm libmir"
+                  libevc libevm libmir \
+                  libjuti libjgdi"
 
 QMON_SHARED_LIBRARIES="libXbae libXicon libXmt libXspin libXtab"
 QMON_NEED_SHARED_LIBRARIES="libXltree"
@@ -76,7 +77,10 @@ DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
 DRMAAJ_FILES="CLASSES/drmaa.jar"
 
-JUTIJ_FILES="CLASSES/juti/dist/juti.jar"
+JNI_SHARED_LIBRARIES="libdrmaa libjuti libjgdi"
+
+JUTIJ_FILES="CLASSES/juti/juti.jar"
+JGDIJ_FILES="libs/jgdi/build/jgdi.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -975,7 +979,7 @@ if [ $instcommon = true ]; then
          Execute cp $f $DEST_SGE_ROOT/include
       done
 
-      for filename in $DRMAAJ_FILES $JUTIJ_FILES; do
+      for filename in $DRMAAJ_FILES $JUTIJ_FILES $JGDIJ_FILES; do
          if [ -f $filename ]; then
              echo Installing `basename $filename`
              Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
@@ -983,6 +987,7 @@ if [ $instcommon = true ]; then
              Install 0.0 644 $filename $DEST_SGE_ROOT/lib
          fi
       done
+
       Cleanup include
    fi
 
@@ -1369,6 +1374,10 @@ for i in $ARCH; do
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$OPENSSLSOVERSION.$shlibext"
                else
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.$OPENSSLSOVERSION"
+                  # for lib dir without $DSTARCH, e.g. /usr on linux
+                  if [ ! -f $libname ]; then
+                     libname="$OPENSSLBASE/lib/$lib.$shlibext.$OPENSSLSOVERSION"
+                  fi   
                fi
 
                if [ -f $libname ]; then
@@ -1392,8 +1401,11 @@ for i in $ARCH; do
             if [ $instbdb = true ]; then
                for lib in $BERKELEYDB_SHARED_LIBRARIES; do
                   libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+                  libname2="$BERKELEYDBBASE/lib/$lib.$shlibext"
                   if [ -f $libname ]; then
                      InstallProg $libname
+                  elif [ -f $libname2 ]; then   
+                     InstallProg $libname2
                   elif [ $exit_on_error = true ]; then
                      echo "\"$libname\" not found. Installation failed."
                      exit 1
@@ -1415,16 +1427,17 @@ for i in $ARCH; do
             ( cd $DEST_SGE_ROOT/lib/$DSTARCH
             ln -s $libname $lib.$shlibext )
 
-# On MacOS X, the JVM expects a special JNI extension for shared libraries
-            if [ $shlibext != $jnilibext ]; then
-               ( echo Linking $lib.$jnilibext to $lib.$shlibext
-               cd $DEST_SGE_ROOT/lib/$DSTARCH
-               if [ -f lib.$jnilibext ]; then
-                  rm $lib.$jnilibext
+            for lib in $JNI_SHARED_LIBRARIES; do
+               # On MacOS X, the JVM expects a special JNI extension for shared libraries
+               if [ "$shlibext" != "$jnilibext" ]; then
+                  ( echo Linking $lib.$jnilibext to $lib.$shlibext
+                  cd $DEST_SGE_ROOT/lib/$DSTARCH
+                  if [ -f $lib.$jnilibext ]; then
+                     rm $lib.$jnilibext
+                  fi
+                  ln -s $lib.$shlibext $lib.$jnilibext )
                fi
-
-               ln -s $lib.$shlibext $lib.$jnilibext )
-            fi
+            done
          fi
       fi
       cd ..

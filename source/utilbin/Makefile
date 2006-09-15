@@ -239,7 +239,7 @@ spooledit.o: $(UTILBIN_DIR)/spooledit.c
 
 #---------------------------------------------------------------------
 sgepasswd: sge_passwd_main.o version.o $(LCKLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB)
-		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(WINGRIDLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SECLIBS_STATIC) $(LIBS)
+		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(WINGRIDLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SECLIBS_STATIC) $(LIBS) $(DLLIB)
 
 sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
 		$(CC) -DDEFINE_SGE_PASSWD_MAIN  $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -o $@ -c $(UTILBIN_DIR)/sge_passwd.c

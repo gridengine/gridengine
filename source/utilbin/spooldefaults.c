@@ -62,9 +62,12 @@
 #include "msg_utilbin.h"
 #include "sge_profiling.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
 static int spool_object_list(const char *directory, 
-                             int (*read_func)(lList **list, const char *dir),
+                             int (*read_func)(lList **list, const char *dir, lList **answer_list),
                              sge_object_type obj_type, 
                              int nm, enum _enum_lMultiType cull_type);
 
@@ -92,20 +95,31 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s\n", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
-static int init_framework(void)
+static int init_framework(void *context)
 {
    int ret = EXIT_FAILURE;
 
    lList *answer_list = NULL;
    lListElem *spooling_context = NULL;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char *spooling_method = ctx->get_spooling_method(ctx);
+   const char *spooling_lib = ctx->get_spooling_lib(ctx);
+   const char *spooling_params = ctx->get_spooling_params(ctx);
+#else
+   const char *spooling_method = bootstrap_get_spooling_method();
+   const char *spooling_lib = bootstrap_get_spooling_lib();
+   const char *spooling_params = bootstrap_get_spooling_params();
+#endif
+
    DENTER(TOP_LAYER, "init_framework");
 
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(&answer_list, 
-                              bootstrap_get_spooling_method(),
-                              bootstrap_get_spooling_lib(), 
-                              bootstrap_get_spooling_params());
+                                                   spooling_method,
+                                                   spooling_lib, 
+                                                   spooling_params);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
       CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
@@ -152,7 +166,7 @@ static int spool_manop(const char *name, sge_object_type type)
    
    object_type_commit_master_list(type, &answer_list);
       
-   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, type)) {
+   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, type, true)) {
       /* error output has been done in spooling function */
       ret = EXIT_FAILURE;
    }
@@ -195,7 +209,7 @@ static int spool_configuration(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else {
       /* put config into a list - we can't spool free objects */
-      if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG)) {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG, true)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
       }
@@ -235,7 +249,7 @@ static int spool_local_conf(int argc, char *argv[])
          if ( le == NULL) { 
             /* put config into a list - we can't spool free objects */
             if (!spool_write_object(&answer_list, spool_get_default_context(), 
-                                 conf, argv[3], SGE_TYPE_CONFIG)) {
+                                 conf, argv[3], SGE_TYPE_CONFIG, true)) {
                /* error output has been done in spooling function */
                ret = EXIT_FAILURE;
             } 
@@ -275,7 +289,7 @@ static int spool_sharetree(int argc, char *argv[])
       lList *list = lCreateList("sharetree", STN_Type);
       lAppendElem(list, stree);
       if (!spool_write_object(&answer_list, spool_get_default_context(), 
-                              stree, "sharetree", SGE_TYPE_SHARETREE)) {
+                              stree, "sharetree", SGE_TYPE_SHARETREE, true)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
       }
@@ -371,7 +385,7 @@ static int spool_pes(int argc, char *argv[])
 }
 
 static int spool_object_list(const char *directory, 
-                             int (*read_func)(lList **list, const char *dir),
+                             int (*read_func)(lList **list, const char *dir, lList **answer_list),
                              sge_object_type obj_type, 
                              int nm, enum _enum_lMultiType cull_type)
 {
@@ -382,7 +396,7 @@ static int spool_object_list(const char *directory,
 
    DENTER(TOP_LAYER, "spool_object_list");
 
-   read_func(&list, directory);
+   read_func(&list, directory, &answer_list);
 
    for_each(ep, list) {
       const char *key;
@@ -400,7 +414,7 @@ static int spool_object_list(const char *directory,
             return EXIT_FAILURE;
       }
       if (!spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              key, obj_type)) {
+                              key, obj_type, true)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
          answer_list_output(&answer_list);
@@ -425,6 +439,9 @@ int main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
 
    DENTER_MAIN(TOP_LAYER, "spooldefaults");
 
@@ -432,26 +449,39 @@ int main(int argc, char *argv[])
 
    sge_prof_setup();
 
+#ifdef TEST_GDI2
+   if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
+      answer_list_output(&answer_list);
+      SGE_EXIT(NULL, 1);
+   }
+#else
    sge_mt_init();
 
    lInit(nmv);
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
+   if (!sge_setup_paths(SPOOLDEFAULTS, sge_get_default_cell(), NULL)) {
       /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
-   } else if (!sge_bootstrap(NULL)) {
+   } else if (!sge_bootstrap(path_state_get_bootstrap_file(), NULL)) {
       ret = EXIT_FAILURE;
    } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
       ret = EXIT_FAILURE;
-   } else {
+   }
+#endif   
+
+   if (ret == EXIT_SUCCESS) {
       /* parse commandline */
       if (argc < 2) {
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {
-         ret = init_framework();
+#ifdef TEST_GDI2
+         ret = init_framework(ctx);
+#else
+         ret = init_framework(NULL);
+#endif         
 
          if (ret == EXIT_SUCCESS) {
             if (strcmp(argv[1], "test") == 0) {
@@ -518,7 +548,7 @@ int main(int argc, char *argv[])
 
    sge_prof_cleanup();
 
-   SGE_EXIT(ret);
+   SGE_EXIT(NULL, ret);
    DEXIT;
    return ret;
 }

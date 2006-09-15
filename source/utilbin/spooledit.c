@@ -58,6 +58,10 @@
 #include "msg_common.h"
 #include "msg_utilbin.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 
 static void 
 usage(const char *argv0)
@@ -72,21 +76,31 @@ usage(const char *argv0)
 }
 
 static int 
-init_framework(bdb_info *info)
+init_framework(void *context, bdb_info *info)
 {
    int ret = EXIT_FAILURE;
 
    lList *answer_list = NULL;
    lListElem *spooling_context = NULL;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char *spooling_method = ctx->get_spooling_method(ctx);
+   const char *spooling_lib = ctx->get_spooling_lib(ctx);
+   const char *spooling_params = ctx->get_spooling_params(ctx);
+#else
+   const char *spooling_method = bootstrap_get_spooling_method();
+   const char *spooling_lib = bootstrap_get_spooling_lib();
+   const char *spooling_params = bootstrap_get_spooling_params();
+#endif
+
    DENTER(TOP_LAYER, "init_framework");
 
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(&answer_list, 
-                              bootstrap_get_spooling_method(),
-                              bootstrap_get_spooling_lib(), 
-                              bootstrap_get_spooling_params());
-
+                                                   spooling_method,
+                                                   spooling_lib, 
+                                                   spooling_params);
    answer_list_output(&answer_list);
    if (!strcmp(bootstrap_get_spooling_method(),"classic")) {
       CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING));
@@ -113,8 +127,7 @@ init_framework(bdb_info *info)
       answer_list_output(&answer_list);
    }  
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bdb_database
@@ -158,8 +171,7 @@ get_descr_from_key(const char *key)
       }
    }
 
-   DEXIT;
-   return descr;
+   DRETURN(descr);
 }
 
 static int 
@@ -198,8 +210,7 @@ list_objects(bdb_info info, const char *key)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int 
@@ -239,8 +250,7 @@ dump_object(bdb_info info, const char *key)
       ret = EXIT_FAILURE;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int 
@@ -303,7 +313,9 @@ load_object(bdb_info info, const char *key, const char *fname)
    }
 
    lFreeElem(&object);
+
    DRETURN(ret);
+
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, fname, strerror(errno)));
    DRETURN(EXIT_FAILURE);
@@ -346,8 +358,7 @@ delete_object( bdb_info info, const char *key)
       ret = EXIT_FAILURE;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -356,30 +367,46 @@ main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
+#ifdef TEST_GDI2
+   if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
+      answer_list_output(&answer_list);
+      SGE_EXIT(NULL, 1);
+   }
+#else
    sge_mt_init();
 
    lInit(nmv);
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
+   if (!sge_setup_paths(SPOOLDEFAULTS, sge_get_default_cell(), NULL)) {
       /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
-   } else if (!sge_bootstrap(NULL)) {
+   } else if (!sge_bootstrap(path_state_get_bootstrap_file(), NULL)) {
       ret = EXIT_FAILURE;
    } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
       ret = EXIT_FAILURE;
-   } else {
+   }
+#endif
+
+   if (ret == EXIT_SUCCESS) {
       /* parse commandline */
       if (argc < 2) {
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {
          bdb_info info = NULL;
-         ret = init_framework(&info);
+#ifdef TEST_GDI2
+         ret = init_framework(ctx, &info);
+#else
+         ret = init_framework(NULL, &info);
+#endif         
 
          if (ret == EXIT_SUCCESS) {
             if (strcmp(argv[1], "list") == 0) {
@@ -428,7 +455,7 @@ main(int argc, char *argv[])
 
    answer_list_output(&answer_list);
 
-   SGE_EXIT(ret);
-   DEXIT;
-   return ret;
+   SGE_EXIT(NULL, ret);
+
+   DRETURN(ret);
 }

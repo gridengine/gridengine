@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
       FD_SET(4, &keep_open);
       FD_SET(5, &keep_open);
 
-      sge_daemonize(&keep_open);
+      sge_daemonize(&keep_open, NULL);
       dup2(3, 0);
       dup2(4, 1);
       dup2(5, 2);

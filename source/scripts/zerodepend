@@ -75,6 +75,7 @@ files=" \
        libs/comm/lists/commlistslib_dependencies \
        libs/comm/examples/commexamples_dependencies \
        libs/lck/lck_dependencies  \
+       libs/juti/juti_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/krb/krb_dependencies \

@@ -57,6 +57,10 @@
 #include "sge_security.h"
 #include "sge_all_listsL.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
@@ -1292,8 +1296,8 @@ int main(int argc, char *argv[]) {
       dstring bw;
       sge_dstring_init(&bw, buffer, sizeof(buffer)); 
 
-      sge_setup_paths(sge_get_default_cell(), &bw);
-      if (sge_bootstrap(NULL) != true) {
+      sge_setup_paths(QPING, sge_get_default_cell(), &bw);
+      if (sge_bootstrap(path_state_get_bootstrap_file(), NULL) != true) {
          fprintf(stderr,"please use option -ssl or -tcp to bypass bootstrap file read\n");
          exit(1);
       }
@@ -1311,7 +1315,7 @@ int main(int argc, char *argv[]) {
       if (got_no_framework == 1) {
          /* we got no framework and we have a bootstrap file */
          sge_getme(QPING);
-         sge_ssl_setup_security_path("qping");
+         sge_ssl_setup_security_path("qping", uti_state_get_user_name());
       } else {
          if (getenv("SSL_CA_CERT_FILE") == NULL) {
             fprintf(stderr,"You have not set the SGE default environment or you specified the -ssl option.\n");

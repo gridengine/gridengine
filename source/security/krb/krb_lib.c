@@ -88,8 +88,9 @@
 
 */
 
-
+#ifdef MIT_KRB
 extern krb5_cc_ops krb5_mcc_ops;
+#endif
 
 static krb_global_data_t gsd;			/* global security data */
 
@@ -170,6 +171,8 @@ int krb_init(const char *progname)
    int rc;
    char keytab[256];
    struct hostent *he;
+   u_long32 prog_number = uti_state_get_mewho();
+   
 
    DENTER(TOP_LAYER, "krb_init");
 
@@ -349,7 +352,7 @@ int krb_init(const char *progname)
 
    /* do qmaster initialization */
    if (gsd.daemon && (!strcmp(prognames[QMASTER], progname) &&
-       uti_state_get_mewho() == QMASTER)) {
+       prog_number == QMASTER)) {
 
       /* NOTE: make sure we are REALLY the qmaster */
       gsd.qmaster = 1;
@@ -605,6 +608,7 @@ krb_send_message(int synchron, const char *tocomproc, int toid,
    krb5_rcache rcache;
    char *cp;
 #endif /* KRB_DO_REPLAY_STUFF */
+   const char *progname = uti_state_get_sge_formal_prog_name();
 
    DENTER(TOP_LAYER, "krb_send_message");
 
@@ -756,9 +760,7 @@ krb_send_message(int synchron, const char *tocomproc, int toid,
    }
 
    if ((rc = krb5_gen_replay_name(gsd.context, portlocal_addr,
-				      uti_state_get_sge_formal_prog_name() ?
-				      uti_state_get_sge_formal_prog_name() :
-				      "sge_client", &cp))) {
+				      progname ? progname : "sge_client", &cp))) {
       ERROR((SGE_EVENT, MSG_KRB_KRB5GENREPLAYNAMEFAILEDFORWXYZ_SSIS ,
 	     tohost, tocomproc, toid, error_message(rc)));
       if (!gsd.daemon)

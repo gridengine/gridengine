@@ -49,10 +49,14 @@ setenv EN_QUIET 1
 switch($buildarch)
    case "sol-amd64":
    case "lx24-amd64":
-      source /vol2/resources/en_jdk15 
+      if ( -f /vol2/resources/en_jdk15 ) then
+         source /vol2/resources/en_jdk15 
+      endif 
       breaksw
    default:
-      source /vol2/resources/en_jdk14 
+      if ( -f /vol2/resources/en_jdk14 ) then
+         source /vol2/resources/en_jdk14 
+      endif   
       breaksw
 endsw
 

@@ -29,6 +29,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifndef TEST_GDI2
+
+
 #include <string.h>
 #include <errno.h>
 #include <string.h>
@@ -101,13 +105,13 @@ lList **alpp
             return -1;
          }
          
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }   
    }
 
    sge_getme(sge_formal_prog_name);
 
-   if (!sge_setup_paths(uti_state_get_default_cell(), &error_dstring)) {
+   if (!sge_setup_paths(sge_formal_prog_name, uti_state_get_default_cell(), &error_dstring)) {
       if (alpp == NULL) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } else {
@@ -119,7 +123,7 @@ lList **alpp
       return -1;
    }
 
-   if (!sge_bootstrap(&error_dstring)) {
+   if (!sge_bootstrap(path_state_get_bootstrap_file(), &error_dstring)) {
       if (alpp == NULL || is_exit_on_error) {
          CRITICAL((SGE_EVENT, sge_dstring_get_string(&error_dstring)));
       } else {
@@ -131,7 +135,7 @@ lList **alpp
          DEXIT;
          return -1;
       }
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    if (feature_initialize_from_string(bootstrap_get_security_mode())) {
@@ -149,7 +153,7 @@ lList **alpp
          DEXIT;
          return -1;
       }
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    /* qmaster and shadowd should not fail on nonexistant act_qmaster file */
@@ -166,7 +170,7 @@ lList **alpp
       else {
          CRITICAL((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S, path_state_get_act_qmaster_file()));   
       }
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    DEXIT;
@@ -214,3 +218,5 @@ int reresolve_me_qualified_hostname(void)
    return CL_RETVAL_OK;
 }
 
+
+#endif

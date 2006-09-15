@@ -54,8 +54,14 @@ extern volatile int jobs_to_start;
  *************************************************************************/
 
 int 
-execd_ticket(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, 
-             u_long *rcvtimeout, int *synchron, char *err_str, int answer_error)
+execd_ticket(void *context, 
+             struct dispatch_entry *de, 
+             sge_pack_buffer *pb, 
+             sge_pack_buffer *apb, 
+             u_long *rcvtimeout, 
+             int *synchron, 
+             char *err_str, 
+             int answer_error)
 {
    u_long32 jobid, jataskid;
    double ticket;

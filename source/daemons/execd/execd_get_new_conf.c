@@ -44,14 +44,27 @@
 
 #include "msg_common.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#else
+#include "sge_prog.h"
+#include "setup_path.h"
+#endif
+
 /*
 ** DESCRIPTION
 **   retrieves new configuration from qmaster, very similar to what is
 **   executed on startup. This function is triggered by the execd
 **   dispatcher table when the tag TAG_GET_NEW_CONF is received.
 */
-int execd_get_new_conf(dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, 
-int *synchron, char *err_str, int answer_error)
+int execd_get_new_conf(void *context, 
+                       dispatch_entry *de, 
+                       sge_pack_buffer *pb, 
+                       sge_pack_buffer *apb, 
+                       u_long *rcvtimeout, 
+                       int *synchron, 
+                       char *err_str, 
+                       int answer_error)
 {
    int ret;
    bool use_qidle = mconf_get_use_qidle();
@@ -59,13 +72,25 @@ int *synchron, char *err_str, int answer_error)
    char* old_spool = NULL;
    char* spool_dir = NULL;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *cell_root = path_state_get_cell_root();
+   u_long32 progid = uti_state_get_mewho();
+#endif
+
    DENTER(TOP_LAYER, "execd_get_new_conf");
 
    unpackint(pb, &dummy);
 
    old_spool = mconf_get_execd_spool_dir();  
 
-   ret = get_merged_configuration(&Execd_Config_List);
+#ifdef TEST_GDI2
+   ret = gdi2_get_merged_configuration(ctx, &Execd_Config_List);
+#else
+   ret = get_merged_configuration(progid, qualified_hostname, cell_root, &Execd_Config_List);
+#endif   
   
    spool_dir = mconf_get_execd_spool_dir(); 
    if (strcmp(old_spool, spool_dir)) {

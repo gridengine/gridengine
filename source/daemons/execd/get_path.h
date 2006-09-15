@@ -34,14 +34,8 @@
 
 
 
-#ifndef __BASIS_TYPES_H
-#   include "basis_types.h"
-#endif
-
-#ifndef __CULL_H
-#   include "cull.h"
-#endif
-
+#include "basis_types.h"
+#include "cull.h"
 #include "sge_dstring.h"
 
 #define SGE_STDIN           0x00100000
@@ -51,11 +45,11 @@
 #define SGE_PAR_STDOUT      0x20000000
 #define SGE_PAR_STDERR      0x40000000
 
-int sge_get_path(lList *lp, const char *cwd, const char *owner, 
+int sge_get_path(const char * qualified_hostname, lList *lp, const char *cwd, const char *owner, 
                  const char *job_name, u_long32 job_number, 
                  u_long32 task_number, int type, char *path, size_t path_len);
                  
-bool sge_get_fs_path(lList* lp, char* fs_host, size_t fs_host_len, 
+bool sge_get_fs_path(lList* lp, char* fs_host, size_t fs_host_len,
                                 char* fs_path, size_t fs_path_len);
 
 const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename);

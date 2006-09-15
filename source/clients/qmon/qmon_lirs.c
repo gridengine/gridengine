@@ -57,6 +57,10 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
 
 static Widget qmon_lirs = 0;
 static Widget lirs_text = 0;
@@ -237,7 +241,11 @@ static void qmonLIRSGetText(Widget tw, lList *lirs_list, lList **alpp)
    FREE(fields);
 
    if (ret) {
-      ret = limit_rule_set_add_del_mod_via_gdi(new_lirs_list, alpp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+#ifdef TEST_GDI2   
+      ret = limit_rule_set_add_del_mod_via_gdi(ctx, new_lirs_list, alpp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+#else      
+      ret = limit_rule_set_add_del_mod_via_gdi(NULL, new_lirs_list, alpp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+#endif
    }
 
    DEXIT;

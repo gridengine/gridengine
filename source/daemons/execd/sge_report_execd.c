@@ -45,7 +45,13 @@
 #include "qm_name.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
+#include "sge_todo.h"
 #include "sge_load.h"
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 
 #ifndef NO_SGE_COMPILE_DEBUG
 static char* report_types[] = {
@@ -64,6 +70,7 @@ extern lUlong sge_execd_report_seqno;
 
 /*-------------------------------------------------------------------------*/
 int sge_send_all_reports(
+void *context,
 u_long32 now,
 int which,
 report_source *report_sources 
@@ -72,11 +79,28 @@ report_source *report_sources
 
    static int state = STATE_ERROR;
    static u_long32 next_alive_time = 0;
+   const char *master_host = NULL;
    int ret = -1;
    int i;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "sge_send_all_reports");
 
+#ifdef TEST_GDI2      
+   /* in case of error state we test every load interval */
+   if (now > next_alive_time || state == STATE_ERROR) {
+      DPRINTF(("ALIVE TEST OF MASTER\n"));
+      next_alive_time = now + ALIVE_INTERVAL;
+      state = STATE_OK;
+      if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
+         state = STATE_ERROR;
+         ctx->get_master(ctx, true);
+      }   
+   }
+   master_host = ctx->get_master(ctx, false);
+#else
    /* in case of error state we test every load interval */
    if (now > next_alive_time || state == STATE_ERROR) {
       DPRINTF(("ALIVE TEST OF MASTER\n"));
@@ -86,6 +110,8 @@ report_source *report_sources
          state = STATE_ERROR;
       }
    }
+   master_host = sge_get_master(0);
+#endif      
 
    if (state == STATE_OK) {
       lList *report_list = NULL;
@@ -97,7 +123,7 @@ report_source *report_sources
       for (i=0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
-            report_sources[i].func(report_list, now, &(report_sources[i].next_send));
+            report_sources[i].func(context, report_list, now, &(report_sources[i].next_send));
          }
       }
 
@@ -108,8 +134,7 @@ report_source *report_sources
          if (++sge_execd_report_seqno == 10000) {
             sge_execd_report_seqno = 0;
          }
-         
-         ret = report_list_send(report_list, sge_get_master(0), 
+         ret = report_list_send(context, report_list, master_host, 
                                 prognames[QMASTER], 1, 0, NULL);
       } else {
          ret = CL_RETVAL_OK;
@@ -120,6 +145,7 @@ report_source *report_sources
    DEXIT;
    return ret;
 }
+
 /* ----------------------------------------
  
    add a double value to the load report list lpp 

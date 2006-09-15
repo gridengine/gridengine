@@ -35,15 +35,16 @@
 #include "sge_c_gdi.h"
 #include "uti/sge_monitor.h"
 
-int hgroup_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int hgroup_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-int hgroup_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+int hgroup_mod(void *context,
+               lList **alpp, lListElem *modp, lListElem *ep, int add, 
                const char *ruser, const char *rhost, gdi_object_t *object, 
                int sub_command, monitoring_t *monitor);
 
-int hgroup_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+int hgroup_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object);
 
-int hgroup_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
+int hgroup_del(void *context, lListElem *cep, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SGE_HOSTGROUP_QMASTER_H_ */
 

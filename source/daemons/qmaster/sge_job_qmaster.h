@@ -40,17 +40,17 @@
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
 
-int sge_gdi_add_job(lListElem *jepp, lList **alpp, lList **lpp, char *ruser, char *rhost, 
+int sge_gdi_add_job(void *context, lListElem *jepp, lList **alpp, lList **lpp, char *ruser, char *rhost, 
                     uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
                      monitoring_t *monitor);
                     
-int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
+int sge_gdi_copy_job(void *context, lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
                      uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
                      monitoring_t *monitor);
 
-int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
+int sge_gdi_mod_job(void *context, lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
 
-int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command, monitoring_t *monitor);
+int sge_gdi_del_job(void *context, lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command, monitoring_t *monitor);
 
 void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 
@@ -63,16 +63,17 @@ void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 void job_suc_pre(lListElem *jep);
 
 void sge_init_job_number(void); 
-void sge_store_job_number(te_event_t anEvent, monitoring_t *monitor);
+void sge_store_job_number(void *context, te_event_t anEvent, monitoring_t *monitor);
 
 void job_ja_task_send_abort_mail(const lListElem *job, const lListElem *ja_task, const char *ruser,
                                  const char *rhost,  const char *err_str);
 
-void get_rid_of_job_due_to_qdel(lListElem *j, lListElem *t, lList **answer_list, const char *ruser,
+void get_rid_of_job_due_to_qdel(void *context,
+                                lListElem *j, lListElem *t, lList **answer_list, const char *ruser,
                                 int force, monitoring_t *monitor);
 
-void job_mark_job_as_deleted(lListElem *j, lListElem *t);
+void job_mark_job_as_deleted(void *context, lListElem *j, lListElem *t);
 
-void sge_job_spool(void);
+void sge_job_spool(void *context);
 
 #endif /* __SGE_JOB_QMASTER_H */

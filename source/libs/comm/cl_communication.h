@@ -98,6 +98,7 @@ int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
 int cl_com_free_debug_client_setup(cl_debug_client_setup_t** new_setup);
 
 int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
+                            cl_ssl_cert_mode_t  ssl_cert_mode,
                             cl_ssl_method_t  ssl_method,
                             char*            ssl_CA_cert_pem_file,
                             char*            ssl_CA_key_pem_file,

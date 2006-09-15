@@ -38,23 +38,24 @@
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
 
-void sge_userprj_spool(void);
+void sge_userprj_spool(void *context);
 
-int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int userprj_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-int userprj_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+int userprj_mod(void *context,
+                lList **alpp, lListElem *modp, lListElem *ep, int add, 
                 const char *ruser, const char *rhost, gdi_object_t *object, 
                 int sub_command, monitoring_t *monitor);
 
-int userprj_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+int userprj_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object);
 
-int sge_del_userprj(lListElem *ep, lList **alpp, lList **upl, const char *ruser, const char *rhost, int user);
+int sge_del_userprj(void *context, lListElem *ep, lList **alpp, lList **upl, const char *ruser, const char *rhost, int user);
 
 int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, const char *attr_name, const char *obj_descr, const char *obj_name);
 
-void sge_automatic_user_cleanup_handler(te_event_t anEvent, monitoring_t *monitor);
+void sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
 
-int sge_add_auto_user(const char *user, lList **alpp, monitoring_t *monitor);
+int sge_add_auto_user(void *context, const char *user, lList **alpp, monitoring_t *monitor);
 
 void project_update_categories(const lList *added, const lList *removed);
 

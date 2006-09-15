@@ -42,9 +42,13 @@ QCONF_SRC = qconf.c \
             sge_cuser_qconf.c
 
 QCONF_ADD_SRC = \
-               usage.c sge_options.c sig_handlers.c \
-               sge_hgroup_qconf.c sge_centry_qconf.c \
-               sge_cqueue_qconf.c sge_limit_rule_qconf.c \
+               usage.c \
+               sge_options.c \
+               sig_handlers.c \
+               sge_hgroup_qconf.c \
+               sge_centry_qconf.c \
+               sge_cqueue_qconf.c \
+               sge_limit_rule_qconf.c \
                sge_mt_init.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 

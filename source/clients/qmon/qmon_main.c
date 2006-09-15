@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <locale.h>
 
 #include <Xm/Xm.h>
 
@@ -65,6 +66,11 @@
 #include "sge_mt_init.h"
 #include "version.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+
+sge_gdi_ctx_class_t *ctx = NULL;
+#endif
 
 
 #ifdef HAS_EDITRES
@@ -109,31 +115,53 @@ char **argv
    Widget StartupWindow = 0;
    Arg  args[10];
    Cardinal ac = 0;
+#ifdef L10N
    char *lang;
-   static char progname[256];
+#endif   
 /*    static char app_name[1024]; */
 
    int i;
    XrmDatabase qmon_database;
+   static char progname[256];
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
 
+#ifndef L10N
+   setlocale(LC_ALL, "C");
+   putenv("LANG=C"); 
+   putenv("LC_ALL=C"); 
+#endif
+
+#ifndef TEST_GDI2
    sge_mt_init();
+#endif
 
    /* INSTALL SIGNAL HANDLER */
    qmonInstSignalHandler();
 
    strcpy(progname, argv[0]);
-   
+
+#ifdef TEST_GDI2
    /* GENERAL SGE SETUP */
    if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
-      qmonInitSge(progname, 0);
+      qmonInitSge((void**)&ctx, progname, 0);
    } else {  
       /* -help */
-      qmonInitSge(progname, 1);
+      qmonInitSge((void**)&ctx, progname, 1);
+   }
+
+   SGE_ROOT = ctx->get_sge_root(ctx);
+#else
+   /* GENERAL SGE SETUP */
+   if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
+      qmonInitSge(NULL, progname, 0);
+   } else {  
+      /* -help */
+      qmonInitSge(NULL, progname, 1);
    }
 
    SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
+#endif
 
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args
@@ -164,6 +192,7 @@ char **argv
    XtAppAddActionHook(AppContext, TraceActions, NULL);
 #endif
 
+#ifdef L10N
    /*
    ** Internationalization:
    ** The qmon_messages.ad file is installed under 
@@ -178,6 +207,8 @@ char **argv
          lang = "C";
       XmtLoadResourceFile(AppShell, "qmon_messages", False, True);
    }   
+#endif
+
 #if 0   
    strcpy(app_name, "QMON +++ Main Control");
    if (strcmp(uti_state_get_default_cell(), "default")) {

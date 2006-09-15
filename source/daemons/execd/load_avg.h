@@ -36,9 +36,9 @@
 
 extern report_source execd_report_sources[];
 
-lList *sge_build_load_report(void);
+lList *sge_build_load_report(const char* qualified_hostname, const char* binary_path);
 
-void update_job_usage(void);
+void update_job_usage(const char *qualified_hostname);
 
 
 #endif /* __LOAD_AVG_H */

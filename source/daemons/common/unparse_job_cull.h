@@ -36,7 +36,7 @@
 
 #define FLG_FULL_CMDLINE 1
 
-lList *cull_unparse_job_parameter(lList **pcmdline, lListElem *job, int flags);
+lList *cull_unparse_job_parameter(void *context, lList **pcmdline, lListElem *job, int flags);
 
 
 #endif /* __UNPARSE_JOB_CULL_H */

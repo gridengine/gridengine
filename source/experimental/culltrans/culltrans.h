@@ -54,8 +54,10 @@ extern "C" {
 using namespace std;
 #endif
 
+#if 0
 // the following must be bigger than sizeof(_enum_multitype)
 #define lBoolT                         9
+#endif
 
 // global stuff from culltrans.cpp
 extern map<string, List>               lists;

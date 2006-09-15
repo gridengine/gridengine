@@ -4996,4 +4996,35 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
    return 0;
 }
 
+/****** cull/multitype/lGetPosName() ****************************************
+*  NAME
+*     lGetPosName() -- Returns name at position
+*
+*  SYNOPSIS
+*     int lGetPosName(const lDescr *dp, int pos) 
+*
+*  FUNCTION
+*     Returns the name at specified position in a descriptor array. The
+*     Position must be inside the valid range of the descriptor. Returns
+*     NoName if descriptor is NULL or pos < 0.
+*
+*  INPUTS
+*     const lDescr *dp - Descriptor 
+*     int pos          - Position 
+*
+*  RESULT
+*     int - Name 
+******************************************************************************/
+int lGetPosName(const lDescr *dp, int pos) {
+   
+   if (!dp ) {
+      LERROR(LEDESCRNULL);
+      return (int) NoName;
+   }
+   if (pos < 0) {
+      return (int) NoName;
+   } 
+   return dp[pos].nm;
+   
+}
 

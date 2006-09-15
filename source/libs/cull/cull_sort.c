@@ -58,8 +58,7 @@ int lInsertSorted(const lSortOrder * so, lListElem * ep, lList * lp)
    DENTER(TOP_LAYER, "lInsertSorted");
 
    if (!so || !ep || !lp) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    for_each(tmp, lp)
@@ -77,15 +76,14 @@ int lInsertSorted(const lSortOrder * so, lListElem * ep, lList * lp)
       lAppendElem(lp, ep);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 int lResortElem(const lSortOrder * so, lListElem * ep, lList * lp)
 {
    lDechainElem(lp, ep);
    lInsertSorted(so, ep, lp);
-   return 0;
+   DRETURN(0);
 }
 
 /* ------------------------------------------------------------ 
@@ -110,7 +108,7 @@ const lSortOrder *sp
                sp[i].pos, sp[i].ad));
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /* ----------------------------------------
@@ -185,8 +183,7 @@ const lSortOrder *sp
       result *= sp[i].ad;
    }
 
-   DEXIT;
-   return result;
+   DRETURN(result);
 }
 
 lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)

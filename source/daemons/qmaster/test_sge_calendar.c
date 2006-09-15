@@ -270,12 +270,12 @@ static date_entry_t tests[] = { {0, {0,0,0, 1,0,104, 0,0,0}, {0,0,0, 1,1,104, 0,
 
 
 /* test functions */
-static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr); 
-static int test_state_change_list (date_entry_t *test, lList *state_changes);
+static int test(void *context, date_entry_t *test, cal_entry_t *calendar, int test_nr); 
+static int test_state_change_list(date_entry_t *test, lList *state_changes);
 static int test_state_change(lListElem *stateObject, u_long32 state, struct tm *time, int elemNr);
 
 /* setup functions */
-static lListElem *createCalObject(cal_entry_t *calendar);
+static lListElem *createCalObject(void *context, cal_entry_t *calendar);
 
 /* output functions */
 static void printDateError(time_t *when, struct tm *time);
@@ -454,7 +454,7 @@ static void printDateError(time_t *when, struct tm *time)
 *     MT-NOTE: createCalObject() is MT safe 
 *
 *******************************************************************************/
-static lListElem *createCalObject(cal_entry_t *calendar) 
+static lListElem *createCalObject(void *context, cal_entry_t *calendar) 
 {
    monitoring_t monitor;
    lListElem *sourceCal = NULL;
@@ -471,7 +471,7 @@ static lListElem *createCalObject(cal_entry_t *calendar)
 
    destCal = lCreateElem(CAL_Type);
    
-   if (0 != calendar_mod(&answerList, destCal, sourceCal, 1, "", "", NULL, 0, &monitor)) {
+   if (0 != calendar_mod(context, &answerList, destCal, sourceCal, 1, "", "", NULL, 0, &monitor)) {
       lWriteListTo(answerList, stdout);
       lFreeElem(&destCal);
       lFreeList(&answerList);
@@ -507,7 +507,7 @@ static lListElem *createCalObject(cal_entry_t *calendar)
 *     MT-NOTE: test() is MT safe 
 *
 *******************************************************************************/
-static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr) 
+static int test(void *context, date_entry_t *test, cal_entry_t *calendar, int test_nr) 
 {
    lListElem *destCal = NULL;
    int ret = 1;
@@ -530,7 +530,7 @@ static int test(date_entry_t *test, cal_entry_t *calendar, int test_nr)
    printf("==> year cal: \"%s\" week cal: \"%s\"\n", calendar->year_cal, calendar->week_cal);  
 
    /* start test */
-   if ((destCal = createCalObject(calendar)) != NULL) {
+   if ((destCal = createCalObject(context, calendar)) != NULL) {
       u_long32 current_state;
       time_t when = 0;
       time_t now  = mktime(&test->now);
@@ -581,6 +581,7 @@ int main(int argc, char* argv[])
 {
    int test_counter = 0;
    int failed = 0;
+   void *context = NULL;
 
    lInit(nmv);
    
@@ -588,7 +589,7 @@ int main(int argc, char* argv[])
    printf("---------------------\n");
 
    while (tests[test_counter].cal_nr != -1) {
-      if (test(&(tests[test_counter]), 
+      if (test(context, &(tests[test_counter]), 
                &(calendars[tests[test_counter].cal_nr]), 
                test_counter) != 0) {
          failed++; 

@@ -46,6 +46,11 @@
 #include "qmon_message.h"
 #include "qm_name.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
 static tTimer timer_struct;
 
 
@@ -103,7 +108,7 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_SHARETREE_LIST, 0, 1, 0, NULL },
    { SGE_CKPT_LIST, 0, 1, 0, NULL },
    { SGE_CALENDAR_LIST, 0, 1, 0, NULL },
-   { SGE_JOB_SCHEDD_INFO, 0, 1, 0, NULL },
+   { SGE_JOB_SCHEDD_INFO_LIST, 0, 1, 0, NULL },
    { SGE_ZOMBIE_LIST, 0, 1, 0, NULL },
    { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
    { SGE_HGROUP_LIST, 0, 1, 0, NULL },
@@ -374,7 +379,9 @@ XtPointer cld,
 XtIntervalId *id 
 ) {
    tTimer *td = (tTimer *)cld;
+#ifndef TEST_GDI2   
    int status;
+#endif   
    lList *lp = NULL;
    lListElem *ep = NULL;
    lList *alp = NULL;
@@ -388,10 +395,28 @@ XtIntervalId *id
 
    DENTER(GUI_LAYER, "qmonTimerCheckInteractiveJob");
 
+#ifdef TEST_GDI2
+   if (ctx->is_alive(ctx) == false) {
+      sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
+      contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
+                                                msg, "@{Retry}", "@{Abort}",
+                                                XmtYesButton, NULL);
+      /*
+      ** we don't want to retry, so go down
+      */
+      if (!contact_ok) {
+         DEXIT;
+         qmonExitFunc(1);
+      }
+   }
+
+#else
+
    /*
    ** ask if the master is available, if not show warning dialog
    ** and leave the timerproc
    */
+
    status = check_isalive(sge_get_master(0));
 
    DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
@@ -400,7 +425,7 @@ XtIntervalId *id
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
-            /*
+      /*
       ** we don't want to retry, so go down
       */
       if (!contact_ok) {
@@ -408,7 +433,8 @@ XtIntervalId *id
          qmonExitFunc(1);
       }
    }
-   
+#endif
+
       
    /*
    ** everything went ok so fetch the lists
@@ -416,7 +442,11 @@ XtIntervalId *id
    */
    what = lWhat("%T(ALL)", JB_Type);
    where = lWhere("%T(%I == %u)", JB_Type, JB_job_number, job_number);
+#ifdef TEST_GDI2
+   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &lp, where, what);
+#else
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &lp, where, what);
+#endif   
 
    aep = lFirst(alp);
    ep = lFirst(lp);

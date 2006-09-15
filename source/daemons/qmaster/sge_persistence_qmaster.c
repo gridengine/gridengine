@@ -51,20 +51,34 @@
 
 #include "msg_qmaster.h"
 
+#ifdef TEST_QMASTER_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 bool
-sge_initialize_persistence(lList **answer_list)
+sge_initialize_persistence(void *context, lList **answer_list)
 {
    bool ret = true;
 
    lListElem *spooling_context;
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *spooling_method = ctx->get_spooling_method(ctx);
+   const char *spooling_lib = ctx->get_spooling_lib(ctx);
+   const char *spooling_params = ctx->get_spooling_params(ctx);
+#else
+   const char *spooling_method = bootstrap_get_spooling_method();
+   const char *spooling_lib = bootstrap_get_spooling_lib();
+   const char *spooling_params = bootstrap_get_spooling_params();
+#endif
 
    DENTER(TOP_LAYER, "sge_initialize_persistence");
 
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(answer_list, 
-                           bootstrap_get_spooling_method(),
-                           bootstrap_get_spooling_lib(), 
-                           bootstrap_get_spooling_params());
+                           spooling_method,
+                           spooling_lib, 
+                           spooling_params);
    if (spooling_context == NULL) {
       /* error message created in spool_create_dynamic_context */
       ret = false;
@@ -133,7 +147,7 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
+spooling_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    time_t next_trigger = 0;
    time_t now;
@@ -211,7 +225,8 @@ spooling_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
 *     
 *******************************************************************************/
 bool 
-sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
+sge_event_spool(void *context,
+                lList **answer_list, u_long32 timestamp, ev_event event, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
                 const char *strkey2, const char *session, 
                 lListElem *object, lListElem *sub_object1, 
@@ -224,6 +239,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    lListElem *element = NULL;
    bool delete = false;
    dstring buffer = DSTRING_INIT;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+#else
+   bool job_spooling = bootstrap_get_job_spooling();
+#endif
+
 
    switch (event) {
       case sgeE_ADMINHOST_LIST:
@@ -497,10 +519,10 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          lList *spool_answer_list = NULL;
          if (delete) {
             ret = spool_delete_object(&spool_answer_list, spool_get_default_context(), 
-                                      object_type, key);
+                                      object_type, key, job_spooling);
          } else {
             ret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                                     element, key, object_type);
+                                     element, key, object_type, job_spooling);
          }
          /* output low level error messages */
          answer_list_output(&spool_answer_list);

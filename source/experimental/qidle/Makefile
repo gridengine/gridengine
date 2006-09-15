@@ -31,7 +31,7 @@
 #___INFO__MARK_END__
 SHELL    = /bin/sh
 RM       = rm -f
-QIDLE_SDIR = ../qidle
+QIDLE_SDIR = ../experimental/qidle
 QIDLE      = qidle
 
 # CODGDI      = libgdi.a
@@ -47,7 +47,7 @@ QIDLE      = qidle
 
 ###########################################################################
 
-# all:  $(QIDLE)
+all:  $(QIDLE)
 
 # qidlestrip:
 # 	$(STRIP) $(QIDLE)
@@ -56,7 +56,7 @@ QIDLE      = qidle
 # The dependencies include additional files from src and utilib
 #
 qidle_depend:
-	$(DEPEND) -f$(QIDLE_SDIR)/qidledependencies $(XCFLAGS) $(QIDLE_SDIR)/*.c
+	$(DEPEND) -f$(QIDLE_SDIR)/qidle_dependencies $(XCFLAGS) $(QIDLE_SDIR)/*.c
 
 # mrproper:  clean 
 # 
@@ -69,11 +69,14 @@ QIDLESRC =  qidle.c
             
 QIDLEOBJS = $(QIDLESRC:.c=.o) 
             
-ALLQIDLEOBJS = $(QIDLEOBJS) sge_conf.o sge_load_sensor.o report.o $(SCHEDLIB) $(GDILIB) \
-               $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB)
+ALLQIDLEOBJS = $(QIDLEOBJS) sge_conf.o sge_load_sensor.o sge_report_execd.o 
+QIDLE_LIB_DEPEND = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) \
+                   $(UTILIB) $(RMONLIB)
+QIDLE_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon
+
   
-$(QIDLE):  $(ALLQIDLEOBJS) 
-	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(ALLQIDLEOBJS) $(XLIBS) $(LIBS) 
+$(QIDLE):  $(ALLQIDLEOBJS) $(QIDLE_LIB_DEPEND)
+	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(ALLQIDLEOBJS) $(QIDLE_ADD_LIBS) $(XLIBS) $(LIBS) 
 
 qidle.o:      $(QIDLE_SDIR)/qidle.c
 	$(CC) $(CFLAGS)  $(XCFLAGS) -c $(QIDLE_SDIR)/qidle.c

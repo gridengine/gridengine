@@ -66,44 +66,84 @@
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *jr_list;
 
 static char execd_messages_file[SGE_PATH_MAX];
 
 /*-------------------------------------------------------------------*/
-void sge_setup_sge_execd(const char* tmp_err_file_name)
+void sge_setup_sge_execd(void *context, const char* tmp_err_file_name)
 {
    char err_str[1024];
    int allowed_get_conf_errors     = 5;
    char* spool_dir = NULL;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+   const char *admin_user = ctx->get_admin_user(ctx);
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+   u_long32 progid = uti_state_get_mewho();
+   const char *cell_root = path_state_get_cell_root();
+   int is_daemonized = uti_state_get_daemonized();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
+   const char *admin_user = bootstrap_get_admin_user();
+#endif
+
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
+   /* TODO: is this the right place to switch the user ?
+            ports below 1024 ok */
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
+   if (sge_set_admin_username(admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
+      /* TODO: remove */
+      SGE_EXIT(NULL, 1);
    }
 
    if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-      SGE_EXIT(1);
+      /* TODO: remove */
+      SGE_EXIT(NULL, 1);
    }
 
-   while (get_conf_and_daemonize(daemonize_execd, &Execd_Config_List, NULL)) {
+#ifdef TEST_GDI2
+   while (gdi2_get_conf_and_daemonize(ctx, daemonize_execd, &Execd_Config_List, NULL)) {
       if (allowed_get_conf_errors-- <= 0) {
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
-         SGE_EXIT(1);
+         /* TODO: remove */
+         SGE_EXIT(NULL, 1);
       }
       sleep(1);
    }
+#else
+   while (get_conf_and_daemonize(progid, progname, qualified_hostname, cell_root, is_daemonized, 
+                                    daemonize_execd, &Execd_Config_List, NULL)) {
+      if (allowed_get_conf_errors-- <= 0) {
+         CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
+         SGE_EXIT(NULL, 1);
+      }
+      sleep(1);
+   }
+#endif   
    sge_show_conf();         
 
-   /* get aliased hostname from commd */
+
+   /* get aliased hostname */
+#ifdef TEST_GDI2
+   /* TODO: is this call needed ? */
+   ctx->reresolve_qualified_hostname(ctx);
+#else
    reresolve_me_qualified_hostname();
+#endif   
    spool_dir = mconf_get_execd_spool_dir();
 
    DPRINTF(("chdir(\"/\")----------------------------\n"));
@@ -112,10 +152,10 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
    sge_mkdir(spool_dir, 0755, 1, 0);
    DPRINTF(("chdir(\"%s\")----------------------------\n", spool_dir));
    sge_chdir_exit(spool_dir,1);
-   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1, 0);
+   sge_mkdir(unqualified_hostname, 0755, 1, 0);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
-            uti_state_get_unqualified_hostname()));
-   sge_chdir_exit(uti_state_get_unqualified_hostname(), 1); 
+            unqualified_hostname));
+   sge_chdir_exit(unqualified_hostname, 1); 
    /* having passed the  previous statement we may 
       log messages into the ERR_FILE  */
    if ( tmp_err_file_name != NULL) {
@@ -128,11 +168,11 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
    sge_switch2admin_user();
    log_state_set_log_as_admin_user(1);
    sprintf(execd_messages_file, "%s/%s/%s", spool_dir, 
-           uti_state_get_unqualified_hostname(), ERR_FILE);
+           unqualified_hostname, ERR_FILE);
    log_state_set_log_file(execd_messages_file);
 
    sprintf(execd_spool_dir, "%s/%s", spool_dir, 
-           uti_state_get_unqualified_hostname());
+           unqualified_hostname);
    
    DPRINTF(("Making directories----------------------------\n"));
    sge_mkdir(EXEC_DIR, 0775, 1, 0);
@@ -145,14 +185,22 @@ void sge_setup_sge_execd(const char* tmp_err_file_name)
 }
 
 /*-------------------------------------------------------------------------*/
-int daemonize_execd()
+int daemonize_execd(void *context)
 {
    fd_set keep_open;
    int ret, fd;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   int is_daemonized = ctx->is_daemonized(ctx);
+   const char *progname = ctx->get_progname(ctx);
+#else
+   int is_daemonized = uti_state_get_daemonized();
+   const char *progname = uti_state_get_sge_formal_prog_name();
+#endif
 
    DENTER(TOP_LAYER, "daemonize_execd");
 
-   if (uti_state_get_daemonized()) {
+   if (is_daemonized) {
       return 1;
    }
    FD_ZERO(&keep_open); 
@@ -166,9 +214,13 @@ int daemonize_execd()
       FD_SET(fd, &keep_open);
    } 
 
-   cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open);
+   cl_com_set_handle_fds(cl_com_get_handle((char*)progname,0), &keep_open);
 
-   ret = sge_daemonize(&keep_open);
+#ifdef TEST_GDI2   
+   ret = sge_daemonize(&keep_open, ctx);   
+#else
+   ret = sge_daemonize(&keep_open, NULL);   
+#endif   
 
    DEXIT;
    return ret;

@@ -84,6 +84,7 @@
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_host.h"
+#include "sge_qstat.h"
 
 #include "sched/sort_hosts.h"
 
@@ -141,7 +142,7 @@ static bool qlimit_print_out_filter(lListElem *filter, const char *name, const c
 *     MT-NOTE: qlimit_output() is MT safe 
 *
 *******************************************************************************/
-bool qlimit_output(void *ctx, lList *host_list, lList *resource_match_list, lList *user_list,
+bool qlimit_output(void *context, lList *host_list, lList *resource_match_list, lList *user_list,
                  lList *pe_list, lList *project_list, lList *cqueue_list, lList **alpp,
                  report_handler_t* report_handler) 
 {
@@ -164,6 +165,10 @@ bool qlimit_output(void *ctx, lList *host_list, lList *resource_match_list, lLis
                                      "*" };
 
    dstring rule_name = DSTRING_INIT;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+#endif
    
    DENTER(TOP_LAYER, "qlimit_output");
 
@@ -174,9 +179,13 @@ bool qlimit_output(void *ctx, lList *host_list, lList *resource_match_list, lLis
    qlimit_filter.user = uti_state_get_user_name();
 #endif
 
-   if (!get_all_lists(ctx, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp)) {
-      ret = false;
-   } else {
+#ifdef TEST_GDI2
+   ret = get_all_lists(ctx, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp);
+#else
+   ret = get_all_lists(NULL, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp);
+#endif
+
+   if (ret == true) {
       bool printheader = true;
       lListElem *lirs = NULL;
 
@@ -545,7 +554,7 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
 
    /* --- limitation rule sets */
    lFreeList(alpp);
-   *alpp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_LIRS_LIST, lirs_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_LIRS_LIST, lirs_id,
                                  mal, lirs_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -554,7 +563,7 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
 
    /* --- complex attribute */
    lFreeList(alpp);
-   *alpp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                  mal, centry_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -562,7 +571,7 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    }
    /* --- usersets */
    lFreeList(alpp);
-   *alpp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USERSET_LIST, userset_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_USERSET_LIST, userset_id,
                                  mal, userset_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -570,7 +579,7 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    }
    /* --- hostgroups */
    lFreeList(alpp);
-   *alpp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgroup_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGROUP_LIST, hgroup_id,
                                  mal, hgroup_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -578,7 +587,7 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    }
    /* --- exec hosts*/
    lFreeList(alpp);
-   *alpp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id,
                                  mal, exechost_l);
 
    lFreeList(&mal);

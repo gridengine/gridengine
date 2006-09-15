@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -66,34 +67,39 @@
 
 #include "gdi/msg_gdilib.h"
 
-static void default_exit_func(int i);
+#ifndef TEST_GDI2
+static void default_exit_func(void **context, int i);
 static void gdi_init_mt(void);
 
-struct gdi_state_t {
+static int gdi_state_get_isalive(void);
+static void gdi_state_set_isalive(int i);
+#endif
+
+#ifndef GDI_STATE_OFF
+static void gdi_free_request(gdi_send_t **async_gdi); 
+
+
+static pthread_key_t   gdi_state_key;
+static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
+
+typedef struct {
    /* gdi request base */
    u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
                                it is ensured that the request ID is also contained in answer */
-   int      daemon_first;
-   int      first_time;
-   int      commd_state;
-
    int      made_setup;
    int      isalive;
 
    char     cached_master_name[CL_MAXHOSTLEN];
 
    gdi_send_t *async_gdi; /* used to store a async GDI request.*/
-};
+} gdi_state_t;
 
-static pthread_key_t   gdi_state_key;
-
-static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 static void gdi_state_destroy(void* state) {
    free(state);
 }
 
-static void gdi_init_mt(void) {
+void gdi_init_mt(void) {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
  
@@ -102,23 +108,17 @@ void gdi_once_init(void) {
 
    /* uti */
    uidgid_mt_init();
-
    bootstrap_mt_init();
    feature_mt_init();
    sge_prof_setup();
-
 
    /* gdi */
    gdi_init_mt();
    path_mt_init();
 }
 
-static void gdi_state_init(struct gdi_state_t* state) {
+static void gdi_state_init(gdi_state_t* state) {
    state->request_id = 0;
-   state->daemon_first = 1;
-   state->first_time = 1;
-   state->commd_state = COMMD_UNKNOWN;
-
    state->made_setup = 0;
    state->isalive = 0;
    strcpy(state->cached_master_name, "");
@@ -164,61 +164,29 @@ void gdi_mt_init(void)
 *     variable.
 *
 ******************************************************************************/
-
-
-u_long32 gdi_state_get_request_id(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
-   return gdi_state->request_id;
-}
-
 u_long32 gdi_state_get_next_request_id(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_request_id");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_next_request_id");
    gdi_state->request_id++;
    return gdi_state->request_id;
 }
 
 
-int gdi_state_get_daemon_first(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_daemon_first");
-   return gdi_state->daemon_first;
-}
-
-int gdi_state_get_first_time(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_first_time");
-   return gdi_state->first_time;
-}
-
-int gdi_state_get_commd_state(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_commd_state");
-   return gdi_state->commd_state;
-}
-
 int gdi_state_get_made_setup(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
    return gdi_state->made_setup;
-}
-
-int gdi_state_get_isalive(void)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_isalive");
-   return gdi_state->isalive;
 }
 
 char *gdi_state_get_cached_master_name(void)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
    return gdi_state->cached_master_name;
 }
 
 gdi_send_t*
 gdi_state_get_last_gdi_request(void) {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                 "gdi_state_get_last_gdi_request");
 
    return gdi_state->async_gdi;
@@ -227,12 +195,12 @@ gdi_state_get_last_gdi_request(void) {
 void 
 gdi_state_clear_last_gdi_request(void) 
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                 "gdi_state_clear_last_gdi_request");
    gdi_free_request(&(gdi_state->async_gdi));
 }
 
-void
+static void
 gdi_free_request(gdi_send_t **async_gdi) 
 {
    (*async_gdi)->out.first = free_gdi_request((*async_gdi)->out.first);
@@ -264,7 +232,7 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
    out->sequence_id = 0;
  
    { /* set thread specific value */
-      GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+      GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
                    "gdi_set_request");
       if (gdi_state->async_gdi != NULL) {
          gdi_free_request(&(gdi_state->async_gdi));
@@ -273,6 +241,15 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
    }
   
    return true;
+}
+
+#endif /* GDI_STATE_OFF */
+
+#ifndef TEST_GDI2
+static int gdi_state_get_isalive(void)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_isalive");
+   return gdi_state->isalive;
 }
 
 /****** libs/gdi/gdi_state_set_????() ************************************
@@ -284,44 +261,17 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
 *     variable.
 *
 ******************************************************************************/
-
-void gdi_state_set_request_id(u_long32 id)
+static void gdi_state_set_made_setup(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_request_id");
-   gdi_state->request_id = id;
-}
-
-void gdi_state_set_daemon_first(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_daemon_first");
-   gdi_state->daemon_first = i;
-}
-
-void gdi_state_set_first_time(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_first_time");
-   gdi_state->first_time = i;
-}
-
-void gdi_state_set_commd_state(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_commd_state");
-   gdi_state->commd_state = i;
-}
-
-void gdi_state_set_made_setup(int i)
-{
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
    gdi_state->made_setup = i;
 }
 
 void gdi_state_set_isalive(int i)
 {
-   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_isalive");
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_isalive");
    gdi_state->isalive = i;
 }
-
-
 
 /****** gdi/setup/sge_gdi_setup() *********************************************
 *  NAME
@@ -490,7 +440,8 @@ int sge_gdi_param(int param, int intval, char *strval)
    return AE_OK;
 }
 
-static void default_exit_func(int i) 
+
+static void default_exit_func(void **context, int i) 
 {
    sge_security_exit(i); 
    cl_com_cleanup_commlib();
@@ -516,8 +467,9 @@ int sge_gdi_shutdown()
 
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
-   default_exit_func(0);
+   default_exit_func(NULL, 0);
 
    DEXIT;
    return 0;
 }
+#endif

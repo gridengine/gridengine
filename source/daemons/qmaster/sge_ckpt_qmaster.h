@@ -37,16 +37,17 @@
 #include "sge_c_gdi.h" 
 #include "uti/sge_monitor.h"
 
-int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add, 
+int ckpt_mod(void *context,
+             lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add, 
              const char *ruser, const char *rhost, gdi_object_t *object, 
              int sub_command, monitoring_t *monitor);
 
-int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
+int ckpt_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object);
 
-int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int ckpt_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
 /* funtions called via gdi and inside the qmaster */
-int sge_del_ckpt(lListElem *, lList **, char *, char *);
+int sge_del_ckpt(void *context, lListElem *, lList **, char *, char *);
 
 void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
                                       const char *obj_name, 

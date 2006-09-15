@@ -1065,20 +1065,20 @@ InitCA()
    if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) ]; then
       # Initialize CA, make directories and get DN info
       #
+      SGE_CA_CMD=util/sgeCA/sge_ca
       if [ "$AUTO" = "true" ]; then
          if [ "$CSP_RECREATE" = "true" ]; then
-            util/sgeCA/sge_ca -init -days 365 -auto $FILE
+            $SGE_CA_CMD -init -days 365 -auto $FILE
             #if [ -f "$CSP_USERFILE" ]; then
-            #   util/sgeCA/sge_ca -usercert $CSP_USERFILE
+            #   $SGE_CA_CMD -usercert $CSP_USERFILE
             #fi
          fi
       else
-         util/sgeCA/sge_ca -init -days 365
+         $SGE_CA_CMD -init -days 365
       fi
 
-      if [ $? != 0 ]; then
-         CAErrUsage
-      fi
+      #  TODO: CAErrUsage no longer available, error handling ???:w
+      
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
       $CLEAR
    fi

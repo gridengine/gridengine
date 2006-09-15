@@ -34,20 +34,18 @@
 
 #include "cull.h"
 
-bool limit_rule_show(lList **answer_list, const char *name);
+bool limit_rule_show(void *context, lList **answer_list, const char *name);
 
-bool limit_rule_get_via_gdi(lList **answer_list, const lList *lirsref_list,
+bool limit_rule_get_via_gdi(void *context, lList **answer_list, const lList *lirsref_list,
                             lList **lirs_list);
 
-bool limit_rule_get_all_via_gdi(lList **answer_list, lList **lirs_list);
-bool limit_rule_set_add(lList **answer_list, const char *name);
-bool limit_rule_set_modify(lList **answer_list, const char *name);
-bool limit_rule_set_add_from_file(lList **answer_list, const char *filename);
-bool limit_rule_set_modify_from_file(lList **answer_list, const char *filename, const char *name);
+bool limit_rule_get_all_via_gdi(void *context, lList **answer_list, lList **lirs_list);
+bool limit_rule_set_add(void *context, lList **answer_list, const char *name);
+bool limit_rule_set_modify(void *context, lList **answer_list, const char *name);
+bool limit_rule_set_add_from_file(void *context, lList **answer_list, const char *filename);
+bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const char *filename, const char *name);
 
-bool limit_rule_set_provide_modify_context(lList **lirs_list, lList **answer_list,
-                                           bool ignore_unchanged_message);
-bool limit_rule_set_add_del_mod_via_gdi(lList *lirs_list, lList **answer_list,
+bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList **answer_list,
                                         u_long32 gdi_command);
 
 #endif /* __SGE_LIMIT_RULE_QCONF */

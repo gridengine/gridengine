@@ -43,32 +43,10 @@
 
 #include "msg_qconf.h"
 
-static void report_and_free_answers(lList **alpp, lList *new_answers);
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
-static void report_and_free_answers(
-lList **alpp,
-lList *new_answers 
-) {
-   lListElem *answer;
-
-   DENTER(TOP_LAYER,"report_and_free_answers");
-
-   if (alpp) { /* append all answers to existing list */
-      lAddList(*alpp, &new_answers);
-   } else { /* write errors to stderr */
-      for_each (answer, new_answers) {
-         answer_exit_if_not_recoverable(answer);
-         if (answer_get_status(answer) != STATUS_OK) {
-            fprintf(stderr, "%s\n", lGetString(answer, AN_text));
-         }   
-      }
-
-      lFreeList(&new_answers);
-   }
-
-   DEXIT;
-   return;
-}
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -81,6 +59,7 @@ lList *new_answers
 
 */
 int sge_client_add_user(
+void *context,
 lList **alpp,
 lList *user_args,
 lList *acl_args 
@@ -92,12 +71,12 @@ lList *acl_args
    lEnumeration *what;
    u_long32 status;
    int already;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
+
 
    DENTER(TOP_LAYER, "sge_client_add_user");
-
-   if ((alpp != NULL) && (*alpp == NULL)) {
-      *alpp = lCreateList("answers", AN_Type);
-   }
 
    what = lWhat("%T(ALL)", US_Type);
 
@@ -111,7 +90,11 @@ lList *acl_args
          user_name=lGetString(userarg, UE_name);
    
          /* get old acl */
+#ifdef TEST_GDI2
+         answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+#else
          answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+#endif         
          lFreeList(&answers);
 
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -119,8 +102,13 @@ lList *acl_args
                lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
 
                /* mod the acl */
+#ifdef TEST_GDI2
+               answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
+                        NULL, NULL);   
+#else
                answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
                         NULL, NULL);   
+#endif                        
             } else {
                already = 1;
             }
@@ -130,8 +118,13 @@ lList *acl_args
             lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
             
             /* add the acl */
+#ifdef TEST_GDI2
+            answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_ADD, &acl, 
+                     NULL, NULL);   
+#else
             answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_ADD, &acl, 
                      NULL, NULL);   
+#endif                     
          }
 
          if (already) {
@@ -162,8 +155,8 @@ lList *acl_args
       lFreeWhere(&where);
    }
    lFreeWhat(&what);
-   DEXIT;
-   return 0;
+
+   DRETURN(0);
 }
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -
@@ -177,6 +170,7 @@ lList *acl_args
 
 */
 int sge_client_del_user(
+void *context,
 lList **alpp,
 lList *user_args,
 lList *acl_args 
@@ -187,12 +181,11 @@ lList *acl_args
    lCondition *where;
    lEnumeration *what;
    u_long32 status;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "sge_client_del_user");
-
-   if ((alpp != NULL) && (*alpp == NULL)) {
-      *alpp = lCreateList("answers", AN_Type);
-   }
 
    what = lWhat("%T(ALL)", US_Type);
 
@@ -205,7 +198,11 @@ lList *acl_args
          char *cp = NULL;
          user_name=lGetString(userarg, UE_name);
          /* get old acl */
+#ifdef TEST_GDI2
+         answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+#else
          answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+#endif         
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
          lFreeList(&answers);
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -213,7 +210,11 @@ lList *acl_args
             cp = NULL;
             if (lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lDelSubStr(lFirst(acl), UE_name, user_name, US_entries);
+#ifdef TEST_GDI2               
+               answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
+#else
                answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
+#endif               
                cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
                status = lGetUlong(lFirst(answers), AN_status);
                lFreeList(&answers);
@@ -259,8 +260,7 @@ lList *acl_args
    }
    lFreeWhat(&what);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -   
@@ -278,6 +278,7 @@ lList *acl_args
 
 */
 int sge_client_get_acls(
+void *context,
 lList **alpp,
 lList *acl_args,
 lList **dst 
@@ -287,12 +288,11 @@ lList **dst
    lCondition *where, *newcp;
    lEnumeration *what;
    const char *acl_name;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
    
    DENTER(TOP_LAYER, "sge_client_get_acls");
-
-   if ((alpp != NULL) && (*alpp == NULL)) {
-      *alpp = lCreateList("answers", AN_Type);
-   }
 
    where = NULL;
    for_each(aclarg,acl_args) {
@@ -305,12 +305,15 @@ lList **dst
          where = lOrWhere(where, newcp);
    }
    what = lWhat("%T(ALL)", US_Type);
+#ifdef TEST_GDI2
+   answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
+#else
    answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
+#endif   
    lFreeWhat(&what);
    lFreeWhere(&where);
 
-   report_and_free_answers(alpp, answers);
+   answer_list_append_list(alpp, &answers);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }

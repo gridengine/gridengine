@@ -83,8 +83,14 @@ extern volatile int shut_me_down;
  counterpart in qmaster: c_qmod.c
  **************************************************************************/
 int 
-execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, 
-                   u_long *rcvtimeout, int *synchron, char *err_str, int answer_error)
+execd_signal_queue(void *context, 
+                   struct dispatch_entry *de, 
+                   sge_pack_buffer *pb, 
+                   sge_pack_buffer *apb, 
+                   u_long *rcvtimeout, 
+                   int *synchron, 
+                   char *err_str, 
+                   int answer_error)
 {
    lListElem *jep;
    int found = 0;
@@ -186,7 +192,7 @@ execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buff
    if (!found && jobid) {
       lListElem *jr;
       jr = get_job_report(jobid, jataskid, NULL);
-      remove_acked_job_exit(jobid, jataskid, NULL, jr);
+      remove_acked_job_exit(context, jobid, jataskid, NULL, jr);
       job_unknown(jobid, jataskid, qname);
    }
 
@@ -446,7 +452,7 @@ void sge_send_suspend_mail(u_long32 signal, lListElem *master_q, lListElem *jep,
                job_exec_time_str);
        sprintf(mail_body, "\n");
  
-       cull_mail(mail_users, mail_subject, mail_body, mail_type );
+       cull_mail(EXECD, mail_users, mail_subject, mail_body, mail_type );
    } 
    DEXIT;
 }

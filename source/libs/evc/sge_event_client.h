@@ -32,12 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifndef TEST_GDI2
+
 #include "sge_gdi.h"
 
 #include "sge_eventL.h"
 #include "uti/sge_monitor.h"
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
+
+
 
 lListElem *ec_get_event_client(void);
 void ec_set_event_client(lListElem *ec);
@@ -46,6 +50,7 @@ bool ec_prepare_registration(ev_registration_id id, const char *name);
 bool ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList **alpp);
 bool ec_deregister(lListElem **event_client);
 bool ec_is_initialized(lListElem *event_client);
+
 
 bool ec_subscribe(lListElem *event_client, ev_event event);
 bool ec_subscribe_all(lListElem *event_client);
@@ -79,14 +84,11 @@ const char *ec_get_session(lListElem *event_client);
 
 ev_registration_id ec_get_id(lListElem *event_client);
 
-void ec_set_clientdata(lListElem *event_client, u_long32 data);
-u_long32 ec_get_clientdata(lListElem *event_client);
-
 bool ec_commit(lListElem *event_client);
 bool ec_commit_multi(lListElem *event_client, lList **malp, state_gdi_multi *state);
 
 
-bool ec_get(lListElem *event_client, lList **, bool exit_on_qmaster_down);
+bool ec_get(lListElem *event_client, lList **event_list, bool exit_on_qmaster_down);
 
 void ec_mark4registration(lListElem *event_client);
 bool ec_need_new_registration(void);
@@ -101,6 +103,9 @@ bool ec_commit_local(lListElem *event_client, event_client_update_func_t update_
 bool ec_deregister_local(lListElem **event_client);
 bool ec_register_local(lListElem *event_client, lList **alpp, event_client_update_func_t update_func, monitoring_t *monitor);
 bool ec_ack_local(lListElem *event_client);
+
+#endif /* TEST_GDI2 */
+
 
 #endif /* __SGE_C_EVENT_H */
 

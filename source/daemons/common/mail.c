@@ -58,7 +58,8 @@
 pid_t wait3(int *, int, struct rusage *);
 #endif
 
-static void sge_send_mail(const char *mailer, int mailer_has_subj_line, 
+static void sge_send_mail(u_long32 progid,
+                          const char *mailer, int mailer_has_subj_line, 
                           const char *user, const char *host, const char *subj,
                           const char *buf);
 
@@ -76,7 +77,7 @@ static void sge_send_mail(const char *mailer, int mailer_has_subj_line,
 ** DESCRIPTION
 **   sends a mail to each of the recipients in the list
 */
-void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
+void cull_mail(u_long32 progid, lList *user_list, char *subj, char *buf, const char *mail_type) {
    char *mailer;
    int mailer_has_subj_line;
    lListElem *ep;
@@ -108,7 +109,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
                   mail_type, user, host, mailer, 
                   subj ? subj : MSG_MAIL_NOSUBJ));
          }
-         sge_send_mail(mailer, mailer_has_subj_line, user, host, subj, buf);
+         sge_send_mail(progid, mailer, mailer_has_subj_line, user, host, subj, buf);
       }
    } 
 
@@ -120,6 +121,7 @@ void cull_mail(lList *user_list, char *subj, char *buf, const char *mail_type) {
 /************************************************************/
 
 static void sge_send_mail(
+u_long32 progid,
 const char *mailer,
 int mailer_has_subj_line,
 const char *user,
@@ -209,7 +211,7 @@ const char *buf
    fprintf(fp, "%s\n", buf);
    FCLOSE(fp);
 
-   sge_setup_sig_handlers(uti_state_get_mewho());
+   sge_setup_sig_handlers(progid);
 
    done = false;
    while (!done) {

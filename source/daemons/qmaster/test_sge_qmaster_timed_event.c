@@ -40,9 +40,9 @@
 #include "sge_profiling.h"
 
  
-void calendar_event_handler(te_event_t anEvent, monitoring_t *monitor);
-void signal_resend_event_handler(te_event_t anEvent, monitoring_t *monitor);
-void job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor);
+void calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void signal_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
 
 static void test_delete_nonexistent_event(void);
 static void test_add_one_time_event_without_handler(void);
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
    return 0;
 } /* main() */
 
-void calendar_event_handler(te_event_t anEvent, monitoring_t *monitor)
+void calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "calendar_event_handler");
 
@@ -116,7 +116,7 @@ void calendar_event_handler(te_event_t anEvent, monitoring_t *monitor)
    return;
 } /* calendar_event_handler() */
 
-void signal_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
+void signal_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "signal_resend_event_handler");
 
@@ -126,7 +126,7 @@ void signal_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
    return;
 } /* signal_resend_event_handler() */
 
-void job_resend_event_handler(te_event_t anEvent, monitoring_t *monitor)
+void job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "job_resend_event_handler");
 

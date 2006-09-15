@@ -93,6 +93,7 @@ u_long32 admail_times[MAX_SSTATE + 1];
 ** have nothing to do with a particular job
 */
 void job_related_adminmail(
+u_long32 progid,
 lListElem *jr,
 int is_array 
 ) {
@@ -301,7 +302,7 @@ int is_array
          }
       }
 
-      cull_mail(lp_mail, sge_mail_subj, sge_mail_body_total, 
+      cull_mail(progid, lp_mail, sge_mail_subj, sge_mail_body_total, 
                 MSG_MAIL_TYPE_ADMIN);
 
       if (sge_mail_body_total)

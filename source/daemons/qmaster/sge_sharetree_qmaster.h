@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_add_sharetree(lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
-int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
-int sge_del_sharetree(lList **lpp, lList **alpp, char *ruser, char *rhost);
+int sge_add_sharetree(void *context, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
+int sge_mod_sharetree(void *context, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
+int sge_del_sharetree(void *context, lList **lpp, lList **alpp, char *ruser, char *rhost);
 
 int update_sharetree(lList **alpp, lList *dst, lList *src);
 

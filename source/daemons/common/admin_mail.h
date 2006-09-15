@@ -47,7 +47,7 @@
 
 
 int adm_mail_reset(int state);
-void job_related_adminmail(lListElem *jr, int is_array);
+void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array);
 
 #endif /* __ADMIN_MAIL_H */
 

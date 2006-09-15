@@ -51,10 +51,11 @@
 #include "read_defaults.h"
 
 static char *get_cwd_defaults_file_path (lList **answer_list);
-static void append_opts_from_default_files (lList **pcmdline, 
-                                     lList **answer_list,
-                                     char **envp,
-                                     char **def_files);
+static void append_opts_from_default_files (u_long32 prog_number,
+                                            lList **pcmdline, 
+                                            lList **answer_list,
+                                            char **envp,
+                                            char **def_files);
 
 /****** sge/opt/opt_list_append_opts_from_default_files() *********************
 *  NAME
@@ -89,15 +90,15 @@ static void append_opts_from_default_files (lList **pcmdline,
 *  NOTES
 *     MT-NOTE: opt_list_append_opts_from_default_files() is MT safe
 *******************************************************************************/
-void opt_list_append_opts_from_default_files(lList **pcmdline, 
+void opt_list_append_opts_from_default_files(u_long32 prog_number, 
+                                             const char* cell_root,
+                                             const char* user,
+                                             lList **pcmdline, 
                                              lList **answer_list,
                                              char **envp) 
 {
    dstring req_file = DSTRING_INIT;
    char *def_files[3 + 1];
-
-   const char *user = uti_state_get_user_name();
-   const char *cell_root = path_state_get_cell_root();
 
    DENTER(TOP_LAYER, "opt_list_append_opts_from_default_files");
 
@@ -124,12 +125,11 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
    /*
     * now read all the defaults files, unaware of where they came from
     */
-   append_opts_from_default_files(pcmdline, answer_list, envp, def_files); /* MT-NOTE !!!! */
-
+   append_opts_from_default_files(prog_number, pcmdline,  answer_list, envp, def_files); /* MT-NOTE !!!! */
+    
    sge_dstring_free(&req_file);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** read_defaults/get_user_home_file_path() *****************************
@@ -233,8 +233,7 @@ static char *get_cwd_defaults_file_path(lList **answer_list)
    }
    strcat(file, SGE_HOME_DEF_REQ_FILE);
    
-   DEXIT;
-   return file;
+   DRETURN(file);
 }
 
 /****** sge/opt/append_opts_from_default_files() *******************************
@@ -269,7 +268,8 @@ static char *get_cwd_defaults_file_path(lList **answer_list)
 *     char **def_files - paths to default files
 *
 *******************************************************************************/
-static void append_opts_from_default_files(lList **pcmdline, 
+static void append_opts_from_default_files(u_long32 prog_number, 
+                                           lList **pcmdline, 
                                            lList **answer_list,
                                            char **envp,
                                            char **def_files) 
@@ -305,7 +305,7 @@ static void append_opts_from_default_files(lList **pcmdline,
       }
       DPRINTF(("-- defaults file: %s\n", *pstr));
 
-      alp = parse_script_file(*pstr, "", pcmdline, envp, 
+      alp = parse_script_file(prog_number, *pstr, "", pcmdline, envp, 
          FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
 
       for_each(aep, alp) {
@@ -339,8 +339,7 @@ static void append_opts_from_default_files(lList **pcmdline,
             ;
          }
          
-         DEXIT;
-         return;
+         DRETURN_VOID;
       }
    }
 
@@ -348,7 +347,7 @@ static void append_opts_from_default_files(lList **pcmdline,
       ;
    }
    
-   DEXIT;
+   DRETURN_VOID;
 }
 /****** sge/opt/opt_list_append_opts_from_qsub_cmdline() **********************
 *  NAME
@@ -376,13 +375,14 @@ static void append_opts_from_default_files(lList **pcmdline,
 *  RESULT
 *     void - None
 *******************************************************************************/
-void opt_list_append_opts_from_qsub_cmdline(lList **opts_cmdline,
+void opt_list_append_opts_from_qsub_cmdline(u_long32 prog_number, 
+                                            lList **opts_cmdline,
                                             lList **answer_list,
                                             char **argv,
                                             char **envp)
 {
    lFreeList(answer_list);
-   *answer_list = cull_parse_cmdline(argv, envp, opts_cmdline, FLG_USE_PSEUDOS);
+   *answer_list = cull_parse_cmdline(prog_number, argv, envp, opts_cmdline, FLG_USE_PSEUDOS);
 }
 
 /****** sge/opt/opt_list_append_opts_from_qalter_cmdline() ********************
@@ -411,13 +411,14 @@ void opt_list_append_opts_from_qsub_cmdline(lList **opts_cmdline,
 *  RESULT
 *     void - None
 *******************************************************************************/
-void opt_list_append_opts_from_qalter_cmdline(lList **opts_cmdline,
+void opt_list_append_opts_from_qalter_cmdline(u_long32 prog_number, 
+                                              lList **opts_cmdline,
                                               lList **answer_list,
                                               char **argv,
                                               char **envp)
 {
    lFreeList(answer_list);
-   *answer_list = cull_parse_cmdline(argv, envp, opts_cmdline, 
+   *answer_list = cull_parse_cmdline(prog_number, argv, envp, opts_cmdline, 
                                      FLG_USE_PSEUDOS | FLG_QALTER);
 }
 
@@ -449,7 +450,8 @@ void opt_list_append_opts_from_qalter_cmdline(lList **opts_cmdline,
 *  RESULT
 *     void - None
 *******************************************************************************/
-void opt_list_append_opts_from_script(lList **opts_scriptfile, 
+void opt_list_append_opts_from_script(u_long32 prog_number, 
+                                      lList **opts_scriptfile, 
                                       lList **answer_list,
                                       const lList *opts_cmdline,
                                       char **envp) 
@@ -470,7 +472,7 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
       prefix = default_prefix;
    }
    lFreeList(answer_list);
-   *answer_list = parse_script_file(scriptfile, prefix, opts_scriptfile, 
+   *answer_list = parse_script_file(prog_number, scriptfile, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
 }
 
@@ -504,7 +506,9 @@ void opt_list_append_opts_from_script(lList **opts_scriptfile,
 *  RESULT
 *     void - None
 *******************************************************************************/
-void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *path,
+void opt_list_append_opts_from_script_path(u_long32 prog_number,
+                                           lList **opts_scriptfile,
+                                           const char *path,
                                            lList **answer_list,
                                            const lList *opts_cmdline,
                                            char **envp)
@@ -551,7 +555,7 @@ void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *
    
    lFreeList(answer_list);
    
-   *answer_list = parse_script_file(scriptpath, prefix, opts_scriptfile, 
+   *answer_list = parse_script_file(prog_number, scriptpath, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
    
    FREE (scriptpath);
@@ -720,6 +724,7 @@ const char *get_root_file_path(dstring *absolut_filename, const char *cell_root,
    DENTER (TOP_LAYER, "get_root_file_path");
 
    sge_dstring_sprintf(absolut_filename, "%s/%s", cell_root, filename);
+
    DRETURN(sge_dstring_get_string(absolut_filename));
 }
 
@@ -784,5 +789,5 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
       ret = false;
    }
 
-  DRETURN(ret); 
+   DRETURN(ret); 
 }

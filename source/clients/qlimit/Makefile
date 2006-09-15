@@ -43,9 +43,10 @@ QLIMIT_ADD_SRC = \
                parse_job_cull.c \
                parse_qsub.c \
                read_defaults.c \
-               qstat_printing.c \
                show_job.c \
                sge_host.c \
+               sge_qstat.c \
+               sge_cqueue_qstat.c \
                sig_handlers.c \
                usage.c \
                sge_options.c

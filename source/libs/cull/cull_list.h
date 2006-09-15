@@ -1,6 +1,8 @@
 #ifndef __CULL_LIST_H
-
 #define __CULL_LIST_H
+
+#ifndef JGDI_GENERATE
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -38,10 +40,12 @@
 #include "basis_types.h"
 #include "cull/cull_hashP.h"
 #include "pack.h"
+#include "sge_dstring.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
 
 #define NoName -1
 
@@ -91,12 +95,25 @@ enum _enum_lMultiType {
 #define CULL_PRIMARY_KEY   0x00000100
 #define CULL_HASH          0x00000200
 #define CULL_UNIQUE        0x00000400
-#define CULL_SHOW          0x00000800
+#define CULL_JGDI_HIDDEN   0x00000800
 #define CULL_CONFIGURE     0x00001000
 #define CULL_SPOOL         0x00002000
 #define CULL_SUBLIST       0x00010000
 #define CULL_SPOOL_PROJECT 0x00020000
 #define CULL_SPOOL_USER    0x00040000
+#define CULL_JGDI_RO       0x00080000
+
+/*
+** JGDI specific defines
+*/
+#define JGDI_ROOT_OBJ( idlname, listname, operators )
+#define JGDI_OBJ( idlname )
+#define JGDI_MAPPED_OBJ( impl_class_name )
+#define JGDI_PRIMITIVE_OBJ(primitive_attribute)
+#define JGDI_PRIMITIVE_ROOT_OBJ(idlname, primitive_attribute, listname, operators)
+#define JGDI_INHERITED_ROOT_OBJ(idlname, listname, operators)
+#define JGDI_MAP_OBJ(key_field, value_field)
+
 
 #define BASIC_UNIT 50         /* Don't touch */
 #define MAX_DESCR_SIZE  4*BASIC_UNIT
@@ -116,8 +133,28 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)       { name, lUlongT  | flags, NULL },
 #define SGE_BOOL(name,flags)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST(name,type,flags)   { name, lListT   | flags, NULL },
+#define SGE_MAP(name,type,flags)   { name, lListT   | flags, NULL },
+#define SGE_MAPLIST(name,type,flags)   { name, lListT   | flags, NULL },
 #define SGE_OBJECT(name,type,flags) { name, lObjectT | flags, NULL },
 #define SGE_REF(name,type,flags)    { name, lRefT    | flags, NULL },
+
+#define DERIVED_LISTDEF(name,parent) lDescr *name = parent
+#define DERIVED_LISTEND ; 
+
+#define SGE_INT_D(name,flags,def)         { name, lIntT    | flags, NULL },
+#define SGE_HOST_D(name,flags,def)        { name, lHostT   | flags, NULL },
+#define SGE_STRING_D(name,flags,def)      { name, lStringT | flags, NULL },
+#define SGE_FLOAT_D(name,flags,def)       { name, lFloatT  | flags, NULL },
+#define SGE_DOUBLE_D(name,flags,def)      { name, lDoubleT | flags, NULL },
+#define SGE_CHAR_D(name,flags,def)        { name, lCharT   | flags, NULL },
+#define SGE_LONG_D(name,flags,def)        { name, lLongT   | flags, NULL },
+#define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
+#define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
+#define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
+#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
+#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
+#define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
+#define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
 
 /* 
  * For lists, objects and references the type of the subordinate object(s) 
@@ -132,10 +169,15 @@ enum _enum_lMultiType {
 #define NAMEEND    };
 
 #else
+
 #ifdef __SGE_GDI_LIBRARY_SUBLIST_FILE__
 
 #define LISTDEF( name )
 #define LISTEND
+
+#define DERIVED_LISTDEF( name, parent )
+#define DERIVED_LISTEND
+
 
 #define SGE_INT(name,flags)
 #define SGE_HOST(name,flags)
@@ -147,8 +189,25 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
+#define SGE_MAP(name,type,flags) __SUBTYPE_MAPPING__ name type
+#define SGE_MAPLIST(name,type,flags) __SUBTYPE_MAPPING__ name type
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
+
+#define SGE_INT_D(name,flags,def)
+#define SGE_HOST_D(name,flags,def)
+#define SGE_STRING_D(name,flags,def)
+#define SGE_FLOAT_D(name,flags,def)
+#define SGE_DOUBLE_D(name,flags,def)
+#define SGE_CHAR_D(name,flags,def)
+#define SGE_LONG_D(name,flags,def)
+#define SGE_ULONG_D(name,flags,def)
+#define SGE_BOOL_D(name,flags,def)
+#define SGE_LIST_D(name,type,flags,def)
+#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)
+#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)
+#define SGE_OBJECT_D(name,type,flags,def)
+#define SGE_REF_D(name,type,flags,def)
 
 #define NAMEDEF( name ) 
 #define NAME( name )
@@ -158,6 +217,9 @@ enum _enum_lMultiType {
 
 #define LISTDEF( name ) extern lDescr name[];
 #define LISTEND
+
+#define DERIVED_LISTDEF(name,parent) extern lDescr *name
+#define DERIVED_LISTEND ; 
 
 #define SGE_INT(name,flags)
 #define SGE_HOST(name,flags)
@@ -169,8 +231,25 @@ enum _enum_lMultiType {
 #define SGE_ULONG(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags)
+#define SGE_MAP(name,type,flags)
+#define SGE_MAPLIST(name,type,flags)
 #define SGE_OBJECT(name,type,flags)
 #define SGE_REF(name,type,flags)
+
+#define SGE_INT_D(name,flags,def)
+#define SGE_HOST_D(name,flags,def)
+#define SGE_STRING_D(name,flags,def)
+#define SGE_FLOAT_D(name,flags,def)
+#define SGE_DOUBLE_D(name,flags,def)
+#define SGE_CHAR_D(name,flags,def)
+#define SGE_LONG_D(name,flags,def)
+#define SGE_ULONG_D(name,flags,def)
+#define SGE_BOOL_D(name,flags,def)
+#define SGE_LIST_D(name,type,flags,def)
+#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)
+#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)
+#define SGE_OBJECT_D(name,type,flags,def)
+#define SGE_REF_D(name,type,flags,def)
 
 #define NAMEDEF( name ) extern char *name[];
 #define NAME( name )
@@ -201,8 +280,11 @@ int lGetElemIndex(const lListElem *ep, const lList *lp);
 const lDescr *lGetElemDescr(const lListElem *ep);
 void lWriteElem(const lListElem *ep);
 void lWriteElemTo(const lListElem *ep, FILE *fp);
+void lWriteElemToStr(const lListElem *ep, dstring *buffer);
+
 void lWriteList(const lList *lp);
 void lWriteListTo(const lList *lp, FILE *fp);
+void lWriteListToStr(const lList* lp, dstring* buffer);
 
 lListElem *lCreateElem(const lDescr *dp);
 lList *lCreateList(const char *listname, const lDescr *descr);
@@ -280,6 +362,8 @@ bool lListElem_clear_changed_info(lListElem *lp);
 #ifdef  __cplusplus
 }
 #endif
+
+#endif /* JGDI_GENERATE */
 
 #endif /* #ifndef __CULL_LIST_H */
 

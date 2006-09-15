@@ -68,7 +68,7 @@ juti_depend:
 ###############################################################################
 
 $(JUTILIB): $(JUTI_OBJS) $(JUTI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) $(LIBPATH) $(LIBS)  -o libjuti.so $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBs) $(LIBS) -lc $(AUTHLIBS)
+	$(SHAREDLD) $(SHARED_LFLAGS) $(LIBPATH) $(LIBS)  -o libjuti$(SHAREDEXT) $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBs) $(LIBS) -lc $(AUTHLIBS)
 
 	
 authuser: authuser.o juti.o

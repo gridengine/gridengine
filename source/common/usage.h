@@ -98,6 +98,6 @@ enum {
 };
 
 void mark_argument_syntax(int argument_number);
-void sge_usage(FILE *fp);
+void sge_usage(u_long32 prog_number, FILE *fp);
 
 #endif /* __USAGE_H */

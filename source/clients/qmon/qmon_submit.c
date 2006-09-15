@@ -95,8 +95,16 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_ulong.h"
+#include "sge_ja_task.h"
+#include "sge_string.h"
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
 
 #include "uti/sge_string.h"
+#include "uti/setup_path.h"
 
 extern char **environ;
 
@@ -907,6 +915,12 @@ XtPointer cld, cad;
    char buf[512];
    String dsp;
 
+#ifdef TEST_GDI2   
+   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
+
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
    if (!cbs->set) {
@@ -931,8 +945,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
-                        dsp); 
+         sprintf(buf, "DISPLAY=%s%s", qualified_hostname, dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 
       XmtInputFieldSetString(submit_env, buf); 
@@ -977,6 +990,12 @@ int mode,
 int submode 
 ) {
    Boolean sensitive, sensitive2;
+
+#ifdef TEST_GDI2
+   const char *username = ctx->get_username(ctx);
+#else
+   const char *username = uti_state_get_user_name();
+#endif   
 
    DENTER(GUI_LAYER, "qmonSubmitSetSensitive");
 
@@ -1030,7 +1049,7 @@ int submode
    ** set sensitivity of deadline field
    */
    if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) {
+            username)) {
       if (sensitive) {      
          XtSetSensitive(submit_deadline, sensitive2);
          XtSetSensitive(submit_deadlinePB, sensitive2);
@@ -1120,7 +1139,11 @@ XtPointer cld, cad;
             return;
          }
 
-         alp = write_job_defaults(jep, filename, 0);
+#ifdef TEST_GDI2
+         alp = write_job_defaults(ctx, jep, filename, 0);
+#else
+         alp = write_job_defaults(NULL, jep, filename, 0);
+#endif         
 
          qmonMessageBox(w, alp, 0);
 
@@ -1281,6 +1304,16 @@ XtPointer cld, cad;
    Boolean status = False;
    u_long32 job_number;
    int just_verify = 0;
+
+#ifdef TEST_GDI2
+   const char *username = ctx->get_username(ctx);
+   const char *sge_root = ctx->get_sge_root(ctx);
+   const char *mastername = ctx->get_master(ctx, false);
+#else
+   const char *username = uti_state_get_user_name();
+   const char *sge_root = path_state_get_sge_root();
+   const char *mastername = sge_get_master(0);
+#endif   
   
    DENTER(GUI_LAYER, "qmonSubmitJobSubmit");
 
@@ -1360,7 +1393,9 @@ XtPointer cld, cad;
       /*
       ** security hook
       */
-      if (set_sec_cred(lFirst(lp)) != 0) {
+      if (set_sec_cred(sge_root, mastername, lFirst(lp), &alp) != 0) {
+         qmonMessageBox(w, alp, true);
+         lFreeList(&alp);
          sprintf(buf, MSG_SEC_SETJOBCRED);
          sprintf(buf, "\n");
          goto error;
@@ -1487,7 +1522,7 @@ XtPointer cld, cad;
       }
 
       if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
-            uti_state_get_user_name())) 
+            username)) 
          nm_set((int*)qalter_fields, JB_deadline);
 
       if (!(what = lIntVector2What(JB_Type, (int*) qalter_fields))) {
@@ -1525,8 +1560,11 @@ XtPointer cld, cad;
          printf("________________________________________\n");
       }
 
+#ifdef TEST_GDI2
+      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+#else
       alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-
+#endif
       if (!qmonMessageBox(w, alp, 0)) {
          updateJobListCB(w, NULL, NULL);
          XmtMsgLinePrintf(submit_message, "Job %d altered", 
@@ -1608,6 +1646,22 @@ int read_defaults
    String dir_pre;
    SGE_STRUCT_STAT statb;
 
+#ifdef TEST_GDI2
+   u_long32 myuid = ctx->get_uid(ctx);
+   u_long32 prog_number = ctx->get_who(ctx);
+   const char *username = ctx->get_username(ctx);
+   const char *cell_root = ctx->get_cell_root(ctx);
+   const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   u_long32 myuid = uti_state_get_uid();
+   u_long32 prog_number = uti_state_get_mewho();
+   const char *username = uti_state_get_user_name();
+   const char *cell_root = path_state_get_cell_root();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
+
    DENTER(GUI_LAYER, "qmonSubmitReadScript");
 
    if (filename[strlen(filename)-1] == '/' || filename[0] == '\0')  {
@@ -1632,7 +1686,7 @@ int read_defaults
    sge_strlcpy(prefix, dir_pre, sizeof(prefix));
 
    if (read_defaults) {
-      opt_list_append_opts_from_default_files(&cmdline, &alp, environ);
+      opt_list_append_opts_from_default_files(prog_number, cell_root, username, &cmdline, &alp, environ);
       if (alp) {
          if (qmonMessageBox(w, alp, 0) == -1) {
             lFreeList(&alp);
@@ -1647,7 +1701,7 @@ int read_defaults
    ** stage one of script file parsing
    */ 
    if (ISSET(submit_mode_data.sub_mode, SUBMIT_SCRIPT)) {
-      alp = parse_script_file(filename, (prefix[0] ? prefix : NULL), &cmdline, environ, 
+      alp = parse_script_file(prog_number, filename, (prefix[0] ? prefix : NULL), &cmdline, environ, 
                               FLG_HIGHER_PRIOR);
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
@@ -1657,7 +1711,7 @@ int read_defaults
          ** stage one ana half of script file parsing
          ** merge an additional script in to override settings
          */ 
-         alp = parse_script_file(merge_script, "", &cmdline, environ, 
+         alp = parse_script_file(prog_number, merge_script, "", &cmdline, environ, 
                                  FLG_HIGHER_PRIOR | FLG_USE_NO_PSEUDOS);
          qmonMessageBox(w, alp, 0);
 
@@ -1668,7 +1722,7 @@ int read_defaults
          }
       }   
    } else {
-      alp = parse_script_file(filename, prefix, &cmdline, environ,
+      alp = parse_script_file(prog_number, filename, prefix, &cmdline, environ,
                               FLG_HIGHER_PRIOR | FLG_IGNORE_EMBEDED_OPTS); 
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
@@ -1677,7 +1731,7 @@ int read_defaults
    /*
    ** stage two of script file parsing
    */ 
-   alp = cull_parse_job_parameter(cmdline, &job);
+   alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, cmdline, &job);
    
    qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
@@ -1826,6 +1880,14 @@ char *prefix
    StringConst project;
    StringConst ckpt_obj;
    const char* tmp_string;
+
+#ifdef TEST_GDI2   
+   const char* username = ctx->get_username(ctx);
+   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char* username = uti_state_get_user_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -1898,9 +1960,9 @@ char *prefix
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
    if (!data->mail_list) {
       lListElem* entry = lAddElemStr(&(data->mail_list), MR_user, 
-                                    uti_state_get_user_name(), MR_Type);
+                                    username, MR_Type);
       if (entry)
-         lSetHost(entry, MR_host, uti_state_get_qualified_hostname());
+         lSetHost(entry, MR_host, qualified_hostname);
    }
 
    {
@@ -2020,6 +2082,18 @@ int save
    lList *perl = NULL;
    lList *alp = NULL;
    lList *path_alias = NULL;
+
+#ifdef TEST_GDI2   
+   const char *cell_root = ctx->get_cell_root(ctx);
+   const char *username = ctx->get_username(ctx);
+   const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char *cell_root = path_state_get_cell_root();
+   const char *username = uti_state_get_user_name();
+   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
    
    DENTER(GUI_LAYER, "qmonSMToCull");
 
@@ -2142,8 +2216,8 @@ int save
       /*
       ** path aliasing
       */
-      if (path_alias_list_initialize(&path_alias, &alp, (StringConst)uti_state_get_user_name(), 
-                                     (StringConst)uti_state_get_qualified_hostname()) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, (StringConst)cell_root, (StringConst)username, 
+                                     (StringConst)qualified_hostname) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             lFreeList(&alp);
@@ -2151,7 +2225,7 @@ int save
             return False;
          }   
       }
-      job_initialize_env(jep, &alp, path_alias);
+      job_initialize_env(jep, &alp, path_alias, unqualified_hostname, qualified_hostname);
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
          lFreeList(&alp);
@@ -2194,8 +2268,8 @@ int save
    if (!data->mail_list && !save) {
       data->mail_list = lCreateElemList("ML", MR_Type, 1);
       if (data->mail_list) {
-         lSetString(lFirst(data->mail_list), MR_user, uti_state_get_user_name());
-         lSetHost(lFirst(data->mail_list), MR_host, uti_state_get_qualified_hostname());
+         lSetString(lFirst(data->mail_list), MR_user, username);
+         lSetHost(lFirst(data->mail_list), MR_host, qualified_hostname);
       }
    }
    lSetList(jep, JB_mail_list, lCopyList("ML", data->mail_list));
@@ -3042,6 +3116,13 @@ static void qmonSubmitClear(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+
+#ifdef TEST_GDI2
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
+
    DENTER(GUI_LAYER, "qmonSubmitClear");
    
    /*
@@ -3066,8 +3147,7 @@ XtPointer cld, cad;
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
-         sprintf(buf, "DISPLAY=%s%s", uti_state_get_qualified_hostname(), 
-                        dsp); 
+         sprintf(buf, "DISPLAY=%s%s", qualified_hostname, dsp); 
       else
          sprintf(buf, "DISPLAY=%s", dsp); 
       XmtInputFieldSetString(submit_env, buf); 

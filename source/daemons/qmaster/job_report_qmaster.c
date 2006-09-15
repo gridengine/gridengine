@@ -68,6 +68,8 @@
 #include "spool/sge_spooling.h"
 
 static void pack_job_exit(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid, const char *task_str);
+static void pack_job_kill(sge_pack_buffer *pb, u_long32 jobid, u_long32 jataskid);
+static char *status2str(u_long32 status);
 
 #define is_running(state) (state==JWRITTEN || state==JRUNNING|| state==JWAITING4OSJID)
 
@@ -84,7 +86,7 @@ const char *task_str
    packstr(pb, task_str);
 }
 
-void pack_job_kill(
+static void pack_job_kill(
 sge_pack_buffer *pb,
 u_long32 jobid,
 u_long32 jataskid 
@@ -95,7 +97,6 @@ u_long32 jataskid
    packint(pb, SGE_SIGKILL);
 }
 
-static char *status2str(u_long32 status);
 static char *status2str(
 u_long32 status 
 ) {
@@ -141,6 +142,7 @@ RETURN
 
    ---------------------------------------- */
 void process_job_report(
+void *context,
 lListElem *report, 
 lListElem *hep,
 char *rhost,
@@ -178,7 +180,7 @@ monitoring_t *monitor
    /* RU: */
    /* tag all reschedule_unknown list entries we hope to 
       hear about in that job report */
-   update_reschedule_unknown_list(hep);
+   update_reschedule_unknown_list(context, hep);
 
    /*
    ** now check all job reports found in step 1 are 
@@ -326,7 +328,7 @@ monitoring_t *monitor
                  
                   if (status == JTRANSFERING) { /* got async ack for this job */
                      DPRINTF(("--- transfering job "sge_u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor); /* implicitly sending usage to schedd */
+                     sge_commit_job(context, jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
                   } else {
                      /* need to generate a job event for new usage 
@@ -398,7 +400,8 @@ monitoring_t *monitor
 
                     /* notify scheduler of task usage event */
                     if (new_task) {
-                       sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
+                       sge_event_spool(context,
+                                       &answer_list, 0, sgeE_PETASK_ADD, 
                                        jobid, jataskid, pe_task_id_str, NULL,
                                        lGetString(jep, JB_session),
                                        jep, jatep, petask, true, true);
@@ -439,19 +442,21 @@ monitoring_t *monitor
                 * long running jobs */
                if (reporting_is_intermediate_acct_required(jep, jatep, petask)) {
                   /* write intermediate usage */
-                  reporting_create_acct_record(NULL, jr, jep, jatep, true);
+                  reporting_create_acct_record(context, NULL, jr, jep, jatep, true);
 
                   /* this action has changed the ja_task/pe_task - spool */
                   if (pe_task_id_str != NULL) {
                      /* JG: TODO we would need a PETASK_MOD event here!
                       * for spooling only, the ADD event is OK
                       */
-                     sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
+                     sge_event_spool(context,
+                                     &answer_list, 0, sgeE_PETASK_ADD, 
                                      jobid, jataskid, pe_task_id_str, NULL,
                                      lGetString(jep, JB_session),
                                      jep, jatep, petask, false, true);
                   } else {
-                     sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+                     sge_event_spool(context,
+                                     &answer_list, 0, sgeE_JATASK_MOD, 
                                      jobid, jataskid, NULL, NULL,
                                      lGetString(jep, JB_session),
                                      jep, jatep, NULL, false, true);
@@ -650,7 +655,7 @@ monitoring_t *monitor
                      DPRINTF(("--- running job "sge_u32"."sge_u32" is exiting\n", 
                         jobid, jataskid, (status==JTRANSFERING)?"transfering":"running"));
 
-                     sge_job_exit(jr, jep, jatep, monitor);
+                     sge_job_exit(context, jr, jep, jatep, monitor);
                   } else {
                      u_long32 failed = lGetUlong(jr, JR_failed);
 
@@ -658,7 +663,7 @@ monitoring_t *monitor
                            !lGetString(jep, JB_checkpoint_name)) {
                         u_long32 state  = lGetUlong(jatep, JAT_state);
                         if (!(state & JDELETED)) {
-                           job_mark_job_as_deleted(jep, jatep);
+                           job_mark_job_as_deleted(context, jep, jatep);
                            ERROR((SGE_EVENT, MSG_JOB_MASTERTASKFAILED_S, 
                                   job_get_id_string(jobid, jataskid, NULL)));
                         }
@@ -721,7 +726,7 @@ monitoring_t *monitor
                            jobid, jataskid, pe_task_id_str));
                         lSetUlong(petask, PET_status, JFINISHED);
 
-                        reporting_create_acct_record(NULL, jr, jep, jatep, 
+                        reporting_create_acct_record(context, NULL, jr, jep, jatep, 
                                                      false);
 
                         /* add tasks (scaled) usage to past usage container */
@@ -731,7 +736,8 @@ monitoring_t *monitor
                               lList *answer_list = NULL;
                               container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
                               /* usage container will be spooled */
-                              sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
+                              sge_event_spool(context,
+                                            &answer_list, 0, sgeE_PETASK_ADD, 
                                             jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, NULL, lGetString(jep, JB_session),  
                                             jep, jatep, container, true, true);
                               answer_list_output(&answer_list);
@@ -751,7 +757,8 @@ monitoring_t *monitor
                                * but a sgeE_PETASK_MOD. We don't have this event
                                * yet. For spooling only, the add event will do
                                */
-                              sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
+                              sge_event_spool(context,
+                                            &answer_list, 0, sgeE_PETASK_ADD, 
                                             jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, NULL, lGetString(jep, JB_session),  
                                             jep, jatep, container, false, true);
                               answer_list_output(&answer_list);
@@ -761,7 +768,8 @@ monitoring_t *monitor
                         /* remove pe task from job/jatask */
                         if (known_pe_task) {
                            lList *answer_list = NULL;
-                           sge_event_spool(&answer_list, 0, sgeE_PETASK_DEL, 
+                           sge_event_spool(context,
+                                           &answer_list, 0, sgeE_PETASK_DEL, 
                                           jobid, jataskid, pe_task_id_str, 
                                           NULL, NULL, NULL, NULL, NULL, 
                                           true, true);
@@ -808,7 +816,7 @@ monitoring_t *monitor
                                                        lGetString(jr, JR_err_str)); 
 #endif
                            if (!(state & JDELETED)) {
-                              job_mark_job_as_deleted(jep, jatep);
+                              job_mark_job_as_deleted(context, jep, jatep);
                               ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_S, 
                                      job_get_id_string(jobid, jataskid, pe_task_id_str)));
                            }
@@ -950,7 +958,7 @@ monitoring_t *monitor
    
    /* RU: */
    /* delete reschedule unknown list entries we heard about */
-   delete_from_reschedule_unknown_list(hep);
+   delete_from_reschedule_unknown_list(context, hep);
 
    lXchgList(report, REP_list, &jrl);
 

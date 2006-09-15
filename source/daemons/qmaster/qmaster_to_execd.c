@@ -42,7 +42,12 @@
 
 #include "msg_qmaster.h"
 
-static int host_notify_about_X(lListElem *host,
+#ifdef TEST_QMASTER_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
+static int host_notify_about_X(void *context,
+                               lListElem *host,
                                u_long32 x,
                                int tag,
                                int progname_id);
@@ -88,7 +93,8 @@ static int host_notify_about_X(lListElem *host,
 *  SEE ALSO
 *     qmaster/host/host_notify_about_featureset()
 *******************************************************************************/
-static int host_notify_about_X(lListElem *host,
+static int host_notify_about_X(void *context, 
+                               lListElem *host,
                                u_long32 x,
                                int tag,
                                int progname_id)
@@ -97,14 +103,23 @@ static int host_notify_about_X(lListElem *host,
    sge_pack_buffer pb;
    int ret = 0;
    unsigned long last_heard_from;
+
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char* myprogname = ctx->get_progname(ctx);
+#else
+   const char* myprogname = uti_state_get_sge_formal_prog_name();
+#endif
+
    DENTER(TOP_LAYER, "host_notify_about_X");
 
    hostname = lGetHost(host, EH_name);
    if (progname_id == EXECD) {
       u_short id = 1;
       const char *commproc = prognames[progname_id];
-      cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0)),
-                                        (char*)hostname, (char*)commproc,id, &last_heard_from);
+      cl_commlib_get_last_message_time(cl_com_get_handle((char*)myprogname, 0),
+                                        (char*)hostname, (char*)commproc,id, 
+                                        &last_heard_from);
       if (!last_heard_from) {
          ERROR((SGE_EVENT, MSG_NOXKNOWNONHOSTYTOSENDCONFNOTIFICATION_SS,
                 commproc, hostname));
@@ -117,7 +132,11 @@ static int host_notify_about_X(lListElem *host,
       u_long32 dummy = 0;
 
       packint(&pb, x);
+#ifdef TEST_QMASTER_GDI2
+      if (gdi2_send_message_pb(ctx, 0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK) {
+#else
       if (gdi_send_message_pb(0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK) {
+#endif      
          ret = -1;
       } else {
          ret = 0;
@@ -151,11 +170,11 @@ error:
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_new_conf(lListElem *host) 
+int host_notify_about_new_conf(void *context, lListElem *host) 
 {
    u_long32 dummy = 0;  /* value has no special meaning */
 
-   return host_notify_about_X(host, dummy, TAG_GET_NEW_CONF, EXECD);
+   return host_notify_about_X(context, host, dummy, TAG_GET_NEW_CONF, EXECD);
 }
 
 /****** qmaster/host/host_notify_about_kill() *********************************
@@ -178,7 +197,7 @@ int host_notify_about_new_conf(lListElem *host)
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_kill(lListElem *host, int kill_command)
+int host_notify_about_kill(void *context, lListElem *host, int kill_command)
 {
-   return host_notify_about_X(host, kill_command, TAG_KILL_EXECD, EXECD);
+   return host_notify_about_X(context, host, kill_command, TAG_KILL_EXECD, EXECD);
 }

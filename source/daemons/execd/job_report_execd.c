@@ -271,8 +271,14 @@ RETURN
 
    ------------------------------------------------------------ */
 int 
-execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb,
-            u_long *rcvtimeout, int *synchron, char *err_str, int answer_error) 
+execd_c_ack(void *context, 
+            struct dispatch_entry *de, 
+            sge_pack_buffer *pb, 
+            sge_pack_buffer *apb,
+            u_long *rcvtimeout, 
+            int *synchron, 
+            char *err_str, 
+            int answer_error) 
 {
    u_long32 ack_type;
    u_long32 jobid, jataskid;
@@ -305,7 +311,7 @@ execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
-               remove_acked_job_exit(jobid, jataskid, pe_task_id_str, jr);
+               remove_acked_job_exit(context, jobid, jataskid, pe_task_id_str, jr);
             } 
             else {
                DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
@@ -338,7 +344,7 @@ execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb
                if (signal_job(jobid, jataskid, signo)) {
                   lListElem *jr;
                   jr = get_job_report(jobid, jataskid, NULL);
-                  remove_acked_job_exit(jobid, jataskid, NULL, jr);
+                  remove_acked_job_exit(context, jobid, jataskid, NULL, jr);
                   job_unknown(jobid, jataskid, NULL);
                }
             }

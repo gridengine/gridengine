@@ -108,7 +108,7 @@ int japi_init(const char *contact, const char *session_key_in,
  * know whether japi_wait() will be needed or not at the time that japi_init()
  * is called.
  */ 
-int japi_enable_job_wait (const char *session_key_in, dstring *session_key_out,
+int japi_enable_job_wait (const char*username, const char *unqualified_hostname, const char *session_key_in, dstring *session_key_out,
                           error_handler_t handler, dstring *diag);
 
 

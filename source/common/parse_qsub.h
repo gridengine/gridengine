@@ -64,7 +64,7 @@
 #define SGE_HOME_DIRECTORY "$$HOME$$"
 #endif
 
-lList *cull_parse_cmdline(char **arg_list, char **envp, lList **pcmdline, u_long32 flags);
+lList *cull_parse_cmdline(u_long32 prog_number, char **arg_list, char **envp, lList **pcmdline, u_long32 flags);
 
 /************************************************************************/
 int cull_parse_path_list(lList **lpp, char *path_str);

@@ -83,6 +83,13 @@
 #include "qstat_printing.h"
 #include "sge_centry.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
+#include "sge_qstat.h"
+
 static Widget qmon_cq = 0;
 static Widget cq_cqfolder = 0;
 static Widget cq_customize = 0;
@@ -127,19 +134,6 @@ static void qmonQinstanceSetLoad(Widget matrix, const char *qiname);
 static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQinstanceExplain(Widget w, XtPointer cld, XtPointer cad);
-static int filter_queues(
-lList **filtered_queue_list,
-lList *queue_list, 
-lList *centry_list,
-lList *hgrp_list,
-lList *exechost_list,
-lList *acl_list,
-lList *pe_list,
-lList *resource_list, 
-lList *queueref_list, 
-lList *peref_list, 
-lList *queue_user_list,
-u_long32 queue_states);
 
 static void qmonQinstanceShowBrowserExplain(
 dstring *info,
@@ -1670,7 +1664,7 @@ static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad)
    int rows;
    lList *alp = NULL;
    const char *str;
-   Boolean status, answer;
+   Boolean status, answer = False;
    Widget matrix = cluster_queue_settings;
 
    DENTER(GUI_LAYER, "qmonCQDelete");
@@ -1694,7 +1688,11 @@ static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad)
                str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
                if ( str && *str != '\0' ) { 
                   DPRINTF(("CQ to delete: %s\n", str));
-                  cqueue_delete(&alp, str);
+#ifdef TEST_GDI2
+                  cqueue_delete(ctx, &alp, str);
+#else
+                  cqueue_delete(NULL, &alp, str);
+#endif
                }
             }
          }
@@ -1829,6 +1827,7 @@ static void qmonCQUpdateCQMatrix(void)
    lList *ehl = NULL;
    lList *cl = NULL;
    lList *acl = NULL;
+   lList *prjl = NULL;
    lList *ql = NULL;
    lList *fql = NULL;
    lList *ul = NULL;
@@ -1873,13 +1872,14 @@ static void qmonCQUpdateCQMatrix(void)
    cl = qmonMirrorList(SGE_CENTRY_LIST);
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
    acl = qmonMirrorList(SGE_USERSET_LIST);
+   prjl = qmonMirrorList(SGE_PROJECT_LIST);
    pel = qmonMirrorList(SGE_PE_LIST);
    hgl = qmonMirrorList(SGE_HGROUP_LIST);
 
    /*
    ** match filter criteria
    */
-   filter_queues(&fql, ql, cl, hgl, ehl, acl, pel, rl, qrl, prl, ul, qstate);
+   filter_queues(&fql, ql, cl, hgl, ehl, acl, prjl, pel, rl, qrl, prl, ul, qstate, NULL);
 
    /*
    ** sort according to sorting criteria
@@ -1982,6 +1982,7 @@ static void qmonCQUpdateQIMatrix(void)
    lList *pel = NULL;
    lList *qrl = NULL;
    lList *hgl = NULL;
+   lList *prjl = NULL;
    lListElem *cq = NULL;
    int row;
    int num_rows;
@@ -2017,13 +2018,14 @@ static void qmonCQUpdateQIMatrix(void)
    cl = qmonMirrorList(SGE_CENTRY_LIST);
    ql = qmonMirrorList(SGE_CQUEUE_LIST);
    acl = qmonMirrorList(SGE_USERSET_LIST);
+   prjl = qmonMirrorList(SGE_PROJECT_LIST);
    pel = qmonMirrorList(SGE_PE_LIST);
    hgl = qmonMirrorList(SGE_HGROUP_LIST);
 
    /*
    ** match filter criteria
    */
-   filter_queues(&fql, ql, cl, hgl, ehl, acl, pel, rl, qrl, prl, ul, qstate);
+   filter_queues(&fql, ql, cl, hgl, ehl, acl, prjl, pel, rl, qrl, prl, ul, qstate, NULL);
 
    /*
    ** sort according to sorting criteria
@@ -2332,122 +2334,3 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
 }
 
 
-/*-------------------------------------------------------------------------*/
-static int filter_queues(
-lList **filtered_queue_list,
-lList *queue_list, 
-lList *centry_list,
-lList *hgrp_list,
-lList *exechost_list,
-lList *acl_list,
-lList *pe_list,
-lList *resource_list, 
-lList *queueref_list, 
-lList *peref_list, 
-lList *queue_user_list,
-u_long32 queue_states)
-{
-   static lCondition *tagged_queues = NULL;
-   static lEnumeration *all_fields = NULL;
-   int nqueues = 0;
-   u_long32 empty_qs = 0; 
-
-   DENTER(GUI_LAYER, "filter_queues");
-
-   if (!tagged_queues) {
-      tagged_queues = lWhere("%T(%I == %u)", CQ_Type, CQ_tag, TAG_SHOW_IT);
-      all_fields = lWhat("%T(ALL)", CQ_Type);
-   }
-   centry_list_init_double(centry_list);
-
-   DPRINTF(("------- selecting queues -----------\n"));
-   /* all queues are selected */
-   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
-
-   /* unseclect all queues not selected by a -q (if exist) */
-   if (lGetNumberOfElem(queueref_list)>0) {
-      if ((nqueues=select_by_qref_list(queue_list, hgrp_list, queueref_list))<0) {
-         DEXIT;
-         return -1;
-      }
-
-      if (nqueues==0) {
-         *filtered_queue_list = NULL;
-         DEXIT;
-         return 0;
-      }
-   }
-
-   /* unselect all queues not selected by -qs */
-   select_by_queue_state(queue_states, exechost_list, queue_list, centry_list);
-  
-   /* unselect all queues not selected by a -U (if exist) */
-   if (lGetNumberOfElem(queue_user_list)>0) {
-      if ((nqueues=select_by_queue_user_list(exechost_list, queue_list, queue_user_list, acl_list, NULL))<0) {
-         DEXIT;
-         return -1;
-      }
-
-      if (nqueues==0) {
-         *filtered_queue_list = NULL;
-         DEXIT;
-         return 0;
-      }
-   }
-
-   /* unselect all queues not selected by a -pe (if exist) */
-   if (lGetNumberOfElem(peref_list)>0) {
-      if ((nqueues=select_by_pe_list(queue_list, peref_list, pe_list))<0) {
-         DEXIT;
-         return -1;
-      }
-
-      if (nqueues==0) {
-         *filtered_queue_list = NULL;
-         DEXIT;
-         return 0;
-      }
-   }
-   /* unselect all queues not selected by a -l (if exist) */
-   if (lGetNumberOfElem(resource_list)) {
-      if (select_by_resource_list(resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
-         DEXIT;
-         return -1;
-      }
-   }   
-
-   if (qmon_debug) {
-      lListElem *cqueue;
-      for_each(cqueue, queue_list) {
-         lListElem *qep;
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-
-         for_each(qep, qinstance_list) {
-            if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
-               dstring qinstance_name = DSTRING_INIT;
-
-               qinstance_get_name(qep, &qinstance_name);
-               printf("++ %s\n", sge_dstring_get_string(&qinstance_name));
-               sge_dstring_free(&qinstance_name);
-            } else {
-               dstring qinstance_name = DSTRING_INIT;
-
-               qinstance_get_name(qep, &qinstance_name);
-               printf("-- %s\n", sge_dstring_get_string(&qinstance_name));
-               sge_dstring_free(&qinstance_name);
-            }
-         }
-      }
-   }
-
-
-   if (!is_cqueue_selected(queue_list)) {
-      *filtered_queue_list = NULL;
-      DEXIT;
-      return 0;
-   }
-   *filtered_queue_list = lSelect("FQL", queue_list, tagged_queues, all_fields);  
-
-   DEXIT;
-   return 1;
-}

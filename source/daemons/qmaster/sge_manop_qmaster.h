@@ -34,9 +34,9 @@
 
 #include "cull.h"
 
-int sge_add_manop(lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
+int sge_add_manop(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
-int sge_del_manop(lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
+int sge_del_manop(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
 #endif /* _SGE_MANOP_QMASTER_H_ */
 

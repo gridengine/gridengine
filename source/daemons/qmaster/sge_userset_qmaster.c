@@ -60,7 +60,7 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-static void sge_change_queue_version_acl(const char *acl_name);
+static void sge_change_queue_version_acl(void *context, const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
 static int verify_userset_deletion(lList **alpp, const char *userset_name);
 static int dept_is_valid_defaultdepartment(lListElem *dept, lList **answer_list);
@@ -72,6 +72,7 @@ static int acl_is_valid_acl(lListElem *acl, lList **answer_list);
    adds an userset list to the global userset_list
  *********************************************************************/
 int sge_add_userset(
+void *context,
 lListElem *ep,
 lList **alpp,
 lList **userset_list,
@@ -162,7 +163,7 @@ char *rhost
       sge_dstring_free(&ds);
    }
 
-   if (!sge_event_spool(alpp, 0, sgeE_USERSET_ADD,
+   if (!sge_event_spool(context, alpp, 0, sgeE_USERSET_ADD,
                         0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
@@ -187,6 +188,7 @@ char *rhost
    deletes an userset list from the global userset_list
  ******************************************************************/
 int sge_del_userset(
+void *context,
 lListElem *ep,
 lList **alpp,
 lList **userset_list,
@@ -241,12 +243,12 @@ char *rhost
 
    lRemoveElem(*userset_list, &found);
 
-   sge_event_spool(alpp, 0, sgeE_USERSET_DEL, 
+   sge_event_spool(context, alpp, 0, sgeE_USERSET_DEL, 
                    0, 0, userset_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
    /* change queue versions */
-   sge_change_queue_version_acl(userset_name);
+   sge_change_queue_version_acl(context, userset_name);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
@@ -261,6 +263,7 @@ char *rhost
    modifies an userset in the global list
  **************************************************************/
 int sge_mod_userset(
+void *context,
 lListElem *ep,
 lList **alpp,
 lList **userset_list,
@@ -352,14 +355,14 @@ char *rhost
    }
 
    /* update on file */
-   if (!sge_event_spool(alpp, 0, sgeE_USERSET_MOD,
+   if (!sge_event_spool(context, alpp, 0, sgeE_USERSET_MOD,
                         0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
       DEXIT;
       return STATUS_EDISK;
    }
    /* change queue versions */
-   sge_change_queue_version_acl(userset_name);
+   sge_change_queue_version_acl(context, userset_name);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
@@ -378,7 +381,7 @@ char *rhost
    of all queues containing this complex;
  **********************************************************************/
 static void 
-sge_change_queue_version_acl(const char *acl_name) 
+sge_change_queue_version_acl(void *context, const char *acl_name) 
 {
    lListElem *cqueue = NULL;
 
@@ -402,7 +405,7 @@ sge_change_queue_version_acl(const char *acl_name)
                      " changed\n", lGetString(qinstance, QU_full_name), 
                      acl_name));
             qinstance_increase_qversion(qinstance);
-            sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+            sge_event_spool(context, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                             0, 0, lGetString(qinstance, QU_qname), 
                             lGetHost(qinstance, QU_qhostname), NULL,
                             qinstance, NULL, NULL, true, true);

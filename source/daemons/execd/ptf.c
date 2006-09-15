@@ -119,6 +119,7 @@
 #include "sge_job.h"
 #include "sge_uidgid.h"
 #include "sge_pe_task.h"
+#include "sge_ja_task.h"
 
 /*
  *

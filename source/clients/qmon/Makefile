@@ -115,6 +115,7 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             sge_cqueue_qstat.c \
             read_write_complex.c \
             read_object.c \
+            sge_qstat.c \
             sge_limit_rule_qconf.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o

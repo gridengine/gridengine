@@ -231,7 +231,6 @@ int main(int argc, char **argv)
 
 #ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-   sge_error_class_t *eh = NULL;
 #endif
 
    DENTER_MAIN(TOP_LAYER, "qlimit");
@@ -239,18 +238,10 @@ int main(int argc, char **argv)
    log_state_set_log_gui(true);
 
 #ifdef TEST_GDI2
-   eh = sge_error_class_create();
-   if (!eh) {
-      fprintf(stderr, "couldn't create error handler\n");
+   if (sge_gdi2_setup(&ctx, QLIMIT, &alp) != AE_OK) {
+      answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT(1);
-   }   
-
-   if (sge_gdi2_setup(&ctx, QLIMIT, eh) != AE_OK) {
-      showError(ctx->eh);
-      sge_error_class_destroy(&eh);
-      sge_prof_cleanup();
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 #else
    sge_mt_init();
@@ -259,7 +250,7 @@ int main(int argc, char **argv)
    if (sge_gdi_setup(prognames[QLIMIT], &alp) != AE_OK) {
       answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 #endif
 
@@ -292,14 +283,14 @@ int main(int argc, char **argv)
          answer_list_output(&alp);
          lFreeList(&pcmdline);
          sge_prof_cleanup();
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
    if (sge_parse_cmdline_qlimit(argv, &pcmdline, &alp) == false) {
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    /*
@@ -320,7 +311,7 @@ int main(int argc, char **argv)
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
 #ifdef TEST_GDI2
@@ -336,10 +327,10 @@ int main(int argc, char **argv)
    if ( qlimit_result != 0 ) {
       answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
    sge_prof_cleanup();
-   SGE_EXIT(0); /* 0 means ok - others are errors */
+   SGE_EXIT(NULL, 0); /* 0 means ok - others are errors */
    DEXIT;
    return 0;
 }

@@ -36,18 +36,21 @@
 #include "cull.h"
 
 bool
-qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
+qinstance_change_state_on_command(void *context,
+                                  lListElem *this_elem, lList**answer_list,
                                   u_long32 transition, bool force_transition,
                                   const char *user, const char *host,
                                   bool is_operator, bool is_owner, monitoring_t *monitor);
 
 bool
-qinstance_change_state_on_calendar(lListElem *this_elem,
+qinstance_change_state_on_calendar(void *context,
+                                   lListElem *this_elem,
                                    const lListElem *calendar, 
                                    monitoring_t *monitor);
 
 bool
-qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
+qinstance_modify_attribute(void *context,
+                           lListElem *this_elem, lList **answer_list,
                            const lListElem *cqueue,
                            int attribute_name,
                            int cqueue_attibute_name,
@@ -62,7 +65,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                            monitoring_t *monitor);
 
 bool 
-qinstance_change_state_on_calendar_all(const char* cal_name,  
+qinstance_change_state_on_calendar_all(void *context,
+                                       const char* cal_name,  
                                        u_long32 cal_order, 
                                        const lList *state_change_list, 
                                        monitoring_t *monitor);

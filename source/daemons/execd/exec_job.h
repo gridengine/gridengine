@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_exec_job(lListElem *jep, lListElem *jatep, lListElem *petep, char *err_str, int err_length);
+int sge_exec_job(void *context, lListElem *jep, lListElem *jatep, lListElem *petep, char *err_str, int err_length);
 lListElem* responsible_queue(lListElem *jep, lListElem *, lListElem *petep);
 
 #endif /* __EXEC_JOB_H */

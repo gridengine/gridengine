@@ -89,6 +89,10 @@
 #include "msg_qmaster.h"
 #include "sge_mtutil.h"
 
+#ifdef TEST_QMASTER_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 typedef enum {
    NOT_DEFINED = 0,
    DO_SPOOL,
@@ -164,7 +168,8 @@ lList **topp,   ticket orders ptr ptr
 
  **********************************************************************/ 
 int 
-sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
+sge_follow_order(void *context,
+                 lListElem *ep, lList **alpp, char *ruser, char *rhost,
                  lList **topp, monitoring_t *monitor, object_description *object_base) 
 {
    int allowed;
@@ -247,7 +252,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             /* spooling of the JATASK will be done in sge_commit_job */
             sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), jatp);
-            sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
+            sge_event_spool(context, &answer_list, 0, sgeE_JOB_MOD,
                             job_number, 0, NULL, NULL, 
                             lGetString(jep, JB_session),
                             jep, NULL, NULL, true, true);
@@ -502,10 +507,10 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
 
-      if (sge_give_job(jep, jatp, master_qep, pe, master_host, monitor)) {
+      if (sge_give_job(context, jep, jatp, master_qep, pe, master_host, monitor)) {
 
          /* setting of queues in state unheard is done by sge_give_job() */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DELIVERY_FAILED, COMMIT_DEFAULT, monitor);
+         sge_commit_job(context, jep, jatp, NULL, COMMIT_ST_DELIVERY_FAILED, COMMIT_DEFAULT, monitor);
          /* This was sge_commit_job(jep, COMMIT_ST_RESCHEDULED). It raised problems if a job
             could not be delivered. The jobslotsfree had been increased even if
             they where not decreased bevore. */
@@ -518,7 +523,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       }
      
       /* job is now sent and goes into transfering state */
-      sge_commit_job(jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
+      sge_commit_job(context, jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
 
       /* set timeout for job resend */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
@@ -540,7 +545,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
          lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
 
-         cqueue_list_x_on_subordinate_gdil(master_list, true, gdil, monitor);
+         cqueue_list_x_on_subordinate_gdil(context, master_list, true, gdil, monitor);
       }
    }    
       break;
@@ -1025,7 +1030,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                       sge_u32c(task_number)));
                lSetUlong(jatp, JAT_status, JFINISHED);
             }
-            sge_event_spool(alpp, 0, sgeE_JATASK_ADD, 
+            sge_event_spool(context, alpp, 0, sgeE_JATASK_ADD, 
                             job_number, task_number, NULL, NULL, 
                             lGetString(jep, JB_session),
                             jep, jatp, NULL, true, true);
@@ -1048,7 +1053,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
     
          /* remove it */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT, monitor);
+         sge_commit_job(context, jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT, monitor);
       } else {
          if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             if(lGetString(jep, JB_script_file)) {
@@ -1073,7 +1078,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                lGetString(jep, JB_owner)));
 
          /* remove it */
-         sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         sge_commit_job(context, jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
       }
       break;
 
@@ -1219,7 +1224,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             
             {
                lList *answer_list = NULL;
-               sge_event_spool(&answer_list, now,
+               sge_event_spool(context, &answer_list, now,
                                (or_type == ORT_update_user_usage) ? 
                                           sgeE_USER_MOD:sgeE_PROJECT_MOD,
                                0, 0, up_name, NULL, NULL,
@@ -1296,7 +1301,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             INFO((SGE_EVENT, MSG_JOB_SUSPTQ_UUS, sge_u32c(jobid), sge_u32c(task_number), qnm));
 
             if (!ISSET(lGetUlong(jatp, JAT_state), JSUSPENDED)) {
-               sge_signal_queue(SGE_SIGSTOP, queueep, jep, jatp, monitor);
+               sge_signal_queue(context, SGE_SIGSTOP, queueep, jep, jatp, monitor);
                state = lGetUlong(jatp, JAT_state);
                CLEARBIT(JRUNNING, state);
                lSetUlong(jatp, JAT_state, state);
@@ -1308,7 +1313,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             {
                lList *answer_list = NULL;
                const char *session = lGetString (jep, JB_session);
-               sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+               sge_event_spool(context, &answer_list, 0, sgeE_JATASK_MOD,
                                jobid, task_number, NULL, NULL, session,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
@@ -1350,7 +1355,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             INFO((SGE_EVENT, MSG_JOB_UNSUSPOT_UUS, sge_u32c(jobid), sge_u32c(task_number), qnm));
       
             if (!ISSET(lGetUlong(jatp, JAT_state), JSUSPENDED)) {
-               sge_signal_queue(SGE_SIGCONT, queueep, jep, jatp, monitor);
+               sge_signal_queue(context, SGE_SIGCONT, queueep, jep, jatp, monitor);
                state = lGetUlong(jatp, JAT_state);
                SETBIT(JRUNNING, state);
                lSetUlong(jatp, JAT_state, state);
@@ -1361,7 +1366,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
             {
                lList *answer_list = NULL;
                const char *session = lGetString (jep, JB_session);
-               sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+               sge_event_spool(context, &answer_list, 0, sgeE_JATASK_MOD,
                                jobid, task_number, NULL, NULL, session,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
@@ -1415,7 +1420,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
 /*
  * MT-NOTE: distribute_ticket_orders() is NOT MT safe
  */
-int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor, object_description *object_base) 
+int distribute_ticket_orders(void *context, lList *ticket_orders, monitoring_t *monitor, object_description *object_base) 
 {
    u_long32 jobid, jataskid; 
    lList *to_send;
@@ -1428,6 +1433,12 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor, objec
    u_long32 now;
    int cl_err = CL_RETVAL_OK;
    unsigned long last_heard_from;
+
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif
+
+   
 
    DENTER(TOP_LAYER, "distribute_ticket_orders");
 
@@ -1501,7 +1512,7 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor, objec
       n = lGetNumberOfElem(to_send);
 
       if (hep) {
-         cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
+         cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[QMASTER], 0)),
                                         (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       }
       if (  hep &&  last_heard_from + 10 * mconf_get_load_report_time() > now) {
@@ -1513,8 +1524,13 @@ int distribute_ticket_orders( lList *ticket_orders, monitoring_t *monitor, objec
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
+#ifdef TEST_QMASTER_GDI2
+            cl_err = gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, master_host_name, 
+                                         TAG_CHANGE_TICKET, &pb, &dummymid);
+#else
             cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, 
                                          TAG_CHANGE_TICKET, &pb, &dummymid);
+#endif
             MONITOR_MESSAGES_OUT(monitor);
             clear_packbuffer(&pb);
             DPRINTF(("%s %d ticket changings to execd@%s\n", 

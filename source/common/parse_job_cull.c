@@ -61,6 +61,7 @@
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_prog.h"
+#include "setup_path.h"
 #include "sge_var.h"
 #include "sge_log.h"
 #include "sge_answer.h"
@@ -106,7 +107,9 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp);
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob) 
+lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *cell_root, 
+                                const char *unqualified_hostname, const char *qualified_hostname, 
+                                lList *cmdline, lListElem **pjob) 
 {
    const char *cp;
    lListElem *ep;
@@ -119,8 +122,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    if (!pjob) {
       answer_list_add(&answer,  MSG_PARSE_NULLPOINTERRECEIVED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    if (!*pjob) {
@@ -129,8 +131,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
    }
 
@@ -144,8 +145,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
       lAppendElem(tmpl_task_list, tmpl_task);
       lSetList(*pjob, JB_ja_tasks, tmpl_task_list); 
@@ -154,16 +154,13 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    /*
    ** path aliasing
    */
-   if (path_alias_list_initialize(&path_alias, &answer, uti_state_get_user_name(), 
-                                  uti_state_get_qualified_hostname()) == -1) {
-      DEXIT;
-      return answer;
+   if (path_alias_list_initialize(&path_alias, &answer, cell_root, username, qualified_hostname) == -1) {
+      DRETURN(answer);
    }
 
-   job_initialize_env(*pjob, &answer, path_alias);
+   job_initialize_env(*pjob, &answer, path_alias, unqualified_hostname, qualified_hostname);
    if (answer) {
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
@@ -225,8 +222,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    }
    job_initialize_id_lists(*pjob, &answer);
    if (answer != NULL) {
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /*
@@ -311,15 +307,13 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
          /* If getcwd() fails... */
          answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
       
       path = reroot_path (*pjob, tmp_str, &answer);
       
       if (path == NULL) {
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
       
       lSetString(*pjob, JB_cwd, path);
@@ -378,8 +372,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       answer_list_add(&answer, error_string, 
                       STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /* -hold_jid */
@@ -429,8 +422,8 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
 #ifndef USE_CLIENT_QALTER
    if (!lGetList(*pjob, JB_mail_list)) {   
-      ep = lAddSubStr(*pjob, MR_user, uti_state_get_user_name(), JB_mail_list, MR_Type);
-      lSetHost(ep, MR_host, uti_state_get_qualified_hostname());
+      ep = lAddSubStr(*pjob, MR_user, username, JB_mail_list, MR_Type);
+      lSetHost(ep, MR_host, qualified_hostname);
    }
 #endif
 
@@ -578,8 +571,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
             /* If getcwd() fails... */
             answer_list_add (&answer, MSG_ANSWER_GETCWDFAILED, 
                              STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
       }
 #endif
@@ -649,8 +641,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       if( JOB_TYPE_IS_BINARY(jb_now) ) {
          answer_list_add(&answer, MSG_COMMAND_REQUIRED_FOR_BINARY_JOB,
                          STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
       lSetString(*pjob, JB_script_file, "STDIN");
    }
@@ -660,8 +651,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetString(*pjob, JB_job_name,  cp);
    }
 
-   DEXIT;
-   return answer;
+   DRETURN(answer);
 }
 
 /****** client/parse_job_cull/parse_script_file() *****************************
@@ -730,6 +720,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 *     cod_request(5)
 *******************************************************************************/
 lList *parse_script_file(
+u_long32 prog_number,
 const char *script_file,
 const char *directive_prefix,
 lList **lpp_options, 
@@ -756,8 +747,7 @@ u_long32 flags
       /* no place where to put result */
       answer_list_add(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    if (!(flags & FLG_IGNORE_EMBEDED_OPTS)) {
@@ -768,8 +758,7 @@ u_long32 flags
                      MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
             answer_list_add(&answer, error_string, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
          
          FCLOSE(fp);
@@ -782,8 +771,7 @@ u_long32 flags
                      MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
             answer_list_add(&answer, error_string, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
       } else {
          /* no script file but input from stdin */
@@ -791,15 +779,13 @@ u_long32 flags
          if (filestrptr == NULL) {
             answer_list_add(&answer, MSG_ANSWER_ERRORREADINGFROMSTDIN, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
          else if (filestrptr[0] == '\0') {
             answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             FREE(filestrptr);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
       }
 
@@ -842,8 +828,7 @@ u_long32 flags
                if (parameters == NULL) {
                   answer_list_add(&answer, MSG_SGETEXT_NOMEM, 
                                   STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return answer;
+                  DRETURN(answer);
                }
                
                strncpy (parameters, s, nl_index);
@@ -858,8 +843,7 @@ u_long32 flags
                if (parameters == NULL) {
                   answer_list_add(&answer, MSG_SGETEXT_NOMEM, 
                                   STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return answer;
+                  DRETURN(answer);
                }
                
                /* strcpy copies everything up to and including the NULL
@@ -945,7 +929,7 @@ u_long32 flags
                /*
                ** problem: error handling missing here and above
                */
-               alp = cull_parse_cmdline(str_table, envp, &lp_new_opts, 0);
+               alp = cull_parse_cmdline(prog_number, str_table, envp, &lp_new_opts, 0);
 
                for_each (aep, alp) {
                   answer_quality_t quality;
@@ -972,8 +956,7 @@ u_long32 flags
                
                if (do_exit) {
                   FREE(filestrptr);
-                  DEXIT;
-                  return answer;
+                  DRETURN(answer);
                }
 
                /*
@@ -1012,8 +995,7 @@ u_long32 flags
 
    if (!lp_new_opts) {
       FREE(filestrptr);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    if (!*lpp_options) {
@@ -1030,13 +1012,13 @@ u_long32 flags
 
    FREE(filestrptr);
 
-   DEXIT;
-   return answer;
+   DRETURN(answer);
 FCLOSE_ERROR:
    snprintf(error_string, MAX_STRING_SIZE,
             MSG_FILE_ERRORCLOSEINGXY_SS, script_file, strerror(errno));
    answer_list_add(&answer, error_string,
                    STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+
    DRETURN(answer);
 }
 
@@ -1060,8 +1042,7 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
          /* If getcwd() fails... */
          answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       chdir(tmp_str);
@@ -1075,8 +1056,7 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
       }
    }
    
-   DEXIT;
-   return strdup (tmp_str);
+   DRETURN(strdup(tmp_str));
 }
 
 /* This is the threadsafe version of the method.  However, it is untested, so
@@ -1134,7 +1114,6 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
       } while (tmp_path[0] != '\0');
    }
    
-   DEXIT;
-   return strdup (final_path);
+   DRETURN(strdup(final_path));
 }
 #endif

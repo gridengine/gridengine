@@ -77,6 +77,12 @@
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
+
 static String icon_names[] = {
    "21cal",
    "21cal_ins",
@@ -227,12 +233,18 @@ String name
 
 
 /*-------------------------------------------------------------------------*/
-void qmonInitSge( char *progname, int usage) 
+void qmonInitSge(void **context, char *progname, int usage) 
 {
    int error = 0;
    int endless_loop = 0;
    lList *alp = NULL;
    char* env_var = NULL;
+   const char *mastername = NULL;
+   u_long32 sge_qmaster_port = 0;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
 
    DENTER(GUI_LAYER, "qmonInitSge");
    
@@ -242,31 +254,45 @@ void qmonInitSge( char *progname, int usage)
    if (env_var != NULL) {
       endless_loop = atoi(env_var);
    }
-   log_state_set_log_gui(True);
+   log_state_set_log_gui(1);
+#ifdef TEST_GDI2
+   error = sge_gdi2_setup(&ctx, QMON, &alp);
+   mastername = ctx->get_sge_root(ctx);
+   sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
+#else
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    if (!usage) {
       sge_gdi_param(SET_ISALIVE, 1, NULL);
    }   
-   if ((error=sge_gdi_setup(prognames[QMON], &alp)) != AE_OK) {
+   error=sge_gdi_setup(prognames[QMON], &alp);
+   mastername = sge_get_master(0);
+   sge_qmaster_port = sge_get_qmaster_port();
+#endif   
+   if (error != AE_OK) {
+
       answer_list_output(&alp);
       
-      if ( sge_get_master(0) != NULL) {
-         error=check_isalive(sge_get_master(0));
-         
+      if ( mastername != NULL) {
+#ifdef TEST_GDI2
+         error=ctx->is_alive(ctx);
+#else
+         error=check_isalive(mastername);
+#endif         
          /* For the default case, just print a simple message */
          if (error == CL_RETVAL_CONNECT_ERROR ||
              error == CL_RETVAL_CONNECTION_NOT_FOUND) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER], 
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(0)));
+                                   sge_qmaster_port, 
+                                   mastername));
          }
          /* For unusual errors, give more detail */
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER], 
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(0), cl_get_error_text(error)));
+                                   sge_qmaster_port, 
+                                   mastername, 
+                                   cl_get_error_text(error)));
          }
          
          fprintf(stderr, "%s\n", SGE_EVENT);
@@ -278,14 +304,23 @@ void qmonInitSge( char *progname, int usage)
 
    while(endless_loop > 0) {
       static int nr_of_errors = 0;
-      error=check_isalive(sge_get_master(0));
+#ifdef TEST_GDI2      
+      error=ctx->is_alive(ctx);
+#else
+      error=check_isalive(mastername);
+#endif      
       printf("checking isalive qmaster (errors=%d, frequency=%d) ...\n", nr_of_errors, endless_loop);
       if (do_qmon_shutdown()) {
          qmonExitFunc(0);
       }
       sleep(endless_loop);
    }
-   log_state_set_log_gui(False);
+   log_state_set_log_gui(0);
+#ifdef TEST_GDI2   
+   if (context) {   
+      *context = ctx;
+   }   
+#endif   
    DEXIT;
 }
 
@@ -310,7 +345,11 @@ XtPointer cad
 ) {
    DENTER(GUI_LAYER, "qmonExitCB");
 
+#ifdef TEST_GDI2
+   sge_gdi2_shutdown((void**)&ctx);
+#else
    sge_gdi_shutdown();
+#endif   
    DCLOSE;
    exit(0);
 

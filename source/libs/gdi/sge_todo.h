@@ -38,7 +38,8 @@
 
 /* This is a duplicate definition to the one in sge_report.h.  One of them
  * should be removed. */
-int report_list_send(const lList *rlp, const char *rhost,
+int report_list_send(void *context,
+                     const lList *rlp, const char *rhost,
                      const char *commproc, int id,
                      int synchron, u_long32 *mid);
 

@@ -34,15 +34,6 @@
 
 #include "basis_types.h"
 
-#define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _MESSAGE(19000, _("no queues remaining after "SFN" queue selection"))
-#define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION _MESSAGE(19001, _("no queues remaining after selection"))
-#define MSG_GDI_JOBZOMBIESSGEGDIFAILED              _MESSAGE(19002, _("job zombies: sge_gdi failed"))
-#define MSG_GDI_PESGEGDIFAILED              _MESSAGE(19003, _("pe: sge_gdi failed"))
-#define MSG_GDI_CKPTSGEGDIFAILED    _MESSAGE(19004, _("ckpt: sge_gdi failed"))
-#define MSG_GDI_USERSETSGEGDIFAILED    _MESSAGE(19005, _("userset: sge_gdi failed"))
-#define MSG_GDI_PROJECTSGEGDIFAILED    _MESSAGE(19006, _("project: sge_gdi failed"))
-/* #define MSG_PE_UNKNOWNPARALLELENVIRONMENTX_S    _message(19007, _("error: unknown parallel environment "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_OPTIONS_WRONGARGUMENTTOSOPT                  _MESSAGE(19009, _("ERROR! wrong argument to -s option"))
 #define MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES     _MESSAGE(19010, _("view additional attributes"))
 #define MSG_QSTAT_USAGE_EXPLAINOPT                       _MESSAGE(19011, _("show reason for c(onfiguration amiguous), a(larm), suspend A(larm), E(rror) state"))
 #define MSG_QSTAT_USAGE_FULLOUTPUT                       _MESSAGE(19012, _("full output"))

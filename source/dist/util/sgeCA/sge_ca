@@ -110,6 +110,9 @@ ErrUsage()
    "                       with u=Unix User, g=Common Name, e=email\n" \
    "   -grm_pkcs12 <g>     generate pkcs12 format file for GRM daemon\n" \
    "                       with g=Common Name of the GRM daemon\n" \
+   "   -ks <user>          generate a keystore file for <user>\n" \
+   "   -kspwf <file>       keystore pw file\n" \
+   "   -ksout <file>       keystore output file \n" \
    $myname
 
    exit 1
@@ -741,6 +744,35 @@ MakeUserCerts()
 }
 
 #--------------------------------------------------------------------------
+# MakeKeystore create keystore file of user's certificate and key
+#
+# $1 = <unix user>
+#
+MakeKeystore()
+{
+   CA_ARGS="-catop $CATOP"
+   CA_ARGS="$CA_ARGS -calocaltop $CALOCALTOP"
+   CA_ARGS="$CA_ARGS -cascript $ROOT_PATH/util/sgeCA/sge_ca"
+   CA_ARGS="$CA_ARGS -cahost $CAHOST -adminuser $ADMINUSER"
+   CA_ARGS="$CA_ARGS initks user $user $ksoutfile"
+   if [ "$kspwfile" != "" ]; then
+      CA_ARGS="$CA_ARGS $kspwfile"
+   fi
+
+   if [ "$JAVA_HOME" = "" ]; then 
+      PrintError "JAVA_HOME not set"
+      return 1
+   else   
+      JAVA=$JAVA_HOME/bin/java
+   fi
+
+   JVM_ARGS="-cp $ROOT_PATH/lib/juti.jar"
+   JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=$ROOT_PATH/util/sgeCA/logging.properties"
+
+   $JAVA $JVM_ARGS com.sun.grid.ca.Main $CA_ARGS 
+}
+
+#--------------------------------------------------------------------------
 # MakePKCS12 create pkcs12 file of user's certificate and key
 #
 # $1 = "user" or "grm_daemon"
@@ -1144,6 +1176,10 @@ RenewCert()
          PrintError "chown failed (%s)" $NEWKEYDIR
          return 1
       fi
+      if [ $? != 0 ]; then
+         PrintError "chown failed (%s)" $NEWKEYDIR
+         return 1
+      fi
       Execute $CHMOD 644 $NEWKEYDIR/*
       if [ $? != 0 ]; then
          PrintError "chmod failed (%s/\*)" $NEWKEYDIR
@@ -1523,6 +1559,8 @@ passinfile=""
 pkcs12outdir=""
 md="-md5"
 nodes="-nodes"
+ksoutfile=""
+kspwfile=""
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
@@ -1665,6 +1703,34 @@ while [ $ARGC != 0 ]; do
          ErrUsage
       fi
       user="$2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -ks)
+      WHICH="ks"
+      if [ $ARGC -lt 2 ]; then
+         PrintError "-ks needs argument"
+         ErrUsage
+      fi
+      user="$2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -ksout)   
+      if [ $ARGC -lt 2 ]; then
+         PrintError "-ksout needs argument"
+         ErrUsage
+      fi
+      ksoutfile="$2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -kspwf)   
+      if [ $ARGC -lt 2 ]; then
+         PrintError "-kspwf needs argument"
+         ErrUsage
+      fi
+      kspwfile="$2"
       shift
       ARGC=`expr $ARGC - 1`
       ;;
@@ -1867,6 +1933,12 @@ renew_ca)
     ;;
 pkcs12) 
     MakePKCS12 user $user
+    if [ $? != 0 ]; then
+       exit 1
+    fi
+    ;;
+ks) 
+    MakeKeystore $user
     if [ $? != 0 ]; then
        exit 1
     fi

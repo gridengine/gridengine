@@ -43,6 +43,12 @@
 #include "sge_prog.h"
 #include "version.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
+
 static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s%s";
 extern char SFLN_ELN[];
 
@@ -59,6 +65,15 @@ XtPointer cld, cad;
 #if 0
    dstring ds;
    char buffer[256];
+#ifdef TEST_GDI2
+   const char* username = ctx->get_username(ctx);
+   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
+   const char* default_cell = ctx->get_default_cell(ctx);
+#else
+   const char* username = uti_state_get_user_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+   const char* default_cell = uti_state_get_default_cell();
+#endif   
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
@@ -66,23 +81,33 @@ XtPointer cld, cad;
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
-                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
+                     username, qualified_hostname, 
                      feature_get_product_name(FS_LONG_VERSION, &ds), 
-                     uti_state_get_default_cell(), 
+                     default_cell, 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
    sge_dstring_free(&ds);
    DEXIT;
 #else
    char buffer[256];
+#ifdef TEST_GDI2
+   const char* username = ctx->get_username(ctx);
+   const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
+   const char* default_cell = ctx->get_default_cell(ctx);
+#else
+   const char* username = uti_state_get_user_name();
+   const char* qualified_hostname = uti_state_get_qualified_hostname();
+   const char* default_cell = uti_state_get_default_cell();
+#endif   
+
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    sprintf(buffer, "%s %s", GE_LONGNAME, GDI_VERSION);  
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
-                     uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
+                     username, qualified_hostname, 
                      buffer, 
-                     uti_state_get_default_cell(), 
+                     default_cell, 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
    DEXIT;
 #endif

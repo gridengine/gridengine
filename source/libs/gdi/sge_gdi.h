@@ -103,7 +103,7 @@ enum {
    SGE_SHARETREE_LIST,
    SGE_CKPT_LIST,
    SGE_CALENDAR_LIST,
-   SGE_JOB_SCHEDD_INFO,
+   SGE_JOB_SCHEDD_INFO_LIST,
    SGE_ZOMBIE_LIST,
    SGE_USER_MAPPING_LIST,
    SGE_HGROUP_LIST,
@@ -140,6 +140,7 @@ typedef struct {
 /* to be used for initializing state_gdi_multi */
 #define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
 
+#ifndef TEST_GDI2
 lList 
 *sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
 
@@ -155,8 +156,10 @@ sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList 
 bool
 gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync);
 
-lList 
-*sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
+#endif
+
+ 
+bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
 
 /**
  * This struct stores the basic information for a async GDI

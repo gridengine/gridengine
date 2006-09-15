@@ -33,24 +33,24 @@
  ************************************************************************/
 
 
-lListElem *cuser_get_via_gdi(lList **answer_list, const char *cuser);
+lListElem *cuser_get_via_gdi(void *context, lList **answer_list, const char *cuser);
 
-bool cuser_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
+bool cuser_add_del_mod_via_gdi(void *context, lListElem *this_elem, lList **answer_list,
                                u_long32 gdi_command);
 
 bool cuser_provide_modify_context(lListElem **this_elem,
                                   lList **answer_list);
 
-bool cuser_show(lList **answer_list, const char *name);
+bool cuser_show(void *context, lList **answer_list, const char *name);
 
-bool cuser_add(lList **answer_list, const char *name);
+bool cuser_add(void *context, lList **answer_list, const char *name);
 
-bool cuser_modify(lList **answer_list, const char *name);
+bool cuser_modify(void *context, lList **answer_list, const char *name);
 
-bool cuser_delete(lList **answer_list, const char *name);
+bool cuser_delete(void *context, lList **answer_list, const char *name);
 
-bool cuser_add_from_file(lList **answer_list, const char *filename);
+bool cuser_add_from_file(void *context, lList **answer_list, const char *filename);
 
-bool cuser_modify_from_file(lList **answer_list, const char *filename);
+bool cuser_modify_from_file(void *context, lList **answer_list, const char *filename);
 
 #endif /* __SGE_CUSER_QCONF */

@@ -66,7 +66,14 @@
 #include "msg_gdilib.h"
 #include "msg_sgeobjlib.h"
 
-/****** gdi/report/report_list_send() ******************************************
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
+
+
+/****** sgeobj/sge_report/report_list_send() ******************************************
 *  NAME
 *     report_list_send() -- Send a list of reports.
 *
@@ -97,13 +104,18 @@
 *  NOTES
 *     MT-NOTE: report_list_send() is not MT safe (assumptions)
 *******************************************************************************/
-int report_list_send(const lList *rlp, const char *rhost,
-                     const char *commproc, int id,
+int report_list_send(void *context, 
+                     const lList *rlp, 
+                     const char *rhost, const char *commproc, int id,
                      int synchron, u_long32 *mid)
 {
    sge_pack_buffer pb;
    int ret, size;
    lList *alp = NULL;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+#endif
 
    DENTER(TOP_LAYER, "report_list_send");
 
@@ -141,7 +153,12 @@ int report_list_send(const lList *rlp, const char *rhost,
       return -1;
    }
 
+#ifdef TEST_GDI2
+   ret = sge_gdi2_send_any_request(synchron, mid, ctx, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+#else
    ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+#endif
+
    clear_packbuffer(&pb);
    answer_list_output (&alp);
 

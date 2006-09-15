@@ -50,6 +50,8 @@
 
 #include "sgeobj/sge_conf.h"
 
+#define EVENT_LAYER CULL_LAYER
+
 static const char THREAD_NAME[] = "TET";
 
 struct te_event {
@@ -103,7 +105,7 @@ static void       timed_event_once_init(void);
 static void*      timed_event_thread(void*);
 static void       check_time(time_t);
 static te_event_t event_from_list_elem(lListElem*);
-static void       scan_table_and_deliver(te_event_t, monitoring_t *monitor);
+static void       scan_table_and_deliver(void *context, te_event_t, monitoring_t *monitor);
 static bool       should_exit(void);
 
 
@@ -124,7 +126,7 @@ static bool       should_exit(void);
 static void timed_event_wait_empty(void) 
 {
 
-   DENTER(TOP_LAYER, "timed_event_wait");
+   DENTER(EVENT_LAYER, "timed_event_wait");
    
    while (lGetNumberOfElem((const lList*)Event_Control.list) == 0) {
          DPRINTF(("%s: event list empty --> will wait\n", SGE_FUNC));
@@ -156,7 +158,7 @@ static void timed_event_wait_empty(void)
 static void timed_event_wait_next(te_event_t te, time_t now) 
 {
    struct timespec ts;
-   DENTER(TOP_LAYER, "timed_event_wait_next");
+   DENTER(EVENT_LAYER, "timed_event_wait_next");
 
    ts.tv_sec = te->when;
    ts.tv_nsec = 0;
@@ -202,7 +204,7 @@ DEXIT;
 *******************************************************************************/
 void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
 {
-   DENTER(TOP_LAYER, "te_add_event_handler");
+   DENTER(EVENT_LAYER, "te_add_event_handler");
 
    SGE_ASSERT(aHandler != NULL);
 
@@ -273,7 +275,7 @@ te_event_t te_new_event(time_t aTime, te_type_t aType, te_mode_t aMode, u_long32
 {
    te_event_t ev = NULL;
   
-   DENTER(TOP_LAYER, "te_new_event");
+   DENTER(EVENT_LAYER, "te_new_event");
    
    ev = (te_event_t)sge_malloc(sizeof(struct te_event));
    
@@ -319,7 +321,7 @@ te_event_t te_new_event(time_t aTime, te_type_t aType, te_mode_t aMode, u_long32
 void te_free_event(te_event_t *anEvent)
 {
 
-   DENTER(TOP_LAYER, "te_free_event");
+   DENTER(EVENT_LAYER, "te_free_event");
 
    SGE_ASSERT((anEvent != NULL));
    
@@ -375,7 +377,7 @@ void te_add_event(te_event_t anEvent)
    time_t when = 0;
    lListElem *le;
 
-   DENTER(TOP_LAYER, "te_add_event");
+   DENTER(EVENT_LAYER, "te_add_event");
 
    SGE_ASSERT((anEvent != NULL));
 
@@ -454,7 +456,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
    int res, n = 0;
    lCondition *cond = NULL;
 
-   DENTER(TOP_LAYER, "te_delete_event");
+   DENTER(EVENT_LAYER, "te_delete_event");
 
 
    DPRINTF(("%s: (t:"sge_u32" u1:"sge_u32" u2:"sge_u32" s:%s)\n", SGE_FUNC, aType, aKey1, aKey2, strKey?strKey:MSG_SMALLNULL));
@@ -541,7 +543,7 @@ int te_delete_one_time_event(te_type_t aType, u_long32 aKey1, u_long32 aKey2, co
 *******************************************************************************/
 void te_shutdown(void)
 {
-   DENTER(TOP_LAYER, "te_shutdown");
+   DENTER(EVENT_LAYER, "te_shutdown");
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
@@ -583,7 +585,7 @@ time_t te_get_when(te_event_t anEvent)
 {
    time_t res = 0;
 
-   DENTER(TOP_LAYER, "te_get_when");
+   DENTER(EVENT_LAYER, "te_get_when");
 
    SGE_ASSERT(NULL != anEvent);
 
@@ -617,7 +619,7 @@ te_type_t te_get_type(te_event_t anEvent)
 {
    te_type_t res;
 
-   DENTER(TOP_LAYER, "te_get_type");
+   DENTER(EVENT_LAYER, "te_get_type");
 
    SGE_ASSERT(NULL != anEvent);
 
@@ -651,7 +653,7 @@ te_mode_t te_get_mode(te_event_t anEvent)
 {
    te_mode_t res;
 
-   DENTER(TOP_LAYER, "te_get_mode");
+   DENTER(EVENT_LAYER, "te_get_mode");
 
    SGE_ASSERT(NULL != anEvent);
 
@@ -685,7 +687,7 @@ u_long32 te_get_first_numeric_key(te_event_t anEvent)
 {
    u_long32 res = 0;
 
-   DENTER(TOP_LAYER, "te_get_first_numeric_key");
+   DENTER(EVENT_LAYER, "te_get_first_numeric_key");
 
    SGE_ASSERT(NULL != anEvent);
    
@@ -719,7 +721,7 @@ u_long32 te_get_second_numeric_key(te_event_t anEvent)
 {
    u_long32 res = 0;
 
-   DENTER(TOP_LAYER, "te_get_second_numeric_key");
+   DENTER(EVENT_LAYER, "te_get_second_numeric_key");
 
    SGE_ASSERT(NULL != anEvent);
    
@@ -755,7 +757,7 @@ const char* te_get_alphanumeric_key(te_event_t anEvent)
 {
    const char* res = NULL;
 
-   DENTER(TOP_LAYER, "te_get_alphanumeric_key");
+   DENTER(EVENT_LAYER, "te_get_alphanumeric_key");
 
    SGE_ASSERT(NULL != anEvent);
 
@@ -789,7 +791,7 @@ u_long32 te_get_sequence_number(te_event_t anEvent)
 {
    u_long32 res = 0;
 
-   DENTER(TOP_LAYER, "te_get_sequence_number");
+   DENTER(EVENT_LAYER, "te_get_sequence_number");
 
    SGE_ASSERT(NULL != anEvent);
 
@@ -828,7 +830,7 @@ static void timed_event_once_init(void)
 {
    pthread_attr_t attr;
 
-   DENTER(TOP_LAYER, "timed_event_once_init");
+   DENTER(EVENT_LAYER, "timed_event_once_init");
 
    Event_Control.list = lCreateList("timed event list", TE_Type);
    Event_Control.sort_order = lParseSortOrderVarArg(TE_Type, "%I+", TE_when);
@@ -897,11 +899,18 @@ static void* timed_event_thread(void* anArg)
    time_t now;
    time_t next_prof_output = 0;
    monitoring_t monitor;
+#ifdef TEST_QMASTER_GDI2
+   void *context = NULL;
+#endif   
 
-   DENTER(TOP_LAYER, "timed_event_thread");
+   DENTER(EVENT_LAYER, "timed_event_thread");
 
    sge_monitor_init(&monitor, (char *) anArg, TET_EXT, TET_WARNING, TET_ERROR);
-   sge_qmaster_thread_init(true);
+#ifdef TEST_QMASTER_GDI2   
+   sge_qmaster_thread_init(&context, true);
+#else   
+   sge_qmaster_thread_init(NULL, true);
+#endif   
 
    /* register at profiling module */
    set_thread_name(pthread_self(),"TEvent Thread");
@@ -954,7 +963,11 @@ static void* timed_event_thread(void* anArg)
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
         
-      scan_table_and_deliver(te, &monitor);
+#ifdef TEST_QMASTER_GDI2        
+      scan_table_and_deliver(context, te, &monitor);
+#else
+      scan_table_and_deliver(NULL, te, &monitor);
+#endif
       te_free_event(&te);
 
       sge_monitor_output(&monitor);
@@ -997,7 +1010,7 @@ static void check_time(time_t aTime)
 {
    lListElem* le;
 
-   DENTER(TOP_LAYER, "check_time");
+   DENTER(EVENT_LAYER, "check_time");
 
    if (Event_Control.last > aTime)
    {
@@ -1046,7 +1059,7 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
    te_event_t ev = NULL;
    const char* str = NULL;
 
-   DENTER(TOP_LAYER, "event_from_list_elem");
+   DENTER(EVENT_LAYER, "event_from_list_elem");
 
    ev = (te_event_t)sge_malloc(sizeof(struct te_event));
    
@@ -1090,12 +1103,12 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 *     MT-NOTE: Otherwise a deadlock may occur due to recursive mutex locking.
 *
 *******************************************************************************/
-static void scan_table_and_deliver(te_event_t anEvent, monitoring_t *monitor)
+static void scan_table_and_deliver(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    int i = 0;
    te_handler_t handler = NULL;
 
-   DENTER(TOP_LAYER, "scan_table_and_deliver");
+   DENTER(EVENT_LAYER, "scan_table_and_deliver");
 
    DPRINTF(("%s: event (t:"sge_u32" w:"sge_u32" m:"sge_u32" s:%s)\n", EVENT_FRMT(anEvent)));
 
@@ -1114,7 +1127,7 @@ static void scan_table_and_deliver(te_event_t anEvent, monitoring_t *monitor)
    sge_mutex_unlock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
 
    if (handler != NULL) {
-      handler(anEvent, monitor);
+      handler(context, anEvent, monitor);
    } else {
       WARNING((SGE_EVENT, MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I, anEvent->type ));
    }
@@ -1158,7 +1171,7 @@ static bool should_exit(void)
 {
    bool res = false;
 
-   DENTER(TOP_LAYER, "should_exit");
+   DENTER(EVENT_LAYER, "should_exit");
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 

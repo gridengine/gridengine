@@ -60,12 +60,12 @@ typedef struct {
  * external interface of default scheduler used schedd framework (public)
  */
 
-typedef int (*default_scheduler_alg_t)(sge_Sdescr_t *, lList**);
+typedef int (*default_scheduler_alg_t)(void *context, sge_Sdescr_t *, lList**);
 
-int scheduler(sge_Sdescr_t *lists, lList **orders);
+int scheduler(void *context, sge_Sdescr_t *lists, lList **orders);
 
 #ifdef SCHEDULER_SAMPLES
-int my_scheduler(sge_Sdescr_t *lists, lList **orders);
+int my_scheduler(void *context, sge_Sdescr_t *lists, lList **orders);
 #endif
 
 

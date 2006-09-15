@@ -44,6 +44,9 @@
 #include "sge_gdiP.h"
 #include "msg_gdilib.h"
 
+
+#ifndef TEST_GDI2
+
 /*------------------------------------------------------------
  * sge_get_master
  *
@@ -59,26 +62,26 @@ const char *sge_get_master(
 int read_master_file 
 ) {
    char err_str[SGE_PATH_MAX+128];
-   char *cached_master_name;
+   char *cached_master_name = gdi_state_get_cached_master_name();
+   const char *act_qmaster_file = path_state_get_act_qmaster_file();
 
    DENTER(GDI_LAYER, "sge_get_master");
 
-   cached_master_name = gdi_state_get_cached_master_name();
    if (!read_master_file && cached_master_name[0] != '\0') {
-      DEXIT;
-      return cached_master_name;
+      DRETURN(cached_master_name);
    }
 
-   if (get_qm_name(cached_master_name, path_state_get_act_qmaster_file(), err_str)) {
+   if (get_qm_name(cached_master_name, act_qmaster_file, err_str)) {
       ERROR((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S , err_str));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", cached_master_name));
-   DEXIT;
-   return cached_master_name;
+
+   DRETURN(cached_master_name);
 }
+
+#endif
 
 /*-----------------------------------------------------------------------
  * Read name of qmaster from master_file

@@ -44,10 +44,10 @@
 #endif
 #endif
 
-#ifdef DEBUG
+#ifdef LISTTREE_DEBUG
 #include <stdlib.h>
 #include <stdarg.h>
-static void DBG(int line,char *fcn,char *fmt, ...)
+static void LT_DBG(int line,const char *fcn,char *fmt, ...)
 {
    va_list ap;
   
@@ -57,13 +57,13 @@ static void DBG(int line,char *fcn,char *fmt, ...)
    va_end(ap);
 }
 #define DARG __LINE__,__FUNCTION__
-#define DBGW(a) fprintf(stderr,"%s:%d %s()   %s\n",__FILE__,__LINE__,__FUNCTION__, a)
+#define LT_DBGW(a) fprintf(stderr,"%s:%d %s()   %s\n",__FILE__,__LINE__,__FUNCTION__, a)
 #else
-static void DBG(int line,char *fcn,char *fmt, ...)
+static void LT_DBG(int line,const char *fcn,char *fmt, ...)
 {
 }
 #define DARG __LINE__,__FUNCTION__
-#define DBGW(a)
+#define LT_DBGW(a)
 #endif
 
 
@@ -591,7 +591,7 @@ ListTreeWidget w;
       w->list.preferredHeight = XtHeight(w) - 2*Prim_ShadowThickness(w)
                                  - 2*Prim_HighlightThickness(w);
    }    
-   DBG(DARG,"prefWidth=%d prefHeight=%d\n",
+   LT_DBG(DARG,"prefWidth=%d prefHeight=%d\n",
          w->list.preferredWidth,w->list.preferredHeight);
 }
 
@@ -784,15 +784,15 @@ ListTreeWidget w;
       else {
          int top, bot, size;
 
-         DBG(DARG, "topItemPos = %d, botItemPos = %d, visibleCount = %d, itemCount= %d\n", w->list.topItemPos, w->list.bottomItemPos,
+         LT_DBG(DARG, "topItemPos = %d, botItemPos = %d, visibleCount = %d, itemCount= %d\n", w->list.topItemPos, w->list.bottomItemPos,
            w->list.visibleCount, w->list.itemCount);
            
          top = w->list.topItemPos;
          bot=w->list.itemCount;
          size=w->list.visibleCount;
-         DBG(DARG,"BEFORE: top=%d bot=%d size=%d ",top,bot,size);
+         LT_DBG(DARG,"BEFORE: top=%d bot=%d size=%d ",top,bot,size);
          if (top+size>bot) bot=top+size;
-         DBG(DARG,"  AFTER: bot=%d\n",bot);
+         LT_DBG(DARG,"  AFTER: bot=%d\n",bot);
 
          XtVaSetValues( w->list.vsb,
                         XmNvalue, w->list.topItemPos,
@@ -840,7 +840,7 @@ ListTreeWidget w;
       }
    }
   
-   DBG(DARG,"item=%d visible=%d\n", w->list.itemCount, w->list.visibleCount);
+   LT_DBG(DARG,"item=%d visible=%d\n", w->list.itemCount, w->list.visibleCount);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -859,18 +859,18 @@ XtPointer call_data;
   
    w->list.topItemPos=cbs->value;
 
-   DBG(DARG,"topItemPos=%d\n",w->list.topItemPos);
+   LT_DBG(DARG,"topItemPos=%d\n",w->list.topItemPos);
 
 #if 0
-   DBG(DARG,"VSBCallback: cbs->reason=%d ",cbs->reason);
+   LT_DBG(DARG,"VSBCallback: cbs->reason=%d ",cbs->reason);
    if (cbs->reason==XmCR_INCREMENT) {
-      DBG(DARG,"increment\n");
+      LT_DBG(DARG,"increment\n");
    }
    else if (cbs->reason==XmCR_DECREMENT) {
-      DBG(DARG,"decrement\n");
+      LT_DBG(DARG,"decrement\n");
    }
    else if (cbs->reason==XmCR_VALUE_CHANGED) {
-      DBG(DARG,"value_changed\n");
+      LT_DBG(DARG,"value_changed\n");
       SetScrollbars(w);
    }
 #else
@@ -900,7 +900,7 @@ XtPointer call_data;
    w->list.hsbPos=cbs->value;
    HSB2X(w);
 
-   DBG(DARG,"XOffset=%d prefWidth=%d viewWidth=%d\n",
+   LT_DBG(DARG,"XOffset=%d prefWidth=%d viewWidth=%d\n",
       w->list.XOffset,w->list.preferredWidth,w->list.viewWidth);
    if (w->list.XOffset!=w->list.lastXOffset) {
       DrawAll(w);
@@ -943,7 +943,7 @@ XtWidgetGeometry *answer;
    answer->height = w->list.preferredHeight + 2*Prim_ShadowThickness(w)
       + 2*Prim_HighlightThickness(w);
   
-   DBG(DARG,"w=%d h=%d\n", answer->width, answer->height);
+   LT_DBG(DARG,"w=%d h=%d\n", answer->width, answer->height);
   
    if (proposed->width>=answer->width && proposed->height>=answer->height) 
       return XtGeometryYes;
@@ -1464,7 +1464,7 @@ Cardinal *num_params;
       if (y < yend) {
          while (item && y < yend && y < w->list.viewY+w->list.viewHeight) {
             if (item) {
-               DBG(DARG,"Highlighting y=%d item=%s\n",y,item->text);
+               LT_DBG(DARG,"Highlighting y=%d item=%s\n",y,item->text);
                HighlightItem(w, item, True, True);
                y += item->height + w->list.VSpacing;
             }
@@ -1474,7 +1474,7 @@ Cardinal *num_params;
       else {
          while (item && y > yend && y > 0) {
             if (item) {
-               DBG(DARG,"Highlighting y=%d item=%s\n",y,item->text);
+               LT_DBG(DARG,"Highlighting y=%d item=%s\n",y,item->text);
                HighlightItem(w, item, True, True);
                y -= item->height + w->list.VSpacing;
             }
@@ -1549,7 +1549,7 @@ Cardinal *num_params;
 {
    ListTreeWidget w = (ListTreeWidget) aw;
 
-   DBGW("focus_in");
+   LT_DBGW("focus_in");
 
    if (!w->list.HasFocus) {
       XtCallActionProc(aw, "PrimitiveFocusIn", event, params, *num_params);
@@ -1572,7 +1572,7 @@ Cardinal *num_params;
 {
    ListTreeWidget w = (ListTreeWidget) aw;
 
-   DBGW("focus_out");
+   LT_DBGW("focus_out");
   
    if (w->list.HasFocus) {
       XtCallActionProc(aw, "PrimitiveFocusOut", event, params, *num_params);
@@ -1624,7 +1624,7 @@ Cardinal *num_params;
 #endif
 {
 
-   DBG(DARG,"keypress\n");
+   LT_DBG(DARG,"keypress\n");
 
 }
 
@@ -1907,14 +1907,14 @@ ListTreeItem *item;
          else
             yroot=item->parent->y + item->parent->height;
          
-         DBG(DARG,"parent=%s drawing x=%d y=%d\n",
+         LT_DBG(DARG,"parent=%s drawing x=%d y=%d\n",
                item->parent->text,xroot,yroot);
          XDrawLine(XtDisplay(w), XtWindow(w), w->list.drawGC,
                      xroot + w->list.XOffset, yroot,
                      xroot + w->list.XOffset, w->list.exposeBot);
       }
       else {
-         DBG(DARG,"parent=%s  NOT DRAWING\n",item->parent->text);
+         LT_DBG(DARG,"parent=%s  NOT DRAWING\n",item->parent->text);
       }
     
       item=item->parent;
@@ -1960,7 +1960,7 @@ int hevent;
   
    DrawChildren(w, item, &lastdrawn, y, xbranch, ybranch);
 
-   DBG(DARG,"lastdrawn=%s\n",lastdrawn->text);
+   LT_DBG(DARG,"lastdrawn=%s\n",lastdrawn->text);
    w->list.bottomItemPos=lastdrawn->count;
 
    DrawVertical(w,lastdrawn);
@@ -2334,7 +2334,7 @@ ListTreeItem **finditem;
 #endif
 {
    while (item) {
-      DBG(DARG,"searching y=%d item=%s\n",y,item->text);
+      LT_DBG(DARG,"searching y=%d item=%s\n",y,item->text);
       if (findy >= y && findy <= y + item->height + w->list.VSpacing) {
          *finditem = item;
          return -1;
@@ -2417,7 +2417,7 @@ Boolean *found;
    Pixinfo *pix;
 
    while (item) {
-      DBG(DARG,"Checking y=%d  item=%s\n",y,item->text);
+      LT_DBG(DARG,"Checking y=%d  item=%s\n",y,item->text);
       if (item == finditem) {
          *found = True;
          return y;
@@ -2472,7 +2472,7 @@ int *counter;
       y += height + (int) w->list.VSpacing;
       if ((item->firstchild) && (item->open)) {
          y = SearchPosition(w, item->firstchild, y, counter, finditem, &found);
-         DBG(DARG,"y=%d counter=%d\n", y, counter);
+         LT_DBG(DARG,"y=%d counter=%d\n", y, counter);
          if (found)
             return (Position) y;
       }
@@ -2483,7 +2483,7 @@ int *counter;
    if (item != finditem)
       y = 0;
 
-   DBG(DARG,"y=%d counter=%d\n", y, counter);
+   LT_DBG(DARG,"y=%d counter=%d\n", y, counter);
 
    return (Position) y;
 }
@@ -3415,7 +3415,7 @@ ListTreeItem *item;
    GetPosition(lw, item, &counter);
    item_pos = counter;
    
-   DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
+   LT_DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
            lw->list.visibleCount, item_pos, lw->list.itemCount);
 
    if (item_pos > (lw->list.topItemPos + lw->list.visibleCount) ||
@@ -3426,7 +3426,7 @@ ListTreeItem *item;
          DrawAll(lw);
          SetScrollbars(lw);
    }
-   DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
+   LT_DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
            lw->list.visibleCount, item_pos, lw->list.itemCount);
 
 }

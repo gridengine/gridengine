@@ -67,6 +67,10 @@
 #include "sge_profiling.h"
 #include "sge_mt_init.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#include "sge_event_client2.h"
+#endif
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
@@ -80,14 +84,15 @@ qevent_options *Global_qevent_options;
 
 
 static void qevent_show_usage(void);
-static void qevent_testsuite_mode(void);
+static void qevent_testsuite_mode(void *evc_context);
 static char* qevent_get_event_name(int event);
-static void qevent_trigger_scripts( int qevent_event, qevent_options *option_struct, lListElem *event );
-static void qevent_start_trigger_script(int qevent_event, const char* script_file, lListElem *event  );
+static void qevent_trigger_scripts(int qevent_event, qevent_options *option_struct, lListElem *event);
+static void qevent_start_trigger_script(int qevent_event, const char* script_file, lListElem *event);
 static qevent_options* qevent_get_option_struct(void);
 static void qevent_set_option_struct(qevent_options *option_struct);
 
-
+/* EB: DEBUG */
+/* #define QEVENT_SHOW_ALL */
 
 int main(int argc, char *argv[]);
 
@@ -106,11 +111,15 @@ static void qevent_dump_pid_file(void) {
 }
 
 
-bool print_event(sge_object_type type, sge_event_action action, 
-                lListElem *event, void *clientdata)
+#ifdef QEVENT_SHOW_ALL
+static sge_callback_result 
+print_event(void *evc_context, object_description *object_base, sge_object_type type, 
+            sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
    dstring buffer_wrapper;
+
+   DENTER(TOP_LAYER, "print_event");
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
@@ -118,14 +127,16 @@ bool print_event(sge_object_type type, sge_event_action action,
    fflush(stdout);
    /* create a callback error to test error handling */
    if(type == SGE_TYPE_GLOBAL_CONFIG) {
-      return false;
+      DEXIT;
+      return SGE_EMA_FAILURE;
    }
    
-   return true;
+   DEXIT;
+   return SGE_EMA_OK;
 }
-
-sge_callback_result
-print_jatask_event(object_description *object_base, sge_object_type type, 
+#else
+static sge_callback_result
+print_jatask_event(void *evc_context, object_description *object_base, sge_object_type type, 
                    sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -196,10 +207,11 @@ print_jatask_event(object_description *object_base, sge_object_type type,
    DEXIT;
    return SGE_EMA_OK;
 }
+#endif
 
 
-sge_callback_result
-analyze_jatask_event(object_description *object_base,sge_object_type type, 
+static sge_callback_result
+analyze_jatask_event(void *evc_context, object_description *object_base,sge_object_type type, 
                      sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -462,8 +474,12 @@ int main(int argc, char *argv[])
 {
    qevent_options enabled_options;
    dstring errors = DSTRING_INIT;
+   int i, gdi_setup;
    lList *alp = NULL;
-   int i,gdi_setup;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL; 
+   sge_evc_class_t *evc = NULL;
+#endif   
 
 
    DENTER_MAIN(TOP_LAYER, "qevent");
@@ -472,12 +488,6 @@ int main(int argc, char *argv[])
 
    /* dump pid to file */
    qevent_dump_pid_file();
-
-   log_state_set_log_gui(1);
-
-   sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-
-   gdi_setup = sge_gdi_setup(prognames[QEVENT], &alp);
 
    /* parse command line */
    enabled_options.error_message = &errors;
@@ -490,7 +500,7 @@ int main(int argc, char *argv[])
    if (enabled_options.help_option) {
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
       return 0;
    }
 
@@ -499,33 +509,49 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "%s", sge_dstring_get_string(enabled_options.error_message) ));
       qevent_show_usage();
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
 
+   log_state_set_log_gui(1);
+   sge_setup_sig_handlers(QEVENT);
+#ifdef TEST_GDI2
    /* setup event client */
-   if ( gdi_setup != AE_OK) {
+   gdi_setup = sge_gdi2_setup(&ctx, QEVENT, &alp);
+   if (gdi_setup != AE_OK) {
+      answer_list_output(&alp);
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT(NULL, 1);
+   }
+   /* TODO: how is the memory we allocate here released ???, SGE_EXIT doesn't */
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp)) {
+      answer_list_output(&alp);
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT((void**)&ctx, 1);
+   }
+#else
+   /* setup event client */
+   sge_gdi_param(SET_MEWHO, QEVENT, NULL);
+   gdi_setup = sge_gdi_setup(prognames[QEVENT], &alp);
+   if (gdi_setup != AE_OK) {
       sge_dstring_free(enabled_options.error_message);
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
-
-   sge_setup_sig_handlers(QEVENT);
-
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
-   }
+#endif
 
    /* ok, start over ... */
-
    /* check for testsuite option */
    
    if (enabled_options.testsuite_option) {
       /* only for testsuite */
-      qevent_testsuite_mode();
+#ifdef TEST_GDI2
+      qevent_testsuite_mode(evc);
+#else
+      qevent_testsuite_mode(NULL);
+#endif      
       sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
    if (enabled_options.trigger_option_count > 0) {
@@ -533,9 +559,15 @@ int main(int argc, char *argv[])
       lEnumeration *what = NULL;
       lListElem *event_client = NULL;
 
-      sge_mirror_initialize(EV_ID_ANY, "sge_mirror -trigger", true);
+#ifdef TEST_GDI2
+      sge_mirror_initialize(evc, EV_ID_ANY, "sge_mirror -trigger", true);
+      event_client = evc->ec_get_event_client(evc);
+      evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_ACK);
+#else
+      sge_mirror_initialize(NULL, EV_ID_ANY, "sge_mirror -trigger", true);
       event_client = ec_get_event_client();
       ec_set_busy_handling(event_client, EV_BUSY_UNTIL_ACK);
+#endif      
 
       /* put out information about -trigger option */
       for (i=0;i<enabled_options.trigger_option_count;i++) {
@@ -552,7 +584,20 @@ int main(int argc, char *argv[])
                                                               JB_ja_s_h_ids,JB_ja_o_h_ids, JB_ja_template);
                   
                   /* register for job events */ 
-                  sge_mirror_subscribe(event_client, SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
+#ifdef TEST_GDI2
+                  sge_mirror_subscribe(evc, event_client, SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
+                  evc->ec_set_flush(evc, sgeE_JOB_DEL,true, 1);
+
+                  /* the mirror interface registers more events, than we need,
+                     thus we free the ones, we do not need */
+                /*  evc->ec_unsubscribe(evc, sgeE_JOB_LIST); */
+                  evc->ec_unsubscribe(evc, sgeE_JOB_MOD);
+                  evc->ec_unsubscribe(evc, sgeE_JOB_MOD_SCHED_PRIORITY);
+                  evc->ec_unsubscribe(evc, sgeE_JOB_USAGE);
+                  evc->ec_unsubscribe(evc, sgeE_JOB_FINAL_USAGE);
+               /*   evc->ec_unsubscribe(evc, sgeE_JOB_ADD); */
+#else
+                  sge_mirror_subscribe(NULL, event_client, SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
                   ec_set_flush(event_client, sgeE_JOB_DEL,true, 1);
 
                   /* the mirror interface registers more events, than we need,
@@ -563,7 +608,7 @@ int main(int argc, char *argv[])
                   ec_unsubscribe(event_client, sgeE_JOB_USAGE);
                   ec_unsubscribe(event_client, sgeE_JOB_FINAL_USAGE);
                /*   ec_unsubscribe(event_client, sgeE_JOB_ADD); */
-                  
+#endif                  
                   /* free the what and where mask */
                   lFreeWhere(&where);
                   lFreeWhat(&what);
@@ -573,16 +618,24 @@ int main(int argc, char *argv[])
                   /* build mask for the job structure to contain only the needed elements */
                   where = NULL; 
                   what = lWhat("%T(%I)", JAT_Type, JAT_status);
-                  
                   /* register for JAT events */ 
-                  sge_mirror_subscribe(event_client, SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL, where, what);
+#ifdef TEST_GDI2                  
+                  sge_mirror_subscribe(evc, event_client, SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL, where, what);
+                  evc->ec_set_flush(evc, sgeE_JATASK_DEL,true, 1);
+                  
+                  /* the mirror interface registers more events, than we need,
+                     thus we free the ones, we do not need */ 
+                  evc->ec_unsubscribe(evc, sgeE_JATASK_ADD);
+                  evc->ec_unsubscribe(evc, sgeE_JATASK_MOD);
+#else
+                  sge_mirror_subscribe(NULL, event_client, SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL, where, what);
                   ec_set_flush(event_client, sgeE_JATASK_DEL,true, 1);
                   
                   /* the mirror interface registers more events, than we need,
                      thus we free the ones, we do not need */ 
                   ec_unsubscribe(event_client, sgeE_JATASK_ADD);
                   ec_unsubscribe(event_client, sgeE_JATASK_MOD);
-
+#endif
                   /* free the what and where mask */
                   lFreeWhere(&where);
                   lFreeWhat(&what);
@@ -591,18 +644,26 @@ int main(int argc, char *argv[])
       }
 
       while(!shut_me_down) {
-         sge_mirror_error error = sge_mirror_process_events(event_client);
+#ifdef TEST_GDI2
+         sge_mirror_error error = sge_mirror_process_events(evc, event_client);
+#else
+         sge_mirror_error error = sge_mirror_process_events(NULL, event_client);
+#endif
          if (error == SGE_EM_TIMEOUT && !shut_me_down ) {
             sleep(10);
             continue;
          }
       }
 
-      sge_mirror_shutdown(&event_client);
+#ifdef TEST_GDI2
+      sge_mirror_shutdown(evc, &event_client);
+#else
+      sge_mirror_shutdown(NULL, &event_client);
+#endif      
 
       sge_dstring_free(enabled_options.error_message);
       sge_prof_cleanup();
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
       return 0;
    }
 
@@ -611,7 +672,7 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    sge_prof_cleanup();
-   SGE_EXIT(1);
+   SGE_EXIT(NULL, 1);
    DEXIT;
    return 1;
 }
@@ -629,59 +690,85 @@ static char* qevent_get_event_name(int event) {
 
 
 
-void qevent_testsuite_mode(void) 
+static void qevent_testsuite_mode(void *evc_context) 
 {
-#if 0 /* EB: DEBUG */
-#define QEVENT_SHOW_ALL
-#endif
    u_long32 timestamp;
+   lListElem *event_client = NULL;
+#ifndef QEVENT_SHOW_ALL
    lCondition *where =NULL;
    lEnumeration *what = NULL;
-   lListElem *event_client = NULL;
  
-      const int job_nm[] = {       
-            JB_job_number,
-            JB_host,
-            JB_category,            
-            JB_project, 
-            JB_ja_tasks,
-            JB_ja_structure,
-            JB_ja_n_h_ids,
-            JB_ja_u_h_ids,
-            JB_ja_s_h_ids,
-            JB_ja_o_h_ids,   
-            JB_ja_template,
-            NoName
-         };
-
-      const int jat_nm[] = {     
-         JAT_status, 
-         JAT_task_number,
+   const int job_nm[] = {       
+         JB_job_number,
+         JB_host,
+         JB_category,            
+         JB_project, 
+         JB_ja_tasks,
+         JB_ja_structure,
+         JB_ja_n_h_ids,
+         JB_ja_u_h_ids,
+         JB_ja_s_h_ids,
+         JB_ja_o_h_ids,   
+         JB_ja_template,
          NoName
-      };  
+      };
+
+   const int jat_nm[] = {     
+      JAT_status, 
+      JAT_task_number,
+      NoName
+   };  
+#endif
+   
+#ifdef TEST_GDI2
+   sge_evc_class_t *evc = (sge_evc_class_t *)evc_context;
+#endif
 
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
-   sge_mirror_initialize(EV_ID_ANY, "qevent", true);
+#ifdef TEST_GDI2
+   sge_mirror_initialize(evc_context, EV_ID_ANY, "qevent", true);
+   event_client = evc->ec_get_event_client(evc);
+#else
+   sge_mirror_initialize(NULL, EV_ID_ANY, "qevent", true);
    event_client = ec_get_event_client();
+#endif   
 
 #ifdef QEVENT_SHOW_ALL
-   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
-#else
+   sge_mirror_subscribe(event_context, event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
+#else /* QEVENT_SHOW_ALL */
    where = NULL; 
-    what =  lIntVector2What(JB_Type, job_nm); 
+   what =  lIntVector2What(JB_Type, job_nm); 
 
-   sge_mirror_subscribe(event_client, SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
+#ifdef TEST_GDI2
+   sge_mirror_subscribe(evc, event_client, SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
+#else
+   sge_mirror_subscribe(NULL, event_client, SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
+#endif   
    lFreeWhere(&where);
    lFreeWhat(&what);
    
    where = NULL; 
    what = lIntVector2What(JAT_Type, jat_nm); 
 
-   sge_mirror_subscribe(event_client, SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
+#ifdef TEST_GDI2
+   sge_mirror_subscribe(evc, event_client, SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
+#else
+   sge_mirror_subscribe(NULL, event_client, SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
+#endif   
    lFreeWhere(&where);
    lFreeWhat(&what);
  
+#ifdef TEST_GDI2
+   /* we want a 5 sevc->econd event delivery interval */
+   evc->ec_set_edtime(evc, 5);
+
+   /* and have our events flushed immediately */
+   evc->ec_set_flush(evc, sgeE_JATASK_MOD, true, 1);
+   evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE, true, 1);
+   evc->ec_set_flush(evc, sgeE_JOB_ADD, true, 1);
+   evc->ec_set_flush(evc, sgeE_JOB_DEL, true, 1);
+#else
    /* we want a 5 second event delivery interval */
    ec_set_edtime(event_client, 5);
 
@@ -690,11 +777,12 @@ void qevent_testsuite_mode(void)
    ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE, true, 1);
    ec_set_flush(event_client, sgeE_JOB_ADD, true, 1);
    ec_set_flush(event_client, sgeE_JOB_DEL, true, 1);
+#endif   
 
-#endif
+#endif /* QEVENT_SHOW_ALL */
    
    while(!shut_me_down) {
-      sge_mirror_error error = sge_mirror_process_events(event_client);
+      sge_mirror_error error = sge_mirror_process_events(evc_context, event_client);
       if (error == SGE_EM_TIMEOUT && !shut_me_down) {
          sleep(10);
          continue;
@@ -708,7 +796,7 @@ void qevent_testsuite_mode(void)
 #endif
    }
 
-   sge_mirror_shutdown(&event_client);
+   sge_mirror_shutdown(evc_context, &event_client);
 
    DEXIT;
 }

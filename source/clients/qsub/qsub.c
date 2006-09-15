@@ -60,17 +60,22 @@
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
 extern char **environ;
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t exit_cv = PTHREAD_COND_INITIALIZER;
 static bool exited = false;
 
-static char *get_bulk_jobid_string (long job_id, int start, int end, int step);
-static void qsub_setup_sig_handlers (void);
+static char *get_bulk_jobid_string(long job_id, int start, int end, int step);
+static void qsub_setup_sig_handlers(void);
 static void qsub_terminate(void);
-static void *sig_thread (void *dummy);
-static int report_exit_status (int stat, const char *jobid);
-static void error_handler (const char *message);
+static void *sig_thread(void *dummy);
+static int report_exit_status(int stat, const char *jobid);
+static void error_handler(const char *message);
 
 int main(int argc, char **argv);
 
@@ -99,6 +104,15 @@ char **argv
    char *jobid_string = NULL;
    drmaa_attr_values_t *jobids = NULL;
 
+   u_long32 prog_number = 0;
+   u_long32 myuid = 0;
+   const char *sge_root = NULL;
+   const char *cell_root = NULL;
+   const char *username = NULL;
+   const char *qualified_hostname = NULL;
+   const char *unqualified_hostname = NULL;
+   const char *mastername = NULL;
+
    DENTER_MAIN(TOP_LAYER, "qsub");
 
    sge_prof_setup();
@@ -106,64 +120,86 @@ char **argv
    /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);
 
-   DPRINTF (("Initializing JAPI\n"));
+   DPRINTF(("Initializing JAPI\n"));
 
    if (japi_init(NULL, NULL, NULL, QSUB, false, NULL, &diag)
                                                       != DRMAA_ERRNO_SUCCESS) {
       fprintf(stderr, "\n");
       fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
-              sge_dstring_get_string (&diag));
+              sge_dstring_get_string(&diag));
       fprintf(stderr, "\n");
       DEXIT;
-      SGE_EXIT (1);
+      SGE_EXIT(NULL, 1);
    }
+
+#ifdef TEST_GDI2
+   prog_number = ctx->get_who(ctx);
+   myuid = ctx->get_uid(ctx);
+   sge_root = ctx->get_sge_root(ctx);
+   cell_root = ctx->get_cell_root(ctx);
+   username = ctx->get_username(ctx);
+   qualified_hostname = ctx->get_qualified_hostname(ctx);
+   unqualified_hostname = ctx->get_unqualified_hostname(ctx);
+   mastername = ctx->get_master(ctx, false);
+#else
+   prog_number = uti_state_get_mewho();
+   myuid = uti_state_get_uid();
+   sge_root = path_state_get_sge_root();
+   cell_root = path_state_get_cell_root();
+   username = uti_state_get_user_name();
+   qualified_hostname = uti_state_get_qualified_hostname();
+   unqualified_hostname = uti_state_get_unqualified_hostname();
+   mastername = sge_get_master(0);
+#endif   
+
 
    /*
     * read switches from the various defaults files
     */
-   opt_list_append_opts_from_default_files(&opts_defaults, &alp, environ);
+   opt_list_append_opts_from_default_files(prog_number, cell_root, username, &opts_defaults, &alp, environ);
    tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    /*
     * append the commandline switches to the list
     */
-   opt_list_append_opts_from_qsub_cmdline(&opts_cmdline, &alp,
+   opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_cmdline, &alp,
                                           argv + 1, environ);
    tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    /*
     * show usage if -help was in commandline
     */
    if (opt_list_has_X(opts_cmdline, "-help")) {
-      sge_usage(stdout);
+      sge_usage(QSUB, stdout);
       DEXIT;
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
    /*
     * We will only read commandline options from scripfile if the script
     * itself should not be handled as binary
     */
-   if (opt_list_is_X_true (opts_cmdline, "-b") ||
-       (!opt_list_has_X (opts_cmdline, "-b") &&
-        opt_list_is_X_true (opts_defaults, "-b"))) {
+   if (opt_list_is_X_true(opts_cmdline, "-b") ||
+       (!opt_list_has_X(opts_cmdline, "-b") &&
+        opt_list_is_X_true(opts_defaults, "-b"))) {
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
-      opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
+      opt_list_append_opts_from_script(prog_number,
+                                       &opts_scriptfile, &alp, 
                                        opts_cmdline, environ);
       tmp_ret = answer_list_print_err_warn(&alp, MSG_QSUB_COULDNOTREADSCRIPT_S,
                                            MSG_WARNING);
       if (tmp_ret > 0) {
          DEXIT;
-         SGE_EXIT(tmp_ret);
+         SGE_EXIT(NULL, tmp_ret);
       }
    }
 
@@ -188,34 +224,34 @@ char **argv
       DPRINTF(("Wait for job end\n"));
    }
    
-   alp = cull_parse_job_parameter(opts_all, &job);
+   alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
 
    tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
-      SGE_EXIT(tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
-   if (set_sec_cred(job) != 0) {
-      fprintf(stderr, "%s\n", MSG_SEC_SETJOBCRED);
+   if (set_sec_cred(sge_root, mastername, job, &alp) != 0) {
+      answer_list_output(&alp);
       DEXIT;
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    /* Check is we're just verifying the job */
    just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
-   DPRINTF (("Just verifying job\n"));
+   DPRINTF(("Just verifying job\n"));
 
    /* Check if job is immediate */
    is_immediate = (int)JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type));
-   DPRINTF (("Job is%s immediate\n", is_immediate ? "" : " not"));
+   DPRINTF(("Job is%s immediate\n", is_immediate ? "" : " not"));
 
    DPRINTF(("Everything ok\n"));
 
    if (lGetUlong(job, JB_verify)) {
       cull_show_job(job, 0);
       DEXIT;
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
    if (is_immediate || wait_for_job) {
@@ -223,7 +259,7 @@ char **argv
       
       qsub_setup_sig_handlers(); 
 
-      if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
+      if (pthread_create(&sigt, NULL, sig_thread, (void *)NULL) != 0) {
          fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  " error preparing signal handling thread");
@@ -233,9 +269,9 @@ char **argv
          goto Error;
       }
       
-      if (japi_enable_job_wait (NULL, &session_key_out, error_handler, &diag) ==
+      if (japi_enable_job_wait(username, unqualified_hostname, NULL, &session_key_out, error_handler, &diag) ==
                                        DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
-         const char *msg = sge_dstring_get_string (&diag);
+         const char *msg = sge_dstring_get_string(&diag);
          fprintf(stderr, "\n");
          fprintf(stderr, MSG_QSUB_COULDNOTINITIALIZEENV_S,
                  msg?msg:" error starting event client thread");
@@ -279,10 +315,7 @@ char **argv
 
       DPRINTF(("job id is: %ld\n", jobids->it.ji.jobid));
       
-      jobid_string = get_bulk_jobid_string ((long)jobids->it.ji.jobid,
-                                            jobids->it.ji.start,
-                                            jobids->it.ji.end,
-                                            jobids->it.ji.incr);
+      jobid_string = get_bulk_jobid_string((long)jobids->it.ji.jobid, start, end, step);
    }
    else if (num_tasks == 1) {
       int error = japi_run_job(&jobid, job, &diag);
@@ -313,7 +346,7 @@ char **argv
       jobid_string = strdup(sge_dstring_get_string(&jobid));
       DPRINTF(("job id is: %s\n", jobid_string));
 
-      sge_dstring_free (&jobid);
+      sge_dstring_free(&jobid);
    }
    else {
       fprintf(stderr, MSG_QSUB_COULDNOTRUNJOB_S, "invalid task structure");
@@ -339,7 +372,7 @@ char **argv
       printf("\n");
    }   
 
-   if ( (wait_for_job || is_immediate) && !just_verify) {
+   if ((wait_for_job || is_immediate) && !just_verify) {
       int event;
 
       if (is_immediate) {
@@ -373,7 +406,7 @@ char **argv
                 (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
                fprintf(stderr, "\n");
                fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S,
-                       sge_dstring_get_string (&diag));
+                       sge_dstring_get_string(&diag));
                fprintf(stderr, "\n");
             }
 
@@ -396,7 +429,7 @@ char **argv
                if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
                    (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
                   fprintf(stderr, "\n");
-                  fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string (&diag));
+                  fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string(&diag));
                   fprintf(stderr, "\n");
                }
                
@@ -408,13 +441,13 @@ char **argv
             /* If the job is an array job, use the first non-zero exit code as
              * the exit code for qsub. */
             if (exit_status == 0) {
-               exit_status = report_exit_status (stat,
-                                              sge_dstring_get_string (&jobid));
+               exit_status = report_exit_status(stat,
+                                              sge_dstring_get_string(&jobid));
             }
             /* If we've already found a non-zero exit code, just print the exit
              * info for the task. */
             else {
-               report_exit_status (stat, sge_dstring_get_string (&jobid));
+               report_exit_status(stat, sge_dstring_get_string(&jobid));
             }               
          }
       }
@@ -428,7 +461,7 @@ Error:
    if ((tmp_ret = japi_exit(JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
       if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
          fprintf(stderr, "\n");
-         fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string (&diag));
+         fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S, sge_dstring_get_string(&diag));
          fprintf(stderr, "\n");
       }
       else {
@@ -439,14 +472,14 @@ Error:
           * If the call to japi_init() succeeds, then we have an active session,
           * so coming here because of an error would not result in the
           * DRMAA_ERRNO_NO_ACTIVE_SESSION error. */
-         DPRINTF (("Sleeping for 15 seconds to wait for the exit to finish.\n"));
+         DPRINTF(("Sleeping for 15 seconds to wait for the exit to finish.\n"));
          
          sge_relative_timespec(15, &ts);
          sge_mutex_lock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
          
          while (!exited) {
-            if (pthread_cond_timedwait (&exit_cv, &exit_mutex, &ts) == ETIMEDOUT) {
-               DPRINTF (("Exit has not finished after 15 seconds.  Exiting.\n"));
+            if (pthread_cond_timedwait(&exit_cv, &exit_mutex, &ts) == ETIMEDOUT) {
+               DPRINTF(("Exit has not finished after 15 seconds.  Exiting.\n"));
                break;
             }
          }
@@ -459,7 +492,7 @@ Error:
 
    /* This is an exit() instead of an SGE_EXIT() because when the qmaster is
     * supended, SGE_EXIT() hangs. */
-   exit (exit_status);
+   exit(exit_status);
    DEXIT;
    return exit_status;
 }
@@ -469,7 +502,7 @@ Error:
 *     get_bulk_jobid_string() -- Turn the job id and parameters into a string
 *
 *  SYNOPSIS
-*     char *get_bulk_jobid_string (long job_id, int start, int end, int step)
+*     char *get_bulk_jobid_string(long job_id, int start, int end, int step)
 *
 *  FUNCTION
 *     Creates a string from the job id, start task, end task, and task step.
@@ -487,14 +520,14 @@ Error:
 *  NOTES
 *     MT-NOTES: get_bulk_jobid_string() is MT safe
 *******************************************************************************/
-static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
+static char *get_bulk_jobid_string(long job_id, int start, int end, int step)
 {
-   char *jobid_str = (char *)malloc (sizeof (char) * 1024);
+   char *jobid_str = (char *)malloc(sizeof(char) * 1024);
    char *ret_str = NULL;
    
    sprintf(jobid_str, "%ld.%d-%d:%d", job_id, start, end, step);
-   ret_str = strdup (jobid_str);
-   FREE (jobid_str);
+   ret_str = strdup(jobid_str);
+   FREE(jobid_str);
    
    return ret_str;
 }
@@ -504,7 +537,7 @@ static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
 *     qsub_setup_sig_handlers() -- Set up the signal handlers
 *
 *  SYNOPSIS
-*     void qsub_setup_sig_handlers (void)
+*     void qsub_setup_sig_handlers(void)
 *
 *  FUNCTION
 *     Blocks all signals so that the signal handler thread receives them.
@@ -512,12 +545,12 @@ static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
 *  NOTES
 *     MT-NOTES: get_bulk_jobid_string() is MT safe
 *******************************************************************************/
-static void qsub_setup_sig_handlers (void)
+static void qsub_setup_sig_handlers(void)
 {
    sigset_t sig_set;
 
-   sigfillset (&sig_set);
-   pthread_sigmask (SIG_BLOCK, &sig_set, NULL);
+   sigfillset(&sig_set);
+   pthread_sigmask(SIG_BLOCK, &sig_set, NULL);
 }
 
 /****** qsub_terminate() *******************************************************
@@ -549,15 +582,15 @@ static void qsub_terminate(void)
        (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
       fprintf(stderr, "\n");
       fprintf(stderr, MSG_QSUB_COULDNOTFINALIZEENV_S,
-              sge_dstring_get_string (&diag));
+              sge_dstring_get_string(&diag));
       fprintf(stderr, "\n");
    }
 
-   sge_dstring_free (&diag);
+   sge_dstring_free(&diag);
 
    sge_mutex_lock("qsub_exit_mutex", "qsub_terminate", __LINE__, &exit_mutex);
    exited = true;
-   pthread_cond_signal (&exit_cv);
+   pthread_cond_signal(&exit_cv);
    sge_mutex_unlock("qsub_exit_mutex", "qsub_terminate", __LINE__, &exit_mutex);
 }
 
@@ -566,7 +599,7 @@ static void qsub_terminate(void)
 *     sig_thread() -- Signal handler thread
 *
 *  SYNOPSIS
-*     void *sig_thread (void *dummy)
+*     void *sig_thread(void *dummy)
 *
 *  FUNCTION
 *     Waits for a SIGINT or SIGTERM and then calls qsub_terminate().
@@ -580,25 +613,25 @@ static void qsub_terminate(void)
 *  NOTES
 *     MT-NOTES: sig_thread() is MT safe
 *******************************************************************************/
-static void *sig_thread (void *dummy)
+static void *sig_thread(void *dummy)
 {
    int sig;
    sigset_t signal_set;
    dstring diag = DSTRING_INIT;
 
-   sigemptyset (&signal_set);
-   sigaddset (&signal_set, SIGINT);
-   sigaddset (&signal_set, SIGTERM);
+   sigemptyset(&signal_set);
+   sigaddset(&signal_set, SIGINT);
+   sigaddset(&signal_set, SIGTERM);
 
    /* Set up this thread so that when japi_exit() gets called, the GDI is
     * ready for use. */
-   japi_init_mt (&diag);
+   japi_init_mt(&diag);
 
-   /* We don't care about sigwait's return (error) code because our response
+   /* We don't care about sigwait's return(error) code because our response
     * to an error would be the same thing we're doing anyway: shutting down. */
-   sigwait (&signal_set, &sig);
+   sigwait(&signal_set, &sig);
    
-   qsub_terminate ();
+   qsub_terminate();
    
    return (void *)NULL;
 }
@@ -608,7 +641,7 @@ static void *sig_thread (void *dummy)
 *     report_exit_status() -- Prints a job's exit status
 *
 *  SYNOPSIS
-*     static int report_exit_status (int stat, const char *jobid)
+*     static int report_exit_status(int stat, const char *jobid)
 *
 *  FUNCTION
 *     Prints a job's exit status to stdout.
@@ -623,7 +656,7 @@ static void *sig_thread (void *dummy)
 *  NOTES
 *     MT-NOTES: report_exit_status() is MT safe
 *******************************************************************************/
-static int report_exit_status (int stat, const char *jobid)
+static int report_exit_status(int stat, const char *jobid)
 {
    int aborted, exited, signaled;
    int exit_status = 0;
@@ -645,8 +678,8 @@ static int report_exit_status (int stat, const char *jobid)
             dstring termsig = DSTRING_INIT;
             japi_wtermsig(&termsig, stat, NULL);
             printf(MSG_QSUB_JOBRECEIVEDSIGNAL_SS, jobid,
-                    sge_dstring_get_string (&termsig));
-            sge_dstring_free (&termsig);
+                    sge_dstring_get_string(&termsig));
+            sge_dstring_free(&termsig);
          }
          else {
             printf(MSG_QSUB_JOBFINISHUNCLEAR_S, jobid);
@@ -665,7 +698,7 @@ static int report_exit_status (int stat, const char *jobid)
 *     error_handler() -- Prints JAPI error messages
 *
 *  SYNOPSIS
-*     static void error_handler (const char *message)
+*     static void error_handler(const char *message)
 *
 *  FUNCTION
 *     Prints error messages from JAPI event client thread to stderr
@@ -676,7 +709,7 @@ static int report_exit_status (int stat, const char *jobid)
 *  NOTES
 *     MT-NOTES: error_handler() is MT safe
 *******************************************************************************/
-static void error_handler (const char *message)
+static void error_handler(const char *message)
 {
-   fprintf (stderr, message);
+   fprintf(stderr, message);
 }

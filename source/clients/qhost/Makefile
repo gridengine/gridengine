@@ -42,7 +42,11 @@ QHOST_ADD_SRC = \
                qstat_printing.c \
                show_job.c \
                sig_handlers.c \
-               usage.c sge_options.c
+               usage.c \
+               sge_options.c \
+               sge_qstat.c \
+				   sge_qhost.c \
+               sge_cqueue_qstat.c
 
 QHOST_OBJS = $(QHOST_SRC:.c=.o)
 

@@ -57,6 +57,10 @@
 #include "qmon_file.h"
 #include "qmon_message.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
 
 static int BrowserState = 0;
 static Widget BrowserShell = 0;
@@ -146,13 +150,18 @@ XtPointer cld, cad;
    char *host = (char*)cld;
    char filename[SGE_PATH_MAX];
    lList *alp = NULL;
+#ifdef TEST_GDI2
+   const char *default_cell = ctx->get_default_cell(ctx);
+#else
+   const char *default_cell = uti_state_get_default_cell();
+#endif   
 
    DENTER(GUI_LAYER, "qmonBrowserMessages");
 
    /*
    ** get the path to the messages file
    */
-   sprintf(filename, "%s/%s/spool/", SGE_ROOT, uti_state_get_default_cell());
+   sprintf(filename, "%s/%s/spool/", SGE_ROOT, default_cell);
 
    if (!host || !strcmp(host , "global"))
       strcat(filename, "qmaster");

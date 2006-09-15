@@ -53,6 +53,7 @@
 #include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_prog.h"
+#include "setup_path.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_range.h"
@@ -75,7 +76,8 @@
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) 
+lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *username, const char *cell_root,
+                                const char *unqualified_hostname, const char *qualified_hostname, lList *cmdline, lListElem **pjob) 
 {
    const char *cp;
    lListElem *ep;
@@ -95,13 +97,13 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    /*
    ** path aliasing
    */
-   if (path_alias_list_initialize(&path_alias, &answer, uti_state_get_user_name(), 
-                                  uti_state_get_qualified_hostname()) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, cell_root, username, 
+                                  qualified_hostname) == -1) {
       DEXIT;
       return answer;
    }
 
-   job_initialize_env(*pjob, &answer, path_alias);
+   job_initialize_env(*pjob, &answer, path_alias, unqualified_hostname, qualified_hostname);
    if (answer) {
       DEXIT;
       return answer;
@@ -321,8 +323,8 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    parse_list_simple(cmdline, "-M", *pjob, JB_mail_list, MR_host, MR_user, FLG_LIST_MERGE);
 
    if (!lGetList(*pjob, JB_mail_list)) {   
-      ep = lAddSubStr(*pjob, MR_user, uti_state_get_user_name(), JB_mail_list, MR_Type);
-      lSetHost(ep, MR_host, uti_state_get_qualified_hostname());
+      ep = lAddSubStr(*pjob, MR_user, username, JB_mail_list, MR_Type);
+      lSetHost(ep, MR_host, qualified_hostname);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
@@ -517,7 +519,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    /* check DISPLAY on the client side before submitting job to qmaster 
     * only needed for qsh 
     */
-   if(uti_state_get_mewho() == QSH) {
+   if(prog_number == QSH) {
       job_check_qsh_display(*pjob, &answer, false);
    }
 

@@ -58,6 +58,10 @@
 #include "msg_clients_common.h"
 #include "msg_qalter.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 /* when this character is modified, it has also be modified
    the JOB_NAME_DEL in daemons/qmaster/sge_job_qmaster.c 
    It is used, when a job name is modified via job name to
@@ -65,7 +69,7 @@
    */
 static const char *JOB_NAME_DEL = ":";
 
-static lList *qalter_parse_job_parameter(lList *cmdline, lList **pjob, int *all_jobs, int *all_users);
+static lList *qalter_parse_job_parameter(u_long32 prog_number, lList *cmdline, lList **pjob, int *all_jobs, int *all_users);
 
 int verify = 0;
 
@@ -88,6 +92,10 @@ char **argv
    u_long32 gdi_cmd = SGE_GDI_MOD; 
    int tmp_ret;
    int me_who;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
+
 
    DENTER_MAIN(TOP_LAYER, "qalter");
 
@@ -114,30 +122,36 @@ char **argv
    } 
 
    log_state_set_log_gui(1);
+   sge_setup_sig_handlers(me_who);
 
-   sge_gdi_param(SET_MEWHO, me_who, NULL);
-   if (sge_gdi_setup(prognames[uti_state_get_mewho()], &alp)) {
+#ifdef TEST_GDI2
+   if (sge_gdi2_setup(&ctx, me_who, &alp) != AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }
-
-   sge_setup_sig_handlers(uti_state_get_mewho());
+#else
+   sge_gdi_param(SET_MEWHO, me_who, NULL);
+   if (sge_gdi_setup(prognames[me_who], &alp)) {
+      answer_list_output(&alp);
+      SGE_EXIT(NULL, 1);
+   }
+#endif   
 
    /*
    ** begin to work
    */
-   opt_list_append_opts_from_qalter_cmdline(&cmdline, &alp, argv + 1, environ);
+   opt_list_append_opts_from_qalter_cmdline(me_who, &cmdline, &alp, argv + 1, environ);
    tmp_ret = answer_list_print_err_warn(&alp, MSG_QALTER, MSG_QALTERWARNING);
    if (tmp_ret > 0) {
-      SGE_EXIT(tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
-   if ((lGetNumberOfElem (cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
-      sge_usage(stdout);
-      SGE_EXIT(1);
+   if ((lGetNumberOfElem(cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
+      sge_usage(me_who, stdout);
+      SGE_EXIT(NULL, 1);
    }
 
-   alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, 
+   alp = qalter_parse_job_parameter(me_who, cmdline, &request_list, &all_jobs, 
                                     &all_users);
    
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
@@ -154,12 +168,12 @@ char **argv
       */
       cull_show_job(lFirst(request_list), FLG_QALTER);
       sge_prof_cleanup();
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
    tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
-      SGE_EXIT(tmp_ret);
+      SGE_EXIT(NULL, tmp_ret);
    }
 
    if ((me_who == QALTER) ||
@@ -173,7 +187,7 @@ char **argv
       gdi_cmd = SGE_GDI_COPY;
    } else {
       printf("unknown binary name.\n");
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    if (all_jobs)
@@ -181,7 +195,11 @@ char **argv
    if (all_users)
       gdi_cmd |= SGE_GDI_ALL_USERS;
 
+#ifdef TEST_GDI2
+   alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
+#else
    alp = sge_gdi(SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
+#endif   
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
       if (ret==0) {
@@ -201,9 +219,13 @@ char **argv
    }
 
    sge_prof_cleanup();
-   SGE_EXIT(ret);
-   DEXIT;
-   return 0;
+#ifdef TEST_GDI2
+   SGE_EXIT((void**)&ctx, ret);
+#else
+   SGE_EXIT(NULL, ret);
+#endif   
+
+   DRETURN(0);
 }
 
 /*
@@ -218,8 +240,6 @@ char **argv
 **   STATUS_EUNKNOWN   - bad internal error like NULL pointer received or no memory
 **   STATUS_EDISK      - getcwd() failed
 **   STATUS_ENOIMP     - unknown switch or -help occurred
-** EXTERNAL
-**   me
 ** DESCRIPTION
 **   step 1:
 **      parse all options into a dummy job 
@@ -229,6 +249,7 @@ char **argv
 **      dummy job and put them into the prequestlist
 */
 static lList *qalter_parse_job_parameter(
+u_long32 me_who,
 lList *cmdline,
 lList **prequestlist,
 int *all_jobs,
@@ -246,18 +267,14 @@ int *all_users
    int users_flag = 0;
 
    int job_field[100];
-   int me_who;
    bool is_hold_option = false;
 
    DENTER(TOP_LAYER, "qalter_parse_job_parameter"); 
 
-   me_who = uti_state_get_mewho();
-
    if (!prequestlist) {
       answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 
                       ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /*
@@ -269,11 +286,9 @@ int *all_users
    /* we need this job to parse our options in */
    job = lCreateElem(JB_Type);
    if (job == NULL) {
-      sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-      answer_list_add(&answer, SGE_EVENT,
-                      STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      answer_list_add_sprintf(&answer, STATUS_EMALLOC, ANSWER_QUALITY_ERROR,
+                              MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+      DRETURN(answer);
    }
 
    /* initialize job field set */
@@ -292,14 +307,11 @@ int *all_users
    ** (e.g. by putting -help in a script file)
    */
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      char str[1024];
-
       lRemoveElem(cmdline, &ep);
-      sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_ERROR,
+                              MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       lFreeElem(&job);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    /* ---------------------------------------------------------- */
@@ -329,8 +341,7 @@ int *all_users
             answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
          
          if (sge_o_home && !chdir(sge_o_home)) {
@@ -338,8 +349,7 @@ int *all_users
                answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                                STATUS_EDISK, ANSWER_QUALITY_ERROR);
                lFreeElem(&job);
-               DEXIT;
-               return answer;
+               DRETURN(answer);
             }
 
             chdir(tmp_str);
@@ -395,8 +405,7 @@ int *all_users
       lList *jid_list = NULL;
       if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
          lFreeElem(&job);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }                                                 
       lSetList(job, JB_job_identifier_list, jid_list);
    } 
@@ -663,8 +672,7 @@ int *all_users
       answer_list_add(&answer, MSG_JOB_NOJOBATTRIBUTESELECTED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       lFreeElem(&job);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
 /* printf("=============== lWriteElemTo(job, stdout); ==================\n"); */
@@ -681,8 +689,7 @@ int *all_users
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       lFreeElem(&job);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    rdp = NULL;
@@ -691,8 +698,7 @@ int *all_users
       answer_list_add(&answer, MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       lFreeElem(&job);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
    
    lFreeWhat(&what);
@@ -734,8 +740,7 @@ int *all_users
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
             FREE(rdp);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          } else if (!strcmp(lGetString(ep, ID_str), "dummy")) {
             /* we will add a dummy-object to send parameters to qmaster */ 
          } else {
@@ -743,8 +748,7 @@ int *all_users
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
             FREE(rdp);
-            DEXIT;
-            return answer;
+            DRETURN(answer);
          }
       }
       if ((jobid != 0) || ((*all_jobs) == 1)){
@@ -768,13 +772,11 @@ int *all_users
       }   
 
       if (!rep) {   
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
-         answer_list_add(&answer, SGE_EVENT,
-                         STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         answer_list_add_sprintf(&answer, STATUS_EMALLOC, ANSWER_QUALITY_ERROR,
+                                 MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          lFreeElem(&job);
          FREE(rdp);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
 
       /* build task list from ID_Type from JB_job_identifier */
@@ -796,13 +798,11 @@ int *all_users
          }
       }
       if ((lGetPosViaElem(rep, JB_ja_tasks, SGE_NO_ABORT) == -1) && (lGetNumberOfElem(task_list))){
-         sprintf(SGE_EVENT, MSG_OPTIONWORKSONLYONJOB);
-         answer_list_add(&answer, SGE_EVENT,
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         answer_list_add_sprintf(&answer, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                 MSG_OPTIONWORKSONLYONJOB);
          lFreeElem(&job);
          FREE(rdp);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
       lSetList(job, JB_ja_tasks, task_list);
       lSetList(job, JB_ja_structure, 
@@ -886,12 +886,10 @@ int *all_users
                       STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       lFreeElem(&job);
       FREE(rdp);
-      DEXIT;
-      return answer;      
+      DRETURN(answer);      
    }
 
    lFreeElem(&job);
    FREE(rdp);
-   DEXIT;
-   return answer;
+   DRETURN(answer);
 }

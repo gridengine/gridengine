@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     char jobid[DRMAA_JOBNAME_BUFFER + 1];
 
     if (argc != 2) {
-       printf ("Usage: %s path_to_script", argv[0]);
+       printf("Usage: %s path_to_script\n", argv[0]);
        exit(1);
     }
     

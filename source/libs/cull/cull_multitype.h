@@ -66,6 +66,7 @@ char **lGetPosHostRef(const lListElem *ep, int id);
 
 lList **lGetListRef(const lListElem *ep, int name);
 int lGetType(const lDescr *dp, int nm);
+int lGetPosName(const lDescr *dp, int pos);
 int lXchgList(lListElem *ep, int name, lList **lpp);
 int lXchgString(lListElem *ep, int name, char **str);
 int lSwapList(lListElem *to, int to_nm, lListElem *from, int from_nm);

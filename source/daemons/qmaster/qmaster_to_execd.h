@@ -32,16 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_feature.h"
-
-int host_notify_about_new_conf(lListElem *host);
-
-int host_notify_about_kill(lListElem *host, int kill_command);
-
-int host_notify_about_featureset(lListElem *host, feature_id_t featureset);
-
-void host_list_notify_about_featureset(lList *host_list,
-                                       feature_id_t featureset);
+int host_notify_about_new_conf(void *context, lListElem *host);
+int host_notify_about_kill(void *context, lListElem *host, int kill_command);
 
 #endif /* __QMASTER_TO_EXECD_H */
 

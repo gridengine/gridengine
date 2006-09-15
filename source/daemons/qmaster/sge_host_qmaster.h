@@ -40,44 +40,46 @@
 
 
 /* funtions called via gdi and inside the qmaster */
-int sge_del_host(lListElem *, lList **, char *, char *, u_long32, const lList* master_hGroup_List);
+int sge_del_host(void *context, lListElem *, lList **, char *, char *, u_long32, const lList* master_hGroup_List);
 
-int host_spool(lList **alpp, lListElem *ep, gdi_object_t *object);
+int host_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object);
 
-int host_mod(lList **alpp, lListElem *new_host, lListElem *ep, int add, 
+int host_mod(void *context,
+             lList **alpp, lListElem *new_host, lListElem *ep, int add, 
              const char *ruser, const char *rhost, gdi_object_t *object, 
              int sub_command, monitoring_t *monitor);
 
-int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int host_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
 void sge_mark_unheard(lListElem *hep, const char *target);
 
-int sge_add_host_of_type(const char *hostname, u_long32 target, monitoring_t *monitor);
+int sge_add_host_of_type(void *context, const char *hostname, u_long32 target, monitoring_t *monitor);
 
-void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request *answer, uid_t uid, gid_t gid, char *user, char *group);
+void sge_gdi_kill_exechost(void *context, 
+                           char *host, 
+                           sge_gdi_request *request, 
+                           sge_gdi_request *answer,
+                           uid_t uid, 
+                           gid_t gid, 
+                           char *user, 
+                           char *group);
 
-void sge_update_load_values(char *rhost, lList *lp);
+void sge_update_load_values(void *context, char *rhost, lList *lp);
 
-void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor);
+void sge_load_value_cleanup_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
 
-int sge_count_uniq_hosts(lList *ahl, lList *shl);
-
-int sge_execd_startedup(lListElem *hep, lList **alpp, char *ruser, char *rhost, 
+int sge_execd_startedup(void *context, 
+                        lListElem *hep, lList **alpp, char *ruser, char *rhost, 
                         u_long32 target, monitoring_t *monitor);
 
 u_long32 load_report_interval(lListElem *hep); 
 u_long32 sge_get_max_unheard_value(void); 
 
-void sge_change_queue_version_exechost(const char *exechost_name);
-
-int host_notify_about_X(lListElem *host,
-                        u_long32 x,
-                        int tag,
-                        int progname_id);
-
-bool
-host_list_add_missing_href(lList *this_list, lList **answer_list, const lList *href_list, 
-                           monitoring_t *monitor);
+bool host_list_add_missing_href(void *context,
+                                lList *this_list, 
+                                lList **answer_list, 
+                                const lList *href_list, 
+                                monitoring_t *monitor);
 
 void host_diff_projects(const lListElem *new, const lListElem *old, lList **new_prj, lList **old_prj);
 void host_diff_usersets(const lListElem *new, const lListElem *old, lList **new_acl, lList **old_acl);

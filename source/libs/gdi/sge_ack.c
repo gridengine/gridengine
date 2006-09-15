@@ -29,6 +29,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifndef TEST_GDI2
+
+
 #include <stdio.h>
 
 #include "sge_gdiP.h"
@@ -83,3 +87,5 @@ int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val,
 
    return ret;
 }
+
+#endif

@@ -38,53 +38,16 @@
 /* scheduling framework, layer 1: data model */
 
 /* which data do we want to be mirrored from qmaster */
-int subscribe_default_scheduler(void);
-
-/* callback functions for event processing */
-sge_callback_result
-sge_process_schedd_conf_event_before(object_description *object_base, sge_object_type type, 
-                                     sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_schedd_conf_event_after(object_description *object_base, sge_object_type type, 
-                                    sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_job_event_before(object_description *object_base, sge_object_type type, 
-                             sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_job_event_after(object_description *object_base, sge_object_type type, 
-                            sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_ja_task_event_before(object_description *object_base, sge_object_type type, 
-                                 sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_ja_task_event_after(object_description *object_base, sge_object_type type, 
-                                sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_global_config_event(object_description *object_base, sge_object_type type, 
-                                sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_userset_event_after(object_description *object_base, sge_object_type type, 
-                                sge_event_action action, lListElem *event, void *clientdata);
-
-sge_callback_result
-sge_process_schedd_monitor_event(object_description *object_base, sge_object_type type, 
-                                 sge_event_action action, lListElem *event, void *clientdata);
+int subscribe_default_scheduler(void *context);
 
 /* event post processing */
-int event_handler_default_scheduler(void);
+int event_handler_default_scheduler(void *context);
 #ifdef SCHEDULER_SAMPLES
-int event_handler_my_scheduler(void);
+int event_handler_my_scheduler(void *context);
 #endif
 
 /* cleanup post processing */
-void cleanup_default_scheduler(void);
+void cleanup_default_scheduler(void *context);
 
 #endif /* __SGE_PROCESS_EVENTS_H */
 

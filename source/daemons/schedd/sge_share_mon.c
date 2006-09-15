@@ -37,7 +37,7 @@
 
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
-
+#include "sgermon.h"
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_usageL.h"
@@ -56,6 +56,10 @@
 
 #include "sge_sharetree_printing.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 static int
 free_lists(lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
 {
@@ -69,7 +73,7 @@ free_lists(lList **sharetree, lList **users, lList **projects, lList **usersets,
 }
 
 static int
-setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
+setup_lists(void *context, lList **sharetree, lList **users, lList **projects, lList **usersets, lList **config)
 {
    lList *alp = NULL;               /* answer list for individual gdi_multi */
    lList *malp = NULL;              /* answer list for final gdi_multi */
@@ -82,18 +86,32 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
    int userset_id = 0;
    bool error;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
+
    /* get share tree */
    what = lWhat("%T(ALL)", STN_Type);
+#ifdef TEST_GDI2
+   sharetree_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, SGE_GDI_GET, 
+                                NULL, NULL, what, NULL, &state, true);
+#else
    sharetree_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, SGE_GDI_GET, 
                                 NULL, NULL, what, NULL, &state, true);
+#endif
    lFreeWhat(&what);
    error = answer_list_output(&alp);
 
    /* get config list */
    if (!error) {
       what = lWhat("%T(ALL)", SC_Type);
+#ifdef TEST_GDI2
+      sched_conf_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
+                                    NULL, NULL, what, NULL, &state, true);
+#else
       sched_conf_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
                                     NULL, NULL, what, NULL, &state, true);
+#endif
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -101,8 +119,13 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
    /* get user list */
    if (!error) {
       what = lWhat("%T(ALL)", UP_Type);
+#ifdef TEST_GDI2
+      user_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
+                              NULL, NULL, what, NULL, &state, true);
+#else
       user_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
                               NULL, NULL, what, NULL, &state, true);
+#endif
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -110,20 +133,30 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
    /* get project list */
    if (!error) {
       what = lWhat("%T(ALL)", UP_Type);
+#ifdef TEST_GDI2
+      project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
+                                 NULL, NULL, what, NULL, &state, true);
+#else
       project_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
                                  NULL, NULL, what, NULL, &state, true);
+#endif
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
 
-   /* 
+   /*
     * get userset list 
     * send gdi multi request to qmaster
     */
    if (!error) {
       what = lWhat("%T(ALL)", US_Type);
+#ifdef TEST_GDI2
+      userset_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_USERSET_LIST, SGE_GDI_GET, 
+                                 NULL, NULL, what, &malp, &state, true);
+#else
       userset_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_USERSET_LIST, SGE_GDI_GET, 
                                  NULL, NULL, what, &malp, &state, true);
+#endif
       lFreeWhat(&what);
       error = answer_list_output(&alp);
    }
@@ -135,7 +168,7 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
    }
 
    /* extract the sharetree lists */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SHARETREE_LIST, sharetree_id, malp, sharetree);
+   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_SHARETREE_LIST, sharetree_id, malp, sharetree);
    error = answer_list_output(&alp);
 
    /* if we have no sharetree, output message and exit */
@@ -150,19 +183,19 @@ setup_lists(lList **sharetree, lList **users, lList **projects, lList **usersets
 
    /* extract sched_conf, users, projects, usersets */
    if (!error) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_SC_LIST, sched_conf_id, malp, config);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_SC_LIST, sched_conf_id, malp, config);
       error = answer_list_output(&alp);
    }
    if (!error) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USER_LIST, user_id, malp, users);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_USER_LIST, user_id, malp, users);
       error = answer_list_output(&alp);
    }
    if (!error) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_PROJECT_LIST, project_id, malp, projects);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_PROJECT_LIST, project_id, malp, projects);
       error = answer_list_output(&alp);
    }
    if (!error) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_USERSET_LIST, userset_id, malp, usersets);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_USERSET_LIST, userset_id, malp, usersets);
       error = answer_list_output(&alp);
    }
 
@@ -259,9 +292,16 @@ main(int argc, char **argv)
 
    dstring output_dstring = DSTRING_INIT;
 
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = NULL;
+   lList *alp = NULL;
+#endif
+   
+   DENTER_MAIN(TOP_LAYER, "share_mon");
+
    sge_prof_setup();
-   obj_init_mt();
-   sc_init_mt();
+   obj_mt_init();
+   sc_mt_init();
    
    format.name_format  = false;
    format.delim        = "\t";
@@ -341,21 +381,32 @@ main(int argc, char **argv)
    if (err) {
       usage();
       sge_prof_cleanup();
-      exit(1);
+      SGE_EXIT(NULL, 1);
    }
 
    if ((argc - optind) > 0) {
        names = (const char **)&argv[optind];
    }
 
+#ifdef TEST_GDI2
+   if (sge_gdi2_setup(&ctx, SGE_SHARE_MON, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT(NULL, 1);
+   }
+#else
    sge_gdi_setup("sge_share_mon", NULL);
+#endif
 
    if (header) {
       print_hdr(&output_dstring, &format);
    }
 
    while(count == -1 || count-- > 0) {
-      setup_lists(&sharetree, &users, &projects, &usersets, &config);
+#ifdef TEST_GDI2   
+      setup_lists(ctx, &sharetree, &users, &projects, &usersets, &config);
+#else
+      setup_lists(NULL, &sharetree, &users, &projects, &usersets, &config);
+#endif
       sconf_set_config(&config, NULL);
 
       sge_sharetree_print(&output_dstring, sharetree, users, projects, usersets, group_nodes, decay_usage, names, &format);
@@ -377,10 +428,15 @@ main(int argc, char **argv)
       }
    }
 
+#ifdef TEST_GDI2
+   sge_gdi2_shutdown((void**)&ctx);
+#else
    sge_gdi_shutdown();
+#endif   
 
    sge_prof_cleanup();
    sge_dstring_free(&output_dstring);
 
+   DEXIT;
    return 0;
 }

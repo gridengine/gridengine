@@ -61,13 +61,7 @@ struct _sge_gdi_request {
    sge_gdi_request  *next;   
 };
 
-int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
-                         int id, sge_gdi_request *head,u_long32 *mid,
-                         unsigned long response_id, lList **alpp);
 int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp);
-
-bool
-gdi_request_map_pack_error(int pack_ret, lList **answer_list);
 
 bool
 gdi_request_pack_prefix(sge_gdi_request *ar, lList **answer_list,

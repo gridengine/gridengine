@@ -38,8 +38,8 @@
 typedef struct {
    char *name;
    char *descr;
-   int (*subscribe_func)(void);
-   int (*event_func)(void); 
+   int (*subscribe_func)(void *evc_context);
+   int (*event_func)(void *evc_context); 
    void *alg; /* can't make any assumption on this here 
                  though it usually it will be:
                   int (*alg)(sge_Sdescr_t *);        */
@@ -49,8 +49,8 @@ extern sched_func_struct sched_funcs[];
 extern int current_scheduler;
 
 int use_alg(const char *alg_name);
-int sge_before_dispatch(void);
-void sge_schedd_mirror_register(void);
+int sge_before_dispatch(void *evc_context);
+void sge_schedd_mirror_register(void *evc_context);
 
 /* Scheduler spool directory defines */
 #define SCHED_BASE_DIR          "/usr/SGE"

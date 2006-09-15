@@ -32,7 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
+int execd_signal_queue(void *context, 
+                       struct dispatch_entry *de, 
+                       sge_pack_buffer *pb, 
+                       sge_pack_buffer *apb, 
+                       u_long *rcvtimeout, 
+                       int *synchron, 
+                       char *err_str, 
+                       int answer_error);
 
 int signal_job(u_long32 jobid, u_long32 jataskid, u_long32 signal);
 

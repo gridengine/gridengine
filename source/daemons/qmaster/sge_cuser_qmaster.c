@@ -60,7 +60,8 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
-int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
+int cuser_mod(void *context,
+              lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
               int add, const char *remote_user, const char *remote_host,
               gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
@@ -170,7 +171,7 @@ int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
    }
 }
 
-int cuser_success(lListElem *cuser, lListElem *old_cuser, 
+int cuser_success(void *context, lListElem *cuser, lListElem *old_cuser, 
                     gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    DENTER(TOP_LAYER, "usermap_success");
@@ -181,15 +182,22 @@ int cuser_success(lListElem *cuser, lListElem *old_cuser,
    return 0;
 }
 
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object) 
+int cuser_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object) 
 {  
    lList *answer_list = NULL;
    bool dbret;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+#else
+   bool job_spooling = bootstrap_get_job_spooling();
+#endif
 
    DENTER(TOP_LAYER, "usermap_spool");
  
    dbret = spool_write_object(&answer_list, spool_get_default_context(), upe, 
-                              lGetString(upe, CU_name), SGE_TYPE_CUSER);
+                              lGetString(upe, CU_name), SGE_TYPE_CUSER,
+                              job_spooling);
    answer_list_output(&answer_list);
 
    if (!dbret) {

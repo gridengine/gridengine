@@ -90,6 +90,10 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 #ifdef COMPILE_DC
 #  include "ptf.h"
 static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *pe_task_id, lListElem *jr);
@@ -674,7 +678,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    */
       general_failure = GFSTATE_HOST;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array);
       break;
    case SSTATE_PROCSET_NOTSET:
    case SSTATE_READ_CONFIG:
@@ -683,7 +687,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_PESTART_FAILED:
       general_failure = GFSTATE_QUEUE;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array);
       break;
    case SSTATE_BEFORE_JOB:
    case SSTATE_NO_SHELL:
@@ -737,7 +741,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
          general_failure = job_caused_failure ? GFSTATE_JOB : GFSTATE_QUEUE;
          lSetUlong(jr, JR_general_failure, general_failure);
-         job_related_adminmail(jr, is_array);
+         job_related_adminmail(EXECD, jr, is_array);
       }
       break;
    /*
@@ -752,7 +756,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_SERVICE_ERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array);
       break;
    /*
    ** if an error occurred after the job has been run
@@ -765,7 +769,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_PROCSET_NOTFREED:
       general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array);
       break;
    /*
    ** these are shepherd error conditions met by the execd
@@ -782,7 +786,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       */
       general_failure = GFSTATE_NO_HALT;
       lSetUlong(jr, JR_general_failure, general_failure);
-      job_related_adminmail(jr, is_array);
+      job_related_adminmail(EXECD, jr, is_array);
       break;
    default: 
       general_failure = GFSTATE_NO_HALT;
@@ -806,6 +810,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
 /* ------------------------- */
 void remove_acked_job_exit(
+void *context,
 u_long32 job_id,
 u_long32 ja_task_id,
 const char *pe_task_id,
@@ -821,6 +826,13 @@ lListElem *jr
    lListElem *master_q;
    const char *pe_task_id_str; 
    const void *iterator;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *sge_root = ctx->get_sge_root(ctx);
+#else
+   const char *sge_root = path_state_get_sge_root();
+#endif   
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
 
@@ -877,7 +889,7 @@ lListElem *jr
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
-         reaper_sendmail(jep, jr); 
+         reaper_sendmail(context, jep, jr); 
 
 
       /*
@@ -892,7 +904,7 @@ lListElem *jr
       ** Execute command to delete the client's DCE or Kerberos credentials.
       */
       if (mconf_get_do_credentials())
-         delete_credentials(jep);
+         delete_credentials(sge_root, jep);
 
       /* remove job/task active dir */
       if (!mconf_get_keep_active() && !getenv("SGE_KEEP_ACTIVE")) {
@@ -1111,7 +1123,7 @@ int failed
   
    lSetUlong(jr, JR_state, JEXITING);
 
-   job_related_adminmail(jr, job_is_array(jep));
+   job_related_adminmail(EXECD, jr, job_is_array(jep));
 
    DEXIT;
    return jr;
@@ -1763,6 +1775,7 @@ u_long32 *valuep
 
 /* send mail to users if requested */
 void reaper_sendmail(
+void *context,
 lListElem *jep,
 lListElem *jr 
 ) {
@@ -1782,6 +1795,12 @@ lListElem *jr
    char buffer[128];
    dstring cpu_string = DSTRING_INIT;
    dstring maxvmem_string = DSTRING_INIT;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif   
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 
@@ -1793,8 +1812,9 @@ lListElem *jr
    if (!(q=lGetString(jr, JR_queue_name)))
       q = MSG_MAIL_UNKNOWN_NAME;
 
-   if (!(h=lGetHost(jr, JR_host_name)))
-      h = uti_state_get_qualified_hostname();
+   if (!(h=lGetHost(jr, JR_host_name))) {
+      h = qualified_hostname;
+   }
 
    if (!(u=lGetString(jep, JB_owner)))
       u = MSG_MAIL_UNKNOWN_NAME;
@@ -1890,7 +1910,7 @@ lListElem *jr
                  exit_status);
       }
 
-      cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_COMP);
+      cull_mail(EXECD, mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_COMP);
       sge_dstring_free(&utime_string);
       sge_dstring_free(&stime_string);
       sge_dstring_free(&wtime_string);
@@ -1961,7 +1981,7 @@ lListElem *jr
                     err_str, 
                     comment);
          }
-         cull_mail(mail_users, sge_mail_subj, 
+         cull_mail(EXECD, mail_users, sge_mail_subj, 
                    sge_mail_body, MSG_MAIL_TYPE_STATE);
       }
    }

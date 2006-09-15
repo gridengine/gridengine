@@ -90,6 +90,13 @@
 #include "sge_cqueue_qconf.h"
 #include "uti/sge_string.h"
 
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
+
+
 /*-------------------------------------------------------------------------*/
 
 /* 
@@ -1518,6 +1525,7 @@ XtPointer cld, cad;
    bool ret = True;
    XmString xmhost = NULL;
    lListElem *copy = NULL;
+   u_long32 gdi_command = 0;
    
    DENTER(TOP_LAYER, "qmonQCAdd");
    
@@ -1532,12 +1540,15 @@ XtPointer cld, cad;
    copy = lCopyElem(current_qep);
 
    if (dialog_mode == QC_ADD || dialog_mode == QC_CLONE) {
-      ret = cqueue_add_del_mod_via_gdi(copy, &alp, 
-                                        SGE_GDI_ADD | SGE_GDI_SET_ALL); 
+      gdi_command = SGE_GDI_ADD | SGE_GDI_SET_ALL;
    } else {
-      ret = cqueue_add_del_mod_via_gdi(copy, &alp, 
-                                        SGE_GDI_MOD | SGE_GDI_SET_ALL); 
-   }
+      gdi_command = SGE_GDI_MOD | SGE_GDI_SET_ALL;
+   }   
+#ifdef TEST_GDI2   
+   ret = cqueue_add_del_mod_via_gdi(ctx, copy, &alp, gdi_command); 
+#else   
+   ret = cqueue_add_del_mod_via_gdi(NULL, copy, &alp, gdi_command); 
+#endif   
    qmonMessageBox(w, alp, 0);
    
    if ( lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK ) {

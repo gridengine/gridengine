@@ -122,6 +122,15 @@ void qmonPopupQCU(Widget w, XtPointer cld, XtPointer cad)
    if (!qcu)
       qmonCreateQCU(w, NULL);
 
+   /*
+   ** preset qfilter resources
+   */
+   qmonResFilterSet(qcu, NULL, NULL);
+   qmonPEFilterSet(qcu, NULL, NULL);
+   qmonUserFilterSet(qcu, NULL, NULL);
+   qmonQFilterSet(qcu, NULL, NULL);
+   qmonQStateFilterSet(qcu, NULL, NULL);
+
    xmui_manage(qcu);
 
    DEXIT;
@@ -324,15 +333,6 @@ XtPointer cld
                                  NULL); 
 
       
-   /*
-   ** preset qfilter resources
-   */
-   qmonResFilterSet(qcu, NULL, NULL);
-   qmonPEFilterSet(qcu, NULL, NULL);
-   qmonUserFilterSet(qcu, NULL, NULL);
-   qmonQFilterSet(qcu, NULL, NULL);
-   qmonQStateFilterSet(qcu, NULL, NULL);
-
    XtAddCallback(r_filter_ar, XmNactivateCallback,
                         qmonResFilterEditResource, (XtPointer)0);
    XtAddCallback(r_filter_sr, XmNactivateCallback,

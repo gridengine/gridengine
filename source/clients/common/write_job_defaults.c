@@ -72,6 +72,7 @@ static lList *write_defaults_file(lList *lp, char *filename, int flags);
 **   containing the option switches 
 */
 lList *write_job_defaults(
+void *context,
 lListElem *job,
 char *filename,
 int flags 
@@ -84,7 +85,7 @@ int flags
    
    DENTER(TOP_LAYER, "write_job_defaults");
 
-   alp = cull_unparse_job_parameter(&cmdline, job, flags);
+   alp = cull_unparse_job_parameter(context, &cmdline, job, flags);
    for_each(aep, alp) {
       answer_exit_if_not_recoverable(aep);
       status = answer_get_status(aep); 
@@ -93,8 +94,7 @@ int flags
       }
    }
    if (do_exit) {
-      DEXIT;
-      return alp;
+      DRETURN(alp);
    }
    lFreeList(&alp);
 
@@ -106,14 +106,12 @@ int flags
          do_exit = 1;
       }
    }
-    if (do_exit) {
-      DEXIT;
-      return alp;
+   if (do_exit) {
+      DRETURN(alp);
    }
    lFreeList(&alp);
    
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /*
@@ -165,8 +163,7 @@ int flags
       if (!fp) {
          sprintf(str, MSG_FILE_ERROROPENFILEXFORWRITING_S, filename);
          answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
+         DRETURN(answer);
       }
    }
    for_each(ep, lp) {
@@ -201,8 +198,8 @@ int flags
          if (filename) {
             FCLOSE(fp);
          }
-         DEXIT;
-         return answer;
+
+         DRETURN(answer);
       }
       if (lGetUlong(ep, SPA_occurrence) & BIT_SPA_OCC_ARG) {
          cp = lGetString(ep, SPA_switch_arg);
@@ -210,19 +207,21 @@ int flags
             sprintf(str, MSG_ANSWER_ARGUMENTMISSINGFORX_S , 
                     lGetString(ep, SPA_switch));
             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            if (filename)
+            if (filename) {
                FCLOSE(fp);
-            DEXIT;
-            return answer;
+            }   
+               
+            DRETURN(answer);
          }
          i = fprintf(fp, "%s ", cp);
          if (i != (int) strlen(cp) + 1) {
             sprintf(str, MSG_FILE_ERRORWRITETOFILEX_S, filename);
             answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            if (filename)
+            if (filename) {
                FCLOSE(fp);
-            DEXIT;
-            return answer;
+            }   
+
+            DRETURN(answer);
          }
       }
    }
@@ -233,13 +232,12 @@ int flags
       FCLOSE(fp);
    }
 
-   DEXIT;
-   return answer;
+   DRETURN(answer);
+
 FCLOSE_ERROR:
-   sprintf(str, MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
-   answer_list_add(&answer, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return answer;
+   answer_list_add_sprintf(&answer, STATUS_EDISK, ANSWER_QUALITY_ERROR,
+                           MSG_FILE_ERRORCLOSEINGXY_SS, filename, strerror(errno));
+   DRETURN(answer);
 }
 
 

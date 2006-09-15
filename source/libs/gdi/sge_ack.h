@@ -44,8 +44,12 @@ enum {
                          /* running - that was not supposed to be there       */
    ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
 };
+
+#ifndef TEST_GDI2
 int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val,
                             u_long32 ulong_val_2, lList **alpp);
+
+#endif
 
 
 #ifdef  __cplusplus

@@ -65,6 +65,7 @@
   Add the sharetree
  ************************************************************/
 int sge_add_sharetree(
+void *context,
 lListElem *ep,
 lList **lpp,    /* list to change */
 lList **alpp,
@@ -74,7 +75,7 @@ char *rhost
    int ret;
 
    DENTER(TOP_LAYER, "sge_add_sharetree");
-   ret = sge_mod_sharetree(ep, lpp, alpp, ruser, rhost);
+   ret = sge_mod_sharetree(context, ep, lpp, alpp, ruser, rhost);
    DEXIT;
    return ret;
 }
@@ -86,7 +87,8 @@ char *rhost
   lListElem *ep,   This is the new share tree 
   lList **lpp,     list to change 
  ************************************************************/
-int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp, 
+int sge_mod_sharetree(void *context,
+                      lListElem *ep, lList **lpp, lList **alpp, 
                       char *ruser, char *rhost ) 
 {
    int ret;
@@ -138,7 +140,8 @@ int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp,
    lAppendElem(*lpp, lCopyElem(ep));
   
    /* write sharetree to file */
-   if (!sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE,
+   if (!sge_event_spool(context,
+                        alpp, 0, sgeE_NEW_SHARETREE,
                         0, 0, NULL, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
 
@@ -168,6 +171,7 @@ int sge_mod_sharetree(lListElem *ep, lList **lpp, lList **alpp,
   Delete the sharetree
  ************************************************************/
 int sge_del_sharetree(
+void *context,
 lList **lpp,    /* list to change */
 lList **alpp,
 char *ruser,
@@ -182,7 +186,8 @@ char *rhost
       return STATUS_EEXIST;
    }
 
-   sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE, 
+   sge_event_spool(context,
+                   alpp, 0, sgeE_NEW_SHARETREE, 
                    0, 0, NULL, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 

@@ -36,7 +36,7 @@
 
 #include "cull.h"
 
-typedef int (*report_func_type)(lList *, u_long32 now, u_long32 *next_send);
+typedef int (*report_func_type)(void *context, lList *, u_long32 now, u_long32 *next_send);
 
 typedef struct report_source {
   int type;
@@ -44,7 +44,7 @@ typedef struct report_source {
   u_long32 next_send;
 } report_source;
 
-int sge_send_all_reports(u_long32 now, int which, report_source *report_sources);
+int sge_send_all_reports(void *context, u_long32 now, int which, report_source *report_sources);
 
 int sge_add_double2load_report(lList **lpp, char *name, double value, const char *host, char *units);
 int sge_add_int2load_report(lList **lpp, const char *name, int value, const char *host);

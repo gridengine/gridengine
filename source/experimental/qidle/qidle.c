@@ -50,6 +50,9 @@
 #include "cull.h"
 #include "sge_load_sensor.h"
 #include "sgermon.h"
+#include "sge_prog.h"
+#include "sge_bootstrap.h"
+#include "sge_reportL.h"
 
 struct times {
    int sek;
@@ -59,7 +62,7 @@ struct times {
 
 struct times converttime(int s);
 struct times getidletime(Display *dpy);
-void getextloadsensor(char *script);
+void getextloadsensor(const char*qualified_hostname, const char *binary_path, char *script);
 int XIOHandler(Display *dpy);
 
 jmp_buf restartpoint;
@@ -141,7 +144,7 @@ char ** argv;
             tt = getidletime(dpy);
             printf("%s:idle:%d:%02d:%02d\n", host, tt.std, tt.min, tt.sek); fflush(NULL);
             if (script != NULL) 
-               getextloadsensor(script);
+               getextloadsensor(uti_state_get_qualified_hostname(), bootstrap_get_binary_path(), script);
             printf("end\n"); fflush(NULL);
          }
          else 
@@ -196,13 +199,12 @@ int s;
 
 
 /* Gets external loadsensor values */
-void getextloadsensor(script)
-char *script;
+void getextloadsensor(const char *qualified_hostname, const char *binary_path, 
+                      char *script)
 {
    lList *lpp = NULL;
    lListElem *ep = NULL;
-   sge_ls_start(script);
-   sge_ls_get(&lpp);
+   sge_ls_get(qualified_hostname, binary_path, &lpp);
    for_each (ep, lpp) {
       printf("%s:%s:%s\n", 
       lGetHost(ep, LR_host),

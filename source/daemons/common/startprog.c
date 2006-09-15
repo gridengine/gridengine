@@ -104,8 +104,7 @@ int startprog(int out, int err,
        if (SGE_STAT(prog_path, &sb)) {
           ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
                prog_path, strerror(errno)));
-          DEXIT;
-          return -2;
+          DRETURN(-2);
        }
    }   
    else
@@ -113,8 +112,7 @@ int startprog(int out, int err,
  }
  else {
     if (!path) {
-       DEXIT;
-       return -2;
+       DRETURN(-2);
     }   
     sprintf(prog_path, "%s/%s/%s", path, sge_get_arch(), name);
     if (SGE_STAT(prog_path, &sb)) {
@@ -122,8 +120,7 @@ int startprog(int out, int err,
        if (SGE_STAT(prog_path, &sb)) {
           ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
                prog_path, strerror(errno)));
-          DEXIT;
-          return -2;
+          DRETURN(-2);
        }   
     }   
  }
@@ -135,8 +132,7 @@ int startprog(int out, int err,
  pid = fork();
  if (pid < 0) {
    ERROR((SGE_EVENT, MSG_PROC_CANTFORKPROCESSTOSTARTX_S, prog_path));
-   DEXIT;
-   return -1;
+   DRETURN(-1);
  } else if (pid == 0) {
    /* child */
    if (getenv("SGE_DEBUG_LEVEL")) {
@@ -164,11 +160,10 @@ int startprog(int out, int err,
     } else if (ret > 0) {
        CRITICAL((SGE_EVENT, MSG_PROC_CANTSTARTPROCESSX_S, prog_path));     
     }
-    DEXIT;
-    return ret;
+    DRETURN(ret);
  }
  /* should never be reached */
- return -1;
+ DRETURN(-1);
 } 
 
 /*-----------------------------------------------------------------------
@@ -206,6 +201,6 @@ pid_t pid
    ret = exit_status == 8 ? -1 : exit_status;
    
    DPRINTF(("exit status of child: %d\n",  ret));
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }

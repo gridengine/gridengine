@@ -66,18 +66,24 @@
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 static void 
-sge_change_queue_version_centry(void);
+sge_change_queue_version_centry(void *context);
 
 
 /* ------------------------------------------------------------ */
 
 int 
-centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
+centry_mod(void *context,
+           lList **answer_list, lListElem *centry, lListElem *reduced_elem, 
            int add, const char *remote_user, const char *remote_host, 
            gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
@@ -113,7 +119,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       if (pos >= 0) {
          const char *shortcut = lGetPosString(reduced_elem, pos);
 
-         DPRINTF(("Got CE_shortcut: "SFQ"\n", shortcut));
+         DPRINTF(("Got CE_shortcut: "SFQ"\n", shortcut ? shortcut : "-NA-"));
          lSetString(centry, CE_shortcut, shortcut);
       }
    }
@@ -231,15 +237,22 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
 /* ------------------------------------------------------------ */
 
 int 
-centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object) 
+centry_spool(void *context, lList **alpp, lListElem *cep, gdi_object_t *object) 
 {
    lList *answer_list = NULL;
    bool dbret;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+#else
+   bool job_spooling = bootstrap_get_job_spooling();
+#endif
 
    DENTER(TOP_LAYER, "centry_spool");
 
    dbret = spool_write_object(&answer_list, spool_get_default_context(), cep, 
-                              lGetString(cep, CE_name), SGE_TYPE_CENTRY);
+                              lGetString(cep, CE_name), SGE_TYPE_CENTRY,
+                              job_spooling);
    answer_list_output(&answer_list);
 
    if (!dbret) {
@@ -310,7 +323,7 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *
 *******************************************************************************/
 int 
-centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+centry_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    bool rebuild_consumables = false;
 
@@ -349,7 +362,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **p
    return 0;
 }
 
-int sge_del_centry(lListElem *centry, lList **answer_list, 
+int sge_del_centry(void *context, lListElem *centry, lList **answer_list, 
                    char *remote_user, char *remote_host) 
 {
    bool ret = true;
@@ -391,7 +404,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *object_base[SGE_TYPE_CQUEUE].list,
                         *object_base[SGE_TYPE_EXECHOST].list)) {
-                  if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
+                  if (sge_event_spool(context, answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {
 
@@ -444,7 +457,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
 }
 
 static void 
-sge_change_queue_version_centry(void) 
+sge_change_queue_version_centry(void *context) 
 {
    lListElem *ep;
    lListElem *cqueue;
@@ -460,14 +473,14 @@ sge_change_queue_version_centry(void)
       for_each(qinstance, qinstance_list) {
          qinstance_increase_qversion(qinstance);
       
-         sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
+         sge_event_spool(context, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(qinstance, QU_qname), 
                          lGetHost(qinstance, QU_qhostname), NULL,
                          qinstance, NULL, NULL, true, true);
       }
    }
    for_each(ep, *object_base[SGE_TYPE_EXECHOST].list) {
-      sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
+      sge_event_spool(context, &answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(ep, EH_name), NULL, NULL,
                       ep, NULL, NULL, true, false);
    }
@@ -504,7 +517,7 @@ sge_change_queue_version_centry(void)
 *     affected queues instead of all), but also reduce the number of scheduling 
 *     decisions trashed due to a changed queue version number.
 *******************************************************************************/
-void centry_redebit_consumables(const lList *centries)
+void centry_redebit_consumables(void *context, const lList *centries)
 {
    lListElem *cqueue = NULL;
    lListElem *hep = NULL;
@@ -559,7 +572,7 @@ void centry_redebit_consumables(const lList *centries)
       }
    }
 
-   sge_change_queue_version_centry();
+   sge_change_queue_version_centry(context);
  
    /* changing complex attributes can change consumables.
     * dump queue and host consumables to reporting file.

@@ -52,7 +52,7 @@ typedef enum {
 auth_result_t do_pam_authenticate(const char* service, const char *username, const char *password,
                         error_handler_t *error_handler);
                         
-auth_result_t do_shadow_authentication(const char* username, const char* password, 
+auth_result_t do_shadow_authentication(const char* username, const char* password,
                              int* uid, int *gid,
                              error_handler_t *error_handler);
 

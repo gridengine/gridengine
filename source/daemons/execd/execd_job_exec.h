@@ -31,6 +31,21 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-int execd_job_exec(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
-int execd_job_slave(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
+int execd_job_exec(void *context, 
+                   struct dispatch_entry *de, 
+                   sge_pack_buffer *pb, 
+                   sge_pack_buffer *apb, 
+                   u_long *rcvtimeout, 
+                   int *synchron, 
+                   char *err_str, 
+                   int answer_error);
+int execd_job_slave(void *context, 
+                    struct dispatch_entry *de, 
+                    sge_pack_buffer *pb, 
+                    sge_pack_buffer *apb, 
+                    u_long *rcvtimeout, 
+                    int *synchron, 
+                    char *err_str, 
+                    int answer_error);
+
 #endif /* __EXECD_JOB_EXEC_H */

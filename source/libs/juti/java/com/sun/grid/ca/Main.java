@@ -32,6 +32,7 @@
 package com.sun.grid.ca;
 
 import com.sun.grid.security.login.ConsoleCallbackHandler;
+import com.sun.grid.security.login.TextCallbackHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -331,7 +332,7 @@ public class Main {
             switch(type) {
                 case TYPE_USER:
                     if(pwFile == null) {
-                        CallbackHandler cbh = new com.sun.security.auth.callback.TextCallbackHandler();
+                        CallbackHandler cbh = new TextCallbackHandler();
                         
                         PasswordCallback keystorePWCallback = new PasswordCallback("keystore password: ", false);
                         

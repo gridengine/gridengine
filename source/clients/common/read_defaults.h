@@ -39,26 +39,34 @@
 #define SGE_COMMON_DEF_QLIMIT_FILE   "common/sge_qlimit"
 #define SGE_HOME_DEF_QLIMIT_FILE     ".sge_qlimit"
 
-void opt_list_append_opts_from_default_files(lList **pcmdline,  
+void opt_list_append_opts_from_default_files(u_long32 prog_number,
+                                             const char* cell_root,
+                                             const char* username, 
+                                             lList **pcmdline,  
                                              lList **answer_list,
                                              char **envp);
 
-void opt_list_append_opts_from_qsub_cmdline(lList **opts_cmdline,
+void opt_list_append_opts_from_qsub_cmdline(u_long32 prog_number,
+                                            lList **opts_cmdline,
                                             lList **answer_list,
                                             char **argv,
                                             char **envp);
 
-void opt_list_append_opts_from_qalter_cmdline(lList **opts_cmdline,
+void opt_list_append_opts_from_qalter_cmdline(u_long32 prog_number,
+                                              lList **opts_cmdline,
                                               lList **answer_list,
                                               char **argv,
                                               char **envp);
 
-void opt_list_append_opts_from_script(lList **opts_scriptfile,
+void opt_list_append_opts_from_script(u_long32 prog_number, 
+                                      lList **opts_scriptfile,
                                       lList **answer_list,
                                       const lList *opts_cmdline,
                                       char **envp);
 
-void opt_list_append_opts_from_script_path(lList **opts_scriptfile, const char *path,
+void opt_list_append_opts_from_script_path(u_long32 prog_number,
+                                           lList **opts_scriptfile, 
+                                           const char *path,
                                            lList **answer_list,
                                            const lList *opts_cmdline,
                                            char **envp);

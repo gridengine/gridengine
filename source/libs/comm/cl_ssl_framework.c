@@ -115,7 +115,6 @@
 #define cl_com_ssl_func__SSL_get_options(ssl) \
         cl_com_ssl_func__SSL_ctrl((ssl),SSL_CTRL_OPTIONS,0,NULL)
 
-
 /*
  * bugfix for HP and AIX:
  * =====================
@@ -147,6 +146,7 @@ static void                 (*cl_com_ssl_func__ERR_free_strings)                
 static int                  (*cl_com_ssl_func__BIO_free)                            (BIO *a);
 static BIO*                 (*cl_com_ssl_func__BIO_new_fp)                          (FILE *stream, int flags);
 static BIO*                 (*cl_com_ssl_func__BIO_new_socket)                      (int sock, int close_flag);
+static BIO*                 (*cl_com_ssl_func__BIO_new_mem_buf)                     (void *buf, int len);
 static int                  (*cl_com_ssl_func__BIO_printf)                          (BIO *bio, const char *format, ...);
 static void                 (*cl_com_ssl_func__SSL_set_bio)                         (SSL *s, BIO *rbio,BIO *wbio);
 static int                  (*cl_com_ssl_func__SSL_accept)                          (SSL *ssl);
@@ -154,7 +154,9 @@ static void                 (*cl_com_ssl_func__SSL_CTX_free)                    
 static SSL_CTX*             (*cl_com_ssl_func__SSL_CTX_new)                         (SSL_METHOD *meth);
 static SSL_METHOD*          (*cl_com_ssl_func__SSLv23_method)                       (void);
 static int                  (*cl_com_ssl_func__SSL_CTX_use_certificate_chain_file)  (SSL_CTX *ctx, const char *file);
+static int                  (*cl_com_ssl_func__SSL_CTX_use_certificate)             (SSL_CTX *ctx, X509 *cert);
 static int                  (*cl_com_ssl_func__SSL_CTX_use_PrivateKey_file)         (SSL_CTX *ctx, const char *file, int type);
+static int                  (*cl_com_ssl_func__SSL_CTX_use_PrivateKey)              (SSL_CTX *ctx, EVP_PKEY *pkey);
 static int                  (*cl_com_ssl_func__SSL_CTX_load_verify_locations)       (SSL_CTX *ctx, const char *CAfile, const char *CApath);
 static int                  (*cl_com_ssl_func__SSL_library_init)                    (void);
 static void                 (*cl_com_ssl_func__SSL_load_error_strings)              (void);
@@ -175,6 +177,7 @@ static X509*                (*cl_com_ssl_func__X509_STORE_CTX_get_current_cert) 
 static int                  (*cl_com_ssl_func__X509_NAME_get_text_by_OBJ)           (X509_NAME *name, ASN1_OBJECT *obj, char *buf,int len);
 static ASN1_OBJECT*         (*cl_com_ssl_func__OBJ_nid2obj)                         (int n);
 static void                 (*cl_com_ssl_func__X509_free)                           (X509 *a);
+static void                 (*cl_com_ssl_func__EVP_PKEY_free)                       (EVP_PKEY *a);
 static long                 (*cl_com_ssl_func__SSL_CTX_ctrl)                        (SSL_CTX *ctx, int cmd, long larg, void *parg);
 static long                 (*cl_com_ssl_func__SSL_ctrl)                            (SSL *ssl, int cmd, long larg, void *parg);
 static int                  (*cl_com_ssl_func__RAND_status)                         (void);
@@ -183,6 +186,15 @@ static const char*          (*cl_com_ssl_func__SSL_get_cipher_list)             
 static int                  (*cl_com_ssl_func__SSL_CTX_set_cipher_list)             (SSL_CTX *,const char *str);
 static int                  (*cl_com_ssl_func__SSL_set_cipher_list)                 (SSL *ssl, const char *str);
 static void                 (*cl_com_ssl_func__SSL_set_quiet_shutdown)              (SSL *ssl, int mode);
+static char *               (*cl_com_ssl_func__PEM_ASN1_read_bio)                   (char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u);
+static X509*                (*cl_com_ssl_func__d2i_X509)                            (X509 **a, unsigned char **pp, long length);
+static PKCS8_PRIV_KEY_INFO *(*cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO)             (PKCS8_PRIV_KEY_INFO **x,  unsigned char **in, long len);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_PrivateKey)                      (int type, EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_AutoPrivateKey)                  (EVP_PKEY **a, unsigned char **pp, long length);
+static EVP_PKEY*            (*cl_com_ssl_func__d2i_PKCS8PrivateKey_bio)             (BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u);
+static EVP_PKEY*            (*cl_com_ssl_func__EVP_PKCS82PKEY)                      (PKCS8_PRIV_KEY_INFO *p8);
+static ASN1_VALUE*          (*cl_com_ssl_func__ASN1_item_d2i)                       (ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it);
 
 #ifdef ENABLE_CRL
 static char *               (*cl_com_ssl_func__PEM_ASN1_read)                       (char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u);
@@ -240,6 +252,19 @@ static void                 (*cl_com_ssl_func__X509_STORE_free)                 
 #define cl_com_ssl_func__X509_STORE_set_verify_cb_func(ctx,func) ((ctx)->verify_cb=(func))
 
 #endif
+
+#define  cl_com_ssl_func__PEM_read_bio_X509(bp,x,cb,u) (X509 *)cl_com_ssl_func__PEM_ASN1_read_bio( \
+   (char *(*)())cl_com_ssl_func__d2i_X509,PEM_STRING_X509,bp,(char **)x,cb,u)
+#define  cl_com_ssl_func__PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)cl_com_ssl_func__PEM_ASN1_read_bio( \
+   (char *(*)())cl_com_ssl_func__d2i_AutoPrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
+
+static PKCS8_PRIV_KEY_INFO* cl_com_ssl_func__PEM_read_bio_PKCS8_PRIV_KEY_INFO(BIO *bp, PKCS8_PRIV_KEY_INFO **x, pem_password_cb *cb, void *u)
+{ 
+   return((PKCS8_PRIV_KEY_INFO *)cl_com_ssl_func__PEM_ASN1_read_bio((char *(*)())cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO, PEM_STRING_PKCS8INF, 
+            bp, (char **)x,cb,u));
+}
+
+
 
 /* 
  *   connection specific struct (not used from outside) 
@@ -878,6 +903,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__BIO_free   = NULL;
       cl_com_ssl_func__BIO_new_fp   = NULL;
       cl_com_ssl_func__BIO_new_socket   = NULL;
+      cl_com_ssl_func__BIO_new_mem_buf   = NULL;
       cl_com_ssl_func__BIO_printf   = NULL;
       cl_com_ssl_func__SSL_set_bio   = NULL;
       cl_com_ssl_func__SSL_accept   = NULL;
@@ -885,7 +911,9 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__SSL_CTX_new   = NULL;
       cl_com_ssl_func__SSLv23_method   = NULL;
       cl_com_ssl_func__SSL_CTX_use_certificate_chain_file   = NULL;
+      cl_com_ssl_func__SSL_CTX_use_certificate   = NULL;
       cl_com_ssl_func__SSL_CTX_use_PrivateKey_file   = NULL;
+      cl_com_ssl_func__SSL_CTX_use_PrivateKey   = NULL;
       cl_com_ssl_func__SSL_CTX_load_verify_locations   = NULL;
       cl_com_ssl_func__SSL_library_init   = NULL;
       cl_com_ssl_func__SSL_load_error_strings   = NULL;
@@ -906,6 +934,7 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__X509_NAME_get_text_by_OBJ = NULL;
       cl_com_ssl_func__OBJ_nid2obj = NULL;
       cl_com_ssl_func__X509_free = NULL;
+      cl_com_ssl_func__EVP_PKEY_free = NULL;
       cl_com_ssl_func__SSL_CTX_ctrl = NULL;
       cl_com_ssl_func__SSL_ctrl = NULL;
       cl_com_ssl_func__RAND_status = NULL;
@@ -914,6 +943,14 @@ static int cl_com_ssl_destroy_symbol_table(void) {
       cl_com_ssl_func__SSL_CTX_set_cipher_list = NULL;
       cl_com_ssl_func__SSL_set_cipher_list = NULL;
       cl_com_ssl_func__SSL_set_quiet_shutdown = NULL;
+      cl_com_ssl_func__PEM_ASN1_read_bio = NULL;
+      cl_com_ssl_func__d2i_X509 = NULL;
+      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = NULL;
+      cl_com_ssl_func__d2i_PrivateKey = NULL;
+      cl_com_ssl_func__d2i_AutoPrivateKey = NULL;
+      cl_com_ssl_func__d2i_PKCS8PrivateKey_bio = NULL;
+      cl_com_ssl_func__EVP_PKCS82PKEY = NULL;
+      cl_com_ssl_func__ASN1_item_d2i = NULL;
 #ifdef ENABLE_CRL
       cl_com_ssl_func__PEM_ASN1_read = NULL;
       cl_com_ssl_func__SSL_CTX_get_cert_store = NULL;
@@ -988,7 +1025,7 @@ static int cl_com_ssl_build_symbol_table(void) {
    {
       char* func_name = NULL;
       int had_errors = 0;
-#if defined(FREEBSD)
+#if defined(FREEBSD) || defined(DARWIN)
       void* cl_com_ssl_crypto_handle_saved = NULL;
 #endif
 
@@ -1039,7 +1076,7 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
       }
       
-#if defined(FREEBSD)
+#if defined(FREEBSD) || defined(DARWIN)
       cl_com_ssl_crypto_handle_saved = cl_com_ssl_crypto_handle;
       cl_com_ssl_crypto_handle = RTLD_DEFAULT;
 #endif
@@ -1109,6 +1146,13 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
+      func_name = "BIO_new_mem_buf";
+      cl_com_ssl_func__BIO_new_mem_buf = (BIO* (*)(void *buf, int len))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__BIO_new_mem_buf == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
       func_name = "BIO_printf";
       cl_com_ssl_func__BIO_printf = (int (*)(BIO *bio, const char *format, ...))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__BIO_printf == NULL) {
@@ -1158,9 +1202,23 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
+      func_name = "SSL_CTX_use_certificate";
+      cl_com_ssl_func__SSL_CTX_use_certificate = (int (*)(SSL_CTX *ctx, X509 *cert))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__SSL_CTX_use_certificate == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
       func_name = "SSL_CTX_use_PrivateKey_file";
       cl_com_ssl_func__SSL_CTX_use_PrivateKey_file = (int (*)(SSL_CTX *ctx, const char *file, int type))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__SSL_CTX_use_PrivateKey_file == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "SSL_CTX_use_PrivateKey";
+      cl_com_ssl_func__SSL_CTX_use_PrivateKey = (int (*)(SSL_CTX *ctx, EVP_PKEY *pkey))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__SSL_CTX_use_PrivateKey == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
@@ -1305,6 +1363,13 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
+      func_name = "EVP_PKEY_free";
+      cl_com_ssl_func__EVP_PKEY_free = (void (*)(EVP_PKEY *a))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__EVP_PKEY_free == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
       func_name = "SSL_CTX_ctrl";
       cl_com_ssl_func__SSL_CTX_ctrl = (long (*)(SSL_CTX *ctx, int cmd, long larg, void *parg))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__SSL_CTX_ctrl == NULL) {
@@ -1361,6 +1426,13 @@ static int cl_com_ssl_build_symbol_table(void) {
          had_errors++;
       }
 
+      func_name = "PEM_ASN1_read_bio";
+      cl_com_ssl_func__PEM_ASN1_read_bio = (char *(*)(char *(*d2i)(),const char *name,BIO *bp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__PEM_ASN1_read_bio == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
 #ifdef ENABLE_CRL
       func_name = "PEM_ASN1_read";
       cl_com_ssl_func__PEM_ASN1_read = (char *(*)(char *(*d2i)(),const char *name,FILE *fp,char **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
@@ -1386,6 +1458,55 @@ static int cl_com_ssl_build_symbol_table(void) {
       func_name = "d2i_X509_CRL";
       cl_com_ssl_func__d2i_X509_CRL = (X509_CRL* (*)(X509_CRL **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__d2i_X509_CRL == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "d2i_X509";
+      cl_com_ssl_func__d2i_X509 = (X509* (*)(X509 **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__d2i_X509 == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "d2i_PKCS8_PRIV_KEY_INFO";
+      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO = (PKCS8_PRIV_KEY_INFO* (*)(PKCS8_PRIV_KEY_INFO **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "d2i_PrivateKey";
+      cl_com_ssl_func__d2i_PrivateKey = (EVP_PKEY* (*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__d2i_PrivateKey == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "d2i_AutoPrivateKey";
+      cl_com_ssl_func__d2i_AutoPrivateKey = (EVP_PKEY* (*)(EVP_PKEY **a, unsigned char **pp, long length))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__d2i_AutoPrivateKey == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "d2i_PKCS8PrivateKey_bio";
+      cl_com_ssl_func__d2i_PKCS8PrivateKey_bio = (EVP_PKEY* (*)(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__d2i_PKCS8PrivateKey_bio == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "EVP_PKCS82PKEY";
+      cl_com_ssl_func__EVP_PKCS82PKEY = (EVP_PKEY* (*)(PKCS8_PRIV_KEY_INFO *p8))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__EVP_PKCS82PKEY == NULL) {
+         CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
+         had_errors++;
+      }
+
+      func_name = "ASN1_item_d2i";
+      cl_com_ssl_func__ASN1_item_d2i = (ASN1_VALUE* (*)(ASN1_VALUE **pval, unsigned char **in, long len, const ASN1_ITEM *it))dlsym(cl_com_ssl_crypto_handle, func_name);
+      if (cl_com_ssl_func__ASN1_item_d2i == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;
       }
@@ -1688,6 +1809,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__BIO_free                            = BIO_free;
       cl_com_ssl_func__BIO_new_fp                          = BIO_new_fp;
       cl_com_ssl_func__BIO_new_socket                      = BIO_new_socket;
+      cl_com_ssl_func__BIO_new_mem_buf                     = BIO_new_mem_buf;
       cl_com_ssl_func__BIO_printf                          = BIO_printf;
       cl_com_ssl_func__SSL_set_bio                         = SSL_set_bio;
       cl_com_ssl_func__SSL_accept                          = SSL_accept;
@@ -1695,7 +1817,9 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_CTX_new                         = SSL_CTX_new;
       cl_com_ssl_func__SSLv23_method                       = SSLv23_method;
       cl_com_ssl_func__SSL_CTX_use_certificate_chain_file  = SSL_CTX_use_certificate_chain_file;
+      cl_com_ssl_func__SSL_CTX_use_certificate  = SSL_CTX_use_certificate;
       cl_com_ssl_func__SSL_CTX_use_PrivateKey_file         = SSL_CTX_use_PrivateKey_file;
+      cl_com_ssl_func__SSL_CTX_use_PrivateKey              = SSL_CTX_use_PrivateKey;
       cl_com_ssl_func__SSL_CTX_load_verify_locations       = SSL_CTX_load_verify_locations;
       cl_com_ssl_func__SSL_library_init                    = SSL_library_init;
       cl_com_ssl_func__SSL_load_error_strings              = SSL_load_error_strings;
@@ -1716,6 +1840,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__X509_NAME_get_text_by_OBJ           = X509_NAME_get_text_by_OBJ;
       cl_com_ssl_func__OBJ_nid2obj                         = OBJ_nid2obj;
       cl_com_ssl_func__X509_free                           = X509_free;
+      cl_com_ssl_func__EVP_PKEY_free                       = EVP_PKEY_free;
       cl_com_ssl_func__SSL_CTX_ctrl                        = SSL_CTX_ctrl;
       cl_com_ssl_func__SSL_ctrl                            = SSL_ctrl;
       cl_com_ssl_func__RAND_status                         = RAND_status;
@@ -1724,6 +1849,14 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_func__SSL_CTX_set_cipher_list             = SSL_CTX_set_cipher_list;
       cl_com_ssl_func__SSL_set_cipher_list                 = SSL_set_cipher_list;
       cl_com_ssl_func__SSL_set_quiet_shutdown              = SSL_set_quiet_shutdown;
+      cl_com_ssl_func__PEM_ASN1_read_bio                   = PEM_ASN1_read_bio;
+      cl_com_ssl_func__d2i_X509                            = d2i_X509;
+      cl_com_ssl_func__d2i_PKCS8_PRIV_KEY_INFO             = d2i_PKCS8_PRIV_KEY_INFO;
+      cl_com_ssl_func__d2i_PrivateKey                      = d2i_PrivateKey;
+      cl_com_ssl_func__d2i_AutoPrivateKey                  = d2i_AutoPrivateKey;
+      cl_com_ssl_func__d2i_PKCS8PrivateKey_bio             = d2i_PKCS8PrivateKey_bio;
+      cl_com_ssl_func__EVP_PKCS82PKEY                      = EVP_PKCS82PKEY;
+      cl_com_ssl_func__ASN1_item_d2i                       = ASN1_item_d2i;
 
 #ifdef ENABLE_CRL
       cl_com_ssl_func__PEM_ASN1_read                       = PEM_ASN1_read;
@@ -1923,6 +2056,10 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
          *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_336105650);
          break;
       }
+      case 336151576: {
+         *transformed_error = strdup(MSG_CL_COMMLIB_SSL_ERROR_336105650);
+         break;
+      }
       default: {
          snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_NR_AND_TEXT_USS, sge_u32c(ssl_error), module, error_text);
          *transformed_error = strdup(help_buf);
@@ -1967,7 +2104,7 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       return CL_RETVAL_OK;
    }   
 
-   while( (ssl_error = cl_com_ssl_func__ERR_get_error()) ) {
+   while((ssl_error = cl_com_ssl_func__ERR_get_error())) {
       cl_com_ssl_func__ERR_error_string_n(ssl_error,buffer,512);
       snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, ssl_error, func_name, buffer);
       CL_LOG(CL_LOG_ERROR,help_buf);
@@ -2131,34 +2268,111 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
                                           cl_com_ssl_verify_callback);
    }
 
-   /* load certificate chain file */
-   if (cl_com_ssl_func__SSL_CTX_use_certificate_chain_file(private->ssl_ctx, private->ssl_setup->ssl_cert_pem_file) != 1) {
-      CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, private->ssl_setup->ssl_cert_pem_file);
-      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-      return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
-   }
-   CL_LOG_STR(CL_LOG_INFO,"ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
+#if 1
+   if (private->ssl_setup->ssl_cert_mode == CL_SSL_PEM_BYTE) {
+      BIO *mem = NULL;
+      X509 *cert = NULL;
+      PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+      EVP_PKEY *pkey = NULL;
+      char *cn = NULL;
+      /* set certificate file */
+      if (private->ssl_setup->ssl_cert_pem_file != NULL) {
+         mem = cl_com_ssl_func__BIO_new_mem_buf(private->ssl_setup->ssl_cert_pem_file, strlen(private->ssl_setup->ssl_cert_pem_file));
+         cert = cl_com_ssl_func__PEM_read_bio_X509(mem, NULL, NULL, NULL);
+         cl_com_ssl_func__BIO_free(mem);
+         if ((cert == NULL) || (cl_com_ssl_func__SSL_CTX_use_certificate(private->ssl_ctx, cert) != 1)) {
+            unsigned long ssl_error = cl_com_ssl_func__ERR_get_error();
+            char buffer[BUFSIZ];
+            cl_com_ssl_func__ERR_error_string_n(ssl_error, buffer, sizeof(buffer)-1);
+            CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert:", buffer);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, "failed to set ssl_cert");
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+         }
+         cn = cl_com_ssl_func__X509_NAME_oneline(cl_com_ssl_func__X509_get_subject_name(cert), NULL, 0);
+         CL_LOG_STR(CL_LOG_INFO,"ssl_cert:", cn);
+         if (cert != NULL) {
+            cl_com_ssl_func__X509_free(cert);
+         }   
+         if (cn != NULL) {
+            cl_com_ssl_func__OPENSSL_free(cn);
+         }
+      } else {
+         CL_LOG_STR(CL_LOG_INFO,"ssl_cert:", "is NULL");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, "cert is NULL");
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+      }
 
-   if (cl_com_ssl_func__SSL_CTX_load_verify_locations( private->ssl_ctx, 
-                                      private->ssl_setup->ssl_CA_cert_pem_file, 
-                                      NULL) != 1) {
+      /* load CA file from file */
+      if (cl_com_ssl_func__SSL_CTX_load_verify_locations( private->ssl_ctx, 
+                                         private->ssl_setup->ssl_CA_cert_pem_file, 
+                                         NULL) != 1) {
 
-      CL_LOG(CL_LOG_ERROR,"can't read trusted CA certificates file(s)");
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
-      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-      return CL_RETVAL_SSL_CANT_READ_CA_LIST;
-   }
-   CL_LOG_STR(CL_LOG_INFO,"ssl_CA_cert_pem_file:", private->ssl_setup->ssl_CA_cert_pem_file);
+         CL_LOG(CL_LOG_ERROR,"can't read trusted CA certificates file(s)");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_CANT_READ_CA_LIST;
+      }
+      CL_LOG_STR(CL_LOG_INFO,"ssl_CA_cert_pem_file:", private->ssl_setup->ssl_CA_cert_pem_file);
 
-   /* load private key */
-   if (cl_com_ssl_func__SSL_CTX_use_PrivateKey_file(private->ssl_ctx, private->ssl_setup->ssl_key_pem_file, SSL_FILETYPE_PEM) != 1) {
-      CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
-      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
-      cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-      return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+      /* set private key (private key comes from java in PKCS8 pem format */
+      if (private->ssl_setup->ssl_key_pem_file != NULL) {
+         mem = cl_com_ssl_func__BIO_new_mem_buf(private->ssl_setup->ssl_key_pem_file, strlen(private->ssl_setup->ssl_key_pem_file));
+         p8inf = cl_com_ssl_func__PEM_read_bio_PKCS8_PRIV_KEY_INFO(mem, NULL, NULL, NULL);
+         pkey = cl_com_ssl_func__EVP_PKCS82PKEY(p8inf);
+         cl_com_ssl_func__BIO_free(mem);
+         if ((pkey == NULL) || (cl_com_ssl_func__SSL_CTX_use_PrivateKey(private->ssl_ctx, pkey) != 1)) {
+            unsigned long ssl_error = cl_com_ssl_func__ERR_get_error();
+            char buffer[BUFSIZ];
+            cl_com_ssl_func__ERR_error_string_n(ssl_error, buffer, sizeof(buffer)-1);
+            CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_bytes:", buffer);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
+            cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+            return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+         }
+         CL_LOG_STR(CL_LOG_INFO,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
+         if (pkey != NULL) {
+            cl_com_ssl_func__EVP_PKEY_free(pkey);
+         }   
+      } else {
+         CL_LOG_STR(CL_LOG_INFO,"private key:", "is NULL");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, "private key is NULL");
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+      }
+   } else 
+#endif
+   { 
+      /* load certificate chain file */
+      if (cl_com_ssl_func__SSL_CTX_use_certificate_chain_file(private->ssl_ctx, private->ssl_setup->ssl_cert_pem_file) != 1) {
+         CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, private->ssl_setup->ssl_cert_pem_file);
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+      }
+      CL_LOG_STR(CL_LOG_INFO,"ssl_cert_pem_file:", private->ssl_setup->ssl_cert_pem_file);
+
+      if (cl_com_ssl_func__SSL_CTX_load_verify_locations( private->ssl_ctx, 
+                                         private->ssl_setup->ssl_CA_cert_pem_file, 
+                                         NULL) != 1) {
+
+         CL_LOG(CL_LOG_ERROR,"can't read trusted CA certificates file(s)");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_READ_CA_LIST, private->ssl_setup->ssl_CA_cert_pem_file );
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_CANT_READ_CA_LIST;
+      }
+      CL_LOG_STR(CL_LOG_INFO,"ssl_CA_cert_pem_file:", private->ssl_setup->ssl_CA_cert_pem_file);
+
+      /* load private key */
+      if (cl_com_ssl_func__SSL_CTX_use_PrivateKey_file(private->ssl_ctx, private->ssl_setup->ssl_key_pem_file, SSL_FILETYPE_PEM) != 1) {
+         CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
+         cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
+         return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+      }
+      CL_LOG_STR(CL_LOG_INFO,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
    }
-   CL_LOG_STR(CL_LOG_INFO,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
 
    return CL_RETVAL_OK;
 }

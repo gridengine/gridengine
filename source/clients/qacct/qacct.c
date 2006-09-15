@@ -77,6 +77,11 @@
 
 #include "sge_profiling.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
+
 typedef struct {
    int host;
    int queue;
@@ -88,12 +93,13 @@ typedef struct {
    int slots;
 } sge_qacct_columns;
 
-static void show_the_way(FILE *fp);
+static void qacct_usage(FILE *fp);
 static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
 static void showjob(sge_rusage_type *dusage);
-static void get_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
+static void get_qacct_lists(void *context,
+                            lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
 static int sge_read_rusage(FILE *fp, sge_rusage_type *d);
 
@@ -143,7 +149,9 @@ char **argv
    u_long32 job_number = 0;
    stringT job_name;
    int jobfound=0;
+#ifndef TEST_GDI2    
    int last_prepare_enroll_error = CL_RETVAL_OK;
+#endif   
 
    time_t begin_time = -1, end_time = -1;
    
@@ -167,7 +175,7 @@ char **argv
    u_long32 taskend = 0;
    u_long32 taskstep = 0;
 
-   char acctfile[SGE_PATH_MAX + 1];
+   char acctfile[SGE_PATH_MAX + 1] = "";
    char account[1024];
    sge_rusage_type dusage;
    sge_rusage_type totals;
@@ -176,29 +184,39 @@ char **argv
    lList *centry_list, *queue_list, *exechost_list;
    lList *hgrp_list, *queueref_list = NULL, *queue_name_list = NULL;
    lList *sorted_list = NULL;
-   lList *alp = NULL;
    int is_path_setup = 0;   
    u_long32 line = 0;
    dstring ds;
    char buffer[128];
    const char *acct_file = NULL; 
+   lList *alp = NULL;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
+
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
    sge_prof_setup();
-   sc_init_mt();
+   sc_mt_init();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    log_state_set_log_gui(1);
 
+#ifdef TEST_GDI2
+   if (sge_gdi2_setup(&ctx, QACCT, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT((void**)&ctx, 1);
+   }
+
+#else
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
    if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
-
-   *acctfile = '\0';
+#endif   
 
    memset(owner, 0, sizeof(owner));
    memset(project, 0, sizeof(project));
@@ -287,7 +305,11 @@ char **argv
                hostflag = 1;
             } else {
                int ret;
+#ifdef TEST_GDI2
+               ctx->prepare_enroll(ctx);
+#else
                prepare_enroll("qacct", &last_prepare_enroll_error);
+#endif               
                ret = getuniquehostname(argv[++ii], host, 0);
                if (ret != CL_RETVAL_OK) {
                    /*
@@ -327,8 +349,8 @@ char **argv
       else if (!strcmp("-t", argv[ii])) {
          if (!argv[ii+1] || *(argv[ii+1])=='-') {
             fprintf(stderr, "%s\n", MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES ); 
-            show_the_way(stderr);
-            return 1;
+            qacct_usage(stderr);
+            DRETURN(1);
          } else {
             lList* task_id_range_list=NULL;
             lList* answer=NULL;
@@ -340,8 +362,8 @@ char **argv
                lFreeList(&answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
                fprintf(stderr, "\n");
-               show_the_way(stderr);
-               return 1; 
+               qacct_usage(stderr);
+               DRETURN(1); 
             }
             taskstart = lGetUlong(lFirst(task_id_range_list), RN_min);
             taskend = lGetUlong(lFirst(task_id_range_list), RN_max);
@@ -362,14 +384,14 @@ char **argv
                /*
                ** problem: insufficient error reporting
                */
-               show_the_way(stderr);
+               qacct_usage(stderr);
             }
             begin_time = (time_t)tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       }
       /*
@@ -383,14 +405,14 @@ char **argv
                /*
                ** problem: insufficient error reporting
                */
-               show_the_way(stderr);
+               qacct_usage(stderr);
             }
             end_time = (time_t)tmp_end_time;
             DPRINTF(("end is: %ld\n", end_time));
             endflag = 1; 
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       }
       /*
@@ -403,13 +425,13 @@ char **argv
                /*
                ** problem: insufficient error reporting
                */
-               show_the_way(stderr);
+               qacct_usage(stderr);
             }
             DPRINTF(("days is: %d\n", days));
             daysflag = 1; 
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       }
       /*
@@ -481,7 +503,7 @@ char **argv
             complexflag = 1;
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       } 
       /*
@@ -492,7 +514,7 @@ char **argv
             strcpy(acctfile, argv[++ii]);
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       }
       /*
@@ -504,14 +526,14 @@ char **argv
             accountflag = 1;
          }
          else {
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
       }
       else if (!strcmp("-help",argv[ii])) {
-         show_the_way(stdout);
+         qacct_usage(stdout);
       }
       else {
-         show_the_way(stderr);
+         qacct_usage(stderr);
       }
    } /* end for */
 
@@ -520,7 +542,11 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
+#ifdef TEST_GDI2
+      acct_file = ctx->get_acct_file(ctx);
+#else
       acct_file = path_state_get_acct_file();
+#endif      
       DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
       strcpy(acctfile, acct_file);
      
@@ -534,7 +560,7 @@ char **argv
       if (SGE_STAT(acctfile,&buf)) {
          perror(acctfile); 
          printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
    /*
@@ -619,56 +645,72 @@ char **argv
             /*
             ** problem: still to tell some more to the user
             */
-            show_the_way(stderr);
+            qacct_usage(stderr);
          }
          /* lDumpList(stdout, complex_options, 0); */
          if (!is_path_setup) {
+#ifdef TEST_GDI2         
+            ctx->prepare_enroll(ctx);
+            ctx->get_master(ctx, true);
+            if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
+               ERROR((SGE_EVENT, "qmaster is not alive"));
+               SGE_EXIT((void **)&ctx, 1);
+            }
+#else
             prepare_enroll(prognames[QACCT], &last_prepare_enroll_error);
             if (!sge_get_master(1)) {
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }
             DPRINTF(("checking if qmaster is alive ...\n"));
             if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
                ERROR((SGE_EVENT, "qmaster is not alive"));
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }
+#endif            
             sge_setup_sig_handlers(QACCT);
             is_path_setup = 1;
          }
          if (queueref_list && has_domain){ 
-            get_qacct_lists(NULL, &queue_list, NULL, &hgrp_list);
+#ifdef TEST_GDI2
+            get_qacct_lists(ctx, NULL, &queue_list, NULL, &hgrp_list);
+#else
+            get_qacct_lists(NULL, NULL, &queue_list, NULL, &hgrp_list);
+#endif            
             qref_list_resolve(queueref_list, NULL, &queue_name_list, 
                            &found_something, queue_list, hgrp_list, true, true);
             if (!found_something) {
                fprintf(stderr, "%s\n", MSG_QINSTANCE_NOQUEUES);
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             }
          }  
          if (complexflag) {
-            get_qacct_lists(&centry_list, &queue_list, &exechost_list, NULL);
+#ifdef TEST_GDI2
+            get_qacct_lists(ctx, &centry_list, &queue_list, &exechost_list, NULL);
+#else
+            get_qacct_lists(NULL, &centry_list, &queue_list, &exechost_list, NULL);
+#endif            
          }   
-         
-      /* debug output) */
-      #if 0 
-            DPRINTF(("complex entrys:\n"));
-            lWriteList(centry_list);
-            DPRINTF(("queue instances:\n"));
-            lWriteList(queue_list);
-            DPRINTF(("exec hosts:\n"));
-            lWriteList(exechost_list);
-            DPRINTF(("host groups\n"));
-            lWriteList(hgrp_list);
-      #endif
-
       } /* endif complexflag */
 
    }
 
-   fp = fopen(acctfile,"r");
+   /* debug output) */
+   if (getenv("SGE_QACCT_DEBUG")) {
+      printf("complex entries:\n");
+      lWriteListTo(centry_list, stdout);
+      printf("queue instances:\n");
+      lWriteListTo(queue_list, stdout);
+      printf("exec hosts:\n");
+      lWriteListTo(exechost_list, stdout);
+      printf("host groups\n");
+      lWriteListTo(hgrp_list, stdout);
+   }
+
+   fp = fopen(acctfile, "r");
    if (fp == NULL) {
       ERROR((SGE_EVENT, MSG_HISTORY_ERRORUNABLETOOPENX_S ,acctfile));
       printf("%s\n", MSG_HISTORY_NOJOBSRUNNINGSINCESTARTUP);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    totals.ru_wallclock = 0;
@@ -684,7 +726,7 @@ char **argv
       sorted_list = lCreateList("sorted_list", QAJ_Type);
       if (!sorted_list) {
          ERROR((SGE_EVENT, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST ));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
 
@@ -1010,7 +1052,7 @@ char **argv
 
    if (shut_me_down) {
       printf("%s\n", MSG_USER_ABORT);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
    if (job_number || job_name[0]) {
       if (!jobfound) {
@@ -1030,15 +1072,15 @@ char **argv
                ERROR((SGE_EVENT, MSG_HISTORY_JOBNAMEXNOTFOUND_S  , job_name));
             }
          }
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       else 
-         SGE_EXIT(0);
+         SGE_EXIT(NULL, 0);
    } else {
       if (taskstart && taskend && taskstep) {
          ERROR((SGE_EVENT, MSG_HISTORY_TOPTIONREQUIRESJOPTION ));
-         show_the_way(stderr);
-         SGE_EXIT(0); 
+         qacct_usage(stderr);
+         SGE_EXIT(NULL, 0); 
       }
    }
 
@@ -1230,22 +1272,22 @@ char **argv
    ** problem: other clients evaluate some status here
    */
    sge_prof_cleanup();
-   SGE_EXIT(0);
-   DEXIT;
-   return 0;
+   SGE_EXIT(NULL, 0);
+   DRETURN(0);
+
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, acct_file, strerror(errno)));
-   SGE_EXIT(1);
-   DEXIT;
-   return 1;
+   SGE_EXIT(NULL, 1);
+   DRETURN(1);
 }
 
 static void print_full_ulong(int full_length, u_long32 value) {
    char tmp_buf[100];
+
    DENTER(TOP_LAYER, "print_full_ulong");
-      sprintf(tmp_buf, "%5"sge_fu32, value);
-      print_full(full_length, tmp_buf); 
-   DEXIT;
+   sprintf(tmp_buf, "%5"sge_fu32, value);
+   print_full(full_length, tmp_buf); 
+   DRETURN_VOID;
 }
 
 static void print_full(int full_length, const char* string) {
@@ -1253,7 +1295,6 @@ static void print_full(int full_length, const char* string) {
    int string_length=0;
 
    DENTER(TOP_LAYER, "print_full");
-  
    if ( string != NULL) {
       printf("%s",string); 
       string_length = strlen(string);
@@ -1262,8 +1303,7 @@ static void print_full(int full_length, const char* string) {
       printf(" ");
       string_length++;
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data) {
@@ -1272,8 +1312,7 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
    
    if ( column_size_data == NULL ) {
       DPRINTF(("no column size data!\n"));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
 /*   column_size_data->host = 30;
@@ -1386,13 +1425,13 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
      DPRINTF(("got NULL list\n")); 
    }
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
 /*
 ** NAME
-**   show_the_way
+**   qacct_usage
 ** PARAMETER
 **   none
 ** RETURN
@@ -1404,13 +1443,13 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 **   note that the other clients use a common function
 **   for this. output was adapted to a similar look.
 */
-static void show_the_way(
+static void qacct_usage(
 FILE *fp 
 ) {
    dstring ds;
    char buffer[256];
 
-   DENTER(TOP_LAYER, "show_the_way");
+   DENTER(TOP_LAYER, "qacct_usage");
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -1439,11 +1478,12 @@ FILE *fp
    fprintf(fp, " begin_time, end_time              %s\n", MSG_HISTORY_beginend_OPT_USAGE );
    fprintf(fp, " queue                             [cluster_queue|queue_instance|queue_domain|pattern]\n");
    if (fp==stderr) {
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    } else {
-      SGE_EXIT(0);   
+      SGE_EXIT(NULL, 0);   
    }
-   DEXIT;
+
+   DRETURN_VOID;
 }
 
 
@@ -1543,6 +1583,7 @@ sge_rusage_type *dusage
 ** NAME
 **   get_qacct_lists
 ** PARAMETER
+**   context     - communication context
 **   ppcentries  - list pointer-pointer to be set to the complex list, CX_Type, can be NULL
 **   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type, has to be set
 **   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type, can be NULL
@@ -1562,6 +1603,7 @@ sge_rusage_type *dusage
 **   problem: exiting is against the philosophy, restricts usage to clients
 */
 static void get_qacct_lists(
+void *context,
 lList **ppcentries,
 lList **ppqueues,
 lList **ppexechosts,
@@ -1574,6 +1616,9 @@ lList **hgrp_l
    lList *mal = NULL;
    int ce_id = 0, eh_id = 0, q_id = 0, hgrp_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+#endif   
 
    DENTER(TOP_LAYER, "get_qacct_lists");
 
@@ -1582,13 +1627,18 @@ lList **hgrp_l
    */
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
+#ifdef TEST_GDI2
+      ce_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
+                              NULL, NULL, what, NULL, &state, true);
+#else
       ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                               NULL, NULL, what, NULL, &state, true);
+#endif                              
       lFreeWhat(&what);
 
       if (alp) {
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
    /*
@@ -1597,14 +1647,19 @@ lList **hgrp_l
    if (ppexechosts) {
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
+#ifdef TEST_GDI2      
+      eh_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+                              NULL, where, what, NULL, &state, true);
+#else
       eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                               NULL, where, what, NULL, &state, true);
+#endif                              
       lFreeWhat(&what);
       lFreeWhere(&where);
 
       if (alp) {
          ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
 
@@ -1613,26 +1668,36 @@ lList **hgrp_l
    */
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
+#ifdef TEST_GDI2
+      hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
+                           NULL, NULL, what, NULL, &state, true);
+#else
       hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, NULL, &state, true);
+#endif                           
       lFreeWhat(&what);
 
       if (alp) {
          printf("%s", lGetString(lFirst(alp), AN_text));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
    }
    /*
    ** GET SGE_QUEUE_LIST 
    */
    what = lWhat("%T(ALL)", QU_Type);
+#ifdef TEST_GDI2
+   q_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
+                           NULL, NULL, what, &mal, &state, true);
+#else
    q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state, true);
+#endif                           
    lFreeWhat(&what);
 
    if (alp) {
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    /*
@@ -1640,65 +1705,64 @@ lList **hgrp_l
    */
    /* --- complex */
    if (ppcentries) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                    mal, ppcentries);
       if (!alp) {
          ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
          ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       lFreeList(&alp);
    }
 
    /* --- exec host */
    if (ppexechosts) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
                                     mal, ppexechosts);
       if (!alp) {
          ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
          ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       lFreeList(&alp);
    }
 
    /* --- queue */
-   alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, ppqueues);
    if (!alp) {
       ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED ));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
       ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
    lFreeList(&alp);
 
    /* --- hgrp */
    if (hgrp_l) {
-      alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
                                    hgrp_l);
       if (!alp) {
          printf("%s\n", MSG_GDI_HGRPCONFIGGDIFAILED);
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
          printf("%s", lGetString(aep, AN_text));
-         SGE_EXIT(1);
+         SGE_EXIT(NULL, 1);
       }
       lFreeList(&alp);
    }
    /* --- end */
    lFreeList(&mal);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 static int 
@@ -1712,11 +1776,13 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
 
    do {
       pc = fgets(szLine, sizeof(szLine), f);
-      if (pc == NULL) 
-         return 2;
+      if (pc == NULL) { 
+         DRETURN(2);
+      }   
       len = strlen(szLine);
-      if (szLine[len] == '\n')
+      if (szLine[len] == '\n') {
          szLine[len] = '\0';
+      }   
    } while (len <= 1 || szLine[0] == COMMENT_CHAR); 
    
    /*
@@ -1724,8 +1790,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(szLine, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->qname = sge_strdup(d->qname, pc);
    
@@ -1734,8 +1799,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->hostname = sge_strdup(d->hostname, pc);
 
@@ -1744,8 +1808,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->group = sge_strdup(d->group, pc);
           
@@ -1755,8 +1818,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->owner = sge_strdup(d->owner, pc);
 
@@ -1765,8 +1827,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->job_name = sge_strdup(d->job_name, pc);
 
@@ -1775,8 +1836,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    d->job_number = atol(pc);
@@ -1786,8 +1846,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->account = sge_strdup(d->account, pc);
 
@@ -1796,8 +1855,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->priority = atol(pc);
 
@@ -1806,8 +1864,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->submission_time = atol(pc);
 
@@ -1816,8 +1873,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->start_time = atol(pc);
 
@@ -1826,8 +1882,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->end_time = atol(pc);
 
@@ -1836,8 +1891,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->failed = atol(pc);
 
@@ -1846,8 +1900,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->exit_status = atol(pc);
 
@@ -1856,8 +1909,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_wallclock = atol(pc); 
 
@@ -1866,8 +1918,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_utime = atol(pc);
 
@@ -1876,8 +1927,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_stime = atol(pc);
 
@@ -1886,8 +1936,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_maxrss = atol(pc);
 
@@ -1896,8 +1945,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_ixrss = atol(pc);
 
@@ -1906,8 +1954,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_ismrss = atol(pc);
 
@@ -1916,8 +1963,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_idrss = atol(pc);
 
@@ -1926,8 +1972,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_isrss = atol(pc);
    
@@ -1936,8 +1981,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_minflt = atol(pc);
 
@@ -1946,8 +1990,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_majflt = atol(pc);
 
@@ -1956,8 +1999,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_nswap = atol(pc);
 
@@ -1966,8 +2008,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_inblock = atol(pc);
 
@@ -1976,8 +2017,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_oublock = atol(pc);
 
@@ -1986,8 +2026,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_msgsnd = atol(pc);
 
@@ -1996,8 +2035,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_msgrcv = atol(pc);
 
@@ -2006,8 +2044,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_nsignals = atol(pc);
 
@@ -2016,8 +2053,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_nvcsw = atol(pc);
 
@@ -2026,8 +2062,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->ru_nivcsw = atol(pc);
 
@@ -2036,8 +2071,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->project = sge_strdup(d->project, pc);
 
@@ -2046,8 +2080,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
     */
    pc = strtok(NULL, ":\n");
    if (!pc) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    d->department = sge_strdup(d->department, pc);
 
@@ -2100,7 +2133,6 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
 
    /* ... */ 
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

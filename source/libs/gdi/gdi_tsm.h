@@ -38,6 +38,7 @@
 #define JOB_KILL          (1<<3)
 #define EVENTCLIENT_KILL  (1<<4)
 
+#ifndef TEST_GDI2
 lList *gdi_tsm(const char *schedd_name, const char *cell); 
 
 /*
@@ -50,6 +51,7 @@ lList *gdi_tsm(const char *schedd_name, const char *cell);
 */
 lList *gdi_kill(lList *host_list, const char *cell, u_long32 option_flags, u_long32 action_flag);
 
+#endif
 
 #endif /* __GDI_TSM_H */
 

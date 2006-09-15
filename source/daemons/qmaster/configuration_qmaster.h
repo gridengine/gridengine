@@ -34,14 +34,14 @@
 
 #include "basis_types.h"
 
-int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer);
+int sge_read_configuration(void *context, lListElem *aSpoolContext, lList *anAnswer);
 
 lList*     sge_get_configuration(void);
 lListElem* sge_get_configuration_for_host(const char* aName);
 lListElem* sge_get_configuration_entry_by_name(const char *aHost, const char *anEntryName);
 
-int sge_del_configuration(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
-int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser, char *aHost);
+int sge_del_configuration(void *context, lListElem *cxp, lList **alpp, char *ruser, char *rhost);
+int sge_mod_configuration(void *context, lListElem *aConf, lList **anAnswer, char *aUser, char *aHost);
 int sge_compare_configuration(lListElem *aHost, lList *aConf);
 
 void sge_set_conf_reprioritize(lListElem *aConf, bool aFlag);

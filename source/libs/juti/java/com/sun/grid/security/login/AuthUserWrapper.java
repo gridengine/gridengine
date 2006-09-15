@@ -36,13 +36,8 @@ import com.sun.grid.util.expect.ExpectBuffer;
 import com.sun.grid.util.expect.ExpectHandler;
 import com.sun.grid.util.expect.ExpectPasswordHandler;
 import com.sun.grid.util.expect.ExpectStringHandler;
-import com.sun.security.auth.UnixNumericGroupPrincipal;
-import com.sun.security.auth.UnixNumericUserPrincipal;
-import com.sun.security.auth.UnixPrincipal;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -94,7 +89,7 @@ class AuthUserWrapper {
     /**
      * Authenticate a user
      *
-     * @param username unix username
+     * @param username  username
      * @param password the password
      * @throws javax.security.auth.login.LoginException <ul>
      *     <li>if the authuser binary reports and error (authuser exited with status 2)</li>
@@ -106,10 +101,10 @@ class AuthUserWrapper {
      *        (authuser exited with status 1)
      *    </li>
      *    <li> else a <code>Set</code> containing <ul>
-     *          <li> a {@link com.sun.security.auth.UnixPrincipal} of the authenticated user</li>
-     *          <li> a {@link com.sun.security.auth.UnixNumericUserPrincipal} with the user id
+     *          <li> a {@link com.sun.grid.security.login.UserPrincipal} of the authenticated user</li>
+     *          <li> a {@link com.sun.grid.security.login.NumericUserPrincipal} with the user id
      *              of the authenticated user</li>
-     *          <li> a {@link  com.sun.security.auth.UnixNumericGroupPrincipal} for each group the authenticated
+     *          <li> a {@link  com.sun.grid.security.login.NumericGroupPrincipal} for each group the authenticated
      *               user belongs too</li>
      *         </ul></li>
      *  </ul>
@@ -195,10 +190,10 @@ class AuthUserWrapper {
             String line = buffer.consumeLine("uid ");
             if(line != null) {
 
-                UnixPrincipal up = new UnixPrincipal(username);
+                UserPrincipal up = new UserPrincipal(username);
                 principals.add(up);
                 line = line.trim();
-                UnixNumericUserPrincipal p = new UnixNumericUserPrincipal(line);
+                NumericUserPrincipal p = new NumericUserPrincipal(line);
                 principals.add(p);
             }
             
@@ -207,7 +202,7 @@ class AuthUserWrapper {
                 StringTokenizer st = new StringTokenizer(line.trim(), ",");
                 boolean primaryGroup = true;
                 while(st.hasMoreTokens()) {
-                    UnixNumericGroupPrincipal p = new UnixNumericGroupPrincipal(st.nextToken(), primaryGroup);
+                    NumericGroupPrincipal p = new NumericGroupPrincipal(st.nextToken(), primaryGroup);
                     principals.add(p);
                     primaryGroup = false;
                 }

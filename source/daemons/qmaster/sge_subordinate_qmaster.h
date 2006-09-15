@@ -35,16 +35,19 @@
 #include "uti/sge_monitor.h"
 
 bool
-cqueue_list_x_on_subordinate_gdil(lList *this_list, bool suspend,
+cqueue_list_x_on_subordinate_gdil(void *context,
+                                  lList *this_list, bool suspend,
                                   const lList *gdil, monitoring_t *monitor);
 
 bool
-cqueue_list_x_on_subordinate_so(lList *this_list, lList **answer_list,
+cqueue_list_x_on_subordinate_so(void *context, 
+                                lList *this_list, lList **answer_list,
                                 bool suspend, const lList *resolved_so_list,
                                 bool do_recompute_caches, monitoring_t *monitor);
 
 bool
-qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
+qinstance_x_on_subordinate(void *context,
+                           lListElem *this_elem, bool suspend,
                            bool rebuild_cache, monitoring_t *monitor);
 
 bool
@@ -53,7 +56,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
                                       lList **resolved_so_list);
 
 bool
-qinstance_initialize_sos_attr(lListElem *this_elem, monitoring_t *monitor);
+qinstance_initialize_sos_attr(void *context, lListElem *this_elem, monitoring_t *monitor);
 
 
 

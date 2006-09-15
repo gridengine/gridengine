@@ -1,3 +1,4 @@
+#ifndef TEST_GDI2
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -47,6 +48,7 @@
 #include "commlib.h"
 #include "gdi_conf.h"
 #include "sge_any_request.h"
+#include "setup_path.h"
 
 #include "msg_gdilib.h"
 #include "msg_sgeobjlib.h"
@@ -99,6 +101,7 @@ lListElem **lepp
    int success;
    static int already_logged = 0;
    u_long32 status;
+   u_long32 me = uti_state_get_mewho();
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -131,8 +134,8 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED)       == true ||
-          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED)       == true ||
+          sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
          lFreeElem(&hep);
          DEXIT;
          return -6;
@@ -214,6 +217,11 @@ lListElem **lepp
 }
 
 int get_conf_and_daemonize(
+u_long32 progid,
+const char *progname,
+const char *qualified_hostname,
+const char *cell_root,
+int is_daemonized,
 tDaemonizeFunc dfunc,
 lList **conf_list,
 volatile int* abort_flag
@@ -230,22 +238,22 @@ volatile int* abort_flag
     * for better performance retrieve 2 configurations
     * in one gdi call
     */
-   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
+   DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
 
-   while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
+   while ((ret = get_configuration(qualified_hostname, &global, &local))) {
       if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
          DEXIT;
          return -1;
       }
-      if (!uti_state_get_daemonized()) {
+      if (!is_daemonized) {
          /* do not daemonize the first time to be able
             to report communication errors to stdout/stderr */
          if (!getenv("SGE_ND") && sleep_counter > 2) {
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
-            dfunc();
+            dfunc(NULL);
          }
-         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         handle = cl_com_get_handle((char*)progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -259,7 +267,7 @@ volatile int* abort_flag
       } else {
          /* here we are daemonized, we do a longer sleep when there is no connection */
          DTRACE;
-         handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+         handle = cl_com_get_handle((char*)progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -280,10 +288,9 @@ volatile int* abort_flag
       }
    }
   
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(progid, cell_root, global, local, NULL);
    if (ret) {
-      DPRINTF((
-         "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
+      DPRINTF(("Error %d merging configuration \"%s\"\n", ret, qualified_hostname));
    }
 
    /*
@@ -310,6 +317,9 @@ volatile int* abort_flag
  *
  *-------------------------------------------------------------------------*/
 int get_merged_configuration(
+u_long32 progid,
+const char *qualified_hostname,
+const char *cell_root,
 lList **conf_list
 ) {
    lListElem *global = NULL;
@@ -318,18 +328,18 @@ lList **conf_list
 
    DENTER(TOP_LAYER, "get_merged_configuration");
 
-   DPRINTF(("qualified hostname: %s\n",  uti_state_get_qualified_hostname()));
-   ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local);
+   DPRINTF(("qualified hostname: %s\n",  qualified_hostname));
+   ret = get_configuration(qualified_hostname, &global, &local);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, uti_state_get_qualified_hostname()));
+      ERROR((SGE_EVENT, MSG_CONF_NOREADCONF_IS, ret, qualified_hostname));
       lFreeElem(&global);
       lFreeElem(&local);
       return -1;
    }
 
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(progid, cell_root, global, local, NULL);
    if (ret) {
-      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, uti_state_get_qualified_hostname()));
+      ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, qualified_hostname));
       lFreeElem(&global);
       lFreeElem(&local);
       return -2;
@@ -350,3 +360,4 @@ lList **conf_list
    return 0;
 }
 
+#endif

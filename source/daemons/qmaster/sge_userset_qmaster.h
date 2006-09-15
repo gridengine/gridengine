@@ -32,13 +32,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_add_userset(lListElem *ep, lList **alpp, lList **userset_list, 
+int sge_add_userset(void *context,
+                    lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
-int sge_del_userset(lListElem *ep, lList **alpp, lList **userset_list, 
+int sge_del_userset(void *context,
+                    lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
-int sge_mod_userset(lListElem *ep, lList **alpp, lList **userset_list, 
+int sge_mod_userset(void *context, lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
 int sge_verify_department_entries(lList *userset_list, lListElem *new_userset, 

@@ -45,9 +45,9 @@ enum {
    LS_BROKEN_PIPE                 /* ls has exited or select <= 0       */
 };
 
-int sge_ls_start(char *scriptfile);
+int sge_ls_start(const char* qualified_hostname, const char *binary_path, char *scriptfile);
 
-int sge_ls_get(lList **lpp);
+int sge_ls_get(const char* qualified_hostname, const char *binary_path, lList **lpp);
 
 void sge_ls_stop(int);
 

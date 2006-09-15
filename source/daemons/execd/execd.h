@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_execd_register_at_qmaster(void);
+int sge_execd_register_at_qmaster(void *context);
 
 #endif /* __EXECD_MAIN_H */

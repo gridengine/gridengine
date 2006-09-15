@@ -1,3 +1,4 @@
+#ifndef TEST_GDI2
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -212,3 +213,4 @@ bool sge_gdi_check_permission(lList **alpp, int option)
   return access_status;
 }
 
+#endif

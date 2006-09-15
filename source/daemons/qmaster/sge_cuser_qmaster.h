@@ -35,13 +35,14 @@
 #include "sge_c_gdi.h"
 #include "uti/sge_monitor.h"
 
-int cuser_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int cuser_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-int cuser_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+int cuser_mod(void *context,
+              lList **alpp, lListElem *modp, lListElem *ep, int add, 
               const char *ruser, const char *rhost, gdi_object_t *object,
               int sub_command, monitoring_t *monitor);
 
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+int cuser_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object);
 
 int cuser_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
 

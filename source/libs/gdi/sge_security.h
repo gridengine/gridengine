@@ -44,63 +44,65 @@
 #   include "krb_lib.h"
 #endif
 
-int sge_security_initialize(const char *name);
+
+
 void sge_security_exit(int i);
 
-int 
-gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, 
-                    int *tag, char **buffer, u_long32 *buflen, int synchron);
+#ifndef TEST_GDI2
+int sge_security_initialize(const char *prog_name, const char *username);
 
-int 
-gdi_send_message(int synchron, const char *tocomproc, int toid, 
-                 const char *tohost, int tag, char *buffer, int buflen, 
-                 u_long32 *mid);
+int gdi_receive_message(char *fromcommproc, 
+                        u_short *fromid, 
+                        char *fromhost, 
+                        int *tag, 
+                        char **buffer, 
+                        u_long32 *buflen, 
+                        int synchron);
 
-int 
-gdi_receive_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
-                        char* component_name, unsigned long component_id, 
-                        int synchron, unsigned long response_mid, 
-                        cl_com_message_t** message, cl_com_endpoint_t** sender);
+int gdi_send_message(int synchron, 
+                     const char *tocomproc, 
+                     int toid, 
+                     const char *tohost, 
+                     int tag, 
+                     char *buffer, 
+                     int buflen, 
+                     u_long32 *mid);
 
-int 
-gdi_send_sec_message(cl_com_handle_t* handle, char* un_resolved_hostname, 
-                     char* component_name, unsigned long component_id, 
-                     cl_xml_ack_type_t ack_type, cl_byte_t* data, 
-                     unsigned long size, unsigned long* mid, 
-                     unsigned long response_mid, unsigned long tag ,
-                     int copy_data, int wait_for_ack);
-
-int set_sec_cred(lListElem *job);
-
-void delete_credentials(lListElem *jep);
-
-bool cache_sec_cred(lListElem *jep, const char *rhost);
-
-int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList **alpp);
-
-int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char *err_str);
+#endif
 
 #ifdef SECURE
 /* int 0 on success, -1 on failure */
-int sge_ssl_setup_security_path(const char *progname);
+int sge_ssl_setup_security_path(const char *progname, const char *username);
 #endif
+
 
 #ifdef KERBEROS
 int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
 
 void tgt2cc(lListElem *jep, const char *rhost, const char* target);
-
 void tgtcclr(lListElem *jep, const char *rhost, const char* target);
+int set_sec_cred(const char *sge_root, const char *mastername, lListElem *job, lList **alpp);
+void delete_credentials(const char *sge_root, lListElem *jep);
+bool cache_sec_cred(const char *sge_root, lListElem *jep, const char *rhost);
+int store_sec_cred(const char *sge_root, sge_gdi_request *request, lListElem *jep, int do_authentication, lList **alpp);
+int store_sec_cred2(const char* sge_root, 
+                    const char* unqualified_hostname, 
+                    lListElem *jelem, 
+                    int do_authentication, 
+                    int *general, 
+                    char *err_str);
 
-int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
-                        gid_t gid, char *group);
+int sge_set_auth_info(sge_gdi_request *request, 
+                      uid_t uid, const char *user, 
+                      gid_t gid, const char *group);
 
 int sge_get_auth_info(sge_gdi_request *request, 
                       uid_t *uid, char *user, size_t user_len,
                       gid_t *gid, char *group, size_t group_len);
 
-int sge_security_verify_user(const char *host, const char *commproc, u_long32 id, const char *user); 
+int sge_security_verify_user(const char *host, const char *commproc, u_long32 id,
+                             const char *admin_user, const char *user, const char *progname); 
 
 bool sge_security_verify_unique_identifier(bool check_admin_user, 
                                            const char* user, 
@@ -110,7 +112,8 @@ bool sge_security_verify_unique_identifier(bool check_admin_user,
                                            const char* commproc, 
                                            unsigned long commid);
 
-void sge_security_event_handler(te_event_t anEvent, monitoring_t *monitor);
+void sge_security_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+
 
 #endif /* __SGE_SECURITY_H */
 

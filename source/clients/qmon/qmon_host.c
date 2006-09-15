@@ -74,6 +74,7 @@
 #include "qmon_project.h"
 #include "qmon_queue.h"
 #include "Matrix.h"
+#include "Tab.h"
 #include "gdi_tsm.h"
 #include "sge_feature.h"
 #include "sge_host.h"
@@ -83,7 +84,10 @@
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
 
-#include "Tab.h"
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tHostEntry {
@@ -1126,6 +1130,11 @@ XtPointer cld, cad;
    lList *lp = NULL;
    lList *alp = NULL;
    static lCondition *where = NULL;
+#ifdef TEST_GDI2   
+   const char *default_cell = ctx->get_default_cell(ctx);
+#else
+   const char *default_cell = uti_state_get_default_cell();
+#endif   
 
    DENTER(GUI_LAYER, "qmonExecHostShutdown");
 
@@ -1139,7 +1148,11 @@ XtPointer cld, cad;
     * deletes all hosts if list is empty
     */
    if (lp) {
-      alp = gdi_kill(lp, uti_state_get_default_cell(), 0, EXECD_KILL); 
+#ifdef TEST_GDI2
+      alp = ctx->kill(ctx, lp, default_cell, 0, EXECD_KILL); 
+#else
+      alp = gdi_kill(lp, default_cell, 0, EXECD_KILL); 
+#endif      
       qmonMessageBox(w, alp, 1);
       lFreeList(&lp);
       lFreeList(&alp);
@@ -1854,11 +1867,19 @@ XtPointer cld, cad;
    href_list = XmStringToCull(hg_memberlist_w, HR_Type, HR_name, ALL_ITEMS);
    hg_ep = hgroup_create(&alp, hgname, href_list, true);
 
+#ifdef TEST_GDI2
    if (add_mode) {
-      hgroup_add_del_mod_via_gdi(hg_ep, &alp, SGE_GDI_ADD);
+      hgroup_add_del_mod_via_gdi(ctx, hg_ep, &alp, SGE_GDI_ADD);
    } else {
-      hgroup_add_del_mod_via_gdi(hg_ep, &alp, SGE_GDI_MOD);
+      hgroup_add_del_mod_via_gdi(ctx, hg_ep, &alp, SGE_GDI_MOD);
    }   
+#else
+   if (add_mode) {
+      hgroup_add_del_mod_via_gdi(NULL, hg_ep, &alp, SGE_GDI_ADD);
+   } else {
+      hgroup_add_del_mod_via_gdi(NULL, hg_ep, &alp, SGE_GDI_MOD);
+   }   
+#endif
 
    if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) != STATUS_OK) {
       qmonMessageBox(w, alp, 0);

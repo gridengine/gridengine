@@ -32,15 +32,26 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifndef TEST_GDI2
 int 
 get_configuration(const char *config_name, 
                   lListElem **gepp, 
                   lListElem **lepp);
 
-int get_conf_and_daemonize(tDaemonizeFunc dfunc, 
+int get_conf_and_daemonize(u_long32 progid,
+                           const char *progname,
+                           const char *qualified_hostname,
+                           const char *cell_root,
+                           int is_deamonized,
+                           tDaemonizeFunc dfunc, 
                            lList **conf_list,
                            volatile int* abort_flag);
 
-int get_merged_configuration(lList **conf_list);
+int get_merged_configuration(u_long32 progid,
+                             const char *qualified_hostname, 
+                             const char*cell_root, 
+                             lList **conf_list);
+
+#endif
 
 #endif /* __GDI_CONF_H */

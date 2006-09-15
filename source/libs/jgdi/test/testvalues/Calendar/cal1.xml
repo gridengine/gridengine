@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CAL_Type>
+   <name>${name}</name>
+   <yearCalendar>30.3.1997-31.3.1997=suspend</yearCalendar>
+   <weekCalendar>mon-fri=20-6=suspend sat-sun=suspend</weekCalendar>
+   <parsedYearCalendar>
+      <CA_Type>
+         <ydayRange>
+            <TMR_Type>
+            </TMR_Type>
+
+         </ydayRange>
+         <daytimeRange>
+            <TMR_Type>
+            </TMR_Type>
+
+         </daytimeRange>
+         <state>256</state>
+      </CA_Type>
+
+   </parsedYearCalendar>
+   <parsedWeekCalendar>
+      <CA_Type>
+         <wdayRange>
+            <TMR_Type>
+            </TMR_Type>
+
+         </wdayRange>
+         <daytimeRange>
+            <TMR_Type>
+            </TMR_Type>
+
+            <TMR_Type>
+            </TMR_Type>
+
+         </daytimeRange>
+         <state>256</state>
+      </CA_Type>
+
+      <CA_Type>
+         <wdayRange>
+            <TMR_Type>
+            </TMR_Type>
+
+            <TMR_Type>
+            </TMR_Type>
+
+         </wdayRange>
+         <daytimeRange>
+            <TMR_Type>
+            </TMR_Type>
+
+         </daytimeRange>
+         <state>256</state>
+      </CA_Type>
+
+   </parsedWeekCalendar>
+</CAL_Type>

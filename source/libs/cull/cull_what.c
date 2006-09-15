@@ -79,8 +79,7 @@ void nm_set(int job_field[], int nm)
    /* seek it */
    for (i=0; job_field[i]!=NoName; i++)
       if (job_field[i] == nm) {
-         DEXIT;
-         return; /* found */
+         DRETURN_VOID; /*found*/
       }
 
    /* set it */
@@ -88,8 +87,7 @@ void nm_set(int job_field[], int nm)
    job_field[i++] = nm;
    job_field[i] = NoName;
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** cull/what/lReduceDescr() **********************************************
@@ -120,26 +118,22 @@ int lReduceDescr(lDescr **dst_dpp, lDescr *src_dp, lEnumeration *enp)
    DENTER(TOP_LAYER, "lReduceDescr");
 
    if (!dst_dpp || !src_dp || !enp) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    n = lCountWhat(enp, src_dp);
 
    if (n == 0) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    /* create new partial descriptor */
    if (!(*dst_dpp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    lPartialDescr(enp, src_dp, *dst_dpp, &index);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* ------------------------------------------------------------ 
@@ -211,8 +205,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
       ep[1].ep = NULL;
-      DEXIT;
-      return ep;
+      DRETURN(ep);
 
    case CULL_NONE:
       ep[0].pos = WHAT_NONE;
@@ -224,8 +217,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
       ep[1].ep = NULL;
-      DEXIT;
-      return ep;
+      DRETURN(ep);
 
    default:
       break;
@@ -371,8 +363,7 @@ lEnumeration *lWhat(const char *fmt, ...)
 
    if (!fmt) {
       LERROR(LENOFORMATSTR);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    /* 
       initialize scan function, the actual token is scanned again 
@@ -386,12 +377,10 @@ lEnumeration *lWhat(const char *fmt, ...)
 
    if (!enumeration) {
       LERROR(LEPARSECOND);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
-   DEXIT;
-   return enumeration;
+   DRETURN(enumeration);
 }
 
 static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
@@ -407,20 +396,17 @@ static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
 
    if (scan(NULL, state) != TYPE) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat %T */
    if (!(dp = va_arg(*app, lDescr *))) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (scan(NULL, state) != BRA) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ( */
 
@@ -446,8 +432,7 @@ static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
 
          if (token != FIELD) {
             LERROR(LESYNTAX);         
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          eat_token(state);                 /* eat %I */
 
@@ -484,8 +469,7 @@ static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
 
    if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ) */
 
@@ -493,8 +477,7 @@ static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
    enumeration = malloc(sizeof(lEnumeration) * next_id);
    if (enumeration == NULL) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    for (i = 0; i < next_id; i++) {  
@@ -504,8 +487,7 @@ static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app)
       enumeration[i].ep = ep[i].ep;
    }
 
-   DEXIT;
-   return enumeration;
+   DRETURN(enumeration);
 }
 
 /****** cull/what/lWhatAll() *****************************************************
@@ -547,14 +529,12 @@ lEnumeration *lWhatAll()
    ep[1].mt = lEndT;
    ep[1].ep = NULL;
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 
  error:
    LERROR(error_status);
    DPRINTF(("error_status = %d\n", error_status));
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /****** cull/what/lFreeWhat() *************************************************
@@ -614,13 +594,11 @@ int lCountWhat(const lEnumeration *enp, const lDescr *dp)
 
    if (!enp) {
       LERROR(LEENUMNULL);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    if (!dp) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    switch (enp[0].pos) {
    case WHAT_NONE:
@@ -629,8 +607,7 @@ int lCountWhat(const lEnumeration *enp, const lDescr *dp)
    case WHAT_ALL:
       if ((n = lCountDescr(dp)) == -1) {
          LERROR(LECOUNTDESCR);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       break;
    default:
@@ -638,8 +615,7 @@ int lCountWhat(const lEnumeration *enp, const lDescr *dp)
          ;
    }
 
-   DEXIT;
-   return n;
+   DRETURN(n);
 }
 
 /****** cull/what/lCopyWhat() *************************************************
@@ -667,16 +643,14 @@ lEnumeration *lCopyWhat(const lEnumeration *ep)
 
    if (!ep) {
       LERROR(LEENUMNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    for (n = 0; ep[n].mt != lEndT; n++);
 
    if (!(copy = (lEnumeration *) malloc(sizeof(lEnumeration) * (n + 1)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    for (i = 0; i <= n; i++) {
@@ -686,8 +660,7 @@ lEnumeration *lCopyWhat(const lEnumeration *ep)
       copy[i].ep = lCopyWhat(ep[i].ep);
    }
 
-   DEXIT;
-   return copy;
+   DRETURN(copy);
 }
 
 /****** cull/what/lIntVector2What() *******************************************
@@ -729,8 +702,7 @@ lEnumeration *lIntVector2What(const lDescr *dp, const int intv[])
 
    what = _lWhat(fmtstr, dp, intv, i);
 
-   DEXIT;
-   return what;
+   DRETURN(what);
 }
 
 int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
@@ -842,8 +814,7 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
          ret = -1;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2)

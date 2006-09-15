@@ -46,6 +46,11 @@
 #include "sge_answer.h"
 #include "sge_mt_init.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#include "sge_feature.h"
+#endif
+
 
 extern char **environ;
 
@@ -55,32 +60,46 @@ int main(int argc, char *argv[]);
 int main(int argc, char **argv)
 {
    lList *alp = NULL;
-   
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif   
+
    DENTER_MAIN(TOP_LAYER, "qconf");
 
+   log_state_set_log_gui(1);
+   sge_setup_sig_handlers(QCONF);
+   
+#ifdef TEST_GDI2
+   if (sge_gdi2_setup(&ctx, QCONF, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT((void**)&ctx, 1);
+   }
+
+   if (sge_parse_qconf((void*)ctx, ++argv)) {
+      SGE_EXIT((void**)&ctx, 1);
+   } else {
+      SGE_EXIT((void**)&ctx, 0);
+   }
+   DEXIT;
+   return 0;
+#else
    sge_mt_init();
 
    lInit(nmv);
 
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
    if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
-   sge_setup_sig_handlers(QCONF);
-
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv)) {
-      SGE_EXIT(1);
+   if (sge_parse_qconf(NULL, ++argv)) {
+      SGE_EXIT(NULL, 1);
    } else {
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
    DEXIT;
    return 0;
+#endif
+
 }

@@ -97,22 +97,19 @@ lCondition *lOrWhere(const lCondition *cp0, const lCondition *cp1)
 
    if (!cp0 || !cp1) {
       LERROR(LECONDNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    newcp->op = OR;
    newcp->operand.log.first = (lCondition *)cp0;
    newcp->operand.log.second = (lCondition *)cp1;
 
-   DEXIT;
-   return newcp;
+   DRETURN(newcp);
 }
 
 /****** cull/where/lAndWhere() ************************************************
@@ -140,22 +137,19 @@ lCondition *lAndWhere(const lCondition *cp0, const lCondition *cp1)
 
    if (!cp0 || !cp1) {
       LERROR(LECONDNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    newcp->op = AND;
    newcp->operand.log.first = (lCondition *)cp0;
    newcp->operand.log.second = (lCondition *)cp1;
 
-   DEXIT;
-   return newcp;
+   DRETURN(newcp);
 }
 
 /****** cull/where/lWriteWhereTo() ********************************************
@@ -186,8 +180,7 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
 
    if (!cp) {
       LERROR(LECONDNULL);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    out[0] = '\0';
@@ -261,8 +254,7 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
 
       default:
          LERROR(LEOPUNKNOWN);
-         DEXIT;
-         return;
+         DRETURN_VOID;
       }
 
       switch (mt_get_type(cp->operand.cmp.mt)) {
@@ -343,8 +335,7 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
          break;
       default:
          unknownType("lWriteWhere");
-         DEXIT;
-         return;
+         DRETURN_VOID;
       }
       break;
 
@@ -414,12 +405,10 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
    default:
       LERROR(LEOPUNKNOWN);
       DPRINTF(("error: LEOPUNKNOWN\n"));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 lListElem *lWhereToElem(const lCondition *where){
@@ -448,8 +437,7 @@ lListElem *lWhereToElem(const lCondition *where){
       }
       clear_packbuffer(&pb); 
    }
-   DEXIT;
-   return whereElem;
+   DRETURN(whereElem);
 }
 
 lCondition *lWhereFromElem(const lListElem *where){
@@ -476,8 +464,7 @@ lCondition *lWhereFromElem(const lListElem *where){
    else {
       ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, sge_u32c(lGetUlong(where, PACK_id)), SGE_WHERE));
    }
-   DEXIT;
-   return cond;
+   DRETURN(cond);
 }
 
 
@@ -517,8 +504,7 @@ lCondition *lWhere(const char *fmt,...)
 
    if (!fmt) {
       LERROR(LENOFORMATSTR);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    /* 
       initialize scan function, the actual token is scanned again
@@ -532,12 +518,10 @@ lCondition *lWhere(const char *fmt,...)
 
    if (!cond) {
       LERROR(LEPARSECOND);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
-   DEXIT;
-   return cond;
+   DRETURN(cond);
 }
 
 static lCondition *subscope(cull_parse_state* state, va_list *app) 
@@ -549,39 +533,33 @@ static lCondition *subscope(cull_parse_state* state, va_list *app)
 
    if (scan(NULL, state) != TYPE) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat %T */
    if (!(dp = va_arg(*app, lDescr *))) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (scan(NULL, state) != BRA) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ( */
 
    if (!(cp = sum(dp, state, app))) {
       LERROR(LESUM);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
       lFreeWhere(&cp);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ) */
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app) 
@@ -598,8 +576,7 @@ static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app)
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
          lFreeWhere(&cp);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       newcp->op = OR;
       newcp->operand.log.first = cp;
@@ -607,8 +584,7 @@ static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app)
       cp = newcp;
    }
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app) 
@@ -625,8 +601,7 @@ static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app)
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(&cp);
          LERROR(LEMALLOC);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       newcp->op = AND;
       newcp->operand.log.first = cp;
@@ -634,8 +609,7 @@ static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app)
       cp = newcp;
    }
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app) 
@@ -650,8 +624,7 @@ static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app)
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(&cp);
          LERROR(LEMALLOC);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       cp->operand.log.first = negfactor(dp, state, app);
       cp->operand.log.second = NULL;
@@ -660,8 +633,7 @@ static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app)
    else
       cp = negfactor(dp, state, app);
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *negfactor(
@@ -680,17 +652,14 @@ va_list *app
 
       if (scan(NULL, state) != KET) {
          LERROR(LESYNTAX);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       eat_token(state);
 
-      DEXIT;
-      return cp;
+      DRETURN(cp);
    }
 
-   DEXIT;
-   return read_val(dp, state, app);
+   DRETURN(read_val(dp, state, app));
 
 }
 
@@ -709,21 +678,18 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
 
    if (!dp) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if ((token = scan(NULL, state)) != FIELD) {
       lFreeWhere(&cp);
       LERROR(LESYNTAX);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
    eat_token(state);
 
@@ -731,8 +697,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    if ((cp->operand.cmp.pos = lGetPosInDescr(dp, cp->operand.cmp.nm)) < 0) {
       lFreeWhere(&cp);
       LERROR(LENAMENOT);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    cp->operand.cmp.mt = dp[cp->operand.cmp.pos].mt;
 
@@ -757,18 +722,15 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          lFreeWhere(&cp);
          LERROR(LEINCTYPE);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       cp->operand.cmp.val.cp = subscope(state, app);
-      DEXIT;
-      return cp;
+      DRETURN(cp);
 
    default:
       lFreeWhere(&cp);
       LERROR(LEOPUNKNOWN);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    switch (scan(NULL, state)) {
@@ -847,13 +809,11 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    default:
       lFreeWhere(&cp);
       unknownType("lWhere");
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 
@@ -866,8 +826,7 @@ static lCondition *_subscope(cull_parse_state *state, WhereArgList *wapp)
 
    if (scan(NULL, state) != TYPE) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat %T */
    /* 
@@ -878,33 +837,28 @@ static lCondition *_subscope(cull_parse_state *state, WhereArgList *wapp)
    dp = (*wapp)++->descriptor;
    if (!(dp)) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (scan(NULL, state) != BRA) {
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ( */
 
    if (!(cp = _sum(dp, state, wapp))) {
       LERROR(LESUM);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
       lFreeWhere(&cp);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    eat_token(state);                 /* eat ) */
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
@@ -921,8 +875,7 @@ static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp)
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
          lFreeWhere(&cp);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       newcp->op = OR;
       newcp->operand.log.first = cp;
@@ -930,8 +883,7 @@ static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp)
       cp = newcp;
    }
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
@@ -948,8 +900,7 @@ static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *w
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(&cp);
          LERROR(LEMALLOC);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       newcp->op = AND;
       newcp->operand.log.first = cp;
@@ -957,8 +908,7 @@ static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *w
       cp = newcp;
    }
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
@@ -973,8 +923,7 @@ static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wa
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(&cp);
          LERROR(LEMALLOC);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       cp->operand.log.first = _negfactor(dp, state, wapp);
       cp->operand.log.second = NULL;
@@ -983,8 +932,7 @@ static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wa
    else
       cp = _negfactor(dp, state, wapp);
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 static lCondition *_negfactor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
@@ -1000,17 +948,14 @@ static lCondition *_negfactor(lDescr *dp, cull_parse_state *state, WhereArgList 
 
       if (scan(NULL, state) != KET) {
          LERROR(LESYNTAX);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       eat_token(state);
 
-      DEXIT;
-      return cp;
+      DRETURN(cp);
    }
 
-   DEXIT;
-   return _read_val(dp, state, wapp);
+   DRETURN(_read_val(dp, state, wapp));
 
 }
 
@@ -1023,21 +968,18 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
 
    if (!dp) {
       LERROR(LEDESCRNULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if ((token = scan(NULL, state)) != FIELD) {
       lFreeWhere(&cp);
       LERROR(LESYNTAX);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
    eat_token(state);
 
@@ -1047,8 +989,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
    if ((cp->operand.cmp.pos = lGetPosInDescr(dp, cp->operand.cmp.nm)) < 0) {
       lFreeWhere(&cp);
       LERROR(LENAMENOT);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    cp->operand.cmp.mt = dp[cp->operand.cmp.pos].mt;
 
@@ -1073,18 +1014,15 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          lFreeWhere(&cp);
          LERROR(LEINCTYPE);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
       cp->operand.cmp.val.cp = _subscope(state, wapp);
-      DEXIT;
-      return cp;
+      DRETURN(cp);
 
    default:
       lFreeWhere(&cp);
       LERROR(LEOPUNKNOWN);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    switch (scan(NULL, state)) {
@@ -1161,8 +1099,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
 
    default:
       unknownType("_lWhere");
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* 
@@ -1179,8 +1116,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
 
    eat_token(state);
 
-   DEXIT;
-   return cp;
+   DRETURN(cp);
 }
 
 /****** cull/where/lFreeWhere() ***********************************************
@@ -1281,14 +1217,12 @@ int lCompare(const lListElem *ep, const lCondition *cp)
 
    if (!ep) {
       LERROR(LEELEMNULL);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    /* no conditions ok */
    if (!cp) {
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    switch (cp->op) {
@@ -1308,14 +1242,12 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          if (!(str1 = lGetPosString(ep, cp->operand.cmp.pos))) {
             LERROR(LENULLSTRING);
             DPRINTF(("lGetPosString in lCompare\n"));
-            DEXIT;
-            return 0;
+            DRETURN(0);
          }
          if (!(str2 = cp->operand.cmp.val.str)) {
             DPRINTF(("cp->operand.cmp.val.str in lCompare\n"));
             LERROR(LENULLSTRING);
-            DEXIT;
-            return 0;
+            DRETURN(0);
          }
          result = strcmp(str1, str2);
          DPRINTF(("strcmp(%s, %s)(lStringT) = %d\n", str1, str2, result));
@@ -1324,14 +1256,12 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          if (!(str1 = lGetPosHost(ep, cp->operand.cmp.pos))) {
             LERROR(LENULLSTRING);
             DPRINTF(("lGetPosHost in lCompare\n"));
-            DEXIT;
-            return 0;
+            DRETURN(0);
          }
          if (!(str2 = cp->operand.cmp.val.host)) {
             DPRINTF(("cp->operand.cmp.val.host in lCompare\n"));
             LERROR(LENULLSTRING);
-            DEXIT;
-            return 0;
+            DRETURN(0);
          }
          result = strcmp(str1, str2);
          DPRINTF(("strcmp(%s, %s)(lhostT) = %d\n", str1, str2, result));
@@ -1344,8 +1274,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
       case lListT:
          result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), 
                               cp->operand.cmp.val.cp) != NULL);
-         DEXIT;
-         return result;
+         DRETURN(result);
       case lFloatT:
          result = floatcmp(lGetPosFloat(ep, cp->operand.cmp.pos), 
                            cp->operand.cmp.val.fl);
@@ -1372,8 +1301,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          break;
       default:
          unknownType("lCompare");
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
 
       switch (cp->op) {
@@ -1397,8 +1325,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          break;
       default:
          LERROR(LEOPUNKNOWN);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
       break;
 
@@ -1406,8 +1333,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
    case HOSTNAMECMP:
       if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
 
       if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
@@ -1418,15 +1344,13 @@ int lCompare(const lListElem *ep, const lCondition *cp)
       if (str1 == NULL) {
           LERROR(LENULLSTRING);
           DPRINTF(("lGetPosString in lCompare\n"));
-          DEXIT;
-          return 0;
+          DRETURN(0);
       }
 
       if (!(str2 = cp->operand.cmp.val.str)) {
          DPRINTF(("cp->operand.cmp.val.str in lCompare\n"));
          LERROR(LENULLSTRING);
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
 
       if (cp->op == STRCASECMP ) {
@@ -1440,8 +1364,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
    case PATTERNCMP:
       if ((mt_get_type(cp->operand.cmp.mt) != lStringT) && (mt_get_type(cp->operand.cmp.mt) != lHostT)) {
          unknownType("lCompare");
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
       if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
          result = !fnmatch(cp->operand.cmp.val.str, 
@@ -1457,8 +1380,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
    case BITMASK:
       if (mt_get_type(cp->operand.cmp.mt) != lUlongT) {
          unknownType("lCompare");
-         DEXIT;
-         return 0;
+         DRETURN(0);
       }
       result = bitmaskcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
                           cp->operand.cmp.val.ul);
@@ -1490,8 +1412,7 @@ int lCompare(const lListElem *ep, const lCondition *cp)
       exit(-1);
 
    }
-   DEXIT;
-   return result;
+   DRETURN(result);
 }
 
 /****** cull/where/lCopyWhere() ***********************************************
@@ -1518,14 +1439,12 @@ lCondition *lCopyWhere(const lCondition *cp)
    DENTER(CULL_LAYER, "lCopyWhere");
 
    if (!cp) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(new = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    new->op = cp->op;
@@ -1582,8 +1501,7 @@ lCondition *lCopyWhere(const lCondition *cp)
       default:
          unknownType("lCopyWhere");
          lFreeWhere(&new);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
    case SUBSCOPE:
       if (mt_get_type(cp->operand.cmp.mt) == lListT) {
@@ -1603,10 +1521,8 @@ lCondition *lCopyWhere(const lCondition *cp)
    default:
       LERROR(LEOPUNKNOWN);
       lFreeWhere(&new);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
-   DEXIT;
-   return new;
+   DRETURN(new);
 }

@@ -1309,7 +1309,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 #if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int fromlen = 0;
 #else
-   socklen_t fromlen;
+   socklen_t fromlen = 0;
 #endif
    int retval;
    int server_fd = -1;

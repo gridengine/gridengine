@@ -52,6 +52,7 @@
 #include "sge_qref.h"
 #include "sge_edit.h"
 #include "sge_cqueue_qconf.h"
+#include "sge_prog.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -64,15 +65,25 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_subordinate.h"
 
+#if TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 static void insert_custom_complex_values_writer(spooling_field *fields);
 static int write_QU_consumable_config_list(const lListElem *ep, int nm,
                                            dstring *buffer, lList **alp);
+static bool 
+cqueue_provide_modify_context(void *context, lListElem **this_elem, lList **answer_list,
+                              bool ignore_unchanged_message);
 
 bool
-cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
+cqueue_add_del_mod_via_gdi(void *context, lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
 {
    bool ret = true;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "cqueue_add_del_mod_via_gdi");
    if (this_elem != NULL) {
@@ -89,22 +100,28 @@ cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
 
          cqueue_list = lCreateList("", CQ_Type);
          lAppendElem(cqueue_list, this_elem);
-
+#ifdef TEST_GDI2
+         gdi_answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, gdi_command,
+                                   &cqueue_list, NULL, NULL);
+#else
          gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, gdi_command,
                                    &cqueue_list, NULL, NULL);
+#endif                                   
          answer_list_replace(answer_list, &gdi_answer_list);
          lDechainElem(cqueue_list, this_elem);
          lFreeList(&cqueue_list);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 lListElem *
-cqueue_get_via_gdi(lList **answer_list, const char *name) 
+cqueue_get_via_gdi(void *context, lList **answer_list, const char *name) 
 {
    lListElem *ret = NULL;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "cqueue_get_via_gdi");
    if (name != NULL) {
@@ -115,8 +132,13 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
 
       what = lWhat("%T(ALL)", CQ_Type);
       where = lWhere("%T(%I==%s)", CQ_Type, CQ_name, name);
+#ifdef TEST_GDI2      
+      gdi_answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+                                &cqueue_list, where, what);
+#else
       gdi_answer_list = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_GET, 
                                 &cqueue_list, where, what);
+#endif                                
       lFreeWhat(&what);
       lFreeWhere(&where);
 
@@ -129,15 +151,17 @@ cqueue_get_via_gdi(lList **answer_list, const char *name)
       lFreeList(&gdi_answer_list);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
-cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
+cqueue_hgroup_get_via_gdi(void *context, lList **answer_list, const lList *qref_list,
                           lList **hgrp_list, lList **cq_list)
 {
    bool ret = true;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "cqueue_hgroup_get_via_gdi");
    if (hgrp_list != NULL && cq_list != NULL) {
@@ -190,24 +214,34 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
       }
       if (ret && fetch_all_hgroup) { 
          lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
-        
+#ifdef TEST_GDI2        
+         hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
+                                 SGE_GDI_GET, NULL, NULL, what, NULL, &state, true);
+#else
          hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
                                  SGE_GDI_GET, NULL, NULL, what, NULL, &state, true);
+#endif                                 
          lFreeWhat(&what);
       }  
       if (ret) {
          lEnumeration *what; 
          
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
+#ifdef TEST_GDI2
+         cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+                               SGE_GDI_GET, NULL, cqueue_where, what,
+                               &multi_answer_list, &state, true);
+#else
          cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
                                &multi_answer_list, &state, true);
+#endif                               
          lFreeWhat(&what);
       }
       if (ret && fetch_all_hgroup) {
          lList *local_answer_list = NULL;
          
-         local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+         sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
                       SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
          if (local_answer_list != NULL) {
             lListElem *answer = lFirst(local_answer_list);
@@ -223,7 +257,7 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
       if (ret) {
          lList *local_answer_list = NULL;
          
-         local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+         sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
                       SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
          if (local_answer_list != NULL) {
             lListElem *answer = lFirst(local_answer_list);
@@ -239,15 +273,17 @@ cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
       lFreeList(&multi_answer_list);
       lFreeWhere(&cqueue_where);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
-cqueue_hgroup_get_all_via_gdi(lList **answer_list,
+cqueue_hgroup_get_all_via_gdi(void *context, lList **answer_list,
                               lList **hgrp_list, lList **cq_list)
 {
    bool ret = true;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif   
 
    DENTER(TOP_LAYER, "cqueue_hgroup_get_all_via_gdi");
    if (hgrp_list != NULL && cq_list != NULL) {
@@ -261,19 +297,30 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
 
       /* HGRP */
       hgrp_what = lWhat("%T(ALL)", HGRP_Type);
+#ifdef TEST_GDI2
+      hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
+                              SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
+#else
       hgrp_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
                               SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
+#endif
       lFreeWhat(&hgrp_what);
 
       /* CQ */
       cqueue_what = lWhat("%T(ALL)", CQ_Type);
+#ifdef TEST_GDI2
+      cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+                            SGE_GDI_GET, NULL, NULL, cqueue_what,
+                            &multi_answer_list, &state, true);
+#else
       cq_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                             SGE_GDI_GET, NULL, NULL, cqueue_what,
                             &multi_answer_list, &state, true);
+#endif                            
       lFreeWhat(&cqueue_what);
 
       /* HGRP */
-      local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET,
+      sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,
                       SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
       if (local_answer_list != NULL) {
          lListElem *answer = lFirst(local_answer_list);
@@ -287,7 +334,7 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
       lFreeList(&local_answer_list);
       
       /* CQ */   
-      local_answer_list = sge_gdi_extract_answer(SGE_GDI_GET, 
+      sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
                    SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
       if (local_answer_list != NULL) {
          lListElem *answer = lFirst(local_answer_list);
@@ -301,18 +348,26 @@ cqueue_hgroup_get_all_via_gdi(lList **answer_list,
       lFreeList(&local_answer_list);
       lFreeList(&multi_answer_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-bool 
-cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
+static bool 
+cqueue_provide_modify_context(void *context, lListElem **this_elem, lList **answer_list,
                               bool ignore_unchanged_message)
 {
    bool ret = false;
    int status = 0;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   uid_t uid = ctx->get_uid(ctx);
+   gid_t gid = ctx->get_gid(ctx);
+#else
+   uid_t uid = uti_state_get_uid();
+   gid_t gid = uti_state_get_gid();
+#endif   
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
@@ -326,11 +381,10 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
       if (answer_list_output(answer_list)) {
          unlink(filename);
          FREE(filename);
-         DEXIT;
-         SGE_EXIT(1);
+         DRETURN(false);
       }
  
-      status = sge_edit(filename);
+      status = sge_edit(filename, uid, gid);
       if (status >= 0) {
          lListElem *cqueue;
 
@@ -377,12 +431,11 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
       unlink(filename);
       FREE(filename);
    } 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
-cqueue_add(lList **answer_list, const char *name) 
+cqueue_add(void *context, lList **answer_list, const char *name) 
 {
    bool ret = true;
 
@@ -397,22 +450,21 @@ cqueue_add(lList **answer_list, const char *name)
          ret &= cqueue_set_template_attributes(cqueue, answer_list);
       }
       if (ret) {
-         ret &= cqueue_provide_modify_context(&cqueue, answer_list, true);
+         ret &= cqueue_provide_modify_context(context, &cqueue, answer_list, true);
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+         ret &= cqueue_add_del_mod_via_gdi(context, cqueue, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       }
 
       lFreeElem(&cqueue);
    }  
   
-   DEXIT;
-   return ret; 
+   DRETURN(ret); 
 }
 
 bool 
-cqueue_add_from_file(lList **answer_list, const char *filename) 
+cqueue_add_from_file(void *context, lList **answer_list, const char *filename) 
 {
    bool ret = true;
    int fields_out[MAX_NUM_FIELDS];
@@ -444,25 +496,24 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+         ret &= cqueue_add_del_mod_via_gdi(context, cqueue, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       } 
 
       lFreeElem(&cqueue);
    }  
   
-   DEXIT;
-   return ret; 
+   DRETURN(ret); 
 }
 
 bool 
-cqueue_modify(lList **answer_list, const char *name)
+cqueue_modify(void *context, lList **answer_list, const char *name)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "cqueue_modify");
    if (name != NULL) {
-      lListElem *cqueue = cqueue_get_via_gdi(answer_list, name);
+      lListElem *cqueue = cqueue_get_via_gdi(context, answer_list, name);
 
       if (cqueue == NULL) {
          sprintf(SGE_EVENT, MSG_CQUEUE_DOESNOTEXIST_S, name);
@@ -471,21 +522,20 @@ cqueue_modify(lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_provide_modify_context(&cqueue, answer_list, false);
+         ret &= cqueue_provide_modify_context(context, &cqueue, answer_list, false);
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+         ret &= cqueue_add_del_mod_via_gdi(context, cqueue, answer_list, 
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
-     lFreeElem(&cqueue);
+      lFreeElem(&cqueue);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
-cqueue_modify_from_file(lList **answer_list, const char *filename)
+cqueue_modify_from_file(void *context, lList **answer_list, const char *filename)
 {
    bool ret = true;
    int fields_out[MAX_NUM_FIELDS];
@@ -520,7 +570,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
          ret = false;
       }
       if (ret) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, 
+         ret &= cqueue_add_del_mod_via_gdi(context, cqueue, answer_list, 
                                            SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       if (cqueue != NULL) {
@@ -528,12 +578,11 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
-cqueue_delete(lList **answer_list, const char *name)
+cqueue_delete(void *context, lList **answer_list, const char *name)
 {
    bool ret = true;
 
@@ -542,17 +591,16 @@ cqueue_delete(lList **answer_list, const char *name)
       lListElem *cqueue = cqueue_create(answer_list, name); 
    
       if (cqueue != NULL) {
-         ret &= cqueue_add_del_mod_via_gdi(cqueue, answer_list, SGE_GDI_DEL); 
+         ret &= cqueue_add_del_mod_via_gdi(context, cqueue, answer_list, SGE_GDI_DEL); 
       }
 
       lFreeElem(&cqueue);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
-cqueue_show(lList **answer_list, const lList *qref_pattern_list)
+cqueue_show(void *context, lList **answer_list, const lList *qref_pattern_list)
 {
    bool ret = true;
 
@@ -563,7 +611,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       lListElem *qref_pattern;
       bool local_ret;
 
-      local_ret = cqueue_hgroup_get_via_gdi(answer_list, qref_pattern_list,
+      local_ret = cqueue_hgroup_get_via_gdi(context, answer_list, qref_pattern_list,
                                             &hgroup_list, &cqueue_list);
       if (local_ret) {
          for_each(qref_pattern, qref_pattern_list) {
@@ -617,7 +665,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                             * in the complex values list, we have to insert a
                             * custom writer for the complex_values field.  We do
                             * that with this function. */
-                           insert_custom_complex_values_writer (fields);
+                           insert_custom_complex_values_writer(fields);
 
                            if (is_first) {
                               is_first = false; 
@@ -638,8 +686,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                            if (answer_list_output(answer_list)) {
                               lFreeList(&href_list);
                               lFreeList(&qref_list);
-                              DEXIT;
-                              SGE_EXIT(1);
+                              DRETURN(false);
                            }
 
                            found_something = true;
@@ -672,8 +719,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
                            const char *filename;
-                           spooling_field *fields = sge_build_QU_field_list
-                                                                  (true, false);                          
+                           spooling_field *fields = sge_build_QU_field_list(true, false);
 
                            /* Bugfix: Issuezilla #1198
                             * In order to prevent the slots from being printed
@@ -698,8 +744,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                            FREE(filename);
                            
                            if (answer_list_output(answer_list)) {
-                              DEXIT;
-                              SGE_EXIT(1);
+                              DRETURN(false);
                            }
 
                            found_something = true;
@@ -731,8 +776,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      FREE(outname);
                            
                      if (answer_list_output(answer_list)) {
-                        DEXIT;
-                        SGE_EXIT(1);
+                        DRETURN(false);
                      }
 
                      found_something = true;
@@ -767,17 +811,15 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       lFreeElem(&cqueue);
 
       if (answer_list_output(answer_list)) {
-         DEXIT;
-         SGE_EXIT(1);
+         DRETURN(false);
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
-cqueue_list_sick(lList **answer_list)
+cqueue_list_sick(void *context, lList **answer_list)
 {
    bool ret = true;
    lList *hgroup_list = NULL;
@@ -786,7 +828,7 @@ cqueue_list_sick(lList **answer_list)
 
    DENTER(TOP_LAYER, "cqueue_sick");
 
-   local_ret = cqueue_hgroup_get_all_via_gdi(answer_list, 
+   local_ret = cqueue_hgroup_get_all_via_gdi(context, answer_list, 
                                              &hgroup_list, &cqueue_list);
    if (local_ret) {
       dstring ds = DSTRING_INIT;
@@ -799,8 +841,7 @@ cqueue_list_sick(lList **answer_list)
          printf(sge_dstring_get_string(&ds));
       sge_dstring_free(&ds);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -912,8 +953,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
       lFreeList(&used_groups);
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** insert_custom_complex_values_writer() **********************************
@@ -939,6 +979,8 @@ static void insert_custom_complex_values_writer(spooling_field *fields)
    /* First, find the complex_values field. */
    int count = 0;
    
+   DENTER(TOP_LAYER, "insert_custom_complex_values_writer");
+
    while ((fields[count].nm != NoName) && (fields[count].nm != QU_consumable_config_list)) {
       count++;
    }
@@ -947,8 +989,8 @@ static void insert_custom_complex_values_writer(spooling_field *fields)
       /* Next, insert the custom writer. */
       fields[count].write_func = write_QU_consumable_config_list;
    }
-   
-   return;
+
+   DRETURN_VOID;
 }
 
 /****** write_QU_consumable_config_list() **************************************
@@ -977,6 +1019,8 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
    lListElem *vep = NULL;
    bool first = true;
    
+   DENTER(TOP_LAYER, "write_QU_consumable_config_list");
+
    /* Look through the complex_values list and print everything but slots */
    /* The format we're using to print is intended to replicate what is set forth
     * in the qconf_sub_name_value_space_sfi spooling instruction.  If this
@@ -984,8 +1028,8 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
     * use a new sub-instruction, this function will have to be changed to
     * to reflect this.  Otherwise, the complex values will be printed in a
     * different format from the other attributes. */
-   for_each (vep, lp) {
-      const char *name = lGetString (vep, CE_name);
+   for_each(vep, lp) {
+      const char *name = lGetString(vep, CE_name);
 
       if (strcmp (name, "slots") != 0) {
          const char *strval = NULL;
@@ -995,26 +1039,26 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
             first = false;
          }
          else {
-            sge_dstring_append (buffer, " ");
+            sge_dstring_append(buffer, " ");
          }
          
          /* Append name=value, where value could be a string of a number */
-         sge_dstring_append (buffer, name);
-         sge_dstring_append (buffer, "=");
+         sge_dstring_append(buffer, name);
+         sge_dstring_append(buffer, "=");
          
          strval = lGetString(vep, CE_stringval);
 
          if (strval != NULL) {
-            sge_dstring_append (buffer, strval);
+            sge_dstring_append(buffer, strval);
          }
          else {
             char tmp[MAX_STRING_SIZE];
             
             snprintf(tmp, MAX_STRING_SIZE, "%f", lGetDouble(ep, CE_doubleval));
-            sge_dstring_append (buffer, strdup (tmp));
+            sge_dstring_append(buffer, strdup (tmp));
          }
       }
    }
    
-   return 1;
+   DRETURN(1);
 }

@@ -52,14 +52,13 @@
 
 static int getHomeDir(char *exp_path, const char *user);
 
-int sge_get_path(lList *lp, const char *cwd, const char *owner, 
+int sge_get_path(const char *qualified_hostname, lList *lp, const char *cwd, const char *owner, 
                  const char *job_name, u_long32 job_number, 
-                 u_long32 ja_task_number, int type, 
+                 u_long32 ja_task_number, int type,
                  char *pathstr, size_t pathstr_len) 
 {
    lListElem *ep = NULL;
    const char *path = NULL, *host = NULL;
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
 
    DENTER(TOP_LAYER, "sge_get_path");
 
@@ -146,10 +145,10 @@ bool sge_get_fs_path( lList* lp, char* fs_host, size_t fs_host_len,
       bFileStaging = (bool)lGetBool(ep, PN_file_staging);
  
       if( bFileStaging ) {
-         if( lGetHost(ep, PN_file_host)) {
+         if(lGetHost(ep, PN_file_host)) {
             sge_strlcpy(fs_host, lGetHost(ep, PN_file_host), fs_host_len);
          }
-         if( lGetString(ep, PN_path)) {
+         if(lGetString(ep, PN_path)) {
             sge_strlcpy(fs_path, lGetString(ep, PN_path), fs_path_len);
          }
       }

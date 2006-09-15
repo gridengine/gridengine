@@ -1,3 +1,4 @@
+#ifndef TEST_GDI2
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -158,3 +159,4 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    return alp;
 }
 
+#endif

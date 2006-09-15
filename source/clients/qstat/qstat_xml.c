@@ -79,6 +79,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_cqueue.h"
 #include "sge_qref.h"
+#include "sge_ja_task.h"
 
 #include "cull/cull_xml.h"
 #include "sge_job.h"
@@ -86,37 +87,905 @@
 #include "sge_ulong.h"
 
 #include "sge_mt_init.h"
+#include "sge_qstat.h"
 
-static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const lList *user_list, 
-                    const lList *exechost_list, const lList *centry_list, lSortOrder *so,
-                    u_long32 full_listing, u_long32 group_opt, lList **target_list); 
+/* ----------------------- qselect xml handler ------------------------------ */
 
-static lListElem* sge_job_to_XML( lListElem *job, lListElem *jatep, lListElem *qep,
-                                 int print_jobid, char *master, dstring *dyn_task_str,
-                                 u_long32 full_listing, int slots, int slot, 
-                                 const lList *exechost_list, const lList *centry_list, 
-                                 const lList *pe_list, u_long32 group_opt, int slots_per_line);
+static int qselect_xml_report_queue(qselect_handler_t *thiz, const char* qname, lList** alpp);
+static int qselect_xml_finished(qselect_handler_t *thiz, lList** alpp);
+static int qselect_xml_destroy(qselect_handler_t *thiz, lList** alpp);
+static int qselect_xml_started(qselect_handler_t *thiz, lList** alpp);
 
-static int xml_jobs_not_enrolled(lListElem *job, lListElem *qep,
-                        int print_jobid, char *master, u_long32 full_listing,
-                        int slots, int slot, const lList *exechost_list,
-                        const lList *centry_list, const lList *pe_list,
-                        u_long32 sge_ext, u_long32 group_opt, lList *target_list);
+int qselect_xml_init(qselect_handler_t* handler, lList **alpp) {
+   
+   memset(handler, 0, sizeof(qselect_handler_t));
+   
+   handler->ctx = sge_malloc(sizeof(dstring));
+   if (handler->ctx == NULL ) {
+      answer_list_add(alpp, "malloc of dstring buffer failed",
+                            STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      return -1;
+   }
+   memset(handler->ctx, 0, sizeof(dstring));
 
-static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
-                             lListElem *pe_task,  int print_hdr); 
+   handler->report_started = qselect_xml_started;
+   handler->report_finished = qselect_xml_finished;
+   handler->destroy = qselect_xml_destroy;
+   handler->report_queue = qselect_xml_report_queue;
+   return 0;
+}
 
-static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const lList *user_list,
-                             const lList *exechost_list, const lList *centry_list, 
-                             u_long32 full_listing, u_long32 group_opt, lList **target_list);
+static int qselect_xml_destroy(qselect_handler_t *thiz, lList** alpp) {
+   if (thiz != NULL ) {
+      sge_dstring_free((dstring*)thiz->ctx);
+      FREE(thiz->ctx);
+   }
+   return 0;
+}
 
-static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const lList *user_list,
-                           const lList *exechost_list, const lList *centry_list,
-                           u_long32 full_listing, u_long32 group_opt, lList **target_list); 
+static int qselect_xml_started(qselect_handler_t *thiz, lList** alpp) {
+   printf("<qselect>\n");
+   return 0;
+}
 
-static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, const lList *user_list,
-                           const lList *exechost_list, const lList *centry_list,
-                           u_long32 full_listing, u_long32 group_opt, lList **target_list);
+static int qselect_xml_finished(qselect_handler_t *thiz, lList** alpp) {
+   printf("</qselect>\n");
+   return 0;
+}
+
+static int qselect_xml_report_queue(qselect_handler_t *thiz, const char* qname, lList** alpp) {
+   escape_string(qname, (dstring*)thiz->ctx);
+   printf("   <queue>%s</queue>\n", sge_dstring_get_string((dstring*)thiz->ctx));
+   sge_dstring_clear((dstring*)thiz->ctx);
+   return 0;
+}
+                           
+/* --------------- Cluster Queue Summary To XML Handler -------------------*/
+static int cqueue_summary_xml_report_finished(cqueue_summary_handler_t *handler, lList **alpp);
+static int cqueue_summary_xml_report_cqueue(cqueue_summary_handler_t *handler, const char* cqname, cqueue_summary_t *summary, lList **alpp);
+
+int cqueue_summary_xml_handler_init(cqueue_summary_handler_t *handler) {
+   memset(handler, 0, sizeof(cqueue_summary_handler_t));
+   
+   handler->report_finished = cqueue_summary_xml_report_finished;
+   handler->report_cqueue = cqueue_summary_xml_report_cqueue; 
+   return 0;
+}
+
+
+static int cqueue_summary_xml_report_finished(cqueue_summary_handler_t *handler, lList **alpp) {
+   if (handler->ctx != NULL) {
+      lListElem *xml_elem = NULL;
+    
+      xml_elem = xml_getHead("job_info", (lList*)handler->ctx, NULL);
+      handler->ctx = NULL;
+      lWriteElemXMLTo(xml_elem, stdout);  
+      lFreeElem(&xml_elem);
+   }
+   return 0;
+}
+
+static int cqueue_summary_xml_report_cqueue(cqueue_summary_handler_t *handler, const char* cqname, cqueue_summary_t *summary, lList **alpp) {
+   
+   lListElem *elem = NULL;
+   lList *attributeList = NULL;
+   qstat_env_t *qstat_env = handler->qstat_env;
+   bool show_states = (qstat_env->full_listing & QSTAT_DISPLAY_EXTENDED) ? true : false;
+   
+   elem = lCreateElem(XMLE_Type);
+   attributeList = lCreateList("attributes", XMLE_Type);
+   lSetList(elem, XMLE_List, attributeList);
+ 
+   xml_append_Attr_S(attributeList, "name", cqname);
+   if (summary->is_load_available) {
+      xml_append_Attr_D(attributeList, "load", summary->load);
+   }
+   xml_append_Attr_I(attributeList, "used", (int)summary->used);
+   xml_append_Attr_I(attributeList, "available", (int)summary->available);
+   xml_append_Attr_I(attributeList, "total", (int)summary->total);
+   xml_append_Attr_I(attributeList, "temp_disabled", (int)summary->temp_disabled);
+   xml_append_Attr_I(attributeList, "manual_intervention", (int)summary->manual_intervention);
+   if (show_states) {
+      xml_append_Attr_I(attributeList, "suspend_manual", (int)summary->suspend_manual);
+      xml_append_Attr_I(attributeList, "suspend_threshold", (int)summary->suspend_threshold);
+      xml_append_Attr_I(attributeList, "suspend_on_subordinate", (int)summary->suspend_on_subordinate);
+      xml_append_Attr_I(attributeList, "suspend_calendar", (int)summary->suspend_calendar);
+      xml_append_Attr_I(attributeList, "unknown", (int)summary->unknown);
+      xml_append_Attr_I(attributeList, "load_alarm", (int)summary->load_alarm);
+      xml_append_Attr_I(attributeList, "disabled_manual", (int)summary->disabled_manual);
+      xml_append_Attr_I(attributeList, "disabled_calendar", (int)summary->disabled_calendar);
+      xml_append_Attr_I(attributeList, "ambiguous", (int)summary->ambiguous);
+      xml_append_Attr_I(attributeList, "orphaned", (int)summary->orphaned);
+      xml_append_Attr_I(attributeList, "error", (int)summary->error);
+   }
+   if (elem) {
+      if (handler->ctx == NULL){
+         handler->ctx = lCreateList("cluster_queue_summary", XMLE_Type);
+      }
+      lAppendElem((lList*)handler->ctx, elem); 
+   } 
+   return 0;
+}
+ 
+                           
+static int qstat_xml_queue_started(qstat_handler_t* handler, const char* qname, lList **alpp);
+static int qstat_xml_queue_summary(qstat_handler_t* handler, const char* qname, queue_summary_t *summary, lList **alpp);
+static int qstat_xml_queue_finished(qstat_handler_t* handler, const char* qname, lList **alpp);
+static int qstat_xml_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp);
+static int qstat_xml_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp);
+static int qstat_xml_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp);
+static int qstat_xml_queue_resource(qstat_handler_t* handler, const char* dom, const char* name, const char* value, lList **alpp);
+
+static int qstat_xml_job(job_handler_t* handler, u_long32 jid, job_summary_t *summary, lList **alpp);
+static int qstat_xml_sub_task(job_handler_t* handler, task_summary_t *summary, lList **alpp);
+static int qstat_xml_job_additional_info(job_handler_t* handler, job_additional_info_t name, const char* value, lList **alpp);
+static int qstat_xml_job_requested_pe(job_handler_t *handler, const char* pe_name, const char* pe_range, lList **alpp);
+
+static int qstat_xml_job_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp);
+static int qstat_xml_job_request(job_handler_t* handler, const char* name, const char* value, lList **alpp);
+static int qstat_xml_job_report_hard_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp);
+static int qstat_xml_job_soft_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp);
+static int qstat_xml_job_hard_requested_queue(job_handler_t *handler, const char* name, lList **alpp);
+static int qstat_xml_job_soft_requested_queue(job_handler_t *handler, const char* name, lList **alpp);
+static int qstat_xml_job_master_hard_requested_queue(job_handler_t* handler, const char* name, lList **alpp);
+static int qstat_xml_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
+static int qstat_xml_job_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
+
+static int qstat_xml_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp);
+
+
+static int qstat_xml_create_job_list(qstat_handler_t *handler, lList **alpp);
+static int qstat_xml_finish_job_list(qstat_handler_t *handler, const char* state, lList* target_list, lList **alpp);
+
+static int qstat_xml_queue_jobs_started(qstat_handler_t *handler, const char* qname, lList **alpp);
+static int qstat_xml_queue_jobs_finished(qstat_handler_t *handler, const char* qname, lList **alpp);
+
+static int qstat_xml_pending_jobs_finished(qstat_handler_t *handler, lList **alpp);
+static int qstat_xml_finished_jobs_finished(qstat_handler_t *handler, lList **alpp);
+static int qstat_xml_error_jobs_finished(qstat_handler_t *handler, lList **alpp);
+static int qstat_xml_zombie_jobs_finished(qstat_handler_t *handler, lList **alpp);
+
+static int qstat_xml_started(qstat_handler_t* hanlder, lList** alpp);
+static int qstat_xml_finished(qstat_handler_t* hanlder, lList** alpp);
+
+typedef struct {
+
+   lListElem *queue_list_elem;
+   lListElem *queue_elem;
+
+   lListElem *job_list_elem;
+   lList     *job_list;
+   lListElem *job_elem;
+   
+} qstat_xml_ctx_t;
+
+
+int qstat_xml_handler_init(qstat_handler_t* handler, lList **alpp) {
+   int ret = 0;
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)sge_malloc(sizeof(qstat_xml_ctx_t));
+   
+   DENTER(TOP_LAYER, "qstat_xml_handler_init");
+   
+   if (ctx == NULL) {
+      answer_list_add(alpp, "malloc of qstat_xml_ctx_t failed",
+                            STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      ret = -1;
+      goto error;
+   }
+   
+   memset(handler, 0, sizeof(qstat_handler_t));
+   memset(ctx, 0, sizeof(qstat_xml_ctx_t));
+   
+   handler->ctx = ctx;
+   handler->job_handler.ctx = ctx;
+   
+   handler->report_queue_started = qstat_xml_queue_started;
+   handler->report_queue_finished = qstat_xml_queue_finished;
+   handler->report_queue_summary = qstat_xml_queue_summary;
+   handler->report_queue_load_alarm = qstat_xml_queue_load_alarm;
+   handler->report_queue_suspend_alarm = qstat_xml_queue_suspend_alarm;
+   handler->report_queue_message = qstat_xml_queue_message;
+   handler->report_queue_resource = qstat_xml_queue_resource;
+   
+   handler->job_handler.report_job = qstat_xml_job;
+   handler->job_handler.report_sub_task = qstat_xml_sub_task;
+   handler->job_handler.report_additional_info = qstat_xml_job_additional_info;
+   handler->job_handler.report_requested_pe = qstat_xml_job_requested_pe;
+   handler->job_handler.report_granted_pe = qstat_xml_job_granted_pe;
+   handler->job_handler.report_hard_resource = qstat_xml_job_report_hard_resource;
+   handler->job_handler.report_soft_resource = qstat_xml_job_soft_resource;
+   handler->job_handler.report_request = qstat_xml_job_request;
+   handler->job_handler.report_hard_requested_queue = qstat_xml_job_hard_requested_queue;
+   handler->job_handler.report_soft_requested_queue = qstat_xml_job_soft_requested_queue;
+   handler->job_handler.report_master_hard_requested_queue = qstat_xml_job_master_hard_requested_queue;
+   handler->job_handler.report_predecessor_requested = qstat_xml_job_predecessor_requested;
+   handler->job_handler.report_predecessor = qstat_xml_job_predecessor;
+   handler->job_handler.report_job_finished = qstat_xml_job_finished;
+
+   handler->report_queue_jobs_started = qstat_xml_queue_jobs_started;
+   handler->report_queue_jobs_finished = qstat_xml_queue_jobs_finished;
+   
+   handler->report_pending_jobs_started = qstat_xml_create_job_list;
+   handler->report_pending_jobs_finished = qstat_xml_pending_jobs_finished;
+   
+   handler->report_finished_jobs_started = qstat_xml_create_job_list;
+   handler->report_finished_jobs_finished = qstat_xml_finished_jobs_finished;
+
+   handler->report_error_jobs_started = qstat_xml_create_job_list;
+   handler->report_error_jobs_finished = qstat_xml_error_jobs_finished;
+   
+   handler->report_zombie_jobs_started = qstat_xml_create_job_list;
+   handler->report_zombie_jobs_finished = qstat_xml_zombie_jobs_finished;
+   
+   handler->report_finished = qstat_xml_finished; 
+   handler->report_started = qstat_xml_started;
+error:
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_started(qstat_handler_t* handler, lList** alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *attr_elem = NULL;
+   
+   DENTER(TOP_LAYER, "qstat_xml_started" );
+   
+   ctx->queue_list_elem = lCreateElem(XMLE_Type);
+   attr_elem = lCreateElem(XMLA_Type);
+   lSetString(attr_elem, XMLA_Name, "queue_info");
+   lSetObject(ctx->queue_list_elem, XMLE_Element, attr_elem);
+   lSetBool(ctx->queue_list_elem, XMLE_Print, true);
+   
+   ctx->job_list_elem = lCreateElem(XMLE_Type);
+   attr_elem = lCreateElem(XMLA_Type);
+   lSetString(attr_elem, XMLA_Name, "job_info");
+   lSetObject(ctx->job_list_elem, XMLE_Element, attr_elem);
+   lSetBool(ctx->job_list_elem, XMLE_Print, true);
+   lSetList(ctx->job_list_elem, XMLE_List, lCreateList("job_list", XMLE_Type));
+
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_finished(qstat_handler_t* handler, lList** alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *XML_out = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_finished");
+
+   XML_out = lCreateList("job_info", XMLE_Type);
+   
+   lAppendElem(XML_out, ctx->queue_list_elem);
+   ctx->queue_list_elem = NULL;
+   
+   lAppendElem(XML_out, ctx->job_list_elem);
+   ctx->job_list_elem = NULL;
+   
+   xml_elem = xml_getHead("job_info", XML_out, NULL);
+   /*lWriteListTo(XML_out, stdout);*/
+   lWriteElemXMLTo(xml_elem, stdout);
+   lFreeElem(&xml_elem);
+
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job(job_handler_t* handler, u_long32 jid, job_summary_t *summary, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   qstat_env_t *qstat_env = handler->qstat_env;
+   int sge_ext, tsk_ext, sge_urg, sge_pri, sge_time;
+   dstring ds = DSTRING_INIT;
+   lList *attribute_list = NULL;
+   
+   DENTER(TOP_LAYER, "qstat_xml_job");
+
+   ctx->job_elem = lCreateElem(XMLE_Type);
+   attribute_list = lCreateList("attributes", XMLE_Type);
+   lSetList(ctx->job_elem, XMLE_List, attribute_list);
+   
+   
+   sge_ext = (qstat_env->full_listing & QSTAT_DISPLAY_EXTENDED);
+   tsk_ext = (qstat_env->full_listing & QSTAT_DISPLAY_TASKS);
+   sge_urg = (qstat_env->full_listing & QSTAT_DISPLAY_URGENCY);
+   sge_pri = (qstat_env->full_listing & QSTAT_DISPLAY_PRIORITY);
+   sge_time = !sge_ext;
+   sge_time = sge_time | tsk_ext | sge_urg | sge_pri;
+   
+   xml_append_Attr_I(attribute_list, "JB_job_number", jid); 
+   xml_append_Attr_D(attribute_list, "JAT_prio", summary->nprior);
+   if( sge_ext) {
+      xml_append_Attr_D(attribute_list, "JAT_ntix", summary->ntckts);
+   }
+   
+   if (sge_urg) {
+      xml_append_Attr_D(attribute_list, "JB_nurg", summary->nurg);
+      xml_append_Attr_D8(attribute_list, "JB_urg", summary->urg);
+      xml_append_Attr_D8(attribute_list, "JB_rrcontr", summary->rrcontr);
+      xml_append_Attr_D8(attribute_list, "JB_wtcontr", summary->wtcontr);
+      xml_append_Attr_D8(attribute_list, "JB_dlcontr", summary->dlcontr);
+   } 
+
+   if (sge_pri) {
+      xml_append_Attr_D(attribute_list, "JB_nppri", summary->nppri);
+      xml_append_Attr_I(attribute_list, "JB_priority", summary->priority);
+   } 
+
+   xml_append_Attr_S(attribute_list, "JB_name", summary->name);
+   xml_append_Attr_S(attribute_list, "JB_owner", summary->user);
+
+   if (sge_ext) {
+      xml_append_Attr_S(attribute_list, "JB_project", summary->project);
+      xml_append_Attr_S(attribute_list, "JB_department", summary->department);
+   }
+
+
+   xml_append_Attr_S(attribute_list, "state", summary->state);
+
+   if (sge_time) {
+      if (summary->is_running) {
+         xml_append_Attr_S(attribute_list, "JAT_start_time", sge_ctimeXML(summary->start_time, &ds));
+      }   
+      else {
+         xml_append_Attr_S(attribute_list, "JB_submission_time", sge_ctimeXML(summary->submit_time, &ds));
+      }
+   }
+
+   /* deadline time */
+   if (sge_urg) {
+      if (summary->deadline) {
+         xml_append_Attr_S(attribute_list, "JB_deadline", sge_ctimeXML(summary->deadline, &ds));
+      }
+   }
+
+   if (sge_ext) {
+      /* scaled cpu usage */
+      if (summary->has_cpu_usage) {
+         xml_append_Attr_D(attribute_list, "cpu_usage", summary->cpu_usage);
+      } 
+      /* scaled mem usage */
+      if (summary->has_mem_usage) 
+         xml_append_Attr_D(attribute_list, "mem_usage", summary->mem_usage);  
+  
+      /* scaled io usage */
+      if (summary->has_io_usage) 
+         xml_append_Attr_D(attribute_list, "io_usage", summary->io_usage);  
+
+      if (!summary->is_zombie) {
+         if (sge_ext ||summary->is_queue_assigned) {
+            xml_append_Attr_I(attribute_list, "tickets", (int)summary->tickets);
+            xml_append_Attr_I(attribute_list, "JB_override_tickets", (int)summary->override_tickets);
+            xml_append_Attr_I(attribute_list, "JB_jobshare", (int)summary->share);
+            xml_append_Attr_I(attribute_list, "otickets", (int)summary->otickets);
+            xml_append_Attr_I(attribute_list, "ftickets", (int)summary->ftickets);
+            xml_append_Attr_I(attribute_list, "stickets", (int)summary->stickets);
+            /* RH TODO: asked Stefan want is the difference between JAT_share and JB_jobshare */
+            xml_append_Attr_D(attribute_list, "JAT_share", summary->share);
+         }
+      }
+   }
+
+   /* if not full listing we need the queue's name in each line */
+   if (!(qstat_env->full_listing & QSTAT_DISPLAY_FULL)) {
+      xml_append_Attr_S(attribute_list, "queue_name", summary->queue);
+   }   
+
+   if ((qstat_env->group_opt & GROUP_NO_PETASK_GROUPS)) {
+      /* MASTER/SLAVE information needed only to show parallel job distribution */
+      xml_append_Attr_S(attribute_list, "master", summary->master);
+   }
+
+   xml_append_Attr_I(attribute_list, "slots", (int)summary->slots);
+
+   if (summary->task_id && summary->is_array) {
+      xml_append_Attr_S(attribute_list, "tasks", summary->task_id);
+   }
+
+   sge_dstring_free(&ds);   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   
+   DENTER(TOP_LAYER,"qstat_xml_job_finished");
+   
+   lAppendElem(ctx->job_list, ctx->job_elem); 
+   ctx->job_elem = NULL;
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_sub_task(job_handler_t* handler, task_summary_t *summary, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = NULL;
+   
+   DENTER(TOP_LAYER,"qstat_xml_sub_task");
+   
+   xml_elem = lCreateElem(XMLE_Type);
+   attribute_list = lCreateList("attributes", XMLE_Type);
+   lSetList(xml_elem, XMLE_List, attribute_list);
+
+   if(summary->task_id) {
+      xml_append_Attr_S(attribute_list, "task-id", summary->task_id);      
+   }
+
+   xml_append_Attr_S(attribute_list, "state", summary->state);
+
+   if (summary->has_cpu_usage) {
+      xml_append_Attr_D(attribute_list, "cpu-usage", summary->cpu_usage);
+   }
+
+   if (summary->has_mem_usage) {
+      xml_append_Attr_D(attribute_list, "mem-usage", summary->mem_usage);  
+   }   
+
+   if (summary->has_io_usage) {
+      xml_append_Attr_D(attribute_list, "io-usage", summary->io_usage);  
+   }   
+
+   if (summary->has_exit_status) {
+      xml_append_Attr_I(attribute_list, "stat", summary->exit_status);
+   }   
+   
+   /* add the sub task to the current job element */
+   attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+   lAppendElem(attribute_list, xml_elem);
+   
+   DEXIT;
+   return 0;
+}
+
+static char* ADDITIONAL_TAG_NAMES[] = {
+   "ERROR",
+   "checkpoint_env",
+   "master_queue",
+   "full_job_name"
+};
+
+static int qstat_xml_job_additional_info(job_handler_t* handler, job_additional_info_t name, const char* value, lList **alpp) {
+   
+   DENTER(TOP_LAYER,"qstat_xml_job_additional_info");
+   
+   switch(name) {
+      case CHECKPOINT_ENV:
+      case MASTER_QUEUE:
+         DPRINTF(("Skip additional info %s(%d) = %s\n", ADDITIONAL_TAG_NAMES[name], name, value));
+         DEXIT;
+         return 0;
+      default:
+         {
+            qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+            /*lListElem *xml_elem = NULL;*/
+            lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+            
+            DPRINTF(("Add additional info %s(%d) = %s\n", ADDITIONAL_TAG_NAMES[name], name, value));
+            xml_append_Attr_S(attribute_list, ADDITIONAL_TAG_NAMES[name], value);
+            /* xml_elem = xml_append_Attr_S(attribute_list, ADDITIONAL_TAG_NAMES[name], value); 
+            TODO: xml_addAttribute(xmlElem, "name", lGetString(job, JB_pe)); */
+         }
+   }
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_requested_pe(job_handler_t *handler, const char* pe_name, const char* pe_range, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_requested_pe");
+   
+   xml_elem = xml_append_Attr_S(attribute_list, "requested_pe", pe_range); 
+   xml_addAttribute(xml_elem, "name", pe_name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_granted_pe");
+   
+   xml_elem = xml_append_Attr_I(attribute_list, "granted_pe", pe_slots); 
+   xml_addAttribute(xml_elem, "name", pe_name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_request(job_handler_t* handler, const char* name, const char* value, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+   
+   DENTER(TOP_LAYER,"qstat_xml_request");
+   
+   xml_elem = xml_append_Attr_S(attribute_list, "def_hard_request", value); 
+   xml_addAttribute(xml_elem, "name", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_report_hard_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+   
+   DENTER(TOP_LAYER,"qstat_xml_job_report_hard_resource");
+   
+   xml_elem = xml_append_Attr_S(attribute_list, "hard_request", value);
+   xml_addAttribute(xml_elem, "name", name);
+   xml_addAttributeD(xml_elem, "resource_contribution", uc); 
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_soft_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *xml_elem = NULL;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+   
+   DENTER(TOP_LAYER, "qstat_xml_job_soft_resource");
+
+   xml_elem = xml_append_Attr_S(attribute_list, "soft_request", value);
+   xml_addAttribute(xml_elem, "name", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_hard_requested_queue(job_handler_t *handler, const char* name, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_hard_requested_queue");
+
+   xml_append_Attr_S(attribute_list, "hard_req_queue", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_soft_requested_queue(job_handler_t *handler, const char* name, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_soft_requested_queue");
+
+   xml_append_Attr_S(attribute_list, "soft_req_queue", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_master_hard_requested_queue(job_handler_t* handler, const char* name, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_master_hard_requested_queue");
+
+   xml_append_Attr_S(attribute_list, "master_hard_req_queue", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_predecessor_requested");
+
+   xml_append_Attr_S(attribute_list, "predecessor_jobs_req", name);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_job_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_Attribute);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_predecessor");
+
+   xml_append_Attr_I(attribute_list, "predecessor_jobs", (int)jid);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_create_job_list(qstat_handler_t *handler, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   
+   DENTER(TOP_LAYER,"qstat_xml_create_job_list");
+   
+   if (ctx->job_list != NULL) {
+      answer_list_add(alpp, "job_list is not NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return -1;
+   }
+   
+   ctx->job_list = lCreateList("job_list", XMLE_Type);
+   if (ctx->job_list == NULL) {
+      answer_list_add(alpp, "lCreateElem failed for pending job_list", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return -1;
+   }
+   
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_finish_job_list(qstat_handler_t *handler, const char* state, lList* target_list, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lListElem *job_elem = NULL;
+   lListElem *state_elem = NULL;
+   lList *attributes = NULL;
+   lList *job_list = NULL;
+   
+   DENTER(TOP_LAYER, "qstat_xml_finish_job_list");
+   
+   for_each(job_elem, ctx->job_list) {
+      attributes = lGetList(job_elem, XMLE_Attribute);
+      if (!attributes){
+         attributes = lCreateList("attributes", XMLA_Type);
+         lSetList(job_elem, XMLE_Attribute, attributes);
+      }
+      state_elem = lCreateElem(XMLA_Type);
+      lSetString(state_elem, XMLA_Name, "state");
+      lSetString(state_elem, XMLA_Value,state);
+      lAppendElem(attributes, state_elem);
+      
+      lAppendElem(job_list, job_elem);
+      
+   }
+   
+   lAddList(target_list, &(ctx->job_list));
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_jobs_started(qstat_handler_t *handler, const char* qname, lList **alpp) {
+   int ret = 0;
+   DENTER(TOP_LAYER, "qstat_xml_queue_jobs_started" );
+   ret = qstat_xml_create_job_list(handler, alpp);
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_queue_jobs_finished(qstat_handler_t *handler, const char* qname, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   qstat_env_t *qstat_env = handler->qstat_env;
+   int ret = 0;
+   DENTER(TOP_LAYER, "qstat_xml_queue_jobs_finished");
+   
+   if (lFirst(ctx->job_list)) {
+      lList *job_list = NULL;
+      if (qstat_env->full_listing & QSTAT_DISPLAY_FULL ) {
+         job_list = lGetList(ctx->queue_elem, XMLE_List);
+         if(job_list == NULL) {
+            job_list = lCreateList("job_list", XMLE_Type);
+            lSetList(ctx->queue_elem, XMLE_List, job_list);
+         }
+      } else {
+        job_list = lGetList(ctx->queue_list_elem, XMLE_List);
+         if(job_list == NULL) {
+            job_list = lCreateList("job_list", XMLE_Type);
+            lSetList(ctx->queue_list_elem, XMLE_List, job_list);
+         }
+      }
+      ret = qstat_xml_finish_job_list(handler, "running", job_list, alpp);
+   } else {
+      lFreeList(&(ctx->job_list));
+   }
+   
+   DEXIT;
+   return ret;   
+}
+
+
+static int qstat_xml_pending_jobs_finished(qstat_handler_t *handler, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   int ret = 0;
+   lList *target_list = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_pending_jobs_finished");
+   
+   target_list = lGetList(ctx->job_list_elem, XMLE_List);
+   ret = qstat_xml_finish_job_list(handler, "pending", target_list, alpp);
+   
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_finished_jobs_finished(qstat_handler_t *handler, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   int ret = 0;
+   lList *target_list = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_finished_jobs_finished");
+   
+   target_list = lGetList(ctx->job_list_elem, XMLE_List);
+   ret = qstat_xml_finish_job_list(handler, "finished", target_list, alpp);
+   
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_error_jobs_finished(qstat_handler_t *handler, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   int ret = 0;
+   lList *target_list = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_error_jobs_finished");
+   
+   target_list = lGetList(ctx->job_list_elem, XMLE_List);
+   ret = qstat_xml_finish_job_list(handler, "error", target_list, alpp);
+   
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_zombie_jobs_finished(qstat_handler_t *handler, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   int ret = 0;
+   lList *target_list = NULL;
+   
+   DENTER(TOP_LAYER, "qstat_xml_zombie_jobs_finished");
+   
+   target_list = lGetList(ctx->job_list_elem, XMLE_List);
+   ret = qstat_xml_finish_job_list(handler, "zombie", target_list, alpp);
+   
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_queue_finished(qstat_handler_t* handler, const char* qname, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   qstat_env_t *qstat_env = handler->qstat_env;   
+   lList* queue_list = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_queue_finished");
+   
+   if (qstat_env->full_listing & QSTAT_DISPLAY_FULL) {
+      if (ctx->queue_elem == NULL) {
+         DPRINTF(("Illegal State: ctx->queue_elem is NULL !!!\n"));
+         abort();
+      }
+      DPRINTF(("add queue_info for queue %s to queue_list\n", qname ));
+      
+      queue_list = lGetList(ctx->queue_list_elem, XMLE_List);
+      if (queue_list == NULL) {
+         queue_list = lCreateList("Queue-List", XMLE_Type);
+         lSetList(ctx->queue_list_elem, XMLE_List, queue_list);
+      }
+      lAppendElem(queue_list, ctx->queue_elem);
+      ctx->queue_elem = NULL;
+   } else {
+      lFreeElem(&(ctx->queue_elem));
+   }
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_started(qstat_handler_t* handler, const char* qname, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   qstat_env_t *qstat_env = handler->qstat_env;
+   lList *attribute_list = NULL;
+   lListElem *temp = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_queue_started");
+   
+   if (qstat_env->full_listing & QSTAT_DISPLAY_FULL) {
+      DPRINTF(("Create ctx->queue_elem for queue %s\n", qname));
+      
+      if (ctx->queue_elem != NULL) {
+         DPRINTF(("Ilegal state: ctx->queue_elem has to be NULL"));
+         abort();
+      }
+      
+      DPRINTF(("Create ctx->queue_elem for queue %s\n", qname));
+   
+      temp = lCreateElem(XMLE_Type);
+      lSetBool(temp, XMLE_Print, false);
+      ctx->queue_elem = lCreateElem(XMLE_Type);
+      attribute_list = lCreateList("attributes", XMLE_Type);
+      lSetList(temp, XMLE_List, attribute_list);
+      lSetObject(ctx->queue_elem, XMLE_Element, temp);
+   }   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_summary(qstat_handler_t* handler, const char* qname, queue_summary_t *summary, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = NULL;
+   lListElem *xml_elem = NULL;
+   DENTER(TOP_LAYER, "qstat_xml_queue_summary");
+
+   if (ctx->queue_elem == NULL) {
+      DPRINTF(("Ilegal state: ctx->queue_elem must not be NULL"));
+      abort();
+   }
+   xml_elem = lGetObject(ctx->queue_elem, XMLE_Element);
+   attribute_list = lGetList(xml_elem, XMLE_List);
+   
+   xml_append_Attr_S(attribute_list, "name", qname);        
+   xml_append_Attr_S(attribute_list, "qtype", summary->queue_type); 
+
+   /* number of used/free slots */
+   xml_append_Attr_I(attribute_list, "slots_used", summary->used_slots); 
+   xml_append_Attr_I(attribute_list, "slots_total", summary->used_slots + summary->free_slots);
+
+   /* load avg */
+   if (summary->has_load_value && summary->has_load_value_from_object) {
+      xml_append_Attr_D(attribute_list, "load_avg", summary->load_avg);
+   }
+   
+   /* arch */
+   if(summary->arch) {
+      xml_append_Attr_S(attribute_list, "arch", summary->arch);
+   }
+
+   xml_append_Attr_S(attribute_list, "state", summary->state);
+
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   int ret = 0;
+   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   DENTER(TOP_LAYER,"qstat_xml_queue_load_alarm");
+   
+   xml_append_Attr_S(attribute_list, "load-alarm-reason", reason);
+   
+   DEXIT;
+   return ret;
+}
+
+static int qstat_xml_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   DENTER(TOP_LAYER,"qstat_xml_queue_suspend_alarm");
+   
+   xml_append_Attr_S(attribute_list, "suspend-alarm-reason", reason);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   DENTER(TOP_LAYER,"qstat_xml_queue_message");
+   
+   xml_append_Attr_S(attribute_list, "message", message);
+   
+   DEXIT;
+   return 0;
+}
+
+static int qstat_xml_queue_resource(qstat_handler_t* handler, const char* dom, const char* name, const char* value, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   lListElem *xml_elem = NULL;
+   
+   DENTER(TOP_LAYER,"qstat_xml_queue_message");
+   
+   xml_elem = xml_append_Attr_S(attribute_list, "resource", value);
+   xml_addAttribute(xml_elem, "name", name);  
+   xml_addAttribute(xml_elem, "type", dom);
+   
+   DEXIT;
+   return 0;
+}
 
 
 
@@ -219,1425 +1088,3 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
 }
 
 
-void xml_qstat_jobs(lList *job_list, lList *zombie_list, const lList *pe_list, 
-                    const lList *user_list, const lList *exechost_list, 
-                    const lList *centry_list, lSortOrder *so, 
-                    u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-
-   DENTER(TOP_LAYER, "xml_qstat_jobs");
-   
-   /* 
-    *
-    * step 4: iterate over jobs that are pending;
-    *         tag them with TAG_FOUND_IT
-    *
-    *         print the jobs that run in these queues 
-    *
-    */
-   xml_print_jobs_pending(job_list, pe_list, user_list, exechost_list,
-                          centry_list, so, full_listing, group_opt, target_list);
-
-   /* 
-    *
-    * step 5:  in case of SGE look for finished jobs and view them as
-    *          finished  a non SGE-qstat will show them as error jobs
-    *
-    */
-   xml_print_jobs_finished(job_list, pe_list, user_list, exechost_list,
-                           centry_list, full_listing, group_opt, target_list);
-
-   /*
-    *
-    * step 6:  look for jobs not found. This should not happen, cause each
-    *          job is running in a queue, or pending. But if there is
-    *          s.th. wrong we have
-    *          to ensure to print this job just to give hints whats wrong
-    *
-    */
-
-   xml_print_jobs_error(job_list, pe_list, user_list, exechost_list,
-                        centry_list, full_listing, group_opt, target_list);
-
-   /*
-    *
-    * step 7:  print recently finished jobs ('zombies')
-    *
-    */
-   xml_print_jobs_zombie(zombie_list, pe_list, user_list, exechost_list,
-                         centry_list,  full_listing, group_opt, target_list);
-/*
-   xml_elem = xml_getHead("job_info", target_list, NULL);
-         
-   lWriteElemXMLTo(xml_elem, stdout);
-  
-   lFreeElem(&xml_elem);
-  */ 
-   DEXIT;
-}
-
-
-
-static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const lList *user_list, 
-                    const lList *exechost_list, const lList *centry_list, lSortOrder *so,
-                    u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   
-   lListElem *nxt, *jep, *jatep, *nxt_jatep;
-   int sge_ext;
-   dstring dyn_task_str = DSTRING_INIT;
-   lList* ja_task_list = NULL;
-   int FoundTasks;
-
-   DENTER(TOP_LAYER, "sge_print_jobs_pending");
-
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-
-   if (*target_list == NULL){
-      *target_list = lCreateList("job_list", XMLE_Type);
-   }
-   
-   nxt = lFirst(job_list);
-   while ((jep=nxt)) {
-      nxt = lNext(jep);
-      sge_dstring_free(&dyn_task_str);
-      nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
-      FoundTasks = 0;
-      while((jatep = nxt_jatep)) { 
-         if (shut_me_down) {
-            SGE_EXIT(1);
-         }   
-         nxt_jatep = lNext(jatep);
-         if (!(((full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  
-               ||
-             ((full_listing & QSTAT_DISPLAY_USERHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) 
-               ||
-             ((full_listing & QSTAT_DISPLAY_SYSTEMHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) 
-               ||
-             ((full_listing & QSTAT_DISPLAY_JOBHOLD) && lGetList(jep, JB_jid_predecessor_list))
-               ||
-             ((full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) && lGetUlong(jep, JB_execution_time))
-               ||
-             !(full_listing & QSTAT_DISPLAY_HOLD))
-            ) {
-            break;
-         }
-
-         if (!(lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT) && 
-            VALID(JQUEUED, lGetUlong(jatep, JAT_state))) {
-            lSetUlong(jatep, JAT_suitable, 
-            lGetUlong(jatep, JAT_suitable)|TAG_FOUND_IT);
-
-            if ((!lGetNumberOfElem(user_list) || 
-               (lGetNumberOfElem(user_list) && 
-               (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) &&
-               (lGetUlong(jatep, JAT_suitable)&TAG_SHOW_IT)) {
-
-               if ((full_listing & QSTAT_DISPLAY_PENDING) && 
-                   (group_opt & GROUP_NO_TASK_GROUPS) > 0) {
-                  lListElem *elem = NULL;
-                  
-                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
-                                    lGetUlong(jatep, JAT_task_number));
-                  elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL,
-                                &dyn_task_str, full_listing, 0, 0, exechost_list, centry_list, 
-                                pe_list, group_opt, 0);
-                  
-                  if (elem) {
-                     lList *attributes = NULL;
-                     lListElem *pending = lCreateElem(XMLA_Type);
-                     attributes = lGetList(elem, XMLE_Attribute);
-                     
-                     if (!attributes){
-                        attributes = lCreateList("attributes", XMLA_Type);
-                        lSetList(elem, XMLE_Attribute, attributes);
-                     }
-                     lSetString(pending, XMLA_Name, "state");
-                     lSetString(pending, XMLA_Value, "pending");
-                     lAppendElem(attributes, pending);
-
-                     lAppendElem(*target_list, elem); 
-                  }
-               } else {
-                  if (!ja_task_list) {
-                     ja_task_list = lCreateList("", lGetElemDescr(jatep));
-                  }
-                  lAppendElem(ja_task_list, lCopyElem(jatep));
-                  FoundTasks = 1;
-               }
-            }
-         }
-      }
-
-      if ((full_listing & QSTAT_DISPLAY_PENDING)  && 
-          (group_opt & GROUP_NO_TASK_GROUPS) == 0 && 
-          FoundTasks && 
-          ja_task_list) {
-         lList *task_group = NULL;
-
-         while ((task_group = ja_task_list_split_group(&ja_task_list))) {
-            lListElem *elem = NULL;
-
-            ja_task_list_print_to_string(task_group, &dyn_task_str);
-            elem = sge_job_to_XML(jep, lFirst(task_group), NULL, 1, NULL, 
-                          &dyn_task_str, full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);
-            lFreeList(&task_group);
-            sge_dstring_free(&dyn_task_str);
-            if (elem) {
-               lList *attributes = NULL;
-               lListElem *pending = lCreateElem(XMLA_Type);
-               attributes = lGetList(elem, XMLE_Attribute);
-               
-               if (!attributes){
-                  attributes = lCreateList("attributes", XMLA_Type);
-                  lSetList(elem, XMLE_Attribute, attributes);
-               }
-               lSetString(pending, XMLA_Name, "state");
-               lSetString(pending, XMLA_Value, "pending");
-               lAppendElem(attributes, pending);
-               
-               lAppendElem(*target_list, elem); 
-            }
-         }
-         lFreeList(&ja_task_list);
-      }
-  
-      if (jep != nxt && full_listing & QSTAT_DISPLAY_PENDING) {
-
-         xml_jobs_not_enrolled(jep, NULL, 1, NULL, full_listing,
-                                     0, 0, exechost_list, centry_list, pe_list, sge_ext, 
-                                     group_opt, *target_list);
-      }
-      
-   }
-   
-   sge_dstring_free(&dyn_task_str);
-   DEXIT;
-}
-
-static int xml_jobs_not_enrolled(lListElem *job, lListElem *qep,
-                        int print_jobid, char *master, u_long32 full_listing,
-                        int slots, int slot, const lList *exechost_list,
-                        const lList *centry_list, const lList *pe_list,
-                        u_long32 sge_ext, u_long32 group_opt, lList *target_list)
-{
-   lList *range_list[8];         /* RN_Type */
-   u_long32 hold_state[8];
-   int i;
-   dstring ja_task_id_string = DSTRING_INIT;
-
-   DENTER(TOP_LAYER, "xml_jobs_not_enrolled");
-
-   job_create_hold_id_lists(job, range_list, hold_state); 
-   for (i = 0; i <= 7; i++) {
-      lList *answer_list = NULL;
-      u_long32 first_id;
-      int show = 0;
-
-      if (((full_listing & QSTAT_DISPLAY_USERHOLD) && (hold_state[i] & MINUS_H_TGT_USER)) ||
-          ((full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (hold_state[i] & MINUS_H_TGT_OPERATOR)) ||
-          ((full_listing & QSTAT_DISPLAY_SYSTEMHOLD) && (hold_state[i] & MINUS_H_TGT_SYSTEM)) ||
-          ((full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) && (lGetUlong(job, JB_execution_time) > 0)) ||
-          ((full_listing & QSTAT_DISPLAY_JOBHOLD) && (lGetList(job, JB_jid_predecessor_list) != 0)) ||
-          (!(full_listing & QSTAT_DISPLAY_HOLD))
-         ) {
-         show = 1;
-      }
-      if (range_list[i] != NULL && show) { 
-         if ((group_opt & GROUP_NO_TASK_GROUPS) == 0) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string, false);
-            first_id = range_list_get_first_id(range_list[i], &answer_list);
-            if (answer_list_has_error(&answer_list) != 1) {
-               lListElem *ja_task = (lListElem *)job_get_ja_task_template_hold(job, first_id, 
-                                                                  hold_state[i]);
-               lList *n_h_ids = NULL;
-               lList *u_h_ids = NULL;
-               lList *o_h_ids = NULL;
-               lList *s_h_ids = NULL;
-               lListElem *elem = NULL;
-               
-               lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
-               lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
-               lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
-               lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
-               
-               elem = sge_job_to_XML(job, ja_task, qep, print_jobid, master,
-                             &ja_task_id_string, full_listing, slots, slot,
-                             exechost_list, centry_list, pe_list, group_opt, 0);
-              
-               if (elem) {
-                  lList *attributes = NULL;
-                  lListElem *pending = lCreateElem(XMLA_Type);
-                  attributes = lGetList(elem, XMLE_Attribute);
-                  
-                  if (!attributes){
-                     attributes = lCreateList("attributes", XMLA_Type);
-                     lSetList(elem, XMLE_Attribute, attributes);
-                  }
-                  lSetString(pending, XMLA_Name, "state");
-                  lSetString(pending, XMLA_Value, "pending");
-                  lAppendElem(attributes, pending);
-
-                  lAppendElem(target_list, elem); 
-               }
-               
-               lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
-               lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
-               lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
-               lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
-            }
-            sge_dstring_free(&ja_task_id_string);
-         } else {
-            lListElem *elem = NULL;
-            lListElem *range; /* RN_Type */ 
-            
-            for_each(range, range_list[i]) {
-               u_long32 start, end, step;
-               range_get_all_ids(range, &start, &end, &step);
-               for (; start <= end; start += step) { 
-                  lListElem *ja_task = (lListElem *)job_get_ja_task_template_hold( job, start, 
-                                                                     hold_state[i]);
-                  sge_dstring_sprintf(&ja_task_id_string, sge_u32, start);
-                  elem = sge_job_to_XML(job, ja_task, NULL, 1, NULL,
-                                &ja_task_id_string, full_listing, 0, 0, 
-                                exechost_list, centry_list, pe_list, group_opt, 0);
-                  if (elem) {
-                     lList *attributes = NULL;
-                     lListElem *pending = lCreateElem(XMLA_Type);
-                     attributes = lGetList(elem, XMLE_Attribute);
-                     
-                     if (!attributes){
-                        attributes = lCreateList("attributes", XMLA_Type);
-                        lSetList(elem, XMLE_Attribute, attributes);
-                     }
-                     lSetString(pending, XMLA_Name, "state");
-                     lSetString(pending, XMLA_Value, "pending");
-                     lAppendElem(attributes, pending);
-                     
-                     lAppendElem(target_list, elem); 
-                  }                  
-               }
-            }
-         }
-      }
-   }
-   job_destroy_hold_id_lists(job, range_list); 
-   sge_dstring_free(&ja_task_id_string);
-   DEXIT;
-   return STATUS_OK;
-}     
-
-static lListElem* sge_job_to_XML(lListElem *job, lListElem *jatep, lListElem *qep,
-                                 int print_jobid, char *master, dstring *dyn_task_str,
-                                 u_long32 full_listing, int slots, int slot,
-                                 const lList *exechost_list, const lList *centry_list,
-                                 const lList *pe_list, u_long32 group_opt,
-                                 int slots_per_line  /* number of slots to be printed
-                                                        in slots column when 0 is passed
-                                                        the number of requested slots
-                                                        printed */) 
-{
-   char state_string[8];
-   u_long32 jstate;
-   int sge_urg, sge_ext, sge_pri, sge_time;
-   lList *ql = NULL;
-   lListElem *qrep, *gdil_ep=NULL;
-   const char *queue_name;
-   int tsk_ext;
-   u_long tickets,otickets,stickets,ftickets;
-   int is_zombie_job;
-   dstring ds;
-   char buffer[128];
-   dstring queue_name_buffer = DSTRING_INIT;
-   lListElem *jobElem = NULL;
-   lList *attributeList = NULL;
-   
-   DENTER(TOP_LAYER, "sge_job_to_XML");
-
-   jobElem = lCreateElem(XMLE_Type);
-   attributeList = lCreateList("attributes", XMLE_Type);
-   lSetList(jobElem, XMLE_List, attributeList);
-   
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   is_zombie_job = job_is_zombie_job(job);
-
-   if (qep != NULL) {
-      queue_name = qinstance_get_name(qep, &queue_name_buffer);
-   } else {
-      queue_name = NULL; 
-   }
-
-   sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
-   tsk_ext = (full_listing & QSTAT_DISPLAY_TASKS);
-   sge_urg = (full_listing & QSTAT_DISPLAY_URGENCY);
-   sge_pri = (full_listing & QSTAT_DISPLAY_PRIORITY);
-   sge_time = !sge_ext;
-   sge_time = sge_time | tsk_ext | sge_urg | sge_pri;
-
-   /* job number / ja task id */
-   if (print_jobid){
-      xml_append_Attr_I(attributeList, "JB_job_number", (int)lGetUlong(job, JB_job_number));            
-   }
-
-   /* per job priority information */
-   {
-      if (print_jobid) {
-         xml_append_Attr_D(attributeList, "JAT_prio", lGetDouble(jatep, JAT_prio));
-      }   
-
-      if (sge_ext) {
-         if (print_jobid)
-            xml_append_Attr_D(attributeList, "JAT_ntix", lGetDouble(jatep, JAT_ntix));
-      }
-
-      if (sge_urg) {
-         if (print_jobid) {
-            xml_append_Attr_D(attributeList, "JB_nurg", lGetDouble(job, JB_nurg));
-            xml_append_Attr_D8(attributeList, "JB_urg", lGetDouble(job, JB_urg));
-            xml_append_Attr_D8(attributeList, "JB_rrcontr", lGetDouble(job, JB_rrcontr));
-            xml_append_Attr_D8(attributeList, "JB_wtcontr", lGetDouble(job, JB_wtcontr));
-            xml_append_Attr_D8(attributeList, "JB_dlcontr", lGetDouble(job, JB_dlcontr));
-         }
-      } 
-
-      if (sge_pri) {
-         if (print_jobid) {
-            xml_append_Attr_D(attributeList, "JB_nppri", lGetDouble(job, JB_nppri));
-            xml_append_Attr_I(attributeList, "JB_priority", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY);
-         }
-      } 
-   } 
-
-   if (print_jobid) {
-      /* job name */
-      xml_append_Attr_S(attributeList, "JB_name", lGetString(job, JB_job_name));
-
-      /* job owner */
-      xml_append_Attr_S(attributeList, "JB_owner", lGetString(job, JB_owner));
-   }
-
-   if (sge_ext) {
-      if (print_jobid) {
-         /* job project */
-         xml_append_Attr_S(attributeList, "JB_project", lGetString(job, JB_project));
-         /* job department */
-         xml_append_Attr_S(attributeList, "JB_department", lGetString(job, JB_department));
-      }
-   }
-
-   /* move status info into state info */
-   jstate = lGetUlong(jatep, JAT_state);
-   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
-      jstate |= JTRANSFERING;
-      jstate &= ~JRUNNING;
-   }
-
-   if (lGetList(job, JB_jid_predecessor_list) || lGetUlong(jatep, JAT_hold)) {
-      jstate |= JHELD;
-   }
-
-   if (lGetUlong(jatep, JAT_job_restarted)) {
-      jstate &= ~JWAITING;
-      jstate |= JMIGRATING;
-   }
-
-   if (print_jobid) {
-      /* write states into string */ 
-      job_get_state_string(state_string, jstate);
-      xml_append_Attr_S(attributeList, "state", state_string);
-   }
-
-   if (sge_time) {
-      if (print_jobid) {
-         /* start/submit time */
-         if (!lGetUlong(jatep, JAT_start_time) ) {
-            xml_append_Attr_S(attributeList, "JB_submission_time", sge_ctimeXML((time_t)lGetUlong(job, JB_submission_time), &ds));
-         }   
-         else {
-            xml_append_Attr_S(attributeList, "JAT_start_time", sge_ctimeXML((time_t)lGetUlong(jatep, JAT_start_time), &ds));
-         }
-      }
-   }
-
-   /* deadline time */
-   if (sge_urg) {
-      if (print_jobid) { 
-         if (lGetUlong(job, JB_deadline) )
-            xml_append_Attr_S(attributeList, "JB_deadline", sge_ctimeXML((time_t)lGetUlong(job, JB_deadline), &ds));
-      }
-   }
-
-   if (sge_ext) {
-      lListElem *up, *pe, *task;
-      lList *job_usage_list;
-      const char *pe_name;
-      
-      if (!master || !strcmp(master, "MASTER")) {
-         job_usage_list = lCopyList(NULL, lGetList(jatep, JAT_scaled_usage_list));
-      }   
-      else {
-         job_usage_list = lCreateList("", UA_Type);
-      }   
-
-      /* sum pe-task usage based on queue slots */
-      if (job_usage_list) {
-         int subtask_ndx=1;
-         for_each(task, lGetList(jatep, JAT_task_list)) {
-            lListElem *dst, *src, *ep;
-            const char *qname;
-
-            if (!slots ||
-                (queue_name && 
-                 ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
-                 ((qname=lGetString(ep, JG_qname))) &&
-                 !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               for_each(src, lGetList(task, PET_scaled_usage)) {
-                  if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name)))) {
-                     lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
-                  }   
-                  else {
-                     lAppendElem(job_usage_list, lCopyElem(src));
-                  }   
-               }
-            }
-         }
-      }
-
-
-      /* scaled cpu usage */
-      if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_CPU))) {
-         xml_append_Attr_D(attributeList, "cpu_usage", lGetDouble(up, UA_value));
-      } 
-      /* scaled mem usage */
-      if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_MEM))) 
-         xml_append_Attr_D(attributeList, "mem_usage", lGetDouble(up, UA_value));  
-  
-      /* scaled io usage */
-      if ((up = lGetElemStr(job_usage_list, UA_name, USAGE_ATTR_IO))) 
-         xml_append_Attr_D(attributeList, "io_usage", lGetDouble(up, UA_value));  
-
-      lFreeList(&job_usage_list);
-
-      /* get tickets for job/slot */
-      /* braces needed to suppress compiler warnings */
-      if ((pe_name=lGetString(jatep, JAT_granted_pe)) &&
-           (pe=pe_list_locate(pe_list, pe_name)) &&
-           lGetBool(pe, PE_control_slaves)
-         && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
-               JAT_granted_destin_identifier_list))) {
-         if (slot == 0) {
-            tickets = (u_long)lGetDouble(gdil_ep, JG_ticket);
-            otickets = (u_long)lGetDouble(gdil_ep, JG_oticket);
-            ftickets = (u_long)lGetDouble(gdil_ep, JG_fticket);
-            stickets = (u_long)lGetDouble(gdil_ep, JG_sticket);
-         }
-         else {
-            if (slots) {
-               tickets = (u_long)(lGetDouble(gdil_ep, JG_ticket) / slots);
-               otickets = (u_long)(lGetDouble(gdil_ep, JG_oticket) / slots);
-               ftickets = (u_long)(lGetDouble(gdil_ep, JG_fticket) / slots);
-               stickets = (u_long)(lGetDouble(gdil_ep, JG_sticket) / slots);
-            } 
-            else {
-               tickets = otickets = ftickets = stickets = 0;
-            }
-         }
-      }
-      else {
-         tickets = (u_long)lGetDouble(jatep, JAT_tix);
-         otickets = (u_long)lGetDouble(jatep, JAT_oticket);
-         ftickets = (u_long)lGetDouble(jatep, JAT_fticket);
-         stickets = (u_long)lGetDouble(jatep, JAT_sticket);
-      }
-
-      /* report jobs dynamic scheduling attributes */
-      /* only scheduled have these attribute */
-      /* Pending jobs can also have tickets */
-      if (!is_zombie_job) {
-         if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
-            xml_append_Attr_I(attributeList, "tickets", (int)tickets);
-            xml_append_Attr_I(attributeList, "JB_override_tickets", (int)lGetUlong(job, JB_override_tickets));
-            xml_append_Attr_I(attributeList, "JB_jobshare", ((int)lGetUlong(job, JB_jobshare)));
-            xml_append_Attr_I(attributeList, "otickets", (int)otickets);
-            xml_append_Attr_I(attributeList, "ftickets", (int)ftickets);
-            xml_append_Attr_I(attributeList, "stickets", (int)stickets);
-            xml_append_Attr_D(attributeList, "JAT_share", lGetDouble(jatep, JAT_share));
-         }
-      }
-   }
-
-   /* if not full listing we need the queue's name in each line */
-   if (!(full_listing & QSTAT_DISPLAY_FULL)) {
-      xml_append_Attr_S(attributeList, "queue_name", queue_name);
-   }   
-
-   if ((group_opt & GROUP_NO_PETASK_GROUPS)) {
-      /* MASTER/SLAVE information needed only to show parallel job distribution */
-      xml_append_Attr_S(attributeList, "master", master);
-   }
-
-   /* job slots requested/granted */
-   if (!slots_per_line) {
-      slots_per_line = sge_job_slot_request(job, pe_list);
-   }   
-   xml_append_Attr_I(attributeList, "slots", slots_per_line);
-
-   if (sge_dstring_get_string(dyn_task_str) && job_is_array(job))
-      xml_append_Attr_S(attributeList, "tasks", sge_dstring_get_string(dyn_task_str));
-
-   if (tsk_ext) {
-      lList *task_list = lGetList(jatep, JAT_task_list);
-      lListElem *task, *ep;
-      lListElem *xmlElem;
-      const char *qname;
-      int subtask_ndx=1;
-      
-      /* print master sub-task belonging to this queue */
-      if (!slot && task_list && queue_name &&
-          ((ep=lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)))) &&
-          ((qname=lGetString(ep, JG_qname))) &&
-          !strcmp(qname, queue_name)) {
-            
-         xmlElem = xml_subtask(job, jatep, NULL, 0);
-         lAppendElem(attributeList, xmlElem);
-      }
-         
-      /* print sub-tasks belonging to this queue */
-      for_each(task, task_list) {
-         if (!slots || (queue_name && 
-              ((ep=lFirst(lGetList(task, PET_granted_destin_identifier_list)))) &&
-              ((qname=lGetString(ep, JG_qname))) &&
-              !strcmp(qname, queue_name) && ((subtask_ndx++%slots)==slot))) {
-               
-            xmlElem = xml_subtask(job, jatep, task, 0);
-            lAppendElem(attributeList, xmlElem);
-         }
-      }
-   } 
-
-   /* print additional job info if requested */
-   if (print_jobid && (full_listing & QSTAT_DISPLAY_RESOURCES)) {
-      lListElem *xmlElem;
-         if (lGetString(job, JB_pe)) {
-            dstring range_string = DSTRING_INIT;
-            range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                       &range_string, true);
-            xmlElem = xml_append_Attr_S(attributeList, "requested_PE", sge_dstring_get_string(&range_string)); 
-            xml_addAttribute(xmlElem, "name", lGetString(job, JB_pe));  
-
-            sge_dstring_free(&range_string);
-         }
-         if (lGetString(jatep, JAT_granted_pe)) {
-            lListElem *gdil_ep;
-            u_long32 pe_slots = 0;
-            for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list))
-               pe_slots += lGetUlong(gdil_ep, JG_slots);
-            xmlElem = xml_append_Attr_I(attributeList, "granted_PE", (int) pe_slots);       
-            xml_addAttribute(xmlElem, "name", lGetString(jatep, JAT_granted_pe));
-         }
-         if (lGetString(job, JB_checkpoint_name)) { 
-            xml_append_Attr_S(attributeList, "JB_checkpoint_name", lGetString(job, JB_checkpoint_name));
-         }   
-
-         ql = lGetList(job, JB_hard_resource_list);
-         if (ql) {
-            int slots = sge_job_slot_request(job, pe_list);
-            for_each(qrep, ql){
-               const char* name = lGetString(qrep, CE_name);
-               double uc;
-               lListElem *centry = centry_list_locate(centry_list, name);
-              
-               if (centry == NULL) {
-                  continue;
-               }   
-                  
-               uc = centry_urgency_contribution(slots, name, lGetDouble(qrep, CE_doubleval), centry);
-               xmlElem = xml_append_Attr_S(attributeList, "hard_request", lGetString(qrep, CE_stringval)); 
-               xml_addAttribute(xmlElem, "name", name);
-               xml_addAttributeD(xmlElem, "resource_contribution", uc); 
-            }
-         }
-         
-         /* display default requests if necessary */
-         {
-            lList *attributes = NULL;
-            lListElem *ce;
-            const char *name;
-            lListElem *hep;
-
-            queue_complexes2scheduler(&attributes, qep, exechost_list, centry_list);
-            for_each (ce, attributes) {
-               double dval;
-
-               name = lGetString(ce, CE_name);
-               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || 
-                   job_get_request(job, name)) {
-                  continue;
-               }   
-
-               parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 
-               if (dval == 0.0) {
-                  continue;
-               }   
-
-               /* For pending jobs (no queue/no exec host) we may print default request only
-                  if the consumable is specified in the global host. For running we print it
-                  if the resource is managed at this node/queue */
-               if ((qep && lGetSubStr(qep, CE_name, name, QU_consumable_config_list)) ||
-                   (qep && (hep=host_list_locate(exechost_list, lGetHost(qep, QU_qhostname))) &&
-                    lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) ||
-                     ((hep=host_list_locate(exechost_list, SGE_GLOBAL_NAME)) &&
-                         lGetSubStr(hep, CE_name, name, EH_consumable_config_list))){
-                  xmlElem = xml_append_Attr_S(attributeList, "def_hard_request", lGetString(ce, CE_default)); 
-                  xml_addAttribute(xmlElem, "name", name);
-               }
-            }
-            lFreeList(&attributes);
-         }
-
-         ql = lGetList(job, JB_soft_resource_list);
-         if (ql) {
-            for_each(qrep, ql){
-               xmlElem = xml_append_Attr_S(attributeList, "soft_request", lGetString(qrep, CE_stringval));
-               xml_addAttribute(xmlElem, "name", lGetString(qrep, CE_name));
-            }
-         }
-
-         ql = lGetList(job, JB_hard_queue_list);
-         if (ql) {
-            for_each(qrep, ql) {
-               xml_append_Attr_S(attributeList, "hard_req_queue", lGetString(qrep, QR_name));
-            }
-         }
-
-         ql = lGetList(job, JB_soft_queue_list);
-         if (ql) {
-            for_each(qrep, ql) {
-               xml_append_Attr_S(attributeList, "soft_req_queue", lGetString(qrep, QR_name));
-            }
-         }
-         ql = lGetList(job, JB_master_hard_queue_list);
-         if (ql){
-            for_each(qrep, ql) {
-               xml_append_Attr_S(attributeList, "master_hard_req_queue", lGetString(qrep, QR_name));
-            }
-         }
-         ql = lGetList(job, JB_jid_request_list );
-         if (ql) {
-            for_each(qrep, ql) {
-               xml_append_Attr_S(attributeList, "predecessor_jobs_req", lGetString(qrep, JRE_job_name));
-            }
-         }
-         ql = lGetList(job, JB_jid_predecessor_list);
-         if (ql) {
-            for_each(qrep, ql) {
-               xml_append_Attr_I(attributeList, "predecessor_jobs", (int) lGetUlong(qrep, JRE_job_number));
-            }
-         }
-   }
-
-   sge_dstring_free(&queue_name_buffer);
-
-   DEXIT;
-   return jobElem;
-}
-
-/*
- * pe_task : NULL, if master task shall be printed 
- */
-static lListElem *xml_subtask(lListElem *job, lListElem *ja_task,
-                             lListElem *pe_task,  int print_hdr) {
-   lListElem *xmlElem = NULL;
-   lList *attributeList = NULL;
-   char task_state_string[8];
-   u_long32 tstate, tstatus;
-   lListElem *ep;
-   lList *usage_list;
-   lList *scaled_usage_list;
-
-   DENTER(TOP_LAYER, "xml_subtask");
-
-   xmlElem = lCreateElem(XMLE_Type);
-   attributeList = lCreateList("attributes", XMLE_Type);
-   lSetList(xmlElem, XMLE_List, attributeList);
-   
-   /* is sub-task logically running */
-   if(pe_task == NULL) {
-      tstatus = lGetUlong(ja_task, JAT_status);
-      usage_list = lGetList(ja_task, JAT_usage_list);
-      scaled_usage_list = lGetList(ja_task, JAT_scaled_usage_list);
-   } 
-   else {
-      tstatus = lGetUlong(pe_task, PET_status);
-      usage_list = lGetList(pe_task, PET_usage);
-      scaled_usage_list = lGetList(pe_task, PET_scaled_usage);
-   }
-
-   if(pe_task) {
-      xml_append_Attr_S(attributeList, "task-id", lGetString(pe_task, PET_id));      
-   }
-
-   /* move status info into state info */
-   tstate = lGetUlong(ja_task, JAT_state);
-   if (tstatus == JRUNNING) {
-      tstate |= JRUNNING;
-      tstate &= ~JTRANSFERING;
-   } 
-   else if (tstatus == JTRANSFERING) {
-      tstate |= JTRANSFERING;
-      tstate &= ~JRUNNING;
-   } 
-   else if (tstatus == JFINISHED) {
-      tstate |= JEXITING;
-      tstate &= ~(JRUNNING|JTRANSFERING);
-   }
-
-   if (lGetList(job, JB_jid_predecessor_list) || lGetUlong(ja_task, JAT_hold)) {
-      tstate |= JHELD;
-   }
-
-   if (lGetUlong(ja_task, JAT_job_restarted)) {
-      tstate &= ~JWAITING;
-      tstate |= JMIGRATING;
-   }
-
-   /* write states into string */ 
-   job_get_state_string(task_state_string, tstate);
-   xml_append_Attr_S(attributeList, "state", task_state_string);
-
-   {
-      lListElem *up = NULL;
-
-      /* scaled cpu usage */
-      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) {
-         dstring resource_string = DSTRING_INIT;
-
-         double_print_time_to_dstring(lGetDouble(up, UA_value), 
-                                      &resource_string);
-         xml_append_Attr_S(attributeList, "cpu-usage", sge_dstring_get_string(&resource_string));
-         sge_dstring_free(&resource_string);
-      }
-
-      /* scaled mem usage */
-      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) {
-         xml_append_Attr_D(attributeList, "mem-usage", lGetDouble(up, UA_value));  
-      }   
-
-      /* scaled io usage */
-      if ((up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_IO))) {
-         xml_append_Attr_D(attributeList, "io-usage", lGetDouble(up, UA_value));  
-      }   
-   }
-
-   if (tstatus==JFINISHED) {
-      ep=lGetElemStr(usage_list, UA_name, "exit_status");
-      if (ep) {
-         xml_append_Attr_I(attributeList, "stat", (int)lGetDouble(ep, UA_value) );
-      }   
-   }
-
-   DEXIT;
-   return xmlElem;
-}
-
-/*-------------------------------------------------------------------------*/
-/* print the finished jobs in case of SGE                                  */
-/*-------------------------------------------------------------------------*/
-static void xml_print_jobs_finished(lList *job_list, const lList *pe_list, const lList *user_list,
-                             const lList *exechost_list, const lList *centry_list, 
-                             u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   lListElem *jep, *jatep;
-   dstring dyn_task_str = DSTRING_INIT;
-   lListElem *elem;
-
-   DENTER(TOP_LAYER, "xml_print_jobs_finished");
-
-   if (*target_list == NULL){
-      *target_list = lCreateList("Job-List", XMLE_Type);
-   }
-
-   {
-      for_each (jep, job_list) {
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            if (shut_me_down) {
-               SGE_EXIT(1);
-            }   
-            if (lGetUlong(jatep, JAT_status) == JFINISHED) {
-               lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable)|TAG_FOUND_IT);
-
-               if (!getenv("MORE_INFO"))
-                  continue;
-
-               if (!lGetNumberOfElem(user_list) || (lGetNumberOfElem(user_list) && 
-                     (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
-                  
-                  sge_dstring_sprintf(&dyn_task_str, sge_u32, 
-                                    lGetUlong(jatep, JAT_task_number));
-
-                  elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
-                                full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);  
-
-                  if (elem) {
-                     lList *attributes = NULL;
-                     lListElem *pending = lCreateElem(XMLA_Type);
-                     attributes = lGetList(elem, XMLE_Attribute);
-                     
-                     if (!attributes){
-                        attributes = lCreateList("attributes", XMLA_Type);
-                        lSetList(elem, XMLE_Attribute, attributes);
-                     }
-                     lSetString(pending, XMLA_Name, "state");
-                     lSetString(pending, XMLA_Value, "finished");
-                     lAppendElem(attributes, pending);
-
-                     lAppendElem(*target_list, elem); 
-                  }
-               }
-            }
-         }
-      }
-   }
-   sge_dstring_free(&dyn_task_str);
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-/* print the jobs in error                                                 */
-/*-------------------------------------------------------------------------*/
-static void xml_print_jobs_error( lList *job_list, const lList *pe_list, const lList *user_list,
-                           const lList *exechost_list, const lList *centry_list,
-                           u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   lListElem *jep, *jatep;
-   dstring dyn_task_str = DSTRING_INIT;
-   lListElem *elem;
-
-   DENTER(TOP_LAYER, "xml_print_jobs_error");
-
-   if (*target_list == NULL){
-      *target_list = lCreateList("Job-List", XMLE_Type);
-   }
-   
-   for_each (jep, job_list) {
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         if (!(lGetUlong(jatep, JAT_suitable) & TAG_FOUND_IT) && lGetUlong(jatep, JAT_status) == JERROR) {
-            lSetUlong(jatep, JAT_suitable, lGetUlong(jatep, JAT_suitable)|TAG_FOUND_IT);
-
-            if (!lGetNumberOfElem(user_list) || (lGetNumberOfElem(user_list) && 
-                  (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
-
-               sge_dstring_sprintf(&dyn_task_str, "sge_u32", lGetUlong(jatep, JAT_task_number));
-               elem = sge_job_to_XML(jep, jatep, NULL, 1, NULL, &dyn_task_str, 
-                                full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);  
-
-               if (elem) {
-                  lList *attributes = NULL;
-                  lListElem *pending = lCreateElem(XMLA_Type);
-                  attributes = lGetList(elem, XMLE_Attribute);
-                  
-                  if (!attributes){
-                     attributes = lCreateList("attributes", XMLA_Type);
-                     lSetList(elem, XMLE_Attribute, attributes);
-                  }
-                  lSetString(pending, XMLA_Name, "state");
-                  lSetString(pending, XMLA_Value, "error");
-                  lAppendElem(attributes, pending);
-
-                  lAppendElem(*target_list, elem); 
-               }
-            }
-         }
-      }
-   }
-   sge_dstring_free(&dyn_task_str);
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-/* print the zombie jobs                                                   */
-/*-------------------------------------------------------------------------*/
-static void xml_print_jobs_zombie(lList *zombie_list, const lList *pe_list, const lList *user_list,
-                           const lList *exechost_list, const lList *centry_list,
-                           u_long32 full_listing, u_long32 group_opt, lList **target_list) {
-   lListElem *jep;
-   dstring dyn_task_str = DSTRING_INIT; 
-   lListElem *elem;
-   DENTER(TOP_LAYER, "xml_print_jobs_zombie");
-
-   if (! (full_listing & QSTAT_DISPLAY_ZOMBIES)) {
-      DEXIT;
-      return;
-   }
-
-   if (*target_list == NULL){
-      *target_list = lCreateList("Job-List", XMLE_Type);
-   }
-   
-   for_each (jep, zombie_list) { 
-      lList *z_ids = NULL;
-
-      z_ids = lGetList(jep, JB_ja_z_ids);
-      if (z_ids != NULL) {
-         lListElem *ja_task = NULL;
-         u_long32 first_task_id = range_list_get_first_id(z_ids, NULL);
-
-         ja_task = (lListElem *) job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str, false);
-         
-         elem = sge_job_to_XML(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
-                             full_listing, 0, 0, exechost_list, centry_list, pe_list, group_opt, 0);  
-
-         if (elem) {
-            lList *attributes = NULL;
-            lListElem *pending = lCreateElem(XMLA_Type);
-            attributes = lGetList(elem, XMLE_Attribute);
-            
-            if (!attributes){
-               attributes = lCreateList("attributes", XMLA_Type);
-               lSetList(elem, XMLE_Attribute, attributes);
-            }
-            lSetString(pending, XMLA_Name, "state");
-            lSetString(pending, XMLA_Value, "finished");
-            lAppendElem(attributes, pending);
-
-            lAppendElem(*target_list, elem); 
-         }
-         
-         sge_dstring_free(&dyn_task_str);
-      }
-   }
-   DEXIT;
-}
-
-
-/*-------------------------------------------------------------------------*/
-/* print jobs per queue                                                    */
-/*-------------------------------------------------------------------------*/
-void xml_print_jobs_queue(
-lListElem *qep,
-lList *job_list,
-const lList *pe_list,
-const lList *user_list,
-const lList *ehl,
-const lList *centry_list,
-int print_jobs_of_queue,
-u_long32 full_listing,
-u_long32 group_opt,
-lList **target_list
-) {
-   lListElem *jlep;
-   lListElem *jatep;
-   lListElem *gdilep;
-   u_long32 job_tag;
-   u_long32 jataskid = 0;
-   dstring queue_name_buffer = DSTRING_INIT;
-   const char *qnm;
-   dstring dyn_task_str = DSTRING_INIT;
-
-   DENTER(TOP_LAYER, "xml_print_jobs_queue");
-
-   if (*target_list == NULL){
-      *target_list = lCreateList("job_list", XMLE_Type);
-   }
-
-   qnm = qinstance_get_name(qep, &queue_name_buffer);
-
-   for_each(jlep, job_list) {
-      int master, i;
-
-      for_each(jatep, lGetList(jlep, JB_ja_tasks)) {
-         if (shut_me_down) {
-            SGE_EXIT(1);
-         }
-            
-         for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-
-            if(!strcmp(lGetString(gdilep, JG_qname), qnm)) {
-               int slot_adjust = 0;
-               int lines_to_print;
-               int slots_per_line, slots_in_queue = lGetUlong(gdilep, JG_slots); 
-
-               if (qinstance_state_is_manual_suspended(qep) ||
-                   qinstance_state_is_susp_on_sub(qep) ||
-                   qinstance_state_is_cal_suspended(qep)) {
-                  u_long32 jstate;
-
-                  jstate = lGetUlong(jatep, JAT_state);
-                  jstate &= ~JRUNNING;                 /* unset bit JRUNNING */
-                  jstate |= JSUSPENDED_ON_SUBORDINATE; /* set bit JSUSPENDED_ON_SUBORDINATE */
-                  lSetUlong(jatep, JAT_state, jstate);
-               }
-               job_tag = lGetUlong(jatep, JAT_suitable);
-               job_tag |= TAG_FOUND_IT;
-               lSetUlong(jatep, JAT_suitable, job_tag);
-
-               master = !strcmp(qnm, 
-                     lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname));
-
-               if (master) {
-                  const char *pe_name;
-                  lListElem *pe;
-                  if (((pe_name=lGetString(jatep, JAT_granted_pe))) &&
-                      ((pe=pe_list_locate(pe_list, pe_name))) &&
-                      !lGetBool(pe, PE_job_is_first_task))
-
-                      slot_adjust = 1;
-               }
-
-               /* job distribution view ? */
-               if (!(group_opt & GROUP_NO_PETASK_GROUPS)) {
-                  /* no - condensed ouput format */
-                  if (!master && !(full_listing & QSTAT_DISPLAY_FULL)) {
-                     /* skip all slave outputs except in full display mode */
-                     continue;
-                  }
-
-                  /* print only on line per job for this queue */
-                  lines_to_print = 1;
-
-                  /* always only show the number of job slots represented by the line */
-                  if ((full_listing & QSTAT_DISPLAY_FULL)) {
-                     slots_per_line = slots_in_queue;
-                  }   
-                  else {
-                     slots_per_line = sge_granted_slots(lGetList(jatep, JAT_granted_destin_identifier_list));
-                 }    
-               } 
-               else {
-                  /* yes */
-                  lines_to_print = (int)slots_in_queue+slot_adjust;
-                  slots_per_line = 1;
-               }
-
-               for (i=0; i<lines_to_print ;i++) {
-                  int already_printed = 0;
-                  lListElem *elem = NULL;
-
-                  if (!lGetNumberOfElem(user_list) || 
-                     (lGetNumberOfElem(user_list) && (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
-                     if (print_jobs_of_queue && (job_tag & TAG_SHOW_IT)) {
-                        int print_jobid = 1;
-                        int different = 1;
-
-                        jataskid = lGetUlong(jatep, JAT_task_number);
-                        sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
-                        
-                        if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
-                              (lGetUlong(jatep, JAT_state) & JRUNNING)) {
-                           elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,
-                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, 
-                              group_opt, slots_per_line); 
-                           already_printed = 1;
-                           
-                        }
-                        if (!already_printed && (full_listing & QSTAT_DISPLAY_SUSPENDED) &&
-                           ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
-                           (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
-                            (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
-                           
-                           elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,
-                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, 
-                              group_opt, slots_per_line); 
-                           already_printed = 1;  
-                        }
-
-                        if (!already_printed && (full_listing & QSTAT_DISPLAY_USERHOLD) &&
-                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) {
-                           
-                           elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,
-                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list,
-                              group_opt, slots_per_line);
-                           already_printed = 1;
-                        }
-
-                        if (!already_printed && (full_listing & QSTAT_DISPLAY_OPERATORHOLD) &&
-                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  {
-                           
-                           elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,
-                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list,
-                              group_opt, slots_per_line);
-                           already_printed = 1;
-                        }
-                            
-                        if (!already_printed && (full_listing & QSTAT_DISPLAY_SYSTEMHOLD) &&
-                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) {
-                           
-                           elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,
-                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
-                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, 
-                              group_opt, slots_per_line);
-                           already_printed = 1;
-                        }
-                        
-                        if (elem) {
-                           lList *attributes = NULL;
-                           lListElem *pending = lCreateElem(XMLA_Type);
-                           attributes = lGetList(elem, XMLE_Attribute);
-                           
-                           if (!attributes){
-                              attributes = lCreateList("attributes", XMLA_Type);
-                              lSetList(elem, XMLE_Attribute, attributes);
-                           }
-                           lSetString(pending, XMLA_Name, "state");
-                           lSetString(pending, XMLA_Value, "running");
-                           lAppendElem(attributes, pending);
-
-                           lAppendElem(*target_list, elem); 
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-   sge_dstring_free(&queue_name_buffer);
-   sge_dstring_free(&dyn_task_str);
-   DEXIT;
-}
-
-
-lListElem *xml_print_queue(lListElem *q, const lList *exechost_list, const lList *centry_list,
-                    u_long32 full_listing, const lList *qresource_list, u_long32 explain_bits) {
-   char arch_string[80];
-   double load_avg;
-   char *load_avg_str;
-   char load_alarm_reason[MAX_STRING_SIZE];
-   char suspend_alarm_reason[MAX_STRING_SIZE];
-   dstring queue_name_buffer = DSTRING_INIT;
-   const char *queue_name = NULL;
-   bool is_load_value;
-   bool has_value_from_object; 
-   lListElem *jobElem = NULL;
-   lList *attributeList = NULL;
-   u_long32 interval;
-   
-   DENTER(TOP_LAYER, "xml_print_queue");
-
-   *load_alarm_reason = 0;
-   *suspend_alarm_reason = 0;
-   queue_name = qinstance_get_name(q, &queue_name_buffer);
-
-   /* make it possible to display any load value in qstat output */
-   if (!(load_avg_str=getenv("SGE_LOAD_AVG")) || !strlen(load_avg_str))
-      load_avg_str = LOAD_ATTR_LOAD_AVG;
-
-   if (!(full_listing & QSTAT_DISPLAY_FULL)) {
-      sge_dstring_free(&queue_name_buffer);
-      DEXIT;
-      return jobElem;
-   }
-
-   {
-      lListElem *temp = NULL;
-      temp = lCreateElem(XMLE_Type);
-      lSetBool(temp, XMLE_Print, false);
-      jobElem = lCreateElem(XMLE_Type);
-      attributeList = lCreateList("attributes", XMLE_Type);
-      lSetList(temp, XMLE_List, attributeList);
-      lSetObject(jobElem, XMLE_Element, temp);
-   }
-   
-   /* compute the load and check for alarm states */
-
-   is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, q, exechost_list, centry_list, &has_value_from_object) ? true : false;
-   if (sge_load_alarm(NULL, q, lGetList(q, QU_load_thresholds), exechost_list, centry_list, NULL, true)) {
-      qinstance_state_set_alarm(q, true);
-      sge_load_alarm_reason(q, lGetList(q, QU_load_thresholds), exechost_list, 
-                            centry_list, load_alarm_reason, 
-                            MAX_STRING_SIZE - 1, "load");
-   }
-   parse_ulong_val(NULL, &interval, TYPE_TIM,
-                   lGetString(q, QU_suspend_interval), NULL, 0);
-   if (lGetUlong(q, QU_nsuspend) != 0 &&
-       interval != 0 &&
-       sge_load_alarm(NULL, q, lGetList(q, QU_suspend_thresholds), exechost_list, centry_list, NULL, false)) {
-      qinstance_state_set_suspend_alarm(q, true);
-      sge_load_alarm_reason(q, lGetList(q, QU_suspend_thresholds), 
-                            exechost_list, centry_list, suspend_alarm_reason, 
-                            MAX_STRING_SIZE - 1, "suspend");
-   }
-
-   xml_append_Attr_S(attributeList, "name", queue_name);        
-
-   {
-      dstring type_string = DSTRING_INIT;
-
-      qinstance_print_qtype_to_dstring(q, &type_string, true);
-      xml_append_Attr_S(attributeList, "qtype", sge_dstring_get_string(&type_string)); 
-      sge_dstring_free(&type_string);
-   }
-
-   /* number of used/free slots */
-   xml_append_Attr_I(attributeList, "slots_used", qinstance_slots_used(q) ); 
-   xml_append_Attr_I(attributeList, "slots_total", (int)lGetUlong(q, QU_job_slots));
-
-   /* load avg */
-   if (!is_load_value) {
-      if (has_value_from_object) {
-         xml_append_Attr_D(attributeList, "load_avg", load_avg);
-      } 
-   }
-   
-   /* arch */
-   if (!sge_get_string_qattr(arch_string, sizeof(arch_string)-1, LOAD_ATTR_ARCH, 
-         q, exechost_list, centry_list))
-      xml_append_Attr_S(attributeList, "arch", arch_string);
-
-   {
-      dstring state_string = DSTRING_INIT;
-      qinstance_state_append_to_dstring(q, &state_string);
-      xml_append_Attr_S(attributeList, "state", sge_dstring_get_string(&state_string));
-      sge_dstring_free(&state_string);
-   }
-
-   if((full_listing & QSTAT_DISPLAY_ALARMREASON)) {
-      if(*load_alarm_reason) {
-         xml_append_Attr_S(attributeList, "load-alarm-reason", load_alarm_reason);
-      }
-      if(*suspend_alarm_reason) {
-         xml_append_Attr_S(attributeList, "suspend-alarm-reason", suspend_alarm_reason);
-      }
-   }
-
-   if ((explain_bits & QI_ALARM) > 0) {
-      if(*load_alarm_reason) {
-         xml_append_Attr_S(attributeList, "load-alarm-reason", load_alarm_reason);
-      }
-   }
-   if ((explain_bits & QI_SUSPEND_ALARM) > 0) {
-      if(*suspend_alarm_reason) {
-         xml_append_Attr_S(attributeList, "suspend-alarm-reason", suspend_alarm_reason);
-      }
-   }
-   
-   if (explain_bits != QI_DEFAULT) {
-      lList *qim_list = lGetList(q, QU_message_list);
-      lListElem *qim = NULL;
-
-      for_each(qim, qim_list) {
-         u_long32 type = lGetUlong(qim, QIM_type);
-
-         if ((explain_bits & QI_AMBIGUOUS) == type || 
-             (explain_bits & QI_ERROR) == type) {
-            const char *message = lGetString(qim, QIM_message);
-            xml_append_Attr_S(attributeList, "message", message);
-         }
-      }
-   }
-
-   /* view (selected) resources of queue in case of -F [attr,attr,..] */ 
-   if ((full_listing & QSTAT_DISPLAY_QRESOURCES)) {
-      dstring resource_string = DSTRING_INIT;
-      lList *rlp;
-      lListElem *rep;
-      lListElem *xmlElem;
-      char dom[5];
-      const char *s;
-      u_long32 dominant;
-
-      rlp = NULL;
-
-      queue_complexes2scheduler(&rlp, q, exechost_list, centry_list);
-      for_each (rep , rlp) {
-
-         /* we had a -F request */
-         if (qresource_list) {
-            lListElem *qres;
-            qres = lGetElemStr(qresource_list, CE_name, 
-                               lGetString(rep, CE_name));
-            if (qres == NULL) {
-               qres = lGetElemStr(qresource_list, CE_name, 
-                                  lGetString(rep, CE_shortcut));
-            }
-            /* if this complex variable wasn't requested with -F, skip it */
-            if (qres == NULL)
-               continue ;
-         }
-         sge_dstring_clear(&resource_string);
-
-         { 
-            u_long32 type = lGetUlong(rep, CE_valtype);
-            switch (type) {
-            case TYPE_HOST:   
-            case TYPE_STR:   
-            case TYPE_CSTR:  
-            case TYPE_RESTR:
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  s = lGetString(rep, CE_pj_stringval);
-               } else {
-                  dominant = lGetUlong(rep, CE_dominant);
-                  s = lGetString(rep, CE_stringval);
-               }
-               break;
-            case TYPE_TIM: 
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_time_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_time_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            case TYPE_MEM:
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_memory_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_memory_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            default:   
-
-               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-                  double val = lGetDouble(rep, CE_pj_doubleval);
-
-                  dominant = lGetUlong(rep, CE_pj_dominant);
-                  double_print_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               } else {
-                  double val = lGetDouble(rep, CE_doubleval);
-
-                  dominant = lGetUlong(rep, CE_dominant);
-                  double_print_to_dstring(val, &resource_string);
-                  s = sge_dstring_get_string(&resource_string);
-               }
-               break;
-            }
-         }
-         monitor_dominance(dom, dominant); 
-         
-         xmlElem = xml_append_Attr_S(attributeList, "resource", s);
-         xml_addAttribute(xmlElem, "name", lGetString(rep, CE_name));  
-         xml_addAttribute(xmlElem, "type", dom);
-         
-      }
-
-      lFreeList(&rlp);
-      sge_dstring_free(&resource_string);
-
-   }
-
-   sge_dstring_free(&queue_name_buffer);
-
-   DEXIT;
-   return jobElem;
-}

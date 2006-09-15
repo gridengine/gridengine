@@ -87,6 +87,10 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+#ifdef TEST_QMASTER_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 /* do not change, the ":" is hard coded into the qacct file
    parsing routines. */
 static const char REPORTING_DELIMITER = ':';
@@ -108,17 +112,17 @@ static rep_buf_t reporting_buffer[2] = {
 };
 
 static bool 
-reporting_flush_accounting(lList **answer_list);
+reporting_flush_accounting(const char *acct_file, lList **answer_list);
 
 static bool 
-reporting_flush_reporting(lList **answer_list);
+reporting_flush_reporting(const char *reporting_file, lList **answer_list);
 
 static bool 
 reporting_flush_report_file(lList **answer_list,
                             const char *filename, rep_buf_t *buf);
 
 static bool 
-reporting_flush(lList **answer_list);
+reporting_flush(const char *acct_file, const char *reporting_file, lList **answer_list);
 
 static bool 
 reporting_create_record(lList **answer_list, 
@@ -230,8 +234,7 @@ reporting_initialize(lList **answer_list)
    /* the sharelog timed events can be switched on or off */
    config_sharelog();
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 } /* reporting_initialize() */
 
 /****** qmaster/reporting/reporting_shutdown() *****************************
@@ -259,17 +262,26 @@ reporting_initialize(lList **answer_list)
 *     qmaster/reporting/reporting_initialize()
 *******************************************************************************/
 bool
-reporting_shutdown(lList **answer_list, bool do_spool)
+reporting_shutdown(void *context, lList **answer_list, bool do_spool)
 {
    bool ret = true;
    lList* alp = NULL;
    rep_buf_t *buf;
 
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char *reporting_file = ctx->get_reporting_file(ctx);
+   const char *acct_file = ctx->get_acct_file(ctx);
+#else
+   const char *reporting_file = path_state_get_reporting_file();
+   const char *acct_file = path_state_get_acct_file();
+#endif
+
    DENTER(TOP_LAYER, "reporting_shutdown");
 
    if (do_spool == true) {
       /* flush the last reporting values, suppress adding new timer */
-      if (!reporting_flush(&alp)) {
+      if (!reporting_flush(acct_file, reporting_file, &alp)) {
          answer_list_output(&alp);
       }
    }
@@ -285,8 +297,7 @@ reporting_shutdown(lList **answer_list, bool do_spool)
    sge_dstring_free(&(buf->buffer));
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_trigger_handler() **********************
@@ -311,10 +322,19 @@ reporting_shutdown(lList **answer_list, bool do_spool)
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
+reporting_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
    lList *answer_list = NULL;
+
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char *reporting_file = ctx->get_reporting_file(ctx);
+   const char *acct_file = ctx->get_acct_file(ctx);
+#else
+   const char *reporting_file = path_state_get_reporting_file();
+   const char *acct_file = path_state_get_acct_file();
+#endif
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
 
@@ -329,7 +349,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
          flush_interval = mconf_get_sharelog_time();
          
          /* flush the reporting data */
-         if (reporting_flush_reporting(&answer_list) == 0) {
+         if (reporting_flush_reporting(reporting_file, &answer_list) == 0) {
             answer_list_output(&answer_list);
          }
          
@@ -339,7 +359,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
          flush_interval = mconf_get_reporting_flush_time();
          
          /* flush the reporting data */
-         if (reporting_flush_reporting(&answer_list) == 0) {
+         if (reporting_flush_reporting(reporting_file, &answer_list) == 0) {
             answer_list_output(&answer_list);
          }
          
@@ -352,13 +372,13 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
           * multi-threading issues with immediate flushisg, because the
           * reporting_flush_report_file() function uses a mutex and checks the
           * buffer length before trying to flush. */
-         if (reporting_flush_accounting(&answer_list) == 0) {
+         if (reporting_flush_accounting(acct_file, &answer_list) == 0) {
             answer_list_output(&answer_list);
          }
          
          break;
       default:
-         return;
+         DRETURN_VOID;
    }
 
    /* set next flushing interval and add timer.
@@ -375,8 +395,7 @@ reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor)
       te_free_event(&ev);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* reporting_trigger_handler() */
 
 bool
@@ -421,8 +440,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       sge_dstring_free(&job_dstring);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool 
@@ -522,8 +540,7 @@ reporting_create_job_log(lList **answer_list,
       sge_dstring_free(&job_dstring);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_acct_record() *******************
@@ -563,7 +580,8 @@ reporting_create_job_log(lList **answer_list,
  * reporting_create_acct_record is called and we needn't search it from ja_task
  */
 bool
-reporting_create_acct_record(lList **answer_list, 
+reporting_create_acct_record(void *context,
+                       lList **answer_list, 
                        lListElem *job_report, 
                        lListElem *job, lListElem *ja_task, bool intermediate)
 {
@@ -577,6 +595,13 @@ reporting_create_acct_record(lList **answer_list,
 
    bool do_reporting  = mconf_get_do_reporting();
    bool do_accounting = mconf_get_do_accounting();
+
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   const char *acct_file = ctx->get_acct_file(ctx);
+#else
+   const char *acct_file = path_state_get_acct_file();
+#endif
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
@@ -610,7 +635,7 @@ reporting_create_acct_record(lList **answer_list,
          /* If the flush internal is set to 0, flush the accounting buffer after
           * every write. */
          if (mconf_get_accounting_flush_time() == 0) {
-            ret = (reporting_flush_accounting(answer_list) != 0) ? true : false;
+            ret = (reporting_flush_accounting(acct_file, answer_list) != 0) ? true : false;
          }
       }
 
@@ -696,8 +721,7 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_queue_record() *******************
@@ -756,8 +780,7 @@ reporting_create_queue_record(lList **answer_list,
       sge_dstring_free(&queue_dstring);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_queue_consumable_record() ********
@@ -830,8 +853,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
    }
 
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_host_record() *******************
@@ -897,8 +919,7 @@ reporting_create_host_record(lList **answer_list,
       sge_dstring_free(&load_dstring);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_host_consumable_record() ********
@@ -965,8 +986,7 @@ reporting_create_host_consumable_record(lList **answer_list,
    }
 
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting/reporting_create_sharelog_record() ***************
@@ -1052,8 +1072,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -1114,14 +1133,14 @@ reporting_is_intermediate_acct_required(const lListElem *job,
 
    /* if reporting isn't active, we needn't write intermediate usage */
    if (!mconf_get_do_reporting()) {
-      return false;
+      DRETURN(false);
    }
 
    /* valid input data? */
    if (job == NULL || ja_task == NULL) {
       /* JG: TODO: i18N */
       WARNING((SGE_EVENT, "reporting_is_intermediate_acct_required: invalid input data\n"));
-      return false;
+      DRETURN(false);
    }
 
    /* 
@@ -1131,7 +1150,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
    localtime_r(&now, &tm_now);
 #if 1
    if (tm_now.tm_hour != 0 || tm_now.tm_min > INTERMEDIATE_ACCT_WINDOW) {
-      return false;
+      DRETURN(false);
    }
 #endif
 
@@ -1147,7 +1166,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
 
    if ((now - start_time) < (INTERMEDIATE_MIN_RUNTIME + tm_now.tm_min * 60 + 
                    tm_now.tm_sec)) {
-      return false;
+      DRETURN(false);
    }
 
    /* 
@@ -1194,8 +1213,7 @@ reporting_is_intermediate_acct_required(const lListElem *job,
        ret = true;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* ----- static functions ----- */
@@ -1232,8 +1250,7 @@ reporting_write_load_values(lList **answer_list, dstring *buffer,
 
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /*
@@ -1260,8 +1277,7 @@ reporting_create_record(lList **answer_list,
                               REPORTING_DELIMITER);
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting_flush_accounting() ***********************************
@@ -1275,7 +1291,8 @@ reporting_create_record(lList **answer_list,
 *     Flush the information in the accounting buffer into the accounting file.
 *
 *  INPUTS
-*     lList **answer_list  - answer list
+*     const char* acct_file  - accounting file name
+*     lList **answer_list    - answer list
 *
 *  RESULT
 *     int - true  success
@@ -1284,17 +1301,16 @@ reporting_create_record(lList **answer_list,
 *  NOTES
 *     MT-NOTE: reporting_flush_accounting() is MT-safe
 *******************************************************************************/
-static bool reporting_flush_accounting(lList **answer_list)
+static bool reporting_flush_accounting(const char *acct_file, lList **answer_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_flush_accounting");
 
    /* write accounting data */
-   ret = reporting_flush_report_file(answer_list, path_state_get_acct_file(),
+   ret = reporting_flush_report_file(answer_list, acct_file,
                                      &reporting_buffer[ACCOUNTING_BUFFER]);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting_flush_reporting() ***********************************
@@ -1317,17 +1333,16 @@ static bool reporting_flush_accounting(lList **answer_list)
 *  NOTES
 *     MT-NOTE: reporting_flush_reporting() is MT-safe
 *******************************************************************************/
-static bool reporting_flush_reporting(lList **answer_list)
+static bool reporting_flush_reporting(const char *reporting_file, lList **answer_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_flush_reporting");
    /* write reporting data */
    ret = reporting_flush_report_file(answer_list,
-                                     path_state_get_reporting_file(),
+                                     reporting_file,
                                      &reporting_buffer[REPORTING_BUFFER]);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/reporting_flush_report_file() **********************************
@@ -1494,7 +1509,7 @@ FCLOSE_ERROR:
 *  NOTES
 *     MT-NOTE: reporting_flush() is MT-safe
 *******************************************************************************/
-static bool reporting_flush(lList **answer_list)
+static bool reporting_flush(const char *acct_file, const char *reporting_file, lList **answer_list)
 {
    bool ret = true;
    bool reporting_ret;
@@ -1502,19 +1517,18 @@ static bool reporting_flush(lList **answer_list)
    DENTER(TOP_LAYER, "reporting_flush");
 
    /* flush accounting data */
-   reporting_ret = reporting_flush_accounting(answer_list);
+   reporting_ret = reporting_flush_accounting(acct_file, answer_list);
    if (!reporting_ret) {
       ret = false;
    }
      
    /* flush accounting data */
-   reporting_ret = reporting_flush_reporting(answer_list);
+   reporting_ret = reporting_flush_reporting(reporting_file, answer_list);
    if (!reporting_ret) {
       ret = false;
    }
      
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /*
@@ -1658,4 +1672,3 @@ intermediate_usage_written(const lListElem *job_report,
 
    return ret;
 }
-

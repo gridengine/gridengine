@@ -80,9 +80,14 @@
 #include "spool/sge_spooling.h"
 
 #include "sge_reporting_qmaster.h"
+#include "sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
 /* EB: ADOC: add commets */
 
@@ -109,10 +114,11 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list,
                        lList *del_hosts);
 
 static bool
-cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor);
+cqueue_add_qinstances(void *context, lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor);
 
 static lListElem * 
-qinstance_create(const lListElem *cqueue, lList **answer_list,
+qinstance_create(void *context,
+                 const lListElem *cqueue, lList **answer_list,
                  const char *hostname, bool *is_ambiguous, monitoring_t *monitor);
 
 static void
@@ -157,7 +163,8 @@ sge_get_qinstance_number(void)
 }  
 
 static lListElem * 
-qinstance_create(const lListElem *cqueue, lList **answer_list,
+qinstance_create(void *context,
+                 const lListElem *cqueue, lList **answer_list,
                  const char *hostname, bool *is_ambiguous, monitoring_t *monitor) 
 {
    dstring buffer = DSTRING_INIT;
@@ -193,7 +200,8 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
       const char *matching_group = NULL;
       bool initial_modify = true;
 
-      qinstance_modify_attribute(ret, answer_list, cqueue, 
+      qinstance_modify_attribute(context,
+                       ret, answer_list, cqueue, 
                        cqueue_attribute_array[index].qinstance_attr,
                        cqueue_attribute_array[index].cqueue_attr, 
                        cqueue_attribute_array[index].href_attr,
@@ -240,7 +248,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
 }
 
 static bool
-cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor)
+cqueue_add_qinstances(void *context, lListElem *cqueue, lList **answer_list, lList *add_hosts, monitoring_t *monitor)
 {
    bool ret = true;
 
@@ -273,7 +281,8 @@ cqueue_add_qinstances(lListElem *cqueue, lList **answer_list, lList *add_hosts, 
                list = lCreateList("", QU_Type);
                lSetList(cqueue, CQ_qinstances, list);
             }
-            qinstance = qinstance_create(cqueue, answer_list,
+            qinstance = qinstance_create(context,
+                                         cqueue, answer_list,
                                          hostname, &is_ambiguous, monitor);
             if (is_ambiguous) {
                DPRINTF(("qinstance %s has ambiguous conf\n", hostname));
@@ -437,7 +446,8 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 }
 
 bool
-cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
+cqueue_mod_qinstances(void *context,
+                      lListElem *cqueue, lList **answer_list,
                       lListElem *reduced_elem, bool refresh_all_values, monitoring_t *monitor)
 {
    bool ret = true;
@@ -513,7 +523,8 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
                bool tmp_has_changed_state_attr = false;
                bool initial_modify = false;
 
-               ret &= qinstance_modify_attribute(qinstance,
+               ret &= qinstance_modify_attribute(context,
+                          qinstance,
                           answer_list, cqueue,
                           cqueue_attribute_array[index].qinstance_attr,
                           cqueue_attribute_array[index].cqueue_attr,
@@ -594,7 +605,8 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
 }
 
 bool
-cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
+cqueue_handle_qinstances(void *context, 
+                         lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, lList *add_hosts,
                          lList *rem_hosts, bool refresh_all_values,
                          monitoring_t *monitor) 
@@ -607,17 +619,18 @@ cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
       ret &= cqueue_mark_qinstances(cqueue, answer_list, rem_hosts);
    }
    if (ret) {
-      ret &= cqueue_mod_qinstances(cqueue, answer_list, reduced_elem, 
+      ret &= cqueue_mod_qinstances(context, cqueue, answer_list, reduced_elem, 
                                    refresh_all_values, monitor);
    }
    if (ret) {
-      ret &= cqueue_add_qinstances(cqueue, answer_list, add_hosts, monitor);
+      ret &= cqueue_add_qinstances(context, cqueue, answer_list, add_hosts, monitor);
    }
    DEXIT;
    return ret;
 }
 
-int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
+int cqueue_mod(void *context,
+               lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
                gdi_object_t *object, int sub_command, monitoring_t *monitor) 
 {
@@ -691,7 +704,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    if (ret) {
       bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL)) ? true : false;
 
-      ret &= cqueue_handle_qinstances(cqueue, answer_list, reduced_elem, 
+      ret &= cqueue_handle_qinstances(context, 
+                                      cqueue, answer_list, reduced_elem, 
                                       add_hosts, rem_hosts, refresh_all_values, monitor);
    }
 
@@ -703,7 +717,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    if (ret) {
       lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
 
-      ret &= host_list_add_missing_href(list, answer_list, add_hosts, monitor);
+      ret &= host_list_add_missing_href(context, list, answer_list, add_hosts, monitor);
    }
 
    /*
@@ -720,13 +734,14 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    }
 }
 
-int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
+int cqueue_success(void *context,
+                   lListElem *cqueue, lListElem *old_cqueue, 
                    gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    lList *qinstances;
    lListElem *qinstance; 
    DENTER(TOP_LAYER, "cqueue_success");
-  
+
    cqueue_update_categories(cqueue, old_cqueue);
 
    /*
@@ -738,7 +753,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    /*
     * QI modify, add or delete event. Finalize operation.
     */
-   cqueue_commit(cqueue);
+   cqueue_commit(context, cqueue);
 
    /*
     * Handle jobs which were supended due to suspend threshold
@@ -774,7 +789,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
                      if (!strcmp(queue_name, full_name)) {
 
                         if (!ISSET(state, JSUSPENDED)) {
-                           sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task, monitor);
+                           sge_signal_queue(context, SGE_SIGCONT, qinstance, job, ja_task, monitor);
                            SETBIT(JRUNNING, state); 
                            is_qinstance_mod = true;
                         }
@@ -783,7 +798,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
                         
                         lSetUlong(ja_task, JAT_state, state);
 
-                        sge_event_spool(NULL, 0, sgeE_JATASK_MOD,
+                        sge_event_spool(context, NULL, 0, sgeE_JATASK_MOD,
                                         lGetUlong(job,JB_job_number), 
                                         lGetUlong(ja_task, JAT_task_number), NULL, NULL, NULL,
                                         job, ja_task, NULL, true, true);
@@ -797,7 +812,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
          if (is_qinstance_mod) {
                const char *hostname = lGetHost(qinstance, QU_qhostname);
                const char *cqueue_name = lGetString(qinstance, QU_qname);         
-               sge_event_spool(NULL, 0, sgeE_QINSTANCE_MOD,
+               sge_event_spool(context, NULL, 0, sgeE_QINSTANCE_MOD,
                                0, 0, cqueue_name, hostname, NULL,
                                qinstance, NULL, NULL, true, true);         
          }
@@ -809,7 +824,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    return 0;
 }
 
-void cqueue_commit(lListElem *cqueue) 
+void cqueue_commit(void *context, lListElem *cqueue) 
 {
    lList *qinstances = lGetList(cqueue, CQ_qinstances);
    lListElem *next_qinstance = NULL;
@@ -841,7 +856,7 @@ void cqueue_commit(lListElem *cqueue)
          sge_add_event( 0, sgeE_QINSTANCE_MOD, 0, 0,
                        name, hostname, NULL, qinstance);
       } else if (tag == SGE_QI_TAG_DEL) {
-         sge_event_spool(NULL, 0, sgeE_QINSTANCE_DEL,
+         sge_event_spool(context, NULL, 0, sgeE_QINSTANCE_DEL,
                          0, 0, name, hostname,
                          NULL, NULL, NULL, NULL, true, true);
 
@@ -857,7 +872,7 @@ void cqueue_commit(lListElem *cqueue)
    DEXIT;
 }
 
-int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object) 
+int cqueue_spool(void *context, lList **answer_list, lListElem *cqueue, gdi_object_t *object) 
 {  
    int ret = 0;
    const char *name = lGetString(cqueue, CQ_name);
@@ -867,10 +882,17 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
 
    bool dbret;
    lList *spool_answer_list = NULL;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+#else
+   bool job_spooling = bootstrap_get_job_spooling();
+#endif
 
    DENTER(TOP_LAYER, "cqueue_spool");
    dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                              cqueue, name, SGE_TYPE_CQUEUE);
+                              cqueue, name, SGE_TYPE_CQUEUE,
+                              job_spooling);
    answer_list_output(&spool_answer_list);
 
    if (!dbret) {
@@ -890,7 +912,8 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
                                    lGetHost(qinstance, QU_qhostname));
          dbret = spool_write_object(&spool_answer_list, 
                                     spool_get_default_context(), qinstance,
-                                    key, SGE_TYPE_QINSTANCE);
+                                    key, SGE_TYPE_QINSTANCE,
+                                    job_spooling);
          answer_list_output(&spool_answer_list);
 
          if (!dbret) {
@@ -911,7 +934,7 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    return ret;
 }
 
-int cqueue_del(lListElem *this_elem, lList **answer_list, 
+int cqueue_del(void *context, lListElem *this_elem, lList **answer_list, 
                char *remote_user, char *remote_host) 
 {
    bool ret = true;
@@ -978,7 +1001,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                   const char *qi_name = lGetHost(qinstance, QU_qhostname);
 
                   sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
-                  if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
+                  if (sge_event_spool(context, answer_list, 0, sgeE_QINSTANCE_DEL,
                                       0, 0, cq_name, qi_name,
                                       NULL, NULL, NULL, NULL, true, true)) {
                      ; 
@@ -991,7 +1014,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                /*
                 * delete CQ
                 */
-               if (sge_event_spool(answer_list, 0, sgeE_CQUEUE_DEL,
+               if (sge_event_spool(context, answer_list, 0, sgeE_CQUEUE_DEL,
                                    0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
                   cqueue_update_categories(NULL, cqueue);
@@ -1041,7 +1064,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
 }
 
 bool
-cqueue_del_all_orphaned(lListElem *this_elem, lList **answer_list)
+cqueue_del_all_orphaned(void *context, lListElem *this_elem, lList **answer_list)
 {
    bool ret = true;
 
@@ -1066,7 +1089,7 @@ cqueue_del_all_orphaned(lListElem *this_elem, lList **answer_list)
              * This qinstance should be deleted. There are not jobs anymore.
              */
             sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name);
-            if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
+            if (sge_event_spool(context, answer_list, 0, sgeE_QINSTANCE_DEL,
                                 0, 0, cq_name, qi_name,
                                 NULL, NULL, NULL, NULL, true, true)) {
                lRemoveElem(qinstance_list, &qinstance);
@@ -1083,14 +1106,14 @@ cqueue_del_all_orphaned(lListElem *this_elem, lList **answer_list)
 }
 
 bool
-cqueue_list_del_all_orphaned(lList *this_list, lList **answer_list)
+cqueue_list_del_all_orphaned(void *context, lList *this_list, lList **answer_list)
 {
    bool ret = true;
    lListElem *cqueue;
 
    DENTER(TOP_LAYER, "cqueue_list_del_all_orphaned");
    for_each(cqueue, this_list) {
-      ret &= cqueue_del_all_orphaned(cqueue, answer_list);
+      ret &= cqueue_del_all_orphaned(context, cqueue, answer_list);
       if (!ret) {
          break;
       }

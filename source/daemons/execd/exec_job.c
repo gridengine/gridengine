@@ -97,6 +97,10 @@
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
 
@@ -221,6 +225,7 @@ static int addgrpid_already_in_use(long add_grp_id)
         err_length size of err_str
  ************************************************************************/
 int sge_exec_job(
+void *context,
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep,
@@ -283,6 +288,22 @@ int err_length) {
    lListElem *env;
    lList *environmentList = NULL;
    const char *arch = sge_get_arch();
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *sge_root = ctx->get_sge_root(ctx);
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+   const char *default_cell = ctx->get_default_cell(ctx);
+   const char *binary_path = ctx->get_binary_path(ctx);
+   const char *admin_user = ctx->get_admin_user(ctx);
+   const char *masterhost = ctx->get_master(ctx, false);
+#else
+   const char *sge_root = path_state_get_sge_root();
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+   const char *default_cell = uti_state_get_default_cell();
+   const char *binary_path = bootstrap_get_binary_path();
+   const char *admin_user = bootstrap_get_admin_user();
+   const char *masterhost = sge_get_master(0);
+#endif   
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
    char buffer[2048];
@@ -483,7 +504,7 @@ int err_length) {
       if(cwd != NULL) {
          /* path aliasing only for cwd flag set */
          path_alias_list_get_path(path_aliases, NULL,
-                                  cwd, uti_state_get_qualified_hostname(), 
+                                  cwd, qualified_hostname, 
                                   &cwd_out);
          cwd = sge_dstring_get_string(&cwd_out);
          var_list_set_string(&environmentList, "PWD", cwd);
@@ -499,7 +520,7 @@ int err_length) {
          }
       }
 
-      var_list_set_string(&environmentList, VAR_PREFIX "CELL", uti_state_get_default_cell());
+      var_list_set_string(&environmentList, VAR_PREFIX "CELL", default_cell);
 
       var_list_set_string(&environmentList, "HOME", pw->pw_dir);
       var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
@@ -544,7 +565,7 @@ int err_length) {
             if (sfile != NULL) {
                dstring script_file_out = DSTRING_INIT;
                path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL, 
-                                        sfile, uti_state_get_qualified_hostname(), 
+                                        sfile, qualified_hostname, 
                                         &script_file_out);
                sge_strlcpy(script_file, sge_dstring_get_string(&script_file_out), 
                        SGE_PATH_MAX);
@@ -616,7 +637,7 @@ int err_length) {
                dstring script_file_out = DSTRING_INIT;
 
                path_alias_list_get_path(lGetList(jep, JB_path_aliases), NULL,
-                                        sfile, uti_state_get_qualified_hostname(),
+                                        sfile, qualified_hostname,
                                         &script_file_out);
                var_list_set_string(&environmentList, var_name, 
                                    sge_dstring_get_string(&script_file_out));
@@ -626,7 +647,7 @@ int err_length) {
       }
 
       var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
-      sprintf(fname, "%s/%s", bootstrap_get_binary_path(), arch);
+      sprintf(fname, "%s/%s", binary_path, arch);
       var_list_set_string(&environmentList, "SGE_BINARY_PATH", fname);
       
       /* JG: TODO (ENV): do we need REQNAME and REQUEST? */
@@ -669,7 +690,7 @@ int err_length) {
       if ((cp=getenv("SGE_EXECD_PORT")) && strlen(cp))
          var_list_set_string(&environmentList, "SGE_EXECD_PORT", cp);
 
-      var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path_state_get_sge_root());
+      var_list_set_string(&environmentList, VAR_PREFIX "ROOT", sge_root);
 
       var_list_set_int(&environmentList, "NQUEUES", 
          lGetNumberOfElem(lGetList(jatep, JAT_granted_destin_identifier_list)));
@@ -684,7 +705,7 @@ int err_length) {
       var_list_set_string(&environmentList, VAR_PREFIX "ACCOUNT", (lGetString(jep, JB_account) ? 
                lGetString(jep, JB_account) : DEFAULT_ACCOUNT));
 
-      sge_get_path(lGetList(jep, JB_shell_list), cwd, 
+      sge_get_path(qualified_hostname, lGetList(jep, JB_shell_list), cwd, 
                    lGetString(jep, JB_owner),
                    petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name), 
                    job_id,
@@ -876,19 +897,22 @@ int err_length) {
     * in the shepherd. But we need the 'standard' stdin_path (like it is without
     * file staging) later anyway, so we generate it here. */
 
-   sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 
+   sge_get_path(qualified_hostname,
+                lGetList(jep, JB_stdout_path_list), cwd, 
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDOUT, stdout_path, SGE_PATH_MAX);
-   sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
+   sge_get_path(qualified_hostname,
+                lGetList(jep, JB_stderr_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDERR, stderr_path, SGE_PATH_MAX);
-   sge_get_path(lGetList(jep, JB_stdin_path_list), cwd,
+   sge_get_path(qualified_hostname,
+                lGetList(jep, JB_stdin_path_list), cwd,
                 lGetString(jep, JB_owner), 
                 lGetString(jep, JB_job_name),
                 job_id,
@@ -998,7 +1022,7 @@ int err_length) {
    if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
          lGetString(jep, JB_job_name),
          lGetString(jep, JB_owner), 
-         uti_state_get_qualified_hostname()))) 
+         qualified_hostname))) 
       cwd = sge_dstring_sprintf(&cwd_out, "%s", cp);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX)
@@ -1061,7 +1085,8 @@ int err_length) {
 #endif
 
       /* build path for stdout of pe scripts */
-      sge_get_path(lGetList(jep, JB_stdout_path_list), cwd, 
+      sge_get_path(qualified_hostname,
+                   lGetList(jep, JB_stdout_path_list), cwd, 
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
                    job_id,
@@ -1070,7 +1095,8 @@ int err_length) {
       fprintf(fp, "pe_stdout_path=%s\n", pe_stdout_path);
 
       /* build path for stderr of pe scripts */
-      sge_get_path(lGetList(jep, JB_stderr_path_list), cwd,
+      sge_get_path(qualified_hostname,
+                   lGetList(jep, JB_stderr_path_list), cwd,
                    lGetString(jep, JB_owner), 
                    lGetString(jep, JB_job_name), 
                    job_id,
@@ -1256,7 +1282,7 @@ int err_length) {
       fprintf(fp, "use_afs=1\n");
       
       shepherd_name = SGE_COSHEPHERD;
-      sprintf(coshepherd_path, "%s/%s/%s", bootstrap_get_binary_path(), sge_get_arch(), shepherd_name);
+      sprintf(coshepherd_path, "%s/%s/%s", binary_path, sge_get_arch(), shepherd_name);
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
       set_token_cmd = mconf_get_set_token_cmd();
       fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
@@ -1268,7 +1294,7 @@ int err_length) {
    }
    FREE(pag_cmd);
 
-   fprintf(fp, "admin_user=%s\n", bootstrap_get_admin_user());
+   fprintf(fp, "admin_user=%s\n", admin_user);
 
    /* notify method */
    fprintf(fp, "notify_kill_type=%d\n", mconf_get_notify_kill_type());
@@ -1302,14 +1328,14 @@ int err_length) {
          lListElem *elem;
          char daemon[SGE_PATH_MAX];
 
-         fprintf(fp, "master_host=%s\n", sge_get_master(0));
+         fprintf(fp, "master_host=%s\n", masterhost);
          fprintf(fp, "commd_port=-1\n");  /* commd_port not used for GE > 6.0 */
                
          if((elem=lGetElemStr(environmentList, VA_variable, "QRSH_PORT")) != NULL) {
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));
          }
         
-         sprintf(daemon, "%s/utilbin/%s/", path_state_get_sge_root(), arch);
+         sprintf(daemon, "%s/utilbin/%s/", sge_root, arch);
         
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             char* qlogin_daemon = mconf_get_qlogin_daemon();
@@ -1414,11 +1440,11 @@ int err_length) {
    }
 
    shepherd_name = SGE_SHEPHERD;
-   sprintf(shepherd_path, "%s/%s/%s", bootstrap_get_binary_path(), arch, shepherd_name);
+   sprintf(shepherd_path, "%s/%s/%s", binary_path, arch, shepherd_name);
 
    if (SGE_STAT(shepherd_path, &buf)) {
       /* second chance: without architecture */
-      sprintf(shepherd_path, "%s/%s", bootstrap_get_binary_path(), shepherd_name);
+      sprintf(shepherd_path, "%s/%s", binary_path, shepherd_name);
       if (SGE_STAT(shepherd_path, &buf)) {
          snprintf(err_str, err_length, MSG_EXECD_NOSHEPHERD_SSS, arch, shepherd_path, strerror(errno));
          DEXIT;
@@ -1440,7 +1466,7 @@ int err_length) {
    }
    else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       sprintf(dce_wrapper_cmd, "/%s/utilbin/%s/starter_cred",
-              path_state_get_sge_root(), arch);
+              sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          snprintf(err_str, err_length, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
          FREE(pag_cmd);
@@ -1456,7 +1482,7 @@ int err_length) {
 
       if (SGE_STAT(coshepherd_path, &buf)) {
          shepherd_name = SGE_COSHEPHERD;
-         sprintf(coshepherd_path, "%s/%s", bootstrap_get_binary_path(), shepherd_name);
+         sprintf(coshepherd_path, "%s/%s", binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             snprintf(err_str, err_length, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
             FREE(pag_cmd);
@@ -1537,7 +1563,7 @@ int err_length) {
                 lGetString(master_q, QU_qname),
                 lGetHost(master_q, QU_qhostname), sge_mail_start);
          }
-         cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_START);
+         cull_mail(EXECD, mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_START);
       }
    }
 

@@ -209,9 +209,10 @@ Linux)
             lxrelease=24
             ;;
          2.6.*) 
+            ROOT_DIR=`dirname $0`/..
             if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
                lxrelease=26
-            elif [ "$SGE_ROOT" = "" -a -d "bin/lx26-${lxmachine}" ] ; then
+            elif [ "$SGE_ROOT" = "" -a -d "$ROOT_DIR/bin/lx26-${lxmachine}" ] ; then
                lxrelease=26
             else
                lxrelease=24

@@ -88,9 +88,28 @@
 
 #define MSG_CENTRY_NULL_NAME          _MESSAGE(1041, _("Invalid complex attribute definition"))
 #define MSG_CENTRY_NULL_SHORTCUT_S    _MESSAGE(1042, _("Complex attribute "SFQ" has no shortcut defined"))
-
 #define MSG_LIRSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("limitation rule set "SFQ" not found in file "SFQ))
 #define MSG_NOLIRSFOUND              _MESSAGE(1044, _("No limitation rule set found"))
+
+
+#define MSG_HEADER_HOSTNAME              "HOSTNAME"
+#define MSG_HEADER_ARCH                  "ARCH"
+#define MSG_HEADER_NPROC                 "NCPU"
+#define MSG_HEADER_LOAD                  "LOAD"
+#define MSG_HEADER_MEMTOT                "MEMTOT"
+#define MSG_HEADER_MEMUSE                "MEMUSE"
+#define MSG_HEADER_SWAPTO                "SWAPTO"
+#define MSG_HEADER_SWAPUS                "SWAPUS"
+
+
+#define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _MESSAGE(1050, _("no queues remaining after "SFN" queue selection"))
+#define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION            _MESSAGE(1051, _("no queues remaining after selection"))
+#define MSG_GDI_JOBZOMBIESSGEGDIFAILED                       _MESSAGE(1052, _("job zombies: sge_gdi failed"))
+#define MSG_GDI_PESGEGDIFAILED                               _MESSAGE(1053, _("pe: sge_gdi failed"))
+#define MSG_GDI_CKPTSGEGDIFAILED                             _MESSAGE(1054, _("ckpt: sge_gdi failed"))
+#define MSG_GDI_USERSETSGEGDIFAILED                          _MESSAGE(1055, _("userset: sge_gdi failed"))
+#define MSG_GDI_PROJECTSGEGDIFAILED                          _MESSAGE(1056, _("project: sge_gdi failed"))
+#define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1057, _("ERROR! wrong argument to -s option"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

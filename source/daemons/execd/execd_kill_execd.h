@@ -32,8 +32,22 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_kill_execd(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
+int execd_kill_execd(void *context, 
+                     struct dispatch_entry *de, 
+                     sge_pack_buffer *pb, 
+                     sge_pack_buffer *apb, 
+                     u_long *rcvtimeout, 
+                     int *synchron, 
+                     char *err_str, 
+                     int answer_error);
 
-int execd_new_features(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);         
+int execd_new_features(void *context,
+                       struct dispatch_entry *de, 
+                       sge_pack_buffer *pb, 
+                       sge_pack_buffer *apb, 
+                       u_long *rcvtimeout, 
+                       int *synchron, 
+                       char *err_str, 
+                       int answer_error);         
 
 #endif /* __EXECD_KILL_EXECD_H */

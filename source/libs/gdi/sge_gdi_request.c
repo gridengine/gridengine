@@ -66,6 +66,16 @@
 #include "gdi/version.h"
 
 static bool
+sge_pack_gdi_info(u_long32 command);
+
+static bool 
+gdi_request_map_pack_error(int pack_ret, lList **answer_list);
+
+
+
+#ifndef TEST_GDI2
+
+static bool
 gdi_send_multi_async(lList **alpp, state_gdi_multi *state);
 
 static bool
@@ -81,13 +91,15 @@ static int
 sge_get_gdi_request_async(int *commlib_error, char *host, char *commproc, u_short *id,
                           sge_gdi_request** arp, unsigned long request_mid, bool is_sync);                    
 
-static bool
-sge_pack_gdi_info(u_long32 command);
-
 static int 
 sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *commproc, 
                              u_short id, sge_gdi_request *out, sge_gdi_request **in,
                              lList **alpp);
+
+static int 
+sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, 
+                     sge_gdi_request *ar, u_long32 *mid, 
+                     unsigned long response_id, lList **alpp);
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -197,18 +209,16 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
    if ((id = sge_gdi_multi(&alp, SGE_GDI_SEND, target, cmd, lpp, 
                               cp, enp, &mal, &state, true)) == -1) {
       PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DEXIT;
-      return alp;
+      DRETURN(alp);
    }
 
-   alp = sge_gdi_extract_answer(cmd, target, id, mal, lpp);
+   sge_gdi_extract_answer(&alp, cmd, target, id, mal, lpp);
 
    lFreeList(&mal);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
 
-   DEXIT;
-   return alp;
+   DRETURN(alp);
 }
 
 /****** gdi/request/sge_gdi_multi() *******************************************
@@ -425,7 +435,7 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    }
 #endif
    gid = getegid();
-   if(sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
+   if (sge_gid2group(gid, groupname, sizeof(groupname), MAX_NIS_RETRIES)) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
                              sge_u32c(gid)));
       goto error; 
@@ -470,20 +480,19 @@ int sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-   DEXIT;
-   return ret;
 
-   error:
-      if (alpp != NULL) {
-         answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
-      }   
-      answer = free_gdi_request(answer);
-      state->first = free_gdi_request(state->first);
-      state->last = NULL;
-      state->sequence_id = 0;
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DEXIT;
-      return -1;
+   DRETURN(ret);
+
+error:
+   if (alpp != NULL) {
+      answer_list_add(alpp, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
+   }   
+   answer = free_gdi_request(answer);
+   state->first = free_gdi_request(state->first);
+   state->last = NULL;
+   state->sequence_id = 0;
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
+   DRETURN(-1);
 }
 
 /****** sge_gdi_request/gdi_send_multi_async() *********************************
@@ -519,7 +528,8 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
    lListElem *aep = NULL;
 
    u_short id = 1;
-   const char *rhost = sge_get_master(false);
+   u_long32 sge_qmaster_port = sge_get_qmaster_port();
+   const char *mastername = sge_get_master(false);
    const char *commproc = prognames[QMASTER];
    u_long32 gdi_request_mid = 0;
    
@@ -528,7 +538,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
    /* the first request in the request list identifies the request uniquely */
    state->first->request_id = gdi_state_get_next_request_id();
 
-   commlib_error = sge_send_gdi_request(0, rhost, commproc, id, state->first, 
+   commlib_error = sge_send_gdi_request(0, mastername, commproc, id, state->first, 
                                         &gdi_request_mid, 0, alpp);
    
    /* Print out non-error messages */
@@ -542,7 +552,7 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
   
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (commlib_error != CL_RETVAL_OK) {
-      if (( commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
+      if (( commlib_error = check_isalive(mastername)) != CL_RETVAL_OK) {
          /* gdi error */
 
          /* For the default case, just print a simple message */
@@ -550,30 +560,30 @@ gdi_send_multi_async(lList **alpp, state_gdi_multi *state)
              commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER],
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(false)));
+                                   sge_qmaster_port, 
+                                   mastername));
          }
          /* For unusual errors, give more detail */
          else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                    MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER],
-                                   sge_u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(false),
+                                   sge_qmaster_port, 
+                                   mastername,
                                    cl_get_error_text(commlib_error)));
          }
          
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
       }
-      return false;
+      DRETURN(false);
    }
   
 
    /* we have to store the data for the recieve....  */ 
-   gdi_set_request(rhost, commproc, id, state, gdi_request_mid);
+   gdi_set_request(mastername, commproc, id, state, gdi_request_mid);
    
-   return true;
+   DRETURN(true);
 }  
 
 /****** sge_gdi_request/gdi_receive_multi_async() ******************************
@@ -623,6 +633,8 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
    int ret = 0;
    sge_gdi_request *an = NULL;
    lListElem *map = NULL; 
+   const char *mastername = sge_get_master(false);
+   u_long32 sge_qmaster_port = sge_get_qmaster_port();
 
    DENTER(GDI_LAYER, "gdi_receive_multi_async");
 
@@ -667,16 +679,16 @@ gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync)
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      sge_u32c(sge_get_qmaster_port()), 
-                                      sge_get_master(false)));
+                                      sge_qmaster_port, 
+                                      mastername));
             }
             /* For unusual errors, give more detail */
             else {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      sge_u32c(sge_get_qmaster_port()), 
-                                      sge_get_master(false),
+                                      sge_qmaster_port, 
+                                      mastername,
                                       cl_get_error_text(commlib_error)));
             }
          } 
@@ -745,6 +757,8 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
    int status = 0;
    lListElem *map = NULL;
    lListElem *aep = NULL;
+   const char *mastername = sge_get_master(0);
+   u_long32 sge_qmaster_port = sge_get_qmaster_port();
    
    DENTER(GDI_LAYER, "sge_gdi_multi_sync");
 
@@ -761,7 +775,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
 #endif
 
    status = sge_send_receive_gdi_request(&commlib_error, 
-                                         sge_get_master(false), 
+                                         mastername, 
                                          prognames[QMASTER], 1, state->first, answer, alpp);
 
 #ifdef KERBEROS
@@ -802,16 +816,16 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
-                                      sge_u32c(sge_get_qmaster_port()), 
-                                      sge_get_master(false)));
+                                      sge_qmaster_port, 
+                                      mastername));
             }
             /* For unusual errors, give more detail */
             else {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
-                                      sge_u32c(sge_get_qmaster_port()), 
-                                      sge_get_master(false),
+                                      sge_qmaster_port, 
+                                      mastername,
                                       cl_get_error_text(commlib_error)));
             }
             break;
@@ -824,7 +838,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
       }
       DPRINTF(("re-read act_qmaster file (gdi_send_multi_sync)\n"));
       sge_get_master(true);
-      return false;
+      DRETURN(false);
    }
  
    for (an = (*answer); an; an = an->next) { 
@@ -847,93 +861,12 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
    state->first = free_gdi_request(state->first);
    state->last = NULL;
    state->sequence_id = 0;
-   return true;
+   DRETURN(true);
 }
 
-/****** gdi/request/sge_gdi_extract_answer() **********************************
-*  NAME
-*     sge_gdi_extract_answer() -- exctact answers of a multi request.
-*
-*  SYNOPSIS
-*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, 
-*                                   int id, lList* mal, lList** olpp) 
-*
-*  FUNCTION
-*     This function extracts the answer for each invidual request on 
-*     previous sge_gdi_multi() calls. 
-*
-*  INPUTS
-*     u_long32 cmd    - bitmask which decribes the operation 
-*        (see sge_gdi_multi)
-*
-*     u_long32 target - unique id to identify masters list
-*        (see sge_gdi_multi) 
-*
-*     int id          - unique id returned by a previous
-*        sge_gdi_multi() call. 
-*
-*     lList* mal      - List of answer/response lists returned from
-*        sge_gdi_multi(mode=SGE_GDI_SEND)
-*
-*     lList** olpp    - This parameter is used to get a list in case 
-*           of SGE_GDI_GET command. The caller is responsible for 
-*           freeing by using lFreeList(). 
-*
-*  RESULT
-*     returns a CULL list reporting success/failure of the operation. 
-*     This list gets allocated by GDI. The caller is responsible 
-*     for freeing. A response is a list element containing a field 
-*     with a status value (AN_status). The value STATUS_OK is used 
-*     in case of success. STATUS_OK and other values are defined in 
-*     sge_answerL.h. the second field (AN_text) in a response list 
-*     element is a string that describes the performed operation or 
-*     a description of an error.
-*
-*  NOTES
-*     MT-NOTE: sge_gdi_extract_answer() is MT safe
-******************************************************************************/
-lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
-                              lList *mal, lList **olpp) 
-{
-   lList *alp = NULL;
-   lListElem *map = NULL;
-   int operation, sub_command;
 
-   DENTER(GDI_LAYER, "sge_gdi_extract_answer");
 
-   operation = SGE_GDI_GET_OPERATION(cmd); 
-   sub_command = SGE_GDI_GET_SUBCOMMAND(cmd);
 
-   if (!mal || id < 0) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return alp;
-   }
-   
-   map = lGetElemUlong(mal, MA_id, id);
-   if (!map) {
-      DEXIT;
-      return NULL;
-   }
-
-   if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
-       (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
-      if (!olpp) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-         answer_list_add(&alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return alp;
-      }
-      lXchgList(map, MA_objects, olpp);
-   }
-
-   lXchgList(map, MA_answers, &alp);
-
-   DEXIT;
-   return alp;
-}
-  
 /****** gdi/request/sge_send_receive_gdi_request() ****************************
 *  NAME
 *     sge_send_receive_gdi_request() -- snd and rcv a gdi structure 
@@ -980,14 +913,12 @@ sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *
    if (!out) {
       ERROR((SGE_EVENT,
            MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST ));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (!rhost) {
       ERROR((SGE_EVENT, MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST ));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }   
    
    /* we send a gdi request and store the request id */
@@ -999,11 +930,9 @@ sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *
    DPRINTF(("send request with id "sge_U32CFormat"\n", sge_u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
       if (( *commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
-         DEXIT;
-         return -4;
+         DRETURN(-4);
       } else {
-         DEXIT;
-         return -2;
+         DRETURN(-2);
       }
    }
 
@@ -1020,8 +949,7 @@ sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *
 
       if (*in && ((*in)->request_id == out->request_id)) {
          break;
-      }
-      else {
+      } else {
          *in = free_gdi_request(*in);
          DPRINTF(("<<<<<<<<<<<<<<< GDI MISMATCH >>>>>>>>>>>>>>>>>>>\n"));
       }
@@ -1029,17 +957,13 @@ sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *
 
    if (ret) {
       if ( (*commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
-         DEXIT;
-         return -4;
-      } 
-      else {
-         DEXIT;
-         return -3;
+         DRETURN(-4);
+      } else {
+         DRETURN(-3);
       }   
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** gdi/request/sge_send_gdi_request() ************************************
@@ -1073,7 +997,7 @@ sge_send_receive_gdi_request(int *commlib_error, const char *rhost, const char *
 *  NOTES
 *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
 *******************************************************************************/
-int 
+static int 
 sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, 
                      sge_gdi_request *ar, u_long32 *mid, 
                      unsigned long response_id, lList **alpp) 
@@ -1126,8 +1050,8 @@ sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id,
    lFreeList(&answer_list);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_GDI_REQUEST);
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 /****** gdi/request/sge_get_gdi_request() *************************************
@@ -1183,8 +1107,7 @@ static int sge_get_gdi_request_async(int *commlib_error,
 
    DENTER(GDI_LAYER, "sge_get_gdi_request");
    if ( (*commlib_error = sge_get_any_request(host, commproc, id, &pb, &tag, is_sync, request_mid,0)) != CL_RETVAL_OK) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    ret = sge_unpack_gdi_request(&pb, arp);
@@ -1214,10 +1137,95 @@ static int sge_get_gdi_request_async(int *commlib_error,
    */
    clear_packbuffer(&pb);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
+
+#endif /* TEST_GDI2 */
+
+
+/****** gdi/request/sge_gdi_extract_answer() **********************************
+*  NAME
+*     sge_gdi_extract_answer() -- exctact answers of a multi request.
+*
+*  SYNOPSIS
+*     lList* sge_gdi_extract_answer(u_long32 cmd, u_long32 target, 
+*                                   int id, lList* mal, lList** olpp) 
+*
+*  FUNCTION
+*     This function extracts the answer for each invidual request on 
+*     previous sge_gdi_multi() calls. 
+*
+*  INPUTS
+*     lList** alpp    - List for answers if an error occurs in
+*                       sge_gdi_extract_answer
+*                       This list gets allocated by GDI. The caller is responsible 
+*                       for freeing. A response is a list element containing a field 
+*                       with a status value (AN_status). The value STATUS_OK is used 
+*                       in case of success. STATUS_OK and other values are defined in 
+*                       sge_answerL.h. the second field (AN_text) in a response list 
+*                       element is a string that describes the performed operation or 
+*                       a description of an error.
+*     u_long32 cmd    - bitmask which decribes the operation 
+*        (see sge_gdi_multi)
+*
+*     u_long32 target - unique id to identify masters list
+*        (see sge_gdi_multi) 
+*
+*     int id          - unique id returned by a previous
+*        sge_gdi_multi() call. 
+*
+*     lList* mal      - List of answer/response lists returned from
+*        sge_gdi_multi(mode=SGE_GDI_SEND)
+*
+*     lList** olpp    - This parameter is used to get a list in case 
+*           of SGE_GDI_GET command. The caller is responsible for 
+*           freeing by using lFreeList(). 
+*
+*  RESULT
+*     true   in case of success
+*     false  in case of error
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_extract_answer() is MT safe
+******************************************************************************/
+bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
+                              lList *mal, lList **olpp) 
+{
+   lListElem *map = NULL;
+   int operation, sub_command;
+
+   DENTER(GDI_LAYER, "sge_gdi_extract_answer");
+
+   operation = SGE_GDI_GET_OPERATION(cmd); 
+   sub_command = SGE_GDI_GET_SUBCOMMAND(cmd);
+
+   if (!mal || id < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(false);
+   }
+   
+   map = lGetElemUlong(mal, MA_id, id);
+   if (!map) {
+      DRETURN(true);
+   }
+
+   if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
+       (operation == SGE_GDI_ADD && sub_command == SGE_GDI_RETURN_NEW_VERSION )) {
+      if (!olpp) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DRETURN(false);
+      }
+      lXchgList(map, MA_objects, olpp);
+   }
+
+   lXchgList(map, MA_answers, alpp);
+
+   DRETURN(true);
+}
+  
 /****** gdi/request/sge_unpack_gdi_request() **********************************
 *  NAME
 *     sge_unpack_gdi_request() -- unpacks an gdi_request structure 
@@ -1329,17 +1337,14 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       }
    } while (next);
    
+   DRETURN(0);
 
-   DEXIT;
-   return 0;
-
- error:
+error:
    ERROR((SGE_EVENT, MSG_GDI_CANTUNPACKGDIREQUEST ));
    *arp = free_gdi_request(*arp);
    ar = free_gdi_request(ar);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -1393,11 +1398,11 @@ sge_pack_gdi_info(u_long32 command)
              sge_u32c(command)));
       ret = false;
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
-bool 
+static bool 
 gdi_request_map_pack_error(int pack_ret, lList **answer_list)
 {
    bool ret = true;
@@ -1423,8 +1428,8 @@ gdi_request_map_pack_error(int pack_ret, lList **answer_list)
       break;
    }
    ret = (pack_ret == PACK_SUCCESS) ? true : false;
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 bool
@@ -1454,8 +1459,8 @@ gdi_request_pack_prefix(sge_gdi_request *ar, lList **answer_list,
  handle_error:
       ret = gdi_request_map_pack_error(pack_ret, answer_list);
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 bool
@@ -1499,8 +1504,8 @@ gdi_request_pack_suffix(sge_gdi_request *ar, lList **answer_list,
  handle_error:
       ret = gdi_request_map_pack_error(pack_ret, answer_list);
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 /*
@@ -1534,9 +1539,10 @@ gdi_request_pack_result(sge_gdi_request *ar, lList **answer_list,
  handle_error:
       ret = gdi_request_map_pack_error(pack_ret, answer_list);
    }
- exit_this_function:
-   DEXIT;
-   return ret;
+
+exit_this_function:
+
+   DRETURN(ret);
 }
 
 
@@ -1560,8 +1566,8 @@ request_list_pack_results(sge_gdi_request *ar, lList **answer_list,
 
       ar = ar->next;
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 
@@ -1585,8 +1591,7 @@ sge_gdi_request *new_gdi_request(void)
    
    memset(ar, 0, sizeof(sge_gdi_request));
 
-   DEXIT;
-   return ar;
+   DRETURN(ar);
 }
 
 
@@ -1626,6 +1631,5 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
       ar = next;
    }
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }

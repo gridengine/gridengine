@@ -29,6 +29,9 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifndef TEST_GDI2
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -557,20 +560,22 @@
 *     Eventclient/Client/ec_get_edtime()
 *     Eventclient/Client/ec_set_busy_handling()
 *     Eventclient/Client/ec_get_busy_handling()
-*     Eventclient/Client/ec_set_clientdata()
-*     Eventclient/Client/ec_get_clientdata()
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *     Eventclient/Client/ec_mark4registration()
 *     Eventclient/Client/ec_need_new_registration()
 *******************************************************************************/
 
+
+#ifndef TEST_GDI2
 static 
 bool ck_event_number(lList *lp, u_long32 *waiting_for, 
                      u_long32 *wrong_number);
 
 static bool 
 get_event_list(int sync, lList **lp, int* commlib_error);
+
+#endif
 
 static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval); 
 
@@ -581,6 +586,7 @@ static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool 
 
 static void ec_config_changed(lListElem *event_client);
 
+#ifndef TEST_GDI2
 /*----------------------------*/
 /* local event client support */
 /*----------------------------*/
@@ -681,7 +687,7 @@ lListElem *ec_get_event_client(void)
    pthread_once(&ec_once_control, ec_init_mt);
    
    {
-      GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+      GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_get_event_client");
       ret = ec_state->event_client;
    }
    return ret;
@@ -689,31 +695,31 @@ lListElem *ec_get_event_client(void)
 
 void ec_set_event_client(lListElem *ec)
 {
-   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_set_event_client");
    ec_state->event_client = ec;
 }
 
 static u_long32 ec_get_reg_id(void)
 {
-   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_get_reg_id");
    return ec_state->ec_reg_id;
 }
 
 static void ec_set_reg_id(u_long32 id)
 {
-   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_set_reg_id");
    ec_state->ec_reg_id = id;
 }
 
 static u_long32 ec_get_next_event(void)
 {
-   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_get_next_event");
    return ec_state->next_event;
 }
 
 static void ec_set_next_event(u_long32 evc)
 {
-   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_state_get_made_setup");
+   GET_SPECIFIC(ec_state_t, ec_state, ec_state_init, ec_state_key, "ec_set_next_event");
    ec_state->next_event = evc;
 }
 
@@ -847,8 +853,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_is_initialized() ********************************
@@ -909,17 +914,19 @@ void
 ec_mark4registration(lListElem *event_client)
 {
    cl_com_handle_t* handle = NULL;
+   const char *mastername = sge_get_master(0);
+   const char *progname = uti_state_get_sge_formal_prog_name();
 
    DENTER(TOP_LAYER, "ec_mark4registration");
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   handle = cl_com_get_handle((char*)progname, 0);
    if (handle != NULL) {
-      cl_commlib_close_connection(handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
+      cl_commlib_close_connection(handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
       DPRINTF(("closed old connection to qmaster\n"));
    }
    ec_set_need_register(true);
    lSetBool(event_client, EV_changed, true);
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** Eventclient/Client/ec_need_new_registration() *************************
@@ -943,6 +950,9 @@ ec_need_new_registration(void)
 {
    return ec_need_register();
 }
+
+#endif
+
 
 /****** Eventclient/Client/ec_set_edtime() ************************************
 *  NAME
@@ -993,8 +1003,7 @@ int ec_set_edtime(lListElem *event_client, int interval)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_get_edtime() ************************************
@@ -1032,8 +1041,7 @@ ec_get_edtime(lListElem *event_client)
       interval = lGetUlong(event_client, EV_d_time);
    }
 
-   DEXIT;
-   return interval;
+   DRETURN(interval);
 }
 
 /****** Eventclient/Client/ec_set_flush_delay() *****************************
@@ -1081,8 +1089,7 @@ ec_set_flush_delay(lListElem *event_client, int flush_delay)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_get_flush_delay() *****************************
@@ -1121,8 +1128,7 @@ ec_get_flush_delay(lListElem *event_client)
       flush_delay = lGetUlong(event_client, EV_flush_delay);
    }
 
-   DEXIT;
-   return flush_delay;
+   DRETURN(flush_delay);
 }
 
 
@@ -1176,8 +1182,7 @@ ec_set_busy_handling(lListElem *event_client, ev_busy_handling handling)
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_get_busy_handling() *****************************
@@ -1216,9 +1221,10 @@ ec_get_busy_handling(lListElem *event_client)
       handling = (ev_busy_handling)lGetUlong(event_client, EV_busy_handling);
    }
 
-   DEXIT;
-   return handling;
+   DRETURN(handling);
 }
+
+#ifndef TEST_GDI2
 
 /****** Eventclient/Client/ec_register() ***************************************
 *  NAME
@@ -1250,6 +1256,8 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
    cl_com_handle_t* com_handle = NULL;
+   const char* mastername = sge_get_master(0);
+   const char* progname = uti_state_get_sge_formal_prog_name();
    u_long32 ec_reg_id = 0;
 
    DENTER(TOP_LAYER, "ec_register");
@@ -1289,16 +1297,16 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
       /* TODO: is this code section really necessary */
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
-      com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
+      com_handle = cl_com_get_handle((char*)progname, 0);
       if (com_handle != NULL) {
          int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
+         ngc_error = cl_commlib_close_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("closed old connection to qmaster\n"));
          } else {
             INFO((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
          }
-         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
+         ngc_error = cl_commlib_open_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("opened new connection to qmaster\n"));
          } else {
@@ -1343,10 +1351,9 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
             lFreeList(&alp);
             if (exit_on_qmaster_down) {
                DPRINTF(("exiting in ec_register()\n"));
-               SGE_EXIT(1);
+               SGE_EXIT(NULL, 1);
             } else {
-               DEXIT;
-               return false;
+               DRETURN(false);
             }
          }   
       }
@@ -1357,17 +1364,18 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-/****** Eventclient/Client/ec_deregister_local() ************************************
+/****** Eventclient/Client/ec_deregister() ************************************
 *  NAME
-*     ec_deregister_local() -- deregister from the event server
+*     ec_deregister() -- deregister from the event server
 *
 *  SYNOPSIS
+*     #include "sge_event_client.h"
 *
-*     int ec_deregister_local(void) 
+*     int 
+*     ec_deregister(void) 
 *
 *  FUNCTION
 *     Deregister from the event server (usually the qmaster).
@@ -1381,37 +1389,53 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
 *     int - true, if the deregistration succeeded, else false
 *
 *  SEE ALSO
-*     Eventclient/Client/ec_register_local()
+*     Eventclient/Client/ec_register()
 *******************************************************************************/
-bool ec_deregister_local(lListElem **event_client)
+bool 
+ec_deregister(lListElem **event_client)
 {
    bool ret = false;
+   const char *mastername = sge_get_master(0);
 
-   DENTER(TOP_LAYER, "ec_deregister_local");
+   DENTER(TOP_LAYER, "ec_deregister");
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    /* not yet initialized? Nothing to shutdown */
    if (*event_client != NULL) {
-      local_t *evc_local = ec_get_local();
-      u_long32 id = lGetUlong(*event_client, EV_id);
-  
-      evc_local->remove_func(id); 
+      sge_pack_buffer pb;
 
-      /* clear state of this event client instance */
-      lFreeElem(event_client);
-      ec_set_event_client(NULL);
-      ec_set_need_register(true);
-      ec_set_reg_id(0);
-      ec_set_next_event(1);
+      if (init_packbuffer(&pb, sizeof(u_long32), 0) == PACK_SUCCESS) {
+         /* error message is output from init_packbuffer */
+         int send_ret; 
+         lList *alp = NULL;
 
-      ret = true;
+         packint(&pb, lGetUlong(*event_client, EV_id));
+
+         send_ret = sge_send_any_request(0, NULL, mastername,
+                                         prognames[QMASTER], 1, &pb,
+                                         TAG_EVENT_CLIENT_EXIT, 0, &alp);
+         
+         clear_packbuffer(&pb);
+         answer_list_output (&alp);
+
+         if (send_ret == CL_RETVAL_OK) {
+            /* error message is output from sge_send_any_request */
+            /* clear state of this event client instance */
+            lFreeElem(event_client);
+            ec_set_event_client(NULL);
+            ec_set_need_register(true);
+            ec_set_reg_id(0);
+            ec_set_next_event(1);
+
+            ret = true;
+         }
+      }
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_register_local() ******************************
@@ -1509,15 +1533,13 @@ ec_register_local(lListElem *event_client, lList** alpp, event_client_update_fun
    DRETURN(ret);
 }
 
-/****** Eventclient/Client/ec_deregister() ************************************
+/****** Eventclient/Client/ec_deregister_local() ************************************
 *  NAME
-*     ec_deregister() -- deregister from the event server
+*     ec_deregister_local() -- deregister from the event server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
 *
-*     int 
-*     ec_deregister(void) 
+*     int ec_deregister_local(void) 
 *
 *  FUNCTION
 *     Deregister from the event server (usually the qmaster).
@@ -1531,54 +1553,39 @@ ec_register_local(lListElem *event_client, lList** alpp, event_client_update_fun
 *     int - true, if the deregistration succeeded, else false
 *
 *  SEE ALSO
-*     Eventclient/Client/ec_register()
+*     Eventclient/Client/ec_register_local()
 *******************************************************************************/
-bool 
-ec_deregister(lListElem **event_client)
+bool ec_deregister_local(lListElem **event_client)
 {
    bool ret = false;
 
-   DENTER(TOP_LAYER, "ec_deregister");
+   DENTER(TOP_LAYER, "ec_deregister_local");
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    /* not yet initialized? Nothing to shutdown */
    if (*event_client != NULL) {
-      sge_pack_buffer pb;
+      local_t *evc_local = ec_get_local();
+      u_long32 id = lGetUlong(*event_client, EV_id);
+  
+      evc_local->remove_func(id); 
 
-      if (init_packbuffer(&pb, sizeof(u_long32), 0) == PACK_SUCCESS) {
-         /* error message is output from init_packbuffer */
-         int send_ret; 
-         lList *alp = NULL;
+      /* clear state of this event client instance */
+      lFreeElem(event_client);
+      ec_set_event_client(NULL);
+      ec_set_need_register(true);
+      ec_set_reg_id(0);
+      ec_set_next_event(1);
 
-         packint(&pb, lGetUlong(*event_client, EV_id));
-
-         send_ret = sge_send_any_request(0, NULL, sge_get_master(0),
-                                         prognames[QMASTER], 1, &pb,
-                                         TAG_EVENT_CLIENT_EXIT, 0, &alp);
-         
-         clear_packbuffer(&pb);
-         answer_list_output (&alp);
-
-         if (send_ret == CL_RETVAL_OK) {
-            /* error message is output from sge_send_any_request */
-            /* clear state of this event client instance */
-            lFreeElem(event_client);
-            ec_set_event_client(NULL);
-            ec_set_need_register(true);
-            ec_set_reg_id(0);
-            ec_set_next_event(1);
-
-            ret = true;
-         }
-      }
+      ret = true;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
+
+#endif
 
 /****** Eventclient/Client/ec_subscribe() *************************************
 *  NAME
@@ -1642,8 +1649,7 @@ ec_subscribe(lListElem *event_client, ev_event event)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static void ec_add_subscriptionElement(lListElem *event_client, ev_event event, bool flush, int interval) {
@@ -1657,7 +1663,7 @@ static void ec_add_subscriptionElement(lListElem *event_client, ev_event event, 
    
    if (event != sgeE_ALL_EVENTS){
       if (!subscribed) {
-         subscribed = lCreateList("subscrition list", EVS_Type);
+         subscribed = lCreateList("subscription list", EVS_Type);
          lSetList(event_client,EV_subscribed, subscribed);
       }
       else {
@@ -1675,7 +1681,7 @@ static void ec_add_subscriptionElement(lListElem *event_client, ev_event event, 
          lSetBool(event_client, EV_changed, true);
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 static void ec_mod_subscription_flush(lListElem *event_client, ev_event event, bool flush, 
@@ -1700,7 +1706,7 @@ static void ec_mod_subscription_flush(lListElem *event_client, ev_event event, b
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sge_event_client/ec_mod_subscription_where() ***************************
@@ -1764,6 +1770,7 @@ ec_mod_subscription_where(lListElem *event_client, ev_event event,
 
    DRETURN(ret);
 }
+
 static void ec_remove_subscriptionElement(lListElem *event_client, ev_event event) {
 
    lList *subscribed =NULL; 
@@ -1785,8 +1792,9 @@ static void ec_remove_subscriptionElement(lListElem *event_client, ev_event even
          }
       }
    }
-   DEXIT;
+   DRETURN_VOID;
 }
+
 /****** Eventclient/Client/ec_subscribe_all() *********************************
 *  NAME
 *     ec_subscribe_all() -- subscribe all events
@@ -1990,8 +1998,7 @@ ec_get_flush(lListElem *event_client, ev_event event)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_set_flush() *************************************
@@ -2064,8 +2071,7 @@ ec_set_flush(lListElem *event_client, ev_event event, bool flush, int interval)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_unset_flush() ***********************************
@@ -2223,8 +2229,7 @@ ec_set_busy(lListElem *event_client, int busy)
       ret = true;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_get_busy() **************************************
@@ -2269,8 +2274,7 @@ ec_get_busy(lListElem *event_client)
       ret = (lGetUlong(event_client, EV_busy) > 0) ? true : false;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_event_client/ec_set_session() **************************************
@@ -2311,8 +2315,7 @@ bool ec_set_session(lListElem *event_client, const char *session)
       ret = true;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_event_client/ec_get_session() **************************************
@@ -2348,8 +2351,7 @@ const char *ec_get_session(lListElem *event_client)
       ret = lGetString(event_client, EV_session);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_event_client/ec_get_id() *******************************************
@@ -2374,12 +2376,10 @@ ev_registration_id ec_get_id(lListElem *event_client)
    
    if (event_client == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      DEXIT;
-      return EV_ID_INVALID;
+      DRETURN(EV_ID_INVALID);
    }
    
-   DEXIT;
-   return (ev_registration_id)lGetUlong(event_client, EV_id);
+   DRETURN((ev_registration_id)lGetUlong(event_client, EV_id));
 }
 
 /****** Eventclient/Client/ec_config_changed() ********************************
@@ -2409,6 +2409,9 @@ ec_config_changed(lListElem *event_client)
 {
    lSetBool(event_client, EV_changed, true);
 }
+
+
+#ifndef TEST_GDI2
 
 /****** Eventclient/Client/ec_commit_local() ************************************
 *  NAME
@@ -2444,7 +2447,7 @@ ec_commit_local(lListElem *event_client, event_client_update_func_t update_func)
    bool ret = false;
    u_long32 ec_reg_id = 1;
    
-   DENTER(TOP_LAYER, "ec_commit");
+   DENTER(TOP_LAYER, "ec_commit_local");
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
@@ -2473,8 +2476,7 @@ ec_commit_local(lListElem *event_client, event_client_update_func_t update_func)
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_event_client/ec_ack_local() ****************************************
@@ -2525,6 +2527,7 @@ ec_ack_local(lListElem *event_client) {
    
    DRETURN(ret);
 }
+
 
 /****** Eventclient/Client/ec_commit() ****************************************
 *  NAME
@@ -2600,8 +2603,7 @@ ec_commit(lListElem *event_client)
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventclient/Client/ec_commit_multi() ****************************
@@ -2680,7 +2682,7 @@ ec_commit_multi(lListElem *event_client, lList **malpp, state_gdi_multi *state)
       if (alp != NULL) {
          answer_list_handle_request_answer_list(&alp, stderr);
       } else {
-         alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, 
+         sge_gdi_extract_answer(&alp, SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, 
                                       *malpp, NULL);
 
          gdi_ret = answer_list_handle_request_answer_list(&alp, stderr);
@@ -2694,9 +2696,10 @@ ec_commit_multi(lListElem *event_client, lList **malpp, state_gdi_multi *state)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
+
+
 
 /****** Eventclient/Client/ec_get() ******************************************
 *  NAME
@@ -2925,8 +2928,7 @@ ec_get(lListElem *event_client, lList **event_list, bool exit_on_qmaster_down)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -3054,9 +3056,9 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
+
 
 /***i** Eventclient/Client/get_event_list() ***********************************
 *  NAME
@@ -3090,6 +3092,7 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
    u_short id;
    sge_pack_buffer pb;
    int help;
+   const char* mastername = sge_get_master(0);
 
    DENTER(TOP_LAYER, "get_event_list");
 
@@ -3099,7 +3102,7 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
    id = 1;
 
    DPRINTF(("try to get request from %s, id %d\n",(char*)prognames[QMASTER], id ));
-   if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,NULL)) != CL_RETVAL_OK) {
+   if ( (help=sge_get_any_request((char*)mastername, (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,NULL)) != CL_RETVAL_OK) {
       if (help == CL_RETVAL_NO_MESSAGE || help == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
          DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));
       } else {
@@ -3119,9 +3122,10 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
+
+#endif
 
 /****** Eventclient/event_text() **********************************************
 *  NAME
@@ -3144,3 +3148,5 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
 *     event_text will overwrite previous results.
 *******************************************************************************/
 /* function see libs/sgeobj/sge_event.c */
+
+#endif

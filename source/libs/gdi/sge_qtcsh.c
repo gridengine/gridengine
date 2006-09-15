@@ -56,6 +56,10 @@
 
 #include "msg_common.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 /* module global variables */
 static pthread_mutex_t qtask_mutex = PTHREAD_MUTEX_INITIALIZER;
 static lList *task_config = NULL;
@@ -64,7 +68,7 @@ static int mode_remote = 1;
 static int force_remote = 0;
 static int mode_immediate = 1;
 
-static int init_qtask_config(lList **alpp, print_func_t ostream);
+static int init_qtask_config(void *context, lList **alpp, print_func_t ostream);
 
 /****** sge_qtcsh/init_qtask_config() ******************************************
 *  NAME
@@ -77,6 +81,7 @@ static int init_qtask_config(lList **alpp, print_func_t ostream);
 *     ??? 
 *
 *  INPUTS
+*     void *context        - ???
 *     lList **alpp         - ??? 
 *     print_func_t ostream - ??? 
 *
@@ -97,6 +102,7 @@ static int init_qtask_config(lList **alpp, print_func_t ostream);
 *     ???/???
 *******************************************************************************/
 static int init_qtask_config(
+void *context,
 lList **alpp,
 print_func_t ostream 
 ) {
@@ -111,8 +117,17 @@ print_func_t ostream
    struct passwd pw_struct;
 #endif
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char* user_name = ctx->get_username(ctx);
+   const char* cell_root = ctx->get_cell_root(ctx);
+#else
+   const char* user_name = uti_state_get_user_name();
+   const char* cell_root = path_state_get_cell_root();
+#endif   
+
    /* cell global settings */
-   sprintf(fname, "%s/common/qtask", path_state_get_cell_root());
+   sprintf(fname, "%s/common/qtask", cell_root);
 
    if (!(fp = fopen(fname, "r")) && errno != ENOENT) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_CANT_OPEN_SS, fname, strerror(errno)));
@@ -140,20 +155,20 @@ print_func_t ostream
    }
 
 #ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+   pwd = sge_getpwnam_r(user_name, &pw_struct, buffer, sizeof(buffer));
 #else
-   pwd = sge_getpwnam(uti_state_get_user_name());
+   pwd = sge_getpwnam(user_name);
 #endif
    
    /* user settings */
    if (pwd == NULL) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , uti_state_get_user_name()));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_INVALIDNAMEX_S , user_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
    }
    if (!pwd->pw_dir) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , uti_state_get_user_name()));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USER_NOHOMEDIRFORUSERX_S , user_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       (*ostream)("%s", SGE_EVENT);
       goto Error;
@@ -431,7 +446,7 @@ char** pargs /* The array to contain the parsed arguments */
 *     sge_get_qtask_args() -- get args for a qtask entry
 *
 *  SYNOPSIS
-*     char** sge_get_qtask_args (char *taskname, lList *alp)
+*     char** sge_get_qtask_args(void *context, char *taskname, lList *alp)
 *
 *  FUNCTION
 *     This function reads the qtask files and returns an array of args for the
@@ -439,6 +454,7 @@ char** pargs /* The array to contain the parsed arguments */
 *     framework, if it has not already been initialized.
 *
 *  INPUTS
+*     void *context     the communication context
 *     char *taskname    The name of the entry for which to look in the qtask
 *                       files
 *     lList *alp        For returning error information
@@ -454,7 +470,7 @@ char** pargs /* The array to contain the parsed arguments */
 *              task_config global variable.
 *
 *******************************************************************************/
-char **sge_get_qtask_args (char *taskname, lList *alp)
+char **sge_get_qtask_args(void *context, char *taskname, lList *alp)
 {
    const char *value = NULL; 
    int num_args = 0;
@@ -478,7 +494,7 @@ char **sge_get_qtask_args (char *taskname, lList *alp)
    if (task_config == NULL) {
       /* Just using printf here since we don't really have an exciting function
        * like xprintf to pass in.  This was really meant for use with qtsch. */
-      if (init_qtask_config (&alp, (print_func_t)printf) != 0) {
+      if (init_qtask_config(context, &alp, (print_func_t)printf) != 0) {
          sge_mutex_unlock("qtask_mutex", SGE_FUNC, __LINE__, &qtask_mutex);
          DEXIT;
          return args;
@@ -513,9 +529,13 @@ print_func_t ostream
 ) {
    lList *alp = NULL;
 
-   sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if (sge_gdi_setup("qtcsh", NULL) == AE_OK) {
-      if ( init_qtask_config(&alp, ostream) != 0 ) {
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = NULL;
+   /* TODO:
+    *  sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
+    */
+   if (sge_gdi2_setup(&ctx, QTCSH, NULL) == AE_OK) {
+      if (init_qtask_config(ctx, &alp, ostream) != 0 ) {
          mode_remote = 0;          
       } else {
          /* Remote execution is default.
@@ -539,6 +559,34 @@ print_func_t ostream
       mode_remote = 0;          
 /*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */
    }
+#else
+   sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
+   if (sge_gdi_setup("qtcsh", NULL) == AE_OK) {
+      if ( init_qtask_config(NULL, &alp, ostream) != 0 ) {
+         mode_remote = 0;          
+      } else {
+         /* Remote execution is default.
+
+            Turn off remote execution only in case we were 
+            started in the context of an already running job.
+            This is done to prevent recursive 
+
+              qrsh -> qtcsh -> qrsh -> qtcsh -> ...
+
+            submission via SGE/SGE in case qtcsh
+            is the login shell at the execution server.
+          */
+         if ( mode_remote != 0 ) {
+            mode_remote = force_remote?mode_remote:!getenv("JOB_ID");          
+         }
+/*          (*ostream) ("mode_remote = %d\n", mode_remote); */
+      }
+      lFreeList(&alp);
+   } else {
+      mode_remote = 0;          
+/*       (*ostream) ("no $SGE_ROOT, running as normal tcsh\n"); */
+   }
+#endif   
 
    return;
 }

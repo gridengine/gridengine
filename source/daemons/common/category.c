@@ -152,7 +152,7 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
       Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range, SGE_NO_ABORT);
    }
    sge_mutex_unlock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
-  
+
    /*
    ** owner -> acl
    */
@@ -259,7 +259,7 @@ sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_
 {
    const char *p;
 
-   DENTER(TOP_LAYER, "sge_build_job_category");
+   DENTER(TOP_LAYER, "sge_build_job_cs_category");
 
    /* 
     *  deadline

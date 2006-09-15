@@ -56,6 +56,11 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "uti/sge_string.h"
+#include "sge_bootstrap.h"
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
 static bool
 limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list);
@@ -116,8 +121,9 @@ filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm,
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_mod(lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const char *ruser, 
-           const char *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor)
+int lirs_mod(void *context,
+             lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const char *ruser, 
+             const char *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor)
 {
    const char *lirs_name = NULL; 
    bool rules_changed = false;
@@ -212,15 +218,22 @@ ERROR:
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
+int lirs_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object)
 {
    lList *answer_list = NULL;
    bool dbret;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+#else
+   bool job_spooling = bootstrap_get_job_spooling();
+#endif
 
    DENTER(TOP_LAYER, "lirs_spool");
 
    dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              lGetString(ep, LIRS_name), SGE_TYPE_LIRS);
+                              lGetString(ep, LIRS_name), SGE_TYPE_LIRS,
+                              job_spooling);
    answer_list_output(&answer_list);
 
    if (!dbret) {
@@ -230,8 +243,7 @@ int lirs_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
                               lGetString(ep, LIRS_name));
    }
 
-   DEXIT;
-   return dbret ? 0 : 1;
+   DRETURN(dbret ? 0 : 1);
 }
 
 /****** sge_limit_rule_qmaster/lirs_success() **********************************
@@ -266,7 +278,7 @@ int lirs_spool(lList **alpp, lListElem *ep, gdi_object_t *object)
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
+int lirs_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    const char *lirs_name;
 
@@ -310,7 +322,8 @@ int lirs_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList *
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list, 
+int sge_del_limit_rule_set(void *context,
+                    lListElem *ep, lList **alpp, lList **lirs_list, 
                     char *ruser, char *rhost)
 {
    const char *lirs_name;
@@ -322,8 +335,7 @@ int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list,
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* ep is no LIRS element, if ep has no LIRS_name */
@@ -331,24 +343,21 @@ int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list,
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(LIRS_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    lirs_name = lGetPosString(ep, pos);
    if (!lirs_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* search for lirs with this name and remove it from the list */
    if (!(found = limit_rule_set_list_locate(*lirs_list, lirs_name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_LIRS, lirs_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    found = lDechainElem(*lirs_list, found);
@@ -357,7 +366,8 @@ int sge_del_limit_rule_set(lListElem *ep, lList **alpp, lList **lirs_list,
 
    lFreeElem(&found);
 
-   sge_event_spool(alpp, 0, sgeE_LIRS_DEL, 
+   sge_event_spool(context,
+                   alpp, 0, sgeE_LIRS_DEL, 
                    0, 0, lirs_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
@@ -473,6 +483,8 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
    const char *scope;
    bool ret = true;
 
+   DENTER(TOP_LAYER, "filter_diff_usersets_or_projects_scope");
+
    for_each(scope_ep, filter_scope) {
       scope = lGetString(scope_ep, ST_name);
       if (filter_nm == LIR_filter_users) {
@@ -504,7 +516,8 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
          }
       }
    }
-   return ret;
+
+   DRETURN(ret);
 }
 
 /****** sge_limit_rule_qmaster/filter_diff_usersets_or_projects() **************
@@ -720,7 +733,7 @@ static void lirs_update_categories(const lListElem *new_lirs, const lListElem *o
    lFreeList(&old);
    lFreeList(&new);
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** sge_limit_rule_qmaster/scope_is_referenced_lirs() **********************
@@ -760,8 +773,10 @@ scope_is_referenced_lirs(const lListElem *lirs, int nm, const char *name) {
    const lListElem *rule;
    bool ret = false;
 
+   DENTER(TOP_LAYER, "scope_is_referenced_lirs");
+
    if (lirs == NULL || name == NULL) {
-      return ret;
+      DRETURN(ret);
    }
 
    for_each (rule, lGetList(lirs, LIRS_rule)) {
@@ -791,5 +806,5 @@ scope_is_referenced_lirs(const lListElem *lirs, int nm, const char *name) {
       }
    }
 
-   return ret;
+   DRETURN(ret);
 }

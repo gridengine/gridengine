@@ -39,8 +39,20 @@ switch($buildarch)
    case "aix43":
       set argv = ( -no-jni $* )
       breaksw
-   deafult:
+   default:
       set argv = ( $* )
+      breaksw
+endsw
+
+# JAVA settings
+setenv EN_QUIET 1
+switch($buildarch)
+   case "sol-amd64":
+   case "lx24-amd64":
+      source /vol2/resources/en_jdk15 
+      breaksw
+   default:
+      source /vol2/resources/en_jdk14 
       breaksw
 endsw
 
@@ -156,6 +168,8 @@ if ( ! $?JAVA_HOME ) then
    endif
 endif
 
+# set junit jar file
+set JUNIT_JAR = '/vol2/tools/SW/java/junit3.8.1/junit.jar'
 
 # set some variables which are necessary to compile GE for win32 architecture
 #

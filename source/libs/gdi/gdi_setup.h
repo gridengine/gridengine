@@ -47,6 +47,7 @@ enum {
 
 /* these values are standarized gdi return values */
 enum {
+   AE_ERROR = -1,
    AE_OK = 0,
    AE_ALREADY_SETUP,
    AE_UNKNOWN_PARAM,
@@ -54,9 +55,12 @@ enum {
 };
 
 void gdi_mt_init(void);
+
+#ifndef GDI_OFF
 int sge_gdi_setup(const char *programname, lList **alpp);
 int sge_gdi_param(int, int, char *);
 int sge_gdi_shutdown(void);
+#endif
 
 #ifdef  __cplusplus
 }

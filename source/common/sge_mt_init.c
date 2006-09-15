@@ -75,7 +75,7 @@
 void sge_mt_init(void)
 {
    /* object */
-   obj_init_mt(); 
+   obj_mt_init(); 
 
    sge_setup_lock_service();
 
@@ -86,7 +86,7 @@ void sge_mt_init(void)
    bootstrap_mt_init(); 
    feature_mt_init();
 
-   sc_init_mt();
+   sc_mt_init();
    gdi_mt_init();
 
 } /* sge_mt_init */

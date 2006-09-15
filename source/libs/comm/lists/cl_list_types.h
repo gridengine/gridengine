@@ -34,6 +34,7 @@
 /*___INFO__MARK_END__*/
 
 #include <sys/time.h>
+#include <pthread.h>
 
 #define CL_THREAD_LIST 1
 #define CL_LOG_LIST    2

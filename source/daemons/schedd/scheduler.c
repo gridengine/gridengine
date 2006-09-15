@@ -94,7 +94,7 @@ sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int 
-dispatch_jobs(sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
+dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
 
 static dispatch_t 
 select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, lListElem *ja_task, 
@@ -145,7 +145,7 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
    return scheduler(lists);
 }
 #endif
-int scheduler(sge_Sdescr_t *lists, lList **order) {
+int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
    lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
@@ -243,7 +243,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    /**
     * the actual scheduling 
     */
-   dispatch_jobs(lists, &orders, splitted_job_lists);
+   dispatch_jobs(evc_context, lists, &orders, splitted_job_lists);
 
    /**
     * post processing 
@@ -253,7 +253,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 
    /* send job_start_orders */
    if (!shut_me_down) {
-      sge_send_job_start_orders(&orders);
+      sge_send_job_start_orders(evc_context, &orders);
    }
 
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
@@ -351,7 +351,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
       lList *orderlist=sge_join_orders(&orders);
 
       if (orderlist) {
-         sge_send_orders2master(&orderlist);
+         sge_send_orders2master(evc_context, &orderlist);
          if (orderlist != NULL) {
             lFreeList(&orderlist);
          }
@@ -371,8 +371,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
          prof_get_measurement_stime(SGE_PROF_CUSTOM5, true, NULL) ));
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** schedd/scheduler/dispatch_jobs() **************************************
@@ -397,7 +396,7 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
 *     0   ok
 *     -1  got inconsistent data
 ******************************************************************************/
-static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
+static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders,
                          lList **splitted_job_lists[]) 
 {
    lList *user_list=NULL, *group_list=NULL;
@@ -508,8 +507,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       lFreeList(&none_avail_queues);
       lFreeList(&job_load_adjustments);
       DPRINTF(("couldn't split queue list with regard to suspend thresholds\n"));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    unsuspend_job_in_queues(lists->queue_list, 
@@ -529,16 +527,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          NULL, false, true, QU_load_thresholds)) {
       lFreeList(&job_load_adjustments);
       DPRINTF(("couldn't split queue list concerning load\n"));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* remove cal_disabled queues - needed them for implementing suspend thresholds */
    if (sge_split_cal_disabled(&(lists->queue_list), &lists->dis_queue_list)) {
       DPRINTF(("couldn't split queue list concerning cal_disabled state\n"));
       lFreeList(&job_load_adjustments);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    /* trash disabled queues - needed them for implementing suspend thresholds */
@@ -546,8 +542,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       DPRINTF(("couldn't split queue list concerning disabled state\n"));
       lFreeList(&none_avail_queues);
       lFreeList(&job_load_adjustments);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    lFreeList(&none_avail_queues);
@@ -555,8 +550,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       DPRINTF(("couldn't split queue list concerning free slots\n"));
       lFreeList(&none_avail_queues);
       lFreeList(&job_load_adjustments);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    if (lists->dis_queue_list != NULL) {
       lAddList(lists->dis_queue_list, &none_avail_queues);
@@ -596,7 +590,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                     orders); 
 
       /* async gdi */
-      sge_send_job_start_orders(orders); 
+      sge_send_job_start_orders(evc_context, orders); 
          
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
@@ -609,8 +603,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          lFreeList(&user_list);
          lFreeList(&group_list);
          lFreeList(&job_load_adjustments);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -621,8 +614,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       lFreeList(&user_list);
       lFreeList(&group_list);
       lFreeList(&job_load_adjustments);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    } 
    
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
@@ -638,8 +630,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       lFreeList(&user_list);
       lFreeList(&group_list);
       lFreeList(&job_load_adjustments);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    /* 
@@ -839,7 +830,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
                   if (time > 0.5) {
                      /*async gdi*/
-                     if (sge_send_job_start_orders(orders)) {
+                     if (sge_send_job_start_orders(evc_context, orders)) {
                         gettimeofday(&now, NULL);
                      }
                   }
@@ -951,8 +942,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
    sge_free_load_list(&consumable_load_list);
    lFreeList(&job_load_adjustments);
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -1304,8 +1294,7 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
       if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
                error_str, sizeof(error_str)-1)==0) {
          ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DEXIT;
-         return false;
+         DRETURN(false);
       }
       d_ret = d_tmp;
       got_duration = true;
@@ -1315,8 +1304,7 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
       if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
                error_str, sizeof(error_str)-1)==0) {
          ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DEXIT;
-         return false;
+         DRETURN(false);
       }
 
       if (got_duration) {
@@ -1339,8 +1327,7 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
       *duration = sconf_get_default_duration();
    }
 
-   DEXIT;
-   return true;
+   DRETURN(true);
 }
 
 
@@ -1424,8 +1411,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** scheduler/add_calendar_to_schedule() ***********************************
@@ -1455,6 +1441,7 @@ static void
 add_calendar_to_schedule(lList *queue_list) 
 {
    lListElem *queue;
+
    DENTER(TOP_LAYER, "add_calendar_to_schedule");
 
    for_each(queue, queue_list) {
@@ -1497,7 +1484,7 @@ add_calendar_to_schedule(lList *queue_list)
       }/* end if*/
    }
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /****** scheduler/set_utilization() ********************************************
@@ -1593,7 +1580,7 @@ set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti)
       }   
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -1674,6 +1661,5 @@ static void prepare_resource_schedules(const lList *running_jobs, const lList *s
    utilization_print_all(pe_list, host_list, queue_list); 
 #endif   
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }

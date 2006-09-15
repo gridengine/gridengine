@@ -36,12 +36,14 @@
 #include "sgeobj/sge_object.h"
 
 int 
-sge_follow_order(lListElem *order, lList **alpp, char *ruser, 
+sge_follow_order(void *context,
+                 lListElem *order, lList **alpp, char *ruser, 
                  char *rhost, lList **topp, monitoring_t *monitor, 
                  object_description *object_base);
 
 int 
-distribute_ticket_orders(lList *ticket_orders, monitoring_t *monitor, 
+distribute_ticket_orders(void *context, 
+                 lList *ticket_orders, monitoring_t *monitor, 
                  object_description *object_base);
 
 void 

@@ -34,7 +34,7 @@
 
 
                                                               
-lList *write_job_defaults(lListElem *job, char *filename, int flags);
+lList *write_job_defaults(void *context, lListElem *job, char *filename, int flags);
 
 #endif /* __WRITE_JOB_DEFAULTS_H */
 

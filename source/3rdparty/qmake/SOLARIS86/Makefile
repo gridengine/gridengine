@@ -200,8 +200,8 @@ all: all-redirect
 #	cd $(top_srcdir) && $(AUTOHEADER)
 #	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
 #
-#mostlyclean-hdr:
-#
+mostlyclean-hdr:
+
 clean-hdr:
 
 #distclean-hdr:

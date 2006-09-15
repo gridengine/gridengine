@@ -247,7 +247,7 @@
 #define MSG_RU_CKPTNOTVALID_SSS       _MESSAGE(33173, _(SFN" requests ckpt object "SFN". Therefore this "SFN" is not restartable."))
 #define MSG_RU_CKPTEXIST_SS           _MESSAGE(33174, _(SFN" requests ckpt object "SFN". This ckpt object does not exist."))
 #define MSG_RU_INDELETEDSTATE_SS      _MESSAGE(33175, _("The "SFN" "SFN" is already in deleted state. No rescheduling!"))
-#define MSG_RU_NORERUNQUEUE_SSS       _MESSAGE(33176, _("The "SFN" "SFN" is running in queue "SFN" were jobs are not rerunable."))
+#define MSG_RU_NORERUNQUEUE_SSS       _MESSAGE(33176, _("The "SFN" "SFN" is running in queue "SFN" where jobs are not rerunable."))
 
 /*
 ** sge_host_qmaster.c

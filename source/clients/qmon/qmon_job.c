@@ -83,6 +83,12 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_ja_task.h"
+
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+extern sge_gdi_ctx_class_t *ctx;
+#endif
 
 enum {
    JOB_DISPLAY_MODE_RUNNING,
@@ -1249,8 +1255,11 @@ XtPointer cad
    if (jl && status_ask) {
       for_each(jep, jl)
          lSetUlong(jep, JB_priority, BASE_PRIORITY + new_priority);
-
+#ifdef TEST_GDI2
+      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+#else
       alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+#endif
    
       qmonMessageBox(w, alp, 0);
 
@@ -1360,8 +1369,11 @@ XtPointer cld, cad;
          }
 
 /* lWriteListTo(jl, stdout); */
-
+#ifdef TEST_GDI2
+         alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+#else
          alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+#endif
       
          qmonMessageBox(w, alp, 0);
 
@@ -1839,7 +1851,11 @@ dstring *sb
  
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
+#ifdef TEST_GDI2
+   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+#else
+   alp = sge_gdi(SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+#endif
    lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -1867,7 +1883,11 @@ dstring *sb
    }                                          
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
+#ifdef TEST_GDI2
+   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
+#else
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
+#endif   
    lFreeWhere(&where);
    lFreeWhat(&what);
    for_each(aep, alp) {
@@ -1963,7 +1983,11 @@ dstring *sb
  
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = sge_gdi(SGE_JOB_SCHEDD_INFO, SGE_GDI_GET, &ilp, NULL, what);
+#ifdef TEST_GDI2   
+   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+#else
+   alp = sge_gdi(SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+#endif
    lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {

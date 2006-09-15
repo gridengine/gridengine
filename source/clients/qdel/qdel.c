@@ -57,6 +57,10 @@
 #include "sge_options.h"
 #include "sge_profiling.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 
 static bool sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
 static bool sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, lList **ppuserlist, lList **alpp);
@@ -77,6 +81,10 @@ int main(int argc, char **argv) {
    unsigned long status = 0;
    bool have_master_privileges;
    cl_com_handle_t* handle = NULL;
+#ifdef TEST_GDI2   
+   sge_gdi_ctx_class_t *ctx = NULL;
+#endif
+
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
@@ -84,11 +92,18 @@ int main(int argc, char **argv) {
 
    log_state_set_log_gui(1);
 
+#ifdef TEST_GDI2
+   if (sge_gdi2_setup(&ctx, QDEL, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      goto error_exit;
+   }
+#else
    sge_gdi_param(SET_MEWHO, QDEL, NULL);
    if (sge_gdi_setup(prognames[QDEL], &alp) != AE_OK) {
       answer_list_output(&alp);
       goto error_exit;
    }
+#endif
 
    if (!sge_parse_cmdline_qdel(++argv, environ, &pcmdline, &alp)) {
       /*
@@ -125,7 +140,10 @@ int main(int argc, char **argv) {
       }
    }
 
-   handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   /* TODO: remove this code from client, should be hidden in gdi layer 
+   **       timeout value should be set in gdi_setup
+   */
+   handle=cl_com_get_handle((char*)prognames[QDEL], 0);
    cl_com_set_synchron_receive_timeout(handle, 10*60);
 
    /* prepare gdi request for 'all' and '-uall' parameters */
@@ -142,7 +160,11 @@ int main(int argc, char **argv) {
    /* Has the user the permission to use the the '-f' (forced) flag */
    have_master_privileges = false;
    if (force == 1) {
+#ifdef TEST_GDI2   
+      have_master_privileges = sge_gdi2_check_permission(ctx, &alp, MANAGER_CHECK);
+#else
       have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
+#endif      
       lFreeList(&alp);
    }
    /* delete the job */
@@ -215,8 +237,11 @@ int main(int argc, char **argv) {
                   }   
                }
             }
-            
+#ifdef TEST_GDI2
+            alp = ctx->gdi(ctx, SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
+#else
             alp = sge_gdi(SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
+#endif            
 
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
@@ -267,18 +292,28 @@ int main(int argc, char **argv) {
    lFreeList(&alp);
    lFreeList(&jlp);
    lFreeList(&ref_list);
-   sge_gdi_shutdown();
    sge_prof_cleanup();
-   SGE_EXIT(0);
+#ifdef TEST_GDI2
+   sge_gdi2_shutdown((void**)&ctx);
+   SGE_EXIT((void**)&ctx, 0);
+#else
+   sge_gdi_shutdown();
+   SGE_EXIT(NULL, 0);
+#endif   
    return 0;
 
 error_exit:
    lFreeList(&alp);
    lFreeList(&jlp);
    lFreeList(&ref_list);
-   sge_gdi_shutdown();
    sge_prof_cleanup();
-   SGE_EXIT(1); 
+#ifdef TEST_GDI2
+   sge_gdi2_shutdown((void**)&ctx);
+   SGE_EXIT((void**)&ctx, 1);
+#else
+   sge_gdi_shutdown();
+   SGE_EXIT(NULL, 1); 
+#endif   
    DEXIT;
    return 1;
 }
@@ -295,14 +330,13 @@ char **envp,
 lList **ppcmdline,
 lList **alpp
 ) {
-char **sp;
-char **rp;
-stringT str;
+   char **sp;
+   char **rp;
 
    DENTER(TOP_LAYER, "sge_parse_cmdline_qdel");
 
    rp = argv;
-   while(*(sp=rp)) {
+   while (*(sp=rp)) {
       /* -help */
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, alpp)) != sp)
          continue;
@@ -335,8 +369,8 @@ stringT str;
          /* next field is path_name */
          sp++;
          if (*sp == NULL) {
-             printf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
              goto error;
          }
 
@@ -368,14 +402,15 @@ stringT str;
       }
 
       /* oops */
-      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-      answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                              MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
 error:      
       qdel_usage(stderr, NULL);
       DRETURN(false);
    }
+
    DRETURN(true);
+
 }
 
 /****
@@ -407,7 +442,7 @@ bool ret = true;
    {
       if(parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
          qdel_usage(stdout, NULL);
-         SGE_EXIT(0);
+         SGE_EXIT(NULL, 0);
          break;
       }
       if(parse_flag(ppcmdline, "-f", alpp, pforce)) 

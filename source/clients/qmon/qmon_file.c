@@ -112,6 +112,7 @@ char *qmonReadText(const char *filename, lList **alpp)
 
    FCLOSE(fp);
    DRETURN(text);
+
 FCLOSE_ERROR:
    XtFree(text);
    answer_list_add_sprintf(alpp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,

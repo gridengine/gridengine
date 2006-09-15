@@ -33,11 +33,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifndef TEST_GDI2
+
 #include "cull.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
 
 enum {
    TAG_NONE            = 0,     /* usable e.g. as delimiter in a tag array */
@@ -66,24 +69,33 @@ enum {
 
 };
 
-const char* sge_dump_message_tag(unsigned long tag);
+
 int check_isalive(const char *masterhost);
 int prepare_enroll(const char *name, int* commlib_error);
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag, u_long32 response_id, lList **alpp);
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron,  u_long32 for_request_mid, u_long32* mid);
 int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
 
+
+const char* sge_dump_message_tag(unsigned long tag);
+
 typedef enum sge_gdi_stored_com_error_type {
    SGE_COM_ACCESS_DENIED = 101,
    SGE_COM_ENDPOINT_NOT_UNIQUE,
    SGE_COM_WAS_COMMUNICATION_ERROR
 } sge_gdi_stored_com_error_t;
-bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type);
+bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type);
 
 enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
 
+#include "comm/lists/cl_list_types.h"
+void general_communication_error(const cl_application_error_list_elem_t* commlib_error);
+
+
 #ifdef  __cplusplus
 }
+#endif
+
 #endif
 
 #endif /* __SGE_ANY_REQUEST_H */

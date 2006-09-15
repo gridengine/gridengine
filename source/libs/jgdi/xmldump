@@ -1,0 +1,25 @@
+#!/bin/sh
+
+BASEDIR=`dirname $0`
+BASEDIR=`cd $BASEDIR; pwd`
+
+. $BASEDIR/run_util.sh
+
+GRIDENGINE_SOURCE=/home/rh150277/devel/AARH_BRANCH/gridengine/source
+
+if [ -f run_test.env ]; then
+   . run_test.env
+fi
+
+JVM_ARGS=""
+JVM_ARGS="$JVM_ARGS -cp build/classes"
+#JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=test/logging.properties"
+
+url="bootstrap://${SGE_ROOT}@${SGE_CELL}:${SGE_QMASTER_PORT}"
+
+run $JVM_ARGS com.sun.grid.jgdi.configuration.xml.XMLDump $url $*
+
+
+
+
+

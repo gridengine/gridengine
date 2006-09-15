@@ -35,6 +35,6 @@
 
 #include "sge_monitor.h"
 
-void *sge_qmaster_process_message(void *anArg, monitoring_t *monitor);
+void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *monitor);
 
 #endif /* _SGE_QMASTER_PROCESS_MESSAGE_H_ */

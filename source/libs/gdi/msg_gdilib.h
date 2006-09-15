@@ -169,6 +169,8 @@
 
 #define MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S _MESSAGE(55013, _("qmaster on host "SFQ" is still running - terminating"))
 
+#define MSG_GDI_CREATE_EH                _MESSAGE(55014, _("couldn't create error handler"))
+#define MSG_GDI_CONTEXT_NULL             _MESSAGE(55015, _("context is NULL"))
 
 
 #endif /* __MSG_GDILIB_H */

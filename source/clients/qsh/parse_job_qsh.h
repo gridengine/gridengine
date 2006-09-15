@@ -35,7 +35,8 @@
 
 
 
-lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob);
+lList *cull_parse_qsh_parameter(u_long32 prog_name, u_long32 uid, const char *username, const char *cell_root,
+                                const char *unqualified_hostname, const char *qualified_hostname, lList *cmdline, lListElem **pjob);
 
 #endif /* __PARSE_JOB_QSH_H */
 

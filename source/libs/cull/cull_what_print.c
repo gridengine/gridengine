@@ -71,17 +71,17 @@ static void _lWriteWhatTo(const lEnumeration *ep, dstring *buffer, int level)
       
       switch (ep[i].pos) {
       case WHAT_NONE:
-         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %d "
+         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %7d "
                                     "pos: %3d\n", ep[i].nm, "NONE", 
                                     ep[i].mt, ep[i].pos);
          break;
       case WHAT_ALL:
-         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %d "
+         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %7d "
                                     "pos: %3d\n", ep[i].nm, "ALL", 
                                     ep[i].mt, ep[i].pos);
          break;
       default:
-         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %d "
+         sge_dstring_sprintf_append(buffer, "nm: %6d %-20.20s mt: %7d "
                                     "pos: %3d\n", ep[i].nm, 
                                     lNm2Str(ep[i].nm), 
                                     ep[i].mt, ep[i].pos);

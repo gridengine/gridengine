@@ -54,6 +54,9 @@
 #include "sge_bootstrap.h"
 #include "sge_prog.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -73,31 +76,47 @@ typedef struct pbcache {
 
 
 static int match_dpe(dispatch_entry *dea, dispatch_entry *deb);
-static int authorize_dpe(dispatch_entry *deb);
-static int receive_message_cach_n_ack(dispatch_entry *de, sge_pack_buffer **pb, 
-                               int *tagarray, int cachesize, 
-                               void (*errfunc)(const char *));
-static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
-                   void (*errfunc)(const char *err_str));
+static int authorize_dpe(const char* admin_user, dispatch_entry *deb);
+static int receive_message_cach_n_ack(void *context,
+                                      dispatch_entry *de, 
+                                      sge_pack_buffer **pb, 
+                                      int *tagarray, 
+                                      int cachesize, 
+                                      void (*errfunc)(const char *));
+static int sendAckPb(void *context, 
+                     sge_pack_buffer *apb, 
+                     char *host, 
+                     char *commproc, 
+                     u_short id,
+                     void (*errfunc)(const char *err_str));
 static int isIn(int tag, int *tagarray);
 static int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray); 
 static int alloc_de(dispatch_entry *de);
 static void free_de(dispatch_entry *de);
 static int copy_de(dispatch_entry *dedst, dispatch_entry *desrc);
-static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray,
-                           void              (*errfunc)(const char *));
+static int receive_message(void *context, 
+                           dispatch_entry *de, 
+                           sge_pack_buffer **pb, 
+                           int* tagarray,
+                           void (*errfunc)(const char *));
 
 
-static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarray, 
-                           void              (*errfunc)(const char *)) 
+
+
+
+static int receive_message(void *context, 
+                           dispatch_entry *de, 
+                           sge_pack_buffer **pb, 
+                           int* tagarray, 
+                           void (*errfunc)(const char *)) 
 {
    int ret;
    DENTER(TOP_LAYER, "receive_message");
 
-      ret = receive_message_cach_n_ack(de, pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
+   ret = receive_message_cach_n_ack(context, de, pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
 
-      DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
-               cl_get_error_text(ret), de->host, de->commproc, de->id)); 
+   DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
+            cl_get_error_text(ret), de->host, de->commproc, de->id)); 
    
    DEXIT;
    return ret;
@@ -142,7 +161,8 @@ static int receive_message(dispatch_entry *de, sge_pack_buffer **pb, int* tagarr
     Acknowledgement is done synchron, so we block until message arrives, or
     will never arrive.
  *********************************************************/
-int dispatch( dispatch_entry*   table,
+int dispatch( void *context,
+              dispatch_entry*   table,
               int               tabsize, 
               int*              tagarray, 
               u_long            rcvtimeout,
@@ -162,6 +182,12 @@ int dispatch( dispatch_entry*   table,
    time_t next_prof_output = 0;
    monitoring_t monitor;
    u_long32 monitor_time = 0; /* will never change in case of an execd, disables the monitoring */
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *admin_user = ctx->get_admin_user(ctx);
+#else
+   const char *admin_user = bootstrap_get_admin_user();
+#endif  
 
    DENTER(TOP_LAYER, "dispatch");
 
@@ -201,7 +227,7 @@ int dispatch( dispatch_entry*   table,
             de.id = 0;
       }
 
-      MONITOR_IDLE_TIME((i = receive_message(&de, &pb, tagarray, errfunc)), (&monitor), monitor_time, false);
+      MONITOR_IDLE_TIME((i = receive_message(context, &de, &pb, tagarray, errfunc)), (&monitor), monitor_time, false);
       MONITOR_MESSAGES((&monitor));
       
       switch (i) {
@@ -215,7 +241,7 @@ int dispatch( dispatch_entry*   table,
          break;
       default:
          do_re_register = true; /* unexpected error, do reregister */
-         if (cl_com_get_handle("execd" ,1) == NULL) {
+         if (cl_com_get_handle("execd", 1) == NULL) {
             terminate = 1; /* if we don't have a handle, we must leave
                             * because execd_register will create a new one.
                             * This error would be realy strange, because
@@ -224,12 +250,12 @@ int dispatch( dispatch_entry*   table,
          }
       }
 
-      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
-          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true ||
+          sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
          terminate = 1; /* leave dispatcher */
       }
 
-      if (sge_get_com_error_flag(SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
          do_re_register = true;
       }
 
@@ -246,14 +272,25 @@ int dispatch( dispatch_entry*   table,
          if ( now - last_qmaster_file_read >= 30 ) {
             /* re-read act qmaster file (max. every 30 seconds) */
             DPRINTF(("re-read actual qmaster file\n"));
+#ifdef TEST_GDI2            
+            ctx->get_master(ctx, true);
+#else
             sge_get_master(true);
+#endif            
             last_qmaster_file_read = now;
             if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
                 i != CL_RETVAL_CONNECT_ERROR) {
                /* re-register at qmaster when connection is up again */
-               if ( sge_execd_register_at_qmaster() == 0) {
+#ifdef TEST_GDI2               
+               if ( sge_execd_register_at_qmaster(ctx) == 0) {
                   do_re_register = false;
                }
+#else               
+               if ( sge_execd_register_at_qmaster(NULL) == 0) {
+                  do_re_register = false;
+               }
+
+#endif
             }
          }
       }
@@ -263,7 +300,7 @@ int dispatch( dispatch_entry*   table,
       /* look for dispatch entries matching the inbound message or
          entries activated at idle times */
       for (ntab=0; ntab<tabsize; ntab++) {
-         if (match_dpe(&de, &table[ntab]) == 1 && authorize_dpe(&de) == 1) {
+         if (match_dpe(&de, &table[ntab]) == 1 && authorize_dpe(admin_user, &de) == 1) {
             sigset_t old_sigset, sigset;
 
             if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {
@@ -284,7 +321,7 @@ int dispatch( dispatch_entry*   table,
 #endif
             sigprocmask(SIG_BLOCK, &sigset, &old_sigset);
 
-            j = table[ntab].func(&de, pb, &apb, &rcvtimeoutt, &synchron, 
+            j = table[ntab].func(context, &de, pb, &apb, &rcvtimeoutt, &synchron, 
                                  err_str, 0);
 
             sigprocmask(SIG_SETMASK, &old_sigset, NULL);
@@ -295,8 +332,13 @@ int dispatch( dispatch_entry*   table,
             
             /* if apb is filled send it back to the requestor */
             if (pb_filled(&apb)) {              
+#ifdef TEST_GDI2            
+               i = gdi2_send_message_pb(ctx, synchron, de.commproc, de.id, de.host, 
+                                de.tag, &apb, &dummyid);
+#else
                i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
                                 de.tag, &apb, &dummyid);
+#endif
                MONITOR_MESSAGES_OUT((&monitor));
                if (i != CL_RETVAL_OK) {
                   DPRINTF(("gdi_send_message_pb() returns: %s (%s/%s/%d)\n", 
@@ -344,8 +386,8 @@ int dispatch( dispatch_entry*   table,
 /****************************************************/
 /* match 2 dispatchtable entries against each other */
 /****************************************************/
-static int match_dpe(dispatch_entry* dea, dispatch_entry* deb) {
-
+static int match_dpe(dispatch_entry* dea, dispatch_entry* deb)
+{
    if (deb->tag == -1) /* cyclic entries always match */
       return 1;
    if (deb->tag && deb->tag != dea->tag)
@@ -383,7 +425,8 @@ static int match_dpe(dispatch_entry* dea, dispatch_entry* deb) {
 *     MT-NOTE: authorize_dpe() is MT safe 
 *
 *******************************************************************************/
-static int authorize_dpe(dispatch_entry *deb) {
+static int authorize_dpe(const char *admin_user, dispatch_entry *deb) 
+{
 
   DENTER(TOP_LAYER, "authorize_dpe");
 
@@ -395,7 +438,7 @@ static int authorize_dpe(dispatch_entry *deb) {
   /* Do the check for all tags except the TAG_JOB_EXECUTION. The JOB_EXECUTION tag does the check
      by it self because it needs to allow inherit jobs */
   if (deb->tag != TAG_JOB_EXECUTION) { 
-      const char *admin_user = bootstrap_get_admin_user();
+
       if (false == sge_security_verify_unique_identifier(true, admin_user, prognames[EXECD], 1,
                                             deb->host, deb->commproc, deb->id)) {
          DEXIT;
@@ -423,7 +466,8 @@ static int authorize_dpe(dispatch_entry *deb) {
  If we cant send the acknowledges we have to delete the whole messages, in
  order to stay consistent with the sender.
  *****************************************************************************/
-static int receive_message_cach_n_ack( dispatch_entry*    de,
+static int receive_message_cach_n_ack( void *context,
+                                       dispatch_entry*    de,
                                        sge_pack_buffer**  pb,
                                        int*               tagarray,
                                        int                cachesize,
@@ -438,6 +482,9 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    dispatch_entry deact, lastde;
    int i, receive_blocking;
    u_long32 tmpul, tmpul2;
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif  
 
    DENTER(TOP_LAYER, "receive_message_cach_n_ack");
 
@@ -472,8 +519,14 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
 
       cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking );
 
+#ifdef TEST_GDI2
+      i = gdi2_receive_message(ctx, deact.commproc, &deact.id, deact.host, 
+                              &deact.tag, &buffer, &buflen, 0);
+
+#else
       i = gdi_receive_message(deact.commproc, &deact.id, deact.host, 
                               &deact.tag, &buffer, &buflen, 0);
+#endif                              
       DPRINTF(("receiving message (cached="sge_U32CFormat") returned "SFQ"\n", sge_u32c(cached_pbs), cl_get_error_text(i)));
 
 
@@ -513,7 +566,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
                /* this is another sender -> send ack to last sender */
                DPRINTF(("(1) sending acknowledge to (%s,%s,%d)\n",
                         lastde.host, lastde.commproc, lastde.id));
-               if ((i = sendAckPb(&apb, lastde.host, lastde.commproc, 
+               if ((i = sendAckPb(context, &apb, lastde.host, lastde.commproc, 
                                   lastde.id, errfunc)) != CL_RETVAL_OK) {
                   /* We cant send acknowledges, so we have to delete all 
                      newly received pbs with an acknowledgable tag */
@@ -553,7 +606,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    /* write answer to sender */
    if (apb.head_ptr) {  /* only if there is an acknowlege */
       DPRINTF(("(2) sending acknowledge to (%s,%s,%d)\n", lastde.host, lastde.commproc, lastde.id));
-      if ((i = sendAckPb(&apb, lastde.host, lastde.commproc, lastde.id,
+      if ((i = sendAckPb(context, &apb, lastde.host, lastde.commproc, lastde.id,
                          errfunc)) != CL_RETVAL_OK) {
          /* we have to delete all newly received pbs with an 
             acknowledgable tag */
@@ -614,16 +667,24 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
 /**********************************************************
  send acknowledge packet to requestor
  **********************************************************/
-static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
-              void (*errfunc)(const char *err_str))
+static int sendAckPb(void *context, 
+                     sge_pack_buffer *apb, char *host, char *commproc, u_short id,
+                     void (*errfunc)(const char *err_str))
 {
    int i = CL_RETVAL_OK;
    u_long32 dummy = 0;
    char err_str[256];
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif
 
    DENTER(TOP_LAYER, "sendAckPb");
 
+#ifdef TEST_GDI2
+   i = gdi2_send_message_pb(ctx, 0, commproc, id, host, TAG_ACK_REQUEST, apb, &dummy);
+#else   
    i = gdi_send_message_pb(0, commproc, id, host, TAG_ACK_REQUEST, apb, &dummy);
+#endif   
 
    if (i != CL_RETVAL_OK) {
       sprintf(err_str, MSG_COM_NOACK_S,cl_get_error_text(i));

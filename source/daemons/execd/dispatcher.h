@@ -62,12 +62,13 @@ typedef struct dispatch_entry {
       <- err_str is filled if called function returned -1
       ->answer_error is the commlib errorcode from sending apb back to the 
         requestor. This is only set in the second call.  */
-   int (*func)(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
+   int (*func)(void *context, struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
 } dispatch_entry;
 
 
-int dispatch(dispatch_entry *table, int tabsize, int *tagarray, 
-                  u_long rcvtimeout, char *err_str, 
-                  void (*errfunc)(const char *), int wait4commd);
+int dispatch(void *context, 
+             dispatch_entry *table, int tabsize, int *tagarray, 
+             u_long rcvtimeout, char *err_str, 
+             void (*errfunc)(const char *), int wait4commd);
 
 #endif /* _DISPATCHER_H */

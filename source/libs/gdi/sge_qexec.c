@@ -58,6 +58,10 @@
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 static lList *remote_task_list = 0;
 static char lasterror[1024];
 
@@ -66,7 +70,7 @@ static char lasterror[1024];
 
 #define LOCATE_RTASK(tid) lGetElemStr(remote_task_list, RT_tid, tid)
 
-static int rcv_from_execd(int options, int tag); 
+static int rcv_from_execd(void *context, int options, int tag); 
 
 const char *qexec_last_err(void)
 {
@@ -104,12 +108,13 @@ const char *qexec_last_err(void)
 *  NOTES
 *     MT-NOTE: sge_qexecve() is not MT safe
 ******************************************************************************/
-sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
+sge_tid_t sge_qexecve(void *context,
+                      const char *hostname, const char *queuename,
                       const char *cwd, const lList *environment,
                       const lList *path_aliases)
 {
-char myname[256];
-const char *s;
+   char myname[256];
+   const char *s;
    int ret, uid;
    sge_tid_t tid = NULL;
    lListElem *petrep;
@@ -118,6 +123,10 @@ const char *s;
    u_long32 jobid, jataskid;
    u_long32 dummymid = 0;
    const char *env_var_name = "SGE_TASK_ID";
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+#endif   
 
    DENTER(TOP_LAYER, "sge_qexecve");
 
@@ -196,8 +205,14 @@ const char *s;
 
    pack_job_delivery(&pb, petrep, NULL, NULL);
 
+#ifdef TEST_GDI2
+   ret = gdi2_send_message_pb(ctx, 
+                              1, prognames[EXECD], 1, hostname,
+                              TAG_JOB_EXECUTION, &pb, &dummymid);
+#else
    ret = gdi_send_message_pb(1, prognames[EXECD], 1, hostname,
             TAG_JOB_EXECUTION, &pb, &dummymid);
+#endif            
 
    clear_packbuffer(&pb);
 
@@ -214,7 +229,11 @@ const char *s;
    lSetHost(rt, RT_hostname, hostname);
    lSetUlong(rt, RT_state, RT_STATE_WAIT4ACK);
 
-   rcv_from_execd(OPT_SYNCHRON, TAG_JOB_EXECUTION);
+#ifdef TEST_GDI2
+   rcv_from_execd(ctx, OPT_SYNCHRON, TAG_JOB_EXECUTION);
+#else
+   rcv_from_execd(NULL, OPT_SYNCHRON, TAG_JOB_EXECUTION);
+#endif   
    tid = (sge_tid_t) lGetString(rt, RT_tid);
 
    if(strcmp(tid, "none") == 0) {
@@ -235,6 +254,7 @@ const char *s;
  *
  */
 int sge_qwaittid(
+void *context,
 sge_tid_t tid,
 int *status,
 int options 
@@ -260,7 +280,7 @@ int options
             !lGetElemUlong(remote_task_list, RT_state, RT_STATE_EXITED) && /* none exited */
             lGetElemUlong(remote_task_list, RT_state, RT_STATE_WAIT4ACK))) /* but one is waiting for ack */ {
       /* wait for incoming messeges about exited tasks */
-      if ((ret=rcv_from_execd(rcv_opt, TAG_TASK_EXIT))) {
+      if ((ret=rcv_from_execd(context, rcv_opt, TAG_TASK_EXIT))) {
          DEXIT;
          return (ret<0)?-1:0;
       }
@@ -284,6 +304,7 @@ int options
 
 */
 static int rcv_from_execd(
+void *context,
 int options,
 int tag 
 ) {
@@ -298,14 +319,24 @@ int tag
    u_long32 exit_status=0;
    sge_tid_t tid = NULL;
 
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+#endif
+
    DENTER(TOP_LAYER, "rcv_from_execd");
 
    host[0] = '\0';
    from_id = 1;
    do {
       /* FIX_CONST */
+#ifdef TEST_GDI2
+      ret = gdi2_receive_message(ctx, (char*)prognames[EXECD], &from_id, host, &tag, 
+                                 &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0);
+      
+#else
       ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, &tag, 
                                 &msg, &msg_len, (options & OPT_SYNCHRON) ? 1:0);
+#endif
       if ( ret != CL_RETVAL_OK && ret != CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , cl_get_error_text(ret), ret);
          DEXIT;

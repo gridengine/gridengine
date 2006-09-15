@@ -84,6 +84,10 @@
 
 #include "uti/sge_os.h"
 
+#ifdef TEST_QMASTER_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 /*
  * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
  * 'null thread id'. Given, that any variable with static storage class will be
@@ -114,7 +118,8 @@ static void*     message_thread(void*);
 static int       qmaster_exit_state = 0;
 
 /* misc functions */
-static void increment_heartbeat(te_event_t, monitoring_t *monitor);
+static void increment_heartbeat(void *context, te_event_t anEvent, monitoring_t *monitor);
+static int sge_shutdown_qmaster_via_signal_thread(int i);
 
 /****** qmaster/sge_qmaster_main/sge_gdi_kill_master() *************************
 *  NAME
@@ -162,6 +167,8 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
       DEXIT;
       return;
    }
+
+   DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, username, (int) gid, groupname));
 
    if (!manop_is_manager(username)) {
       ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
@@ -227,7 +234,7 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 *     MT-NOTE: sge_daemonize_qmaster() is not MT safe 
 *
 *******************************************************************************/
-void sge_daemonize_qmaster(void)
+bool sge_daemonize_qmaster()
 {
    pid_t pid = -1;
    int failed_fd;
@@ -237,7 +244,7 @@ void sge_daemonize_qmaster(void)
    if(getenv("SGE_ND") != NULL) {
       DPRINTF(("sge_qmaster is not daemonized\n"));
       DEXIT;
-      return;
+      return false;
    }
 
    if((pid = fork()) != 0) {
@@ -263,13 +270,11 @@ void sge_daemonize_qmaster(void)
    failed_fd = sge_occupy_first_three();
    if (failed_fd  != -1) {
       CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
-      SGE_EXIT(0);
+      SGE_EXIT(NULL, 0);
    }
 
-   uti_state_set_daemonized(true);
-
    DEXIT;
-   return;
+   return true;
 } /* sge_daemonize_qmaster() */
 
 /****** qmaster/sge_qmaster_main/sge_become_admin_user() ***************************
@@ -295,20 +300,20 @@ void sge_daemonize_qmaster(void)
 *     MT-NOTE: sge_become_admin_user() is not MT safe 
 *
 *******************************************************************************/
-void sge_become_admin_user(void)
+void sge_become_admin_user(const char *admin_user)
 {
    char str[1024];
 
    DENTER(TOP_LAYER, "sge_become_admin_user");
 
-   if (sge_set_admin_username(bootstrap_get_admin_user(), str) == -1) {
+   if (sge_set_admin_username(admin_user, str) == -1) {
       CRITICAL((SGE_EVENT, str));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    DEXIT;
@@ -392,12 +397,17 @@ void sge_start_heartbeat(void)
 *     MT-NOTE: sge_create_and_join_threads() is not MT safe 
 *
 *******************************************************************************/
-void sge_create_and_join_threads(void)
+void sge_create_and_join_threads(void *context)
 {
    enum { NUM_THRDS = 5 };
    const char *thread_names[NUM_THRDS] = {"SIGT","MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
+#ifdef TEST_QMASTER_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   u_long32 threads = ctx->get_gdi_thread_count(ctx);
+#else
    u_long32 threads = bootstrap_get_gdi_thread_count();
+#endif   
    int i;
 
    DENTER(TOP_LAYER, "sge_create_and_join_threads");
@@ -528,7 +538,7 @@ static pthread_t get_signal_thread(void)
 *     do cope with a system clock which has been put back.
 *
 *******************************************************************************/
-static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
+static void increment_heartbeat(void *context, te_event_t anEvent, monitoring_t *monitor)
 {
    int retval = 0;
    int heartbeat = 0;
@@ -537,6 +547,15 @@ static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
    char act_resolved_qmaster_name[CL_MAXHOSTLEN]; 
 
    char err_str[SGE_PATH_MAX+128];
+
+#ifdef TEST_QMASTER_GDI2
+      sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+      const char *act_qmaster_file = ctx->get_act_qmaster_file(ctx);
+      const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+      const char *act_qmaster_file = path_state_get_act_qmaster_file();
+      const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif
 
    DENTER(TOP_LAYER, "increment_heartbeat");
 
@@ -548,7 +567,7 @@ static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
          break;
       }
       default: {
-         DPRINTF(("(heartbeat) - inc_qmaster_heartbeat() returned %d !!! (beat=%d)\n", retval, heartbeat ));
+         DPRINTF(("(heartbeat) - inc_qmaster_heartbeat() returned %d !!! (beat=%d)\n", retval, heartbeat));
          check_act_qmaster_file = 1;
          break;
       }
@@ -561,15 +580,22 @@ static void increment_heartbeat(te_event_t anEvent, monitoring_t *monitor)
 
    if (check_act_qmaster_file == 1) {
       strcpy(err_str,"");
-      if (get_qm_name(act_qmaster_name, path_state_get_act_qmaster_file(), err_str) == 0) {
+      if (get_qm_name(act_qmaster_name, act_qmaster_file, err_str) == 0) {
          /* got qmaster name */
          if ( getuniquehostname(act_qmaster_name, act_resolved_qmaster_name, 0) == CL_RETVAL_OK && 
-              sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0      ) {
+              sge_hostcmp(act_resolved_qmaster_name, qualified_hostname) != 0      ) {
             /* act_qmaster file has been changed */
             WARNING((SGE_EVENT, MSG_HEART_ACT_QMASTER_FILE_CHANGED));
             if ( sge_shutdown_qmaster_via_signal_thread(100) != 0) {
                ERROR((SGE_EVENT, MSG_HEART_CANT_SIGNAL));
-               sge_shutdown(1);
+               /* TODO: here the ctx reference is not transported back
+               **       event_handler functions should use &ctx instead
+               */
+#ifdef TEST_GDI2
+               sge_shutdown((void**)&ctx, 1);
+#else
+               sge_shutdown(NULL, 1);
+#endif               
             }
          } else {
             DPRINTF(("(heartbeat) - act_qmaster file contains hostname "SFQ"\n", act_qmaster_name));
@@ -704,11 +730,14 @@ void sge_register_event_handler(void)
 *     MT-NOTE: sge_exit_func() is MT safe.
 *
 *******************************************************************************/
-void sge_exit_func(int anExitValue)
+void sge_exit_func(void **context, int anExitValue)
 {
    DENTER(TOP_LAYER, "sge_exit_func");
-
+#ifdef TEST_GDI2
+   sge_gdi2_shutdown(context);
+#else
    sge_gdi_shutdown();
+#endif   
 
    DEXIT;
    return;
@@ -835,11 +864,18 @@ static void* signal_thread(void* anArg)
    int sig_num;
    time_t next_prof_output = 0;
    monitoring_t monitor;
+#ifdef TEST_QMASTER_GDI2
+   void *context = NULL;
+#endif
 
    DENTER(TOP_LAYER, "signal_thread");
 
    sge_monitor_init(&monitor, (char *) anArg, NONE_EXT, ST_WARNING, ST_ERROR);
-   sge_qmaster_thread_init(true);
+#ifdef TEST_QMASTER_GDI2   
+   sge_qmaster_thread_init(&context, true);
+#else   
+   sge_qmaster_thread_init(NULL, true);
+#endif   
 
    sigemptyset(&sig_set);
    sigaddset(&sig_set, SIGINT);
@@ -907,11 +943,19 @@ static void* message_thread(void* anArg)
    time_t next_prof_output = 0;
    monitoring_t monitor;
 
+#ifdef TEST_QMASTER_GDI2
+   void *context = NULL;
+#endif
+
    DENTER(TOP_LAYER, "message_thread");
 
    sge_monitor_init(&monitor, (char *) anArg, GDI_EXT, MT_WARNING, MT_ERROR);
    
-   sge_qmaster_thread_init(true);
+#ifdef TEST_QMASTER_GDI2   
+   sge_qmaster_thread_init(&context, true);
+#else   
+   sge_qmaster_thread_init(NULL, true);
+#endif   
 
    /* register at profiling module */
    set_thread_name(pthread_self(),"Message Thread");
@@ -920,7 +964,11 @@ static void* message_thread(void* anArg)
    while (should_terminate() == false) {
       thread_start_stop_profiling();
 
-      sge_qmaster_process_message(anArg, &monitor);
+#ifdef TEST_QMASTER_GDI2
+      sge_qmaster_process_message(context, anArg, &monitor);
+#else
+      sge_qmaster_process_message(NULL, anArg, &monitor);
+#endif
 
       thread_output_profiling("message thread profiling summary:\n", 
                               &next_prof_output);
@@ -1018,18 +1066,18 @@ static void wait_for_thread_termination(void)
 *     Do NOT change the shutdown operation sequence!
 *
 *******************************************************************************/
-void sge_qmaster_shutdown(bool do_spool)
+void sge_qmaster_shutdown(void *context, bool do_spool)
 {
    DENTER(TOP_LAYER, "sge_qmaster_shutdown");
 
    if (do_spool == true) {
-      sge_job_spool();     /* store qmaster jobs to database */
-      sge_userprj_spool(); /* spool the latest usage */
+      sge_job_spool(context);     /* store qmaster jobs to database */
+      sge_userprj_spool(context); /* spool the latest usage */
    }
 
    sge_shutdown_persistence(NULL);
 
-   reporting_shutdown(NULL, do_spool);
+   reporting_shutdown(context, NULL, do_spool);
 
    te_shutdown();
 
@@ -1041,7 +1089,7 @@ void sge_qmaster_shutdown(bool do_spool)
    return;
 } /* sge_qmaster_shutdown() */
 
-int sge_shutdown_qmaster_via_signal_thread(int i)
+static int sge_shutdown_qmaster_via_signal_thread(int i)
 {
    int return_value = 0;
    DENTER(TOP_LAYER, "sge_shutdown_qmaster_via_signal_thread");

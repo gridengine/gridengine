@@ -428,7 +428,7 @@ set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
-set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS"
+set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS -DTEST_QMASTER_GDI2 -DTEST_GDI2"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
@@ -437,6 +437,7 @@ set NOERR_PROTO      = ""
 set NOERR_SSH        = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
+set JAVA_LFLAGS      = ""
 set JAVA             = 0
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
@@ -1061,6 +1062,7 @@ case AIX51:
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set JAVA_ARCH = "aix"
+   set JAVA_LFLAGS = ""
    breaksw
 
 case ALPHA5:
@@ -1200,9 +1202,11 @@ case DARWIN_PPC:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
-   set JAVA_BINDIR = "Commands"
-   set JAVA_INCL = "Headers"
+   #set JAVA_BINDIR = "Commands"
+   # set JAVA_INCL = "Headers"
+   set JAVA_INCL = "include"
    set JAVA_SHAREDEXT = ".jnilib"
+   #set JAVA_LFLAGS = ""
    unset REL
    breaksw
 
@@ -1320,7 +1324,6 @@ case HP1164:
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
-   
    if ($BUILDARCH == HP11) then
       set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
@@ -1853,9 +1856,46 @@ if ($JNI == 1) then
 
    if ("$JAVA_ARCH" != "") then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
+      switch ($buildarch)
+         case lx24-x86:
+         case lx26-x86:
+         case sol-x86:
+             set JAVA_LIB_ARCH = i386
+             breaksw
+         case sol-sparc64:
+             set JAVA_LIB_ARCH = sparcv9
+             breaksw
+         case sol-sparc:
+             set JAVA_LIB_ARCH = sparc
+             breaksw
+         case lx24-amd64:
+         case sol-amd64:
+             set JAVA_LIB_ARCH = amd64
+             breaksw
+         case lx24-ia64:
+             set JAVA_LIB_ARCH = ia64
+             breaksw
+         default:
+             set JAVA_LIB_ARCH = ""
+             echo "WARNING: no JAVA_LIB_ARCH for architecture $buildarch"
+      endsw
+      if ( "$JAVA_LIB_ARCH" != "") then
+        set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib/$JAVA_LIB_ARCH/server"
+      else
+        set JAVA_LFLAGS=""
+      endif
    endif
+   #
+   # special treatment
+   #
+   if ( $buildarch == aix51 ) then
+     set JAVA_LFLAGS="-L$JAVA_HOME/jre/bin/classic"
+   else if ( $buildarch == darwin-ppc ) then
+     set JAVA_LFLAGS="-L$JAVA_HOME/../Libraries"
+   endif  
 else
    set JNI_TARGET = "NJ"
+   set CFLAGS = "$CFLAGS -DNO_JNI"
 endif
 
 if ($JAVA_SHAREDEXT == "") then
@@ -1936,6 +1976,7 @@ set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 #---------------------------------------------------------------------------
 # Actual make targets begin here
 #
+echo "Building in directory: `pwd`"
 if ("$COMPILE_DIR" == "") then
    echo making in $COMPILE_ARCH/ for $BUILDARCH at host `hostname`
 else
@@ -2014,27 +2055,26 @@ if ( "$BUILDJAVADOC" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else
-      echo done
-      exit 0
    endif
-
-   cd $SOURCE
-   
 
    echo _______J_U_T_I__J_A_V_A_D_O_C_S__________
    cd $SOURCE/libs/juti
-
-   set target = "javadoc"
 
    ant -f build.xml $target
 
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else
-      echo done
-      exit 0
+   endif
+
+   echo _______J_G_D_I__J_A_V_A_D_O_C_S__________
+   cd $SOURCE/libs/jgdi
+
+   ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $target
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
    endif
 
    cd $SOURCE
@@ -2332,6 +2372,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "JNI_TARGET=$JNI_TARGET" \
+         "JAVA_LFLAGS=$JAVA_LFLAGS" \
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          $argv
@@ -2353,24 +2394,31 @@ if ( "$JAVA" > 0 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else if ( $JAVA == 2 ) then
-      echo done
-      exit 0
    endif
-   cd $SOURCE
 
    echo _________J_U_T_I__C_L_A_S_S__F_I_L_E_S___
-   cd libs/juti
-   ant -Dlibs.junit.classpath=$JUNIT_JAR -f build.xml jar
+   cd $SOURCE/libs/juti
+   ant -Dlibs.junit.classpath=$JUNIT_JAR -f build.xml $argv
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else if ( $JAVA == 2 ) then
+   endif
+
+   echo _________J_G_D_I__C_L_A_S_S__F_I_L_E_S___
+   cd $SOURCE/libs/jgdi
+   ant -Dlibs.junit.classpath=$JUNIT_JAR -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+
+   if ( $JAVA == 2 ) then
       echo done
       exit 0
    endif
 
-   cd $SOURCE
 endif
 
 if ( "$QMON" == 1 ) then

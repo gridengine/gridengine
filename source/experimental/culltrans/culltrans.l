@@ -10,7 +10,7 @@
 
 liststart          LISTDEF
 listend            LISTEND
-cod                COD_
+sge                SGE_
 booldef            BOOL
 floatdef           FLOAT
 doubledef          DOUBLE
@@ -26,66 +26,70 @@ idlend             XIDL\*\/
 uppercase          [A-Z]
 spaces             [ \t]*
 
-%start list idl
+%start list idl attr
 %p 4000
-%n 550
+%n 1550
+%e 2000
 
 %%
-{spaces}I{liststart}                  {BEGIN list; return IDLGEN_ILISTSTART; }
-{spaces}S{liststart}                  {BEGIN list; return IDLGEN_SLISTSTART; }
-<list>{spaces}{listend}               {BEGIN 0; return IDLGEN_LISTEND; }
-<list>{spaces}{cod}K{ulongdef}                  return IDLGEN_KULONG;
-<list>{spaces}{cod}K{stringdef}                 return IDLGEN_KSTRING;
-<list>{spaces}{cod}I{booldef}                   return IDLGEN_IBOOL;
-<list>{spaces}{cod}I{floatdef}                  return IDLGEN_IFLOAT;
-<list>{spaces}{cod}I{doubledef}                 return IDLGEN_IDOUBLE;
-<list>{spaces}{cod}I{ulongdef}                  return IDLGEN_IULONG;
-<list>{spaces}{cod}I{longdef}                   return IDLGEN_ILONG;
-<list>{spaces}{cod}I{chardef}                   return IDLGEN_ICHAR;
-<list>{spaces}{cod}I{intdef}                    return IDLGEN_IINT;
-<list>{spaces}{cod}I{stringdef}                 return IDLGEN_ISTRING;
-<list>{spaces}{cod}IR{booldef}                  return IDLGEN_IRBOOL;
-<list>{spaces}{cod}IR{floatdef}                 return IDLGEN_IRFLOAT;
-<list>{spaces}{cod}IR{doubledef}                return IDLGEN_IRDOUBLE;
-<list>{spaces}{cod}IR{ulongdef}                 return IDLGEN_IRULONG;
-<list>{spaces}{cod}IR{longdef}                  return IDLGEN_IRLONG;
-<list>{spaces}{cod}IR{chardef}                  return IDLGEN_IRCHAR;
-<list>{spaces}{cod}IR{intdef}                   return IDLGEN_IRINT;
-<list>{spaces}{cod}IR{stringdef}                return IDLGEN_IRSTRING;
-<list>{spaces}{cod}I{listdef}                   return IDLGEN_ILIST;
-<list>{spaces}{cod}I{objdef}                    return IDLGEN_IOBJECT;
-<list>{spaces}{cod}IR{listdef}                  return IDLGEN_IRLIST;
-<list>{spaces}{cod}IR{objdef}                   return IDLGEN_IROBJECT;
-<list>{spaces}{cod}{booldef}                    return IDLGEN_BOOL;
-<list>{spaces}{cod}{floatdef}                   return IDLGEN_FLOAT;
-<list>{spaces}{cod}{doubledef}                  return IDLGEN_DOUBLE;
-<list>{spaces}{cod}{ulongdef}                   return IDLGEN_ULONG;
-<list>{spaces}{cod}{longdef}                    return IDLGEN_LONG;
-<list>{spaces}{cod}{chardef}                    return IDLGEN_CHAR;
-<list>{spaces}{cod}{intdef}                     return IDLGEN_INT;
-<list>{spaces}{cod}{stringdef}                  return IDLGEN_STRING;
-<list>{spaces}{cod}R{booldef}                   return IDLGEN_RBOOL;
-<list>{spaces}{cod}R{floatdef}                  return IDLGEN_RFLOAT;
-<list>{spaces}{cod}R{doubledef}                 return IDLGEN_RDOUBLE;
-<list>{spaces}{cod}R{ulongdef}                  return IDLGEN_RULONG;
-<list>{spaces}{cod}R{longdef}                   return IDLGEN_RLONG;
-<list>{spaces}{cod}R{chardef}                   return IDLGEN_RCHAR;
-<list>{spaces}{cod}R{intdef}                    return IDLGEN_RINT;
-<list>{spaces}{cod}R{stringdef}                 return IDLGEN_RSTRING;
-<list>{spaces}{cod}T{listdef}                   return IDLGEN_LIST;
-<list>{spaces}{cod}R{listdef}                   return IDLGEN_RLIST;
-<list>{spaces}{cod}R{objdef}                    return IDLGEN_ROBJECT;
-<list>{spaces}{cod}X?{listdef}                  return IDLGEN_XLIST;
-<list>{spaces}{cod}X{objdef}                    return IDLGEN_XOBJECT;
-<list>{spaces}{cod}X{uppercase}*                {strcpy(yylval.name, yytext); return IDLGEN_XELEM;}
-<list>[_a-zA-Z][_a-zA-Z0-9]*               {strcpy(yylval.name, yytext); return IDLGEN_IDENTIFIER;}
-<list>{spaces}\({spaces}                   return IDLGEN_OPENBRACE;
-<list>{spaces}\,{spaces}                   return IDLGEN_COMMA;
-<list>{spaces}\)                           return IDLGEN_CLOSEBRACE;
-<list>{spaces}{idlstart}                   BEGIN idl;
-<list>\n                                   {yylval.other = '\n'; return IDLGEN_OTHER;}
-<list>.                                    {yylval.other = yytext[0]; return IDLGEN_OTHER;}
-<idl>{spaces}{idlend}\n                    BEGIN list;
-<idl>.*\n                                  {strcpy(yylval.name, yytext); return IDLGEN_IDL;}
-\n                                         {yylval.other = '\n'; return IDLGEN_OTHER;}
-.                                          {yylval.other = yytext[0]; return IDLGEN_OTHER;}
+{spaces}I{liststart}                  {BEGIN list; printf("%s\n", yytext); return IDLGEN_ILISTSTART; }
+{spaces}S{liststart}                  {BEGIN list; printf("%s\n", yytext); return IDLGEN_SLISTSTART; }
+<list>{spaces}{listend}               {BEGIN 0; printf("%s\n", yytext); return IDLGEN_LISTEND; }
+<list>{spaces}{sge}K{ulongdef}                  {printf("%s\n", yytext); return IDLGEN_KULONG;}
+<list>{spaces}{sge}K{stringdef}                 {printf("%s\n", yytext); return IDLGEN_KSTRING;}
+<list>{spaces}{sge}I{booldef}                   {printf("%s\n", yytext); return IDLGEN_IBOOL;}
+<list>{spaces}{sge}I{floatdef}                  {printf("%s\n", yytext); return IDLGEN_IFLOAT;}
+<list>{spaces}{sge}I{doubledef}                 {printf("%s\n", yytext); return IDLGEN_IDOUBLE;}
+<list>{spaces}{sge}I{ulongdef}                  {printf("%s\n", yytext); return IDLGEN_IULONG;}
+<list>{spaces}{sge}I{longdef}                   {printf("%s\n", yytext); return IDLGEN_ILONG;}
+<list>{spaces}{sge}I{chardef}                   {printf("%s\n", yytext); return IDLGEN_ICHAR;}
+<list>{spaces}{sge}I{intdef}                    {printf("%s\n", yytext); return IDLGEN_IINT;}
+<list>{spaces}{sge}I{stringdef}                 {printf("%s\n", yytext); return IDLGEN_ISTRING;}
+<list>{spaces}{sge}IR{booldef}                  {printf("%s\n", yytext); return IDLGEN_IRBOOL;}
+<list>{spaces}{sge}IR{floatdef}                 {printf("%s\n", yytext); return IDLGEN_IRFLOAT;}
+<list>{spaces}{sge}IR{doubledef}                {printf("%s\n", yytext); return IDLGEN_IRDOUBLE;}
+<list>{spaces}{sge}IR{ulongdef}                 {printf("%s\n", yytext); return IDLGEN_IRULONG;}
+<list>{spaces}{sge}IR{longdef}                  {printf("%s\n", yytext); return IDLGEN_IRLONG;}
+<list>{spaces}{sge}IR{chardef}                  {printf("%s\n", yytext); return IDLGEN_IRCHAR;}
+<list>{spaces}{sge}IR{intdef}                   {printf("%s\n", yytext); return IDLGEN_IRINT;}
+<list>{spaces}{sge}IR{stringdef}                {printf("%s\n", yytext); return IDLGEN_IRSTRING;}
+<list>{spaces}{sge}I{listdef}                   {printf("%s\n", yytext); return IDLGEN_ILIST;}
+<list>{spaces}{sge}I{objdef}                    {printf("%s\n", yytext); return IDLGEN_IOBJECT;}
+<list>{spaces}{sge}IR{listdef}                  {printf("%s\n", yytext); return IDLGEN_IRLIST;}
+<list>{spaces}{sge}IR{objdef}                   {printf("%s\n", yytext); return IDLGEN_IROBJECT;}
+<list>{spaces}{sge}{booldef}                    {printf("%s\n", yytext); return IDLGEN_BOOL;}
+<list>{spaces}{sge}{floatdef}                   {printf("%s\n", yytext); return IDLGEN_FLOAT;}
+<list>{spaces}{sge}{doubledef}                  {printf("%s\n", yytext); return IDLGEN_DOUBLE;}
+<list>{spaces}{sge}{ulongdef}                   {printf("%s\n", yytext); return IDLGEN_ULONG;}
+<list>{spaces}{sge}{longdef}                    {printf("%s\n", yytext); return IDLGEN_LONG;}
+<list>{spaces}{sge}{chardef}                    {printf("%s\n", yytext); return IDLGEN_CHAR;}
+<list>{spaces}{sge}{intdef}                     {printf("%s\n", yytext); return IDLGEN_INT;}
+<list>{spaces}{sge}{stringdef}                  {printf("%s\n", yytext); return IDLGEN_STRING;}
+<list>{spaces}{sge}R{booldef}                   {printf("%s\n", yytext); return IDLGEN_RBOOL;}
+<list>{spaces}{sge}R{floatdef}                  {printf("%s\n", yytext); return IDLGEN_RFLOAT;}
+<list>{spaces}{sge}R{doubledef}                 {printf("%s\n", yytext); return IDLGEN_RDOUBLE;}
+<list>{spaces}{sge}R{ulongdef}                  {printf("%s\n", yytext); return IDLGEN_RULONG;}
+<list>{spaces}{sge}R{longdef}                   {printf("%s\n", yytext); return IDLGEN_RLONG;}
+<list>{spaces}{sge}R{chardef}                   {printf("%s\n", yytext); return IDLGEN_RCHAR;}
+<list>{spaces}{sge}R{intdef}                    {printf("%s\n", yytext); return IDLGEN_RINT;}
+<list>{spaces}{sge}R{stringdef}                 {printf("%s\n", yytext); return IDLGEN_RSTRING;}
+<list>{spaces}{sge}T{listdef}                   {printf("%s\n", yytext); return IDLGEN_LIST;}
+<list>{spaces}{sge}R{listdef}                   {printf("%s\n", yytext); return IDLGEN_RLIST;}
+<list>{spaces}{sge}R{objdef}                    {printf("%s\n", yytext); return IDLGEN_ROBJECT;}
+<list>{spaces}{sge}X?{listdef}                  {printf("%s\n", yytext); return IDLGEN_XLIST;}
+<list>{spaces}{sge}X{objdef}                    {printf("%s\n", yytext); return IDLGEN_XOBJECT;}
+<list>{spaces}{sge}X{uppercase}*                {strcpy(yylval.name, yytext); printf("%s\n", yytext); return IDLGEN_XELEM;}
+<list>\,{spaces}CULL_[_a-zA-Z0-9]*         {printf("%s\n", yytext); BEGIN attr;}
+<list>[_a-zA-Z][_a-zA-Z0-9]*               {strcpy(yylval.name, yytext); printf("%s\n", yytext); return IDLGEN_IDENTIFIER;}
+<list>{spaces}\({spaces}                   {printf("%s\n", yytext); return IDLGEN_OPENBRACE;}
+<list>{spaces}\,{spaces}                   {printf("%s\n", yytext); return IDLGEN_COMMA;}
+<list>{spaces}\)                           {printf("%s\n", yytext); return IDLGEN_CLOSEBRACE;}
+<list>{spaces}{idlstart}                   {printf("%s\n", yytext); BEGIN idl;}
+<list>\n                                   {yylval.other = '\n';printf("%s\n", yytext);  return IDLGEN_OTHER;}
+<list>.                                    {yylval.other = yytext[0];printf("%s\n", yytext);  return IDLGEN_OTHER;}
+<idl>{spaces}{idlend}\n                    {printf("%s\n", yytext); BEGIN list;}
+<idl>.*\n                                  {strcpy(yylval.name, yytext); printf("%s\n", yytext); return IDLGEN_IDL;}
+<attr>{spaces}\|{spaces}CULL_[_a-zA-Z0-9]* {printf("%s\n", yytext);}
+<attr>{spaces}\)                           {BEGIN list; printf("%s\n", yytext); return IDLGEN_CLOSEBRACE;}
+\n                                         {yylval.other = '\n'; /* printf("%s\n", yytext);*/ return IDLGEN_OTHER;}
+.                                          {yylval.other = yytext[0];/* printf("%s\n", yytext);*/ return IDLGEN_OTHER;}

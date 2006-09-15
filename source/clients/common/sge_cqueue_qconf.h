@@ -34,44 +34,44 @@
 
 
 lListElem *
-cqueue_get_via_gdi(lList **answer_list, const char *cqueue);
+cqueue_get_via_gdi(void *context, lList **answer_list, const char *cqueue);
 
 bool
-cqueue_hgroup_get_via_gdi(lList **answer_list, const lList *qref_list,
+cqueue_hgroup_get_via_gdi(void *context,
+                          lList **answer_list, const lList *qref_list,
                           lList **hgrp_list, lList **cq_list);
 
 bool
-cqueue_hgroup_get_all_via_gdi(lList **answer_list, 
+cqueue_hgroup_get_all_via_gdi(void *context,
+                              lList **answer_list, 
                               lList **hgrp_list, lList **cq_list);
 
 bool 
-cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
+cqueue_add_del_mod_via_gdi(void *context,
+                           lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command);
 
-bool 
-cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
-                              bool ignore_unchanged_message);
 
 bool
-cqueue_show(lList **answer_list, const lList *qref_pattern);
+cqueue_show(void *context, lList **answer_list, const lList *qref_pattern);
 
 bool 
-cqueue_add(lList **answer_list, const char *name);
+cqueue_add(void *context, lList **answer_list, const char *name);
 
 bool 
-cqueue_modify(lList **answer_list, const char *name);
+cqueue_modify(void *context, lList **answer_list, const char *name);
 
 bool 
-cqueue_delete(lList **answer_list, const char *name);
+cqueue_delete(void *context, lList **answer_list, const char *name);
 
 bool 
-cqueue_add_from_file(lList **answer_list, const char *filename);
+cqueue_add_from_file(void *context, lList **answer_list, const char *filename);
 
 bool 
-cqueue_modify_from_file(lList **answer_list, const char *filename);
+cqueue_modify_from_file(void *context, lList **answer_list, const char *filename);
 
 bool
-cqueue_list_sick(lList **answer_list);
+cqueue_list_sick(void *context, lList **answer_list);
 
 bool
 cqueue_sick(lListElem *cqueue, lList **answer_list, lList *hgroup_list, dstring *ds);

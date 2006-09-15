@@ -63,10 +63,10 @@ bool
 reporting_initialize(lList **answer_list);
 
 bool
-reporting_shutdown(lList **answer_list, bool do_spool);
+reporting_shutdown(void *context, lList **answer_list, bool do_spool);
 
 void
-reporting_trigger_handler(te_event_t anEvent, monitoring_t *monitor);
+reporting_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);
@@ -83,9 +83,12 @@ reporting_create_job_log(lList **answer_list,
                          const char *message);
 
 bool
-reporting_create_acct_record(lList **answer_list, 
-                       lListElem *job_report, 
-                       lListElem *job, lListElem *ja_task, bool intermediate);
+reporting_create_acct_record(void *context,
+                             lList **answer_list, 
+                             lListElem *job_report, 
+                             lListElem *job, 
+                             lListElem *ja_task, 
+                             bool intermediate);
 
 bool
 reporting_create_host_record(lList **answer_list,

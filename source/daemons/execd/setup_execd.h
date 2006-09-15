@@ -32,8 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void sge_setup_sge_execd(const char* tmp_err_file_name);
-int daemonize_execd(void);
+void sge_setup_sge_execd(void *context, const char* tmp_err_file_name);
+
+
+int daemonize_execd(void *context);
 int job_initialize_job(lListElem *job);
 
 #endif /* __SETUP_EXECD_H */

@@ -85,6 +85,10 @@
 
 #include "sge_str.h"
 
+#ifdef TEST_GDI2
+#include "sge_gdi_ctx.h"
+#endif
+
 #if COMPILE_DC
 static int reprioritization_enabled = 0;
 #endif
@@ -97,10 +101,11 @@ sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
 static bool
 sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 
-static int sge_start_jobs(void);
-static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
+static int sge_start_jobs(void *context);
+static int exec_job_or_task(void *context, lListElem *jep, lListElem *jatep, lListElem *petep);
 
 static bool should_reprioritize(void);
+static void force_job_rlimit(const char* qualified_hostname);
 
 extern volatile int jobs_to_start;
 
@@ -186,7 +191,7 @@ static void notify_ptf()
 }
 
 /* force job resource limits */
-void force_job_rlimit()
+static void force_job_rlimit(const char* qualified_hostname)
 {
    lList *usage_list;
    lListElem *q=NULL, *jep, *cpu_ep, *vmem_ep, *gdil_ep, *jatep;
@@ -221,8 +226,7 @@ void force_job_rlimit()
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             double lim;
 
-            if (sge_hostcmp(uti_state_get_qualified_hostname(), 
-                 lGetHost(gdil_ep, JG_qhostname)) 
+            if (sge_hostcmp(qualified_hostname, lGetHost(gdil_ep, JG_qhostname)) 
                 || !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
@@ -299,15 +303,13 @@ void force_job_rlimit()
 #endif
 
 static u_long32 
-execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now) 
+execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int limit_nm, u_long32 now) 
 {
    u_long32 ret = U_LONG32_MAX;
    const lListElem *gdil;
-   const char *hostname;
    const void *iterator;
-  
-   hostname = uti_state_get_qualified_hostname();
-   gdil = lGetElemHostFirst(gdil_list, JG_qhostname, hostname, &iterator);
+
+   gdil = lGetElemHostFirst(gdil_list, JG_qhostname, qualified_hostname, &iterator);
    while (gdil != NULL) {
       const lListElem *queue;
       const char *limit;
@@ -326,7 +328,7 @@ execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now)
          ret = MIN(ret, clock_val);
       }
 
-      gdil = lGetElemHostNext(gdil_list, JG_qhostname, hostname, &iterator);
+      gdil = lGetElemHostNext(gdil_list, JG_qhostname, qualified_hostname, &iterator);
    }
 
    if (ret != U_LONG32_MAX) {
@@ -356,8 +358,14 @@ execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now)
 #define OLD_JOB_INTERVAL 60
 
 int 
-execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb,
-               u_long *rcvtimeout, int *synchron, char *err_str, int answer_error) 
+execd_ck_to_do(void *context,
+               struct dispatch_entry *de, 
+               sge_pack_buffer *pb, 
+               sge_pack_buffer *apb,
+               u_long *rcvtimeout, 
+               int *synchron, 
+               char *err_str, 
+               int answer_error) 
 {
    u_long32 now;
    static u_long next_usage = 0;
@@ -368,6 +376,13 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
    lListElem *jep, *jatep;
    int was_communication_error = CL_RETVAL_OK;
    int return_value = 0;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -457,11 +472,11 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       }
 #endif
       /* update the usage list in our job report list */
-      update_job_usage();
+      update_job_usage(qualified_hostname);
 
 #ifdef COMPILE_DC
       /* check for job limits */
-      force_job_rlimit();
+      force_job_rlimit(qualified_hostname);
 #endif
    }
       
@@ -471,7 +486,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
        * loose a job start if we reset jobs_to_start after sge_start_jobs()
        */
       jobs_to_start = 0;
-      sge_start_jobs();
+      sge_start_jobs(context);
    }
 
    if (sge_sig_handler_dead_children != 0) {
@@ -500,9 +515,9 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
                lList *gdil_list = lGetList(jatep, 
                                            JAT_granted_destin_identifier_list);
                lSetUlong(jep, JB_soft_wallclock_gmt, 
-                         execd_get_wallclock_limit(gdil_list, QU_s_rt, now));
+                         execd_get_wallclock_limit(qualified_hostname, gdil_list, QU_s_rt, now));
                lSetUlong(jep, JB_hard_wallclock_gmt, 
-                         execd_get_wallclock_limit(gdil_list, QU_h_rt, now));
+                         execd_get_wallclock_limit(qualified_hostname, gdil_list, QU_h_rt, now));
             }
 
             if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
@@ -600,7 +615,7 @@ execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *
       if (last_report_send < now) {
          last_report_send = now;
          /* send all reports */
-         was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
+         was_communication_error = sge_send_all_reports(context, now, 0, execd_report_sources);
          DPRINTF(("----> was_communication_error: "SFQ" ("sge_U32CFormat")\n", 
                   cl_get_error_text(was_communication_error), 
                   sge_u32c(was_communication_error)));
@@ -720,7 +735,7 @@ sge_kill_petasks(const lListElem *job, const lListElem *ja_task)
 
 
 /*****************************************************************************/
-static int sge_start_jobs()
+static int sge_start_jobs(void *context)
 {
    lListElem *jep, *jatep, *petep;
    int state_changed;
@@ -736,11 +751,11 @@ static int sge_start_jobs()
 
    for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         state_changed = exec_job_or_task(jep, jatep, NULL);
+         state_changed = exec_job_or_task(context, jep, jatep, NULL);
 
          /* visit all tasks */
          for_each(petep, lGetList(jatep, JAT_task_list))
-            state_changed |= exec_job_or_task(jep, jatep, petep);
+            state_changed |= exec_job_or_task(context, jep, jatep, petep);
 
          /* now save this job so we are up to date on restart */
          if (state_changed) {
@@ -758,6 +773,7 @@ static int sge_start_jobs()
 
 
 static int exec_job_or_task(
+void *context,
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep
@@ -767,6 +783,13 @@ lListElem *petep
    u_long32 now;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id = NULL;
+
+#ifdef TEST_GDI2
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+#else
+   const char *qualified_hostname = uti_state_get_qualified_hostname();
+#endif
 
    DENTER(TOP_LAYER, "exec_job_or_task");
 
@@ -800,7 +823,7 @@ lListElem *petep
    /* JG: TODO: make a function simulate_start_job_or_task() */
    if(mconf_get_simulate_hosts()) {
       const char *host = lGetHost(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qhostname);
-      if(sge_hostcmp(host, uti_state_get_qualified_hostname()) != 0) {
+      if(sge_hostcmp(host, qualified_hostname) != 0) {
          lList *job_args;
          u_long32 duration = 60;
 
@@ -854,7 +877,7 @@ lListElem *petep
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
    } else {
-      pid = sge_exec_job(jep, jatep, petep, err_str, 256);
+      pid = sge_exec_job(context, jep, jatep, petep, err_str, 256);
    }   
 
    if (pid < 0) {
@@ -886,7 +909,7 @@ lListElem *petep
 
    DPRINTF(("***EXECING "sge_u32"."sge_u32" on %s (tid = %s) (pid = %d)\n",
             job_id, ja_task_id, 
-            uti_state_get_unqualified_hostname(), pe_task_id != NULL ? pe_task_id : "null", pid));
+            qualified_hostname, pe_task_id != NULL ? pe_task_id : "null", pid));
 
    /* when a ja_task or pe_task has been started, flush the job report */
    {

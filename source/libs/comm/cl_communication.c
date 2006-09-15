@@ -44,7 +44,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "sge_hostname.h"
+#include "uti/sge_hostname.h"
 #include "cl_commlib.h"
 #include "cl_util.h"
 #include "cl_data_types.h"
@@ -161,7 +161,9 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
       CL_LOG(CL_LOG_WARNING,"freeing sirm in message struct");
       cl_com_free_sirm_message(&((*message)->message_sirm));
    }
-   free((*message)->message);
+   if ((*message)->message != NULL) {
+      free((*message)->message);
+   }   
    free(*message);
    *message = NULL;
    return CL_RETVAL_OK;
@@ -445,6 +447,7 @@ int cl_com_free_debug_client_setup(cl_debug_client_setup_t** dc_setup) {
 #endif
 #define __CL_FUNCTION__ "cl_com_create_ssl_setup()"
 int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
+                            cl_ssl_cert_mode_t   ssl_cert_mode,
                             cl_ssl_method_t      ssl_method,
                             char*                ssl_CA_cert_pem_file,
                             char*                ssl_CA_key_pem_file,
@@ -467,7 +470,7 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
       CL_LOG(CL_LOG_ERROR,"setup configuration pointer is not NULL");
       return CL_RETVAL_PARAMS;
    }
- 
+
    switch(ssl_method) {
       case CL_SSL_v23:
          break;
@@ -484,6 +487,8 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
 
    memset(tmp_setup, 0, sizeof(cl_ssl_setup_t));
    
+   tmp_setup->ssl_cert_mode = ssl_cert_mode;
+
    tmp_setup->ssl_method = ssl_method;
 
    if (ssl_CA_cert_pem_file != NULL) {
@@ -589,6 +594,7 @@ int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source) {
    }
 
    return cl_com_create_ssl_setup(new_setup, 
+                                  source->ssl_cert_mode,
                                   source->ssl_method,
                                   source->ssl_CA_cert_pem_file,
                                   source->ssl_CA_key_pem_file,

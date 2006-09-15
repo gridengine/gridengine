@@ -64,7 +64,7 @@ typedef enum {
 
 typedef struct te_event* te_event_t;
 
-typedef void (*te_handler_t)(te_event_t, monitoring_t *monitor);
+typedef void (*te_handler_t)(void *context, te_event_t, monitoring_t *monitor);
 
 
 extern void       te_register_event_handler(te_handler_t, te_type_t);

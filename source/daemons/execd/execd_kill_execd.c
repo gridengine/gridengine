@@ -47,13 +47,14 @@
 
 extern int shut_me_down;
 
-int execd_kill_execd(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb; 
-u_long *rcvtimeout; 
-int *synchron; 
-char *err_str; 
-int answer_error;
+int execd_kill_execd(void *context,
+                     struct dispatch_entry *de,
+                     sge_pack_buffer *pb, 
+                     sge_pack_buffer *apb, 
+                     u_long *rcvtimeout, 
+                     int *synchron, 
+                     char *err_str, 
+                     int answer_error)
 {
    lListElem *jep, *jatep;
    u_long32 kill_jobs;
@@ -80,10 +81,9 @@ int answer_error;
             sge_execd_deliver_signal(sge_signal, jep, jatep);
          }
       }
-      shut_me_down = 1; /* Needed for Checkpointing */
    }
-   else
-      shut_me_down = 1;
+
+   shut_me_down = 1;
 
    DEXIT;
    return 0;

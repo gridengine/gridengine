@@ -82,6 +82,7 @@
 #include "sge_qinstance_state.h"
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
+#include "sge_ja_task.h"
 #include "uti/sge_string.h"
 
 /*-------------------------------------------------------------------------*/
@@ -1644,6 +1645,10 @@ int how
 
 #else   
 
+   XtVaSetValues( list, 
+                  XmNitems, NULL,
+                  XmNitemCount, 0,
+                  NULL);
    for (i=FIRST_FIELD; i<num_jobs; i++) {
       if (how == FILL_ALL) {
          DPRINTF(("XmListAddItemUniqueSorted: '%s'\n", job_items[i].name));

@@ -37,11 +37,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -153,7 +151,14 @@ public class Expect {
             this.env.toArray(env);
                     
             if(LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, "exec: {0}", Arrays.toString(cmd));
+                StringBuffer msg = new StringBuffer();
+                for(int i = 0; i < cmd.length; i++) {
+                    if(i>0) {
+                        msg.append(' ');
+                    }
+                    msg.append(cmd[i]);
+                }
+                LOGGER.log(Level.FINE, "exec: {0}", msg);
             }
             process = Runtime.getRuntime().exec(cmd, env);
             
@@ -430,7 +435,17 @@ public class Expect {
      */ 
     public void println(char[] x) {
         if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + Arrays.toString(x) + "'<NL>");
+            StringBuffer msg = new StringBuffer();
+            for(int i = 0; i < x.length; i++) {
+                if(i>0) {
+                    msg.append(' ');
+                }
+                msg.append('\'');
+                msg.append(x[i]);
+                msg.append('\'');
+            }
+            
+            LOGGER.log(Level.FINER, "send " + msg + "<NL>");
         }
         stdin.println(x);
     }

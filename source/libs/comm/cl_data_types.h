@@ -198,6 +198,10 @@ typedef enum cl_ssl_verify_mode_type {
    CL_SSL_USER_NAME = 2
 } cl_ssl_verify_mode_t;
 
+typedef enum cl_ssl_cert_mode_type {
+   CL_SSL_PEM_FILE = 1,
+   CL_SSL_PEM_BYTE = 2
+} cl_ssl_cert_mode_t;   
 
 /* callback for verify peer names */
 typedef cl_bool_t    (*cl_ssl_verify_func_t)  (cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value );
@@ -238,17 +242,24 @@ typedef struct cl_debug_client_setup_type {
  * b) make TODO parameters check
  */
 typedef struct cl_ssl_setup_type {
+   cl_ssl_cert_mode_t ssl_cert_mode;           /*  CL_SSL_PEM_FILE or CL_SSL_PEM_BYTE                                          */
+                                               /*  if (ssl_cert_mode == CL_SSL_PEM_FILE) {                                     */
+                                               /*     ssl_cert_pem_file contains the pem cert file name                        */
+                                               /*     ssl_key_pem_file contains the pem key file name                          */
+                                               /*  } else {                                                                    */
+                                               /*     ssl_cert_pem_file contains the pem cert file name                        */
+                                               /*     ssl_key_pem_file contains the pem key file name                          */
+                                               /*  }                                                                           */
    cl_ssl_method_t ssl_method;                 /*  used for call to SSL_CTX_new() as parameter       */
    char*           ssl_CA_cert_pem_file;       /*  CA certificate file                           ->ca_cert_file<-              */
-   char*           ssl_CA_key_pem_file;        /*  private certificate file of CA                ->ca_key_file (not used)<-    */
-   char*           ssl_cert_pem_file;          /*  certificates file                             ->cert_file<-                 */
+   char*           ssl_CA_key_pem_file;        /*  private key file of CA                        ->ca_key_file (not used)<-    */
+   char*           ssl_cert_pem_file;          /*  certificate file                              ->cert_file<-                 */
    char*           ssl_key_pem_file;           /*  key file                                      ->key_file<-                  */
    char*           ssl_rand_file;              /*  rand file (if RAND_status() not ok)           ->rand_file<-                 */
    char*           ssl_reconnect_file;         /*  file for reconnect data                       ->reconnect_file (not used)<- */
    char*           ssl_crl_file;               /*  file for revocation list */
    unsigned long   ssl_refresh_time;           /*  key alive time for connections (for services) ->refresh_time (not used)<-   */
    char*           ssl_password;               /*  password for encrypted keyfiles               ->not used<-                  */
-
    cl_ssl_verify_func_t  ssl_verify_func;       /*  function callback for peer user/name check */
 } cl_ssl_setup_t;
 

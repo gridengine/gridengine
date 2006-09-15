@@ -525,8 +525,8 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
       return 9;
    }
   
-   snprintf(buffer, 2048, "0:%d:%s/utilbin/%s:%s:%s", 
-                    port, sge_root, arch, cwd, get_conf_val("host"));
+   snprintf(buffer, 2048, "0:%d:%s/utilbin/%s:%s:%s",
+            port, sge_root, arch, cwd, get_conf_val("host"));
 
    if (write_to_qrsh(buffer) != 0) {
       SHEPHERD_TRACE((err_str, "communication with qrsh failed"));

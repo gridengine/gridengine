@@ -66,6 +66,11 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="-pre-init">
+        <property file="../../build_private.properties"/>
+        <property file="../../build.properties"/>
+    </target>
+    
     
     <target name="-post-jar">
         <antcall target="test.jar"/>

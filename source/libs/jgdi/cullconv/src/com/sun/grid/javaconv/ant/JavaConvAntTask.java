@@ -62,6 +62,9 @@ public class JavaConvAntTask extends Task {
    
    private ClassFilter classdef;
    
+   private String source = "1.4";
+   private String target = "1.4";
+   
    public ClassFilter createClassDef() {
       if(classdef == null) {
          classdef = new ClassFilter(this);
@@ -137,6 +140,22 @@ public class JavaConvAntTask extends Task {
    
    public String getClassname() {
       return classname;
+   }
+
+   public String getSource() {
+      return source;
+   }
+
+   public void setSource(String source) {
+      this.source = source;
+   }
+
+   public String getTarget() {
+      return target;
+   }
+
+   public void setTarget(String target) {
+      this.target = target;
    }
    
    

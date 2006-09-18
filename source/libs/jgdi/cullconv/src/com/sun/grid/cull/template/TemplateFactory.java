@@ -57,10 +57,15 @@ public class TemplateFactory {
    private File tmpClassesDir;
    private String classpath;
    private Logger logger = Logger.getLogger("cullconv");
+   private String javaSourceVersion = "1.4";
+   private String javaTargetVersion = "1.4";
    
-   public TemplateFactory(File tmpDir, String classpath) {
+   
+   public TemplateFactory(File tmpDir, String classpath, String javaSourceVersion, String javaTargetVersion) {
       
       this.tmpDir = tmpDir;
+      this.javaSourceVersion = javaSourceVersion;
+      this.javaTargetVersion = javaTargetVersion;
       tmpSrcDir = new File(tmpDir, "src");
       tmpClassesDir = new File(tmpDir, "classes");
       this.classpath = classpath;
@@ -116,6 +121,8 @@ public class TemplateFactory {
          String args [] = {         
             "-d", tmpClassesDir.getAbsolutePath(), 
             "-classpath", classpath,
+            "-source", javaSourceVersion,
+            "-target", javaTargetVersion,
             srcFile.getAbsolutePath()
          };
 

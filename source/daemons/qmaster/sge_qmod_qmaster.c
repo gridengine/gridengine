@@ -543,7 +543,7 @@ monitoring_t *monitor
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
             ja_task_message_trash_all_of_type_X(jatep, 1); 
-lWriteElemTo(jatep, stderr);
+/* lWriteElemTo(jatep, stderr); */
             sge_event_spool(context,
                             answer, 0, sgeE_JATASK_MOD,
                             job_id, task_id, NULL, NULL, NULL,

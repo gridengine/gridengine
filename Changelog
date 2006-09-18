@@ -1,4 +1,11 @@
+AA-2006-09-18-0: Enhancem:  o cleanup of build process of drmaa,juti,jgdi
+                            o build source/target for cullconv
+                            o bug in sge_centry_del() that leads to master abort for qconf -mc
+                              in delete case
+                 Review:    RH           
+
 DT-2006-09-16-0: WWW        o Added Google Analytics tracking code to html
+
 AA-2006-09-15-0: Enhancem:  o introduced sge_gdi_ctx_class_t for jgdi support
                               sge_env, prog_state, path_state,
                               bootstrap_state, sge_csp,

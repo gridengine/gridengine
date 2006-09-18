@@ -51,8 +51,9 @@ public class CullTemplateConverter extends AbstractCullConverter {
    
    
    /** Creates a new instance of CullTemplateConverter */
-   public CullTemplateConverter(File buildDir, String classpath, File outputFile, File template ) {      
-      fac = new TemplateFactory(buildDir, classpath );
+   public CullTemplateConverter(File buildDir, String classpath, File outputFile, File template,
+           String javaSourceVersion, String javaTargetVersion) {      
+      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
       this.outputFile = outputFile;
       this.templateFile = template;
    }

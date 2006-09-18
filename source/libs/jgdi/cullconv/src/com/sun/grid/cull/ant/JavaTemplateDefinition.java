@@ -69,7 +69,9 @@ public class JavaTemplateDefinition extends JavaConverterDefinition {
       CullJavaTemplateConverter ret = new CullJavaTemplateConverter(cullConvAntTask.getBuildDir(),
                                                                     cullConvAntTask.getClassPathAsString(),
                                                                     getOutputDir(), 
-                                                                    template );
+                                                                    template,
+                                                                    cullConvAntTask.getSource(),
+                                                                    cullConvAntTask.getTarget());
       
       ret.setPackagename(getPackagename());
       

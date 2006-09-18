@@ -83,7 +83,9 @@ public class TemplateConverterDefinition extends ConverterDefinition {
       
       CullTemplateConverter converter = new CullTemplateConverter(cullConvAntTask.getBuildDir(), 
                                                             cullConvAntTask.getClassPathAsString(),
-                                                            getOutputFile(), templateFile);
+                                                            getOutputFile(), templateFile,
+                                                            cullConvAntTask.getSource(),
+                                                            cullConvAntTask.getTarget());
       setScopeInConverter(converter);
       
       return converter;

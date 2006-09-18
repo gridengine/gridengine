@@ -66,7 +66,9 @@ public class JavaTemplateConverterDefintion extends AbstractConverterDefinition 
    }
    
    public JavaToJavaConverter createConverter() throws org.apache.tools.ant.BuildException {
-      return new JavaToJavaTemplateConverter(javaConvAntTask.getBuildDir(), javaConvAntTask.getClassPathAsString(), outputDir, packageName, templateFile, classSuffix, fileSuffix);
+      return new JavaToJavaTemplateConverter(javaConvAntTask.getBuildDir(), javaConvAntTask.getClassPathAsString(), outputDir, 
+                                             packageName, templateFile, classSuffix, fileSuffix,
+                                             javaConvAntTask.getSource(), javaConvAntTask.getTarget());
    }
 
    public File getOutputDir() {

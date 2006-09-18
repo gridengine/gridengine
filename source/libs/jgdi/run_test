@@ -28,8 +28,8 @@ JVM_ARGS="$JVM_ARGS -Djtestcase.script.validation=false -Xcheck:jni"
 JVM_ARGS="$JVM_ARGS -Djava.util.logging.config.file=test/logging.properties"
 
 if [ $CSP -eq 1 ]; then
-   JVM_ARGS="$JVM_ARGS -Djava.security.policy=src/jgdi.policy"
-   JVM_ARGS="$JVM_ARGS -Djava.security.auth.login.config==src/jaas.config"
+   JVM_ARGS="$JVM_ARGS -Djava.security.policy=util/jgdi.policy"
+   JVM_ARGS="$JVM_ARGS -Djava.security.auth.login.config==util/jaas.config"
    JVM_ARGS="$JVM_ARGS -Djava.security.manager"
 fi
 

@@ -66,6 +66,9 @@ public class CullConvAntTask extends Task {
    
    private Path classpath;
    
+   private String source = "1.4";
+   private String target = "1.4";
+   
    /** Creates a new instance of CullConvAntTask */
    public CullConvAntTask() {
    }
@@ -204,6 +207,22 @@ public class CullConvAntTask extends Task {
 
    public void setBuildDir(File buildDir) {
       this.buildDir = buildDir;
+   }
+
+   public String getSource() {
+      return source;
+   }
+
+   public void setSource(String source) {
+      this.source = source;
+   }
+
+   public String getTarget() {
+      return target;
+   }
+
+   public void setTarget(String target) {
+      this.target = target;
    }
    
 }

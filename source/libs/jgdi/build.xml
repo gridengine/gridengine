@@ -45,9 +45,9 @@
    
 
    <target name="init">
-      <property file="build_private.properties"/>    
-      <property file="build.properties"/>
       <property name="sge.srcdir" location="../.."/>
+      <property file="${sge.srcdir}/build_private.properties"/>    
+      <property file="${sge.srcdir}/build.properties"/>
       <property name="build.dir"  location="build"/>
       <property name="classes.dir"  location="${build.dir}/classes"/>
       <property name="src.dir"      location="src" />
@@ -57,6 +57,7 @@
       <property name="javadoc.dir" location="${build.dir}/doc/api"/>
       <property name="example.dir" location="examples"/>
       <property name="example.src.dir" location="examples/src"/>
+
 
       <property name="cullconv.jar" location="${basedir}/cullconv/build/cullconv.jar"/>
       <property name="project.name" value="${ant.project.name}"/>
@@ -123,8 +124,8 @@
       <javac debug="true" deprecation="true" 
          destdir="${classes.dir}"
          includes="com/sun/grid/jgdi/jni/JGDIImpl.java, com/sun/grid/jgdi/jni/JGDIBase.java, com/sun/grid/jgdi/jni/EventClient.java"
-         target="1.4"
-         source="1.4">
+         target="${javac.target}"
+         source="${javac.source}">
          <src refid="jgdi.srcpath"/>
       </javac>
     
@@ -134,8 +135,8 @@
       <javac debug="${javac.debug}" 
          deprecation="${javac.deprecated}"  
          destdir="${classes.dir}"
-         target="1.4"
-         source="1.4">
+         target="${javac.target}"
+         source="${javac.source}">
          <src refid="jgdi.srcpath"/>
          <classpath refid="compile.classpath"/>
       </javac>
@@ -184,7 +185,7 @@
        
    </target>    
     
-   <target  name="javadoc" depends="javadoc.init, javadoc.todo" 
+   <target  name="javadoc" depends="javadoc.init" 
       description="Javadoc for N1GE Java Admin API.">
        
       <javadoc destdir="${javadoc.dir}" 
@@ -197,9 +198,22 @@
          <tag name="todo" scope="all"  description="TODO:"/>
       </javadoc>
    </target>
-    
-    
-   <target name="javadoc.todo" depends="javadoc.init">
+   
+   <target name="javadoc.todo.init">
+      <available file="${tododoclet.jar}" property="javadoc.tododoclet.available"/>   
+   </target>
+   
+   <!--
+      The javadoc.todo target needs the jar file ${tododoclet.jar}
+   -->
+   <target name="javadoc.todo" depends="javadoc.init, javadoc.todo.init" 
+           if="javadoc.tododoclet.available"
+           description="Generates a overview of all todo tags from the javadoc comments">
+      
+      <fail unless="javadoc.tododoclet.available">
+         tododoclet not found. Please specify the tododoclet.jar property
+      </fail>
+      
       <javadoc packagenames="com.sun.grid.*" 
          doclet="com.sun.grid.tododoclet.TodoListDoclet"
          docletpath="${tododoclet.dir}/TodoDoclet.jar"
@@ -306,7 +320,9 @@
       <mkdir dir="${gensrc.dir}/com/sun/grid/jgdi/jni"/>
       <echo>java.library.path: ${java.library.path}</echo>      
       <cullconv packageName="com.sun.grid.jgdi.configuration"
-         buildDir="${build.dir}/tmp">
+         buildDir="${build.dir}/tmp"
+         target="${javac.target}"
+         source="${javac.source}">
          <classpath>
             <path location="${cullconv.jar}"/>
          </classpath>
@@ -575,6 +591,8 @@
    <target name="gensrc.native" depends="jni.init, gensrc.init, compile, aimk.template, aimk.drmaa"
       description="Create a all generated native source files">  
       <cullconv packageName="com.sun.grid.jgdi.configuration"
+                source="${javac.source}"
+                target="${javac.target}"
          buildDir="${build.dir}/tmp">
          <classpath>
             <path location="${cullconv.jar}"/>
@@ -594,8 +612,6 @@
             <include name="sge_all_listsL.template"/>
          </cullFiles>
       </cullconv>
-      
-      <echo>java jar file: ${java.home}/lib/rt.jar</echo>
       
       <javaconv buildDir="${build.dir}/tmp">
          <classdef>
@@ -741,8 +757,8 @@
                <jvmarg line="${sge.jvmargs}"/>
                <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
                <sysproperty key="java.util.logging.config.file" value="test/logging.properties"/>
-               <sysproperty key="java.security.policy" value="src/jgdi.policy"/>
-               <sysproperty key="java.security.auth.login.config" value="src/jaas.config"/>
+               <sysproperty key="java.security.policy" value="util/jgdi.policy"/>
+               <sysproperty key="java.security.auth.login.config" value="util/jaas.config"/>
                <sysproperty key="-Djava.security.manager" value=""/>
                <classpath refid="test.classpath"/>
                <batchtest todir="${build.dir}">
@@ -763,8 +779,8 @@
                <jvmarg line="${sge.jvmargs}"/>
                <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
                <sysproperty key="java.util.logging.config.file" value="test/logging.properties"/>
-               <sysproperty key="java.security.policy" value="src/jgdi.policy"/>
-               <sysproperty key="java.security.auth.login.config" value="src/jaas.config"/>
+               <sysproperty key="java.security.policy" value="util/jgdi.policy"/>
+               <sysproperty key="java.security.auth.login.config" value="util/jaas.config"/>
                <sysproperty key="-Djava.security.manager" value=""/>
                <jvmarg value="-Xdebug"/>
                <jvmarg value="-Xnoagent"/>
@@ -799,8 +815,8 @@
    <target name="test" depends="jni.init, jar, aimk" description="Run junit tests">
       <junit printsummary="withOutAndErr" haltonfailure="yes" fork="yes" dir="${basedir}"> 
          <jvmarg line="${sge.jvmargs}"/>
-         <sysproperty key="java.security.policy" value="src/jgdi.policy"/>
-         <sysproperty key="java.security.auth.login.config" value="src/jaas.config"/>
+         <sysproperty key="java.security.policy" value="util/jgdi.policy"/>
+         <sysproperty key="java.security.auth.login.config" value="util/jaas.config"/>
          <sysproperty key="-Djava.security.manager" value=""/>
          <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
          <sysproperty key="java.util.logging.config.file" value="test/logging.properties"/>
@@ -859,7 +875,7 @@
          <jvmarg value="-Djava.security.policy=${basedir}/util/rmiproxy.policy"/>
          <jvmarg value="-Djava.rmi.server.codebase=file://${classes.dir}/*"/>
          <jvmarg value="-Djava.rmi.server.logCalls=false"/>
-         <sysproperty key="java.util.logging.config.file" value="src/logging.properties"/>
+         <sysproperty key="java.util.logging.config.file" value="util/logging.properties"/>
          <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
          <arg line="-reg local:${rmiproxy.port}"/>
          <arg value="${rmiproxy.name}"/>
@@ -873,7 +889,7 @@
    <target name="test.login" depends="init, jni.init, compile">
        
       <java fork="true" classname="com.sun.grid.jgdi.login.JGDILoginTest">
-         <sysproperty key="java.security.auth.login.config" value="src/jgdi_jaas.config"/>
+         <sysproperty key="java.security.auth.login.config" value="juti/jgdi_jaas.config"/>
          <classpath>
             <pathelement location="${classes.dir}"/>
          </classpath>

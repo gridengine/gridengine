@@ -56,9 +56,10 @@ public class JavaToJavaTemplateConverter extends AbstractJavaToJavaConverter {
    
    /** Creates a new instance of CullTemplateConverter */
    public JavaToJavaTemplateConverter(File buildDir, String classpath, File outputDir, String packageName,
-                                    File template, String classSuffix, String fileSuffix ) {     
+                                    File template, String classSuffix, String fileSuffix,
+                                    String javaSourceVersion, String javaTargetVersion) {     
       super(outputDir, packageName, fileSuffix);
-      fac = new TemplateFactory(buildDir, classpath );
+      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion );
       this.templateFile = template;
       this.classSuffix = classSuffix;
    }

@@ -57,6 +57,8 @@ public class TemplateTask extends Task {
    private String classname;
    private File outputFile;
    private Path classpath;
+   private String source = "1.4";
+   private String target = "1.4";
    
    /** Creates a new instance of TemplateTask */
    public TemplateTask() {
@@ -88,7 +90,7 @@ public class TemplateTask extends Task {
          throw new BuildException("classpath not set");
       }
       try {
-         TemplateFactory fac = new TemplateFactory(buildDir,classpath.toString());
+         TemplateFactory fac = new TemplateFactory(buildDir,classpath.toString(),source, target);
          Template t = fac.createTemplate(template);
 
          Printer p = null;
@@ -175,6 +177,22 @@ public class TemplateTask extends Task {
          classpath = new Path(getProject());
       }
       return classpath;
+   }
+
+   public String getSource() {
+      return source;
+   }
+
+   public void setSource(String source) {
+      this.source = source;
+   }
+
+   public String getTarget() {
+      return target;
+   }
+
+   public void setTarget(String target) {
+      this.target = target;
    }
 
    

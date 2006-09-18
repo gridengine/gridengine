@@ -60,10 +60,11 @@ public class JavaTemplateConverter implements JavaToJavaConverter {
    private Logger logger = Logger.getLogger("cullconv");
     
    /** Creates a new instance of JavaTemplateConverter */
-   public JavaTemplateConverter(File buildDir, String classpath, File templateFile, File outputFile, File prologFile, File epilogFile) {
+   public JavaTemplateConverter(File buildDir, String classpath, File templateFile, File outputFile, File prologFile, File epilogFile,
+                                String javaSourceVersion, String javaTargetVersion) {
       this.templateFile = templateFile;
       this.outputFile = outputFile;
-      fac = new TemplateFactory(buildDir, classpath );
+      fac = new TemplateFactory(buildDir, classpath, javaSourceVersion, javaTargetVersion);
       this.prologFile = prologFile;
       this.epilogFile = epilogFile; 
       this.printer = null;

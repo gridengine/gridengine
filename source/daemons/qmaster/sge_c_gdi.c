@@ -1015,7 +1015,7 @@ sge_c_gdi_del(void *context,
                break;
 
             case SGE_CENTRY_LIST:
-               sge_del_centry(ep, &(answer->alp), user, host);
+               sge_del_centry(context, ep, &(answer->alp), user, host);
                break;
 
             case SGE_PE_LIST:

@@ -78,7 +78,8 @@ public class TemplateConverterDefinition extends AbstractConverterDefinition {
    
    public JavaToJavaConverter createConverter() throws org.apache.tools.ant.BuildException {
       return new JavaTemplateConverter(javaConvAntTask.getBuildDir(), javaConvAntTask.getClassPathAsString(), 
-                                       templateFile, outputFile, prologFile, epilogFile );
+                                       templateFile, outputFile, prologFile, epilogFile,
+                                       javaConvAntTask.getSource(), javaConvAntTask.getTarget());
                                        
    }
 

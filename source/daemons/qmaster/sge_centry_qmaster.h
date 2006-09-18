@@ -36,7 +36,7 @@
 #include "uti/sge_monitor.h"
 
 int 
-sge_del_centry(lListElem *cxp, lList **alpp, char *ruser, char *rhost);
+sge_del_centry(void *context, lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 
 int 
 centry_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);

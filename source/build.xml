@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Gridengine Java" default="all" basedir=".">
+   
+    <description>Builds the java parts of gridengine</description>
+
+    <target name="all" depends="drmaa, juti, jgdi"/>
+    <target name="clean" depends="drmaa.clean, juti.clean, jgdi.clean"/>
+    <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc"/>
+    <target name="test" depends="drmaa.test, juti.test, jgdi.test"/>
+    
+    <!-- DRMAA -->
+    <target name="drmaa">
+       <ant dir="classes" inheritall="true"/>
+    </target>
+    
+    <target name="drmaa.clean">
+       <ant dir="classes" target="clean"/>
+    </target>
+
+    <target name="drmaa.javadoc">
+       <ant dir="classes" target="javadoc"/>
+    </target>
+    
+    <target name="drmaa.test">
+       <ant dir="classes" target="test"/>
+    </target>
+    
+    <!-- JUTI -->
+    <target name="juti">
+       <ant dir="libs/juti" inheritall="true"/>
+    </target>
+    
+    <target name="juti.clean">
+       <ant dir="libs/juti" target="clean"/>
+    </target>
+    
+    <target name="juti.javadoc">
+       <ant dir="libs/juti" target="javadoc"/>
+    </target>
+    
+    <target name="juti.test">
+       <ant dir="libs/juti" target="test"/>
+    </target>
+    
+    <!-- JGDI -->
+    <target name="jgdi">
+       <ant dir="libs/jgdi" inheritall="true"/>
+    </target>
+    
+    <target name="jgdi.clean">
+       <ant dir="libs/jgdi" target="clean"/>
+    </target>
+
+    <target name="jgdi.javadoc">
+       <ant dir="libs/jgdi" target="javadoc"/>
+    </target>
+    
+    <target name="jgdi.test">
+       <ant dir="libs/jgdi" target="test"/>
+    </target>
+    
+</project>

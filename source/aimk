@@ -2043,9 +2043,7 @@ if ( "$BUILDGETTEXT" == 1 ) then
 endif   
 
 if ( "$BUILDJAVADOC" == 1 ) then
-   echo _______D_R_M_A_A__J_A_V_A_D_O_C_S__________
-
-   cd $SOURCE/classes
+   echo _______J_A_V_A_D_O_C_S__________
 
    set target = "javadoc"
 
@@ -2060,28 +2058,6 @@ if ( "$BUILDJAVADOC" == 1 ) then
       exit 1
    endif
 
-   echo _______J_U_T_I__J_A_V_A_D_O_C_S__________
-   cd $SOURCE/libs/juti
-
-   ant -f build.xml $target
-
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   echo _______J_G_D_I__J_A_V_A_D_O_C_S__________
-   cd $SOURCE/libs/jgdi
-
-   ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $target
-
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   cd $SOURCE
-   
 endif
 
 if ( "$SGE_DEPEND" == 1 ) then
@@ -2388,35 +2364,10 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
 endif
 
 if ( "$JAVA" > 0 ) then
-   echo _____D_R_M_A_A__C_L_A_S_S__F_I_L_E_S____
+   echo _____Making JAVA targets_____
 
-   cd classes
-
-   ant -f build.xml $argv
-
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   echo _________J_U_T_I__C_L_A_S_S__F_I_L_E_S___
-   cd $SOURCE/libs/juti
-   ant -Dlibs.junit.classpath=$JUNIT_JAR -f build.xml $argv
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   echo _________J_G_D_I__C_L_A_S_S__F_I_L_E_S___
-   cd $SOURCE/libs/jgdi
-   ant -Dlibs.junit.classpath=$JUNIT_JAR -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   cd $SOURCE
-
+   ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
+   
    if ( $JAVA == 2 ) then
       echo done
       exit 0

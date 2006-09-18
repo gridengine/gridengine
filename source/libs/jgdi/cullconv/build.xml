@@ -4,8 +4,8 @@
 
     <target name="init">
     
-       <property file="build_private.properties"/>
-       <property file="build.properties"/>
+       <property file="../../../build_private.properties"/>
+       <property file="../../../build.properties"/>
     
        <property name="cullconv.jar" value="build/cullconv.jar"/>
               

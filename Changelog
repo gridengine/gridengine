@@ -1,3 +1,6 @@
+AA-2006-09-18-1: Enhancem:  o bugfix, profiling was switched off
+                 Review:    RH
+
 RH-2006-09-18-0: Enhancem:  o sge_ca checks wether needed binaries are
                               installed
                  Review:    AA

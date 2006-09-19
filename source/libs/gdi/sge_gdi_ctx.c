@@ -448,7 +448,6 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
 /*    gdi_once_init(); */
    
    /* TODO: profiling init, is this possible */
-   sge_prof_set_enabled(false);
    sge_prof_setup();
    feature_mt_init();
    gdi_init_mt();

@@ -181,6 +181,9 @@ Linux)
    sparc)
      lxmachine=sparc
      ;;
+   sparc64)
+     lxmachine=sparc
+     ;;
    x86_64)
      lxmachine=amd64
      ;;
@@ -195,9 +198,6 @@ Linux)
    esac
 
    case $osrelease in
-   2.2.*)
-      lxrelease=22
-      ;;
    2.4.*)
       # For an alternative means to determine GNU C lib version see
       # http://www.gnu.org/software/libc/FAQ.html#s-4.9
@@ -356,6 +356,7 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       MANTYPE=catman/cat
       ;;
    esac
+
    if [ "$1" = "-m" ]; then
       echo $DEFAULTMANPATH
    elif [ "$1" = "-lib" ]; then

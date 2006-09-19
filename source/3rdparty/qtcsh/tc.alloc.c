@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.alloc.c,v 1.8 2004/05/06 12:05:32 andre Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.alloc.c,v 1.9 2006/09/19 13:45:16 joga Exp $ */
 /*
  * tc.alloc.c (Caltech) 2/21/82
  * Chris Kingsley, kingsley@cit-20.
@@ -44,7 +44,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: tc.alloc.c,v 1.8 2004/05/06 12:05:32 andre Exp $")
+RCSID("$Id: tc.alloc.c,v 1.9 2006/09/19 13:45:16 joga Exp $")
 
 static char   *memtop = NULL;		/* PWP: top of current memory */
 static char   *membot = NULL;		/* PWP: bottom of allocatable memory */
@@ -168,43 +168,6 @@ static	void	morecore	__P((int));
 	xprintf(" (memtop = %lx membot = %lx)\n", memtop, membot);	\
 	return; \
     }
-#endif
-
-
-#if 0
-#if defined(SOLARIS) || defined(SOLARIS64) || defined(SOLARIS86) || defined(SUN4) || defined (HP11) || defined(HP1164) || defined(ALPHA5) || defined(ALPHA4) || defined(ALINUX) || defined(LINUX60) || defined(LINUX6) || defined(SLINUX) || defined(FREEBSD)|| defined(DARWIN) || defined(IA64LINUX) || defined(LINUXAMD64)
-# ifdef const
-#  undef const
-# endif
-# if defined(LINUX86) || defined(ALINUX) || defined(SLINUX) || defined(LINUXIA64) || defined(LINUXAMD64)
-#  ifdef strdup
-#    undef strdup
-     char* strdup(const char*s);  
-#  endif /* strdup */
-# endif
-char* strdup(s)
-const char* s;
-#else
-char* strdup(s)
-char* s;
-#endif
-{
-   char* new = NULL;
-   int n = 0;
-
-   if (!s)
-      return NULL;
-
-   n = strlen(s);
-   if (n) {
-      new = malloc(n+1);
-      if (s) {
-         strcpy(new,s);
-      }
-   }
-
-   return new;
-}
 #endif
 
 memalign_t

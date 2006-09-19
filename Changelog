@@ -1,10 +1,15 @@
+JG-2006-09-19-0: Enhancem.: SPARC Linux port.
+                 Testsuite: Fixed writing to mailfile instead of sending mail.
+                 Review:    RD
+
 DT-2006-09-18-0: WWW        o Backed out DT-2006-09-16-0
 
 AA-2006-09-18-0: Enhancem:  o cleanup of build process of drmaa,juti,jgdi
                             o build source/target for cullconv
-                            o bug in sge_centry_del() that leads to master abort for qconf -mc
+                            o bug in sge_centry_del() that leads to master 
+                              abort for qconf -mc
                               in delete case
-                 Review:    RH           
+                 Review:    RH
 
 DT-2006-09-16-0: WWW        o Added Google Analytics tracking code to html
 

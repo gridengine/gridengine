@@ -172,6 +172,9 @@ Linux)
    sparc)
      lxmachine=sparc
      ;;
+   sparc64)
+     lxmachine=sparc
+     ;;
    x86_64)
      lxmachine=amd64
      ;;
@@ -186,9 +189,6 @@ Linux)
    esac
 
    case $osrelease in
-   2.2.*)
-      lxrelease=22
-      ;;
    2.[46].*)
       case $lxmachine in
       amd64)

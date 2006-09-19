@@ -183,9 +183,14 @@ case "lx24-sparc":
    set TARGET_BITS = TARGET_32BIT
    breaksw
 case "lx26-sparc":
-   set BUILDARCH = SLINUX 
-   set COMPILE_ARCH = SLINUX_26
+   set BUILDARCH = LINUXSPARC
+   set COMPILE_ARCH = LINUXSPARC_26
    set TARGET_BITS = TARGET_32BIT
+   breaksw
+case "lx26-sparc64":
+   set BUILDARCH = LINUXSPARC64
+   set COMPILE_ARCH = LINUXSPARC64_26
+   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "lx22-x86":
    set BUILDARCH = LINUX86
@@ -1391,6 +1396,8 @@ case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
 case LINUXPPC:
+case LINUXSPARC:
+case LINUXSPARC64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
@@ -1413,6 +1420,10 @@ case LINUXPPC:
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
+   endif
+
+   if ($BUILDARCH == LINUXSPARC64) then
+      set CFLAGS = "-m64 $CFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1441,7 +1452,7 @@ case LINUXPPC:
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
-   if ( $buildarch == "lx26-x86" ) then
+   if ( $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" ) then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
    if ("$ADOC" == 1) then
@@ -1854,7 +1865,7 @@ default:
    exit 1
 endsw
 
-if ($JNI == 1) then
+if ( $JNI == 1 ) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
 
    if ("$JAVA_ARCH" != "") then

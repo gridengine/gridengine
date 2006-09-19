@@ -1232,19 +1232,24 @@ proc get_root_passwd {} {
 #     check/send_mail
 #*******************************
 proc mail_report { subject body } {
-  global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC CHECK_OUTPUT
+   global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC CHECK_OUTPUT
+   global write_mail_to_file
 
-  if { [string compare $CHECK_REPORT_EMAIL_TO "none"] == 0 } {
-     puts $CHECK_OUTPUT "--> mail_report - no mail address"
-     return
-  }
+   set mail_cc ""
 
-  set mail_cc ""
-  if { [string compare $CHECK_REPORT_EMAIL_CC "none"] != 0 } {
-      set mail_cc $CHECK_REPORT_EMAIL_CC
-  }
+   # needn't check mailto / cc if we are writing to mailfile
+   if {$write_mail_to_file == 0} {
+      if { [string compare $CHECK_REPORT_EMAIL_TO "none"] == 0 } {
+         puts $CHECK_OUTPUT "--> mail_report - no mail address"
+         return
+      }
+   
+      if { [string compare $CHECK_REPORT_EMAIL_CC "none"] != 0 } {
+         set mail_cc $CHECK_REPORT_EMAIL_CC
+      }
+   }
 
-  send_mail $CHECK_REPORT_EMAIL_TO $mail_cc $subject $body 
+   send_mail $CHECK_REPORT_EMAIL_TO $mail_cc $subject $body 
 }
 
 
@@ -1277,11 +1282,6 @@ proc send_mail { address cc subject body } {
   global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER CHECK_MAX_ERROR_MAILS
   global write_mail_to_file CHECK_MAIL_OUTPUT_FILE CHECK_ENABLE_MAIL
 
-  set erg [sendmail_wrapper $address $cc $subject $body]
-  if { $erg == 0 } {
-     return
-  }
-
   if { $write_mail_to_file != 0 } {
      set fd [ open $CHECK_MAIL_OUTPUT_FILE "a" ]
      puts $fd "-=*************************************************************=-"
@@ -1293,6 +1293,11 @@ proc send_mail { address cc subject body } {
      flush $fd
      close $fd 
      puts $CHECK_OUTPUT "Added entry in mail output file $CHECK_MAIL_OUTPUT_FILE"
+     return
+  }
+
+  set erg [sendmail_wrapper $address $cc $subject $body]
+  if { $erg == 0 } {
      return
   }
 
@@ -7796,19 +7801,6 @@ proc restart_debug_daemons { { shutdown 0 } } {
    wait_for_load_from_all_queues 300 
 }
 
-proc no_blocking_input {  } {
-
-  fconfigure stdin -blocking FALSE
-  while { 1 } {
-     set data [read -nonewline stdin ]
-     if { [string length $data] > 0 } {
-        fconfigure stdin -blocking TRUE
-        return $data
-     }  
-     after 250
-  }
-}
-
 #                                                             max. column:     |
 #****** check/ask_user_yes_or_no() ******
 # 
@@ -8339,6 +8331,9 @@ set CHECK_ACTUAL_TEST_PATH "not in testmode"
 set mail_subject "testsuite error - main"
 set mail_body    "date: [exec date]\n:\n"
 
+# for some reason, we need this with SuSE 10 expect 5.43.0
+fconfigure stdin -blocking TRUE
+
 for { set i 0 } { $i < $argc } { incr i } {
    if {([string compare [lindex $argv $i] "--setup"] == 0) || ([string compare [lindex $argv $i] "setup"] == 0) } {
       set catch_return [ catch { eval exec "cp ${CHECK_DEFAULTS_FILE} ${CHECK_DEFAULTS_FILE}.[timestamp]" } ]
@@ -8538,6 +8533,12 @@ for { set i 0 } { $i < $argc } { incr i } {
       }
       set write_mail_to_file 1
       puts $CHECK_OUTPUT " ---> writing all mails into \"$CHECK_MAIL_OUTPUT_FILE\" ! <---"
+      if {[file exists $CHECK_MAIL_OUTPUT_FILE]} {
+         file rename -force $CHECK_MAIL_OUTPUT_FILE "$CHECK_MAIL_OUTPUT_FILE.bak"
+      }
+      set mf [open $CHECK_MAIL_OUTPUT_FILE "w"]
+      puts $mf "This file contains testsuite mail contents"
+      close $mf
       continue
    }
  

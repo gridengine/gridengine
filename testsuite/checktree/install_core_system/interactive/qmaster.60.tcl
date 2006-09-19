@@ -196,7 +196,6 @@ proc install_qmaster {} {
     set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" 0 "" 1 15 1 1 1]
  }
  set sp_id [ lindex $id 1 ] 
- 
 
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 

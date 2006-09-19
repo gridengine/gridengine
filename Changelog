@@ -1,3 +1,7 @@
+RH-2006-09-18-0: Enhancem:  o sge_ca checks wether needed binaries are
+                              installed
+                 Review:    AA
+
 JG-2006-09-19-0: Enhancem.: SPARC Linux port.
                  Testsuite: Fixed writing to mailfile instead of sending mail.
                  Review:    RD

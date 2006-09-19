@@ -63,7 +63,9 @@ PrintErrorAndExit()
 {
    exitcode=$1
    shift
-   PrintError $*
+   fmt="$1"
+   shift
+   PrintError "$fmt" $*
    exit $exitcode
 }
 
@@ -1493,6 +1495,20 @@ fi
 ARCH=`$ARCHSCRIPT`
 V5UTILBIN=$ROOT_PATH/utilbin/$ARCH              # adminrun, infotext, openssl, uidgid
 
+if [ ! -d "$V5UTILBIN" ]; then
+   echo
+   echo "Error: The utilbin directory "$V5UTILBIN" does not exist"
+   echo "Please verify your setup and restart this script. Exit."
+   exit 1
+fi
+
+if [ ! -d "$ROOT_PATH/lib/$ARCH" ]; then
+    echo
+    echo "Error: The lib directory \"$ROOT_PATH/lib/$ARCH\" does not exist"
+    echo "Please verify your setup and restart this script. Exit."
+    exit 1
+fi
+
 if [ "$LD_LIBRARY_PATH"  = "" ]; then
    LD_LIBRARY_PATH=$ROOT_PATH/lib/$ARCH
 else
@@ -1512,17 +1528,42 @@ export LD_LIBRARY_PATH
 INFOTXT_DUMMY=$V5UTILBIN/infotext
 INFOTEXT=$INFOTXT_DUMMY
 if [ ! -x $INFOTXT_DUMMY ]; then
-   echo "can't find binary \"$INFOTXT_DUMMY\""
-   echo "Installation failed."
+   echo "Error: Can't find binary \"$INFOTXT_DUMMY\""
+   echo "Please verify your setup and restart this script. Exit."
    exit 1
 fi
+
+# Test the infotext binary
+tmp=`$INFOTEXT test 2>&1`
+if [ $? -ne 0 ]; then
+   echo "Error: Execution of $INFOTEXT failed: $tmp"
+   echo "Please verify your setup and restart this script. Exit."
+   exit 1
+fi
+
+#
+# From now on we can use PrintError methods to write error messages
+#
+
 SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 
 #---------------------------------------
 # setup INFOTEXT end
 #---------------------------------------
 
-euid=`$V5UTILBIN/uidgid -euid`
+#
+#  Check wether all needed binaries are exists
+#
+for i in adminrun openssl uidgid; do
+   if [ ! -x $V5UTILBIN/$i ]; then
+      PrintErrorAndExit 1 "Error: Can't find binary \"%s\"" $V5UTILBIN/$i
+   fi
+done
+
+euid=`$V5UTILBIN/uidgid -euid 2>&1`
+if [ $? -ne 0 ]; then
+   PrintErrorAndExit 1 "Execution of $V5UTILBIN/uidgid failed: $euid"
+fi
 if [ $euid = 0 ]; then
    rootinstalls=true
 else

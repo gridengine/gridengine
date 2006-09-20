@@ -37,13 +37,16 @@ import com.sun.grid.util.expect.ExpectHandler;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.channels.FileLock;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -54,9 +57,6 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -172,30 +172,66 @@ public class GridCAImpl implements GridCA {
     protected File getCertFileForDaemon(String daemon) {
         return new File(getLocalDaemonDir(daemon), "cert.pem");
     }
+
+
     
     
     protected void execute(Expect pb) throws GridCAException {
         LOGGER.entering("GridCAImpl", "execute");
 
-        ErrorHandler eh = new ErrorHandler();
-        pb.add(eh);
-        int res;
+        // Since the sge_ca infrastructure can not be shared
+        // between processes we have to create a file lock
+        
+        File lockFile = new File(config.getCaLocalTop(), "lock");
+        RandomAccessFile raf;
         try {
-            res = pb.exec(60 * 1000);
+            raf = new RandomAccessFile(lockFile, "rw");
         } catch (IOException ex) {
-            throw RB.newGridCAException(ex, "gridCAImpl.sge_ca.ioError",
-                                        ex.getLocalizedMessage());
-        } catch (InterruptedException ex) {
-            throw RB.newGridCAException("gridCAImpl.sge_ca.interrupt");
+            throw RB.newGridCAException(ex, "gridCAImpl.error.lockFileNotFound",
+                    new Object [] { lockFile, ex.getLocalizedMessage() });
         }
-        if(res != 0) {
-            String error = eh.getError();
-            if(error == null || error.length() == 0) {
-                throw RB.newGridCAException("gridCAImpl.sge_ca.unknownError",
-                                            new Integer(res));
-            } else {
-                throw RB.newGridCAException("gridCAImpl.sge_ca.error",
-                                            new Object [] { new Integer(res), error });
+        
+        
+        FileLock lock;
+        try {
+            lock = raf.getChannel().lock();
+        } catch (IOException ex) {
+            throw RB.newGridCAException(ex, "gridCAImpl.error.lock", 
+                      new Object [] { lockFile, ex.getLocalizedMessage() });
+        }
+        
+        try {
+            ErrorHandler eh = new ErrorHandler();
+            pb.add(eh);
+            int res;
+            try {
+                res = pb.exec(60 * 1000);
+            } catch (IOException ex) {
+                throw RB.newGridCAException(ex, "gridCAImpl.sge_ca.ioError",
+                                            ex.getLocalizedMessage());
+            } catch (InterruptedException ex) {
+                throw RB.newGridCAException("gridCAImpl.sge_ca.interrupt");
+            }
+            if(res != 0) {
+                String error = eh.getError();
+                if(error == null || error.length() == 0) {
+                    throw RB.newGridCAException("gridCAImpl.sge_ca.unknownError",
+                                                new Integer(res));
+                } else {
+                    throw RB.newGridCAException("gridCAImpl.sge_ca.error",
+                                                new Object [] { new Integer(res), error });
+                }
+            }
+        } finally {
+            try {
+                lock.release();
+            } catch (IOException ex) {
+                // Ingore
+            }
+            try {
+                raf.close();
+            } catch (IOException ex) {
+                // Ingore
             }
         }
         LOGGER.exiting("GridCAImpl", "execute");

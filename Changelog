@@ -1,3 +1,7 @@
+RH-2006-09-20-1: Bugfix:    o sge_ca does not longer use 'global' tmp files
+                            o GridCAImpl writes lock file before calling sge_ca
+                 Review:    HP
+
 JG-2006-09-20-0: Bugfix:    Fixed build on tru64. Cleanup.
                  Testsuite: Fixed aimk clean call (falsely reported errors).
                             Made project_access_list test available for 6.x.

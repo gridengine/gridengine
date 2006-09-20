@@ -639,7 +639,7 @@ MakeRandFile()
    fi
    # $INFOTEXT "Creating RANDFILE from '%s' in '%s'" $rfile $1
 
-   RANDFILE=/tmp/.rand; export RANDFILE;
+   RANDFILE=/tmp/.rand.$$; export RANDFILE;
    $V5UTILBIN/adminrun $2 dd if=$rfile of=$RANDFILE count=2048 > /dev/null 2>&1
    if [ $? -lt 0 ]; then
        PrintError "Could not create random number for (%s -> %s)" $rfile $RANDFILE
@@ -659,7 +659,7 @@ MakeRandFile()
 
    $V5UTILBIN/adminrun $2 $RM $RANDFILE > /dev/null 2>&1
    if [ $? -ne 0 ]; then
-       PrintError "Could not delete file %s as user %s" /tmp/.rand $2
+       PrintError "Could not delete file %s as user %s" $RANDFILE $2
        return 1
    fi
    
@@ -818,7 +818,7 @@ MakePKCS12()
 
    $INFOTEXT "Generating %s/%s.p12." "$myoutdir" "$keyowner"
    # create rand.seed file
-   RSFILE=/tmp/rand.seed
+   RSFILE=/tmp/rand.seed.$$
    MakeRandFile $RSFILE $unixuser
    if [ $? -ne 0 ]; then
       return 1
@@ -862,7 +862,7 @@ MakePKCS12ForUsers()
 DumpUsers()
 {
    CERTDIR=$CALOCALTOP/userkeys
-   RSFILE=/tmp/rand
+   RSFILE=/tmp/rand.$$
 
    # create rand.seed file
    MakeRandFile $RSFILE $USER

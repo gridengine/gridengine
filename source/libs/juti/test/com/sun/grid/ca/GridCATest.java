@@ -66,6 +66,9 @@ public class GridCATest extends TestCase {
         catop = new File(baseDir, "catop");
         calocaltop = new File(baseDir, "calocaltop");
         
+        catop.mkdir();
+        calocaltop.mkdir();
+        
         TestConfiguration testConfig = TestConfiguration.getInstance();
 
         
@@ -80,6 +83,13 @@ public class GridCATest extends TestCase {
 
         ca = GridCAFactory.newInstance(config);
     }
+    
+    protected void tearDown() throws Exception {
+        Runtime.getRuntime().exec("chmod -R u+w " + baseDir.getAbsolutePath());
+        Runtime.getRuntime().exec("rm -rf " + baseDir.getAbsolutePath());
+    }
+    
+    
     
     private void initCA() throws Exception {
         
@@ -148,5 +158,6 @@ public class GridCATest extends TestCase {
         cal.add(Calendar.DAY_OF_YEAR, days + 1);
         assertTrue( cal.getTimeInMillis() > renewedCert.getNotAfter().getTime());
     }
+
     
 }

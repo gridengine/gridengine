@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="all" name="jgdi">
 
+  <macrodef name="assert_prop">
+     <attribute name="property"/>
+     <sequential>
+         <fail unless="@{property}">
+             Please define property @{property} in
+             ${sge.srcdir}/build_private.properties
+          or ${sge.srcdir}/build.properties
+         </fail>
+     </sequential>
+  </macrodef>
 
    <target name="aimk.init" depends="aimk.init.remote, aimk.init.local"/>
    
@@ -48,6 +58,8 @@
       <property name="sge.srcdir" location="../.."/>
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
+      
+      
       <property name="build.dir"  location="build"/>
       <property name="classes.dir"  location="${build.dir}/classes"/>
       <property name="src.dir"      location="src" />
@@ -63,10 +75,6 @@
       <property name="project.name" value="${ant.project.name}"/>
       <property name="jar" location="${build.dir}/${project.name}.jar"/>
         
-      <path id="cullconv.srcpath">
-         <path location="${basedir}/../cullconv/src"/>
-         <path location="${basedir}/../cullconv/build/gensrc"/>            
-      </path>
         
 
       <mkdir dir="${classes.dir}"/>
@@ -216,7 +224,7 @@
       
       <javadoc packagenames="com.sun.grid.*" 
          doclet="com.sun.grid.tododoclet.TodoListDoclet"
-         docletpath="${tododoclet.dir}/TodoDoclet.jar"
+         docletpath="${tododoclet.jar}"
          additionalparam="-d ${basedir}/build/todo.xml">
          <fileset refid="javadoc.src.files"/>
          <fileset refid="javadoc.gensrc.files"/>
@@ -288,6 +296,12 @@
     
    <target name="gensrc.debug" depends="jni.init"
       description="Start the source generation in debugging mode">  
+       
+      <path id="cullconv.srcpath">
+         <path location="${basedir}/cullconv/src"/>
+         <path location="${basedir}/cullconv/build/gensrc"/>            
+      </path>
+       
     
       <nbjpdastart name="JGDI Code Generation" addressproperty="jpda.address" transport="dt_socket">
          <classpath>
@@ -689,8 +703,15 @@
 
       <property environment="env"/>
        
-      <exec executable="${sge.srcdir}/dist/util/arch" outputproperty="sge.arch"/>
-       
+      <exec executable="${sge.srcdir}/dist/util/arch" outputproperty="sge.arch" 
+            failifexecutionfails="true"/>
+
+      <exec executable="${sge.srcdir}/scripts/compilearch"
+            outputproperty="sge.src.arch"
+            failifexecutionfails="true">
+          <arg line="-b ${sge.arch}"/>
+      </exec>
+      
       <echo message="sge.arch=${sge.arch}"/>
       <echo message="sge.src.arch=${sge.src.arch}"/> 
      
@@ -704,36 +725,11 @@
       </condition>
       <!-- else -->
       <property name="datamodel" value=""/>
-       
-      <condition property="sge.src.arch" value="SOLARIS64"> 
-         <or>
-            <equals arg1="${sge.arch}" arg2="sol-sparc64"/>
-            <equals arg1="${sge.arch}" arg2="solaris64"/>
-         </or>
-      </condition>
-      <condition property="sge.src.arch" value="LINUX86_24">
-         <or>
-            <equals arg1="${sge.arch}" arg2="lx24-x86"/>
-            <equals arg1="${sge.arch}" arg2="glinux"/>
-         </or>
-      </condition>
-      <condition property="sge.src.arch" value="LINUX86_26">
-         <equals arg1="${sge.arch}" arg2="lx26-x86"/>
-      </condition>
-      <condition property="sge.src.arch" value="LINUXAMD64_24">
-         <equals arg1="${sge.arch}" arg2="lx24-amd64"/>
-      </condition>
-      <condition property="sge.src.arch" value="SOLARISAMD64">
-         <equals arg1="${env.ARCH}" arg2="sol-amd64"/>
-      </condition>
-      <condition property="sge.src.arch" value="SOLARIS">
-         <equals arg1="${env.ARCH}" arg2="sol-sparc"/>
-      </condition>
-       
-       
-       
+      
       <fail message="Unsuported ARCH ${sge.arch}" unless="sge.src.arch"/>
-       
+      
+      <assert_prop property="sge.root"/>
+      
       <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}:${sge.root}/lib/${sge.arch}"/>       
       <property name="sge.jvmargs"  value="-Djava.library.path=${sge.lib.path} ${datamodel}"/>
       <echo>sge.jvmargs = ${sge.jvmargs}</echo>
@@ -868,6 +864,9 @@
    </target>
         
    <target name="runproxy" depends="init, jni.init, compile" description="run the jgdi proxy">
+       
+      <assert_prop property="rmiproxy.name"/>
+      <assert_prop property="rmiproxy.port"/>
        
       <java fork="true" classname="com.sun.grid.jgdi.rmi.JGDIRmiProxy">
          <jvmarg line="${sge.jvmargs}"/>

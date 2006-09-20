@@ -53,219 +53,23 @@ else
    exit 1
 endif
 
-expr $buildarch : UNSUPPORTED > /dev/null
-if ( $status == 0 ) then
-   echo script dist/util/arch does not support \"$buildarch\"
-   exit 1
-else if ( $buildarch == UNKNOWN ) then
-   echo script dist/util/arch does not recognize your operating systems
-   exit 1
+set BUILDARCH = `scripts/compilearch -b $buildarch`
+if ( $status != 0 ) then
+  echo Unsupported architecture $buildarch
+  exit 1
 endif
 
-# Map buildarch into uppercase BUILDARCH
-#
-switch ($buildarch)
-case "aix43":
-   set BUILDARCH = AIX43
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "aix51":
-   set BUILDARCH = AIX51
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "cray":
-   set BUILDARCH = UNICOS
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "crayts":
-   set BUILDARCH = UNICOS_TS
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "craytsieee":
-   set BUILDARCH = UNICOS_TS_IEEE
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "darwin-x86":
-   set BUILDARCH = DARWIN_X86
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "darwin-ppc":
-   set BUILDARCH = DARWIN_PPC
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "fbsd-alpha"
-   set BUILDARCH = FREEBSD_ALPHA
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "fbsd-amd64"
-   set BUILDARCH = FREEBSD_AMD64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "fbsd-i386"
-   set BUILDARCH = FREEBSD_I386
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "fbsd-ia64"
-   set BUILDARCH = FREEBSD_IA64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "fbsd-ppc"
-   set BUILDARCH = FREEBSD_PPC
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "fbsd-sparc64"
-   set BUILDARCH = FREEBSD_SPARC64
-   breaksw
-case "hp10":
-   set BUILDARCH = HP10
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "hp11":
-   set BUILDARCH = HP11
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "hp11-64":
-   set BUILDARCH = HP1164
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "irix65":
-   set BUILDARCH = IRIX65
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx22-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_22
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-amd64":
-   set BUILDARCH = LINUXAMD64
-   set COMPILE_ARCH = LINUXAMD64_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-amd64":
-   set BUILDARCH = LINUXAMD64
-   set COMPILE_ARCH = LINUXAMD64_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-ia64":
-   set BUILDARCH = LINUXIA64
-   set COMPILE_ARCH = LINUXIA64_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-ppc":
-   set BUILDARCH = LINUXPPC
-   set COMPILE_ARCH = LINUXPPC_26
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-ia64":               
-   set BUILDARCH = LINUXIA64
-   set COMPILE_ARCH = LINUXIA64_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx22-sparc":
-   set BUILDARCH = SLINUX
-   set COMPILE_ARCH = SLINUX_22
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx24-sparc":
-   set BUILDARCH = SLINUX
-   set COMPILE_ARCH = SLINUX_24
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-sparc":
-   set BUILDARCH = LINUXSPARC
-   set COMPILE_ARCH = LINUXSPARC_26
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-sparc64":
-   set BUILDARCH = LINUXSPARC64
-   set COMPILE_ARCH = LINUXSPARC64_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx22-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_22
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx24-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_24
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_26
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "necsx4":
-   set BUILDARCH = NECSX4
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "necsx5":
-case "necsx6":
-case "sx":
-   set BUILDARCH = NECSX5
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "nbsd-alpha":
-   set BUILDARCH = NETBSD_ALPHA
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "nbsd-i386":
-   set BUILDARCH = NETBSD_I386
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "nbsd-powerpc":
-   set BUILDARCH = NETBSD_POWERPC
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "nbsd-sparc64":
-   set BUILDARCH = NETBSD_SPARC64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "nbsd-x86_64":
-   set BUILDARCH = NETBSD_X86_64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "sol-sparc":
-   set BUILDARCH = SOLARIS
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "sol-sparc64":
-   set BUILDARCH = SOLARIS64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "sol-x86":
-   set BUILDARCH = SOLARIS86
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "sol-amd64":
-   set BUILDARCH = SOLARISAMD64
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "tru64":
-   set BUILDARCH = ALPHA5
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "win32-x86":
-   set BUILDARCH = WIN32_X86
-   set TARGET_BITS = TARGET_32BIT
-   breaksw   
-default:
-   echo cannot compile - no mapping for architecture \"$buildarch\" defined yet
-   exit 1
-   breaksw
-endsw
+set TARGET_BITS = `scripts/compilearch -t $buildarch`
+if ( $status != 0 ) then
+  echo Unsupported architecture $buildarch
+  exit 1
+endif
+
+set COMPILE_ARCH = `scripts/compilearch -c $buildarch`
+if ( $status != 0 ) then
+  echo Unsupported architecture $buildarch
+  exit 1
+endif
 
 #---------------------------------------------------------------------------
 # Preparsing for all args which change BUILDARCH or which exit

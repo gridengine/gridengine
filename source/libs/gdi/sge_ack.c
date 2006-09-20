@@ -87,5 +87,9 @@ int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val,
 
    return ret;
 }
-
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_ack(void) {
+   return 0;
+}
 #endif

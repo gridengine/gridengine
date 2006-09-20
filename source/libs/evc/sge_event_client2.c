@@ -2885,7 +2885,7 @@ bool sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_
 *     const char* - pointer to the descriptive string.
 *
 *  NOTES
-*     The result points to a static buffer. Subsequent calls to i
+*     The result points to a static buffer. Subsequent calls to
 *     event_text will overwrite previous results.
 *******************************************************************************/
 /* function see libs/sgeobj/sge_event.c */

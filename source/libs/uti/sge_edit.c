@@ -104,8 +104,7 @@ int sge_edit(const char *fname, uid_t myuid, gid_t mygid)
          }
 #endif
       }
-   }
-   else {
+   } else {
       const char *cp = NULL;
 
       sge_set_def_sig_mask(0, NULL);   

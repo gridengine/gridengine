@@ -882,6 +882,7 @@ case ALPHA5:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
+   set AUTHLIBS = ""
 
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"

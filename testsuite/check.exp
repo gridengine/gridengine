@@ -7169,7 +7169,7 @@ proc compile_with_aimk { host_list a_report task_name { aimk_options "" }  } {
 
       set prog "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/remotecompile.sh"
       set par1 "$CHECK_SOURCE_DIR"
-      set par2 "$my_compile_options -DDAILY_BUILD_NUMBER=$build_number"
+      set par2 "-DDAILY_BUILD_NUMBER=$build_number $my_compile_options"
       
       puts $CHECK_OUTPUT "$prog $par1 '$par2'"
       set open_spawn [ open_remote_spawn_process $elem $CHECK_USER $prog "$par1 '$par2'" 0 "" 0 ]

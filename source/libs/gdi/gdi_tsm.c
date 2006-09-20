@@ -158,5 +158,9 @@ lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags,
    DEXIT;
    return alp;
 }
-
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_gdi_tsm(void) {
+   return 0;
+}
 #endif

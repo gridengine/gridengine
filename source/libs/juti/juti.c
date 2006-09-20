@@ -38,7 +38,7 @@
 
 #include <pwd.h>
 
-#if defined(IRIX65) || defined(AIX43) || defined(HP1164) || defined(INTERIX)
+#if defined(IRIX65) || defined(AIX43) || defined(HP1164) || defined(INTERIX) || defined(ALPHA5)
 #define JUTI_NO_PAM
 #elif defined(DARWIN)
 #include <pam/pam_appl.h>
@@ -46,7 +46,7 @@
 #include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD)
+#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD) || defined(ALPHA5)
 #define JUTI_NO_SHADOW
 #else
 #include <shadow.h>

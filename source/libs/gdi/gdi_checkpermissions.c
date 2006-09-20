@@ -213,4 +213,9 @@ bool sge_gdi_check_permission(lList **alpp, int option)
   return access_status;
 }
 
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_gdi_checkpermissions(void) {
+   return 0;
+}
 #endif

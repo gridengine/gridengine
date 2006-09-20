@@ -1125,4 +1125,9 @@ int check_isalive(const char *masterhost)
    return alive;
 }
 
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_any_request(void) {
+   return 0;
+}
 #endif

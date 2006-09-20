@@ -59,34 +59,33 @@ set check_description(0)  "Test project access for queue/cluster/pe"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "project_access_lists_setup"
+set check_cleanup_function "project_access_lists_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "project_access_lists_setup"
 lappend check_functions "project_access_lists_global_host"
 lappend check_functions "project_access_lists_exec_host"
 lappend check_functions "project_access_lists_queue"
 lappend check_functions "project_access_lists_cluster_config"
 lappend check_functions "project_access_lists_project"
-lappend check_functions "project_access_lists_cleanup"
 
 proc project_access_lists_init_level {} {
    global CHECK_ACT_LEVEL
    global CHECK_PRODUCT_TYPE
  
-   if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
-       return -1
-    }
+   if {[string compare $CHECK_PRODUCT_TYPE "sgeee"] != 0} {
+      return -1
+   }
  
    switch -- $CHECK_ACT_LEVEL {
-      "0" { 
-            return 0    
-      } 
-      "1" {
-            return -1
+      "0" {
+         return 0
       }
-   } 
-   return -1  ;# no other level else
+   }
+
+   return -1
 }
 
 # -------- local test procedures -----------------------------------------------
@@ -95,45 +94,51 @@ global project_access_lists_queue
 global project_access_lists_host
 
 global project_access_lists_host_conf
-global project_access_lists_queue_conf
 global project_access_lists_global_host_conf
 global project_access_lists_cluster_conf
 global project_access_lists_schedd_conf
 
-proc project_access_lists_setup  {} {
-   global ts_config
+proc project_access_lists_setup {} {
+   global ts_config CHECK_OUTPUT
    global CHECK_GROUP
+   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+
    global project_access_lists_queue
    global project_access_lists_host
-
    global project_access_lists_host_conf
-   global project_access_lists_queue_conf
    global project_access_lists_global_host_conf
    global project_access_lists_cluster_conf
    global project_access_lists_schedd_conf
 
-   global CHECK_CORE_EXECD CHECK_OUTPUT
-   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
-   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   # we'll use this host for testing
+   set project_access_lists_host  [lindex $ts_config(execd_nodes) 0]
 
-   set project_access_lists_queue "[lindex $CHECK_CORE_EXECD 0].q"
-   set project_access_lists_host  [lindex $CHECK_CORE_EXECD 0]
+   # setup an own queue - we'll change a lot of config params - better not touch all.q
+   set queue_values(load_thresholds)       "np_load_avg=11.00"
+   set queue_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+   add_queue "prjacc" "@allhosts" queue_values
+   # ... and disable all.q
+   foreach host $ts_config(execd_nodes) {
+      disable_queue [get_queue_instance "all.q" $host]
+   }
+
+   # we'll submit into this queue instance
+   set project_access_lists_queue [get_queue_instance "prjacc" $project_access_lists_host]
 
    puts $CHECK_OUTPUT "using queue $project_access_lists_queue"
    puts $CHECK_OUTPUT "using host $project_access_lists_host"
 
    #saving original configurations
-   get_exechost project_access_lists_host_conf $project_access_lists_host  
-   get_queue    $project_access_lists_queue       project_access_lists_queue_conf
-   get_exechost project_access_lists_global_host_conf "global"       
-   get_config                             project_access_lists_cluster_conf 
-   get_schedd_config                      project_access_lists_schedd_conf
+   get_exechost      project_access_lists_host_conf $project_access_lists_host  
+   get_exechost      project_access_lists_global_host_conf "global"       
+   get_config        project_access_lists_cluster_conf 
+   get_schedd_config project_access_lists_schedd_conf
    set my_schedd_config(schedule_interval)       "0:0:01"
    if { $ts_config(gridengine_version) == 53 } {
       set my_schedd_config(sgeee_schedule_interval) "0:0:02"
    }
    set_schedd_config my_schedd_config
-
 
    set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]
 
@@ -166,23 +171,67 @@ proc project_access_lists_setup  {} {
    set_error 0 "ok"
 }
 
-proc test_job_run { id_string job_id } {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
+proc project_access_lists_cleanup {} {
+   global ts_config CHECK_OUTPUT
 
-   if { $job_id > 0 } {
-      wait_for_jobpending $job_id "leeper" 60 1
+   global project_access_lists_queue
+   global project_access_lists_host
+
+   global project_access_lists_host_conf
+   global project_access_lists_global_host_conf
+   global project_access_lists_cluster_conf
+   global project_access_lists_schedd_conf
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+
+   # delete the test queue
+   del_queue "prjacc" 0 1
+  
+   # restore hosts and configurations
+   set_exechost  project_access_lists_host_conf $project_access_lists_host 
+   set_exechost  project_access_lists_global_host_conf "global"
+   set_config    project_access_lists_cluster_conf
+   set_schedd_config project_access_lists_schedd_conf
+
+   # enable all.q
+   foreach host $ts_config(execd_nodes) {
+      enable_queue [get_queue_instance "all.q" $host]
    }
 
-   trigger_scheduling
+   # delete test projects
+   del_prj "userA_project_group"
+   del_prj "userB_project_group"
+   del_prj "userA_project_name"
+   del_prj "userB_project_name"
 
-   if { $job_id < 1 } {
+   # delete access lists
+   del_access_list "userA_group"  ;# A
+   del_access_list "userB_group"  ;# B
+   del_access_list "userA_name"   ;# C
+   del_access_list "userB_name"   ;# D
+
+   set_error 0 "ok"
+}
+
+
+
+proc test_job_run {id_string job_id} {
+   global ts_config CHECK_OUTPUT
+
+   if {$job_id < 1} {
      add_proc_error "test_job_run" -1 "wrong job id: $job_id, id_string: $id_string\n[get_submit_error $job_id]" 
    } else {
-      if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
+      wait_for_jobpending $job_id "leeper" 60 1
+
+      trigger_scheduling
+
+      if {[wait_for_jobstart $job_id "leeper" 120] != 0} {
          add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
       }
+
+      delete_job $job_id 1
    }
-   delete_job $job_id 1
 }
 
 proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
@@ -200,7 +249,6 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
    sleep 2
    
-
    set job_id_A [ submit_job "-P userA_project_group $jobargs" 0 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
    if { $A_ok == 1 } {
       test_job_run "$id_string (A)" $job_id_A
@@ -219,8 +267,6 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } 
    if { $D_ok == 1 } {
       test_job_run "$id_string (D)" $job_id_D
    }
-
-
 
    if { $E_ok != -1 } {
       set job_id_E [ submit_job "-P mytestproject $jobargs" 0 30 "" $CHECK_USER ]
@@ -262,10 +308,11 @@ proc check_user_job_info { job_id } {
 
    global CHECK_HOST CHECK_L10N CHECK_OUTPUT
 
-   if { $CHECK_L10N == 1 } {
-      set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] "*" "*" "*" ]
-      set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS] "*" "*" "*" ]
-      set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*" ]
+   if {$CHECK_L10N == 1} {
+      set NOT_THE_CORRECT_PROJECT [translate_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS "*" "*" "*"]
+      set NOT_ALLOWED_TO_RUN      [translate_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS "*" "*" "*"]
+      set NO_PERMISSION           [translate_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS "*" "*"]
+
       set scheduling_info_text [get_scheduling_info $job_id]
       puts $CHECK_OUTPUT "schedd info : \"$scheduling_info_text\""
       puts $CHECK_OUTPUT "matchstring1: \"$NOT_THE_CORRECT_PROJECT\""
@@ -278,7 +325,7 @@ proc check_user_job_info { job_id } {
       puts $CHECK_OUTPUT $match1
       puts $CHECK_OUTPUT $match2
       puts $CHECK_OUTPUT $match3
-      if { $match1 != 1 && $match2 != 1 && $match3 != 1 } {
+      if {$match1 != 1 && $match2 != 1 && $match3 != 1} {
          return 1
       }
       return 0
@@ -294,7 +341,7 @@ proc check_user_job_info { job_id } {
    return 0
 }
 
-proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
+proc run_user_jobs {id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1"} } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT project_access_lists_host CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global project_access_lists_queue CHECK_HOST
@@ -361,10 +408,6 @@ proc run_user_jobs { id_string jobargs A_ok B_ok C_ok D_ok { E_ok "-1" } } {
       if { $E_ok == 1 } {
          test_job_run "$id_string (E)" $job_id_E
       } else {
-         set NOT_THE_CORRECT_PROJECT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASINCORRECTPRJ_SSS] "*" "*" "*"]
-         set NOT_ALLOWED_TO_RUN      [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_EXCLPRJ_SSS] "*" "*" "*"]
-         set NO_PERMISSION           [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_INFO_HASNOPERMISSION_SS] "*" "*"]
-
          if { [check_user_job_info $job_id_E] } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_E (E) should not run"
          }
@@ -416,9 +459,8 @@ proc project_access_lists_global_host {} {
 
    set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
 
-
    # testing user and group
-   set project_access_lists "{userA_project_name userB_project_name }"
+   set project_access_lists {userA_project_name userB_project_name}
    foreach elem $project_access_lists {
       set A_USER [lindex $elem 0]
       set B_USER [lindex $elem 1]
@@ -456,14 +498,14 @@ proc project_access_lists_global_host {} {
       run_user_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1 1 1
    
       #case 6
-      set my_global_host(xprojects) "$A_USER,$B_USER"
+      set my_global_host(xprojects) "$A_USER $B_USER"
       set my_global_host(projects)  "NONE"
       set_exechost my_global_host "global"
       run_user_jobs "case 6,$A_USER,$B_USER" "$jobargs" 1 1 0 0
    
       #case 7
       set my_global_host(xprojects) "NONE"
-      set my_global_host(projects)  "$A_USER,$B_USER"
+      set my_global_host(projects)  "$A_USER $B_USER"
       set_exechost my_global_host "global"
       run_user_jobs "case 7,$A_USER,$B_USER" "$jobargs" 0 0 1 1
   
@@ -482,11 +524,11 @@ proc project_access_lists_global_host {} {
    run_user_jobs "group/user case 1" "$jobargs" 0 0 1 0 0
 
    set my_global_host(xprojects) "NONE"
-   set my_global_host(projects)  "userA_project_name,userA_project_group"
+   set my_global_host(projects)  "userA_project_name userA_project_group"
    set_exechost my_global_host "global"
    run_user_jobs "group/user case 2" "$jobargs" 1 0 1 0 0
 
-   set my_global_host(xprojects) "userA_project_name,userA_project_group"
+   set my_global_host(xprojects) "userA_project_name userA_project_group"
    set my_global_host(projects)  "NONE"
    set_exechost my_global_host "global"
    run_user_jobs "group/user case 3" "$jobargs" 0 1 0 1 1
@@ -551,14 +593,14 @@ proc project_access_lists_exec_host {} {
       run_user_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1 1 1
    
       #case 6
-      set my_local_host(xprojects) "$A_USER,$B_USER"
+      set my_local_host(xprojects) "$A_USER $B_USER"
       set my_local_host(projects)  "NONE"
       set_exechost my_local_host $project_access_lists_host
       run_user_jobs "case 6,$A_USER,$B_USER" "$jobargs" 1 1 0 0
    
       #case 7
       set my_local_host(xprojects) "NONE"
-      set my_local_host(projects)  "$A_USER,$B_USER"
+      set my_local_host(projects)  "$A_USER $B_USER"
       set_exechost my_local_host $project_access_lists_host
       run_user_jobs "case 7,$A_USER,$B_USER" "$jobargs" 0 0 1 1
   
@@ -577,11 +619,11 @@ proc project_access_lists_exec_host {} {
    run_user_jobs "group/user case 1" "$jobargs" 0 0 1 0 0
 
    set my_local_host(xprojects) "NONE"
-   set my_local_host(projects)  "userA_project_name,userA_project_group"
+   set my_local_host(projects)  "userA_project_name userA_project_group"
    set_exechost my_local_host $project_access_lists_host
    run_user_jobs "group/user case 2" "$jobargs" 1 0 1 0 0
 
-   set my_local_host(xprojects) "userA_project_name,userA_project_group"
+   set my_local_host(xprojects) "userA_project_name userA_project_group"
    set my_local_host(projects)  "NONE"
    set_exechost my_local_host $project_access_lists_host
    run_user_jobs "group/user case 3" "$jobargs" 0 1 0 1 1
@@ -600,10 +642,11 @@ proc project_access_lists_exec_host {} {
 }
 
 proc project_access_lists_queue {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT project_access_lists_queue CHECK_USER
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
+   global project_access_lists_queue project_access_lists_host
 
    set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
@@ -618,49 +661,49 @@ proc project_access_lists_queue {} {
       # case 1
       set my_queue_conf(xprojects) "$A_USER"
       set my_queue_conf(projects)  "NONE"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 1,$A_USER,$B_USER" "$jobargs" 1 1 0 1   ;# A = 0 (not running) B = 1 (should run)
    
       # case 2
       set my_queue_conf(xprojects) "NONE"
       set my_queue_conf(projects)  "$A_USER"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 2,$A_USER,$B_USER" "$jobargs" 0 0 1 0
    
       # case 3
       set my_queue_conf(xprojects) "$B_USER"
       set my_queue_conf(projects)  "$A_USER"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 3,$A_USER,$B_USER" "$jobargs" 0 0 1 0
    
       #case 4
       set my_queue_conf(xprojects) "$A_USER"
       set my_queue_conf(projects)  "$B_USER"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 4,$A_USER,$B_USER" "$jobargs" 0 0 0 1
    
       #case 5
       set my_queue_conf(xprojects) "NONE"
       set my_queue_conf(projects)  "NONE"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1 1 1
    
       #case 6
-      set my_queue_conf(xprojects) "$A_USER,$B_USER"
+      set my_queue_conf(xprojects) "$A_USER $B_USER"
       set my_queue_conf(projects)  "NONE"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 6,$A_USER,$B_USER" "$jobargs" 1 1 0 0
    
       #case 7
       set my_queue_conf(xprojects) "NONE"
-      set my_queue_conf(projects)  "$A_USER,$B_USER"
-      set_queue $project_access_lists_queue my_queue_conf
+      set my_queue_conf(projects)  "$A_USER $B_USER"
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
       run_user_jobs "case 7,$A_USER,$B_USER" "$jobargs" 0 0 1 1
   
       #restore
       set my_queue_conf(xprojects) "NONE"
       set my_queue_conf(projects)  "NONE"
-      set_queue $project_access_lists_queue my_queue_conf
+      mod_queue "prjacc" $project_access_lists_host my_queue_conf
    }
 
 
@@ -668,28 +711,28 @@ proc project_access_lists_queue {} {
    # userA_name userB_name userA_group userB_group
    set my_queue_conf(xprojects) "userA_project_group"
    set my_queue_conf(projects)  "userA_project_name"
-   set_queue $project_access_lists_queue my_queue_conf
+   mod_queue "prjacc" $project_access_lists_host my_queue_conf
    run_user_jobs "group/user case 1" "$jobargs" 0 0 1 0 0
 
    set my_queue_conf(xprojects) "NONE"
-   set my_queue_conf(projects)  "userA_project_name,userA_project_group"
-   set_queue $project_access_lists_queue my_queue_conf
+   set my_queue_conf(projects)  "userA_project_name userA_project_group"
+   mod_queue "prjacc" $project_access_lists_host my_queue_conf
    run_user_jobs "group/user case 2" "$jobargs" 1 0 1 0 0
 
-   set my_queue_conf(xprojects) "userA_project_name,userA_project_group"
+   set my_queue_conf(xprojects) "userA_project_name userA_project_group"
    set my_queue_conf(projects)  "NONE"
-   set_queue $project_access_lists_queue my_queue_conf
+   mod_queue "prjacc" $project_access_lists_host my_queue_conf
    run_user_jobs "group/user case 3" "$jobargs" 0 1 0 1 1
 
    set my_queue_conf(xprojects) "userA_project_name"
    set my_queue_conf(projects)  "userA_project_group"
-   set_queue $project_access_lists_queue my_queue_conf
+   mod_queue "prjacc" $project_access_lists_host my_queue_conf
    run_user_jobs "group/user case 4" "$jobargs" 1 0 0 0 0
 
    #restore
    set my_queue_conf(xprojects) "NONE"
    set my_queue_conf(projects)  "NONE"
-   set_queue $project_access_lists_queue my_queue_conf
+   mod_queue "prjacc" $project_access_lists_host my_queue_conf
      
 
    set_error 0 "ok"
@@ -715,49 +758,49 @@ proc project_access_lists_cluster_config {} {
       # case 1
       set my_cluster_conf(xprojects) "$A_USER"
       set my_cluster_conf(projects)  "NONE"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 1,$A_USER,$B_USER" "$jobargs" 1 1 0 1   ;# A = 0 (not running) B = 1 (should run)
    
       # case 2
       set my_cluster_conf(xprojects) "NONE"
       set my_cluster_conf(projects)  "$A_USER"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 2,$A_USER,$B_USER" "$jobargs" 0 0 1 0
    
       # case 3
       set my_cluster_conf(xprojects) "$B_USER"
       set my_cluster_conf(projects)  "$A_USER"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 3,$A_USER,$B_USER" "$jobargs" 0 0 1 0
    
       #case 4
       set my_cluster_conf(xprojects) "$A_USER"
       set my_cluster_conf(projects)  "$B_USER"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 4,$A_USER,$B_USER" "$jobargs" 0 0 0 1
    
       #case 5
       set my_cluster_conf(xprojects) "NONE"
       set my_cluster_conf(projects)  "NONE"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1 1 1
    
       #case 6
-      set my_cluster_conf(xprojects) "$A_USER,$B_USER"
+      set my_cluster_conf(xprojects) "$A_USER $B_USER"
       set my_cluster_conf(projects)  "NONE"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 6,$A_USER,$B_USER" "$jobargs" 1 1 0 0
    
       #case 7
       set my_cluster_conf(xprojects) "NONE"
-      set my_cluster_conf(projects)  "$A_USER,$B_USER"
-      set_config my_cluster_conf "global"
+      set my_cluster_conf(projects)  "$A_USER $B_USER"
+      set_config my_cluster_conf
       run_user_denied_jobs "case 7,$A_USER,$B_USER" "$jobargs" 0 0 1 1
   
       #restore
       set my_cluster_conf(xprojects) "NONE"
       set my_cluster_conf(projects)  "NONE"
-      set_config my_cluster_conf "global"
+      set_config my_cluster_conf
    }
 
 
@@ -765,28 +808,28 @@ proc project_access_lists_cluster_config {} {
    # userA_name userB_name userA_group userB_group
    set my_cluster_conf(xprojects) "userA_project_group"
    set my_cluster_conf(projects)  "userA_project_name"
-   set_config my_cluster_conf "global"
+   set_config my_cluster_conf
    run_user_denied_jobs "group/user case 1" "$jobargs" 0 0 1 0 0
 
    set my_cluster_conf(xprojects) "NONE"
-   set my_cluster_conf(projects)  "userA_project_name,userA_project_group"
-   set_config my_cluster_conf "global"
+   set my_cluster_conf(projects)  "userA_project_name userA_project_group"
+   set_config my_cluster_conf
    run_user_denied_jobs "group/user case 2" "$jobargs" 1 0 1 0 0
 
-   set my_cluster_conf(xprojects) "userA_project_name,userA_project_group"
+   set my_cluster_conf(xprojects) "userA_project_name userA_project_group"
    set my_cluster_conf(projects)  "NONE"
-   set_config my_cluster_conf "global"
+   set_config my_cluster_conf
    run_user_denied_jobs "group/user case 3" "$jobargs" 0 1 0 1 1
 
    set my_cluster_conf(xprojects) "userA_project_name"
    set my_cluster_conf(projects)  "userA_project_group"
-   set_config my_cluster_conf "global"
+   set_config my_cluster_conf
    run_user_denied_jobs "group/user case 4" "$jobargs" 1 0 0 0 0
 
    #restore
    set my_cluster_conf(xprojects) "NONE"
    set my_cluster_conf(projects)  "NONE"
-   set_config my_cluster_conf "global"
+   set_config my_cluster_conf
      
 
    set_error 0 "ok"
@@ -852,7 +895,7 @@ proc project_access_lists_project {} {
 
    
       #case 6
-      set my_project(xacl) "$A_USER,$B_USER"
+      set my_project(xacl) "$A_USER $B_USER"
       set my_project(acl)  "NONE"
       add_prj my_project
       if { $group_test == 1 } {
@@ -880,7 +923,7 @@ proc project_access_lists_project {} {
    
       #case 7
       set my_project(xacl) "NONE"
-      set my_project(acl)  "$A_USER,$B_USER"
+      set my_project(acl)  "$A_USER $B_USER"
       add_prj my_project
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
@@ -908,12 +951,12 @@ proc project_access_lists_project {} {
    del_prj "access_test_project"
 
    set my_project(xacl) "NONE"
-   set my_project(acl)  "userA_name,userA_group"
+   set my_project(acl)  "userA_name userA_group"
    add_prj my_project
    run_user_denied_jobs "group/user case 2" "$jobargs" 1 0 1 0
    del_prj "access_test_project"
 
-   set my_project(xacl) "userA_name,userA_group"
+   set my_project(xacl) "userA_name userA_group"
    set my_project(acl)  "NONE"
    add_prj my_project
    run_user_denied_jobs "group/user case 3" "$jobargs" 0 1 0 1
@@ -927,39 +970,4 @@ proc project_access_lists_project {} {
 
    set_error 0 "ok"
 }
-
-proc project_access_lists_cleanup  {} {
-   global project_access_lists_queue
-   global project_access_lists_host
-
-   global project_access_lists_host_conf
-   global project_access_lists_queue_conf
-   global project_access_lists_global_host_conf
-   global project_access_lists_cluster_conf
-   global project_access_lists_schedd_conf
-
-   global CHECK_CORE_EXECD CHECK_OUTPUT
-
-   del_prj "userA_project_group"
-   del_prj "userB_project_group"
-   del_prj "userA_project_name"
-   del_prj "userB_project_name"
-
-   del_access_list "userA_group"  ;# A
-   del_access_list "userB_group"  ;# B
-   del_access_list "userA_name"   ;# C
-   del_access_list "userB_name"   ;# D
-
-
-   set_exechost  project_access_lists_host_conf $project_access_lists_host 
-   set_queue     $project_access_lists_queue project_access_lists_queue_conf
-   set_exechost  project_access_lists_global_host_conf "global"
-   set_config    project_access_lists_cluster_conf
-   set_schedd_config project_access_lists_schedd_conf
-
-   wait_for_end_of_all_jobs 300
-   set_error 0 "ok"
-}
-
-
 

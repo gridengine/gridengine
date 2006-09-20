@@ -125,6 +125,7 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
    /*
     * mkdir is buggy, chown dir manually
     */
+   /* Flawfinder: ignore */
    chown(path_, geteuid(), getegid());
 #endif
  

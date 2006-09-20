@@ -217,6 +217,9 @@ int reresolve_me_qualified_hostname(void)
    DEXIT;
    return CL_RETVAL_OK;
 }
-
-
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_setup(void) {
+   return 0;
+}
 #endif

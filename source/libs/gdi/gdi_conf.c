@@ -359,5 +359,9 @@ lList **conf_list
    DEXIT;
    return 0;
 }
-
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_gdi_conf(void) {
+   return 0;
+}
 #endif

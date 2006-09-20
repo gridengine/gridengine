@@ -3144,9 +3144,13 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
 *     const char* - pointer to the descriptive string.
 *
 *  NOTES
-*     The result points to a static buffer. Subsequent calls to i
+*     The result points to a static buffer. Subsequent calls to
 *     event_text will overwrite previous results.
 *******************************************************************************/
 /* function see libs/sgeobj/sge_event.c */
-
+#else
+/* some compilers don't accept an empty module - give them a dummy method */
+int dummy_event_client(void) {
+   return 0;
+}
 #endif

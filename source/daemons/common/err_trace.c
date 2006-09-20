@@ -929,7 +929,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
            
                 /* Have to use chown() here, because fchown() has some bugs
                  * on True64 and Irix.*/
-                if(chown(g_shepherd_file_path[shepherd_file], 
+                if (chown(g_shepherd_file_path[shepherd_file], 
                                      jobuser_id, jobuser_gid)!=0) {
                     /* chown failed. This means that user root is a normal user
                      * for the file system (due to NFS rights). So we have no
@@ -937,7 +937,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
                      * We must do this as file owner = admin user.
                      */
                     seteuid(old_euid);
-                    if( fchmod( fd, 0666 )==-1) {
+                    if (fchmod(fd, 0666) == -1) {
                         sprintf(buffer, "can't fchmod(fd, 0666): %s\n", strerror(errno));
                         shepherd_panic(buffer);
                         return;
@@ -952,7 +952,7 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp,
                     * and we give the ownership to the
                     * prolog/pe_start/job/pe_stop/epilog user.
                     */
-                   if(g_keep_files_open && nfs_mounted(".")) {
+                   if (g_keep_files_open && nfs_mounted(".")) {
                         g_keep_files_open = false;
                    }
                 }

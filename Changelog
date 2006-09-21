@@ -1,3 +1,8 @@
+AA-2006-09-21-0: Bugfix:    o wrong prototype fixed in centry_redebit_consumables()
+                            o error handling in unpacking code
+                            o formatting
+                 Review:    RD           
+
 RH-2006-09-20-1: Bugfix:    o sge_ca does not longer use 'global' tmp files
                             o GridCAImpl writes lock file before calling sge_ca
                  Review:    HP

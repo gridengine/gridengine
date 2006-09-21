@@ -1252,7 +1252,7 @@ bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
 ******************************************************************************/
 int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp) 
 {
-   int ret;
+   int ret = PACK_SUCCESS;
    sge_gdi_request *ar = NULL;
    sge_gdi_request *prev_ar = NULL;
    u_long32 next;
@@ -1325,6 +1325,7 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
          break;
       default:
          ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, sge_u32c(ar->op)));
+         ret = PACK_BADARG;
          goto error;
       }
 
@@ -1337,7 +1338,7 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       }
    } while (next);
    
-   DRETURN(0);
+   DRETURN(ret);
 
 error:
    ERROR((SGE_EVENT, MSG_GDI_CANTUNPACKGDIREQUEST ));

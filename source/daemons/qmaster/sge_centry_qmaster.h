@@ -51,7 +51,7 @@ centry_mod(void *context,
            int sub_command, monitoring_t *monitor);
 
 void
-centry_redebit_consumables(const lList *centries);
+centry_redebit_consumables(void *context, const lList *centries);
 
 #endif /* __SGE_CENTRY_QMASTER_H */
 

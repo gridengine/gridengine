@@ -1598,7 +1598,7 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
       switch (request->target) {
          case SGE_CENTRY_LIST:
             DPRINTF(("rebuilding consumable debitation\n"));
-            centry_redebit_consumables(ppList);
+            centry_redebit_consumables(context, ppList);
             break;
       }
    }

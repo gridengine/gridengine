@@ -1244,19 +1244,19 @@ int subscribe_default_scheduler(void *evc_context)
    /* event types with callbacks */
 
    sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_SCHEDD_CONF, sge_process_schedd_conf_event_before, 
-                        sge_process_schedd_conf_event_after,      NULL, NULL, NULL);
+                        sge_process_schedd_conf_event_after, NULL, NULL, NULL);
                                                 
    sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_SCHEDD_MONITOR, NULL, 
-                        sge_process_schedd_monitor_event,   NULL, NULL, NULL);
+                        sge_process_schedd_monitor_event, NULL, NULL, NULL);
    
    sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_GLOBAL_CONFIG,  NULL, 
-                        sge_process_global_config_event,    NULL, NULL, NULL);
+                        sge_process_global_config_event, NULL, NULL, NULL);
    
-   sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_JOB,            sge_process_job_event_before, 
-                        sge_process_job_event_after,        NULL, where_job, what_job);
+   sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_JOB, sge_process_job_event_before, 
+                        sge_process_job_event_after, NULL, where_job, what_job);
                         
-   sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
-                        sge_process_ja_task_event_after,    NULL, where_jat, what_jat);
+   sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_JATASK, sge_process_ja_task_event_before, 
+                        sge_process_ja_task_event_after, NULL, where_jat, what_jat);
                                                
    sge_mirror_subscribe(evc_context, event_client, SGE_TYPE_USERSET, sge_process_userset_event_before, 
                         NULL, NULL, NULL, NULL); 

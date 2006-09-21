@@ -140,7 +140,7 @@ typedef enum {
    SGE_EMA_IGNORE = 2   /* no further processing for this event is done */
 } sge_callback_result;
 
-typedef sge_callback_result (*sge_mirror_callback)(void *context,
+typedef sge_callback_result (*sge_mirror_callback)(void *evc_context,
                                                    object_description *object_base, 
                                                    sge_object_type type, 
                                                    sge_event_action action, 

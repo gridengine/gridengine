@@ -1,3 +1,5 @@
+RC-2006-09-22-0: WWW        o fixed typo in sge_migrate.html
+
 AA-2006-09-21-0: Bugfix:    o wrong prototype fixed in centry_redebit_consumables()
                             o error handling in unpacking code
                             o formatting

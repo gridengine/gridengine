@@ -210,6 +210,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
       DEXIT;
       SGE_EXIT(NULL, 1);
    }
+   DEXIT;
 }
 
 /****** sgeobj/answer/answer_get_quality_text() *******************************
@@ -539,8 +540,7 @@ bool answer_list_has_error(lList **answer_list)
 
    DENTER(ANSWER_LAYER, "answer_list_has_error");
    ret = answer_list_has_quality(answer_list, ANSWER_QUALITY_ERROR);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }               
 
 /****** sgeobj/answer/answer_list_on_error_print_or_exit() ********************

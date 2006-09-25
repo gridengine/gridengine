@@ -171,7 +171,9 @@
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
 #define MSG_SCHEDD_INFO_CANNOTRUNLIRS_SSS             _MESSAGE(47140, _("Job cannot run in queue instance \""SFN"@"SFN"\" because exceeds limit in rule "SFN)) 
+#define MSG_SCHEDD_INFO_CANNOTRUNLIRS                 _MESSAGE(47140, _("Jobs cannot run because exceeds limit in limitation rule sets")) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS          _MESSAGE(47141, _("Job dropped because of invalid dynamical limit "SFN" in rule "SFN)) 
+#define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT             _MESSAGE(47141, _("Jobs dropped because of invalid dynamical limit")) 
 
 
 /* 

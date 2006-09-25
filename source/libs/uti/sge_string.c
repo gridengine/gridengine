@@ -1164,7 +1164,7 @@ void sge_strip_quotes(char **pstr)
    
    for (; *pstr; pstr++) {
       for (cp2 = cp = *pstr; *cp; cp++) {
-         if (*cp != '"') {
+         if ((*cp != '"') && (*cp != '\'')) {
             *cp2++ = *cp;
          }
       }

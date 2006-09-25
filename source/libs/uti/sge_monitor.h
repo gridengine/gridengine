@@ -266,6 +266,7 @@ typedef struct {
    u_long32    gdi_cp_count;     /* counts the gdi cp requests */
    u_long32    gdi_trig_count;   /* counts the gdi trig requests */
    u_long32    gdi_perm_count;   /* counts the gdi perm requests */
+   u_long32    gdi_replace_count;   /* counts the gdi perm requests */
 
    u_long32    eload_count; /* counts the execd load reports */
    u_long32    econf_count; /* counts the execd conf version requests */
@@ -283,6 +284,7 @@ typedef struct {
 #define MONITOR_GDI_CP(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_cp_count++
 #define MONITOR_GDI_TRIG(monitor)   if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_trig_count++
 #define MONITOR_GDI_PERM(monitor)   if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_perm_count++
+#define MONITOR_GDI_REPLACE(monitor) if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->gdi_replace_count++
 
 #define MONITOR_ACK(monitor)     if ((monitor->monitor_time > 0) && (monitor->ext_type == GDI_EXT)) ((m_gdi_t*)(monitor->ext_data))->ack_count++
 

@@ -52,6 +52,7 @@ enum {
    SGE_GDI_PERMCHECK,
    SGE_GDI_SPECIAL,
    SGE_GDI_COPY,
+   SGE_GDI_REPLACE,
 
    /* SUB COMMAND  ----------- */
 

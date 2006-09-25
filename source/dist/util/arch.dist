@@ -342,6 +342,11 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       ;;
    sol-*)
       DEFAULTMANPATH=/usr/share/man
+      # if bit-specific variable already set, use this variable!
+      SHARED_LIBRARY_PATH_BITS="LD_LIBRARY_PATH_`isainfo -b`"
+      if eval [ x\$$SHARED_LIBRARY_PATH_BITS != x ]; then
+	      SHARED_LIBRARY_PATH=$SHARED_LIBRARY_PATH_BITS
+      fi
       ;;
    tru64)
       DEFAULTMANPATH=/usr/share/man:/usr/dt/share/man:/usr/local/man

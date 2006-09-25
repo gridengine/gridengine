@@ -249,7 +249,6 @@ const lList* master_hGroup_List
    lList **host_list = NULL;
    int nm = 0;
    char *name = NULL;
-   int found_host;
    int ret;
 
 #ifdef TEST_QMASTER_GDI2
@@ -314,14 +313,7 @@ const lList* master_hGroup_List
    }
 
    /* check if host is in host list */
-   found_host = 1;
    if ((ep=host_list_locate(*host_list, unique))==NULL) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, name, host));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      found_host = 0;
-   }
-
-   if (!found_host) {
       /* may be host was not the unique hostname.
          Get the unique hostname and try to find it again. */
       if (getuniquehostname(host, unique, 0)!=CL_RETVAL_OK)
@@ -1132,7 +1124,7 @@ sge_gdi_request *answer
          notification */
       for_each(lel, *object_type_get_master_list(SGE_TYPE_EXECHOST)) {  
          hostname = lGetHost(lel, EH_name);
-         if (strcmp(hostname, "template") && strcmp(hostname, "global")) {
+         if (strcmp(hostname, SGE_TEMPLATE_NAME) && strcmp(hostname, SGE_GLOBAL_NAME )) {
             notify(context, lel, answer, kill_jobs, 0); 
 
             /* RU: */

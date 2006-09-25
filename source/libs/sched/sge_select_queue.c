@@ -3208,6 +3208,7 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
    if (a->lirs_list == NULL || lGetNumberOfElem(a->lirs_list) == 0) {
       no_check = true;
    }
+
    for_each(queue_instance, a->queue_list) {
       u_long32 tt_lirs_all = 0;
 
@@ -3221,6 +3222,7 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
             u_long32 tt_lirs = a->start;
 
             if (!lGetBool(lirs, LIRS_enabled)) {
+               result = DISPATCH_OK;
                continue;
             }
 

@@ -1323,6 +1323,10 @@ int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp)
       case SGE_GDI_COPY:
          DPRINTF(("unpacking copy request\n"));
          break;
+      case SGE_GDI_REPLACE:
+      case SGE_GDI_REPLACE | SGE_GDI_SET_ALL:
+         DPRINTF(("unpacking SGE_GDI_REPLACE request\n"));
+         break;
       default:
          ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, sge_u32c(ar->op)));
          ret = PACK_BADARG;
@@ -1393,6 +1397,10 @@ sge_pack_gdi_info(u_long32 command)
       break;
    case SGE_GDI_COPY:
       DPRINTF(("request denied\n"));
+      break;
+   case SGE_GDI_REPLACE:
+   case SGE_GDI_REPLACE | SGE_GDI_SET_ALL:
+      DPRINTF(("packing SGE_GDI_REPLACE request\n"));
       break;
    default:
       ERROR((SGE_EVENT, MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D, 

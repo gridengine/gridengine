@@ -116,7 +116,7 @@ static int sge_next_is_an_opt(char **ptr);
 static int sge_error_and_exit(const char *ptr);
 
 /* ------------------------------------------------------------- */
-static int show_object_list(void *context, u_long32, lDescr *, int, char *);
+static bool show_object_list(void *context, u_long32, lDescr *, int, char *);
 static int show_processors(void *context);
 static int show_eventclients(void *context);
 
@@ -124,8 +124,8 @@ static bool show_gdi_request_answer(lList *alp);
 static bool show_gdi_request_answer_list(lList *alp);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
-static int add_host_of_type(void *context, lList *arglp, u_long32 target);
-static int del_host_of_type(void *context, lList *arglp, u_long32 target);
+static bool add_host_of_type(void *context, lList *arglp, u_long32 target);
+static bool del_host_of_type(void *context, lList *arglp, u_long32 target);
 static int print_acl(void *context, lList *arglp);
 static int qconf_modify_attribute(void *context, lList **alpp, int from_file, char ***spp, lListElem **epp, int sub_command, struct object_info_entry *info_entry); 
 static lListElem *edit_exechost(lListElem *ep, uid_t uid, gid_t gid);
@@ -1091,7 +1091,9 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, SH_Type, SH_name, *spp);
-         add_host_of_type(context, lp, SGE_SUBMITHOST_LIST);
+         if (!add_host_of_type(context, lp, SGE_SUBMITHOST_LIST)) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
 
          spp++;
@@ -1516,7 +1518,9 @@ char *argv[]
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, EH_Type, EH_name, *spp);
-         del_host_of_type(context, lp, SGE_EXECHOST_LIST);
+         if (!del_host_of_type(context, lp, SGE_EXECHOST_LIST)) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
          spp++;
          continue;
@@ -1528,7 +1532,9 @@ char *argv[]
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, AH_Type, AH_name, *spp);
-         del_host_of_type(context, lp, SGE_ADMINHOST_LIST);
+         if (!del_host_of_type(context, lp, SGE_ADMINHOST_LIST)) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
 
          spp++;
@@ -1626,7 +1632,9 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, SH_Type, SH_name, *spp);
-         del_host_of_type(context, lp, SGE_SUBMITHOST_LIST);
+         if (!del_host_of_type(context, lp, SGE_SUBMITHOST_LIST)) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
 
          spp++;
@@ -2004,7 +2012,9 @@ char *argv[]
          qconf_is_adminhost(context, qualified_hostname);
          qconf_is_manager(context, username);
 
-         centry_list_modify(context, &answer_list);
+         if (!centry_list_modify(context, &answer_list)) {
+            sge_parse_return = 1;
+         }
          show_gdi_request_answer_list(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -3502,7 +3512,9 @@ char *argv[]
          /* get userset */
          parse_name_list_to_cull("usersets", &lp, US_Type, US_name, *spp);
 
-         edit_usersets(context, lp);
+         if (edit_usersets(context, lp) != 0) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
 
          spp++;
@@ -4124,7 +4136,9 @@ char *argv[]
       /* "-scall" */
 
       if (strcmp("-scall", *spp) == 0) {
-         show_object_list(context, SGE_CALENDAR_LIST, CAL_Type, CAL_name, "calendar"); 
+         if (!show_object_list(context, SGE_CALENDAR_LIST, CAL_Type, CAL_name, "calendar")) { 
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4193,14 +4207,23 @@ char *argv[]
             }
             host = lGetHost(hep, EH_name);
 
-            if (action == 0)
-               print_config(context, host);
-            else if (action == 1)
-               add_modify_config(context, host, NULL, 1);
-            else if (action == 2)
-               add_modify_config(context, host, NULL, 0);
-            else if (action == 3)
-               add_modify_config(context, host, cp, 0);
+            if (action == 0) {
+               if (print_config(context, host) != 0) {
+                  sge_parse_return = 1;
+               }
+            } else if (action == 1) {
+               if (add_modify_config(context, host, NULL, 1) != 0) {
+                  sge_parse_return = 1;
+               }
+            } else if (action == 2) {
+               if (add_modify_config(context, host, NULL, 0) != 0) {
+                  sge_parse_return = 1;
+               }
+            } else if (action == 3) {
+               if (add_modify_config(context, host, cp, 0) != 0) {
+                  sge_parse_return = 1;
+               }
+            }
             first = 0;
          } /* end for */
          
@@ -4258,8 +4281,10 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-sckptl" */
       if (strcmp("-sckptl", *spp) == 0) {
-         show_object_list(context, SGE_CKPT_LIST, CK_Type, CK_name,
-               "ckpt interface definition");
+         if (!show_object_list(context, SGE_CKPT_LIST, CK_Type, CK_name,
+               "ckpt interface definition")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4267,7 +4292,9 @@ char *argv[]
       /* "-sconfl" */
 
       if (strcmp("-sconfl", *spp) == 0) {
-         show_object_list(context, SGE_CONFIG_LIST, CONF_Type, CONF_hname, "config"); 
+         if (!show_object_list(context, SGE_CONFIG_LIST, CONF_Type, CONF_hname, "config")) {
+            sge_parse_return = 1;
+         }
          spp++;
          continue;
       }
@@ -4359,15 +4386,18 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            spp++;
-            continue;
+           sge_parse_return = 1; 
+           spp++;
+           continue;
          }
          lFreeList(&alp);
 
          if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_EXEC_XISNOTANEXECUTIONHOST_S, host);
             fprintf(stderr, "\n");
-            DRETURN(1);
+            sge_parse_return = 1; 
+            spp++;
+            continue;
          }
 
          ep = lFirst(lp);
@@ -4381,7 +4411,9 @@ char *argv[]
             FREE (filename_stdout);
             
             if (answer_list_output(&alp)) {
-               sge_error_and_exit (NULL);
+               sge_parse_return = 1; 
+               spp++;
+               continue;
             }
          }
 
@@ -4398,8 +4430,10 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-sel" */
       if (strcmp("-sel", *spp) == 0) {
-         show_object_list(context, SGE_EXECHOST_LIST, EH_Type, EH_name, 
-               "execution host"); 
+         if (!show_object_list(context, SGE_EXECHOST_LIST, EH_Type, EH_name, 
+               "execution host")) { 
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4413,8 +4447,10 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-sh" */
       if (strcmp("-sh", *spp) == 0) {
-         show_object_list(context, SGE_ADMINHOST_LIST, AH_Type, AH_name, 
-               "administrative host"); 
+         if (!show_object_list(context, SGE_ADMINHOST_LIST, AH_Type, AH_name, 
+               "administrative host")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4441,7 +4477,9 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-slrsl " */
       if (strcmp("-slrsl", *spp) == 0) {
-         show_object_list(context, SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list");
+         if (!show_object_list(context, SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4449,7 +4487,9 @@ char *argv[]
       /* "-sm" */
 
       if (strcmp("-sm", *spp) == 0) {
-         show_object_list(context, SGE_MANAGER_LIST, MO_Type, MO_name, "manager"); 
+         if (!show_object_list(context, SGE_MANAGER_LIST, MO_Type, MO_name, "manager")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4506,8 +4546,10 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-spl" */
       if (strcmp("-spl", *spp) == 0) {
-         show_object_list(context, SGE_PE_LIST, PE_Type, PE_name,
-               "parallel environment");
+         if (!show_object_list(context, SGE_PE_LIST, PE_Type, PE_name,
+               "parallel environment")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4515,7 +4557,9 @@ char *argv[]
       /* "-so" */
 
       if (strcmp("-so", *spp) == 0) {
-         show_object_list(context, SGE_OPERATOR_LIST, MO_Type, MO_name, "operator"); 
+         if (!show_object_list(context, SGE_OPERATOR_LIST, MO_Type, MO_name, "operator")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4537,6 +4581,7 @@ char *argv[]
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            sge_parse_return = 1; 
             spp++;
             continue;
          }
@@ -4549,6 +4594,7 @@ char *argv[]
          FREE (filename_stdout);
          if (answer_list_output(&alp)) {
             fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
+            sge_parse_return = 1; 
             spp++;
             continue;
          }
@@ -4747,8 +4793,10 @@ char *argv[]
       /* "-ss" */
       if (strcmp("-ss", *spp) == 0) {
 
-         show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
-               "submit host"); 
+         if (!show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
+               "submit host")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4758,8 +4806,9 @@ char *argv[]
 
       if (strcmp("-sss", *spp) == 0) {
          /* ... */
-         show_object_list(context, SGE_EVENT_LIST, EV_Type, EV_host, "scheduling host"); 
-
+         if (!show_object_list(context, SGE_EVENT_LIST, EV_Type, EV_host, "scheduling host")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -4771,7 +4820,9 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("acl`s to show", &lp, 
                US_Type, US_name, *spp);
-         print_acl(context, lp);
+         if (print_acl(context, lp) != 0) {
+            sge_parse_return = 1;
+         }
          lFreeList(&lp);
 
          spp++;
@@ -4786,7 +4837,9 @@ char *argv[]
 #ifndef __SGE_NO_USERMAPPING__
       /* "-sumapl" */
       if (strcmp("-sumapl", *spp) == 0) {
-         show_object_list(context, SGE_USER_MAPPING_LIST, CU_Type, CU_name, "user mapping entries");  
+         if (!show_object_list(context, SGE_USER_MAPPING_LIST, CU_Type, CU_name, "user mapping entries")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5119,8 +5172,10 @@ char *argv[]
 
       /* "-shgrpl" */
       if (strcmp("-shgrpl", *spp) == 0) {
-         show_object_list(context, SGE_HGROUP_LIST, HGRP_Type, HGRP_name, 
-                          "host group list");  
+         if (!show_object_list(context, SGE_HGROUP_LIST, HGRP_Type, HGRP_name, 
+                          "host group list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5283,7 +5338,9 @@ char *argv[]
 
       /* "-sql" */
       if (strcmp("-sql", *spp) == 0) {
-         show_object_list(context, SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list");
+         if (!show_object_list(context, SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5644,8 +5701,10 @@ char *argv[]
 
       /* "-ss" */
       if (strcmp("-ss", *spp) == 0) {
-         show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
-               "submit"); 
+         if (!show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
+               "submit")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5653,8 +5712,10 @@ char *argv[]
       /* "-sul" */
 
       if (strcmp("-sul", *spp) == 0) {
-         show_object_list(context, SGE_USERSET_LIST, US_Type, US_name, 
-               "userset list"); 
+         if (!show_object_list(context, SGE_USERSET_LIST, US_Type, US_name, 
+               "userset list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5664,8 +5725,10 @@ char *argv[]
        /* "-suserl" */
 
       if (strcmp("-suserl", *spp) == 0) {
-         show_object_list(context, SGE_USER_LIST, UP_Type, UP_name, 
-               "user list"); 
+         if (!show_object_list(context, SGE_USER_LIST, UP_Type, UP_name, 
+               "user list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5675,8 +5738,10 @@ char *argv[]
        /* "-sprjl" */
 
       if (strcmp("-sprjl", *spp) == 0) {
-         show_object_list(context, SGE_PROJECT_LIST, UP_Type, UP_name, 
-               "project list"); 
+         if (!show_object_list(context, SGE_PROJECT_LIST, UP_Type, UP_name, 
+               "project list")) {
+            sge_parse_return = 1; 
+         }
          spp++;
          continue;
       }
@@ -5714,13 +5779,8 @@ char *argv[]
 
 /***********************************************************************/
 
-static void parse_name_list_to_cull(
-char *name,
-lList **lpp,
-lDescr *dp,
-int nm,
-char *s 
-) {
+static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s)
+{
    char *cp2 = NULL;
    lListElem *ep = NULL;
    int pos;
@@ -5805,7 +5865,7 @@ static int sge_error_and_exit(const char *ptr) {
    DRETURN(1); /* to prevent warning */
 }
 
-static int add_host_of_type(
+static bool add_host_of_type(
 void *context,
 lList *arglp,
 u_long32 target 
@@ -5816,7 +5876,7 @@ u_long32 target
    int nm = NoName;
    lDescr *type = NULL;
    char *name = NULL;
-   int ret = 0;
+   int ret = true;
 #ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
 #endif
@@ -5836,7 +5896,7 @@ u_long32 target
          break;
       default:
          DPRINTF(("add_host_of_type: unexpected type\n"));
-         ret |= 1;
+         ret = false;
          DRETURN(ret);
    }
    
@@ -5844,7 +5904,7 @@ u_long32 target
       /* resolve hostname */
       if (sge_resolve_host(argep, nm) != CL_RETVAL_OK) {
          const char* host = lGetHost(argep, nm);
-         ret |= 1;
+         ret = false;
          if ( host == NULL) {
             host = "";
          }
@@ -5886,14 +5946,12 @@ u_long32 target
 
 /* ------------------------------------------------------------ */
 
-static int del_host_of_type(
-void *context,
-lList *arglp,
-u_long32 target 
-) {
+static bool del_host_of_type(void *context, lList *arglp, u_long32 target )
+{
    lListElem *argep=NULL, *ep=NULL;
    lList *lp=NULL, *alp=NULL;
    lDescr *type = NULL;
+   bool ret = true;
 #ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
 #endif
@@ -5915,7 +5973,7 @@ u_long32 target
    for_each (argep, arglp) {
 
       /* make a new host element */
-      lp = lCreateList("host to add", type);
+      lp = lCreateList("host_to_del", type);
       ep = lCopyElem(argep);
       lAppendElem(lp, ep);
 
@@ -5927,15 +5985,16 @@ u_long32 target
 #endif
 
       /* print results */
-      ep = lFirst(alp);
-      answer_exit_if_not_recoverable(ep);
-		fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      if (answer_list_has_error(&alp)) {
+         ret = false;
+      }
+      answer_list_on_error_print_or_exit(&alp, stderr);
 
       lFreeList(&alp);
       lFreeList(&lp);
    }
 
-   DRETURN(0);
+   DRETURN(ret);
 }
 
 /* ------------------------------------------------------------ */
@@ -6271,19 +6330,15 @@ gid_t gid
 
 /* ------------------------------------------------------------ */
 
-static int show_object_list(
-void *context,
-u_long32 target,
-lDescr *type,
-int keynm,
-char *name 
-) {
+static bool show_object_list(void *context, u_long32 target, lDescr *type, int keynm, char *name) 
+{
    lEnumeration *what = NULL;
    lCondition *where = NULL;
    lList *alp = NULL, *lp = NULL;
    lListElem *ep = NULL;
    int pos;
    int dataType;
+   bool ret = true;
    
 #ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
@@ -6324,12 +6379,12 @@ char *name
 
    ep = lFirst(alp);
    answer_exit_if_not_recoverable(ep);
-   if (answer_get_status(ep) != STATUS_OK) {
-      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
-      DRETURN(0);
+   if (answer_list_output(&alp)) {
+      lFreeList(&lp);
+      DRETURN(false);
    }
 
-   if (lp && lGetNumberOfElem(lp) > 0) {
+   if (lGetNumberOfElem(lp) > 0) {
       for_each (ep, lp) {
          const char *line = NULL;
          pos = lGetPosInDescr(type, keynm);
@@ -6354,12 +6409,13 @@ char *name
    } else {
       fprintf(stderr, MSG_QCONF_NOXDEFINED_S, name);
       fprintf(stderr, "\n");
+      ret = false;
    }
    
    lFreeList(&alp);
    lFreeList(&lp);
    
-   DRETURN(0);
+   DRETURN(ret);
 }
 
 static int show_eventclients(void *context)

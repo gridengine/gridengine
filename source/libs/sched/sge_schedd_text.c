@@ -366,6 +366,12 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_CANNOTRUNINQUEUECAL   :
          return MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL    ;
 
+      case SCHEDD_INFO_CANNOTRUNLIRS:
+         return MSG_SCHEDD_INFO_CANNOTRUNLIRS;
+
+      case SCHEDD_INFO_JOBDYNAMICALLIMIT:
+         return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT;
+
       default:
          return "";
    }

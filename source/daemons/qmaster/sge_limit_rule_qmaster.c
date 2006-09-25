@@ -143,7 +143,7 @@ int lirs_mod(void *context,
    }
 
    /* ---- LIRS_description */
-   attr_mod_str(alpp, lirs, new_lirs, LIRS_description, "description");
+   attr_mod_zerostr(lirs, new_lirs, LIRS_description, "description");
 
    /* ---- LIRS_enabled */
    attr_mod_bool(lirs, new_lirs, LIRS_enabled, "enabled");
@@ -364,8 +364,6 @@ int sge_del_limit_rule_set(void *context,
 
    lirs_update_categories(NULL, found);
 
-   lFreeElem(&found);
-
    sge_event_spool(context,
                    alpp, 0, sgeE_LIRS_DEL, 
                    0, 0, lirs_name, NULL, NULL,
@@ -374,6 +372,8 @@ int sge_del_limit_rule_set(void *context,
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, lirs_name, MSG_OBJ_LIRS));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   lFreeElem(&found);
 
    DRETURN(STATUS_OK);
 }

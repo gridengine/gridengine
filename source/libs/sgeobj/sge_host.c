@@ -138,7 +138,7 @@ bool host_is_referenced(const lListElem *host,
 
             sprintf(SGE_EVENT, MSG_HOSTREFINQUEUE_SS, hostname, queuename);
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                            ANSWER_QUALITY_INFO);
+                            ANSWER_QUALITY_ERROR);
             ret = true;
             break;
          }
@@ -158,7 +158,7 @@ bool host_is_referenced(const lListElem *host,
 
                   sprintf(SGE_EVENT, MSG_HOSTREFINHGRP_SS, hostname, hgrp_name);
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                            ANSWER_QUALITY_INFO);
+                            ANSWER_QUALITY_ERROR);
 
                   ret = true;
                   break;

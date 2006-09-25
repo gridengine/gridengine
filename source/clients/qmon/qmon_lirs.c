@@ -136,7 +136,7 @@ static void qmonLIRSOkay(Widget w, XtPointer cld, XtPointer cad)
    
    lirs_list = qmonMirrorList(SGE_LIRS_LIST);
    qmonLIRSGetText(lirs_text, lirs_list, &alp);
-   if (alp) {
+   if (answer_list_has_error(&alp)) {
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
       DEXIT;
@@ -144,6 +144,7 @@ static void qmonLIRSOkay(Widget w, XtPointer cld, XtPointer cad)
    }
 
    xmui_unmanage(qmon_lirs);
+   lFreeList(&alp);
 
    DEXIT;
 }
@@ -242,9 +243,9 @@ static void qmonLIRSGetText(Widget tw, lList *lirs_list, lList **alpp)
 
    if (ret) {
 #ifdef TEST_GDI2   
-      ret = limit_rule_set_add_del_mod_via_gdi(ctx, new_lirs_list, alpp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+      ret = limit_rule_set_add_del_mod_via_gdi(ctx, new_lirs_list, alpp, SGE_GDI_REPLACE);
 #else      
-      ret = limit_rule_set_add_del_mod_via_gdi(NULL, new_lirs_list, alpp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+      ret = limit_rule_set_add_del_mod_via_gdi(NULL, new_lirs_list, alpp, SGE_GDI_REPLACE);
 #endif
    }
 

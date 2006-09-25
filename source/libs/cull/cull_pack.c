@@ -329,7 +329,8 @@ lDescr **dpp
       return ret;
    }
 
-   if ( n+1 > MAX_DESCR_SIZE) {
+   /* n+1 does not work because this casts n to int */ 
+   if ( n > MAX_DESCR_SIZE - 1 ) {
       LERROR(LEMALLOC);
       DEXIT;
       return PACK_ENOMEM;

@@ -6737,6 +6737,43 @@ proc is_scheduler_alive { hostname qmaster_spool_dir } {
    return $alive
 }
 
+#****** sge_procedures/is_qmaster_alive() **************************************
+#  NAME
+#     is_qmaster_alive() -- check if qmaster process is running
+#
+#  SYNOPSIS
+#     is_qmaster_alive { hostname qmaster_spool_dir } 
+#
+#  FUNCTION
+#     This function searches the process table for a running qmaster process
+#
+#  INPUTS
+#     hostname          - qmaster hostname
+#     qmaster_spool_dir - qmaster spool dir
+#
+#  RESULT
+#     1 on success
+#     0 on error
+#
+#  SEE ALSO
+#     sge_procedures/is_scheduler_alive()
+#*******************************************************************************
+proc is_qmaster_alive { hostname qmaster_spool_dir } {
+   global ts_config
+
+   set qmaster_pid [get_qmaster_pid]
+   get_ps_info $qmaster_pid $hostname
+   
+   set alive 0
+   if { ($ps_info($qmaster_pid,error) == 0) } {
+      if { [ is_pid_with_name_existing $hostname $qmaster_pid "sge_qmaster" ] == 0 } { 
+         set alive 1
+      }
+   }
+
+   return $alive
+}
+
 #****** sge_procedures/get_scheduler_pid() *************************************
 #  NAME
 #     get_scheduler_pid() -- ??? 

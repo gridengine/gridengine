@@ -39,6 +39,7 @@
 #include "gdi/sge_gdi.h"
 #include "uti/sge_prog.h"
 
+#include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_limit_rule.h"
 #include "sgeobj/sge_answer.h"
 #include "spool/flatfile/sge_flatfile.h"
@@ -302,16 +303,20 @@ bool limit_rule_set_modify(void *context, lList **answer_list, const char *name)
 {
    bool ret = false;
    lList *lirs_list = NULL;
+   u_long32 gdi_command = 0;
 
    DENTER(TOP_LAYER, "limit_rule_set_modify");
 
    if (name != NULL) {
       lList *lirsref_list = NULL;
 
+      gdi_command = SGE_GDI_MOD | SGE_GDI_SET_ALL;
+
       lString2List(name, &lirsref_list, LIRS_Type, LIRS_name, ", ");
       ret = limit_rule_get_via_gdi(context, answer_list, lirsref_list, &lirs_list);
       lFreeList(&lirsref_list);
    } else {
+      gdi_command = SGE_GDI_REPLACE;
       ret = limit_rule_get_all_via_gdi(context, answer_list, &lirs_list);
    }
 
@@ -320,7 +325,7 @@ bool limit_rule_set_modify(void *context, lList **answer_list, const char *name)
    }
    if (ret) {
       ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list,
-                                       SGE_GDI_MOD | SGE_GDI_SET_ALL);
+                                       gdi_command);
    }
 
    lFreeList(&lirs_list);
@@ -404,6 +409,9 @@ static bool limit_rule_set_provide_modify_context(void *context, lList **lirs_li
                                            bool ignore_unchanged_message)
 {
    bool ret = false;
+   int status = 0;
+   const char *filename = NULL;
+   spooling_field *fields = NULL;
 #ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    uid_t uid = ctx->get_uid(ctx);
@@ -415,54 +423,62 @@ static bool limit_rule_set_provide_modify_context(void *context, lList **lirs_li
    
    DENTER(TOP_LAYER, "limit_rule_set_provide_modify_context");
 
-   if (lirs_list != NULL && *lirs_list) {
-      int status = 0;
-      const char *filename = NULL;
-      spooling_field *fields = sge_build_LIRS_field_list(false, true);
-      
-      filename = spool_flatfile_write_list(answer_list, *lirs_list, fields,
-                                           &qconf_limit_rule_set_sfi, SP_DEST_TMP,
-                                           SP_FORM_ASCII, filename, false);
-      if (answer_list_output(answer_list)) {
-         unlink(filename);
-         FREE(filename);
-         FREE(fields);
-         DRETURN(false);
-      }
-      status = sge_edit(filename, uid, gid);
-      if (status >= 0) {
-         lList *new_lirs_list = NULL;
+   if (lirs_list == NULL) {
+      answer_list_add(answer_list, MSG_PARSE_NULLPOINTERRECEIVED, 
+                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      DRETURN(ret); 
+   }
 
-         /* fields_out field does not work for lirs because of duplicate entry */
-         new_lirs_list = spool_flatfile_read_list(answer_list, LIRS_Type, fields,
-                                                  NULL, true, &qconf_limit_rule_set_sfi,
-                                                  SP_FORM_ASCII, NULL, filename);
-         if (answer_list_output(answer_list)) {
-            lFreeList(&new_lirs_list);
-         }
-         if (new_lirs_list != NULL) {
-            if (ignore_unchanged_message || object_list_has_differences(new_lirs_list, answer_list, *lirs_list, false)) {
-               lFreeList(lirs_list);
-               *lirs_list = new_lirs_list;
-               ret = true;
-            } else {
-               lFreeList(&new_lirs_list);
-               answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
-                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-            }
-         } else {
-            answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
-                            STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-         }
-      } else{
-         answer_list_add(answer_list, MSG_PARSE_EDITFAILED,
-                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-      }
+   if (*lirs_list == NULL) {
+      *lirs_list = lCreateList("", LIRS_Type);
+   }
 
+   fields = sge_build_LIRS_field_list(false, true);
+   filename = spool_flatfile_write_list(answer_list, *lirs_list, fields,
+                                        &qconf_limit_rule_set_sfi, SP_DEST_TMP,
+                                        SP_FORM_ASCII, filename, false);
+
+   if (answer_list_has_error(answer_list)) {
       unlink(filename);
       FREE(filename);
       FREE(fields);
+      DRETURN(ret);
    }
+
+   status = sge_edit(filename, uid, gid);
+
+   if (status >= 0) {
+      lList *new_lirs_list = NULL;
+
+      /* fields_out field does not work for lirs because of duplicate entry */
+      new_lirs_list = spool_flatfile_read_list(answer_list, LIRS_Type, fields,
+                                               NULL, true, &qconf_limit_rule_set_sfi,
+                                               SP_FORM_ASCII, NULL, filename);
+      if (answer_list_has_error(answer_list)) {
+         lFreeList(&new_lirs_list);
+      }
+      if (new_lirs_list != NULL) {
+         if (ignore_unchanged_message || object_list_has_differences(new_lirs_list, answer_list, *lirs_list, false)) {
+            lFreeList(lirs_list);
+            *lirs_list = new_lirs_list;
+            ret = true;
+         } else {
+            lFreeList(&new_lirs_list);
+            answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
+                            STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+         }
+      } else {
+         answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
+                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      }
+   } else {
+      answer_list_add(answer_list, MSG_PARSE_EDITFAILED,
+                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+   }
+
+   unlink(filename);
+   FREE(filename);
+   FREE(fields);
    DRETURN(ret);
 }
 
@@ -502,13 +518,13 @@ bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList *
 
    if (lirs_list != NULL) {
       u_long32 operation = SGE_GDI_GET_OPERATION(gdi_command);
-      bool do_verify = (operation == SGE_GDI_MOD) || (operation == SGE_GDI_ADD) ? true : false;
+      bool do_verify = (operation == SGE_GDI_MOD) || (operation == SGE_GDI_ADD
+                        || (operation == SGE_GDI_REPLACE)) ? true : false;
 
       if (do_verify) {
          ret = limit_rule_sets_verify_attributes(lirs_list, answer_list, false);
       }
       if (ret) {
-/*          lFreeList(answer_list); */
 #ifdef TEST_GDI2
          *answer_list = ctx->gdi(ctx, SGE_LIRS_LIST, gdi_command, &lirs_list, NULL, NULL);
 #else
@@ -546,6 +562,7 @@ bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList *
 bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const char *filename, const char* name) 
 {
    bool ret = false;
+   u_long32 gdi_command = 0;
    
    DENTER(TOP_LAYER, "limit_rule_set_modify_from_file");
    if (filename != NULL) {
@@ -563,6 +580,8 @@ bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const c
             lListElem *tmp_lirs = NULL;
             lList *found_lirs_list = lCreateList("lirs_list", LIRS_Type);
 
+            gdi_command = SGE_GDI_MOD | SGE_GDI_SET_ALL;
+
             lString2List(name, &selected_lirs_list, LIRS_Type, LIRS_name, ", ");
             for_each(tmp_lirs, selected_lirs_list) {
                lListElem *found = limit_rule_set_list_locate(lirs_list, lGetString(tmp_lirs, LIRS_name));
@@ -578,11 +597,13 @@ bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const c
             lFreeList(&selected_lirs_list);
             lFreeList(&lirs_list);
             lirs_list = found_lirs_list;
+         } else {
+            gdi_command = SGE_GDI_REPLACE;
          }
 
          if (lirs_list != NULL) {
-            ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list, 
-                                           SGE_GDI_MOD | SGE_GDI_SET_ALL); 
+            ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list,
+                                           gdi_command); 
          }
       }
       FREE(fields);

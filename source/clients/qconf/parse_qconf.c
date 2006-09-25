@@ -5876,7 +5876,7 @@ u_long32 target
    int nm = NoName;
    lDescr *type = NULL;
    char *name = NULL;
-   int ret = true;
+   bool ret = true;
 #ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
 #endif

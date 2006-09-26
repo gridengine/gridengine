@@ -1177,7 +1177,7 @@ char *sge_host_get_mainname(host *h)
 void sge_hostcpy(char *dst, const char *raw)
 {
    bool ignore_fqdn = bootstrap_get_ignore_fqdn();
-   const char *default_domain = bootstrap_get_default_domain();
+   const char *default_domain;
 
    if (dst == NULL || raw == NULL) {
       return;
@@ -1190,11 +1190,12 @@ void sge_hostcpy(char *dst, const char *raw)
       if ((s = strchr(dst, '.'))) {
          *s = '\0';
       }
-   } else if (default_domain != NULL && 
+      return;
+   } 
+   if ((default_domain = bootstrap_get_default_domain()) != NULL && 
               SGE_STRCASECMP(default_domain, "none") != 0) {
  
       /* exotic: honor FQDN but use default_domain */
- 
       if (!strchr(raw, '.')) {
          snprintf(dst, CL_MAXHOSTLEN, "%s.%s", raw, default_domain);
       } else {

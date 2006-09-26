@@ -1,3 +1,6 @@
+AH-2006-09-26-0: Bugfix:    Do bootstrap_get_default_domain() in sge_hostcpy()
+                            if required only 
+
 AA-2006-09-26-0: Enhancem:  o removed obsolete qstat_filter.[ch] and build rule in Makefile
                             o missing error message for non admin/submit hosts in qstat
                             o error handling in qacct

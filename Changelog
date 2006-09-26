@@ -1,3 +1,6 @@
+RD-2006-09-26-0: Bugfix:    fixed java doc install
+                 Review:    AA
+
 AH-2006-09-26-0: Bugfix:    Do bootstrap_get_default_domain() in sge_hostcpy()
                             if required only 
 

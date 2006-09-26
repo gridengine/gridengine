@@ -1,3 +1,5 @@
+AH-2006-09-26-1: Bugfix:    Disabled RMON_USE_CTX in rmon_condition()
+
 RD-2006-09-26-0: Bugfix:    fixed java doc install
                  Review:    AA
 

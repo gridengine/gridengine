@@ -43,7 +43,10 @@
 #include "msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
-#define RMON_USE_CTX
+/* define RMON_USE_CTX 
+   It increases scheduler dispatch time by 60-70%.
+   Must be wrong. 
+*/
 
 /* ALPHA (osf4 and tru64) have f(un)lockfile, but prototype is missing */
 #if defined (ALPHA)

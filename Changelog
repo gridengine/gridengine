@@ -1,3 +1,9 @@
+AA-2006-09-26-0: Enhancem:  o removed obsolete qstat_filter.[ch] and build rule in Makefile
+                            o missing error message for non admin/submit hosts in qstat
+                            o error handling in qacct
+                            o move of clients/qlimit/qlimit_output.* to clients/common/sge_qlimit.* for jgdi
+                 Review:    RD 
+
 RD-2006-09-25-0: Bugfix:    o added SGE_GDI_REPLACE 
                             o fixed lirs scheduling issue
                             o corrected some qconf return values

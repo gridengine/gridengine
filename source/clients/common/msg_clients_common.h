@@ -41,13 +41,6 @@
 #define MSG_QDEL_not_available_OPT_USAGE_S               _MESSAGE(1005, _("no usage for "SFQ" available"))
 #define MSG_WARNING                                      _MESSAGE(1006, _("warning: "))
 #define MSG_SEC_SETJOBCRED                               _MESSAGE(1007, _("\nCannot set job credentials."))
-#define MSG_GDI_QUEUESGEGDIFAILED                        _MESSAGE(1008, _("queue: sge_gdi failed"))
-#define MSG_GDI_JOBSGEGDIFAILED                          _MESSAGE(1009, _("job: sge_gdi failed"))
-#define MSG_GDI_EXECHOSTSGEGDIFAILED                     _MESSAGE(1010, _("exec host: sge_gdi failed"))
-#define MSG_GDI_COMPLEXSGEGDIFAILED                      _MESSAGE(1011, _("complex: sge_gdi failed"))
-#define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED                 _MESSAGE(1012, _("scheduler configuration: sge_gdi failed"))
-#define MSG_GDI_HGRPCONFIGGDIFAILED                      _MESSAGE(1013, _("host group configuration: sge_gdi failed"))
-#define MSG_GDI_GLOBALCONFIGGDIFAILED                    _MESSAGE(1014, _("global configuration: sge_gdi failed"))
 
 #define MSG_COMMON_help_OPT_USAGE                        _MESSAGE(1015, _("print this help"))
 #define MSG_COMMON_xml_OPT_USAGE                         _MESSAGE(1016, _("display the information in XML-Format"))
@@ -104,12 +97,13 @@
 
 #define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _MESSAGE(1050, _("no queues remaining after "SFN" queue selection"))
 #define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION            _MESSAGE(1051, _("no queues remaining after selection"))
-#define MSG_GDI_JOBZOMBIESSGEGDIFAILED                       _MESSAGE(1052, _("job zombies: sge_gdi failed"))
-#define MSG_GDI_PESGEGDIFAILED                               _MESSAGE(1053, _("pe: sge_gdi failed"))
-#define MSG_GDI_CKPTSGEGDIFAILED                             _MESSAGE(1054, _("ckpt: sge_gdi failed"))
-#define MSG_GDI_USERSETSGEGDIFAILED                          _MESSAGE(1055, _("userset: sge_gdi failed"))
-#define MSG_GDI_PROJECTSGEGDIFAILED                          _MESSAGE(1056, _("project: sge_gdi failed"))
-#define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1057, _("ERROR! wrong argument to -s option"))
+#define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1052, _("ERROR! wrong argument to -s option"))
+
+
+#define MSG_HEADER_RULE "limitation rule"
+#define MSG_HEADER_LIMIT "limit"
+#define MSG_HEADER_FILTER "filter"
+
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

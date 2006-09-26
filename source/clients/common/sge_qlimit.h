@@ -1,5 +1,5 @@
-#ifndef __MSG_QSTAT_FILTER_H
-#define __MSG_QSTAT_FILTER_H
+#ifndef __SGE_QLIMIT_H
+#define __SGE_QLIMIT_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,19 +32,37 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void qstat_filter_add_core_attributes(void);
-void qstat_filter_add_ext_attributes(void);
-void qstat_filter_add_pri_attributes(void);
-void qstat_filter_add_urg_attributes(void);
-void qstat_filter_add_l_attributes(void);
-void qstat_filter_add_q_attributes(void);
-void qstat_filter_add_pe_attributes(void);
-void qstat_filter_add_r_attributes(void);
-void qstat_filter_add_xml_attributes(void);
-void qstat_filter_add_t_attributes(void);
-void qstat_filter_add_U_attributes(void);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-lEnumeration *qstat_get_JB_Type_filter(void);
-lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show);
+#include "cull/cull.h"
 
-#endif /* __MSG_QSTAT_FILTER_H */
+typedef struct report_handler_str report_handler_t;
+
+#define QLIMIT_SUCCESS 0
+#define QLIMIT_ERROR   -1
+
+struct report_handler_str {
+   void* ctx;
+   int (*report_started)(report_handler_t* handler, lList **alpp);
+   int (*report_finished)(report_handler_t* handler, lList **alpp);
+   int (*report_limit_rule_begin)(report_handler_t* handler, const char *limit_name, lList **alpp);
+   int (*report_limit_string_value)(report_handler_t* handler, const char*name, const char *value, bool exclude, lList **alpp);
+   int (*report_limit_rule_finished)(report_handler_t* handler, const char *limit_name, lList **alpp);
+
+   int (*report_resource_value)(report_handler_t* handler, const char* resource, const char* limit, const char*value, lList **alpp);
+   int (*destroy)(report_handler_t** handler, lList **alpp);
+};
+
+bool qlimit_output(void *ctx, lList *host_list, lList *resource_match_list, lList *user_list,
+                lList *pe_list, lList *project_list, lList *cqueue_list, lList **alpp,
+                report_handler_t* report_handler);
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif
+
+

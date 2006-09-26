@@ -37,7 +37,7 @@
 #include <float.h>
 #include <fnmatch.h>
 
-#include "qlimit_output.h"
+#include "sge_qlimit.h"
 
 #include "basis_types.h"
 #include "sge.h"
@@ -66,7 +66,6 @@
 #include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
-#include "msg_qlimit.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_log.h"

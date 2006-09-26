@@ -76,7 +76,7 @@
 #include "sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sge_mt_init.h"
-#include "qlimit_output.h"
+#include "sge_qlimit.h"
 #include "sge_object.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_uidgid.h"
@@ -93,7 +93,7 @@ static report_handler_t* create_xml_report_handler(lList **alpp);
 static int xml_report_finished(report_handler_t* handler, lList **alpp);
 static int xml_report_started(report_handler_t* handler, lList **alpp);
 
-static int xml_report_limit_rule_begin(report_handler_t* handler, const char* host_name, lList **alpp);
+static int xml_report_limit_rule_begin(report_handler_t* handler, const char* limit_name, lList **alpp);
 static int xml_report_limit_rule_finished(report_handler_t* handler, const char *limit_name, lList **alpp);
 static int xml_report_limit_string_value(report_handler_t* handler, const char* name, const char *value, bool exclude, lList **alpp);
 static int xml_report_resource_value(report_handler_t* handler, const char* resource, const char* limit, const char*value, lList **alpp);

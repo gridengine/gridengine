@@ -100,8 +100,5 @@ qstat.o: 	$(QSTAT_DIR)/qstat.c
 qstat_cmdline.o: 	$(QSTAT_DIR)/qstat_cmdline.c
 		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_cmdline.c
 
-qstat_filter.o: 	$(QSTAT_DIR)/qstat_filter.c
-		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_filter.c
-
 qstat_xml.o: 	$(QSTAT_DIR)/qstat_xml.c
 		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_xml.c

@@ -71,6 +71,7 @@ sge_pack_gdi_info(u_long32 command);
 static bool 
 gdi_request_map_pack_error(int pack_ret, lList **answer_list);
 
+static const char *target2string(u_long32 target);
 
 
 #ifndef TEST_GDI2
@@ -1208,7 +1209,10 @@ bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id,
    
    map = lGetElemUlong(mal, MA_id, id);
    if (!map) {
-      DRETURN(true);
+      sprintf(SGE_EVENT, MSG_GDI_SGEGDIFAILED_S, target2string(target)); 
+      SGE_ADD_MSG_ID(SGE_EVENT);
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DRETURN(false);
    }
 
    if ((operation == SGE_GDI_GET) || (operation == SGE_GDI_PERMCHECK) ||
@@ -1642,3 +1646,101 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
 
    DRETURN(NULL);
 }
+
+
+/****** sge_gdi_request/target2string() **************************************
+*  NAME
+*     target2string() -- return the target list name
+*
+*  SYNOPSIS
+*     const char *target2string(u_long32 target)
+*
+*  NOTES
+*     MT-NOTE: target2string() is MT safe
+*******************************************************************************/
+static const char *target2string(u_long32 target) 
+{
+   const char *ret = NULL;
+  
+   switch (target) {
+      case SGE_ADMINHOST_LIST:
+         ret = "SGE_ADMINHOST_LIST";
+         break;
+      case SGE_SUBMITHOST_LIST:
+         ret = "SGE_SUBMITHOST_LIST";
+         break;
+      case SGE_EXECHOST_LIST:
+         ret = "SGE_EXECHOST_LIST";
+         break;
+      case SGE_CQUEUE_LIST:
+         ret = "SGE_CQUEUE_LIST";
+         break;
+      case SGE_JOB_LIST:
+         ret = "SGE_JOB_LIST";
+         break;
+      case SGE_EVENT_LIST:
+         ret = "SGE_EVENT_LIST";
+         break;
+      case SGE_CENTRY_LIST:
+         ret = "SGE_CENTRY_LIST";
+         break;
+      case SGE_ORDER_LIST:
+         ret = "SGE_ORDER_LIST";
+         break;
+      case SGE_MASTER_EVENT:
+         ret = "SGE_MASTER_EVENT";
+         break;
+      case SGE_CONFIG_LIST:
+         ret = "SGE_CONFIG_LIST";
+         break;
+      case SGE_MANAGER_LIST:
+         ret = "SGE_MANAGER_LIST";
+         break;
+      case SGE_OPERATOR_LIST:
+         ret = "SGE_OPERATOR_LIST";
+         break;
+      case SGE_PE_LIST:
+         ret = "SGE_PE_LIST";
+         break;
+      case SGE_SC_LIST:
+         ret = "SGE_SC_LIST";
+         break;
+      case SGE_USER_LIST:
+         ret = "SGE_USER_LIST";
+         break;
+      case SGE_USERSET_LIST:
+         ret = "SGE_USERSET_LIST";
+         break;
+      case SGE_PROJECT_LIST:
+         ret = "SGE_PROJECT_LIST";
+         break;
+      case SGE_SHARETREE_LIST:
+         ret = "SGE_SHARETREE_LIST";
+         break;
+      case SGE_CKPT_LIST:
+         ret = "SGE_CKPT_LIST";
+         break;
+      case SGE_CALENDAR_LIST:
+         ret = "SGE_CALENDAR_LIST";
+         break;
+      case SGE_JOB_SCHEDD_INFO_LIST:
+         ret = "SGE_JOB_SCHEDD_INFO_LIST";
+         break;
+      case SGE_ZOMBIE_LIST:
+         ret = "SGE_ZOMBIE_LIST";
+         break;
+      case SGE_USER_MAPPING_LIST:
+         ret = "SGE_USER_MAPPING_LIST";
+         break;
+      case SGE_HGROUP_LIST:
+         ret = "SGE_HGROUP_LIST";
+         break;
+      case SGE_LIRS_LIST:
+         ret = "SGE_LIRS_LIST";
+         break;
+      default:
+         ret = "unknown list";
+   }
+   return ret;
+}
+

@@ -129,6 +129,7 @@
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43137, _("invalid value ("sge_U32CFormat") for ar->op"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                     _MESSAGE(43138, _("can't unpack gdi request"))
 #define MSG_GDI_GDI_ALREADY_SETUP                        _MESSAGE(43139, _("GDI already setup"))
+#define MSG_GDI_SGEGDIFAILED_S                           _MESSAGE(43140, _("sge_gdi on list "SFQ" failed"))
 
 /**
  * cull/cull_where.c

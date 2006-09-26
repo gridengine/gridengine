@@ -35,12 +35,8 @@
 #include "basis_types.h"
 
 /*
-** qhost.c
+** qlimit.c
 */
-
-#define MSG_HEADER_RULE "limitation rule"
-#define MSG_HEADER_LIMIT "limit"
-#define MSG_HEADER_FILTER "filter"
 
 #define MSG_QLIMIT_h_OPT_USAGE        _MESSAGE(10000, _("display only selected hosts"))
 #define MSG_QLIMIT_l_OPT_USAGE        _MESSAGE(10001, _("request the given resources"))

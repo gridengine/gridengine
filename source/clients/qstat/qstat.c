@@ -284,7 +284,7 @@ char **argv
  
    if (alp) {
       /*
-      ** high level parsing error! sow answer list
+      ** high level parsing error! show answer list
       */
       for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));

@@ -36,8 +36,7 @@ QLIMIT_DIR = $(SDIR)/clients/qlimit
 
 QLIMIT_TARGETS = qlimit
 
-QLIMIT_SRC = qlimit.c \
-             qlimit_output.c
+QLIMIT_SRC = qlimit.c 
 
 QLIMIT_ADD_SRC = \
                parse_job_cull.c \
@@ -46,6 +45,7 @@ QLIMIT_ADD_SRC = \
                show_job.c \
                sge_host.c \
                sge_qstat.c \
+               sge_qlimit.c \
                sge_cqueue_qstat.c \
                sig_handlers.c \
                usage.c \

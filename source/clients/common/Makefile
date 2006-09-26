@@ -43,8 +43,9 @@ CLIENTS_COMMON_SRC = qstat_printing.c \
                      sge_limit_rule_qconf.c \
                      sge_cqueue_qstat.c \
                      sge_centry_qconf.c \
-                     sge_qhost.c        \
-                     sge_qstat.c
+                     sge_qhost.c \
+                     sge_qstat.c \
+                     sge_qlimit.c
 
 
 CLIENTS_COMMON_OBJS = $(CLIENTS_COMMON_SRC:.c=.o)
@@ -107,4 +108,7 @@ sge_qhost.o: $(CLIENTS_COMMON_DIR)/sge_qhost.c
 
 sge_qstat.o: $(CLIENTS_COMMON_DIR)/sge_qstat.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qstat.c
+
+sge_qlimit.o: $(CLIENTS_COMMON_DIR)/sge_qlimit.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qlimit.c
 

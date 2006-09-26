@@ -98,7 +98,7 @@ static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
 static void showjob(sge_rusage_type *dusage);
-static void get_qacct_lists(void *context,
+static bool get_qacct_lists(void *context, lList **alpp,
                             lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
 static int sge_read_rusage(FILE *fp, sge_rusage_type *d);
@@ -190,6 +190,7 @@ char **argv
    char buffer[128];
    const char *acct_file = NULL; 
    lList *alp = NULL;
+   bool ret = true;
 #ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
 #endif
@@ -672,10 +673,15 @@ char **argv
          }
          if (queueref_list && has_domain){ 
 #ifdef TEST_GDI2
-            get_qacct_lists(ctx, NULL, &queue_list, NULL, &hgrp_list);
+            ret = get_qacct_lists(ctx, &alp, NULL, &queue_list, NULL, &hgrp_list);
 #else
-            get_qacct_lists(NULL, NULL, &queue_list, NULL, &hgrp_list);
+            ret = get_qacct_lists(NULL, &alp, NULL, &queue_list, NULL, &hgrp_list);
 #endif            
+            if (ret == false) {
+               answer_list_output(&alp);
+               SGE_EXIT(NULL, 1);
+            }   
+
             qref_list_resolve(queueref_list, NULL, &queue_name_list, 
                            &found_something, queue_list, hgrp_list, true, true);
             if (!found_something) {
@@ -685,10 +691,14 @@ char **argv
          }  
          if (complexflag) {
 #ifdef TEST_GDI2
-            get_qacct_lists(ctx, &centry_list, &queue_list, &exechost_list, NULL);
+            ret = get_qacct_lists(ctx, &alp, &centry_list, &queue_list, &exechost_list, NULL);
 #else
-            get_qacct_lists(NULL, &centry_list, &queue_list, &exechost_list, NULL);
+            ret = get_qacct_lists(NULL, &alp, &centry_list, &queue_list, &exechost_list, NULL);
 #endif            
+            if (ret == false) {
+               answer_list_output(&alp);
+               SGE_EXIT(NULL, 1);
+            }   
          }   
       } /* endif complexflag */
 
@@ -1584,6 +1594,7 @@ sge_rusage_type *dusage
 **   get_qacct_lists
 ** PARAMETER
 **   context     - communication context
+**   alpp        - list pointer-pointer answer list
 **   ppcentries  - list pointer-pointer to be set to the complex list, CX_Type, can be NULL
 **   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type, has to be set
 **   ppexechosts - list pointer-pointer to be set to the exechosts list,EH_Type, can be NULL
@@ -1602,8 +1613,9 @@ sge_rusage_type *dusage
 **   function does its own error handling by calling SGE_EXIT
 **   problem: exiting is against the philosophy, restricts usage to clients
 */
-static void get_qacct_lists(
+static bool get_qacct_lists(
 void *context,
+lList **alpp,
 lList **ppcentries,
 lList **ppqueues,
 lList **ppexechosts,
@@ -1611,8 +1623,6 @@ lList **hgrp_l
 ) {
    lCondition *where = NULL;
    lEnumeration *what = NULL;
-   lList *alp = NULL;
-   lListElem *aep = NULL;
    lList *mal = NULL;
    int ce_id = 0, eh_id = 0, q_id = 0, hgrp_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
@@ -1628,17 +1638,16 @@ lList **hgrp_l
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
 #ifdef TEST_GDI2
-      ce_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
+      ce_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                               NULL, NULL, what, NULL, &state, true);
 #else
-      ce_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
+      ce_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                               NULL, NULL, what, NULL, &state, true);
 #endif                              
       lFreeWhat(&what);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) {
+         DRETURN(false);
       }
    }
    /*
@@ -1648,18 +1657,17 @@ lList **hgrp_l
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
 #ifdef TEST_GDI2      
-      eh_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+      eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                               NULL, where, what, NULL, &state, true);
 #else
-      eh_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+      eh_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                               NULL, where, what, NULL, &state, true);
 #endif                              
       lFreeWhat(&what);
       lFreeWhere(&where);
 
-      if (alp) {
-         ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) {
+         DRETURN(false);
       }
    }
 
@@ -1669,17 +1677,16 @@ lList **hgrp_l
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
 #ifdef TEST_GDI2
-      hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
+      hgrp_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, NULL, &state, true);
 #else
-      hgrp_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
+      hgrp_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, NULL, &state, true);
 #endif                           
       lFreeWhat(&what);
 
-      if (alp) {
-         printf("%s", lGetString(lFirst(alp), AN_text));
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) {
+         DRETURN(false);
       }
    }
    /*
@@ -1687,17 +1694,17 @@ lList **hgrp_l
    */
    what = lWhat("%T(ALL)", QU_Type);
 #ifdef TEST_GDI2
-   q_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
+   q_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state, true);
 #else
-   q_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
+   q_id = sge_gdi_multi(alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state, true);
 #endif                           
    lFreeWhat(&what);
 
-   if (alp) {
-      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
-      SGE_EXIT(NULL, 1);
+   if (answer_list_has_error(alpp)) {
+      lFreeList(&mal);
+      DRETURN(false);
    }
 
    /*
@@ -1705,64 +1712,46 @@ lList **hgrp_l
    */
    /* --- complex */
    if (ppcentries) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                    mal, ppcentries);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED ));
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) { 
+         lFreeList(&mal);
+         DRETURN(false);
       }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(NULL, 1);
-      }
-      lFreeList(&alp);
    }
 
    /* --- exec host */
    if (ppexechosts) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
                                     mal, ppexechosts);
-      if (!alp) {
-         ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED ));
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) { 
+         lFreeList(&mal);
+         DRETURN(false);
       }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-         SGE_EXIT(NULL, 1);
-      }
-      lFreeList(&alp);
    }
 
    /* --- queue */
-   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+   if (ppqueues) {
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, ppqueues);
-   if (!alp) {
-      ERROR((SGE_EVENT, MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED ));
-      SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) { 
+         lFreeList(&mal);
+         DRETURN(false);
+      }
    }
-   if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-      ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-      SGE_EXIT(NULL, 1);
-   }
-   lFreeList(&alp);
 
    /* --- hgrp */
    if (hgrp_l) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
                                    hgrp_l);
-      if (!alp) {
-         printf("%s\n", MSG_GDI_HGRPCONFIGGDIFAILED);
-         SGE_EXIT(NULL, 1);
+      if (answer_list_has_error(alpp)) { 
+         lFreeList(&mal);
+         DRETURN(false);
       }
-      if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
-         printf("%s", lGetString(aep, AN_text));
-         SGE_EXIT(NULL, 1);
-      }
-      lFreeList(&alp);
    }
    /* --- end */
    lFreeList(&mal);
-   DRETURN_VOID;
+   DRETURN(true);
 }
 
 static int 

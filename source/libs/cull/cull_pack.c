@@ -329,7 +329,7 @@ lDescr **dpp
       return ret;
    }
 
-   if ( n+1 > MAX_DESCR_SIZE) {
+   if ( n > MAX_DESCR_SIZE - 1 ) {
       LERROR(LEMALLOC);
       DEXIT;
       return PACK_ENOMEM;

@@ -1,3 +1,7 @@
+RD-2006-09-26-0: Bugfix:    fixed java doc install
+                            integer overflow
+                 Review:    AA
+
 JG-2006-09-12-0: Bugfix:    Intermediate accounting records for pe slave tasks
                             contained invalid submission time.
                  Bugtraq:   6457900

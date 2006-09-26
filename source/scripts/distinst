@@ -1080,7 +1080,7 @@ if [ $instcommon = true ]; then
       if [ -d JAVADOCS ]; then
          echo "Installing doc/javadocs"
          Execute rm -rf $DEST_SGE_ROOT/doc/javadocs
-         MakeDir $DEST_SGE_ROOT/doc/javadocs
+         MakeDir doc/javadocs
 
          Execute cp -R JAVADOCS/* $DEST_SGE_ROOT/doc/javadocs
 

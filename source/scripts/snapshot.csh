@@ -104,11 +104,14 @@ echo If the $CVSROOT is the wrong CVSROOT, press Ctrl-C
 cd $CODIR || exit 1
 rm -rf $CODIR/gridengine || exit 1
 
-cvs -z9 -q co -r $TAG gridengine/source gridengine/testsuite gridengine/INSTALL gridengine/Changelog gridengine/doc
+cvs -z9 -q co -r $TAG gridengine/source gridengine/INSTALL gridengine/Changelog gridengine/doc
 find gridengine -name Root -exec rm {} \;
 foreach i ( $EXCLUDEFILES ) 
    find gridengine -name $i -exec rm {} \;
-end   
+end
+rm -rf gridengine/doc/testsuite
+rm -rf gridengine/source/experimental
+
 
 $TAR cvzf $OUTFILE gridengine
 if ( $status == 0 ) then

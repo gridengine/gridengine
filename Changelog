@@ -1,3 +1,7 @@
+AH-2006-09-27-0: Enhancem:  Adjusted snapshot.csh so that experimental and 
+                            testuite directories are no longer in src tar-balls
+                 Review:    JG
+
 AA-2006-09-27-0: Bugfix:    o qstat ok output
                             o sge_get_master(int-> bool)
                             o async gdi, gdi_state

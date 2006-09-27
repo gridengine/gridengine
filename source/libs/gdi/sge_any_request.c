@@ -708,16 +708,16 @@ int prepare_enroll(const char *name, int* last_commlib_error)
                char act_resolved_qmaster_name[CL_MAXHOSTLEN]; 
                cl_com_set_synchron_receive_timeout(handle, 5);
 
-               if (sge_get_master(1) != NULL) {
+               if (sge_get_master(true) != NULL) {
                   /* check a running qmaster on different host */
-                  if (getuniquehostname(sge_get_master(0), act_resolved_qmaster_name, 0) == CL_RETVAL_OK &&
+                  if (getuniquehostname(sge_get_master(false), act_resolved_qmaster_name, 0) == CL_RETVAL_OK &&
                       sge_hostcmp(act_resolved_qmaster_name, uti_state_get_qualified_hostname()) != 0) {
                      DPRINTF(("act_qmaster file contains host "SFQ" which doesn't match local host name "SFQ"\n",
-                              sge_get_master(0), uti_state_get_qualified_hostname()  ));
+                              sge_get_master(false), uti_state_get_qualified_hostname()  ));
 
                      cl_com_set_error_func(NULL);
 
-                     alive_back = check_isalive(sge_get_master(0));
+                     alive_back = check_isalive(sge_get_master(false));
 
                      ret_val = cl_com_set_error_func(general_communication_error);
                      if (ret_val != CL_RETVAL_OK) {
@@ -725,10 +725,10 @@ int prepare_enroll(const char *name, int* last_commlib_error)
                      }
 
                      if (alive_back == CL_RETVAL_OK && getenv("SGE_TEST_HEARTBEAT_TIMEOUT") == NULL ) {
-                        CRITICAL((SGE_EVENT, MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S, sge_get_master(0) ));
+                        CRITICAL((SGE_EVENT, MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S, sge_get_master(false) ));
                         SGE_EXIT(NULL, 1);
                      } else {
-                        DPRINTF(("qmaster on host "SFQ" is down\n", sge_get_master(0)));
+                        DPRINTF(("qmaster on host "SFQ" is down\n", sge_get_master(false)));
                      }
                   } else {
                      DPRINTF(("act_qmaster file contains local host name\n"));

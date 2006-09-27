@@ -1389,7 +1389,7 @@ int main(int argc, char **argv)
    cell_root = path_state_get_cell_root();
    myuid = uti_state_get_uid();
    username = uti_state_get_user_name();
-   mastername = sge_get_master(0);
+   mastername = sge_get_master(false);
 #endif
 
    /*

@@ -380,7 +380,7 @@ char **argv
             handler.destroy(&handler);
          }
       }
-      
+
       for_each(aep, answer_list) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }

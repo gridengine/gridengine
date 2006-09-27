@@ -259,7 +259,7 @@ char *argv[]
 #ifdef TEST_GDI2
    master_host = ctx->get_master(ctx, false);
 #else
-   master_host = sge_get_master(0);
+   master_host = sge_get_master(false);
 #endif   
    if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
@@ -492,7 +492,7 @@ static int sge_ck_qmaster(void *context, const char *former_master_host)
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *username = ctx->get_username(ctx);
 #else
-   const char *current_master = sge_get_master(1);
+   const char *current_master = sge_get_master(true);
    const char *qualified_hostname = uti_state_get_qualified_hostname();
    const char *username = uti_state_get_user_name();
 #endif   

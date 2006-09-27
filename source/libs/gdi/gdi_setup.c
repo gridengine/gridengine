@@ -73,7 +73,6 @@ static void gdi_init_mt(void);
 
 static int gdi_state_get_isalive(void);
 static void gdi_state_set_isalive(int i);
-#endif
 
 #ifndef GDI_STATE_OFF
 static void gdi_free_request(gdi_send_t **async_gdi); 
@@ -245,7 +244,6 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
 
 #endif /* GDI_STATE_OFF */
 
-#ifndef TEST_GDI2
 static int gdi_state_get_isalive(void)
 {
    GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_isalive");

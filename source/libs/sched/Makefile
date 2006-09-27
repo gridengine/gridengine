@@ -196,7 +196,7 @@ simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULL
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_resource_utilization: test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(GDILIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_resource_utilization $(LFLAGS) test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB)  $(GDILIB) $(CULLLIB) $(DLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(SECLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_resource_utilization $(LFLAGS) test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(DLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(SECLIB)
 
 simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c

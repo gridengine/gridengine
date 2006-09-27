@@ -914,7 +914,7 @@ void
 ec_mark4registration(lListElem *event_client)
 {
    cl_com_handle_t* handle = NULL;
-   const char *mastername = sge_get_master(0);
+   const char *mastername = sge_get_master(false);
    const char *progname = uti_state_get_sge_formal_prog_name();
 
    DENTER(TOP_LAYER, "ec_mark4registration");
@@ -1256,7 +1256,7 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
    cl_com_handle_t* com_handle = NULL;
-   const char* mastername = sge_get_master(0);
+   const char* mastername = sge_get_master(false);
    const char* progname = uti_state_get_sge_formal_prog_name();
    u_long32 ec_reg_id = 0;
 
@@ -1395,7 +1395,7 @@ bool
 ec_deregister(lListElem **event_client)
 {
    bool ret = false;
-   const char *mastername = sge_get_master(0);
+   const char *mastername = sge_get_master(false);
 
    DENTER(TOP_LAYER, "ec_deregister");
 
@@ -3092,7 +3092,7 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
    u_short id;
    sge_pack_buffer pb;
    int help;
-   const char* mastername = sge_get_master(0);
+   const char* mastername = sge_get_master(false);
 
    DENTER(TOP_LAYER, "get_event_list");
 

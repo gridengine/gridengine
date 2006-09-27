@@ -659,11 +659,11 @@ char **argv
             }
 #else
             prepare_enroll(prognames[QACCT], &last_prepare_enroll_error);
-            if (!sge_get_master(1)) {
+            if (!sge_get_master(true)) {
                SGE_EXIT(NULL, 1);
             }
             DPRINTF(("checking if qmaster is alive ...\n"));
-            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
+            if (check_isalive(sge_get_master(false)) != CL_RETVAL_OK) {
                ERROR((SGE_EVENT, "qmaster is not alive"));
                SGE_EXIT(NULL, 1);
             }

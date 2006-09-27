@@ -1312,7 +1312,7 @@ XtPointer cld, cad;
 #else
    const char *username = uti_state_get_user_name();
    const char *sge_root = path_state_get_sge_root();
-   const char *mastername = sge_get_master(0);
+   const char *mastername = sge_get_master(false);
 #endif   
   
    DENTER(GUI_LAYER, "qmonSubmitJobSubmit");

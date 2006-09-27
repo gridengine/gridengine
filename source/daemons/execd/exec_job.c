@@ -302,7 +302,7 @@ int err_length) {
    const char *default_cell = uti_state_get_default_cell();
    const char *binary_path = bootstrap_get_binary_path();
    const char *admin_user = bootstrap_get_admin_user();
-   const char *masterhost = sge_get_master(0);
+   const char *masterhost = sge_get_master(false);
 #endif   
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;

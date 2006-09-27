@@ -52,14 +52,14 @@
  *
  * get hostname of qmaster
  *
- * if read_master_file==0 we return the cached master_name
- *                   ==1 we look into the master_file
+ * if read_master_file==false we return the cached master_name
+ *                    ==true we look into the master_file
  *
  * NOTES
  *    MT-NOTE: sge_get_master() is MT safe
  *------------------------------------------------------------*/
 const char *sge_get_master(
-int read_master_file 
+bool read_master_file 
 ) {
    char err_str[SGE_PATH_MAX+128];
    char *cached_master_name = gdi_state_get_cached_master_name();

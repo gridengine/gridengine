@@ -91,6 +91,3 @@ include $(QLIMIT_DIR)/qlimit_dependencies
 ###############################################################################
 qlimit.o: 	$(QLIMIT_DIR)/qlimit.c
 		$(CC) $(CFLAGS) -c $(QLIMIT_DIR)/qlimit.c
-
-qlimit_output.o: 	$(QLIMIT_DIR)/qlimit_output.c
-		$(CC) $(CFLAGS) -c $(QLIMIT_DIR)/qlimit_output.c

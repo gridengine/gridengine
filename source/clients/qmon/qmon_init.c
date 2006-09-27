@@ -265,7 +265,7 @@ void qmonInitSge(void **context, char *progname, int usage)
       sge_gdi_param(SET_ISALIVE, 1, NULL);
    }   
    error=sge_gdi_setup(prognames[QMON], &alp);
-   mastername = sge_get_master(0);
+   mastername = sge_get_master(false);
    sge_qmaster_port = sge_get_qmaster_port();
 #endif   
    if (error != AE_OK) {

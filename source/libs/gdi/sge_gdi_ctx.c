@@ -75,6 +75,7 @@ extern lNameSpace nmv[];
 /* TODO: throw this out asap */
 #include "sge_gdi.h"
 #include "sge_any_request.h"
+#include "sge_gdi_request.h"
 void gdi_once_init(void);
 void gdi_init_mt(void);
 void feature_mt_init(void);
@@ -106,6 +107,184 @@ typedef struct {
    sge_error_class_t *eh;
 
 } sge_gdi_ctx_t;
+
+#ifndef GDI_STATE_OFF
+static void gdi_free_request(gdi_send_t **async_gdi); 
+
+static pthread_key_t   gdi_state_key;
+static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
+
+typedef struct {
+   /* gdi request base */
+   u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
+                               it is ensured that the request ID is also contained in answer */
+   int      made_setup;
+   int      isalive;
+
+   char     cached_master_name[CL_MAXHOSTLEN];
+
+   gdi_send_t *async_gdi; /* used to store a async GDI request.*/
+} gdi_state_t;
+
+
+static void gdi_state_destroy(void* state) {
+   free(state);
+}
+
+void gdi_init_mt(void) {
+   pthread_key_create(&gdi_state_key, &gdi_state_destroy);
+} 
+ 
+/* per process initialization */
+void gdi_once_init(void) {
+
+   /* uti */
+   uidgid_mt_init();
+   bootstrap_mt_init();
+   feature_mt_init();
+   sge_prof_setup();
+
+   /* gdi */
+   gdi_init_mt();
+   path_mt_init();
+}
+
+static void gdi_state_init(gdi_state_t* state) {
+   state->request_id = 0;
+   state->made_setup = 0;
+   state->isalive = 0;
+   strcpy(state->cached_master_name, "");
+
+   state->async_gdi = NULL;
+}
+
+/****** gid/gdi_setup/gdi_mt_init() ************************************************
+*  NAME
+*     gdi_mt_init() -- Initialize GDI state for multi threading use.
+*
+*  SYNOPSIS
+*     void gdi_mt_init(void) 
+*
+*  FUNCTION
+*     Set up GDI. This function must be called at least once before any of the
+*     GDI functions is used. This function is idempotent, i.e. it is safe to
+*     call it multiple times.
+*
+*     Thread local storage for the GDI state information is reserved. 
+*
+*  INPUTS
+*     void - NONE 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: gdi_mt_init() is MT safe 
+*
+*******************************************************************************/
+void gdi_mt_init(void)
+{
+   pthread_once(&gdi_once_control, gdi_once_init);
+}
+
+/****** libs/gdi/gdi_state_get_????() ************************************
+*  NAME
+*     gdi_state_get_????() - read access to gdilib global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global
+*     variable.
+*
+******************************************************************************/
+u_long32 gdi_state_get_next_request_id(void)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_next_request_id");
+   gdi_state->request_id++;
+   return gdi_state->request_id;
+}
+
+static void gdi_state_set_made_setup(int i)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
+   gdi_state->made_setup = i;
+}
+
+
+int gdi_state_get_made_setup(void)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_made_setup");
+   return gdi_state->made_setup;
+}
+
+char *gdi_state_get_cached_master_name(void)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
+   return gdi_state->cached_master_name;
+}
+
+gdi_send_t*
+gdi_state_get_last_gdi_request(void) {
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+                "gdi_state_get_last_gdi_request");
+
+   return gdi_state->async_gdi;
+}
+
+void 
+gdi_state_clear_last_gdi_request(void) 
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+                "gdi_state_clear_last_gdi_request");
+   gdi_free_request(&(gdi_state->async_gdi));
+}
+
+static void
+gdi_free_request(gdi_send_t **async_gdi) 
+{
+   (*async_gdi)->out.first = free_gdi_request((*async_gdi)->out.first);
+   FREE(*async_gdi);
+}
+
+bool
+gdi_set_request(const char* rhost, const char* commproc, u_short id, 
+                state_gdi_multi *out, u_long32 gdi_request_mid) 
+{
+   gdi_send_t *async_gdi = NULL;
+ 
+   async_gdi = (gdi_send_t*) malloc(sizeof(gdi_send_t));
+   if (async_gdi == NULL) {
+      return false;
+   }
+ 
+   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
+   async_gdi->id = id;
+   async_gdi->gdi_request_mid = gdi_request_mid;
+
+   /* copy gdi request and set the past in one to NULL */
+   async_gdi->out.first = out->first;
+   out->first = NULL;
+   async_gdi->out.last = out->last;
+   out->last = NULL;
+   async_gdi->out.sequence_id = out->sequence_id;
+   out->sequence_id = 0;
+ 
+   { /* set thread specific value */
+      GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, 
+                   "gdi_set_request");
+      if (gdi_state->async_gdi != NULL) {
+         gdi_free_request(&(gdi_state->async_gdi));
+      }
+      gdi_state->async_gdi = async_gdi;
+   }
+  
+   return true;
+}
+
+#endif /* GDI_STATE_OFF */
+
+
+
 
 typedef struct {
    sge_gdi_ctx_class_t* ctx;   
@@ -516,7 +695,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    /* Strip Windows domain name from user name */
    {
       char *plus_sign;
-      
+
       plus_sign = strstr(es->username, "+");
       if (plus_sign!=NULL) {
          plus_sign++;
@@ -524,7 +703,6 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
       }
    }
 #endif
-
    
 
    if (_sge_gid2group(es->gid, &(es->gid), &(es->groupname), MAX_NIS_RETRIES)) {
@@ -681,8 +859,6 @@ static int sge_gdi_ctx_class_connect(sge_gdi_ctx_class_t *thiz)
    */
 
    ret = sge_gdi_ctx_class_prepare_enroll(thiz);
-
-/*    TODO: gdi_state_set_made_setup(1); */
 
    /* check if master is alive */
    if (ret == CL_RETVAL_OK && is_alive_check) {
@@ -1730,15 +1906,28 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
 {
    sge_gdi_ctx_class_t *ctx = NULL;
    int ret = AE_OK;
+   bool alpp_was_null = true;
 
    DENTER(TOP_LAYER, "sge_gdi2_setup");
 
-#if 0
+#if 1
+   lInit(nmv);
+
+   if (alpp != NULL && *alpp != NULL) {
+     alpp_was_null = false;
+   }
+
    /* TODO: gdi_state_t should be part of context */
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {
-      answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING, MSG_GDI_GDI_ALREADY_SETUP);
+      if (alpp_was_null) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      }
+      else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                 MSG_GDI_GDI_ALREADY_SETUP);
+      }
       DRETURN(AE_ALREADY_SETUP);
    }
 #endif
@@ -1751,7 +1940,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
    ctx = *context_ref;
    ctx->prepare_enroll(ctx);
 
-#if 0
+#if 1
    /* TODO: gdi_state should be part of context */
    gdi_state_set_made_setup(1);
 #endif   

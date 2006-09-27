@@ -758,7 +758,7 @@ gdi_send_multi_sync(lList **alpp, state_gdi_multi *state, sge_gdi_request **answ
    int status = 0;
    lListElem *map = NULL;
    lListElem *aep = NULL;
-   const char *mastername = sge_get_master(0);
+   const char *mastername = sge_get_master(false);
    u_long32 sge_qmaster_port = sge_get_qmaster_port();
    
    DENTER(GDI_LAYER, "sge_gdi_multi_sync");

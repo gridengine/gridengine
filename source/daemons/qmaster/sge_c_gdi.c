@@ -650,7 +650,6 @@ fprintf(stderr, "\n");
             gdi_request_pack_result(answer, &local_answer_list, pb);
 #endif
 #if 0
-B
             fprintf(stderr, "*** pb\n");
             pb_print_to(pb, false, stderr);
 #endif

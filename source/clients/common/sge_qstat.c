@@ -443,8 +443,10 @@ static int qstat_env_prepare(qstat_env_t* qstat_env, bool need_job_list, lList *
    DENTER(TOP_LAYER,"qstat_env_prepare");
    
    ret = qstat_env_get_all_lists(qstat_env, need_job_list, alpp);
-   if(ret) {
+   if (ret) {
       DRETURN(ret);
+   } else {
+      lFreeList(alpp);
    }
 
    ret = sconf_set_config(&(qstat_env->schedd_config), alpp);

@@ -808,7 +808,7 @@ const char *userset_name
 
 /****** sge_userset_qmaster/userset_still_used() *******************************
 *  NAME
-*     userset_still_used() -- True, if userset still used
+*     userset_still_used() -- True, if userset still used 
 *
 *  SYNOPSIS
 *     static bool userset_still_used(const char *u)
@@ -816,6 +816,10 @@ const char *userset_name
 *  FUNCTION
 *     Returns true, if userset is still used as ACL with host_conf(5),
 *     queue_conf(5), or sge_pe(5).
+* 
+*     Use of usersets as ACLs in sge_conf(5) play no role here, 
+*     since such ACLs are checked in qmaster and thus are not 
+*     relevant for the scheduling algorithm.
 *
 *  INPUTS
 *     const char *p - the userset

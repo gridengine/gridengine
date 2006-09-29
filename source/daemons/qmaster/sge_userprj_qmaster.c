@@ -719,6 +719,10 @@ void sge_userprj_spool(void *context) {
 *     Returns true, if project is still used as ACL with host_conf(5),
 *     queue_conf(5).
 *
+*     Use of projects as ACLs in sge_conf(5) play no role here, 
+*     since such ACLs are checked in qmaster and thus are not 
+*     relevant for the scheduling algorithm.
+*
 *  INPUTS
 *     const char *p - the project
 *

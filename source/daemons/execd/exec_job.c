@@ -1023,7 +1023,7 @@ int err_length) {
          lGetString(jep, JB_job_name),
          lGetString(jep, JB_owner), 
          qualified_hostname))) 
-      cwd = sge_dstring_sprintf(&cwd_out, "%s", cp);
+      cwd = sge_dstring_copy_string(&cwd_out, cp);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX)
    {

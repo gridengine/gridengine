@@ -3049,10 +3049,8 @@ static int LIRS_test(void) {
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
    lListElem *ep3 = NULL;
-   lListElem *ep4 = NULL;
    lListElem *limit = NULL;
    lList *lp1 = NULL;
-   lList *lp2 = NULL;
    lList *limit_list= NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
@@ -3069,20 +3067,10 @@ static int LIRS_test(void) {
    ep2 = lCreateElem(LIR_Type);
       ep3 = lCreateElem(LIRF_Type);
       lSetBool(ep3, LIRF_expand, true);
-         lp2 = lCreateList("User_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_User1");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_scope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_User1", LIRF_scope, ST_Type);
 
-         lp2 = lCreateList("Xuser_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_User2");
-         lAppendElem(lp2, ep4);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_User3");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_xscope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_User2", LIRF_xscope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_User3", LIRF_xscope, ST_Type);
       lSetObject(ep2, LIR_filter_users, ep3);
 
       limit_list = lCreateList("Limit_List", LIRL_Type);
@@ -3096,17 +3084,9 @@ static int LIRS_test(void) {
    ep2 = lCreateElem(LIR_Type);
       ep3 = lCreateElem(LIRF_Type);
       lSetBool(ep3, LIRF_expand, true);
-         lp2 = lCreateList("Queue_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_Queue1");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_scope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_Queue1", LIRF_scope, ST_Type);
 
-         lp2 = lCreateList("Xqueue_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_Queue2");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_xscope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_Queue2", LIRF_xscope, ST_Type);
       lSetObject(ep2, LIR_filter_queues, ep3);
 
       limit_list = lCreateList("Limit_List", LIRL_Type);
@@ -3121,17 +3101,9 @@ static int LIRS_test(void) {
    lSetString(ep2, LIR_name, "rule3");
       ep3 = lCreateElem(LIRF_Type);
       lSetBool(ep3, LIRF_expand, true);
-         lp2 = lCreateList("PE_LIST", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_pe1");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_scope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_Pe1", LIRF_scope, ST_Type);
 
-         lp2 = lCreateList("Xqueue_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "Test_pe2");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_xscope, lp2);
+      lAddSubStr(ep3, ST_name, "Test_Pe2", LIRF_xscope, ST_Type);
       lSetObject(ep2, LIR_filter_pes, ep3);
 
       limit_list = lCreateList("Limit_List", LIRL_Type);
@@ -3144,6 +3116,7 @@ static int LIRS_test(void) {
    lSetList(ep, LIRS_rule, lp1);
    lAppendElem(lirs_list, ep);
 
+   /* rule 4 */
    ep = lCreateElem(LIRS_Type);
    lSetString(ep, LIRS_name, "Test_Name2");
    lSetString(ep, LIRS_description, "Test Description");
@@ -3152,16 +3125,9 @@ static int LIRS_test(void) {
    ep2 = lCreateElem(LIR_Type);
       ep3 = lCreateElem(LIRF_Type);
       lSetBool(ep3, LIRF_expand, false);
-         lp2 = lCreateList("User_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "roland");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_scope, lp2);
-         lp2 = lCreateList("Xuser_List", ST_Type);
-         ep4 = lCreateElem(ST_Type);
-         lSetString(ep4, ST_name, "andre");
-         lAppendElem(lp2, ep4);
-         lSetList(ep3, LIRF_xscope, lp2);
+      lAddSubStr(ep3, ST_name, "roland", LIRF_scope, ST_Type);
+
+      lAddSubStr(ep3, ST_name, "andre", LIRF_xscope, ST_Type);
       lSetObject(ep2, LIR_filter_users, ep3);
 
       limit_list = lCreateList("Limit_List", LIRL_Type);

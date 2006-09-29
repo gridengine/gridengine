@@ -1417,15 +1417,15 @@ u_long32 step
 
          for_each(user, user_list) {
             if (!first) {
-               sge_dstring_sprintf_append(&ds, ",");
+               sge_dstring_append(&ds, ",");
             } else {
                first = false;
             }
             if (umax == 0) {
-               sge_dstring_sprintf_append(&ds, "...");
+               sge_dstring_append(&ds, "...");
                break;
             }   
-            sge_dstring_sprintf_append(&ds, "%s", lGetString(user, ST_name));
+            sge_dstring_append(&ds, lGetString(user, ST_name));
             umax--;
          }
          sge_strlcpy(user_list_string, sge_dstring_get_string(&ds), sizeof(user_list_string));

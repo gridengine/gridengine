@@ -1052,7 +1052,7 @@ int force_existence
 
          switch (type) {
          case TYPE_BOO:
-            sge_dstring_copy_string( &resource_string, src_dl?"true":"false");
+            sge_dstring_copy_string(&resource_string, src_dl?"true":"false");
 /*            sprintf(availability_text1, "%s:%s=%s", dom_str, name, src_dl?"true":"false");*/
 #if 0
             DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",

@@ -117,7 +117,7 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
             sge_dstring_append (string, " ");
          }
          
-         sge_dstring_sprintf_append(string, "%s", lGetString(elem, SO_name));
+         sge_dstring_append(string, lGetString(elem, SO_name));
          if (lGetUlong(elem, SO_threshold)) {
             sge_dstring_sprintf_append(string, "="sge_u32"%s",
                                        lGetUlong(elem, SO_threshold),
@@ -126,7 +126,7 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
          printed = true;
       }
       if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
+         sge_dstring_append(string, "NONE");
       }
       ret = sge_dstring_get_string(string);
    }
@@ -238,7 +238,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
          /* Here we use the has_hostname and has_domain variables just because
           * we need to pass something in.  All we're interested in is the cqueue
           * name.  Their values will be ignored. */
-         ret = cqueue_name_split (sub_name, &cq_name, &host_name,
+         ret = cqueue_name_split(sub_name, &cq_name, &host_name,
                                   &has_hostname, &has_domain);
 
          if (ret) {

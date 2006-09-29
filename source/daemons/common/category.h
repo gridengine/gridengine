@@ -35,7 +35,7 @@
 
 
 void
-sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list, const lList *prj_list, bool *did_project); 
+sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list, const lList *prj_list, bool *did_project, const lList *lirs_list); 
 
 const char* 
 sge_build_job_cs_category(dstring *category_str, lListElem *job, lListElem *cat_obj, bool did_project); 

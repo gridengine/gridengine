@@ -79,16 +79,18 @@ UTILIB_ADD_OBJS = peopen_standalone.o pids_standalone.o
 
 UTILIB_TEST_OBJS = \
          test_sge_profiling.o \
-         test_sge_tmpnam.o 
+         test_sge_bitfield.o \
+         test_sge_dstring.o
 
 UTILIB_TEST_PROGS = \
          test_sge_profiling \
-         test_sge_tmpnam 
+         test_sge_bitfield \
+         test_sge_dstring
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-utilib: $(UTILIB) 
+utilib: $(UTILIB) $(UTILIB_TEST_PROGS)
 
 utilib_clean:
 	$(RM) $(UTILIB_OBJS) libuti.a libuti$(SHAREDEXT) $(UTILIB_ADD_OBJS) $(UTILIB_TEST_OBJS) $(UTILIB_TEST_PROGS)
@@ -252,9 +254,3 @@ test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
 
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c
-
-test_sge_tmpnam: test_sge_tmpnam.o $(UTILIB)
-	$(LD_WRAPPER) $(CC) -o $@ $(CHECKLIB) -L$(SDIR)/$(COMPILE_ARCH) $(LFLAGS) test_sge_tmpnam.o $(UTILIB) -lrmon -lcheck $(LIBS)
-
-test_sge_tmpnam.o: $(UTILIB_DIR)/test_sge_tmpnam.c
-	$(CC) $(CFLAGS) $(CHECKINCL) -c $(UTILIB_DIR)/test_sge_tmpnam.c

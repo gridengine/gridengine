@@ -730,12 +730,11 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
 
       for_each(elem, this_list) {
          if (printed) {
-            sge_dstring_sprintf_append(string, ",");
+            sge_dstring_append(string, ",");
          }
          sge_dstring_sprintf_append(string, "%s=", lGetString(elem, CE_name));
          if (lGetString(elem, CE_stringval) != NULL) {
-            sge_dstring_sprintf_append(string, "%s",
-                                       lGetString(elem, CE_stringval));
+            sge_dstring_append(string, lGetString(elem, CE_stringval));
          } else {
             sge_dstring_sprintf_append(string, "%f", 
                                        lGetDouble(elem, CE_doubleval));
@@ -743,7 +742,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
          printed = true;
       }
       if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
+         sge_dstring_append(string, "NONE");
       }
       ret = sge_dstring_get_string(string);
    }

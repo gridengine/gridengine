@@ -88,14 +88,14 @@ str_list_append_to_dstring(const lList *this_list, dstring *string,
       bool printed = false;
 
       for_each(elem, this_list) {
-         sge_dstring_sprintf_append(string, "%s", lGetString(elem, ST_name));
+         sge_dstring_append(string, lGetString(elem, ST_name));
          if (lNext(elem) != NULL) {
             sge_dstring_sprintf_append(string, "%c", delimiter);
          }
          printed = true;
       }
       if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
+         sge_dstring_append(string, "NONE");
       }
       ret = sge_dstring_get_string(string);
    }

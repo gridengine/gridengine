@@ -55,8 +55,7 @@ void starting_up()
    log_state_set_log_level(LOG_INFO);
    
    if (feature_get_active_featureset_id() == FEATURE_NO_SECURITY) {
-      sge_dstring_sprintf(&ds2, "%s", 
-                          feature_get_product_name(FS_VERSION, &ds)); 
+      sge_dstring_copy_string(&ds2, feature_get_product_name(FS_VERSION, &ds)); 
    } else {   
       sge_dstring_sprintf(&ds2, "%s (%s)", 
                           feature_get_product_name(FS_VERSION, &ds),
@@ -88,8 +87,7 @@ void sge_shutdown(void **context, int i)
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    log_state_set_log_level(LOG_INFO);
    if (feature_get_active_featureset_id() == FEATURE_NO_SECURITY) {
-      sge_dstring_sprintf(&ds2, "%s", 
-                          feature_get_product_name(FS_VERSION, &ds)); 
+      sge_dstring_copy_string(&ds2, feature_get_product_name(FS_VERSION, &ds)); 
    } else {   
       sge_dstring_sprintf(&ds2, "%s (%s)", 
                           feature_get_product_name(FS_VERSION, &ds),

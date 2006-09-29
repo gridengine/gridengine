@@ -450,6 +450,7 @@ cqueue_mod_qinstances(void *context,
                       lListElem *cqueue, lList **answer_list,
                       lListElem *reduced_elem, bool refresh_all_values, monitoring_t *monitor)
 {
+   dstring buffer = DSTRING_INIT;
    bool ret = true;
    
    DENTER(TOP_LAYER, "cqueue_mod_qinstances");
@@ -462,7 +463,6 @@ cqueue_mod_qinstances(void *context,
        * Try to find changes for all qinstances ...
        */
       for_each(qinstance, qinstance_list) {
-         dstring buffer = DSTRING_INIT;
          const char *qinstance_name = qinstance_get_name(qinstance, &buffer);
          bool is_ambiguous = qinstance_state_is_ambiguous(qinstance);
          bool is_del = (lGetUlong(qinstance, QU_tag) == SGE_QI_TAG_DEL) ? true : false;
@@ -590,8 +590,6 @@ cqueue_mod_qinstances(void *context,
             qinstance_increase_qversion(qinstance);
          }
 
-         sge_dstring_free(&buffer);
-
          if (!ret) {
             /*
              * Skip remaining qinstances if an error occured.
@@ -600,8 +598,9 @@ cqueue_mod_qinstances(void *context,
          }
       }
    }
-   DEXIT;
-   return ret;
+   sge_dstring_free(&buffer);
+
+   DRETURN(ret);
 }
 
 bool
@@ -995,9 +994,10 @@ int cqueue_del(void *context, lListElem *this_elem, lList **answer_list,
                /*
                 * delete QIs
                 */
+               dstring key = DSTRING_INIT;
                sge_dstring_sprintf(&dir, "%s/%s", QINSTANCES_DIR, cq_name); 
+
                for_each(qinstance, qinstances) {
-                  dstring key = DSTRING_INIT;
                   const char *qi_name = lGetHost(qinstance, QU_qhostname);
 
                   sge_dstring_sprintf(&key, "%s/%s", cq_name, qi_name); 
@@ -1006,8 +1006,8 @@ int cqueue_del(void *context, lListElem *this_elem, lList **answer_list,
                                       NULL, NULL, NULL, NULL, true, true)) {
                      ; 
                   }
-                  sge_dstring_free(&key);
                }
+               sge_dstring_free(&key);
                sge_rmdir(sge_dstring_get_string(&dir), NULL);
                sge_dstring_free(&dir);
 
@@ -1071,6 +1071,7 @@ cqueue_del_all_orphaned(void *context, lListElem *this_elem, lList **answer_list
    DENTER(TOP_LAYER, "cqueue_del_all_orphaned");
 
    if (this_elem != NULL) {
+      dstring dir = DSTRING_INIT;
       const char* cq_name = lGetString(this_elem, CQ_name);
       lList *qinstance_list = lGetList(this_elem, CQ_qinstances);
       lListElem *qinstance = NULL;
@@ -1082,7 +1083,6 @@ cqueue_del_all_orphaned(void *context, lListElem *this_elem, lList **answer_list
          
          if (qinstance_state_is_orphaned(qinstance) &&
              qinstance_slots_used(qinstance) == 0) {
-            dstring dir = DSTRING_INIT;
             const char *qi_name = lGetHost(qinstance, QU_qhostname);
       
             /*
@@ -1097,9 +1097,9 @@ cqueue_del_all_orphaned(void *context, lListElem *this_elem, lList **answer_list
                   sge_rmdir(sge_dstring_get_string(&dir), NULL);
                }
             }
-            sge_dstring_free(&dir);
          }
       }
+      sge_dstring_free(&dir);
    }
    DEXIT;
    return ret;

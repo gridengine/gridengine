@@ -173,6 +173,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
    const char *qname;
    lListElem *gel, *qep, *so;
    int ret = 0;
+   dstring queue_name = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "debit_job_from_queues");
 
@@ -194,7 +195,6 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
             if (!tst_sos(qslots,        total, so)  &&  /* not suspended till now */
                  tst_sos(qslots+tagged, total, so)) {   /* but now                */
                lListElem *order = NULL;
-               dstring queue_name = DSTRING_INIT;
 
                sge_dstring_sprintf(&queue_name, "%s@%s", lGetString(so, SO_name), lGetHost(qep, QU_qhostname));
              
@@ -221,7 +221,6 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
                      sge_u32c(lGetUlong(order, OR_job_number)), qname, sge_dstring_get_string(&queue_name)));
                   }
                }
-               sge_dstring_free(&queue_name);
             }
          }
 
@@ -230,6 +229,8 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
          qinstance_debit_consumable(qep, job, centry_list, tagged);
       }
    }
+
+   sge_dstring_free(&queue_name);
 
    DEXIT;
    return ret;

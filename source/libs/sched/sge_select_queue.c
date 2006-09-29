@@ -4744,6 +4744,8 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
    int total_soft_violations = 0;
    lList *jc_hosts = NULL;
    lList *jc_queues = NULL;
+   dstring rule_name = DSTRING_INIT;
+   dstring rue_name = DSTRING_INIT;
    
    DENTER(TOP_LAYER, "parallel_make_granted_destination_id_list");
 
@@ -4892,13 +4894,11 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
 
             /* get lirs slots for this queue instance */
                lListElem *lirs = NULL;
-               dstring rule_name = DSTRING_INIT;
                const char* user = lGetString(a->job, JB_owner);
                const char* project = lGetString(a->job, JB_project);
                const char *pe = lGetString(a->job, JB_pe);
                const char *queue = lGetString(qep, QU_qname); 
                const char *host = lGetHost(qep, QU_qhostname);
-               dstring rue_name = DSTRING_INIT;
 
                /* first step - verify no rule that counts for a sum of 
                   hosts or queues will be violated and adjust slots */
@@ -4974,7 +4974,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                   }
                }
 
-               sge_dstring_free(&rue_name);
 
                /* second step - higher the granted slots for every matching rule set */
                if (slots != 0) {
@@ -5022,7 +5021,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                      }
                   }
                }
-               sge_dstring_free(&rule_name);
             }
 
             if (slots != 0) {
@@ -5059,6 +5057,8 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
          DPRINTF(("!!! NO MORE SLOTS !!!\n"));
          lFreeList(&jc_hosts);
          lFreeList(&jc_queues);
+         sge_dstring_free(&rule_name);
+         sge_dstring_free(&rue_name);
          lFreeList(&gdil); 
          DRETURN(MATCH_LATER);
       }
@@ -5069,12 +5069,16 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
          DPRINTF(("!!! NOT ENOUGH SLOTS !!!\n"));
          lFreeList(&jc_hosts);
          lFreeList(&jc_queues);
+         sge_dstring_free(&rule_name);
+         sge_dstring_free(&rue_name);
          lFreeList(&gdil); 
          DRETURN(MATCH_LATER);
    }
 
    lFreeList(&jc_hosts);
    lFreeList(&jc_queues);
+   sge_dstring_free(&rule_name);
+   sge_dstring_free(&rue_name);
    lFreeList(&(a->gdil));
    a->gdil = gdil;
    a->soft_violations = total_soft_violations;

@@ -611,12 +611,10 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
          int slots = 0;
 
          for_each(ja_task, ja_task_list) {
-            dstring buffer = DSTRING_INIT;
-            const char *name = qinstance_get_name(this_elem, &buffer);
+            const char *name = lGetString(this_elem, QU_full_name);
 
             lListElem *gdil_ep = lGetSubStr(ja_task, JG_qname, name,
                                             JAT_granted_destin_identifier_list);
-            sge_dstring_free(&buffer);
             if (gdil_ep != NULL) {
                slots += lGetUlong(gdil_ep, JG_slots);
             }
@@ -626,6 +624,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
          }
       }
    }
+
    DRETURN(ret);
 }
 
@@ -679,11 +678,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
          const char *hostname = lGetHost(qinstance, QU_qhostname);
          if ( !sge_hostcmp(hostname_pattern, hostname) || !fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
-               dstring buffer = DSTRING_INIT;
-               const char *qi_name = qinstance_get_name(qinstance, &buffer);
-
-               lAddElemStr(qref_list, QR_name, qi_name, QR_Type);
-               sge_dstring_free(&buffer);
+               lAddElemStr(qref_list, QR_name, lGetString(qinstance, QU_full_name), QR_Type);
             }
          }
       }

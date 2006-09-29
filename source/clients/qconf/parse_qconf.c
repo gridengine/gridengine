@@ -2688,11 +2688,11 @@ char *argv[]
       bool handle_exechost;
 
       spp = sge_parser_get_next(spp);
-      sge_dstring_sprintf(&object_name, "%s", *spp);
+      sge_dstring_copy_string(&object_name, *spp);
       spp = sge_parser_get_next(spp);
-      sge_dstring_sprintf(&attribute_pattern, "%s", *spp);
+      sge_dstring_copy_string(&attribute_pattern, *spp);
       spp = sge_parser_get_next(spp);
-      sge_dstring_sprintf(&value_pattern, "%s", *spp);
+      sge_dstring_copy_string(&value_pattern, *spp);
 
       handle_cqueue = (strcmp(sge_dstring_get_string(&object_name), "queue") == 0) ? true : false;
       handle_domain = (strcmp(sge_dstring_get_string(&object_name), "queue_domain") == 0) ? true : false;
@@ -2754,12 +2754,12 @@ char *argv[]
                   sge_dstring_sprintf_append(&value, "%s=%.10g", lGetString(value_elem, HS_name), lGetDouble(value_elem, HS_value));
                   value_elem = lNext(value_elem);
                   if (value_elem != NULL) {
-                     sge_dstring_sprintf_append(&value, ",");
+                     sge_dstring_append(&value, ",");
                   }
                }
                value_string = sge_dstring_get_string(&value);
                if (value_string == NULL) {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                   value_string = sge_dstring_get_string(&value);
                }
                if (!fnmatch(sge_dstring_get_string(&value_pattern), value_string, 0)) {
@@ -2785,18 +2785,18 @@ char *argv[]
                while (value_elem != NULL) {
                   sge_dstring_sprintf_append(&value, "%s=", lGetString(value_elem, CE_name));
                   if (lGetString(value_elem, CE_stringval) != NULL) {
-                     sge_dstring_sprintf_append(&value, "%s", lGetString(value_elem, CE_stringval));
+                     sge_dstring_append(&value, lGetString(value_elem, CE_stringval));
                   } else {
                      sge_dstring_sprintf_append(&value, "%f", lGetString(value_elem, CE_doubleval));
                   }
                   value_elem = lNext(value_elem);
                   if (value_elem != NULL) {
-                     sge_dstring_sprintf_append(&value, ",");
+                     sge_dstring_append(&value, ",");
                   }
                }
                value_string = sge_dstring_get_string(&value);
                if (value_string == NULL) {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                   value_string = sge_dstring_get_string(&value);
                }
                if (!fnmatch(sge_dstring_get_string(&value_pattern), value_string, 0)) {
@@ -2824,12 +2824,12 @@ char *argv[]
                   sge_dstring_sprintf_append(&value, "%s", lGetString(value_elem, HL_value));
                   value_elem = lNext(value_elem);
                   if (value_elem != NULL) {
-                     sge_dstring_sprintf_append(&value, ",");
+                     sge_dstring_append(&value, ",");
                   }
                }
                value_string = sge_dstring_get_string(&value);
                if (value_string == NULL) {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                   value_string = sge_dstring_get_string(&value);
                }
                if (!fnmatch(sge_dstring_get_string(&value_pattern), value_string, 0)) {
@@ -2871,15 +2871,15 @@ char *argv[]
                value_elem = lFirst(value_list);
 
                while (value_elem != NULL) {
-                  sge_dstring_sprintf_append(&value, "%s", lGetString(value_elem, US_name));
+                  sge_dstring_append(&value, lGetString(value_elem, US_name));
                   value_elem = lNext(value_elem);
                   if (value_elem != NULL) {
-                     sge_dstring_sprintf_append(&value, " ");
+                     sge_dstring_append(&value, " ");
                   }
                }
                value_string = sge_dstring_get_string(&value);
                if (value_string == NULL) {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                   value_string = sge_dstring_get_string(&value);
                }
                if (!fnmatch(sge_dstring_get_string(&value_pattern), value_string, 0)) {
@@ -2903,15 +2903,15 @@ char *argv[]
                value_elem = lFirst(value_list);
 
                while (value_elem != NULL) {
-                  sge_dstring_sprintf_append(&value, "%s", lGetString(value_elem, US_name));
+                  sge_dstring_append(&value, lGetString(value_elem, US_name));
                   value_elem = lNext(value_elem);
                   if (value_elem != NULL) {
-                     sge_dstring_sprintf_append(&value, " ");
+                     sge_dstring_append(&value, " ");
                   }
                }
                value_string = sge_dstring_get_string(&value);
                if (value_string == NULL) {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                   value_string = sge_dstring_get_string(&value);
                }
                if (!fnmatch(sge_dstring_get_string(&value_pattern), value_string, 0)) {
@@ -2973,7 +2973,7 @@ char *argv[]
                if (hostref_list != NULL) {
                   href_list_append_to_dstring(hostref_list, &value);
                } else {
-                  sge_dstring_sprintf(&value, "NONE");
+                  sge_dstring_copy_string(&value, "NONE");
                }
                if (handle_cqueue &&
                    !fnmatch(sge_dstring_get_string(&value_pattern), sge_dstring_get_string(&value), 0)) {

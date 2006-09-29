@@ -415,7 +415,7 @@ XtIntervalId *id
    ** and leave the timerproc
    */
 
-   status = check_isalive(sge_get_master(0));
+   status = check_isalive(sge_get_master(false));
 
    DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
    if (status != CL_RETVAL_OK) {

@@ -622,7 +622,7 @@ char **argv
             char *tmp_str = NULL;
             name = lGetString(qref_pattern, QR_name); 
            
-            sge_dstring_sprintf(&qi_name, "%s", name); 
+            sge_dstring_copy_string(&qi_name, name); 
            
             if ((tmp_str = strchr(name, '@')) == NULL){
                sge_dstring_append(&qi_name, "@*");

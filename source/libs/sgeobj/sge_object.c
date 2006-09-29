@@ -759,8 +759,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
             result = sge_dstring_sprintf_append(buffer, "%c", lGetPosChar(object, pos));
             break;
          case lBoolT:
-            result = sge_dstring_sprintf_append(buffer, "%s", 
-                                lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR);
+            result = sge_dstring_append(buffer, lGetPosBool(object, pos) ? TRUE_STR : FALSE_STR);
             break;
          case lIntT:
             result = sge_dstring_sprintf_append(buffer, "%d", lGetPosInt(object, pos));
@@ -773,8 +772,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
                                       str != NULL ? str : NONE_STR,
                                       string_quotes);
             } else {
-               result = sge_dstring_sprintf_append(buffer, "%s", 
-                                      str != NULL ? str : NONE_STR);
+               result = sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
             }
             break;
          case lHostT:
@@ -785,8 +783,7 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
                                       str != NULL ? str : NONE_STR,
                                       string_quotes);
             } else {
-               result = sge_dstring_sprintf_append(buffer, "%s", 
-                                      str != NULL ? str : NONE_STR);
+               result = sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
             }
             break;
          case lListT:

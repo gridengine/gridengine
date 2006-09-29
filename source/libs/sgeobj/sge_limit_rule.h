@@ -62,4 +62,6 @@ bool lirs_is_matching_rule(lListElem *rule, const char *user, const char *projec
 
 bool limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list);
 
+bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, lList *acl_list);
+
 #endif /* __SGE_LIMIT_RULE_H */

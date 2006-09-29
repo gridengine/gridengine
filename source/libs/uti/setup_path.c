@@ -313,7 +313,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
                                      buffer, sizeof(buffer)-1, 1))) {
       /* in exit-on-error case program already exited */
       if (error_dstring != NULL) {
-         sge_dstring_sprintf(error_dstring, buffer);
+         sge_dstring_copy_string(error_dstring, buffer);
       }
       DEXIT;
       return false;
@@ -337,7 +337,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          CRITICAL((SGE_EVENT, MSG_UTI_SGEROOTNOTADIRECTORY_S , sge_root));
          SGE_EXIT(NULL, 1);
       } else {   
-         sge_dstring_sprintf(error_dstring, MSG_UTI_SGEROOTNOTADIRECTORY_S , 
+         sge_dstring_sprintf(error_dstring, MSG_UTI_SGEROOTNOTADIRECTORY_S, 
                              sge_root);
          sge_dstring_append(error_dstring, "\n");
          DEXIT;
@@ -351,7 +351,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
          SGE_EXIT(NULL, 1);
       } else {
-         sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOMEM);
+         sge_dstring_copy_string(error_dstring, MSG_SGETEXT_NOMEM);
          DEXIT;
          return false;
       }
@@ -381,7 +381,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
             CRITICAL((SGE_EVENT, MSG_UTI_DIRECTORYNOTEXIST_S , common_dir));
             SGE_EXIT(NULL, 1);
          } else {
-            sge_dstring_sprintf(error_dstring, MSG_UTI_DIRECTORYNOTEXIST_S , 
+            sge_dstring_sprintf(error_dstring, MSG_UTI_DIRECTORYNOTEXIST_S, 
                                 common_dir);
             DEXIT;
             return false;

@@ -691,7 +691,7 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
          sge_dstring_sprintf_append(&group_string, "[%s=", href);
          object_append_field_to_dstring(attr, NULL, &group_string, value_nm, 
                                         '\0');
-         sge_dstring_sprintf_append(&group_string, "]");
+         sge_dstring_append(&group_string, "]");
          found_group = true;
       } else {
          if (found_host) {

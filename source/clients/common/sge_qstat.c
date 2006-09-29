@@ -189,11 +189,7 @@ int qselect(qstat_env_t* qstat_env, qselect_handler_t* handler, lList **alpp) {
 
       for_each(qep, qinstance_list) {
          if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
-            dstring qinstance_name = DSTRING_INIT;
-
-            qinstance_get_name(qep, &qinstance_name);
-            handler->report_queue(handler, sge_dstring_get_string(&qinstance_name), alpp);
-            sge_dstring_free(&qinstance_name);
+            handler->report_queue(handler, lGetString(qep, QU_full_name), alpp);
          }
       }
    }
@@ -504,7 +500,6 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
    
    lListElem *qep = NULL;
    int ret = 0;
-   dstring queue_name_buffer = DSTRING_INIT;
    
    
    DENTER(TOP_LAYER,"qstat_handle_running_jobs");
@@ -512,8 +507,7 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
    /* handle running jobs of a queue */ 
    for_each(qep, qstat_env->queue_list) {
 
-      const char* queue_name = qinstance_get_name(qep, &queue_name_buffer);
-
+      const char* queue_name = lGetString(qep, QU_full_name);
       
       /* here we have the queue */
       if (lGetUlong(qep, QU_tag) & TAG_SHOW_IT) {
@@ -551,7 +545,6 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
          
       }
    }
-   sge_dstring_free(&queue_name_buffer);
    DRETURN(ret);
 }
 
@@ -563,12 +556,13 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
-   dstring queue_name_buffer = DSTRING_INIT;
    const char *qnm;
    int ret = 0;
+   dstring dyn_task_str = DSTRING_INIT;
+
    DENTER(TOP_LAYER, "handle_jobs_queue");
 
-   qnm = qinstance_get_name(qep, &queue_name_buffer);
+   qnm = lGetString(qep, QU_full_name);
 
    if(handler->report_queue_jobs_started && (ret=handler->report_queue_jobs_started(handler, qnm, alpp)) ) {
       DPRINTF(("report_queue_jobs_started failed\n"));
@@ -690,14 +684,12 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                            print_it = false;
                         }       
                         if (print_it) {
-                           dstring dyn_task_str = DSTRING_INIT;
                            sge_dstring_sprintf(&dyn_task_str, sge_u32, jataskid);
                            ret = sge_handle_job(jlep, jatep, qep, print_jobid,
                                                 (master && different && (i==0))?"MASTER":"SLAVE",
                                                 &dyn_task_str,
                                                 slots_in_queue+slot_adjust, i, slots_per_line,
                                                 qstat_env, &(handler->job_handler), alpp );
-                           sge_dstring_free(&dyn_task_str);                     
                            if (ret) {
                               goto error;
                            }
@@ -717,7 +709,7 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
    
    
 error:
-   sge_dstring_free(&queue_name_buffer);
+   sge_dstring_free(&dyn_task_str);                     
    DRETURN(ret);
 }
 
@@ -970,17 +962,9 @@ int filter_queues(lList **filtered_queue_list,
 
          for_each(qep, qinstance_list) {
             if ((lGetUlong(qep, QU_tag) & TAG_SHOW_IT)!=0) {
-               dstring qinstance_name = DSTRING_INIT;
-
-               qinstance_get_name(qep, &qinstance_name);
-               DPRINTF(("++ %s\n", sge_dstring_get_string(&qinstance_name)));
-               sge_dstring_free(&qinstance_name);
+               DPRINTF(("++ %s\n", lGetString(qep, QU_full_name)));
             } else {
-               dstring qinstance_name = DSTRING_INIT;
-
-               qinstance_get_name(qep, &qinstance_name);
-               DPRINTF(("-- %s\n", sge_dstring_get_string(&qinstance_name)));
-               sge_dstring_free(&qinstance_name);
+               DPRINTF(("-- %s\n", lGetString(qep, QU_full_name)));
             }
          }
       }
@@ -1437,7 +1421,6 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
    char *load_avg_str;
    char load_alarm_reason[MAX_STRING_SIZE];
    char suspend_alarm_reason[MAX_STRING_SIZE];
-   dstring queue_name_buffer = DSTRING_INIT;
    const char *queue_name = NULL;
    u_long32 interval;
    
@@ -1463,7 +1446,7 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
       DRETURN(0);
    }
 
-   queue_name = qinstance_get_name(q, &queue_name_buffer);
+   queue_name = lGetString(q, QU_full_name);
 
    /* compute the load and check for alarm states */
 
@@ -1619,7 +1602,6 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
    }
 
 error:
-   sge_dstring_free(&queue_name_buffer);
    sge_dstring_free(&type_string);
    sge_dstring_free(&state_string);
    
@@ -1635,6 +1617,7 @@ int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList 
    int FoundTasks;
    int ret = 0;
    int count = 0;
+   dstring dyn_task_str = DSTRING_INIT;
    
    DENTER(TOP_LAYER, "handle_pending_jobs");
 
@@ -1686,14 +1669,12 @@ int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList 
                if ((qstat_env->full_listing & QSTAT_DISPLAY_PENDING) && 
                    (qstat_env->group_opt & GROUP_NO_TASK_GROUPS) > 0) {
 
-                  dstring dyn_task_str = DSTRING_INIT;
                   sge_dstring_sprintf(&dyn_task_str, sge_u32, 
                                     lGetUlong(jatep, JAT_task_number));
 
                   ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str,
                                        0, 0, 0,
                                        qstat_env, &(handler->job_handler), alpp);
-                  sge_dstring_free(&dyn_task_str);
 
                   if(ret) {
                      DPRINTF(("sge_handle_job failed\n"));
@@ -1717,7 +1698,7 @@ int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList 
          lList *task_group = NULL;
 
          while ((task_group = ja_task_list_split_group(&ja_task_list))) {
-            dstring dyn_task_str = DSTRING_INIT;
+            sge_dstring_clear(&dyn_task_str);
             ja_task_list_print_to_string(task_group, &dyn_task_str);
 
             ret = sge_handle_job(jep, lFirst(task_group), NULL, true, NULL, &dyn_task_str,
@@ -1725,7 +1706,6 @@ int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList 
                                  qstat_env, &(handler->job_handler), alpp);
             
             lFreeList(&task_group);
-            sge_dstring_free(&dyn_task_str);
             
             if(ret) {
                DPRINTF(("sge_handle_job failed\n"));
@@ -1748,6 +1728,7 @@ int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList 
    }
    
 error:
+   sge_dstring_free(&dyn_task_str);
    lFreeList(&ja_task_list);
 
    DRETURN(ret);
@@ -1758,6 +1739,8 @@ int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList
    lListElem *jep, *jatep;
    int ret = 0;
    int count = 0;
+   dstring dyn_task_str = DSTRING_INIT;
+
    DENTER(TOP_LAYER, "handle_finished_jobs");
 
    for_each (jep, qstat_env->job_list) {
@@ -1775,7 +1758,6 @@ int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList
 
             if (!lGetNumberOfElem(qstat_env->user_list) || (lGetNumberOfElem(qstat_env->user_list) && 
                   (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
-               dstring dyn_task_str = DSTRING_INIT;
                      
                if (count == 0) {
                   if( handler->report_finished_jobs_started && (ret=handler->report_finished_jobs_started(handler, alpp))) {
@@ -1789,8 +1771,6 @@ int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList
                ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str, 
                                     0, 0, 0,
                                     qstat_env, &(handler->job_handler), alpp);
-
-               sge_dstring_free(&dyn_task_str);
 
                if (ret) {
                   break;
@@ -1806,6 +1786,8 @@ int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList
          DPRINTF(("report_finished_jobs_finished failed\n"));
       }
    }
+
+   sge_dstring_free(&dyn_task_str);
    DRETURN(ret);
 }
 
@@ -1815,6 +1797,7 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
    lListElem *jep, *jatep;
    int ret = 0;
    int count = 0;
+   dstring dyn_task_str = DSTRING_INIT;
    
    DENTER(TOP_LAYER, "handle_error_jobs");
 
@@ -1825,7 +1808,6 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
 
             if (!lGetNumberOfElem(qstat_env->user_list) || (lGetNumberOfElem(qstat_env->user_list) && 
                   (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
-               dstring dyn_task_str = DSTRING_INIT;
                sge_dstring_sprintf(&dyn_task_str, "sge_u32", lGetUlong(jatep, JAT_task_number));
                
                if (count == 0) {
@@ -1837,8 +1819,6 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
                ret = sge_handle_job(jep, jatep, NULL, true, NULL, &dyn_task_str,
                                     0, 0, 0,
                                     qstat_env, &(handler->job_handler), alpp);
-
-               sge_dstring_free(&dyn_task_str);
 
                if(ret) {
                   goto error;
@@ -1855,6 +1835,7 @@ static int handle_error_jobs(qstat_env_t *qstat_env, qstat_handler_t* handler, l
    }
    
 error:   
+   sge_dstring_free(&dyn_task_str);
    DRETURN(ret);
 }
 
@@ -1863,10 +1844,12 @@ int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList *
    lListElem *jep;
    int ret = 0;
    int count = 0;
+   dstring dyn_task_str = DSTRING_INIT; 
    
    DENTER(TOP_LAYER, "handle_zombie_jobs");
    
    if (! (qstat_env->full_listing & QSTAT_DISPLAY_ZOMBIES)) {
+      sge_dstring_free(&dyn_task_str);
       DRETURN(0);
    }
 
@@ -1875,8 +1858,9 @@ int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList *
       z_ids = lGetList(jep, JB_ja_z_ids);
       if (z_ids != NULL) {
          lListElem *ja_task = NULL;
-         dstring dyn_task_str = DSTRING_INIT; 
          u_long32 first_task_id = range_list_get_first_id(z_ids, NULL);
+
+         sge_dstring_clear(&dyn_task_str);
 
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
          range_list_print_to_string(z_ids, &dyn_task_str, false);
@@ -1893,7 +1877,6 @@ int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList *
          if(ret) {
             break;                            
          }
-         sge_dstring_free(&dyn_task_str);
          count++;
       }
    }
@@ -1902,6 +1885,8 @@ int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList *
          DPRINTF(("report_zombie_jobs_finished failed\n"));
       }
    }
+
+   sge_dstring_free(&dyn_task_str);
    DRETURN(ret);
 }
 
@@ -2014,7 +1999,6 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
    lList *ql = NULL;
    lListElem *qrep, *gdil_ep=NULL;
    
-   dstring queue_name_buffer = DSTRING_INIT;
    
    job_summary_t summary;
    u_long32 ret = 0;
@@ -2027,7 +2011,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
    summary.is_zombie = job_is_zombie_job(job);
 
    if (qep != NULL) {
-      summary.queue = qinstance_get_name(qep, &queue_name_buffer);
+      summary.queue = lGetString(qep, QU_full_name);
    } else {
       summary.queue = NULL;
    }
@@ -2511,8 +2495,6 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
 #undef QSTAT_INDENT2
 
 error:
-   sge_dstring_free(&queue_name_buffer);
-
    DRETURN(ret);
 }
 

@@ -144,6 +144,8 @@ sge_gdi_qmod(void *context,
    int alltasks;
    lList *master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
    lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+   dstring cqueue_buffer = DSTRING_INIT;
+   dstring hostname_buffer = DSTRING_INIT;
    
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
@@ -152,6 +154,8 @@ sge_gdi_qmod(void *context,
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(&(answer->alp), SGE_EVENT, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&cqueue_buffer);
+      sge_dstring_free(&hostname_buffer);
       DEXIT;
       return;
    }
@@ -181,8 +185,6 @@ sge_gdi_qmod(void *context,
             id_action = (id_action & (~QUEUE_DO_ACTION));
 
             for_each(qref, tmp_list) {
-               dstring cqueue_buffer = DSTRING_INIT;
-               dstring hostname_buffer = DSTRING_INIT;
                const char *full_name = NULL;
                const char *cqueue_name = NULL;
                const char *hostname = NULL;
@@ -200,8 +202,6 @@ sge_gdi_qmod(void *context,
                cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                qinstance_list = lGetList(cqueue, CQ_qinstances);
                qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
-               sge_dstring_free(&cqueue_buffer);
-               sge_dstring_free(&hostname_buffer);
 
                sge_change_queue_state(context, user, host, qinstance,
                      id_action, lGetUlong(dep, ID_force),
@@ -411,6 +411,9 @@ sge_gdi_qmod(void *context,
          answer_list_add(&alp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
    }
+
+   sge_dstring_free(&cqueue_buffer);
+   sge_dstring_free(&hostname_buffer);
 
    answer->alp = alp;
    

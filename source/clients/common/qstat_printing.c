@@ -456,13 +456,12 @@ int queue_name_length
    u_long32 job_tag;
    u_long32 jid = 0, old_jid;
    u_long32 jataskid = 0, old_jataskid;
-   dstring queue_name_buffer = DSTRING_INIT;
    const char *qnm;
    dstring dyn_task_str = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "sge_print_jobs_queue");
 
-   qnm = qinstance_get_name(qep, &queue_name_buffer);
+   qnm = lGetString(qep, QU_full_name);
 
    for_each(jlep, job_list) {
       int master, i;
@@ -604,7 +603,6 @@ int queue_name_length
          }
       }
    }
-   sge_dstring_free(&queue_name_buffer);
    sge_dstring_free(&dyn_task_str);
 
    DRETURN_VOID;

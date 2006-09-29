@@ -233,7 +233,6 @@ sge_event_spool(void *context,
                 lListElem *sub_object2, bool send_event, bool spool)
 {
    bool ret = true;
-   dstring key_buffer = DSTRING_INIT; 
    const char *key = NULL;
    sge_object_type object_type;
    lListElem *element = NULL;
@@ -392,8 +391,8 @@ sge_event_spool(void *context,
       case sgeE_QINSTANCE_MOD:
       case sgeE_QINSTANCE_SOS:
       case sgeE_QINSTANCE_USOS:
-         sge_dstring_sprintf(&key_buffer, SFN"/"SFN, strkey, strkey2);
-         key = sge_dstring_get_string(&key_buffer);
+         sge_dstring_sprintf(&buffer, SFN"/"SFN, strkey, strkey2);
+         key = sge_dstring_get_string(&buffer);
          element = object;
          object_type = SGE_TYPE_QINSTANCE;
          break;
@@ -552,7 +551,6 @@ sge_event_spool(void *context,
       lListElem_clear_changed_info(object);
    }
 
-   sge_dstring_free(&key_buffer);
    sge_dstring_free(&buffer);
 
    return ret;

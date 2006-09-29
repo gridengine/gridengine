@@ -50,6 +50,7 @@ typedef struct {
    char       *owner;                  /* the job owner */
    char       *group;                  /* the job group */
    char       *checkpointing;          /* the checkpointing */
+   char       *lirs;                   /* the limitation rule set */
    char       *hard_resource_list;     /* the hard requested resources */
    char       *soft_resource_list;     /* the soft requested resources */
    char       *hard_queue_list;        /* the hard requested queues */
@@ -75,27 +76,29 @@ static char *AccessList[] = {"test2_acc user test_user irgendwas",
  * that for each line you have also 1 result_category line with the expected category string
  *
  **/
-static data_entry_t tests[] = { {1, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0},
-                                {2, 128, "my_pr", "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0},
-                                {3, 128, NULL, "user", NULL, "my_check", NULL, NULL, NULL, NULL, NULL, 0},
-                                {4, 128, "my_pr", "user", NULL, "my_check", NULL, NULL, NULL, NULL, NULL, 0},
-                                {5, 128, NULL, "user", NULL, NULL, "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, NULL, 0},
-                                {6, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, NULL, 0},
-                                {7, 128, NULL, "user", NULL, NULL, NULL, "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, 0},
-                                {8, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
+static data_entry_t tests[] = { {1, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0},
+                                {2, 128, "my_pr", "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0},
+                                {3, 128, NULL, "user", NULL, "my_check", NULL, NULL, NULL, NULL, NULL, NULL, 0},
+                                {4, 128, "my_pr", "user", NULL, "my_check", NULL, NULL, NULL, NULL, NULL, NULL, 0},
+                                {5, 128, NULL, "user", NULL, NULL, NULL, "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, NULL, 0},
+                                {6, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, NULL, 0},
+                                {7, 128, NULL, "user", NULL, NULL, NULL, NULL, "arch test_arch lic 1 memory 1GB", NULL, NULL, NULL, 0},
+                                {8, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     NULL, NULL, NULL, 0}, 
-                                {9, 128, NULL, "user", NULL, NULL, NULL, NULL, "my.q@test m1.q@what-ever test@*", NULL, NULL, 0},
-                                {10, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
+                                {9, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, "my.q@test m1.q@what-ever test@*", NULL, NULL, 0},
+                                {10, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     "my.q@test m1.q@what-ever test@*", NULL, NULL, 0},
-                                {11, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, "my.q@test m1.q@what-ever test@*", NULL, 0},
-                                {12, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
+                                {11, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, "my.q@test m1.q@what-ever test@*", NULL, 0},
+                                {12, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     "my.q@test m1.q@what-ever test@*", "my.q@test m1.q@what-ever test@*", NULL, 0},
-                                {13, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, "my_pe 1-10", 0},
-                                {14, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
+                                {13, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, "my_pe 1-10", 0},
+                                {14, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     "my.q@test m1.q@what-ever test@*", "my.q@test m1.q@what-ever test@*", "my_pe 1-10", 0},
-                                {15, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1},    
-                                {16, 128, "my_pr", "user", NULL, "my_check", "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
+                                {15, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1},    
+                                {16, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     "my.q@test m1.q@what-ever test@*", "my.q@test m1.q@what-ever test@*", "my_pe 1-10", 1},
+                                {17, 128, NULL, "lirs_user", NULL, NULL, "my_lirs", NULL, NULL, NULL, NULL, NULL, 0},
+                                {18, 128, NULL, "user", NULL, NULL, "my_lirs", NULL, NULL, NULL, NULL, NULL, 0},
 
 /* stop entry */                {-1,  0, NULL,   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0} 
                               };  
@@ -119,6 +122,8 @@ static char *result_category[] = { NULL,
                                    "-q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
                                    "-U test2_acc,test1_acc",
                                    "-U test2_acc,test1_acc -q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
+                                   "-u lirs_user",
+                                   NULL,
                                    NULL
                                  };
 
@@ -203,6 +208,42 @@ static lList *test_create_project(const char *project)
    prj = lAddElemStr(&project_list, UP_name, project, UP_Type);
    lSetBool(prj, UP_consider_with_categories, true);
    return project_list;
+}
+
+static lList *test_create_lirs(void)
+{
+   lList* lirs_list = lCreateList("my_lirs", LIRS_Type);
+   lListElem* lirs;
+   lList* rule_list;
+   lListElem* rule;
+   lListElem* filter;
+   lListElem* limit;
+   lList * limit_list;
+   
+   lirs = lCreateElem(LIRS_Type);
+   lSetString(lirs, LIRS_name, "Test_Name1");
+   lSetBool(lirs, LIRS_enabled, true);
+   rule_list = lCreateList("Rule_List", LIR_Type);
+
+   rule = lCreateElem(LIR_Type);
+      filter = lCreateElem(LIRF_Type);
+      lSetBool(filter, LIRF_expand, true);
+      lAddSubStr(filter, ST_name, "lirs_user", LIRF_scope, ST_Type);
+
+      lSetObject(rule, LIR_filter_users, filter);
+
+      limit_list = lCreateList("limit_list", LIRL_Type);
+      limit = lCreateElem(LIRL_Type);
+      lSetString(limit, LIRL_name, "slots");
+      lSetString(limit, LIRL_value, "2*$num_proc");
+      lAppendElem(limit_list, limit);
+      lSetList(rule, LIR_limit, limit_list);
+   lAppendElem(rule_list, rule);
+   lSetList(lirs, LIRS_rule, rule_list);
+   lAppendElem(lirs_list, lirs);
+
+
+   return lirs_list;
 }
 
 /****** test_category/test_create_request() ************************************
@@ -482,7 +523,7 @@ end:
 *     MT-NOTE: test_performance() is MT safe 
 *
 *******************************************************************************/
-static double test_performance(lListElem *job_elem, int max, lList* access_list, const lList *project_list) 
+static double test_performance(lListElem *job_elem, int max, lList* access_list, const lList *project_list, const lList *lirs_list) 
 {
    int i;
    dstring category_str = DSTRING_INIT;
@@ -492,7 +533,7 @@ static double test_performance(lListElem *job_elem, int max, lList* access_list,
    
    gettimeofday(&before, NULL); 
    for (i = 0; i < max; i++) {
-      sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL);
+      sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, lirs_list);
       sge_dstring_clear(&category_str);
    }
    gettimeofday(&after, NULL);
@@ -531,6 +572,7 @@ static int test(data_entry_t *test, char *result, int count)
    lListElem *job_elem = NULL;
    lList *access_list = NULL;
    lList *project_list = NULL;
+   lList *lirs_list = NULL;
 
    printf("\ntest %d:\n-------\n", test->test_nr);
    
@@ -542,11 +584,14 @@ static int test(data_entry_t *test, char *result, int count)
    if (test->project) {
       project_list = test_create_project(test->project);
    }
+   if (test->lirs) {
+      lirs_list = test_create_lirs();
+   }
 
    if (job_elem != NULL) {
        dstring category_str = DSTRING_INIT;
 
-       sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL);
+       sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, lirs_list);
 
        printf("got     : <%s>\n", sge_dstring_get_string(&category_str)!=NULL?sge_dstring_get_string(&category_str):"<NULL>");
 
@@ -571,7 +616,7 @@ static int test(data_entry_t *test, char *result, int count)
             printf("test with %dx :", i);
             job_elem = test_create_job(test, i);
             if (job_elem != NULL) {
-               double time = test_performance(job_elem, max, access_list, NULL); 
+               double time = test_performance(job_elem, max, access_list, NULL, lirs_list); 
                if (time > 1) {
                   max /= 10;
                }
@@ -595,6 +640,7 @@ static int test(data_entry_t *test, char *result, int count)
    }
    lFreeElem(&job_elem);
    lFreeList(&access_list);
+   lFreeList(&lirs_list);
    return ret;
 }
 

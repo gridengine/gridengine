@@ -781,7 +781,7 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
          ret = false;
       } 
       if (ret) {
-         sge_dstring_sprintf(home_dir, "%s", pwd->pw_dir);
+         sge_dstring_copy_string(home_dir, pwd->pw_dir);
       }
 
    } else {

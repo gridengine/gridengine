@@ -1657,6 +1657,7 @@ void job_initialize_env(lListElem *job, lList **answer_list,
                         const char *qualified_hostname)
 {
    lList *env_list = NULL;
+   dstring buffer = DSTRING_INIT;
    DENTER(TOP_LAYER, "job_initialize_env");  
     
    lXchgList(job, JB_env_list, &env_list);
@@ -1664,18 +1665,15 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       int i = -1;
       const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
                                 "SHELL", "TZ", "MAIL", NULL};
-      dstring new_env_name = DSTRING_INIT;
 
       while (env_name[++i] != 0) {
          const char *env_value = sge_getenv(env_name[i]);
 
-         sge_dstring_sprintf(&new_env_name, "%s%s%s", VAR_PREFIX, "O_",
+         sge_dstring_sprintf(&buffer, "%s%s%s", VAR_PREFIX, "O_",
                              env_name[i]);
-         var_list_set_string(&env_list, sge_dstring_get_string (&new_env_name),
+         var_list_set_string(&env_list, sge_dstring_get_string(&buffer),
                              env_value);
       }
-      
-      sge_dstring_free (&new_env_name);
    }
    {
       const char* host = sge_getenv("HOST"); /* ??? */
@@ -1686,7 +1684,6 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       var_list_set_string(&env_list, VAR_PREFIX "O_HOST", host);
    } 
    {
-      dstring cwd_out = DSTRING_INIT;
       char tmp_str[SGE_PATH_MAX + 1];
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
@@ -1696,13 +1693,13 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       }
       path_alias_list_get_path(path_alias_list, NULL, 
                                tmp_str, qualified_hostname,
-                               &cwd_out);
+                               &buffer);
       var_list_set_string(&env_list, VAR_PREFIX "O_WORKDIR", 
-                          sge_dstring_get_string(&cwd_out));
-      sge_dstring_free(&cwd_out);
+                          sge_dstring_get_string(&buffer));
    }
 
 error:
+   sge_dstring_free(&buffer);
    lXchgList(job, JB_env_list, &env_list);
    DRETURN_VOID;
 }
@@ -1897,6 +1894,9 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the 
 *                   next call of the function.
+*
+*  MT-NOTE
+*     This function is NOT mt-save because it uses a static dstring
 ******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
                               const char *pe_task_id)
@@ -2595,13 +2595,16 @@ bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const cha
                sge_contained_in_access_list(owner, group, elem, NULL)) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
-               sge_dstring_sprintf_append(category_str, " ");
+               sge_dstring_append(category_str, " ");
             }
-            sge_dstring_sprintf_append(category_str, "%s %s", option, lGetString(elem, US_name));
+            sge_dstring_append(category_str, option);
+            sge_dstring_append(category_str, " ");
+            sge_dstring_append(category_str, lGetString(elem, US_name));
             first = false;
          }
          else {
-            sge_dstring_sprintf_append(category_str, ",%s", lGetString(elem, US_name));
+            sge_dstring_append(category_str, ",");
+            sge_dstring_append(category_str, lGetString(elem, US_name));
          }
       }
    }
@@ -2648,13 +2651,16 @@ bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem,
       for_each (sub_elem, print_list) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
-               sge_dstring_sprintf_append(category_str, " ");
+               sge_dstring_append(category_str, " ");
             }
-            sge_dstring_sprintf_append(category_str, "%s %s", option, lGetString(sub_elem, QR_name));
+            sge_dstring_append(category_str, option);
+            sge_dstring_append(category_str, " ");
+            sge_dstring_append(category_str, lGetString(sub_elem, QR_name));
             first = false;
          }
          else {
-            sge_dstring_sprintf_append(category_str, ",%s", lGetString(sub_elem, QR_name));
+            sge_dstring_append(category_str, ",");
+            sge_dstring_append(category_str, lGetString(sub_elem, QR_name));
          }
       }
    }
@@ -2701,16 +2707,21 @@ bool sge_unparse_resource_list_dstring(dstring *category_str, lListElem *job_ele
        for_each (sub_elem, print_list) {
          if (first) {
             if (sge_dstring_strlen(category_str) > 0) {
-               sge_dstring_sprintf_append(category_str, " ");
+               sge_dstring_append(category_str, " ");
             }
          
-            sge_dstring_sprintf_append(category_str, "%s %s=%s", option, lGetString(sub_elem, CE_name), 
-                                                           lGetString(sub_elem, CE_stringval));
+            sge_dstring_append(category_str, option);
+            sge_dstring_append(category_str, " ");
+            sge_dstring_append(category_str, lGetString(sub_elem, CE_name));
+            sge_dstring_append(category_str, "=");
+            sge_dstring_append(category_str, lGetString(sub_elem, CE_stringval));
             first = false;
          }
          else {
-            sge_dstring_sprintf_append(category_str, ",%s=%s", lGetString(sub_elem, CE_name), 
-                                                 lGetString(sub_elem, CE_stringval));
+            sge_dstring_append(category_str, ",");
+            sge_dstring_append(category_str, lGetString(sub_elem, CE_name));
+            sge_dstring_append(category_str, "=");
+            sge_dstring_append(category_str, lGetString(sub_elem, CE_stringval));
          }
       }
    }
@@ -2760,10 +2771,14 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
 
          range_list_print_to_string(range_list, &range_string, true);
          if (sge_dstring_strlen(category_str) > 0) {
-            sge_dstring_sprintf_append(category_str, " ");
+            sge_dstring_append(category_str, " ");
          }
-         sge_dstring_sprintf_append(category_str, "%s %s %s", option, lGetString(job_elem, JB_pe), 
-                                                 sge_dstring_get_string(&range_string)); 
+         sge_dstring_append(category_str, option);
+         sge_dstring_append(category_str, " ");
+         sge_dstring_append(category_str, lGetString(job_elem, JB_pe));
+         sge_dstring_append(category_str, " ");
+         sge_dstring_append_dstring(category_str, &range_string);
+
          sge_dstring_free(&range_string);
       }
       
@@ -2805,9 +2820,11 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
    
    if ((string = lGetPosString(job_elem, nm)) != NULL) {            
       if (sge_dstring_strlen(category_str) > 0) {
-         sge_dstring_sprintf_append(category_str, " ");
+         sge_dstring_append(category_str, " ");
       }
-      sge_dstring_sprintf_append(category_str, "%s %s", option, string);
+      sge_dstring_append(category_str, option);
+      sge_dstring_append(category_str, " ");
+      sge_dstring_append(category_str, string);
    }
    DRETURN(true);
 }

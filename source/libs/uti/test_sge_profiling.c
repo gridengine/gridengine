@@ -308,7 +308,6 @@ void* do_calc(void* p) {
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
    for(i = 0; i < num; i++) {
-      
       x = sin(i % 10);
       y = cos(i % 10);
       z = x * y;
@@ -335,6 +334,9 @@ void* do_calc(void* p) {
 
    sge_dstring_free(&error);
 
+   /* to please the compiler on irix */
+   x = z;
+
    return NULL;
 }
 
@@ -343,7 +345,6 @@ void* do_calc2(void* p) {
    int i = 0;
    int x,y;
    dstring error = DSTRING_INIT;
-
 
    /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
@@ -376,6 +377,10 @@ void* do_calc2(void* p) {
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
+
+   /* to please the compiler on irix */
+   y = x;
+   x = y;
 
    sge_dstring_free(&error);
 

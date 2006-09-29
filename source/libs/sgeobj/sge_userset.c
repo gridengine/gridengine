@@ -318,14 +318,14 @@ userset_list_append_to_dstring(const lList *this_list, dstring *string)
       bool printed = false;
 
       for_each(elem, this_list) {
-         sge_dstring_sprintf_append(string, "%s", lGetString(elem, US_name));
+         sge_dstring_append(string, lGetString(elem, US_name));
          if (lNext(elem)) {
-            sge_dstring_sprintf_append(string, " ");
+            sge_dstring_append(string, " ");
          }
          printed = true;
       }
       if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
+         sge_dstring_append(string, "NONE");
       }
       ret = sge_dstring_get_string(string);
    }

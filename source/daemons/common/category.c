@@ -58,6 +58,7 @@
 #include "sge_job.h"
 #include "lck/sge_mtutil.h"
 #include "sge_userprjL.h"
+#include "sge_limit_rule.h"
 
 #include "msg_daemons_common.h"
 
@@ -128,7 +129,7 @@ static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1
 *     MT-NOTE: sge_build_job_category_dstring() is MT safe as long as the caller is
 *
 *******************************************************************************/
-void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list, const lList *prj_list, bool *did_project) 
+void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList *acl_list, const lList *prj_list, bool *did_project, const lList *lirs_list) 
 {
 
    const char *owner = NULL;
@@ -161,11 +162,15 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    sge_unparse_acl_dstring(category_str, owner, group, acl_list, "-U");
  
    /* 
-   ** need user in scheduling category due to limitation rules
-   ** RD: TODO: only in lirs referenced users should be added to the category string.
-   **           currently this is not done and we add always the user to the category.
-   */ 
-   sge_dstring_sprintf_append(category_str, " -u %s", lGetString(job, JB_owner));
+   ** -u if referenced in limitation rule sets
+   */
+   if (sge_user_is_referenced_in_lirs(lirs_list, lGetString(job, JB_owner), acl_list)) {
+      if (sge_dstring_strlen(category_str) > 0) {
+         sge_dstring_append(category_str, " ");
+      }
+      sge_dstring_append(category_str, "-u ");
+      sge_dstring_append(category_str, lGetString(job, JB_owner));
+   }
 
    /*
    ** -hard -q qlist
@@ -202,10 +207,10 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    */
    if (JOB_TYPE_IS_IMMEDIATE(lGetPosUlong(job, Category_Control.cull_order_pos.JB_type_pos))) {
       if (sge_dstring_strlen(category_str) > 0) {
-         sge_dstring_sprintf_append(category_str, " -I y");
+         sge_dstring_append(category_str, " -I y");
       }
       else {
-         sge_dstring_sprintf_append(category_str, "-I y");
+         sge_dstring_append(category_str, "-I y");
       }
    }
       

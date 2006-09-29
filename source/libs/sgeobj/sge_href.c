@@ -801,9 +801,9 @@ href_list_append_to_dstring(const lList *this_list, dstring *string)
          const char *name = lGetHost(href, HR_name);
 
          if (!is_first) {
-            sge_dstring_sprintf_append(string, "%s", delim);
+            sge_dstring_append(string, delim);
          }
-         sge_dstring_sprintf_append(string, "%s", name);
+         sge_dstring_append(string, name);
          is_first = false; 
       }
    } else {
@@ -893,15 +893,15 @@ href_list_debug_print(const lList *this_list, const char *prefix)
       const char *hostname = lGetHost(href, HR_name);
 
       if (is_first_hostname) {
-         sge_dstring_sprintf(&message, prefix);
+         sge_dstring_copy_string(&message, prefix);
+         is_first_hostname = false;
       } else {
-         sge_dstring_sprintf_append(&message, ", ");
+         sge_dstring_append(&message, ", ");
       }
-      sge_dstring_sprintf_append(&message, "%s", hostname);
-      is_first_hostname = false;
+      sge_dstring_append(&message, hostname);
    }
    if (!is_first_hostname) {
-      sge_dstring_sprintf_append(&message, "\n");
+      sge_dstring_append(&message, "\n");
       DPRINTF((sge_dstring_get_string(&message)));
    }
    sge_dstring_free(&message);

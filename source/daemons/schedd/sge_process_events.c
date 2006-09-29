@@ -218,7 +218,8 @@ int event_handler_default_scheduler(void *evc_context)
       DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
       sge_rebuild_job_category(*object_type_get_master_list(SGE_TYPE_JOB), 
             *object_type_get_master_list(SGE_TYPE_USERSET), 
-            *object_type_get_master_list(SGE_TYPE_PROJECT));
+            *object_type_get_master_list(SGE_TYPE_PROJECT),
+            *object_type_get_master_list(SGE_TYPE_LIRS));
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
@@ -944,7 +945,10 @@ sge_process_job_event_after(void *evc_context, object_description *object_base, 
             u_long32 start, end, step;
 
             /* add job category */
-            sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET), *object_type_get_master_list(SGE_TYPE_PROJECT));
+            sge_add_job_category(job,
+                                 *object_type_get_master_list(SGE_TYPE_USERSET),
+                                 *object_type_get_master_list(SGE_TYPE_PROJECT),
+                                 *object_type_get_master_list(SGE_TYPE_LIRS));
 
             job_get_submit_task_ids(job, &start, &end, &step);
 
@@ -965,7 +969,10 @@ sge_process_job_event_after(void *evc_context, object_description *object_base, 
                ** for changed job
                */
 
-               sge_add_job_category(job, *object_type_get_master_list(SGE_TYPE_USERSET), *object_type_get_master_list(SGE_TYPE_PROJECT));
+               sge_add_job_category(job,
+                                    *object_type_get_master_list(SGE_TYPE_USERSET),
+                                    *object_type_get_master_list(SGE_TYPE_PROJECT),
+                                    *object_type_get_master_list(SGE_TYPE_LIRS));
                break;
 
             case sgeE_JOB_FINAL_USAGE:

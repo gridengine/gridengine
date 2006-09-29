@@ -32,6 +32,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "sge_dstring.h"
 
@@ -41,7 +43,7 @@ static bool
 check_dstring(dstring *sb) {
    bool ret = true;
 
-   printf("%5d : %5d : %-50s\n", sb->size, sb->length, 
+   printf("%5d : %5d : %-50s\n", (int)sb->size, (int)sb->length, 
           sb->s == NULL ? "(null)" : sb->s);
 
    return ret;
@@ -50,7 +52,7 @@ check_dstring(dstring *sb) {
 static bool 
 check_all(dstring *sb)
 {
-   int ret = true;
+   bool ret = true;
    int i;
 
    /* sge_dstring_append */
@@ -109,7 +111,9 @@ check_all(dstring *sb)
    sge_dstring_sprintf(sb, NULL);
    sge_dstring_sprintf(sb, "test %s", "string");
    check_dstring(sb);
-   
+  
+#if 0
+   /* does not build on irix */
    /* sge_dstring_vsprintf */
    printf("\nchecking sge_dstring_vsprintf\n");
    {
@@ -120,6 +124,7 @@ check_all(dstring *sb)
       sge_dstring_vsprintf(sb, "test %s", args);
       check_dstring(sb);
    }
+#endif
    
    /* sge_dstring_sprintf_append */
    printf("\nchecking sge_dstring_sprintf_append\n");
@@ -198,23 +203,93 @@ check_all(dstring *sb)
    return ret;
 }
 
+static void test_dstring_performance(dstring *ds, int max, const char *data)
+{
+   int i;
+   struct timeval before;
+   struct timeval after;
+   double time;
+
+   gettimeofday(&before, NULL);
+   for (i = 0; i < max; i++) {
+      sge_dstring_sprintf(ds, "%s", data, data);
+   }
+   gettimeofday(&after, NULL);
+
+   time = after.tv_usec - before.tv_usec;
+   time = after.tv_sec - before.tv_sec + (time/1000000);
+
+   printf("%d sge_dstring_sprintf took %.2fs\n", max, time);
+}
+
+static void test_dstring_performance_static(int max, const char *data)
+{
+   int i;
+   struct timeval before;
+   struct timeval after;
+   double time;
+
+   gettimeofday(&before, NULL);
+   for (i = 0; i < max; i++) {
+      dstring ds;
+      char ds_buffer[MAX_STRING_SIZE];
+      sge_dstring_init(&ds, ds_buffer, sizeof(ds_buffer));
+      sge_dstring_sprintf(&ds, "%s/%s", data, data);
+   }
+   gettimeofday(&after, NULL);
+
+   time = after.tv_usec - before.tv_usec;
+   time = after.tv_sec - before.tv_sec + (time/1000000);
+
+   printf("%d static dstring creations took %.2fs\n", max, time);
+}
+
+static void test_dstring_performance_dynamic(int max, const char *data)
+{
+   int i;
+   struct timeval before;
+   struct timeval after;
+   double time;
+
+   gettimeofday(&before, NULL);
+   for (i = 0; i < max; i++) {
+      dstring ds = DSTRING_INIT;
+      sge_dstring_sprintf(&ds, "%s/%s", data, data);
+      sge_dstring_free(&ds);
+   }
+   gettimeofday(&after, NULL);
+
+   time = after.tv_usec - before.tv_usec;
+   time = after.tv_sec - before.tv_sec + (time/1000000);
+
+   printf("%d dstring creations took %.2fs\n", max, time);
+}
+
 int main(int argc, char *argv[])
 {
    bool ret = true;
    dstring dynamic_dstring = DSTRING_INIT;
    dstring static_dstring;
-   char    static_buffer[STATIC_SIZE];
+   char    static_buffer[MAX_STRING_SIZE];
    
    sge_dstring_init(&static_dstring, static_buffer, STATIC_SIZE);
 
    printf("running all checks with a dynamic dstring\n");
    ret = check_all(&dynamic_dstring);
+   test_dstring_performance(&dynamic_dstring, 100000, "test_data"); 
+   test_dstring_performance_dynamic(100000, "test_data"); 
+   printf("%s\n", sge_dstring_get_string(&dynamic_dstring));
 
    if (ret) {
       printf("\n\nrunning all checks with a static dstring of length %d\n", 
              STATIC_SIZE);
-      ret = check_all(&static_dstring);
+         ret = check_all(&static_dstring);
+         test_dstring_performance(&static_dstring, 100000, "test_data"); 
+         test_dstring_performance_static(100000, "test_data"); 
+         printf("%s\n", sge_dstring_get_string(&static_dstring));
    }
+
+
 
    sge_dstring_free(&dynamic_dstring);
 

@@ -66,7 +66,7 @@ int shepconf_has_userdef_method(const char *method_name, dstring *method)
    int ret = 0;
 
    if (conf_val != NULL && conf_val[0] == '/') {
-      sge_dstring_sprintf(method, "%s", conf_val);
+      sge_dstring_copy_string(method, conf_val);
       ret = 1;
    }
    return ret;

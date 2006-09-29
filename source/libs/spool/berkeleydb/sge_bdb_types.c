@@ -522,9 +522,9 @@ bdb_get_dbname(bdb_info info, dstring *buffer)
    const char *path   = bdb_get_path(info);
 
    if (path == NULL) {
-      ret = sge_dstring_sprintf(buffer, "%s", MSG_BERKELEY_DBNOTINITIALIZED);
+      ret = sge_dstring_copy_string(buffer, MSG_BERKELEY_DBNOTINITIALIZED);
    } else if (server == NULL) {
-      ret = sge_dstring_sprintf(buffer, "%s", path);
+      ret = sge_dstring_copy_string(buffer, path);
    } else {
       ret = sge_dstring_sprintf(buffer, "%s:%s", server, path);
    }

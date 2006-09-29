@@ -156,17 +156,18 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
    DENTER(CQUEUE_LAYER, "enumeration_create_reduced_cq");
    for_each_attr(attr, descr) {
       if (names == -1) {
-         sge_dstring_sprintf(&format_string, "%s", "%T(");
+         sge_dstring_clear(&format_string);
+         sge_dstring_append(&format_string, "%T(");
       }
       if ((attr == CQ_name) ||
           (fetch_all_qi && attr == CQ_qinstances) ||
           (fetch_all_nqi && attr != CQ_qinstances)) {
          names++;
          name_array[names] = attr;
-         sge_dstring_sprintf_append(&format_string, "%s", "%I");
+         sge_dstring_append(&format_string, "%I");
       }
    }
-   sge_dstring_sprintf_append(&format_string, "%s", ")");
+   sge_dstring_append(&format_string, ")");
    ret = _lWhat(sge_dstring_get_string(&format_string), CQ_Type, 
                 name_array, ++names);
    sge_dstring_free(&format_string);
@@ -222,6 +223,9 @@ cqueue_name_split(const char *name,
        host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
       int part = 0;
       const char *tmp_string;
+
+      sge_dstring_clear(cqueue_name);
+      sge_dstring_clear(host_domain);
 
       while (*name != '\0') {
          if (part == 1) {
@@ -1261,6 +1265,8 @@ bool
 cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list) 
 {
    bool ret = true;
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_domain = DSTRING_INIT;
 
    DENTER(CQUEUE_LAYER, "cqueue_xattr_pre_gdi");
    if (this_list != NULL) {
@@ -1268,8 +1274,6 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
    
       for_each(cqueue, this_list) {
          const char *name = lGetString(cqueue, CQ_name);
-         dstring cqueue_name = DSTRING_INIT;
-         dstring host_domain = DSTRING_INIT;
          bool has_hostname = false;
          bool has_domain = false;
 
@@ -1314,12 +1318,12 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
                index++;
             }
          }
-         sge_dstring_free(&host_domain);
-         sge_dstring_free(&cqueue_name);
       }
    }
-   DEXIT;
-   return ret;
+
+   sge_dstring_free(&host_domain);
+   sge_dstring_free(&cqueue_name);
+   DRETURN(ret);
 }
 
 /****** sgeobj/cqueue_is_used_in_subordinate() ****************************

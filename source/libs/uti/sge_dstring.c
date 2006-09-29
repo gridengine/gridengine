@@ -49,15 +49,15 @@ typedef const char* (*sge_dstring_copy_append_f)(dstring *sb, const char *a);
 
 static const char*
 sge_dstring_vsprintf_copy_append(dstring *sb,
+                                 sge_dstring_copy_append_f function,
                                  const char *format,
-                                 va_list ap,
-                                 sge_dstring_copy_append_f function);
+                                 va_list ap);
 
 static const char*
 sge_dstring_vsprintf_copy_append(dstring *sb,
+                                 sge_dstring_copy_append_f function,
                                  const char *format,
-                                 va_list ap,
-                                 sge_dstring_copy_append_f function)
+                                 va_list ap)
 {
    const char *ret = NULL;
 
@@ -289,8 +289,8 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
          va_list ap;
 
          va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap,
-                                                sge_dstring_copy_string);
+         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_copy_string,
+                                                format, ap);
       } else {
          ret = sb->s;
       }
@@ -326,8 +326,8 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 
    if (sb != NULL) {
       if (format != NULL) {
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap,
-                                                sge_dstring_copy_string);
+         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_copy_string,
+                                               format, ap);
       } else {
          ret = sb->s;
       }
@@ -368,8 +368,8 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
          va_list ap;
    
          va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, format, ap, 
-                                                sge_dstring_append);
+         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_append,
+                                                format, ap); 
       } else {
          ret = sb->s;
       }

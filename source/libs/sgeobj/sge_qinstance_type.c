@@ -102,15 +102,15 @@ qtype_append_to_dstring(u_long32 qtype, dstring *string)
       for (ptr = queue_types; **ptr != '\0'; ptr++) {
          if (bitmask & qtype) {
             if (qtype_defined) {
-               sge_dstring_sprintf_append(string, " ");
+               sge_dstring_append(string, " ");
             }
-            sge_dstring_sprintf_append(string, "%s", *ptr);
+            sge_dstring_append(string, *ptr);
             qtype_defined = true;
          }
          bitmask <<= 1;
       };
       if (!qtype_defined) {
-         sge_dstring_sprintf_append(string, "NONE");
+         sge_dstring_append(string, "NONE");
       }
       ret = sge_dstring_get_string(string);
    }
@@ -153,9 +153,9 @@ qinstance_print_qtype_to_dstring(const lListElem *this_elem,
       }
       if (!qtype_defined) {
          if (only_first_char) {
-            sge_dstring_sprintf_append(string, "N");
+            sge_dstring_append(string, "N");
          } else {
-            sge_dstring_sprintf_append(string, "NONE");
+            sge_dstring_append(string, "NONE");
          }
       }
    }

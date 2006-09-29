@@ -1258,3 +1258,24 @@ limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, l
 
    DRETURN(ret);
 }
+
+bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, lList *acl_list) {
+   bool ret = false;
+   lListElem *ep;
+
+   for_each(ep, lirs) {
+      lList *rule_list = lGetList(ep, LIRS_rule);
+      lListElem *rule;
+      for_each(rule, rule_list) {
+         if (limit_rule_filter_match(lGetObject(rule, LIR_filter_users), FILTER_USERS, user, acl_list, NULL)) {
+            ret = true;
+            break;
+         }
+      }
+      if (ret == true) {
+         break;
+      }
+   }
+   return ret;
+}
+

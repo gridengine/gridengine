@@ -108,11 +108,7 @@ qref_list_resolve_cqueue_names(const lList *cq_qref_list,
          cqueue = lGetElemStr(cqueue_list, CQ_name, cq_name); 
          qinstance_list = lGetList(cqueue, CQ_qinstances);
          for_each(qinstance, qinstance_list) {
-            dstring buffer = DSTRING_INIT;
-            const char *qi_name = qinstance_get_name(qinstance, &buffer);
-
-            lAddElemStr(qref_list, QR_name, qi_name, QR_Type);
-            sge_dstring_free(&buffer);
+            lAddElemStr(qref_list, QR_name, lGetString(qinstance, QU_full_name), QR_Type);
             *found_something = true;
          }
       } else {
@@ -176,6 +172,7 @@ qref_list_resolve_qdomain_names(const lList *cq_qref_list,
    const char *hgroup_pattern = NULL;
    lList *href_list = NULL;
    lListElem *cq_qref = NULL;
+   dstring buffer = DSTRING_INIT;
 
    DENTER(QREF_LAYER, "qref_list_resolve_qdomain_names");
    hgroup_pattern = sge_dstring_get_string(host_or_hgroup);
@@ -206,18 +203,15 @@ qref_list_resolve_qdomain_names(const lList *cq_qref_list,
             qinstance = lGetElemHost(qinstance_list, 
                                      QU_qhostname, hostname);
             if (qinstance != NULL) {
-               dstring buffer = DSTRING_INIT;
                const char *qinstance_name = NULL;
 
                qinstance_name = qinstance_get_name(qinstance, 
                                                    &buffer);
                lAddElemStr(qref_list, QR_name, 
                            qinstance_name, QR_Type);
-               sge_dstring_free(&buffer);
                *found_something = true;
             }
          } else {
-            dstring buffer = DSTRING_INIT;
             const char *hgroup_name = lGetHost(href, HR_name);
             const char *qinstance_name = NULL;
 
@@ -225,11 +219,11 @@ qref_list_resolve_qdomain_names(const lList *cq_qref_list,
                                                  cqueue_name, hgroup_name);
             lAddElemStr(qref_list, QR_name,
                         qinstance_name, QR_Type);
-            sge_dstring_free(&buffer);
             *found_something = true;
          }
       }
    }
+   sge_dstring_free(&buffer);
    lFreeList(&href_list);
    DEXIT;
    return ret;
@@ -350,6 +344,9 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
                   bool resolve_cqueue, bool resolve_qdomain)
 {
    bool ret = true;
+   dstring cqueue_name = DSTRING_INIT;
+   dstring host_or_hgroup = DSTRING_INIT;
+
    DENTER(QREF_LAYER, "qref_list_resolve");
 
    if (src_qref_list != NULL) {
@@ -357,8 +354,6 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
 
       *found_something = false;
       for_each(qref_pattern, src_qref_list) {
-         dstring cqueue_name = DSTRING_INIT;
-         dstring host_or_hgroup = DSTRING_INIT;
          const char *name = NULL;
          bool has_hostname;
          bool has_domain;
@@ -405,10 +400,11 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
             *found_something = true;
          } 
          lFreeList(&cq_ref_list);
-         sge_dstring_free(&host_or_hgroup);
-         sge_dstring_free(&cqueue_name);
       } 
    }
+
+   sge_dstring_free(&host_or_hgroup);
+   sge_dstring_free(&cqueue_name);
    DEXIT;
    return ret;
 }

@@ -1,3 +1,8 @@
+AA-2006-09-28-0: Cleanup:   o prototype cleanup
+                            o correction of Makefile
+                            o removal of obsolete files
+                 Review:    RD           
+
 AH-2006-09-27-0: Enhancem:  Adjusted snapshot.csh so that experimental and 
                             testuite directories are no longer in src tar-balls
                  Review:    JG

@@ -210,9 +210,7 @@ Cardinal argcount
 }
 
 /*-------------------------------------------------------------------------*/
-void qmonMatrixSelect(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonMatrixSelect(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixSelectCellCallbackStruct *cbs = 
                (XbaeMatrixSelectCellCallbackStruct*) cad;
@@ -275,9 +273,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void DeleteLines(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void DeleteLines(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget matrix = (Widget) cld;
    int rows;
@@ -326,9 +322,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void ColumnZeroNoEdit(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void ColumnZeroNoEdit(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixEnterCellCallbackStruct *cbs = 
             (XbaeMatrixEnterCellCallbackStruct*) cad;
@@ -342,9 +336,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void ColumnNoEdit(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void ColumnNoEdit(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixEnterCellCallbackStruct *cbs = 
             (XbaeMatrixEnterCellCallbackStruct*) cad;
@@ -360,9 +352,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonMatrixTraverse(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonMatrixTraverse(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixTraverseCellCallbackStruct *cbs = 
             (XbaeMatrixTraverseCellCallbackStruct*) cad;
@@ -404,13 +394,10 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonMatrixLoseFocus(w, cld, cad) 
-Widget w;
-XtPointer cld, cad;
+static void qmonMatrixLoseFocus(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget matrix = (Widget) cld;
    XbaeMatrixCommitEdit(matrix, False);
-
 }
 
 /*-------------------------------------------------------------------------*/

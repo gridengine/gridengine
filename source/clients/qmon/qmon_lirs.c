@@ -71,9 +71,7 @@ static void qmonLIRSSetText(Widget tw, lList *lirs_list, lList **alpp);
 static void qmonLIRSGetText(Widget tw, lList *lirs_list, lList **alpp);
 
 /*-------------------------------------------------------------------------*/
-void qmonLIRSPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonLIRSPopup(Widget w, XtPointer cld, XtPointer cad) 
 {
    Widget shell, lirs_okay, lirs_cancel;
    lList *alp = NULL;

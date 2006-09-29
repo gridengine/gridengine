@@ -93,9 +93,7 @@ static Widget request_sr = 0;
 
 
 /*-------------------------------------------------------------------------*/
-void qmonRequestPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonRequestPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget request_hardsoft, parent, request_clear, request_okay,
          request_cancel; 
@@ -230,9 +228,7 @@ int how
    
 
 /*-------------------------------------------------------------------------*/
-static void qmonRequestRemoveResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonRequestRemoveResource(Widget w, XtPointer cld, XtPointer cad)
 {
 
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
@@ -257,9 +253,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonRequestClear(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonRequestClear(Widget w, XtPointer cld, XtPointer cad)
 {
 
 
@@ -283,9 +277,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonToggleHardSoft2(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonToggleHardSoft2(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
 
@@ -305,9 +297,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonRequestOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonRequestOkay(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonRequestOkay");
@@ -324,9 +314,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonRequestCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonRequestCancel(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonRequestCancel");
@@ -487,9 +475,7 @@ int type
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonRequestEditResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonRequestEditResource(Widget w, XtPointer cld, XtPointer cad)
 {
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
    long how = (long)cld;

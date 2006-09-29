@@ -374,9 +374,7 @@ Cardinal num_menu_items
 
 #ifdef QMON_DEBUG
 /*-------------------------------------------------------------------------*/
-static void reportWidgetsCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void reportWidgetsCB(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget top = XmtGetTopLevelShell(w);
    FILE *fp;
@@ -419,9 +417,7 @@ FILE *fp
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPointTo(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPointTo(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget result, top;
    Cursor cursor;
@@ -448,9 +444,7 @@ XtPointer cld, cad;
 #if 0
 
 /*-------------------------------------------------------------------------*/
-static void qmonHelpBrowserPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHelpBrowserPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    static Widget help = 0;
    Widget top;

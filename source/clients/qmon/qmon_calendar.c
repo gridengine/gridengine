@@ -86,9 +86,7 @@ static Widget qmonCreateCalendarAsk(Widget parent);
 static Boolean qmonCalendarGetAsk(lListElem *calp);
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupCalendarConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupCalendarConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -151,9 +149,7 @@ void updateCalendarList(void)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownCalendarConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownCalendarConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownCalendarConfig");
 
@@ -218,9 +214,7 @@ lListElem *ep
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectCalendar(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectCalendar(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *calname;
@@ -319,9 +313,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCalendarAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCalendarAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonCalendarAdd");
 
@@ -336,9 +328,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCalendarModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *calnames;
    Cardinal calnum;
@@ -378,9 +368,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCalendarOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCalendarOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *cal = NULL;
    lList *alp;
@@ -444,9 +432,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCalendarCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCalendarCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonCalendarCancel");
 
@@ -456,9 +442,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCalendarDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCalendarDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;

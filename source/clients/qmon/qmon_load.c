@@ -55,9 +55,7 @@ typedef struct _tFFM {
 static void qmonLoadAddEntry(Widget matrix, String name);
 
 /*-------------------------------------------------------------------------*/
-void qmonLoadSelectEntry(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonLoadSelectEntry(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixSelectCellCallbackStruct *cbs = 
             (XbaeMatrixSelectCellCallbackStruct*) cad;

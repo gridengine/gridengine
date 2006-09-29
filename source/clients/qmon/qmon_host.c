@@ -239,9 +239,7 @@ static int dialog_mode = SGE_ADMINHOST_LIST;
 
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupHostConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupHostConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -286,9 +284,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownHostConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownHostConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownHostConfig");
 
@@ -541,9 +537,7 @@ XtPointer cld
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostSelect(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostSelect(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *ehname;
@@ -790,9 +784,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ehl = NULL;
    lList *alp;
@@ -849,9 +841,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonExecHostCancel");
 
@@ -1123,9 +1113,7 @@ StringConst name
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostShutdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostShutdown(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -1162,9 +1150,7 @@ XtPointer cld, cad;
 }
          
 /*-------------------------------------------------------------------------*/
-static void qmonHostDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    /* int type = (int)(long) cld; */ /* 
                                 * 64 bit pointers == long , this cast
@@ -1225,9 +1211,7 @@ XtPointer cld, cad;
 }
          
 /*-------------------------------------------------------------------------*/
-static void qmonHostHelp(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostHelp(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget widget = 0;
    
@@ -1255,9 +1239,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    int type = dialog_mode;
    lList *lp = NULL;
@@ -1347,9 +1329,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostChange(Widget w, XtPointer cld, XtPointer cad)
 {
    long mode = (long) cld;
    Cardinal ehnum;
@@ -1406,9 +1386,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostCheckName(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostCheckName(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
    static char unique[CL_MAXHOSTLEN];
@@ -1444,9 +1422,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostCheckScaling(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonExecHostCheckScaling(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixLeaveCellCallbackStruct *cbs =
          (XbaeMatrixLeaveCellCallbackStruct*) cad;
@@ -1476,9 +1452,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostFolderChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostFolderChange(Widget w, XtPointer cld, XtPointer cad)
 {
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
 
@@ -1512,9 +1486,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* A C C E S S L I S T     P A G E                                         */
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostAccessToggle(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostAccessToggle(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
    
@@ -1533,9 +1505,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostAccessAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostAccessAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount, i;
@@ -1572,9 +1542,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostAccessRemove(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostAccessRemove(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount;
@@ -1651,9 +1619,7 @@ static void qmonExecHostReportVarRemove(Widget w, XtPointer cld, XtPointer cad)
 /*-------------------------------------------------------------------------*/
 /* P R O J E C T     P A G E                                               */
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostProjectToggle(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostProjectToggle(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
    
@@ -1672,9 +1638,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostProjectAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostProjectAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount, i;
@@ -1711,9 +1675,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonExecHostProjectRemove(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonExecHostProjectRemove(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount;
@@ -1785,9 +1747,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostgroupChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostgroupChange(Widget w, XtPointer cld, XtPointer cad)
 {
    long mode = (long) cld;
    Cardinal hgnum;
@@ -1843,9 +1803,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostgroupOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostgroupOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    StringConst hgname = NULL;
@@ -1893,9 +1851,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostgroupCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostgroupCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonHostgroupCancel");
 
@@ -1905,9 +1861,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonHostgroupCheckName(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonHostgroupCheckName(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
    static char unique[CL_MAXHOSTLEN];

@@ -320,8 +320,6 @@ typedef struct _tShareTreeData {
 
 /*-------------------------------------------------------------------------*/
 static void HighlightCallback(w,client,call)
-Widget w;
-XtPointer client, call;
 {
    ListTreeMultiReturnStruct *ret;
    ListTreeItem *item;
@@ -348,8 +346,6 @@ XtPointer client, call;
 
 /*-------------------------------------------------------------------------*/
 static void MenuCallback(w,client,call)
-Widget w;
-XtPointer client, call;
 {
    ListTreeItemReturnStruct *ret = (ListTreeItemReturnStruct *)call;
 
@@ -364,8 +360,6 @@ XtPointer client, call;
 
 /*-------------------------------------------------------------------------*/
 static void ActivateCallback(w,client,call)
-Widget w;
-XtPointer client, call;
 {
    ListTreeActivateStruct *ret;
    int count;
@@ -648,9 +642,7 @@ ListTreeItem *item
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void showtree(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showtree(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    lList *shac = NULL;
@@ -678,9 +670,7 @@ FCLOSE_ERROR:
 }
    
 /*-------------------------------------------------------------------------*/
-static void showshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -699,9 +689,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showsimpleshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showsimpleshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -720,9 +708,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showusage(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showusage(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -741,9 +727,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showpath(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showpath(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;

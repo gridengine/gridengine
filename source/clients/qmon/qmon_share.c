@@ -263,9 +263,7 @@ static Boolean AskForNode(Widget w, String name, int name_len, Cardinal *share);
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonShareTreePopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonShareTreePopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -307,9 +305,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreePopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreePopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean answer = False;
    Boolean status = False;
@@ -341,9 +337,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static Widget qmonShareTreeCreate(
-Widget parent 
-) {
+static Widget qmonShareTreeCreate(Widget parent)
+{
    Widget st_layout, st_close, st_update, st_more, st_apply, st_delete,
             st_cpu, st_io, st_mem, st_cpu_t, st_mem_t, st_io_t, st_mod_node,
             st_add_leaf, st_add_node, st_main_link, st_next, st_find, 
@@ -486,9 +481,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    lListElem *sep = NULL;
    lList *lp = NULL;
@@ -572,9 +565,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeAddLeaf(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeAddLeaf(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -632,9 +623,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeAddNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeAddNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -702,9 +691,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeCut(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeCut(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -751,9 +738,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeCopy(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeCopy(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -789,9 +774,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreePaste(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreePaste(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -831,9 +814,7 @@ static char search_for[256] = "";
 static ListTreeMultiReturnStruct *matches;
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeFindNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeFindNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -871,9 +852,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeFindNextNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeFindNextNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    static int count = 0;
@@ -922,9 +901,7 @@ XtPointer cld, cad;
 
 #if 0
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeToggleType(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeToggleType(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
 
@@ -939,9 +916,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeLink(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeLink(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonShareTreeToggleType");
@@ -960,9 +935,7 @@ XtPointer cld, cad;
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeShowMore(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeShowMore(Widget w, XtPointer cld, XtPointer cad)
 {
    static Boolean managed = False;
    Widget ratio = (Widget)cld;
@@ -991,9 +964,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeClearUsage(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    lList *alp2 = NULL;
@@ -1075,9 +1046,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeDeleteNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeDeleteNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -1111,9 +1080,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    lList *share_tree = NULL;
@@ -1232,9 +1199,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeHighlight(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeHighlight(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeMultiReturnStruct *ret = (ListTreeMultiReturnStruct*)cad;
    ListTreeItem *item;
@@ -1264,9 +1229,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeSetValues(
-ListTreeItem *item 
-) {
+static void qmonShareTreeSetValues(ListTreeItem *item)
+{
    tSTNUserData *data;
    tSTNEntry newdata;
    char buf[10];
@@ -1295,9 +1259,7 @@ ListTreeItem *item
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeMenu(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeMenu(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeWidget tree = (ListTreeWidget) cld;
    ListTreeItemReturnStruct *ret = (ListTreeItemReturnStruct *)cad;
@@ -1352,9 +1314,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeModifyNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeModifyNode(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeWidget tree = (ListTreeWidget) cld;
    Boolean status;
@@ -1430,9 +1390,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeActivate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeActivate(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeActivateStruct *ret = (ListTreeActivateStruct*)cad;
    int count;
@@ -1454,10 +1412,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static lList *buildShac(
-lListElem *parent,
-int depth 
-) {
+static lList *buildShac(lListElem *parent, int depth)
+{
    lList *shac;
    lListElem *ep;
    char buf[BUFSIZ];
@@ -1488,9 +1444,7 @@ int depth
 #if 0
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeCreateItem(w, cld, cad)
-Widget w; 
-XtPointer cld, cad;
+static void qmonShareTreeCreateItem(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeItemReturnStruct *cbs = (ListTreeItemReturnStruct*)cad;
    tNodeData *data = (tNodeData *) cld;
@@ -1510,9 +1464,7 @@ printf("qmonShareTreeCreateItem\n");
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeDestroyItem(w, cld, cad)
-Widget w; 
-XtPointer cld, cad;
+static void qmonShareTreeDestroyItem(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeItemReturnStruct *cbs = (ListTreeItemReturnStruct*)cad;
 
@@ -1980,9 +1932,7 @@ ListTreeItem *item
 
 #if 0
 /*-------------------------------------------------------------------------*/
-static void showtree(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showtree(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    lList *shac = NULL;
@@ -2010,9 +1960,7 @@ FCLOSE_ERROR:
 }
    
 /*-------------------------------------------------------------------------*/
-static void showshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -2031,9 +1979,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showsimpleshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showsimpleshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -2052,9 +1998,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showusage(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showusage(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -2210,9 +2154,7 @@ Cardinal *share
 
    
 /*-------------------------------------------------------------------------*/
-static void AskNodeOkCallback(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void AskNodeOkCallback(Widget w, XtPointer cld, XtPointer cad)
 {
     tAskNodeInfo *info = (tAskNodeInfo *)cld;
     info->blocked = False;
@@ -2220,9 +2162,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void AskNodeCancelCallback(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void AskNodeCancelCallback(Widget w, XtPointer cld, XtPointer cad)
 {
     tAskNodeInfo *info = (tAskNodeInfo *)cld;
     info->blocked = False;
@@ -2275,9 +2215,7 @@ XtPointer data
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeSetName(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeSetName(Widget w, XtPointer cld, XtPointer cad)
 {
    String name = (String)cad;
    Widget tree = (Widget)cld;
@@ -2314,9 +2252,7 @@ XtPointer share
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonShareTreeSetShare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonShareTreeSetShare(Widget w, XtPointer cld, XtPointer cad)
 {
    String share_str = (String)cad;
    Widget tree = (Widget)cld;

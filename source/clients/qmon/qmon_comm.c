@@ -656,9 +656,7 @@ int action
 
 
 /*-------------------------------------------------------------------------*/
-void qmonShowMirrorList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad)
 {
    int type = (int)(long) cld;
    

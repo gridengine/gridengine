@@ -101,9 +101,7 @@ static Boolean qmonPEGetAsk(lListElem *pep);
 static void qmonPEAskForUsers(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupPEConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupPEConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -167,9 +165,7 @@ void updatePeList(void)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownPEConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownPEConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownPEConfig");
 
@@ -291,9 +287,7 @@ lListElem *ep
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectPE(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectPE(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *pename;
@@ -406,9 +400,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPEAskForUsers(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPEAskForUsers(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ql_out = NULL;
    lList *ql_in = NULL;
@@ -434,9 +426,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPEAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPEAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPEAdd");
 
@@ -451,9 +441,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPEModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPEModify(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *penames;
    Cardinal penum;
@@ -493,9 +481,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPEOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPEOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *pel = NULL;
    lList *alp;
@@ -556,9 +542,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPECancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPECancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPECancel");
 
@@ -568,9 +552,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPEDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPEDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;

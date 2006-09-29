@@ -151,9 +151,7 @@ static void ParametersToCull(lListElem *sep, tFREntry *data);
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonFTicketPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonFTicketPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -183,9 +181,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-void qmonOTicketPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonOTicketPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -218,9 +214,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
 /*-------------------------------------------------------------------------*/
-static void qmonFOTicketPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFOTicketPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget ticket = (Widget)cld;
 
@@ -232,11 +226,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTOpenLink(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTOpenLink(Widget w, XtPointer cld, XtPointer cad)
+{
    tFOTInfo *info = (tFOTInfo *) cld;
 
    DENTER(GUI_LAYER, "qmonFOTOpenLink");
@@ -267,9 +258,7 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFTOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -581,11 +570,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTEnterCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTEnterCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixEnterCellCallbackStruct *cbs =
       (XbaeMatrixEnterCellCallbackStruct*) cad;
    String str;
@@ -601,11 +587,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTLeaveCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTLeaveCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixLeaveCellCallbackStruct *cbs = 
          (XbaeMatrixLeaveCellCallbackStruct *)cad;
 
@@ -627,11 +610,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTLeaveCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFTLeaveCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixLeaveCellCallbackStruct *cbs = 
          (XbaeMatrixLeaveCellCallbackStruct *)cad;
 
@@ -794,9 +774,7 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFTUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -851,9 +829,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonOTUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonOTUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -919,9 +895,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonOTOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonOTOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;

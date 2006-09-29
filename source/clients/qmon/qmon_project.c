@@ -90,9 +90,7 @@ static Boolean qmonProjectGetAsk(lListElem *prjp);
 static void qmonProjectAskForUsers(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupProjectConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupProjectConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -146,9 +144,7 @@ void updateProjectList(void)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownProjectConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownProjectConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownProjectConfig");
 
@@ -236,9 +232,7 @@ lListElem *ep
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectProject(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectProject(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *prjname;
@@ -342,9 +336,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectAskForUsers(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectAskForUsers(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ql_out = NULL;
    lList *ql_in = NULL;
@@ -373,9 +365,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonProjectAdd");
 
@@ -390,9 +380,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectModify(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *prjnames;
    Cardinal prjnum;
@@ -438,9 +426,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *prjl = NULL;
    lList *alp = NULL;
@@ -529,9 +515,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonProjectCancel");
 
@@ -541,9 +525,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonProjectDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonProjectDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;

@@ -157,9 +157,7 @@ static int show_info_for_job(FILE *fp, lList **alpp, dstring *sb);
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonJobPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonJobPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
 
@@ -225,9 +223,7 @@ Widget *zombie_m
 }
 
 /*-------------------------------------------------------------------------*/
-void updateJobListCB(w, cld, cad) 
-Widget w;
-XtPointer cld, cad;
+void updateJobListCB(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
 
@@ -256,9 +252,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonJobPopdown");
 
@@ -268,9 +262,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobStartUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobStartUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonJobStartUpdate");
   
@@ -282,9 +274,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobStopUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobStopUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonJobStopUpdate");
   
@@ -1281,9 +1271,7 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobHold(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *jl = NULL;
    lList *rl = NULL;
@@ -1401,9 +1389,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobQalter(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobQalter(Widget w, XtPointer cld, XtPointer cad)
 {
 #ifdef QALTER_RUNNING
    lList *rl = NULL;
@@ -1717,18 +1703,14 @@ dstring *dyn_tasks
 }
 
    
-static void AskHoldOkCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad)
 {
     tAskHoldInfo *info = (tAskHoldInfo *)cld;
     info->blocked = False;
     info->button = XmtOkButton;
 }
 
-static void AskHoldCancelCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad)
 {
     tAskHoldInfo *info = (tAskHoldInfo *)cld;
     info->blocked = False;
@@ -1736,9 +1718,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobScheddInfo(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad)
 {
    dstring sb = DSTRING_INIT;
    lList *jl = NULL;
@@ -1766,9 +1746,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFolderChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFolderChange(Widget w, XtPointer cld, XtPointer cad)
 {
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
 

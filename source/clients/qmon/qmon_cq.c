@@ -195,9 +195,7 @@ static ListTreeItem* cq_add_aqtlist(Widget tree, ListTreeItem *parent,
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonCQPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonCQPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -238,9 +236,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
 /*-------------------------------------------------------------------------*/
-static void qmonCQPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonCQPopdown");
@@ -404,9 +400,7 @@ static char search_for[256] = "";
 static ListTreeMultiReturnStruct *matches;
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQFindNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQFindNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -444,9 +438,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQFindNextNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQFindNextNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    static int count = 0;
@@ -494,9 +486,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQHighlight(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQHighlight(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeMultiReturnStruct *ret = (ListTreeMultiReturnStruct*)cad;
    ListTreeItem *item;
@@ -526,9 +516,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQMenu(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQMenu(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeItemReturnStruct *ret = (ListTreeItemReturnStruct *)cad;
    char name[BUFSIZ];
@@ -550,9 +538,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQActivate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQActivate(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeActivateStruct *ret = (ListTreeActivateStruct*)cad;
    int count;

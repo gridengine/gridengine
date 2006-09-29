@@ -488,9 +488,7 @@ static tSMEntry SMData;
 /*-------------------------------------------------------------------------*/
 /* PUBLIC                                                                  */
 /*-------------------------------------------------------------------------*/
-void qmonSubmitPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    tSubmitMode *data = (tSubmitMode *)cld;
    XmString xtitle = NULL;
@@ -892,9 +890,7 @@ Widget parent
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonSubmitPopdown");
@@ -907,9 +903,7 @@ XtPointer cld, cad;
 }   
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitInteractive(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad)
 {
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
    char buf[512];
@@ -958,9 +952,7 @@ XtPointer cld, cad;
 }   
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitBinary(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitBinary(Widget w, XtPointer cld, XtPointer cad)
 {
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*) cad;
 
@@ -1081,9 +1073,7 @@ int submode
 /*-------------------------------------------------------------------------*/
 /* set sensitivity of stderr/stdout input                                  */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitOutputMerge(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitOutputMerge(Widget w, XtPointer cld, XtPointer cad)
 {  
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*)cad;
 
@@ -1104,9 +1094,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* write a job configuration to file                                       */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitSaveDefault(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
 {  
 
    static char filename[BUFSIZ];
@@ -1160,9 +1148,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* load a job configuration from file                                      */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitLoadDefault(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitLoadDefault(Widget w, XtPointer cld, XtPointer cad)
 {  
 
    static char filename[4*BUFSIZ];
@@ -1199,9 +1185,7 @@ XtPointer cld, cad;
 /* popup XmtAskForString Dialog, get exec time and set it in input field   */
 /* if inputfield is empty or 0 there are no restrictions on exec time      */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitExecTime(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitExecTime(Widget w, XtPointer cld, XtPointer cad)
 {  
    Boolean status;
    char message[] = "@{submit.asksubmittime.Enter the submit time in the\nfollowing format: [[CC]]YY]MMDDhhmm[.ss]\nor leave the current time and press ok}";
@@ -1244,9 +1228,7 @@ XtPointer cld, cad;
 /* popup XmtAskForString Dialog, get deadline time                         */
 /* if inputfield is empty or 0 there are no restrictions on exec time      */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitDeadline(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitDeadline(Widget w, XtPointer cld, XtPointer cad)
 {  
    Boolean status;
    char message[] = "@{submit.askdeadlinetime.Enter the deadline time in the\nfollowing format: [[CC]]YY]MMDDhhmm.[ss]\nor leave the current time and press ok}";
@@ -1294,9 +1276,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* get the dialog entries and send gdi request                             */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitJobSubmit(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL, *alp = NULL;
    lEnumeration *what = NULL;
@@ -1606,9 +1586,7 @@ XtPointer cld, cad;
 /* get the Job Script, extract the sge directives and show them in      */
 /* the dialog                                                              */
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitGetScript(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad)
 {
    static char filename[4*BUFSIZ];
    static char directory[4*BUFSIZ];
@@ -2467,9 +2445,7 @@ StringConst sge_o_home
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitCheckJobName(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitCheckJobName(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*)cad;
    
@@ -2491,9 +2467,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitCheckInput(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitCheckInput(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*)cad;
    
@@ -2507,9 +2481,7 @@ XtPointer cld, cad;
 
 #if 0
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitCommitInput(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitCommitInput(Widget w, XtPointer cld, XtPointer cad)
 {
    char *cbs = (char *)cad;
 
@@ -2577,9 +2549,7 @@ u_long32 mail_options
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitEdit(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitEdit(Widget w, XtPointer cld, XtPointer cad)
 {
    char *script_name;
    char *file;
@@ -2774,9 +2744,7 @@ Widget w
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitAskForPE(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitAskForPE(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean status = False;
    lList *pel = NULL;
@@ -2828,9 +2796,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitAskForCkpt(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitAskForCkpt(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean status = False;
    lList *ckptl = NULL;
@@ -2882,9 +2848,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitAskForProject(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean status = False;
    lList *pl = NULL;
@@ -2937,9 +2901,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitShellList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitShellList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitShellList");
    /* 
@@ -2958,9 +2920,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitMailList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitMailList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitMailList");
    /* 
@@ -2979,9 +2939,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitMailInput(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitMailInput(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget list = (Widget) cld;
    String address;
@@ -3002,9 +2960,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitStderrList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitStderrList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitStderrList");
    /* 
@@ -3024,9 +2980,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitStdoutList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitStdoutList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitStdoutList");
    /* 
@@ -3046,9 +3000,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitStdinList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitStdinList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitStdinList");
    /* 
@@ -3068,9 +3020,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitEnvList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitEnvList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitEnvList");
    /* 
@@ -3090,9 +3040,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitCtxList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitCtxList(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSubmitCtxList");
    /*
@@ -3112,9 +3060,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitClear(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitClear(Widget w, XtPointer cld, XtPointer cad)
 {
 
 #ifdef TEST_GDI2
@@ -3169,9 +3115,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitReload(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitReload(Widget w, XtPointer cld, XtPointer cad)
 {
    String filename;
 
@@ -3192,9 +3136,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitReset(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitReset(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget dialog = (Widget)cld;
    
@@ -3206,9 +3148,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget list = (Widget)cld;
    XmString *selectedItems;
@@ -3240,9 +3180,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitClearCtxEnv(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitClearCtxEnv(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget matrix = (Widget)cld;
    
@@ -3256,9 +3194,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitGetEnv(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitGetEnv(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget matrix = (Widget) cld;
 
@@ -3302,9 +3238,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget dialog = (Widget)cld;
    
@@ -3334,9 +3268,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget dialog = (Widget)cld;
    
@@ -3381,9 +3313,7 @@ static void qmonSubmitChangeResourcesPixmap(void)
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSubmitToggleHoldNow(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSubmitToggleHoldNow(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonToggleHoldNow");
 

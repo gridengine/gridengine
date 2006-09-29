@@ -137,9 +137,7 @@ static XmtMenuItem queue_popup_items[] = {
 /*-------------------------------------------------------------------------*/
 /*    P U B L I C    F U N C T I O N S                                     */
 /*-------------------------------------------------------------------------*/
-void qmonQueuePopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonQueuePopup(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    
@@ -276,9 +274,7 @@ void updateQueueList(void)
 }
 
 /*-------------------------------------------------------------------------*/
-void updateQueueListCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void updateQueueListCB(Widget w, XtPointer cld, XtPointer cad)
 {
 
    lList *alp = NULL;
@@ -297,9 +293,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /*    P R I V A T E   F U N C T I O N S                                    */
 /*-------------------------------------------------------------------------*/
-static void qmonQueuePopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueuePopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonQueuePopdown");
 
@@ -310,9 +304,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQueueStartUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueueStartUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonQueueStartUpdate");
   
@@ -329,9 +321,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQueueStopUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueueStopUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonQueueStopUpdate");
   
@@ -1095,9 +1085,7 @@ int selected
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonDrawQueueButton(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonDrawQueueButton(Widget w, XtPointer cld, XtPointer cad)
 {
    static XmFontList defaultFontList = NULL;
    tQueueButton *qB = (tQueueButton*) cld;
@@ -1363,9 +1351,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQueueModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueueModify(Widget w, XtPointer cld, XtPointer cad)
 {
    int n = 0, i, j;
    lList *lp = NULL;
@@ -1405,9 +1391,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQueueDeleteQuick(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueueDeleteQuick(Widget w, XtPointer cld, XtPointer cad)
 {
    int i, j;
    lList *lp = NULL;
@@ -1464,9 +1448,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQueueChangeState(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQueueChangeState(Widget w, XtPointer cld, XtPointer cad)
 {
    int i, j;
    lList *ql = NULL;

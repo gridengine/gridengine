@@ -127,9 +127,9 @@ test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $
                         $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
                         $(RMONLIB) $(UTILIB) $(SPOOLFLIB) $(WINGRIDLIB_DEP)
 	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) \
-                         $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(GDILIB) \
+                         $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                          $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
                          $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
 
-test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
+test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl.c

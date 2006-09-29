@@ -1337,9 +1337,7 @@ int cols
 }
 
 /*-------------------------------------------------------------------------*/
-static void okCB(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void okCB(Widget w, XtPointer cld, XtPointer cad)
 {
    int nr_fields = 0;
    int i, j;
@@ -1405,9 +1403,7 @@ XtPointer cld,cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void cancelCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void cancelCB(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "cancelCB");
    
@@ -1418,9 +1414,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void saveCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void saveCB(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -1451,9 +1445,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void addToSelected(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void addToSelected(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *items;
    Cardinal itemCount;
@@ -1475,9 +1467,7 @@ XtPointer cld,cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void rmFromSelected(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *items;
    Cardinal itemCount;
@@ -1668,9 +1658,7 @@ int how
 
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupJCU(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupJCU(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(TOP_LAYER, "qmonPopupJCU");
 
@@ -1850,9 +1838,7 @@ XtPointer cld
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterClear(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterClear(Widget w, XtPointer cld, XtPointer cad)
 {
 
 
@@ -1871,9 +1857,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterSet(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterSet(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *arl = NULL;
    lListElem *ep = NULL;
@@ -1906,9 +1890,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterEditResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 {
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
    long how = (long)cld;
@@ -1980,9 +1962,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterRemoveResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad)
 {
 
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;

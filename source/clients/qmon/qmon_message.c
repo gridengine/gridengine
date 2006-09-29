@@ -209,9 +209,7 @@ Widget parent
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonMessageOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonMessageOk(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonMessageOk");
 

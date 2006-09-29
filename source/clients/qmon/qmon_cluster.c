@@ -426,9 +426,7 @@ static void qmonClusterCheckInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonClusterTime(Widget w, XtPointer cld, XtPointer cad);
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
-void qmonPopupClusterConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupClusterConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -504,9 +502,7 @@ void updateClusterList(void)
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectHost(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectHost(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *hname;
@@ -585,9 +581,7 @@ lListElem *ep
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownClusterConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(TOP_LAYER, "qmonPopdownClusterConfig");
 
@@ -793,9 +787,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterChange(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean add  = (Boolean)(long)cld;
    static tCClEntry cluster_entry;
@@ -855,9 +847,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget layout = (Widget) cld;
    tCClEntry cluster_entry;
@@ -938,9 +928,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget layout = (Widget) cld;
 
@@ -1017,9 +1005,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -2322,9 +2308,7 @@ char *str
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterAskForUsers(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterAskForUsers(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ql_out = NULL;
    lList *ql_in = NULL;
@@ -2357,9 +2341,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterAskForProjects(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterAskForProjects(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ql_out = NULL;
    lList *ql_in = NULL;
@@ -2393,9 +2375,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterHost(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterHost(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
    static char unique[CL_MAXHOSTLEN];
@@ -2430,9 +2410,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonClusterCheckInput(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonClusterCheckInput(Widget w, XtPointer cld, XtPointer cad)
 {
 #define MAX_INPUT_LEN   4*BUFSIZ
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;

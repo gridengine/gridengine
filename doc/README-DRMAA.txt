@@ -100,6 +100,16 @@ Content
    compiler/linker that you want to link in this library, e.g. by passing
    the "-ldrmaa" option to the compiler/linker.
 
+   If you are planning to use the DRMAA 1.0 library instead of the DRMAA
+   0.95 library which is active by default, you must compile with the
+   -DDRMAA_10 flag, which tells the compiler to use the DRMAA 1.0 header
+   information.  The differences between the 1.0 and 0.95 DRMAA libraries
+   are small in theory, but can actually make a big difference in practice.
+   Because of the way the error codes changed between 0.95 and 1.0, an
+   application compiled for 0.95 will not run with the 1.0 library.  The
+   problem is easily solved, however, by recompiling with the -DDRMAA_10
+   flag.  For more information about what's new in DRMAA 1.0, see the man
+   pages for drmaa_attributes(3), drmaa_jobtemplate(3) and drmaa_submit(3).
 
 3. Getting Support
 ------------------

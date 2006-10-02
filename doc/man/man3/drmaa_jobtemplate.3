@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_jobtemplate.3,v $     Last Update: $Date: 2004/08/11 13:38:21 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: drmaa_jobtemplate.3,v $     Last Update: $Date: 2006/10/02 21:17:57 $     Revision: $Revision: 1.5.10.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,13 +12,13 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_jobtemplate 3 "$Date: 2004/08/11 13:38:21 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_jobtemplate 3 "$Date: 2006/10/02 21:17:57 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
 .SH NAME
 drmaa_allocate_job_template, drmaa_delete_job_template, drmaa_set_attribute, drmaa_get_attribute, drmaa_set_vector_attribute,
-drmaa_get_vector_attribute, drmaa_get_next_attr_value, drmaa_release_attr_values \- xxQS_NAMExx DRMAA job template handling
+drmaa_get_vector_attribute, drmaa_get_next_attr_value, drmaa_get_num_attr_values, drmaa_release_attr_values \- xxQS_NAMExx DRMAA job template handling
 .PP
 .\"
 .\"
@@ -109,6 +109,15 @@ drmaa_get_vector_attribute, drmaa_get_next_attr_value, drmaa_release_attr_values
 \fB);\fB
 .PP
 .nf
+\fBint drmaa_get_num_attr_values(\fB
+.RS
+\fBdrmaa_attr_values_t* values,\fB
+\fBint *size\fB
+.RE
+.fi
+);\fB
+.PP
+.nf
 \fBvoid drmaa_release_attr_values(\fB
 .RS
 \fBdrmaa_attr_values_t* values
@@ -166,6 +175,19 @@ vector returned into \fIvalues\fP using
 .SS "drmaa_get_next_attr_value()"
 Each time drmaa_get_next_attr_value() is called it returns into \fIvalue\fP up to \fIvalue_len\fP 
 bytes of the next entry stored in the DRMAA values string vector, \fIvalues\fP.
+With the DRMAA 0.95 library, once the values list has been exhausted,
+DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is returned.  With the DRMAA 1.0 library, once the values list
+has been exhausted, DRMAA_ERRNO_NO_MORE_ELEMENTS is returned.  In order
+to use the DRMAA 1.0 library, you must define the DRMAA_10 macro, either in your
+application directly or through a compiler flag, such as -DDRMAA_10.
+.PP
+.\" 
+.SS "drmaa_get_num_attr_values()"
+The drmaa_get_num_attr_values() returns into \fIsize\fP the number of entries
+in the DRMAA values string vector.  This function is only available in the 1.0
+implementation.  In order to use the DRMAA 1.0 library, you must define the
+DRMAA_10 macro, either in your application directly or through a compiler flag,
+such as -DDRMAA_10.
 .PP
 .\" 
 .SS "drmaa_release_attr_values()"

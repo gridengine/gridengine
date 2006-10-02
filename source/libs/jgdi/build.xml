@@ -272,13 +272,12 @@
          <exclude name="EV_Type"/>
       </patternset>
 
-
+      <!-- Types for Flexibe Resource Limits are excluded -->
       <patternset id="excludeTypes">
-         <!-- Types for Flexibe Resource Limits are excluded -->
-         <exclude name="LIRS_Type"/>
-         <exclude name="LIR_Type"/>
-         <exclude name="LIRF_Type"/>
-         <exclude name="LIRL_Type"/>
+         <!--exclude name="LIRS_Type"/-->
+         <!--exclude name="LIR_Type"/-->
+         <!--exclude name="LIRF_Type"/-->
+         <!--exclude name="LIRL_Type"/-->
       </patternset>
 
       
@@ -592,6 +591,7 @@
                <exclude name="CE_Type"/>
                <exclude name="CONF_Type"/>
                <exclude name="JB_Type"/>
+               <exclude name="SME_Type"/>
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>                           
@@ -638,6 +638,7 @@
                <include name="ClassDescriptor"/>
                <include name="PropertyDescriptor"/>         
                <include name="ListPropertyDescriptor"/>
+               <include name="SimplePropertyDescriptor"/>
                <include name="MapPropertyDescriptor"/>
                <include name="MapListPropertyDescriptor"/>
             </package>

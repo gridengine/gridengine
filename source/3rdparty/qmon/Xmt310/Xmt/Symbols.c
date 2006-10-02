@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Symbols.c,v 1.1 2001/07/18 11:06:03 root Exp $
+ * $Id: Symbols.c,v 1.2 2006/10/02 14:24:58 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,15 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Symbols.c,v $
- * Revision 1.1  2001/07/18 11:06:03  root
- * Initial revision
+ * Revision 1.2  2006/10/02 14:24:58  andre
+ * AA-2006-10-02-0: Enhancem:  o jgdi qlimit
+ *                             o sge_error_verror()
+ *                             o japi segv
+ *                             o copyright comments
+ *                  Review:    RH
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:03  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -407,7 +414,7 @@ XtArgVal *valuep;
 	_XtCopyToArg(&s->addr, (XtArgVal *) &valuep, s->size);
 	break;
     case XmtSymbolRESOURCE:
-	XtVaGetValues((Widget)s->addr, s->resource_name, valuep);
+	XtVaGetValues((Widget)s->addr, s->resource_name, valuep, NULL);
 	break;
     }
 }

@@ -31,16 +31,29 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.util.List;
+
 /**
  *
  * @author richard.hierlmeier@sun.com
  * @todo   beta ??
  *         add javadoc comments
  */
-public interface QResourceLimit {
+public interface LimitRuleInfo {
    
-   public String getResource();
-   public Object getLimit();
-   public Object getValue();
+   public String getLimitRuleName();
+ 
+   public List getUsers();
+   public List getProjects();
+   public List getPes();
+   public List getQueues();
+   public List getHosts();
    
+   public List getXUsers();
+   public List getXProjects();
+   public List getXPes();
+   public List getXQueues();
+   public List getXHosts();
+
+   public List getLimits();
 }

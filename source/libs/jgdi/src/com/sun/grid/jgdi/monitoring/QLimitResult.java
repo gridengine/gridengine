@@ -29,57 +29,33 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.jgdi.monitoring.filter;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
+package com.sun.grid.jgdi.monitoring;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.Set;
 
 /**
- *
- * @author richard.hierlmeier@sun.com
+ * This interface represent the result of the qlimit algorithm.
+ * 
  */
-public class UserFilter {
+public interface QLimitResult {
    
-   private List userList = new ArrayList();
+   /**
+    *  Get a set of all limit names
+    *  @return set of limit names 
+    */
+   public Set getLimitRuleNames();
    
-   /** Creates a new instance of HostFilter */
-   public UserFilter() {
-   }
+   /**
+    *  Get the host info for a host
+    *  @param  host  name of the host
+    *  @return the host info
+    */
+   public LimitRuleInfo getLimitRuleInfo(String limit_name);
    
-   public static UserFilter parse(String userList) {
-       UserFilter ret = new UserFilter();
-       StringTokenizer st = new StringTokenizer(userList, ",");
-       while(st.hasMoreTokens()) {
-           ret.addUser(st.nextToken());
-       }
-       return ret;
-   }
-   
-   
-   public void addUser(String username) {
-      userList.add(username);
-   }
-   
-   public List getUsers() {
-      return Collections.unmodifiableList(userList);
-   }
-
-   public String toString() {
-      StringBuffer ret = new StringBuffer();
-      
-      ret.append("UserFilter[");
-      Iterator iter = userList.iterator();
-      if(iter.hasNext()) {
-         ret.append(iter.next());
-         while(iter.hasNext()) {
-            ret.append(",");
-            ret.append(iter.next());
-         }
-      }
-      return ret.toString();
-   }
+   /**
+    *  Get a list of all available limit rule info objects
+    *  @return list of all available limit rule info objects
+    */
+   public List getLimitRules();
    
 }

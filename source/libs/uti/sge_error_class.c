@@ -65,6 +65,8 @@ static bool sge_error_has_error(sge_error_class_t* eh);
 static bool sge_error_has_quality(sge_error_class_t* thiz, int error_quality);
 static bool sge_error_has_type(sge_error_class_t* thiz, int error_type);
 
+static void sge_error_verror(sge_error_class_t* thiz, int error_type, int error_quality, 
+                            const char*format, va_list ap);
 static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_quality, 
                             const char*fmt, ...);
                             
@@ -95,6 +97,7 @@ sge_error_class_t* sge_error_class_create(void) {
    ret->has_quality = sge_error_has_quality;
    ret->has_type = sge_error_has_type;
    ret->error = sge_error_error;
+   ret->verror = sge_error_verror;
    ret->clear = sge_error_class_clear;
    ret->iterator = sge_error_class_iterator;
    return ret;
@@ -231,18 +234,14 @@ static sge_error_iterator_class_t* sge_error_iterator_class_create(sge_error_cla
    return ret;
 }
 
-
-static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_quality, 
-                            const char*format, ...) {
+static void sge_error_verror(sge_error_class_t* thiz, int error_type, int error_quality, 
+                            const char*format, va_list ap) {
    
    sge_error_message_t *error = NULL;
    sge_error_t *et = (sge_error_t*)thiz->sge_error_handle;
    dstring ds = DSTRING_INIT;
-   va_list ap;
    
-   DENTER(TOP_LAYER, "sge_error_error");
-
-   va_start(ap, format);
+   DENTER(TOP_LAYER, "sge_error_verror");
 
    error = (sge_error_message_t*)sge_malloc(sizeof(sge_error_message_t));
 
@@ -255,7 +254,7 @@ static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_q
    error->next = NULL;
    sge_dstring_free(&ds);
    
-   DPRINTF(("error: %s\n", error->message));
+   DPRINTF(("error: %s\n", error->message ? error->message : ""));
 
    if (et->first == NULL) {
       et->first = error;      
@@ -263,6 +262,22 @@ static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_q
    } else {
       et->last->next = error;
       et->last = error;
+   }
+
+   DEXIT;
+}
+
+
+static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_quality, 
+                            const char*format, ...) {
+   
+   va_list ap;
+   
+   DENTER(TOP_LAYER, "sge_error_error");
+
+   if (format != NULL) {
+      va_start(ap, format);
+      sge_error_verror(thiz, error_type, error_quality, format, ap);
    }
 
    DEXIT;

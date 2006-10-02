@@ -1,5 +1,7 @@
 #!/bin/sh
 
+GRIDENGINE_SOURCE=""
+
 DIR=`dirname $0`
 . $DIR/run_util.properties
 
@@ -88,6 +90,9 @@ setup_env() {
                   DEBUGGER=dbx;;
       darwin-ppc) SRC_ARCH=DARWIN_PPC;
                   JAVA_ARCH="";
+                  DEBUGGER=dbx;;
+           tru64) SRC_ARCH=ALPHA5;
+                  JAVA_ARCH=alpha;
                   DEBUGGER=dbx;;
         *) echo "ARCH $ARCH is not supported"; exit 1;;
    esac

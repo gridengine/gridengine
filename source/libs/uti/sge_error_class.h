@@ -52,6 +52,7 @@ struct sge_error_iterator_class_str {
 struct sge_error_class_str {
    void *sge_error_handle;
    void (*error)(sge_error_class_t* thiz, int error_type, int error_quality, const char*fmt, ...);
+   void (*verror)(sge_error_class_t* thiz, int error_type, int error_quality, const char*fmt, va_list ap);
    
    void (*clear)(sge_error_class_t *thiz);
    

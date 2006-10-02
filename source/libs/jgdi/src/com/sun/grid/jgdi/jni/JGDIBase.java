@@ -134,8 +134,12 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     * @todo beta ??
     *       <p>QLimit not yet implemented</p>
     */
-   public List getQLimit(QLimitOptions options) throws JGDIException {
-      throw new IllegalStateException("Not yet implemented");
+   public QLimitResult getQLimit(QLimitOptions options) throws JGDIException {
+      QLimitResultImpl ret  = new QLimitResultImpl();
+      
+      getQLimit(options, ret);
+      
+      return ret;
    }
    
    /**
@@ -253,4 +257,6 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     *       Not tested
     */
    public native String getSchedulerHost() throws JGDIException;
+
+   private native void getQLimit(QLimitOptions options, QLimitResultImpl ret) throws JGDIException;
 }

@@ -86,8 +86,7 @@ public class ResourceFilter {
     
     public String getResource(String name) {
         String ret = (String)resourceMap.get(name);
-        System.out.println("getResource: " + name + " = " + ret);
         return ret;
     }
-    
+
 }

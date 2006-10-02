@@ -121,6 +121,17 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
       return (PropertyDescriptor)propertyList.get(index);
    }
    
+   public PropertyDescriptor getPropertyByCullFieldName(int cullFieldName) {
+      Iterator iter = propertyList.iterator();
+      while(iter.hasNext()) {
+         PropertyDescriptor pd = (PropertyDescriptor)iter.next();
+         if(pd.getCullFieldName() == cullFieldName) {
+            return pd;
+         }
+      }
+      return null;
+   }
+   
    public Class getBeanClass() {
       return beanClass;
    }

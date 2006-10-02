@@ -4083,6 +4083,7 @@ static void *japi_implementation_thread_ctx(void *p)
    lListElem *what_el = NULL;
    lList *alp = NULL, *event_list = NULL;
    lListElem *event;
+   char buffer[1024];
    dstring buffer_wrapper;
    bool stop_ec = false;
    int parameter, ed_time = 30, flush_delay_rate = 6;
@@ -4107,6 +4108,8 @@ static void *japi_implementation_thread_ctx(void *p)
    }
    JAPI_UNLOCK_EC_STATE();
    
+   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
+
    if (sge_gdi2_setup(&evc_ctx, prog_number, &alp) != AE_OK) {
       DPRINTF(("error: sge_gdi2_setup() failed for event client thread\n"));
       if (p) {

@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<LIRS_Type>
+   <name>test_max_per_host</name>
+   <description>NONE</description>
+   <enabled>true</enabled>
+   <rule>
+      <LIR_Type>
+         <filterUsers><LIRF_Type>
+            <expand>false</expand>
+            <scope>
+               <string>aa114085</string>
+            </scope>
+         </LIRF_Type>
+         </filterUsers>
+         <filterHosts><LIRF_Type>
+            <expand>true</expand>
+            <scope>
+               <string>@sol-amd64</string>
+            </scope>
+         </LIRF_Type>
+         </filterHosts>
+         <limit>
+            <LIRL_Type>
+               <name>slots</name>
+               <value>2</value>
+            </LIRL_Type>
+         </limit>
+      </LIR_Type>
+   </rule>
+</LIRS_Type>

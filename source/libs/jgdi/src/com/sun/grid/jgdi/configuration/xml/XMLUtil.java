@@ -610,7 +610,11 @@ public class XMLUtil {
             if(pd == null) {
                throw new SAXParseException("cull type " + cd.getCullName() + " has no property " + name, locator);
             } if(pd instanceof SimplePropertyDescriptor ) {
-               return new SimplePropertyHandler(this, (SimplePropertyDescriptor)pd);
+               if(pd.getPropertyType().isPrimitive() || pd.getPropertyType().equals(String.class)) {
+                  return new SimplePropertyHandler(this, (SimplePropertyDescriptor)pd);
+               } else {
+                  return new ObjectPropertyHandler(this, (SimplePropertyDescriptor)pd);
+               }
             } else if (pd instanceof ListPropertyDescriptor ) {
                return new ListPropertyHandler(this, (ListPropertyDescriptor)pd);
             } else if ( pd instanceof MapPropertyDescriptor ) {
@@ -780,11 +784,26 @@ public class XMLUtil {
             
             if(value != null ) {
                // We have a simple element
-               addObject(parse(value.toString(), pd.getPropertyType()));
+               addObject(parse(value.toString(), pd));
             }
          }
       }
       
+      class ObjectPropertyHandler extends CullPropertyHandler {
+         private SimplePropertyDescriptor pd;
+         
+         public ObjectPropertyHandler(GEObjectHandler parent, SimplePropertyDescriptor pd) {
+            super(parent);
+            this.pd = pd;
+         }
+         
+         public void addObject(Object obj) throws SAXException {
+            if(parent.getObject() == null) {
+               throw new SAXException("parent " + parent.getName() + " has not object");
+            }
+            pd.setValue(parent.getObject(), obj);
+         }
+      }
       
       
       class ListPropertyHandler extends CullPropertyHandler {
@@ -795,12 +814,6 @@ public class XMLUtil {
             this.pd = pd;
          }
          
-//         public CullHandler getHandler(String name, org.xml.sax.Attributes attributes)  throws SAXException {
-//            if(!pd.getCullType().equals(name)) {
-//               throw new SAXParseException("This handler can only handle object of type " + pd.getCullType()+ "(got " + name + ")", locator );
-//            }
-//            return super.getHandler(name, attributes);
-//         }
          public void addObject(Object obj) throws SAXException {
             if(parent.getObject() == null) {
                throw new SAXException("parent " + parent.getName() + " has not object");
@@ -841,7 +854,7 @@ public class XMLUtil {
             
             if(value != null ) {
                // We have a simple element
-               addObject(parse(value.toString(), pd.getPropertyType()));
+               addObject(parse(value.toString(), pd));
             }
          }
       }
@@ -876,13 +889,27 @@ public class XMLUtil {
       /**
        * parse methode for primitive and string elements
        * @param value  the value which should be parsed
-       * @param clazz  exepected type
+       * @param PropertyDescriptor  descriptor of the property
        * @throws org.xml.sax.SAXException the value could not be parsed
        * @return the parsed value
        */
-      private Object parse(String value, Class clazz) throws SAXException {
-         
-         if( Boolean.TYPE.isAssignableFrom(clazz) ) {
+      private Object parse(String value, PropertyDescriptor pd) throws SAXException {
+         Class clazz = pd.getPropertyType();
+         if(pd.hasCullWrapper()) {
+            
+            ClassDescriptor realClassDescriptor = Util.getDescriptor(pd.getPropertyType());
+            
+            Object obj = realClassDescriptor.newInstance();
+            
+            PropertyDescriptor rpd = realClassDescriptor.getPropertyByCullFieldName(pd.getCullContentField());
+            
+            if(rpd instanceof SimplePropertyDescriptor) {
+               ((SimplePropertyDescriptor)rpd).setValue(obj, parse(value, rpd));
+               return obj;
+            } else {
+               throw new SAXParseException("Can only handle simple wrapped properties", locator);
+            }
+         } else if( Boolean.TYPE.isAssignableFrom(clazz) ) {
             return new Boolean(value);
          } else if ( Integer.TYPE.isAssignableFrom(clazz) ) {
             try {

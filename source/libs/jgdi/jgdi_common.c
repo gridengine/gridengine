@@ -98,6 +98,8 @@ static jgdi_result_t calendar_to_elem(object_mapping_t *thiz, JNIEnv *env, jobje
 static jgdi_result_t elem_to_calendar(object_mapping_t *thiz, JNIEnv *env, lListElem *elem, jobject* obj, lList **alpp);
 static object_mapping_t* get_object_mapping(const lDescr *descr);
 
+static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject cob, lList **alpp);
+static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject *cob, lList **alpp);
 
 static object_mapping_t OBJECT_MAPPINGS [] = {
    { &(TM_Type[0]), 
@@ -743,8 +745,22 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
            break;
          }
       case lObjectT:
-         /* TODO implement object conversion */
-         break;
+         {
+           jclass prop_descr_class; 
+           lObject cob = NULL;
+           
+           if (Object_getClass(env, prop_descr, &prop_descr_class, alpp) != JGDI_SUCCESS) {
+              result = JGDI_ERROR;
+              break;
+           }
+
+           result = get_object(env, object_class, obj, prop_descr, &cob, alpp);
+
+           if (result == JGDI_SUCCESS) {
+              lSetPosObject(ep, pos, cob);
+           }
+           break;
+         }
       case lRefT:
          /* TODO implement reference converion */
          break;
@@ -934,6 +950,29 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
                                             "set_object_attribute: set_list of property %s failed", 
                                             property_name);
                  }
+              }
+           }
+           break;
+         }
+      case lObjectT:
+         {
+           lObject cob = lGetPosObject(ep,pos);
+           
+           if (cob) {
+              jclass prop_descr_class; 
+              
+              if (Object_getClass(env, prop_descr, &prop_descr_class, alpp) != JGDI_SUCCESS) {
+                 result = JGDI_ERROR;
+                 break;
+              }
+
+              jgdi_log_printf(env, JGDI_LOGGER, FINER, "Property %s is an object", property_name);
+
+              result = set_object(env, target_class, target, prop_descr, cob, alpp );
+              if (result != JGDI_SUCCESS) {
+                 answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                         "set_object_attribute: set_list of property %s failed", 
+                                         property_name);
               }
            }
            break;
@@ -2168,6 +2207,144 @@ jgdi_result_t set_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
          break;
       }
    }
+
+   DEXIT;
+   return ret;
+}
+
+static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject *cob, lList **alpp) {
+
+   lDescr*    descr;
+   jint        count;
+   int        i;
+   jobject    obj;
+   lList      *tmp_list = NULL;
+   lListElem  *ep = NULL;
+   
+   jboolean  has_cull_wrapper = false;
+   jint      content_field_name = 0;
+   int       content_field_type = lEndT;
+   int       content_field_pos = lEndT;
+   jgdi_result_t       ret = JGDI_SUCCESS;
+   
+   DENTER( BASIS_LAYER, "get_object" );
+
+   if ((ret=get_descriptor_for_property(env, property_descr, &descr, alpp)) != JGDI_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   ret = SimplePropertyDescriptor_getValue(env, property_descr, bean, &obj, alpp);
+
+   if (ret != JGDI_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   if (obj == NULL) {
+      /* new have an empty object */
+      *cob = NULL;
+      return JGDI_SUCCESS;
+   }
+
+   
+   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp) != JGDI_SUCCESS)) {
+      DEXIT;
+      return ret;
+   }
+   if (has_cull_wrapper) {
+      if((ret=PropertyDescriptor_getCullContentField(env, property_descr, &content_field_name, alpp)) != JGDI_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+      content_field_pos = lGetPosInDescr(descr, content_field_name);
+      if (content_field_pos < 0) {
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                 "content field %s not found in descriptor", lNm2Str(content_field_name));
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
+      content_field_type = lGetPosType(descr, content_field_pos);
+      if (content_field_type == lEndT) {
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                 "type of content field of attr %s not found", lNm2Str(content_field_name));
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
+      ep = lCreateElem(descr);
+      ret=set_value_in_elem(env, obj, ep, content_field_type, content_field_pos, alpp);
+   } else {
+      ret=obj_to_listelem(env, obj, &ep, descr, alpp);
+   }
+   if (ret != JGDI_SUCCESS) {
+      lFreeElem(&ep);
+      DEXIT;
+      return ret;
+   } else {
+      *cob = ep;
+      DEXIT;
+      return JGDI_SUCCESS;
+   }
+}
+
+static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject cob, lList **alpp) {
+
+   jobject   obj;
+   const lDescr*   descr;
+   jclass    property_class;
+   lListElem* ep = NULL;
+
+   /* for primitive wrappers */
+   jint content_field_name = 0;
+   int  content_field_pos = lEndT;
+   int  content_field_type = 0;
+   jboolean has_cull_wrapper = false;
+   jgdi_result_t  ret = JGDI_SUCCESS;
+   
+   DENTER(BASIS_LAYER, "set_object");
+
+   DTRACE;
+   if ((ret=PropertyDescriptor_getPropertyType(env, property_descr, &property_class, alpp)) != JGDI_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+   
+   DTRACE;
+   descr = lGetElemDescr(cob);
+   
+   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp)) != JGDI_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+   if (has_cull_wrapper == true) {
+      jgdi_log_printf(env, JGDI_LOGGER, FINER, "Property has a cull wrapper");
+      if (ret != JGDI_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+      
+      if((ret=PropertyDescriptor_getCullContentField(env, property_descr, &content_field_name, alpp)) != JGDI_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+      if(content_field_pos == lEndT) {
+         content_field_pos = lGetPosInDescr(descr, (jint)content_field_name);
+         if (content_field_pos < 0) {
+            answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                    "content field %s not found in descriptor", lNm2Str(content_field_name));
+            DEXIT;
+            return JGDI_ILLEGAL_STATE;
+         }
+         content_field_type = lGetPosType(descr, content_field_pos);
+      }
+      ret = create_object_from_elem(env, cob, &obj, content_field_type, content_field_pos, alpp);
+   } else {
+      ret = listelem_to_obj(env, cob, &obj, descr, property_class, alpp );
+   }
+   
+   jgdi_log_printf(env, JGDI_LOGGER, FINER, "add converter property to list");
+   
+   ret=SimplePropertyDescriptor_setValue(env, property_descr, bean, obj, alpp);
 
    DEXIT;
    return ret;
@@ -3647,7 +3824,7 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
       what = lWhat("%T(ALL)", descr);
       
       /* add to list */
-      alp = ctx->gdi(ctx, target_list, SGE_GDI_ADD, &lp, where, what);
+      alp = ctx->gdi(ctx, target_list, SGE_GDI_ADD | SGE_GDI_SET_ALL, &lp, where, what);
       lFreeList(&lp);
       
       if(answer_list_has_error(&alp)) {

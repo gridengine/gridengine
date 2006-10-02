@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringTokenizer;
 
 
 /**
@@ -49,6 +50,15 @@ public class ProjectFilter {
    
    /** Creates a new instance of ParallelEnvironmentFilter */
    public ProjectFilter() {
+   }
+
+   public static ProjectFilter parse(String projectList) {
+       ProjectFilter ret = new ProjectFilter();
+       StringTokenizer st = new StringTokenizer(projectList, ",");
+       while(st.hasMoreTokens()) {
+           ret.addProject(st.nextToken());
+       }
+       return ret;
    }
    
    public void addProject(String prjName) {

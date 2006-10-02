@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
+import com.sun.grid.jgdi.monitoring.QLimitResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
@@ -104,7 +105,7 @@ public interface JGDIBase {
     *  The CLI equivialent of this method is <code>qhost</code> (see man qhost(1)).
     *
     *  @param options  host summary options
-    *  @return the <code>QHostResult</code> object which the host summary information
+    *  @return the <code>QHostResult</code> object with the host summary information
     *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
     */
    public QHostResult execQHost(QHostOptions options) throws JGDIException;
@@ -134,10 +135,11 @@ public interface JGDIBase {
     *
     *  The CLI equivialent of this method is <code>qlimit</code> (see man qlimit(1)).
     *  
-    *  @param options the options for the qlimit algorithm
-    *  @return  list of {@link com.sun.grid.jgdi.monitoring.QLimit} instances
+    *  @param options  qlimit summary options
+    *  @return the <code>QLimitResult</code> object with the qlimit summary information
+    *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
     */
-   public List getQLimit(QLimitOptions options) throws JGDIException;
+   public QLimitResult getQLimit(QLimitOptions options) throws JGDIException;
    
    
    // -------- Managing interface methods --------------------------------------

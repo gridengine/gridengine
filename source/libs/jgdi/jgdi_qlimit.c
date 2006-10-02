@@ -1,3 +1,35 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
 #include <ctype.h>
 #include <string.h>
 #include "jni.h"
@@ -25,7 +57,7 @@
 #include "jgdi_logging.h"
 
 /* DICKER TODO: Aendere das aber flott */ 
-int shut_me_down = 0;
+/* int shut_me_down = 0; */
 
 
 typedef struct jgdi_report_handler_str jgdi_report_handler_t;
@@ -40,18 +72,17 @@ struct jgdi_report_handler_str {
 static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qlimit_result, lList **alpp);
 static int jgdi_report_finished(report_handler_t* handler, lList **alpp);
 static int jgdi_report_started(report_handler_t* handler, lList **alpp);
-static int jgdi_report_host_begin(report_handler_t* handler, const char* host_name, lList **alpp);
-static int jgdi_report_host_string_value(report_handler_t* handler, const char* name, const char *value, lList **alpp);
-static int jgdi_report_host_ulong_value(report_handler_t* handler, const char* name, u_long32 value, lList **alpp);
-static int jgdi_report_host_finished(report_handler_t* handler, const char* host_name, lList **alpp);
-static int jgdi_report_resource_value(report_handler_t* handler, const char* dominance, const char* name, const char* value, lList **alpp);
-static int jgdi_report_queue_string_value(report_handler_t* handler, const char* qname, const char* name, const char *value, lList **alpp);
-static int jgdi_report_queue_ulong_value(report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList **alpp);
+
+static int jgdi_report_limit_rule_begin(report_handler_t* handler, const char* limit_name, lList **alpp);
+static int jgdi_report_limit_rule_finished(report_handler_t* handler, const char* limit_name, lList **alpp);
+static int jgdi_report_limit_string_value(report_handler_t* handler, const char* name, const char *value, bool exclude, lList **alpp);
+static int jgdi_report_resource_value(report_handler_t* handler, const char* resource, const char* limit, const char* value, lList **alpp);
 static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp);
 
 static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qlimit_result, lList **alpp) {
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)sge_malloc(sizeof(jgdi_report_handler_t));
    report_handler_t *ret = NULL;
+
    DENTER( JGDI_LAYER, "jgdi_report_handler_create" );
    
    if (jgdi_handler == NULL ) {
@@ -74,19 +105,14 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qlimit_
    memset(ret, 0, sizeof(report_handler_t));
    
    jgdi_handler->result = JGDI_SUCCESS;
+   
    ret->ctx = jgdi_handler;
    ret->report_started = jgdi_report_started;
    ret->report_finished = jgdi_report_finished;
-   
-   ret->report_host_begin = jgdi_report_host_begin;
-   ret->report_host_finished = jgdi_report_host_finished;
-   
-   ret->report_host_string_value = jgdi_report_host_string_value;
-   ret->report_host_ulong_value = jgdi_report_host_ulong_value;
-   
+   ret->report_limit_rule_begin = jgdi_report_limit_rule_begin;
+   ret->report_limit_string_value = jgdi_report_limit_string_value;
+   ret->report_limit_rule_finished = jgdi_report_limit_rule_finished;
    ret->report_resource_value = jgdi_report_resource_value;
-   ret->report_queue_string_value = jgdi_report_queue_string_value;
-   ret->report_queue_ulong_value = jgdi_report_queue_ulong_value;
    ret->destroy = jgdi_destroy_report_handler;
    
    jgdi_handler->qlimit_result = qlimit_result;
@@ -111,35 +137,35 @@ static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp)
       FREE((*handler)->ctx);
    }
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
 
 static int jgdi_report_finished(report_handler_t* handler, lList **alpp) {
    DENTER( JGDI_LAYER, "jgdi_report_finished" );
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
 static int jgdi_report_started(report_handler_t* handler, lList **alpp) {
    DENTER( JGDI_LAYER, "jgdi_report_started" );
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
-static int jgdi_report_host_begin(report_handler_t* handler, const char* host_name, lList **alpp) {
+static int jgdi_report_limit_rule_begin(report_handler_t* handler, const char* limit_rule_name, lList **alpp) {
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
    jobject qlimit_info = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_begin" );
+   DENTER( JGDI_LAYER, "jgdi_report_limit_rule_begin" );
 
-   DPRINTF(("Create new host info object for host %s\n", host_name));
+   jgdi_log_printf(env, JGDI_LOGGER, FINER, "Create new limit rule info object for limit rule %s\n", limit_rule_name);
   
-   jgdi_handler->result = HostInfoImpl_init_0(env, &qlimit_info, host_name, alpp);
+   jgdi_handler->result = LimitRuleInfoImpl_init_0(env, &qlimit_info, limit_rule_name, alpp);
    if (jgdi_handler->result != JGDI_SUCCESS) {
       DEXIT;
-      return QHOST_ERROR;
+      return QLIMIT_ERROR;
    }
    
    jgdi_handler->qlimit_info = (*env)->NewGlobalRef(env, qlimit_info);
@@ -149,69 +175,159 @@ static int jgdi_report_host_begin(report_handler_t* handler, const char* host_na
    if (jgdi_handler->qlimit_info == NULL) {
       answer_list_add(alpp , "Can not create global reference for qlimit info object", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return QHOST_ERROR;
+      return QLIMIT_ERROR;
    }
    
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
-static int jgdi_report_host_string_value(report_handler_t* handler, const char* name, const char *value, lList** alpp) {
+static int jgdi_report_limit_string_value(report_handler_t* handler, const char* name, const char *value, bool exclude, lList** alpp) {
    
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
-   jstring value_obj = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_string_value" );
+   DENTER( JGDI_LAYER, "jgdi_report_limit_string_value" );
    
-   DPRINTF(("add host value %s=%s\n", name, value));
+   jgdi_log_printf(env, JGDI_LOGGER, FINER, "add filter value %s=%s\n", name, value);
    
-   value_obj = (*env)->NewStringUTF(env, value);
-   
-   if (HostInfoImpl_addHostValue(env, jgdi_handler->qlimit_info, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+   /* include lists */
+   if (!strcmp(name, "users") && exclude == false) {
+      if (LimitRuleInfoImpl_addUser(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
    }
+   
+   if (!strcmp(name, "projects") && exclude == false) {
+      if (LimitRuleInfoImpl_addProject(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "pes") && exclude == false) {
+      if (LimitRuleInfoImpl_addPe(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "queues") && exclude == false) {
+      if (LimitRuleInfoImpl_addQueue(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "hosts") && exclude == false) {
+      if (LimitRuleInfoImpl_addHost(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   /* exclude lists */
+   if (!strcmp(name, "users") && exclude == true) {
+      if (LimitRuleInfoImpl_addXUser(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "projects") && exclude == true) {
+      if (LimitRuleInfoImpl_addXProject(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "pes") && exclude == true) {
+      if (LimitRuleInfoImpl_addXPe(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "queues") && exclude == true) {
+      if (LimitRuleInfoImpl_addXQueue(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
+   if (!strcmp(name, "hosts") && exclude == true) {
+      if (LimitRuleInfoImpl_addXHost(env, jgdi_handler->qlimit_info, value, alpp) != JGDI_SUCCESS) {
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
+   }
+   
    
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
-
-static int jgdi_report_host_ulong_value(report_handler_t* handler, const char* name, u_long32 value, lList** alpp) {
+static int jgdi_report_resource_value(report_handler_t* handler, const char* resource, const char* limit, const char* value, lList** alpp) {
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
-   jobject value_obj = NULL;
+   jobject resource_obj = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_ulong_value" );
+   DENTER( JGDI_LAYER, "jgdi_report_resource_value" );
+   
+   if (jgdi_handler->qlimit_info == NULL) {
+      answer_list_add(alpp, "jgdi_report_resource_value: qlimit_info object not set", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return QLIMIT_ERROR;
+   }
 
-   DPRINTF(("add host value %s=%ld\n", name, value));
-   
-   jgdi_handler->result = Long_init_0(env, &value_obj, value, alpp);
-   if (jgdi_handler->result != JGDI_SUCCESS) {
+   jgdi_log_printf(env, JGDI_LOGGER, FINER,
+                     "resource='%s', limit='%s', value='%s'\n", resource, limit, value);
+
+   if (ResourceLimitImpl_init(env, &resource_obj, alpp) != JGDI_SUCCESS) {
      DEXIT;
-     return QHOST_ERROR;
+     return QLIMIT_ERROR;
    }
-   
-   if (HostInfoImpl_addHostValue(env, jgdi_handler->qlimit_info, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+
+
+
+   if (resource_obj != NULL) {
+      if (ResourceLimitImpl_setName(env, resource_obj, resource, alpp) != JGDI_SUCCESS) {
+         DEXIT;
+         return QLIMIT_ERROR;
+      }
+
+      if (ResourceLimitImpl_setLimitValue(env, resource_obj, limit, alpp) != JGDI_SUCCESS) {
+         DEXIT;
+         return QLIMIT_ERROR;
+      }
+
+      if (ResourceLimitImpl_setUsageValue(env, resource_obj, value, alpp) != JGDI_SUCCESS) {
+         DEXIT;
+         return QLIMIT_ERROR;
+      }
+      if (LimitRuleInfoImpl_addLimit(env, jgdi_handler->qlimit_info, resource_obj, alpp) != JGDI_SUCCESS) { 
+        DEXIT;
+        return QLIMIT_ERROR;
+      }
    }
+
    DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
-static int jgdi_report_host_finished(report_handler_t* handler, const char* host_name, lList** alpp) {
+
+static int jgdi_report_limit_rule_finished(report_handler_t* handler, const char* limit_name, lList** alpp) {
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
 
-   DENTER( JGDI_LAYER, "jgdi_report_host_finished" );
+   DENTER( JGDI_LAYER, "jgdi_report_limit_rule_finished" );
    
    if (jgdi_handler->qlimit_info == NULL) {
       answer_list_add(alpp, "qlimit_info object is not available in jgdi_handler",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return QHOST_ERROR;
+      return QLIMIT_ERROR;
    }
 
    if (jgdi_handler->qlimit_result == NULL) {
@@ -219,97 +335,30 @@ static int jgdi_report_host_finished(report_handler_t* handler, const char* host
       abort();
    }
    
-   if (QHostResultImpl_addHostInfo(env, jgdi_handler->qlimit_result, jgdi_handler->qlimit_info, alpp) != JGDI_SUCCESS) {
+   if (QLimitResultImpl_addLimitRuleInfo(env, jgdi_handler->qlimit_result, jgdi_handler->qlimit_info, alpp) != JGDI_SUCCESS) {
      DEXIT;
-     return QHOST_ERROR;
+     return QLIMIT_ERROR;
    }
    DPRINTF(("DeleteGlobalRef\n"));
    (*env)->DeleteGlobalRef(env, jgdi_handler->qlimit_info);
    jgdi_handler->qlimit_info = NULL;
    
    DEXIT;
-   return QHOST_SUCCESS;
-}
-
-static int jgdi_report_resource_value(report_handler_t* handler, const char* dominance, const char* name, const char* value, lList** alpp) {
-   jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
-   JNIEnv *env = jgdi_handler->env;
-   jstring value_obj = NULL;
-   
-   DENTER( JGDI_LAYER, "jgdi_report_resource_value" );
-   
-   if (jgdi_handler->qlimit_info == NULL) {
-      answer_list_add(alpp, "jgdi_report_resource_value: qlimit_info object not set", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QHOST_ERROR;
-   }
-   
-   value_obj = (*env)->NewStringUTF(env, value);
-
-   if (HostInfoImpl_addResourceValue(env, jgdi_handler->qlimit_info, dominance, name, value_obj, alpp) != JGDI_SUCCESS) { 
-     DEXIT;
-     return QHOST_ERROR;
-   }
-
-   DEXIT;
-   return QHOST_SUCCESS;
-}
-
-static int jgdi_report_queue_string_value(report_handler_t* handler, const char* qname, const char* name, const char *value, lList** alpp) {
-   jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
-   JNIEnv *env = jgdi_handler->env;
-   jstring value_obj = NULL;
-   char qname1[1024];
-   char name1[1024];
-   DENTER( JGDI_LAYER, "jgdi_report_queue_string_value" );
-   
-   strcpy(qname1, qname);
-   strcpy(name1, name);
-   value_obj = (*env)->NewStringUTF(env, value);
-   
-   DPRINTF(("addQueueValue: %s, %s, %s\n", qname1, name1, value));   
-   if (HostInfoImpl_addQueueValue(env, jgdi_handler->qlimit_info, qname1, name1, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
-   }
-   DEXIT;
-   return QHOST_SUCCESS;
-}
-
-static int jgdi_report_queue_ulong_value(report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList** alpp) {
-   jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
-   JNIEnv *env = jgdi_handler->env;
-   jobject value_obj = NULL;
-   DENTER( JGDI_LAYER, "jgdi_report_queue_ulong_value" );
-   
-   DPRINTF(("addQueueValue: %s, %s, %ld\n", qname, name, value));   
-   
-   jgdi_handler->result = Long_init_0(env, &value_obj, value, alpp);
-   if (jgdi_handler->result != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
-   }
-   if (HostInfoImpl_addQueueValue(env, jgdi_handler->qlimit_info, qname, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
-   }
-   DEXIT;
-   return QHOST_SUCCESS;
+   return QLIMIT_SUCCESS;
 }
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
- * Method:    execQHost
- * Signature: (Lcom/sun/grid/jgdi/monitoring/QHostOptions;Lcom/sun/grid/jgdi/monitoring/QHostResultImpl;)V
+ * Method:    getQLimit
+ * Signature: (Lcom/sun/grid/jgdi/monitoring/QLimitOptions;Lcom/sun/grid/jgdi/monitoring/QLimitResultImpl;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getQLimit
   (JNIEnv *env, jobject jgdi, jobject qlimit_options, jobject qlimit_result) {
    
    jclass    cls = NULL;
    jmethodID mid = NULL;
    jobject   sub_object = NULL;
    lList     *alp = NULL;
-   u_long32  show = 0;
    
    struct filter_def {
       const char* getter;
@@ -318,11 +367,16 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       lList *list;
    };
    
-   struct filter_def filters [] = {
+   /*
+   ** order in filters[] is important -> qlimit_output
+   */
+   struct filter_def filters[] = {
       { "getHostFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/HostFilter;", "getHosts", NULL },
-      { "getUserFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/UserFilter;", "getUsers", NULL },
       { "getResourceFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/ResourceFilter;", "getResources", NULL },
-      { "getResourceAttributeFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/ResourceAttributeFilter;", "getValueNames", NULL },
+      { "getUserFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/UserFilter;", "getUsers", NULL },
+      { "getPeFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/ParallelEnvironmentFilter;", "getPEList", NULL },
+      { "getProjectFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/ProjectFilter;", "getProjectList", NULL },
+      { "getQueueFilter", "()Lcom/sun/grid/jgdi/monitoring/filter/QueueFilter;", "getQueues", NULL },
       { NULL, NULL, NULL, NULL }
    };
    
@@ -332,7 +386,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER( JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost" );
+   DENTER( JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getQLimit" );
    
    jgdi_init_rmon_ctx(env, JGDI_QHOST_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -345,32 +399,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
    
    sge_gdi_set_thread_local_ctx(ctx);
 
-   cls = QHostOptions_find_class(env, &alp);
+   cls = QLimitOptions_find_class(env, &alp);
    if (cls == NULL) {
       ret = JGDI_ILLEGAL_STATE;
       goto error;
-   }
-   
-   /* build the show bitmask */
-   {
-      jboolean  is_show_queue = false;
-      jboolean  is_show_jobs  = false;
-      
-      if ((ret=QHostOptions_includeQueue(env, qlimit_options, &is_show_queue, &alp)) != JGDI_SUCCESS) {
-         goto error;
-      }
-      if((ret=QHostOptions_includeJobs(env, qlimit_options, &is_show_jobs, &alp)) != JGDI_SUCCESS) {
-         goto error;
-      }
-    
-      if( is_show_queue ) {
-         DPRINTF(("execQHost: show queues\n"));
-         show |= QHOST_DISPLAY_QUEUES;
-      }
-      if( is_show_jobs ) {
-         DPRINTF(("execQHost: show jobs\n"));
-         show |= QHOST_DISPLAY_JOBS;
-      }
    }
    
    for(i = 0; filters[i].getter != NULL; i++ ) {
@@ -382,7 +414,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       }
       sub_object = (*env)->CallObjectMethod(env, qlimit_options, mid);
       
-      if (test_jni_error( env, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost: Unexpected error while getting sub_object", &alp)) {
+      if (test_jni_error( env, "Java_com_sun_grid_jgdi_jni_JGDIBase_getQLimit: Unexpected error while getting sub_object", &alp)) {
          ret = JGDI_ILLEGAL_STATE;
          break;
       }
@@ -390,9 +422,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       if (sub_object != NULL) {
          if ((ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp)) != JGDI_SUCCESS) {
             break;
-         }
-         if(strcmp(filters[i].getter, "getResourceAttributeFilter") == 0) {
-            show |= QHOST_DISPLAY_RESOURCES;
          } else if (strcmp(filters[i].getter, "getHostFilter") == 0) {
             lListElem *ep = NULL;
             /* 
@@ -419,12 +448,13 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       report_handler_t *report_handler = jgdi_report_handler_create(env, qlimit_result, &alp);
       
       if (report_handler != NULL) {
-         do_qlimit(ctx, 
-                    filters[0].list,
-                    filters[1].list,
-                    filters[2].list,
-                    filters[3].list,
-                    show,
+         qlimit_output(ctx, 
+                    filters[0].list, /* -h host_list */
+                    filters[1].list, /* -l resource_match_list */
+                    filters[2].list, /* -u user_list */
+                    filters[3].list, /* -pe pe_list */
+                    filters[4].list, /* -P project_list */
+                    filters[5].list, /* -q cqueue_list */
                     &alp,
                     report_handler);
          ret = ((jgdi_report_handler_t*)report_handler->ctx)->result;
@@ -453,6 +483,3 @@ error:
    DEXIT;
    
 }
-
-
-

@@ -30,24 +30,43 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
-
+import com.sun.grid.jgdi.monitoring.LimitRuleInfoImpl;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
+ * Default Implemenation of the {@link QLimitResult} interface.
  *
- * @author richard.hierlmeier@sun.com
- * @todo   beta ??
- *         add javadoc comments
  */
-public interface QLimit {
+public class QLimitResultImpl implements QLimitResult, Serializable {
    
-   public String getRulename();
-   public List getUsers();
-   public List getProjects();
-   public List getPes();
-   public List getQueues();
-   public List getHosts();
+   private Map limitRuleInfoMap = new HashMap();
+   private List limitRuleInfoList = new ArrayList();
    
-   public List getLimits();
+   public Set getLimitRuleNames() {
+      return limitRuleInfoMap.keySet();
+   }
+   
+   public LimitRuleInfo createLimitRuleInfo(String limitRuleName) {
+      LimitRuleInfoImpl ret = new LimitRuleInfoImpl(limitRuleName);
+      limitRuleInfoMap.put(ret.getLimitRuleName(), ret);
+      return ret;
+   }
+   
+   public void addLimitRuleInfo(LimitRuleInfo limitRuleInfo) {
+      limitRuleInfoMap.put(limitRuleInfo.getLimitRuleName(), limitRuleInfo);
+   }
+   
+   public LimitRuleInfo getLimitRuleInfo(String limitRuleName) {
+      return (LimitRuleInfo)limitRuleInfoMap.get(limitRuleName);
+   }
+   
+   public List getLimitRules() {
+      return new ArrayList(limitRuleInfoMap.values());
+   }
    
 }

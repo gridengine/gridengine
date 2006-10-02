@@ -105,5 +105,11 @@
 #define MSG_HEADER_FILTER "filter"
 
 
+
+#define MSG_HEADER_RULE "limitation rule"
+#define MSG_HEADER_LIMIT "limit"
+#define MSG_HEADER_FILTER "filter"
+
+
 #endif /* __MSG_CLIENTS_COMMON_H */
 

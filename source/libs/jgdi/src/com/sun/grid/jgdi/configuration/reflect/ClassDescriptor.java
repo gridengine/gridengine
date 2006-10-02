@@ -46,6 +46,8 @@ public interface ClassDescriptor {
 
    public String [] getPropertyNames();
    public PropertyDescriptor getProperty( String name );
+   public PropertyDescriptor getPropertyByCullFieldName(int cullFieldName);
+   
    
    public int getPropertyCount();
    public PropertyDescriptor getProperty(int index);

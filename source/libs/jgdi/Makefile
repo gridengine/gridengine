@@ -37,19 +37,20 @@ JGDI_BUILD_DIR = $(JGDI_DIR)/build
 JGDI_INCLUDES = -I$(JGDI_DIR) -I$(JGDI_BUILD_DIR)
 JGDI_GENSRC_DIR = $(JGDI_BUILD_DIR)/gensrc
 JGDI_CLASSES_DIR = $(JGDI_BUILD_DIR)/classes
-JGDI_SRC   = jgdi.c         \
-             jgdi_common.c  \
-             jgdi_event.c   \
+JGDI_SRC   = jgdi.c \
+             jgdi_common.c \
+             jgdi_event.c \
              jgdi_event_gen.c \
-             jgdi_qhost.c   \
-             jgdi_qstat.c   \
+             jgdi_qhost.c \
+             jgdi_qstat.c \
+             jgdi_qlimit.c \
              jgdi_mapping.c \
              jgdi_wrapper.c \
              jgdi_logging.c
 
 JGDI_OBJS  = $(JGDI_SRC:.c=.o)
 
-JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_cqueue_qstat.c qstat_printing.c show_job.c
+JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_qlimit.c sge_cqueue_qstat.c qstat_printing.c show_job.c
 
 JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o)
 

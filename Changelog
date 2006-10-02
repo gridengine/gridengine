@@ -1,3 +1,9 @@
+AA-2006-10-02-0: Enhancem:  o jgdi qlimit 
+                            o sge_error_verror()
+                            o japi segv
+                            o copyright comments
+                 Review:    RH           
+
 RD-2006-09-29-0: Enhancem:  o category string considers limitation rule sets for
                               -u switch
                  Cleanup:   o optimized use of dstring for performance

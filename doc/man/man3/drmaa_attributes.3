@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2006/03/01 22:05:52 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2006/10/02 21:05:19 $     Revision: $Revision: 1.16 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,13 +12,13 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2006/03/01 22:05:52 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2006/10/02 21:05:19 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
 .SH NAME
 drmaa_get_attribute_names, drmaa_get_vector_attribute_names, drmaa_get_next_attr_name, 
-drmaa_release_attr_names \- DRMAA job template attributes
+drmaa_get_num_attr_names, drmaa_release_attr_names \- DRMAA job template attributes
 .PP
 .\"
 .\"
@@ -114,7 +114,9 @@ vector can be extracted using
 .M drmaa_get_next_attr_name 3 . 
 The number of names in the names string vector can be determined using
 .M drmaa_get_num_attr_names 3 .
-Note that this function is only available in the 1.0 implementation.
+Note that this function is only available in the 1.0 implementation.  In order
+to use the DRMAA 1.0 library, you must define the DRMAA_10 macro, either in your
+application directly or through a compiler flag, such as -DDRMAA_10.
 The caller is responsible for releasing the names string 
 vector returned into \fIvalues\fP using 
 .M drmaa_release_attr_names 3 .
@@ -145,6 +147,19 @@ for setting and inspecting vector attributes.
 Each time drmaa_get_next_attr_name() is called it returns into the buffer,
 \fIvalue\fP, up to \fIvalue_len\fP 
 bytes of the next entry stored in the DRMAA names string vector, \fIvalues\fP.
+With the DRMAA 0.95 library, once the names list has been exhausted,
+DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is returned.  With the DRMAA 1.0 library, once the names list
+has been exhausted, DRMAA_ERRNO_NO_MORE_ELEMENTS is returned.  In order
+to use the DRMAA 1.0 library, you must define the DRMAA_10 macro, either in your
+application directly or through a compiler flag, such as -DDRMAA_10.
+.PP
+.\" 
+.SS "drmaa_get_num_attr_names()"
+The drmaa_get_num_attr_names() returns into \fIsize\fP the number of entries
+in the DRMAA names string vector.  This function is only available in the 1.0
+implementation.  In order to use the DRMAA 1.0 library, you must define the
+DRMAA_10 macro, either in your application directly or through a compiler flag,
+such as -DDRMAA_10.
 .PP
 .\" 
 .SS "drmaa_release_attr_names()"

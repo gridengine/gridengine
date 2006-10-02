@@ -1,3 +1,6 @@
+DT-2006-10-02-0: Docs:      o Added -DDRMAA_10 info to man pages
+                 Bugtraq:   6474739
+
 AA-2006-10-02-0: Enhancem:  o jgdi qlimit 
                             o sge_error_verror()
                             o japi segv

@@ -1,0 +1,258 @@
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+
+/*  Parameters:
+      $1 = qmaster_pid
+      $2 = scheduler_pid
+      $3 = interval
+      $4 = show qmaster spooling probes
+      $5 = show incoming qmaster request probes
+*/
+
+BEGIN
+{
+   printf("%20s |%7s %7s|%4s %4s %4s|%7s %7s %7s|%7s %7s|%7s %7s %7s %7s", "Time", 
+         "#wrt", "wrt/ms", "#rep", "#gdi", "#ack", "#dsp", "dsp/ms", "#sad", 
+         "#snd", "#rcv", "#lck0", "#ulck0", "#lck1", "#ulck1");
+   snd_schedd = 0;
+   rcv = 0;
+   rep = 0;
+   ack = 0;
+   gdi = 0;
+   wrt = 0;
+   wrt_total = 0;
+   dsp = 0;
+   sad = 0;
+   dsp_total = 0;
+   lck0 = 0;
+   lck1 = 0;
+   ulck0 = 0;
+   ulck1 = 0;
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/*                                qmaster/scheduler logging                             */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/* errors, warnings and criticals only */
+pid$1::sge_log:entry, pid$2::sge_log:entry
+/arg0 == 2 || arg0 == 3 || arg0 == 4/
+{
+   printf("%20Y | %s(%d, %s)", walltimestamp, probefunc, arg0, copyinstr(arg1));
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/*                                    statistics                                        */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+profile:::tick-$3
+{
+   printf("%20Y | %7d %7d|%4d %4d %4d|%7d %7d %7d|%7d %7d|%7d %7d %7d %7d", 
+        walltimestamp, wrt, wrt_total, rep, gdi, ack, dsp, dsp_total, sad, 
+        snd_schedd, rcv, lck0, ulck0, lck1, ulck1);
+   snd_schedd = 0;
+   rcv = 0;
+   rep = 0;
+   ack = 0;
+   gdi = 0;
+   wrt = 0;
+   wrt_total = 0;
+   dsp = 0;
+   dsp_total = 0;
+   sad = 0;
+   lck0 = 0;
+   ulck0 = 0;
+   lck1 = 0;
+   ulck1 = 0;
+}
+
+/* -------------------------------------- [spooling] ---------------------------------- */
+
+pid$1::spool_write_object:entry, pid$1::spool_delete_object:entry
+{
+   self->spool_start = timestamp;
+}
+pid$1::spool_write_object:return, pid$1::spool_delete_object:return
+{ 
+   wrt_total += (timestamp - self->spool_start)/1000000;
+/*    printf("\t%s() tid %d %d", probefunc, tid, (timestamp - self->spool_start)/1000000); */
+   @q[ probefunc ] = quantize((timestamp - self->spool_start)/1000000);
+   wrt++;
+}
+
+/* -------------------------------------- [requests] ---------------------------------- */
+
+pid$1::sge_c_report:return
+{ 
+   rep++;
+}
+
+pid$1::do_c_ack:return
+{ 
+   ack++;
+}
+
+pid$1::do_gdi_request:return
+{ 
+   gdi++;
+}
+
+/* ------------------------------------- [scheduling] --------------------------------- */
+
+pid$2::dispatch_jobs:entry
+{
+   self->dispatch_start = timestamp;
+}
+pid$2::dispatch_jobs:return
+{ 
+   dsp_total += (timestamp - self->dispatch_start)/1000000;
+/*    printf("\t%s() tid %d %d %d", probefunc, tid, (timestamp - self->dispatch_start)/1000000, dsp_total); */
+   @q[ probefunc ] = quantize((timestamp - self->dispatch_start)/1000000);
+   dsp++;
+}
+
+pid$2::select_assign_debit:return
+{
+   sad++;
+}
+
+/* ---------------------------------- [synchronization] ------------------------------- */
+
+pid$1::report_list_send:entry
+{
+   self->event_target = copyinstr(arg2);
+}
+pid$1::report_list_send:return
+/self->event_target == "schedd" /
+{ 
+   snd_schedd++;
+}
+
+pid$2::ec_get:return
+{ 
+    rcv++;
+}
+
+/* --------------------------------------- [locks] ------------------------------------ */
+
+pid$1::sge_lock:entry
+{
+   self->lnum = arg0
+/*    printf("\t%s(%d, %s) tid %d %d", probefunc, arg0, copyinstr(arg2), tid, timestamp); */
+}
+pid$1::sge_lock:return
+/self->lnum == 0/
+{ 
+   lck0++;
+}
+pid$1::sge_lock:return
+/self->lnum == 1/
+{ 
+   lck1++;
+}
+
+pid$1::sge_unlock:entry
+{
+   self->lnum = arg0
+}
+pid$1::sge_unlock:return
+/self->lnum == 0/
+{ 
+   ulck0++;
+}
+pid$1::sge_unlock:return
+/self->lnum == 1/
+{ 
+   ulck1++;
+}
+
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/*                            showing probes in detail                                  */
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+/* -------------------------------------- [spooling] ---------------------------------- */
+pid$1::spool_write_object:entry
+/$4 == 1/
+{
+   printf("\t%s(%d, %s) tid %d", probefunc, arg4, copyinstr(arg3), tid);
+}
+pid$1::spool_delete_object:entry
+/$4 == 1/
+{
+   printf("\t%s(%d, %s) tid %d", probefunc, arg2, copyinstr(arg3), tid);
+}
+
+/* -------------------------------------- [requests] ---------------------------------- */
+pid$1::sge_c_report:entry
+/$5 == 1/
+{
+   printf("\t%s(%s, %s) tid %d", probefunc, copyinstr(arg0), copyinstr(arg1), tid);
+}
+
+pid$1::do_c_ack:entry
+/$5 == 1/
+{
+   printf("\t%s() tid %d", probefunc, tid);
+}
+
+/* pid$1::do_gdi_request:entry
+/$5 == 1/
+{
+   printf("\t%s() tid %d", probefunc, tid);
+} */
+
+/* can't probe static function: 
+pid$1::sge_c_gdi_copy:entry */
+pid$1::sge_c_gdi_get:entry, pid$1::sge_c_gdi_add:entry, pid$1::sge_c_gdi_del:entry, pid$1::sge_c_gdi_mod:entry
+/$5 == 1/
+{
+   printf("\t%s(%s) tid %d", probefunc, copyinstr(arg1), tid);
+}
+
+/* can't probe static functions: 
+pid$1::sge_c_gdi_trigger:entry
+pid$1::sge_c_gdi_permcheck:entry 
+/$5 == 1/
+{
+   printf("\t%s(%s) tid %d", probefunc, copyinstr(arg0), tid);
+}
+*/
+
+/* ------------------------------------- [scheduling] --------------------------------- */
+/* pid$2::select_assign_debit:entry
+{
+} */
+/* ---------------------------------- [synchronization] ------------------------------- */
+/* pid$2::ec_get:entry
+{ 
+   printf("\t%s() tid %d %d", probefunc, tid, timestamp);
+} */
+/* --------------------------------------- [locks] ------------------------------------ */

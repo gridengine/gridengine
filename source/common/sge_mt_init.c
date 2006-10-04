@@ -87,6 +87,8 @@ void sge_mt_init(void)
    feature_mt_init();
 
    sc_mt_init();
+#ifndef NEW_GDI_STATE   
    gdi_mt_init();
+#endif   
 
 } /* sge_mt_init */

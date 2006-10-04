@@ -1255,7 +1255,10 @@ int main(int argc, char *argv[]) {
    bootstrap_mt_init(); 
    feature_mt_init();
 
+#ifndef NEW_GDI_STATE
    gdi_mt_init();
+#endif
+
    sge_getme(QPING);
 
    lInit(nmv);

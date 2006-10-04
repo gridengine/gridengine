@@ -336,7 +336,7 @@ static bool
 gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state, sge_gdi_request **answer, lList **malpp)
 {
    int commlib_error = CL_RETVAL_OK;
-   sge_gdi_request *an;
+   sge_gdi_request *an = NULL;
    int status = 0;
    lListElem *map = NULL;
    lListElem *aep = NULL;
@@ -345,8 +345,12 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
    
    DENTER(GDI_LAYER, "gdi2_send_multi_sync");
 
+#ifdef NEW_GDI_STATE
+   state->first->request_id = gdi_state_get_next_request_id(ctx);
+#else
    /* the first request in the request list identifies the request uniquely */
    state->first->request_id = gdi_state_get_next_request_id();
+#endif   
 
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
@@ -993,7 +997,11 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
    DENTER(GDI_LAYER, "gdi2_receive_multi_async");
 
    /* we have to check for an ongoing gdi reqest, if there is none, we have to exit */
+#ifdef NEW_GDI_STATE
+   if ((async_gdi = gdi_state_get_last_gdi_request(ctx)) != NULL) {
+#else
    if ((async_gdi = gdi_state_get_last_gdi_request()) != NULL) {
+#endif   
       rcv_rhost = async_gdi->rhost; /* rhost is a char array */
       rcv_commproc = async_gdi->commproc; /* commproc is a char array */
       id = async_gdi->id; /* id is u_short */
@@ -1043,7 +1051,11 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
          }
+#ifdef NEW_GDI_STATE
+         gdi_state_clear_last_gdi_request(ctx); 
+#else
          gdi_state_clear_last_gdi_request(); 
+#endif         
       }
       DRETURN(false);
    }
@@ -1066,7 +1078,11 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
 
    (*answer) = free_gdi_request((*answer));
   
-   gdi_state_clear_last_gdi_request();
+#ifdef NEW_GDI_STATE
+   gdi_state_clear_last_gdi_request(ctx); 
+#else
+   gdi_state_clear_last_gdi_request(); 
+#endif         
    
    DRETURN(true);
 }
@@ -1113,7 +1129,11 @@ gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *s
    rhost = ctx->get_master(ctx, false);
 
    /* the first request in the request list identifies the request uniquely */
+#ifdef NEW_GDI_STATE
+   state->first->request_id = gdi_state_get_next_request_id(ctx);
+#else
    state->first->request_id = gdi_state_get_next_request_id();
+#endif   
 
    commlib_error = sge_send_gdi2_request(0, ctx, state->first, &gdi_request_mid, 0, alpp);
    
@@ -1154,7 +1174,11 @@ gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *s
   
 
    /* we have to store the data for the recieve....  */ 
+#ifdef NEW_GDI_STATE   
+   gdi_set_request(ctx, rhost, commproc, id, state, gdi_request_mid);
+#else
    gdi_set_request(rhost, commproc, id, state, gdi_request_mid);
+#endif   
    
    DRETURN(true);
 }  

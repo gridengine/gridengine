@@ -85,6 +85,16 @@ void sc_mt_init(void);
 #include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
 
+#ifdef NEW_GDI_STATE 
+typedef struct {
+   /* gdi request base */
+   u_long32 request_id;     /* incremented with each GDI request to have a unique request ID
+                               it is ensured that the request ID is also contained in answer */
+   gdi_send_t *async_gdi; /* used to store a async GDI request.*/
+} gdi_state_t;
+#endif
+
+
 typedef struct {
    sge_env_state_class_t* sge_env_state_obj;
    sge_prog_state_class_t* sge_prog_state_obj;
@@ -106,12 +116,19 @@ typedef struct {
    int last_commlib_error;
    sge_error_class_t *eh;
 
+   bool is_setup;
+
+#ifdef NEW_GDI_STATE
+   /* gdi_state */
+   gdi_state_t gdi_state;
+#endif   
+
 } sge_gdi_ctx_t;
 
-#ifndef GDI_STATE_OFF
+#ifndef NEW_GDI_STATE
 static void gdi_free_request(gdi_send_t **async_gdi); 
 
-static pthread_key_t   gdi_state_key;
+static pthread_key_t  gdi_state_key;
 static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 typedef struct {
@@ -203,11 +220,13 @@ u_long32 gdi_state_get_next_request_id(void)
    return gdi_state->request_id;
 }
 
+#ifdef USE_GDI_STATE
 static void gdi_state_set_made_setup(int i)
 {
    GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
    gdi_state->made_setup = i;
 }
+#endif
 
 
 int gdi_state_get_made_setup(void)
@@ -281,7 +300,75 @@ gdi_set_request(const char* rhost, const char* commproc, u_short id,
    return true;
 }
 
-#endif /* GDI_STATE_OFF */
+#else
+
+static void gdi_free_request(gdi_send_t **async_gdi); 
+
+u_long32 gdi_state_get_next_request_id(sge_gdi_ctx_class_t *ctx)
+{
+   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
+   gdi_state_t gdi_state = gdi_ctx->gdi_state;
+   gdi_state.request_id++;
+   return gdi_state.request_id;
+}
+
+gdi_send_t* gdi_state_get_last_gdi_request(sge_gdi_ctx_class_t *ctx) {
+   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
+   gdi_state_t gdi_state = gdi_ctx->gdi_state;
+   return gdi_state.async_gdi;
+}
+
+void gdi_state_clear_last_gdi_request(sge_gdi_ctx_class_t *ctx) 
+{
+   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
+   gdi_state_t gdi_state = gdi_ctx->gdi_state;
+   gdi_free_request(&(gdi_state.async_gdi));
+}
+
+static void gdi_free_request(gdi_send_t **async_gdi) 
+{
+   (*async_gdi)->out.first = free_gdi_request((*async_gdi)->out.first);
+   FREE(*async_gdi);
+}
+
+bool
+gdi_set_request(sge_gdi_ctx_class_t *ctx, const char* rhost, const char* commproc, u_short id, 
+                state_gdi_multi *out, u_long32 gdi_request_mid) 
+{
+   sge_gdi_ctx_t *gdi_ctx = (sge_gdi_ctx_t*)ctx->sge_gdi_ctx_handle;
+   gdi_state_t gdi_state = gdi_ctx->gdi_state;
+   gdi_send_t *async_gdi = NULL;
+ 
+   DENTER(TOP_LAYER, "gdi_set_request");
+
+   async_gdi = (gdi_send_t*) malloc(sizeof(gdi_send_t));
+   if (async_gdi == NULL) {
+      DRETURN(false);
+   }
+ 
+   sge_strlcpy(async_gdi->rhost, rhost, CL_MAXHOSTLEN);
+   sge_strlcpy(async_gdi->commproc, commproc, CL_MAXHOSTLEN);
+   async_gdi->id = id;
+   async_gdi->gdi_request_mid = gdi_request_mid;
+
+   /* copy gdi request and set the past in one to NULL */
+   async_gdi->out.first = out->first;
+   out->first = NULL;
+   async_gdi->out.last = out->last;
+   out->last = NULL;
+   async_gdi->out.sequence_id = out->sequence_id;
+   out->sequence_id = 0;
+ 
+   /* set context specific value */
+   if (gdi_state.async_gdi != NULL) {
+      gdi_free_request(&(gdi_state.async_gdi));
+   }
+   gdi_state.async_gdi = async_gdi;
+  
+   DRETURN(true);
+}
+
+#endif /* NEW_GDI_STATE */
 
 
 
@@ -356,6 +443,8 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz,
                               int sge_execd_port);
 static void sge_gdi_ctx_destroy(void *theState);
 
+static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup);
+static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz);
 static void sge_gdi_ctx_class_get_errors(sge_gdi_ctx_class_t *thiz, lList **alpp, bool clear_errors);
 static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, int error_quality, const char* fmt, ...);
 static sge_env_state_class_t* get_sge_env_state(sge_gdi_ctx_class_t *thiz);
@@ -581,7 +670,6 @@ static void sge_gdi_ctx_class_get_errors(sge_gdi_ctx_class_t *thiz, lList **alpp
 static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, int error_quality, const char* fmt, ...)
 {
    sge_gdi_ctx_t *gdi_ctx = NULL;
-   va_list arg_list;
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_error");
 
@@ -592,11 +680,47 @@ static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, i
    gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
       
    if (gdi_ctx->eh) {
-      va_start(arg_list, fmt);
-      gdi_ctx->eh->error(gdi_ctx->eh, error_type, error_quality, fmt, arg_list);
+      if (fmt != NULL) {
+         va_list arg_list;
+         va_start(arg_list, fmt);
+         gdi_ctx->eh->verror(gdi_ctx->eh, error_type, error_quality, fmt, arg_list);
+      }
    }   
 
    DRETURN_VOID;
+}
+
+static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup)
+{
+   sge_gdi_ctx_t *gdi_ctx = NULL;
+
+   DENTER(TOP_LAYER, "sge_gdi_ctx_set_is_setup");
+
+   if (!thiz || !thiz->sge_gdi_ctx_handle) {
+      DRETURN_VOID;
+   }   
+   
+   gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
+      
+   gdi_ctx->is_setup = is_setup;
+
+   DRETURN_VOID;
+}
+
+
+static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
+{
+   sge_gdi_ctx_t *gdi_ctx = NULL;
+
+   DENTER(TOP_LAYER, "sge_gdi_ctx_is_setup");
+
+   if (!thiz || !thiz->sge_gdi_ctx_handle) {
+      DRETURN(false);
+   }   
+   
+   gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
+      
+   DRETURN(gdi_ctx->is_setup);
 }
 
 
@@ -629,7 +753,9 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    /* TODO: profiling init, is this possible */
    sge_prof_setup();
    feature_mt_init();
+#ifndef NEW_GDI_STATE   
    gdi_init_mt();
+#endif   
    sc_mt_init();
    obj_mt_init();
    bootstrap_mt_init();
@@ -742,7 +868,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
       }
 #endif
    }    
-   
+
    DRETURN(true);
 }
 
@@ -1910,9 +2036,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
 
    DENTER(TOP_LAYER, "sge_gdi2_setup");
 
-#if 1
-   lInit(nmv);
-
+#ifdef USE_GDI_STATE 
    if (alpp != NULL && *alpp != NULL) {
      alpp_was_null = false;
    }
@@ -1923,15 +2047,23 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
    if (gdi_state_get_made_setup()) {
       if (alpp_was_null) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                 MSG_GDI_GDI_ALREADY_SETUP);
       }
-      else {
+      DRETURN(AE_ALREADY_SETUP);
+   }
+#else   
+   if (sge_gdi_ctx_is_setup(ctx)) {
+      if (alpp_was_null) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
                                  MSG_GDI_GDI_ALREADY_SETUP);
       }
       DRETURN(AE_ALREADY_SETUP);
    }
 #endif
-
    ret = sge_setup2(context_ref, progid, alpp); 
    if (ret != AE_OK) {
       DRETURN(ret);
@@ -1940,10 +2072,12 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
    ctx = *context_ref;
    ctx->prepare_enroll(ctx);
 
-#if 1
+#ifdef USE_GDI_STATE
    /* TODO: gdi_state should be part of context */
    gdi_state_set_made_setup(1);
-#endif   
+#else   
+   sge_gdi_ctx_set_is_setup(ctx, true);
+#endif
 
    DRETURN(AE_OK);
 }

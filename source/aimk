@@ -237,7 +237,7 @@ set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
-set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS -DTEST_QMASTER_GDI2 -DTEST_GDI2"
+set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS -DNEW_GDI_STATE -DTEST_QMASTER_GDI2 -DTEST_GDI2"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
@@ -1012,9 +1012,9 @@ case DARWIN_PPC:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
-   #set JAVA_BINDIR = "Commands"
+   # set JAVA_BINDIR = "Commands"
    # set JAVA_INCL = "Headers"
-   set JAVA_INCL = "include"
+   # set JAVA_INCL = "Versions/Current/Headers"
    set JAVA_SHAREDEXT = ".jnilib"
    #set JAVA_LFLAGS = ""
    unset REL
@@ -1694,6 +1694,21 @@ if ( $JNI == 1 ) then
          case lx24-ia64:
              set JAVA_LIB_ARCH = ia64
              breaksw
+         case hp11:
+             set JAVA_LIB_ARCH = PA_RISC
+             breaksw
+         case hp11-64:
+             set JAVA_LIB_ARCH = PA_RISC2.0 
+             breaksw
+         case irix65:
+             set JAVA_LIB_ARCH = "" 
+             breaksw
+         case darwin-*:
+             set JAVA_LIB_ARCH = "" 
+             breaksw
+         case tru64:
+             set JAVA_LIB_ARCH = "" 
+             breaksw
          default:
              set JAVA_LIB_ARCH = ""
              echo "WARNING: no JAVA_LIB_ARCH for architecture $buildarch"
@@ -1709,8 +1724,12 @@ if ( $JNI == 1 ) then
    #
    if ( $buildarch == aix51 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/bin/classic"
-   else if ( $buildarch == darwin-ppc ) then
+   else if ( $buildarch == darwin-* ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/../Libraries"
+   else if ( $buildarch == irix65 ) then
+     set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib32/mips"
+   else if ( $buildarch == tru64 ) then
+     set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib/alpha/classic"
    endif  
 else
    set JNI_TARGET = "NJ"
@@ -2032,7 +2051,7 @@ if ( "$MAKESTRPTIME" == 1 ) then
    cd $SOURCE
 endif
 
-if ( "$MAKESNPRINTF" == 1 ) then
+if ( "$MAKESNPRINTF" == 1 && "$JAVA" != 2 ) then
    echo ______3_r_d_p_a_r_t_y__S_N_P_R_I_N_T_F___
 
    set TPLIB = "$TPLIB libsnprintf.a"
@@ -2051,10 +2070,10 @@ if ( "$MAKESNPRINTF" == 1 ) then
       "DEPEND_FLAGS=$DEPEND_FLAGS" \
       "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
 
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
+   #if ( $status != 0 ) then
+   #   echo not done
+   #   exit 1
+   #endif
 
    cd $SOURCE
 endif

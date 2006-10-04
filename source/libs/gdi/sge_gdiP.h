@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
- 
 
 #ifdef WIN32NATIVE
 #	include "win32nativetypes.h"
@@ -45,6 +44,7 @@
 extern "C" {
 #endif
 
+#ifndef NEW_GDI_STATE
 u_long32 gdi_state_get_next_request_id(void);
 gdi_send_t* gdi_state_get_last_gdi_request(void); 
 char *gdi_state_get_cached_master_name(void);
@@ -55,9 +55,26 @@ bool        gdi_set_request(const char* rhost,
                             state_gdi_multi *out, 
                             u_long32 gdi_request_mid); 
 
+#else
+
+#include "sge_gdi_ctx.h"
+
+u_long32 gdi_state_get_next_request_id(sge_gdi_ctx_class_t *ctx);
+gdi_send_t* gdi_state_get_last_gdi_request(sge_gdi_ctx_class_t *ctx); 
+void        gdi_state_clear_last_gdi_request(sge_gdi_ctx_class_t *ctx);
+bool        gdi_set_request(sge_gdi_ctx_class_t *ctx,
+                            const char* rhost, 
+                            const char* commproc, 
+                            u_short id, 
+                            state_gdi_multi *out, 
+                            u_long32 gdi_request_mid); 
+
+#endif /* NEW_GDI_STATE */
+
 #ifdef  __cplusplus
 }
 #endif
+
 
 #endif /* __SGE_GDI_INTERN_H */
 

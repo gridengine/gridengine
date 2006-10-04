@@ -69,16 +69,25 @@ public class <%=classname%> extends <%
 
        attr = cullObj.getAttr(i);
        
+       if(attr.isHidden()) {
+           continue;
+       }
+       
        if( attr.getDefault() != null ) {
           
           String defaultValue = attr.getDefault();
           String attrName = jh.getAttrName(attr);
           String attrType = jh.getFullClassName(attr.getType());
 
-          
+          if((attr instanceof com.sun.grid.cull.CullListAttr ||
+              attr instanceof com.sun.grid.cull.CullMapListAttr ) && 
+              attrName.endsWith("List")) {
+              attrName = attrName.substring(0, attrName.length() - 4);
+          }
           if( attr instanceof com.sun.grid.cull.CullMapAttr ) {
              
              com.sun.grid.cull.CullMapAttr mapAttr =(com.sun.grid.cull.CullMapAttr)attr;
+             
              
              String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                              attrName.substring(1);
@@ -89,17 +98,24 @@ public class <%=classname%> extends <%
 
              String defaultKey = ((com.sun.grid.cull.CullMapAttr )attr).getDefaultKey();
              if(defaultKey != null) {
+              if(attr instanceof com.sun.grid.cull.CullMapListAttr ) {
 %>
+       addDefault<%=gsname%>(<%=defaultValue%>);
+<%
+              } else {
+%>              
        put<%=gsname%>("<%=defaultKey%>", <%=defaultValue%>);
 <%
-                
+              }              
              }
              
           } else {
        
           defaultValue = jh.getInitializer(attr, defaultValue);
+          String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+                             attrName.substring(1);
       %>
-       m_<%=attrName%> = <%=defaultValue%>;<%    
+       set<%=gsname%>(<%=defaultValue%>);<%    
        
           } // end of if
        }
@@ -108,6 +124,42 @@ public class <%=classname%> extends <%
     }
 
   } // end of default constructor
+  
+  // --- newInstance method with primary key field
+  
+<%
+   if(cullObj.getPrimaryKeyCount() > 0) {
+%>
+   /**
+    *  Create a new instance of <%=classname%>
+    */
+   public <%=classname%>(<%      
+     for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++ ) {
+        com.sun.grid.cull.CullAttr pkAttr = cullObj.getPrimaryKeyAttr(i);
+        String pkAttrName = jh.getAttrName(pkAttr);
+        if( i > 0 ) {
+       %>, <%
+        }
+     %><%=jh.getFullClassName(pkAttr.getType())%> <%=pkAttrName%> <%
+     }    
+%>) {
+
+<%
+     for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++ ) {
+        com.sun.grid.cull.CullAttr pkAttr = cullObj.getPrimaryKeyAttr(i);
+        String pkAttrName = jh.getAttrName(pkAttr);
+
+        String pkGsname =  Character.toUpperCase( pkAttrName.charAt(0) ) +
+                              pkAttrName.substring(1);   
+%>   
+         set<%=pkGsname%>(<%=pkAttrName%>);
+<%
+     } 
+%>
+    }
+<%
+  }
+%>
 
 <% // Iterator over all attributes and create member variable, 
     // getter and setter
@@ -322,6 +374,80 @@ public class <%=classname%> extends <%
         }
       }
       return Collections.EMPTY_LIST;
+   }
+   
+   // default methods
+   
+   /**
+    *  <p>Get the default value of the attribute <%=attrName%>.
+    *  (<%=mapAttr.getDefaultKey()%>)</p>
+    *  @return the default value of the attribute <%=attrName%>
+    *  @throws  java.lang.IllegalStateException if the default value is not set
+    */
+   public <%=valueClassName%> getDefault<%=gsname%>(int index) {
+       return get<%=gsname%>("<%=mapAttr.getDefaultKey()%>", index);
+   }
+   
+   /**
+    *  Get the number of values for  the default <code><%=mapAttr.getKeyName()%></code>
+    *  (<%=mapAttr.getDefaultKey()%>).
+    *  @param <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
+    */
+   public int getDefault<%=gsname%>Count() {
+       return get<%=gsname%>Count("<%=mapAttr.getDefaultKey()%>");
+   }
+   
+   /**
+    *  Add <code><%=mapAttr.getValueName()%></code> attribute to 
+    *  the default <code><%=mapAttr.getKeyName()%></code>  (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getValueName()%> the <%=mapAttr.getValueName()%> attribute
+    */
+   public void addDefault<%=gsname%>(<%=valueClassName%> <%=mapAttr.getValueName()%>) {
+      add<%=gsname%>("<%=mapAttr.getDefaultKey()%>", <%=mapAttr.getValueName()%>);
+   }
+   
+   /**
+    *  Set <code><%=mapAttr.getValueName()%></code> attribute for the default
+    *  <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param index  index of the <%=mapAttr.getValueName()%> attribute
+    *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
+    */
+   public void setDefault<%=gsname%>(int index, <%=valueClassName%> <%=mapAttr.getValueName()%>) {
+      set<%=gsname%>("<%=mapAttr.getDefaultKey()%>", index, <%=mapAttr.getValueName()%>);
+   }
+   
+   /**
+    *  Remove <code><%=mapAttr.getValueName()%></code> attribute for the
+    *  default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getKeyName()%>  the <%=mapAttr.getKeyName()%>
+    *  @param index the index of the <%=mapAttr.getValueName()%> attribute
+    *  @return the remove <%=mapAttr.getValueName()%> attribute of <code>null</code>
+    *          if the attribute has not been found
+    */
+   public Object removeDefault<%=gsname%>At(<%=keyClassName%> <%=mapAttr.getKeyName()%>, int index) {
+       return remove<%=gsname%>At("<%=mapAttr.getDefaultKey()%>", index);
+   }
+   
+   /**
+    *  Remove <code><%=mapAttr.getValueName()%></code> attribute from the
+    *  default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getValueName()%> the <%=mapAttr.getValueName()%>) attribute
+    *  @return <code>true</code> if the attribute has been removed
+    */
+   public boolean removeDefault<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, <%=valueClassName%> <%=mapAttr.getValueName()%>) {
+       return remove<%=gsname%>("<%=mapAttr.getDefaultKey()%>", <%=mapAttr.getValueName()%>);
+   }
+
+   /**
+    *  Remove all <%=mapAttr.getValueName()%>) attributes from 
+    *  the default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    */
+   public void removeAllDefault<%=gsname%>() {
+       removeAll<%=gsname%>("<%=mapAttr.getDefaultKey()%>");
    }
    
     

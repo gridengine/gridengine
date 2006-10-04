@@ -31,15 +31,57 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.event;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  *
  * @author  richard.hierlmeier@sun.com
  */
-public abstract class ListEvent extends ChangedObjectEvent {
+public abstract class ListEvent extends Event {
+   
+   /** the list of object */
+   private List objects;
+   
+   /** Type of the changed objects */
+   private Class objectType;
+   
+   
    
    /** Creates a new instance of AbstractListEvent */
    public ListEvent(long timestamp, int eventId, Class objectType) {
-      super(EventType.SGE_EMA_LIST, timestamp, eventId, objectType);
+      super(EventType.SGE_EMA_LIST, timestamp, eventId);
+      this.objectType = objectType;
    }
    
+   /**
+    *  Add a object
+    *
+    *  @param obj the object
+    */
+   public void add(Object obj) {
+      if( obj == null ) {
+         throw new IllegalArgumentException("obj must not be null");
+      }
+      if( !objectType.isAssignableFrom(obj.getClass())) {
+         throw new IllegalArgumentException("changedObj must instanceof " + objectType.getName() );
+      }
+      if(objects == null) {
+          objects = new LinkedList();
+      }
+      objects.add(obj);
+   }
+   
+    /**
+     * Get the objects we belongs to this list event
+     * @return list of objects
+     */
+   public List getObjects() {
+       if(objects == null) {
+           return Collections.EMPTY_LIST;
+       } else {
+           return Collections.unmodifiableList(objects);
+       }
+   }
 }

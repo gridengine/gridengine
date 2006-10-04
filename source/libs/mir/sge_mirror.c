@@ -2391,16 +2391,19 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
 
    DENTER(TOP_LAYER, "sge_mirror_update_master_list_str_key");
 
+#if 0
    ep = lGetElemStr(*list, key_nm, key);
 
    ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
-
-   /* TODO: is the code above correct, do we always have list != NULL ???
+#else   
+   /* TODO: is the code above correct, do we always have list != NULL ??? */
    if (list != NULL) {
       ep = lGetElemStr(*list, key_nm, key);
       ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
+   } else {
+      ret = SGE_EM_NOT_INITIALIZED;
    }
-   */
+#endif   
 
    DEXIT;
    return ret;

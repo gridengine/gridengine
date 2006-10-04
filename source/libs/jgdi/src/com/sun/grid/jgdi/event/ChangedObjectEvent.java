@@ -44,10 +44,9 @@ import java.util.List;
  */
 public abstract class ChangedObjectEvent extends Event {
    
-   /** List of changed objects */
-   private List changedObjects;
+   /** the new version of the changed objects */
+   private Object changedObject;
    
-   /** Type of the changed objects */
    private Class objectType;
    
    /**
@@ -71,50 +70,51 @@ public abstract class ChangedObjectEvent extends Event {
    }
    
    /**
-    *  Add a changed object to the list of changed objects
+    *  Set the new version of the changed object
     *  @param changedObj  the changed object
     *  @throws IllegalArgumentException if <code>changedObj</code> is <code>null</code>
     *  @throws IllegalArgumentException if the class object type for the event is not 
     *                                   assignable from the class of <code>changedObj</code>
     *  @see #getObjectType
     */
-   public void add(Object changedObj) {
+   public void setChangedObject(Object changedObj) {
       if( changedObj == null ) {
          throw new IllegalArgumentException("changedObj must not be null");
       }
       if( !objectType.isAssignableFrom(changedObj.getClass())) {
          throw new IllegalArgumentException("changedObj must instanceof " + objectType.getName() );
       }
-      if(changedObjects == null) {
-         changedObjects = new ArrayList();
-      }
-      changedObjects.add(changedObj);
+      this.changedObject = changedObject;
    }
    
    /**
-    *  Get a list of all object which has been changed by this event
+    *  Get the new version of the changed object which has been changed by this event
     *  @return list of changed objects
     */
-   public List getChangedObjects() {
-      if(changedObjects == null) {
-         return Collections.EMPTY_LIST;
-      } else {
-         return Collections.unmodifiableList(changedObjects);
-      }
+   public Object getChangedObject() {
+       return changedObject;
    }
 
    public String toString() {
       StringBuffer ret = new StringBuffer();
       ret.append("[");
       ret.append(super.toString());
-      Iterator iter = getChangedObjects().iterator();
-      while(iter.hasNext()) {
-         ret.append(",");
-         ret.append(iter.next().toString());
-      }
+      ret.append(", ");
+      ret.append(changedObject);
       ret.append("]");
       return ret.toString();
    }
    
-   
+   /**
+    *  Set the primary key information of the changed object into the event.
+    * 
+    *  <p>This method is called from the the native part of jgdi to fill the
+    *     primary key information into a del event</p>
+    *
+    *  @param  numKey1  first numerical primary key of the deleted object
+    *  @param  numKey2  second numerical primary key of the deleted object
+    *  @param  strKey1  first string primary key of the deleted object
+    *  @param  strKey2  second string primary key of the deleted object
+    */
+   public abstract void setPKInfo(int numKey1, int numKey2, String strKey1, String strKey2);
 }

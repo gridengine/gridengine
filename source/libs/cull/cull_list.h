@@ -107,7 +107,8 @@ enum _enum_lMultiType {
 ** JGDI specific defines
 */
 #define JGDI_ROOT_OBJ( idlname, listname, operators )
-#define JGDI_OBJ( idlname )
+#define JGDI_OBJ(idlname)
+#define JGDI_OBJ_P(idlname, operators)
 #define JGDI_MAPPED_OBJ( impl_class_name )
 #define JGDI_PRIMITIVE_OBJ(primitive_attribute)
 #define JGDI_PRIMITIVE_ROOT_OBJ(idlname, primitive_attribute, listname, operators)
@@ -152,7 +153,7 @@ enum _enum_lMultiType {
 #define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
 #define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
-#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
+#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
 #define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
 #define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
 
@@ -205,7 +206,7 @@ enum _enum_lMultiType {
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
 #define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)
-#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)
+#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)
 #define SGE_OBJECT_D(name,type,flags,def)
 #define SGE_REF_D(name,type,flags,def)
 
@@ -247,7 +248,7 @@ enum _enum_lMultiType {
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
 #define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)
-#define SGE_MAPLIST_D(name,type,flags,def,jgdi_keyname,jgdi_valuename)
+#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)
 #define SGE_OBJECT_D(name,type,flags,def)
 #define SGE_REF_D(name,type,flags,def)
 

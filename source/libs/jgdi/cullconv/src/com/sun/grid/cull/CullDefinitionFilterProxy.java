@@ -44,22 +44,16 @@ public class CullDefinitionFilterProxy extends CullDefinition {
    
    
    private CullDefinition cullDef;
-   private String [] includes;
-   private String [] excludes;
    private Set filteredCullObjectNameSet;
-   private boolean printDependencies;
-   private String objectFilter;
+   private  CullDefinitionFilter[] filters;
    
    /** Creates a new instance of CullDefinitionFilter */
-   public CullDefinitionFilterProxy(CullDefinition cullDef, String[] includes, String []excludes, String objectFilter) {
+   public CullDefinitionFilterProxy(CullDefinition cullDef, CullDefinitionFilter[] filters) {
       this.cullDef = cullDef;
-      this.includes = includes;
-      this.excludes = excludes;
-      this.objectFilter = objectFilter;
+      this.filters  = filters;
    }
 
    public void setPackageName(String packageName) {
-
       super.setPackageName(packageName);
    }
 
@@ -103,56 +97,11 @@ public class CullDefinitionFilterProxy extends CullDefinition {
 
    public java.util.Set getObjectNames() {
       if( this.filteredCullObjectNameSet == null ) {
-         Set orgSet = cullDef.getObjectNames();
+          
          filteredCullObjectNameSet = new HashSet();
-         
-         if( this.includes == null || includes.length == 0 ) {
-            filteredCullObjectNameSet.addAll(orgSet);
-         } else {
-
-            for(int i = 0; i < includes.length; i++) {
-               if( orgSet.contains(includes[i]) ) {
-                  filteredCullObjectNameSet.add(includes[i]);
-               }
-            }
-
-         }
-         if( this.excludes != null && this.excludes.length > 0 ) {
-            for(int i = 0; i < excludes.length; i++ ) {
-               filteredCullObjectNameSet.remove(excludes[i]);
-            }
-         }
-
-         if(printDependencies) {
-            logger.info("dependencies --------------------------------------");
-            logger.info("object filter = '" + objectFilter + "'" );
-         }
-         CullDependencies depend = new CullDependencies(cullDef, filteredCullObjectNameSet, objectFilter);
-         
-         String [] names = new String[filteredCullObjectNameSet.size()];
-         filteredCullObjectNameSet.toArray(names);
-         for(int i = 0; i < names.length; i++ ) {
-
-            CullDependencies.Node node = depend.getNode(names[i]);
-            if( node == null ) {
-               logger.warning("node for obj " + names[i] + " not found");
-            } else {
-
-               boolean isNeeded = node.isNeeded();
-               
-               if(printDependencies) {
-                  logger.info(node.toString());
-               } else if( logger.isLoggable(Level.FINE ) ) {
-                 logger.fine(node.toString());
-               }
-
-               if( !isNeeded ) {
-                  filteredCullObjectNameSet.remove(names[i]);
-               }
-            }
-         }
-         if(filteredCullObjectNameSet.isEmpty()) {
-            logger.warning("No cull object matches the objectFilter '" + objectFilter + "'");
+         for(int i = 0; i < filters.length; i++) {
+             Set filteredObjs = filters[i].getObjectNames(cullDef);
+             filteredCullObjectNameSet.addAll(filteredObjs);
          }
       }
       return Collections.unmodifiableSet(filteredCullObjectNameSet);
@@ -165,13 +114,4 @@ public class CullDefinitionFilterProxy extends CullDefinition {
    protected com.sun.grid.cull.CullDefinition.Elem createElem() {
       return cullDef.createElem();
    }
-
-   public boolean isPrintDependencies() {
-      return printDependencies;
-   }
-
-   public void setPrintDependencies(boolean printDependencies) {
-      this.printDependencies = printDependencies;
-   }
-   
 }

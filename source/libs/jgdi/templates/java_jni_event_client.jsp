@@ -238,6 +238,63 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
 <% 
       } // end of hasModifyOperation
    } // end of while 
+   String [] specialEvents = {
+       "QmasterGoesDown",
+       "SchedulerRun",
+       "Shutdown",
+       "JobFinish",
+       "JobUsage",
+       "JobFinalUsage",      
+   };
+   
+   for(int i = 0; i < specialEvents.length; i++) {
+
+%>
+     /**
+      *  Subscribe/Unsubscribe the <%=specialEvents[i]%> event
+      *
+      *  @param subscribe Subscribe/Unsubscribe flag
+      *  @throws JGDIException if the subcribtion is failed
+      */
+     public void subscribe<%=specialEvents[i]%>(boolean subscribe) throws JGDIException {
+        synchronized(syncObject) {
+           nativeSubscribe<%=specialEvents[i]%>(subscribe);  
+        }
+     }
+   
+     private native void nativeSubscribe<%=specialEvents[i]%>(boolean subscribe) throws JGDIException;
+   
+     /**
+      *  Set the flush time for the <%=specialEvents[i]%> event.
+      *
+      *  @param  flush     flush flag. (If <code>true</code> flushing is enabled and vice versa)
+      *  @param  interval  flush interval in seconds
+      *  @throws JGDIException on any error
+      */
+     public void set<%=specialEvents[i]%>Flush(boolean flush, int interval) throws JGDIException {
+        synchronized(syncObject) {
+           nativeSet<%=specialEvents[i]%>Flush(flush, interval);  
+        }
+     }
+     
+     private native void nativeSet<%=specialEvents[i]%>Flush(boolean flush, int interval) throws JGDIException;
+     
+     /**
+      * Get the flush time of the <%=specialEvents[i]%>  event
+      *
+      * @return the flush time of the <%=specialEvents[i]%> event in seconds
+      */
+     public int  getMod<%=specialEvents[i]%>Flush() throws JGDIException {
+        synchronized(syncObject) {
+           return nativeGet<%=specialEvents[i]%>Flush();  
+        }
+     }
+     
+     private native int  nativeGet<%=specialEvents[i]%>Flush() throws JGDIException;
+     
+     
+<%
+   } // end of for special events
 %>
 
 }

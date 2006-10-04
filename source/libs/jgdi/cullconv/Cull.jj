@@ -80,7 +80,7 @@ TOKEN :
 |
     < JGDI_ROOT_OBJ : "JGDI_ROOT_OBJ" >
 |
-    < JGDI_OBJ : "JGDI_OBJ" >
+    < JGDI_OBJ : "JGDI_OBJ" | "JGDI_OBJ_P" >
 |
     < JGDI_PRIMITIVE_ROOT_OBJ : "JGDI_PRIMITIVE_ROOT_OBJ" >
 |
@@ -299,9 +299,9 @@ void JGDINamedObject(CullObject obj) :
 {
   <JGDI_OBJ>          { obj.setType(CullObject.TYPE_SIMPLE); }
   "(" nameToken=<ID>  { obj.setIdlName( nameToken.image ); }
+  ( "," JGDIOperation(obj) ( "|" JGDIOperation(obj) )* )?
   ")"
 }
-
 
 void JGDIMapObject(CullObject obj):
 {
@@ -438,6 +438,7 @@ void CullMapListAttr(CullObject obj) :
 {
    Token typeToken;
    Token nameToken;
+   String defaultKey = null;
    String defaultValue = null;
    String keyName = null;
    String valueName = null;
@@ -454,10 +455,14 @@ void CullMapListAttr(CullObject obj) :
      attr.setType( typeToken.image );
    }
    "," CullParam(attr)   
-   [ "," defaultValue = Literal() 
+   [ "," defaultKey = Literal()
+     "," defaultValue = Literal()
      [ "," keyName = StringLiteral(false) "," valueName = StringLiteral(false) ]
    ] ")"
    {
+     if (defaultKey != null) {
+        attr.setDefaultKey( defaultKey );
+     }
      if (defaultValue != null) {    
         attr.setDefault( defaultValue );
      }

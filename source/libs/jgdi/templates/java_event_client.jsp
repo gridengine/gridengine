@@ -11,12 +11,12 @@
 %>
 package com.sun.grid.jgdi;
 
-
+ 
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.event.EventListener;
 
-/**
+/** 
  *  EventClient interface
  *
  *
@@ -58,60 +58,8 @@ import com.sun.grid.jgdi.event.EventListener;
  *           sgeE_JOB*, sgeE_NEW_SHARETREE, sgeE_QINSTANCE_*)
  *
  */
-public interface EventClient {
+public interface EventClient extends EventClientBase {
 
-   /**
-    * Get the id of this event client
-    * @return the event client id
-    */
-   public int getId();
-   
-   /**
-    *  Close this event client
-    */
-   public void close() throws JGDIException, InterruptedException;
-   
-   /**
-    *  Start the event client
-    */
-   public void start() throws InterruptedException;
-   
-   /**
-    *  Determine if the event client is running
-    *  @return <code>true</code> if the event client is running
-    */
-   public boolean isRunning();
-   
-   /**
-    *  Subscribe all events for this event client
-    *  @throws JGDIException if the subscribtion is failed
-    */
-   public void subscribeAll() throws JGDIException;
-   
-   
-   /**
-    *  Unsubscribe all events for this event client
-    *  @throws JGDIException if the unsubscribtion is failed
-    */
-   public void unsubscribeAll();
-   
-   /**
-    * Add an event listener to this event client
-    * @param lis the event listener
-    */
-   public void addEventListener(EventListener lis);
-   
-   /**
-    * Remove an event listener from this event client
-    * @param lis the event listener
-    */
-   public void removeEventListener(EventListener lis);
-   
-   /**
-    * Commit the subscribtion
-    * @throws JGDIException if the commit has failed
-    */
-   public void commit() throws JGDIException;   
 
 <%
     java.util.Iterator iter = cullDef.getObjectNames().iterator();
@@ -124,10 +72,16 @@ public interface EventClient {
       
       name = cullObj.getIdlName();
       
+//      System.out.println("name = " + name + ", cullname = " + cullObj.getName() + " " + 
+//                         (cullObj.hasAddOperation() ? "A" : "") + 
+//                         (cullObj.hasDeleteOperation() ? "D" : "") +
+//                         (cullObj.hasGetListOperation() ? "L" : "") +
+//                         (cullObj.hasGetOperation() ? "G" : "") +
+//                         (cullObj.hasModifyOperation() ? "M" : ""));
+      
       if(name == null) {
          throw new IllegalStateException("Have no idl name for " + cullObj.getName());
       }
-      
       if(cullObj.hasAddOperation()) {
 %>
      /**
@@ -242,6 +196,45 @@ public interface EventClient {
 <% 
       } // end of hasModifyOperation
    } // end of while 
-%>
 
+   String [] specialEvents = {
+       "QmasterGoesDown",
+       "SchedulerRun",
+       "Shutdown",
+       "JobFinish",
+       "JobUsage",
+       "JobFinalUsage"
+   };
+   
+   for(int i = 0; i < specialEvents.length; i++) {
+
+%>
+     /**
+      *  Subscribe/Unsubscribe the <%=specialEvents[i]%> event
+      *
+      *  @param subscribe Subscribe/Unsubscribe flag
+      *  @throws JGDIException if the subcribtion is failed
+      */
+     public void subscribe<%=specialEvents[i]%>(boolean subscribe) throws JGDIException;
+   
+   
+     /**
+      *  Set the flush time for the <%=specialEvents[i]%> event.
+      *
+      *  @param  flush     flush flag. (If <code>true</code> flushing is enabled and vice versa)
+      *  @param  interval  flush interval in seconds
+      *  @throws JGDIException on any error
+      */
+     public void set<%=specialEvents[i]%>Flush(boolean flush, int interval) throws JGDIException;
+     
+     /**
+      * Get the flush time of the <%=specialEvents[i]%>  event
+      *
+      * @return the flush time of the <%=specialEvents[i]%> event in seconds
+      */
+     public int  getMod<%=specialEvents[i]%>Flush() throws JGDIException;
+     
+<%
+   } // end of for special events
+%>
 }

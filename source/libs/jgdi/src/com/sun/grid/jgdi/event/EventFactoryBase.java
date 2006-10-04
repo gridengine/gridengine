@@ -49,4 +49,16 @@ public class EventFactoryBase {
       return new SchedulerRunEvent(timestamp, id);
    } 
    
+   public static JobFinishEvent createJobFinishEvent(long timestamp, int id) {
+       return new JobFinishEvent(timestamp, id);
+   }
+
+   public static JobUsageEvent createJobUsageEvent(long timestamp, int id) {
+       return new JobUsageEvent(timestamp, id);
+   }
+
+   public static JobFinalUsageEvent createJobFinalUsageEvent(long timestamp, int id) {
+       return new JobFinalUsageEvent(timestamp, id);
+   }
+   
 }

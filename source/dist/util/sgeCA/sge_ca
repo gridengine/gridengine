@@ -177,6 +177,46 @@ Execute()
    return $?
 }
 
+ExecRm() {
+  Execute $RM -rf $* > /dev/null 2>&1
+  files=""
+  for i in $*; do
+     if [ -f $i -o -d $i ]; then
+        files="$files $i" 
+     fi 
+  done
+  if [ "$files" != "" ]; then
+    sleep 1
+    for i in $files; do
+       Execute $RM -rf $i  > /dev/null 2>&1
+       if [ $? -ne 0 ]; then
+          return 1
+       fi
+    done
+  fi
+  return 0
+}
+
+ExecRmAsAdmin() {
+  ExecuteAsAdmin $RM -rf $*  > /dev/null 2>&1
+  files=""
+  for i in $*; do
+     if [ -f $i -o -d $i ]; then
+        files="$files $i" 
+     fi 
+  done
+  if [ "$files" != "" ]; then
+    sleep 1
+    for i in $files; do
+       ExecuteAsAdmin $RM -rf $i  > /dev/null 2>&1
+       if [ $? -ne 0 ]; then
+          return 1
+       fi
+    done
+  fi
+  return 0
+}
+
 #-------------------------------------------------------------------------
 # Change the ownership of a file or directory
 # Is only executed as root
@@ -388,7 +428,7 @@ InstallKey()
       return 1
    fi
    
-   $V5UTILBIN/adminrun $2 $CHMOD 400 $basedir/private/*
+   $V5UTILBIN/adminrun $2 $CHMOD 600 $basedir/private/*
    if [ $? -ne 0 ]; then
       PrintError "chmod for %s on private files failed (%s/\*)" $2 $basedir/private
       return 1
@@ -406,7 +446,7 @@ InstallKey()
       return 1
    fi
    
-   $V5UTILBIN/adminrun $2 $CHMOD 444 $basedir/certs/*
+   $V5UTILBIN/adminrun $2 $CHMOD 644 $basedir/certs/*
    if [ $? -ne 0 ]; then
       PrintError "chmod for %s on cert files failed (%s/\*)" $2 $basedir/certs
       return 1
@@ -532,13 +572,13 @@ MakeCAcert()
  
          TMPFILE=/tmp/sge_ca$$.tmp
          TMPFILE1=/tmp/sge_ca1$$.tmp
-         $RM -f $TMPFILE $TMPFILE1
+         ExecRm $TMPFILE $TMPFILE1
          if [ $? -ne 0 ]; then
             PrintError "Could not delete file %s" $TMPFILE
             return 1
          fi
          
-         $RM -f $TMPFILE1
+         ExecRm $TMPFILE1
          if [ $? -ne 0 ]; then
             PrintError "Could not delete file %s" $TMPFILE1
             return 1
@@ -596,7 +636,7 @@ MakeCAcert()
          status=$?
          umask 022
 
-         ExecuteAsAdmin $CHMOD 444 ${CATOP}/$CACERT
+         ExecuteAsAdmin $CHMOD 644 ${CATOP}/$CACERT
          if [ $? -ne 0 ]; then
             PrintError "chmod as %s failed (%s)" $ADMINUSER ${CATOP}/$CACERT
             return 1
@@ -647,7 +687,7 @@ MakeRandFile()
    fi
    $V5UTILBIN/adminrun $2 $OPENSSL rand -rand $RANDFILE -out $1 2048  > /dev/null 2>&1
    if [ $? -ne 0 ]; then
-       PrintError "openssl rand command as user %s failed (%s -> %s)" $2 $RANDFILE $1
+       PrintError "bootstraping of rand command as user %s failed (%s -> %s)" $2 $RANDFILE $1
        return 1
    fi
    
@@ -932,7 +972,7 @@ MakeCert()
       REQFILE=$KEYDIR/req.pem
       CERTFILE=$KEYDIR/cert.pem
       RSFILE=$KEYDIR/rand.seed
-      Execute $RM -rf $KEYDIR
+      ExecRm $KEYDIR
       ExecuteAsAdmin $MKDIR $KEYDIR
    elif [ $1 = grm_daemon ]; then
       KEYDIR=$CALOCALTOP/daemons/$3
@@ -940,7 +980,7 @@ MakeCert()
       REQFILE=$KEYDIR/req.pem
       CERTFILE=$KEYDIR/cert.pem
       RSFILE=$KEYDIR/rand.seed
-      Execute $RM -rf $KEYDIR
+      ExecRm $KEYDIR
       ExecuteAsAdmin $MKDIR $KEYDIR
    else 
       PrintError "Unknown certificate type %s" $1
@@ -977,7 +1017,7 @@ MakeCert()
       PrintError "Can't sign certificate request %s. Exit." $REQFILE 
       return 1
    fi
-   ExecuteAsAdmin $CHMOD 444 $CERTFILE
+   ExecuteAsAdmin $CHMOD 644 $CERTFILE
    if [ $? != 0 ]; then
       PrintError "chmod as %s failed (%s)" $ADMINUSER $CERTFILE
       return 1
@@ -990,7 +1030,7 @@ MakeCert()
       PrintError "chmod failed (%s)" $KEYDIR
       return 1
    fi
-   Execute $CHMOD 400 $KEYDIR/*
+   Execute $CHMOD 600 $KEYDIR/*
    if [ $? != 0 ]; then
       PrintError "chmod failed (%s/\*)" $KEYDIR
       return 1
@@ -1057,7 +1097,7 @@ RenewCA()
       PrintError "Could not move file as %s (%s -> %s)" $ADMINUSER $NEWCACERTFILE $CACERTFILE
       return 1
    fi
-   ExecuteAsAdmin $CHMOD 444 $CACERTFILE
+   ExecuteAsAdmin $CHMOD 644 $CACERTFILE
    if [ $? != 0 ]; then
       PrintError "chmod as %s failed (%s)" $ADMINUSER $CACERTFILE
       return 1
@@ -1277,13 +1317,13 @@ RenewCert()
    Execute $RM -f $TMPFILE $TMPFILE1 
 
    if [ "$1" != daemon ]; then
-      Execute $RM -rf $NEWKEYBASEDIR
+      ExecRm $NEWKEYBASEDIR
       Execute $CHMOD 500 $KEYDIR
       if [ $? != 0 ]; then
          PrintError "chmod failed (%s)" $KEYDIR
          return 1
       fi
-      Execute $CHMOD 400 $KEYDIR/*
+      Execute $CHMOD 600 $KEYDIR/*
       if [ $? != 0 ]; then
          PrintError "chmod failed (%s/\*)" $KEYDIR
          return 1
@@ -1320,14 +1360,20 @@ MakeCADirs()
       exit 1
    fi
 
-   Execute $RM -rf $CALOCALTOP > /dev/null 2>&1
-   ExecuteAsAdmin $RM -rf $CATOP > /dev/null 2>&1
-
-   if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
-      PrintError "Can't delete the CA directories\n   %s or %s" \
-                 $CATOP $CALOCALTOP
+   ExecRm $CALOCALTOP 
+   if [ -f $CALOCALTOP -o -d $CALOCALTOP ]; then
+      PrintError "Can't delete the CA local directories\n   %s" \
+                 $CALOCALTOP
       return 1
    fi
+
+   ExecRmAsAdmin $CATOP 
+   if [ -f $CATOP -o -d $CATOP ]; then
+      PrintError "Can't delete the CA directories\n   %s" \
+                 $CATOP 
+      return 1
+   fi
+
 
    $INFOTEXT "Creating %s" $CATOP
    ExecuteAsAdmin $MKDIR $CATOP

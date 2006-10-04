@@ -24,8 +24,15 @@ public class <%=name%>AddEvent extends AddEvent {
      super(timestamp, eventID, <%=jh.getClassName(cullObj)%>.class );
   } // end of default constructor
 
-  public void add(<%=jh.getClassName(cullObj)%> obj) {
-     super.add(obj);
+  public void set(<%=jh.getClassName(cullObj)%> obj) {
+     super.setChangedObject(obj);
   }
   
+  public <%=jh.getClassName(cullObj)%> get() {
+     return (<%=jh.getClassName(cullObj)%>) getChangedObject();
+  }
+  
+
+<%@include file="java_event_pkinfo.jsp"%>  
+
 }

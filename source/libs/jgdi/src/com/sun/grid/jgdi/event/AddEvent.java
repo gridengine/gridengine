@@ -36,7 +36,7 @@ package com.sun.grid.jgdi.event;
  *
  * @author  richard.hierlmeier@sun.com
  */
-public class AddEvent extends ChangedObjectEvent {
+public abstract class AddEvent extends ChangedObjectEvent {
    
    /**
     * Creates a new instance of AddEvent

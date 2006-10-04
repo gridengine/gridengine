@@ -513,6 +513,11 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
 
    DENTER( JGDI_LAYER, "obj_to_listelem");
    
+   if (obj == NULL) {
+      *elem = NULL;
+      ret = JGDI_SUCCESS;
+      goto error;
+   }
    /* --------------------------------------------------------------------------
       Quick and Dirty Hack to support Operator_Type and Manager_Type
       TODO generate this code and use the information from the cull definition
@@ -531,6 +536,7 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
       ret = JGDI_SUCCESS;
       goto error;
    }
+   
    
    if ((ret = Object_getClass(env,obj, &clazz, alpp)) != JGDI_SUCCESS) {
       goto error;
@@ -1334,6 +1340,22 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    for_each(ep, lp) {
       lList  *sub_list = lGetPosList(ep, value_field_pos);
       lListElem *sub_ep = NULL;
+      const char *key = NULL;
+      jstring key_obj = NULL;
+      int value_count = 0;
+      switch(key_field_type) {
+         case lStringT:
+            key = lGetPosString(ep, key_field_pos);
+            break;
+         case lHostT:
+            key = lGetPosHost(ep, key_field_pos);
+            break;
+         default:
+            answer_list_add(alpp, "key of a map must be of type String or Host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+      }
+      key_obj = (*env)->NewStringUTF(env, key);
       
       for_each(sub_ep, sub_list) {
          jobject value_obj = NULL;
@@ -1363,30 +1385,21 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
             DEXIT;
             return JGDI_ERROR;
          } else {
-            const char *key = NULL;
-            jstring key_obj = NULL;
-            
-            switch(key_field_type) {
-               case lStringT:
-                  key = lGetPosString(ep, key_field_pos);
-                  break;
-               case lHostT:
-                  key = lGetPosHost(ep, key_field_pos);
-                  break;
-               default:
-                  answer_list_add(alpp, "key of a map must be of type String or Host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-                  DEXIT;
-                  return JGDI_ERROR;
-            }
-            
-            key_obj = (*env)->NewStringUTF(env, key);
-            
             if ((ret=MapListPropertyDescriptor_add(env, property_descr, bean, key_obj, value_obj, alpp)) != JGDI_SUCCESS) {
                DEXIT;
                return ret;
             }
+            value_count++;
          }
       }
+      if (value_count == 0) {
+         /* we have an empty map list, add the null object */
+         if ((ret=MapListPropertyDescriptor_add(env, property_descr, bean, key_obj, NULL, alpp)) != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+      }
+      
    }
 
    DEXIT;
@@ -1626,23 +1639,24 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
                if ((ret=Iterator_next(env, value_iter, &value_obj, alpp)) != JGDI_SUCCESS) {
                   break;
                }
-               
-               if (has_cull_wrapper) {
-                  value_elem = lCreateElem(elem_descr);
-                  if ((ret=set_value_in_elem(env, value_obj, value_elem, content_field_type, content_field_pos, alpp)) != JGDI_SUCCESS ) {
-                     lFreeElem(&value_elem);
-                     break;
-                  }                  
-               } else {
-                  if ((ret=obj_to_listelem(env, value_obj, &value_elem, elem_descr, alpp)) != JGDI_SUCCESS) {
+               if (value_obj != NULL) {
+                  if (has_cull_wrapper) {
+                     value_elem = lCreateElem(elem_descr);
+                     if ((ret=set_value_in_elem(env, value_obj, value_elem, content_field_type, content_field_pos, alpp)) != JGDI_SUCCESS ) {
+                        lFreeElem(&value_elem);
+                        break;
+                     }                  
+                  } else {
+                     if ((ret=obj_to_listelem(env, value_obj, &value_elem, elem_descr, alpp)) != JGDI_SUCCESS) {
+                        break;
+                     }
+                  }
+                  if (value_elem == NULL ) {
+                     ret = JGDI_ERROR;
                      break;
                   }
+                  lAppendElem(value_list, value_elem);
                }
-               if (value_elem == NULL ) {
-                  ret = JGDI_ERROR;
-                  break;
-               }
-               lAppendElem(value_list, value_elem);
 
                if((ret=Iterator_hasNext(env, value_iter, &has_next_value, alpp)) != JGDI_SUCCESS) {
                   break;
@@ -2215,11 +2229,8 @@ jgdi_result_t set_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
 static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject *cob, lList **alpp) {
 
    lDescr*    descr;
-   jint        count;
-   int        i;
    jobject    obj;
-   lList      *tmp_list = NULL;
-   lListElem  *ep = NULL;
+   lListElem* ep;
    
    jboolean  has_cull_wrapper = false;
    jint      content_field_name = 0;
@@ -2292,7 +2303,6 @@ static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jo
    jobject   obj;
    const lDescr*   descr;
    jclass    property_class;
-   lListElem* ep = NULL;
 
    /* for primitive wrappers */
    jint content_field_name = 0;

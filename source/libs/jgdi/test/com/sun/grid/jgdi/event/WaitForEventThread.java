@@ -114,31 +114,23 @@ public class WaitForEventThread extends Thread implements EventListener {
             }
             
             if(evt.getType().equals(EventType.SGE_EMA_ADD)) {
-               
+                
                AddEvent addEvt = (AddEvent)evt;
-               
-               Iterator iter = addEvt.getChangedObjects().iterator();
-               while(iter.hasNext()) {
-                  if(this.object.equals(iter.next())) {
-                     synchronized(addEventSync) {
-                        hasAddEvent = true;
-                        addEventSync.notifyAll();
-                     }
-                  }
-               }
+              if(this.object.equals(addEvt.getChangedObject())) {
+                 synchronized(addEventSync) {
+                    hasAddEvent = true;
+                    addEventSync.notifyAll();
+                 }
+              }
             } else if (evt.getType().equals(EventType.SGE_EMA_MOD)) {
                
                ModEvent modEvt = (ModEvent)evt;
-               
-               Iterator iter = modEvt.getChangedObjects().iterator();
-               while(iter.hasNext()) {
-                  if(this.object.equals(iter.next())) {
-                     synchronized(modEventSync) {
-                        hasModEvent = true;
-                        modEventSync.notifyAll();
-                     }
-                  }
-               }
+              if(this.object.equals(modEvt.getChangedObject())) {
+                 synchronized(modEventSync) {
+                    hasModEvent = true;
+                    modEventSync.notifyAll();
+                 }
+              }
                
             } else if (evt.getType().equals(EventType.SGE_EMA_DEL)) {
                

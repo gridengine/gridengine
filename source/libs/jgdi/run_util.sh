@@ -3,6 +3,9 @@
 GRIDENGINE_SOURCE=""
 
 DIR=`dirname $0`
+DIR=`cd $DIR; pwd`
+GRIDENGINE_SOURCE=$DIR/../..
+
 . $DIR/run_util.properties
 
 if [ -r $DIR/run_util_private.properties ]; then 

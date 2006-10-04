@@ -35,7 +35,7 @@ package com.sun.grid.jgdi.event;
  *
  * @author  richard.hierlmeier@sun.com
  */
-public class ModEvent extends ChangedObjectEvent {
+public abstract class ModEvent extends ChangedObjectEvent {
    
    /** Creates a new instance of AbstractDelEvent */
    public ModEvent(long timestamp, int eventId, Class objectType) {

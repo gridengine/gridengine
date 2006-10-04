@@ -43,10 +43,7 @@
 #include "msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
-/* define RMON_USE_CTX 
-   It increases scheduler dispatch time by 60-70%.
-   Must be wrong. 
-*/
+#define RMON_USE_CTX 
 
 /* ALPHA (osf4 and tru64) have f(un)lockfile, but prototype is missing */
 #if defined (ALPHA)
@@ -176,12 +173,6 @@ static void rmon_ctx_key_destroy(void * ctx)
 int rmon_condition(int layer, int class)
 {
    int ret_val;
-#ifdef RMON_USE_CTX   
-   rmon_ctx_t *ctx = rmon_get_thread_ctx();
-   if (ctx) {
-      return ctx->is_loggable(ctx, layer, class);
-   }
-#endif   
 #define MLGETL(s, i) ((s)->ml[i]) /* for the sake of speed */
    /*
     * NOTE:

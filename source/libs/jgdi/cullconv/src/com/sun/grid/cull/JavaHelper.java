@@ -534,19 +534,27 @@ public class JavaHelper {
    
    public String getInitializer(CullAttr attr, String value) {
 
-      String fullValueClassName = getFullClassNameOrWrapper(attr.getType());
-
-      if( fullValueClassName.equals(String.class.getName()) ) {
-          value = "\"" + value + "\"";
+       String ret = value;
+       String fullValueClassName = getFullClassNameOrWrapper(attr.getType());
+       CullObject obj = cullDef.getCullObject(attr.getType());
+       if( fullValueClassName.equals(String.class.getName()) ) {
+           ret = "\"" + value + "\"";
        } else if (fullValueClassName.equals(Boolean.class.getName())) {
 
-          if (value.equals("TRUE") || value.equals("true") || value.equals("1") ) {
-             value = "true";
-          } else {
-             value = "false"; 
-          }
-       }      
-      return value;
+           if (value.equals("TRUE") || value.equals("true") || value.equals("1") ) {
+               ret = "true";
+           } else {
+               ret = "false";
+           }
+       } else if(obj != null) {
+           if(obj.getPrimaryKeyCount() > 0) {
+               CullAttr pkAttr = obj.getPrimaryKeyAttr(0);
+               ret = "new " + fullValueClassName + "Impl(" + getInitializer(pkAttr, value) + ")";
+           } else {
+               ret = "new " + fullValueClassName + "Impl()";
+           }
+       }
+       return ret;
    }
    
 }

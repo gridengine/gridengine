@@ -53,7 +53,13 @@
         String listname = obj.getListName();
 
         if(listname == null) {
-           throw new IllegalArgumentException("cull object" + obj.getName() + " has no list");
+           if(obj.getName().equals("JAT_Type")) {
+               return "JATASK";
+           } else if (obj.getName().equals("PET_Type")) {
+               return "PETASK";
+           } else {
+               throw new IllegalArgumentException("cull object" + obj.getName() + " has no list");
+           }
         }
         int si = listname.indexOf('_');
         int ei = listname.lastIndexOf('_');
@@ -215,45 +221,107 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
       gen.generate();
       
    } // end of while 
+    
+   // special events
+    
+   String [][] specialEvents = {
+       { "QmasterGoesDown", "sgeE_QMASTER_GOES_DOWN" },
+       { "SchedulerRun",    "sgeE_SCHEDDMONITOR" },
+       { "Shutdown",        "sgeE_SHUTDOWN" },
+       { "JobFinish",       "sgeE_JOB_FINISH" },
+       { "JobUsage",        "sgeE_JOB_USAGE" },
+       { "JobFinalUsage",   "sgeE_JOB_FINAL_USAGE" }
+   };
+   
+   for(int i = 0; i < specialEvents.length; i++) {
+       gen.generate(specialEvents[i][0], specialEvents[i][1]);
+       gen.generateFlush(specialEvents[i][0], specialEvents[i][1]);
+   }
 %>
 
 jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp) {
 
    switch( lGetUlong(ev, ET_type)) {
 <%
+   class EvtInfo {
+       
+       private String classname;
+       private String cullObjName;
+       private String addEvent;
+       private String modEvent;
+       private String delEvent;
+       private String listEvent;
+               
+       public EvtInfo(com.sun.grid.cull.CullObject cullObj, SubscribeMethodGenerator gen) {
+           classname = jh.getFullClassName(cullObj).replace('.', '/');
+           cullObjName = cullObj.getName();         
+           if(cullObj.hasModifyOperation()) {
+               modEvent = gen.getModEventName(cullObj);
+           }
+           if(cullObj.hasAddOperation()) {
+               addEvent = gen.getAddEventName(cullObj);
+           }
+           if(cullObj.hasGetListOperation()) {
+               addEvent = gen.getListEventName(cullObj);
+           }
+           if(cullObj.hasDeleteOperation()) {
+               delEvent = gen.getDelEventName(cullObj);
+           }
+       }
+       
+       public EvtInfo(String classname, String cullObjName, String addEvent, String modEvent, String delEvent, String listEvent) {
+           this.classname = classname;
+           this.cullObjName = cullObjName;
+           this.addEvent = addEvent;
+           this.modEvent = modEvent;
+           this.delEvent = delEvent;
+           this.listEvent = listEvent;
+       }
+       
+       public void generate() {
+      if(modEvent != null) {
+%>
+      case <%=modEvent%>:
+         return create_generic_event(env, event,"<%=classname%>", "<%=cullObjName%>", <%=cullObjName%>, SGE_EMA_MOD, ev, alpp);
+<%
+      }
+      if(listEvent != null) {
+%>      
+      case <%=listEvent%>:
+         return create_generic_event(env, event,"<%=classname%>", "<%=cullObjName%>", <%=cullObjName%>, SGE_EMA_LIST, ev, alpp);
+<%
+      }
+      if(delEvent != null) {
+%>      
+      case <%=delEvent%>:
+         return create_generic_event(env, event,"<%=classname%>", "<%=cullObjName%>", <%=cullObjName%>, SGE_EMA_DEL, ev, alpp);
+<%
+      }
+      if(addEvent != null) {
+%>      
+      case <%=addEvent%>:
+         return create_generic_event(env, event,"<%=classname%>", "<%=cullObjName%>", <%=cullObjName%>, SGE_EMA_ADD, ev, alpp);
+<%
+       }
+       } // end of generate
+   } // end of class EvtInfo
+       
+   java.util.List evtList = new java.util.LinkedList();
+   
    iter = cullDef.getObjectNames().iterator();
     while( iter.hasNext() ) {
       name = (String)iter.next();
       cullObj = cullDef.getCullObject(name); 
       
-      String eventName = gen.getEventName(cullObj);     
-      String classname = jh.getFullClassName(cullObj).replace('.', '/');
-      
-      if(cullObj.hasModifyOperation()) {
-%>
-      case <%=gen.getModEventName(cullObj)%>:
-         return create_generic_event(env, event,"<%=classname%>", "<%=cullObj.getName()%>", <%=cullObj.getName()%>, SGE_EMA_MOD, ev, alpp);
-<%
-      }
-      if(cullObj.hasGetListOperation()) {
-%>      
-      case <%=gen.getListEventName(cullObj)%>:
-         return create_generic_event(env, event,"<%=classname%>", "<%=cullObj.getName()%>", <%=cullObj.getName()%>, SGE_EMA_LIST, ev, alpp);
-<%
-      }
-      if(cullObj.hasDeleteOperation()) {
-%>      
-      case <%=gen.getDelEventName(cullObj)%>:
-         return create_generic_event(env, event,"<%=classname%>", "<%=cullObj.getName()%>", <%=cullObj.getName()%>, SGE_EMA_DEL, ev, alpp);
-<%
-      }
-      if(cullObj.hasAddOperation()) {
-%>      
-      case <%=gen.getAddEventName(cullObj)%>:
-         return create_generic_event(env, event,"<%=classname%>", "<%=cullObj.getName()%>", <%=cullObj.getName()%>, SGE_EMA_ADD, ev, alpp);
-<%
-      }
+      evtList.add(new EvtInfo(cullObj, gen));
    } // end of while      
+   
+   // generate the c code
+   iter = evtList.iterator();
+   while(iter.hasNext()) {
+       ((EvtInfo)iter.next()).generate();
+   }
+   
 %>  
       default:
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 

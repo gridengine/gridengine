@@ -6,8 +6,8 @@
             <!--Do not use Project Properties customizer when editing this file manually.-->
             <name>jgdi</name>
             <properties>
-                <property-file>build_private.properties</property-file>
-                <property-file>build.properties</property-file>
+                <property-file>../../build_private.properties</property-file>
+                <property-file>../../build.properties</property-file>
             </properties>
             <folders>
                 <source-folder>
@@ -159,7 +159,7 @@
                 <package-root>src</package-root>
                 <package-root>test</package-root>
                 <package-root>examples/src</package-root>
-                <classpath mode="compile">${junit.home}/junit.jar</classpath>
+                <classpath mode="compile">${libs.junit.classpath}</classpath>
                 <built-to>jgdi.jar</built-to>
                 <source-level>1.4</source-level>
             </compilation-unit>

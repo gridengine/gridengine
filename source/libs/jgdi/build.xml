@@ -280,7 +280,8 @@
          <!--exclude name="LIRL_Type"/-->
       </patternset>
 
-      
+     
+      <echo>cullconv.jar=${cullconv.jar}</echo> 
       <taskdef name="cullconv" classname="com.sun.grid.cull.ant.CullConvAntTask">
          <classpath location="${cullconv.jar}"/>
       </taskdef>
@@ -350,19 +351,17 @@
 
                        
          <templateconv scope="definition"
-            objectFilter="root depend"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/reflect/CullTypeMapping.java"
             templateFile="templates/java_mapping.jsp">
-            <pattern>
+            <pattern objectFilter="root depend">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
                    
          <javatemplateconv outputDir="${gensrc.dir}"
             template="templates/javamodel.jsp"
-            scope="objects"
-            objectFilter="root depend">
-            <pattern>
+            scope="objects">
+            <pattern objectFilter="root depend">
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>
@@ -370,24 +369,20 @@
          <javatemplateconv outputDir="${gensrc.dir}"
             template="templates/javamodel_impl.jsp"
             classSuffix="Impl"
-            scope="objects"
-            objectFilter="root depend">
-            <pattern>
+            scope="objects">
+            <pattern objectFilter="root depend">
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>
          
          
          <templateconv scope="definition"
-            objectFilter="root depend"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/ConfigurationFactory.java"
             templateFile="templates/java_config_factory.jsp">
-            <pattern>
+            <pattern objectFilter="root depend">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
-         
-         
          
          <javaconv outputDir="${gensrc.dir}"
          packagename="com.sun.grid.jgdi"
@@ -397,9 +392,8 @@
             classSuffix="Descriptor"
             packagename="com.sun.grid.jgdi.configuration.reflect"
             template="templates/javadescriptor.jsp"
-            scope="objects"
-            objectFilter="root depend">
-            <pattern>
+            scope="objects">
+            <pattern objectFilter="root depend">
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>
@@ -407,18 +401,16 @@
          <javatemplateconv outputDir="${gensrc.dir}"
             classSuffix="TestCase"
             scope="objects"
-            objectFilter="root"
             template="templates/java_simpletest.jsp">
-            <pattern>
+            <pattern objectFilter="root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>
 
          <templateconv scope="definition"
-            objectFilter="root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/JGDISimpleTestsuite.java"
             templateFile="templates/java_simpletestsuite.jsp">
-            <pattern>
+            <pattern objectFilter="root">
                <patternset refid="excludeTypes"/>
                <exclude name="CONF_Type"/>
                <exclude name="JB_Type"/>
@@ -427,28 +419,25 @@
 
          <!-- JGDI classes -->
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/JGDI.java"
             templateFile="templates/java_jgdi.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
                        
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/JGDIImpl.java"
             templateFile="templates/java_jni_jgdi.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
                                               
          <templateconv scope="objects"
-            objectFilter="root primitive_root"
             outputFile="${build.dir}/jgdi.c"
             templateFile="templates/c_jgdi.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
@@ -456,38 +445,34 @@
                        
          <!-- RMI ====================================== -->               
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemote.java"
             templateFile="templates/java_rmi_jgdi.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
             
                        
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteImpl.java"
             templateFile="templates/java_rmi_jgdi_impl.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
                        
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteCache.java"
             templateFile="templates/java_rmi_jgdi_cache.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
 
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteDescriptor.java"
             templateFile="templates/java_rmi_jgdi_descriptor.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <patternset refid="excludeTypes"/>
             </pattern>
          </templateconv>
@@ -498,10 +483,9 @@
             classSuffix="ListEvent"
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
-            objectFilter="root primitive_root"
             template="templates/java_listevent.jsp">
-            <pattern>
-               <exclude name="SC_Type"/>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>                           
@@ -511,10 +495,14 @@
             classSuffix="ModEvent"
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
-            objectFilter="root primitive_root"
             template="templates/java_modevent.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </javatemplateconv>                           
 
@@ -522,11 +510,14 @@
             classSuffix="AddEvent"
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
-            objectFilter="root primitive_root"
             template="templates/java_addevent.jsp">
-            <pattern>
-               <exclude name="SC_Type"/>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </javatemplateconv>                           
          
@@ -534,48 +525,66 @@
             classSuffix="DelEvent"
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
-            objectFilter="root primitive_root"
             template="templates/java_delevent.jsp">
-            <pattern>
-               <exclude name="SC_Type"/>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </javatemplateconv>                           
                                                   
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/event/EventFactory.java"
             templateFile="templates/java_event_factory.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </templateconv>
 
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/EventClient.java"
             templateFile="templates/java_event_client.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </templateconv>
          
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/EventClientImpl.java"
             templateFile="templates/java_jni_event_client.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
+               <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </templateconv>
 
          <templateconv scope="definition"
-            objectFilter="root primitive_root"
             outputFile="${build.dir}/jgdi_event_gen.c"
             templateFile="templates/c_event_client.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <exclude name="EV_Type"/>
                <patternset refid="excludeTypes"/>
+            </pattern>
+            <pattern>
+               <include name="JAT_Type"/>
+               <include name="PET_Type"/>
             </pattern>
          </templateconv>
 
@@ -583,9 +592,8 @@
             classSuffix="EventTestCase"
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
-            objectFilter="root primitive_root"
             template="templates/java_event_test.jsp">
-            <pattern>
+            <pattern objectFilter="root primitive_root">
                <exclude name="EV_Type"/>
                <exclude name="EVC_Type"/>
                <exclude name="CE_Type"/>
@@ -617,9 +625,10 @@
          templateFile="templates/c_jgdi_mapping.jsp"/>        
                        
          <templateconv scope="objects"
-         objectFilter="root depend"
-         outputFile="${build.dir}/jgdi.c"
-         templateFile="templates/c_jgdi.jsp"/>
+             outputFile="${build.dir}/jgdi.c"
+             templateFile="templates/c_jgdi.jsp">
+             <pattern objectfilter="root depend"/>
+         </templateconv>
          
          
          <cullFiles dir="${build.dir}">
@@ -651,8 +660,11 @@
             </package>
             <package name="com.sun.grid.jgdi.event">
                <include name="EventFactory"/>
-               <include name="DelEvent"/>
+               <include name="ChangedObjectEvent"/>
+               <include name="ListEvent"/>
                <include name="EventFactoryBase"/>
+               <include name="JobEvent"/>
+               <include name="JobUsageEvent"/>
             </package>
             <package name="com.sun.grid.jgdi.monitoring"/>
             <package name="com.sun.grid.jgdi.filter">
@@ -708,10 +720,22 @@
             failifexecutionfails="true"/>
 
       <exec executable="${sge.srcdir}/scripts/compilearch"
-            outputproperty="sge.src.arch"
+            outputproperty="sge.compile.arch"
+            failifexecutionfails="true">
+          <arg line="-c ${sge.arch}"/>
+      </exec>
+
+      <exec executable="${sge.srcdir}/scripts/compilearch"
+            outputproperty="sge.build.arch"
             failifexecutionfails="true">
           <arg line="-b ${sge.arch}"/>
       </exec>
+      
+      <condition property="sge.src.arch" value="${sge.build.arch}">
+          <equals arg1="${sge.compile.arch}" arg2=""/>
+      </condition>
+      <!-- else -->
+      <property name="sge.src.arch" value="${sge.compile.arch}"/>
       
       <echo message="sge.arch=${sge.arch}"/>
       <echo message="sge.src.arch=${sge.src.arch}"/> 

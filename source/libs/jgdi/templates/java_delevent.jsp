@@ -9,7 +9,6 @@
   
   String name = jh.getNonPrimitiveClassname(cullObj);
   
-  
 %>
 package <%=jh.getPackageName()%>;
 
@@ -22,93 +21,22 @@ import <%=jh.getFullClassName(cullObj)%>;
  */
 public class <%=name%>DelEvent extends DelEvent {
 
-<%
-   for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
-      attr = cullObj.getPrimaryKeyAttr(i);
-     String attrName = jh.getAttrName(attr);
-     if( attrName.endsWith("List") ) {          
-        attrName  = attrName.substring(0, attrName.length() - 4 );
-     }
-         
-%>   private <%=jh.getClassName(attr.getType())%> m_<%=attrName%>;
-<%         
-   }
-%>
-
 <% // Default constructor ----------------------------------------- %>
   public <%=name%>DelEvent(long timestamp, int eventID) {
      super(timestamp, eventID, <%=jh.getClassName(cullObj)%>.class );
   } // end of default constructor
 
-  public void add(<%=jh.getClassName(cullObj)%> obj) {
-     super.add(obj);
+  public void set(<%=jh.getClassName(cullObj)%> obj) {
+     super.setChangedObject(obj);
   }
   
-  
-  /**
-   *   Set the primary key info of the deleted <%=name%>.
-   *
-   *   This mehtod is not indented for public usage. It is called from the
-   *   native code to set the primary key info of cull event.
-   * 
-   *   @param numKey1   first numerical key
-   *   @param numKey2   second numerical key
-   *   @param strKey1   fist string key
-   *   @param strKey2   second string key
-   */
-  public void setPKInfo(int numKey1, int numKey2, String strKey1, String strKey2) {
-<%
-  {
-      int pkIndex = 1;
-      
-      for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
-         attr = cullObj.getPrimaryKeyAttr(i);
-         
-         String attrName = jh.getAttrName(attr);
-         if( attrName.endsWith("List") ) {          
-            attrName  = attrName.substring(0, attrName.length() - 4 );
-         }
-         if(pkIndex > 2) {
-            throw new IllegalStateException("cull object has more then two primary key fields");
-         } 
-         if(jh.getFullClassName(attr.getType()).equals(String.class.getName())) {
-%>      m_<%=attrName%> = strKey<%=pkIndex++%>;
-<%
-         } else if (jh.getClassName(attr.getType()).equals("int")) {
-%>      m_<%=attrName%> = numKey<%=pkIndex++%>;
-<%
-         } else {
+  public <%=jh.getClassName(cullObj)%> get() {
+     return (<%=jh.getClassName(cullObj)%>) getChangedObject();
+  }
 
-           throw new IllegalStateException("Can not handle primary key field with type " + attr.getType()); 
-         }
-      }
-  }
-%>
-   }
-   
-<%
-    // Accessor for the primary key information
-    for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
-       attr = cullObj.getPrimaryKeyAttr(i);
-       String attrName = jh.getAttrName(attr);
-       if( attrName.endsWith("List") ) {          
-          attrName  = attrName.substring(0, attrName.length() - 4 );
-       }
-       String gsmName = Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
-       
-%>     
-    /**
-    *   Get the <%=attrName%> of the deleted <%=name%>
-    *
-    *   @return the <%=attrName%> of the deleted <%=name%>
-    */
-    public <%=jh.getFullClassName(attr.getType())%> get<%=gsmName%>() {
-       return m_<%=attrName%>;   
-    }
-<%       
-    }
-%>
-   
+  
+<%@include file="java_event_pkinfo.jsp"%>    
+  
    
    /**
     *  Determine if this event has deleted <code>obj</code>

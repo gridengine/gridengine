@@ -34,12 +34,12 @@ package com.sun.grid.cull.ant;
 import com.sun.grid.cull.AbstractCullConverter;
 import com.sun.grid.cull.CullConverter;
 import com.sun.grid.cull.CullDefinition;
+import com.sun.grid.cull.CullDefinitionFilter;
 import com.sun.grid.cull.CullDefinitionFilterProxy;
-import com.sun.grid.cull.CullDependencies;
-import java.util.StringTokenizer;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.types.PatternSet;
 
 /**
  *
@@ -62,10 +62,6 @@ public abstract class ConverterDefinition {
    
    private String scope;
    
-   private String objectFilter;
-   
-   private boolean printDependencies;
-
    public String getClassname() {
       return classname;
    }
@@ -115,28 +111,28 @@ public abstract class ConverterDefinition {
       
    }
 
-   private PatternSet patternSet;
+   private List patternList = new LinkedList();
    
-   public PatternSet createPattern() {       
-      if(patternSet == null) {
-         patternSet = new PatternSet();
-      }
-      return patternSet;
+   public CullObjectFilterDefinition createPattern() { 
+       
+      CullObjectFilterDefinition ret = new CullObjectFilterDefinition();
+      patternList.add(ret);
+      return ret;
    }
    
+
    
    public CullDefinition createFilteredCullDefinition(CullDefinition cullDef) {
 
-      String [] incl = null;
-      String [] excl = null;
-      if( patternSet != null ) {
-         incl = patternSet.getIncludePatterns(project);
-         excl = patternSet.getExcludePatterns(project);
-      }
-      
-      CullDefinitionFilterProxy ret =  new CullDefinitionFilterProxy(cullDef, incl, excl, objectFilter);
-      ret.setPrintDependencies(printDependencies);
-      return ret;
+       if(patternList.isEmpty()) {
+           return cullDef;
+       } else {
+           CullDefinitionFilter [] filters = new CullDefinitionFilter[patternList.size()];
+           for(int i = 0; i < filters.length; i++) {
+               filters[i] = ((CullObjectFilterDefinition)patternList.get(i)).createFilter();
+           }
+           return new CullDefinitionFilterProxy(cullDef, filters);
+       }
    }
 
    public String getScope() {
@@ -147,20 +143,4 @@ public abstract class ConverterDefinition {
       this.scope = scope;
    }
 
-   public String getObjectFilter() {
-      return objectFilter;
-   }
-
-   public void setObjectFilter(String filter) {
-      this.objectFilter = filter;
-   }
-
-   public boolean isPrintDependencies() {
-      return printDependencies;
-   }
-
-   public void setPrintDependencies(boolean printDependencies) {
-      this.printDependencies = printDependencies;
-   }
-   
 }

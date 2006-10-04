@@ -60,7 +60,9 @@
 static pthread_mutex_t sge_evc_mutex = PTHREAD_MUTEX_INITIALIZER;
 static sge_evc_class_t* sge_evc_array[MAX_EVC_ARRAY_SIZE];
 static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *ev, lList** alpp);
-
+                                             
+static jgdi_result_t fill_job_usage_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp);
+static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp);
 #define JGDI_LAYER      TOP_LAYER
 
 
@@ -456,18 +458,8 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
    
    switch(event_type) {
 
-      case sgeE_JATASK_ADD:                 /*26 + event add array job task */
-      case sgeE_JATASK_DEL:                 /*27 + event delete array job task */
-      case sgeE_JATASK_MOD:                 /*28 + event modify array job task */
-
-      case sgeE_PETASK_ADD:                 /*29   event add a new pe task */
-      case sgeE_PETASK_DEL:                 /*30   event delete a pe task */
-
       case sgeE_JOB_MOD_SCHED_PRIORITY:     /*35 + event job modify priority */
-      case sgeE_JOB_USAGE:                  /*36 + event job online usage */
-      case sgeE_JOB_FINAL_USAGE:            /*37 + event job final usage report after job end */
-      case sgeE_JOB_FINISH:                 /*38 + job finally finished or aborted (user view) */
-
+      
       case sgeE_JOB_SCHEDD_INFO_LIST:       /*39 + send job schedd info list at registration */
       case sgeE_JOB_SCHEDD_INFO_ADD:        /*40 - event jobs schedd info added */
       case sgeE_JOB_SCHEDD_INFO_DEL:        /*41 - event jobs schedd info deleted */
@@ -486,6 +478,25 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
                                "handling event %d yet not implemented", event_type);
         ret = JGDI_ILLEGAL_STATE;
         break;
+        
+      case sgeE_JOB_FINAL_USAGE:            /*37 + event job final usage report after job end */
+           ret = EventFactoryBase_static_createJobFinalUsageEvent(env, timestamp, evtId, &event, alpp);
+           if(ret == JGDI_SUCCESS) {
+              ret = fill_job_usage_event(env, event, ev, alpp);
+           }
+           break;
+      case sgeE_JOB_USAGE:                  /*36 + event job online usage */
+           ret = EventFactoryBase_static_createJobUsageEvent(env, timestamp, evtId, &event, alpp);
+           if(ret == JGDI_SUCCESS) {
+              ret = fill_job_usage_event(env, event, ev, alpp);
+           }
+           break;
+      case sgeE_JOB_FINISH:                 /*38 + job finally finished or aborted (user view) */
+           ret = EventFactoryBase_static_createJobFinishEvent(env, timestamp, evtId, &event, alpp);
+           if(ret == JGDI_SUCCESS) {
+              ret = fill_job_event(env, event, ev, alpp);
+           }
+           break;
       case sgeE_QMASTER_GOES_DOWN:
            ret = EventFactoryBase_static_createQmasterGoesDownEvent(env, timestamp, evtId, &event, alpp);
            break;
@@ -510,17 +521,59 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
    
 }
 
+
+static jgdi_result_t fill_job_usage_event(JNIEnv *env, jobject event_obj, 
+                                            lListElem *ev, lList **alpp) {
+     jgdi_result_t ret = JGDI_SUCCESS;
+     lListElem *ep = NULL;
+     
+     DENTER(JGDI_LAYER, "fill_job_event");
+     ret = fill_job_event(env, event_obj, ev, alpp);
+     
+     /* Job usage events has a list of UA_Type in the ET_new_version */
+     for_each(ep, lGetList(ev, ET_new_version)) {
+        const char* name = lGetString(ep, UA_name);
+        jdouble value = (jdouble)lGetDouble(ep, UA_value);
+        
+        ret = JobUsageEvent_addUsage(env, event_obj, name, value, alpp);
+        if (ret != JGDI_SUCCESS) {
+           break;
+        }
+     }
+     DEXIT;
+     return ret;
+}
+
+static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp) {                                               
+     jgdi_result_t ret = JGDI_SUCCESS;
+     u_long32 job_id = lGetUlong(ev, ET_intkey);
+     u_long32 ja_task_id = lGetUlong(ev, ET_intkey2);
+     const char* pe_task_id = lGetString(ev, ET_strkey);
+     
+     DENTER(JGDI_LAYER, "fill_job_event");
+     
+     ret = JobEvent_setJobId(env, event_obj, (jint)job_id, alpp);
+     if(ret != JGDI_SUCCESS) {
+        DEXIT;
+        return ret;
+     }
+     ret = JobEvent_setTaskId(env, event_obj, (jint)ja_task_id, alpp);
+     if(ret != JGDI_SUCCESS) {
+        DEXIT;
+        return ret;
+     }
+     ret = JobEvent_setPeTaskId(env, event_obj, pe_task_id, alpp);
+     DEXIT;
+     return ret;
+}
+   
 jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* beanClassName, 
                                  const char* cullTypeName, lDescr *descr, int event_action, lListElem *ev, lList **alpp)
 {
-   jclass eventClass = NULL;
    jclass beanClass = NULL;
    jobject event = NULL;
-   jobject obj = NULL;
-   jmethodID addMid;
    jlong timestamp = 0;
    jint  evtId = 0;
-   dstring signature = DSTRING_INIT;
    lListElem *ep = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
@@ -575,46 +628,72 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
       return ret;
    }
    
-   if(event_action == SGE_EMA_DEL) {
-      ret = DelEvent_setPKInfo(env, event,
-                               lGetUlong(ev,ET_intkey),
-                               lGetUlong(ev,ET_intkey2),
-                               lGetString(ev,ET_strkey),
-                               lGetString(ev,ET_strkey2),
-                               alpp);
+   if ( event_action == SGE_EMA_LIST ) {
+      jobject  obj = NULL;
+      
+      for_each(ep, lGetList(ev, ET_new_version)) {
+         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp )) != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+         ret = ListEvent_add(env, event, obj, alpp);
+         if(ret != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+      }
+   } else {
+      jobject  obj = NULL;
+      
+      ret = ChangedObjectEvent_setPKInfo(env, event,
+                                        lGetUlong(ev,ET_intkey),
+                                        lGetUlong(ev,ET_intkey2),
+                                        lGetString(ev,ET_strkey),
+                                        lGetString(ev,ET_strkey2),
+                                        alpp);
+                                        
       if(ret != JGDI_SUCCESS) {
          DEXIT;
          return ret;
       }
-   }                            
-   
-
-   eventClass = (*env)->GetObjectClass(env, event);
-   if (test_jni_error( env, "handleEvent: GetObjectClass failed", alpp)) {   
-      DEXIT;
-      return JGDI_ERROR;
-   }
-
-   sge_dstring_sprintf(&signature, "(L%s;)V", beanClassName);
-   addMid = get_methodid(env, eventClass, "add", sge_dstring_get_string(&signature), alpp);
-   sge_dstring_free(&signature);
-   if (!addMid) {
-      DEXIT;
-      return JGDI_ERROR;
-   }
       
-   for_each(ep, lGetList(ev, ET_new_version)) {
-      if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp )) != JGDI_SUCCESS) {
-         DEXIT;
-         return ret;
+      ep =lFirst(lGetList(ev, ET_new_version));
+      
+      /* DEL events do not have a new version */
+      if (ep != NULL) {
+         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp )) != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+         ret = ChangedObjectEvent_setChangedObject(env, event, obj, alpp);
+         if(ret != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+      } else if (event_action != SGE_EMA_DEL) {
+         jclass evt_class = NULL;
+         jstring evt_classname_obj = NULL;
+         const char* evt_classname = NULL;
+         
+         ret = Object_getClass(env, obj, &evt_class, alpp);
+         if (ret != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+         
+         ret = Class_getName(env, evt_class, &evt_classname_obj, alpp);
+         if (ret != JGDI_SUCCESS) {
+            DEXIT;
+            return ret;
+         }
+         
+         evt_classname = (*env)->GetStringUTFChars(env, evt_classname_obj, 0);
+         jgdi_log_printf(env, JGDI_EVENT_LOGGER, WARNING,
+                         "generic event did not contain a new version (%s)",
+                         evt_classname);
+                         
+         (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);            
       }
-      DPRINTF(("object converted\n"));
-      (*env)->CallVoidMethod(env, event, addMid, obj);
-      if (test_jni_error(env, "handleEvent: event->add failed", alpp)) {
-         DEXIT;
-         return JGDI_ILLEGAL_STATE;
-      }
-      DPRINTF(("object added to changed object list\n"));
    }
    
    *event_obj = event;

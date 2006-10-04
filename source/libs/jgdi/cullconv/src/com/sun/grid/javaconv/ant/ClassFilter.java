@@ -201,8 +201,8 @@ public class ClassFilter {
          String [] incl = null;
          String [] excl = null;
          if( patternSet != null ) {
-            incl = patternSet.getIncludePatterns(project);
-            excl = patternSet.getExcludePatterns(project);
+            incl = patternSet.getIncludePatterns(getProject());
+            excl = patternSet.getExcludePatterns(getProject());
          }
          int index = className.lastIndexOf('.');
          String shortName = null;

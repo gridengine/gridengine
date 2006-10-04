@@ -31,53 +31,50 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.event;
 
-import com.sun.grid.jgdi.BaseTestCase;
-import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.EventClient;
-import com.sun.grid.jgdi.JGDIFactory;
-import com.sun.grid.jgdi.JobSubmitter;
-import com.sun.grid.jgdi.configuration.JobTask;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 /**
+ * Abstract base class for all job events
  *
- * @author richard.hierlmeier@sun.com
+ * @author  richard.hierlmeier@sun.com
  */
-public class SpecialEventTestCase extends BaseTestCase {
-   
-   private JGDI jgdi;
-   private JGDI jgdi_evc;
-   private EventClient evc;
-   
-   /** Creates a new instance of SpecialEventTestCase */
-   public SpecialEventTestCase(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      
-      jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
-      super.setUp();
-      logger.fine("SetUp done");
-   }
-   
-   protected void tearDown() throws Exception {
-      try {
-        evc.close();
-      } finally {
-         jgdi.close();
-         jgdi_evc.close();
-      }
-   }
-   
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( SpecialEventTestCase.class);
-      return suite;
-   }
- 
-   
+public abstract class JobEvent extends Event {
+    
+    private int jobId;
+    private int taskId;
+    private String peTaskId;
+    
+    /** Creates a new instance of JobFinishEvent */
+    public JobEvent(long timestamp, int evtId) {
+        super(EventType.SGE_EMA_TRIGGER, timestamp, evtId);
+    }
+
+    public int getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(int jobId) {
+        this.jobId = jobId;
+    }
+
+    public int getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(int taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getPeTaskId() {
+        return peTaskId;
+    }
+
+    public void setPeTaskId(String peTaskId) {
+        this.peTaskId = peTaskId;
+    }
+
+    public String toString() {
+        return super.toString() + ", jobId=" + jobId + ", taskId=" + taskId + ", pePeTaskId=" + peTaskId;
+    }
+    
+    
+    
 }

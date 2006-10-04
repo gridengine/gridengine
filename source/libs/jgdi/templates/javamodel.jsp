@@ -103,6 +103,23 @@ public interface <%=classname%> extends <%
    public Set get<%=gsname%>Keys();
    
    /**
+    *  <p>Get the default value of the attribute <%=attrName%>.
+    *  (<%=mapAttr.getDefaultKey()%>)</p>
+    *  @return the default value of the attribute <%=attrName%>
+    *  @throws  java.lang.IllegalStateException if the default value is not set
+    */
+   public <%=valueClassName%> getDefault<%=gsname%>(int index);
+   
+   /**
+    *  Get the number of values for  the default <code><%=mapAttr.getKeyName()%></code>
+    *  (<%=mapAttr.getDefaultKey()%>).
+    *  @param <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
+    */
+   public int getDefault<%=gsname%>Count();
+   
+   
+   
+   /**
     *  Get an unmodifiable list of <%=attrName%> attributes for 
     *  <code><%=mapAttr.getKeyName()%></code>.
     *
@@ -151,16 +168,62 @@ public interface <%=classname%> extends <%
    public boolean remove<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, <%=valueClassName%> <%=mapAttr.getValueName()%>);
    
    /**
-    *  Remove all <%=mapAttr.getValueName()%>) attributes.
-    */
-   public void removeAll<%=gsname%>();
-   
-   /**
     *  Remove all <code><%=mapAttr.getValueName()%></code> attributes for <code><%=mapAttr.getKeyName()%></code>.
     *
     *  @param <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
     */   
    public void removeAll<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>);
+   
+   // default methods
+   
+   /**
+    *  Add <code><%=mapAttr.getValueName()%></code> attribute to 
+    *  the default <code><%=mapAttr.getKeyName()%></code>  (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getValueName()%> the <%=mapAttr.getValueName()%> attribute
+    */
+   public void addDefault<%=gsname%>(<%=valueClassName%> <%=mapAttr.getValueName()%>);
+   
+   /**
+    *  Set <code><%=mapAttr.getValueName()%></code> attribute for the default
+    *  <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param index  index of the <%=mapAttr.getValueName()%> attribute
+    *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
+    */
+   public void setDefault<%=gsname%>(int index, <%=valueClassName%> <%=mapAttr.getValueName()%>);
+   
+   /**
+    *  Remove <code><%=mapAttr.getValueName()%></code> attribute for the
+    *  default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getKeyName()%>  the <%=mapAttr.getKeyName()%>
+    *  @param index the index of the <%=mapAttr.getValueName()%> attribute
+    *  @return the remove <%=mapAttr.getValueName()%> attribute of <code>null</code>
+    *          if the attribute has not been found
+    */
+   public Object removeDefault<%=gsname%>At(<%=keyClassName%> <%=mapAttr.getKeyName()%>, int index);
+   
+   /**
+    *  Remove <code><%=mapAttr.getValueName()%></code> attribute from the
+    *  default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    *
+    *  @param <%=mapAttr.getValueName()%> the <%=mapAttr.getValueName()%>) attribute
+    *  @return <code>true</code> if the attribute has been removed
+    */
+   public boolean removeDefault<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, <%=valueClassName%> <%=mapAttr.getValueName()%>);
+
+   /**
+    *  Remove all <%=mapAttr.getValueName()%>) attributes from 
+    *  the default <code><%=mapAttr.getKeyName()%></code> (<%=mapAttr.getDefaultKey()%>).
+    */
+   public void removeAllDefault<%=gsname%>();
+   
+   /**
+    *  Remove all <%=mapAttr.getValueName()%>) attributes.
+    */
+   public void removeAll<%=gsname%>();
+   
    
 <%
    }

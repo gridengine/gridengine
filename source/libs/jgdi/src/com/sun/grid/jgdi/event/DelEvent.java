@@ -42,18 +42,6 @@ public abstract class DelEvent extends ChangedObjectEvent {
       super(EventType.SGE_EMA_DEL, timestamp, eventId, objectType);
    }
    
-   /**
-    *  Set the primary key information of the deleted object into the del event.
-    * 
-    *  <p>This method is called from the the native part of jgdi to fill the
-    *     primary key information into a del event</p>
-    *
-    *  @param  numKey1  first numerical primary key of the deleted object
-    *  @param  numKey2  second numerical primary key of the deleted object
-    *  @param  strKey1  first string primary key of the deleted object
-    *  @param  strKey2  second string primary key of the deleted object
-    */
-   public abstract void setPKInfo(int numKey1, int numKey2, String strKey1, String strKey2);
    
    /**
     *  Determine if this event has deleted <code>obj</code>

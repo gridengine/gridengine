@@ -31,53 +31,54 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.event;
 
-import com.sun.grid.jgdi.BaseTestCase;
-import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.EventClient;
-import com.sun.grid.jgdi.JGDIFactory;
-import com.sun.grid.jgdi.JobSubmitter;
-import com.sun.grid.jgdi.configuration.JobTask;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
+ * Java Wrapper class for the JOB_USAGE event.
  *
- * @author richard.hierlmeier@sun.com
+ * @author  richard.hierlmeier@sun.com
  */
-public class SpecialEventTestCase extends BaseTestCase {
-   
-   private JGDI jgdi;
-   private JGDI jgdi_evc;
-   private EventClient evc;
-   
-   /** Creates a new instance of SpecialEventTestCase */
-   public SpecialEventTestCase(String testName) {
-      super(testName);
-   }
-   
-   protected void setUp() throws Exception {
-      
-      jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
-      super.setUp();
-      logger.fine("SetUp done");
-   }
-   
-   protected void tearDown() throws Exception {
-      try {
-        evc.close();
-      } finally {
-         jgdi.close();
-         jgdi_evc.close();
-      }
-   }
-   
-   
-   public static Test suite() {
-      TestSuite suite = new TestSuite( SpecialEventTestCase.class);
-      return suite;
-   }
- 
-   
+public class JobUsageEvent extends JobEvent {
+    
+    private Map usage;
+    
+    /** Creates a new instance of JobFinishEvent */
+    public JobUsageEvent(long timestamp, int evtId) {
+        super(timestamp, evtId);
+    }
+
+    public void addUsage(String name, double value) {
+        if(usage == null) {
+            usage = new HashMap();
+        }
+        usage.put(name, new Double(value));
+    }
+    
+    
+    public Set getLoadValueNames() {
+        if(usage == null) {
+            return Collections.EMPTY_SET;
+        } else {
+            return usage.keySet();
+        }
+    }
+    
+    public Double getLoadValue(String name) {
+        if(usage == null) {
+            throw new IllegalStateException("Have no load values");
+        }
+        return (Double)usage.get(name);
+    }
+    
+    
+    
+    public Map getUsage() {
+        if(usage == null) {
+            return Collections.EMPTY_MAP;
+        }
+        return Collections.unmodifiableMap(usage);
+    }
 }

@@ -36,7 +36,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +97,7 @@ public class JobSubmitter {
                     + arch
         };
 
-        if(logger.isLoggable(Level.FINE)) {
+       if(logger.isLoggable(Level.INFO)) {
             
            StringBuffer buf = new StringBuffer();
            for(int i = 0; i < cmd.length; i++) {
@@ -103,13 +106,15 @@ public class JobSubmitter {
                }
                buf.append(cmd[i]);
            }
-           logger.log(Level.FINE,"exec: {0}", buf.toString());
+           logger.log(Level.INFO,"exec: {0}", buf.toString());
         }
         
         Process p = Runtime.getRuntime().exec(cmd, env);
         
         Pump stdout = new Pump(p.getInputStream());
+        Pump stderr = new Pump(p.getErrorStream());
         stdout.start();
+        stderr.start();
         try {
             p.waitFor();
         } finally {
@@ -117,6 +122,11 @@ public class JobSubmitter {
             if(stdout.isAlive()) {
                 stdout.interrupt();
                 stdout.join();
+            }
+            stderr.join(1000);
+            if(stderr.isAlive()) {
+                stderr.interrupt();
+                stderr.join();
             }
         }
 
@@ -127,32 +137,60 @@ public class JobSubmitter {
                 throw new IOException("Got not output from qsub");
             }
             String line = (String)messages.get(0);
+            
+            if(line.startsWith(YOUR_JOB)) {
+                int end = line.indexOf('(', YOUR_JOB.length());
 
-            if(!line.startsWith(YOUR_JOB)) {
+                if(end < 0) {
+                    throw new IOException("Invalid output of qsub (" + line + ")");
+                }
+
+                String jobStr = line.substring(YOUR_JOB.length(), end).trim();
+
+                try {
+                    int ret = Integer.parseInt(jobStr);
+                    logger.log(Level.INFO, "job {0} submitted", jobStr);
+                    return ret;
+                } catch(NumberFormatException nfe) {
+                    throw new IOException("Invalid output of qsub (" + line + ")");
+                }
+            } else if (line.startsWith(YOUR_JOB_ARRAY)) {
+                int end = line.indexOf('.', YOUR_JOB_ARRAY.length());
+
+                if(end < 0) {
+                    throw new IOException("Invalid output of qsub (" + line + ")");
+                }
+
+                String jobStr = line.substring(YOUR_JOB_ARRAY.length(), end).trim();
+
+                try {
+                    int ret = Integer.parseInt(jobStr);
+                    logger.log(Level.INFO, "job {0} submitted", jobStr);
+                    return ret;
+                } catch(NumberFormatException nfe) {
+                    throw new IOException("Invalid output of qsub (" + line + ")");
+                }
+            } else {
                 throw new IOException("Invalid output of qsub (" + line + ")");
             }
 
-            int end = line.indexOf('(', YOUR_JOB.length());
-
-            if(end < 0) {
-                throw new IOException("Invalid output of qsub (" + line + ")");
-            }
-
-            String jobStr = line.substring(YOUR_JOB.length(), end).trim();
-
-            try {
-                int ret = Integer.parseInt(jobStr);
-                logger.log(Level.INFO, "job {0} submitted", jobStr);
-                return ret;
-            } catch(NumberFormatException nfe) {
-                throw new IOException("Invalid output of qsub (" + line + ")");
-            }
         } else {
-            throw new IOException("qsub exited with status " + p.exitValue());
+            List messages = stderr.getOutput();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            
+            pw.println("qsub exited with status " + p.exitValue());
+            Iterator iter = messages.iterator();
+            while(iter.hasNext()) {
+                pw.println(iter.next());
+            }
+            pw.close();
+            throw new IOException(sw.getBuffer().toString());
         }
     }
     
     private final static String YOUR_JOB  ="Your job ";
+    private final static String YOUR_JOB_ARRAY = "Your job-array ";
     
     private static Map archMap = new HashMap();
     

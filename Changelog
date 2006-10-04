@@ -1,3 +1,7 @@
+RH-2006-09-26-0: Enhancem:  o some missing events for jgdi implemented
+                            o rmon_condition does not use rmon context
+                 Review     AA
+
 AA-2006-10-04-0: Enhancem:  o gdi_state part of context
                             o aimk additional java target fixes, NEW_GDI_STATE define
                  Review:    RD

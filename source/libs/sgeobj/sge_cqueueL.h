@@ -155,20 +155,20 @@ LISTDEF(CQ_Type)
    SGE_MAP_D(CQ_terminate_method, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "terminateMethod")
    SGE_MAP_D(CQ_initial_state, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "default", "hostname", "initialState") 
 
-   SGE_MAPLIST_D(CQ_pe_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "pe")
-   SGE_MAPLIST_D(CQ_ckpt_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "checkpoint")
+   SGE_MAPLIST_D(CQ_pe_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "pe")
+   SGE_MAPLIST_D(CQ_ckpt_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "checkpoint")
 
-   SGE_MAPLIST_D(CQ_owner_list, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "owner")
-   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "acl")   
-   SGE_MAPLIST_D(CQ_xacl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "acl")
+   SGE_MAPLIST_D(CQ_owner_list, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "owner")
+   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")   
+   SGE_MAPLIST_D(CQ_xacl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")
 
-   SGE_MAPLIST_D(CQ_projects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "project")       
-   SGE_MAPLIST_D(CQ_xprojects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "project")    
+   SGE_MAPLIST_D(CQ_projects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")       
+   SGE_MAPLIST_D(CQ_xprojects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")    
 
-   SGE_MAPLIST_D(CQ_load_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "loadThreshold") 
-   SGE_MAPLIST_D(CQ_suspend_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "suspendThreshold")
-   SGE_MAPLIST_D(CQ_consumable_config_list, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "consumable") 
-   SGE_MAPLIST_D(CQ_subordinate_list, ASOLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "hostname", "subordinate")
+   SGE_MAPLIST_D(CQ_load_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "loadThreshold") 
+   SGE_MAPLIST_D(CQ_suspend_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "suspendThreshold")
+   SGE_MAPLIST_D(CQ_consumable_config_list, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "consumable") 
+   SGE_MAPLIST_D(CQ_subordinate_list, ASOLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "subordinate")
 
    SGE_MAP_D(CQ_qtype, AQTLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "qType")  
 

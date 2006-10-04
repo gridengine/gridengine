@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#if 0
+#define QEVENT_SHOW_ALL
+#endif
+
 #if defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
 #include <sys/time.h>
 #endif
@@ -692,9 +696,9 @@ static char* qevent_get_event_name(int event) {
 
 static void qevent_testsuite_mode(void *evc_context) 
 {
-   u_long32 timestamp;
    lListElem *event_client = NULL;
 #ifndef QEVENT_SHOW_ALL
+   u_long32 timestamp;
    lCondition *where =NULL;
    lEnumeration *what = NULL;
  
@@ -735,7 +739,11 @@ static void qevent_testsuite_mode(void *evc_context)
 #endif   
 
 #ifdef QEVENT_SHOW_ALL
-   sge_mirror_subscribe(event_context, event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
+#ifdef TEST_GDI2
+   sge_mirror_subscribe(evc, event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
+#else
+   sge_mirror_subscribe(NULL, event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
+#endif
 #else /* QEVENT_SHOW_ALL */
    where = NULL; 
    what =  lIntVector2What(JB_Type, job_nm); 
@@ -788,8 +796,8 @@ static void qevent_testsuite_mode(void *evc_context)
          continue;
       }
 
-      timestamp = sge_get_gmt();
 #ifndef QEVENT_SHOW_ALL
+      timestamp = sge_get_gmt();
       fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="sge_U32CFormat")\n",
               Global_jobs_running,Global_jobs_registered,sge_u32c(timestamp));
       fflush(stdout);  

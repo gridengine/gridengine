@@ -295,6 +295,7 @@ public class TemplateFactory {
       }
       
       String str = buf.toString().trim();
+      System.out.println("static code:" + str);
       StringTokenizer st = new StringTokenizer(str," ");
       if( st.hasMoreTokens() ) {
          String token = st.nextToken();

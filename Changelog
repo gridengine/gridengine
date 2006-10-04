@@ -1,3 +1,6 @@
+RH-2006-10-04-0: Enhancem:  o Merge compilearch from maintrunc
+                 Review:    AA
+                 
 DT-2006-10-02-0: Docs:      o Added -DDRMAA_10 info to man pages
                             - Merged from Maintrunk DT-2006-10-02-0
                  Bugtraq:   6474739

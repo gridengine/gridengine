@@ -117,12 +117,12 @@ case $buildarch in
       BUILDARCH=UNICOS_TS_IEEE
       TARGET_BITS=TARGET_32BIT
       ;;
-   darwin-x86)
-      BUILDARCH=DARWIN_X86
+   darwin)
+      BUILDARCH=DARWIN
       TARGET_BITS=TARGET_32BIT
       ;;
-   darwin-ppc)
-      BUILDARCH=DARWIN_PPC
+   darwin-x86)
+      BUILDARCH=DARWIN_X86
       TARGET_BITS=TARGET_32BIT
       ;;
    fbsd-alpha)

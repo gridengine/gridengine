@@ -348,6 +348,38 @@ int sge_gdi_add_job(void *context,
       }
    }
 
+   if (job_verify_name(jep, alpp, "this job")) {
+      DRETURN(STATUS_EUNKNOWN);
+   }
+
+   /*
+    * Is the max. size of array jobs exceeded?
+    */
+   {
+      u_long32 max_aj_tasks = mconf_get_max_aj_tasks();
+      if (max_aj_tasks > 0) {
+         lList *range_list = lGetList(jep, JB_ja_structure);
+         u_long32 submit_size = range_list_get_number_of_ids(range_list);
+      
+         if (submit_size > max_aj_tasks) {
+            ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, sge_u32c(max_aj_tasks)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN(STATUS_EUNKNOWN);
+         } 
+      }
+   }
+
+   { /* JB_context contains a raw context list, which needs to be transformed into
+        a real context. For that, we have to take out the raw context and add it back
+        again, processed. */
+   
+      lList* temp = NULL;
+      lXchgList(jep, JB_context, &temp); 
+      set_context(temp, jep);
+      lFreeList(&temp);
+   }
+
 /* NEED A LOCK FROM HERE ON */
    {
       object_description *object_base = object_type_get_object_description();
@@ -375,39 +407,6 @@ int sge_gdi_add_job(void *context,
          DRETURN(STATUS_EUNKNOWN);
       }
 
-      if (job_verify_name(jep, alpp, "this job")) {
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-     
-      /*
-       * Is the max. size of array jobs exceeded?
-       */
-      {
-         u_long32 max_aj_tasks = mconf_get_max_aj_tasks();
-         if (max_aj_tasks > 0) {
-            lList *range_list = lGetList(jep, JB_ja_structure);
-            u_long32 submit_size = range_list_get_number_of_ids(range_list);
-         
-            if (submit_size > max_aj_tasks) {
-               ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, sge_u32c(max_aj_tasks)));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-               DRETURN(STATUS_EUNKNOWN);
-            } 
-         }
-      }
-      
-      { /* JB_context contains a raw context list, which needs to be transformed into
-           a real context. For that, we have to take out the raw context and add it back
-           again, processed. */
-      
-         lList* temp = NULL;
-         lXchgList(jep, JB_context, &temp); 
-         set_context(temp, jep);
-         lFreeList(&temp);
-      }
-   
       /* check max_jobs */
       if (job_list_register_new_job(*object_base[SGE_TYPE_JOB].list, mconf_get_max_jobs(), 0)) {/*read*/
          INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, sge_u32c(mconf_get_max_jobs())));
@@ -3361,7 +3360,7 @@ static int job_verify_name(const lListElem *job, lList **answer_list,
 *  RESULT
 *     bool - true if account string is valid 
 *
-*  MT-NOTE: sge_resolve_host() is MT safe 
+*  MT-NOTE: job_has_valid_account_string() is MT safe 
 *
 ******************************************************************************/
 bool job_has_valid_account_string(const char *name, lList **answer_list) {

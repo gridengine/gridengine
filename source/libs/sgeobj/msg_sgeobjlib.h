@@ -86,7 +86,7 @@
 #define MSG_PARSE_NOALLOCATTRLIST                        _MESSAGE(64065, _("unable to alloc space for attrib. list"))
 #define MSG_PARSE_NOALLOCATTRELEM                        _MESSAGE(64068, _("unable to alloc space for attrib. element"))
 #define MSG_NONE_NOT_ALLOWED_S                           _MESSAGE(64079, _("The keyword \"none\" is not allowed in "SFQ))
-#define MSG_NOTEXISTING_ATTRIBUTE_SS                     _MESSAGE(64080, _("Referenced complex attribute "SFQ" does not exist in "SFN))
+#define MSG_NOTEXISTING_ATTRIBUTE_SS                     _MESSAGE(64080, _(SFQ" references not existing complex attribute "SFQ))
 #define MSG_WRONGTYPE_ATTRIBUTE_SS                       _MESSAGE(64081, _("String, CString, ReString or Host attributes are not allowed in "SFQ": " SFQ))
 #define MSG_US_INVALIDUSERNAME                           _MESSAGE(64083, _("userset contains invalid (null) user name"))
 
@@ -350,5 +350,6 @@
 #define MSG_LIMITRULE_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
 #define MSG_LIMITRULE_NORULES                    _MESSAGE(64377, _("limitation rule set has no rules"))
 #define MSG_LIMITRULE_NONAME                     _MESSAGE(64378, _("limitation rule set has no name"))
+#define MSG_CENTRYREFINLIRS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in limitation rule set "SFQ"."))
 
 #endif /* __MSG_SGEOBJLIB_H */

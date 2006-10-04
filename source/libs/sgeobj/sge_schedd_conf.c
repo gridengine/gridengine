@@ -724,6 +724,12 @@ bool sconf_is_centry_referenced(const lListElem *centry)
       lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
 
       ret = ((centry_ref != NULL)? true : false);
+
+      if (!ret) {
+         if (load_formula_is_centry_referenced(lGetString(sc_ep, SC_load_formula), centry)) {
+            ret = true;
+         }
+      }
    }
 
    sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);

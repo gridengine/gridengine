@@ -403,7 +403,8 @@ int sge_del_centry(void *context, lListElem *centry, lList **answer_list,
             if (tmp_centry != NULL) {
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *object_base[SGE_TYPE_CQUEUE].list,
-                        *object_base[SGE_TYPE_EXECHOST].list)) {
+                        *object_base[SGE_TYPE_EXECHOST].list,
+                        *object_base[SGE_TYPE_LIRS].list)) {
                   if (sge_event_spool(context, answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {

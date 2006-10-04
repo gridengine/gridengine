@@ -1682,7 +1682,6 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
 
    DENTER(TOP_LAYER, "sge_chck_mod_perm_user");
 
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
    /* check permissions of user */
    switch (target) {
@@ -1707,6 +1706,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
    case SGE_HGROUP_LIST:
    case SGE_LIRS_LIST:
       /* user must be a manager */
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1714,10 +1714,12 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
          DEXIT;
          return 1;
       }
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       break;
 
    case SGE_USERSET_LIST:
       /* user must be a operator */
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
       if (!manop_is_operator(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEOPERATOR_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
@@ -1725,6 +1727,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
          DEXIT;
          return 1;
       }
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       break;
 
    case SGE_JOB_LIST:
@@ -1751,12 +1754,10 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
    default:
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       DEXIT;
       return 1;
    }
 
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    DEXIT;
    return 0;
 }
@@ -1874,7 +1875,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       }
       break;
    default:
-      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       DEXIT;

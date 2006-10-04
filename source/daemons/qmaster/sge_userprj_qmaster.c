@@ -480,15 +480,17 @@ sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring
 
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
-   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    /* shall auto users be deleted again? */
    if (auto_user_delete_time > 0) {
       lListElem *user, *next;
       object_description *object_base = object_type_get_object_description();
-      lList **master_user_list = object_base[SGE_TYPE_USER].list;
+      lList **master_user_list;
       u_long32 now = sge_get_gmt();
       u_long32 next_delete = now + auto_user_delete_time;
+
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      master_user_list = object_base[SGE_TYPE_USER].list;
 
       /*
        * Check each user for deletion time. We don't use for_each()
@@ -526,9 +528,8 @@ sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring
             }
          }
       }
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
 }

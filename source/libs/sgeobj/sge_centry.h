@@ -61,7 +61,8 @@ centry_create(lList **answer_list,
 bool
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list);
+                     const lList *master_exechost_list,
+                     const lList *master_lirs_list);
 
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, 
@@ -120,6 +121,8 @@ int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
 
 bool
 validate_load_formula(const char *formula, lList **answer_list, lList *centry_list, const char *name);
+
+bool load_formula_is_centry_referenced(const char *load_formula, const lListElem *centry);
 
 #endif /* __SGE_CENTRY_H */
 

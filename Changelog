@@ -1,3 +1,10 @@
+RD-2006-10-04-0: Bugfix:    o Added reference check for consumable in limitaition rule set
+                            o Added reference check for consumable in load_fomula
+                            o Optimized qmaster locking
+                 Bugtraq:   6477176
+                 Issue:     2104
+                 Review:    JG
+
 RH-2006-09-26-0: Enhancem:  o some missing events for jgdi implemented
                             o rmon_condition does not use rmon context
                  Review     AA

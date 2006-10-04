@@ -50,6 +50,7 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_object.h"
+#include "sgeobj/sge_limit_rule.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -383,59 +384,73 @@ centry_create(lList **answer_list, const char *name)
 bool 
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
-                     const lList *master_exechost_list)
+                     const lList *master_exechost_list,
+                     const lList *master_lirs_list)
 {
    bool ret = false;
+   const char *centry_name = lGetString(centry, CE_name);
 
    DENTER(CENTRY_LAYER, "centry_is_referenced");
+
+   if (sconf_is_centry_referenced(centry)) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                              ANSWER_QUALITY_INFO, 
+                              MSG_CENTRYREFINSCONF_S, centry_name);
+      ret = true;
+   }
    if (!ret) {
-      const char *centry_name = lGetString(centry, CE_name);
+      lListElem *cqueue = NULL; 
 
-      if (!ret) {
-         lListElem *cqueue = NULL; 
+      for_each(cqueue, master_cqueue_list) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
 
-         for_each(cqueue, master_cqueue_list) {
-            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-            lListElem *qinstance = NULL;
-
-            for_each(qinstance, qinstance_list) {
-               if (qinstance_is_centry_referenced(qinstance, centry)) {
-                  const char *name = lGetString(qinstance, QU_full_name);
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                          ANSWER_QUALITY_INFO, 
-                                          MSG_CENTRYREFINQUEUE_SS,
-                                          centry_name, name);
-                  ret = true;
-                  break;
-               }
-            }
-         }
-      }
-      if (!ret) {
-         lListElem *host = NULL;    /* EH_Type */
-
-         for_each(host, master_exechost_list) {
-            if (host_is_centry_referenced(host, centry)) {
-               const char *host_name = lGetHost(host, EH_name);
-
+         for_each(qinstance, qinstance_list) {
+            if (qinstance_is_centry_referenced(qinstance, centry)) {
+               const char *name = lGetString(qinstance, QU_full_name);
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_INFO, 
-                                       MSG_CENTRYREFINHOST_SS,
-                                       centry_name, host_name);
+                                       MSG_CENTRYREFINQUEUE_SS,
+                                       centry_name, name);
                ret = true;
                break;
             }
          }
+         if (ret) {
+            break;
+         }
       }
-      if (!ret) {
-         if (sconf_is_centry_referenced(centry)) {
+   }
+   if (!ret) {
+      lListElem *host = NULL;    /* EH_Type */
+
+      for_each(host, master_exechost_list) {
+         if (host_is_centry_referenced(host, centry)) {
+            const char *host_name = lGetHost(host, EH_name);
+
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
-                                    MSG_CENTRYREFINSCONF_S, centry_name);
+                                    MSG_CENTRYREFINHOST_SS,
+                                    centry_name, host_name);
             ret = true;
+            break;
          }
-      } 
+      }
    }
+   if (!ret) {
+      lListElem *lirs = NULL;
+      for_each(lirs, master_lirs_list) {
+         if (sge_centry_referenced_in_lirs(lirs, centry)) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, 
+                                    MSG_CENTRYREFINLIRS_SS,
+                                    centry_name, lGetString(lirs, LIRS_name));
+            ret = true;
+            break;
+         }
+      }
+   } 
+      
    DRETURN(ret);
 }
 
@@ -1347,7 +1362,7 @@ bool validate_load_formula(const char *load_formula, lList **answer_list, lList 
             } 
             else {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, 
-                              fact, name));
+                              name, fact));
                answer_list_add(answer_list, SGE_EVENT, 
                                STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                ret = false;
@@ -1375,6 +1390,68 @@ bool validate_load_formula(const char *load_formula, lList **answer_list, lList 
       }
       sge_free_saved_vars(term_context);
    }
+
+   DRETURN(ret);
+}
+
+/****** sge_centry/load_formula_is_centry_referenced() *************************
+*  NAME
+*     load_formula_is_centry_referenced() -- search load formula for centry reference
+*
+*  SYNOPSIS
+*     bool load_formula_is_centry_referenced(const char *load_formula, const 
+*     lListElem *centry) 
+*
+*  FUNCTION
+*     This function searches for a centry reference in the defined algebraic
+*     expression
+*
+*  INPUTS
+*     const char *load_formula - load formula expression
+*     const lListElem *centry  - centry to search for
+*
+*  RESULT
+*     bool - true if referenced
+*            false if not referenced
+*
+*  NOTES
+*     MT-NOTE: load_formula_is_centry_referenced() is MT safe 
+*
+*******************************************************************************/
+bool load_formula_is_centry_referenced(const char *load_formula, const lListElem *centry)
+{
+   bool ret = false;
+   const char *term_delim = "+-";
+   const char *term, *next_term;
+   struct saved_vars_s *term_context = NULL;
+   const char *centry_name = lGetString(centry, CE_name);
+
+   DENTER(TOP_LAYER, "load_formula_is_centry_referenced");
+
+   if (load_formula == NULL) {
+      DRETURN(ret);
+   }
+
+   next_term = sge_strtok_r(load_formula, term_delim, &term_context);
+   while ((term = next_term) && ret == false) {
+      const char *fact_delim = "*";
+      const char *fact;
+      struct saved_vars_s *fact_context = NULL;
+      
+      next_term = sge_strtok_r(NULL, term_delim, &term_context);
+
+      fact = sge_strtok_r(term, fact_delim, &fact_context);
+      if (fact != NULL) {
+         if (strchr(fact, '$')) {
+            fact++;
+         }
+         if (strcmp(fact, centry_name) == 0) {
+            ret = true;
+         }
+      }
+      sge_free_saved_vars(fact_context);
+   }
+   sge_free_saved_vars(term_context);
 
    DRETURN(ret);
 }

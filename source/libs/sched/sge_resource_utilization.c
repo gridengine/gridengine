@@ -606,7 +606,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
          queue = malloc(sizeof(char)*size);
          queue = strncpy(queue, queue_instance, size);
       } else {
-         queue = strdup(lGetString(gel, JG_qname));
+         queue = strdup(queue_instance);
       }
       
       for_each(lirs, a->lirs_list) {

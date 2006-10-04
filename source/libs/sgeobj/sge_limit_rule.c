@@ -352,9 +352,10 @@ bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool
             lListElem *centry = centry_list_locate(master_centry_list, name);
 
             if (centry == NULL) {
-               sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, name, SGE_LIRS_NAME);
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING);
-               continue;
+               sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, SGE_LIRS_NAME, name);
+               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
             }
 
             lSetString(limit, LIRL_name, lGetString(centry, CE_name));
@@ -713,7 +714,8 @@ lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const
    int mods = 0;
    const char* hostname = lGetHost(granted, JG_qhostname);
    const char* username = lGetString(job, JB_owner);
-   char* qname = NULL;
+   char *qname = NULL;
+   const char *queue_instance = lGetString(granted, JG_qname);
    const char* project = lGetString(job, JB_project);
    char *at_sign = NULL; 
 
@@ -723,11 +725,15 @@ lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const
       DRETURN(0);
    }
 
-   qname = strdup(lGetString(granted, JG_qname));
    /* remove the host name part of the queue instance name */
-   if ((at_sign = strchr(qname, '@'))) {
-      at_sign[0] = '\0';
-   } 
+   at_sign = strchr(queue_instance, '@');
+   if (at_sign != NULL ) {
+      int size = at_sign - queue_instance;
+      qname = malloc(sizeof(char)*size);
+      qname = strncpy(qname, queue_instance, size);
+   } else {
+      qname = strdup(queue_instance);
+   }
 
    rule = lirs_get_matching_rule(lirs, username, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
 
@@ -742,6 +748,7 @@ lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const
 
       sge_dstring_free(&rue_name);
    }
+   
    FREE(qname);
 
    DRETURN(mods); 
@@ -1259,7 +1266,32 @@ limit_rule_filter_match(lListElem *filter, int filter_type, const char *value, l
    DRETURN(ret);
 }
 
-bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, lList *acl_list) {
+/****** sge_limit_rule/sge_user_is_referenced_in_lirs() ************************
+*  NAME
+*     sge_user_is_referenced_in_lirs() -- search for user reference in lirs 
+*
+*  SYNOPSIS
+*     bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, 
+*     lList *acl_list) 
+*
+*  FUNCTION
+*     Search for a user reference in the limitation rule sets
+*
+*  INPUTS
+*     const lList *lirs - limitation rule set list
+*     const char *user  - user to search
+*     lList *acl_list   - acl list for user resolving
+*
+*  RESULT
+*     bool - true if user was found
+*            false if user was not found
+*
+*  NOTES
+*     MT-NOTE: sge_user_is_referenced_in_lirs() is MT safe 
+*
+*******************************************************************************/
+bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, lList *acl_list)
+{
    bool ret = false;
    lListElem *ep;
 
@@ -1279,3 +1311,61 @@ bool sge_user_is_referenced_in_lirs(const lList *lirs, const char *user, lList *
    return ret;
 }
 
+/****** sge_limit_rule/sge_centry_referenced_in_lirs() *************************
+*  NAME
+*     sge_centry_referenced_in_lirs() -- search for a centry reference in
+*                                        a limitation rule set
+*
+*  SYNOPSIS
+*     bool sge_centry_referenced_in_lirs(const lListElem *lirs, const lListElem 
+*     *centry) 
+*
+*  FUNCTION
+*     This function search a centry reference in a limitation rule set
+*
+*  INPUTS
+*     const lListElem *lirs   - limitation rule set
+*     const lListElem *centry - complex entry
+*
+*  RESULT
+*     bool - true if found
+*            false if not found
+*
+*  NOTES
+*     MT-NOTE: sge_centry_referenced_in_lirs() is MT safe 
+*
+*******************************************************************************/
+bool sge_centry_referenced_in_lirs(const lListElem *lirs, const lListElem *centry)
+{
+   bool ret = false;
+   const char *centry_name = lGetString(centry, CE_name);
+   lListElem *rule;
+
+   DENTER(TOP_LAYER, "sge_centry_referenced_in_lirs");
+
+   for_each(rule, lGetList(lirs, LIRS_rule)) {
+      lListElem *limit;
+      for_each(limit, lGetList(rule, LIR_limit)) {
+         const char *limit_name = lGetString(limit, LIRL_value);
+         DPRINTF(("limit name %s\n", limit_name));
+         if (strchr(limit_name, '$') != NULL) {
+            /* dynamical limit */
+            if (load_formula_is_centry_referenced(limit_name, centry)) {
+               ret = true;
+               break;
+            }
+         } else {
+            /* static limit */
+            if (strcmp(limit_name, centry_name) == 0) {
+               ret = true;
+               break;
+            }
+         }
+      }
+      if (ret) {
+         break;
+      }
+   }
+
+   DRETURN(ret);
+}

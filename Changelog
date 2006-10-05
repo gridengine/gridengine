@@ -1,3 +1,6 @@
+RD-2006-10-05-0: Bugfix:    fixed locking issue introduced by RD-2006-10-04-0
+                 Review:    JG
+
 RD-2006-10-04-0: Bugfix:    o Added reference check for consumable in limitaition rule set
                             o Added reference check for consumable in load_fomula
                             o Optimized qmaster locking

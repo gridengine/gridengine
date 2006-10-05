@@ -364,7 +364,6 @@ int sge_gdi_add_job(void *context,
          if (submit_size > max_aj_tasks) {
             ERROR((SGE_EVENT, MSG_JOB_MORETASKSTHAN_U, sge_u32c(max_aj_tasks)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EUNKNOWN);
          } 
       }

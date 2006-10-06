@@ -90,9 +90,6 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
 #endif
 
 #endif 
-static auth_result_t get_crypted_password(const char* username, char* buffer, size_t size, 
-                                error_handler_t *error_handler);
-
 
                       
 auth_result_t do_pam_authenticate(const char* service, const char *username, 
@@ -282,8 +279,7 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
 }
 #endif
 
-static auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
-
+auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
                                 error_handler_t *error_handler) {
                      
 #if defined(AIX43) || defined(AIX51)
@@ -320,55 +316,6 @@ static auth_result_t get_crypted_password(const char* username, char* buffer, si
 
 }
 
-
-
-auth_result_t do_shadow_authentication(const char* username, const char* password, 
-                             int* uid, int *gid,
-                             error_handler_t *error_handler) {
-   
-   auth_result_t ret = JUTI_AUTH_SUCCESS;
-   char crypted_password[BUFSIZE];
-   char *new_crypted_password = NULL;
-   struct passwd *pwres = getpwnam(username);
-      
-   if(pwres == NULL) {
-      ret = JUTI_AUTH_FAILED;
-      error_handler->error(MSG_JUTI_USER_UNKNOWN_S, username);
-      goto error;
-   }
-#ifdef DEBUG
-   printf("user found in passwd\n");
-#endif
-   ret = get_crypted_password(username, crypted_password, BUFSIZE, error_handler);
-   if(ret != JUTI_AUTH_SUCCESS) {
-      goto error;
-   }
-#ifdef DEBUG
-   printf("    crypted password: %s\n", crypted_password);
-#endif
-#if !defined(INTERIX)
-   new_crypted_password = crypt(password, crypted_password);
-#endif
-   if (new_crypted_password == NULL) {
-      error_handler->error(MSG_JUTI_CRYPT_FAILED_S, strerror(errno));
-      ret = JUTI_AUTH_ERROR;
-   } else {
-#ifdef DEBUG
-      printf("new crypted password: %s\n", new_crypted_password);
-#endif
-      if(strcmp(crypted_password, new_crypted_password) == 0) {
-         ret = JUTI_AUTH_SUCCESS;
-      } else {
-         error_handler->error(MSG_JUTI_INVALID_PASSWORD);
-         ret = JUTI_AUTH_FAILED;
-      }
-   }
-   
-   *uid = pwres->pw_uid;
-   *gid = pwres->pw_gid;
-error:
-   return ret;
-}
 
 
 static struct termios init_set;

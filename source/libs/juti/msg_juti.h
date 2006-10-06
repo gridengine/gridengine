@@ -36,7 +36,14 @@
 extern "C" {
 #endif
 
-#include "basis_types.h"
+#ifndef WINDOWS
+#  include "basis_types.h"
+#else
+   /* save string format non-quoted */
+#  define SFN  "%-.100s"
+#  define _(x)              (x)
+#  define _MESSAGE(x,y)     (y)
+#endif
 
 #define MSG_JUTI_PAM_NOT_AVAILABLE    _MESSAGE(213001, _("pam not available"))
 #define MSG_JUTI_USER_UNKNOWN_S       _MESSAGE(213002, _("user "SFN" unknown")) 
@@ -51,6 +58,7 @@ extern "C" {
 #define MSG_AUTUSER_UNKNOWN_AUTH_METHOD_S _MESSAGE(213104, _("Unknown <auth_method> "SFN))
 #define MSG_AUTHUSER_NO_PW_ENTRY_SS       _MESSAGE(213105, _("password: can not get password entry of user "SFN": "SFN))
 #define MSG_AUTHUSER_ERROR                _MESSAGE(213106, _("Error: "))
+#define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213106, _("Wrong user or password"))
 #ifdef	__cplusplus
 }
 #endif

@@ -1931,7 +1931,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    else
       set WINCFLAGS = "/MT"
    endif
-   set WINCFLAGS = "${WINCFLAGS} /D "_CONSOLE" /W3 /WX /nologo /c /Wp64 /EHsc"
+   set WINCFLAGS = "${WINCFLAGS} /D "WINDOWS" /D "_CONSOLE" /W3 /WX"
+   set WINCFLAGS = "${WINCFLAGS} /nologo /c /Wp64 /EHsc"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"

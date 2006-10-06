@@ -36,6 +36,9 @@
 extern "C" {
 #endif
 
+#ifdef WINDOWS
+typedef int gid_t;
+#endif
 
 typedef struct error_handler_str error_handler_t;
 
@@ -51,12 +54,9 @@ typedef enum {
 
 auth_result_t do_pam_authenticate(const char* service, const char *username, const char *password,
                         error_handler_t *error_handler);
-                        
-auth_result_t do_shadow_authentication(const char* username, const char* password,
-                             int* uid, int *gid,
-                             error_handler_t *error_handler);
-
 int juti_getgrouplist(const char *uname, gid_t agroup, gid_t **groups_res, int *grpcnt);
+auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
+                                   error_handler_t *error_handler);
 
 void setEcho(int flag);
 

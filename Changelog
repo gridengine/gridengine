@@ -1,3 +1,6 @@
+RH-2006-10-06-0: Enhancem:  juti: GridCA.renewCaCertificate implemented
+                 Review:    MD
+
 RD-2006-10-05-0: Bugfix:    fixed locking issue introduced by RD-2006-10-04-0
                  Review:    JG
 

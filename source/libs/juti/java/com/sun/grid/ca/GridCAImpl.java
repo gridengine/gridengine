@@ -399,6 +399,17 @@ public class GridCAImpl implements GridCA {
         return ret;
     }
     
+    public void renewCaCertificate(int days) throws GridCAException {
+        LOGGER.entering("GridCAImpl", "renewCaCertificate");
+        Expect pb = createProcess();
+        pb.command().add("-renew_ca");
+        pb.command().add("-days");
+        pb.command().add(Integer.toString(days));
+
+        execute(pb);
+
+        LOGGER.exiting("GridCAImpl", "renewCaCertificate");
+    }
     
     private File createTempFile(String prefix, String suffix) throws GridCAException {
         try {

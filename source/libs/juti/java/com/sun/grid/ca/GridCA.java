@@ -108,10 +108,18 @@ public interface GridCA {
      *  @param daemon  name of the daemon
      *  @param days      validity of the new certificate in days
      *  @return the renewed certificate
-     *  @throws CAException if the certificate can not be renewed
+     *  @throws GridCAException if the certificate can not be renewed
      */
     public X509Certificate renewDaemonCertificate(String daemon, int days) throws GridCAException;
 
+    
+    /**
+     *  Renew the certificate of the certificate authority
+     *
+     *  @param days  validity of the new certificate in days
+     *  @throws GridCAException if the certificate can not be renewed
+     */
+    public void renewCaCertificate(int days) throws GridCAException;    
     
     /**
      * Create private key and certificate for a grm daemon.

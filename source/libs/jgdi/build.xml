@@ -795,6 +795,10 @@
          <sequential>
             <nbjpdastart name="Debug test" addressproperty="jpda.address" transport="dt_socket">
                <classpath refid="test.classpath"/>
+               <sourcepath>
+                  <path refid="jgdi.srcpath"/>
+                  <path refid="cullconv.srcpath"/>
+               </sourcepath>               
             </nbjpdastart>            
             <junit fork="yes" dir="${basedir}" showoutput="true">
                <jvmarg line="${sge.jvmargs}"/>

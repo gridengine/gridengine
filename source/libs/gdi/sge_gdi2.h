@@ -84,7 +84,7 @@ sge_gdi2_multi_sync(sge_gdi_ctx_class_t *ctx, lList **alpp, int mode, u_long32 t
 int sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, 
                     int *tag, int synchron, u_long32 for_request_mid, u_long32* mid);
 
-int sge_gdi2_send_any_request(int synchron, u_long32 *mid, sge_gdi_ctx_class_t *ctx, 
+int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
                               const char *rhost, const char *commproc, int id,
                               sge_pack_buffer *pb, 
                               int tag, u_long32  response_id, lList **alpp);
@@ -144,14 +144,6 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
 
 void general_communication_error(const cl_application_error_list_elem_t* commlib_error);
 int gdi_log_flush_func(cl_raw_list_t* list_p);
-void dump_rcv_info(cl_com_message_t** message,
-                   cl_com_endpoint_t** sender);
-void dump_snd_info(char* un_resolved_hostname,
-                   char* component_name,
-                   unsigned long component_id,
-                   cl_xml_ack_type_t ack_type,
-                   unsigned long tag,
-                   unsigned long* mid);
 
 #ifdef DEBUG_CLIENT_SUPPORT
 void gdi_rmon_print_callback_function(const char *progname,

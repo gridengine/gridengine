@@ -208,12 +208,12 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
          /* send all stuff packed during processing to execd */
 #ifdef TEST_QMASTER_GDI2
          sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-         sge_gdi2_send_any_request(0, NULL, ctx, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp);
+         sge_gdi2_send_any_request(ctx, 0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp);
 #else
          sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
 #endif         
          MONITOR_MESSAGES_OUT(monitor); 
-         answer_list_output (&alp);
+         answer_list_output(&alp);
       }
       clear_packbuffer(&pb);
    }

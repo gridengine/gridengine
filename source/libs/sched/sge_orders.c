@@ -561,7 +561,7 @@ int sge_send_job_start_orders(void *evc_context, order_t *orders) {
    sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
 #endif
 
-   DENTER(TOP_LAYER, "sge_send_orders2master");
+   DENTER(TOP_LAYER, "sge_send_job_start_orders");
 
 #ifdef TEST_GDI2
    if(!ctx->gdi_receive_multi_async(ctx, &answer, &malp, false)) {

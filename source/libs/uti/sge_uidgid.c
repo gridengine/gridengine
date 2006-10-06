@@ -944,7 +944,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       {
          if (use_qsub_gid) {
             if (setgid(pw->pw_gid)) {
-               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, sge_u32c(pw->pw_uid));
+               sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U, sge_u32c(pw->pw_gid));
                return 1;
             }
          }
@@ -956,7 +956,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    } else {
       if (use_qsub_gid) {
          if (setgid(pw->pw_gid)) {
-            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , sge_u32c(pw->pw_uid));
+            sprintf(err_str, MSG_SYSTEM_SETGIDFAILED_U , sge_u32c(pw->pw_gid));
             return 1;
          }
       }

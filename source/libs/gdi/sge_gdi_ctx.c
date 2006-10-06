@@ -364,6 +364,20 @@ gdi_set_request(sge_gdi_ctx_class_t *ctx, const char* rhost, const char* commpro
       gdi_free_request(&(gdi_state.async_gdi));
    }
    gdi_state.async_gdi = async_gdi;
+
+#if 0
+   /* AA: async GDI DEBUG */
+   if (gdi_state.async_gdi) {
+      sge_gdi_request *req = gdi_state.async_gdi->out.first;
+      int count = 0;
+      while (req) {
+         printf("***************request %d is: (%s/%s/%d) request_id="sge_u32"\n",
+                 count, req->host, req->commproc, req->id, req->request_id);
+         count++;
+         req=req->next;
+      }           
+   }   
+#endif   
   
    DRETURN(true);
 }
@@ -1946,8 +1960,6 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    char  user[128] = "";
    const char *sge_root = NULL;
    const char *sge_cell = NULL;
-   const char *sge_qmaster_port_str = NULL;
-   const char *sge_execd_port_str = NULL;
    u_long32 sge_qmaster_port = 0;
    u_long32 sge_execd_port = 0;
    sge_error_class_t *eh = NULL;
@@ -1969,16 +1981,8 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
       DRETURN(AE_ERROR);
    }
    sge_cell = getenv("SGE_CELL")?getenv("SGE_CELL"):DEFAULT_CELL;
-   if ((sge_qmaster_port_str = getenv("SGE_QMASTER_PORT")) == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "SGE_QMASTER_PORT is NULL");
-      DRETURN(AE_ERROR);
-   }
-   if ((sge_execd_port_str = getenv("SGE_EXECD_PORT")) == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "SGE_EXECD_PORT is NULL");
-      DRETURN(AE_ERROR);
-   }
-   sge_qmaster_port = atoi(sge_qmaster_port_str);
-   sge_execd_port = atoi(sge_execd_port_str);
+   sge_qmaster_port = sge_get_qmaster_port();
+   sge_execd_port = sge_get_execd_port();
 
 /* sge_mt_init { */
 /*    sge_prof_setup(); */

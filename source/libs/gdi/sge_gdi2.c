@@ -634,7 +634,7 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
          }
       }
    } else {
-      ret = sge_gdi2_send_any_request(sync, mid, ctx, rhost, commproc, id, &pb,
+      ret = sge_gdi2_send_any_request(ctx, sync, mid, rhost, commproc, id, &pb,
                               TAG_GDI_REQUEST, response_id, alpp);
    }
    clear_packbuffer(&pb);
@@ -744,7 +744,7 @@ static int sge_get_gdi2_request_async(sge_gdi_ctx_class_t *ctx,
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
-int sge_gdi2_send_any_request(int synchron, u_long32 *mid, sge_gdi_ctx_class_t *ctx, 
+int sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
                          const char *rhost, const char *commproc, int id,
                          sge_pack_buffer *pb, 
                          int tag, u_long32  response_id, lList **alpp)
@@ -1007,7 +1007,16 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
       id = async_gdi->id; /* id is u_short */
       gdi_request_mid = async_gdi->gdi_request_mid;
       state = &(async_gdi->out);
+#if 0      
+      /* AA: DEBUG async gdi */
+      printf("++++++++++ async gdi: rhost/commproc/id: (%s/%s/%d) gdi_request_mid: "sge_u32"\n", 
+                 rcv_rhost, rcv_commproc, id, gdi_request_mid);      
+#endif
    } else {
+#if 0   
+      /* AA: DEBUG async gdi */
+      printf("-+-+-+-+-+ no async gdi\n"); 
+#endif      
       /* nothing todo... */
       DRETURN(true);
    }
@@ -1278,7 +1287,7 @@ int sge_gdi2_send_ack_to_qmaster(sge_gdi_ctx_class_t *ctx, int sync, u_long32 ty
    packint(&pb, type);
    packint(&pb, ulong_val);
    packint(&pb, ulong_val_2);
-   ret = sge_gdi2_send_any_request(sync, NULL, ctx, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, alpp);
+   ret = sge_gdi2_send_any_request(ctx, sync, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, alpp);
    clear_packbuffer(&pb);
    answer_list_output (alpp);
 
@@ -2322,53 +2331,6 @@ int gdi_log_flush_func(cl_raw_list_t* list_p) {
    DRETURN(CL_RETVAL_OK);
 }
 
-
-void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender) {
-   DENTER(TOP_LAYER, "dump_rcv_info");
-   if ( message  != NULL && sender   != NULL && *message != NULL && *sender  != NULL &&
-        (*sender)->comp_host != NULL && (*sender)->comp_name != NULL ) {
-         char buffer[512];
-         dstring ds;
-         sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"sge_U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, sge_u32c((*sender)->comp_id)));
-      DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
-      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (*message)->message_tag) ));
-      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "sge_U32CFormat"\n",  sge_u32c((*message)->message_id) ));
-      DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
-      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-   }
-   DEXIT;
-}
-
-void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                          cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid ) {
-   char buffer[512];
-   dstring ds;
-
-   DENTER(TOP_LAYER, "dump_snd_info");
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   if (un_resolved_hostname != NULL && component_name != NULL) {
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"sge_U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,sge_u32c(component_id)));
-      DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
-      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( tag) ));
-      if (mid) {
-         DEBUG((SGE_EVENT,"gdi_snd: message id:        "sge_U32CFormat"\n",  sge_u32c(*mid) ));
-      } else {
-         DEBUG((SGE_EVENT,"gdi_snd: message id:        not handled by caller\n"));
-      }
-      DEBUG((SGE_EVENT,"gdi_snd: send time:         %s\n",            sge_ctime(0, &ds)));
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-   } else {
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_snd: some parameters are not set\n"));
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-   }
-   DEXIT;
-}
 
 #ifdef DEBUG_CLIENT_SUPPORT
 void gdi_rmon_print_callback_function(const char *progname, const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id) {

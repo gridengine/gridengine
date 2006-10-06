@@ -170,7 +170,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    user_name = wl_strip_hostname(user_name);
 #endif
 
-   DENTER(TOP_LAYER, "setup_ssl_security_path");
+   DENTER(TOP_LAYER, "sge_ssl_setup_security_path");
 
    if (progname == NULL) {
       CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));

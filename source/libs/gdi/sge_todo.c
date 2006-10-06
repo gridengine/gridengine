@@ -154,7 +154,7 @@ int report_list_send(void *context,
    }
 
 #ifdef TEST_GDI2
-   ret = sge_gdi2_send_any_request(synchron, mid, ctx, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+   ret = sge_gdi2_send_any_request(ctx, synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
 #else
    ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
 #endif

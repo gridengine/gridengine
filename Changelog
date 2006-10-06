@@ -1,3 +1,8 @@
+AA-2006-10-06-0: Enhancem:  o reordering of arguments, formatting
+                            o build.xml test debug fix
+                            o rollback of NEW_GDI_STATE in aimk
+                 Review:    RD
+
 RH-2006-10-06-0: Enhancem:  juti: GridCA.renewCaCertificate implemented
                  Review:    MD
 

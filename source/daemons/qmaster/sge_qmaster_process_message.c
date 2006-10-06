@@ -548,7 +548,7 @@ do_gdi_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
 #else
 
 #ifdef TEST_QMASTER_GDI2
-      sge_gdi2_send_any_request(ASYNC, NULL, ctx, 
+      sge_gdi2_send_any_request(ctx, ASYNC, NULL,
                                 aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &pb,
                                 TAG_GDI_REQUEST, aMsg->request_mid, &alp);
 #else

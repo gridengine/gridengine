@@ -1416,7 +1416,7 @@ static bool ec2_deregister(sge_evc_class_t *thiz)
 
          packint(&pb, lGetUlong(sge_evc->ec, EV_id));
 
-         send_ret = sge_gdi2_send_any_request(0, NULL, sge_gdi_ctx, rhost, commproc, id, &pb, TAG_EVENT_CLIENT_EXIT, 0, &alp);
+         send_ret = sge_gdi2_send_any_request(sge_gdi_ctx, 0, NULL, rhost, commproc, id, &pb, TAG_EVENT_CLIENT_EXIT, 0, &alp);
          
          clear_packbuffer(&pb);
          answer_list_output (&alp);

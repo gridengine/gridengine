@@ -341,7 +341,7 @@ gdi_set_request(sge_gdi_ctx_class_t *ctx, const char* rhost, const char* commpro
  
    DENTER(TOP_LAYER, "gdi_set_request");
 
-   async_gdi = (gdi_send_t*) malloc(sizeof(gdi_send_t));
+   async_gdi = (gdi_send_t*)malloc(sizeof(gdi_send_t));
    if (async_gdi == NULL) {
       DRETURN(false);
    }

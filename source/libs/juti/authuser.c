@@ -34,12 +34,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#if defined(DARWIN_PPC) || defined(ALPHA5)
+#if defined(DARWIN) || defined(ALPHA5)
 #  include <unistd.h>
 #endif
 #ifndef WINDOWS
 #  include <pwd.h>
-#  ifndef DARWIN_PPC
+#  ifndef DARWIN
 #     include <crypt.h>
 #  endif
 #endif

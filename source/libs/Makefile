@@ -46,13 +46,7 @@ include $(SDIR)/libs/mir/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/japi/Makefile
-ifneq ($(ARCH), win32-x86)
 include $(SDIR)/libs/juti/Makefile
-JUTI_ALL=juti_all
-JUTI_CLEAN=juti_clean
-JUTI_DEPEN=juti_depend
-JUTI_MESSAGES=juti_messages
-endif
 
 ###############################################################################
 # Variable definitions for targets to build

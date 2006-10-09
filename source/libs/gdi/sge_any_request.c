@@ -887,7 +887,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
 
    if (i != CL_RETVAL_OK) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                             MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS ,
+                             MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS,
                              (synchron ? "" : "a"),
                              commproc, 
                              id, 

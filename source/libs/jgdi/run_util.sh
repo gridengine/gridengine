@@ -109,9 +109,9 @@ setup_env() {
    log "APPL_ARGS=$APPL_ARGS"
    
    if [ "$LD_LIBRARY_PATH" = "" ]; then 
-      LD_LIBRARY_PATH=${GRIDENGINE_SOURCE}/${SRC_ARCH}:${JAVA_HOME}/jre/lib/$JAVA_ARCH/server
+      LD_LIBRARY_PATH=${GRIDENGINE_SOURCE}/${SRC_ARCH}:${JAVA_HOME}/jre/lib/$JAVA_ARCH/server:${JAVA_HOME}/jre/lib/$JAVA_ARCH
    else 
-      LD_LIBRARY_PATH="${GRIDENGINE_SOURCE}/${SRC_ARCH}:${JAVA_HOME}/jre/lib/$JAVA_ARCH/server:$LD_LIBRARY_PATH"
+      LD_LIBRARY_PATH="${GRIDENGINE_SOURCE}/${SRC_ARCH}:${JAVA_HOME}/jre/lib/$JAVA_ARCH/server:${JAVA_HOME}/jre/lib/$JAVA_ARCH:$LD_LIBRARY_PATH"
    fi
    export LD_LIBRARY_PATH
    log "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"   

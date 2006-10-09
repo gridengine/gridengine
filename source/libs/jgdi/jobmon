@@ -5,10 +5,6 @@ BASEDIR=`cd $BASEDIR; pwd`
 
 . $BASEDIR/run_util.sh
 
-if [ -f run_test.env ]; then
-   . run_test.env
-fi
-
 run $* -cp $BASEDIR/build/classes com.sun.grid.jgdi.examples.JobMonitor 
 
 

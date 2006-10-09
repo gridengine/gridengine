@@ -1,3 +1,8 @@
+JG-2006-10-09-0: Bugfix:    Fixed msg_juti.h.
+                            aimk didn't fail on windows in case of errors while
+                            building windows applications.
+                 Review:    RH
+
 AA-2006-10-09-0: Enhancem:  o corrections in LD_LIBRARY_PATH in run_util.sh for jobmon
                  Review:    RH
 

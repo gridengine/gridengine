@@ -1257,7 +1257,7 @@ case LINUXSPARC64:
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
-   if ( $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" ) then
+   if ( $buildarch == "lx24-x86" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" ) then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
    if ("$ADOC" == 1) then
@@ -1968,6 +1968,11 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
 
    cd ..
 endif

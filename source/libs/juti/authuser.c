@@ -34,8 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "msg_juti.h"
-#include "juti.h"
 #if defined(DARWIN_PPC) || defined(ALPHA5)
 #  include <unistd.h>
 #endif
@@ -49,7 +47,21 @@
 #  define _WIN32_WINNT 0x0500
 #  include <windows.h>
 #  include <Sddl.h>
+
+/* 
+ * for some reason we cannot include basistypes.h when building authuser.
+ * only include it ifndef WINDOWS in msg_juti.h,
+ * and do special handling here.
+ * TODO: should be understood and fixed (in basis_types.h?)
+ */
+#  define SFN  "%-.100s"
+#  define _(x)              (x)
+#  define _MESSAGE(x,y)     (y)
+
 #endif
+
+#include "msg_juti.h"
+#include "juti.h"
 
 #if 0
 #define DEBUG 1

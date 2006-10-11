@@ -149,7 +149,7 @@ an_status_t verify_str_key(
                            mid_strings[table][i], mid_characters[table][i]));
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, 
-                           mid_strings[i]));
+                           mid_strings[table][i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return STATUS_EUNKNOWN;

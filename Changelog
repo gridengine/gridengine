@@ -1,5 +1,6 @@
 RD-2006-10-11-0: Bugfix:    raised openssl version to 0.9.7l
                             set clients verion to 6.0u9
+                 Bugtraq:   6480580
                  Review:    AA
 
 HP-2006-08-10-0: Bugfix:    Now loading key and rand file for Administrator, not 

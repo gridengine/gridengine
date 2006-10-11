@@ -156,9 +156,10 @@ static void eval_atomic(request_handling_t type);
 static void eval_atomic_end(request_handling_t type); 
 
 static request_handling_t do_gdi_request(void *context, struct_msg_t*, monitoring_t *monitor);
+static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor);
+
 static request_handling_t do_report_request(void *context, struct_msg_t*, monitoring_t *monitor);
 static void do_event_client_exit(void *context, struct_msg_t *aMsg, monitoring_t *monitor);
-static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor);
 static void sge_c_job_ack(void *context,
                           char *host,
                           char *commproc,
@@ -167,6 +168,14 @@ static void sge_c_job_ack(void *context,
                           u_long32 ack_ulong2, 
                           monitoring_t *monitor);
 
+
+/*
+ * Prevent these functions made inline by compiler. This is 
+ * necessary for Solaris 10 dtrace pid provider to work.
+ */
+#ifdef SOLARIS
+#pragma no_inline(do_gdi_request, do_c_ack, do_report_request)
+#endif
 
 /****** sge_qmaster_process_message/eval_message_and_block() *******************
 *  NAME

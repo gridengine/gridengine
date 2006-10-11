@@ -90,6 +90,9 @@
 #include "sgeobj/sge_event.h"
 #include "uti/sge_bootstrap.h"
 
+
+
+
 #ifdef TEST_QMASTER_GDI2
 #include "sge_gdi_ctx.h"
 #endif
@@ -158,10 +161,13 @@ static int schedd_mod(void *context,
                       lList **alpp, lListElem *modp, lListElem *ep, int add, 
                       const char *ruser, const char *rhost, gdi_object_t *object, 
                       int sub_command, monitoring_t *monitor );
-#if 0
-static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt);
 
-static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, int *aBeforeCnt, int *anAfterCnt);
+/*
+ * Prevent these functions made inline by compiler. This is 
+ * necessary for Solaris 10 dtrace pid provider to work.
+ */
+#ifdef SOLARIS
+#pragma no_inline(sge_c_gdi_permcheck, sge_c_gdi_trigger, sge_c_gdi_copy, sge_c_gdi_get, sge_c_gdi_del, sge_c_gdi_mod, sge_c_gdi_add, sge_c_gdi_copy)
 #endif
 
 /* ------------------------------ generic gdi objects --------------------- */

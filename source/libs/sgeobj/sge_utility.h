@@ -52,7 +52,10 @@
       return false;                                                  \
    }
 
-an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name);
+#define KEY_TABLE	(1)
+#define QSUB_TABLE	(2)
+an_status_t
+   verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name, int table);
 
 bool verify_host_name(lList **answer_list, const char *host_name);
 #endif /* __SGE_UTILITY_H */

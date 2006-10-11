@@ -3013,7 +3013,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_session);
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_session)) != STATUS_OK) {
+         if (verify_str_key(
+               answer_list, name, MAX_VERIFY_STRING,
+               lNm2Str(JB_session), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       } 
@@ -3023,7 +3025,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_project);
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_project)) != STATUS_OK) {
+         if (verify_str_key(
+            answer_list, name, MAX_VERIFY_STRING,
+            lNm2Str(JB_project), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       } 
@@ -3033,7 +3037,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_department);
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_department)) != STATUS_OK) {
+         if (verify_str_key(
+            answer_list, name, MAX_VERIFY_STRING,
+            lNm2Str(JB_department), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       } 
@@ -3102,7 +3108,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_account);
       if (name != NULL) {
-         if(verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_account)) != STATUS_OK) {
+         if(verify_str_key(
+               answer_list, name, MAX_VERIFY_STRING,
+               lNm2Str(JB_account), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       }
@@ -3138,7 +3146,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job, JB_checkpoint_name);
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_checkpoint_name)) != STATUS_OK) {
+         if (verify_str_key(
+               answer_list, name, MAX_VERIFY_STRING,
+               lNm2Str(JB_checkpoint_name), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       }
@@ -3180,7 +3190,9 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       const char *name = lGetString(job,JB_pe );
       if (name != NULL) {
-         if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, lNm2Str(JB_pe)) != STATUS_OK) {
+         if (verify_str_key(
+               answer_list, name, MAX_VERIFY_STRING,
+               lNm2Str(JB_pe), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       }

@@ -49,15 +49,19 @@
 #include "msg_qmaster.h"
 #include "msg_sgeobjlib.h"
 
-an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, const char *name) 
+an_status_t verify_str_key(
+   lList **alpp, const char *str, size_t str_length, const char *name, int table) 
 {
-   static char begin_chars[3] = { '.', '#', 0 };
-   static const char *begin_strings[3];
+   static const char *begin_strings[2][3];
+   static const char *mid_strings[2][19];
 
-   static const char mid_characters[19] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
-      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0};
-   static const char *mid_strings[19];
+   static char begin_chars[2][3] =
+      { { '.', '#', 0 },
+        { 0, 0, 0 } };
 
+   static const char mid_characters[2][19] =
+      { { '\n', '\t', '\r', ' ', '/', ':', '\'', '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0},
+        { '\n', '\t', '\r', '/', ':', '@', '\\', '*', '?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} };
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];
 
@@ -66,33 +70,50 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
    const char* forbidden_string;
    int i;
 
+   table = table -1;
    if (!initialized) {
-      begin_strings[0] = MSG_GDI_KEYSTR_DOT;
-      begin_strings[1] = MSG_GDI_KEYSTR_HASH;
-      begin_strings[2] = NULL;
-      mid_strings[0] = MSG_GDI_KEYSTR_RETURN;
-      mid_strings[1] = MSG_GDI_KEYSTR_TABULATOR;
-      mid_strings[2] = MSG_GDI_KEYSTR_CARRIAGERET;
-      mid_strings[3] = MSG_GDI_KEYSTR_SPACE;
-      mid_strings[4] = MSG_GDI_KEYSTR_SLASH;
-      mid_strings[5] = MSG_GDI_KEYSTR_COLON;
-      mid_strings[6] = MSG_GDI_KEYSTR_QUOTE;
-      mid_strings[7] = MSG_GDI_KEYSTR_DBLQUOTE;
-      mid_strings[8] = MSG_GDI_KEYSTR_BACKSLASH;
-      mid_strings[9] = MSG_GDI_KEYSTR_BRACKETS;
-      mid_strings[10] = MSG_GDI_KEYSTR_BRACKETS;
-      mid_strings[11] = MSG_GDI_KEYSTR_BRACES;
-      mid_strings[12] = MSG_GDI_KEYSTR_BRACES;
-      mid_strings[13] = MSG_GDI_KEYSTR_PIPE;
-      mid_strings[14] = MSG_GDI_KEYSTR_PARENTHESIS;
-      mid_strings[15] = MSG_GDI_KEYSTR_PARENTHESIS;
-      mid_strings[16] = MSG_GDI_KEYSTR_AT;
-      mid_strings[17] = MSG_GDI_KEYSTR_PERCENT;
-      mid_strings[18] = NULL;
+      begin_strings[0][0] = MSG_GDI_KEYSTR_DOT;
+      begin_strings[0][1] = MSG_GDI_KEYSTR_HASH;
+      begin_strings[0][2] = NULL;
+      begin_strings[1][0] = NULL;
+      begin_strings[1][1] = NULL;
+      begin_strings[1][2] = NULL;
+
+      mid_strings[0][0] = MSG_GDI_KEYSTR_RETURN;
+      mid_strings[0][1] = MSG_GDI_KEYSTR_TABULATOR;
+      mid_strings[0][2] = MSG_GDI_KEYSTR_CARRIAGERET;
+      mid_strings[0][3] = MSG_GDI_KEYSTR_SPACE;
+      mid_strings[0][4] = MSG_GDI_KEYSTR_SLASH;
+      mid_strings[0][5] = MSG_GDI_KEYSTR_COLON;
+      mid_strings[0][6] = MSG_GDI_KEYSTR_QUOTE;
+      mid_strings[0][7] = MSG_GDI_KEYSTR_DBLQUOTE;
+      mid_strings[0][8] = MSG_GDI_KEYSTR_BACKSLASH;
+      mid_strings[0][9] = MSG_GDI_KEYSTR_BRACKETS;
+      mid_strings[0][10] = MSG_GDI_KEYSTR_BRACKETS;
+      mid_strings[0][11] = MSG_GDI_KEYSTR_BRACES;
+      mid_strings[0][12] = MSG_GDI_KEYSTR_BRACES;
+      mid_strings[0][13] = MSG_GDI_KEYSTR_PIPE;
+      mid_strings[0][14] = MSG_GDI_KEYSTR_PARENTHESIS;
+      mid_strings[0][15] = MSG_GDI_KEYSTR_PARENTHESIS;
+      mid_strings[0][16] = MSG_GDI_KEYSTR_AT;
+      mid_strings[0][17] = MSG_GDI_KEYSTR_PERCENT;
+      mid_strings[0][18] = NULL;
+      mid_strings[1][0] = MSG_GDI_KEYSTR_RETURN;
+      mid_strings[1][1] = MSG_GDI_KEYSTR_TABULATOR;
+      mid_strings[1][2] = MSG_GDI_KEYSTR_CARRIAGERET;
+      mid_strings[1][3] = MSG_GDI_KEYSTR_SLASH;
+      mid_strings[1][4] = MSG_GDI_KEYSTR_COLON;
+      mid_strings[1][5] = MSG_GDI_KEYSTR_AT;
+      mid_strings[1][6] = MSG_GDI_KEYSTR_BACKSLASH;
+      mid_strings[1][7] = MSG_GDI_KEYSTR_ASTERISK;
+      mid_strings[1][8] = MSG_GDI_KEYSTR_QUESTIONMARK;
+      mid_strings[1][9] = NULL;
+
       keyword_strings[0] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[1] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[2] = MSG_GDI_KEYSTR_KEYWORD;
       keyword_strings[3] = NULL;
+
       initialized = 1;
    }
 
@@ -105,14 +126,14 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
 
    /* check first character */
    i = -1;
-   while ((forbidden_char = begin_chars[++i])) {
+   while ((forbidden_char = begin_chars[table][++i])) {
       if (str[0] == forbidden_char) {
          if (isprint((int) forbidden_char)) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_SC,
-                           begin_strings[i], begin_chars[i]));
+                           begin_strings[table][i], begin_chars[table][i]));
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_FIRSTCHAR_S, 
-                           begin_strings[i]));
+                           begin_strings[table][i]));
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return STATUS_EUNKNOWN;
@@ -121,11 +142,11 @@ an_status_t verify_str_key(lList **alpp, const char *str, size_t str_length, con
 
    /* check all characters in str */
    i = -1;
-   while ((forbidden_char = mid_characters[++i])) {
+   while ((forbidden_char = mid_characters[table][++i])) {
       if (strchr(str, forbidden_char)) {
          if (isprint((int) forbidden_char)) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC,
-                           mid_strings[i], mid_characters[i]));
+                           mid_strings[table][i], mid_characters[table][i]));
          } else {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, 
                            mid_strings[i]));

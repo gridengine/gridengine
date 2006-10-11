@@ -1,3 +1,7 @@
+RD-2006-10-11-0: Bugfix:    raised openssl version to 0.9.7l
+                 Bugtraq:   6480580
+                 Review:    AA
+
 AH-2006-10-05-0: Enhancem:  Added monitor.[sh,d] and README-dtrace.txt
                             to source repository (only).
                  Review:    AA,JG

@@ -3110,7 +3110,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
       if (name != NULL) {
          if(verify_str_key(
                answer_list, name, MAX_VERIFY_STRING,
-               lNm2Str(JB_account), KEY_TABLE) != STATUS_OK) {
+               lNm2Str(JB_account), QSUB_TABLE) != STATUS_OK) {
             ret = false;
          }
       }

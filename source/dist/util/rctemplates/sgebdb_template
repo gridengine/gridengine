@@ -89,16 +89,22 @@ BDBHOMES="-h SPOOLING_DIR"
 
 unset CODINE_ROOT GRD_ROOT COD_CELL GRD_CELL
 
+# library path setting required only for architectures where RUNPATH is not supported
 arch=`$SGE_ROOT/util/arch`
-shlib_path_name=`$SGE_ROOT/util/arch -lib`
-
-old_value=`eval echo '$'$shlib_path_name`
-if [ x$old_value = x ]; then
-   eval $shlib_path_name=$SGE_ROOT/lib/$arch
-else
-   eval $shlib_path_name=$old_value:$SGE_ROOT/lib/$arch
-fi
-export $shlib_path_name
+case $arch in
+#ENFORCE_SHLIBPATH#sol*|lx*)
+#ENFORCE_SHLIBPATH#   ;;
+*)
+   shlib_path_name=`$SGE_ROOT/util/arch -lib`
+   old_value=`eval echo '$'$shlib_path_name`
+   if [ x$old_value = x ]; then
+      eval $shlib_path_name=$SGE_ROOT/lib/$arch
+   else
+      eval $shlib_path_name=$old_value:$SGE_ROOT/lib/$arch
+   fi
+   export $shlib_path_name
+   ;;
+esac
 
 #---------------------------------------------------------------------------
 # Shutdown

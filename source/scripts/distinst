@@ -123,6 +123,7 @@ ErrUsage()
    echo "       -help_arch     = show architectures table"
    echo "       -libs          = all libraries"
    echo "       -local         = install in \$SGE_ROOT"
+   echo "       -shlibpath     = cause LD_LIBRARY_PATH be always set even if RUNPATH supported (Solaris/Linux)"
    echo "       -mansrc <dir>  = take man pages from MANSBUILD_<dir>"
    echo "       -nobdb         = do not install the Berkeley DB binaries and libs"
    echo "       -noexit        = do not exit on installation errors"
@@ -491,6 +492,10 @@ instclassictargets=false
 instopenssl=true
 instbdb=true
 
+# Note: Until now default is 'true', but this is just intermediately
+# Actually it must be 'false'. Please remove this comment afterwards.
+enforce_shlibpath=true
+
 cmdname=`basename $0`
 
 if [ $cmdname = myinst ]; then
@@ -616,6 +621,9 @@ while [ $# -ge 1 ]; do
       ;;
    -noopenssl)
       instopenssl=false
+      ;;
+   -shlibpath)
+      enforce_shlibpath=true
       ;;
    -v)
       verbose=true
@@ -859,6 +867,17 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/util
       MakeDir util
       Execute cp -r dist/util $DEST_SGE_ROOT
+      if [ $enforce_shlibpath = true ]; then
+         Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh
+         Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template
+         Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgeexecd_template > $DEST_SGE_ROOT/util/rctemplates/sgeexecd_template
+         Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
+      else
+         Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh
+         Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template
+         Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgeexecd_template > $DEST_SGE_ROOT/util/rctemplates/sgeexecd_template
+         Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
+      fi
       Cleanup util
 
       # Not available in Beta

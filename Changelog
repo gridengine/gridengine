@@ -1,4 +1,11 @@
-AH-2006-10-11-0: Enhancem:  Added #pragma no_inline() to prevent inlining of some 
+AH-2006-10-12-0: Enhancem.: Added distinst -shlibpath to allow enforcement of 
+                            LD_LIBRARY_PATH setting even with Solaris/Linux where 
+                            actually $ORIGIN relative RUNPATH is used instead
+                 Bugster:   6456290
+                 Issue:     2090
+                 Review:    AS
+
+AH-2006-10-10-0: Enhancem:  Added #pragma no_inline() to prevent inlining of some 
                             functions as required for dtrace(1) pid provider. This 
                             change is explained in dtrace-doc CR #6480235.
                  Review:    RD

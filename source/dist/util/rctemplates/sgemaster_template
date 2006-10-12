@@ -95,15 +95,22 @@ SGE_EXECD_PORT=GENSGE_EXECD_PORT; export SGE_EXECD_PORT
 unset CODINE_ROOT GRD_ROOT COD_CELL GRD_CELL
 
 ARCH=`$SGE_ROOT/util/arch`
-shlib_path_name=`$SGE_ROOT/util/arch -lib`
-old_value=`eval echo '$'$shlib_path_name`
-if [ x$old_value = x ]; then
-   eval $shlib_path_name=$SGE_ROOT/lib/$ARCH
-else
-   eval $shlib_path_name=$old_value:$SGE_ROOT/lib/$ARCH
-fi
-export $shlib_path_name
 
+# library path setting required only for architectures where RUNPATH is not supported
+case $ARCH in
+#ENFORCE_SHLIBPATH#sol*|lx*)
+#ENFORCE_SHLIBPATH#   ;;
+*)
+   shlib_path_name=`$SGE_ROOT/util/arch -lib`
+   old_value=`eval echo '$'$shlib_path_name`
+   if [ x$old_value = x ]; then
+      eval $shlib_path_name=$SGE_ROOT/lib/$ARCH
+   else
+      eval $shlib_path_name=$old_value:$SGE_ROOT/lib/$ARCH
+   fi
+   export $shlib_path_name
+   ;;
+esac
 
 #---------------------------------------------------------------------------
 # Shutdown

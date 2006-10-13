@@ -49,6 +49,64 @@
 #include "msg_qmaster.h"
 #include "msg_sgeobjlib.h"
 
+
+
+/****** sge_utility/verify_str_key() *******************************************
+*  NAME
+*     verify_str_key() -- Generic function for verifying object names
+*
+*  SYNOPSIS
+*     an_status_t verify_str_key(lList **alpp, const char *str, size_t 
+*     str_length, const char *name, int table) 
+*
+*  FUNCTION
+*     Verifies object names. The follwing verification tables are 
+*     used
+*
+*        QSUB_TABLE    job account strings 
+*           (see qsub(1) -A for characters not allowed)
+*        QSUB_TABLE    job name
+*           (see qsub(1) -N for characters not allowed)
+*        KEY_TABLE     parallel environemnt names
+*           (see sge_pe(5))
+*        KEY_TABLE     calendar names 
+*           (see calendar_conf(5))
+*        KEY_TABLE     cluster queue names 
+*           (see queue_conf(5))
+*        KEY_TABLE     project names
+*           (see project(5))
+*        KEY_TABLE     userset names
+*           (see access_list(5))
+*        KEY_TABLE     department names
+*           (see access_list(5))
+*        KEY_TABLE     checkpoint interface name
+*           (see checkpoint(5))
+*        KEY_TABLE     user name
+*           (see user(5))
+*        KEY_TABLE     hostgroup names
+*           (see hostgroup(5))
+*
+*        KEY_TABLE     event client name (internal purposes only)
+*        KEY_TABLE     JAPI session key (internal purposes only)
+*
+*           Note, there is test_sge_utility
+*
+*  INPUTS
+*     lList **alpp      - answer list
+*     const char *str   - string to be verified
+*     size_t str_length - length of the string to be verified
+*     const char *name  - verbal description of the object
+*     int table         - verification table to be used
+*
+*  RESULT
+*     an_status_t - STATUS_OK upon success
+*
+*  NOTES
+*     MT-NOTE: verify_str_key() is MT safe 
+* 
+*  SEE ALSO
+*     There is a module test (test_sge_utility) for verify_str_key().
+*******************************************************************************/
 an_status_t verify_str_key(
    lList **alpp, const char *str, size_t str_length, const char *name, int table) 
 {

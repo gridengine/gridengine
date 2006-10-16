@@ -37,6 +37,11 @@
 #include <errno.h>
 #include <stdarg.h>
 
+/* do not compile in monitoring code */
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
+
 #include "msg_cull.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -52,10 +57,6 @@
 #include "pack.h"
 #include "cull_pack.h"
 
-/* do not compile in monitoring code */
-#ifndef NO_SGE_COMPILE_DEBUG
-#define NO_SGE_COMPILE_DEBUG
-#endif
 
 #define CULL_BASIS_LAYER CULL_LAYER
 

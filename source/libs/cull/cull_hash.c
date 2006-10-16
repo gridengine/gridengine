@@ -33,6 +33,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* do not compile in monitoring code */
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_cull.h"

@@ -1,3 +1,7 @@
+AH-2006-10-16-2: Enhancem.: Fixed NO_SGE_COMPILE_DEBUG setting to cause 
+                            rmon-macros be inactive in pack.c, cull_list.c 
+                            and cull_hash.c
+
 RD-2006-10-11-0: Bugfix:    raised openssl version to 0.9.7l
                  Bugtraq:   6480580
                  Review:    AA

@@ -1311,8 +1311,9 @@ case LINUXSPARC64:
    set JAVA_ARCH = "linux"
 
    # due to -rpath relative_path the LD_LIBRARY_PATH not needed anymore
-   set RUNPATH = -Wl,-rpath,'\$$ORIGIN'/../../lib/$buildarch
-   set LFLAGS   = "$LFLAGS $RUNPATH"
+   set RUNPATH       = -Wl,-rpath,'\$$ORIGIN'/../../lib/$buildarch
+   set LFLAGS        = "$LFLAGS $RUNPATH"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
 
    breaksw
    
@@ -1628,8 +1629,9 @@ case SOLARISAMD64:
    set JAVA_ARCH = "solaris"
 
    # due to -R relative_path the LD_LIBRARY_PATH not needed anymore
-   set RUNPATH = "-R "'\$$ORIGIN'/../../lib/$buildarch
-   set LFLAGS   = "$LFLAGS $RUNPATH"
+   set RUNPATH       = "-R "'\$$ORIGIN'/../../lib/$buildarch
+   set LFLAGS        = "$LFLAGS $RUNPATH"
+   set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
 
    breaksw
 

@@ -1,3 +1,9 @@
+AH-2006-10-16-3: Enhancem.: Added RUNPATH link flag to SHARED_LFLAGS to fix problem
+                            of libspoolb.so depending on LD_LIBRARY_PATH for 
+                            libdb-4.4.so.
+                 Bugster:   6456290
+                 Issue:     2090
+                 
 AH-2006-10-16-1: Enhancem.: Fixed NO_SGE_COMPILE_DEBUG setting to cause rmon-macros 
                             be inactive in pack.c, cull_list.c and cull_hash.c
 

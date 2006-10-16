@@ -45,6 +45,11 @@
 #include "misc.h"
 #endif
 
+/* do not compile in monitoring code */
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
+
 #include "basis_types.h"
 #include "sgermon.h"
 #include "cull_listP.h"
@@ -53,11 +58,6 @@
 #include "cull_state.h"
 
 #include "uti/sge_stdlib.h"
-
-/* do not compile in monitoring code */
-#ifndef NO_SGE_COMPILE_DEBUG
-#   define NO_SGE_COMPILE_DEBUG
-#endif
 
 #if 0
 #   undef PACK_LAYER

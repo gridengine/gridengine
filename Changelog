@@ -1,3 +1,6 @@
+AH-2006-10-16-1: Enhancem.: Fixed NO_SGE_COMPILE_DEBUG setting to cause rmon-macros 
+                            be inactive in pack.c, cull_list.c and cull_hash.c
+
 AH-2006-10-16-0: Enhancem.: Forgot inst_common.sh with AH-2006-10-12-0
                  Bugster:   6456290
                  Issue:     2090

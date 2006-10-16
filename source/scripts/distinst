@@ -872,11 +872,13 @@ if [ $instcommon = true ]; then
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgeexecd_template > $DEST_SGE_ROOT/util/rctemplates/sgeexecd_template
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
+         Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       else
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgeexecd_template > $DEST_SGE_ROOT/util/rctemplates/sgeexecd_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
+         Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
       Cleanup util
 

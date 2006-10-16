@@ -1,3 +1,8 @@
+AH-2006-10-16-0: Enhancem.: Forgot inst_common.sh with AH-2006-10-12-0
+                 Bugster:   6456290
+                 Issue:     2090
+                 Review:    JG
+
 AH-2006-10-12-0: Enhancem.: Added distinst -shlibpath to allow enforcement of 
                             LD_LIBRARY_PATH setting even with Solaris/Linux where 
                             actually $ORIGIN relative RUNPATH is used instead

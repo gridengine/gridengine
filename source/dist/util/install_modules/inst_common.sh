@@ -50,15 +50,21 @@ BasicSettings()
   SGE_BIN="./bin/$SGE_ARCH"
 
 
-  shlib_path_name=`util/arch -lib`
-  old_value=`eval echo '$'$shlib_path_name`
-  if [ x$old_value = x ]; then
-     eval $shlib_path_name=lib/$SGE_ARCH
-  else
-     eval $shlib_path_name=$old_value:lib/$SGE_ARCH
-  fi
-  export $shlib_path_name
-
+  # library path setting required only for architectures where RUNPATH is not supported
+  case $SGE_ARCH in
+#ENFORCE_SHLIBPATH#sol*|lx*)
+#ENFORCE_SHLIBPATH#  ;;
+  *)
+    shlib_path_name=`util/arch -lib`
+    old_value=`eval echo '$'$shlib_path_name`
+    if [ x$old_value = x ]; then
+       eval $shlib_path_name=lib/$SGE_ARCH
+    else
+       eval $shlib_path_name=$old_value:lib/$SGE_ARCH
+    fi
+    export $shlib_path_name
+    ;;
+  esac
   ADMINUSER=default
   MYUID=`$SGE_UTILBIN/uidgid -uid`
   MYGID=`$SGE_UTILBIN/uidgid -gid`

@@ -166,7 +166,6 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
          MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
-
             if (host_notify_about_new_conf(context, hep) != 0) {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
             }

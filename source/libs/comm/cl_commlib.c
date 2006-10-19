@@ -4677,6 +4677,9 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                            break;
                         }
                      }
+#if 0
+                     CL_LOG_STR(CL_LOG_ERROR,"commlib returns message: ", connection->tag_name_func((*message)->message_tag));
+#endif
                      return CL_RETVAL_OK;
                   }
                }

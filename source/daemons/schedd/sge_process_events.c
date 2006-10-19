@@ -198,7 +198,9 @@ int event_handler_default_scheduler(void *evc_context)
    double prof_copy=0, prof_event=0, prof_init=0, prof_free=0, prof_run=0;
    lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
    lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
+   lList *master_project_list = *object_type_get_master_list(SGE_TYPE_PROJECT);
    lList *master_exechost_list= *object_type_get_master_list(SGE_TYPE_EXECHOST);
+   lList *master_lirs_list= *object_type_get_master_list(SGE_TYPE_LIRS);
    
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
@@ -216,10 +218,10 @@ int event_handler_default_scheduler(void *evc_context)
 
    if (rebuild_categories) {
       DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
-      sge_rebuild_job_category(*object_type_get_master_list(SGE_TYPE_JOB), 
-            *object_type_get_master_list(SGE_TYPE_USERSET), 
-            *object_type_get_master_list(SGE_TYPE_PROJECT),
-            *object_type_get_master_list(SGE_TYPE_LIRS));
+      sge_rebuild_job_category(master_job_list, 
+            master_userset_list, 
+            master_project_list,
+            master_lirs_list);
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
@@ -282,7 +284,7 @@ int event_handler_default_scheduler(void *evc_context)
    copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
    copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
    copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
-   copy.lirs_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_LIRS));
+   copy.lirs_list = lCopyList("", master_lirs_list);
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
@@ -792,7 +794,7 @@ sge_process_schedd_conf_event_before(void *evc_context, object_description *obje
       lListElem *old = sconf_get_config(); 
       const char *new_load_formula = lGetString(new, SC_load_formula);
       lList *alpp = NULL;
-      lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
+      lList *master_centry_list = *sge_master_list(object_base, SGE_TYPE_CENTRY);
 
       if (master_centry_list != NULL &&
           !validate_load_formula(new_load_formula, &alpp, master_centry_list, SGE_ATTR_LOAD_FORMULA)) {
@@ -924,7 +926,7 @@ sge_process_job_event_after(void *evc_context, object_description *object_base, 
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
+      job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
@@ -1058,7 +1060,7 @@ sge_process_ja_task_event_after(void *evc_context, object_description *object_ba
       DPRINTF(("callback processing ja_task event after default rule SGE_EMA_DEL\n"));
 
       job_id = lGetUlong(event, ET_intkey);
-      job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
+      job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
       if (job == NULL) {
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
                 job_get_id_string(job_id, 0, NULL)));
@@ -1107,7 +1109,7 @@ sge_process_project_event_before(void *evc_context, object_description *object_b
 
    p = lGetString(event, ET_strkey);
    new = lFirst(lGetList(event, ET_new_version));
-   old = userprj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), p);
+   old = userprj_list_locate(*sge_master_list(object_base, SGE_TYPE_PROJECT), p);
 
    switch (action) {
    case SGE_EMA_ADD:
@@ -1171,7 +1173,7 @@ sge_callback_result sge_process_userset_event_before(void *evc_context, object_d
 
    u = lGetString(event, ET_strkey);
    new = lFirst(lGetList(event, ET_new_version));
-   old = userset_list_locate(*object_type_get_master_list(SGE_TYPE_USERSET), u);
+   old = userset_list_locate(*sge_master_list(object_base, SGE_TYPE_USERSET), u);
 
    switch (action) {
    case SGE_EMA_ADD:

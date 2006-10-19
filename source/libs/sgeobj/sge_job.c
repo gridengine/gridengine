@@ -2890,6 +2890,10 @@ job_verify(const lListElem *job, lList **answer_list)
                                     MSG_JOB_NAMETOOLONG_I, MAX_VERIFY_STRING);
             ret = false;
          }
+      } else {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                 MSG_JOB_NOJOBNAME);
+         ret = false;
       }
    }
 

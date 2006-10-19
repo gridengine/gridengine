@@ -1771,7 +1771,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
 
    if (use_execd_handle == 0) {
       /* normal gdi send to qmaster */
-      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
+      DEBUG((SGE_EVENT,"standard gdi receive message\n"));
       handle = sge_ctx->get_com_handle(sge_ctx);
    } else {
       /* we have to send a message to another component than qmaster */

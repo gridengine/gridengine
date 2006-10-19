@@ -247,9 +247,6 @@ char *rhost
                    0, 0, userset_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
 
-   /* change queue versions */
-   sge_change_queue_version_acl(context, userset_name);
-
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

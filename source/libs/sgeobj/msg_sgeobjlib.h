@@ -339,6 +339,8 @@
 #define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
 
 #define MSG_INVALID_QINSTANCE_NAME_S   _MESSAGE(64356, _("invalid queue instance name "SFQ))
+#define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
+
 
 #define MSG_LIMITRULE_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
 

@@ -1,3 +1,9 @@
+RD-2006-10-19-0: Bugfix:    - Execd ignores in certain cases JOB_EXECUTION request
+                            - removed some redundant code
+                 Bugster:   6483941
+                 Issue:     2106
+                 Review:    JG
+
 AH-2006-10-19-0: Bugfix:    Ensure events emitted upon qmod -d/-e get always
                             sent as a whole to the scheduler.
                  Review:    RD

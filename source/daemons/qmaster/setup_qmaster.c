@@ -860,7 +860,7 @@ static int setup_qmaster(void *context)
       answer_list_output(&answer_list);
       spooling_context = spool_get_default_context();
    }
-   
+
    if (sge_read_configuration(context, spooling_context, answer_list) != 0) {
       DEXIT;
       return -1;

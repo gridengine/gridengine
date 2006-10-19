@@ -483,7 +483,7 @@ execd_ck_to_do(void *context,
    /* start jobs if present */
    if (jobs_to_start) {
       /* reset jobs_to_start before starting jobs. We may loose
-       * loose a job start if we reset jobs_to_start after sge_start_jobs()
+       * a job start if we reset jobs_to_start after sge_start_jobs()
        */
       jobs_to_start = 0;
       sge_start_jobs(context);

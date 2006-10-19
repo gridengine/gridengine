@@ -171,7 +171,7 @@ int dispatch( void *context,
               int               wait4commd)
 {
    /* CR - TODO: rework complete dispatch function(s) for NGC */
-   dispatch_entry de,   /* filled with receive mask */
+   dispatch_entry de,   /* filled with received mask */
                   *te;
    int i, j, terminate, errorcode, ntab;
    bool do_re_register = false;
@@ -267,8 +267,6 @@ int dispatch( void *context,
          u_long32 now = sge_get_gmt();
          static u_long32 last_qmaster_file_read = 0;
          
-         de.tag = -1;
-
          if ( now - last_qmaster_file_read >= 30 ) {
             /* re-read act qmaster file (max. every 30 seconds) */
             DPRINTF(("re-read actual qmaster file\n"));
@@ -282,20 +280,17 @@ int dispatch( void *context,
                 i != CL_RETVAL_CONNECT_ERROR) {
                /* re-register at qmaster when connection is up again */
 #ifdef TEST_GDI2               
-               if ( sge_execd_register_at_qmaster(ctx) == 0) {
+               if (sge_execd_register_at_qmaster(ctx) == 0) {
                   do_re_register = false;
                }
 #else               
-               if ( sge_execd_register_at_qmaster(NULL) == 0) {
+               if (sge_execd_register_at_qmaster(NULL) == 0) {
                   do_re_register = false;
                }
-
 #endif
             }
          }
       }
-
-
 
       /* look for dispatch entries matching the inbound message or
          entries activated at idle times */
@@ -463,7 +458,7 @@ static int authorize_dpe(const char *admin_user, dispatch_entry *deb)
 
  So we can't indicate any lost acknowledge and therefore any lost message.
 
- If we cant send the acknowledges we have to delete the whole messages, in
+ If we can't send the acknowledges we have to delete the whole messages, in
  order to stay consistent with the sender.
  *****************************************************************************/
 static int receive_message_cach_n_ack( void *context,
@@ -517,7 +512,7 @@ static int receive_message_cach_n_ack( void *context,
    while (cached_pbs < cachesize && i == CL_RETVAL_OK) {
       copy_de(&deact, de);
 
-      cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking );
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking);
 
 #ifdef TEST_GDI2
       i = gdi2_receive_message(ctx, deact.commproc, &deact.id, deact.host, 
@@ -657,8 +652,6 @@ static int receive_message_cach_n_ack( void *context,
    free_de(&deact);
    free_de(&lastde);
 
-
-
    DEXIT;
    return i;
 }
@@ -761,15 +754,13 @@ dispatch_entry *de;
 }
 
 /**************************************************/
-static void free_de(de)       /* free fields in de */
-dispatch_entry *de;
+static void free_de(dispatch_entry *de)       /* free fields in de */
 {
    free(de->commproc);
    free(de->host);
 }
 
-static int copy_de(dedst, desrc)
-dispatch_entry *dedst, *desrc;
+static int copy_de(dispatch_entry *dedst, dispatch_entry* desrc)
 {
    dedst->tag = desrc->tag;
 

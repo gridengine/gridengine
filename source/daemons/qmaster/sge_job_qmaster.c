@@ -399,13 +399,6 @@ int sge_gdi_add_job(void *context,
          lSetString(jep, JB_exec_file, str);
       }
 
-      if (!lGetString(jep, JB_job_name)) {        /* look for job name */
-         ERROR((SGE_EVENT, MSG_JOB_NOJOBNAME_U, sge_u32c(job_number)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
       /* check max_jobs */
       if (job_list_register_new_job(*object_base[SGE_TYPE_JOB].list, mconf_get_max_jobs(), 0)) {/*read*/
          INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, sge_u32c(mconf_get_max_jobs())));

@@ -1447,7 +1447,7 @@ for i in $ARCH; do
 
             for lib in $JNI_SHARED_LIBRARIES; do
                # On MacOS X, the JVM expects a special JNI extension for shared libraries
-               if [ "$shlibext" != "$jnilibext" ]; then
+               if [ "$shlibext" != "$jnilibext" -a -f "$lib.$shlibext" ]; then
                   ( echo Linking $lib.$jnilibext to $lib.$shlibext
                   cd $DEST_SGE_ROOT/lib/$DSTARCH
                   if [ -f $lib.$jnilibext ]; then

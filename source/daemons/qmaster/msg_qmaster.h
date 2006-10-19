@@ -304,7 +304,6 @@
 #define MSG_JOB_PRJREQUIRED           _MESSAGE(33223, _("job rejected: no project was supplied and only certain projects are allowed to submit jobs"))
 #define MSG_JOB_NODEADLINEUSER_S      _MESSAGE(33224, _("job rejected: the user "SFQ" is no deadline initiation user"))
 #define MSG_JOB_NONADMINPRIO          _MESSAGE(33225, _("job rejected: positive submission priority requires operator privileges"))
-#define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "sge_U32CFormat" was rejected cause there is no job_name in the request"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "sge_U32CFormat" was rejected cause it can't be written: "SFN))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "sge_U32CFormat" was rejected cause it couldn't be written"))
 #define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "sge_U32CFormat" dependency change would generate a dependency cycle with job "sge_U32CFormat))

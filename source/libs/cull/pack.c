@@ -362,7 +362,6 @@ int packdouble(sge_pack_buffer *pb, double d) {
    char buf[32];
 #if !(defined(WIN32))                                         /* var not needed */
    XDR xdrs;
-   int doublesize;
 #endif
 
    DENTER(PACK_LAYER, "packdouble");
@@ -390,8 +389,8 @@ int packdouble(sge_pack_buffer *pb, double d) {
          return PACK_FORMAT;
       }
 
-      if ((doublesize = xdr_getpos(&xdrs)) != DOUBLESIZE) {
-         DPRINTF(("error - size of XDRed double is %d\n", doublesize));
+      if (xdr_getpos(&xdrs) != DOUBLESIZE) {
+         DPRINTF(("error - size of XDRed double is %d\n", xdr_getpos(&xdrs)));
          xdr_destroy(&xdrs);
          DEXIT;
          return PACK_FORMAT;
@@ -407,8 +406,8 @@ int packdouble(sge_pack_buffer *pb, double d) {
          return PACK_FORMAT;
       }
 
-      if ((doublesize = wl_xdr_getpos(&xdrs)) != DOUBLESIZE) {
-         DPRINTF(("error - size of XDRed double is %d\n", doublesize));
+      if (wl_xdr_getpos(&xdrs) != DOUBLESIZE) {
+         DPRINTF(("error - size of XDRed double is %d\n", wl_xdr_getpos(&xdrs)));
          wl_xdr_destroy(&xdrs);
          DEXIT;
          return PACK_FORMAT;
@@ -822,7 +821,7 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
 {
    int ret;
    u_long32 size, char_size;
-   char *buffer;
+   char *buffer = NULL;
 
    DENTER(PACK_LAYER, "unpackbitfield");
 

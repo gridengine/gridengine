@@ -1259,7 +1259,9 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
        case SGE_CQUEUE_LIST:
        case SGE_JOB_LIST:
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+            sge_set_commit_required();
             sge_gdi_qmod(host, request, answer, monitor);
+            sge_commit();
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          break; 
 

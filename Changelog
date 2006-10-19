@@ -1,3 +1,6 @@
+RD-2006-10-19-0: CVS        Created V60u9_TAG
+---------------------------------------------
+
 RD-2006-10-11-1: Bugfix:    fixed build error
                  Review:    RD
 
@@ -22,7 +25,7 @@ AH-2006-05-27-0: Enhancem.: Merged S3-branch scalability enhancements
                  Review:    RD
 
 RD-2006-07-27-0: CVS        Created V60u8_1_qmaster_TAG
----------------------------------------------
+-------------------------------------------------------
 
 JG-2006-05-22-0: Bugfix:    Jobs with negative -p priority were rejected by
                             sge_qmaster.

@@ -1,3 +1,7 @@
+AH-2006-10-19-0: Bugfix:    Ensure events emitted upon qmod -d/-e get always
+                            sent as a whole to the scheduler.
+                 Review:    RD
+
 JG-2006-10-19-0: Bugfix:    Fixed broken build on irix and darwin.
                  Review:    RD
 

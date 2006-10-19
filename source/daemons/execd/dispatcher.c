@@ -241,8 +241,6 @@ int dispatch( dispatch_entry*   table,
          u_long32 now = sge_get_gmt();
          static u_long32 last_qmaster_file_read = 0;
          
-         de.tag = -1;
-
          if ( now - last_qmaster_file_read >= 30 ) {
             /* re-read act qmaster file (max. every 30 seconds) */
             DPRINTF(("re-read actual qmaster file\n"));

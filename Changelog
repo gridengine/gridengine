@@ -1,3 +1,6 @@
+JG-2006-10-19-0: Bugfix:    Fixed broken build on irix and darwin.
+                 Review:    RD
+
 AH-2006-10-16-3: Enhancem.: Added RUNPATH link flag to SHARED_LFLAGS to fix problem
                             of libspoolb.so depending on LD_LIBRARY_PATH for 
                             libdb-4.4.so.

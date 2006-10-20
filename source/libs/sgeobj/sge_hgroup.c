@@ -126,7 +126,9 @@ bool hgroup_check_name(lList **answer_list, const char* name)
                               MSG_HGRP_INVALIDHOSTGROUPNAME_S, name);
       return false;
    }
-   if (verify_str_key(answer_list,&name[1], MAX_VERIFY_STRING, "hostgroup") != STATUS_OK) {
+   if (verify_str_key(
+      answer_list,&name[1], MAX_VERIFY_STRING,
+      "hostgroup", KEY_TABLE) != STATUS_OK) {
       return false;
    }
    return true;

@@ -333,7 +333,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    if (!lGetString(jep, JB_account)) {
       lSetString(jep, JB_account, DEFAULT_ACCOUNT);
    } else {
-      if (!job_has_valid_account_string(lGetString(jep, JB_account), alpp)) {
+      if (verify_str_key(
+            alpp, lGetString(jep, JB_account), MAX_VERIFY_STRING,
+            "account string", QSUB_TABLE) != STATUS_OK) {
          return STATUS_EUNKNOWN;
       }
    }
@@ -2742,7 +2744,9 @@ int *trigger
    /* ---- JB_account */
    if ((pos=lGetPosViaElem(jep, JB_account, SGE_NO_ABORT))>=0) {
       DPRINTF(("got new JB_account\n")); 
-      if (!job_has_valid_account_string(lGetString(jep, JB_account), alpp)) {
+      if (verify_str_key(
+            alpp, lGetString(jep, JB_account), MAX_VERIFY_STRING,
+            "account string", QSUB_TABLE) != STATUS_OK) {
          return STATUS_EUNKNOWN;
       }
       lSetString(new_job, JB_account, lGetString(jep, JB_account));
@@ -3369,61 +3373,16 @@ static int job_verify_name(const lListElem *job, lList **answer_list,
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
-      else if (!job_has_valid_account_string(job_name, answer_list)) {
-         ret = STATUS_EUNKNOWN;
+      else {
+         if (verify_str_key(
+               answer_list, job_name, MAX_VERIFY_STRING,
+               lNm2Str(JB_job_name), QSUB_TABLE) != STATUS_OK) {
+            ret = STATUS_EUNKNOWN;
+         }
       }
    }
 
    DEXIT;
-   return ret;
-}
-
-/****** sgeobj/job/job_has_valid_account_string() *****************************
-*  NAME
-*     job_has_valid_account_string() -- is job account string valid 
-*
-*  SYNOPSIS
-*     bool job_has_valid_account_string(const lListElem *job, 
-*                                       lList **answer_list) 
-*
-*  FUNCTION
-*     Returns true if the account string contained in "job" does not
-*     contain any colon (':'). 
-*
-*  INPUTS
-*     const lListElem *job - JB_Type element 
-*     lList **answer_list  - AN_Type element 
-*
-*  RESULT
-*     bool - true if account string is valid 
-*
-*  MT-NOTE: sge_resolve_host() is MT safe 
-*
-******************************************************************************/
-bool job_has_valid_account_string(const char *name, lList **answer_list) {
-   bool ret = true;
-
-#define MAX_characters 9 
-   const char characters[MAX_characters] = { '\n', '\t', '\r', '/', ':', '@', '\\', '?', '*'};
-   const char *output[MAX_characters] = {"\\n", "\\t", "\\r", "/", ":", "@", "\\", "?", "*"};
-   int i;
-   
-   DENTER(TOP_LAYER, "job_verify_name");
-
-   if (name != NULL) {
-      for (i=0; i < MAX_characters; i++) {
-         if (strchr(name, characters[i])) {
-            ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_S, output[i])); 
-            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = false;
-            break;  
-         }   
-      }
-   }
-
-   DEXIT;
-
-   
    return ret;
 }
 

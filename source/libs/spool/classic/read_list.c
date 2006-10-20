@@ -406,7 +406,9 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_PE_S, pe);
                printf("\n");
             }
-            if (verify_str_key(&alp, pe, MAX_VERIFY_STRING, "pe") != STATUS_OK) {
+            if (verify_str_key(
+                  &alp, pe, MAX_VERIFY_STRING,
+                  "pe", KEY_TABLE) != STATUS_OK) {
                DEXIT;
                return -1;
             }       
@@ -462,7 +464,9 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_CALENDAR_S, cal);
                printf("\n");
             }
-            if (verify_str_key(&alp, cal, MAX_VERIFY_STRING, "cal") != STATUS_OK) {
+            if (verify_str_key(
+               &alp, cal, MAX_VERIFY_STRING,
+               "cal", KEY_TABLE) != STATUS_OK) {
                DEXIT;
                return -1;
             }      
@@ -618,7 +622,9 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_QUEUE_S, lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(&alp, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
+            if (verify_str_key(
+                  &alp, queue_str, MAX_VERIFY_STRING,
+                  "cqueue", KEY_TABLE) != STATUS_OK) {
                DEXIT;
                return -1;
             }   
@@ -737,7 +743,9 @@ int sge_read_project_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(&alp, userprj_str, MAX_VERIFY_STRING, "project") != STATUS_OK) {
+            if (verify_str_key(
+                  &alp, userprj_str, MAX_VERIFY_STRING,
+                  "project", KEY_TABLE) != STATUS_OK) {
                DEXIT;
                return -1;
             }  
@@ -842,7 +850,9 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory)
                printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(&alp, userset, MAX_VERIFY_STRING, "userset") != STATUS_OK) {
+            if (verify_str_key(
+                  &alp, userset, MAX_VERIFY_STRING,
+                  "userset", KEY_TABLE) != STATUS_OK) {
                DEXIT;
                return -1;
             }  

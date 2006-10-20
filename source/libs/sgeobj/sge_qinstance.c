@@ -1371,7 +1371,8 @@ qinstance_verify(const lListElem *qep, lList **answer_list)
    }
 
    if (ret) {
-      if (verify_str_key(answer_list, lGetString(qep, QU_qname), MAX_VERIFY_STRING, lNm2Str(QU_qname)) != STATUS_OK) {
+      if (verify_str_key(answer_list, lGetString(qep, QU_qname),
+                         MAX_VERIFY_STRING, lNm2Str(QU_qname), KEY_TABLE) != STATUS_OK) {
          ret = false;
       }
    }
@@ -1434,7 +1435,7 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
    /* the cqueue name */
    if (ret) {
       if (verify_str_key(answer_list, sge_dstring_get_string(&cqueue_name), 
-                         MAX_VERIFY_STRING, "cluster queue") != STATUS_OK) {
+                         MAX_VERIFY_STRING, "cluster queue", KEY_TABLE) != STATUS_OK) {
          ret = false;
       }
    }
@@ -1445,7 +1446,7 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
          ret = verify_host_name(answer_list, sge_dstring_get_string(&host_domain));
       } else if (has_domain) {
          if (verify_str_key(answer_list, sge_dstring_get_string(&host_domain) + 1, 
-                            MAX_VERIFY_STRING, "host domain") != STATUS_OK) {
+                            MAX_VERIFY_STRING, "host domain", KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       } else {

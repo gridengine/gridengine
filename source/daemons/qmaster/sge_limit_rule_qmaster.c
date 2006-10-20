@@ -138,7 +138,8 @@ int lirs_mod(void *context,
    lirs_name = lGetString(new_lirs, LIRS_name);
 
    /* Name has to be a valid name */
-   if (add && verify_str_key(alpp, lirs_name, MAX_VERIFY_STRING, MSG_OBJ_LIRS) != STATUS_OK) {
+   if (add && verify_str_key(alpp, lirs_name, MAX_VERIFY_STRING,
+                             MSG_OBJ_LIRS, KEY_TABLE) != STATUS_OK) {
       DRETURN(STATUS_EUNKNOWN);
    }
 

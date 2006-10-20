@@ -156,7 +156,11 @@
 #define MSG_GDI_KEYSTR_AT              _MESSAGE(33101, _("At"))
 #define MSG_GDI_KEYSTR_PIPE            _MESSAGE(33102, _("Pipe"))
 #define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33104, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames"))
+#define MSG_GDI_KEYSTR_ASTERISK        _MESSAGE(33104, _("Asterisk"))
+
+#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33940, _("Questionmark"))
+#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33941, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+
 
 /*
 ** ck_to_do_qmaster.c

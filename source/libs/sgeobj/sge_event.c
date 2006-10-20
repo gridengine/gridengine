@@ -547,7 +547,9 @@ event_client_verify(const lListElem *event_client, lList **answer_list, bool add
        */
       str = lGetString(event_client, EV_name);
       if (str == NULL ||
-         verify_str_key(answer_list, str, MAX_VERIFY_STRING, lNm2Str(EV_name)) != STATUS_OK) {
+         verify_str_key(
+            answer_list, str, MAX_VERIFY_STRING,
+            lNm2Str(EV_name), KEY_TABLE) != STATUS_OK) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDNAME);
          ret = false;
@@ -638,8 +640,9 @@ if (ret == false) {
    if (ret) {
       const char *session = lGetString(event_client, EV_session);
       if (session != NULL) {
-         if (verify_str_key(answer_list, session, MAX_VERIFY_STRING, "session key") 
-                            != STATUS_OK) {
+         if (verify_str_key(
+         answer_list, session, MAX_VERIFY_STRING,
+         "session key", KEY_TABLE) != STATUS_OK) {
             answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                     MSG_EVENT_INVALIDSESSIONKEY);
             ret = false;

@@ -315,7 +315,9 @@ pe_task_verify_request(const lListElem *petr, lList **answer_list) {
       const char *queue_name = lGetString(petr, PETR_queuename);
 
       if (queue_name != NULL) {
-         if (verify_str_key(answer_list, queue_name, MAX_VERIFY_STRING, lNm2Str(PETR_queuename)) != STATUS_OK) {
+         if (verify_str_key(
+               answer_list, queue_name, MAX_VERIFY_STRING,
+               lNm2Str(PETR_queuename), KEY_TABLE) != STATUS_OK) {
             ret = false;
          }
       }

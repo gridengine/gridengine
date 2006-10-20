@@ -68,14 +68,16 @@ int main(int argc, char *argv[])
    };
 
    for (i=0; denied[i] != NULL; i++) {
-      if (verify_str_key(&answer_list, denied[i], MAX_VERIFY_STRING, "test") == STATUS_OK) {
+      if (verify_str_key(
+            &answer_list, denied[i], MAX_VERIFY_STRING, "test", KEY_TABLE) == STATUS_OK) {
          printf("%s should be forbidden\n",  denied[i]);
          ret++;
       }
    }
 
    for (i=0; allowed[i] != NULL; i++) {
-      if (verify_str_key(&answer_list, allowed[i], MAX_VERIFY_STRING, "test") != STATUS_OK) {
+      if (verify_str_key(
+            &answer_list, allowed[i], MAX_VERIFY_STRING, "test", KEY_TABLE) != STATUS_OK) {
          printf("%s should be allowed\n",  allowed[i]);
          ret++;
       }

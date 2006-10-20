@@ -77,7 +77,7 @@ calendar_mod(void *context, lList **alpp, lListElem *new_cal, lListElem *cep, in
    /* ---- CAL_name cannot get changed - we just ignore it */
    if (add) {
       cal_name = lGetString(cep, CAL_name);
-      if (verify_str_key(alpp, cal_name, MAX_VERIFY_STRING, "calendar") != STATUS_OK)
+      if (verify_str_key(alpp, cal_name, MAX_VERIFY_STRING, "calendar", KEY_TABLE) != STATUS_OK)
          goto ERROR;
       lSetString(new_cal, CAL_name, cal_name);
    } else {

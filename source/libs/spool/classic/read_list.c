@@ -399,7 +399,8 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp
                printf(MSG_SETUP_PE_S, pe);
                printf("\n");
             }
-            if (verify_str_key(NULL, pe, MAX_VERIFY_STRING, "pe") != STATUS_OK) {
+            if (verify_str_key(NULL, pe, MAX_VERIFY_STRING,
+                               "pe", KEY_TABLE) != STATUS_OK) {
                DRETURN(-1);
             }       
             ep = cull_read_in_pe(directory, pe, 1, 0, NULL, NULL);
@@ -453,7 +454,8 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alp
                printf(MSG_SETUP_CALENDAR_S, cal);
                printf("\n");
             }
-            if (verify_str_key(NULL, cal, MAX_VERIFY_STRING, "cal") != STATUS_OK) {
+            if (verify_str_key(NULL, cal, MAX_VERIFY_STRING,
+                               "cal", KEY_TABLE) != STATUS_OK) {
                DRETURN(-1);
             }      
             ep = cull_read_in_cal(directory, cal, 1, 0, NULL, NULL);
@@ -603,7 +605,8 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **
                printf(MSG_SETUP_QUEUE_S, queue_str);
                printf("\n");
             }
-            if (verify_str_key(NULL, queue_str, MAX_VERIFY_STRING, "cqueue") != STATUS_OK) {
+            if (verify_str_key(NULL, queue_str, MAX_VERIFY_STRING,
+                               "cqueue", KEY_TABLE) != STATUS_OK) {
                DRETURN(-1);
             }   
             qep = cull_read_in_cqueue(directory, 
@@ -718,7 +721,8 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory, 
                printf(MSG_SETUP_LIRS_S, lirs_name);
                printf("\n");
            }
-           if (verify_str_key(NULL, lirs_name, MAX_VERIFY_STRING, "lirs") != STATUS_OK) {
+           if (verify_str_key(NULL, lirs_name, MAX_VERIFY_STRING,
+                              "lirs", KEY_TABLE) != STATUS_OK) {
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
@@ -786,7 +790,8 @@ int sge_read_project_list_from_disk(lList **list, const char *directory, lList *
                printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(NULL, userprj_str, MAX_VERIFY_STRING, "project") != STATUS_OK) {
+            if (verify_str_key(NULL, userprj_str, MAX_VERIFY_STRING,
+                               "project", KEY_TABLE) != STATUS_OK) {
                DRETURN(-1);
             }  
             ep = cull_read_in_userprj(directory, lGetString(direntry, ST_name), 1,
@@ -885,7 +890,8 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory, lList *
                printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
                printf("\n");
             }
-            if (verify_str_key(NULL, userset, MAX_VERIFY_STRING, "userset") != STATUS_OK) {
+            if (verify_str_key(NULL, userset, MAX_VERIFY_STRING,
+                               "userset", KEY_TABLE) != STATUS_OK) {
                DRETURN(-1);
             }  
 

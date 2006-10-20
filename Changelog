@@ -1,3 +1,7 @@
+GH-2006-10-20-0: Bugfix:    Account string does not accept the "|" character
+                 Bugtraq:   6475282
+                 Review:    AH
+
 RD-2006-10-19-0: Bugfix:    - Execd ignores in certain cases JOB_EXECUTION request
                             - removed some redundant code
                  Bugster:   6483941

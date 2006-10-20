@@ -1,3 +1,6 @@
+RD-2006-10-20-0: Bugfix:    Merged forgotten darwin-x86 bits from maintrunk
+                 Changed:   distinst
+
 RD-2006-10-19-0: Bugfix:    Execd ignores in certain cases JOB_EXECUTION request
                  Bugster:   6483941
                  Issue:     2106

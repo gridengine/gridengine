@@ -40,10 +40,6 @@
 #include "sge_job.h"
 
 static void 
-remove_immediate_job(lList *job_list, lListElem *job, order_t *orders, 
-                     int remove_order);
-
-static void 
 order_remove_order_and_immediate(lListElem *job, lListElem *ja_task, 
                                  order_t *orders);
 
@@ -134,7 +130,7 @@ remove_immediate_jobs( lList *pending_job_list, lList *running_job_list, order_t
 *
 *  FUNCTION
 *     Removes immediate jobs which cannot be scheduled from the given job list.
-*     his is done by generating an order of type ORT_remove_immediate_job.  If
+*     This is done by generating an order of type ORT_remove_immediate_job.  If
 *     remove_orders is set, the ORT_start_job orders are first removed from the
 *     order list before adding the remove order.
 *
@@ -150,8 +146,8 @@ remove_immediate_jobs( lList *pending_job_list, lList *running_job_list, order_t
 *     MT-NOTE: remove_immediate_job() is MT safe
 *
 *******************************************************************************/
-static void 
-remove_immediate_job( lList *job_list, lListElem *job, order_t *orders, int remove_orders) 
+void 
+remove_immediate_job(lList *job_list, lListElem *job, order_t *orders, int remove_orders) 
 {
    lListElem *ja_task; 
    lListElem *range = NULL;
@@ -228,22 +224,22 @@ order_remove_order_and_immediate( lListElem *job, lListElem *ja_task, order_t *o
     * the whole job can run
     */  
    lList *orderList = orders->jobStartOrderList;
-   lCondition *where = lWhere ("%T(%I==%u && %I==%u && %I==%u)", OR_Type,
+   lCondition *where = lWhere("%T(%I==%u && %I==%u && %I==%u)", OR_Type,
                       OR_type, ORT_start_job,
-                      OR_job_number, lGetUlong (job, JB_job_number),
-                      OR_ja_task_number, lGetUlong (ja_task, JAT_task_number));
+                      OR_job_number, lGetUlong(job, JB_job_number),
+                      OR_ja_task_number, lGetUlong(ja_task, JAT_task_number));
    lListElem *ep = lFindFirst (orderList, where);
    
    DENTER(TOP_LAYER, "order_remove_order_and_immediate");
    
    if (ep != NULL) {
       DPRINTF (("Removing job start order for job task %u.%u\n",
-                lGetUlong (job, JB_job_number),
-                lGetUlong (ja_task, JAT_task_number)));
+                lGetUlong(job, JB_job_number),
+                lGetUlong(ja_task, JAT_task_number)));
       lRemoveElem(orderList, &ep);
    }
    
-   order_remove_immediate (job, ja_task, orders);
+   order_remove_immediate(job, ja_task, orders);
    lFreeWhere(&where);
    
    DEXIT;

@@ -886,9 +886,15 @@ static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders
             schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
 
             if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) { /* immediate job */
-               /* delet the job, it will be deleted on master side anyway */
-
-               lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id); 
+               lCondition *where = NULL;
+               lListElem *rjob;
+               /* remove job from pending list and generate remove immediate orders 
+                  for all tasks including alreaedy assigned ones */
+               where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id);
+               remove_immediate_job(*(splitted_job_lists[SPLIT_PENDING]), orig_job, orders, 0);
+               if ((rjob = lFindFirst(*(splitted_job_lists[SPLIT_RUNNING]), where)) != NULL)
+                  remove_immediate_job(*(splitted_job_lists[SPLIT_RUNNING]), rjob, orders, 1);
+               lFreeWhere(&where);
             }
             else {
             /* prevent that we get the same job next time again */
@@ -927,14 +933,12 @@ static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders
 
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
-
       PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s (%d fast, %d comp, %d pe, %d res)",
                  prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL),
                  fast_runs,
                  fast_soft_runs,
                  comprehensive_runs,
-                 nreservation
-            ));
+                 nreservation));
    }
 
    lFreeList(&user_list);

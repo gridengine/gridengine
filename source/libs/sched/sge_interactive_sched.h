@@ -34,6 +34,8 @@
 
 #include "sge_orders.h"
 
+void remove_immediate_job(lList *job_list, lListElem *job, order_t *orders, int remove_orders);
+
 int remove_immediate_jobs(lList *pending_job_list, lList *running_job_list,
                           order_t *orders);
 

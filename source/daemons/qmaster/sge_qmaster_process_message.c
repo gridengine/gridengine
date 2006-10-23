@@ -95,7 +95,7 @@ typedef struct {
  * 2) if the first GDI multi request is not a get request
  *    all GDI requests are not a get request
  * 
- * Based on this assumption we can greate the following
+ * Based on this assumption we can create the following
  * execution matrix (GDI is used for atomix GDI requests
  * and load/job reports:
  *
@@ -289,7 +289,7 @@ eval_atomic(request_handling_t type)
 {
    bool cond = false;
 
-   DENTER(TOP_LAYER, "eval_atomicx");
+   DENTER(TOP_LAYER, "eval_atomic");
    
    if (type == ATOMIC_NONE) {
       return;
@@ -316,7 +316,7 @@ eval_atomic(request_handling_t type)
       }
    } while (!cond);
   
-   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n\n", Master_Control.type, 
+   DPRINTF(("eval after type %d, counter %d, wait %d --- ntype %d\n", Master_Control.type, 
             Master_Control.counter, Master_Control.signal, type));
    
    sge_mutex_unlock("message_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);

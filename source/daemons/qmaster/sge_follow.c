@@ -100,7 +100,7 @@ typedef enum {
 } spool_type;
 
 typedef struct {
-   pthread_mutex_t last_update_mutex; /* gards the last_update access */
+   pthread_mutex_t last_update_mutex; /* guards the last_update access */
    u_long32 last_update;               /* used to store the last time, when the usage was stored */
    spool_type is_spooling;             /* identifies, if spooling should happen */
    u_long32   now;                     /* stores the time of the last spool computation */

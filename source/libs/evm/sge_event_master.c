@@ -151,10 +151,10 @@ typedef struct {
  ***********************************************************
  */
 typedef struct {
-   pthread_mutex_t  transaction_mutex;    /* a mutix ensuring that only one transaction is running at a time */
+   pthread_mutex_t  transaction_mutex;    /* a mutex ensuring that only one transaction is running at a time */
    lList            *transaction_events;  /* a list storing all events happening, while a transaction is open, a
                                              transaction is not thread specific*/
-   pthread_mutex_t  t_add_event_mutex;    /* garding the transaction_events list and the boolean is_transaction */
+   pthread_mutex_t  t_add_event_mutex;    /* guarding the transaction_events list and the boolean is_transaction */
    bool             is_transaction;       /* identifies, if a transaction is open, or not */
    pthread_mutex_t  mutex;                 /* used for mutual exclusion. only use in public functions   */
    pthread_cond_t   lockfield_cond_var;    /* used for waiting                                          */
@@ -4516,7 +4516,7 @@ static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
 *     void sge_set_commit_required ()
 *
 *  FUNCTION
-*  Enables transactions on events. Sofar a rollback is not suported. It allows to acumulate
+*  Enables transactions on events. So far a rollback is not supported. It allows to accumulate
 *  events, while multiple objects are modified and events are issued and to submit them as
 *  one event package. There can only be one event session open at a time. The transaction_mutex
 *  will block multiple calles to this method.

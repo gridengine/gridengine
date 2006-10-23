@@ -262,7 +262,7 @@ jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev,
                addEvent = gen.getAddEventName(cullObj);
            }
            if(cullObj.hasGetListOperation()) {
-               addEvent = gen.getListEventName(cullObj);
+               listEvent = gen.getListEventName(cullObj);
            }
            if(cullObj.hasDeleteOperation()) {
                delEvent = gen.getDelEventName(cullObj);

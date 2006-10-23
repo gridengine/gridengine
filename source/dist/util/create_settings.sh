@@ -90,6 +90,7 @@ fi
 
 
 echo ""                                                          >> $SP_CSH
+echo '# library path setting required only for architectures where RUNPATH is not supported' >> $SP_CSH
 echo 'if ( $?MANPATH == 1 ) then'                                >> $SP_CSH
 echo "   setenv MANPATH \$SGE_ROOT/"'${MANTYPE}':'$MANPATH'      >> $SP_CSH
 echo "else"                                                      >> $SP_CSH
@@ -99,13 +100,11 @@ echo ""                                                          >> $SP_CSH
 echo "set path = ( \$SGE_ROOT/bin/"'$ARCH $path )'               >> $SP_CSH
 
 echo 'switch ($ARCH)'                                            >> $SP_CSH
-echo 'case "Xsol*":'                                              >> $SP_CSH
-echo 'case "Xlx*":'                                               >> $SP_CSH
-echo '   breaksw'                                                >> $SP_CSH
+#ENFORCE_SHLIBPATH#echo 'case "sol*":'                           >> $SP_CSH
+#ENFORCE_SHLIBPATH#echo 'case "lx*":'                            >> $SP_CSH
+#ENFORCE_SHLIBPATH#echo '   breaksw'                             >> $SP_CSH
 echo 'case "*":'                                                 >> $SP_CSH
-
 echo "   set shlib_path_name = \`\$SGE_ROOT/util/arch -lib\`"       >> $SP_CSH
-
 echo "   if ( \`eval echo '\$?'\$shlib_path_name\` ) then"          >> $SP_CSH
 echo "      set old_value = \`eval echo '\$'\$shlib_path_name\`"    >> $SP_CSH
 echo "      setenv \$shlib_path_name \"\$SGE_ROOT/lib/\$ARCH\":\"\$old_value\""   >> $SP_CSH
@@ -149,9 +148,10 @@ echo "MANPATH=\$SGE_ROOT/\$MANTYPE:\$MANPATH; export MANPATH"    >> $SP_SH
 echo ""                                                          >> $SP_SH
 echo "PATH=\$SGE_ROOT/bin/\$ARCH:\$PATH; export PATH"            >> $SP_SH
 
+echo '# library path setting required only for architectures where RUNPATH is not supported' >> $SP_SH
 echo 'case $ARCH in'                                                >> $SP_SH
-echo 'Xsol*|Xlx*)'                                                    >> $SP_SH
-echo '   ;;'                                                        >> $SP_SH
+#ENFORCE_SHLIBPATH#echo 'sol*|lx*)'                                 >> $SP_SH
+#ENFORCE_SHLIBPATH#echo '   ;;'                                     >> $SP_SH
 echo '*)'                                                           >> $SP_SH
 echo "   shlib_path_name=\`\$SGE_ROOT/util/arch -lib\`"             >> $SP_SH
 echo "   old_value=\`eval echo '\$'\$shlib_path_name\`"             >> $SP_SH

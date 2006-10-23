@@ -1,6 +1,6 @@
 AH-2006-10-23-1: Bugfix:    Immediate array jobs that exceed the number of 
                             available resources are not rejected completely
-                            6480138
+                 Bugtraq:   6480138
                  Review:    AA
 
 AH-2006-10-23-0: Bugfix:    Discrepancy between load values reported by 

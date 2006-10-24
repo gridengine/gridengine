@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/05/05 15:32:40 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2004/05/05 15:32:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -61,9 +61,9 @@ characteristics.
 The format of a
 .I host_conf
 file is defined as follows:
-.IP "\fBhostname\fP"
+.SS "\fBhostname\fP"
 The name of the execution host.
-.IP "\fBload_scaling\fP"
+.SS "\fBload_scaling\fP"
 A comma separated list of scaling values to be applied to each or part
 of the load values being reported by the
 .M xxqs_name_sxx_execd 8
@@ -91,7 +91,7 @@ allowed in between the load_scaling value string.
 The parameter
 .B load_scaling
 is not meaningful for the definition of the "global" host.
-.IP "\fBcomplex_values\fP"
+.SS "\fBcomplex_values\fP"
 .B complex_values
 defines quotas for resource attributes managed via this 
 host. Each complex attribute is followed by an "=" sign and the value 
@@ -171,7 +171,7 @@ per job slot basis.
 .sp 1
 The default value for this parameter is NONE, i.e. no administrator 
 defined resource attribute quotas are associated with the host.
-.IP "\fBload_values\fP"
+.SS "\fBload_values\fP"
 This entry cannot be configured but is only displayed in case of a
 .M qconf 1
 \fB\-se\fP command. All load values are displayed as reported by the
@@ -179,14 +179,14 @@ This entry cannot be configured but is only displayed in case of a
 on the host. The load values are enlisted in a comma separated list. Each
 load value start with its name, followed by an equal sign and the reported
 value.
-.IP "\fBprocessors\fP"
+.SS "\fBprocessors\fP"
 This entry cannot be configured but is only displayed in case of a
 .M qconf 1
 \fB\-se\fP command. Its value is the number of processors which has been
 detected by
 .M xxqs_name_sxx_execd 8
 on the corresponding host.
-.IP "\fBusage_scaling\fP"
+.SS "\fBusage_scaling\fP"
 The format is equivalent to
 .B load_scaling
 (see above), the only valid attributes to be scaled however are
@@ -197,7 +197,7 @@ for Memory consumption aggregated over the life-time of jobs and
 .B io
 for data transferred via any I/O devices. The default NONE means
 "no scaling", i.e. all scaling factors are 1.
-.IP "\fBuser_lists\fP"
+.SS "\fBuser_lists\fP"
 The \fBuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
@@ -207,7 +207,7 @@ NONE (the default) any user has access being not explicitly excluded
 via the \fBxuser_lists\fP parameter described below.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the host.
-.IP "\fBxuser_lists\fP"
+.SS "\fBxuser_lists\fP"
 The \fBxuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
@@ -216,14 +216,14 @@ allowed to access the host. If the \fBxuser_lists\fP parameter is set to
 NONE (the default) any user has access.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the host.
-.IP "\fBprojects\fP"
+.SS "\fBprojects\fP"
 The \fBprojects\fP parameter contains a comma separated list of projects
 that have access to the host. Any projects not in this list are denied
 access to the host. If set to NONE (the default), any project
 has access that is not specifically excluded via the \fBxprojects\fP
 parameter described below. If a project is in both the \fBprojects\fP and
 \fBxprojects\fP parameters, the project is denied access to the host.
-.IP "\fBxprojects\fP"
+.SS "\fBxprojects\fP"
 The \fBxprojects\fP parameter contains a comma separated list of projects
 that are denied access to the host. If set to NONE (the default), no
 projects are denied access other than those denied access based on the
@@ -231,7 +231,7 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the host.
 .\"
-.IP "\fBreport_variables\fP"
+.SS "\fBreport_variables\fP"
 The \fBreport_variables\fP parameter contains a comma separated list of 
 variables that shall be written to the reporting file.
 The variables listed here will be written to the reporting file when a load report arrives from an execution host.

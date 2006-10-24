@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2005/03/30 14:31:36 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/03/30 14:31:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx bootstrap file
@@ -50,7 +50,7 @@ The paragraphs that follow provide brief descriptions of the individual
 parameters that compose the bootstrap configuration for a
 xxQS_NAMExx cluster:
 .\"
-.SH "\fBadmin_user\fP"
+.SS "\fBadmin_user\fP"
 Administrative user account used by xxQS_NAMExx for all internal file
 handling (status spooling, message logging, etc.). Can be used in cases
 where the root account does not have the corresponding file access
@@ -66,7 +66,7 @@ The \fBadmin_user\fP parameter has no default value, but instead it is
 defined during the master installation procedure.
 .\"
 .\"
-.SH "\fBdefault_domain\fP"
+.SS "\fBdefault_domain\fP"
 Only needed if your xxQS_NAMExx cluster covers hosts belonging to more than
 a single DNS domain. In this case it can be used if your hostname resolving 
 yields both qualified and unqualified hostnames for the hosts in one of the 
@@ -87,7 +87,7 @@ in a running system is not supported. The default for
 is "none", in which case it will not be used.
 .\"
 .\"
-.SH "\fBignore_fqdn\fP"
+.SS "\fBignore_fqdn\fP"
 Ignore fully qualified domain name component of hostnames. Should be set 
 if all hosts belonging to a xxQS_NAMExx cluster are part of a single DNS 
 domain. It is switched on if set to either "true" or "1". Switching it 
@@ -101,7 +101,7 @@ in a running system is not supported. The default for
 is "true".
 .\"
 .\"
-.SH "\fBspooling_method\fP"
+.SS "\fBspooling_method\fP"
 Defines how 
 .M xxqs_name_sxx_qmaster 8
 writes its configuration and the status information of a running cluster.
@@ -109,7 +109,7 @@ writes its configuration and the status information of a running cluster.
 The available spooling methods are \fIberkeleydb\fP and \fIclassic\fP.
 .\"
 .\"
-.SH "\fBspooling_lib\fP"
+.SS "\fBspooling_lib\fP"
 The name of a shared library containing the \fBspooling_method\fP to be loaded 
 at 
 .M xxqs_name_sxx_qmaster 8
@@ -124,7 +124,7 @@ parameter \fBspooling_lib\fP will be ignored.
 .PP
 .\"
 .\"
-.SH "\fBspooling_params\fP"
+.SS "\fBspooling_params\fP"
 Defines parameters to the chosen spooling method.
 .PP
 Parameters that are needed to initialize the spooling framework, e.g. to open database files or to connect to a certain database server.
@@ -136,7 +136,7 @@ For spooling method \fIclassic\fP the spooling parameters take the form
 /sge/default/common;/sge/default/spool/qmaster
 .\"
 .\"
-.SH "\fBbinary_path\fP"
+.SS "\fBbinary_path\fP"
 The directory path where the xxQS_NAMExx binaries reside. It is used within
 xxQS_NAMExx components to locate and startup other xxQS_NAMExx programs.
 .PP
@@ -151,7 +151,7 @@ The default location for the binary path is
 .PP
 .\"
 .\"
-.SH "\fBqmaster_spool_dir\fP"
+.SS "\fBqmaster_spool_dir\fP"
 The location where the master spool directory resides. Only the
 .M xxqs_name_sxx_qmaster 8
 and 
@@ -173,7 +173,7 @@ master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
 .PP
 .\"
 .\"
-.SH "\fBproduct_mode\fP"
+.SS "\fBproduct_mode\fP"
 The product mode defines the set of features the installed cluster is using.
 .PP
 Both the basic product modes sge (xxQS_NAMExx standard mode) and 

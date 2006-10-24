@@ -1,3 +1,9 @@
+RD-2006-10-24-0: Enhancem.  o added lirs qconf options to qconf(1)
+                            o added qlimit(1) manpage
+                            o added sge_limitation_rule_set(5) man page
+                            o unified format of all man pages
+                 Review:    DT
+
 AH-2006-10-23-1: Bugfix:    Immediate array jobs that exceed the number of 
                             available resources are not rejected completely
                  Bugtraq:   6480138

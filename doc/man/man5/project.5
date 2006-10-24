@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: project.5,v $     Last Update: $Date: 2004/04/19 10:52:08 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: project.5,v $     Last Update: $Date: 2006/10/24 08:05:02 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH PROJECT 5 "$Date: 2004/04/19 10:52:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH PROJECT 5 "$Date: 2006/10/24 08:05:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 project \- xxQS_NAMExx project entry file format
@@ -52,17 +52,17 @@ modified via the \fB\-aprj\fP, \fB\-mprj\fP and \fB\-dprj\fP options to
 .\"
 .SH FORMAT
 A project definition contains the following parameters:
-.IP "\fBname\fP"
+.SS "\fBname\fP"
 The project name.
-.IP "\fBoticket\fP"
+.SS "\fBoticket\fP"
 The amount of override tickets currently assigned to the project.
-.IP "\fBfshare\fP"
+.SS "\fBfshare\fP"
 The current functional share of the project.
-.IP "\fBfacl\fP"
+.SS "\fBfacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
 referring to those users being allowed to submit jobs to the project.
-.IP "\fBfxacl\fP"
+.SS "\fBfxacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
 referring to those users being not allowed to submit jobs to the project.

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2005/12/13 14:15:13 $     Revision: $Revision: 1.30 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.31 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2005/12/13 14:15:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -374,7 +374,7 @@ or
 The state E(rror) appears for pending jobs that couldn't be started due to 
 job properties. The reason for the job error is shown by the 
 .M qstat 1 
-\fB\-j job_list\f
+\fB\-j job_list\fP
 option.
 .IP "\(bu" 3n
 the submission or start time and date of the job.
@@ -808,7 +808,7 @@ not know the best display length, one can set SGE_LONG_QNAMES to
 \fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qstat\fP
 	cluster qstat default options
 \fI$HOME/.xxqs_name_sxx_qstat\fR	
-   user qstat default options
+	user qstat default options
 .fi
 .\"
 .\"

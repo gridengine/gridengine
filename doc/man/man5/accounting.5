@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2006/09/12 09:17:13 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2006/09/12 09:17:13 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -48,19 +48,19 @@ and lines which contain one character or less are ignored.
 Accounting record entries are
 separated by colon (':') signs. The entries denote in their order
 of appearance:
-.IP "\fBqname\fP"
+.SS "\fBqname\fP"
 Name of the cluster queue in which the job has run.
-.IP "\fBhostname\fP"
+.SS "\fBhostname\fP"
 Name of the execution host.
-.IP "\fBgroup\fP"
+.SS "\fBgroup\fP"
 The effective group id of the job owner when executing the job.
-.IP "\fBowner\fP"
+.SS "\fBowner\fP"
 Owner of the xxQS_NAMExx job.
-.IP "\fBjob_name\fP"
+.SS "\fBjob_name\fP"
 Job name.
-.IP "\fBjob_number\fP"
+.SS "\fBjob_number\fP"
 Job identifier - job number.
-.IP "\fBaccount\fP"
+.SS "\fBaccount\fP"
 An account string as specified by the
 .M qsub 1
 or
@@ -70,24 +70,24 @@ or
 Priority value assigned to the job corresponding to the \fBpriority\fP
 parameter in the queue configuration (see
 .M queue_conf 5 ).
-.IP "\fBsubmission_time\fP"
+.SS "\fBsubmission_time\fP"
 Submission time in seconds (since epoch format).
 For slave tasks of tightly integrated parallel jobs, the submission_time is 
 always set to 0.
-.IP "\fBstart_time\fP"
+.SS "\fBstart_time\fP"
 Start time in seconds (since epoch format).
-.IP "\fBend_time\fP"
+.SS "\fBend_time\fP"
 End time in seconds (since epoch format).
-.IP "\fBfailed\fP"
+.SS "\fBfailed\fP"
 Indicates the problem which occurred in case a job could not be started on 
 the execution host (e.g. because the owner of the job did not have a valid 
 account on that machine). If xxQS_NAMExx tries to start a job multiple times, 
 this may lead to multiple entries in the accounting file corresponding to 
 the same job ID.
-.IP "\fBexit_status\fP"
+.SS "\fBexit_status\fP"
 Exit status of the job script (or xxQS_NAMExx specific status in case
 of certain error conditions).
-.IP "\fBru_wallclock\fP"
+.SS "\fBru_wallclock\fP"
 Difference between \fBend_time\fP and \fBstart_time\fP (see above).
 .PP
 The remainder of the accounting entries follows the contents of the
@@ -119,30 +119,30 @@ fields may be 0.  The following entries are provided:
 .fi
 .PP
 
-.IP "\fBproject\fP"
+.SS "\fBproject\fP"
 The project which was assigned to the job.
-.IP "\fBdepartment\fP"
+.SS "\fBdepartment\fP"
 The department which was assigned to the job.
-.IP "\fBgranted_pe\fP"
+.SS "\fBgranted_pe\fP"
 The parallel environment which was selected for that job.
-.IP "\fBslots\fP"
+.SS "\fBslots\fP"
 The number of slots which were dispatched to the job by the scheduler.
-.IP "\fBtask_number\fP"
+.SS "\fBtask_number\fP"
 Array job task index number.
-.IP "\fBcpu\fP"
+.SS "\fBcpu\fP"
 The cpu time usage in seconds. 
-.IP "\fBmem\fP"
+.SS "\fBmem\fP"
 The integral memory usage in Gbytes seconds. 
-.IP "\fBio\fP"
+.SS "\fBio\fP"
 The amount of data transferred in input/output operations.
-.IP "\fBcategory\fP"
+.SS "\fBcategory\fP"
 A string specifying the job category.
-.IP "\fBiow\fP"
+.SS "\fBiow\fP"
 The io wait time in seconds.
-.IP "\fBpe_taskid\fP"
+.SS "\fBpe_taskid\fP"
 If this identifier is set the task was part of a parallel job and was 
 passed to xxQS_NAMExx via the qrsh -inherit interface.
-.IP "\fBmaxvmem\fP"
+.SS "\fBmaxvmem\fP"
 The maximum vmem size in bytes.
 .fi
 .\"

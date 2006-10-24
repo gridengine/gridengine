@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2004/04/19 10:52:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
@@ -102,7 +102,7 @@ Depending on the presence or absence of the \fB\-q\fP or \fB\-F\fP and
 PP
 .\"
 .SS "\fBDefault Format (without \-q, \-F and \-j)\fP"
-Following the header line a line is printed for each host
+For each host one line is printed. The output consists of
 consisting of
 .IP "\(bu" 3n
 the Hostname 
@@ -258,7 +258,7 @@ files.
 .IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
 cell
-.I qstat
+.I qhost 
 uses (in the order of precedence):
 .sp 1
 .RS

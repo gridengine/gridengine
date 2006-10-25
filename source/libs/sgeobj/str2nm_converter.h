@@ -34,7 +34,7 @@
 
 #ifndef NO_JNI
 
-#include "jni.h"
+#include <jni.h>
 
 int lStr2NmGenerator(const char *str, lNameSpace *ns);
 

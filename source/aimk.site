@@ -70,7 +70,7 @@ setenv TMPDIR /tmp
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_SOVERSION = 0.9.7e
+set OPENSSL_SOVERSION = 0.9.7l
 set OPENSSL_HOME = /vol2/tools/SW/openssl-$OPENSSL_SOVERSION/$buildarch
 
 

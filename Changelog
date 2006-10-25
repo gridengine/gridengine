@@ -1,3 +1,12 @@
+AA-2006-10-25-0: Enhancem.  o openss-0.9.7l
+                            o aimk fix for darwin
+                            o execd USE_QSUB_GID problem fix
+                            o drmaa build junit.jar dependency
+                            o darwin JNI_CreateJavaVM_Impl due to
+                              missing JNI_CreateJavaVM
+                            o jni.h wrong dependency
+                 Review:    JG
+
 RD-2006-10-24-0: Enhancem.  o added lirs qconf options to qconf(1)
                             o added qlimit(1) manpage
                             o added sge_limitation_rule_set(5) man page

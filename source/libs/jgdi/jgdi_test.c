@@ -37,6 +37,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef DARWIN
+int JNI_CreateJavaVM_Impl(JavaVM **pvm, void **penv, void *args);
+#endif
+
 JNIEnv* create_vm(int argc, char** argv);
 
 int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv);

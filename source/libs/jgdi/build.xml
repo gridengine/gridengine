@@ -49,7 +49,7 @@
    </target>
    
    <target name="aimk.drmaa" depends="aimk.init">
-      <aimk_call args="-only-core libdrmaa.so"/>
+      <aimk_call args="-only-core drmaalib"/>
    </target>
    
    
@@ -242,6 +242,7 @@
 
    <target name="gensrc" depends="jni.init"
       description="Create a all generated source files">  
+      <echo>java.library.path: ${java.library.path}</echo>      
       <java classname="org.apache.tools.ant.launch.Launcher" 
          fork="true" failonerror="true">
          <jvmarg line="${sge.jvmargs}"/>
@@ -283,11 +284,19 @@
      
       <echo>cullconv.jar=${cullconv.jar}</echo> 
       <taskdef name="cullconv" classname="com.sun.grid.cull.ant.CullConvAntTask">
-         <classpath location="${cullconv.jar}"/>
+         <!--classpath location="${cullconv.jar}"/-->
+         <classpath>
+            <pathelement path="${cullconv.jar}"/>
+            <pathelement path="${libs.junit.classpath}"/>
+         </classpath>
       </taskdef>
       
       <taskdef name="javaconv" classname="com.sun.grid.javaconv.ant.JavaConvAntTask">
-         <classpath location="${cullconv.jar}"/>
+         <!--classpath location="${cullconv.jar}"/-->
+         <classpath>
+            <pathelement path="${cullconv.jar}"/>
+            <pathelement path="${libs.junit.classpath}"/>
+         </classpath>
       </taskdef>
       
       <mkdir dir="${build.dir}/tmp"/>
@@ -882,13 +891,14 @@
    </target>
 
    <target name="run.qevent" depends="init, jni.init, jar">
+      <echo message="bootstrap://${sge.root}@${sge.cell}:${sge.qmaster_port}"/> 
       <java fork="true" classname="com.sun.grid.jgdi.event.QEvent">
          <jvmarg line="${sge.jvmargs}"/>
          <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>
          <classpath>
             <pathelement location="${classes.dir}"/>
          </classpath>
-         <arg line="//bootstrap:${env.SGE_ROOT}@${env.SGE_CELL}:${env.SGE_QMASTER_PORT}"/>
+         <arg line="bootstrap://${sge.root}@${sge.cell}:${sge.qmaster_port}"/>
       </java>
    </target>
         

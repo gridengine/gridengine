@@ -34,6 +34,10 @@ ___INFO__MARK_END__-->
 
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
+      <property name="sge.srcdir" location=".."/>
+      <property file="${sge.srcdir}/build_private.properties"/>    
+      <property file="${sge.srcdir}/build.properties"/>
+      
       <property location="../CLASSES" name="classes.dir"/>
       <property location="../CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
@@ -59,7 +63,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init,compile" description="Compile test classes." name="compile.test">
       <mkdir dir="${classes.dir.test}"/>
-      <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}">
+      <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}:${libs.junit.classpath}">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/*.java"/>

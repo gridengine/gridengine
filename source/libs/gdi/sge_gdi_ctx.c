@@ -452,6 +452,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz,
                               int prog_number,
                               const char* component_name,
                               const char* username,
+                              const char* groupname,
                               const char *sge_root, 
                               const char *sge_cell, 
                               int sge_qmaster_port, 
@@ -545,7 +546,8 @@ static int sge_gdi_ctx_class_gdi_multi_sync(sge_gdi_ctx_class_t* thiz,
                                             bool do_sync);
 
 
-sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* component_name, const char* username,
+sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* component_name,
+                                              const char* username, const char *groupname,
                                               const char *sge_root, const char *sge_cell, 
                                               int sge_qmaster_port, int sge_execd_port, lList **alpp)
 {
@@ -640,7 +642,7 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    }
 
 
-   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, username, sge_root, sge_cell, sge_qmaster_port, sge_execd_port)) {
+   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, username, groupname, sge_root, sge_cell, sge_qmaster_port, sge_execd_port)) {
       sge_gdi_ctx_class_get_errors(ret, alpp, true);
       sge_gdi_ctx_class_destroy(&ret);
       DRETURN(NULL);
@@ -739,7 +741,9 @@ static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
 }
 
 
-static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name, const char* username, const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port)
+static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
+                              const char* username, const char *groupname,
+                              const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
    sge_error_class_t *eh = es->eh;
@@ -828,7 +832,16 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
          DRETURN(false);
       }
       es->uid = pwd->pw_uid;
-      es->gid = pwd->pw_gid;
+      if (groupname != NULL) {
+         gid_t gid;
+         if (sge_group2gid(groupname, &gid, MAX_NIS_RETRIES) == 1) {;
+            eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_group2gid failed for groupname %s", groupname);
+            DRETURN(false);
+         }
+         es->gid = gid;
+      } else {
+         es->gid = pwd->pw_gid;
+      }   
    }
    
    es->username = strdup(username);
@@ -846,10 +859,16 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    }
 #endif
    
-
-   if (_sge_gid2group(es->gid, &(es->gid), &(es->groupname), MAX_NIS_RETRIES)) {
-      eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_GETGRGIDXFAILEDERRORX_U, sge_u32c(es->gid));
-      DRETURN(false);
+   /*
+   ** groupname
+   */
+   if (groupname != NULL) {
+      es->groupname = strdup(groupname);
+   } else {   
+      if (_sge_gid2group(es->gid, &(es->gid), &(es->groupname), MAX_NIS_RETRIES)) {
+         eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_GETGRGIDXFAILEDERRORX_U, sge_u32c(es->gid));
+         DRETURN(false);
+      }
    }
 
    /*
@@ -954,7 +973,7 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
    
    /* TODO we need a way to define the execd port */
    
-   ret = sge_gdi_ctx_class_create(prog_number, component_name, username,
+   ret = sge_gdi_ctx_class_create(prog_number, component_name, username, NULL,
                                   sge_root, sge_cell, sge_qmaster_p, sge_execd_p, alpp);
    
    DRETURN(ret); 
@@ -1960,6 +1979,7 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p)
 int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 {
    char  user[128] = "";
+   char  group[128] = "";
    const char *sge_root = NULL;
    const char *sge_cell = NULL;
    u_long32 sge_qmaster_port = 0;
@@ -1997,13 +2017,18 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 /*    gdi_mt_init(); */
 /* } end sge_mt_init */
 
-   if (sge_uid2user(getuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
+   if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "can't get user name");
       DRETURN(AE_ERROR);
    }
 
+   if (sge_gid2group(getegid(), group, sizeof(group), MAX_NIS_RETRIES)) {
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "can't get group name");
+      DRETURN(AE_ERROR);
+   }
+
    /* a dynamic eh handler is created */
-   *context = sge_gdi_ctx_class_create(progid, prognames[progid], user,
+   *context = sge_gdi_ctx_class_create(progid, prognames[progid], user, group,
                                        sge_root, sge_cell, sge_qmaster_port, sge_execd_port, NULL);
 
    if (*context == NULL) {

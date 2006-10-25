@@ -591,7 +591,7 @@ static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders
 
       /* async gdi */
       sge_send_job_start_orders(evc_context, orders); 
-         
+
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 

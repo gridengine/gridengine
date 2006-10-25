@@ -36,8 +36,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <jni.h>
-
 #include "sgermon.h"
 #include "cull.h"
 #include "sge_string.h"

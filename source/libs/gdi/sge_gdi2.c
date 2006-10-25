@@ -277,6 +277,7 @@ int sge_gdi2_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, int mode, u_long
    strncpy(username, ctx->get_username(ctx), sizeof(username));
    strncpy(groupname, ctx->get_groupname(ctx), sizeof(groupname));
    
+   DPRINTF(("sge_set_auth_info: username(uid) = %s(%d), groupname = %s(%d)\n", username, uid, groupname, gid));
    if (sge_set_auth_info(request, uid, username, gid, groupname) == -1) {
       goto error;
    }   

@@ -1737,13 +1737,14 @@ if ( $JNI == 1 ) then
    #
    if ( $buildarch == aix51 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/bin/classic"
-   else if ( $buildarch == darwin-* ) then
+   else if ( $buildarch == darwin-x86 || $buildarch == darwin-ppc ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/../Libraries"
    else if ( $buildarch == irix65 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib32/mips"
    else if ( $buildarch == tru64 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib/alpha/classic"
    endif  
+
 else
    set JNI_TARGET = "NJ"
    set CFLAGS = "$CFLAGS -DNO_JNI"

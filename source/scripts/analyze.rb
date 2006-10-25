@@ -278,10 +278,12 @@ class CategoryHash < PrintableHash
 			c = self[cat]
 			if first
 				puts "###### Table with #{self.size} categories ######"
-				puts sprintf("%-7.7s %9.9s %9.9s %s", "njobs", "wallclock", "pending", "category")
+				puts sprintf("%-7.7s %9.9s %9.9s %9.9s %9.9s %s", "njobs", 
+               "pending", "wallclock", "p/njobs", "w/njobs", "category")
 				first = false
 			end
-			puts sprintf("%-7.7s %9.9s %9.9s %s", c.jobs.to_s, c.wallclock.to_s, c.pending.to_s, cat)
+			puts sprintf("%-7.7s %9.9s %9.9s %9.9s %9.9s %s", c.jobs.to_s, c.pending.to_s, 
+               c.wallclock.to_s, (c.pending/c.jobs).to_s, (c.wallclock/c.jobs).to_s, cat)
 		end
 	end
 end

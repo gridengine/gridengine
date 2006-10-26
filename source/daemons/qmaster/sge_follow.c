@@ -1512,7 +1512,7 @@ int distribute_ticket_orders(void *context, lList *ticket_orders, monitoring_t *
       n = lGetNumberOfElem(to_send);
 
       if (hep) {
-         cl_commlib_get_last_message_time((cl_com_get_handle((char*)prognames[QMASTER], 0)),
+         cl_commlib_get_last_message_time((cl_com_get_handle(prognames[QMASTER], 0)),
                                         (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       }
       if (  hep &&  last_heard_from + 10 * mconf_get_load_report_time() > now) {

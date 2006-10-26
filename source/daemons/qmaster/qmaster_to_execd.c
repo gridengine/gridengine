@@ -106,9 +106,6 @@ static int host_notify_about_X(void *context,
 
 #ifdef TEST_QMASTER_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-   const char* myprogname = ctx->get_progname(ctx);
-#else
-   const char* myprogname = uti_state_get_sge_formal_prog_name();
 #endif
 
    DENTER(TOP_LAYER, "host_notify_about_X");
@@ -117,7 +114,7 @@ static int host_notify_about_X(void *context,
    if (progname_id == EXECD) {
       u_short id = 1;
       const char *commproc = prognames[progname_id];
-      cl_commlib_get_last_message_time(cl_com_get_handle((char*)myprogname, 0),
+      cl_commlib_get_last_message_time(cl_com_get_handle(prognames[QMASTER], 0),
                                         (char*)hostname, (char*)commproc,id, 
                                         &last_heard_from);
       if (!last_heard_from) {

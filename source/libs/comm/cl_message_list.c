@@ -49,7 +49,7 @@ int cl_message_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
 }
 
 
-int cl_message_list_append_message(cl_raw_list_t* list_p,cl_com_message_t* message, int lock_list ) {  /* CR check */
+int cl_message_list_append_message(cl_raw_list_t* list_p, cl_com_message_t* message, int lock_list) {  /* CR check */
 
    int ret_val;
    cl_message_list_elem_t* new_elem = NULL;
@@ -95,7 +95,7 @@ int cl_message_list_append_message(cl_raw_list_t* list_p,cl_com_message_t* messa
 }
 
 
-int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* message, int lock_list ) {  /*CR check */
+int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* message, int lock_list) {  /*CR check */
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
    cl_message_list_elem_t* elem = NULL;

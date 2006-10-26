@@ -644,7 +644,7 @@ static void communication_setup(void *context)
 
    DEBUG((SGE_EVENT,"my resolved hostname name is: \"%s\"\n", qualified_hostname));
 
-   com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
+   com_handle = cl_com_get_handle(prognames[QMASTER], 1);
 
    if (com_handle == NULL)
    {
@@ -701,7 +701,7 @@ static void communication_setup(void *context)
       log_state_set_log_level(old_ll);
    }
 
-   cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[QMASTER], 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
+   cl_commlib_set_connection_param(cl_com_get_handle(prognames[QMASTER], 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
    DEXIT;
    return;

@@ -421,15 +421,13 @@ send_slave_jobs_wc(void *context, const char *target, lListElem *tmpjep, lListEl
 #ifdef TEST_QMASTER_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *sge_root = ctx->get_sge_root(ctx);
-   const char *myprogname = ctx->get_progname(ctx);
 #else
    const char *sge_root = path_state_get_sge_root();
-   const char *myprogname = uti_state_get_sge_formal_prog_name();
 #endif   
 
    DENTER(TOP_LAYER, "send_slave_jobs_wc");
 
-   handle = cl_com_get_handle((char*)myprogname, 0);
+   handle = cl_com_get_handle(prognames[QMASTER], 0);
 
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lListElem *hep;
@@ -595,7 +593,7 @@ send_job(void *context,
    }
 
    /* do ask_commproc() only if we are missing load reports */
-   handle = cl_com_get_handle((char*)myprogname, 0);
+   handle = cl_com_get_handle(myprogname, 0);
    cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
    now = sge_get_gmt();
    if (last_heard_from + sge_get_max_unheard_value() <= now) {

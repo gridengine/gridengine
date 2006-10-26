@@ -253,7 +253,7 @@ volatile int* abort_flag
             ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc(NULL);
          }
-         handle = cl_com_get_handle((char*)progname, 0);
+         handle = cl_com_get_handle(progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:
@@ -267,7 +267,7 @@ volatile int* abort_flag
       } else {
          /* here we are daemonized, we do a longer sleep when there is no connection */
          DTRACE;
-         handle = cl_com_get_handle((char*)progname, 0);
+         handle = cl_com_get_handle(progname, 0);
          ret_val = cl_commlib_trigger(handle, 1);
          switch(ret_val) {
             case CL_RETVAL_SELECT_TIMEOUT:

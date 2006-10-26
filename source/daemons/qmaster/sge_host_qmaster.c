@@ -842,7 +842,6 @@ void sge_load_value_cleanup_handler(void *context, te_event_t anEvent, monitorin
    const char *host;
    int host_unheard;
    u_short id = 1;
-   const char *comproc;
    u_long32 timeout; 
    int nstatics, nbefore;
    lListElem *global_host_elem   = NULL;
@@ -852,13 +851,9 @@ void sge_load_value_cleanup_handler(void *context, te_event_t anEvent, monitorin
    lList *master_exechost_list = *object_type_get_master_list(SGE_TYPE_EXECHOST);
    const void *iterator = NULL;
 
-   const char* myprogname = prognames[QMASTER];
-
    DENTER(TOP_LAYER, "sge_load_value_cleanup_handler");
 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-
-   comproc = prognames[EXECD];
 
    /* get "global" element pointer */
    global_host_elem   = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);    
@@ -886,16 +881,16 @@ void sge_load_value_cleanup_handler(void *context, te_event_t anEvent, monitorin
 
       timeout = MAX(load_report_interval(hep)*3, mconf_get_max_unheard()); 
       if ( hep != global_host_elem) {
-         cl_commlib_get_last_message_time((cl_com_get_handle((char*)myprogname ,0)),
-                                        (char*)host, (char*)comproc,id, &last_heard_from);
+         cl_commlib_get_last_message_time((cl_com_get_handle(prognames[QMASTER],0)),
+                                        (char*)host, (char*)prognames[EXECD], id, &last_heard_from);
       }
       if ( (hep != global_host_elem )  && (now > last_heard_from + timeout)) {
          host_unheard = 1;
 #if 0
          DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "sge_u32", "
-               "now = "sge_u32", last_heard = "sge_u32"\n", id, comproc, host, 
+               "now = "sge_u32", last_heard = "sge_u32"\n", id, prognames[EXECD], host, 
                sge_u32c(timeout), sge_u32c(now), 
-               sge_u32c(last_heard_from(comproc, &id, host))));
+               sge_u32c(last_heard_from(prognames[EXECD], &id, host))));
 #endif
       } else {
          host_unheard = 0;
@@ -1193,10 +1188,8 @@ int force
 
 #ifdef TEST_QMASTER_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-   const char* myprogname = ctx->get_progname(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
 #else
-   const char* myprogname = uti_state_get_sge_formal_prog_name();
    bool job_spooling = bootstrap_get_job_spooling();
 #endif
 
@@ -1206,7 +1199,7 @@ int force
 
    hostname = lGetHost(lel, EH_name);
 
-   cl_commlib_get_last_message_time((cl_com_get_handle((char*)myprogname ,0)),
+   cl_commlib_get_last_message_time((cl_com_get_handle(prognames[QMASTER], 0)),
                                         (char*)hostname, (char*)prognames[EXECD],1, &last_heard_from);
    execd_alive = last_heard_from;
 

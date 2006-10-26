@@ -98,7 +98,7 @@ static void gdi_rmon_print_callback_function(const char *message, unsigned long 
 static void gdi_rmon_print_callback_function(const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id) {
    cl_com_handle_t* handle = NULL;
 
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   handle = cl_com_get_handle(uti_state_get_sge_formal_prog_name() ,0);
    if (handle != NULL) {
       cl_com_application_debug(handle, message);
    }
@@ -643,7 +643,7 @@ int prepare_enroll(const char *name, int* last_commlib_error)
    /* OK, now we can create communication handles ... */
    me_who = uti_state_get_mewho();
 
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   handle = cl_com_get_handle(uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       int execd_port = 0;
@@ -841,7 +841,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
       return CL_RETVAL_PARAMS;
    }
    
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   handle = cl_com_get_handle(uti_state_get_sge_formal_prog_name() ,0);
    if (handle == NULL) {
       answer_list_add(alpp, MSG_GDI_NOCOMMHANDLE, 
                       STATUS_NOCOMMD, ANSWER_QUALITY_ERROR);
@@ -939,7 +939,7 @@ sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *p
    
    strcpy(host, rhost);
 
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   handle = cl_com_get_handle(uti_state_get_sge_formal_prog_name() ,0);
 
    /* trigger communication or wait for a new message (select timeout) */
    cl_commlib_trigger(handle, synchron);
@@ -1087,7 +1087,7 @@ int check_isalive(const char *masterhost)
       return CL_RETVAL_UNKNOWN_ENDPOINT;
    }
 
-   handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
+   handle=cl_com_get_handle(uti_state_get_sge_formal_prog_name(), 0);
    if (handle == NULL) {
 
       sge_mutex_lock("check_alive_mutex", SGE_FUNC, __LINE__, &check_alive_mutex);  

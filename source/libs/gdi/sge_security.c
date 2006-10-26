@@ -632,7 +632,7 @@ gdi_send_message(int synchron, const char *tocomproc, int toid,
    if (use_execd_handle == 0) {
       /* normal gdi send to qmaster */
       DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)progname ,0);
+      handle = cl_com_get_handle(progname ,0);
    } else {
       /* we have to send a message to another component than qmaster */
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
@@ -734,7 +734,7 @@ gdi_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
    if (use_execd_handle == 0) {
       /* normal gdi send to qmaster */
       DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
-      handle = cl_com_get_handle((char*)progname, 0);
+      handle = cl_com_get_handle(progname, 0);
    } else {
       /* we have to send a message to another component than qmaster */
       DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
@@ -1727,7 +1727,7 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
      cl_com_handle_t* handle = NULL;
      char* unique_identifier = NULL;
 
-     handle = cl_com_get_handle((char*)progname, progid);
+     handle = cl_com_get_handle(progname, progid);
      if (cl_com_ssl_get_unique_id(handle, (char*)hostname, (char*)commproc, commid, &unique_identifier) == CL_RETVAL_OK) {
          DPRINTF(("unique identifier = "SFQ"\n", unique_identifier ));
          DPRINTF(("user = "SFQ"\n", user));

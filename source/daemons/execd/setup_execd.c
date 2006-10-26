@@ -214,7 +214,7 @@ int daemonize_execd(void *context)
       FD_SET(fd, &keep_open);
    } 
 
-   cl_com_set_handle_fds(cl_com_get_handle((char*)progname,0), &keep_open);
+   cl_com_set_handle_fds(cl_com_get_handle(progname,0), &keep_open);
 
 #ifdef TEST_GDI2   
    ret = sge_daemonize(&keep_open, ctx);   

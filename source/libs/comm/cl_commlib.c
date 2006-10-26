@@ -193,6 +193,38 @@ static cl_app_debug_client_func_t cl_com_debug_client_callback_func = cl_com_def
 static pthread_mutex_t  cl_com_ssl_setup_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_ssl_setup_t*  cl_com_ssl_setup_config = NULL;
 
+
+static int cl_message_list_append_send(cl_com_connection_t* c, cl_com_message_t* m, int l);
+static int cl_message_list_remove_send(cl_com_connection_t* c, cl_com_message_t* m, int l);
+static int cl_message_list_append_receive(cl_com_connection_t* c, cl_com_message_t* m, int l);
+static int cl_message_list_remove_receive(cl_com_connection_t* c, cl_com_message_t* m, int l);
+
+/*
+ * Prevent these functions made inline by compiler. This is
+ * necessary for Solaris 10 dtrace pid provider to work.
+ */
+#ifdef SOLARIS
+#pragma no_inline(cl_message_list_append_send, cl_message_list_remove_send, cl_message_list_append_receive, cl_message_list_remove_receive)
+#endif
+
+static int cl_message_list_append_send(cl_com_connection_t* c, cl_com_message_t* m, int l)
+{
+   return cl_message_list_append_message(c->send_message_list, m, l);
+}
+static int cl_message_list_remove_send(cl_com_connection_t* c, cl_com_message_t* m, int l)
+{
+   return cl_message_list_remove_message(c->send_message_list, m, l);
+}
+static int cl_message_list_append_receive(cl_com_connection_t* c, cl_com_message_t* m, int l)
+{
+   return cl_message_list_append_message(c->received_message_list, m, l);
+}
+static int cl_message_list_remove_receive(cl_com_connection_t* c, cl_com_message_t* m, int l)
+{
+   return cl_message_list_remove_message(c->received_message_list, m, l);
+}
+
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -1916,7 +1948,7 @@ int cl_com_get_max_connections(cl_com_handle_t* handle, unsigned long* value) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_handle()"
-cl_com_handle_t* cl_com_get_handle(char* component_name, unsigned long component_id) {
+cl_com_handle_t* cl_com_get_handle(const char* component_name, unsigned long component_id) {
    cl_handle_list_elem_t* elem = NULL;
    cl_com_handle_t* ret_handle = NULL;
 
@@ -2975,7 +3007,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             return CL_RETVAL_MALLOC;   
          }
          memcpy(message->message, connection->data_read_buffer , sizeof(cl_byte_t) * size);
-         return_value = cl_message_list_append_message(connection->received_message_list, message, 1);
+         return_value = cl_message_list_append_receive(connection, message, 1);
          if (return_value == CL_RETVAL_OK) {
             if (connection->handler != NULL) { 
                cl_com_handle_t* handle = connection->handler;
@@ -3019,7 +3051,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             return return_value;   
          }
          message->message_state = CL_MS_INIT_RCV;
-         return_value = cl_message_list_append_message(connection->received_message_list, message, 0);
+         return_value = cl_message_list_append_receive(connection, message, 0);
          if (return_value != CL_RETVAL_OK) {
             cl_raw_list_unlock(connection->received_message_list);
             CL_LOG(CL_LOG_ERROR,"error appending new empty read message");
@@ -3213,7 +3245,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
 
          switch(message->message_df) {
             case CL_MIH_DF_SIM: {
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
@@ -3259,7 +3291,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
             }
             case CL_MIH_DF_SIRM: {
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
@@ -3299,7 +3331,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
             }
             case CL_MIH_DF_AM: {
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
@@ -3340,7 +3372,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
             }
             case CL_MIH_DF_CCM: {
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message,0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
@@ -3370,7 +3402,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return CL_RETVAL_OK;
             }
             case CL_MIH_DF_CCRM: {
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
@@ -3395,7 +3427,7 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             }
             default: {
                CL_LOG(CL_LOG_ERROR,"reseived unsupported protocol message");
-               return_value = cl_message_list_remove_message(connection->received_message_list, message,0);
+               return_value = cl_message_list_remove_receive(connection, message, 0);
                if (return_value == CL_RETVAL_OK) {
                   cl_com_free_message(&message);
                }
@@ -3508,7 +3540,7 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
             if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
                if (message->message_sirm != NULL) {
                   CL_LOG(CL_LOG_INFO,"got sirm from checked connection");
-                  cl_message_list_remove_message(connection->send_message_list, message,0 );
+                  cl_message_list_remove_send(connection, message, 0);
                   CL_LOG_INT(CL_LOG_INFO,"endpoint runtime:", (int)message->message_sirm->runtime );
                   if (message->message_sirm->info != NULL) {
                      CL_LOG_STR(CL_LOG_INFO,"endpoint info:   ", message->message_sirm->info);
@@ -3527,7 +3559,7 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
                   connection->check_endpoint_mid = 0;
                   connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
                }
-               cl_message_list_remove_message(connection->send_message_list, message,0 );
+               cl_message_list_remove_send(connection, message, 0);
                cl_com_free_message(&message);
             } else {
                if ( ignore_timeouts == CL_TRUE) {
@@ -3540,7 +3572,7 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
                         connection->check_endpoint_mid = 0;
                         connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
                      }
-                     cl_message_list_remove_message(connection->send_message_list, message,0 );
+                     cl_message_list_remove_send(connection, message, 0);
                      cl_com_free_message(&message);
                   }
                } 
@@ -3739,7 +3771,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
                                           CL_MIH_MAT_NAK,
                                           0,
                                           0);
-                     cl_message_list_append_message(connection->send_message_list,message,0);
+                     cl_message_list_append_send(connection,message,0);
                      cl_raw_list_unlock(connection->send_message_list);
                      flushed_client = CL_TRUE;
                   }
@@ -4181,7 +4213,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           connection->write_buffer_timeout_time = 0;
           connection->statistic->bytes_sent = connection->statistic->bytes_sent + message->message_length;
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + message->message_length;
-          if ( cl_message_list_remove_message(connection->send_message_list, message,0 ) == CL_RETVAL_OK) {
+          if ( cl_message_list_remove_send(connection, message, 0) == CL_RETVAL_OK) {
              cl_com_free_message(&message);
           }
 
@@ -4442,7 +4474,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
              /* remove messages which don't want an acknoledge */
              default:
              if (message->message_mat == CL_MIH_MAT_NAK) {
-                if (cl_message_list_remove_message(connection->send_message_list, message,0 ) == CL_RETVAL_OK) {
+                if (cl_message_list_remove_send(connection, message, 0) == CL_RETVAL_OK) {
                    cl_com_free_message(&message);
 #ifdef CL_DO_COMMLIB_DEBUG
                    CL_LOG(CL_LOG_DEBUG,"last sent message removed from send_message_list");
@@ -4612,7 +4644,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                   if (message_match == 1) {
                      /* remove message from received message list*/
                      *message = message_elem->message;
-                     cl_message_list_remove_message(connection->received_message_list, *message,0);
+                     cl_message_list_remove_receive(connection, *message, 0);
 
                      /* release the message list */
                      cl_raw_list_unlock(connection->received_message_list);
@@ -4924,7 +4956,7 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
 
    CL_LOG_INT(CL_LOG_INFO,"sending ack for message=", (int)message->message_id);
    
-   ret_val = cl_message_list_append_message(connection->send_message_list,ack_message,1);
+   ret_val = cl_message_list_append_send(connection, ack_message,1);
 
    return ret_val;
 }
@@ -4959,7 +4991,7 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
    }
    ccm_message->message_df = CL_MIH_DF_CCM;
    CL_LOG(CL_LOG_INFO,"sending connection close message");
-   ret_val = cl_message_list_append_message(connection->send_message_list,ccm_message,1);
+   ret_val = cl_message_list_append_send(connection, ccm_message, 1);
    return ret_val;
 }
 
@@ -4992,7 +5024,7 @@ static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned
       *mid = sim_message->message_id;
    }
    CL_LOG(CL_LOG_INFO,"sending information message (SIM)");
-   ret_val = cl_message_list_append_message(connection->send_message_list,sim_message,1);
+   ret_val = cl_message_list_append_send(connection, sim_message, 1);
    return ret_val;
 }
 
@@ -5063,7 +5095,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message->message_df = CL_MIH_DF_SIRM;
    CL_LOG_INT(CL_LOG_INFO,"sending SIRM for message=", (int)message->message_id);
 
-   ret_val = cl_message_list_append_message(connection->send_message_list,sirm_message,1);
+   ret_val = cl_message_list_append_send(connection, sirm_message, 1);
    return ret_val;
 }
 
@@ -5098,7 +5130,7 @@ static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    }
    ccrm_message->message_df = CL_MIH_DF_CCRM;
    CL_LOG(CL_LOG_INFO,"sending connection close response message");
-   ret_val = cl_message_list_append_message(connection->send_message_list,ccrm_message,1);
+   ret_val = cl_message_list_append_send(connection, ccrm_message, 1);
    return ret_val;
 
 }
@@ -5179,7 +5211,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                /* found message */
                found_message = 1;
                if (message->message_ack_flag == 1) {
-                  cl_message_list_remove_message(connection->send_message_list, message,0 );
+                  cl_message_list_remove_send(connection, message, 0);
                   cl_com_free_message(&message);
                   cl_raw_list_unlock(connection->send_message_list);
 
@@ -5786,7 +5818,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
 
                            /* remove message from received message list*/
                            message = current_message_elem->message;
-                           cl_message_list_remove_message(connection->received_message_list, message, 0);
+                           cl_message_list_remove_receive(connection, message, 0);
 
                            /* decrease counter for ready messages */
                            pthread_mutex_lock(handle->messages_ready_mutex);
@@ -6003,7 +6035,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                /* found message */
                found_message = 1;
                if (message->message_sirm != NULL) {
-                  cl_message_list_remove_message(connection->send_message_list, message,0 );
+                  cl_message_list_remove_send(connection, message, 0);
                   *status = message->message_sirm;
                   message->message_sirm = NULL;
                   cl_com_free_message(&message);
@@ -6198,7 +6230,7 @@ static int cl_commlib_send_message_to_endpoint(cl_com_handle_t*   handle,
                return return_value;
             }
    
-            return_value = cl_message_list_append_message(connection->send_message_list,message,1);
+            return_value = cl_message_list_append_send(connection, message, 1);
             if (return_value != CL_RETVAL_OK) {
                cl_com_free_message(&message);
                cl_raw_list_unlock(handle->connection_list);
@@ -6451,7 +6483,7 @@ cl_commlib_send_message(cl_com_handle_t* handle, char *un_resolved_hostname,
                if (mid != NULL) {
                  *mid = message->message_id;
                }
-               return_value = cl_message_list_append_message(connection->send_message_list,message,1);
+               return_value = cl_message_list_append_send(connection, message, 1);
                if (return_value != CL_RETVAL_OK) {
                   cl_com_free_message(&message);
                   cl_raw_list_unlock(handle->connection_list);

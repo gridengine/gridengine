@@ -1709,12 +1709,12 @@ int main(int argc, char **argv)
 #if 0
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       /* leave_commd() for old commlib */
-      cl_commlib_close_connection(cl_com_get_handle((char*)progname,0),
+      cl_commlib_close_connection(cl_com_get_handle(progname,0),
                                  (char*)mastername,
                                  (char*)prognames[QMASTER],
                                  1, CL_FALSE);
 #else
-      cl_commlib_shutdown_handle(cl_com_get_handle((char*)progname,0),CL_FALSE);
+      cl_commlib_shutdown_handle(cl_com_get_handle(progname,0),CL_FALSE);
 #endif
 
 #ifdef TEST_GDI2
@@ -1854,7 +1854,7 @@ int main(int argc, char **argv)
 
          /* leave commd while waiting for connection / sleeping while polling (CR -> old commlib comment) */
          /* next enroll will _not_ ask commd to get same client id as before (CR -> old commlib comment) */
-         cl_commlib_close_connection(cl_com_get_handle((char*)progname,0),
+         cl_commlib_close_connection(cl_com_get_handle(progname,0),
                                      (char*)mastername,
                                      (char*)prognames[QMASTER],
                                      1, CL_FALSE);
@@ -1867,7 +1867,7 @@ int main(int argc, char **argv)
             if(msgsock >= 0) {
                if(!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
                   cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle((char*)progname,0),
+                  cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                      (char*)mastername,
                                      (char*)prognames[QMASTER],
                                      1);
@@ -1888,7 +1888,7 @@ int main(int argc, char **argv)
                if(exit_status < 0) {
                   WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, client_name));
                   cl_com_ignore_timeouts(CL_FALSE);
-                  cl_commlib_open_connection(cl_com_get_handle((char*)progname,0),
+                  cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                      (char*)mastername,
                                      (char*)prognames[QMASTER],
                                      1);
@@ -1904,7 +1904,7 @@ int main(int argc, char **argv)
             sleep(random_poll);
          }   
          cl_com_ignore_timeouts(CL_FALSE);
-         cl_commlib_open_connection(cl_com_get_handle((char*)progname,0),
+         cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                    (char*)mastername,
                                    (char*)prognames[QMASTER],
                                     1);

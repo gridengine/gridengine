@@ -372,7 +372,7 @@ char qmaster_out_file[SGE_PATH_MAX];
    log_state_set_log_file(shadow_err_file);
 
    FD_ZERO(&fds);
-   if (cl_com_set_handle_fds(cl_com_get_handle((char*)prognames[SHADOWD] ,0), &fds) == CL_RETVAL_OK) {
+   if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &fds) == CL_RETVAL_OK) {
       sge_daemonize(&fds, ctx);
    } else {
       sge_daemonize(NULL, ctx);

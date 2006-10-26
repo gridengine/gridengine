@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
    /* TODO: remove this code from client, should be hidden in gdi layer 
    **       timeout value should be set in gdi_setup
    */
-   handle=cl_com_get_handle((char*)prognames[QDEL], 0);
+   handle=cl_com_get_handle(prognames[QDEL], 0);
    cl_com_set_synchron_receive_timeout(handle, 10*60);
 
    /* prepare gdi request for 'all' and '-uall' parameters */

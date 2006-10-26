@@ -1293,7 +1293,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
 #ifdef TEST_GDI2
       com_handle = sge_gdi_ctx->get_com_handle(sge_gdi_ctx);
 #else
-      com_handle = cl_com_get_handle((char*)progname, 0);
+      com_handle = cl_com_get_handle(progname, 0);
 #endif
       if (com_handle != NULL) {
          int ngc_error;

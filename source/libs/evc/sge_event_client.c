@@ -918,7 +918,7 @@ ec_mark4registration(lListElem *event_client)
    const char *progname = uti_state_get_sge_formal_prog_name();
 
    DENTER(TOP_LAYER, "ec_mark4registration");
-   handle = cl_com_get_handle((char*)progname, 0);
+   handle = cl_com_get_handle(progname, 0);
    if (handle != NULL) {
       cl_commlib_close_connection(handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
       DPRINTF(("closed old connection to qmaster\n"));
@@ -1297,7 +1297,7 @@ ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList** alpp)
       /* TODO: is this code section really necessary */
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
-      com_handle = cl_com_get_handle((char*)progname, 0);
+      com_handle = cl_com_get_handle(progname, 0);
       if (com_handle != NULL) {
          int ngc_error;
          ngc_error = cl_commlib_close_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);

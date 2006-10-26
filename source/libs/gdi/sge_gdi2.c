@@ -2337,7 +2337,7 @@ int gdi_log_flush_func(cl_raw_list_t* list_p) {
 void gdi_rmon_print_callback_function(const char *progname, const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id) {
    cl_com_handle_t* handle = NULL;
 
-   handle = cl_com_get_handle((char*)progname ,0);
+   handle = cl_com_get_handle(progname ,0);
    if (handle != NULL) {
       cl_com_application_debug(handle, message);
    }

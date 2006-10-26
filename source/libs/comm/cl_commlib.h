@@ -71,7 +71,7 @@ cl_com_handle_t* cl_com_create_handle(int*                      commlib_error,
 
 int cl_commlib_shutdown_handle   (cl_com_handle_t* handle, cl_bool_t return_for_messages );
 
-cl_com_handle_t* cl_com_get_handle(char*         component_name, 
+cl_com_handle_t* cl_com_get_handle(const char* component_name, 
                                    unsigned long component_id);  /* CR check */
 
 /* commlib parameter functions */

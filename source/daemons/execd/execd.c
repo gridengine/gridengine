@@ -264,7 +264,7 @@ char **argv
 #ifdef TEST_GDI2
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
-   while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+   while ( cl_com_get_handle(prognames[EXECD],1) == NULL) {
       ctx->prepare_enroll(ctx);
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 || shut_me_down ) {
@@ -275,7 +275,7 @@ char **argv
          CRITICAL((SGE_EVENT, MSG_COM_ERROR));
          SGE_EXIT((void**)&ctx, 1);
       }
-      if (cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+      if (cl_com_get_handle(prognames[EXECD],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
         if (max_enroll_tries < 27) {
@@ -288,7 +288,7 @@ char **argv
 #else
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
-   while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+   while ( cl_com_get_handle(prognames[EXECD],1) == NULL) {
       int last_execd_error = 0;
       prepare_enroll(prognames[EXECD], &last_execd_error);
       max_enroll_tries--;
@@ -300,7 +300,7 @@ char **argv
          CRITICAL((SGE_EVENT, MSG_COM_ERROR));
          SGE_EXIT(NULL, 1);
       }
-      if (  cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+      if (  cl_com_get_handle(prognames[EXECD],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
         if (max_enroll_tries < 27) {
@@ -637,7 +637,7 @@ static void execd_register(void *context)
          int ret_val;
          cl_com_handle_t* handle = NULL;
          
-         handle = cl_com_get_handle((char*)prognames[EXECD],1);
+         handle = cl_com_get_handle(prognames[EXECD],1);
          if ( handle == NULL) {
             DPRINTF(("preparing reenroll"));
 #ifdef TEST_GDI2
@@ -645,7 +645,7 @@ static void execd_register(void *context)
 #else            
             prepare_enroll(prognames[EXECD], &last_enroll_error);
 #endif            
-            handle = cl_com_get_handle((char*)prognames[EXECD],1);
+            handle = cl_com_get_handle(prognames[EXECD],1);
          }
 
          ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */

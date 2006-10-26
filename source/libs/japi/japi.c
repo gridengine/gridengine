@@ -584,7 +584,7 @@ int japi_init(const char *contact, const char *session_key_in,
       u_long32 my_who = uti_state_get_mewho();
 
       /* Make sure the commlib handle exists  If it doesn't, create it. */
-      handle = cl_com_get_handle ((char*)progname, 0);
+      handle = cl_com_get_handle(progname, 0);
 
       if (handle == NULL) {
          if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
@@ -1062,7 +1062,7 @@ int japi_exit(int flag, dstring *diag)
 #ifdef TEST_GDI2
    handle = ctx->get_com_handle(ctx);
 #else
-   handle = cl_com_get_handle((char*)progname, 0);
+   handle = cl_com_get_handle(progname, 0);
 #endif
    cl_errno = cl_commlib_shutdown_handle(handle, CL_FALSE);
    DPRINTF (("After commlib shutdown\n"));
@@ -4703,8 +4703,8 @@ static void *japi_implementation_thread(void *p)
    japi_ec_id = ec_get_id(event_client);
    JAPI_UNLOCK_EC_STATE();
 
-   DPRINTF(("my formal prog name is \"%s\"\n",(char*)uti_state_get_sge_formal_prog_name()));
-   cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),ed_time*2);
+   DPRINTF(("my formal prog name is \"%s\"\n", uti_state_get_sge_formal_prog_name()));
+   cl_com_set_synchron_receive_timeout(cl_com_get_handle(uti_state_get_sge_formal_prog_name(),0),ed_time*2);
 
    while (!stop_ec) {
       int ec_get_ret = 0;

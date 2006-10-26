@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 #endif
    /* this must be done as root user to be able to bind ports < 1024 */
    max_enroll_tries = 30;
-   while ( cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
+   while ( cl_com_get_handle(prognames[QMASTER],1) == NULL) {
 #ifdef TEST_QMASTER_GDI2
       ctx->prepare_enroll(ctx);
 #else
@@ -359,7 +359,7 @@ int main(int argc, char* argv[])
          SGE_EXIT(NULL, 1);
 #endif         
       }
-      if (  cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
+      if (  cl_com_get_handle(prognames[QMASTER],1) == NULL) {
         /* sleep when prepare_enroll() failed */
         sleep(1);
       }

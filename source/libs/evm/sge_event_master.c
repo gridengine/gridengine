@@ -470,7 +470,7 @@ static int        purge_event_list(lList* aList, ev_event anEvent);
 static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
 static void       add_list_event_direct(lListElem *event_client,
                                         lListElem *event, bool copy_event);
-static void       total_update_event(lListElem*, ev_event, object_description *master_table);
+static void       total_update_event(lListElem*, ev_event, object_description *master_table, bool new_subscription);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
 static lListElem* eventclient_list_locate_by_adress(const char*, const char*, u_long32);
@@ -2112,7 +2112,7 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(aClientID), "add acknowledgements"));
       DRETURN_VOID;
    }
-   
+
    lSetUlong(etp, ET_number, (u_long32)anEvent);
    lAppendElem(etlp, etp);
    lSetUlong(evp, EV_id, aClientID);
@@ -3093,31 +3093,31 @@ static void total_update(lListElem *event_client, monitoring_t *monitor)
    
    sge_set_commit_required();
   
-   total_update_event(event_client, sgeE_ADMINHOST_LIST, master_table);
-   total_update_event(event_client, sgeE_CALENDAR_LIST, master_table);
-   total_update_event(event_client, sgeE_CKPT_LIST, master_table);
-   total_update_event(event_client, sgeE_CENTRY_LIST, master_table);
-   total_update_event(event_client, sgeE_CONFIG_LIST, master_table);
-   total_update_event(event_client, sgeE_EXECHOST_LIST, master_table);
-   total_update_event(event_client, sgeE_JOB_LIST, master_table);
-   total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST, master_table);
-   total_update_event(event_client, sgeE_MANAGER_LIST, master_table);
-   total_update_event(event_client, sgeE_OPERATOR_LIST, master_table);
-   total_update_event(event_client, sgeE_PE_LIST, master_table);
-   total_update_event(event_client, sgeE_CQUEUE_LIST, master_table);
-   total_update_event(event_client, sgeE_SCHED_CONF, master_table);
-   total_update_event(event_client, sgeE_SUBMITHOST_LIST, master_table);
-   total_update_event(event_client, sgeE_USERSET_LIST, master_table);
+   total_update_event(event_client, sgeE_ADMINHOST_LIST, master_table, false);
+   total_update_event(event_client, sgeE_CALENDAR_LIST, master_table, false);
+   total_update_event(event_client, sgeE_CKPT_LIST, master_table, false);
+   total_update_event(event_client, sgeE_CENTRY_LIST, master_table, false);
+   total_update_event(event_client, sgeE_CONFIG_LIST, master_table, false);
+   total_update_event(event_client, sgeE_EXECHOST_LIST, master_table, false);
+   total_update_event(event_client, sgeE_JOB_LIST, master_table, false);
+   total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST, master_table, false);
+   total_update_event(event_client, sgeE_MANAGER_LIST, master_table, false);
+   total_update_event(event_client, sgeE_OPERATOR_LIST, master_table, false);
+   total_update_event(event_client, sgeE_PE_LIST, master_table, false);
+   total_update_event(event_client, sgeE_CQUEUE_LIST, master_table, false);
+   total_update_event(event_client, sgeE_SCHED_CONF, master_table, false);
+   total_update_event(event_client, sgeE_SUBMITHOST_LIST, master_table, false);
+   total_update_event(event_client, sgeE_USERSET_LIST, master_table, false);
 
-   total_update_event(event_client, sgeE_NEW_SHARETREE, master_table);
-   total_update_event(event_client, sgeE_PROJECT_LIST, master_table);
-   total_update_event(event_client, sgeE_USER_LIST, master_table);
+   total_update_event(event_client, sgeE_NEW_SHARETREE, master_table, false);
+   total_update_event(event_client, sgeE_PROJECT_LIST, master_table, false);
+   total_update_event(event_client, sgeE_USER_LIST, master_table, false);
 
-   total_update_event(event_client, sgeE_HGROUP_LIST, master_table);
-   total_update_event(event_client, sgeE_LIRS_LIST, master_table);
+   total_update_event(event_client, sgeE_HGROUP_LIST, master_table, false);
+   total_update_event(event_client, sgeE_LIRS_LIST, master_table, false);
 
 #ifndef __SGE_NO_USERMAPPING__
-   total_update_event(event_client, sgeE_CUSER_LIST, master_table);
+   total_update_event(event_client, sgeE_CUSER_LIST, master_table, false);
 #endif
 
    sge_commit();
@@ -3162,7 +3162,7 @@ static void build_subscription(lListElem *event_el)
       DRETURN_VOID;
    }
 
-   DPRINTF(("rebuild event mask for a client\n"));
+   DPRINTF(("rebuild event mask for client(id): %s("sge_u32")\n", lGetString(event_el, EV_name), lGetUlong(event_el, EV_id)));
 
    sub_array = (subscription_t *) malloc(sizeof(subscription_t) * sgeE_EVENTSIZE);
    
@@ -3257,9 +3257,9 @@ check_send_new_subscribed_list(const subscription_t *old_subscription,
                                lListElem *event_client, ev_event event, 
                                object_description *master_table)
 {
-   if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
+   if ((new_subscription[event].subscription == EV_SUBSCRIBED) && 
        (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
-      total_update_event(event_client, event, master_table);
+      total_update_event(event_client, event, master_table, true);
    }   
 }
 
@@ -3293,7 +3293,7 @@ static int eventclient_subscribed(const lListElem *event_client, ev_event event,
                                   const char *session)
 {
    const subscription_t *subscription = NULL;
-   const char *ec_session;
+   const char *ec_session = NULL;
 
    DENTER(TOP_LAYER, "eventclient_subscribed");
 
@@ -3331,8 +3331,8 @@ static int eventclient_subscribed(const lListElem *event_client, ev_event event,
          }
       }
    }
-   if (subscription[event].subscription == EV_SUBSCRIBED &&
-       subscription[event].blocked == false) {
+   if ((subscription[event].subscription == EV_SUBSCRIBED) &&
+       (subscription[event].blocked == false)) {
       DRETURN(1);
    }
 
@@ -3575,7 +3575,7 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
 *     object_description *object_base  - master list table
 *
 *******************************************************************************/
-static void total_update_event(lListElem *event_client, ev_event type, object_description *object_base) 
+static void total_update_event(lListElem *event_client, ev_event type, object_description *object_base, bool new_subscription) 
 {
    lList *lp = NULL; /* lp should be set, if we have to make a copy */
    lList *copy_lp = NULL; /* copy_lp should be used for a copy of the org. list */
@@ -3594,8 +3594,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
     * event in the send queue and forget about it.  However, doing this test
     * here could prevent the queuing of events that will later be determined
     * to be useless. */
-   if (eventclient_subscribed(event_client, type, NULL)) {
-      
+   if (new_subscription || eventclient_subscribed(event_client, type, NULL)) {
       unlock_client (id); 
    
       switch (type) {

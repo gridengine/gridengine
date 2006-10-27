@@ -451,9 +451,6 @@ int main(int argc, char* argv[])
    sge_qmaster_shutdown(NULL, do_final_spool);
 #endif      
 
-   /* TODO CR: do we need this function? (its empty) */ 
-   sge_teardown_lock_service();
-
 #ifdef TEST_GDI2
    sge_shutdown((void**)&ctx, qmaster_exit_state);
 #else

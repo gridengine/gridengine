@@ -46,7 +46,7 @@ LCKLIB_SRC = \
 
 LCKLIB_OBJS = $(LCKLIB_SRC:.c=.o)
 
-LCKLIB_TEST_ADD_LIBS = -llck -lrmon
+LCKLIB_TEST_ADD_LIBS = -luti -llck -lrmon
 
 LCKLIB_TEST_LIB_DEPENDS = $(RMONLIB) $(LCKLIB)
 

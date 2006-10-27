@@ -422,8 +422,6 @@ char *argv[]
 
    sge_mirror_shutdown(evc, &event_client);
 
-   sge_teardown_lock_service();
-   
    sge_prof_cleanup();
 
    FREE(initial_qmaster_host);

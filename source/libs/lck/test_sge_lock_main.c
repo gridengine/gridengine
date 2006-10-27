@@ -111,7 +111,6 @@ int main(int argc, char *argv[])
 
       printf("the test took: %fs\n", time_new);
    }
-   sge_teardown_lock_service();
    FREE(t);
 
    DEXIT;
@@ -141,8 +140,6 @@ int main(int argc, char *argv[])
 static void setup(void)
 {
    DENTER(TOP_LAYER, "setup");
-
-   sge_setup_lock_service();
 
    DEXIT;
    return;

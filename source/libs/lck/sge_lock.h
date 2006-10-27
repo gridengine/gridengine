@@ -55,19 +55,12 @@ typedef enum {
 
 typedef u_long32 sge_locker_t;
 
-/* lock_service_provider */
-void sge_setup_lock_service(void);
-void sge_teardown_lock_service(void);
-
 /*
  * Lock user interface
  */
 void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
 void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
 sge_locker_t sge_locker_id(void);
-
-const char* sge_type_name(sge_locktype_t aType);
-int sge_num_locktypes(void);
 
 #if defined(SGE_LOCK)
 #error "SGE_LOCK already defined!"
@@ -86,10 +79,5 @@ int sge_num_locktypes(void);
 { \
    sge_unlock(type, mode, SGE_FUNC, sge_locker_id()); \
 }
-
-/*
- * Lock service provider interface 
- */
-void sge_set_id_callback(sge_locker_t (*aFunc)(void));
 
 #endif /* _SGE_LOCK_H_ */

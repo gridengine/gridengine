@@ -80,9 +80,8 @@
 *  SEE ALSO
 *     sge_lock/sge_lock.h
 *******************************************************************************/
-
-static pthread_rwlock_t Global_Lock;
-static pthread_rwlock_t Master_Conf_Lock;
+static pthread_rwlock_t Global_Lock = PTHREAD_RWLOCK_INITIALIZER;
+static pthread_rwlock_t Master_Conf_Lock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* watch out. The order in this array has to be the same as in the sge_locktype_t type */
 static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Master_Conf_Lock};
@@ -93,10 +92,10 @@ static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
    "master_config" /* LOCK_MASTER_CONF */ 
 };
 
-static sge_locker_t (*id_callback) (void);
-
 /* lock service provider */
 static sge_locker_t id_callback_impl(void);
+
+static sge_locker_t (*id_callback)(void) = id_callback_impl;
 
 
 /****** sge_lock/sge_lock() ****************************************************
@@ -295,165 +294,6 @@ sge_locker_t sge_locker_id(void)
    return id;
 } /* sge_locker_id */
 
-/****** sge_lock/sge_type_name() ***********************************************
-*  NAME
-*     sge_type_name() -- Lock type name 
-*
-*  SYNOPSIS
-*     const char* sge_type_name(sge_locktype_t aType) 
-*
-*  FUNCTION
-*     Return lock name for a given lock type.
-*
-*  INPUTS
-*     sge_locktype_t aType - lock type for which the name should be returned. 
-*
-*  RESULT
-*     const char* - pointer to a constant string holding the lock type name.
-*                   NULL if the lock type is unknown.
-*
-*  NOTES
-*     MT-NOTE: sge_type_name() is MT safe 
-*******************************************************************************/
-const char* sge_type_name(sge_locktype_t aType)
-{
-   const char *s = NULL;
-   int i = (int)aType;
-
-   s = (i < NUM_OF_LOCK_TYPES) ? locktype_names[i] : NULL;
-
-   return s;
-} /* sge_type_name */
-
-/****** sge_lock/sge_num_locktypes() *******************************************
-*  NAME
-*     sge_num_locktypes() -- Number of lock types
-*
-*  SYNOPSIS
-*     int sge_num_locktypes(void) 
-*
-*  FUNCTION
-*     Return number of lock types. 
-*
-*     This function is useful for a lock service provider to determine the number
-*     of locks it is supposed to handle.
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     int - number of lock types.
-*
-*  NOTES
-*     MT-NOTE: sge_num_locktypes() is MT safe 
-*******************************************************************************/
-int sge_num_locktypes(void)
-{
-   int i = 0;
-
-   i = (int)NUM_OF_LOCK_TYPES;
-
-   return i;
-} /* sge_num_locktypes */
-
-
-/****** sge_lock/sge_set_id_callback() *****************************************
-*  NAME
-*     sge_set_id_callback() -- Set locker id callback 
-*
-*  SYNOPSIS
-*     void sge_set_id_callback(sge_locker_t (*aFunc)(void)) 
-*
-*  FUNCTION
-*     Set the callback which is used by 'sge_locker_id()' to actually fetch a 
-*     locker id from the lock service provider. 
-*
-*     A lock service provider must call this function *before* a lock client
-*     fetches a locker id via 'sge_locker_id()' for the first time.
-*
-*  INPUTS
-*     aFunc - locker id function pointer
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: sge_set_id_callback() is NOT MT safe 
-*******************************************************************************/
-void sge_set_id_callback(sge_locker_t (*aFunc)(void))
-{
-   if (NULL != aFunc) {
-      id_callback = aFunc;
-   }
-
-   return;
-} /* sge_set_id_callback */
-
-/****** libs/lck/sge_setup_lock_service() **************************
-*  NAME
-*     sge_setup_lock_service() -- setup lock service 
-*
-*  SYNOPSIS
-*     static void sge_setup_lock_service(void) 
-*
-*  FUNCTION
-*     Determine number of locks needed. Create and initialize the respective
-*     mutexes. Register the callbacks required by the locking API 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: sge_setup_lock_service() is NOT MT safe. 
-*
-*     Currently we do not use so called recursive mutexes. This may change
-*     *without* warning, if necessary!
-*
-*  SEE ALSO
-*     libs/lck/sge_lock.c
-*
-*******************************************************************************/
-void sge_setup_lock_service(void)
-{
-   DENTER(BASIS_LAYER, "sge_setup_lock_service");
-   
-   pthread_rwlock_init(&Global_Lock, NULL); 
-   pthread_rwlock_init(&Master_Conf_Lock, NULL);
-
-   sge_set_id_callback(id_callback_impl);
-   
-   DRETURN_VOID;
-} /* sge_setup_lock_service() */
-
-/****** libs/lck/sge_teardown_lock_service() ***********************
-*  NAME
-*     sge_teardown_lock_service() -- teardown lock service 
-*
-*  SYNOPSIS
-*     static void sge_teardown_lock_service(void) 
-*
-*  FUNCTION
-*     Destroy and free mutexes created with 'sge_setup_lock_service()' 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     void - none
-*
-*  NOTES
-*     MT-NOTE: sge_teardown_lock_service() is NOT MT safe. 
-*
-*******************************************************************************/
-void sge_teardown_lock_service(void)
-{
-   DENTER(BASIS_LAYER, "sge_teardown_lock_service");
-
-   DRETURN_VOID;
-} /* sge_teardown_lock_service() */
 
 /****** libs/lck/id_callback_impl() *********************************
 *  NAME

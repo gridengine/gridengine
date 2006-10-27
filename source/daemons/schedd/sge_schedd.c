@@ -224,7 +224,13 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
-   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
+   /*
+    * Scheduler needs a relatively high synchronuous receive timeout as minimum. This
+    * is required for cases when orders processing takes long time due to very slow
+    * qmaster spooling (e.g. classic over NFS).
+    */
+   cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), 
+      MAX(120, (int) (sconf_get_schedule_interval() * 2)));
 
    sge_sig_handler_in_main_loop = 1;
 
@@ -288,8 +294,8 @@ char *argv[]
          if (sconf_is_new_config()) {
 
             /* set actual syncron receive timeout */
-            cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),
-                                                 (int) (sconf_get_schedule_interval() * 2) );
+            cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0),
+                                       MAX(120, (int) (sconf_get_schedule_interval() * 2)));
 
             /* check profiling settings, if necessary, switch profiling on/off */
             if (sconf_get_profiling()) {

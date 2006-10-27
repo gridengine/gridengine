@@ -1,3 +1,10 @@
+AH-2006-10-27-0: Bugfix:    qmaster loggings "scheduler tried to remove a
+                            incomplete" and "scheduler send a order for a
+                            changed user/project"
+                 Bugster:   6486125
+                 Issue:     2108
+                 Review:    JG
+
 GH-2006-10-20-0: Bugfix:    Account string does not accept the "|" character
                  Bugtraq:   6475282
                  Review:    AH

@@ -11,6 +11,7 @@ AH-2006-10-26-0: Bugfix:    qmaster loggings "scheduler tried to remove a
                             changed user/project"
                  Bugster:   6486125
                  Issue:     2108
+                 Review:    JG
 
 2 Conformance to specification
 

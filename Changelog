@@ -1,3 +1,8 @@
+AS-2006-10-30-1: Bugfix:    dist/util/sge_request referred to cod_request(5)
+                            man page instead of sge_request(5)
+                 Bugster:   6325359
+
+
 AA-2006-10-30-0: Bugfix:    o repaired broken build on certain archs through sge_lock fix
                             o fixed error messages for PEM_BYTE code
                  Review:    RD

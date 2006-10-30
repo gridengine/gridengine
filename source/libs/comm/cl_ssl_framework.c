@@ -2285,9 +2285,9 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
             char buffer[BUFSIZ];
             cl_com_ssl_func__ERR_error_string_n(ssl_error, buffer, sizeof(buffer)-1);
             CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_cert:", buffer);
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, "failed to set ssl_cert");
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE, "failed to set ssl_cert");
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-            return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+            return CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE;
          }
          cn = cl_com_ssl_func__X509_NAME_oneline(cl_com_ssl_func__X509_get_subject_name(cert), NULL, 0);
          CL_LOG_STR(CL_LOG_INFO,"ssl_cert:", cn);
@@ -2299,9 +2299,9 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
          }
       } else {
          CL_LOG_STR(CL_LOG_INFO,"ssl_cert:", "is NULL");
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE, "cert is NULL");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL, "cert is NULL");
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         return CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+         return CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL;
       }
 
       /* load CA file from file */
@@ -2327,9 +2327,9 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
             char buffer[BUFSIZ];
             cl_com_ssl_func__ERR_error_string_n(ssl_error, buffer, sizeof(buffer)-1);
             CL_LOG_STR(CL_LOG_ERROR,"failed to set ssl_key_pem_bytes:", buffer);
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, private->ssl_setup->ssl_key_pem_file);
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE, private->ssl_setup->ssl_key_pem_file);
             cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-            return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+            return CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE;
          }
          CL_LOG_STR(CL_LOG_INFO,"ssl_key_pem_file:", private->ssl_setup->ssl_key_pem_file);
          if (pkey != NULL) {
@@ -2337,9 +2337,9 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
          }   
       } else {
          CL_LOG_STR(CL_LOG_INFO,"private key:", "is NULL");
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE, "private key is NULL");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE, "private key is NULL");
          cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
-         return CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+         return CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE;
       }
    } else 
 #endif

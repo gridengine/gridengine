@@ -157,5 +157,8 @@
 #define MSG_CL_RETVAL_COMMLIB_SETUP_ALREADY_CALLED     _MESSAGE(80119, _("cl_com_setup_commlib() processed twice"))
 #define MSG_CL_RETVAL_DO_IGNORE                        _MESSAGE(80120, _("value is ignored"))
 #define MSG_CL_RETVAL_CLOSE_ALIAS_FILE_FAILED          _MESSAGE(80121, _("could not close alias file"))
+#define MSG_CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE       _MESSAGE(80122, _("can't set certificate bytes"))
+#define MSG_CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL    _MESSAGE(80123, _("certificate bytes are NULL"))
+#define MSG_CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE        _MESSAGE(80124, _("can't set key bytes"))
 
 #endif /* __MSG_COMMLISTSLIB_H */

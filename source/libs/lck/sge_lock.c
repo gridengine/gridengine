@@ -80,8 +80,8 @@
 *  SEE ALSO
 *     sge_lock/sge_lock.h
 *******************************************************************************/
-static pthread_rwlock_t Global_Lock = PTHREAD_RWLOCK_INITIALIZER;
-static pthread_rwlock_t Master_Conf_Lock = PTHREAD_RWLOCK_INITIALIZER;
+static pthread_rwlock_t Global_Lock;
+static pthread_rwlock_t Master_Conf_Lock;
 
 /* watch out. The order in this array has to be the same as in the sge_locktype_t type */
 static pthread_rwlock_t *SGE_RW_Locks[NUM_OF_LOCK_TYPES] = {&Global_Lock, &Master_Conf_Lock};
@@ -92,6 +92,8 @@ static const char* locktype_names[NUM_OF_LOCK_TYPES] = {
    "master_config" /* LOCK_MASTER_CONF */ 
 };
 
+static pthread_once_t lock_once = PTHREAD_ONCE_INIT;
+static void lock_once_init(void);
 /* lock service provider */
 static sge_locker_t id_callback_impl(void);
 
@@ -132,6 +134,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 
    DENTER(BASIS_LAYER, "sge_lock");
 
+   pthread_once(&lock_once, lock_once_init);
 #ifdef PRINT_LOCK
    {
       struct timeval now;
@@ -177,6 +180,7 @@ void sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_
 
    DENTER(BASIS_LAYER, "sge_lock");
    
+   pthread_once(&lock_once, lock_once_init);
    if (aMode == LOCK_READ) {
       res = pthread_rwlock_rdlock(SGE_RW_Locks[aType]);
    }
@@ -227,6 +231,7 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
    int res = -1;
    DENTER(BASIS_LAYER, "sge_unlock");
 
+   pthread_once(&lock_once, lock_once_init);
    if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
       CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
@@ -250,6 +255,7 @@ void sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sg
    
    DENTER(BASIS_LAYER, "sge_unlock");
 
+   pthread_once(&lock_once, lock_once_init);
    if ((res = pthread_rwlock_unlock(SGE_RW_Locks[aType])) != 0) {
       CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, locktype_names[aType], strerror(res)));
       abort();
@@ -294,6 +300,39 @@ sge_locker_t sge_locker_id(void)
    return id;
 } /* sge_locker_id */
 
+/****** libs/lck/lock_once_init() **************************
+*  NAME
+*     lock_once_init() -- setup lock service 
+*
+*  SYNOPSIS
+*     static void lock_once_init(void) 
+*
+*  FUNCTION
+*     Determine number of locks needed. Create and initialize the respective
+*     mutexes. Register the callbacks required by the locking API 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: lock_once_init() is NOT MT safe. 
+*
+*     Currently we do not use so called recursive mutexes. This may change
+*     *without* warning, if necessary!
+*
+*  SEE ALSO
+*     libs/lck/sge_lock.c
+*
+*******************************************************************************/
+static void lock_once_init(void)
+{
+   pthread_rwlock_init(&Global_Lock, NULL); 
+   pthread_rwlock_init(&Master_Conf_Lock, NULL);
+   return;
+} /* prog_once_init() */
 
 /****** libs/lck/id_callback_impl() *********************************
 *  NAME

@@ -422,6 +422,15 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_CLOSE_ALIAS_FILE_FAILED: {
          return MSG_CL_RETVAL_CLOSE_ALIAS_FILE_FAILED;
       }
+      case CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE: {
+         return MSG_CL_RETVAL_SSL_CANT_SET_CERT_PEM_BYTE;
+      }
+      case CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL: {
+         return MSG_CL_RETVAL_SSL_SET_CERT_PEM_BYTE_IS_NULL;
+      }
+      case CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE: {
+         return MSG_CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

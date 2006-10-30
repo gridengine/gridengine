@@ -4,7 +4,7 @@
 # automatically applied to all job submission requests. Users can get rid of
 # these defaults by using the -clear option.
 #
-# See cod_request(5) for a detailed description of the file format.
+# See sge_request(5) for a detailed description of the file format.
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################

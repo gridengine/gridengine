@@ -1,3 +1,7 @@
+RH-2006-10-30-0: Bugfix:    o jgdi: QueueInstanceSummary did not work with a queue filter
+                              (JB_hard_resource_list has been reduced)
+                 Review:    AA
+
 AA-2006-10-27-0: Bugfix:    o changed sge_lock to use static initializers
                               and removed unused functions sge_setup_lock_service() etc.
                             o fix for subscribe/unsubscribe after being registered

@@ -149,6 +149,8 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "END ------------- queue filter --------------");
+                      
+      qstat_filter_add_q_attributes(qstat_env);                    
    }
    
    if ((ret=build_resource_filter(env, filter, qstat_env, alpp)) != JGDI_SUCCESS) {
@@ -171,6 +173,8 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "END ------------- PE filter --------------");
+                      
+      qstat_filter_add_pe_attributes(qstat_env);
    }
 
    if ((ret=build_queue_state_filter(env, filter, qstat_env, alpp))) {
@@ -190,6 +194,8 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE, 
                       "END ------------- queue user filter --------------");
+                      
+       qstat_filter_add_U_attributes(qstat_env);
    }
    
    if (filter->job_user_filter != NULL) {
@@ -1420,7 +1426,11 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
          goto error;
       }            
       if (res) {
+#if 0
+         qstat_env.full_listing |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
+#else
          qstat_env.full_listing |= QSTAT_DISPLAY_FULL;
+#endif         
       }
       
       if ((ret = QueueInstanceSummaryOptions_showRequestedResourcesForJobs(env, options, &res, &alp)) != JGDI_SUCCESS) {
@@ -1437,6 +1447,15 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
          qstat_filter_add_pri_attributes(&qstat_env);
          qstat_env.full_listing |= QSTAT_DISPLAY_PRIORITY;
       }
+
+      if ((ret = BasicQueueOptions_showAdditionalAttributes(env, options, &res, &alp)) != JGDI_SUCCESS) {
+         goto error;
+      }
+      if (res) {
+         qstat_filter_add_ext_attributes(&qstat_env); 
+         qstat_env.full_listing |= QSTAT_DISPLAY_EXTENDED;
+      }
+      
       if ((ret = QueueInstanceSummaryOptions_showJobUrgency(env, options, &res, &alp)) != JGDI_SUCCESS) {
          goto error;
       }

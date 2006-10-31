@@ -1,3 +1,7 @@
+CR-2006-10-31-0: Cleanup:   o fixed support for issue 1096 from testsuite
+                              (missing code)
+                 Review:    AA
+
 RH-2006-10-31-0: Enhancem.  o missing events for jgdi implemented
                             o cleanup for event class generated
                             o SISSL headers added

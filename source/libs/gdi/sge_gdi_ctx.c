@@ -1378,6 +1378,26 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
       ctx_set_last_commlib_error(thiz, cl_ret);
    }
 
+#ifdef DEBUG_CLIENT_SUPPORT
+   /* set rmon callback for message printing (after handle creation) */
+   rmon_set_print_callback(gdi_rmon_print_callback_function);
+#endif
+
+   if ((thiz->get_who(thiz) == QMASTER) && (getenv("SGE_TEST_SOCKET_BIND") != NULL)) {
+      /* this is for testsuite socket bind test (issue 1096 ) */
+         struct timeval now;
+         gettimeofday(&now,NULL);
+     
+         /* if this environment variable is set, we wait 15 seconds after 
+            communication lib setup */
+         DPRINTF(("waiting for 60 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
+         while ( handle != NULL && now.tv_sec - handle->start_time.tv_sec  <= 60 ) {
+            DPRINTF(("timeout: "sge_U32CFormat"\n",sge_u32c(now.tv_sec - handle->start_time.tv_sec)));
+            cl_commlib_trigger(handle, 1);
+            gettimeofday(&now,NULL);
+         }
+         DPRINTF(("continue with setup\n"));
+   }
    DRETURN(cl_ret);   
 }
 

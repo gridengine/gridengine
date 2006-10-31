@@ -117,6 +117,7 @@ enum {
 
 LISTDEF(CE_Type)
    JGDI_ROOT_OBJ(ComplexEntry, SGE_CENTRY_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_CENTRY_ADD) | MODIFY(sgeE_CENTRY_MOD) | DELETE(sgeE_CENTRY_DEL) | GET_LIST(sgeE_CENTRY_LIST))
    SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)          /* full name of attribute */
    SGE_STRING_D(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "NONE")      /* shortcut name of attribute */
    SGE_ULONG_D(CE_valtype, CULL_DEFAULT | CULL_SPOOL, TYPE_INT)        /* type */

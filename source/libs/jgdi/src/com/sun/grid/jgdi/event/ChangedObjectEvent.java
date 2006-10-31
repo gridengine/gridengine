@@ -84,7 +84,7 @@ public abstract class ChangedObjectEvent extends Event {
       if( !objectType.isAssignableFrom(changedObj.getClass())) {
          throw new IllegalArgumentException("changedObj must instanceof " + objectType.getName() );
       }
-      this.changedObject = changedObject;
+      this.changedObject = changedObj;
    }
    
    /**

@@ -1,3 +1,15 @@
+RH-2006-10-31-0: Enhancem.  o missing events for jgdi implemented
+                            o cleanup for event class generated
+                            o SISSL headers added
+                            o new test command libs/jgdi/jgdievc (prints
+                              all events received over jgdi to stdout)
+                            o jgdi support now parallel builds on different
+                              hosts ("aimk -java" started on different 
+                              platforms works). The java build host has
+                              to defined in build_private.properties. If this
+                              property is not defined, the localhost is used.
+                 Review:   AA
+
 AS-2006-10-30-1: Bugfix:    dist/util/sge_request referred to cod_request(5)
                             man page instead of sge_request(5)
                  Bugster:   6325359

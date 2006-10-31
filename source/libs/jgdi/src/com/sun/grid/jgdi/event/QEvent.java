@@ -63,13 +63,13 @@ public class QEvent implements EventListener {
    public static void main(String[] args) {
       
       try {
-         System.loadLibrary( "jgdi" );
-         
          QEvent qevt = new QEvent(args[0]);
          
          qevt.start();
          
          Runtime.getRuntime().addShutdownHook( qevt.new ShutdownHandler() );
+         
+         Thread.currentThread().sleep(Integer.MAX_VALUE);
       } catch( Exception e) {
          e.printStackTrace();
       }
@@ -105,7 +105,8 @@ public class QEvent implements EventListener {
    
    public void eventOccured(Event evt) {
       
-      System.out.print(evt);
+      System.out.println(evt);
+      System.out.flush();
       
    }
    

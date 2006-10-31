@@ -457,6 +457,27 @@ void jgdi_log_list(JNIEnv *env, const char* logger, log_level_t level, lList *li
       sge_dstring_free(&ds);
    }
 }
+
+
+void jgdi_log_listelem(JNIEnv *env, const char* logger, log_level_t level, lListElem *elem) {
+   jobject logger_obj = NULL;
+   
+   logger_obj = jgdi_get_logger(env, logger);
+   if(logger_obj == NULL) {
+      return;
+   }
+   
+   if (jgdi_is_loggable(env, logger_obj, level)) {
+      dstring ds = DSTRING_INIT;
+      
+      lInit(nmv); 
+      lWriteElemToStr(elem, &ds);
+      jgdi_log(env, logger_obj, FINE, sge_dstring_get_string(&ds));
+      
+      sge_dstring_free(&ds);
+   }
+}
+
 /*-------------------------------------------------------------------------*
  * NAME
  *   jgdi_log_answer_list - write a answer list into a java logger

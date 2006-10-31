@@ -39,6 +39,7 @@ import com.sun.grid.jgdi.event.EventType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -105,20 +106,27 @@ public abstract class AbstractEventClient implements Runnable {
     */
    public void close() throws JGDIException, InterruptedException {
       
-      Thread aThread = thread;
-      thread = null;
+      logger.log(Level.FINE, "close event client");
+      Thread aThread = null;
+      synchronized(syncObject) {
+          aThread = thread;
+          thread = null;
+          syncObject.notifyAll();
+      }
       if( aThread != null ) {
-         aThread.interrupt();
-         if( aThread != Thread.currentThread() ) {
-            aThread.join();
+         while(aThread.isAlive()) {
+             logger.log(Level.FINE, "interrupting working thread");
+             aThread.interrupt();
+             aThread.join(1000);
+         }
+         logger.log(Level.FINE, "working thread died");
+         int index = this.evc_index;
+         this.evc_index = 0;
+         if( index != 0) {
+            closeNative(index);
          }
       }
       
-      int index = this.evc_index;
-      this.evc_index = 0;
-      if( index != 0) {
-         closeNative(index);
-      }
       
    }
    
@@ -155,7 +163,7 @@ public abstract class AbstractEventClient implements Runnable {
             logger.info("event client registered at qmaster (id = " + getId() + ")");
 
             
-            while( !Thread.currentThread().isInterrupted() ) {
+            while( thread != null ) {
                try {
                   synchronized(syncObject) {
                      fillEvents(eventList);

@@ -53,19 +53,9 @@ enum {
    CAL_parsed_week_calendar
 };
 
-#if 0
-LISTDEF(CAL_Type)
-   JGDI_ROOT_OBJ(Calendar, SGE_CALENDAR_LIST, ADD | MODIFY | DELETE | GET | GET_LIST )
-   SGE_STRING(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
-   SGE_STRING(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL)
-   SGE_STRING(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL)
-   /* non spooling fields */
-   SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
-   SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
-LISTEND 
-#else
 LISTDEF(CAL_Type) 
    JGDI_ROOT_OBJ(Calendar, SGE_CALENDAR_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_CALENDAR_ADD) | MODIFY(sgeE_CALENDAR_MOD) | DELETE(sgeE_CALENDAR_DEL) | GET_LIST(sgeE_CALENDAR_LIST))
    SGE_STRING_D(CAL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL, "template")
    SGE_STRING_D(CAL_year_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
    SGE_STRING_D(CAL_week_calendar, CULL_DEFAULT | CULL_SPOOL, "none")
@@ -73,9 +63,6 @@ LISTDEF(CAL_Type)
    SGE_LIST(CAL_parsed_year_calendar, CA_Type, CULL_DEFAULT)
    SGE_LIST(CAL_parsed_week_calendar, CA_Type, CULL_DEFAULT)
 LISTEND 
-
-#endif
-
 
 NAMEDEF(CALN)
    NAME("CAL_name")

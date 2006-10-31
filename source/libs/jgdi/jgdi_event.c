@@ -56,6 +56,7 @@
 #include "sge_eventL.h"
 #include "jgdi_wrapper.h"
 #include "jgdi_logging.h"
+#include "sge_event.h"
 #define MAX_EVC_ARRAY_SIZE 1024
 static pthread_mutex_t sge_evc_mutex = PTHREAD_MUTEX_INITIALIZER;
 static sge_evc_class_t* sge_evc_array[MAX_EVC_ARRAY_SIZE];
@@ -63,6 +64,10 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
                                              
 static jgdi_result_t fill_job_usage_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp);
 static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp);
+
+static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const char* beanClassName, 
+                                        lDescr *descr, int event_action, lListElem *ev, lList **alpp);
+
 #define JGDI_LAYER      TOP_LAYER
 
 
@@ -397,13 +402,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
 
    sge_evc->ec_get(sge_evc, &elist, FALSE);
 
-   jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINE,
-                   "BEGIN ------------- event list --------------");
-   
-   jgdi_log_list(env, JGDI_EVENT_LOGGER, FINE, elist);
-   
-   jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINE,
-                   "END ------------- event list --------------");
 
    for_each(ev, elist) {
       
@@ -450,35 +448,49 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
    jobject event = NULL;
    jlong timestamp = 0;
    jint  evtId = 0;
-   
    DENTER(JGDI_LAYER, "process_event");
+   
+   {
+      dstring evc_buffer = DSTRING_INIT;
+      const char* evc_text = event_text(ev, &evc_buffer);
+      
+      jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINE,
+                      "BEGIN: event %s --------------", evc_text);
+      
+      jgdi_log_listelem(env, JGDI_EVENT_LOGGER, FINE, ev);
+      
+      jgdi_log_printf(env, JGDI_EVENT_LOGGER, FINE,
+                      "END event %s --------------", evc_text);
+                      
+      sge_dstring_free(&evc_buffer);
+   }
    
    evtId = lGetUlong(ev, ET_number);
    timestamp = lGetUlong(ev, ET_timestamp);
-   
+
    switch(event_type) {
 
       case sgeE_JOB_MOD_SCHED_PRIORITY:     /*35 + event job modify priority */
-      
-      case sgeE_JOB_SCHEDD_INFO_LIST:       /*39 + send job schedd info list at registration */
-      case sgeE_JOB_SCHEDD_INFO_ADD:        /*40 - event jobs schedd info added */
-      case sgeE_JOB_SCHEDD_INFO_DEL:        /*41 - event jobs schedd info deleted */
-      case sgeE_JOB_SCHEDD_INFO_MOD:        /*42 + event jobs schedd info modified */
-
-      case sgeE_NEW_SHARETREE:               /*51 + replace possibly existing share tree */
-
-      case sgeE_QINSTANCE_ADD:              /*65 + event queue instance add */
-      case sgeE_QINSTANCE_DEL:              /*66 + event queue instance delete */
-      case sgeE_QINSTANCE_MOD:              /*67 + event queue instance mod */
+         ret = EventFactoryBase_static_createJobPriorityModEvent(env, timestamp, evtId, &event, alpp);
+         
+         if (ret == JGDI_SUCCESS) {
+              ret = fill_generic_event(env, event, "com/sun/grid/jgdi/configuration/Job", JB_Type, SGE_EMA_MOD, ev, alpp);
+         }
+         break;
       case sgeE_QINSTANCE_SOS:              /*68 + event queue instance sos */
+         ret = EventFactoryBase_static_createQueueInstanceSuspendEvent(env, timestamp, evtId, &event, alpp);
+         
+         if (ret == JGDI_SUCCESS) {
+              ret = fill_generic_event(env, event, "com/sun/grid/jgdi/configuration/QueueInstance", QU_Type, SGE_EMA_MOD, ev, alpp);
+         }
+         break;
       case sgeE_QINSTANCE_USOS:             /*69 + event queue instance usos */
-
-
-        answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                               "handling event %d yet not implemented", event_type);
-        ret = JGDI_ILLEGAL_STATE;
-        break;
-        
+         ret = EventFactoryBase_static_createQueueInstanceUnsuspendEvent(env, timestamp, evtId, &event, alpp);
+         
+         if (ret == JGDI_SUCCESS) {
+              ret = fill_generic_event(env, event, "com/sun/grid/jgdi/configuration/QueueInstance", QU_Type, SGE_EMA_MOD, ev, alpp);
+         }
+         break;
       case sgeE_JOB_FINAL_USAGE:            /*37 + event job final usage report after job end */
            ret = EventFactoryBase_static_createJobFinalUsageEvent(env, timestamp, evtId, &event, alpp);
            if(ret == JGDI_SUCCESS) {
@@ -570,7 +582,6 @@ static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *e
 jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* beanClassName, 
                                  const char* cullTypeName, lDescr *descr, int event_action, lListElem *ev, lList **alpp)
 {
-   jclass beanClass = NULL;
    jobject event = NULL;
    jlong timestamp = 0;
    jint  evtId = 0;
@@ -587,17 +598,6 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
       DEXIT;
       return JGDI_ILLEGAL_ARGUMENT;
    }   
-   if (beanClassName == NULL) {
-      answer_list_add(alpp, "beanClassName is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
-      DEXIT;
-      return JGDI_ILLEGAL_ARGUMENT;
-   }
-
-   beanClass = (*env)->FindClass(env, beanClassName);
-   if (test_jni_error(env, "handleEvent: FindClass failed", alpp)) {
-      DEXIT;
-      return JGDI_ILLEGAL_ARGUMENT;
-   }
 
    switch (event_action) {
       case SGE_EMA_LIST:
@@ -628,6 +628,37 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
       return ret;
    }
    
+   ret = fill_generic_event(env, event, beanClassName, descr, event_action, ev, alpp);
+   if(ret != JGDI_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+   *event_obj = event;
+   DEXIT;
+   return ret;
+}
+
+static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const char* beanClassName, 
+                                        lDescr *descr, int event_action, lListElem *ev, lList **alpp) {
+
+   lListElem *ep = NULL;                                           
+   jclass beanClass = NULL;
+   jgdi_result_t ret = JGDI_SUCCESS;
+   
+   DENTER(JGDI_LAYER, "fill_generic_event");
+                                           
+   if (beanClassName == NULL) {
+      answer_list_add(alpp, "beanClassName is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
+      DEXIT;
+      return JGDI_ILLEGAL_ARGUMENT;
+   }
+
+   beanClass = (*env)->FindClass(env, beanClassName);
+   if (test_jni_error(env, "handleEvent: FindClass failed", alpp)) {
+      DEXIT;
+      return JGDI_ILLEGAL_ARGUMENT;
+   }
+   
    if ( event_action == SGE_EMA_LIST ) {
       jobject  obj = NULL;
       
@@ -636,7 +667,7 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
             DEXIT;
             return ret;
          }
-         ret = ListEvent_add(env, event, obj, alpp);
+         ret = ListEvent_add(env, event_obj, obj, alpp);
          if(ret != JGDI_SUCCESS) {
             DEXIT;
             return ret;
@@ -645,7 +676,7 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
    } else {
       jobject  obj = NULL;
       
-      ret = ChangedObjectEvent_setPKInfo(env, event,
+      ret = ChangedObjectEvent_setPKInfo(env, event_obj,
                                         lGetUlong(ev,ET_intkey),
                                         lGetUlong(ev,ET_intkey2),
                                         lGetString(ev,ET_strkey),
@@ -665,7 +696,7 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
             DEXIT;
             return ret;
          }
-         ret = ChangedObjectEvent_setChangedObject(env, event, obj, alpp);
+         ret = ChangedObjectEvent_setChangedObject(env, event_obj, obj, alpp);
          if(ret != JGDI_SUCCESS) {
             DEXIT;
             return ret;
@@ -695,8 +726,6 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
          (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);            
       }
    }
-   
-   *event_obj = event;
    
    DEXIT;
    return JGDI_SUCCESS;

@@ -107,8 +107,8 @@ enum _enum_lMultiType {
 ** JGDI specific defines
 */
 #define JGDI_ROOT_OBJ( idlname, listname, operators )
+#define JGDI_EVENT_OBJ(eventtypes)
 #define JGDI_OBJ(idlname)
-#define JGDI_OBJ_P(idlname, operators)
 #define JGDI_MAPPED_OBJ( impl_class_name )
 #define JGDI_PRIMITIVE_OBJ(primitive_attribute)
 #define JGDI_PRIMITIVE_ROOT_OBJ(idlname, primitive_attribute, listname, operators)

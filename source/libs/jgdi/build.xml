@@ -55,9 +55,26 @@
    
 
    <target name="init">
+       
       <property name="sge.srcdir" location="../.."/>
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
+       
+       <exec executable="hostname" outputproperty="hostname"/>
+       
+       <condition property="isJavaBuildHost">
+           <not>
+              <isset property="java.buildhost"/>
+           </not>
+       </condition>
+       
+       <condition property="isJavaBuildHost" >
+           <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+       </condition>
+       
+       <echo>isJavaBuildHost = ${isJavaBuildHost}</echo>
+       
+       
       
       
       <property name="build.dir"  location="build"/>
@@ -139,7 +156,7 @@
     
    </target>
 
-   <target depends="init, gensrc" name="compile">
+   <target depends="init, gensrc" name="compile" if="isJavaBuildHost">
       <javac debug="${javac.debug}" 
          deprecation="${javac.deprecated}"  
          destdir="${classes.dir}"
@@ -155,19 +172,46 @@
         
    </target>
 
-   <target depends="init,compile" name="jar">
-      <jar basedir="${classes.dir}" compress="true" jarfile="${jar}">
-         <fileset dir="${classes.dir}">
+   <target name="jar.init" depends="init">
+       <fileset id="jar.classes" dir="${classes.dir}">
             <include name="**/*.class"/>
             <exclude name="com/sun/grid/jgdi/examples/**/*"/>
-         </fileset>
-         <fileset dir="${src.dir}">
+      </fileset>
+      <fileset id="jar.properties" dir="${src.dir}">
             <include name="com/sun/grid/jgdi/Resources*.properties"/>
-         </fileset>
-      </jar>
+      </fileset>
+       <dependset>
+           <srcfileset refid="jar.classes"/>
+           <srcfileset refid="jar.properties"/>
+           <targetfileset file="${jar}"/>
+       </dependset>
+       
    </target>
+   
+   <target name="jar" depends="jar.build, jar.wait"/>
 
-   <target depends="init,jar, aimk" description="Build everything." name="all"/>
+   <target depends="jar.init, compile, gensrc.native" name="jar.build" if="isJavaBuildHost">
+      
+      <jar basedir="${classes.dir}" compress="true" jarfile="${jar}.tmp">
+          <fileset refid="jar.classes"/>
+          <fileset refid="jar.properties"/>
+      </jar>
+      <copy file="${jar}.tmp" tofile="${jar}"/>
+   </target>
+   
+   <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
+       <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+            <available file="${jar}"/>
+       </waitfor>
+       
+       <available file="${jar}" property="jar.available"/>
+       
+       <fail unless="jar.available">
+          Timeout while waiting for jar file build on host ${java.buildhost}
+       </fail>
+   </target>       
+
+   <target depends="jar, aimk" description="Build everything." name="all"/>
 
         
    <target name="javadoc.init" depends="init">
@@ -240,7 +284,7 @@
    </target>
     
 
-   <target name="gensrc" depends="jni.init"
+   <target name="gensrc" depends="jni.init" if="isJavaBuildHost"
       description="Create a all generated source files">  
       <echo>java.library.path: ${java.library.path}</echo>      
       <java classname="org.apache.tools.ant.launch.Launcher" 
@@ -255,34 +299,8 @@
       </java>
    </target>
     
-   <target name="gensrc.init" depends="jni.init, cullconv">
-      <!-- This pattern set defines all cull objects which should 
-      be considered for the simple test case -->
-           
+   <target name="gensrc.init" depends="jni.init, cullconv" if="isJavaBuildHost">
       
-      <patternset id="simpletest">
-         <!--exclude name="CE_Type"/-->
-         <exclude name="SME_Type"/>
-         <exclude name="CQ_Type"/>
-         <exclude name="JB_Type"/>
-         <exclude name="SC_Type"/>
-         <exclude name="STN_Type"/>
-         <exclude name="CONF_Type"/>
-         <exclude name="UP_Type"/>
-         <exclude name="MO_Type"/>
-         <exclude name="EV_Type"/>
-      </patternset>
-
-      <!-- Types for Flexibe Resource Limits are excluded -->
-      <patternset id="excludeTypes">
-         <!--exclude name="LIRS_Type"/-->
-         <!--exclude name="LIR_Type"/-->
-         <!--exclude name="LIRF_Type"/-->
-         <!--exclude name="LIRL_Type"/-->
-      </patternset>
-
-     
-      <echo>cullconv.jar=${cullconv.jar}</echo> 
       <taskdef name="cullconv" classname="com.sun.grid.cull.ant.CullConvAntTask">
          <!--classpath location="${cullconv.jar}"/-->
          <classpath>
@@ -353,58 +371,45 @@
          <templateconv scope="definition"
             outputFile="${build.dir}/jgdi_mapping.c"
             templateFile="templates/c_jgdi_mapping.jsp">
-            <pattern>
-               <patternset refid="excludeTypes"/>
-            </pattern>
          </templateconv>            
 
                        
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/reflect/CullTypeMapping.java"
             templateFile="templates/java_mapping.jsp">
-            <pattern objectFilter="root depend">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root depend"/>
          </templateconv>
                    
          <javatemplateconv outputDir="${gensrc.dir}"
             template="templates/javamodel.jsp"
             scope="objects">
-            <pattern objectFilter="root depend">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root depend"/>
          </javatemplateconv>
 
          <javatemplateconv outputDir="${gensrc.dir}"
             template="templates/javamodel_impl.jsp"
             classSuffix="Impl"
             scope="objects">
-            <pattern objectFilter="root depend">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root depend"/>
          </javatemplateconv>
          
          
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/ConfigurationFactory.java"
             templateFile="templates/java_config_factory.jsp">
-            <pattern objectFilter="root depend">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root depend"/>
          </templateconv>
          
          <javaconv outputDir="${gensrc.dir}"
-         packagename="com.sun.grid.jgdi"
-         className="com.sun.grid.cull.CullConstantConverter"/>
+                   packagename="com.sun.grid.jgdi"
+                   className="com.sun.grid.cull.CullConstantConverter"/>
          
          <javatemplateconv outputDir="${gensrc.dir}"
             classSuffix="Descriptor"
             packagename="com.sun.grid.jgdi.configuration.reflect"
             template="templates/javadescriptor.jsp"
             scope="objects">
-            <pattern objectFilter="root depend">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root depend"/>
          </javatemplateconv>
                   
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -412,43 +417,28 @@
             scope="objects"
             template="templates/java_simpletest.jsp">
             <pattern objectFilter="root">
-               <patternset refid="excludeTypes"/>
+               <exclude name="STN_Type"/>
+               <exclude name="QU_Type"/>
             </pattern>
          </javatemplateconv>
-
-         <templateconv scope="definition"
-            outputFile="${gensrc.dir}/com/sun/grid/jgdi/JGDISimpleTestsuite.java"
-            templateFile="templates/java_simpletestsuite.jsp">
-            <pattern objectFilter="root">
-               <patternset refid="excludeTypes"/>
-               <exclude name="CONF_Type"/>
-               <exclude name="JB_Type"/>
-            </pattern>
-         </templateconv>
 
          <!-- JGDI classes -->
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/JGDI.java"
             templateFile="templates/java_jgdi.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
                        
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/JGDIImpl.java"
             templateFile="templates/java_jni_jgdi.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
                                               
          <templateconv scope="objects"
             outputFile="${build.dir}/jgdi.c"
             templateFile="templates/c_jgdi.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
                        
                        
@@ -456,34 +446,26 @@
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemote.java"
             templateFile="templates/java_rmi_jgdi.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
             
                        
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteImpl.java"
             templateFile="templates/java_rmi_jgdi_impl.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
                        
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteCache.java"
             templateFile="templates/java_rmi_jgdi_cache.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
 
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteDescriptor.java"
             templateFile="templates/java_rmi_jgdi_descriptor.jsp">
-            <pattern objectFilter="root primitive_root">
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="root primitive_root"/>
          </templateconv>
                                               
          <!-- Event Objects -->
@@ -493,10 +475,7 @@
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
             template="templates/java_listevent.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </javatemplateconv>                           
          
          
@@ -505,14 +484,7 @@
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
             template="templates/java_modevent.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </javatemplateconv>                           
 
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -520,14 +492,7 @@
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
             template="templates/java_addevent.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </javatemplateconv>                           
          
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -535,66 +500,31 @@
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
             template="templates/java_delevent.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </javatemplateconv>                           
                                                   
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/event/EventFactory.java"
             templateFile="templates/java_event_factory.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </templateconv>
 
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/EventClient.java"
             templateFile="templates/java_event_client.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </templateconv>
          
          <templateconv scope="definition"
             outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/EventClientImpl.java"
             templateFile="templates/java_jni_event_client.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </templateconv>
 
          <templateconv scope="definition"
             outputFile="${build.dir}/jgdi_event_gen.c"
             templateFile="templates/c_event_client.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <patternset refid="excludeTypes"/>
-            </pattern>
-            <pattern>
-               <include name="JAT_Type"/>
-               <include name="PET_Type"/>
-            </pattern>
+            <pattern objectFilter="event"/>
          </templateconv>
 
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -602,14 +532,15 @@
             packagename="com.sun.grid.jgdi.event"
             scope="objects"
             template="templates/java_event_test.jsp">
-            <pattern objectFilter="root primitive_root">
-               <exclude name="EV_Type"/>
-               <exclude name="EVC_Type"/>
+            <pattern objectFilter="event">
+               <exclude name="STN_Type"/>
+               <exclude name="QU_Type"/>
                <exclude name="CE_Type"/>
                <exclude name="CONF_Type"/>
                <exclude name="JB_Type"/>
+               <exclude name="JAT_Type"/>
+               <exclude name="PET_Type"/>
                <exclude name="SME_Type"/>
-               <patternset refid="excludeTypes"/>
             </pattern>
          </javatemplateconv>                           
          
@@ -620,7 +551,8 @@
    </target>
     
    <target name="gensrc.native" depends="jni.init, gensrc.init, compile, aimk.template, aimk.drmaa"
-      description="Create a all generated native source files">  
+      description="Create a all generated native source files"
+      if="isJavaBuildHost">  
       <cullconv packageName="com.sun.grid.jgdi.configuration"
                 source="${javac.source}"
                 target="${javac.target}"
@@ -847,7 +779,7 @@
    </target>
         
    <target name="test" depends="jni.init, jar, aimk" description="Run junit tests">
-      <junit printsummary="withOutAndErr" haltonfailure="yes" fork="yes" dir="${basedir}"> 
+      <junit printsummary="withOutAndErr" haltonfailure="no" fork="yes" dir="${basedir}"> 
          <jvmarg line="${sge.jvmargs}"/>
          <sysproperty key="java.security.policy" value="util/jgdi.policy"/>
          <sysproperty key="java.security.auth.login.config" value="util/jaas.config"/>
@@ -858,7 +790,7 @@
          <formatter type="xml" usefile="no"/>
         
         
-         <batchtest todir="${build.dir}">
+         <batchtest todir="${build.dir}" >
             <fileset dir="test">
                <include name="**/*TestCase.java"/>
                <exclude name="com/sun/grid/jgdi/BaseTestCase.java"/>

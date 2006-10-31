@@ -196,7 +196,8 @@ enum {
 
 
 LISTDEF(STN_Type)
-/*   JGDI_ROOT_OBJ( ShareTree, SGE_SHARETREE_LIST , ADD | MODIFY | DELETE | GET ) */
+   JGDI_ROOT_OBJ( ShareTree, SGE_SHARETREE_LIST , MODIFY | GET)
+   JGDI_EVENT_OBJ(MODIFY(sgeE_NEW_SHARETREE))
    SGE_STRING(STN_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(STN_type, CULL_DEFAULT | CULL_SPOOL)        /* 960624 svd - changed to STN_type */
    SGE_ULONG(STN_id, CULL_DEFAULT)         /* Unique node id for storing to disk */

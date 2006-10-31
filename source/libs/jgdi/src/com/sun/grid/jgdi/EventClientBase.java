@@ -93,4 +93,6 @@ public interface EventClientBase {
      */
     public void commit() throws JGDIException;
     
+    
+    
 }

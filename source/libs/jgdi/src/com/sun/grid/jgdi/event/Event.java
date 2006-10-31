@@ -74,7 +74,7 @@ public class Event {
    
    public String toString() {
       Date date = new Date(1000*getTimestamp());
-      return "Id/Timestamp/Type: " + getEventId() + "/" + DateFormat.getTimeInstance().format(date) + "/" + getType();
+      return "Id/Timestamp/Type/class: " + getEventId() + "/" + DateFormat.getTimeInstance().format(date) + "/" + getType() + "/" + getClass().getName();
    }
    
    /**

@@ -61,4 +61,15 @@ public class EventFactoryBase {
        return new JobFinalUsageEvent(timestamp, id);
    }
    
+   public static QueueInstanceSuspendEvent createQueueInstanceSuspendEvent(long timestamp, int id) {
+       return new QueueInstanceSuspendEvent(timestamp, id);
+   }
+
+   public static QueueInstanceUnsuspendEvent createQueueInstanceUnsuspendEvent(long timestamp, int id) {
+       return new QueueInstanceUnsuspendEvent(timestamp, id);
+   }
+   
+   public static JobPriorityModEvent createJobPriorityModEvent(long timestamp, int id) {
+       return new JobPriorityModEvent(timestamp, id);
+   }
 }

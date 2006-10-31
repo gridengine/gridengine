@@ -82,6 +82,8 @@ TOKEN :
 |
     < JGDI_OBJ : "JGDI_OBJ" | "JGDI_OBJ_P" >
 |
+    < JGDI_EVENT_OBJ : "JGDI_EVENT_OBJ">
+|
     < JGDI_PRIMITIVE_ROOT_OBJ : "JGDI_PRIMITIVE_ROOT_OBJ" >
 |
     < JGDI_PRIMITIVE_OBJ : "JGDI_PRIMITIVE_OBJ" >
@@ -259,12 +261,52 @@ void JGDIObject(CullObject obj) :
 {
 }
 {
-  JGDIPrimitiveRootObject(obj) 
+  (JGDIPrimitiveRootObject(obj) 
   | JGDIRootObject(obj) 
   | JGDINamedObject(obj) 
   | JGDIPrimitiveSimpleObject(obj) 
   | JGDIMapObject(obj)
-  | CullMappedObject(obj)
+  | CullMappedObject(obj))
+  (JGDIEventObject(obj))?
+}
+
+void JGDIEventObject(CullObject obj) :
+{
+}
+{
+  <JGDI_EVENT_OBJ> "(" (JGDIEvent(obj) ( "|" JGDIEvent(obj) )* )? ")"
+}
+
+void JGDIEvent(CullObject obj) :
+{
+   Token evtNameToken;
+}
+{
+   (<ADD>      JGDIEventName(obj, "ADD")       { obj.setHasAddEvent(true);     }  )
+ | (<MODIFY>   JGDIEventName(obj, "MODIFY")    { obj.setHasModifyEvent(true);  }  )
+ | (<DELETE>   JGDIEventName(obj, "DELETE")    { obj.setHasDeleteEvent(true);  }  )
+ | (<GET_LIST> JGDIEventName(obj, "GET_LIST")  { obj.setHasGetListEvent(true); }  )
+}
+
+void JGDIEventName(CullObject obj, String name) :
+{
+   Token evtNameToken;
+}
+{
+   "(" evtNameToken = <ID> ")" 
+   { 
+       if(name.equals("ADD")) {
+            obj.setAddEventName(evtNameToken.image);
+       } else if (name.equals("MODIFY")) {
+            obj.setModifyEventName(evtNameToken.image);
+       } else if (name.equals("DELETE")) {
+            obj.setDeleteEventName(evtNameToken.image);
+       } else if (name.equals("GET_LIST")) {
+            obj.setGetListEventName(evtNameToken.image);
+       } else {
+            throw new IllegalStateException("unknown event name " + name);
+       }
+   }
 }
 
 void JGDIRootObject(CullObject obj) :

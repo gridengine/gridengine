@@ -58,6 +58,8 @@ public class CullDependencies {
    public static final String FILTER_MAPPED_OBJECTS = "mapped";
    public static final String FILTER_MAP_OBJECTS = "map";
    public static final String FILTER_DEPEND_OBJECTS = "depend";
+   public static final String FILTER_EVENT_OBJECTS = "event";
+   
    
    public static final int INCLUDE_ROOT_OBJECTS           = 0x0001;
    public static final int INCLUDE_OBJECTS                = 0x0002;
@@ -66,6 +68,7 @@ public class CullDependencies {
    public static final int INCLUDE_MAPPED_OBJECTS         = 0x0010;
    public static final int INCLUDE_MAP_OBJECTS            = 0x0020;
    public static final int INCLUDE_DEPEND_OBJECTS         = 0x0040;
+   public static final int INCLUDE_EVENT_OBJECTS          = 0x0080;
    public static final int INCLUDE_ALL                    = 0xFFFF;
    private int includeMask;
    
@@ -87,6 +90,8 @@ public class CullDependencies {
                includeMask |= INCLUDE_PRIMITIVE_OBJECTS;
             } else if (FILTER_ROOT_OBJECTS.equals(token)) {
                includeMask |= INCLUDE_ROOT_OBJECTS;
+            } else if (FILTER_EVENT_OBJECTS.equals(token)) {
+               includeMask |= INCLUDE_EVENT_OBJECTS;
             } else if (FILTER_DEPEND_OBJECTS.equals(token)) {
                includeMask |= INCLUDE_DEPEND_OBJECTS;
             } else if (FILTER_MAPPED_OBJECTS.equals(token)) {
@@ -153,6 +158,10 @@ public class CullDependencies {
       return (includeMask & INCLUDE_ROOT_OBJECTS) == INCLUDE_ROOT_OBJECTS;
    }
    
+   public boolean includeEventObjects() {
+      return (includeMask & INCLUDE_EVENT_OBJECTS) == INCLUDE_EVENT_OBJECTS;
+   }
+   
    public boolean includeObjects() {
       return (includeMask & INCLUDE_OBJECTS) == INCLUDE_OBJECTS;
    }
@@ -211,7 +220,9 @@ public class CullDependencies {
             } else {
                isNeededArmed = true;
                
-               if( obj.getType() == CullObject.TYPE_PRIMITIVE && includePrimitveObjects() ) {
+               if ( obj.hasEvents() && includeEventObjects()) {
+                   needed = Boolean.TRUE;
+               } else if( obj.getType() == CullObject.TYPE_PRIMITIVE && includePrimitveObjects() ) {
                   needed = Boolean.TRUE;
                } else if ( obj.getType() == CullObject.TYPE_MAPPED && includeMappedObjects() ) {
                   needed = Boolean.TRUE;
@@ -227,7 +238,6 @@ public class CullDependencies {
                         needed = Boolean.TRUE;
                      }
                   }
-                  
                } else if ( includeObjects()) {
                   needed = Boolean.TRUE;                  
                }

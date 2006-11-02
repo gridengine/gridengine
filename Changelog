@@ -1,3 +1,6 @@
+AA-2006-11-02-0: Bugfix:    o distinst.site file for openssl-0.9.7l
+                 Review:    CR
+
 RD-2006-11-02-0: Bugfix:    o fixed qlimit return value for help output
                             o fixed minor qconf -mlrs issues
                             o fixed reservation bug with limitation rule sets

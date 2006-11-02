@@ -324,11 +324,12 @@ int main(int argc, char **argv)
       report_handler->destroy(&report_handler, &alp);
    }
    
-   if ( qlimit_result != 0 ) {
+   if (qlimit_result != 0) {
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT(NULL, 1);
    }
+
    sge_prof_cleanup();
    SGE_EXIT(NULL, 0); /* 0 means ok - others are errors */
    DEXIT;
@@ -562,7 +563,6 @@ sge_parse_qlimit(lList **ppcmdline, lList **host_list, lList **resource_list,
                  lList **user_list, lList **pe_list, lList **project_list,
                  lList **cqueue_list, report_handler_t **report_handler, lList **alpp)
 {
-   bool showedhelp = false;
    u_long32 helpflag = 0;
    char *argstr = NULL;
    bool ret = true;
@@ -574,9 +574,9 @@ sge_parse_qlimit(lList **ppcmdline, lList **host_list, lList **resource_list,
    */
    while (lGetNumberOfElem(*ppcmdline)) {
       if (parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
-         showedhelp = true;
          qlimit_usage(stdout);
-         ret = false;
+         DEXIT;
+         SGE_EXIT(NULL, 0);
          break;
       }
 
@@ -615,9 +615,7 @@ sge_parse_qlimit(lList **ppcmdline, lList **host_list, lList **resource_list,
    }
 
    if (lGetNumberOfElem(*ppcmdline)) {
-     if (showedhelp == false) {
-       qlimit_usage(stderr);
-     }
+     qlimit_usage(stderr);
      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_TOOMANYOPTIONS);
      ret = false;
    }

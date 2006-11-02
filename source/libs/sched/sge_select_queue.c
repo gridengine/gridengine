@@ -150,7 +150,7 @@ parallel_host_slots(sge_assignment_t *a, int *slots, int *slots_qend, int *host_
                    lListElem *hep, bool allow_non_requestable);
 
 static dispatch_t 
-parallel_limit_slots_by_time(const sge_assignment_t *a, lListElem *req, 
+parallel_limit_slots_by_time(const sge_assignment_t *a, lList *requests, 
                  int *slots, int *slots_qend, lListElem *centry, lListElem *lirl, dstring rue_name);
 
 static dispatch_t
@@ -3221,8 +3221,9 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
             const lListElem *rule = NULL;
             u_long32 tt_lirs = a->start;
 
+            result = DISPATCH_OK;
+
             if (!lGetBool(lirs, LIRS_enabled)) {
-               result = DISPATCH_OK;
                continue;
             }
 
@@ -3236,6 +3237,11 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
             if (rule != NULL) {
                /* Check booked usage */
                result = lirs_limitation_reached(a, rule, host_name, queue_name, &tt_lirs);
+
+               if (result == DISPATCH_MISSING_ATTR) {
+                  result = DISPATCH_OK;
+                  continue;
+               }
                
                if (result != DISPATCH_OK) {
                   schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNLIRS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
@@ -3243,11 +3249,11 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
                   break;
                }
                tt_lirs_all = MAX(tt_lirs_all, tt_lirs);
-            } 
+            }
          }
          if (lirs == NULL) { /* all rule sets checked successfully */
             lSetUlong(queue_instance, QU_tag, 1);
-            if (a->is_reservation) {
+            if (a->is_reservation && (tt_lirs_all != 0)) {
                lSetUlong(queue_instance, QU_available_at, tt_lirs_all);
             }
          } else {
@@ -3286,13 +3292,14 @@ sequential_tag_queues_suitable4job_by_lirs(sge_assignment_t *a)
 *     static dispatch_t - DISPATCH_OK job can be scheduled
 *                         DISPATCH_NEVER_CAT no jobs of this category will be scheduled
 *                         DISPATCH_NOT_AT_TIME job can be scheduled later
+*                         DISPATCH_MISSING_ATTR rule does not match requested attributes
 *
 *  NOTES
 *     MT-NOTE: lirs_limitation_reached() is not MT safe 
 *
 *******************************************************************************/
 static dispatch_t lirs_limitation_reached(sge_assignment_t *a, const lListElem *rule, const char* host, const char* queue, u_long32 *start) {
-   dispatch_t ret = DISPATCH_OK;
+   dispatch_t ret = DISPATCH_MISSING_ATTR;
    lList *limit_list = NULL;
    lListElem * limit = NULL;
    static lListElem *implicit_slots_request = NULL;
@@ -4232,7 +4239,7 @@ parallel_lirs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qe
                   limit_rule_get_rue_string(&rue_name, rule, user, project, host, queue, pe);
 
                   if (limit_rule_set_dynamical_limit(limit, global_host, exec_host, a->centry_list)) {
-                     result = parallel_limit_slots_by_time(a, job_centry, &tslots, &tslots_qend, raw_centry, limit, rue_name);
+                     result = parallel_limit_slots_by_time(a, job_centry_list, &tslots, &tslots_qend, raw_centry, limit, rue_name);
                      if (first) {
                         first = false;
                         *slots = tslots;
@@ -4278,7 +4285,7 @@ parallel_lirs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qe
 *
 *  SYNOPSIS
 *     static dispatch_t parallel_limit_slots_by_time(const sge_assignment_t *a, 
-*     lListElem *req, int *slots, int *slots_qend, lListElem *centry, lListElem 
+*     lList *requests, int *slots, int *slots_qend, lListElem *centry, lListElem 
 *     *limit, dstring rue_name) 
 *
 *  FUNCTION
@@ -4286,7 +4293,7 @@ parallel_lirs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qe
 *
 *  INPUTS
 *     const sge_assignment_t *a - job info structure (in)
-*     lListElem *req            - Job request (CE_Type)
+*     lList *requests           - Job request list (CE_Type)
 *     int *slots                - out: free slots
 *     int *slots_qend           - out: free slots in the far far future
 *     lListElem *centry         - Load information for the resource
@@ -4304,11 +4311,10 @@ parallel_lirs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qe
 *     parallel_rc_slots_by_time
 *******************************************************************************/
 static dispatch_t 
-parallel_limit_slots_by_time(const sge_assignment_t *a, lListElem *req, 
+parallel_limit_slots_by_time(const sge_assignment_t *a, lList *requests, 
                  int *slots, int *slots_qend, lListElem *centry, lListElem *limit, dstring rue_name)
 {
    lList *tmp_centry_list = lCreateList("", CE_Type);
-   lList *tmp_req_list = lCreateList("", CE_Type);
    lList *tmp_rue_list = lCreateList("", RUE_Type);
    lListElem *tmp_centry_elem = NULL;
    lListElem *tmp_rue_elem = NULL;
@@ -4317,9 +4323,6 @@ parallel_limit_slots_by_time(const sge_assignment_t *a, lListElem *req,
 
    DENTER(TOP_LAYER, "parallel_limit_slots_by_time");
 
-   /* create tmp_req_list */
-   lAppendElem(tmp_req_list, req);
-   
    /* create tmp_centry_list */
    tmp_centry_elem = lCopyElem(centry);
    lSetDouble(tmp_centry_elem, CE_doubleval, lGetDouble(limit, LIRL_dvalue));
@@ -4330,15 +4333,15 @@ parallel_limit_slots_by_time(const sge_assignment_t *a, lListElem *req,
    if (tmp_rue_elem == NULL) {
       tmp_rue_elem = lCreateElem(RUE_Type);
    }
+
    lSetString(tmp_rue_elem, RUE_name, lGetString(limit, LIRL_name));
    lAppendElem(tmp_rue_list, tmp_rue_elem);
 
-   result = parallel_rc_slots_by_time(a, tmp_req_list, slots, 
+   result = parallel_rc_slots_by_time(a, requests, slots, 
                                       slots_qend, tmp_centry_list, tmp_rue_list, NULL,  
                                       false, NULL, DOMINANT_LAYER_LIRS, 0.0, LIRS_TAG, false, SGE_LIRS_NAME);
    
    lFreeList(&tmp_centry_list);
-   lFreeList(&tmp_req_list);
    lFreeList(&tmp_rue_list);
 
    DRETURN(result);
@@ -4742,8 +4745,12 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
    bool need_master_host = (lGetList(a->job, JB_master_hard_queue_list) != NULL) ? true : false;
    int host_seq_no = 1;
    int total_soft_violations = 0;
+#if 0
    lList *jc_hosts = NULL;
    lList *jc_queues = NULL;
+#else
+   lList *jc_list = NULL;
+#endif
    dstring rule_name = DSTRING_INIT;
    dstring rue_name = DSTRING_INIT;
    
@@ -4912,7 +4919,9 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                   sge_dstring_clear(&rule_name);
                   rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
                   if (rule != NULL) {
+                     u_long32 lir_level = lGetUlong(rule, LIR_level);
                      lListElem *jc_tmp = NULL;
+                     #if 0
                      if (lGetUlong(rule, LIR_level) == LIR_CQUEUE) {
                         DPRINTF(("found per queue limit but sum of hosts\n"));
                         if (jc_hosts != NULL) {
@@ -4927,7 +4936,27 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                            sge_dstring_append(&rule_name, host);
                            jc_tmp = lGetElemStr(jc_queues, JC_name, sge_dstring_get_string(&rule_name));
                         }
+                     } else if (lGetUlong(rule, LIR_level) == LIR_GLOBAL) {
+                        DPRINTF(("found global limit\n"));
+                        if (jc_queues != NULL) {
+                           sge_dstring_append(&rule_name, "@");
+                           sge_dstring_append(&rule_name, SGE_GLOBAL_NAME);
+                           jc_tmp = lGetElemStr(jc_queues, JC_name, sge_dstring_get_string(&rule_name));
+                        }
                      }
+                     #else
+                     if (lir_level != LIR_QUEUEI && jc_list != NULL) {
+                        sge_dstring_append(&rule_name, "@");
+                        if (lir_level == LIR_GLOBAL) {
+                           sge_dstring_append(&rule_name, SGE_GLOBAL_NAME);
+                        } else if (lir_level == LIR_CQUEUE) {
+                           sge_dstring_append(&rule_name, queue);
+                        } else {
+                           sge_dstring_append(&rule_name, host);
+                        }
+                        jc_tmp = lGetElemStr(jc_list, JC_name, sge_dstring_get_string(&rule_name));
+                     }
+                     #endif
 
                      if (jc_tmp != NULL) {
                         int lslots = host_slots;
@@ -4948,13 +4977,11 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                               /* found a rule, now check limit */
                               int tslots = 0;
                               int tslots_qend = 0;
-
                               lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
-                              lListElem *job_centry = centry_list_locate(job_centry_list, lGetString(limit, LIRL_name));
 
                               limit_rule_get_rue_string(&rue_name, rule, user, project, host, queue, pe);
 
-                              parallel_limit_slots_by_time(a, job_centry, &tslots, &tslots_qend, raw_centry, limit, rue_name);
+                              parallel_limit_slots_by_time(a, job_centry_list, &tslots, &tslots_qend, raw_centry, limit, rue_name);
                               if (first) {
                                  first = false;
                                  lslots = tslots;
@@ -4988,7 +5015,8 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                      rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
                      if (rule != NULL) {
                         lListElem *jc_tmp = NULL;
-                        DPRINTF(("LIR_level %d", lGetUlong(rule, LIR_level)));
+                        u_long32 lir_level = lGetUlong(rule, LIR_level);
+                        #if 0
                         if (lGetUlong(rule, LIR_level) == LIR_CQUEUE) {
                            DPRINTF(("found per queue limit but sum of hosts\n"));
                            if (jc_hosts == NULL) {
@@ -5015,7 +5043,44 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                               lSetString(jc_tmp, JC_name, sge_dstring_get_string(&rule_name));
                               lAppendElem(jc_queues, jc_tmp);
                            }
+                        } else if (lGetUlong(rule, LIR_level) == LIR_GLOBAL) {
+                           DPRINTF(("found global limit\n"));
+                           if (jc_queues == NULL) {
+                              jc_queues = lCreateList("", JC_Type);
+                           }
+                           sge_dstring_append(&rule_name, "@");
+                           sge_dstring_append(&rule_name, SGE_GLOBAL_NAME);
+                           jc_tmp = lGetElemStr(jc_queues, JC_name, sge_dstring_get_string(&rule_name));
+                           if (jc_tmp == NULL) {
+                              jc_tmp = lCreateElem(JC_Type);
+                              lSetString(jc_tmp, JC_name, sge_dstring_get_string(&rule_name));
+                              lAppendElem(jc_queues, jc_tmp);
+                           }
                         }
+                        #else
+                        if (lir_level != LIR_QUEUEI) {
+                           sge_dstring_append(&rule_name, "@");
+                           if (lir_level == LIR_GLOBAL) {
+                              sge_dstring_append(&rule_name, SGE_GLOBAL_NAME);
+                           } else if (lir_level == LIR_CQUEUE) {
+                              sge_dstring_append(&rule_name, queue);
+                           } else {
+                              sge_dstring_append(&rule_name, host);
+                           }
+
+                           if (jc_list == NULL) {
+                              jc_list = lCreateList("", JC_Type);
+                           } else {
+                              jc_tmp = lGetElemStr(jc_list, JC_name, sge_dstring_get_string(&rule_name));
+                           }
+
+                           if (jc_tmp == NULL) {
+                              jc_tmp = lCreateElem(JC_Type);
+                              lSetString(jc_tmp, JC_name, sge_dstring_get_string(&rule_name));
+                              lAppendElem(jc_list, jc_tmp);
+                           }
+                        }
+                        #endif
                         DPRINTF(("book %d additional slots for %s\n", slots, sge_dstring_get_string(&rule_name)));
                         lAddUlong(jc_tmp, JC_jobs, slots);
                      }
@@ -5055,8 +5120,12 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
       DPRINTF(("- - - accu_host_slots %d total_slots %d\n", accu_host_slots, a->slots));
       if (last_accu_host_slots == accu_host_slots) {
          DPRINTF(("!!! NO MORE SLOTS !!!\n"));
+#if 0
          lFreeList(&jc_hosts);
          lFreeList(&jc_queues);
+#else
+         lFreeList(&jc_list);
+#endif
          sge_dstring_free(&rule_name);
          sge_dstring_free(&rue_name);
          lFreeList(&gdil); 
@@ -5067,16 +5136,24 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
    /* because of the limitation rule sets it's could be not all requested slots could be assigned. */
    if (accu_host_slots < a->slots) {
          DPRINTF(("!!! NOT ENOUGH SLOTS !!!\n"));
+#if 0
          lFreeList(&jc_hosts);
          lFreeList(&jc_queues);
+#else
+         lFreeList(&jc_list);
+#endif
          sge_dstring_free(&rule_name);
          sge_dstring_free(&rue_name);
          lFreeList(&gdil); 
          DRETURN(MATCH_LATER);
    }
 
+#if 0
    lFreeList(&jc_hosts);
    lFreeList(&jc_queues);
+#else
+   lFreeList(&jc_list);
+#endif
    sge_dstring_free(&rule_name);
    sge_dstring_free(&rue_name);
    lFreeList(&(a->gdil));

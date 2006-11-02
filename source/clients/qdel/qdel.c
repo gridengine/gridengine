@@ -437,11 +437,11 @@ bool ret = true;
       ppcmdline list. 
    */
 
-
    while(lGetNumberOfElem(*ppcmdline))
    {
       if(parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
          qdel_usage(stdout, NULL);
+         DEXIT;
          SGE_EXIT(NULL, 0);
          break;
       }
@@ -508,8 +508,8 @@ char *what
       fprintf(fp, "  [-f]                               %s\n",  MSG_QDEL_f_OPT_USAGE);
       fprintf(fp, "  [-help]                            %s\n",  MSG_COMMON_help_OPT_USAGE);
       fprintf(fp, "  [-u user_list]                     %s\n",  MSG_QDEL_del_list_3_OPT_USAGE); 
-      fprintf(fp, "\n");
       fprintf(fp, "  job_task_list                      %s\n",  MSG_QDEL_del_list_1_OPT_USAGE);
+      fprintf(fp, "\n");
       fprintf(fp, "job_task_list  job_tasks[ job_tasks[ ...]]\n");
       fprintf(fp, "job_tasks      {job_id[.task_id_range]|job_name|pattern}[ -t task_id_range]\n");
       fprintf(fp, "task_id_range  task_id[-task_id[:step]]\n");

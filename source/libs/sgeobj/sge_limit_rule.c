@@ -252,7 +252,8 @@ lListElem* limit_rule_set_defaults(lListElem* lirs)
       lAppendElem(rule_list, rule);
 
       /* Set LIRS_enabled */
-      lSetBool(lirs, LIRS_enabled, true);
+      lSetBool(lirs, LIRS_enabled, false);
+
       /* Set LIRS_rule */
       lSetList(lirs, LIRS_rule, rule_list);
    }

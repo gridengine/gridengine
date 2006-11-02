@@ -28,6 +28,8 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+
+#include <string.h>
  
 #include "sge_limit_rule_qconf.h"
 #include "msg_common.h"
@@ -575,7 +577,7 @@ bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const c
                                           SP_FORM_ASCII, NULL, filename);
       if (lirs_list != NULL) {
 
-         if (ret && name != NULL) {
+         if (name != NULL && strlen(name) > 0 ) {
             lList *selected_lirs_list = NULL;
             lListElem *tmp_lirs = NULL;
             lList *found_lirs_list = lCreateList("lirs_list", LIRS_Type);

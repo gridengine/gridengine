@@ -1,3 +1,9 @@
+RD-2006-11-02-0: Bugfix:    o fixed qlimit return value for help output
+                            o fixed minor qconf -mlrs issues
+                            o fixed reservation bug with limitation rule sets
+                            o fixed pe scheduling bug with limitation rule sets
+                 Review:    JG
+
 HP-2006-11-02-0: Enhancem.: added authuser.exe for Windows to distinst script
 
 CR-2006-10-31-0: Cleanup:   o fixed support for issue 1096 from testsuite

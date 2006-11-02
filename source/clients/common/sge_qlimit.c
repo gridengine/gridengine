@@ -158,8 +158,8 @@ bool qlimit_output(void *context, lList *host_list, lList *resource_match_list, 
    int xml_ret = 0;
 
    qlimit_filter_t qlimit_filter = { "*",
-                                     "*",
-                                     "*",
+                                     NULL,
+                                     NULL,
                                      "*",
                                      "*" };
 
@@ -373,7 +373,7 @@ bool qlimit_output(void *context, lList *host_list, lList *resource_match_list, 
 
                                  }
                               }
-                           } 
+                           }
                         } while ((host_ep = lNext(host_ep)));
                      } while ((queue_ep = lNext(queue_ep)));
                   } while ((pe_ep = lNext(pe_ep)));

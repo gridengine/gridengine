@@ -1,3 +1,5 @@
+HP-2006-11-02-0: Enhancem.: added authuser.exe for Windows to distinst script
+
 CR-2006-10-31-0: Cleanup:   o fixed support for issue 1096 from testsuite
                               (missing code)
                  Review:    AA

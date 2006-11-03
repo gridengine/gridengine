@@ -1,3 +1,8 @@
+HP-2006-11-03-0: Bugfix:    o Changed binary detection of installation from
+                              authuser to authuser.exe for Windows
+                 Changed:   inst_common.sh
+                 Review:    MD
+
 AH-2006-11-03-0: Bugfix:    Ensure pthread_key_create(&gdi_state_key) be called 
                             only once.
                  Review:    AA

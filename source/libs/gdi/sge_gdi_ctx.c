@@ -149,24 +149,10 @@ static void gdi_state_destroy(void* state) {
    free(state);
 }
 
-void gdi_init_mt(void) {
+void gdi_once_init(void) {
    pthread_key_create(&gdi_state_key, &gdi_state_destroy);
 } 
  
-/* per process initialization */
-void gdi_once_init(void) {
-
-   /* uti */
-   uidgid_mt_init();
-   bootstrap_mt_init();
-   feature_mt_init();
-   sge_prof_setup();
-
-   /* gdi */
-   gdi_init_mt();
-   path_mt_init();
-}
-
 static void gdi_state_init(gdi_state_t* state) {
    state->request_id = 0;
    state->made_setup = 0;
@@ -773,7 +759,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    sge_prof_setup();
    feature_mt_init();
 #ifndef NEW_GDI_STATE   
-   gdi_init_mt();
+   gdi_mt_init();
 #endif   
    sc_mt_init();
    obj_mt_init();

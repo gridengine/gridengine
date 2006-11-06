@@ -38,6 +38,16 @@ ___INFO__MARK_END__-->
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
       
+      <exec executable="hostname" outputproperty="hostname"/>
+      <condition property="isJavaBuildHost">
+         <not>
+         <isset property="java.buildhost"/>
+         </not>
+      </condition>
+      <condition property="isJavaBuildHost" >
+         <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+      </condition>
+
       <property location="../CLASSES" name="classes.dir"/>
       <property location="../CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
@@ -50,7 +60,7 @@ ___INFO__MARK_END__-->
       <property location="../scripts/removeGeneratedTags.pl" name="script"/>
    </target>
 
-   <target depends="init" description="Compile core classes." name="compile">
+   <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
       <mkdir dir="${classes.dir}"/>
       <javac debug="true" deprecation="true" destdir="${classes.dir}">
          <src path="${src.dir}/"/>
@@ -61,7 +71,7 @@ ___INFO__MARK_END__-->
       </javac>
    </target>
 
-   <target depends="init,compile" description="Compile test classes." name="compile.test">
+   <target depends="init,compile" description="Compile test classes." name="compile.test" if="isJavaBuildHost">
       <mkdir dir="${classes.dir.test}"/>
       <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}:${libs.junit.classpath}">
          <src path="${src.dir.test}"/>
@@ -72,18 +82,53 @@ ___INFO__MARK_END__-->
          <include name="DrmaaSuite.java"/>
       </javac>
    </target>
+   
 
-   <target depends="init,compile" description="Build release jar." name="jar">
-      <jar compress="true" jarfile="${jar}">
-         <fileset dir="${classes.dir}">
-            <include name="org/ggf/drmaa/*.class"/>
-            <include name="com/sun/grid/drmaa/*.class"/>
-         </fileset>
-         <fileset dir="${src.dir}">
-            <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
-         </fileset>
-      </jar>
+   <target name="jar.init" depends="init">
+      <fileset id="jar.classes" dir="${classes.dir}">
+         <include name="org/ggf/drmaa/*.class"/>
+         <include name="com/sun/grid/drmaa/*.class"/>
+      </fileset>
+      <fileset id="jar.test.classes" dir="${classes.dir.test}">
+         <include name="org/ggf/drmaa/*.class"/>
+         <include name="com/sun/grid/*.class"/>
+         <include name="com/sun/grid/drmaa/*.class"/>
+         <include name="TestDrmaa*.class"/>
+         <include name="DrmaaSuite.class"/>
+      </fileset>
+      <fileset id="jar.meta" dir="${src.dir}">
+         <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
+      </fileset>
+      <dependset>
+         <srcfileset refid="jar.classes"/>
+         <srcfileset refid="jar.test.classes"/>
+         <srcfileset refid="jar.meta"/>
+         <targetfileset file="${jar}"/>
+      </dependset>
    </target>
+   
+
+   <target depends="jar.build, jar.wait" description="Build release jar." name="jar"/>
+
+   <target depends="jar.init, compile" name="jar.build" if="isJavaBuildHost">
+      <jar compress="true" jarfile="${jar}.tmp">
+         <fileset refid="jar.classes"/>
+         <fileset refid="jar.meta"/>
+      </jar>
+      <copy file="${jar}.tmp" tofile="${jar}"/>
+   </target>
+
+   <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
+       <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+            <available file="${jar}"/>
+       </waitfor>
+       
+       <available file="${jar}" property="jar.available"/>
+       
+       <fail unless="jar.available">
+          Timeout while waiting for ${jar} file build on host ${java.buildhost}
+       </fail>
+   </target>       
 
    <target depends="init,compile.test" description="Build stand-alone test jar." name="test.all">
       <jar compress="true" jarfile="${test.jar}">
@@ -115,14 +160,38 @@ ___INFO__MARK_END__-->
          </fileset>
       </jar>
    </target>
-
-   <target depends="init,compile" description="Build API jar." name="api">
-      <jar compress="true" jarfile="${api.jar}">
-         <fileset dir="${classes.dir}">
-            <include name="org/ggf/drmaa/*.class"/>
-         </fileset>
-      </jar>
+   
+   <target name="api.init" depends="init">
+      <fileset id="api.classes" dir="${classes.dir}">
+         <include name="org/ggf/drmaa/*.class"/>
+         <include name="com/sun/grid/drmaa/*.class"/>
+      </fileset>
+      <dependset>
+         <srcfileset refid="api.classes"/>
+         <targetfileset file="${api.jar}"/>
+      </dependset>
    </target>
+
+   <target depends="api.init, api.build, api.wait" description="Build api jar." name="api"/>
+
+   <target depends="api.init, compile" name="api.build" if="isJavaBuildHost">
+      <jar compress="true" jarfile="${api.jar}.tmp">
+         <fileset refid="api.classes"/>
+      </jar>
+      <copy file="${api.jar}.tmp" tofile="${api.jar}"/>
+   </target>
+
+   <target name="api.wait" depends="api.init" unless="isJavaBuildHost">
+       <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+            <available file="${api.jar}"/>
+       </waitfor>
+       
+       <available file="${api.jar}" property="api.jar.available"/>
+       
+       <fail unless="api.jar.available">
+          Timeout while waiting for ${api.jar} file build on host ${java.buildhost}
+       </fail>
+   </target>       
 
    <target depends="init,jar,test" description="Build everything." name="common_all"/>
 

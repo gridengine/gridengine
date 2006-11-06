@@ -171,7 +171,7 @@ error:
 
 jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList **alpp) 
 {
-   int index = 0;
+   jint index = 0;
    jgdi_result_t ret = JGDI_SUCCESS;
    
    DENTER( JGDI_LAYER, "getEVC" );
@@ -585,7 +585,6 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
    jobject event = NULL;
    jlong timestamp = 0;
    jint  evtId = 0;
-   lListElem *ep = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    
    DENTER(JGDI_LAYER, "handleEvent");

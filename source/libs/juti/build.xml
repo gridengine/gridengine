@@ -69,8 +69,26 @@
     <target name="-pre-init">
         <property file="../../build_private.properties"/>
         <property file="../../build.properties"/>
+        <exec executable="hostname" outputproperty="hostname"/>
+        <condition property="isJavaBuildHost">
+           <not>
+           <isset property="java.buildhost"/>
+           </not>
+        </condition>
+        <condition property="isJavaBuildHost" >
+           <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
+        </condition>
     </target>
     
+    <target name="-pre-compile" unless="isJavaBuildHost">
+        <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+           <available file="${dist.jar}"/>
+        </waitfor>
+        <available file="${dist.jar}" property="jar.available"/>
+        <fail unless="jar.available">
+           Timeout while waiting for jar file build on host ${java.buildhost}
+        </fail>
+    </target>
     
     <target name="-post-jar">
         <antcall target="test.jar"/>

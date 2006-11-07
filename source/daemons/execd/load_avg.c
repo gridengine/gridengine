@@ -640,7 +640,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       /* report if SGE_Helper_Service.exe is running and GUI can be displayed */
       sge_add_int2load_report(lpp, "display_win_gui", 
-         svc_running, uti_state_get_qualified_hostname());
+         svc_running, qualified_hostname);
    }
 #endif
 

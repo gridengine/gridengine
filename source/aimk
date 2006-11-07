@@ -2224,6 +2224,11 @@ if ( "$JAVA" > 0 ) then
 
    ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
    
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
    if ( $JAVA == 2 ) then
       echo done
       exit 0

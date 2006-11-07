@@ -1,3 +1,15 @@
+Bugs fixed in SGE 6.0u9 since release 6.0u8
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+-        6480580   CSP mode is affected by OpenSSL Security Advisory [28th September 2006]
+2107     6475282   account string does not accept the "|" character
+2094     6458517   unreasonably long scheduler dispatch times if lots of projects are used in share tree
+2093     6458510   unreasonably long scheduler dispatch times if lots of cluster queues are deployed in large clusters
+2055     6424565   jobs with negative priority will be rejected by qmaster
+
+
 Bugs fixed in SGE 6.0u8 since release 6.0u7
 -------------------------------------------
 

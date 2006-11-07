@@ -27,6 +27,7 @@
    </target>
     
    <target name="all" depends="drmaa, juti, jgdi"/>
+   <target name="depend" depends="init"/>
    <target name="clean" depends="drmaa.clean, juti.clean, jgdi.clean"/>
    <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc"/>
    <target name="test" depends="drmaa.test, juti.test, jgdi.test"/>

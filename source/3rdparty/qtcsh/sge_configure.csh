@@ -14,8 +14,8 @@ endif
 echo "change to directory ./$arch"
 cd $arch
 
-echo "calling ../configure --srcdir=.. --with-grd=$arch"
-../configure --srcdir=.. --with-grd=$arch
+echo "calling ../configure --srcdir=.. --with-sge=$arch"
+../configure --srcdir=.. --with-sge=$arch
 
 echo "change to directory ./"
 cd ..

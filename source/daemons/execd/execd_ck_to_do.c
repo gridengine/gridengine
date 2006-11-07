@@ -85,6 +85,7 @@
 
 #if COMPILE_DC
 static int reprioritization_enabled = 0;
+static bool should_reprioritize(void);
 #endif
 
 extern volatile int waiting4osjid;
@@ -98,7 +99,6 @@ sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 static int sge_start_jobs(void);
 static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
-static bool should_reprioritize(void);
 
 extern volatile int jobs_to_start;
 
@@ -1052,7 +1052,6 @@ lListElem *pe_task
    DEXIT;
    return 0;
 }
-#endif
 
 static bool should_reprioritize(void)
 {
@@ -1091,4 +1090,6 @@ static bool should_reprioritize(void)
    DEXIT;
    return ret;
 } /* should_reprioritize */
+
+#endif
 

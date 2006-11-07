@@ -1155,15 +1155,22 @@ case HP1164:
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
    breaksw
-   
+
 case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
 case LINUXPPC:
+case LINUXSPARC:
+case LINUXSPARC64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
-   set COMPILE_DC = 1
+
+   if ( $BUILDARCH == LINUXSPARC ) then
+      set COMPILE_DC = 0
+   else
+      set COMPILE_DC = 1
+   endif
 
    # Optimization on LINUXIA64 is broken, qmon dumps
    if ($OPTIMIZATION == 1 && $BUILDARCH != LINUXIA64) then
@@ -1182,6 +1189,10 @@ case LINUXPPC:
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
+   endif
+
+   if ($BUILDARCH == LINUXSPARC64) then
+      set CFLAGS = "-m64 $CFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1252,7 +1263,7 @@ case LINUXPPC:
    endif
    set JAVA_ARCH = "linux"
    breaksw
-   
+
 case WIN32_X86:
    set CC = gcc
    set RM = "rm -f"
@@ -1404,44 +1415,6 @@ case NECSX5:
    endif
    set DLLIB = ""
    set JAVA_ARCH = ""
-   breaksw
-
-case SLINUX:
-   set MAKEWINGRIDLIB   = 0
-   set MAKEWINGRIDAPP   = 0
-   set COMPILE_DC = 0
-   set OFLAG = "-O"
-   if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O3"
-   endif   
-
-   set CC = "gcc"
-   set CXX = "g++"
-
-   if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g -DSGE_LOCK_DEBUG"
-      set OFLAG = ""
-   endif
-   if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
-   endif
-
-   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
-   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
-
-   set SHAREDLD = $CC
-   set SHARED_CFLAGS = "-fPIC"
-   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
-
-   set XMTDEF   = ""
-   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
-   set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
-   set XLIBD    = "-L/usr/X11R6/lib"
-   set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
-   set NOERR_CFLAG = "-Wno-error"
-   set JAVA_ARCH = "linux"
    breaksw
 
 case SOLARIS:

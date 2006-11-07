@@ -632,7 +632,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-hesiod=PREFIX    Use Hesiod lookup for ~ expansion
-  --with-grd=ARCH         SGE/SGEEE ARCH (LINUX5/LINUX6...)
+  --with-sge=ARCH         SGE/SGEEE ARCH (LINUX5/LINUX6...)
 
 Some influential environment variables:
   CC          C compiler command
@@ -2682,17 +2682,17 @@ fi
   fi
 fi
 
-# Check whether --with-grd or --without-grd was given.
-if test "${with_grd+set}" = set; then
-  withval="$with_grd"
-  grd="$withval"
+# Check whether --with-sge or --without-sge was given.
+if test "${with_sge+set}" = set; then
+  withval="$with_sge"
+  sge="$withval"
 else
-  grd=no
+  sge=no
 fi;
-if test "$grd" != no; then
+if test "$sge" != no; then
    GRDDEF="-I../../../libs/gdi"
-   GRDLIB="-L../../../$grd -R${SGE_ROOT}/lib/${SGE_ARCH} \$(SGE_LIBS) ${LDFLAGS}"
-   CFLAGS="$CFLAGS -DPROG_NAME='\"qtcsh\"' -D$grd"
+   GRDLIB="-L../../../$sge -R${SGE_ROOT}/lib/${SGE_ARCH} \$(SGE_LIBS) ${LDFLAGS}"
+   CFLAGS="$CFLAGS -DPROG_NAME='\"qtcsh\"' -D$sge"
 fi
 
 ac_config_files="$ac_config_files Makefile"

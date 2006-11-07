@@ -2463,6 +2463,7 @@ shepherd_signal_job(pid_t pid, int sig) {
 #if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX)
         if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {                        
 #   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
+#      ifdef COMPILE_DC
             if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
                 gid_t add_grp_id;
                 char *cp = search_conf_val("add_grp_id");
@@ -2479,6 +2480,7 @@ shepherd_signal_job(pid_t pid, int sig) {
                 pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
                 sge_switch2admin_user();
             }
+#      endif
 #   elif defined(IRIX)
             if (first == 1) {
                 int n;

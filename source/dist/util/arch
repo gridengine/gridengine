@@ -180,6 +180,9 @@ Linux)
    sparc)
      lxmachine=sparc
      ;;
+   sparc64)
+     lxmachine=sparc
+     ;;
    x86_64)
      lxmachine=amd64
      ;;

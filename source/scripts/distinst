@@ -167,8 +167,6 @@ SetArchBin()
       ARCHBIN=HP1164 
    elif [ $i = irix65 ]; then
       ARCHBIN=IRIX65
-   elif  [ $i = lx22-alpha ]; then 
-      ARCHBIN=ALINUX_22
    elif  [ $i = lx24-alpha ]; then 
       ARCHBIN=ALINUX_24
    elif  [ $i = lx26-alpha ]; then 
@@ -183,14 +181,14 @@ SetArchBin()
       ARCHBIN=LINUXIA64_26
    elif  [ $i = lx26-ppc ]; then
       ARCHBIN=LINUXPPC_26
-   elif  [ $i = lx22-sparc ]; then 
-      ARCHBIN=SLINUX_22
    elif  [ $i = lx24-sparc ]; then 
-      ARCHBIN=SLINUX_24
+      ARCHBIN=LINUXSPARC_24
    elif  [ $i = lx26-sparc ]; then 
-      ARCHBIN=SLINUX_26
-   elif  [ $i = lx22-x86 ]; then 
-      ARCHBIN=LINUX86_22
+      ARCHBIN=LINUXSPARC_26
+   elif  [ $i = lx24-sparc64 ]; then 
+      ARCHBIN=LINUXSPARC64_24
+   elif  [ $i = lx26-sparc64 ]; then 
+      ARCHBIN=LINUXSPARC64_26
    elif  [ $i = lx24-x86 ]; then 
       ARCHBIN=LINUX86_24
    elif  [ $i = lx26-x86 ]; then
@@ -280,7 +278,8 @@ ArchTable()
    echo "lx22-sparc            SPARC Linux v2.2 kernel"
    echo "lx24-sparc            SPARC Linux v2.4 kernel"
    echo "lx26-sparc            SPARC Linux v2.6 kernel"
-   echo "lx22-x86              x86 Linux v2.2 kernel"
+   echo "lx24-sparc64          SPARC 64bit Linux v2.4 kernel"
+   echo "lx26-sparc64          SPARC 64bit Linux v2.6 kernel"
    echo "lx24-x86              x86 Linux v2.4 kernel"
    echo "lx26-x86              x86 Linux v2.6 kernel"
    echo "osf4                  OSF 4.x"

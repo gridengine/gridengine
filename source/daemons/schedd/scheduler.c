@@ -45,6 +45,8 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
+#include "commlib.h"
+#include "sge_prog.h"
 #include "sge_profiling.h"
 #include "sge_conf.h"
 #include "sge_string.h"
@@ -349,11 +351,20 @@ int scheduler(sge_Sdescr_t *lists, lList **order) {
    if (!shut_me_down) {
       lList *orderlist=sge_join_orders(&orders);
 
-      if (orderlist) {
+      if (orderlist != NULL) {
+         /*
+          * Scheduler needs a relatively high synchronuous receive timeout as minimum. This
+          * is required for cases when orders processing takes long time due to very slow 
+          * qmaster spooling (e.g. classic over NFS).
+          *
+          * We'll reset it after sending the orders, to have a poss. lower timeout
+          * (2 * event client interval) for receiving new events.
+          */
+         cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), 120);
          sge_send_orders2master(&orderlist);
-         if (orderlist != NULL) {
-            lFreeList(&orderlist);
-         }
+         cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0),
+                                             (int) (sconf_get_schedule_interval() * 2));
+         lFreeList(&orderlist);
       }
    }
 
@@ -595,7 +606,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
       /* async gdi */
       sge_send_job_start_orders(orders); 
-         
+
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
 

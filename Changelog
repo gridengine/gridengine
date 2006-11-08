@@ -1,3 +1,7 @@
+JG-2006-11-08-0: Bugfix:    Reconnect of scheduler to a restarted qmaster took
+                            too long (2 minutes), caused by AH-2006-10-27-0.
+                 Review:    AH
+
 JG-2006-11-07-0: Enhancem.: SPARC Linux port.
                  Review:    RD
 

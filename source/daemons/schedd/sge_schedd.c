@@ -285,13 +285,9 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
-   /*
-    * Scheduler needs a relatively high synchronuous receive timeout as minimum. This
-    * is required for cases when orders processing takes long time due to very slow 
-    * qmaster spooling (e.g. classic over NFS).
-    */
+   /* This is the timeout used for waiting for events. */
    cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
-         MAX(120, (int)(sconf_get_schedule_interval() * 2)));
+                                       (int) (sconf_get_schedule_interval() * 2));
 
    sge_sig_handler_in_main_loop = 1;
 
@@ -364,10 +360,12 @@ char *argv[]
 
          /* got new config? */
          if (sconf_is_new_config()) {
-
-            /* Update synchronuous receive timeout */
+            /* 
+             * Update synchronous receive timeout
+             * This is the timeout used for waiting for events. 
+             */
             cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
-                  MAX(120, (int) (sconf_get_schedule_interval() * 2)));
+                                                (int) (sconf_get_schedule_interval() * 2));
 
             /* check profiling settings, if necessary, switch profiling on/off */
             if (sconf_get_profiling()) {

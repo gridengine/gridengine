@@ -1,3 +1,7 @@
+JG-2006-11-08-0: Bugfix:    Reconnect of scheduler to a restarted qmaster took
+                            too long (2 minutes), caused by AH-2006-10-27-0.
+                 Review:    AH
+
 AA-2006-11-07-0: Bugfix:    o fix in sge_get_loadavg() for INTERIX section
                               uti_state_get_qualified_hostname() instead if qualified_hostname
                  Review:    TBD

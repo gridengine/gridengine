@@ -64,6 +64,8 @@ jgdi_clean:
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
 	$(SHAREDLD) $(SHARED_LFLAGS)  $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) -lsched -ldrmaa $(SLIBs) $(LIBS) -lc
+	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
+
 
 jgdi_test: jgdi_test.o
 	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS) -ljvm $(LIBS)  jgdi_test.o 

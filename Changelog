@@ -1,3 +1,7 @@
+RH-2006-11-09-1: Bugfix:    o missing links for jni_libs in target directories 
+                            o jgdi: run_util.sh supports now darwin-* and hp11*
+                 Review:    AA
+
 RH-2006-11-09-0: Enhancem.: o juti: authuser moved to utilbin
                             o juti: java part for windows user authentication
                                     implemented

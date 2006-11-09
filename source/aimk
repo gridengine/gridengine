@@ -1715,7 +1715,7 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = PA_RISC
              breaksw
          case hp11-64:
-             set JAVA_LIB_ARCH = PA_RISC2.0 
+             set JAVA_LIB_ARCH = PA_RISC2.0W
              breaksw
          case irix65:
              set JAVA_LIB_ARCH = "" 

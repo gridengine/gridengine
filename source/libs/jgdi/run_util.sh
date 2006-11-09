@@ -67,36 +67,53 @@ setup_env() {
 
    JAVA_DATA_MODEL=""
    case $ARCH in
-       solaris64) SRC_ARCH=SOLARIS64; 
-                  JAVA_ARCH=sparcv9;
-                  JAVA_DATA_MODEL=-d64;
-                  DEBUGGER=dbx;;
-     sol-sparc64) SRC_ARCH=SOLARIS64;
-                  JAVA_ARCH=sparcv9;
-                  JAVA_DATA_MODEL=-d64;
-                  DEBUGGER=dbx;;
-       sol-amd64) SRC_ARCH=SOLARISAMD64;
-                  JAVA_ARCH=amd64;
-                  JAVA_DATA_MODEL=-d64;
-                  DEBUGGER=dbx;;
-        lx26-x86) SRC_ARCH=LINUX86_26;
-                  JAVA_ARCH=i386;
-                  DEBUGGER=gdb;;
-        lx24-x86) SRC_ARCH=LINUX86_24;
-                  JAVA_ARCH=i386;
-                  DEBUGGER=gdb;;
-      lx24-amd64) SRC_ARCH=LINUXAMD64_24;
-                  JAVA_ARCH=amd64;
-                  DEBUGGER=gdb;;
-           aix51) SRC_ARCH=AIX51;
-                  JAVA_ARCH=aix;
-                  DEBUGGER=dbx;;
-      darwin-ppc) SRC_ARCH=DARWIN_PPC;
-                  JAVA_ARCH="";
-                  DEBUGGER=dbx;;
-           tru64) SRC_ARCH=ALPHA5;
-                  JAVA_ARCH=alpha;
-                  DEBUGGER=dbx;;
+       solaris64) SRC_ARCH=SOLARIS64
+                  JAVA_ARCH=sparcv9
+                  JAVA_DATA_MODEL=-d64
+                  DEBUGGER=dbx
+                  ;;
+     sol-sparc64) SRC_ARCH=SOLARIS64
+                  JAVA_ARCH=sparcv9
+                  JAVA_DATA_MODEL=-d64
+                  DEBUGGER=dbx
+                  ;;
+       sol-amd64) SRC_ARCH=SOLARISAMD64
+                  JAVA_ARCH=amd64
+                  JAVA_DATA_MODEL=-d64
+                  DEBUGGER=dbx
+                  ;;
+        lx26-x86) SRC_ARCH=LINUX86_26
+                  JAVA_ARCH=i386
+                  DEBUGGER=gdb
+                  ;;
+        lx24-x86) SRC_ARCH=LINUX86_24
+                  JAVA_ARCH=i386
+                  DEBUGGER=gdb
+                  ;;
+      lx24-amd64) SRC_ARCH=LINUXAMD64_24
+                  JAVA_ARCH=amd64
+                  DEBUGGER=gdb
+                  ;;
+           aix51) SRC_ARCH=AIX51
+                  JAVA_ARCH=aix
+                  DEBUGGER=dbx
+                  ;;
+      darwin-ppc) SRC_ARCH=DARWIN_PPC
+                  JAVA_ARCH=""
+                  DEBUGGER=dbx
+                  ;;
+           tru64) SRC_ARCH=ALPHA5
+                  JAVA_ARCH=alpha
+                  DEBUGGER=dbx
+                  ;;
+         hp11-64) SRC_ARCH=HP1164
+                  JAVA_ARCH=PA_RISC2.0W
+                  DEBUGGER=Unkown
+                  ;;
+            hp11) SRC_ARCH=HP11
+                  JAVA_ARCH=PA_RISC
+                  DEBUGGER=Unkown
+                  ;;
         *) echo "ARCH $ARCH is not supported"; exit 1;;
    esac
    

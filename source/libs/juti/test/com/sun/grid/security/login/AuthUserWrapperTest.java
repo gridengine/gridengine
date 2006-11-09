@@ -56,16 +56,20 @@ public class AuthUserWrapperTest extends TestCase{
         TestConfiguration config = TestConfiguration.getInstance();
         File utilbin = new File(config.getSgeRoot(), "utilbin");
         File utilbinArch = new File(utilbin, SGEUtil.getArch(config.getSgeRoot()));
-        authuser = new File(utilbinArch, "authuser");
+        if(SGEUtil.isWindows()) {
+            authuser = new File(utilbinArch, "authuser.exe");
+        } else {
+            authuser = new File(utilbinArch, "authuser");
+        }
     }
 
     protected void tearDown() throws Exception {
     }
     
-    public void testShadow() throws Exception {
+    public void testSystem() throws Exception {
         
         TestConfiguration config = TestConfiguration.getInstance();
-        AuthUserWrapper wrapper = AuthUserWrapper.newInstanceForShadow(authuser.getAbsolutePath());
+        AuthUserWrapper wrapper = AuthUserWrapper.newInstance(authuser.getAbsolutePath());
         
         Set principals = wrapper.authenticate(config.getTestUser(), config.getTestUserPassword());
 
@@ -76,26 +80,33 @@ public class AuthUserWrapperTest extends TestCase{
             LOGGER.log(Level.FINE,"user {0} has principal {1}", new Object [] { config.getTestUser(), iter.next() });
         }
         
-        principals =  wrapper.authenticate(config.getTestUser(), new char[0]); 
-        assertNull("login which empty password successeded", principals);
+        try {
+            principals =  wrapper.authenticate(config.getTestUser(), new char[0]); 
+            assertNull("login which empty password successeded", principals);
+        } catch(Exception e) {
+            // ignore
+        }
     }
     
     public void testPam() throws Exception {
-        TestConfiguration config = TestConfiguration.getInstance();
-    
-        AuthUserWrapper wrapper = AuthUserWrapper.newInstanceForPam(authuser.getAbsolutePath(), config.getPamService());
         
-        Set principals = wrapper.authenticate(config.getTestUser(), config.getTestUserPassword());
+        if(!SGEUtil.isWindows()) {
+            TestConfiguration config = TestConfiguration.getInstance();
 
-        assertNotNull("no principals found", principals);
-        
-        Iterator iter = principals.iterator();
-        while(iter.hasNext()) {
-            LOGGER.log(Level.FINE,"user {0} has principal {1}", new Object [] { config.getTestUser(), iter.next() });
+            AuthUserWrapper wrapper = AuthUserWrapper.newInstanceForPam(authuser.getAbsolutePath(), config.getPamService());
+
+            Set principals = wrapper.authenticate(config.getTestUser(), config.getTestUserPassword());
+
+            assertNotNull("no principals found", principals);
+
+            Iterator iter = principals.iterator();
+            while(iter.hasNext()) {
+                LOGGER.log(Level.FINE,"user {0} has principal {1}", new Object [] { config.getTestUser(), iter.next() });
+            }
+
+            principals =  wrapper.authenticate(config.getTestUser(), new char[0]); 
+            assertNull("login which empty password successeded", principals);
         }
-        
-        principals =  wrapper.authenticate(config.getTestUser(), new char[0]); 
-        assertNull("login which empty password successeded", principals);
     }
     
 }

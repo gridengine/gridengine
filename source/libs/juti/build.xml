@@ -66,9 +66,30 @@
     nbproject/build-impl.xml file. 
 
     -->
-    <target name="-pre-init">
-        <property file="../../build_private.properties"/>
+    
+    <target name="propsinit.base">
+        <condition property="isWindows">
+            <os family="windows"/>
+        </condition>
+        
+    </target>
+    
+    <target name="propsinit.unix" depends="propsinit.base" unless="isWindows">
         <property file="../../build.properties"/>
+    </target>
+    
+    <target name="propsinit.win" depends="propsinit.base" if="isWindows">
+        <property file="../../build_win.properties"/>
+    </target>
+    
+    <target name="propsinit" depends="propsinit.win, propsinit.unix"/>
+    
+    <target name="-pre-init" >
+        <property file="../../build_private.properties"/>
+    </target>
+    
+    <target name="-post-init" depends="propsinit">
+        <echo>libs.junit.classpath=${libs.junit.classpath}</echo>
         <exec executable="hostname" outputproperty="hostname"/>
         <condition property="isJavaBuildHost">
            <not>

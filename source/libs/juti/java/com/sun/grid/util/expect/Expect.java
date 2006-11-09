@@ -200,8 +200,21 @@ public class Expect {
                 }
                 
                 
-                if(LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.log(Level.FINER, "got ''{0}''", received);
+                if(LOGGER.isLoggable(Level.FINE)) {
+                    String str = received.toString().replace("\r", "");
+
+                    StringBuilder buf = new StringBuilder();
+                    for(int i = 0; i < str.length(); i++) {
+                        if(str.charAt(i) == '\n') {
+                            LOGGER.log(Level.FINE, "got ''{0}<NL>''", buf.toString());
+                            buf.setLength(0);
+                        } else {
+                            buf.append(str.charAt(i));
+                        }
+                    }
+                    if(buf.length() > 0) {
+                        LOGGER.log(Level.FINE,"got ''{0}''", buf.toString());
+                    }
                 }
                 
                 workingBuffer.append(received);
@@ -272,12 +285,12 @@ public class Expect {
         public void run() {
             try {
                 Reader rd = new InputStreamReader(in);
-                char [] buf = new char[30];
+                char [] buf = new char[1024];
                 int len = 0;
                 try {
                     while((len = rd.read(buf)) > 0) {
-                        if(LOGGER.isLoggable(Level.FINER)) {
-                            LOGGER.log(Level.FINER, "{0}: {1}", new Object [] { tag, new String(buf, 0, len) } );
+                        if(LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.log(Level.FINEST, "{0}: {1}", new Object [] { tag, new String(buf, 0, len) } );
                         }
                         synchronized(buffer) {
                             buffer.append(buf, 0, len);
@@ -288,8 +301,8 @@ public class Expect {
                     error = ioe;
                 }
             } finally {
-                if(LOGGER.isLoggable(Level.FINER)) {
-                    LOGGER.log(Level.FINER, "{0} finished", tag);
+                if(LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.log(Level.FINEST, "{0} finished", tag);
                 }
             }
         }
@@ -299,7 +312,7 @@ public class Expect {
      *  Flush stdin
      */
     public void flush() {
-        LOGGER.fine("flush");
+        LOGGER.finer("flush");
         stdin.flush();
     }
     
@@ -308,8 +321,8 @@ public class Expect {
      *  @param x the string
      */ 
     public void println(String x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'");
         }
         stdin.println(x);
     }
@@ -319,8 +332,8 @@ public class Expect {
      *  @param x the string
      */ 
     public void print(String s) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + s + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + s + "'");
         }
         stdin.print(s);
     }
@@ -330,8 +343,8 @@ public class Expect {
      *  @param x the object
      */ 
     public void println(Object x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'");
         }
         stdin.println(x);
     }
@@ -341,8 +354,8 @@ public class Expect {
      *  @param x the object
      */ 
     public void print(Object obj) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + obj + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + obj + "'");
         }
         stdin.print(obj);
     }
@@ -352,8 +365,8 @@ public class Expect {
      *  @param x the integer
      */ 
     public void println(int x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'");
         }
         stdin.println(x);
     }
@@ -363,8 +376,8 @@ public class Expect {
      *  @param x the integer
      */ 
     public void print(int i) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + i + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + i + "'");
         }
         stdin.print(i);
     }
@@ -374,8 +387,8 @@ public class Expect {
      *  @param x the boolean
      */ 
     public void print(boolean b) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + b + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + b + "'");
         }
         stdin.print(b);
     }
@@ -385,8 +398,8 @@ public class Expect {
      *  @param x the boolean
      */ 
     public void println(boolean x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'<NL>");
         }
         stdin.println(x);
     }
@@ -396,8 +409,8 @@ public class Expect {
      *  @param x the long
      */ 
     public void println(long x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'<NL>");
         }
         stdin.println(x);
     }
@@ -407,8 +420,8 @@ public class Expect {
      *  @param x the long
      */ 
     public void print(long l) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + l + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + l + "'");
         }
         stdin.print(l);
     }
@@ -418,8 +431,8 @@ public class Expect {
      *  @param x the double
      */ 
     public void println(double x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'<NL>");
         }
         stdin.println(x);
     }
@@ -434,7 +447,7 @@ public class Expect {
      *  @param x the char array
      */ 
     public void println(char[] x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
+        if(LOGGER.isLoggable(Level.FINE)) {
             StringBuffer msg = new StringBuffer();
             for(int i = 0; i < x.length; i++) {
                 if(i>0) {
@@ -445,7 +458,7 @@ public class Expect {
                 msg.append('\'');
             }
             
-            LOGGER.log(Level.FINER, "send " + msg + "<NL>");
+            LOGGER.log(Level.FINE, "send " + msg + "<NL>");
         }
         stdin.println(x);
     }
@@ -460,8 +473,8 @@ public class Expect {
      *  @param s the char array
      */ 
     public void print(char[] s) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + new String(s) + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + new String(s) + "'");
         }
         stdin.print(s);
     }
@@ -472,8 +485,8 @@ public class Expect {
      *  @param s the password
      */ 
     public void printPassword(char[] s) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send a password");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send a password");
         }
         stdin.print(s);
     }
@@ -484,8 +497,8 @@ public class Expect {
      *  @param s the password
      */ 
     public void printlnPassword(char[] s) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send a password<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send a password<NL>");
         }
         stdin.println(s);
     }
@@ -496,8 +509,8 @@ public class Expect {
      *  @param d the double
      */ 
     public void print(double d) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + d + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + d + "'");
         }
         stdin.print(d);
     }
@@ -508,8 +521,8 @@ public class Expect {
      *  @param x the char
      */ 
     public void println(char x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'<NL>");
         }
         stdin.println(x);
     }
@@ -520,8 +533,8 @@ public class Expect {
      *  @param c the char
      */ 
     public void print(char c) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + c + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + c + "'<NL>");
         }
         stdin.print(c);
     }
@@ -532,8 +545,8 @@ public class Expect {
      *  @param x the float
      */ 
     public void println(float x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'<NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'<NL>");
         }
         stdin.println(x);
     }
@@ -544,8 +557,8 @@ public class Expect {
      *  @param x the float
      */ 
     public void print(float x) {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send '" + x + "'");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send '" + x + "'");
         }
         stdin.print(x);
     }
@@ -554,8 +567,8 @@ public class Expect {
      *  print linefeed to stdin.
      */ 
     public void println() {
-        if(LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.log(Level.FINER, "send <NL>");
+        if(LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE, "send <NL>");
         }
         stdin.println();
     }

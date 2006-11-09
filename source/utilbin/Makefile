@@ -39,14 +39,14 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit \
-                 tst_pthread_signals fstype qping sgepasswd
+                 tst_pthread_signals fstype qping sgepasswd $(AUTHUSER_ALL)
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spooledit.c spoolinit.c \
-               tst_pthread_signals.c fstype.c qping.c
+               tst_pthread_signals.c fstype.c qping.c authuser.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -246,4 +246,16 @@ sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
 
 sge_passwd.o: $(UTILBIN_DIR)/sge_passwd.c
 		$(CC) $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_passwd.c
+
+#---------------------------------------------------------------------
+AUTHUSER_ADD_LIBS = -luti -llck -lrmon $(DLLIB)
+
+authuser.exe:
+
+authuser: authuser.o juti.o
+	$(CC) -o authuser authuser.o juti.o $(LFLAGS) $(LIBS) $(AUTHLIBS) $(AUTHUSER_ADD_LIBS) 
+
+authuser.o: $(UTILBIN_DIR)/authuser.c
+	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/authuser.c -o authuser.o
+
 

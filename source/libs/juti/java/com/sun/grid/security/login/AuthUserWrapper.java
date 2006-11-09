@@ -75,14 +75,14 @@ class AuthUserWrapper {
     
     /**
      * Create a new instance of <code>AuthUserWrapper</code> which uses
-     * the shadow authentication system.
+     * the authentication system of the operation system
      * 
      * @param authuser    path the the authuser binary
      * @return the <code>AuthUserWrapper</code>.
      */
-    public static AuthUserWrapper newInstanceForShadow(String authuser) {
+    public static AuthUserWrapper newInstance(String authuser) {
         return new AuthUserWrapper( new String [] {
-             authuser, "shadow"
+             authuser, "system"
         });
     }
 
@@ -162,7 +162,7 @@ class AuthUserWrapper {
         
         String error;
         public void handle(Expect expect, ExpectBuffer buffer) throws IOException {
-            String msg = buffer.consumeLine("error: ");
+            String msg = buffer.consumeLine("Error: ");
             if(msg != null) {
                 error = msg.trim();
             }
@@ -202,7 +202,18 @@ class AuthUserWrapper {
                 StringTokenizer st = new StringTokenizer(line.trim(), ",");
                 boolean primaryGroup = true;
                 while(st.hasMoreTokens()) {
-                    NumericGroupPrincipal p = new NumericGroupPrincipal(st.nextToken(), primaryGroup);
+                    String groupName = st.nextToken();
+                    int index = groupName.indexOf('(');
+                    if(index >= 0) {
+                        int endIndex = groupName.indexOf(')', index);
+                        if(endIndex > index) {
+                            String gid = groupName.substring(index+1, endIndex);
+                            groupName = groupName.substring(0,index);
+                            NumericGroupPrincipal p = new NumericGroupPrincipal(gid, primaryGroup);
+                            principals.add(p);
+                        }
+                    }
+                    GroupPrincipal p = new GroupPrincipal(groupName, primaryGroup);
                     principals.add(p);
                     primaryGroup = false;
                 }

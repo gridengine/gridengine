@@ -32,7 +32,25 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifdef WINDOWS
+#  define _WIN32_WINNT 0x0500
+#  include <windows.h>
+#  include <Sddl.h>
+
+/* 
+ * for some reason we cannot include basistypes.h when building authuser.
+ * only include it ifndef WINDOWS in msg_juti.h,
+ * and do special handling here.
+ * TODO: should be understood and fixed (in basis_types.h?)
+ */
+#  define SFN  "%-.100s"
+#  define _(x)              (x)
+#  define _MESSAGE(x,y)     (y)
+
+#else
 #include "basis_types.h"
+#endif
+
 
 /* 
 ** utilbin/adminrun.c
@@ -206,5 +224,22 @@
 #define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))
 #define MSG_PWD_CANTLOADRANDFILE_SS _MESSAGE(57328,         _(SFN": can't load rand file %s"))
 
+/*
+ * utilbin/authuser
+ */
+#define MSG_AUTHUSER_PAM_NOT_AVAILABLE    _MESSAGE(213001, _("pam not available"))
+#define MSG_AUTHUSER_USER_UNKNOWN_S       _MESSAGE(213002, _("user "SFN" unknown")) 
+#define MSG_AUTHUSER_NO_SHADOW_ENTRY_S    _MESSAGE(213003, _("user "SFN" has no shadow entry"))
+#define MSG_AUTHUSER_CRYPT_FAILED_S       _MESSAGE(213004, _("crypt failed: "SFN))
+#define MSG_AUTHUSER_INVALID_PASSWORD     _MESSAGE(213005, _("invalid password"))
+#define MSG_AUTHUSER_PAM_ERROR_S          _MESSAGE(213006, _("PAM error: "SFN)) 
+
+#define MSG_AUTUSER_INVAILD_ARG_COUNT     _MESSAGE(213101, _("invalid number of arguments"))
+#define MSG_AUTUSER_MISSING_PAM_SERVICE   _MESSAGE(213102, _("missing pam service name"))
+#define MSG_AUTUSER_UNKNOWN_PARAM_S       _MESSAGE(213103, _("Unknown param "SFN))
+#define MSG_AUTUSER_UNKNOWN_AUTH_METHOD_S _MESSAGE(213104, _("Unknown <auth_method> "SFN))
+#define MSG_AUTHUSER_NO_PW_ENTRY_SS       _MESSAGE(213105, _("password: can not get password entry of user "SFN": "SFN))
+#define MSG_AUTHUSER_ERROR                _MESSAGE(213106, _("Error: "))
+#define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213107, _("Wrong user or password"))
 
 #endif /* __MSG_UTILBIN_H */

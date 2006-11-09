@@ -50,7 +50,7 @@ import javax.security.auth.spi.LoginModule;
 
 /**
  * This <code>LoginModule</code> authenticates a unix user with username
- * and password against the PAM or shadow authentication system.
+ * and password against the PAM or system authentication system.
  * 
  * The username is queried with a <code>NameCallback</code>, the password with 
  * a <code>PasswordCallback</code>
@@ -80,7 +80,7 @@ import javax.security.auth.spi.LoginModule;
  *   </tr>
  *   <tr>
  *      <td>auth_method</td>
- *      <td>Autehtication method. Valid values are "pam" and "shadow"</td>
+ *      <td>Autehtication method. Valid values are "pam" and "system"</td>
  *   </tr>
  *   <tr>
  *      <td>pam_service</td>
@@ -100,13 +100,13 @@ import javax.security.auth.spi.LoginModule;
  *  };
  * </pre>
  * 
- * <H3>Simple jaas config file for shadow authentication</H3>
+ * <H3>Simple jaas config file for system authentication</H3>
  * 
  * <pre>
  *  sample {
  *   com.sun.grid.security.login.UnixLoginModule requisite
  *         command="/opt/sge",
- *         auth_method="shadow";
+ *         auth_method="system";
  *  };
  * </pre>
  * 
@@ -153,6 +153,9 @@ public class UnixLoginModule implements LoginModule {
                 command = sgeRoot + File.separatorChar + "utilbin"
                         + File.separatorChar + arch 
                         + File.separatorChar + "authuser";
+                if(arch.equals("win32-x86")) {
+                    command += ".exe";
+                }
                 LOGGER.log(Level.FINE, "command={0}", command);
             } catch (Exception ex) {
                 LOGGER.log(Level.WARNING, "unixlogin.error.arch", ex);
@@ -226,7 +229,11 @@ public class UnixLoginModule implements LoginModule {
         } else if("pam".equals(authMethod)) {
             authuser = AuthUserWrapper.newInstanceForPam(command, pamService);
         } else if ("shadow".equals(authMethod)) {
-            authuser = AuthUserWrapper.newInstanceForShadow(command);
+            LOGGER.log(Level.WARNING, "unixlogin.deprecatedAuthMethod", 
+                       new Object [] { authMethod, "system" } );
+            authuser = AuthUserWrapper.newInstance(command);
+        } else if ("system".equals(authMethod)) {
+            authuser = AuthUserWrapper.newInstance(command);
         } else {
             throw RB.newLoginException("unixlogin.error.unknownAuthMethod", 
                                        new Object [] {authMethod});

@@ -29,6 +29,13 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifdef WINDOWS
+
+#include <windows.h>
+
+#else
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,293 +43,36 @@
 #include <string.h>
 #include <termios.h>
 
-#include <pwd.h>
-
-#if defined(IRIX65) || defined(AIX43) || defined(HP1164) || defined(INTERIX) || defined(ALPHA5)
-#define JUTI_NO_PAM
-#elif defined(DARWIN)
-#include <pam/pam_appl.h>
-#else
-#include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD) || defined(ALPHA5)
-#define JUTI_NO_SHADOW
-#else
-#include <shadow.h>
-#endif
-
-#if defined(AIX51) || defined(AIX43)
-#include <userpw.h>
-#endif
-
-#include <unistd.h>
-#include <dlfcn.h>
-#include <sys/param.h>
-#include <grp.h>
-
-#include "juti.h"
-#include "msg_juti.h"
-
-#if 0
-#define DEBUG
-#endif
-
-#define BUFSIZE 1024
-
-
-#ifndef JUTI_NO_PAM
-/*
- * For application data, like password. Passes through the
- * pam framework to the conversation function.
- */
-struct app_pam_data {
-	const char *password;
-};
-
-/* pam conversation function */
-#if defined(SOLARIS) || defined(AIX) || defined(HP11) || defined(HP1164)
-static int login_conv(int num_msg, struct pam_message **msgm,
-                      struct pam_response **response, void *appdata_ptr);
-#else
-static int login_conv(int num_msg, const struct pam_message **msgm,
-                      struct pam_response **response, void *appdata_ptr);
-#endif
-
-#endif 
-
-                      
-auth_result_t do_pam_authenticate(const char* service, const char *username, 
-                                  const char *password,
-                                  error_handler_t *error_handler)
+void setEcho(int flag) 
 {
-#ifdef JUTI_NO_PAM
-   error_handler->error(MSG_JUTI_PAM_NOT_AVAILABLE);
-   return JUTI_AUTH_ERROR;
-#else
-   auth_result_t ret;
-	int status;
-	pam_handle_t *pamh;		/* pam handle */
-	struct pam_conv pamconv;	/* pam init structure */
-	struct app_pam_data app_data;	/* pam application data */
+#ifdef WINDOWS
+   HANDLE hConsole;
+   DWORD  dwMode;
 
-	pamh = NULL;
-	/*
-	 * app_data gets passed through the framework
-	 * to "login_conv". Set the password for use in login_conv
-	 * and set up the pam_conv data with the conversation
-	 * function and the application data pointer.
-	 */
-	app_data.password = password;
-	pamconv.conv = login_conv;
-	pamconv.appdata_ptr = &app_data;
+   hConsole = CreateFile("CONIN$", 
+              GENERIC_READ|GENERIC_WRITE, 
+              FILE_SHARE_READ|FILE_SHARE_WRITE,
+              NULL,
+              OPEN_EXISTING,
+              0,
+              NULL);
 
-	/* pam start session */
-	status = pam_start(service, username, &pamconv, &pamh);
-   if(status != PAM_SUCCESS) {
-      ret = JUTI_AUTH_ERROR;
-      goto error;
+   if(hConsole != INVALID_HANDLE_VALUE) {
+      GetConsoleMode(hConsole, &dwMode);
+      if(flag) {
+         dwMode |= ENABLE_ECHO_INPUT;
+      } else {
+         dwMode &= ~ENABLE_ECHO_INPUT;
+      }
+      SetConsoleMode(hConsole, dwMode);
+      CloseHandle(hConsole);
    }
-   status = pam_authenticate(pamh, PAM_SILENT);
-   if(status != PAM_SUCCESS) {
-      ret = JUTI_AUTH_FAILED;
-      goto error;
-   }
+#else /* unix */
+   static struct termios init_set;
+   static int initialized = 0;
 
-	/* check if the authenicated user is allowed to use machine */
-   status = pam_acct_mgmt(pamh, PAM_SILENT);
-	if (status != PAM_SUCCESS) {
-      ret = JUTI_AUTH_FAILED;
-      goto error;
-	}
-   ret = JUTI_AUTH_SUCCESS; 
-
-error:
-	if (status != PAM_SUCCESS) {
-		const char *pam_err_msg = pam_strerror(pamh, status);
-		error_handler->error(MSG_JUTI_PAM_ERROR_S, pam_err_msg);
-	}
-
-	/* end pam session */
-	if (pamh != NULL) {
-	    pam_end(pamh, status == PAM_SUCCESS ? PAM_SUCCESS : PAM_ABORT);
-	}
-	return ret;
-#endif
-}
-
-/*
- * login_conv:
- * this is the conversation function called from a PAM authentication module
- * to print erro messagae or get user information
- */
-#ifndef JUTI_NO_PAM
-#if defined(SOLARIS) || defined(AIX) || defined(HP11) || defined(HP1164)
-static int login_conv(int num_msg, struct pam_message **msgm,
-                      struct pam_response **response, void *appdata_ptr)
-#else
-static int login_conv(int num_msg, const struct pam_message **msgm,
-                      struct pam_response **response, void *appdata_ptr)
-#endif
-{
-	int count = 0;
-	int reply_used = 0;
-	struct pam_response *reply;
-
-	if (num_msg <= 0) {
-#ifdef DEBUG
-		printf("no message returned from pam module\n");
-#endif
-		return (PAM_CONV_ERR);
-	}
-
-	reply = (struct pam_response *)calloc(num_msg,
-		sizeof (struct pam_response));
-	if (reply == NULL) {
-#ifdef DEBUG
-		printf("calloc memory error\n");
-#endif
-		return (PAM_BUF_ERR);
-	}
-
-	for (count = 0; count < num_msg; ++count) {
-#ifdef DEBUG
-            printf("\n login_conv: prompt_style:  %d" , msgm[count]->msg_style);
-            printf("\n login_conv: prompt_message:  %s" , msgm[count]->msg);
-            printf("\n PAM_PROMPT_ECHO_OFF  %d" , PAM_PROMPT_ECHO_OFF);
-            printf("\n PAM_PROMPT_ECHO_ON  %d" , PAM_PROMPT_ECHO_ON);
-            printf("\n PAM_ERROR_MSG  %d" , PAM_ERROR_MSG);
-            printf("\n PAM_TEXT_INFO  %d" , PAM_TEXT_INFO);
-#endif
-
-	    switch (msgm[count]->msg_style) {
-		case PAM_PROMPT_ECHO_OFF:
-		if (((struct app_pam_data *)appdata_ptr)->password != NULL) {
-			(reply+count)->resp = strdup(((struct app_pam_data *)
-				appdata_ptr)->password);
-                    if (reply[count].resp == NULL) {
-                        /*
-                         * It may be the case that some modules won't free
-                         * the pam_response memory if the return is not
-                         * PAM_SUCCESS. We should not have had
-                         * multiple PAM_PROMPT_ECHO_OFF in a single
-                         * login_conv call but just in case see if
-                         * reply was modified anyway.
-                         */
-                        if (reply_used) {
-                            int i;
-                            for (i = 0; i < num_msg; ++i) {
-                                if (reply[i].resp != NULL) {
-                                    free(reply[i].resp);
-                                }
-                            }
-                        }
-                        free(reply);
-                        *response = NULL;
-                        return (PAM_BUF_ERR);
-                    }
-		}
-                /*
-                 * Always set reply_used even if the password is NULL
-                 * A NULL response cannot be returned with PAM_SUCCESS.
-                 * Could return PAN_CONV_ERR but let later code determine
-                 * the effect of a NULL password.
-                 */
-                reply_used = 1;
-		break;
-
-            /* For empty user name, shouldn't happen */
-		case PAM_PROMPT_ECHO_ON:
-                /*
-                 * It may be the case that some modules won't free
-                 * the pam_response memory if the return is not
-                 * PAM_SUCCESS. We should not have had
-                 * multiple PAM_PROMPT_ECHO_OFF in a single
-                 * login_conv call but just in case see if
-                 * reply was modified anyway.
-                 */
-                if (reply_used) {
-                    int i;
-                    for (i = 0; i < num_msg; ++i) {
-                        if (reply[i].resp != NULL) {
-                            free(reply[i].resp);
-                        }
-                    }
-                }
-                free(reply);
-                *response = NULL;
-                /*
-                 * Have to return error here since PAM can loop
-                 * when no username is provided
-                 */
-		    break;
-		case PAM_ERROR_MSG:
-		case PAM_TEXT_INFO:
-			break;
-		default:
-			break;
-	    }
-	}
-
-        /*
-         * The response may not always be freed by
-         * modules for PAM_ERROR_MSG, and PAM_TEXT_INFO
-         * So make sure it is freed if we didn't use it.
-         */
-        if (!reply_used) {
-            free(reply);
-            reply = NULL;
-        }
-	*response = reply;
-
-	return (PAM_SUCCESS);
-}
-#endif
-
-auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
-                                error_handler_t *error_handler) {
-                     
-#if defined(AIX43) || defined(AIX51)
-   char buf[BUFSIZE];
-   struct userpw *pw = NULL;
-   
-   strncpy(buf, username, BUFSIZE);
-   pw = getuserpw(buf);
-   if(pw == NULL) {
-      error_handler->error(MSG_JUTI_USER_UNKNOWN_S, username);
-      return JUTI_AUTH_FAILED;
-   } else {
-      strncpy(pw->upw_passwd, buffer, size);
-      return JUTI_AUTH_SUCCESS;
-   }
-#elif defined(JUTI_NO_SHADOW)
-   struct passwd *pw = getpwnam(username);
-   if(pw == NULL) {
-      error_handler->error(MSG_JUTI_USER_UNKNOWN_S, username);
-      return JUTI_AUTH_FAILED;
-   } else {
-      strncpy(pw->pw_passwd, buffer, size);
-      return JUTI_AUTH_SUCCESS;
-   }
-#else
-   struct spwd *pres = getspnam(username);
-   if(pres == NULL) {
-      error_handler->error(MSG_JUTI_NO_SHADOW_ENTRY_S, username);
-      return JUTI_AUTH_FAILED;
-   }
-   strncpy(buffer, pres->sp_pwdp, size);
-   return JUTI_AUTH_SUCCESS;
-#endif
-
-}
-
-
-
-static struct termios init_set;
-static int initialized = 0;
-
-void setEcho(int flag) {
-   
    struct termios new_set;
    
    if(initialized == 0) {
@@ -337,62 +87,7 @@ void setEcho(int flag) {
       new_set.c_lflag &= ~ECHO;
       tcsetattr(fileno(stdin), TCSAFLUSH, &new_set);
    }
-   
+
+#endif
 }
-
-
-
-int juti_getgrouplist(const char *uname, gid_t agroup, gid_t **groups_res, int *grpcnt)
-{
-	struct group *grp;
-	int bail;
-   
-   int maxgroups = 10;
-   gid_t *groups = (gid_t*)malloc(sizeof(groups)*maxgroups);
-   int ngroups = 0;
-   int i = 0;
-   
-   if(groups == NULL) {
-      return -1;
-   }
-   
-   groups[ngroups++]=agroup;
-
-	setgrent();
-	while ((grp = getgrent())) {
-		if (grp->gr_gid == agroup) {
-			continue;
-      }
-      for (bail = 0, i = 0; bail == 0 && i < ngroups; i++) {
-			if (groups[i] == grp->gr_gid) {
-				bail = 1;
-         }
-      }
-		if (bail) {
-			continue;
-      }
-		for (i = 0; grp->gr_mem[i]; i++) {
-			if (!strcmp(grp->gr_mem[i], uname)) {
-            if (ngroups >= maxgroups) {
-               gid_t *tmp = groups;
-               maxgroups +=10;
-               groups = (gid_t*)malloc(sizeof(groups)*maxgroups);
-               if(groups == NULL) {
-                  free(tmp);
-                  return -1;
-               }
-               memcpy(groups, tmp, sizeof(gid_t) * ngroups);
-               free(tmp);
-            }
-            groups[ngroups++] = grp->gr_gid;
-			}
-		}
-	}
-
-	endgrent();
-   *groups_res = groups;   
-	*grpcnt = ngroups;
-	return 0;
-}
-
 

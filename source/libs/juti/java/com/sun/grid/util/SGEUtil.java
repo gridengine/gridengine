@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -128,8 +129,13 @@ public class SGEUtil {
     
     private static Map archMap = new HashMap();
     
-    /**
-     * Get the arch string for a gridengine installation
+    
+    public static boolean isWindows() {
+        String osname = System.getProperty("os.name").toLowerCase(Locale.US);
+        return osname.indexOf("windows") >= 0;
+    }
+    
+    /* Get the arch string for a gridengine installation
      * @param sgeRoot the sge root directory
      * @throws java.io.IOException if the execution of the arch script fails
      * @return the arch string
@@ -138,27 +144,31 @@ public class SGEUtil {
         
         String ret = (String)archMap.get(sgeRoot);
         if(ret == null) {
-            Expect expect = new Expect();
-            
-            expect.env().add("SGE_ROOT=" + sgeRoot.getAbsolutePath());
-            expect.command().add( sgeRoot.getAbsolutePath() + File.separatorChar + "util" + File.separatorChar + "arch");
-            
-            ArchExpectHandler archHandler = new ArchExpectHandler();
-            expect.add(archHandler);
-            try {
-                int res = expect.exec(1000);
-                if(res != 0) {
-                   throw new IOException("arch script exited with status (" + ret +")"); 
+            if(isWindows()) {
+                ret = "win32-x86";
+            } else {
+                Expect expect = new Expect();
+
+                expect.env().add("SGE_ROOT=" + sgeRoot.getAbsolutePath());
+                expect.command().add( sgeRoot.getAbsolutePath() + File.separatorChar + "util" + File.separatorChar + "arch");
+
+                ArchExpectHandler archHandler = new ArchExpectHandler();
+                expect.add(archHandler);
+                try {
+                    int res = expect.exec(1000);
+                    if(res != 0) {
+                       throw new IOException("arch script exited with status (" + ret +")"); 
+                    }
+
+                    ret = archHandler.getArch();
+                    if(ret == null) {
+                        throw new IllegalStateException("arch script did not produce any output");
+                    }
+                } catch (InterruptedException ex) {
+                    throw new IllegalStateException("arch script has been interrupted");
                 }
-                
-                ret = archHandler.getArch();
-                if(ret == null) {
-                    throw new IllegalStateException("arch script did not produce any output");
-                }
-                archMap.put(sgeRoot, ret);
-            } catch (InterruptedException ex) {
-                throw new IllegalStateException("arch script has been interrupted");
             }
+            archMap.put(sgeRoot, ret);
         }
         return ret;
     }

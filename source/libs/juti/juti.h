@@ -36,28 +36,6 @@
 extern "C" {
 #endif
 
-#ifdef WINDOWS
-typedef int gid_t;
-#endif
-
-typedef struct error_handler_str error_handler_t;
-
-struct error_handler_str {
-   void (*error)(const char* fmt, ...);
-};
-
-typedef enum {
-   JUTI_AUTH_SUCCESS = 0,     /* authentication success */
-   JUTI_AUTH_FAILED  = 1,    /* invalid username or password */
-   JUTI_AUTH_ERROR   = 2     /* authentication is not proper configured */
-} auth_result_t;
-
-auth_result_t do_pam_authenticate(const char* service, const char *username, const char *password,
-                        error_handler_t *error_handler);
-int juti_getgrouplist(const char *uname, gid_t agroup, gid_t **groups_res, int *grpcnt);
-auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
-                                   error_handler_t *error_handler);
-
 void setEcho(int flag);
 
 #ifdef  __cplusplus

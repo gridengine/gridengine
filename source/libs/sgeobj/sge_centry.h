@@ -45,6 +45,10 @@ extern const struct queue2cmplx host_resource[];
 extern const int max_queue_resources;
 extern const struct queue2cmplx queue_resource[];
 
+int
+centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empty_boolean,
+                      bool allow_neg_consumable);
+
 const char *
 map_op2str(u_long32 op);
 

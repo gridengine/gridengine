@@ -60,10 +60,6 @@
 
 /* EB: ADOC: add commets */
 
-static int
-centry_fill_and_check(lListElem *cep, lList** answer_list, bool allow_empty_boolean,
-                      bool allow_neg_consumable);
-
    const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
    const struct queue2cmplx host_resource[] = {
       {"arch",           0, TYPE_STR},
@@ -150,7 +146,7 @@ centry_fill_and_check(lListElem *cep, lList** answer_list, bool allow_empty_bool
 *       -1 on error
 *        an error message will be written into SGE_EVENT
 ******************************************************************************/
-static int
+int
 centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empty_boolean,
                       bool allow_neg_consumable)
 {
@@ -169,8 +165,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       if (allow_empty_boolean && lGetUlong(this_elem, CE_valtype)==TYPE_BOO) {
          lSetString(this_elem, CE_stringval, "TRUE");
          s = lGetString(this_elem, CE_stringval);
-      }
-      else {
+      } else {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, name));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
@@ -190,6 +185,17 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          }
          lSetDouble(this_elem, CE_doubleval, dval);
 
+         /* normalize time values, so that the string value is based on seconds */
+         if (type == TYPE_TIM && dval != DBL_MAX) {
+            char str_value[100];
+            dstring ds;
+            sge_dstring_init(&ds, str_value, sizeof(str_value));
+            sge_dstring_sprintf(&ds, "%.0f", dval);
+            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
+                     lGetString(this_elem, CE_stringval), str_value));
+            lSetString(this_elem, CE_stringval, str_value);
+         }
+         
          /* also the CE_default must be parsable for numeric types */
          if ((s=lGetString(this_elem, CE_default))
             && !parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
@@ -206,18 +212,6 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
 
             DRETURN(-1);
          }
-
-         /* normalize time values, so that the string value is based on seconds */
-         if (TYPE_TIM == type && dval != DBL_MAX) {
-            char str_value[100];
-            dstring ds;
-            sge_dstring_init(&ds, str_value, sizeof(str_value));
-            sge_dstring_sprintf(&ds, "%.0f", dval);
-            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
-                     lGetString(this_elem, CE_stringval), str_value));
-            lSetString(this_elem, CE_stringval, str_value);
-         }
-         
          break;
       case TYPE_HOST:
          /* resolve hostname and store it */

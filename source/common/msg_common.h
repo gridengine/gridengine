@@ -513,7 +513,7 @@
 #define MSG_GDI_USAGE_dul_OPT_LISTNAME_LIST              "[-dul listname_list]"
 #define MSG_GDI_UTEXT_dul_OPT_LISTNAME_LIST              _MESSAGE(23347, _("delete userset list(s) completely"))
 
-#define MSG_GDI_USAGE_DUSER_USER                         "[-duser user_list]"
+#define MSG_GDI_USAGE_DUSER_USER                         "[-duser user]"
 #define MSG_GDI_UTEXT_DUSER_USER                         _MESSAGE(23348, _("delete user"))
 
 #define MSG_GDI_USAGE_dprj_OPT_PROJECT                   "[-dprj project_list]"

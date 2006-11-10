@@ -1,3 +1,9 @@
+RD-2006-11-10-0: Bugfix:    fixed some limitation rule set bugs 
+                            - qconf -Xattr with limitation_rule set were broken
+                            - filter matching on queue level was broken
+                            - limit on non consumable were not enforced
+                 Review:    JG
+
 RH-2006-11-09-1: Bugfix:    o missing links for jni_libs in target directories 
                             o jgdi: run_util.sh supports now darwin-* and hp11*
                  Review:    AA

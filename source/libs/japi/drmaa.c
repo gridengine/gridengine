@@ -3621,7 +3621,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
       if ((p2 - p1)/sizeof(char) == 4) {
          /* 4 digit year given */
          strncpy(tmp, p1, 4);
-         tmp[4] = 0;
+         tmp[4] = '\0';
          year = atoi(tmp);
          century_set = 1;
          year_set = 1;
@@ -3630,7 +3630,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
       else if ((p2 - p1)/sizeof(char) == 2) {
          /* 2 digit year or month given.  We'll sort it out later. */
          strncpy(tmp, p1, 2);
-         tmp[2] = 0;
+         tmp[2] = '\0';
          year = atoi(tmp);
          year_set = 1;
          p1 = p2 + 1;
@@ -3656,7 +3656,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
    if (p2 != NULL) {
       /* 2 digit month given.  Set the month now and worry about the day later. */
       strncpy(tmp, p1, 2);
-      tmp[2] = 0;
+      tmp[2] = '\0';
       month = atoi(tmp);
       month_set = 1;
       p1 = p2 + 1;
@@ -3685,7 +3685,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
    if ((p2 != NULL) && ((p2 - p1)/sizeof(char) == 2)) {
       /* 2 digit day given. */
       strncpy(tmp, p1, 2);
-      tmp[2] = 0;
+      tmp[2] = '\0';
       day = atoi(tmp);
       day_set = 1;
       p1 = p2 + 1;
@@ -3715,7 +3715,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
    if (*p2 == ':') {
       /* 2 digit seconds given */
       strncpy(tmp, p2 + 1, 2);
-      tmp[2] = 0;
+      tmp[2] = '\0';
       second = atoi(tmp);
       /* Set our pointer to the end of the minutes plus 1 for the colon plus 2
        * for the seconds. */

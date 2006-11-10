@@ -605,6 +605,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
          int size = at_sign - queue_instance;
          queue = malloc(sizeof(char)*size);
          queue = strncpy(queue, queue_instance, size);
+         queue[size]='\0';
       } else {
          queue = strdup(queue_instance);
       }

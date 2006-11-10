@@ -3349,20 +3349,19 @@ static dispatch_t lirs_limitation_reached(sge_assignment_t *a, const lListElem *
          }
       }
 
-      if (lGetBool(raw_centry, CE_consumable)) {
-         /* Consumable Resource */
+      {
          lList *tmp_centry_list = lCreateList("", CE_Type);
          lList *tmp_rue_list = lCreateList("", RUE_Type);
          lListElem *tmp_centry_elem = NULL;
          lListElem *tmp_rue_elem = NULL;
             
-         DPRINTF(("consumable\n"));
          if (limit_rule_set_dynamical_limit(limit, global_host, exec_host, a->centry_list)) {
             lList *rue_list = lGetList(limit, LIRL_usage);
             u_long32 tmp_time = a->start;
 
             /* create tmp_centry_list */
             tmp_centry_elem = lCopyElem(raw_centry);
+            lSetString(tmp_centry_elem, CE_stringval, lGetString(limit, LIRL_value));
             lSetDouble(tmp_centry_elem, CE_doubleval, lGetDouble(limit, LIRL_dvalue));
             lAppendElem(tmp_centry_list, tmp_centry_elem);
 
@@ -3394,17 +3393,6 @@ static dispatch_t lirs_limitation_reached(sge_assignment_t *a, const lListElem *
 
             lFreeList(&tmp_rue_list);
             lFreeList(&tmp_centry_list);
-         }
-      } else {
-         /* Static Resource */
-         char availability_text[2048];
-
-         DPRINTF((" static\n"));
-         lSetString(raw_centry, CE_stringval, lGetString(limit, LIRL_value));
-         DPRINTF(("comparing %s with %s\n", lGetString(raw_centry, CE_stringval), lGetString(job_centry, CE_stringval)));
-         if (compare_complexes(1, raw_centry, job_centry, availability_text, false, false) != 1) {
-            ret = DISPATCH_NEVER_CAT;
-            break;
          }
       }
    }
@@ -5912,7 +5900,6 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    u_long32 now = sconf_get_now();
 
    DENTER(TOP_LAYER, "ri_time_by_slots");
-
 
    attrname = lGetString(rep, CE_name);
    actual_el = lGetElemStr(actual_attr, RUE_name, attrname);

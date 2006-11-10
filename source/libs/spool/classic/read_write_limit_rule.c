@@ -516,6 +516,7 @@ char *write_limit_rule_set(int spool, int how, const lListElem *ep) {
    DRETURN((how==1?sge_strdup(NULL, filename):filename));
 FPRINTF_ERROR:
 FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_NOCLOSE_SS, filename, strerror(errno)));
    sge_dstring_free(&dbuffer);
    DRETURN(NULL); 
 }

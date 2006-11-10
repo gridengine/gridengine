@@ -379,20 +379,21 @@ bool limit_rule_set_verify_attributes(lListElem *lirs, lList **answer_list, bool
                }  
                /* The evaluation of the value needs to be done at scheduling time. Per default it's zero */
             } else {
+               lListElem *tmp_ce = lCopyElem(centry);
                /* fix limit, fill up missing attributes */
                lSetBool(limit, LIRL_dynamic, false);
-
-               if (lGetBool(centry, CE_consumable)) {
-                  double dval = 0.0;
-
-                  if (parse_ulong_val(&dval, NULL, lGetUlong(centry, CE_valtype), strval, NULL, 0) == 0) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_LIMITRULE_INVALIDLIMIT, lGetString(limit, LIRL_name));
-                     ret = false;
-                     break;
-                  }
-                  lSetDouble(limit, LIRL_dvalue, dval);
-                  lSetUlong(limit, LIRL_type, lGetUlong(centry, CE_valtype));
-               } 
+  
+               lSetString(tmp_ce, CE_stringval, strval);
+               if (centry_fill_and_check(tmp_ce, answer_list, false, false)) {
+                  ret = false;
+                  lFreeElem(&tmp_ce);
+                  break;
+               }
+              
+               lSetString(limit, LIRL_value, lGetString(tmp_ce, CE_stringval));
+               lSetDouble(limit, LIRL_dvalue, lGetDouble(tmp_ce, CE_doubleval));
+               lSetUlong(limit, LIRL_type, lGetUlong(tmp_ce, CE_valtype));
+               lFreeElem(&tmp_ce);
             }
          }
          if (ret == false) {
@@ -732,6 +733,7 @@ lirs_debit_consumable(lListElem *lirs, lListElem *job, lListElem *granted, const
       int size = at_sign - queue_instance;
       qname = malloc(sizeof(char)*size);
       qname = strncpy(qname, queue_instance, size);
+      qname[size]='\0';
    } else {
       qname = strdup(queue_instance);
    }

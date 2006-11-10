@@ -6049,7 +6049,7 @@ gid_t gid
    }
 
    if (hep != NULL) {
-      missing_field = spool_get_unprocessed_field (fields, fields_out, &alp);
+      missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
    }
 
    if (missing_field != NoName) {
@@ -7302,7 +7302,7 @@ static int qconf_modify_attribute(void *context,
       *spp = sge_parser_get_next (*spp);
       value = (const char *)strdup (**spp);
 
-      if (!strcmp(info_entry->object_name, SGE_OBJ_LIRS)) {
+      if (!strcmp(info_entry->object_name, SGE_OBJ_LIRS) && !strcmp(name, "limit")) {
          sge_dstring_append(&delim, " to ");
       } else {
          sge_dstring_append_char(&delim, info_entry->instr->name_value_delimiter);

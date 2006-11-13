@@ -1,3 +1,6 @@
+JG-2006-11-13-0: Bugfix:    Fixed messages file msg_utilbin.h.
+                 Review:    AA 
+
 RD-2006-11-10-0: Bugfix:    fixed some limitation rule set bugs 
                             - qconf -Xattr with limitation_rule set were broken
                             - filter matching on queue level was broken

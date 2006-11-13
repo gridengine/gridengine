@@ -1954,6 +1954,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\common'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\utilbin'"
    set WINCFLAGS = "${WINCFLAGS} -I'..\\libs\\juti'"
 
    if ( $DEBUGGED == 1 ) then

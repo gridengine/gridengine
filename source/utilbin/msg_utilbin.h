@@ -32,25 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef WINDOWS
-#  define _WIN32_WINNT 0x0500
-#  include <windows.h>
-#  include <Sddl.h>
-
-/* 
- * for some reason we cannot include basistypes.h when building authuser.
- * only include it ifndef WINDOWS in msg_juti.h,
- * and do special handling here.
- * TODO: should be understood and fixed (in basis_types.h?)
- */
-#  define SFN  "%-.100s"
-#  define _(x)              (x)
-#  define _MESSAGE(x,y)     (y)
-
-#else
 #include "basis_types.h"
-#endif
-
 
 /* 
 ** utilbin/adminrun.c

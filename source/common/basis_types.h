@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifndef WINDOWS
+
 #include <sys/types.h>
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
@@ -248,4 +250,5 @@ typedef char stringT[MAX_STRING_SIZE];
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
 
+#endif /* WINDOWS */
 #endif /* __BASIS_TYPES_H */

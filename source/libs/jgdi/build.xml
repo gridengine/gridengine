@@ -87,8 +87,8 @@
       <property name="example.dir" location="examples"/>
       <property name="example.src.dir" location="examples/src"/>
 
-
-      <property name="cullconv.jar" location="${basedir}/cullconv/build/cullconv.jar"/>
+      <property name="cullconv.dir" location="${basedir}/cullconv"/>
+      <property name="cullconv.jar" location="${cullconv.dir}/build/cullconv.jar"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property name="jar" location="${build.dir}/${project.name}.jar"/>
         
@@ -894,13 +894,17 @@
    <!-- CULLCONV =========================================================== -->
 
    <target name="cullconv.init" depends="init">
-            <available file="${cullconv.jar}" type="file"
-                       property="cullconv.available"/>
+       <uptodate property="cullconv.uptodate" targetfile="${cullconv.jar}">
+           <srcfiles dir="${cullconv.dir}">
+               <include name="src/**/*.java"/>
+               <include name="Cull.jj"/>
+           </srcfiles>
+       </uptodate>
    </target>
    
-   <target name="cullconv" unless="cullconv.available" depends="cullconv.init"
+   <target name="cullconv" unless="cullconv.uptodate" depends="cullconv.init"
            description="builds cullconv.jar">
-      <ant antfile="build.xml" dir="cullconv"/>
+      <ant antfile="build.xml" dir="${cullconv.dir}"/>
    </target>
         
 </project>

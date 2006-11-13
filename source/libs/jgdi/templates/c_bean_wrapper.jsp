@@ -130,7 +130,7 @@ jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp) {
  *  The method id of the java constructor is stored in a static variable.
  *  On the first call of this method this static method id is initialized.
  *-------------------------------------------------------------------------*/
-int <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject *obj <%
+jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject *obj <%
    
       for(int i = 0; i < parameters.length; i++) {      
          if( String.class.equals(parameters[i])) {
@@ -142,7 +142,7 @@ int <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject *obj <%
       } // end of fore
 %>, lList **alpp) {
 
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    static jmethodID mid = NULL;
    jclass clazz = NULL;<%
    
@@ -216,9 +216,9 @@ int <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject *obj <%
   
     
 %>
-int <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp) {
+jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp) {
 
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    jclass clazz = NULL;
    static jfieldID mid = NULL;
    /*static <%=ch.getCType(field.getType())%> field = <%=ch.getInitializer(field.getType())%>;*/
@@ -294,7 +294,7 @@ int <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getTy
  *  The method id of the java method is stored in a static variable.
  *  On the first call of this method this static method id is initialized.
  *-------------------------------------------------------------------------*/
-int <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
+jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
    
       for(int i = 0; i < parameters.length; i++) {         
          if( String.class.equals(parameters[i])) {
@@ -315,7 +315,7 @@ int <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
     // And finally we need the answer lsit
 %>, lList **alpp) {
 
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    static jmethodID mid = NULL; 
    jclass clazz = NULL;
 <%   
@@ -511,7 +511,7 @@ int <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
  *  The method id of the java method is stored in a static variable.
  *  On the first call of this method this static method id is initialized.
  *-------------------------------------------------------------------------*/
-int <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
+jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
    
       for(int i = 0; i < parameters.length; i++) {         
          if( String.class.equals(parameters[i])) {
@@ -532,7 +532,7 @@ int <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj 
     // And finally we need the answer lsit
 %>, lList **alpp) {
 
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    static jmethodID mid = NULL; 
    jclass clazz = NULL;
 <%   

@@ -216,17 +216,18 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
    if (filter->job_state_filter != NULL) {
       jstring job_state_obj = NULL; 
       const char * job_state = NULL;
-      
+      int filter_res = 0;
       if ((ret=JobStateFilter_getStateString(env, filter->job_state_filter, &job_state_obj, alpp)) != JGDI_SUCCESS) {
          goto error;
       }
       job_state = (*env)->GetStringUTFChars(env, job_state_obj, 0);
       
-      ret = build_job_state_filter(qstat_env, job_state, alpp);
+      filter_res = build_job_state_filter(qstat_env, job_state, alpp);
       
       (*env)->ReleaseStringUTFChars(env, job_state_obj, job_state);
       
-      if(ret != JGDI_SUCCESS) {
+      if(filter_res != 0) {
+         ret = JGDI_ERROR;
          goto error;
       }
    }
@@ -272,7 +273,7 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
                                                      qstat_env_t *qstat_env, lList **alpp) {
    jobject value_name_list = NULL;
    jobject iterator = NULL;
-   jgdi_result_t ret = 0;
+   jgdi_result_t ret = JGDI_SUCCESS;
    u_long32 count = 0;
    
    DENTER(JGDI_LAYER, "build_resource_attribute_filter");
@@ -363,7 +364,7 @@ error:
  *-------------------------------------------------------------------------*/
 static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *filter, 
                                  qstat_env_t* qstat_env, lList **alpp) {
-   jgdi_result_t ret = 0;
+   jgdi_result_t ret = JGDI_SUCCESS;
    jobject resource_name_set = NULL;
    jobject iterator = NULL;
    u_long32 count = 0;
@@ -545,7 +546,7 @@ int jgdi_qstat_cqueue_summary(cqueue_summary_handler_t *handler, const char* cqn
    if ((ret = ClusterQueueSummary_setSuspendByCalendar(ctx->jni_env, cqueue_summary, summary->suspend_calendar, alpp)) != JGDI_SUCCESS) {
       goto error;
    }
-   if ((ret = ClusterQueueSummary_setUnknown(ctx->jni_env, cqueue_summary, summary->unknown, alpp) != JGDI_SUCCESS)) {
+   if ((ret = ClusterQueueSummary_setUnknown(ctx->jni_env, cqueue_summary, summary->unknown, alpp)) != JGDI_SUCCESS) {
       goto error;
    }
    if ((ret = ClusterQueueSummary_setLoadAlarm(ctx->jni_env, cqueue_summary, summary->load_alarm, alpp)) != JGDI_SUCCESS) {

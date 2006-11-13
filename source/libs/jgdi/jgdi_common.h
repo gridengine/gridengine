@@ -58,8 +58,8 @@ jgdi_result_t get_int(JNIEnv *env, jclass beanClass, jobject obj, const char* pr
 jgdi_result_t get_long(JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, lLong *ret, lList **alpp);
 jgdi_result_t set_long( JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, lLong value, lList **alpp);
 jgdi_result_t set_int( JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, u_long32 value, lList **alpp);
-jgdi_result_t get_bool(JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, bool *retb, lList **alpp);
-jgdi_result_t set_bool( JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, bool value, lList **alpp );
+jgdi_result_t get_bool(JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, lBool *retb, lList **alpp);
+jgdi_result_t set_bool( JNIEnv *env, jclass beanClass, jobject obj, const char* propertyName, lBool value, lList **alpp );
 jgdi_result_t get_list(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lList**list, lList **alpp);
 jgdi_result_t set_list(JNIEnv *env, jclass beanClass, jobject bean, jobject propertyDescr, lList *lp, lList **alpp);
 
@@ -99,7 +99,7 @@ jboolean test_jni_error(JNIEnv* env, const char* message, lList **alpp);
 #define JGDI_PROGNAME   JGDI
 
 
-int build_filter(JNIEnv *env, jobject filter, lCondition **where, lList **alpp);
+jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lList **alpp);
 void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const char *classname, int target_list, lDescr *descr);
 void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, int target_list, lDescr *descr);
 void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr);

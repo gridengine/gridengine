@@ -63,12 +63,12 @@ jgdi_clean:
 	rm -rf $(JGDI_LIB) $(JGDI_OBJS) jgdi_test*
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS)  $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) -lsched -ldrmaa $(SLIBs) $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) -lsched -ldrmaa $(SLIBs) $(LIBS) -lc
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 
 jgdi_test: jgdi_test.o
-	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS) -ljvm $(LIBS)  jgdi_test.o 
+	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS)  jgdi_test.o -ljvm $(LIBS)  
 	
 
 jgdi_test.o: $(JGDI_DIR)/jgdi_test.c

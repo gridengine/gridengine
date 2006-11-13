@@ -556,7 +556,7 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
    }
    
    /* get the property count */
-   if ((ret=ClassDescriptor_getPropertyCount(env, obj_descr, &prop_count, alpp) != JGDI_SUCCESS)) {
+   if ((ret=ClassDescriptor_getPropertyCount(env, obj_descr, &prop_count, alpp)) != JGDI_SUCCESS) {
       goto error;
    }
    
@@ -636,7 +636,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
    switch (type) {
       case lBoolT:
          {
-            bool b;
+            lBool b;
             result = get_bool(env, object_class, obj, property_name, &b, alpp);
             if (result == JGDI_SUCCESS )  {
                lSetPosBool(ep, pos, b);
@@ -848,7 +848,7 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
    switch (type) {
       case lBoolT:
          {
-            bool b = lGetPosBool(ep, pos);
+            lBool b = lGetPosBool(ep, pos);
             result = set_bool(env, target_class, target, property_name, b, alpp);
             break;
          }
@@ -1245,7 +1245,6 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    int key_field_type;
    jint value_field_name;
    int value_field_pos;
-   int value_field_type=0;
    jclass elem_class;
    const char* elem_class_name = NULL;
    
@@ -1321,7 +1320,6 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
       DEXIT;
       return JGDI_ILLEGAL_STATE;
    }
-   value_field_type = lGetPosType(descr, value_field_pos);
    
    if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp)) != JGDI_SUCCESS) {
       DEXIT;
@@ -1533,7 +1531,6 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
       return ret;
    } else {
       int value_field_pos;
-      int value_field_type;
       int key_field_name_pos;
       lDescr    *elem_descr = NULL;
 
@@ -1550,7 +1547,6 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
          return JGDI_ERROR;
       }
       
-      value_field_type = lGetPosType(descr, value_field_pos);
       
       key_field_name_pos = lGetPosInDescr(descr, key_field_name);
       if (key_field_name_pos < 0) {
@@ -1712,7 +1708,7 @@ static jgdi_result_t create_object_from_elem(JNIEnv *env, lListElem *ep, jobject
    switch(cullType) {
          case lBoolT:
             {
-               bool value = lGetPosBool(ep, pos);
+               lBool value = lGetPosBool(ep, pos);
                if ((ret=Boolean_init(env, value_obj, (jboolean)value, alpp)) != JGDI_SUCCESS) {
                   DEXIT;
                   return ret;
@@ -2090,7 +2086,7 @@ jgdi_result_t get_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
    }
 
    
-   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp) != JGDI_SUCCESS)) {
+   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp)) != JGDI_SUCCESS) {
       DEXIT;
       return ret;
    }
@@ -2259,7 +2255,7 @@ static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jo
    }
 
    
-   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp) != JGDI_SUCCESS)) {
+   if ((ret=PropertyDescriptor_hasCullWrapper(env, property_descr, &has_cull_wrapper, alpp)) != JGDI_SUCCESS) {
       DEXIT;
       return ret;
    }
@@ -2600,7 +2596,7 @@ jgdi_result_t get_long(JNIEnv *env, jclass bean_class, jobject obj, const char* 
       return JGDI_ERROR;
    }
 
-   *ret = jl;
+   *ret = (lLong)jl;
 
    DEXIT;
    return JGDI_SUCCESS;
@@ -2630,7 +2626,7 @@ jgdi_result_t set_long( JNIEnv *env, jclass bean_class, jobject obj, const char*
 }
 
 
-jgdi_result_t get_bool(JNIEnv *env, jclass bean_class, jobject obj, const char* property_name, bool *retb, lList **alpp) {
+jgdi_result_t get_bool(JNIEnv *env, jclass bean_class, jobject obj, const char* property_name, lBool *retb, lList **alpp) {
    char buf[1024];
    jmethodID mid = NULL;
    jboolean  jb = 0;
@@ -2653,13 +2649,13 @@ jgdi_result_t get_bool(JNIEnv *env, jclass bean_class, jobject obj, const char* 
 
    jgdi_log_printf(env, JGDI_LOGGER, FINER, "property %s =", property_name, *retb);
 
-   *retb = jb;
+   *retb = (lBool)jb;
 
    DEXIT;
    return JGDI_SUCCESS;
 }
 
-jgdi_result_t set_bool( JNIEnv *env, jclass bean_class, jobject obj, const char* property_name, bool value, lList **alpp) {
+jgdi_result_t set_bool( JNIEnv *env, jclass bean_class, jobject obj, const char* property_name, lBool value, lList **alpp) {
    char buf[1024];
    jmethodID mid = NULL;
    
@@ -2942,7 +2938,7 @@ void throw_error_from_answer_list(JNIEnv *env, jgdi_result_t result, lList* alp)
 void throw_error_from_handler(JNIEnv *env, sge_error_class_t *eh) {
    sge_error_iterator_class_t *iter = NULL;
    dstring ds = DSTRING_INIT;
-   bool first = TRUE;
+   bool first = true;
 
    DENTER( BASIS_LAYER, "throw_error_from_handler" );
    
@@ -2950,7 +2946,7 @@ void throw_error_from_handler(JNIEnv *env, sge_error_class_t *eh) {
 
    while (iter && iter->next(iter)) {
       if (first) {
-         first = FALSE;
+         first = false;
       } else {   
          sge_dstring_append(&ds, "\n");
       }   
@@ -3262,7 +3258,7 @@ static jgdi_result_t get_descriptor_for_property(JNIEnv *env, jobject property_d
 
    jstring   cull_type_name_obj;
    const char* cull_type_name;
-   int  ret = JGDI_SUCCESS;
+   jgdi_result_t  ret = JGDI_SUCCESS;
 
    DENTER( BASIS_LAYER, "get_descriptor_for_property" );
 
@@ -3290,7 +3286,7 @@ static jgdi_result_t get_list_descriptor_for_property(JNIEnv *env, jobject prope
 
    jstring   cull_type_name_obj;
    const char* cull_type_name;
-   int  ret = JGDI_SUCCESS;
+   jgdi_result_t  ret = JGDI_SUCCESS;
 
    DENTER( BASIS_LAYER, "get_descriptor_for_property" );
 
@@ -3406,7 +3402,7 @@ static jgdi_result_t string_list_to_list_elem(JNIEnv *env, jobject list, lList *
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-int build_filter(JNIEnv *env, jobject filter, lCondition **where, lList **alpp) {
+jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lList **alpp) {
    
    jclass pk_filter_class = NULL;
    jclass filter_class = NULL;
@@ -3719,7 +3715,8 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    
    
    if (filter != NULL) { 
-     if ((ret=build_filter(env, filter, &where, &alp)) != JGDI_SUCCESS) {
+     ret=build_filter(env, filter, &where, &alp);
+     if (ret != JGDI_SUCCESS) {
         goto error;
      }
    }
@@ -3798,7 +3795,7 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
    static lEnumeration *what  = NULL;
    lListElem *ep = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
    DENTER(JGDI_LAYER, "jgdi_add");
@@ -3870,7 +3867,7 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
    static lEnumeration *what  = NULL;
    lListElem *ep = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
    DENTER( TOP_LAYER, "jgdi_delete" );
@@ -3931,7 +3928,7 @@ void jgdi_update(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname,
    static lEnumeration *what  = NULL;
    lListElem *ep = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-   int ret = JGDI_SUCCESS;
+   jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
    DENTER( TOP_LAYER, "jgdi_update" );

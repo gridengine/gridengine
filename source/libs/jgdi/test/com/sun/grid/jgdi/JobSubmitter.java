@@ -94,7 +94,7 @@ public class JobSubmitter {
             "SGE_QMASTER_PORT=" + cluster.getQmasterPort(),
             "SGE_EXECD_PORT=" + cluster.getExecdPort(),
             "LD_LIBRARY_PATH=" + cluster.getSgeRoot() + File.separatorChar + "lib"
-                    + arch
+                    + File.separatorChar + arch
         };
 
        if(logger.isLoggable(Level.INFO)) {

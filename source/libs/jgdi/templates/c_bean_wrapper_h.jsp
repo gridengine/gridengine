@@ -60,7 +60,7 @@ jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp);
       String constructorName = (String)iter.next();
       java.lang.reflect.Constructor constructor = ch.getConstructor(constructorName);
 %>
-int <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
+jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
    
       Class [] parameters = constructor.getParameterTypes();
       for(int i = 0; i < parameters.length; i++) {
@@ -85,7 +85,7 @@ int <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
   
     
 %>
-int <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp);
+jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp);
 <%    
  } // end of while
   
@@ -99,7 +99,7 @@ int <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getTy
       java.lang.reflect.Method method = ch.getStaticMethod(methodName);
       
 %>
-int <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
+jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
    
       Class [] parameters = method.getParameterTypes();      
       for(int i = 0; i < parameters.length; i++) {
@@ -130,7 +130,7 @@ int <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
       java.lang.reflect.Method method = ch.getMethod(methodName);
       
 %>
-int <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
+jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
    
       Class [] parameters = method.getParameterTypes();
       for(int i = 0; i < parameters.length; i++) {

@@ -1,3 +1,6 @@
+RH-2006-11-13-0: Bugfix:    Broken compile of jgdi on denethor
+                 Review:    AA
+
 JG-2006-11-13-0: Bugfix:    Fixed messages file msg_utilbin.h.
                  Review:    AA 
 

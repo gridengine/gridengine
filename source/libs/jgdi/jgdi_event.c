@@ -132,7 +132,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       goto error;
    }
 
-   evc = sge_evc_class_create(sge_gdi_ctx, reg_id, &alp); 
+   evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp); 
    if (!evc) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
       DEXIT;
@@ -209,7 +209,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_register(J
       return;
    }
    
-   if( !sge_evc->ec_register(sge_evc, FALSE, &alp) ) {
+   if( !sge_evc->ec_register(sge_evc, false, &alp) ) {
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
@@ -240,7 +240,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    lList *alp = NULL;
    sge_evc_class_t *sge_evc = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
-   ev_registration_id id = 0;
+   ev_registration_id id = EV_ID_ANY;
    rmon_ctx_t rmon_ctx;
    
    DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister");
@@ -400,7 +400,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
       return;
    }
 
-   sge_evc->ec_get(sge_evc, &elist, FALSE);
+   sge_evc->ec_get(sge_evc, &elist, false);
 
 
    for_each(ev, elist) {

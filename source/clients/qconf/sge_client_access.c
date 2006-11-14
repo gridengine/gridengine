@@ -43,7 +43,12 @@
 
 #include "msg_qconf.h"
 
-#define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
+static void INIT_ALPP(lList **alpp)
+{
+   if (alpp != NULL && *alpp != NULL) {
+      *alpp = lCreateList("answers", AN_Type);
+   }
+}
 
 static void report_and_free_answers(lList **alpp, lList *new_answers);
 

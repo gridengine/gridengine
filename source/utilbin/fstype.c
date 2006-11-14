@@ -61,10 +61,8 @@ int main(int argc, char *argv[]) {
    if (argc < 2) {
       printf("Usage: fstype <directory>\n");
       return 1;
-   }
-   else
-   {  
-#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
+   } else {  
+#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || (defined(NETBSD) && !defined(ST_RDONLY))
    struct statfs buf;
    ret = statfs(argv[1], &buf);
 #elif defined(INTERIX)

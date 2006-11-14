@@ -1,3 +1,10 @@
+JG-2006-11-14-0: Enhancem.: NetBSD port (integrated patches from NetBSD pkgsrc).
+                            Added some files (qmake, qtcsh) that were not 
+                            checked in for the sparc linux port.
+                            Fixed broken build of compile and sgepasswd with
+                            current gcc (4.1.2).
+                 Review:    RD, AA
+
 JG-2006-11-08-0: Bugfix:    Reconnect of scheduler to a restarted qmaster took
                             too long (2 minutes), caused by AH-2006-10-27-0.
                  Review:    AH

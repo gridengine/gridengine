@@ -962,7 +962,7 @@ static bool nfs_mounted(const char *path)
 {
    bool ret=true;
 
-#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD)
+#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || (defined(NETBSD) && !defined(ST_RDONLY))
    struct statfs buf;
    statfs(path, &buf);
 #elif defined(INTERIX)

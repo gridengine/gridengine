@@ -223,7 +223,7 @@ int sge_qmaster_thread_init(bool switch_to_admin_user)
 
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, uti_state_get_qualified_hostname()));
   
-#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64)
+#if defined(LINUX)
    uidgid_mt_init();
 #endif
 

@@ -41,7 +41,6 @@
 #include "sge_log.h"
 #include "sge_mtutil.h"
 #include "sge_prog.h"
-#include "setup.h"
 #include "setup_qmaster.h"
 #include "sge_profiling.h"
 #include "msg_common.h"
@@ -105,7 +104,7 @@ static void       timed_event_once_init(void);
 static void*      timed_event_thread(void*);
 static void       check_time(time_t);
 static te_event_t event_from_list_elem(lListElem*);
-static void       scan_table_and_deliver(void *context, te_event_t, monitoring_t *monitor);
+static void       scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t, monitoring_t *monitor);
 static bool       should_exit(void);
 
 
@@ -899,18 +898,12 @@ static void* timed_event_thread(void* anArg)
    time_t now;
    time_t next_prof_output = 0;
    monitoring_t monitor;
-#ifdef TEST_QMASTER_GDI2
-   void *context = NULL;
-#endif   
+   sge_gdi_ctx_class_t *ctx = NULL;
 
    DENTER(EVENT_LAYER, "timed_event_thread");
 
    sge_monitor_init(&monitor, (char *) anArg, TET_EXT, TET_WARNING, TET_ERROR);
-#ifdef TEST_QMASTER_GDI2   
-   sge_qmaster_thread_init(&context, true);
-#else   
-   sge_qmaster_thread_init(NULL, true);
-#endif   
+   sge_qmaster_thread_init(&ctx, true);
 
    /* register at profiling module */
    set_thread_name(pthread_self(),"TEvent Thread");
@@ -963,11 +956,7 @@ static void* timed_event_thread(void* anArg)
 
       sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
         
-#ifdef TEST_QMASTER_GDI2        
-      scan_table_and_deliver(context, te, &monitor);
-#else
-      scan_table_and_deliver(NULL, te, &monitor);
-#endif
+      scan_table_and_deliver(ctx, te, &monitor);
       te_free_event(&te);
 
       sge_monitor_output(&monitor);
@@ -1103,7 +1092,7 @@ static te_event_t event_from_list_elem(lListElem* aListElem)
 *     MT-NOTE: Otherwise a deadlock may occur due to recursive mutex locking.
 *
 *******************************************************************************/
-static void scan_table_and_deliver(void *context, te_event_t anEvent, monitoring_t *monitor)
+static void scan_table_and_deliver(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    int i = 0;
    te_handler_t handler = NULL;
@@ -1127,7 +1116,7 @@ static void scan_table_and_deliver(void *context, te_event_t anEvent, monitoring
    sge_mutex_unlock("handler_table_mutex", SGE_FUNC, __LINE__, &Handler_Tbl.mutex);
 
    if (handler != NULL) {
-      handler(context, anEvent, monitor);
+      handler(ctx, anEvent, monitor);
    } else {
       WARNING((SGE_EVENT, MSG_SYSTEM_RECEIVEDUNKNOWNEVENT_I, anEvent->type ));
    }

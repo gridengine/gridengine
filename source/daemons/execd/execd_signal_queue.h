@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_signal_queue(void *context, 
+int execd_signal_queue(sge_gdi_ctx_class_t *ctx, 
                        struct dispatch_entry *de, 
                        sge_pack_buffer *pb, 
                        sge_pack_buffer *apb, 

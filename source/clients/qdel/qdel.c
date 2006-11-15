@@ -44,7 +44,6 @@
 #include "sig_handlers.h"
 #include "parse.h"
 #include "sge_answer.h"
-#include "gdi_checkpermissions.h"
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_str.h"
@@ -56,10 +55,7 @@
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
 #include "sge_profiling.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 
 static bool sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
@@ -81,10 +77,7 @@ int main(int argc, char **argv) {
    unsigned long status = 0;
    bool have_master_privileges;
    cl_com_handle_t* handle = NULL;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
-
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
@@ -92,18 +85,10 @@ int main(int argc, char **argv) {
 
    log_state_set_log_gui(1);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QDEL, &alp) != AE_OK) {
       answer_list_output(&alp);
       goto error_exit;
    }
-#else
-   sge_gdi_param(SET_MEWHO, QDEL, NULL);
-   if (sge_gdi_setup(prognames[QDEL], &alp) != AE_OK) {
-      answer_list_output(&alp);
-      goto error_exit;
-   }
-#endif
 
    if (!sge_parse_cmdline_qdel(++argv, environ, &pcmdline, &alp)) {
       /*
@@ -160,11 +145,7 @@ int main(int argc, char **argv) {
    /* Has the user the permission to use the the '-f' (forced) flag */
    have_master_privileges = false;
    if (force == 1) {
-#ifdef TEST_GDI2   
       have_master_privileges = sge_gdi2_check_permission(ctx, &alp, MANAGER_CHECK);
-#else
-      have_master_privileges = sge_gdi_check_permission(&alp, MANAGER_CHECK);
-#endif      
       lFreeList(&alp);
    }
    /* delete the job */
@@ -237,11 +218,7 @@ int main(int argc, char **argv) {
                   }   
                }
             }
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
-#endif            
 
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
@@ -293,13 +270,8 @@ int main(int argc, char **argv) {
    lFreeList(&jlp);
    lFreeList(&ref_list);
    sge_prof_cleanup();
-#ifdef TEST_GDI2
    sge_gdi2_shutdown((void**)&ctx);
    SGE_EXIT((void**)&ctx, 0);
-#else
-   sge_gdi_shutdown();
-   SGE_EXIT(NULL, 0);
-#endif   
    return 0;
 
 error_exit:
@@ -307,13 +279,8 @@ error_exit:
    lFreeList(&jlp);
    lFreeList(&ref_list);
    sge_prof_cleanup();
-#ifdef TEST_GDI2
    sge_gdi2_shutdown((void**)&ctx);
    SGE_EXIT((void**)&ctx, 1);
-#else
-   sge_gdi_shutdown();
-   SGE_EXIT(NULL, 1); 
-#endif   
    DEXIT;
    return 1;
 }

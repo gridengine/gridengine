@@ -46,9 +46,7 @@
 #include "uti/sge_uidgid.h"
 
 #include "sge.h"
-#include "sge_any_request.h"
 #include "sge_all_listsL.h"
-#include "setup_path.h"
 #include "sge_gdi.h"
 #include "sge_sched.h"
 #include "commlib.h"
@@ -70,16 +68,13 @@
 #include "sge_centry.h"
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
+#include "sge_profiling.h"
+#include "gdi/sge_gdi_ctx.h"
+
 
 #include "msg_common.h"
 #include "msg_history.h"
 #include "msg_clients_common.h"
-
-#include "sge_profiling.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 typedef struct {
@@ -98,7 +93,7 @@ static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
 static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data );
 static void showjob(sge_rusage_type *dusage);
-static bool get_qacct_lists(void *context, lList **alpp,
+static bool get_qacct_lists(sge_gdi_ctx_class_t *ctx, lList **alpp,
                             lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
 static int sge_read_rusage(FILE *fp, sge_rusage_type *d);
@@ -149,12 +144,7 @@ char **argv
    u_long32 job_number = 0;
    stringT job_name;
    int jobfound=0;
-#ifndef TEST_GDI2    
-   int last_prepare_enroll_error = CL_RETVAL_OK;
-#endif   
-
    time_t begin_time = -1, end_time = -1;
-   
    u_long32 days;
    sge_qacct_columns column_sizes;
    int groupflag=0;
@@ -191,10 +181,7 @@ char **argv
    const char *acct_file = NULL; 
    lList *alp = NULL;
    bool ret = true;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
-
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
@@ -205,19 +192,10 @@ char **argv
 
    log_state_set_log_gui(1);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QACCT, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
-
-#else
-   sge_gdi_param(SET_MEWHO, QACCT, NULL);
-   if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
-      answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
-   }
-#endif   
 
    memset(owner, 0, sizeof(owner));
    memset(project, 0, sizeof(project));
@@ -306,11 +284,7 @@ char **argv
                hostflag = 1;
             } else {
                int ret;
-#ifdef TEST_GDI2
                ctx->prepare_enroll(ctx);
-#else
-               prepare_enroll("qacct", &last_prepare_enroll_error);
-#endif               
                ret = getuniquehostname(argv[++ii], host, 0);
                if (ret != CL_RETVAL_OK) {
                    /*
@@ -543,11 +517,7 @@ char **argv
    ** mounted directory.
    */
    if (!acctfile[0]) {
-#ifdef TEST_GDI2
       acct_file = ctx->get_acct_file(ctx);
-#else
-      acct_file = path_state_get_acct_file();
-#endif      
       DPRINTF(("acct_file: %s\n", (acct_file ? acct_file : "(NULL)")));
       strcpy(acctfile, acct_file);
      
@@ -650,33 +620,17 @@ char **argv
          }
          /* lDumpList(stdout, complex_options, 0); */
          if (!is_path_setup) {
-#ifdef TEST_GDI2         
             ctx->prepare_enroll(ctx);
             ctx->get_master(ctx, true);
             if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
                ERROR((SGE_EVENT, "qmaster is not alive"));
                SGE_EXIT((void **)&ctx, 1);
             }
-#else
-            prepare_enroll(prognames[QACCT], &last_prepare_enroll_error);
-            if (!sge_get_master(true)) {
-               SGE_EXIT(NULL, 1);
-            }
-            DPRINTF(("checking if qmaster is alive ...\n"));
-            if (check_isalive(sge_get_master(false)) != CL_RETVAL_OK) {
-               ERROR((SGE_EVENT, "qmaster is not alive"));
-               SGE_EXIT(NULL, 1);
-            }
-#endif            
             sge_setup_sig_handlers(QACCT);
             is_path_setup = 1;
          }
          if (queueref_list && has_domain){ 
-#ifdef TEST_GDI2
             ret = get_qacct_lists(ctx, &alp, NULL, &queue_list, NULL, &hgrp_list);
-#else
-            ret = get_qacct_lists(NULL, &alp, NULL, &queue_list, NULL, &hgrp_list);
-#endif            
             if (ret == false) {
                answer_list_output(&alp);
                SGE_EXIT(NULL, 1);
@@ -690,11 +644,7 @@ char **argv
             }
          }  
          if (complexflag) {
-#ifdef TEST_GDI2
             ret = get_qacct_lists(ctx, &alp, &centry_list, &queue_list, &exechost_list, NULL);
-#else
-            ret = get_qacct_lists(NULL, &alp, &centry_list, &queue_list, &exechost_list, NULL);
-#endif            
             if (ret == false) {
                answer_list_output(&alp);
                SGE_EXIT(NULL, 1);
@@ -1593,7 +1543,7 @@ sge_rusage_type *dusage
 ** NAME
 **   get_qacct_lists
 ** PARAMETER
-**   context     - communication context
+**   ctx         - communication context
 **   alpp        - list pointer-pointer answer list
 **   ppcentries  - list pointer-pointer to be set to the complex list, CX_Type, can be NULL
 **   ppqueues    - list pointer-pointer to be set to the queues list, QU_Type, has to be set
@@ -1614,7 +1564,7 @@ sge_rusage_type *dusage
 **   problem: exiting is against the philosophy, restricts usage to clients
 */
 static bool get_qacct_lists(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lList **ppcentries,
 lList **ppqueues,
@@ -1626,9 +1576,6 @@ lList **hgrp_l
    lList *mal = NULL;
    int ce_id = 0, eh_id = 0, q_id = 0, hgrp_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif   
 
    DENTER(TOP_LAYER, "get_qacct_lists");
 
@@ -1637,13 +1584,8 @@ lList **hgrp_l
    */
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
-#ifdef TEST_GDI2
       ce_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
                               NULL, NULL, what, NULL, &state, true);
-#else
-      ce_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
-                              NULL, NULL, what, NULL, &state, true);
-#endif                              
       lFreeWhat(&what);
 
       if (answer_list_has_error(alpp)) {
@@ -1656,13 +1598,8 @@ lList **hgrp_l
    if (ppexechosts) {
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2      
       eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                               NULL, where, what, NULL, &state, true);
-#else
-      eh_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                              NULL, where, what, NULL, &state, true);
-#endif                              
       lFreeWhat(&what);
       lFreeWhere(&where);
 
@@ -1676,13 +1613,8 @@ lList **hgrp_l
    */
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
-#ifdef TEST_GDI2
       hgrp_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, NULL, &state, true);
-#else
-      hgrp_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                           NULL, NULL, what, NULL, &state, true);
-#endif                           
       lFreeWhat(&what);
 
       if (answer_list_has_error(alpp)) {
@@ -1693,13 +1625,8 @@ lList **hgrp_l
    ** GET SGE_QUEUE_LIST 
    */
    what = lWhat("%T(ALL)", QU_Type);
-#ifdef TEST_GDI2
    q_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &mal, &state, true);
-#else
-   q_id = sge_gdi_multi(alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                           NULL, NULL, what, &mal, &state, true);
-#endif                           
    lFreeWhat(&what);
 
    if (answer_list_has_error(alpp)) {

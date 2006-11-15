@@ -38,6 +38,7 @@
 #include "sge_object.h"
 
 #include "sge_eventL.h"
+#include "evc/sge_event_client2.h"
 
 /****** Eventmirror/--Eventmirror ***************************************
 *
@@ -140,7 +141,7 @@ typedef enum {
    SGE_EMA_IGNORE = 2   /* no further processing for this event is done */
 } sge_callback_result;
 
-typedef sge_callback_result (*sge_mirror_callback)(void *evc_context,
+typedef sge_callback_result (*sge_mirror_callback)(sge_evc_class_t *evc,
                                                    object_description *object_base, 
                                                    sge_object_type type, 
                                                    sge_event_action action, 
@@ -166,31 +167,29 @@ typedef enum {
 
 /* Initialization - Shutdown */
 sge_mirror_error 
-sge_mirror_initialize(void *evc_context, ev_registration_id id, const char *name, bool use_global_data);
+sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *name, bool use_global_data);
 
 sge_mirror_error 
-sge_mirror_initialize_local(void *evc_context, ev_registration_id id, const char *name, 
+sge_mirror_initialize_local(sge_evc_class_t *evc, ev_registration_id id, const char *name, 
                             bool use_global_data,event_client_update_func_t update_func);
 
 
-sge_mirror_error sge_mirror_shutdown(void *evc_context, lListElem **event_client);
-sge_mirror_error sge_mirror_shutdown_local(void *evc_context, lListElem **event_client);
+sge_mirror_error sge_mirror_shutdown(sge_evc_class_t *evc);
+sge_mirror_error sge_mirror_shutdown_local(sge_evc_class_t *evc);
 
 /* Subscription */
-sge_mirror_error sge_mirror_subscribe(void *evc_context, 
-                                      lListElem *event_client,
+sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc, 
                                       sge_object_type type, 
                                       sge_mirror_callback callback_before, 
                                       sge_mirror_callback callback_after, 
                                       void *clientdata,
                                       const lCondition *where, const lEnumeration *what);
 
-sge_mirror_error sge_mirror_unsubscribe(void *evc_context,
-                                        lListElem *event_client,
+sge_mirror_error sge_mirror_unsubscribe(sge_evc_class_t *evc,
                                         sge_object_type type);
 
 /* Event Processing */
-sge_mirror_error sge_mirror_process_events(void *evc_context, lListElem *event_client);
+sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc);
 
 sge_mirror_error 
 sge_mirror_update_master_list(lList **list, const lDescr *list_descr,

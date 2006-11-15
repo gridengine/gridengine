@@ -42,12 +42,9 @@
 #include "sge_prog.h"
 #include "sge_bootstrap.h"
 #include "sge_gdi.h"
-#include "gdi_tsm.h"
-#include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
 #include "version.h"
 #include "cl_errors.h"
-#include "setup.h"
 #include "sge_log.h"
 #include "sge_error_class.h"
 #include "sge_qinstance_state.h"
@@ -56,6 +53,7 @@
 #include "jgdi_wrapper.h"
 #include "jgdi_factory.h"
 #include "sge_calendar.h"
+#include "sge_cqueue.h"
 #include "jgdi_logging.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
@@ -90,8 +88,8 @@ typedef struct object_mapping_str object_mapping_t;
 
 struct object_mapping_str {
    lDescr* descr;
-   jgdi_result_t (*object_to_elem)(object_mapping_t *thiz, JNIEnv *env, jobject obj, lListElem *elem, lList **alpp);
-   jgdi_result_t (*elem_to_object)(object_mapping_t *thiz, JNIEnv *env, lListElem *elem, jobject* obj, lList **alpp);
+   jgdi_result_t(*object_to_elem)(object_mapping_t *thiz, JNIEnv *env, jobject obj, lListElem *elem, lList **alpp);
+   jgdi_result_t(*elem_to_object)(object_mapping_t *thiz, JNIEnv *env, lListElem *elem, jobject* obj, lList **alpp);
 } ;
 
 static jgdi_result_t calendar_to_elem(object_mapping_t *thiz, JNIEnv *env, jobject obj, lListElem *elem, lList **alpp);
@@ -102,20 +100,19 @@ static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jo
 static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jobject property_descr, lObject *cob, lList **alpp);
 
 static object_mapping_t OBJECT_MAPPINGS [] = {
-   { &(TM_Type[0]), 
-     calendar_to_elem, 
+   { &(TM_Type[0]),
+     calendar_to_elem,
      elem_to_calendar },
-   { NULL, NULL, NULL }   
+     { NULL, NULL, NULL }
 };
 
-
+static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr);
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDI
  * Method:    close
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jobject jgdi, jint ctx_index)
-{
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jobject jgdi, jint ctx_index) {
    sge_gdi_ctx_class_t *ctx = NULL;
 
    DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_close");
@@ -127,7 +124,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jo
       sge_gdi_ctx_class_destroy(&ctx);
    } else {
       THROW_ERROR((env, JGDI_ERROR, "ctx is NULL"));
-   }   
+   }
 
    DEXIT;
 }
@@ -137,9 +134,8 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_close(JNIEnv *env, jo
  * Method:    initNative
  * Signature: ()V
  */
-JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative
-  (JNIEnv *env, jobject jgdi, jstring url_obj) {
-
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative(JNIEnv *env, jobject jgdi, jstring url_obj) {
+   
    char* argv[] = { "jgdi" };
    int argc = 1;
    jint ret = -1;
@@ -210,7 +206,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative
          ctx = sge_gdi_ctx_class_create_from_bootstrap(JGDI_PROGNAME,
                                                        sge_dstring_get_string(&component_name),
                                                        url, username, &alp);
-         sge_dstring_free(&component_name);                                                       
+         sge_dstring_free(&component_name);
          if(ctx == NULL) {
             pthread_mutex_unlock(&sge_gdi_ctx_mutex);
             throw_error_from_answer_list(env, JGDI_ERROR, alp);
@@ -223,7 +219,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative
             ret = 0;
             break;
          }
-      }   
+      }
       i++;
    }
    
@@ -240,17 +236,17 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative
    }
 
 error:
-      
+
    if (url != NULL) {
       (*env)->ReleaseStringUTFChars(env, url_obj, url );
    }
-   if (username != NULL) { 
+   if (username != NULL) {
       (*env)->ReleaseStringUTFChars(env, username_obj, username );
    }
-   if (private_key != NULL) { 
+   if (private_key != NULL) {
       (*env)->ReleaseStringUTFChars(env, private_key_obj, private_key );
    }
-   if (certificate != NULL) { 
+   if (certificate != NULL) {
       (*env)->ReleaseStringUTFChars(env, certificate_obj, certificate );
    }
    
@@ -276,8 +272,7 @@ error:
  * Method:    getEnv
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDI_getEnv
-  (JNIEnv *env, jobject jgdi, jstring name) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDI_getEnv(JNIEnv *env, jobject jgdi, jstring name) {
 
    
    const char * env_name = (*env)->GetStringUTFChars(env, name, 0);
@@ -332,8 +327,7 @@ jgdi_result_t getGDIContext(JNIEnv *env, jobject jgdi, sge_gdi_ctx_class_t **ctx
  * Method:    getActQMaster
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster
-         (JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster(JNIEnv *env, jobject jgdi) {
 
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -354,9 +348,9 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster
       THROW_ERROR((env, JGDI_ILLEGAL_STATE, "bootstrap state not found"));
       DEXIT;
       return NULL;
-   }   
-      
-   master = ctx->get_master(ctx, false); 
+   }
+
+   master = ctx->get_master(ctx, false);
    if (master != NULL) {
       DEXIT;
       return (*env)->NewStringUTF(env, master);
@@ -371,8 +365,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getActQMaster
  * Method:    getAdminUser
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser
-         (JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser(JNIEnv *env, jobject jgdi) {
    
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -393,9 +386,9 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser
       THROW_ERROR((env, JGDI_ILLEGAL_STATE, "bootstrap state not found"));
       DEXIT;
       return NULL;
-   }   
-      
-   admin_user = bs->get_admin_user(bs); 
+   }
+
+   admin_user = bs->get_admin_user(bs);
    if (admin_user != NULL) {
       DEXIT;
       return (*env)->NewStringUTF(env, admin_user);
@@ -405,8 +398,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getAdminUser
 }
 
 
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot
-         (JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot(JNIEnv *env, jobject jgdi) {
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    const char *sge_root = NULL;
@@ -420,7 +412,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot
       DEXIT;
       return NULL;
    }
-   sge_root = ctx->get_sge_root(ctx); 
+   sge_root = ctx->get_sge_root(ctx);
    if (sge_root != NULL) {
       DEXIT;
       return (*env)->NewStringUTF(env, sge_root);
@@ -429,8 +421,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getNativeSGERoot
    return NULL;
 }
 
-JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSGECell
-         (JNIEnv *env, jobject jgdi) {
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSGECell(JNIEnv *env, jobject jgdi) {
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    const char *sge_cell = NULL;
@@ -444,7 +435,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getSGECell
       DEXIT;
       return NULL;
    }
-   sge_cell = ctx->get_cell_root(ctx); 
+   sge_cell = ctx->get_cell_root(ctx);
    if (sge_cell != NULL) {
       DEXIT;
       return (*env)->NewStringUTF(env, sge_cell);
@@ -497,7 +488,7 @@ jgdi_result_t listelem_to_obj(JNIEnv *env, lListElem *ep, jobject *obj, const lD
         return ret;
      }
      
-     set_object_attribute(env, ep, descr, *obj, prop_descr, alpp); 
+     set_object_attribute(env, ep, descr, *obj, prop_descr, alpp);
    }
    DEXIT;
    return ret;
@@ -524,7 +515,7 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
       ------------------------------------------------------------------------*/
    if(descr == Manager_Type || descr == Operator_Type ) {
       const char* name = NULL;
-      *elem = lCreateElem(descr);      
+      *elem = lCreateElem(descr);
       if (!(*elem)) {
          answer_list_add(alpp, "lCreateElem failed", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = JGDI_ERROR;
@@ -538,7 +529,7 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
    }
    
    
-   if ((ret = Object_getClass(env,obj, &clazz, alpp)) != JGDI_SUCCESS) {
+   if ((ret = Object_getClass(env, obj, &clazz, alpp)) != JGDI_SUCCESS) {
       goto error;
    }
 
@@ -570,9 +561,9 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
    }
 #if 0 
 {
-   lInit(nmv); 
+   lInit(nmv);
    lWriteElemTo(*elem, stdout);
-}   
+}
 #endif
 
 error:
@@ -602,7 +593,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
    DENTER( BASIS_LAYER, "set_elem_attribute" );
    
    object_class = (*env)->GetObjectClass(env, obj);
-   if(test_jni_error(env,"set_elem_attribute: class of bean object not found", alpp)) {
+   if(test_jni_error(env, "set_elem_attribute: class of bean object not found", alpp)) {
       DEXIT;
       return JGDI_ERROR;
    }
@@ -611,7 +602,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
       DEXIT;
       return JGDI_ERROR;
    }
-   if (test_jni_error(env,"set_object_attribute: GetStringUTFChars failed", alpp)) {
+   if (test_jni_error(env, "set_object_attribute: GetStringUTFChars failed", alpp)) {
       DEXIT;
       return JGDI_ERROR;
    }
@@ -625,13 +616,13 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
    
    pos = lGetPosInDescr(descr, elem_field_name);
    if (pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "field %s not found in descriptor", lNm2Str(elem_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
    }
    
-   type = lGetPosType(descr,pos);
+   type = lGetPosType(descr, pos);
    
    switch (type) {
       case lBoolT:
@@ -780,11 +771,11 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
    }
    
    if (property_name) {
-      (*env)->ReleaseStringUTFChars(env, property_name_str, property_name);   
+      (*env)->ReleaseStringUTFChars(env, property_name_str, property_name);
    }
    
    if (unknown_type) {
-     answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+     answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                              "unknown cull type %d found", type);
      DEXIT;
      return JGDI_ERROR;
@@ -835,7 +826,7 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
    
    pos = lGetPosInDescr(descr, elem_field_name);
    if (pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "field %s not found in descriptor", lNm2Str(elem_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -993,11 +984,11 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
    }
    
    if (property_name) {
-      (*env)->ReleaseStringUTFChars(env, property_name_str, property_name);   
+      (*env)->ReleaseStringUTFChars(env, property_name_str, property_name);
    }
    
    if (unknown_type) {
-     answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+     answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                              "unknown cull type %d found", type);
      DEXIT;
      return JGDI_ERROR;
@@ -1051,7 +1042,7 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
    
    key_field_pos = lGetPosInDescr(descr, key_field_name);
    if (key_field_pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "key field %s not found in descriptor", lNm2Str(key_field_pos));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -1124,7 +1115,7 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
 
       value_field_pos = lGetPosInDescr(descr, value_field_name);
       if (value_field_pos < 0) {
-         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "value field %s not found in descriptor", lNm2Str(value_field_name));
          DEXIT;
          return JGDI_ILLEGAL_STATE;
@@ -1145,7 +1136,7 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          if (content_field_name >= 0) {
             content_field_pos = lGetPosInDescr(&descr[value_field_pos], content_field_name);
             if (content_field_pos < 0) {
-               answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+               answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                        "content field %s not found in descriptor", lNm2Str(content_field_name));
                DEXIT;
                return JGDI_ILLEGAL_STATE;
@@ -1214,7 +1205,7 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
                lFreeElem(&sub_elem);
                break;
             }
-            lSetPosObject(elem, content_field_pos, sub_elem);            
+            lSetPosObject(elem, content_field_pos, sub_elem);
          } else {
             if((ret=set_value_in_elem(env, value_obj, elem, value_field_type, value_field_pos, alpp)) != JGDI_SUCCESS ) {
                break;
@@ -1224,13 +1215,13 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
    }
    
    if (ret != JGDI_SUCCESS) {
-     lFreeList(&tmp_list);
-     DEXIT;
-     return ret;
+      lFreeList(&tmp_list);
+      DEXIT;
+      return ret;
    } else {
-     *list = tmp_list;
-     DEXIT;
-     return JGDI_SUCCESS;
+      *list = tmp_list;
+      DEXIT;
+      return JGDI_SUCCESS;
    }
 }
 
@@ -1305,7 +1296,7 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    }
    key_field_pos = lGetPosInDescr(descr, key_field_name);
    if (key_field_pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "key field %s not found in descriptor", lNm2Str(key_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -1315,7 +1306,7 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    
    value_field_pos = lGetPosInDescr(descr, value_field_name);
    if (value_field_pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "value field %s not found in descriptor", lNm2Str(value_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -1425,7 +1416,7 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    {
       jstring property_name_obj = NULL;
       const char* tmp_name = NULL;
-      lInit(nmv); 
+      lInit(nmv);
       if ((ret=PropertyDescriptor_getPropertyName(env, property_descr, &property_name_obj, alpp)) != JGDI_SUCCESS) {
          DEXIT;
          return ret;
@@ -1463,7 +1454,7 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
    key_field_pos = lGetPosInDescr(descr, key_field_name);
    if (key_field_pos < 0 ) {
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                              "field %s not found in desriptor of property %s", 
+                              "field %s not found in desriptor of property %s",
                               lNm2Str(key_field_name), property_name); 
       DEXIT;
       return JGDI_ERROR;
@@ -1619,7 +1610,7 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
 
          if ((ret=Iterator_hasNext(env, value_iter, &has_next_value, alpp)) != JGDI_SUCCESS) {
             break;
-         } 
+         }
          
          if (has_next_value) {
             lListElem *elem = NULL;
@@ -1629,7 +1620,7 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
             value_list = lCreateList("", elem_descr);
             
             while (has_next_value) {
-               jobject value_obj;               
+               jobject value_obj;
                lListElem *value_elem = NULL;
                
                if ((ret=Iterator_next(env, value_iter, &value_obj, alpp)) != JGDI_SUCCESS) {
@@ -1641,7 +1632,7 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
                      if ((ret=set_value_in_elem(env, value_obj, value_elem, content_field_type, content_field_pos, alpp)) != JGDI_SUCCESS ) {
                         lFreeElem(&value_elem);
                         break;
-                     }                  
+                     }
                   } else {
                      if ((ret=obj_to_listelem(env, value_obj, &value_elem, elem_descr, alpp)) != JGDI_SUCCESS) {
                         break;
@@ -1958,7 +1949,7 @@ static jgdi_result_t set_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
    
    key_field_pos = lGetPosInDescr(descr, key_field_name);
    if (key_field_pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "key field %s not found in descriptor", lNm2Str(key_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -1968,7 +1959,7 @@ static jgdi_result_t set_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
    
    value_field_pos = lGetPosInDescr(descr, value_field_name);
    if (value_field_pos < 0) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "value field %s not found in descriptor", lNm2Str(value_field_name));
       DEXIT;
       return JGDI_ILLEGAL_STATE;
@@ -1985,7 +1976,7 @@ static jgdi_result_t set_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          DEXIT;
          return ret;
       }
-   }   
+   }
    
    for_each(ep, lp) {
       jobject value_obj = NULL;
@@ -2016,7 +2007,7 @@ static jgdi_result_t set_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          if(content_field_pos == lEndT) {
             content_field_pos = lGetPosInDescr(wrapper->descr, (jint)content_field_name);
             if (content_field_pos < 0) {
-               answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+               answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                        "content field %s not found in descriptor", lNm2Str(content_field_name));
                DEXIT;
                return JGDI_ILLEGAL_STATE;
@@ -2040,7 +2031,7 @@ static jgdi_result_t set_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          object_to_str(env, key_obj, key_str, BUFSIZ);
          object_to_str(env, value_obj, value_str, BUFSIZ);
 
-         answer_list_add_sprintf(alpp, 
+         answer_list_add_sprintf(alpp,
                              STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                              "key = %s, value = %s", key_str, value_str);
 #endif
@@ -2097,21 +2088,21 @@ jgdi_result_t get_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
       }
       content_field_pos = lGetPosInDescr(descr, content_field_name);
       if (content_field_pos < 0) {
-         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "content field %s not found in descriptor", lNm2Str(content_field_name));
          DEXIT;
          return JGDI_ILLEGAL_STATE;
       }
       content_field_type =lGetPosType(descr, content_field_pos);
       if (content_field_type == lEndT) {
-         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "type of content field of attr %s not found", lNm2Str(content_field_name));
          DEXIT;
          return JGDI_ILLEGAL_STATE;
       }
    }
    
-   tmp_list = lCreateList("",descr);
+   tmp_list = lCreateList("", descr);
    if (!tmp_list) {
       answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -2132,7 +2123,7 @@ jgdi_result_t get_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
       } else if ((ret=obj_to_listelem(env, obj, &ep, descr, alpp)) != JGDI_SUCCESS) {
          break;
       }
-      lAppendElem(tmp_list,ep);
+      lAppendElem(tmp_list, ep);
    }
    
    if (ret != JGDI_SUCCESS) {
@@ -2186,7 +2177,7 @@ jgdi_result_t set_list(JNIEnv *env, jclass bean_class, jobject bean, jobject pro
          DEXIT;
          return ret;
       }
-   }   
+   }
    
 
    for_each(ep,lp) {
@@ -2266,14 +2257,14 @@ static jgdi_result_t get_object(JNIEnv *env, jclass bean_class, jobject bean, jo
       }
       content_field_pos = lGetPosInDescr(descr, content_field_name);
       if (content_field_pos < 0) {
-         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "content field %s not found in descriptor", lNm2Str(content_field_name));
          DEXIT;
          return JGDI_ILLEGAL_STATE;
       }
       content_field_type = lGetPosType(descr, content_field_pos);
       if (content_field_type == lEndT) {
-         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+         answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  "type of content field of attr %s not found", lNm2Str(content_field_name));
          DEXIT;
          return JGDI_ILLEGAL_STATE;
@@ -2336,7 +2327,7 @@ static jgdi_result_t set_object(JNIEnv *env, jclass bean_class, jobject bean, jo
       if(content_field_pos == lEndT) {
          content_field_pos = lGetPosInDescr(descr, (jint)content_field_name);
          if (content_field_pos < 0) {
-            answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+            answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                     "content field %s not found in descriptor", lNm2Str(content_field_name));
             DEXIT;
             return JGDI_ILLEGAL_STATE;
@@ -2480,9 +2471,9 @@ jgdi_result_t get_string(JNIEnv *env, jclass bean_class, jobject obj, const char
 
    if (jstr == NULL) {
       *retstr = NULL;
-   } else {   
+   } else {
       name = (*env)->GetStringUTFChars(env, jstr, 0);
-      if (test_jni_error( env, "get_string: GetStringUTF failed", alpp)) {      
+      if (test_jni_error( env, "get_string: GetStringUTF failed", alpp)) {
          DEXIT;
          return JGDI_ERROR;
       }
@@ -2510,7 +2501,7 @@ jgdi_result_t set_string(JNIEnv *env, jclass bean_class, jobject obj, const char
    }
 
    str = (*env)->NewStringUTF(env, value);
-   if (test_jni_error( env, "set_string: NewStringUTF failed", alpp)) {      
+   if (test_jni_error( env, "set_string: NewStringUTF failed", alpp)) {
       DEXIT;
       return JGDI_ERROR;
    }
@@ -2720,7 +2711,7 @@ jmethodID get_static_methodid( JNIEnv *env, jclass cls, const char* methodName,
    jmethodID mid = NULL;
 
    DENTER( BASIS_LAYER, "get_static_methodid" );
-      
+
    mid = (*env)->GetStaticMethodID(env, cls, methodName, signature);
    
    /* error occured */
@@ -2734,7 +2725,7 @@ jmethodID get_static_methodid( JNIEnv *env, jclass cls, const char* methodName,
       class_name_str = get_class_name(env, cls, alpp);
       
       if (class_name_str != NULL) {
-          class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
+         class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
       }
       
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -2757,7 +2748,7 @@ jfieldID get_static_fieldid( JNIEnv *env, jclass cls, const char* fieldName,
    jfieldID mid = NULL;
 
    DENTER( BASIS_LAYER, "get_static_fieldid" );
-      
+
    mid = (*env)->GetStaticFieldID(env, cls, fieldName, signature);
    
    /* error occured */
@@ -2771,7 +2762,7 @@ jfieldID get_static_fieldid( JNIEnv *env, jclass cls, const char* fieldName,
       class_name_str = get_class_name(env, cls, alpp);
       
       if (class_name_str != NULL) {
-          class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
+         class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
       }
       
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -2821,7 +2812,7 @@ jmethodID get_methodid( JNIEnv *env, jclass cls, const char* methodName,
       DEXIT;
       return NULL;
    }
-      
+
    mid = (*env)->GetMethodID(env, cls, methodName, signature);
    
    /* error occured */
@@ -2835,7 +2826,7 @@ jmethodID get_methodid( JNIEnv *env, jclass cls, const char* methodName,
       class_name_str = get_class_name(env, cls, alpp);
       
       if (class_name_str != NULL) {
-          class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
+         class_name = (*env)->GetStringUTFChars(env, class_name_str, 0);
       }
       
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -2912,7 +2903,7 @@ void throw_error(JNIEnv *env, jgdi_result_t result, const char* message, ...) {
          print_exception(env, exc, &ds);
          printf("%s\n", sge_dstring_get_string(&ds));
          sge_dstring_free(&ds);
-         abort(); 
+         abort();
       }
    }
    (*env)->ThrowNew(env, new_exc_cls, buf);
@@ -2949,7 +2940,7 @@ void throw_error_from_handler(JNIEnv *env, sge_error_class_t *eh) {
          first = false;
       } else {   
          sge_dstring_append(&ds, "\n");
-      }   
+      }
       sge_dstring_append(&ds, iter->get_message(iter));
    }
    throw_error(env, JGDI_ERROR, sge_dstring_get_string(&ds));
@@ -2976,7 +2967,7 @@ jboolean test_jni_error(JNIEnv* env, const char* message, lList **alpp) {
    
    exc = (*env)->ExceptionOccurred(env);
    
-   if (exc) {      
+   if (exc) {
       DPRINTF(("An exception occured\n"));
 #if 1
       if (alpp != NULL) {
@@ -2994,7 +2985,7 @@ jboolean test_jni_error(JNIEnv* env, const char* message, lList **alpp) {
          DPRINTF(("Exception text: %s\n", sge_dstring_get_string(&buf)));
          sge_dstring_clear(&buf);
          
-         sge_dstring_append(&buf, message);      
+         sge_dstring_append(&buf, message);
          sge_dstring_append(&buf, "\n");
          print_exception(env, newExc, &buf);
          sge_dstring_append(&buf, "\n");
@@ -3003,7 +2994,7 @@ jboolean test_jni_error(JNIEnv* env, const char* message, lList **alpp) {
          
          (*env)->DeleteGlobalRef(env, newExc);
       }
-#endif      
+#endif
       DEXIT;
       return TRUE;
    } else {
@@ -3026,7 +3017,7 @@ static void exception_to_string(JNIEnv* env, jobject exc, dstring* buf) {
       (*env)->ExceptionClear(env);
       DEXIT;
       return;
-   }      
+   }
    msg_obj = (jstring)(*env)->CallObjectMethod(env, exc, to_string_mid );
    if ((*env)->ExceptionOccurred(env)) {
       sge_dstring_append(buf, "ERROR: method java.lang.Throwable.toString failed");
@@ -3041,7 +3032,7 @@ static void exception_to_string(JNIEnv* env, jobject exc, dstring* buf) {
       (*env)->ExceptionClear(env);
       DEXIT;
       return;
-   } 
+   }
    if (msg == NULL || strlen(msg) == 0) {
       sge_dstring_append(buf, "null");
    } else {
@@ -3083,7 +3074,7 @@ static void print_exception(JNIEnv* env, jobject exc, dstring* buf) {
       (*env)->ExceptionClear(env);
       DEXIT;
       return;
-   }      
+   }
    
    msg_obj = (jstring)(*env)->CallObjectMethod(env, exc, to_string_mid );
    if ((*env)->ExceptionOccurred(env)) {
@@ -3099,7 +3090,7 @@ static void print_exception(JNIEnv* env, jobject exc, dstring* buf) {
       (*env)->ExceptionClear(env);
       DEXIT;
       return;
-   } 
+   }
    if (msg == NULL || strlen(msg) == 0) {
       sge_dstring_append(buf, "null");
    } else {
@@ -3117,7 +3108,7 @@ static void print_exception(JNIEnv* env, jobject exc, dstring* buf) {
       (*env)->ExceptionClear(env);
       DEXIT;
       return;
-   }     
+   }
    
    exc = (*env)->CallObjectMethod(env, exc, get_cause_mid);
    if ((*env)->ExceptionOccurred(env)) {
@@ -3158,14 +3149,14 @@ static void print_stacktrace(JNIEnv* env, jobject exc, dstring* buf) {
       return;
    }
    
-   get_stacktrace_mid = (*env)->GetMethodID(env, throwable_class, 
+   get_stacktrace_mid = (*env)->GetMethodID(env, throwable_class,
                                           "getStackTrace", "()[Ljava/lang/StackTraceElement;");
    if (get_stacktrace_mid == NULL) {
       sge_dstring_append(buf, "\nERROR: Can't find method getStacktrace in class java.lang.StackTraceElement");
       (*env)->ExceptionClear(env);
       return;
    }
-                                             
+
    to_string_mid = (*env)->GetMethodID(env, stacktrace_element_class,
                                      "toString", "()Ljava/lang/String;");
    if (to_string_mid == NULL) {
@@ -3237,10 +3228,10 @@ void object_to_str(JNIEnv* env, jobject obj, char* buf, size_t max_len) {
       
       clazz = (*env)->GetObjectClass(env, obj);
       
-      classname_obj = get_class_name(env,clazz, &alpp);
+      classname_obj = get_class_name(env, clazz, &alpp);
       
       
-      mid = get_methodid(env, clazz, "toString", "()Ljava/lang/String;", &alpp);     
+      mid = get_methodid(env, clazz, "toString", "()Ljava/lang/String;", &alpp);
       
       obj_str_obj = (jstring)(*env)->CallObjectMethod(env, obj, mid );
       
@@ -3249,8 +3240,8 @@ void object_to_str(JNIEnv* env, jobject obj, char* buf, size_t max_len) {
       
       snprintf(buf, max_len, "%s (%s)", objStr, classname );
       
-      (*env)->ReleaseStringUTFChars(env, classname_obj, classname );      
-      (*env)->ReleaseStringUTFChars(env, obj_str_obj, objStr );      
+      (*env)->ReleaseStringUTFChars(env, classname_obj, classname );
+      (*env)->ReleaseStringUTFChars(env, obj_str_obj, objStr );
    }
 }
 
@@ -3280,7 +3271,7 @@ static jgdi_result_t get_descriptor_for_property(JNIEnv *env, jobject property_d
    
    DEXIT;
    return ret;
-}   
+}
    
 static jgdi_result_t get_list_descriptor_for_property(JNIEnv *env, jobject property_descr, lDescr **descr, lList **alpp) {
 
@@ -3308,7 +3299,7 @@ static jgdi_result_t get_list_descriptor_for_property(JNIEnv *env, jobject prope
    
    DEXIT;
    return ret;
-}   
+}
 
 
 jgdi_result_t get_string_list(JNIEnv *env, jobject obj, const char* getter, lList **lpp, lDescr* descr, int nm, lList **alpp) {
@@ -3319,7 +3310,7 @@ jgdi_result_t get_string_list(JNIEnv *env, jobject obj, const char* getter, lLis
    DENTER( BASIS_LAYER, "get_string_list" );
    
    cls = (*env)->GetObjectClass(env, obj);
-   if (test_jni_error( env, "get_string_list: class for obj not found", alpp)) {   
+   if (test_jni_error( env, "get_string_list: class for obj not found", alpp)) {
       DEXIT;
       return JGDI_ERROR;
    }
@@ -3509,7 +3500,7 @@ jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lLis
       }
       class_name =  (*env)->GetStringUTFChars(env, class_name_obj, 0);
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                              "build_filter: filer must be an instanceof %s", 
+                              "build_filter: filer must be an instanceof %s",
                               class_name);
       (*env)->ReleaseStringUTFChars(env, class_name_obj, class_name );
       DEXIT;
@@ -3534,10 +3525,10 @@ jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lLis
  * DESCRIPTION
  *
  *  This method builds a lCondition element from a object of type
- *  com.sun.grid.jgdi.filter.StringWhereClause or 
+ *  com.sun.grid.jgdi.filter.StringWhereClause or
  *  com.sun.grid.jgdi.filter.IntWhereClause
  *
- *  EXAMPLE 
+ *  EXAMPLE
  *
  *  Java:
  *  IntWhereClause wc = new IntWhereClause("JB_Type", CullConstants.JB_Name, 1);
@@ -3554,7 +3545,7 @@ jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lLis
  *  Result of build_field_filter:
  *
  *   lCondition where = lWhere("%T(%I==%s)", CQ_Type, CQ_Name, "all.q" );
- * 
+ *
  *-------------------------------------------------------------------------*/
 static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition **where, lList **alpp) {
    jstring type_obj = NULL;
@@ -3578,7 +3569,7 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
       descr = get_descr(type);
       if (descr == NULL) {
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "build_field_filter: descriptor for %s not found", 
+                                 "build_field_filter: descriptor for %s not found",
                                  type);
       }
       (*env)->ReleaseStringUTFChars(env, type_obj, type);
@@ -3624,7 +3615,7 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
       
       if (value_obj == NULL) {
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "build_filter: value of filtered primary key field %d is NULL", 
+                                 "build_filter: value of filtered primary key field %d is NULL",
                                  field_name);
          DEXIT;
          return JGDI_ERROR;
@@ -3685,7 +3676,7 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
          }
          class_name =  (*env)->GetStringUTFChars(env, class_name_obj, 0);
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "build_filter: filter for class %s not implemented", 
+                                 "build_filter: filter for class %s not implemented",
                                  class_name);
          (*env)->ReleaseStringUTFChars(env, class_name_obj, class_name );
          DEXIT;
@@ -3699,16 +3690,16 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
 void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const char *classname, int target_list, lDescr *descr) {
 
    jclass obj_class;
-    
+
    /* receive Cull Object */
    lList *lp = NULL;
    const lDescr *listdescr = NULL;
    lList *alp = NULL;
    lCondition *where = NULL;
-   static lEnumeration *what  = NULL;
+   lEnumeration *what  = NULL;
    lListElem *ep = NULL;
    jobject obj;
-   sge_gdi_ctx_class_t *ctx = NULL; 
+   sge_gdi_ctx_class_t *ctx = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    int count = 0;
    DENTER(JGDI_LAYER, "jgdi_fill");
@@ -3748,7 +3739,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    
    obj_class = (*env)->FindClass(env, classname);
    if (!obj_class) {
-      answer_list_add_sprintf(&alp, 
+      answer_list_add_sprintf(&alp,
                               STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "class %s not found",  classname);
       ret = JGDI_ERROR;
@@ -3756,7 +3747,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    }
  
    listdescr = lGetListDescr(lp);
-   for_each (ep, lp) {
+   for_each(ep, lp) {
       jboolean add_result = false;
       /* convert to Java representation */
       if ((ret = listelem_to_obj(env, ep, &obj, listdescr, obj_class, &alp)) != JGDI_SUCCESS) {
@@ -3852,7 +3843,7 @@ error:
    sge_gdi_set_thread_local_ctx(NULL);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
-      
+
    DEXIT;
 }
 
@@ -3952,7 +3943,7 @@ void jgdi_update(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname,
    lp = lCreateList("", descr);
    lAppendElem(lp, ep);
    
-   jgdi_log_printf(env, JGDI_LOGGER, FINE, 
+   jgdi_log_printf(env, JGDI_LOGGER, FINE,
                    "BEGIN --------------- jgdi_update %s -------------------------------", classname); 
    
    jgdi_log_list(env, JGDI_LOGGER, FINE, lp);
@@ -4246,7 +4237,7 @@ static void jgdi_qmod(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolea
           if (obj) {
              lListElem *idep = NULL;
              const char* name = (*env)->GetStringUTFChars(env, obj, 0);
-             idep = lAddElemStr(&ref_list, ID_str, name, ID_Type); 
+             idep = lAddElemStr(&ref_list, ID_str, name, ID_Type);
              lSetUlong(idep, ID_action, transition);
              lSetUlong(idep, ID_force, option);
              (*env)->ReleaseStringUTFChars(env, obj, name);
@@ -4254,12 +4245,12 @@ static void jgdi_qmod(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolea
       }
       
       jgdi_log_printf(env, JGDI_LOGGER, FINER,
-                      "jgdi_mod: ref_list BEGIN ----------------------------------------"); 
+                      "jgdi_mod: ref_list BEGIN ----------------------------------------");
       
       jgdi_log_list(env, JGDI_LOGGER, FINER, ref_list);
 
       jgdi_log_printf(env, JGDI_LOGGER, FINER,
-                      "jgdi_mod: ref_list END ----------------------------------------"); 
+                      "jgdi_mod: ref_list END ----------------------------------------");
       
       /* get context */
       ret = getGDIContext(env, jgdi, &ctx, &alp);
@@ -4304,7 +4295,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killAllExecds(JNIEnv 
   
    if (terminate_jobs) {
       kill_target |= JOB_KILL;
-   } 
+   }
    jgdi_kill(env, jgdi, NULL, kill_target);
 
    DEXIT;
@@ -4330,14 +4321,14 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killExecd(JNIEnv *env
          if (obj) {
             const char* hostname = (*env)->GetStringUTFChars(env, obj, 0);
             DPRINTF(("hostname: %s\n", hostname));
-            lAddElemHost(&lp, EH_name, hostname, EH_Type); 
+            lAddElemHost(&lp, EH_name, hostname, EH_Type);
             (*env)->ReleaseStringUTFChars(env, obj, hostname);
-         }   
+         }
       }
    
       if (terminate_jobs) {
          kill_target |= JOB_KILL;
-      }   
+      }
       jgdi_kill(env, jgdi, lp, kill_target);
       lFreeList(&lp);
    }
@@ -4369,16 +4360,16 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killEventClients(JNIE
    if (length <= 0) {
       DEXIT;
       return;
-   }  
+   }
 
    ibuf = (jint *) malloc(sizeof(jint)*length);
    
-   (*env)->GetIntArrayRegion(env, iarray, 0, length, ibuf); 
+   (*env)->GetIntArrayRegion(env, iarray, 0, length, ibuf);
    for (i=0; i<length; i++) {
       char buffer[BUFSIZ];
       sprintf(buffer, "%d", (int) ibuf[i]);
       DPRINTF(("ec: %s\n", buffer));
-      lAddElemStr(&lp, ID_str, buffer, ID_Type); 
+      lAddElemStr(&lp, ID_str, buffer, ID_Type);
    }
    FREE(ibuf);
    jgdi_kill(env, jgdi, lp, EVENTCLIENT_KILL);
@@ -4483,7 +4474,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_cleanQueues(JNIEnv *e
    jgdi_qmod(env, jgdi, obj_array, force, transition, option);
 
    DEXIT;
-}  
+}
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIBase
@@ -4665,26 +4656,168 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_clearShareTreeUsage(J
    DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_clearShareTreeUsage");
 
    jgdi_clearusage(env, jgdi);
-
+   
    DEXIT;
 }
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIBase
- * Method:    getEventClients
- * Signature: ()Ljava/util/List;
+ * Method:    showDetachedSettings
+ * Signature: ([Ljava/lang/String;)Ljava/lang/String
  */
-JNIEXPORT jobject JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_getEventClients(JNIEnv *env, jobject jgdi)
-{
-   jobject list = NULL;
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettingsAll(JNIEnv *env, jobject jgdi) {
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_getEventClients");
-
-   THROW_ERROR((env, JGDI_ILLEGAL_STATE, "Not yet implemented"));
-/*    jgdi_fill(env, jgdi, list, NULL, "com/sun/grid/jgdi/configuration/EventClient", SGE_EVENT_LIST, EV_Type); */
-
+   jstring jdetachedStr = NULL;
+   
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings");
+   
+   jgdi_detached_settings(env, jgdi, NULL, &jdetachedStr);
+   
    DEXIT;
-   return list;
+   return jdetachedStr;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBase
+ * Method:    showDetachedSettings
+ * Signature: ([Ljava/lang/String;)Ljava/lang/String
+ */
+JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings(JNIEnv *env, jobject jgdi, jobjectArray obj_array) {
+   
+   jstring jdetachedStr = NULL;
+   
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_showDetachedSettings");
+   
+   jgdi_detached_settings(env, jgdi, obj_array, &jdetachedStr);
+   
+   DEXIT;
+   return jdetachedStr;
+}
+
+static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jstring *jdetachedStrPtr) {
+   jgdi_result_t ret = JGDI_SUCCESS;
+   rmon_ctx_t rmon_ctx;
+   lList *lp = NULL;
+   lList *hgroup_list = NULL;
+   lList *cqueue_list = NULL;
+   bool local_ret = false;
+   sge_gdi_ctx_class_t *ctx = NULL;
+   lList *alp =NULL;
+   jstring jdetachedStr = NULL;
+   
+   lEnumeration *hgrp_what = NULL; 
+   lEnumeration *cqueue_what = NULL;
+   int hgrp_id = 0; 
+   int cq_id = 0;
+   lList *local_answer_list = NULL;
+   lList *multi_answer_list = NULL;
+   state_gdi_multi state = STATE_GDI_MULTI_INIT;
+
+   DENTER(JGDI_LAYER, "jgdi_detached_settings");
+
+   jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
+   rmon_set_thread_ctx(&rmon_ctx);
+   
+   if (obj_array != NULL) {
+      int i;
+      jsize asize = (*env)->GetArrayLength(env, obj_array);
+      for (i=0; i<asize; i++) {
+         jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
+         if (obj) {
+            const char* queuename = (*env)->GetStringUTFChars(env, obj, 0);
+            DPRINTF(("queuename: %s\n", queuename));
+            lAddElemStr(&lp, CQ_name, queuename, CQ_Type);
+            (*env)->ReleaseStringUTFChars(env, obj, queuename);
+         }
+      }
+      jgdi_log_printf(env, JGDI_LOGGER, FINER,
+      "jgdi_show_detached_settings: lp BEGIN ----------------------------------------");
+      
+      jgdi_log_list(env, JGDI_LOGGER, FINER, lp);
+      
+      jgdi_log_printf(env, JGDI_LOGGER, FINER,
+      "jgdi_show_detached_settings: lp END ----------------------------------------");
+      
+   }
+   
+   /* get context */
+   ret = getGDIContext(env, jgdi, &ctx, &alp);
+   if (ret != JGDI_SUCCESS) {
+      goto error;
+   }
+   
+   /* HGRP */
+   hgrp_what = lWhat("%T(ALL)", HGRP_Type);
+   hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST,
+                           SGE_GDI_GET, NULL, NULL, hgrp_what, NULL, &state, true);
+   lFreeWhat(&hgrp_what);
+
+   /* CQ */
+   cqueue_what = lWhat("%T(ALL)", CQ_Type);
+   cq_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+                         SGE_GDI_GET, NULL, NULL, cqueue_what,
+                         &multi_answer_list, &state, true);
+   lFreeWhat(&cqueue_what);
+
+   /* HGRP */
+   sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,
+                   SGE_HGROUP_LIST, hgrp_id, multi_answer_list, &hgroup_list);
+   if (local_answer_list != NULL) {
+      lListElem *answer = lFirst(local_answer_list);
+
+      if (lGetUlong(answer, AN_status) != STATUS_OK) {
+         lDechainElem(local_answer_list, answer);
+         answer_list_add_elem(&alp, answer);
+      }
+   }
+   lFreeList(&local_answer_list);
+   
+   /* CQ */   
+   sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
+                SGE_CQUEUE_LIST, cq_id, multi_answer_list, &cqueue_list);
+   if (local_answer_list != NULL) {
+      lListElem *answer = lFirst(local_answer_list);
+
+      if (lGetUlong(answer, AN_status) != STATUS_OK) {
+         lDechainElem(local_answer_list, answer);
+         answer_list_add_elem(&alp, answer);
+      }
+   } 
+   lFreeList(&local_answer_list);
+   lFreeList(&multi_answer_list);
+      
+   if (answer_list_has_error(&alp)) {
+      ret = JGDI_ERROR;
+   } else {
+      jgdi_log_answer_list(env, JGDI_LOGGER, alp);
+   }
+   
+   if (ret != JGDI_ERROR) {
+      dstring ds = DSTRING_INIT;
+      lListElem *cqueue = NULL;
+      
+      for_each(cqueue, cqueue_list) {
+         cqueue_sick(cqueue, &alp, hgroup_list, &ds);
+      }
+      if (sge_dstring_get_string(&ds)) {
+         const char *detached_str = sge_dstring_get_string(&ds);
+         jdetachedStr = (*env)->NewStringUTF(env, detached_str);
+         sge_dstring_free(&ds);
+      }
+   }
+   *jdetachedStrPtr = jdetachedStr;
+   
+   error:
+   /* if error throw exception */
+   if(ret != JGDI_SUCCESS) {
+      throw_error_from_answer_list(env, ret, alp);
+   }
+   
+   lFreeList(&alp);
+   lFreeList(&lp);
+   rmon_set_thread_ctx(NULL);
+   jgdi_destroy_rmon_ctx(&rmon_ctx);
+   DEXIT;
 }
 
 /*
@@ -4766,7 +4899,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_JGDIFactory_setJGDIVersion(JNIE
  *                      a cull object of type TM_Type
  * PARAMETER
  *  thiz - the object mapping
- *  env  - JNI environment 
+ *  env  - JNI environment
  *  obj  - the java.util.Calendar object
  *  elem - the TM_Type object
  *  alpp - answer list for error reporting
@@ -4808,7 +4941,7 @@ static jgdi_result_t calendar_to_elem(object_mapping_t *thiz, JNIEnv *env, jobje
  *                      a java.util.Calendar object
  * PARAMETER
  *  thiz - the object mapping
- *  env  - the JNI environment 
+ *  env  - the JNI environment
  *  elem - the cull object
  *  obj  - pointer to the java object reference
  *  alpp - answer list for error reporting

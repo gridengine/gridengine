@@ -42,10 +42,7 @@
 #include "sge_lock.h"
 #include "sge_bootstrap.h"
 #include "sge.h"
-#include "setup.h"
 #include "sge_all_listsL.h"
-#include "sge_event_client.h"
-#include "sge_any_request.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_orders.h"
@@ -60,7 +57,6 @@
 #include "schedd_monitor.h"
 #include "sig_handlers.h"
 #include "sge_conf.h"
-#include "gdi_conf.h"
 #include "sge_process_events.h"
 #include "basis_types.h"
 #include "qm_name.h"
@@ -86,31 +82,30 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_schedd_conf.h"
 
+#include "gdi/sge_gdi_ctx.h"
+#include "evc/sge_event_client2.h"
+
 #include "msg_common.h"
 #include "msg_schedd.h"
 #include "msg_daemons_common.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#include "sge_event_client2.h"
-#endif
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 
-static void schedd_set_serf_log_file(void *context);
+static void schedd_set_serf_log_file(sge_gdi_ctx_class_t *ctx);
 static void schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, 
    const char *state, u_long32 start_time, u_long32 end_time, char level_char,
    const char *object_name, const char *name, double utilization);
 static void schedd_serf_newline(u_long32 time);
 
-static int sge_ck_qmaster(void *context, const char *former_master_host);
+static int sge_ck_qmaster(sge_gdi_ctx_class_t *ctx, const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
-static void schedd_exit_func(void **context, int i);
-static int sge_setup_sge_schedd(void *context);
-int daemonize_schedd(void *context);
+static void schedd_exit_func(void **ctx_ref, int i);
+static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx);
+int daemonize_schedd(void *ctx);
 
 
 /* array used to select from different scheduling alorithms */
@@ -141,23 +136,13 @@ char *argv[]
    time_t next_prof_output = 0;
    bool done = false;
    int schedd_exit_state = 0;
-   lListElem *event_client = NULL;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
    sge_evc_class_t *evc = NULL;
    lList *alp = NULL;
-#else
-   void *ctx = NULL;
-   void *evc = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
-#ifndef TEST_GDI2
-   sge_mt_init();
-#else
    sge_prof_setup();
-#endif   
 
    /* set profiling parameters */
    prof_set_level_name(SGE_PROF_EVENTMASTER, NULL, NULL);
@@ -194,18 +179,11 @@ char *argv[]
    sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(SCHEDD);
 
-#ifdef TEST_GDI2
-   if (sge_setup2(&ctx, SCHEDD, NULL) != AE_OK) {
+   if (sge_setup2(&ctx, SCHEDD, &alp) != AE_OK) {
+      answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
    ctx->set_exit_func(ctx, schedd_exit_func);
-#else
-   uti_state_set_exit_func(schedd_exit_func);
-   if (sge_setup(SCHEDD, NULL) != 0) {
-      /* sge_setup has already printed the error message */
-      SGE_EXIT(NULL, 1);
-   }
-#endif   
    
    /* TODO: to remove the internal path_state_get_cell_root() dependency
    **       schedd_set_schedd_log_file(ctx)
@@ -235,7 +213,6 @@ char *argv[]
    check_qmaster = (sge_setup_sge_schedd(ctx) != 0) ? true : false;
 
    /* prepare event client/mirror mechanism */
-#ifdef TEST_GDI2   
    /* TODO: check if this works with daemonizing */
    if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp)) {
       answer_list_output(&alp);
@@ -249,17 +226,8 @@ char *argv[]
    }
 #endif   
    sge_schedd_mirror_register(evc);
-   event_client = evc->ec_get_event_client(evc);
-#else   
-   sge_schedd_mirror_register(NULL);
-   event_client = ec_get_event_client();
-#endif   
 
-#ifdef TEST_GDI2
    master_host = ctx->get_master(ctx, false);
-#else
-   master_host = sge_get_master(false);
-#endif   
    if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
       CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
       SGE_EXIT(NULL, 1);
@@ -337,26 +305,15 @@ char *argv[]
             }
          }
 
-         if(sge_mirror_process_events(evc, event_client) == SGE_EM_TIMEOUT) {
+         if(sge_mirror_process_events(evc) == SGE_EM_TIMEOUT) {
             check_qmaster = true;
             continue;
          }
 
-#ifdef TEST_GDI2            
          if(evc->ec_need_new_registration(evc)) {
             check_qmaster = true;
             continue;
          }
-#else
-         /* we must re-initialize 'event_client' as it might have been 
-            freed deep down in sge_mirror_process_events() */
-         event_client = ec_get_event_client();
-
-         if(ec_need_new_registration()) {
-            check_qmaster = true;
-            continue;
-         }
-#endif         
 
          /* got new config? */
          if (sconf_is_new_config()) {
@@ -418,17 +375,13 @@ char *argv[]
       }
    }
 
-   sge_mirror_shutdown(evc, &event_client);
+   sge_mirror_shutdown(evc);
 
    sge_prof_cleanup();
 
    FREE(initial_qmaster_host);
 
-#ifdef TEST_GDI2
    sge_shutdown((void**)&ctx, schedd_exit_state);
-#else
-   sge_shutdown(NULL, schedd_exit_state);
-#endif
 
    DRETURN(EXIT_SUCCESS);
 }
@@ -448,15 +401,13 @@ static void usage(FILE *fp)
 }
 
 /*************************************************************/
-static void schedd_exit_func(void **context, int i) 
+static void schedd_exit_func(void **ctx_ref, int i) 
 {
    DENTER(TOP_LAYER, "schedd_exit_func");
-#ifdef TEST_GDI2
-   sge_gdi2_shutdown(context);
-#else
-   sge_gdi_shutdown();
-#endif   
+   
+   sge_gdi2_shutdown(ctx_ref);
    serf_exit();
+
    DRETURN_VOID;
 }
 
@@ -480,22 +431,15 @@ static int parse_cmdline_schedd(int argc, char *argv[])
  *  1 failed but we should retry (also check_isalive() failed)
  * -1 error 
  *----------------------------------------------------------------*/
-static int sge_ck_qmaster(void *context, const char *former_master_host)
+static int sge_ck_qmaster(sge_gdi_ctx_class_t *ctx, const char *former_master_host)
 {
    lList *alp, *lp = NULL;
    int success;
    lEnumeration *what;
    lCondition *where;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *current_master = ctx->get_master(ctx, true);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *username = ctx->get_username(ctx);
-#else
-   const char *current_master = sge_get_master(true);
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *username = uti_state_get_user_name();
-#endif   
 
    DENTER(TOP_LAYER, "sge_ck_qmaster");
 
@@ -505,17 +449,10 @@ static int sge_ck_qmaster(void *context, const char *former_master_host)
       DRETURN(-1);
    }
 
-#ifdef TEST_GDI2
    if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
       DPRINTF(("qmaster is not alive\n"));
       DRETURN(1);
    }
-#else
-   if (check_isalive(current_master) != CL_RETVAL_OK) {
-      DPRINTF(("qmaster is not alive\n"));
-      DRETURN(1);
-   }
-#endif
 
 /*---------------------------------------------------------------*/
    DPRINTF(("Checking if user \"%s\" is manager\n", username));
@@ -524,13 +461,7 @@ static int sge_ck_qmaster(void *context, const char *former_master_host)
    where = lWhere("%T(%I == %s)",
                   MO_Type,
                   MO_name, username);
-                  
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
-#endif   
-   
    lFreeWhere(&where);
    lFreeWhat(&what);
 
@@ -561,11 +492,7 @@ static int sge_ck_qmaster(void *context, const char *former_master_host)
    where = lWhere("%T(%I h= %s)",
                   AH_Type,
                   AH_name, qualified_hostname);
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#endif   
    lFreeWhere(&where);
    lFreeWhat(&what);
 
@@ -600,7 +527,7 @@ const char *alg_name
 ) {
    int i = 0;
    int scheduler_before = current_scheduler;
-   int (*event_func_before)(void *) = sched_funcs[current_scheduler].event_func;
+   int (*event_func_before)(sge_evc_class_t *) = sched_funcs[current_scheduler].event_func;
 
    DENTER(TOP_LAYER, "use_alg");
 
@@ -642,31 +569,16 @@ const char *alg_name
  *         1     if sge_ck_qmaster() returns ==  1
  *         0     if setup was completely ok
  *-------------------------------------------------------------------*/
-static int sge_setup_sge_schedd(void *context)
+static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
 {
    int ret;
    u_long32 saved_logginglevel;
    char err_str[1024];
    lList *schedd_config_list = NULL;
-
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *qmaster_spool_dir = ctx->get_qmaster_spool_dir(ctx);
-#else
-   int last_prepare_enroll_error = CL_RETVAL_OK;
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *qmaster_spool_dir = bootstrap_get_qmaster_spool_dir();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-   u_long32 progid = uti_state_get_mewho();
-   const char *cell_root = path_state_get_cell_root();
-   int is_daemonized = uti_state_get_daemonized();
-#endif   
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
-
 
    /*
    ** switch to admin user
@@ -681,7 +593,6 @@ static int sge_setup_sge_schedd(void *context)
       SGE_EXIT(NULL, 1);
    }
 
-#ifdef TEST_GDI2
    ret = ctx->prepare_enroll(ctx);
    ret = gdi2_get_conf_and_daemonize(ctx, daemonize_schedd, &schedd_config_list, &shut_me_down);
    switch(ret) {
@@ -700,36 +611,6 @@ static int sge_setup_sge_schedd(void *context)
 
    lFreeList(&schedd_config_list);
 
-#else
-   /*
-    * setup communication as admin user
-    */
-   prepare_enroll(prognames[SCHEDD], &last_prepare_enroll_error );
-
-   /* get_conf_and_daemonize() will come back for access denied or endpoint not unique
-    * erros */
-   ret = get_conf_and_daemonize(progid, progname, qualified_hostname, cell_root, is_daemonized,
-                                 daemonize_schedd, &schedd_config_list, &shut_me_down);
-   switch(ret) {
-      case 0:
-         break;
-      case -2:
-         INFO((SGE_EVENT, MSG_SCHEDD_SCHEDD_ABORT_BY_USER));
-         SGE_EXIT(NULL, 1);
-         break;
-      default:
-         CRITICAL((SGE_EVENT, MSG_SCHEDD_ALREADY_RUNNING));
-         SGE_EXIT(NULL, 1);
-   }
-
-   sge_show_conf();
-
-   lFreeList(&schedd_config_list);
-   
-   /* get aliased hostname from commd */
-   reresolve_me_qualified_hostname();
-#endif
-
    sge_chdir_exit(qmaster_spool_dir, 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1, 0);
    sge_chdir_exit(SCHED_SPOOL_DIR, 1);
@@ -744,7 +625,7 @@ static int sge_setup_sge_schedd(void *context)
    /* suppress the INFO messages during setup phase */
    saved_logginglevel = log_state_get_log_level();
    log_state_set_log_level(LOG_WARNING);
-   if ((ret = sge_ck_qmaster(context, NULL)) < 0) {
+   if ((ret = sge_ck_qmaster(ctx, NULL)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
       SGE_EXIT(NULL, 1);
    }
@@ -757,9 +638,11 @@ static int sge_setup_sge_schedd(void *context)
 int daemonize_schedd(void *context)
 {
    int ret = 0;
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+
    DENTER(TOP_LAYER, "daemonize_schedd");
 
-   ret = sge_daemonize_finalize(context);
+   ret = sge_daemonize_finalize(ctx);
 
    DRETURN(ret);
 }
@@ -767,17 +650,11 @@ int daemonize_schedd(void *context)
 
 /* do everything that needs to be done in common for all schedulers 
    between processing events and dispatching */
-int sge_before_dispatch(void *evc_context)
+int sge_before_dispatch(sge_evc_class_t *evc)
 {
-#ifdef TEST_GDI2
-   sge_evc_class_t *evc = (sge_evc_class_t *)evc_context;
    sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   u_long32 progid = uti_state_get_mewho();
-#endif   
    
    DENTER(TOP_LAYER, "sge_before_dispatch");
 
@@ -786,57 +663,32 @@ int sge_before_dispatch(void *evc_context)
    if (new_global_config) {
       lListElem *global = NULL, *local = NULL;
 
-#ifdef TEST_GDI2
       if (gdi2_get_configuration(ctx, SGE_GLOBAL_NAME, &global, &local) == 0) {
          merge_configuration(progid, cell_root, global, local, NULL);
       }   
-#else
-      if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0) {
-         merge_configuration(progid, cell_root, global, local, NULL);
-      }   
-#endif      
       lFreeElem(&global);
       lFreeElem(&local);
       new_global_config = 0;
    }
    
    if (sconf_is_new_config()) {
-#ifndef TEST_GDI2   
-      lListElem *event_client = ec_get_event_client();
-#endif      
       int interval = sconf_get_flush_finish_sec();
       bool flush = (interval > 0) ? true : false;
       interval--;
-#ifdef TEST_GDI2      
       if (evc->ec_get_flush(evc, sgeE_JOB_DEL) != interval) {
          evc->ec_set_flush(evc, sgeE_JOB_DEL,flush, interval);
          evc->ec_set_flush(evc, sgeE_JOB_FINAL_USAGE,flush, interval);
          evc->ec_set_flush(evc, sgeE_JATASK_MOD, flush, interval);
          evc->ec_set_flush(evc, sgeE_JATASK_DEL, flush, interval);
       }
-#else      
-      if (ec_get_flush(event_client, sgeE_JOB_DEL) != interval) {
-         ec_set_flush(event_client, sgeE_JOB_DEL,flush, interval);
-         ec_set_flush(event_client, sgeE_JOB_FINAL_USAGE,flush, interval);
-         ec_set_flush(event_client, sgeE_JATASK_MOD, flush, interval);
-         ec_set_flush(event_client, sgeE_JATASK_DEL, flush, interval);
-      }
-#endif      
 
       interval= sconf_get_flush_submit_sec();
       flush = (interval > 0) ? true : false;
       interval--;      
-#ifdef TEST_GDI2      
       if(evc->ec_get_flush(evc, sgeE_JOB_ADD) != interval) {
          evc->ec_set_flush(evc, sgeE_JOB_ADD, flush, interval);
       }
       evc->ec_commit(evc, NULL);
-#else
-      if(ec_get_flush(event_client, sgeE_JOB_ADD) != interval) {
-         ec_set_flush(event_client, sgeE_JOB_ADD, flush, interval);
-      }
-      ec_commit(event_client);
-#endif      
    }
 
    /*
@@ -850,22 +702,14 @@ int sge_before_dispatch(void *evc_context)
    DRETURN(0);
 }
 
-void sge_schedd_mirror_register(void *evc_context)
+void sge_schedd_mirror_register(sge_evc_class_t *evc)
 {
    /* register as event mirror */
-#ifdef TEST_GDI2
-   sge_evc_class_t *evc = (sge_evc_class_t *)evc_context;
    sge_mirror_initialize(evc, EV_ID_SCHEDD, "scheduler", true);
    evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_RELEASED);
-#else
-   lListElem *event_client = NULL;
-   sge_mirror_initialize(evc_context, EV_ID_SCHEDD, "scheduler", true);
-   event_client = ec_get_event_client();
-   ec_set_busy_handling(event_client, EV_BUSY_UNTIL_RELEASED);
-#endif   
 
    /* subscribe events */
-   sched_funcs[current_scheduler].subscribe_func(evc_context);
+   sched_funcs[current_scheduler].subscribe_func(evc);
 }
 
 /* sge_schedd's current schedule entry recording facility (poor mans realization) */
@@ -873,14 +717,9 @@ void sge_schedd_mirror_register(void *evc_context)
 static char schedule_log_path[SGE_PATH_MAX + 1] = "";
 const char *schedule_log_file = "schedule";
 
-static void schedd_set_serf_log_file(void *context)
+static void schedd_set_serf_log_file(sge_gdi_ctx_class_t *ctx)
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*) context;
    const char *cell_root = ctx->get_cell_root(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-#endif 
 
    DENTER(TOP_LAYER, "set_schedd_serf_log_path");
 

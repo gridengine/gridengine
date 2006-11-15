@@ -45,7 +45,7 @@
 #include "sge_queue_mirror.h"
 
 sge_callback_result
-cqueue_update_master_list(void *context, object_description *object_base, sge_object_type type, 
+cqueue_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                           sge_event_action action, lListElem *event, void *clientdata)
 {
    sge_callback_result ret = SGE_EMA_OK;
@@ -88,7 +88,7 @@ cqueue_update_master_list(void *context, object_description *object_base, sge_ob
 }
 
 sge_callback_result
-qinstance_update_cqueue_list(void *context, object_description *object_base, sge_object_type type, 
+qinstance_update_cqueue_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                              sge_event_action action, lListElem *event, void *clientdata)
 {
    sge_callback_result ret = SGE_EMA_OK;

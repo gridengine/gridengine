@@ -47,7 +47,7 @@ int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
 
 #include "dispatcher.h"
 
-int execd_c_ack(void *context, 
+int execd_c_ack(sge_gdi_ctx_class_t *ctx, 
                 struct dispatch_entry *de, 
                 sge_pack_buffer *pb, 
                 sge_pack_buffer *apb, 

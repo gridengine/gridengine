@@ -30,16 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef TEST_GDI2
-
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <string.h>
 #include <strings.h>
 
-#include "sge_any_request.h"
-#include "sge_ack.h"
 #include "sge_unistd.h"
 #include "commlib.h"
 #include "commproc.h"
@@ -54,7 +50,6 @@
 #include "sge_answer.h"
 #include "sge_report.h"
 #include "sge_conf.h"
-#include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
 #include "sge_error_class.h"
 
@@ -1290,11 +1285,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
       /* TODO: is this code section really necessary */
       /* closing actual connection to qmaster and reopen new connection. This will delete all
          buffered messages  - CR */
-#ifdef TEST_GDI2
       com_handle = sge_gdi_ctx->get_com_handle(sge_gdi_ctx);
-#else
-      com_handle = cl_com_get_handle(progname, 0);
-#endif
       if (com_handle != NULL) {
          int ngc_error;
          ngc_error = cl_commlib_close_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
@@ -2890,6 +2881,3 @@ bool sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_
 *******************************************************************************/
 /* function see libs/sgeobj/sge_event.c */
 
-
-
-#endif /* TEST_GDI2 */

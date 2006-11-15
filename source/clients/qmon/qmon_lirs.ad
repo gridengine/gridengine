@@ -48,7 +48,7 @@ Qmon*lirs.xmtChildren:  \
 Qmon*lirs.layout: \
    Row { \
       Stretchable Col { \
-         Stretchable Caption tl "@{Flexible Resource Limits}" 5 in % 5 in lirs_text \
+         Stretchable Caption tl "@{Resource Quotas}" 5 in % 5 in lirs_text \
       } \
       Fixed Shadowed Col { \
          lirs_okay \

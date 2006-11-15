@@ -35,6 +35,7 @@
 #ifdef TEST_GDI2
 
 #include "sgeobj/sge_conf.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -120,6 +121,11 @@ int gdi2_get_conf_and_daemonize(sge_gdi_ctx_class_t *ctx,
                                 lList **conf_list,
                                 volatile int* abort_flag);
                                 
+int report_list_send(sge_gdi_ctx_class_t *ctx,
+                     const lList *rlp, const char *rhost,
+                     const char *commproc, int id,
+                     int synchron, u_long32 *mid);
+
 int sge_gdi2_shutdown(void **context);
 
 #define ASYNC_GDI2

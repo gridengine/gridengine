@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 
-#endif /* _SGE_SSI_H_ */
+#include "evc/sge_event_client2.h"
 
 /****** schedlib/ssi/--Simple-Scheduler-Interface ***************************************
 *
@@ -82,12 +82,14 @@
 ****************************************************************************
 */
 
+#include "evc/sge_event_client2.h"
+
 typedef struct {
    int procs;
    const char *host_name;
 } task_map;
 
-bool sge_ssi_job_start(void *evc_context, const char *job_identifier, const char *pe, task_map tasks[]);
+bool sge_ssi_job_start(sge_evc_class_t *evc, const char *job_identifier, const char *pe, task_map tasks[]);
+bool sge_ssi_job_cancel(sge_evc_class_t *evc, const char *job_identifier, bool reschedule); 
 
-bool sge_ssi_job_cancel(void *evc_context, const char *job_identifier, bool reschedule); 
-
+#endif /* _SGE_SSI_H_ */

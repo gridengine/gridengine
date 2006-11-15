@@ -38,11 +38,12 @@
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
 #include "sge_profiling.h"
+#include "gdi/sge_gdi_ctx.h"
 
  
-void calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
-void signal_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
-void job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
+void signal_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
+void job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
 static void test_delete_nonexistent_event(void);
 static void test_add_one_time_event_without_handler(void);
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
    return 0;
 } /* main() */
 
-void calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+void calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "calendar_event_handler");
 
@@ -116,7 +117,7 @@ void calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *mon
    return;
 } /* calendar_event_handler() */
 
-void signal_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+void signal_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "signal_resend_event_handler");
 
@@ -126,7 +127,7 @@ void signal_resend_event_handler(void *context, te_event_t anEvent, monitoring_t
    return;
 } /* signal_resend_event_handler() */
 
-void job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+void job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    DENTER(TOP_LAYER, "job_resend_event_handler");
 

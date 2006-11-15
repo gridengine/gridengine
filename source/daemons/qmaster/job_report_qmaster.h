@@ -33,8 +33,9 @@
 /*___INFO__MARK_END__*/
 
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
-void process_job_report(void *context, lListElem *report, lListElem *hep, char *rhost, 
+void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report, lListElem *hep, char *rhost, 
                         char *commproc, sge_pack_buffer *pb, monitoring_t *monitor);
 
 #endif /* __JOB_REPORT_QMASTER_H */

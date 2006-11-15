@@ -38,16 +38,16 @@
 /* scheduling framework, layer 1: data model */
 
 /* which data do we want to be mirrored from qmaster */
-int subscribe_default_scheduler(void *evc_context);
+int subscribe_default_scheduler(sge_evc_class_t *evc);
 
 /* event post processing */
-int event_handler_default_scheduler(void *evc_context);
+int event_handler_default_scheduler(sge_evc_class_t *evc);
 #ifdef SCHEDULER_SAMPLES
-int event_handler_my_scheduler(void *evc_context);
+int event_handler_my_scheduler(sge_evc_class_t *evc);
 #endif
 
 /* cleanup post processing */
-void cleanup_default_scheduler(void *evc_context);
+void cleanup_default_scheduler(sge_evc_class_t *evc);
 
 #endif /* __SGE_PROCESS_EVENTS_H */
 

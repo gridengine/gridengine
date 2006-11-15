@@ -83,13 +83,11 @@
 #include "sge_rusage.h"
 #include "sge_reporting_qmaster.h"
 
+
 /* messages */
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /* do not change, the ":" is hard coded into the qacct file
    parsing routines. */
@@ -262,20 +260,13 @@ reporting_initialize(lList **answer_list)
 *     qmaster/reporting/reporting_initialize()
 *******************************************************************************/
 bool
-reporting_shutdown(void *context, lList **answer_list, bool do_spool)
+reporting_shutdown(sge_gdi_ctx_class_t *ctx, lList **answer_list, bool do_spool)
 {
    bool ret = true;
    lList* alp = NULL;
    rep_buf_t *buf;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *reporting_file = ctx->get_reporting_file(ctx);
    const char *acct_file = ctx->get_acct_file(ctx);
-#else
-   const char *reporting_file = path_state_get_reporting_file();
-   const char *acct_file = path_state_get_acct_file();
-#endif
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
@@ -322,19 +313,12 @@ reporting_shutdown(void *context, lList **answer_list, bool do_spool)
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+reporting_trigger_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 flush_interval = 0;
    lList *answer_list = NULL;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *reporting_file = ctx->get_reporting_file(ctx);
    const char *acct_file = ctx->get_acct_file(ctx);
-#else
-   const char *reporting_file = path_state_get_reporting_file();
-   const char *acct_file = path_state_get_acct_file();
-#endif
 
    DENTER(TOP_LAYER, "reporting_trigger_handler");
 
@@ -580,28 +564,20 @@ reporting_create_job_log(lList **answer_list,
  * reporting_create_acct_record is called and we needn't search it from ja_task
  */
 bool
-reporting_create_acct_record(void *context,
+reporting_create_acct_record(sge_gdi_ctx_class_t *ctx,
                        lList **answer_list, 
                        lListElem *job_report, 
                        lListElem *job, lListElem *ja_task, bool intermediate)
 {
    bool ret = true;
-
    char category_buffer[MAX_STRING_SIZE];
    dstring category_dstring;
    dstring job_dstring = DSTRING_INIT;
    const char *category_string = NULL; 
    const char *job_string = NULL;
-
    bool do_reporting  = mconf_get_do_reporting();
    bool do_accounting = mconf_get_do_accounting();
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *acct_file = ctx->get_acct_file(ctx);
-#else
-   const char *acct_file = path_state_get_acct_file();
-#endif
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 

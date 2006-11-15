@@ -78,9 +78,7 @@
 
 /* GDI */
 #include "sge_conf.h"
-#include "gdi_conf.h"
 #include "sge_gdi.h"
-#include "gdi_tsm.h"
 #include "sge_gdi_request.h"
 #include "sge_gdiP.h"
 #include "sge_security.h"
@@ -97,7 +95,6 @@
 #include "sge_qinstance_state.h"
 #include "sge_range.h"
 #include "msg_common.h"
-#include "gdi/sge_any_request.h"
 
 /* OBJ */
 #include "sge_jobL.h"
@@ -110,11 +107,10 @@
 #include "sge_usageL.h"
 
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#include "sge_event_client2.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "evc/sge_event_client2.h"
+
 sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
 
 /****** JAPI/--Job_API ********************************************************
@@ -316,11 +312,7 @@ static int japi_open_session(const char *username, const char *unqualified_hostn
 #ifdef ENABLE_PERSISTENT_JAPI_SESSIONS
 static int japi_close_session(const char*username, const dstring *key, dstring *diag);
 #endif
-#ifdef TEST_GDI2
 static void *japi_implementation_thread_ctx(void *);
-#else
-static void *japi_implementation_thread(void *);
-#endif
 static int japi_parse_jobid(const char *jobid_str, u_long32 *jobid, u_long32 *taskid, 
    bool *is_array, dstring *diag);
 static int japi_send_job(lListElem *job, u_long32 *jobid, dstring *diag);
@@ -407,7 +399,13 @@ int japi_init_mt(dstring *diag)
    DENTER(TOP_LAYER, "japi_init_mt");
 
    log_state_set_log_gui(1);
-#ifdef TEST_GDI2
+   /* current major assumptions are
+      - code is not compiled with -DCRYPTO
+      - code is not compiled with -DKERBEROS
+      - neither AFS nor DCE/KERBEROS security may be used */
+
+   /* as long as signal handling is not restored japi_init_mt() is
+      good place to install library signal handling */
    japi_use_library_signals();
 
    /*
@@ -419,35 +417,6 @@ int japi_init_mt(dstring *diag)
       lFreeList(&alp);
       DRETURN(DRMAA_ERRNO_INTERNAL_ERROR);
    }
-#else
-   sge_prof_setup();
-   bootstrap_mt_init();
-   feature_mt_init();
-
-   sge_getme(prog_number);
-
-   sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if ( uti_state_get_mewho() == QUSERDEFINED) { 
-      sge_gdi_param(SET_MEWHO, prog_number, NULL);
-   } 
-
-   /* current major assumptions are
-      - code is not compiled with -DCRYPTO
-      - code is not compiled with -DKERBEROS
-      - neither AFS nor DCE/KERBEROS security may be used */
-
-   /* as long as signal handling is not restored japi_init_mt() is
-      good place to install library signal handling */
-   japi_use_library_signals();
-
-   gdi_errno = sge_gdi_setup(prognames[prog_number], &alp);
-   
-   if ((gdi_errno != AE_OK) && (gdi_errno != AE_ALREADY_SETUP)) {
-      answer_to_dstring(lFirst(alp), diag);
-      lFreeList(&alp);
-      DRETURN(DRMAA_ERRNO_INTERNAL_ERROR);
-   }
-#endif
 
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }
@@ -569,36 +538,12 @@ int japi_init(const char *contact, const char *session_key_in,
    /* No need to worry about locking for this global since it is only used in
     * japi_init(), and only one thread may be in japi_init() at a time. */
    if (!virgin_session) {
-#ifdef TEST_GDI2   
       int commlib_error = CL_RETVAL_OK;
       handle = ctx->get_com_handle(ctx);
       if (handle == NULL) {
          commlib_error = ctx->connect(ctx);
          handle = ctx->get_com_handle(ctx);
       }   
-#else
-      int commlib_error = CL_RETVAL_OK;
-      cl_framework_t  communication_framework = CL_CT_TCP;
-      const char *progname = uti_state_get_sge_formal_prog_name();
-      u_long32 sge_qmaster_port = sge_get_qmaster_port();
-      u_long32 my_who = uti_state_get_mewho();
-
-      /* Make sure the commlib handle exists  If it doesn't, create it. */
-      handle = cl_com_get_handle(progname, 0);
-
-      if (handle == NULL) {
-         if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-            DPRINTF(("using communication lib with SSL framework (japi)\n"));
-            communication_framework = CL_CT_SSL;
-         }
-         
-         handle = cl_com_create_handle(&commlib_error, communication_framework, 
-                                       CL_CM_CT_MESSAGE, CL_FALSE,
-                                       sge_qmaster_port, CL_TCP_DEFAULT,
-                                       (char*)prognames[my_who],
-                                       0, 1, 0);      
-      }
-#endif
       if (handle == NULL) {
          sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE_S,
                               cl_get_error_text(commlib_error));
@@ -610,16 +555,11 @@ int japi_init(const char *contact, const char *session_key_in,
    }
    
    if (enable_wait) {
-#ifdef TEST_GDI2
       const char *username = ctx->get_username(ctx);
       const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
-#else
-      const char *username = uti_state_get_user_name();
-      const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-#endif
 
       /* spawn implementation thread japi_implementation_thread() */
-      ret = japi_enable_job_wait (username, unqualified_hostname, session_key_in, session_key_out, handler,
+      ret = japi_enable_job_wait(username, unqualified_hostname, session_key_in, session_key_out, handler,
                                   diag);
    }
    else {
@@ -772,13 +712,8 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
    JAPI_LOCK_EC_STATE();   
    DPRINTF(("Waiting for event client to start up\n"));
 
-#ifdef TEST_GDI2
    i = pthread_create(&japi_event_client_thread, &attr,
                       japi_implementation_thread_ctx, (void *)&japi_ec_alp);
-#else
-   i = pthread_create(&japi_event_client_thread, &attr,
-                      japi_implementation_thread, (void *)&japi_ec_alp);
-#endif                      
 
    if (i != 0) {
       japi_ec_state = JAPI_EC_DOWN;
@@ -946,12 +881,7 @@ int japi_exit(int flag, dstring *diag)
    int *value;
    int cl_errno;
    cl_com_handle_t* handle = NULL;
-#ifdef TEST_GDI2
    const char *default_cell = ctx->get_default_cell(ctx);
-#else
-   const char *progname = uti_state_get_sge_formal_prog_name();
-   const char *default_cell = uti_state_get_default_cell();
-#endif
 
    DENTER(TOP_LAYER, "japi_exit");
 
@@ -1059,11 +989,7 @@ int japi_exit(int flag, dstring *diag)
     * disconnect from commd
     */
    DPRINTF (("Before commlib shutdown\n"));
-#ifdef TEST_GDI2
    handle = ctx->get_com_handle(ctx);
-#else
-   handle = cl_com_get_handle(progname, 0);
-#endif
    cl_errno = cl_commlib_shutdown_handle(handle, CL_FALSE);
    DPRINTF (("After commlib shutdown\n"));
    
@@ -1332,11 +1258,7 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
    lAppendElem(job_lp, lCopyElem(sge_job_template));
 
    /* use GDI to submit job for this session */
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
-#else
-   alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
-#endif   
 
    /* reinitialize 'job' with pointer to new version from qmaster */
    if ((job = lFirst(job_lp))) {
@@ -1860,13 +1782,8 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                id_list_build_from_str_list(&id_list, &alp, ref_list,
                                            QI_DO_UNSUSPEND, 0);
             }
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
                           &id_list, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
-                          &id_list, NULL, NULL);
-#endif                          
             lFreeList(&id_list);
             lFreeList(&ref_list);
 
@@ -1969,11 +1886,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
          }
 
          if (request_list) {
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &request_list, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &request_list, NULL, NULL);
-#endif            
             lFreeList(&request_list);
 
             for_each (aep, alp) {
@@ -3351,15 +3264,9 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       japi_standard_error(DRMAA_ERRNO_NO_MEMORY, diag);
       DRETURN(DRMAA_ERRNO_NO_MEMORY);
    }
-#ifdef TEST_GDI2
    qu_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
                          SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
                          NULL, &state, true);
-#else
-   qu_id = sge_gdi_multi(&alp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, 
-                         SGE_GDI_GET, NULL, cqueue_selection, cqueue_fields, 
-                         NULL, &state, true);
-#endif                         
    lFreeWhere(&cqueue_selection);
    lFreeWhat(&cqueue_fields);
 
@@ -3382,13 +3289,8 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
       DRETURN(DRMAA_ERRNO_NO_MEMORY);
    }
    
-#ifdef TEST_GDI2   
    jb_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
          job_selection, job_fields, &mal, &state, true);
-#else         
-   jb_id = sge_gdi_multi(&alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
-         job_selection, job_fields, &mal, &state, true);
-#endif         
    lFreeWhere(&job_selection);
    lFreeWhat(&job_fields);
 
@@ -4044,7 +3946,6 @@ int japi_get_drm_system(dstring *drm, dstring *diag, int me)
 }
 
 
-#ifdef TEST_GDI2
 /****** JAPI/japi_implementation_thread_ctx() **************************************
 *  Under construction
 *  NAME   
@@ -4537,503 +4438,6 @@ SetupFailed:
    DRETURN(p);
 }
 
-#else
-
-/****** JAPI/japi_implementation_thread() **************************************
-*  NAME
-*     japi_implementation_thread() -- Control flow implementation thread
-*
-*  SYNOPSIS
-*
-*  FUNCTION
-*
-*  INPUTS
-*  RESULT
-*
-*  NOTES
-*     MT-NOTE: japi_implementation_thread() is MT safe
-*******************************************************************************/
-static void *japi_implementation_thread(void *p)
-{
-   const int job_nm[] = {       
-      JB_job_number,
-      JB_project,
-      JB_type,
-      JB_ja_tasks,
-      JB_ja_structure,
-      JB_ja_n_h_ids,
-      JB_ja_u_h_ids,
-      JB_ja_s_h_ids,
-      JB_ja_o_h_ids,
-      JB_ja_z_ids,
-      JB_ja_template,
-      NoName
-   };
-   
-   lCondition *where = NULL;
-   lEnumeration *what = NULL;
-   lListElem *where_el = NULL;
-   lListElem *what_el = NULL;
-   lList *alp = NULL, *event_list = NULL;
-   lListElem *event;
-   char buffer[1024];
-   dstring buffer_wrapper;
-   bool stop_ec = false;
-   int parameter, ed_time = 30, flush_delay_rate = 6;
-   const char *s;
-   bool up_and_running = false;
-   bool qmaster_bound = false; /* Whether we ever successfully connected to the
-                                  qmaster. */
-   bool disconnected = false; /* Whether we are currently connected to the
-                                 qmaster. */
-   lListElem *event_client = NULL;
-
-   DENTER(TOP_LAYER, "japi_implementation_thread");
-
-   /* Check EC state before we bother starting.  This also prevents the event
-    * client thread from having a race condition with japi_enable_job_wait(). */
-   JAPI_LOCK_EC_STATE();
-   if (japi_ec_state != JAPI_EC_STARTING) {
-      JAPI_UNLOCK_EC_STATE();
-      lFreeList(&alp);
-      goto SetupFailed;
-   }
-   JAPI_UNLOCK_EC_STATE();
-   
-   sge_getme(prog_number);
-
-   sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
-
-   /* needed to init comlib per thread globals */
-   sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
-   if ( uti_state_get_mewho() == QUSERDEFINED) { 
-      sge_gdi_param(SET_MEWHO, prog_number, NULL);
-   } 
-
-   if (sge_gdi_setup(uti_state_get_sge_formal_prog_name(), &alp)!=AE_OK) {
-      DPRINTF(("error: sge_gdi_setup() failed for event client thread\n"));
-      if (p) {
-         lListElem *aep = lFirst(alp);
-         if (aep) {
-            answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
-         }
-      }
-      lFreeList(&alp);
-      goto SetupFailed;
-   }
-   log_state_set_log_gui(0);
-
-   /* JAPI parameters passed through environment */
-   if ((s=getenv("SGE_JAPI_EDTIME"))) {
-      parameter = atoi(s);
-      if (parameter > 0) {
-         ed_time = parameter;
-      }
-   }
-   if ((s=getenv("SGE_JAPI_FLUSH_DELAY_RATE"))) {
-      parameter = atoi(s);
-      if (parameter > 0 && parameter < ed_time)
-         flush_delay_rate = parameter;       
-   }
-
-   /* register at qmaster as event client */
-   DPRINTF(("registering as event client ...\n"));
-   ec_prepare_registration(EV_ID_ANY, uti_state_get_sge_formal_prog_name());
-   event_client = ec_get_event_client();
-
-   ec_set_edtime(event_client, ed_time); 
-   ec_set_busy_handling(event_client, EV_THROTTLE_FLUSH); 
-   ec_set_flush_delay(event_client, flush_delay_rate); 
-   ec_set_session(event_client, japi_session_key);
-   ec_subscribe(event_client, sgeE_JOB_LIST);
-   
-   where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key);
-   what = lIntVector2What(JB_Type, job_nm); 
-
-   where_el = lWhereToElem(where);
-   what_el = lWhatToElem(what);
-   
-   ec_mod_subscription_where(event_client, sgeE_JOB_LIST, what_el, where_el);
-
-   lFreeWhere(&where);
-   lFreeWhat(&what);
-   if (where_el) {
-      lFreeElem(&where_el);
-   }
-   
-   if (what_el) {
-      lFreeElem(&what_el);
-   }
-
-   ec_subscribe(event_client, sgeE_JOB_FINISH);
-   ec_set_flush(event_client, sgeE_JOB_FINISH, true, 0);
-
-   ec_subscribe(event_client, sgeE_JATASK_MOD);
-   ec_set_flush(event_client, sgeE_JATASK_MOD, true, 0);
-
-   ec_subscribe(event_client, sgeE_SHUTDOWN);
-   ec_set_flush(event_client, sgeE_SHUTDOWN, true, 0);
-
-/*    sgeE_QMASTER_GOES_DOWN  ??? */
-
-   /* Check again before we commit to this. */
-   JAPI_LOCK_EC_STATE();
-   if (japi_ec_state != JAPI_EC_STARTING) {
-      JAPI_UNLOCK_EC_STATE();
-      lFreeList(&alp);
-      goto SetupFailed;
-   }
-   
-   if (!ec_register(event_client, false, &alp)) {      
-      DPRINTF(("error: ec_register() failed\n"));
-      
-      if (p) {
-         lListElem *aep = lFirst(alp);
-         if (aep) {
-            answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                            lGetUlong(aep, AN_status), 
-                            (answer_quality_t)lGetUlong(aep, AN_quality));
-         }
-      }
-      JAPI_UNLOCK_EC_STATE();
-      lFreeList(&alp);
-      goto SetupFailed;
-   }
-   japi_ec_id = ec_get_id(event_client);
-   JAPI_UNLOCK_EC_STATE();
-
-   DPRINTF(("my formal prog name is \"%s\"\n", uti_state_get_sge_formal_prog_name()));
-   cl_com_set_synchron_receive_timeout(cl_com_get_handle(uti_state_get_sge_formal_prog_name(),0),ed_time*2);
-
-   while (!stop_ec) {
-      int ec_get_ret = 0;
-
-      /* read events and add relevant information into library session data */
-      if ((ec_get_ret = ec_get(event_client,&event_list, false)) == false) {
-         ec_mark4registration(event_client);
-         
-         DPRINTF (("Sleeping 10 seconds before trying to register again.\n"));
-         sleep(10);
-      } else {
-         /* We need to check that we japi_exit() didn't wake us up to die. */
-         JAPI_LOCK_EC_STATE();
-         if (japi_ec_state == JAPI_EC_FINISHING) {
-            JAPI_UNLOCK_EC_STATE();
-            DPRINTF (("Received stop request while waiting for events.\n"));
-            lFreeList(&event_list);
-            break;
-         }
-         JAPI_UNLOCK_EC_STATE();
-         
-         /* Bug Fix: Issuezilla #826
-          * The first part of this bug fix is to keep the event client thread
-          * from dying when the qmaster goes down.  In distinguish between
-          * failures that represent the qmaster going down and failures that
-          * represent other errors, such as the qmaster never having been up,
-          * we note here that we were able to communication with the qmaster
-          * at least once before we started having problems. */
-         qmaster_bound = true;
-
-         /* If we think we're disconnected, print a message saying we've
-          * reconnected, and note that we're not disconnected. */
-         if (disconnected) {
-            if (error_handler != NULL) {
-               error_handler (MSG_JAPI_RECONNECTED);
-            }
-            
-            DPRINTF ((MSG_JAPI_RECONNECTED));
-            disconnected = false;
-         }
-         
-         for_each (event, event_list) {
-            u_long32 type, intkey, intkey2;
-            type = lGetUlong(event, ET_type);
-            intkey = lGetUlong(event, ET_intkey);
-            intkey2 = lGetUlong(event, ET_intkey2);
-
-            DPRINTF(("\tEvent: %s intkey %d intkey2 %d\n", event_text(event, &buffer_wrapper), intkey, intkey2));
-
-            /* maintain library session data */ 
-            if (type == sgeE_JOB_LIST) {
-               lList *sge_job_list = lGetList(event, ET_new_version);
-               lListElem *sge_job, *japi_job;
-               u_long32 jobid;
-               int finished_tasks = 0;
-
-               DPRINTF (("Handling job list event\n"));                  
-               JAPI_LOCK_JOB_LIST();
-
-               /* - check every session job  
-                  - no longer existing jobs must be moved to JJ_finished_jobs
-                  - TODO: actually we had to return DRMAA_ERRNO_NO_RUSAGE when japi_wait() is 
-                          called for such a job. Must enhance JJAT_Type to reflect the case when 
-                          no stat and rusage are known */
-               for_each(japi_job, Master_japi_job_list) {
-                  jobid = lGetUlong(japi_job, JJ_jobid);
-                  sge_job = lGetElemUlong(sge_job_list, JB_job_number, jobid);
-
-                  if (sge_job == NULL) {
-                     u_long32 taskid = 0;
-                     /* This is pointer to the list in the JJ structure, so as
-                      * it is changed in the while, it's changed here. */
-                     lList *id_list = lGetList(japi_job,
-                                               JJ_not_yet_finished_ids);
-                     
-                     while ((taskid = range_list_get_first_id(id_list, NULL)) != 0) {
-                        /* remove task from not yet finished job id list */
-                        object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, taskid);
-
-                        /* add entry to the finished tasks */
-                        DPRINTF(("adding finished task "sge_u32" for job "sge_u32" existing not any longer\n", taskid, jobid));
-                        lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
-                        finished_tasks++;
-
-                     } /* while */
-                  } /* if (sge_job == NULL) */
-                  else {
-                     finished_tasks = japi_sync_job_tasks (japi_job, sge_job);
-                     /* So that we know which jobs have been seen, we remove this
-                      * job from the list. */
-                     lRemoveElem(sge_job_list, &sge_job);
-                  } /* else */
-               } /* for_each */
-
-               /* Now add any left over jobs to the master job list. */
-               for_each(sge_job, sge_job_list) {
-                  lList *task_list = NULL;
-                  
-                  japi_job = lAddElemUlong(&Master_japi_job_list, JJ_jobid,
-                                           lGetUlong(sge_job, JB_job_number),
-                                           JJ_Type);
-                  lSetUlong(japi_job, JJ_type, lGetUlong(sge_job, JB_type));
-                  lXchgList(sge_job, JB_ja_structure, &task_list);
-                  lSetList(japi_job, JJ_not_yet_finished_ids, task_list);
-                  finished_tasks = japi_sync_job_tasks (japi_job, sge_job);
-               }
-               
-               /* signal all application threads waiting for a job to finish */
-               if (finished_tasks)
-                  pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
-
-               JAPI_UNLOCK_JOB_LIST();
-
-               if (!up_and_running) {
-                  /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
-                  DPRINTF(("signalling event client thread is up and running\n"));
-
-                  JAPI_LOCK_EC_STATE();
-                  japi_ec_state = JAPI_EC_UP;
-                  DPRINTF (("EC STATE is now %d\n", japi_ec_state));
-                     pthread_cond_signal(&japi_ec_state_starting_cv);
-                  JAPI_UNLOCK_EC_STATE();
-                  up_and_running = true;
-               }
-            } /* if type == sgeE_JOB_LIST */
-            else if (type == sgeE_JOB_FINISH) {
-               /* - move job/task to JJ_finished_jobs */
-               lListElem *japi_job, *japi_task;
-               u_long32 wait_status;
-               const char *err_str;
-               lListElem *jr = lFirst(lGetList(event, ET_new_version));
-
-               DPRINTF (("Handling job finish event\n"));
-
-               wait_status = lGetUlong(jr, JR_wait_status);
-               err_str = lGetString(jr, JR_err_str);
-               if (SGE_GET_NEVERRAN(wait_status)) { 
-                  DPRINTF(("JOB_FINISH: %d.%d job never ran: %s\n", 
-                           intkey, intkey2, err_str));
-               } else {
-                  if (SGE_GET_WEXITED(wait_status)) {
-                     DPRINTF(("JOB_FINISH: %d.%d exited with exit status %d\n", 
-                              intkey, intkey2, SGE_GET_WEXITSTATUS(wait_status)));
-                  }
-                  if (SGE_GET_WSIGNALED(wait_status)) {
-                     DPRINTF(("JOB_FINISH: %d.%d died through signal %s%s\n", 
-                              intkey, intkey2, sge_sig2str(SGE_GET_WSIGNAL(wait_status)),
-                              SGE_GET_WCOREDUMP(wait_status)?"(core dumped)":""));
-                  }
-               }
-
-               JAPI_LOCK_JOB_LIST();
-
-               japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, intkey);
-               if (japi_job != NULL) {
-                  if (range_list_is_id_within(lGetList(japi_job, JJ_not_yet_finished_ids), intkey2)) {
-                     lList *usage = NULL;
-
-                     /* remove task from not yet finished job id list */
-                     object_delete_range_id(japi_job, NULL, JJ_not_yet_finished_ids, intkey2);
-
-                     /* add an entry to the finished tasks */
-                     DPRINTF(("adding finished task %ld for job %ld\n", intkey2, intkey));
-                     japi_task = lAddSubUlong(japi_job, JJAT_task_id, intkey2, JJ_finished_tasks, JJAT_Type);
-                     lSetUlong(japi_task, JJAT_stat, wait_status);
-                     lSetString(japi_task, JJAT_failed_text, err_str);
-
-                     usage = lGetList (jr, JR_usage);
-
-                     if (usage != NULL)  {
-                        lSetList(japi_task, JJAT_rusage, lCopyList ("job usage", usage));
-                     }
-
-                     /* signal all application threads waiting for a job event */
-                     pthread_cond_broadcast(&Master_japi_job_list_finished_cv);
-                  } /* if range_list_is_id_within() */
-               } /* if japi_job != NULL */
-               else {
-                  DPRINTF (("ignoring event on unknown job "sge_u32"\n", intkey));
-               }
-
-               JAPI_UNLOCK_JOB_LIST();
-            } /* else if type == sgeE_JOB_FINISH */
-            else if (type == sgeE_JATASK_MOD) {
-               /* - add task to JJ_started_task_ids */
-               lListElem *japi_job;
-               lList *jat = lGetList(event, ET_new_version);
-               lListElem *ep = lFirst(jat);
-               u_long job_status = lGetUlong(ep, JAT_status);
-               bool task_running = (job_status==JRUNNING || 
-                                    job_status==JTRANSFERING) ? true : false;
-
-               if (task_running) {
-                  DPRINTF (("Handling task start event\n"));
-
-                  JAPI_LOCK_JOB_LIST();
-
-                  japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid,
-                                           intkey);
-                  if (japi_job != NULL) {
-                     if (!range_list_is_id_within (
-                                 lGetList (japi_job, JJ_started_task_ids),
-                                 intkey2)) {
-                        lList *range = NULL;
-
-                        lXchgList(japi_job, JJ_started_task_ids, &range);
-
-                        if (range == NULL) {
-                           range = lCreateList ("started tasks", RN_Type);
-                        }
-
-                        /* add an entry to the started tasks */
-                        DPRINTF(("adding started task %ld for job %ld\n",
-                                 intkey2, intkey));
-                        range_list_insert_id (&range, &alp, intkey2);
-                        range_list_sort_uniq_compress (range, &japi_ec_alp);
-                        lXchgList(japi_job, JJ_started_task_ids, &range);
-
-                        /* signal all application threads waiting for a job event */
-                        pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
-                     }
-                  } /* if japi_job != NULL */
-                  else {
-                     DPRINTF(("ignoring event on unknown job "sge_u32"\n", intkey));
-                  }
-
-                  JAPI_UNLOCK_JOB_LIST();
-               } /* if task_running */
-            } /* else if type == sgeE_JATASK_MOD */
-            /* Bug Fix: Issuezilla #826
-             * Since we only want to stop when explicitly told to, we have to
-             * draw a distinction between SHUTDOWN and QMASTER_GOES_DOWN. On
-             * SHUTDOWN we exit the event client thread.  On QMASTER_GOES_DOWN
-             * we may eventually want to issue a warning message. */
-            else if (type == sgeE_SHUTDOWN) {
-               DPRINTF (("Received shutdown message\n"));
-               stop_ec = true;
-               qmaster_bound = false;
-            } /* else if type == sgeE_SHUTDOWN */
-            else if (type == sgeE_QMASTER_GOES_DOWN) {
-               /* Print a message that qmaster is down and note that we are
-                * disconnected. */
-               if (error_handler != NULL) {
-                  error_handler (MSG_JAPI_QMASTER_DOWN);
-               }
-
-               DPRINTF ((MSG_JAPI_QMASTER_DOWN));
-               disconnected = true;
-               
-            } /* else if type == sgeE_QMASTER_GOES_DOWN */
-         } /* for_each */
-         lFreeList(&event_list);
-      } /* else */
-
-      if (!stop_ec) {
-         /* has japi_exit() been called meanwhile ? */ 
-         JAPI_LOCK_EC_STATE();
-         if (japi_ec_state == JAPI_EC_FINISHING) {
-            stop_ec = true;
-         }
-         JAPI_UNLOCK_EC_STATE();
-      }
-
-      /* Bug Fix: Issuezilla #826
-       * Here we have to make sure that we only give up if we've never actually
-       * connected to the qmaster.  At some point we should probably implement
-       * some kind of timeout to keep clients from waiting indefinitely for a
-       * qmaster that may never come back. */
-      if ((ec_get_ret == 0) && !stop_ec && !qmaster_bound) {
-         /* Print a message that there's a communication problem */
-         if (error_handler != NULL) {
-            error_handler (MSG_JAPI_EC_GET_PROBLEM);
-         }
-
-         DPRINTF ((MSG_JAPI_EC_GET_PROBLEM));
-         stop_ec = true;
-      }
-      else if ((ec_get_ret == 0) && !stop_ec && !disconnected) {
-         /* Print a message that the qmaster is unavailable and note that we're
-            disconnected. */
-         if (error_handler != NULL) {
-            error_handler (MSG_JAPI_DISCONNECTED);
-         }
-
-         DPRINTF ((MSG_JAPI_DISCONNECTED));
-         disconnected = true;
-      }
-   } /* while */
-
-   /* Unregister event client */
-   DPRINTF(("unregistering from qmaster ...\n"));
-   if (ec_deregister(&event_client) == FALSE) {
-      DPRINTF(("failed unregistering event client from qmaster.\n"));
-   } else {
-      DPRINTF(("... unregistered.\n"));
-   }
-      
-   JAPI_LOCK_EC_STATE();
-   /* We have to check here whether the event client ever got the first job list
-    * event.  If not, being here counts as a failure. */
-   /* The only non-error states here are JAPI_EC_UP="success" and
-    * JAPI_EC_FINISHING="aborted by main thread." */
-   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_FINISHING)) {
-      japi_ec_state = JAPI_EC_DOWN;
-   }
-   else {
-      japi_ec_state = JAPI_EC_FAILED;
-   }
-   
-   japi_ec_id = 0;
-   /* We signal here because it's possible that we started up ok but failed on
-    * the first ec_get to get the job list event.  In that case, the main thread
-    * will still be waiting for the event client to signal start up. */
-   pthread_cond_signal(&japi_ec_state_starting_cv);
-   JAPI_UNLOCK_EC_STATE();
-   
-   /* signal all application threads waiting for a job event */
-   pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
-
-   DRETURN(p);
-
-SetupFailed:
-   JAPI_LOCK_EC_STATE();
-   japi_ec_state = JAPI_EC_FAILED;
-   pthread_cond_signal(&japi_ec_state_starting_cv);
-   JAPI_UNLOCK_EC_STATE();
-   DRETURN(p);
-}
-#endif
 
 /****** JAPI/japi_sync_job_tasks() *********************************************
 *  NAME
@@ -5374,11 +4778,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
 
    DENTER(TOP_LAYER, "japi_read_dynamic_attributes");   
 
-#ifdef TEST_GDI2
    ret=gdi2_get_configuration(ctx, "global", &config, NULL);
-#else
-   ret=get_configuration("global", &config, NULL);
-#endif   
 
    if (ret<0) {
       switch( ret ) {
@@ -5459,11 +4859,7 @@ static int do_gdi_delete(lList **id_list, int action, bool delete_all,
 
    DENTER (TOP_LAYER, "do_gdi_delete");
 
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
-#else
-   alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
-#endif   
    lFreeList(id_list);
 
    for_each (aep, alp) {
@@ -5516,11 +4912,7 @@ static int japi_stop_event_client (const char *default_cell)
    DPRINTF (("Requesting that GDI kill our event client.\n"));
    snprintf(id_string, sizeof(id_string)-1, sge_u32, japi_ec_id);
    lAddElemStr(&id_list, ID_str, id_string, ID_Type);
-#ifdef TEST_GDI2
    alp = ctx->kill(ctx, id_list, default_cell, 0, EVENTCLIENT_KILL);
-#else
-   alp = gdi_kill(id_list, default_cell, 0, EVENTCLIENT_KILL);
-#endif   
    lFreeList(&id_list);
    lFreeList(&alp);
    

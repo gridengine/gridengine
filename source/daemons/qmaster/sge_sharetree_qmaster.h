@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_add_sharetree(void *context, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
-int sge_mod_sharetree(void *context, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
-int sge_del_sharetree(void *context, lList **lpp, lList **alpp, char *ruser, char *rhost);
+#include "gdi/sge_gdi_ctx.h"
+
+int sge_add_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
+int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
+int sge_del_sharetree(sge_gdi_ctx_class_t *ctx, lList **lpp, lList **alpp, char *ruser, char *rhost);
 
 int update_sharetree(lList **alpp, lList *dst, lList *src);
 

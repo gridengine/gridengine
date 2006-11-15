@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef TEST_GDI2
-
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -63,7 +61,6 @@
 #include "sge_spool.h"
 #include "qm_name.h"
 #include "sge_unistd.h"
-#include "sge_security.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "uti/setup_path.h"
@@ -80,19 +77,17 @@
 
 #include "sge_time.h"
 
-#include "gdi_tsm.h"
 #include "sge_eventL.h"
 #include "sge_idL.h"
 #include "sge_hostL.h"
 #include "sge_confL.h"
 #include "sge_host.h"
 
-#include "gdi_checkpermissions.h"
 #include "sge_permissionL.h"
 
 #include "sge_conf.h"
-#include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
+#include "sge_security.h"
 
 
 static void dump_send_info(const char* comp_host, const char* comp_name, int comp_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid);
@@ -2174,6 +2169,90 @@ int sge_gdi2_shutdown(void **context)
    DRETURN(0);
 }
 
+/****** sgeobj/sge_report/report_list_send() ******************************************
+*  NAME
+*     report_list_send() -- Send a list of reports.
+*
+*  SYNOPSIS
+*     int report_list_send(const lList *rlp, const char *rhost,
+*                          const char *commproc, int id,
+*                          int synchron, u_long32 *mid)
+*
+*  FUNCTION
+*     Send a list of reports.
+*
+*  INPUTS
+*     const lList *rlp     - REP_Type list
+*     const char *rhost    - Hostname
+*     const char *commproc - Component name
+*     int id               - Component id
+*     int synchron         - true or false
+*     u_long32 *mid        - Message id
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Unexpected error
+*        -2 - No memory
+*        -3 - Format error
+*        other - see sge_send_any_request()
+*
+*  NOTES
+*     MT-NOTE: report_list_send() is not MT safe (assumptions)
+*******************************************************************************/
+int report_list_send(sge_gdi_ctx_class_t *ctx, 
+                     const lList *rlp, 
+                     const char *rhost, const char *commproc, int id,
+                     int synchron, u_long32 *mid)
+{
+   sge_pack_buffer pb;
+   int ret, size;
+   lList *alp = NULL;
+
+   DENTER(TOP_LAYER, "report_list_send");
+
+   /* retrieve packbuffer size to avoid large realloc's while packing */
+   init_packbuffer(&pb, 0, 1);
+   ret = cull_pack_list(&pb, rlp);
+   size = pb_used(&pb);
+   clear_packbuffer(&pb);
+
+   /* prepare packing buffer */
+   if((ret = init_packbuffer(&pb, size, 0)) == PACK_SUCCESS) {
+      ret = cull_pack_list(&pb, rlp);
+   }
+
+   switch (ret) {
+   case PACK_SUCCESS:
+      break;
+
+   case PACK_ENOMEM:
+      ERROR((SGE_EVENT, MSG_GDI_REPORTNOMEMORY_I , size));
+      clear_packbuffer(&pb);
+      DEXIT;
+      return -2;
+
+   case PACK_FORMAT:
+      ERROR((SGE_EVENT, MSG_GDI_REPORTFORMATERROR));
+      clear_packbuffer(&pb);
+      DEXIT;
+      return -3;
+
+   default:
+      ERROR((SGE_EVENT, MSG_GDI_REPORTUNKNOWERROR));
+      clear_packbuffer(&pb);
+      DEXIT;
+      return -1;
+   }
+
+   ret = sge_gdi2_send_any_request(ctx, synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+
+   clear_packbuffer(&pb);
+   answer_list_output (&alp);
+
+   DEXIT;
+   return ret;
+}
 /************* COMMLIB HANDLERS from sge_any_request ************************/
 
 /* setup a communication error callback and mutex for it */
@@ -2576,7 +2655,4 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
 
    DRETURN(ret_val);
 }
-
-
-#endif /* TEST_GDI2 */
 

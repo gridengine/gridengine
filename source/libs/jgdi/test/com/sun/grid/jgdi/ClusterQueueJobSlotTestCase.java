@@ -78,6 +78,11 @@ public class ClusterQueueJobSlotTestCase extends BaseTestCase {
               
               ClusterQueue updatedObj = jgdi.getClusterQueue(testObj.getName());
               
+              // TODO: problem with short/long hostnames as keys -> failure of test even for correct result
+              //       workaround is correct hostname in Testvalues*.properties
+              // System.out.println("retObj.getJobSlots(host) " + retObj.getJobSlots(host) + "(" + host + ")");
+              // System.out.println("updateObj.getJobSlots(host) " + updatedObj.getJobSlots(host) + "(" + host + ")");
+              // System.out.println("updateObj.getJobSlotsKeys() " + updatedObj.getJobSlotsKeys());
               assertEquals(retObj.getJobSlots(host), updatedObj.getJobSlots(host));
               
               retObj.removeJobSlots(host);

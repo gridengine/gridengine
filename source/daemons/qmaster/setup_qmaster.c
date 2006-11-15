@@ -97,30 +97,24 @@
 #include "qmaster_to_execd.h"
 #include "shutdown.h"
 #include "sge_hostname.h"
-#include "sge_any_request.h"
 #include "sge_os.h"
 #include "lock.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_spool.h"
-#include "setup.h"
 #include "sge_event_master.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
 #include "sgeobj/sge_limit_rule.h"
 #include "sge_limit_rule_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
 static lList* parse_qmaster(lList**, u_long32*);
-static void   qmaster_init(void *context, char**);
-static void   communication_setup(void *context);
+static void   qmaster_init(sge_gdi_ctx_class_t *ctx, char**);
+static void   communication_setup(sge_gdi_ctx_class_t *ctx);
 static bool   is_qmaster_already_running(const char *qmaster_spool_dir);
-static void   qmaster_lock_and_shutdown(void **context, int);
-static int    setup_qmaster(void *context);
+static void   qmaster_lock_and_shutdown(void **ctx_ref, int);
+static int    setup_qmaster(sge_gdi_ctx_class_t *ctx);
 
 static int    
 remove_invalid_job_references(bool job_spooling, int user, object_description *object_base);
@@ -165,17 +159,11 @@ static void   init_categories(void);
 *     a useless pid.
 *
 *******************************************************************************/
-int sge_setup_qmaster(void *context, char* anArgv[])
+int sge_setup_qmaster(sge_gdi_ctx_class_t *ctx, char* anArgv[])
 {
    char err_str[1024];
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *act_qmaster_file = ctx->get_act_qmaster_file(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *act_qmaster_file = path_state_get_act_qmaster_file();
-#endif   
 
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
@@ -192,7 +180,7 @@ int sge_setup_qmaster(void *context, char* anArgv[])
       SGE_EXIT(NULL, 1);
    }
 
-   qmaster_init(context, anArgv);
+   qmaster_init(ctx, anArgv);
 
    sge_write_pid(QMASTER_PID_FILE);
 
@@ -227,36 +215,25 @@ int sge_setup_qmaster(void *context, char* anArgv[])
 *     MT-NOTE: of a thread function.
 *
 *******************************************************************************/
-int sge_qmaster_thread_init(void **context, bool switch_to_admin_user)
+int sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, bool switch_to_admin_user)
 {
    const char *admin_user = NULL;
-
-#ifdef TEST_QMASTER_GDI2
+   lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER(TOP_LAYER, "sge_qmaster_thread_init");
 
    lInit(nmv);
 
-#ifdef TEST_QMASTER_GDI2
-   /* TODO: error handling */
-   sge_setup2(&ctx, QMASTER, NULL);
+   if (sge_setup2(ctx_ref, QMASTER, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT((void**)ctx_ref, 1);
+   }   
+   ctx = *ctx_ref; 
    ctx->reresolve_qualified_hostname(ctx);
-   *context = ctx; 
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, ctx->get_qualified_hostname(ctx)));
    admin_user = ctx->get_admin_user(ctx);
-#else
-   sge_setup(QMASTER, NULL);
-   reresolve_me_qualified_hostname();
-   DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, uti_state_get_qualified_hostname()));
-   admin_user = bootstrap_get_admin_user();
-#endif   
   
-#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64)
-   uidgid_mt_init();
-#endif
-
    if ( switch_to_admin_user == true ) {   
       char str[1024];
       if (sge_set_admin_username(admin_user, str) == -1) {
@@ -566,26 +543,19 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *     MT-NOTE: qmaster_init() is NOT MT safe. 
 *
 *******************************************************************************/
-static void qmaster_init(void *context, char **anArgv)
+static void qmaster_init(sge_gdi_ctx_class_t *ctx, char **anArgv)
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
 
    DENTER(TOP_LAYER, "qmaster_init");
 
-   if (setup_qmaster(context)) {
+   if (setup_qmaster(ctx)) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(NULL, 1);
    }
 
-#ifdef TEST_GDI2
    ctx->set_exit_func(ctx, qmaster_lock_and_shutdown);   
-#else
-   uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
-#endif   
   
-   communication_setup(context);
+   communication_setup(ctx);
 
    starting_up(); /* write startup info message to message file */
 
@@ -620,7 +590,7 @@ static void qmaster_init(void *context, char **anArgv)
 *     MT-NOTE: communication_setup() is NOT MT safe 
 *
 *******************************************************************************/
-static void communication_setup(void *context)
+static void communication_setup(sge_gdi_ctx_class_t *ctx)
 {
    cl_com_handle_t* com_handle = NULL;
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
@@ -629,16 +599,9 @@ static void communication_setup(void *context)
    struct rlimit qmaster_rlimits;
 #endif
 
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    u_long32 qmaster_port = ctx->get_sge_qmaster_port(ctx);
    const char *qmaster_spool_dir = ctx->get_qmaster_spool_dir(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   u_long32 qmaster_port = sge_get_qmaster_port();
-   const char *qmaster_spool_dir = bootstrap_get_qmaster_spool_dir();
-#endif
 
    DENTER(TOP_LAYER, "communication_setup");
 
@@ -784,7 +747,7 @@ static bool is_qmaster_already_running(const char *qmaster_spool_dir)
 *     MT-NOTE: qmaster_lock_and_shutdown() is MT safe 
 *
 *******************************************************************************/
-static void qmaster_lock_and_shutdown(void **context, int anExitValue)
+static void qmaster_lock_and_shutdown(void **ctx_ref, int anExitValue)
 {
    DENTER(TOP_LAYER, "qmaster_lock_and_shutdown");
    
@@ -793,18 +756,14 @@ static void qmaster_lock_and_shutdown(void **context, int anExitValue)
          CRITICAL((SGE_EVENT, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
       }
    }
-#ifdef TEST_GDI2
-   sge_gdi2_shutdown(context);
-#else
-   sge_gdi_shutdown();
-#endif   
+   sge_gdi2_shutdown(ctx_ref);
 
    DEXIT;
    return;
 } /* qmaster_lock_and_shutdown() */
 
 
-static int setup_qmaster(void *context)
+static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 {
    lListElem *jep, *ep, *tmpqep;
    static bool first = true;
@@ -815,12 +774,7 @@ static int setup_qmaster(void *context)
    object_description *object_base = object_type_get_object_description();
    const char *qualified_hostname = NULL;
 
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling(); 
-#endif
 
    DENTER(TOP_LAYER, "setup_qmaster");
 
@@ -852,7 +806,7 @@ static int setup_qmaster(void *context)
    cull_hash_new(*(object_base[SGE_TYPE_JOB].list), JB_owner, 0);
 #endif
 
-   if (!sge_initialize_persistence(context, &answer_list)) {
+   if (!sge_initialize_persistence(ctx, &answer_list)) {
       answer_list_output(&answer_list);
       DEXIT;
       return -1;
@@ -861,24 +815,18 @@ static int setup_qmaster(void *context)
       spooling_context = spool_get_default_context();
    }
 
-   if (sge_read_configuration(context, spooling_context, answer_list) != 0) {
+   if (sge_read_configuration(ctx, spooling_context, answer_list) != 0) {
       DEXIT;
       return -1;
    }
    
    mconf_set_new_config(true);
 
-#ifdef TEST_QMASTER_GDI2
    /* get aliased hostname from commd */
    ctx->reresolve_qualified_hostname(ctx);
    qualified_hostname = ctx->get_qualified_hostname(ctx);
    DEBUG((SGE_EVENT,"ctx->get_qualified_hostname(ctx) returned \"%s\"\n", qualified_hostname));
-#else
-   /* get aliased hostname from commd */
-   reresolve_me_qualified_hostname();
-   qualified_hostname = uti_state_get_qualified_hostname();
-   DEBUG((SGE_EVENT,"uti_state_get_qualified_hostname() returned \"%s\"\n", qualified_hostname));
-#endif   
+
    /*
    ** read in all objects and check for correctness
    */
@@ -894,20 +842,20 @@ static int setup_qmaster(void *context)
 
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
-      if (sge_add_host_of_type(context, SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
-      if (sge_add_host_of_type(context, SGE_GLOBAL_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EXECHOST_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
    if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, qualified_hostname)) {
-      if (sge_add_host_of_type(context, qualified_hostname, SGE_ADMINHOST_LIST, &monitor)) {
+      if (sge_add_host_of_type(ctx, qualified_hostname, SGE_ADMINHOST_LIST, &monitor)) {
          DEXIT;
          return -1;
       }
@@ -1010,22 +958,15 @@ static int setup_qmaster(void *context)
                   NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);
    }
 
-#ifdef TEST_QMASTER_GDI2
    if (!ctx->get_job_spooling(ctx)) {
-#else
-   if (!bootstrap_get_job_spooling()) {
-#endif      
       lList *answer_list = NULL;
       dstring buffer = DSTRING_INIT;
       char *str = NULL;
       int len = 0;
 
       INFO((SGE_EVENT, "job spooling is disabled - removing spooled jobs"));
-#ifdef TEST_QMASTER_GDI2
+
       ctx->set_job_spooling(ctx, true);
-#else
-      bootstrap_set_job_spooling(true);
-#endif      
       
       for_each(jep, *object_base[SGE_TYPE_JOB].list) {
          u_long32 job_id = lGetUlong(jep, JB_job_number);
@@ -1050,11 +991,7 @@ static int setup_qmaster(void *context)
       }
       answer_list_output(&answer_list);
       sge_dstring_free(&buffer);
-#ifdef TEST_QMASTER_GDI2
       ctx->set_job_spooling(ctx, true);
-#else
-      bootstrap_set_job_spooling(false);
-#endif      
    }
 
    /* 
@@ -1089,7 +1026,7 @@ static int setup_qmaster(void *context)
     *    - cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      cqueue_mod_qinstances(context, tmpqep, NULL, tmpqep, true, &monitor);
+      cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
    }
         
    /* 
@@ -1127,7 +1064,7 @@ static int setup_qmaster(void *context)
          calendar_parse_week(cep, &answer_list);
          answer_list_output(&answer_list);
 
-         calendar_update_queue_states(context, cep, NULL, NULL, &ppList, &monitor);
+         calendar_update_queue_states(ctx, cep, NULL, NULL, &ppList, &monitor);
       }
 
       lFreeList(&ppList);
@@ -1138,7 +1075,7 @@ static int setup_qmaster(void *context)
 
    DPRINTF(("scheduler config -----------------------------------\n"));
    
-   sge_read_sched_configuration(context, spooling_context, &answer_list);
+   sge_read_sched_configuration(ctx, spooling_context, &answer_list);
    answer_list_output(&answer_list);
 
    /* SGEEE: read user list */

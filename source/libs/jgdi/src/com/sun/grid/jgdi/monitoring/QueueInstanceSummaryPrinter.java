@@ -31,20 +31,15 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
-import java.beans.BeanInfo;
+import com.sun.grid.jgdi.util.OutputTable;
+import com.sun.grid.jgdi.util.OutputTable.Calc;
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.Format;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -72,400 +67,7 @@ public class QueueInstanceSummaryPrinter {
    private int last_job_id;
    private String lastQueue;
    
-   public static class Table {
-      private List columns = new LinkedList();
-      
-      private Class clazz;
-      
-      int rowWidth = -1;
-      
-      
-      public Table(Class clazz) {
-         this.clazz = clazz;
-      }
-      
-      public Column addCol(String name, String header) throws IntrospectionException {
-         return addCol(name, header, 0);
-      }
-      
-      
-      
-      public Column addCol(String name, String header, int width) throws IntrospectionException {
-         Column col = new PropertyColumn(name, header, width);
-         addCol(col);
-         return col;
-      }
-      
-      public Column addCol(String name, String header, int width, int alignment) throws IntrospectionException {
-         Column col = new PropertyColumn(name, header, width, alignment);
-         addCol(col);
-         return col;
-      }
-      
-      public Column addCol(String name, String header, int width, int alignment, Calc calc) throws IntrospectionException {
-         Column col = new CalcColumn(name, header, width, alignment, calc);
-         addCol(col);
-         return col;
-      }
-      
-      
-      public Column addCol(String name, String header, int width, Format format) throws IntrospectionException {
-         Column col = new PropertyColumn(name, header, width, format);
-         addCol(col);
-         return col;
-      }
-      
-      public Column addCol(String name, String header, int width, Format format, Calc calc) throws IntrospectionException {
-         Column col = new CalcColumn(name, header, width, format, calc);
-         addCol(col);
-         return col;
-      }
-      
-      
-      public Column addCol(String name, String header, int width, Calc calc) throws IntrospectionException {
-         Column col = new CalcColumn(name, header, width, calc);
-         addCol(col);
-         return col;
-      }
-      
-      public void addCol(Column col) {
-         columns.add(col);
-         rowWidth = -1;
-      }
-      
-      public void printHeader(PrintWriter pw) {
-         Iterator iter = columns.iterator();
-         while(iter.hasNext()) {
-            Column col = (Column)iter.next();
-            col.printStr(pw, col.getHeader());
-            pw.print(' ');
-         }
-         pw.println();
-      }
-      
-      
-      
-      public int getRowWidth() {
-         if(rowWidth < 0) {
-            int ret = 0;
-            Iterator iter = columns.iterator();
-            while(iter.hasNext()) {
-               Column col = (Column)iter.next();
-               ret += col.getWidth() + 1;
-            }
-            rowWidth = ret;
-         }
-         return rowWidth;
-      }
-      
-      public void printRow(PrintWriter pw, Object obj) {
-         Iterator iter = columns.iterator();
-         while(iter.hasNext()) {
-            ((Column)iter.next()).print(pw, obj);
-            pw.print(' ');
-         }
-         pw.println();
-      }
-      
-      public void printDelimiter(PrintWriter pw, char del) {
-         for(int i = 0; i < getRowWidth(); i++) {
-            pw.print(del);
-         }
-         pw.println();
-      }
-      
-      public abstract class Column {
-         
-         public static final int DEFAULT_COL_WIDTH = 10;
-         
-         String name;
-         private String header;
-         private Format format;
-         private int width;
-         
-         public static final int RIGHT  = 0;
-         public static final int CENTER = 1;
-         public static final int LEFT   = 2;
-         
-         
-         private int alignment = LEFT;
-         private Method getter = null;
-         
-         public Column(String name, String header) {
-            this(name, header, DEFAULT_COL_WIDTH);
-         }
-         
-         public Column(String name, String header, int width) {
-            this(name, header, width, LEFT);
-         }
-         
-         public Column(String name, String header, int width, int alignment) {
-            this(name, header, width, alignment, null);
-         }
-         
-         public Column(String name, String header, Format format) {
-            this(name, header);
-            this.setFormat(format);
-         }
-         
-         public Column(String name, String header, int width, int alignment,  Format format) {
-            this.name = name;
-            this.setHeader(header);
-            this.setWidth(width);
-            this.alignment = alignment;
-            this.setFormat(format);
-         }
-         
-         
-         
-         public String getName() {
-            return name;
-         }
-         
-         
-         public abstract Object getValue(Object obj);
-         
-         
-         public void printStr(PrintWriter pw, String str) {
-            
-            int spaceCount = getWidth() - str.length();
-            
-            if(spaceCount == 0) {
-               pw.print(str);
-            } else {
-               switch(getAlignment()) {
-                  case RIGHT:
-                     if (spaceCount > 0) {
-                        for(int i = 0; i < spaceCount; i++) {
-                           pw.print(' ');
-                        }
-                        pw.print(str);
-                     } else { /* spaceCount < 0 */
-                        str = str.substring(Math.abs(spaceCount));
-                        pw.print(str);
-                     }
-                     break;
-                  case CENTER:
-                     if (spaceCount > 0) {
-                        int prefix = spaceCount / 2;
-                        for(int i = 0; i < prefix; i++) {
-                           pw.print(' ');
-                        }
-                        pw.print(str);
-                        spaceCount -= prefix;
-                        for(int i = 0; i < spaceCount; i++) {
-                           pw.print(' ');
-                        }
-                     } else {
-                        str = str.substring(Math.abs(spaceCount));
-                        pw.print(str);
-                     }
-                  case LEFT:
-                     if(spaceCount > 0) {
-                        pw.print(str);
-                        for(int i = 0; i < spaceCount; i++) {
-                           pw.print(' ');
-                        }
-                     } else {
-                        str = str.substring(0, str.length() - Math.abs(spaceCount));
-                        pw.print(str);
-                     }
-               }
-            }
-         }
-         
-         
-         public void print(PrintWriter pw, Object obj) {
-            Object value = getValue(obj);
-            String str = null;
-            if(value == null) {
-               str = "";
-            } else {
-               if(getFormat() == null) {
-                  str = value.toString();
-               } else {
-                   try {
-                  str = getFormat().format(value);
-                   } catch(RuntimeException e) {
-                       System.err.println("format error in colum " + getName() + " formatter can not format value " + value);
-                       throw e;
-                   }
-               }
-            }
-            printStr(pw, str);
-         }
-         
-         public int getAlignment() {
-            return alignment;
-         }
-         
-         public void setAlignment(int alignment) {
-            this.alignment = alignment;
-         }
-         
-         public Format getFormat() {
-            return format;
-         }
-         
-         public void setFormat(Format format) {
-            this.format = format;
-         }
-         
-         public String getHeader() {
-            return header;
-         }
-         
-         public void setHeader(String header) {
-            this.header = header;
-         }
-         
-         public int getWidth() {
-            return width;
-         }
-         
-         public void setWidth(int width) {
-            this.width = width;
-         }
-      }
-      
-      class PropertyColumn extends Column {
-         
-         private Method getter = null;
-         
-         public PropertyColumn(String name, String header) {
-            this(name, header, DEFAULT_COL_WIDTH);
-         }
-         
-         public PropertyColumn(String name, String header, int width) {
-            this(name, header, width, LEFT);
-         }
-         
-         public PropertyColumn(String name, String header, int width, int alignment) {
-            this(name, header, width, alignment, null);
-         }
-         
-         public PropertyColumn(String name, String header, Format format) {
-            this(name, header);
-            this.setFormat(format);
-         }
-         
-         public PropertyColumn(String name, String header, int width, Format format) {
-            this(name, header, width);
-            this.setFormat(format);
-         }
-         
-         public PropertyColumn(String name, String header, int width, int alignment,  Format format) {
-            super(name, header, width, alignment, format);
-            BeanInfo beanInfo = null;
-            
-            Class aClass = clazz;
-            
-            outer:
-               while(getter == null && aClass != null) {
-                  getter = getGetter(name, aClass);
-                  if(getter == null) {
-                     Class [] interfaces = aClass.getInterfaces();
-                     for(int i = 0; i < interfaces.length; i++) {
-                        getter = getGetter(name, interfaces[i]);
-                        if(getter != null) {
-                           break outer;
-                        }
-                     }
-                     aClass = aClass.getSuperclass();
-                  }
-               }
-               if(getter == null) {
-                  throw new IllegalStateException("getter for " + name + " not found in class " + clazz.getName());
-               }
-         }
-         
-         private Method getGetter(String name, Class aClass) {
-            BeanInfo beanInfo = null;
-            try {
-               beanInfo = Introspector.getBeanInfo(aClass);
-            } catch (IntrospectionException ex) {
-               IllegalStateException ex1 = new IllegalStateException("Can not introspec class " + clazz.getName());
-               ex1.initCause(ex);
-               throw ex1;
-            }
-            PropertyDescriptor [] props = beanInfo.getPropertyDescriptors();
-            for(int i = 0; i < props.length; i++) {
-               if(props[i].getName().equalsIgnoreCase(name)) {
-                  getter = props[i].getReadMethod();
-                  if(getter == null) {
-                     throw new IllegalStateException("property " + name + " has not read method");
-                  }
-                  return getter;
-               }
-            }
-            return null;
-         }
-         
-         
-         public Object getValue(Object obj) {
-            try {
-               return getter.invoke(obj, null);
-            } catch (IllegalAccessException ex) {
-               IllegalStateException ex1 = new IllegalStateException("No access in property " + clazz.getName() + "." + getName());
-               ex1.initCause(ex);
-               throw ex1;
-            } catch (InvocationTargetException ex) {
-               IllegalStateException ex1 = new IllegalStateException("Error in getter " + clazz.getName() + "." + getName());
-               ex1.initCause(ex.getTargetException());
-               throw ex1;
-            }
-         }
-         
-      }
-      
-      
-      class CalcColumn extends Column {
-         
-         private Calc calc;
-         
-         public CalcColumn(String name, String header, Calc calc) {
-            this(name, header, DEFAULT_COL_WIDTH, calc);
-         }
-         
-         public CalcColumn(String name, String header, int width, Calc calc) {
-            this(name, header, width, LEFT, calc);
-         }
-         
-         public CalcColumn(String name, String header, int width, int alignment, Calc calc) {
-            this(name, header, width, alignment, null, calc);
-         }
-         
-         public CalcColumn(String name, String header, Format format, Calc calc) {
-            this(name, header, calc);
-            this.setFormat(format);
-         }
-         
-         public CalcColumn(String name, String header, int width,  Format format, Calc calc) {
-            super(name, header, width);
-            setFormat(format);
-            this.calc = calc;
-         }
-         
-         public CalcColumn(String name, String header, int width, int alignment,  Format format, Calc calc) {
-            super(name, header, width, alignment, format);
-            this.calc = calc;
-         }
-         
-         public Object getValue(Object obj) {
-            return calc.getValue(obj);
-         }
-         
-      }
-      
-      interface Calc {
-         public Object getValue(Object obj);
-      }
-   }
-   
-   public static final DecimalFormat DEFAULT_NUMBER_FORMAT = new DecimalFormat("#####0");
-   public static final DecimalFormat POINT_SIX_FORMAT = new DecimalFormat("####0.000000");
-   
-   public static Table createJobSummaryTable(QueueInstanceSummaryOptions options) throws IntrospectionException {
+   public static OutputTable createJobSummaryTable(QueueInstanceSummaryOptions options) throws IntrospectionException {
       boolean sge_urg, sge_pri, sge_ext, sge_time, tsk_ext;
       boolean print_job_id;
       
@@ -477,9 +79,9 @@ public class QueueInstanceSummaryPrinter {
       sge_time = !sge_ext;
       sge_time = sge_time | tsk_ext | sge_urg | sge_pri;
       
-      Table table = new Table(JobSummary.class);
+      OutputTable table = new OutputTable(JobSummary.class);
       
-      table.addCol("id", "job-ID ", 7, Table.Column.RIGHT);
+      table.addCol("id", "job-ID ", 7, OutputTable.Column.RIGHT);
       table.addCol("priority", "prior", 7);
       if (sge_pri||sge_urg) {
          table.addCol("normalizedUrgency","nurg", 9);
@@ -508,7 +110,7 @@ public class QueueInstanceSummaryPrinter {
       table.addCol("state", "state", 5);
       if (sge_time) {
          
-         Table.Calc timeCalc = new Table.Calc() {
+         Calc timeCalc = new Calc() {
             public Object getValue(Object obj) {
                JobSummary js = (JobSummary)obj;
                if(js.isRunning()) {
@@ -525,8 +127,8 @@ public class QueueInstanceSummaryPrinter {
       }
       if(sge_ext) {
          table.addCol("cpuUsage", "cpu", 8, new CpuUsageCalc());
-         table.addCol("memUsage", "mem", 7, Table.Column.RIGHT, new MemUsageCalc());
-         table.addCol("ioUsage", "io", 7, Table.Column.RIGHT, new IOUsageCalc());
+         table.addCol("memUsage", "mem", 7, OutputTable.Column.RIGHT, new MemUsageCalc());
+         table.addCol("ioUsage", "io", 7, OutputTable.Column.RIGHT, new IOUsageCalc());
          table.addCol("tickets", "tckts", 8, new TicketCalc(sge_ext) {
             public long getValue(JobSummary js) {
                return js.getTickets();
@@ -561,15 +163,15 @@ public class QueueInstanceSummaryPrinter {
       }
       // if(options.showPEJobs()) {
       if (options.showExtendedSubTaskInfo()) {
-         table.addCol("masterQueue", "master", 8, Table.Column.LEFT);
+         table.addCol("masterQueue", "master", 8, OutputTable.Column.LEFT);
       } else {
-         table.addCol("slots", "slots", 8, Table.Column.RIGHT);
+         table.addCol("slots", "slots", 8, OutputTable.Column.RIGHT);
       }
       table.addCol("ja-taskId", "ja-task-ID", 10, new JaTaskIdCalc());
       
       
       if (tsk_ext) {
-         Table.Calc fixedValue = new Table.Calc() {
+         Calc fixedValue = new Calc() {
             public Object getValue(Object obj) {
                return "   NA ";
             }
@@ -578,15 +180,15 @@ public class QueueInstanceSummaryPrinter {
          table.addCol("state", "state" , 6, new StatCalc() );
          // TODO retrieve values from first task
          table.addCol("cpuUsage", "cpu", 8, fixedValue);
-         table.addCol("memUsage", "mem", 7, Table.Column.RIGHT, fixedValue);
-         table.addCol("ioUsage", "io", 7, Table.Column.RIGHT, fixedValue);
+         table.addCol("memUsage", "mem", 7, OutputTable.Column.RIGHT, fixedValue);
+         table.addCol("ioUsage", "io", 7, OutputTable.Column.RIGHT, fixedValue);
          table.addCol("stat", "stat", 5, fixedValue);
          table.addCol("failed", "failed", 7, fixedValue);
       }
       return table;
    }
    
-   private static class StatCalc implements Table.Calc {
+   private static class StatCalc implements Calc {
       
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
@@ -602,7 +204,7 @@ public class QueueInstanceSummaryPrinter {
       }
    }
    
-   private static class CpuUsageCalc implements Table.Calc {
+   private static class CpuUsageCalc implements Calc {
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
          if(!js.hasCpuUsage()) {
@@ -637,7 +239,7 @@ public class QueueInstanceSummaryPrinter {
    }
    
    
-   private abstract static class UsageCalc implements Table.Calc {
+   private abstract static class UsageCalc implements Calc {
       
       private DecimalFormat format = new DecimalFormat("#.00000");
       
@@ -678,7 +280,7 @@ public class QueueInstanceSummaryPrinter {
       }
    }
    
-   private static abstract class TicketCalc implements Table.Calc {
+   private static abstract class TicketCalc implements Calc {
       
       private DecimalFormat format = new DecimalFormat("###00");
       
@@ -704,7 +306,7 @@ public class QueueInstanceSummaryPrinter {
       }
    }
    
-   private static class ShareCalc implements Table.Calc {
+   private static class ShareCalc implements Calc {
       
       private DecimalFormat format = new DecimalFormat("###.00");
       
@@ -728,7 +330,7 @@ public class QueueInstanceSummaryPrinter {
       }
    }
    
-   private static class JaTaskIdCalc implements Table.Calc {
+   private static class JaTaskIdCalc implements Calc {
       
       private DecimalFormat format = new DecimalFormat("###.00");
       
@@ -745,15 +347,15 @@ public class QueueInstanceSummaryPrinter {
    
    private static final  DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
    
-   private static Table createQueueInstanceSummaryTable() throws IntrospectionException {
+   private static OutputTable createQueueInstanceSummaryTable() throws IntrospectionException {
       
-      Table ret = new Table(QueueInstanceSummary.class);
+      OutputTable ret = new OutputTable(QueueInstanceSummary.class);
       
       ret.addCol("name", "queuename", 30);
       ret.addCol("queueType", "qtype", 5);
       ret.addCol("usedSlots", "used/tot.", 4);
       
-      Table.Calc slotCalc = new Table.Calc() {
+      Calc slotCalc = new Calc() {
          
          public Object getValue(Object obj) {
             
@@ -769,7 +371,7 @@ public class QueueInstanceSummaryPrinter {
       
       ret.addCol("totalSlots", "used/tot.", 4, slotCalc);
       
-      Table.Calc loadAvgCalc = new Table.Calc() {
+      Calc loadAvgCalc = new Calc() {
          
          public Object getValue(Object obj) {
             
@@ -792,8 +394,8 @@ public class QueueInstanceSummaryPrinter {
    }
    
    public static void print(PrintWriter pw, QueueInstanceSummaryResult result, QueueInstanceSummaryOptions options) {
-      Table jobSummaryTable = null;
-      Table qiTable = null;
+      OutputTable jobSummaryTable = null;
+      OutputTable qiTable = null;
       try {
          jobSummaryTable = createJobSummaryTable(options);
          qiTable = createQueueInstanceSummaryTable();
@@ -867,7 +469,7 @@ public class QueueInstanceSummaryPrinter {
             if(options.showRequestedResourcesForJobs()) {
                printRequestedResources(pw, js);
             }
-            hadJobs = true;            
+            hadJobs = true;
          }
       }
       
@@ -974,7 +576,7 @@ public class QueueInstanceSummaryPrinter {
          HardRequestValue value = js.getHardRequestValue(resName);
          pw.print(value.getValue());
          pw.print(" (");
-         pw.print(POINT_SIX_FORMAT.format(value.getContribution()));
+         pw.print(OutputTable.POINT_SIX_FORMAT.format(value.getContribution()));
          pw.print(")");
       }
       pw.println();

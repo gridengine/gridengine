@@ -37,15 +37,15 @@
    </target>
 
    <target name="aimk" depends="aimk.init, gensrc.native, javah">
-      <aimk_call args="-only-core -f libs/jgdi/Makefile jgdi_all"/>
+      <aimk_call args="-only-core jgdi_all"/>
    </target>
 
    <target name="aimk.clean" depends="aimk.init">
-      <aimk_call args="-only-core -f libs/jgdi/Makefile jgdi_clean"/>
+      <aimk_call args="-only-core jgdi_clean"/>
    </target>
 
    <target name="aimk.template" depends="aimk.init, init">
-      <aimk_call args="-only-core -f libs/jgdi/Makefile jgdi_template"/>
+      <aimk_call args="-only-core jgdi_template"/>
    </target>
    
    <target name="aimk.drmaa" depends="aimk.init">
@@ -57,6 +57,7 @@
    <target name="init">
        
       <property name="sge.srcdir" location="../.."/>
+      <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
        

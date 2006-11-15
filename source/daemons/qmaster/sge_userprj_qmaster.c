@@ -82,15 +82,12 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
-static int do_add_auto_user(void *context, lListElem*, lList**, monitoring_t *monitor);
+static int do_add_auto_user(sge_gdi_ctx_class_t *ctx, lListElem*, lList**, monitoring_t *monitor);
 
 
 int userprj_mod(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *modp,
 lListElem *ep,
@@ -228,7 +225,7 @@ Error:
    return STATUS_EUNKNOWN;
 }
 
-int userprj_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+int userprj_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
    lListElem *lirs;
@@ -253,22 +250,15 @@ int userprj_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_
 }
 
 int userprj_spool(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *upe,
 gdi_object_t *object 
 ) {
    lList *answer_list = NULL;
    bool dbret;
-
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "userprj_spool");
 
@@ -295,7 +285,7 @@ gdi_object_t *object
    master code: delete a user or project
  ***********************************************************************/
 int sge_del_userprj(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *up_ep,
 lList **alpp,
 lList **upl,    /* list to change */
@@ -417,7 +407,7 @@ int user        /* =1 user, =0 project */
    }
 
    /* delete user or project file */
-   if (!sge_event_spool(context, alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
+   if (!sge_event_spool(ctx, alpp, 0, user ? sgeE_USER_DEL : sgeE_PROJECT_DEL,
                         0, 0, name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
 
@@ -466,18 +456,11 @@ const char *obj_name   /* e.g. "fangorn"  */
 /* automatic user objects which have expired.                         */
 /*-------------------------------------------------------------------------*/
 void
-sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+sge_automatic_user_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    u_long32 auto_user_delete_time = mconf_get_auto_user_delete_time();
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *admin = ctx->get_admin_user(ctx);
    const char *qmaster_host = ctx->get_qualified_hostname(ctx);
-#else
-   const char *admin = bootstrap_get_admin_user();
-   const char *qmaster_host = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
@@ -515,7 +498,7 @@ sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring
                /* if the delete time has expired, delete user */
                if (delete_time <= now) {
                   lList *answer_list = NULL;
-                  if (sge_del_userprj(context, user, &answer_list, master_user_list, admin,
+                  if (sge_del_userprj(ctx, user, &answer_list, master_user_list, admin,
                                        (char *)qmaster_host, 1) != STATUS_OK) {
                      /* 
                       * if deleting the user failes (due to user being referenced
@@ -540,7 +523,7 @@ sge_automatic_user_cleanup_handler(void *context, te_event_t anEvent, monitoring
 /*    called in sge_gdi_add_job                                            */
 /*-------------------------------------------------------------------------*/
 int
-sge_add_auto_user(void *context, const char *user, lList **alpp, monitoring_t *monitor)
+sge_add_auto_user(sge_gdi_ctx_class_t *ctx, const char *user, lList **alpp, monitoring_t *monitor)
 {
    lListElem *uep;
    int status = STATUS_OK;
@@ -593,7 +576,7 @@ sge_add_auto_user(void *context, const char *user, lList **alpp, monitoring_t *m
       }
    
       /* add the auto user via GDI request */
-      status = do_add_auto_user(context, uep, alpp, monitor); 
+      status = do_add_auto_user(ctx, uep, alpp, monitor); 
       lFreeElem(&uep);
       FREE(auto_user_default_project);
    }
@@ -613,21 +596,14 @@ sge_add_auto_user(void *context, const char *user, lList **alpp, monitoring_t *m
 *     MT-NOTE: do_add_auto_user() is not MT safe 
 *
 *******************************************************************************/
-static int do_add_auto_user(void *context, lListElem* anUser, lList** anAnswer, monitoring_t *monitor)
+static int do_add_auto_user(sge_gdi_ctx_class_t *ctx, lListElem* anUser, lList** anAnswer, monitoring_t *monitor)
 {
    int res = STATUS_EUNKNOWN;
    gdi_object_t *userList = NULL;
    lList *tmpAnswer = NULL;
    lList *ppList = NULL;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(TOP_LAYER, "do_add_auto_user");
 
@@ -637,7 +613,7 @@ static int do_add_auto_user(void *context, lListElem* anUser, lList** anAnswer, 
     * Add anUser to the user list.
     * Owner of the operation is the admin user on the qmaster host.
     */
-   res = sge_gdi_add_mod_generic(context,
+   res = sge_gdi_add_mod_generic(ctx,
                                  &tmpAnswer, anUser, 1, userList, 
                                  admin_user, qualified_hostname, 
                                  0, &ppList, monitor);
@@ -678,7 +654,7 @@ static int do_add_auto_user(void *context, lListElem* anUser, lList** anAnswer, 
 *              master lists (only reading)
 *
 *******************************************************************************/
-void sge_userprj_spool(void *context) {
+void sge_userprj_spool(sge_gdi_ctx_class_t *ctx) {
    lListElem *elem = NULL;
    lList *answer_list = NULL;
    const char *name = NULL;
@@ -692,13 +668,13 @@ void sge_userprj_spool(void *context) {
 
    for_each(elem, *object_base[SGE_TYPE_USER].list) {
       name = lGetString(elem, UP_name);
-      sge_event_spool(context, &answer_list, now, sgeE_USER_MOD, 0, 0, name, NULL, NULL,
+      sge_event_spool(ctx, &answer_list, now, sgeE_USER_MOD, 0, 0, name, NULL, NULL,
                       elem, NULL, NULL, false, true);
    }
 
    for_each(elem, *object_base[SGE_TYPE_PROJECT].list) {
       name = lGetString(elem, UP_name);
-      sge_event_spool(context, &answer_list, now, sgeE_PROJECT_MOD, 0, 0, name, NULL, NULL,
+      sge_event_spool(ctx, &answer_list, now, sgeE_PROJECT_MOD, 0, 0, name, NULL, NULL,
                       elem, NULL, NULL, false, true);   
    }
 

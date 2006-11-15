@@ -35,16 +35,16 @@
 #include "sge_c_gdi.h"
 #include "uti/sge_monitor.h"
 
-int cuser_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int cuser_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-int cuser_mod(void *context,
+int cuser_mod(sge_gdi_ctx_class_t *ctx,
               lList **alpp, lListElem *modp, lListElem *ep, int add, 
               const char *ruser, const char *rhost, gdi_object_t *object,
               int sub_command, monitoring_t *monitor);
 
-int cuser_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object);
+int cuser_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *upe, gdi_object_t *object);
 
-int cuser_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
+int cuser_del(sge_gdi_ctx_class_t *ctx, lListElem *cep, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SGE_CUSER_QMASTER_H_ */
 

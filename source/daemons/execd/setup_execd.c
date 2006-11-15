@@ -38,9 +38,7 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "setup.h"
 #include "sge_conf.h"
-#include "gdi_conf.h"
 #include "sge_log.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
@@ -66,35 +64,19 @@
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 extern char execd_spool_dir[SGE_PATH_MAX];
 extern lList *jr_list;
 
 static char execd_messages_file[SGE_PATH_MAX];
 
 /*-------------------------------------------------------------------*/
-void sge_setup_sge_execd(void *context, const char* tmp_err_file_name)
+void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name)
 {
    char err_str[1024];
    int allowed_get_conf_errors     = 5;
    char* spool_dir = NULL;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
    const char *admin_user = ctx->get_admin_user(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-   u_long32 progid = uti_state_get_mewho();
-   const char *cell_root = path_state_get_cell_root();
-   int is_daemonized = uti_state_get_daemonized();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   const char *admin_user = bootstrap_get_admin_user();
-#endif
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
@@ -115,7 +97,6 @@ void sge_setup_sge_execd(void *context, const char* tmp_err_file_name)
       SGE_EXIT(NULL, 1);
    }
 
-#ifdef TEST_GDI2
    while (gdi2_get_conf_and_daemonize(ctx, daemonize_execd, &Execd_Config_List, NULL)) {
       if (allowed_get_conf_errors-- <= 0) {
          CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
@@ -124,26 +105,12 @@ void sge_setup_sge_execd(void *context, const char* tmp_err_file_name)
       }
       sleep(1);
    }
-#else
-   while (get_conf_and_daemonize(progid, progname, qualified_hostname, cell_root, is_daemonized, 
-                                    daemonize_execd, &Execd_Config_List, NULL)) {
-      if (allowed_get_conf_errors-- <= 0) {
-         CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
-         SGE_EXIT(NULL, 1);
-      }
-      sleep(1);
-   }
-#endif   
    sge_show_conf();         
 
 
    /* get aliased hostname */
-#ifdef TEST_GDI2
    /* TODO: is this call needed ? */
    ctx->reresolve_qualified_hostname(ctx);
-#else
-   reresolve_me_qualified_hostname();
-#endif   
    spool_dir = mconf_get_execd_spool_dir();
 
    DPRINTF(("chdir(\"/\")----------------------------\n"));
@@ -189,14 +156,9 @@ int daemonize_execd(void *context)
 {
    fd_set keep_open;
    int ret, fd;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    int is_daemonized = ctx->is_daemonized(ctx);
    const char *progname = ctx->get_progname(ctx);
-#else
-   int is_daemonized = uti_state_get_daemonized();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-#endif
 
    DENTER(TOP_LAYER, "daemonize_execd");
 
@@ -216,11 +178,7 @@ int daemonize_execd(void *context)
 
    cl_com_set_handle_fds(cl_com_get_handle(progname,0), &keep_open);
 
-#ifdef TEST_GDI2   
    ret = sge_daemonize(&keep_open, ctx);   
-#else
-   ret = sge_daemonize(&keep_open, NULL);   
-#endif   
 
    DEXIT;
    return ret;

@@ -59,14 +59,11 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "sge_answer.h"
+#include "sge_gdi_ctx.h"
 
 #include "Matrix.h"
 
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 
 typedef struct _tFOTInfo {
@@ -305,22 +302,12 @@ static void qmonFTOkay(Widget w, XtPointer cld, XtPointer cad)
          ** An alternative solution is to use what_all or NULL (==what_all)
          ** 
          */                         
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, fticket_info.list_type, SGE_GDI_MOD,
                        tlp ? &tlp : &lp, NULL, NULL);
-#else
-         alp = sge_gdi(fticket_info.list_type, SGE_GDI_MOD,
-                       tlp ? &tlp : &lp, NULL, NULL);
-#endif
-         
          lFreeList(&tlp);
       } else {
          what = lWhat("%T(ALL)", fticket_info.dp);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, fticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
-#else
-         alp = sge_gdi(fticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
-#endif
       }
 
       qmonMessageBox(w, alp, 0);
@@ -923,22 +910,12 @@ static void qmonOTOkay(Widget w, XtPointer cld, XtPointer cad)
          what = lWhat("%T(%I %I)", JB_Type, JB_job_number,
                             JB_override_tickets);
          tlp = lSelect("", lp, NULL, what);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, oticket_info.list_type, SGE_GDI_MOD,
                        tlp ? &tlp : &lp, NULL, NULL);
-#else
-         alp = sge_gdi(oticket_info.list_type, SGE_GDI_MOD,
-                       tlp ? &tlp : &lp, NULL, NULL);
-#endif
-         
          lFreeList(&tlp);
       } else {
          what = lWhat("%T(ALL)", oticket_info.dp);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, oticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
-#else
-         alp = sge_gdi(oticket_info.list_type, SGE_GDI_MOD, &lp, NULL, what);
-#endif
       }
 
       qmonMessageBox(w, alp, 0);

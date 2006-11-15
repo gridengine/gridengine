@@ -55,12 +55,6 @@
 #include "sge_ssi.h"
 
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#include "sge_event_client2.h"
-#endif
-
-
 /* MT-NOTE: parse_job_identifier() is not MT safe */
 static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)
 {
@@ -110,15 +104,13 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
 *
 *  MT-NOTE: sge_ssi_job_cancel() is not MT safe
 *******************************************************************************/
-bool sge_ssi_job_cancel(void *context, const char *job_identifier, bool reschedule) 
+bool sge_ssi_job_cancel(sge_evc_class_t *evc, const char *job_identifier, bool reschedule) 
 {
    u_long32 job_id, ja_task_id;
    lList *ref_list = NULL, *alp;
    lListElem *ref_ep;
    char job_id_str[100];
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
+   sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
 
    DENTER(TOP_LAYER, "sge_ssi_job_cancel");
 
@@ -141,11 +133,7 @@ bool sge_ssi_job_cancel(void *context, const char *job_identifier, bool reschedu
    DPRINTF(("deleting job "SFN"\n", job_get_id_string(job_id, ja_task_id, NULL)));
 
    /* send delete request */
-#ifdef TEST_GDI2   
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &ref_list, NULL, NULL);
-#else   
-   alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &ref_list, NULL, NULL);
-#endif   
 
    answer_list_on_error_print_or_exit(&alp, stderr);
 
@@ -184,13 +172,12 @@ bool sge_ssi_job_cancel(void *context, const char *job_identifier, bool reschedu
 *     libsched/ssi/--Simple-Scheduler-Interface
 *     libsched/ssi/-Simple-Scheduler-Interface-Typedefs
 *******************************************************************************/
-bool sge_ssi_job_start(void *evc_context, const char *job_identifier, const char *pe, task_map tasks[])
+bool sge_ssi_job_start(sge_evc_class_t *evc, const char *job_identifier, const char *pe, task_map tasks[])
 {
    u_long32 job_id, ja_task_id;
    lListElem *job, *ja_task;
    lList *order_list = NULL; /* list to be sent to qmaster */
    lList *granted = NULL;    /* granted queues */
-
    int i;
 
    DENTER(TOP_LAYER, "sge_ssi_job_start");
@@ -238,7 +225,8 @@ bool sge_ssi_job_start(void *evc_context, const char *job_identifier, const char
 
    /* create and send order */
    order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted, true);
-   sge_send_orders2master(evc_context, &order_list);
+
+   sge_send_orders2master(evc, &order_list);
 
    if (order_list != NULL) {
       lFreeList(&order_list);

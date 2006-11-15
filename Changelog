@@ -1,3 +1,9 @@
+AA-2006-11-15-0: Enhancem:  o remove TEST_GDI2 obsolete sections and files
+                            o build_testsuite.properties added
+                            o show detached settings in jgdi
+                            o OutputTable from QinstanceSummaryPrinter extracted
+                 Review:    RD, RH           
+                            
 RH-2006-11-13-0: Bugfix:    Broken compile of jgdi on denethor
                  Review:    AA
 

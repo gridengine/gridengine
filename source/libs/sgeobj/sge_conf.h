@@ -38,7 +38,7 @@
    not spooled and is not shown in qconf -mconf */
 #define REPRIORITIZE "reprioritize"
 
-typedef int (*tDaemonizeFunc)(void *);
+typedef int (*tDaemonizeFunc)(void *ctx);
 
 /* This list is *ONLY* used by the execd and should be moved eventually */
 extern lList *Execd_Config_List;

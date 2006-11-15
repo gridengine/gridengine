@@ -35,9 +35,7 @@
 #include "cull.h"
 #include "sge_report_execd.h"
 #include "sge_usageL.h"
-#include "sge_ack.h"
 #include "job_report_execd.h"
-#include "sge_any_request.h"
 #include "reaper_execd.h"
 #include "sge_signal.h"
 #include "execd_signal_queue.h"
@@ -271,7 +269,7 @@ RETURN
 
    ------------------------------------------------------------ */
 int 
-execd_c_ack(void *context, 
+execd_c_ack(sge_gdi_ctx_class_t *ctx, 
             struct dispatch_entry *de, 
             sge_pack_buffer *pb, 
             sge_pack_buffer *apb,
@@ -311,7 +309,7 @@ execd_c_ack(void *context,
                     jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
 
             if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
-               remove_acked_job_exit(context, jobid, jataskid, pe_task_id_str, jr);
+               remove_acked_job_exit(ctx, jobid, jataskid, pe_task_id_str, jr);
             } 
             else {
                DPRINTF(("acknowledged job "sge_u32"."sge_u32" not found\n", jobid, jataskid));
@@ -344,7 +342,7 @@ execd_c_ack(void *context,
                if (signal_job(jobid, jataskid, signo)) {
                   lListElem *jr;
                   jr = get_job_report(jobid, jataskid, NULL);
-                  remove_acked_job_exit(context, jobid, jataskid, NULL, jr);
+                  remove_acked_job_exit(ctx, jobid, jataskid, NULL, jr);
                   job_unknown(jobid, jataskid, NULL);
                }
             }

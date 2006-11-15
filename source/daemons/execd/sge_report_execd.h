@@ -32,11 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "cull.h"
+#include "gdi/sge_gdi_ctx.h"
 
-typedef int (*report_func_type)(void *context, lList *, u_long32 now, u_long32 *next_send);
+typedef int (*report_func_type)(sge_gdi_ctx_class_t *ctx, lList *, u_long32 now, u_long32 *next_send);
 
 typedef struct report_source {
   int type;
@@ -44,7 +43,7 @@ typedef struct report_source {
   u_long32 next_send;
 } report_source;
 
-int sge_send_all_reports(void *context, u_long32 now, int which, report_source *report_sources);
+int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which, report_source *report_sources);
 
 int sge_add_double2load_report(lList **lpp, char *name, double value, const char *host, char *units);
 int sge_add_int2load_report(lList **lpp, const char *name, int value, const char *host);

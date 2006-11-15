@@ -35,10 +35,11 @@
 #include <Xm/Xm.h> 
 #include <Xmt/Color.h>
 #include "qmon_proto.h"
+#include "gdi/sge_gdi_ctx.h"
 
 void qmonLoadIcons(void); 
 Pixmap qmonGetIcon(String name);
-void qmonInitSge(void **context, char *progname, int usage);
+void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage);
 void qmonAllocColor(Widget w);
 void qmonCreateGC(Widget top);
 void qmonExitCB(Widget w, XtPointer cld, XtPointer cad);

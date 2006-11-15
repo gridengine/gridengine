@@ -40,29 +40,24 @@
 #include "sge_unistd.h"
 #include "commlib.h"
 #include "sge_gdi.h"
-#include "sge_any_request.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_all_listsL.h"
+#include "sge_feature.h"
+#include "sge_time.h"
+#include "sge_job.h"
+#include "sge_id.h"
+#include "sge_gdi_ctx.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
-#include "sge_time.h"
 #include "qmon_timer.h"
 #include "qmon_appres.h"
 #include "qmon_globals.h"
 #include "qm_name.h"
-#include "sge_time.h"
-#include "sge_feature.h"
 #include "qmon_init.h"
-#include "sge_job.h"
-#include "sge_id.h"
-#include "gdi_tsm.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 #define for_each2(ep1, lp1, ep2, lp2) \
    for (ep1=lFirst(lp1), ep2=lFirst(lp2); ep1 && ep2;\
@@ -209,9 +204,6 @@ lList **answerp
    int count = 0;
    int current = 0;
    int index;
-#ifndef TEST_GDI2   
-   int status;
-#endif   
    char msg[BUFSIZ];
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
 
@@ -224,7 +216,6 @@ lList **answerp
          count++;
    }
 
-#ifdef TEST_GDI2
    if (ctx->is_alive(ctx) == false) {
       sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
@@ -239,36 +230,10 @@ lList **answerp
       }
    }
 
-#else
-
-   /*
-   ** ask if the master is available, if not show warning dialog
-   ** and leave the timerproc
-   */
-
-   status = check_isalive(sge_get_master(false));
-
-   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
-   if (status != CL_RETVAL_OK) {
-      sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster: %s", "cannot reach qmaster: %s"), cl_get_error_text(status));
-      contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "@{Retry}", "@{Abort}",
-                                                XmtYesButton, NULL);
-      /*
-      ** we don't want to retry, so go down
-      */
-      if (!contact_ok) {
-         DEXIT;
-         qmonExitFunc(1);
-      }
-   }
-#endif
-
    for (i=0; i<XtNumber(QmonMirrorList); i++) {
       if (selector & (1<<i)) {
          current++;
          index = i + 1;
-#ifdef TEST_GDI2
          QmonMirrorList[index].id = ctx->gdi_multi(ctx, &alp, 
                                  (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD,
                                  QmonMirrorList[index].type, 
@@ -278,17 +243,6 @@ lList **answerp
                                  QmonMirrorList[index].what,
                                  (current == count) ? &mal : NULL, 
                                  &state, true);
-#else
-         QmonMirrorList[index].id = sge_gdi_multi(&alp, 
-                                 (current == count) ? SGE_GDI_SEND : SGE_GDI_RECORD,
-                                 QmonMirrorList[index].type, 
-                                 SGE_GDI_GET,
-                                 NULL, 
-                                 QmonMirrorList[index].where, 
-                                 QmonMirrorList[index].what,
-                                 (current == count) ? &mal : NULL, 
-                                 &state, true);
-#endif
          if (QmonMirrorList[index].id == -1)
             goto error;
       }   
@@ -366,11 +320,7 @@ lEnumeration *what
     */
    sge_stopwatch_start(0);
    
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, type, SGE_GDI_DEL, lpp, where, what); 
-#else
-   alp = sge_gdi(type, SGE_GDI_DEL, lpp, where, what); 
-#endif   
 
    if (type == SGE_JOB_LIST) {
 #if 0
@@ -456,19 +406,12 @@ lEnumeration *what
    
    sge_stopwatch_start(0);
    
-#ifdef TEST_GDI2
-   if (type == SGE_JOB_LIST)
+   if (type == SGE_JOB_LIST) {
       alp = ctx->gdi(ctx, type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
                         lpp, where, what);
-   else
+   } else {
       alp = ctx->gdi(ctx, type, SGE_GDI_ADD, lpp, where, what); 
-#else
-   if (type == SGE_JOB_LIST)
-      alp = sge_gdi(type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
-                        lpp, where, what);
-   else
-      alp = sge_gdi(type, SGE_GDI_ADD, lpp, where, what); 
-#endif      
+   }
 
    for_each2(alep, alp, ep, *lpp) {
       if ( lGetUlong(alep, AN_status) == STATUS_OK) {
@@ -505,14 +448,11 @@ lEnumeration *enp
    lList *ans;
    lList *lp = NULL;
 
-   if (enp)
+   if (enp) {
       lp = lSelect("", *lpp, NULL, enp);
+   }   
 
-#ifdef TEST_GDI2
    ans = ctx->gdi(ctx, target, SGE_GDI_MOD, lp ? &lp : lpp, cp, enp);
-#else
-   ans = sge_gdi(target, SGE_GDI_MOD, lp ? &lp : lpp, cp, enp);
-#endif   
 
    lFreeList(&lp);
 
@@ -551,19 +491,7 @@ lEnumeration *what
     */
    sge_stopwatch_start(0);
 
-#if 0
-   /* 
-   ** This should be obsolete now, sometimes it has strange effects, when
-   ** you use an already reduced list (-> lSelect needs the correct descriptor)
-   */
-   alp = mod_gdi(type, SGE_GDI_MOD, lpp, where, what); 
-#else
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, type, SGE_GDI_MOD, lpp, where, what); 
-#else
-   alp = sge_gdi(type, SGE_GDI_MOD, lpp, where, what); 
-#endif   
-#endif
 
    if (!(type == SGE_SC_LIST || type == SGE_SHARETREE_LIST)) {
       /* right now we change the whole element */
@@ -629,7 +557,6 @@ int action
       return NULL;
    }
       
-
    /* 
     * get the answer list for error reporting 
     * alp contains several answer elements for 
@@ -637,11 +564,7 @@ int action
    sge_stopwatch_start(0);
   
    if (id_list_build_from_str_list(&id_list, &alp, lp, action, force)) {
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
-#endif      
       lFreeList(&id_list);
    }
 

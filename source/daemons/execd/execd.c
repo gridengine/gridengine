@@ -37,9 +37,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"
-#include "setup.h"
 
-#include "sge_any_request.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
@@ -96,9 +94,6 @@
 #endif
 
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 
@@ -112,8 +107,8 @@ volatile int waiting4osjid = 1;
  */
 char execd_spool_dir[SGE_PATH_MAX];
 
-static void execd_exit_func(void **context, int i);
-static void execd_register(void *context);
+static void execd_exit_func(void **ctx, int i);
+static void execd_register(sge_gdi_ctx_class_t *ctx);
 static void dispatcher_errfunc(const char *err_str);
 static void parse_cmdline_execd(char **argv);
 static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
@@ -196,9 +191,8 @@ char **argv
    lList **master_job_list = NULL;
    const char* qualified_hostname = NULL;
    const char* binary_path = NULL;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif   
+   lList *alp = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -214,10 +208,6 @@ char **argv
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
-#ifndef TEST_GDI2
-   sge_mt_init();
-#endif   
-
    /* This needs a better solution */
    umask(022);
       
@@ -230,41 +220,25 @@ char **argv
    sge_sig_handler_in_main_loop = 0;
    sge_setup_sig_handlers(EXECD);
 
-
-#ifdef TEST_GDI2
-   if (sge_setup2(&ctx, EXECD, NULL) != AE_OK) {
+   if (sge_setup2(&ctx, EXECD, &alp) != AE_OK) {
+      answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
    ctx->set_exit_func(ctx, execd_exit_func);
    qualified_hostname = ctx->get_qualified_hostname(ctx);
    binary_path = ctx->get_binary_path(ctx);
-#else
-   uti_state_set_exit_func(execd_exit_func);
-   if (sge_setup(EXECD, NULL) != 0) {
-      /* sge_setup has already printed the error message */
-      SGE_EXIT(NULL, 1);
-   }
-   qualified_hostname = uti_state_get_qualified_hostname();
-   binary_path = bootstrap_get_binary_path();
-#endif   
 
    if ((i=sge_occupy_first_three())>=0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
-#ifdef TEST_GDI2
       SGE_EXIT((void**)&ctx, 1);
-#else
-      SGE_EXIT(NULL, 1);
-#endif
    }     
    lInit(nmv);
 
    parse_cmdline_execd(argv);   
    
-
-#ifdef TEST_GDI2
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
-   while ( cl_com_get_handle(prognames[EXECD],1) == NULL) {
+   while (cl_com_get_handle(prognames[EXECD],1) == NULL) {
       ctx->prepare_enroll(ctx);
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 || shut_me_down ) {
@@ -285,32 +259,6 @@ char **argv
         }
       }
    }
-#else
-   /* exit if we can't get communication handle (bind port) */
-   max_enroll_tries = 30;
-   while ( cl_com_get_handle(prognames[EXECD],1) == NULL) {
-      int last_execd_error = 0;
-      prepare_enroll(prognames[EXECD], &last_execd_error);
-      max_enroll_tries--;
-      if ( max_enroll_tries <= 0 || shut_me_down ) {
-         /* exit after 30 seconds */
-         if (printed_points != 0) {
-            printf("\n");
-         }
-         CRITICAL((SGE_EVENT, MSG_COM_ERROR));
-         SGE_EXIT(NULL, 1);
-      }
-      if (  cl_com_get_handle(prognames[EXECD],1) == NULL) {
-        /* sleep when prepare_enroll() failed */
-        sleep(1);
-        if (max_enroll_tries < 27) {
-           printf(".");
-           printed_points++;
-           fflush(stdout);
-        }
-      }
-   }
-#endif   
 
    if (printed_points != 0) {
       printf("\n");
@@ -327,19 +275,10 @@ char **argv
    }
 
    /* daemonizes if qmaster is unreachable */   
-#ifdef TEST_GDI2      
    sge_setup_sge_execd(ctx, tmp_err_file_name);
-#else
-   sge_setup_sge_execd(NULL, tmp_err_file_name);
-#endif
-
 
    if (!getenv("SGE_ND")) {
-#ifdef TEST_GDI2      
       daemonize_execd(ctx);
-#else
-      daemonize_execd(NULL);
-#endif
    }
 
 
@@ -355,11 +294,7 @@ char **argv
       lFreeList(&report_list);
    }
 
-#ifdef TEST_GDI2
    execd_register(ctx);
-#else   
-   execd_register(NULL);
-#endif   
 
    sge_write_pid(EXECD_PID_FILE);
 
@@ -378,11 +313,7 @@ char **argv
 #ifdef COMPILE_DC
    if (ptf_init()) {
       CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTPTF));
-#ifdef TEST_GDI2
       SGE_EXIT((void**)&ctx, 1);
-#else
-      SGE_EXIT(NULL, 1);
-#endif      
    }
    INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
 #endif
@@ -395,11 +326,7 @@ char **argv
    
    /* clean up jobs hanging around (look in active_dir) */
    clean_up_old_jobs(1);
-#ifdef TEST_GDI2   
    sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);
-#else   
-   sge_send_all_reports(NULL, 0, NUM_REP_REPORT_JOB, execd_report_sources);
-#endif   
 
    dispatch_timeout = DISPATCH_TIMEOUT_SGE;
       
@@ -426,15 +353,9 @@ char **argv
 
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
-#ifdef TEST_GDI2
       i = dispatch(ctx, execd_dispatcher_table, 
                    sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
                    tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);
-#else
-      i = dispatch(NULL, execd_dispatcher_table, 
-                   sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
-                   tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);
-#endif
 
       if (sge_sig_handler_sigpipe_received) {
           sge_sig_handler_sigpipe_received = 0;
@@ -454,11 +375,7 @@ char **argv
       if (i) {
          if (cl_is_commlib_error(i)) {
             if (i != CL_RETVAL_OK) {
-#ifdef TEST_GDI2            
                execd_register(ctx); /* reregister at qmaster */
-#else
-               execd_register(NULL); /* reregister at qmaster */
-#endif
             }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
@@ -481,11 +398,7 @@ char **argv
    }   
 
    sge_prof_cleanup();
-#ifdef TEST_GDI2
    sge_shutdown((void**)&ctx, execd_exit_state);
-#else
-   sge_shutdown(NULL, execd_exit_state);
-#endif   
    DEXIT;
    return 0;
 }
@@ -496,16 +409,12 @@ char **argv
  * clean up
  *-------------------------------------------------------------*/
 static void execd_exit_func(
-void **context,
+void **ctx_ref,
 int i 
 ) {
    DENTER(TOP_LAYER, "execd_exit_func");
 
-#ifdef TEST_GDI2
-   sge_gdi2_shutdown(context);
-#else
-   sge_gdi_shutdown();
-#endif   
+   sge_gdi2_shutdown(ctx_ref);
 
    /* trigger load sensors shutdown */
    sge_ls_stop(0);
@@ -553,19 +462,13 @@ const char *err_str
 *  SEE ALSO
 *     execd/execd_register()
 *******************************************************************************/
-int sge_execd_register_at_qmaster(void *context) {
+int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx) {
    int return_value = 0;
    static int sge_last_register_error_flag = 0;
    lList *hlp = NULL, *alp = NULL;
    lListElem *aep = NULL;
    lListElem *hep = NULL;
-   
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*) context;
    const char *master_host = ctx->get_master(ctx, false);
-#else
-   const char *master_host = sge_get_master(false);
-#endif   
    
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
@@ -576,11 +479,7 @@ int sge_execd_register_at_qmaster(void *context) {
 
    /* register at qmaster */
    DPRINTF(("*****  Register at qmaster   *****\n"));
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
-#else
-   alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
-#endif   
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
       if (sge_last_register_error_flag == 0) {
@@ -619,14 +518,9 @@ int sge_execd_register_at_qmaster(void *context) {
 *  SEE ALSO
 *     execd/sge_execd_register_at_qmaster()
 *******************************************************************************/
-static void execd_register(void *context)
+static void execd_register(sge_gdi_ctx_class_t *ctx)
 {
    int had_problems = 0;
-#ifdef TEST_GDI2   
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#else
-   int last_enroll_error  = CL_RETVAL_OK;
-#endif   
 
    DENTER(TOP_LAYER, "execd_register");
 
@@ -640,11 +534,7 @@ static void execd_register(void *context)
          handle = cl_com_get_handle(prognames[EXECD],1);
          if ( handle == NULL) {
             DPRINTF(("preparing reenroll"));
-#ifdef TEST_GDI2
             ctx->prepare_enroll(ctx);
-#else            
-            prepare_enroll(prognames[EXECD], &last_enroll_error);
-#endif            
             handle = cl_com_get_handle(prognames[EXECD],1);
          }
 
@@ -665,11 +555,7 @@ static void execd_register(void *context)
 
       }
 
-#ifdef TEST_GDI2
       if (sge_execd_register_at_qmaster(ctx) != 0) {
-#else
-      if (sge_execd_register_at_qmaster(NULL) != 0) {
-#endif
          if ( had_problems == 0) {
             had_problems = 1;
          }

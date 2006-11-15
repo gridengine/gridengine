@@ -34,43 +34,28 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
-
 #include "sge_bootstrap.h"
-
 #include "sge_answer.h"
 #include "sge_event.h"
 #include "sge_object.h"
 #include "sge_job.h"
-
 #include "sge_event_master.h"
-
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
-
 #include "sge_persistence_qmaster.h"
 
 #include "msg_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 bool
-sge_initialize_persistence(void *context, lList **answer_list)
+sge_initialize_persistence(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 {
    bool ret = true;
 
    lListElem *spooling_context;
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *spooling_method = ctx->get_spooling_method(ctx);
    const char *spooling_lib = ctx->get_spooling_lib(ctx);
    const char *spooling_params = ctx->get_spooling_params(ctx);
-#else
-   const char *spooling_method = bootstrap_get_spooling_method();
-   const char *spooling_lib = bootstrap_get_spooling_lib();
-   const char *spooling_params = bootstrap_get_spooling_params();
-#endif
 
    DENTER(TOP_LAYER, "sge_initialize_persistence");
 
@@ -147,7 +132,7 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-spooling_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+spooling_trigger_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    time_t next_trigger = 0;
    time_t now;
@@ -225,7 +210,7 @@ spooling_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monito
 *     
 *******************************************************************************/
 bool 
-sge_event_spool(void *context,
+sge_event_spool(sge_gdi_ctx_class_t *ctx,
                 lList **answer_list, u_long32 timestamp, ev_event event, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
                 const char *strkey2, const char *session, 
@@ -238,13 +223,7 @@ sge_event_spool(void *context,
    lListElem *element = NULL;
    bool delete = false;
    dstring buffer = DSTRING_INIT;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
-
 
    switch (event) {
       case sgeE_ADMINHOST_LIST:

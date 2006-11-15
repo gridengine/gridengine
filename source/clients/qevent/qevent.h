@@ -42,6 +42,7 @@
 typedef struct qevent_options {
   int          help_option;
   int          testsuite_option;
+  int          subscribe_option;
   int          trigger_option_count;
   int          trigger_option_events[MAX_TRIGGER_SCRIPTS];
   const char*  trigger_option_scripts[MAX_TRIGGER_SCRIPTS];

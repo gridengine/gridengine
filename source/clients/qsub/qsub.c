@@ -55,15 +55,13 @@
 #include "lck/sge_mtutil.h"
 #include "uti/sge_log.h"
 #include "sge_profiling.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 extern char **environ;
 static pthread_mutex_t exit_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -132,7 +130,6 @@ char **argv
       SGE_EXIT(NULL, 1);
    }
 
-#ifdef TEST_GDI2
    prog_number = ctx->get_who(ctx);
    myuid = ctx->get_uid(ctx);
    sge_root = ctx->get_sge_root(ctx);
@@ -141,23 +138,12 @@ char **argv
    qualified_hostname = ctx->get_qualified_hostname(ctx);
    unqualified_hostname = ctx->get_unqualified_hostname(ctx);
    mastername = ctx->get_master(ctx, false);
-#else
-   prog_number = uti_state_get_mewho();
-   myuid = uti_state_get_uid();
-   sge_root = path_state_get_sge_root();
-   cell_root = path_state_get_cell_root();
-   username = uti_state_get_user_name();
-   qualified_hostname = uti_state_get_qualified_hostname();
-   unqualified_hostname = uti_state_get_unqualified_hostname();
-   mastername = sge_get_master(0);
-#endif   
-
 
    /*
     * read switches from the various defaults files
     */
    opt_list_append_opts_from_default_files(prog_number, cell_root, username, &opts_defaults, &alp, environ);
-   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
       SGE_EXIT(NULL, tmp_ret);
@@ -168,7 +154,7 @@ char **argv
     */
    opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_cmdline, &alp,
                                           argv + 1, environ);
-   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_QSUB_WARNING_S);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_QSUB_WARNING_S);
    if (tmp_ret > 0) {
       DEXIT;
       SGE_EXIT(NULL, tmp_ret);
@@ -195,7 +181,7 @@ char **argv
       opt_list_append_opts_from_script(prog_number,
                                        &opts_scriptfile, &alp, 
                                        opts_cmdline, environ);
-      tmp_ret = answer_list_print_err_warn(&alp, MSG_QSUB_COULDNOTREADSCRIPT_S,
+      tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_QSUB_COULDNOTREADSCRIPT_S,
                                            MSG_WARNING);
       if (tmp_ret > 0) {
          DEXIT;
@@ -226,7 +212,7 @@ char **argv
    
    alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
 
-   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_WARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
       DEXIT;
       SGE_EXIT(NULL, tmp_ret);

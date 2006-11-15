@@ -87,10 +87,9 @@
 #include "sge_japiL.h"
 #include "sge_strL.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
+
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 
 /****** DRMAA/--DRMAA_Job_API ********************************************************
@@ -2351,11 +2350,7 @@ static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
    const char *new_path = NULL;
    int drmaa_errno;
    lList *path_list = lCreateList("path_list", PN_Type);
-#ifdef TEST_GDI2
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
-#else
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-#endif   
    
    DENTER(TOP_LAYER, "drmaa_path2path_opt");
 
@@ -2596,22 +2591,12 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
    int read_scriptfile = 0;
    u_long32 jb_now = 0;
 
-#ifdef TEST_GDI2
    u_long32 prog_number = ctx->get_who(ctx);
    u_long32 myuid = ctx->get_uid(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *username = ctx->get_username(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   u_long32 prog_number = uti_state_get_mewho();
-   u_long32 myuid = uti_state_get_uid();
-   const char *cell_root = path_state_get_cell_root();
-   const char *username = uti_state_get_user_name();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
-   
 
    DENTER(TOP_LAYER, "drmaa_job2sge_job");
    
@@ -2844,11 +2829,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       /* We need to document a standard practice for naming job categories so
        * they don't conflict with command names.  I think something like
        * <cat_name>.cat would work fine. */
-#ifdef TEST_GDI2
       args = sge_get_qtask_args(ctx, job_cat, alp);
-#else
-      args = sge_get_qtask_args(NULL, job_cat, alp);
-#endif
       
       if (answer_list_has_error(&alp)) {
          answer_list_to_dstring(alp, diag);

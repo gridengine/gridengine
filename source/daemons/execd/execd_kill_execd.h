@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_kill_execd(void *context, 
+int execd_kill_execd(sge_gdi_ctx_class_t *ctx, 
                      struct dispatch_entry *de, 
                      sge_pack_buffer *pb, 
                      sge_pack_buffer *apb, 
@@ -41,7 +41,7 @@ int execd_kill_execd(void *context,
                      char *err_str, 
                      int answer_error);
 
-int execd_new_features(void *context,
+int execd_new_features(sge_gdi_ctx_class_t *ctx,
                        struct dispatch_entry *de, 
                        sge_pack_buffer *pb, 
                        sge_pack_buffer *apb, 

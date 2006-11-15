@@ -56,21 +56,17 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
-#include "sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 static char object_name[] = "parallel environment";
 
 static void pe_update_categories(const lListElem *new_pe, const lListElem *old_pe);
 
 int pe_mod(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *new_pe,
 lListElem *pe, /* reduced */
@@ -219,17 +215,11 @@ ERROR:
 }
 
 
-int pe_spool(void *context, lList **alpp, lListElem *pep, gdi_object_t *object) 
+int pe_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *pep, gdi_object_t *object) 
 {
    lList *answer_list = NULL;
    bool dbret;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "pe_spool");
 
@@ -249,7 +239,7 @@ int pe_spool(void *context, lList **alpp, lListElem *pep, gdi_object_t *object)
    return dbret ? 0 : 1;
 }
 
-int pe_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+int pe_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *pe_name;
 
@@ -267,7 +257,7 @@ int pe_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *ob
    return 0;
 }
 
-int sge_del_pe(void *context, lListElem *pep, lList **alpp, char *ruser, char *rhost) 
+int sge_del_pe(sge_gdi_ctx_class_t *ctx, lListElem *pep, lList **alpp, char *ruser, char *rhost) 
 {
    int pos;
    lListElem *ep = NULL;
@@ -326,7 +316,7 @@ int sge_del_pe(void *context, lListElem *pep, lList **alpp, char *ruser, char *r
    }
 
    /* remove host file */
-   if (!sge_event_spool(context, alpp, 0, sgeE_PE_DEL,
+   if (!sge_event_spool(ctx, alpp, 0, sgeE_PE_DEL,
                         0, 0, pe, NULL, NULL, NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, pe));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);

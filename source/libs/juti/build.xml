@@ -85,6 +85,7 @@
     <target name="propsinit" depends="propsinit.win, propsinit.unix"/>
     
     <target name="-pre-init" >
+        <property file="../../build_testsuite.properties"/>
         <property file="../../build_private.properties"/>
     </target>
     

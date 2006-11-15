@@ -250,10 +250,8 @@ sge_passwd.o: $(UTILBIN_DIR)/sge_passwd.c
 #---------------------------------------------------------------------
 AUTHUSER_ADD_LIBS = -luti -llck -lrmon $(DLLIB)
 
-authuser.exe:
-
 authuser: authuser.o juti.o
-	$(CC) -o authuser authuser.o juti.o $(LFLAGS) $(LIBS) $(AUTHLIBS) $(AUTHUSER_ADD_LIBS) 
+	$(CC) -o authuser authuser.o juti.o $(LFLAGS) $(AUTHLIBS) $(AUTHUSER_ADD_LIBS) $(LIBS)
 
 authuser.o: $(UTILBIN_DIR)/authuser.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/authuser.c -o authuser.o

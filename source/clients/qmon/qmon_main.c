@@ -65,12 +65,9 @@
 #include "sge_prog.h"
 #include "sge_mt_init.h"
 #include "version.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
 
 #ifdef HAS_EDITRES
@@ -132,36 +129,20 @@ char **argv
    putenv("LC_ALL=C"); 
 #endif
 
-#ifndef TEST_GDI2
-   sge_mt_init();
-#endif
-
    /* INSTALL SIGNAL HANDLER */
    qmonInstSignalHandler();
 
    strcpy(progname, argv[0]);
 
-#ifdef TEST_GDI2
    /* GENERAL SGE SETUP */
    if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
-      qmonInitSge((void**)&ctx, progname, 0);
+      qmonInitSge(&ctx, progname, 0);
    } else {  
       /* -help */
-      qmonInitSge((void**)&ctx, progname, 1);
+      qmonInitSge(&ctx, progname, 1);
    }
 
    SGE_ROOT = ctx->get_sge_root(ctx);
-#else
-   /* GENERAL SGE SETUP */
-   if (!(argc > 1 && !strcmp(argv[1], "-help"))) {
-      qmonInitSge(NULL, progname, 0);
-   } else {  
-      /* -help */
-      qmonInitSge(NULL, progname, 1);
-   }
-
-   SGE_ROOT = sge_get_root_dir(0, NULL, 0, 1);
-#endif
 
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args

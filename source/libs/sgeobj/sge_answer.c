@@ -235,6 +235,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 const char *answer_get_quality_text(const lListElem *answer) 
 {
    const char *quality_text[] = {
+      "CRITICAL",
       "ERROR",
       "WARNING",
       "INFO"
@@ -243,8 +244,8 @@ const char *answer_get_quality_text(const lListElem *answer)
 
    DENTER(ANSWER_LAYER, "answer_get_quality_text");
    quality = lGetUlong(answer, AN_quality);
-   if (quality > 2) {
-      quality = 0;
+   if (quality >= ANSWER_QUALITY_END) {
+      quality = ANSWER_QUALITY_CRITICAL;
    }
    DEXIT;
    return quality_text[quality];
@@ -536,10 +537,13 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 ******************************************************************************/
 bool answer_list_has_error(lList **answer_list)
 {
-   bool ret;
+   bool ret = false;
 
    DENTER(ANSWER_LAYER, "answer_list_has_error");
-   ret = answer_list_has_quality(answer_list, ANSWER_QUALITY_ERROR);
+   if ((answer_list_has_quality(answer_list, ANSWER_QUALITY_ERROR) == true) ||
+       (answer_list_has_quality(answer_list, ANSWER_QUALITY_CRITICAL) == true)) {
+       ret = true;
+   }
    DRETURN(ret);
 }               
 
@@ -608,6 +612,7 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 *     MT-NOTE: answer_list_print_err_warn() is MT safe
 ******************************************************************************/
 int answer_list_print_err_warn(lList **answer_list, 
+                               const char *critical_prefix,
                                const char *err_prefix,
                                const char *warn_prefix)
 {
@@ -617,7 +622,13 @@ int answer_list_print_err_warn(lList **answer_list,
 
    DENTER(ANSWER_LAYER, "answer_list_print_err_warn");
    for_each(answer, *answer_list) {
-      if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
+      if (answer_has_quality(answer, ANSWER_QUALITY_CRITICAL)) {
+         answer_print_text(answer, stderr, critical_prefix, NULL);
+         if (do_exit == 0) {
+            status = answer_get_status(answer);
+            do_exit = 1;
+         }
+      } else if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
          answer_print_text(answer, stderr, err_prefix, NULL);
          if (do_exit == 0) {
             status = answer_get_status(answer);
@@ -668,7 +679,8 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
       lListElem *answer;
 
       for_each(answer, *answer_list) {
-         if(answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
+         if(answer_has_quality(answer, ANSWER_QUALITY_CRITICAL) ||
+            answer_has_quality(answer, ANSWER_QUALITY_ERROR) ||
             answer_has_quality(answer, ANSWER_QUALITY_WARNING)) {
             answer_print_text(answer, stream, NULL, NULL);
             if(ret == STATUS_OK) {
@@ -879,6 +891,10 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
    if (answer_list != NULL && *answer_list != NULL) {
       for_each(answer, *answer_list) {
          switch (lGetUlong(answer, AN_quality)) {
+            case ANSWER_QUALITY_CRITICAL:
+               CRITICAL((SGE_EVENT, lGetString(answer, AN_text)));
+               ret = true;
+               break;
             case ANSWER_QUALITY_ERROR:
                ERROR((SGE_EVENT, lGetString(answer, AN_text)));
                ret = true;

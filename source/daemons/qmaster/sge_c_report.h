@@ -35,8 +35,9 @@
 
 #include "cull.h"
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
 
-void sge_c_report(void *context, char *aHost, char *aCommproc, int anId, lList *aReport, monitoring_t *monitor);
+void sge_c_report(sge_gdi_ctx_class_t *ctx, char *aHost, char *aCommproc, int anId, lList *aReport, monitoring_t *monitor);
 
 #endif /* _SGE_C_REPORT_H_ */

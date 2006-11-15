@@ -63,10 +63,8 @@
 #include "sge_event_client.h"
 #include "sge_event.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#include "sge_event_client2.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
+#include "evc/sge_event_client2.h"
 
 /* examples for retrieving information from SGE's master lists */
 static void print_load_value(lListElem *host, const char *name, const char *format);
@@ -75,7 +73,7 @@ static void get_workload_info(void);
 static void get_policy_info(void);
 
 /* implementation of a simple job scheduler */
-static sge_callback_result remove_finished_job(void *evc_context, 
+static sge_callback_result remove_finished_job(sge_evc_class_t *evc, 
                                 object_description *object_base, 
                                 sge_object_type type, 
                                 sge_event_action action, 
@@ -83,11 +81,11 @@ static sge_callback_result remove_finished_job(void *evc_context,
                                 void *clientdata);
 /* static int queue_get_free_slots(lListElem *queue); */
 /* static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_long32 *procs); */
-static void simple_scheduler(void *evc_context);
-/* static void delete_some_jobs(void *context); */
+static void simple_scheduler(sge_evc_class_t *evc);
+/* static void delete_some_jobs(sge_gdi_ctx_class_t *ctx); */
 
 
-static sge_callback_result remove_finished_job(void *evc_context, object_description *object_base, 
+static sge_callback_result remove_finished_job(sge_evc_class_t *evc, object_description *object_base, 
                                 sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata)
 {
@@ -431,7 +429,7 @@ static void allocate_queue_slots(lList **allocated_queues, lListElem *queue, u_l
 }
 #endif
 
-static void simple_scheduler(void *evc_context)
+static void simple_scheduler(sge_evc_class_t *evc)
 {
    lListElem *job, *ja_task;
    const char *pe_name;
@@ -537,7 +535,7 @@ static void simple_scheduler(void *evc_context)
 }
 
 #if 0
-static void delete_some_jobs(void *evc_context)
+static void delete_some_jobs(sge_evc_class_t *evc)
 {
    /* delete jobs running longer than 2 minutes
     * to test the sge_ssi_job_cancel function 
@@ -559,96 +557,49 @@ static void delete_some_jobs(void *evc_context)
 }
 #endif
 
-static lListElem* register_scheduler(void *evc_context)
+static void register_scheduler(sge_evc_class_t *evc)
 {
-   lListElem *event_client = NULL;
-#ifdef TEST_GDI2   
-   sge_evc_class_t *evc = (sge_evc_class_t*)evc_context;
-#endif   
-
    DENTER(TOP_LAYER, "register_scheduler");
 
    /* initialize mirroring interface */
-#ifdef TEST_GDI2   
-   sge_mirror_initialize(evc_context, EV_ID_SCHEDD, "simple_scheduler", true);
-   event_client = evc->ec_get_event_client(evc);
-   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
+   sge_mirror_initialize(evc, EV_ID_SCHEDD, "simple_scheduler", true);
+   sge_mirror_subscribe(evc, SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
 
    /* in an sgeee system we have to explicitly remove finished jobs 
     * from qmaster 
     */
-   sge_mirror_subscribe(event_client, SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
-#else
-   sge_mirror_initialize(NULL, EV_ID_SCHEDD, "simple_scheduler", true);
-   event_client = ec_get_event_client();
-   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
+   sge_mirror_subscribe(evc, SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
 
-   /* in an sgeee system we have to explicitly remove finished jobs 
-    * from qmaster 
-    */
-   sge_mirror_subscribe(event_client, SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
-#endif
-
-   return event_client;
+   DEXIT;
 }
 
 int main(int argc, char *argv[])
 {
-   lListElem *event_client = NULL;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
    sge_evc_class_t *evc = NULL;
-   sge_error_class_t *eh = NULL;
-#else
-   void *ctx = NULL;
-   void *evc = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "simple_scheduler");
 
    /* setup signal handlers */
    sge_setup_sig_handlers(QSCHED);
 
-#ifdef TEST_GDI2
-   eh = sge_error_class_create();
-   if (!eh) {
-      fprintf(stderr, "couldn't create error handler\n");
-      SGE_EXIT(1);
-   }   
-
-   if (sge_gdi2_setup(&ctx, SCHEDD, eh) != AE_OK) {
-      showError(eh);
-      sge_error_class_destroy(&eh);
-      SGE_EXIT(1);
+   if (sge_gdi2_setup(&ctx, SCHEDD, &alp) != AE_OK) {
+      answer_list_output(&alp);
+      SGE_EXIT(&ctx, 1);
    }
 
    if (ctx && (ctx->reresolve_qualified_hostname(ctx) != CL_RETVAL_OK)) {
       SGE_EXIT(1);
    }   
 
-   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, eh); 
+   evc = sge_evc_class_create(ctx, EV_ID_SCHEDD, &alp); 
 
    if (evc == NULL) {
-      showError(eh);
-   }
-
-#else
-   /* register at commd */
-   sge_gdi_param(SET_MEWHO, QSCHED, NULL);
-   if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT(&ctx, 1);
    }
-   /* hostname resolving check */
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      SGE_EXIT(1);
-   }
-#endif
 
-   event_client = register_scheduler(evc);
-   if (event_client == NULL) {
-      SGE_EXIT(EXIT_FAILURE);
-   }
+   register_scheduler(evc);
 
    /* do processing until shutdown is requested */
    while(!shut_me_down) {

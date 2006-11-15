@@ -65,26 +65,24 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_bootstrap.h"
 #include "gdi/version.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
 #endif
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 static void 
 get_reserved_usage(const char*qualified_hostname, lList **job_usage_list);
 static int 
-execd_add_load_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send);
+execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send);
 static int 
-execd_add_conf_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send);
+execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send);
 static int 
-execd_add_license_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send);
+execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send);
 static int 
-execd_add_job_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send);
+execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send);
 static int 
 sge_get_loadavg(const char *qualified_hostname, lList **lpp);
 
@@ -101,17 +99,10 @@ lUlong sge_execd_report_seqno = 0;
 extern lList *jr_list;
 
 static int 
-execd_add_load_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send) 
+execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char* binary_path = ctx->get_binary_path(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-   const char* binary_path = bootstrap_get_binary_path();
-#endif
-
 
    if (*next_send <= now) {
       lListElem *report;
@@ -138,14 +129,9 @@ execd_add_load_report(void *context, lList *report_list, u_long32 now, u_long32 
 
 
 static int 
-execd_add_conf_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send) 
+execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-#endif
 
    if (*next_send <= now) {
       lListElem *report;
@@ -171,14 +157,9 @@ execd_add_conf_report(void *context, lList *report_list, u_long32 now, u_long32 
 }
 
 static int 
-execd_add_license_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send) 
+execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-#endif
 
    if (*next_send <= now) {
       lListElem *report;
@@ -214,18 +195,12 @@ execd_add_license_report(void *context, lList *report_list, u_long32 now, u_long
 }
 
 static int 
-execd_add_job_report(void *context, lList *report_list, u_long32 now, u_long32 *next_send) 
+execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
    bool do_send = false;
    bool only_flush = false;
    static u_long32 last_send = 0;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-#endif
-
 
    /* if report interval expired: send all reports */
    if (*next_send <= now) {

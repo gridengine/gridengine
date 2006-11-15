@@ -44,14 +44,12 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_prog.h"
-#include "setup.h"
 #include "qm_name.h"
 #include "sig_handlers.h"
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
 #include "sge_hostname.h"
-#include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -69,15 +67,14 @@
 #include "sge_io.h"
 #include "sge_spool.h"
 #include "sge_mt_init.h"
+#include "sge_answer.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
 #include "msg_daemons_common.h"
 #include "msg_shadowd.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 #ifndef FALSE
 #   define FALSE 0
@@ -92,7 +89,7 @@
 #define DELAY_TIME          600 
 
 int main(int argc, char **argv);
-static void shadowd_exit_func(void **context, int i);
+static void shadowd_exit_func(void **ctx_ref, int i);
 static int check_if_valid_shadow(char *binpath, 
                                  char *oldqmaster, 
                                  const char *act_qmaster_file, 
@@ -190,12 +187,8 @@ char qmaster_out_file[SGE_PATH_MAX];
 
 #endif
 
-#ifdef TEST_GDI2
+   lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-#else
-   void *ctx = NULL;
-   int last_prepare_enroll_error = CL_RETVAL_OK;
-#endif   
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
@@ -232,8 +225,8 @@ char qmaster_out_file[SGE_PATH_MAX];
 
    log_state_set_log_file(TMP_ERR_FILE_SHADOWD);
 
-#ifdef TEST_GDI2
-   if (sge_setup2(&ctx, SHADOWD, NULL) != AE_OK) {
+   if (sge_setup2(&ctx, SHADOWD, &alp) != AE_OK) {
+      answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
 
@@ -264,7 +257,7 @@ char qmaster_out_file[SGE_PATH_MAX];
             DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
             if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT((void **)&ctx, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }
          }
 
@@ -277,91 +270,34 @@ char qmaster_out_file[SGE_PATH_MAX];
             DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
             if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
                CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT((void **)&ctx, 1);
+               SGE_EXIT((void**)&ctx, 1);
             }
          }  
       } else {
          ctx->prepare_enroll(ctx);
       }
    }
-#else
-   sge_mt_init();
-
-   /* minimal setup */
-   sge_setup(SHADOWD, NULL);
-
-   qmaster_spool_dir = bootstrap_get_qmaster_spool_dir();
-   bootstrap_file = path_state_get_bootstrap_file();
-   admin_user = bootstrap_get_admin_user();
-   unqualified_hostname = uti_state_get_unqualified_hostname();
-   qualified_hostname = uti_state_get_qualified_hostname();
-   shadow_master_file = path_state_get_shadow_masters_file();
-   act_qmaster_file = path_state_get_act_qmaster_file();
-   bootstrap_binary_path = bootstrap_get_binary_path();
-
-   {
-      pid_t shadowd_pid;
-
-      if (qmaster_spool_dir != NULL) {
-         char *shadowd_name = SGE_SHADOWD;
-
-         /* is there a running shadowd on this host (with unqualified name) */
-         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, qmaster_spool_dir, unqualified_hostname);
-
-         DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
-         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
-            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
-               CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT(NULL, 1);
-            }
-         }
-
-         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
-
-         /* is there a running shadowd on this host (with aliased name) */
-         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, qmaster_spool_dir, qualified_hostname);
-         DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
-         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
-            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
-               CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT(NULL, 1);
-            }
-         }  
-      } else {
-         prepare_enroll(prognames[SHADOWD], &last_prepare_enroll_error );
-      }
-   }
-
-   uti_state_set_exit_func(shadowd_exit_func);
-   sge_setup_sig_handlers(SHADOWD);
-
-   lInit(nmv);
-
-
-#endif
 
    parse_cmdline_shadowd(argc, argv);
 
    if (qmaster_spool_dir == NULL) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, bootstrap_file));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (chdir(qmaster_spool_dir)) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S, qmaster_spool_dir));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (sge_set_admin_username(admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (sge_switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    sprintf(shadow_err_file, "messages_shadowd.%s", unqualified_hostname);
@@ -502,11 +438,7 @@ char qmaster_out_file[SGE_PATH_MAX];
       }
    }
 
-#ifdef TEST_GDI2
    sge_shutdown((void**)&ctx, 0);
-#else
-   sge_shutdown(NULL, 0);
-#endif   
 
    DRETURN(EXIT_SUCCESS);
 }
@@ -516,10 +448,10 @@ char qmaster_out_file[SGE_PATH_MAX];
  * function installed to be called just before exit() is called.
  *-----------------------------------------------------------------*/
 static void shadowd_exit_func(
-void **context,
+void **ctx_ref,
 int i 
 ) {
-   exit(0);
+   exit(i);
 }
 
 /*-----------------------------------------------------------------
@@ -561,10 +493,6 @@ static int check_if_valid_shadow(char *binpath,
                                  const char *binary_path)
 {
    struct hostent *hp;
-#ifndef TEST_GDI2   
-   const char *cp, *cp2;
-   char localconffile[SGE_PATH_MAX];
-#endif
 
    DENTER(TOP_LAYER, "check_if_valid_shadow");
 
@@ -603,28 +531,8 @@ static int check_if_valid_shadow(char *binpath,
       DRETURN(-1);
    }
 
-#ifdef TEST_GDI2
    sprintf(binpath, binary_path); /* copy global configuration path */
    DPRINTF((""SFQ"\n", binpath));   
-#else   
-   /* we can't get binary path */
-   if ((cp=bootstrap_get_binary_path()) != NULL) {
-      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_bootstrap_file()));
-      DRETURN(-1);
-   } else {
-      const char *local_conf_dir = path_state_get_local_conf_dir();
-      sprintf(binpath, cp); /* copy global configuration path */
-      sprintf(localconffile, "%s/%s", local_conf_dir, qualified_hostname);
-      cp2 = bootstrap_get_binary_path();
-      if (cp2) {
-         strcpy(binpath, cp2); /* overwrite global configuration path */
-         DPRINTF(("found local conf binary path:\n"));
-      } else {
-         DPRINTF(("global conf binary path:\n"));   
-      }
-      DPRINTF((""SFQ"\n", binpath));   
-   }
-#endif   
    DPRINTF(("we are a candidate for shadow master\n"));
 
    DRETURN(0);

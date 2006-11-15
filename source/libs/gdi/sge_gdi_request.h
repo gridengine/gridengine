@@ -33,13 +33,10 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "sge_gdi.h"
 
 #ifdef  __cplusplus
 extern "C" {
-#endif
-
-#ifndef __SGE_GDI_H
-#include "sge_gdi.h"
 #endif
 
 struct _sge_gdi_request {

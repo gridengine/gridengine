@@ -54,7 +54,7 @@ extern volatile int jobs_to_start;
  *************************************************************************/
 
 int 
-execd_ticket(void *context, 
+execd_ticket(sge_gdi_ctx_class_t *ctx, 
              struct dispatch_entry *de, 
              sge_pack_buffer *pb, 
              sge_pack_buffer *apb, 

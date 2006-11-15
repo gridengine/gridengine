@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "sge_all_listsL.h"
-#include "sge_any_request.h"
 #include "qmaster_to_execd.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -42,11 +41,8 @@
 
 #include "msg_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
-static int host_notify_about_X(void *context,
+static int host_notify_about_X(sge_gdi_ctx_class_t *ctx,
                                lListElem *host,
                                u_long32 x,
                                int tag,
@@ -93,7 +89,7 @@ static int host_notify_about_X(void *context,
 *  SEE ALSO
 *     qmaster/host/host_notify_about_featureset()
 *******************************************************************************/
-static int host_notify_about_X(void *context, 
+static int host_notify_about_X(sge_gdi_ctx_class_t *ctx, 
                                lListElem *host,
                                u_long32 x,
                                int tag,
@@ -103,10 +99,6 @@ static int host_notify_about_X(void *context,
    sge_pack_buffer pb;
    int ret = 0;
    unsigned long last_heard_from;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
 
    DENTER(TOP_LAYER, "host_notify_about_X");
 
@@ -129,11 +121,7 @@ static int host_notify_about_X(void *context,
       u_long32 dummy = 0;
 
       packint(&pb, x);
-#ifdef TEST_QMASTER_GDI2
       if (gdi2_send_message_pb(ctx, 0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK) {
-#else
-      if (gdi_send_message_pb(0, prognames[progname_id], 1, hostname, tag, &pb, &dummy) != CL_RETVAL_OK) {
-#endif      
          ret = -1;
       } else {
          ret = 0;
@@ -167,11 +155,11 @@ error:
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_new_conf(void *context, lListElem *host) 
+int host_notify_about_new_conf(sge_gdi_ctx_class_t *ctx, lListElem *host) 
 {
    u_long32 dummy = 0;  /* value has no special meaning */
 
-   return host_notify_about_X(context, host, dummy, TAG_GET_NEW_CONF, EXECD);
+   return host_notify_about_X(ctx, host, dummy, TAG_GET_NEW_CONF, EXECD);
 }
 
 /****** qmaster/host/host_notify_about_kill() *********************************
@@ -194,7 +182,7 @@ int host_notify_about_new_conf(void *context, lListElem *host)
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_kill(void *context, lListElem *host, int kill_command)
+int host_notify_about_kill(sge_gdi_ctx_class_t *ctx, lListElem *host, int kill_command)
 {
-   return host_notify_about_X(context, host, kill_command, TAG_KILL_EXECD, EXECD);
+   return host_notify_about_X(ctx, host, kill_command, TAG_KILL_EXECD, EXECD);
 }

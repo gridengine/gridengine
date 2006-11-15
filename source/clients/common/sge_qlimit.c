@@ -84,12 +84,8 @@
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_host.h"
 #include "sge_qstat.h"
-
 #include "sched/sort_hosts.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 #define HEAD_FORMAT "%-18s %-20.20s %s\n"
 
@@ -101,7 +97,7 @@ typedef struct {
    const char* host;
 } qlimit_filter_t;
 
-static bool get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l, lList **hgroup_l, lList **exechost_l, lList *hostref_list, lList **alpp);
+static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **lirs_l, lList **centry_l, lList **userset_l, lList **hgroup_l, lList **exechost_l, lList *hostref_list, lList **alpp);
 
 static char *qlimit_get_next_filter(stringT filter, const char *cp);
 static bool qlimit_print_out_rule(lListElem *rule, dstring rule_name, const char *limit_name,
@@ -141,7 +137,7 @@ static bool qlimit_print_out_filter(lListElem *filter, const char *name, const c
 *     MT-NOTE: qlimit_output() is MT safe 
 *
 *******************************************************************************/
-bool qlimit_output(void *context, lList *host_list, lList *resource_match_list, lList *user_list,
+bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_match_list, lList *user_list,
                  lList *pe_list, lList *project_list, lList *cqueue_list, lList **alpp,
                  report_handler_t* report_handler) 
 {
@@ -165,24 +161,12 @@ bool qlimit_output(void *context, lList *host_list, lList *resource_match_list, 
 
    dstring rule_name = DSTRING_INIT;
 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
-   
    DENTER(TOP_LAYER, "qlimit_output");
 
    /* If no user is requested on command line we set the current user as default */
-#ifdef TEST_GDI2
    qlimit_filter.user = ctx->get_username(ctx);
-#else
-   qlimit_filter.user = uti_state_get_user_name();
-#endif
 
-#ifdef TEST_GDI2
    ret = get_all_lists(ctx, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp);
-#else
-   ret = get_all_lists(NULL, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp);
-#endif
 
    if (ret == true) {
       bool printheader = true;
@@ -404,7 +388,7 @@ qlimit_output_error:
 *     get_all_lists() -- get all lists from qmaster
 *
 *  SYNOPSIS
-*     static bool get_all_lists(void *context, lList **lirs_l, lList 
+*     static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **lirs_l, lList 
 *     **centry_l, lList **userset_l, lList **hgroup_l, lList **exechost_l, 
 *     lList *hostref_l, lList **alpp) 
 *
@@ -432,7 +416,7 @@ qlimit_output_error:
 *
 *******************************************************************************/
 static bool
-get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l,
+get_all_lists(sge_gdi_ctx_class_t *ctx, lList **lirs_l, lList **centry_l, lList **userset_l,
               lList **hgroup_l, lList **exechost_l, lList *hostref_l, lList **alpp)
 {
    lListElem *ep = NULL;
@@ -442,24 +426,15 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    int lirs_id, ce_id, userset_id, hgroup_id, eh_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
    
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
-
    DENTER(TOP_LAYER, "get_all_lists");
 
    /*
    ** limitation rule sets
    */
    what = lWhat("%T(ALL)", LIRS_Type);
-#ifdef TEST_GDI2
    lirs_id = ctx->gdi_multi(ctx, 
                           alpp, SGE_GDI_RECORD, SGE_LIRS_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, NULL, &state, true);
-#else
-   lirs_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_LIRS_LIST, SGE_GDI_GET, 
-                        NULL, NULL, what, NULL, &state, true);
-#endif
    lFreeWhat(&what);
 
    if (answer_list_has_error(alpp)) {
@@ -470,14 +445,9 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    ** complexes
    */
    what = lWhat("%T(ALL)", CE_Type);
-#ifdef TEST_GDI2
    ce_id = ctx->gdi_multi(ctx, 
                           alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, NULL, &state, true);
-#else
-   ce_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                        NULL, NULL, what, NULL, &state, true);
-#endif
    lFreeWhat(&what);
 
    if (answer_list_has_error(alpp)) {
@@ -487,14 +457,9 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    ** usersets 
    */
    what = lWhat("%T(ALL)", US_Type);
-#ifdef TEST_GDI2
    userset_id = ctx->gdi_multi(ctx, 
                           alpp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, NULL, &state, true);
-#else
-   userset_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
-                        NULL, NULL, what, NULL, &state, true);
-#endif
    lFreeWhat(&what);
 
    if (answer_list_has_error(alpp)) {
@@ -504,14 +469,9 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
    ** host groups 
    */
    what = lWhat("%T(ALL)", HGRP_Type);
-#ifdef TEST_GDI2
    hgroup_id = ctx->gdi_multi(ctx, 
                           alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, NULL, &state, true);
-#else
-   hgroup_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                        NULL, NULL, what, NULL, &state, true);
-#endif
    lFreeWhat(&what);
    /*
    ** exec hosts
@@ -536,14 +496,9 @@ get_all_lists(void *context, lList **lirs_l, lList **centry_l, lList **userset_l
       where = nw;
 
    what = lWhat("%T(%I %I %I %I)", EH_Type, EH_name, EH_load_list, EH_consumable_config_list, EH_resource_utilization);
-#ifdef TEST_GDI2
    eh_id = ctx->gdi_multi(ctx, 
                           alpp, SGE_GDI_SEND, SGE_EXECHOST_LIST, SGE_GDI_GET, 
                           NULL, where, what, &mal, &state, true);
-#else
-   eh_id = sge_gdi_multi(alpp, SGE_GDI_SEND, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                        NULL, where, what, &mal, &state, true);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 

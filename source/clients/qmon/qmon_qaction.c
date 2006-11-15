@@ -89,12 +89,9 @@
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
 #include "uti/sge_string.h"
-
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
+
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 
 /*-------------------------------------------------------------------------*/
@@ -1526,11 +1523,7 @@ static void qmonQCAdd(Widget w, XtPointer cld, XtPointer cad)
    } else {
       gdi_command = SGE_GDI_MOD | SGE_GDI_SET_ALL;
    }   
-#ifdef TEST_GDI2   
    ret = cqueue_add_del_mod_via_gdi(ctx, copy, &alp, gdi_command); 
-#else   
-   ret = cqueue_add_del_mod_via_gdi(NULL, copy, &alp, gdi_command); 
-#endif   
    qmonMessageBox(w, alp, 0);
    
    if ( lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK ) {

@@ -52,7 +52,7 @@ JGDI_OBJS  = $(JGDI_SRC:.c=.o)
 
 JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_qlimit.c sge_cqueue_qstat.c qstat_printing.c show_job.c
 
-JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o)
+JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o) $(SCHEDLIB_OBJS) $(DRMAA_OBJS)
 
 JGDI_LIB=libjgdi$(SHAREDEXT)
 SGELIBPATH=-L.
@@ -63,7 +63,7 @@ jgdi_clean:
 	rm -rf $(JGDI_LIB) $(JGDI_OBJS) jgdi_test*
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) -lsched -ldrmaa $(SLIBs) $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 

@@ -45,17 +45,12 @@
 #include "sge_conf.h"
 #include "qmaster_to_execd.h"
 #include "job_report_qmaster.h"
-#include "sge_any_request.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_answer.h"
 #include "sge_lock.h"
 #include "sge_event_master.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
-static int update_license_data(void *context, lListElem *hep, lList *lp_lic); 
+static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
 
 
 /****** sge_c_report() *******************************************************
@@ -80,7 +75,7 @@ static int update_license_data(void *context, lListElem *hep, lList *lp_lic);
 *     MT-NOTE: sge_c_report() is MT safe
 *
 ******************************************************************************/
-void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *report_list, monitoring_t *monitor)
+void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id, lList *report_list, monitoring_t *monitor)
 {
    lListElem *hep = NULL;
    u_long32 rep_type;
@@ -159,14 +154,14 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
       case NUM_REP_REPORT_LOAD:
          MONITOR_ELOAD(monitor); 
          /* Now handle execds load reports */
-         sge_update_load_values(context, rhost, lGetList(report, REP_list));
+         sge_update_load_values(ctx, rhost, lGetList(report, REP_list));
 
          break;
       case NUM_REP_REPORT_CONF: /* this is thread safe, no need for the global lock */
          MONITOR_ECONF(monitor); 
          if (hep && (sge_compare_configuration(hep, lGetList(report, REP_list)) != 0)) {
             DPRINTF(("%s: configuration on host %s is not up to date\n", SGE_FUNC, rhost));
-            if (host_notify_about_new_conf(context, hep) != 0) {
+            if (host_notify_about_new_conf(ctx, hep) != 0) {
                ERROR((SGE_EVENT, MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S, rhost));
             }
          }
@@ -177,7 +172,7 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
          ** save number of processors
          */
          MONITOR_EPROC(monitor);
-         ret = update_license_data(context, hep, lGetList(report, REP_list)); /* is not thread safe, needs global lock */
+         ret = update_license_data(ctx, hep, lGetList(report, REP_list)); /* is not thread safe, needs global lock */
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
          }
@@ -189,7 +184,7 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
             MONITOR_EJOB(monitor);
             is_pb_used = true;
             if(init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-               process_job_report(context, report, hep, rhost, commproc, &pb, monitor); /* is not thread safe, needs global lock */
+               process_job_report(ctx, report, hep, rhost, commproc, &pb, monitor); /* is not thread safe, needs global lock */
             }
          }
          break;
@@ -205,12 +200,7 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
       if (pb_filled(&pb)) {
          lList *alp = NULL;
          /* send all stuff packed during processing to execd */
-#ifdef TEST_QMASTER_GDI2
-         sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
          sge_gdi2_send_any_request(ctx, 0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp);
-#else
-         sge_send_any_request(0, NULL, rhost, commproc, id, &pb, TAG_ACK_REQUEST, 0, &alp); 
-#endif         
          MONITOR_MESSAGES_OUT(monitor); 
          answer_list_output(&alp);
       }
@@ -238,7 +228,7 @@ void sge_c_report(void *context, char *rhost, char *commproc, int id, lList *rep
 **   updates the number of processors in the host element
 **   spools if it has changed
 */
-static int update_license_data(void *context, lListElem *hep, lList *lp_lic)
+static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic)
 {
    u_long32 processors, old_processors;
 
@@ -273,7 +263,7 @@ static int update_license_data(void *context, lListElem *hep, lList *lp_lic)
 
       DPRINTF(("%s has " sge_u32 " processors\n",
          lGetHost(hep, EH_name), processors));
-      sge_event_spool(context,
+      sge_event_spool(ctx,
                       &answer_list, 0, sgeE_EXECHOST_MOD, 
                       0, 0, lGetHost(hep, EH_name), NULL, NULL,
                       hep, NULL, NULL, true, true);

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_ticket(void *context, 
+int execd_ticket(sge_gdi_ctx_class_t *ctx, 
                  struct dispatch_entry *de, 
                  sge_pack_buffer *pb, 
                  sge_pack_buffer *apb, 

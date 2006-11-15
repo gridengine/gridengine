@@ -97,9 +97,6 @@
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
@@ -225,7 +222,7 @@ static int addgrpid_already_in_use(long add_grp_id)
         err_length size of err_str
  ************************************************************************/
 int sge_exec_job(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep,
@@ -288,22 +285,12 @@ int err_length) {
    lListElem *env;
    lList *environmentList = NULL;
    const char *arch = sge_get_arch();
-#ifdef TEST_GDI2   
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *sge_root = ctx->get_sge_root(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *default_cell = ctx->get_default_cell(ctx);
    const char *binary_path = ctx->get_binary_path(ctx);
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *masterhost = ctx->get_master(ctx, false);
-#else
-   const char *sge_root = path_state_get_sge_root();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *default_cell = uti_state_get_default_cell();
-   const char *binary_path = bootstrap_get_binary_path();
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *masterhost = sge_get_master(false);
-#endif   
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
    char buffer[2048];

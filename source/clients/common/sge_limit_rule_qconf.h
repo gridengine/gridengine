@@ -33,19 +33,20 @@
  ************************************************************************/
 
 #include "cull.h"
+#include "gdi/sge_gdi_ctx.h"
 
-bool limit_rule_show(void *context, lList **answer_list, const char *name);
+bool limit_rule_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool limit_rule_get_via_gdi(void *context, lList **answer_list, const lList *lirsref_list,
+bool limit_rule_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *lirsref_list,
                             lList **lirs_list);
 
-bool limit_rule_get_all_via_gdi(void *context, lList **answer_list, lList **lirs_list);
-bool limit_rule_set_add(void *context, lList **answer_list, const char *name);
-bool limit_rule_set_modify(void *context, lList **answer_list, const char *name);
-bool limit_rule_set_add_from_file(void *context, lList **answer_list, const char *filename);
-bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const char *filename, const char *name);
+bool limit_rule_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **lirs_list);
+bool limit_rule_set_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
+bool limit_rule_set_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
+bool limit_rule_set_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
+bool limit_rule_set_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename, const char *name);
 
-bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList **answer_list,
+bool limit_rule_set_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList *lirs_list, lList **answer_list,
                                         u_long32 gdi_command);
 
 #endif /* __SGE_LIMIT_RULE_QCONF */

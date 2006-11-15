@@ -37,6 +37,7 @@ extern "C" {
 #endif
 
 #include "cull/cull.h"
+#include "gdi/sge_gdi_ctx.h"
 
 typedef struct report_handler_str report_handler_t;
 
@@ -55,7 +56,7 @@ struct report_handler_str {
    int (*destroy)(report_handler_t** handler, lList **alpp);
 };
 
-bool qlimit_output(void *ctx, lList *host_list, lList *resource_match_list, lList *user_list,
+bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_match_list, lList *user_list,
                 lList *pe_list, lList *project_list, lList *cqueue_list, lList **alpp,
                 report_handler_t* report_handler);
 

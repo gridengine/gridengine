@@ -44,9 +44,7 @@
 #include "version.h"
 #include "sge_gdi.h"
 #include "sge_mt_init.h"
-#include "sge_any_request.h"
 #include "sge_gdi_request.h"
-#include "sge_ack.h"
 #include "sge_profiling.h"
 #include "sge_uidgid.h"
 #include "sge_signal.h"
@@ -56,10 +54,7 @@
 #include "sge_prog.h"
 #include "sge_security.h"
 #include "sge_all_listsL.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];

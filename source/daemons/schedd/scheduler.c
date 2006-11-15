@@ -96,7 +96,7 @@ sge_Sdescr_t lists =
 {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 static int 
-dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
+dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *orders, lList **splitted_job_list[]);
 
 static dispatch_t 
 select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, lListElem *ja_task, 
@@ -147,7 +147,7 @@ int my_scheduler(sge_Sdescr_t *lists, lList **order)
    return scheduler(lists);
 }
 #endif
-int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
+int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
    lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
@@ -245,7 +245,7 @@ int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
    /**
     * the actual scheduling 
     */
-   dispatch_jobs(evc_context, lists, &orders, splitted_job_lists);
+   dispatch_jobs(evc, lists, &orders, splitted_job_lists);
 
    /**
     * post processing 
@@ -255,7 +255,7 @@ int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
 
    /* send job_start_orders */
    if (!shut_me_down) {
-      sge_send_job_start_orders(evc_context, &orders);
+      sge_send_job_start_orders(evc, &orders);
    }
 
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
@@ -362,7 +362,7 @@ int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
           * (2 * event client interval) for receiving new events.
           */
          cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 120);
-         sge_send_orders2master(evc_context, &orderlist);
+         sge_send_orders2master(evc, &orderlist);
          cl_com_set_synchron_receive_timeout(cl_com_get_handle(prognames[SCHEDD], 0), 
                                              (int) (sconf_get_schedule_interval() * 2));
 
@@ -408,7 +408,7 @@ int scheduler(void *evc_context, sge_Sdescr_t *lists, lList **order) {
 *     0   ok
 *     -1  got inconsistent data
 ******************************************************************************/
-static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders,
+static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *orders,
                          lList **splitted_job_lists[]) 
 {
    lList *user_list=NULL, *group_list=NULL;
@@ -602,7 +602,7 @@ static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders
                     orders); 
 
       /* async gdi */
-      sge_send_job_start_orders(evc_context, orders); 
+      sge_send_job_start_orders(evc, orders); 
 
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
@@ -842,7 +842,7 @@ static int dispatch_jobs(void *evc_context, sge_Sdescr_t *lists, order_t *orders
 
                   if (time > 0.5) {
                      /*async gdi*/
-                     if (sge_send_job_start_orders(evc_context, orders)) {
+                     if (sge_send_job_start_orders(evc, orders)) {
                         gettimeofday(&now, NULL);
                      }
                   }

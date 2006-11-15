@@ -38,6 +38,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.cert.CertificateEncodingException;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.security.auth.Subject;
 import javax.security.auth.x500.X500PrivateCredential;
 
@@ -47,6 +48,7 @@ import javax.security.auth.x500.X500PrivateCredential;
  */
 public class SecurityHelper {
     
+    private static Logger logger = Logger.getLogger(SecurityHelper.class.getName());
     
     private static X500PrivateCredential getPrivateCredentials() {
         AccessControlContext ctx = AccessController.getContext();
@@ -65,11 +67,12 @@ public class SecurityHelper {
         }
         return (X500PrivateCredential)credSet.iterator().next();
     }
-            
+    
     public static String getUsername() {
         
         X500PrivateCredential cred = getPrivateCredentials();
         if(cred == null) {
+            logger.fine("user.name: " + System.getProperty("user.name"));
             return System.getProperty("user.name");
         }
         return cred.getAlias();
@@ -84,10 +87,18 @@ public class SecurityHelper {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         
-        // pw.println("-----BEGIN " + cred.getPrivateKey().getAlgorithm() + " PRIVATE KEY-----");
+        
         pw.println("-----BEGIN PRIVATE KEY-----");
-        pw.print(Base64.encode(cred.getPrivateKey().getEncoded()));
-        // pw.println("-----END " + cred.getPrivateKey().getAlgorithm() + " PRIVATE KEY-----");
+        String str = Base64.encode(cred.getPrivateKey().getEncoded());
+        int lines = str.length()/64;
+        boolean lastline = ((str.length() % 64) != 0);
+        int i;
+        for (i=0; i<lines; i++) {
+            pw.println(str.substring((i*64), ((i*64)+64)));
+        }
+        if (lastline) {
+            pw.println(str.substring(i*64));
+        }
         pw.println("-----END PRIVATE KEY-----");
         pw.close();
         return sw.getBuffer().toString();
@@ -101,7 +112,16 @@ public class SecurityHelper {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         pw.println("-----BEGIN CERTIFICATE-----");
-        pw.print(Base64.encode(cred.getCertificate().getEncoded()));
+        String str = Base64.encode(cred.getCertificate().getEncoded());
+        int lines = str.length()/64;
+        boolean lastline = ((str.length() % 64) != 0);
+        int i;
+        for (i=0; i<lines; i++) {
+            pw.println(str.substring((i*64), ((i*64)+64)));
+        }
+        if (lastline) {
+            pw.println(str.substring(i*64));
+        }
         pw.println("-----END CERTIFICATE-----");
         pw.close();
         return sw.getBuffer().toString();

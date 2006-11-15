@@ -32,7 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_get_new_conf(void *context,
+#include "gdi/sge_gdi_ctx.h"
+
+int execd_get_new_conf(sge_gdi_ctx_class_t *ctx,
                        dispatch_entry *de, 
                        sge_pack_buffer *pb, 
                        sge_pack_buffer *apb, 

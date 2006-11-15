@@ -1818,3 +1818,115 @@ cqueue_list_qinstance_number_is_used(lList *this_list, u_long32 number)
    return ret;
 }
 
+bool
+cqueue_sick(lListElem *cqueue, lList **answer_list, 
+            lList *master_hgroup_list, dstring *ds)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "cqueue_sick");
+
+   /*
+    * Warn about:
+    *    - unused setting for attributes
+    *    - hgroup settings were not all hosts are contained in hostlist
+    */
+   {
+      const char *cqueue_name = lGetString(cqueue, CQ_name);
+      lList *used_hosts = NULL;
+      lList *used_groups = NULL;
+      lList **answer_list = NULL;
+      int index;
+      
+      /*
+       * resolve href list of cqueue
+       */
+      href_list_find_all_references(lGetList(cqueue, CQ_hostlist), answer_list,
+                                    master_hgroup_list, &used_hosts,
+                                    &used_groups);
+
+      index = 0;
+      while (cqueue_attribute_array[index].cqueue_attr != NoName) {
+         /*
+          * Skip geee attributes in ge mode
+          */
+         lList *attr_list = lGetList(cqueue,
+                                 cqueue_attribute_array[index].cqueue_attr);
+         lListElem *next_attr = lFirst(attr_list);
+         lListElem *attr = NULL;
+
+         /*
+          * Test each attribute setting if it is really used in the
+          * current configuration
+          */
+         while((attr = next_attr) != NULL) { 
+            const char *name = lGetHost(attr, 
+                                   cqueue_attribute_array[index].href_attr);
+
+            next_attr = lNext(attr);
+            if (is_hgroup_name(name)) {
+               if (strcmp(name, HOSTREF_DEFAULT)) {
+                  lListElem *hgroup = NULL;
+                  lList *used_hgroup_hosts = NULL;
+                  lList *used_hgroup_groups = NULL;
+                  lList *add_hosts = NULL;
+                  lList *equity_hosts = NULL;
+
+                  hgroup = hgroup_list_locate(master_hgroup_list, name);
+
+                  /*
+                   * hgroup specific setting:
+                   *    make sure each host of hgroup is part of 
+                   *    resolved list
+                   */
+                  hgroup_find_all_references(hgroup, answer_list, 
+                                             master_hgroup_list, 
+                                             &used_hgroup_hosts,
+                                             &used_hgroup_groups);
+                  href_list_compare(used_hgroup_hosts, answer_list,
+                                    used_hosts, &add_hosts, NULL,
+                                    &equity_hosts, NULL);
+
+                  if (lGetNumberOfElem(add_hosts)) {
+                     DTRACE;
+                     sge_dstring_sprintf_append(ds, 
+                             MSG_CQUEUE_DEFOVERWRITTEN_SSSSS,
+                             cqueue_attribute_array[index].name,
+                             name, cqueue_name, name, cqueue_name);
+                     sge_dstring_append(ds, "\n");
+                  }
+
+                  lFreeList(&add_hosts);
+                  lFreeList(&equity_hosts);
+                  lFreeList(&used_hgroup_hosts);
+                  lFreeList(&used_hgroup_groups);
+               } else {
+                  DTRACE;
+               }
+            } else {
+               /*
+                * host specific setting:
+                *    make sure the host is contained in resolved list 
+                */ 
+               if (!href_list_has_member(used_hosts, name)) {
+                  DTRACE;
+                  sge_dstring_sprintf_append(ds, 
+                             MSG_CQUEUE_UNUSEDATTRSETTING_SS,
+                             cqueue_attribute_array[index].name,
+                             name, cqueue_name);
+                  sge_dstring_append(ds, "\n");
+               } else {
+                  DTRACE;
+               }
+            }
+         }
+            
+         index++;
+      }
+      lFreeList(&used_hosts);
+      lFreeList(&used_groups);
+   }
+   
+   DRETURN(ret);
+}
+

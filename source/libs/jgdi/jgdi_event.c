@@ -46,7 +46,6 @@
 #include "sge_gdi_ctx.h"
 #include "sge_gdi2.h"
 #include "cl_errors.h"
-#include "setup.h"
 #include "sge_log.h"
 #include "sge_error_class.h"
 #include "jgdi_common.h"

@@ -52,7 +52,6 @@
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usage.h"
-#include "sge_any_request.h"
 #include "sge_time.h"
 #include "admin_mail.h"
 #include "mail.h"
@@ -67,7 +66,6 @@
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "sge_prog.h"
-#include "sge_conf.h"
 #include "sge_qexec.h"
 #include "sge_string.h"
 #include "sge_afsutil.h"
@@ -89,10 +87,6 @@
 #include "sge_ulong.h"
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -810,7 +804,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
 /* ------------------------- */
 void remove_acked_job_exit(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 u_long32 job_id,
 u_long32 ja_task_id,
 const char *pe_task_id,
@@ -826,13 +820,7 @@ lListElem *jr
    lListElem *master_q;
    const char *pe_task_id_str; 
    const void *iterator;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *sge_root = ctx->get_sge_root(ctx);
-#else
-   const char *sge_root = path_state_get_sge_root();
-#endif   
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
 
@@ -889,7 +877,7 @@ lListElem *jr
      
       /* use mail list of job instead of tasks one */
       if (jr && lGetUlong(jr, JR_state)!=JSLAVE)
-         reaper_sendmail(context, jep, jr); 
+         reaper_sendmail(ctx, jep, jr); 
 
 
       /*
@@ -1775,7 +1763,7 @@ u_long32 *valuep
 
 /* send mail to users if requested */
 void reaper_sendmail(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *jep,
 lListElem *jr 
 ) {
@@ -1795,12 +1783,7 @@ lListElem *jr
    char buffer[128];
    dstring cpu_string = DSTRING_INIT;
    dstring maxvmem_string = DSTRING_INIT;
-#ifdef TEST_GDI2   
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 

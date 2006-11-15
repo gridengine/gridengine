@@ -54,13 +54,11 @@
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/berkeleydb/sge_bdb.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_utilbin.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 static void 
@@ -76,23 +74,15 @@ usage(const char *argv0)
 }
 
 static int 
-init_framework(void *context, bdb_info *info)
+init_framework(sge_gdi_ctx_class_t *ctx, bdb_info *info)
 {
    int ret = EXIT_FAILURE;
 
    lList *answer_list = NULL;
    lListElem *spooling_context = NULL;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *spooling_method = ctx->get_spooling_method(ctx);
    const char *spooling_lib = ctx->get_spooling_lib(ctx);
    const char *spooling_params = ctx->get_spooling_params(ctx);
-#else
-   const char *spooling_method = bootstrap_get_spooling_method();
-   const char *spooling_lib = bootstrap_get_spooling_lib();
-   const char *spooling_params = bootstrap_get_spooling_params();
-#endif
 
    DENTER(TOP_LAYER, "init_framework");
 
@@ -367,33 +357,14 @@ main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
-#ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
-#ifdef TEST_GDI2
    if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
       answer_list_output(&answer_list);
       SGE_EXIT(NULL, 1);
    }
-#else
-   sge_mt_init();
-
-   lInit(nmv);
-
-   sge_getme(SPOOLDEFAULTS);
-
-   if (!sge_setup_paths(SPOOLDEFAULTS, sge_get_default_cell(), NULL)) {
-      /* will never be reached, as sge_setup_paths exits on failure */
-      ret = EXIT_FAILURE;
-   } else if (!sge_bootstrap(path_state_get_bootstrap_file(), NULL)) {
-      ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
-      ret = EXIT_FAILURE;
-   }
-#endif
 
    if (ret == EXIT_SUCCESS) {
       /* parse commandline */
@@ -402,11 +373,7 @@ main(int argc, char *argv[])
          ret = EXIT_FAILURE;
       } else {
          bdb_info info = NULL;
-#ifdef TEST_GDI2
          ret = init_framework(ctx, &info);
-#else
-         ret = init_framework(NULL, &info);
-#endif         
 
          if (ret == EXIT_SUCCESS) {
             if (strcmp(argv[1], "list") == 0) {

@@ -46,13 +46,10 @@
 #include "sgeobj/sge_answer.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 
-static bool limit_rule_set_provide_modify_context(void *context,
+static bool limit_rule_set_provide_modify_context(sge_gdi_ctx_class_t *ctx,
                                   lList **lirs_list, lList **answer_list,
                                   bool ignore_unchanged_message);
 
@@ -80,7 +77,7 @@ static bool limit_rule_set_provide_modify_context(void *context,
 *     MT-NOTE: limit_rule_show() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_show(void *context, lList **answer_list, const char *name)
+bool limit_rule_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    lList *lirs_list = NULL;
    bool ret = false;
@@ -91,10 +88,10 @@ bool limit_rule_show(void *context, lList **answer_list, const char *name)
       lList *lirsref_list = NULL;
 
       lString2List(name, &lirsref_list, LIRS_Type, LIRS_name, ", ");
-      ret = limit_rule_get_via_gdi(context, answer_list, lirsref_list, &lirs_list);
+      ret = limit_rule_get_via_gdi(ctx, answer_list, lirsref_list, &lirs_list);
       lFreeList(&lirsref_list);
    } else {
-      ret = limit_rule_get_all_via_gdi(context, answer_list, &lirs_list);
+      ret = limit_rule_get_all_via_gdi(ctx, answer_list, &lirs_list);
    }
 
    if (ret && lGetNumberOfElem(lirs_list)) {
@@ -142,13 +139,10 @@ bool limit_rule_show(void *context, lList **answer_list, const char *name)
 *     MT-NOTE: limit_rule_get_via_gdi() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_get_via_gdi(void *context, lList **answer_list, const lList *lirsref_list,
+bool limit_rule_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *lirsref_list,
                             lList **lirs_list)
 {
    bool ret = false;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "limit_rule_get_via_gdi");
    if (lirsref_list != NULL) {
@@ -167,11 +161,7 @@ bool limit_rule_get_via_gdi(void *context, lList **answer_list, const lList *lir
             where = lOrWhere(where, add_where);
          }
       }
-#ifdef TEST_GDI2
       *answer_list = ctx->gdi(ctx, SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, where, what);
-#else
-      *answer_list = sge_gdi(SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, where, what);
-#endif
       if (!answer_list_has_error(answer_list)) {
          ret = true;
       }
@@ -205,21 +195,14 @@ bool limit_rule_get_via_gdi(void *context, lList **answer_list, const lList *lir
 *     MT-NOTE: limit_rule_get_all_via_gdi() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_get_all_via_gdi(void *context, lList **answer_list, lList **lirs_list)
+bool limit_rule_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **lirs_list)
 {
    bool ret = false;
    lEnumeration *what = lWhat("%T(ALL)", LIRS_Type);
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "limit_rule_get_all_via_gdi");
 
-#ifdef TEST_GDI2
    *answer_list = ctx->gdi(ctx, SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, NULL, what);
-#else
-   *answer_list = sge_gdi(SGE_LIRS_LIST, SGE_GDI_GET, lirs_list, NULL, what);
-#endif   
    if (!answer_list_has_error(answer_list)) {
       ret = true;
    }
@@ -252,7 +235,7 @@ bool limit_rule_get_all_via_gdi(void *context, lList **answer_list, lList **lirs
 *     MT-NOTE: limit_rule_set_add() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_set_add(void *context, lList **answer_list, const char *name)
+bool limit_rule_set_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = false;
 
@@ -266,10 +249,10 @@ bool limit_rule_set_add(void *context, lList **answer_list, const char *name)
          lirs = limit_rule_set_defaults(lirs);
       }
 
-      ret = limit_rule_set_provide_modify_context(context, &lirs_list, answer_list, true);
+      ret = limit_rule_set_provide_modify_context(ctx, &lirs_list, answer_list, true);
 
       if (ret) {
-         ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list, SGE_GDI_ADD | SGE_GDI_SET_ALL);
+         ret = limit_rule_set_add_del_mod_via_gdi(ctx, lirs_list, answer_list, SGE_GDI_ADD | SGE_GDI_SET_ALL);
       }
 
       lFreeList(&lirs_list);
@@ -301,7 +284,7 @@ bool limit_rule_set_add(void *context, lList **answer_list, const char *name)
 *     MT-NOTE: limit_rule_set_modify() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_set_modify(void *context, lList **answer_list, const char *name)
+bool limit_rule_set_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = false;
    lList *lirs_list = NULL;
@@ -315,18 +298,18 @@ bool limit_rule_set_modify(void *context, lList **answer_list, const char *name)
       gdi_command = SGE_GDI_MOD | SGE_GDI_SET_ALL;
 
       lString2List(name, &lirsref_list, LIRS_Type, LIRS_name, ", ");
-      ret = limit_rule_get_via_gdi(context, answer_list, lirsref_list, &lirs_list);
+      ret = limit_rule_get_via_gdi(ctx, answer_list, lirsref_list, &lirs_list);
       lFreeList(&lirsref_list);
    } else {
       gdi_command = SGE_GDI_REPLACE;
-      ret = limit_rule_get_all_via_gdi(context, answer_list, &lirs_list);
+      ret = limit_rule_get_all_via_gdi(ctx, answer_list, &lirs_list);
    }
 
    if (ret) {
-      ret = limit_rule_set_provide_modify_context(context, &lirs_list, answer_list, false);
+      ret = limit_rule_set_provide_modify_context(ctx, &lirs_list, answer_list, false);
    }
    if (ret) {
-      ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list,
+      ret = limit_rule_set_add_del_mod_via_gdi(ctx, lirs_list, answer_list,
                                        gdi_command);
    }
 
@@ -358,7 +341,7 @@ bool limit_rule_set_modify(void *context, lList **answer_list, const char *name)
 *     MT-NOTE: limit_rule_set_add_from_file() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_set_add_from_file(void *context, lList **answer_list, const char *filename)
+bool limit_rule_set_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename)
 {
    bool ret = false;
 
@@ -372,7 +355,7 @@ bool limit_rule_set_add_from_file(void *context, lList **answer_list, const char
                                           NULL, true, &qconf_limit_rule_set_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       if (lirs_list != NULL) {
-            ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list, 
+            ret = limit_rule_set_add_del_mod_via_gdi(ctx, lirs_list, answer_list, 
                                            SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       }
 
@@ -407,21 +390,15 @@ bool limit_rule_set_add_from_file(void *context, lList **answer_list, const char
 *     MT-NOTE: limit_rule_set_provide_modify_context() is MT safe 
 *
 *******************************************************************************/
-static bool limit_rule_set_provide_modify_context(void *context, lList **lirs_list, lList **answer_list,
+static bool limit_rule_set_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **lirs_list, lList **answer_list,
                                            bool ignore_unchanged_message)
 {
    bool ret = false;
    int status = 0;
    const char *filename = NULL;
    spooling_field *fields = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
-#else
-   uid_t uid = uti_state_get_uid();
-   gid_t gid = uti_state_get_gid();
-#endif   
    
    DENTER(TOP_LAYER, "limit_rule_set_provide_modify_context");
 
@@ -508,13 +485,10 @@ static bool limit_rule_set_provide_modify_context(void *context, lList **lirs_li
 *     MT-NOTE: limit_rule_set_add_del_mod_via_gdi() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList **answer_list,
+bool limit_rule_set_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList *lirs_list, lList **answer_list,
                                         u_long32 gdi_command) 
 {
    bool ret = false;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
    
    DENTER(TOP_LAYER, "limit_rule_set_add_del_mod_via_gdi");
 
@@ -527,11 +501,7 @@ bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList *
          ret = limit_rule_sets_verify_attributes(lirs_list, answer_list, false);
       }
       if (ret) {
-#ifdef TEST_GDI2
          *answer_list = ctx->gdi(ctx, SGE_LIRS_LIST, gdi_command, &lirs_list, NULL, NULL);
-#else
-         *answer_list = sge_gdi(SGE_LIRS_LIST, gdi_command, &lirs_list, NULL, NULL);
-#endif         
       }
    }
    DRETURN(ret);
@@ -561,7 +531,7 @@ bool limit_rule_set_add_del_mod_via_gdi(void *context, lList *lirs_list, lList *
 *     MT-NOTE: limit_rule_set_modify_from_file() is MT safe 
 *
 *******************************************************************************/
-bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const char *filename, const char* name) 
+bool limit_rule_set_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename, const char* name) 
 {
    bool ret = false;
    u_long32 gdi_command = 0;
@@ -604,7 +574,7 @@ bool limit_rule_set_modify_from_file(void *context, lList **answer_list, const c
          }
 
          if (lirs_list != NULL) {
-            ret = limit_rule_set_add_del_mod_via_gdi(context, lirs_list, answer_list,
+            ret = limit_rule_set_add_del_mod_via_gdi(ctx, lirs_list, answer_list,
                                            gdi_command); 
          }
       }

@@ -63,11 +63,9 @@
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_string.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
+
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 enum _modes {
    ADD_MODE,
@@ -1010,20 +1008,12 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
 
    /* update user usage */
    if (ul) {
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &ul, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &ul, NULL, NULL);
-#endif      
    }
 
    /* update project usage */
    if (pl) {
-#ifdef TEST_GDI2   
       alp2 = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &pl, NULL, NULL);
-#else
-      alp2 = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &pl, NULL, NULL);
-#endif
    }
 
    if (alp || alp2) {

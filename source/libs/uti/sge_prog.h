@@ -101,7 +101,7 @@ enum {
  SGE_SHARE_MON           /* 48 */
 };
 
-typedef void (*sge_exit_func_t)(void **context, int);
+typedef void (*sge_exit_func_t)(void **ctx_ref, int);
 
 typedef struct sge_prog_state_class_str sge_prog_state_class_t; 
 

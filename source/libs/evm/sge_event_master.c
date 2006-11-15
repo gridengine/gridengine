@@ -51,7 +51,6 @@
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_report.h"
-#include "sge_todo.h"
 #include "sge_ckpt.h"
 #include "sge_pe.h"
 #include "sge_userprj.h"
@@ -75,13 +74,9 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
-#include "sge_todo.h"
    
 #include "sge_lock.h"
-
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 /* name of this thread */
 static const char THREAD_NAME[] = "EDT";
@@ -457,7 +452,7 @@ static void*      event_deliver_thread(void*);
 static void       event_master_wait_next(void);
 static bool       should_exit(void);
 static int        get_number_of_subscriptions(u_long32 event_type);
-static void       send_events(void *context, lListElem *report, lList *report_list, monitoring_t *monitor);
+static void       send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *report_list, monitoring_t *monitor);
 static void       flush_events(lListElem*, int);
 static void       total_update(lListElem*, monitoring_t *monitor);
 static void       build_subscription(lListElem*);
@@ -2531,21 +2526,13 @@ static void* event_deliver_thread(void *anArg)
    time_t next_prof_output = 0;
    monitoring_t monitor;
    const char *qualified_hostname = NULL;
-
-#ifdef TEST_QMASTER_GDI2
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER(TOP_LAYER, "event_deliver_thread");
 
    sge_monitor_init(&monitor, (char *) anArg, EDT_EXT, EMT_WARNING, EMT_ERROR);
-#ifdef TEST_QMASTER_GDI2   
-   sge_qmaster_thread_init((void**)&ctx, true);
+   sge_qmaster_thread_init(&ctx, true);
    qualified_hostname = ctx->get_qualified_hostname(ctx); 
-#else   
-   sge_qmaster_thread_init(NULL, true);
-   qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    /* register at profiling module */
    set_thread_name(pthread_self(),"Deliver Thread");
@@ -2597,11 +2584,7 @@ static void* event_deliver_thread(void *anArg)
       process_mod_event_client(&monitor);
       process_acks(&monitor);
       process_sends(&monitor);
-#ifdef TEST_QMASTER_GDI2      
       send_events(ctx, report, report_list, &monitor);
-#else      
-      send_events(NULL, report, report_list, &monitor);
-#endif
       sge_monitor_output(&monitor);
       
       thread_output_profiling("event master thread profiling summary:\n", 
@@ -2799,7 +2782,7 @@ static int get_number_of_subscriptions(u_long32 event_type) {
 *     MT-NOTE: will wait on the condition variable 'Master_Control.cond_var'
 *
 *******************************************************************************/
-static void send_events(void *context, lListElem *report, lList *report_list, monitoring_t *monitor) {
+static void send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, lList *report_list, monitoring_t *monitor) {
    u_long32 timeout;
    u_long32 busy_handling;
    u_long32 scheduler_timeout = mconf_get_scheduler_timeout();
@@ -2931,7 +2914,7 @@ static void send_events(void *context, lListElem *report, lList *report_list, mo
                ret = CL_RETVAL_OK;
             }
             else {
-               ret = report_list_send(context, report_list, host, commproc, id, 0, NULL);
+               ret = report_list_send(ctx, report_list, host, commproc, id, 0, NULL);
                MONITOR_MESSAGES_OUT(monitor);
             }
 

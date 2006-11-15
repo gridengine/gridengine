@@ -47,6 +47,7 @@ include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/japi/Makefile
 include $(SDIR)/libs/juti/Makefile
+include $(SDIR)/libs/jgdi/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build

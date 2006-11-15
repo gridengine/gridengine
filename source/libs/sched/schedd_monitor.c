@@ -41,15 +41,11 @@
 #include "sgermon.h"
 #include "cull_parse_util.h"
 #include "sge_time.h"
-#include "setup_path.h"
 #include "sge_answer.h"
 #include "uti/sge_string.h"
 
 #include "msg_common.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 static bool monitor_next_run = false;
 static char log_string[2048 + 1] = "invalid log_string";
@@ -58,13 +54,10 @@ static char schedd_log_file[SGE_PATH_MAX + 1] = "";
 /* if set we do not log into schedd log file but we fill up this answer list */
 static lList **monitor_alpp = NULL;
 
-void schedd_set_schedd_log_file(void *context) {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context; 
+void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
+{
    const char *cell_root = ctx->get_cell_root(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-#endif
+   
    DENTER(TOP_LAYER, "schedd_set_schedd_log_file");
 
    if (!*schedd_log_file) {
@@ -123,13 +116,6 @@ int schedd_log(const char *logstr)
       char *time_str = NULL;
       char str[128];
    
-#ifndef TEST_QMASTER_GDI2   
-      if (!*schedd_log_file) {
-         sprintf(schedd_log_file, "%s/%s/%s", path_state_get_cell_root(), "common", SCHED_LOG_NAME);
-         DPRINTF(("schedd log file >>%s<<\n", schedd_log_file));
-      }
-#endif
-
       now = (time_t)sge_get_gmt();
       time_str =  ctime_r(&now, str);
       if (time_str[strlen(time_str) - 1] == '\n') {

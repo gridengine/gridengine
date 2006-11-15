@@ -32,8 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_read_sched_configuration(void *context, lListElem *aSpoolContext, lList **anAnswer);
+#include "gdi/sge_gdi_ctx.h"
 
-int sge_mod_sched_configuration(void *context, lListElem *confp, lList **alpp, char *ruser, char *rhost);
+int sge_read_sched_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList **anAnswer);
+int sge_mod_sched_configuration(sge_gdi_ctx_class_t *ctx, lListElem *confp, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SCHED_CONF_QMASTER_H_ */

@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
       printf("\ndata successfully written to stdout\n");
       FREE(filepath);
    } else {
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
+      answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
    }
                                
    printf("\n");
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
       sge_unlink(NULL, filepath);
       FREE(filepath);
    } else {
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
+      answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
    }
                                
    filepath = spool_flatfile_write_object(&answer_list, cqueue, false,
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
                                                 "test_sge_spooling_flatfile.dat");
      
       if(reread_queue == NULL) {
-         answer_list_print_err_warn(&answer_list, NULL, NULL);
+         answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
       } else {
          lWriteElemTo(reread_queue, stdout);
          lFreeElem(&reread_queue);
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
       sge_unlink(NULL, filepath);
       FREE(filepath);
    } else {
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
+      answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
    }
   
    filepath = spool_flatfile_write_list(&answer_list, cqueue_list,
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
       printf("\ndata successfully written to stdout\n");
       FREE(filepath);
    } else {
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
+      answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
    }
    
    filepath = spool_flatfile_write_list(&answer_list, cqueue_list,
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
       reread_list = spool_flatfile_read_list(&answer_list, QU_Type, CQ_fields, fields_out, true,
                                              &qconf_ce_list_sfi, SP_FORM_ASCII, NULL, "test_sge_spooling_flatfile.dat");
       if (reread_list == NULL) {
-         answer_list_print_err_warn(&answer_list, NULL, NULL);
+         answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
       } else {
          lWriteListTo(reread_list, stdout);
          lFreeList(&reread_list);
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 /*       sge_unlink(NULL, filepath); */
       FREE(filepath);
    } else {
-      answer_list_print_err_warn(&answer_list, NULL, NULL);
+      answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
    }
 
    /* test reading object */
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
    spool_flatfile_align_object(&answer_list, NULL);
    spool_flatfile_align_list(&answer_list, NULL, fields, 0);
    spool_flatfile_align_list(&answer_list, cqueue_list, NULL, 0);
-   answer_list_print_err_warn(&answer_list, NULL, NULL);
+   answer_list_print_err_warn(&answer_list, NULL, NULL, NULL);
 
    /* cleanup */
    lFreeList(&cqueue_list);

@@ -38,6 +38,7 @@
 #include <sys/resource.h>
 
 #include "basis_types.h"
+#include "gdi/sge_gdi_ctx.h"
 #include "sge_qmaster_main.h"
 #include "sgermon.h"
 #include "sge_mt_init.h"
@@ -46,7 +47,6 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "setup_qmaster.h"
-#include "sge_security.h"
 #include "sge_manop.h"
 #include "sge_mtutil.h"
 #include "sge_lock.h"
@@ -63,7 +63,6 @@
 #include "lock.h"
 #include "qmaster_heartbeat.h"
 #include "shutdown.h"
-#include "setup.h"
 #include "sge_spool.h"
 #include "cl_commlib.h"
 #include "sge_uidgid.h"
@@ -72,7 +71,6 @@
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
-#include "sge_any_request.h"
 #include "sge.h"
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
@@ -81,10 +79,7 @@
 #include "sge_profiling.h"
 #include "uti/sge_monitor.h"
 #include "sge_conf.h"
-
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "sge_security.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -281,11 +276,8 @@ int main(int argc, char* argv[])
    int qmaster_exit_state = 0;
    bool do_final_spool = true;
    bool has_daemonized = false;
-#ifdef TEST_QMASTER_GDI2
    sge_gdi_ctx_class_t *ctx = NULL;
-#else   
-   int last_prepare_enroll_error = CL_RETVAL_OK;
-#endif
+
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -305,17 +297,9 @@ int main(int argc, char* argv[])
       sge_mt_init();
       sigfillset(&sig_set);
       pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
-#ifdef TEST_QMASTER_GDI2
-      sge_qmaster_thread_init((void**)&ctx, true);
-#else      
-      sge_qmaster_thread_init(NULL, true);
-#endif      
+      sge_qmaster_thread_init(&ctx, true);
       sge_process_qmaster_cmdline(argv);
-#ifdef TEST_GDI2      
       SGE_EXIT((void**)&ctx, 1);
-#else
-      SGE_EXIT(NULL, 1);
-#endif      
    }
 
    has_daemonized = sge_daemonize_qmaster();
@@ -329,35 +313,20 @@ int main(int argc, char* argv[])
    init_sig_action_and_mask();
 #endif
 
-#ifdef TEST_QMASTER_GDI2
    /* init qmaster threads without becomming admin user */
-   sge_qmaster_thread_init((void**)&ctx, false);
-#else
-   sge_qmaster_thread_init(NULL, false);
-#endif
+   sge_qmaster_thread_init(&ctx, false);
 
-#ifdef TEST_QMASTER_GDI2
    ctx->set_daemonized(ctx, has_daemonized);
-#else
-   uti_state_set_daemonized(has_daemonized);
-#endif
+
    /* this must be done as root user to be able to bind ports < 1024 */
    max_enroll_tries = 30;
-   while ( cl_com_get_handle(prognames[QMASTER],1) == NULL) {
-#ifdef TEST_QMASTER_GDI2
+   while (cl_com_get_handle(prognames[QMASTER],1) == NULL) {
       ctx->prepare_enroll(ctx);
-#else
-      prepare_enroll(prognames[QMASTER], &last_prepare_enroll_error); 
-#endif      
       max_enroll_tries--;
       if ( max_enroll_tries <= 0 ) {
          /* exit after 30 seconds */
          CRITICAL((SGE_EVENT, MSG_QMASTER_COMMUNICATION_ERRORS ));
-#ifdef TEST_GDI2
          SGE_EXIT((void**)&ctx, 1);
-#else
-         SGE_EXIT(NULL, 1);
-#endif         
       }
       if (  cl_com_get_handle(prognames[QMASTER],1) == NULL) {
         /* sleep when prepare_enroll() failed */
@@ -375,37 +344,20 @@ int main(int argc, char* argv[])
       ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
    }
 
-#ifdef TEST_QMASTER_GDI2
    /* now we become admin user */
    sge_become_admin_user(ctx->get_admin_user(ctx));
-#else
-   /* now we become admin user */
-   sge_become_admin_user(bootstrap_get_admin_user());
-#endif   
 
-#ifdef TEST_QMASTER_GDI2
    sge_chdir_exit(ctx->get_qmaster_spool_dir(ctx), 1);
-#else
-   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
-#endif   
 
    log_state_set_log_file(ERR_FILE);
 
-#ifdef TEST_GDI2
    ctx->set_exit_func(ctx, sge_exit_func);
-#else
-   uti_state_set_exit_func(sge_exit_func);
-#endif   
 
    sge_start_heartbeat();
 
    sge_register_event_handler(); 
 
-#ifdef TEST_QMASTER_GDI2
    sge_setup_qmaster(ctx, argv);
-#else
-   sge_setup_qmaster(NULL, argv);
-#endif   
 
    if (file_descriptor_settings_result == 1) {
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, sge_u32c(FD_SETSIZE)));
@@ -420,11 +372,7 @@ int main(int argc, char* argv[])
 
    sge_setup_job_resend();
 
-#ifdef TEST_QMASTER_GDI2
    sge_create_and_join_threads(ctx);
-#else
-   sge_create_and_join_threads(NULL);
-#endif   
 
    qmaster_exit_state = sge_get_qmaster_exit_state();
    if (qmaster_exit_state == 100) {
@@ -438,29 +386,19 @@ int main(int argc, char* argv[])
 
    if (do_final_spool == true) {
       monitoring_t monitor;
-#ifdef TEST_QMASTER_GDI2
       sge_store_job_number(ctx, NULL, &monitor);
-#else
-      sge_store_job_number(NULL, NULL, &monitor);
-#endif      
    }
 
-#ifdef TEST_QMASTER_GDI2
-   sge_qmaster_shutdown((void*)ctx, do_final_spool);
-#else
-   sge_qmaster_shutdown(NULL, do_final_spool);
-#endif      
+   sge_qmaster_shutdown(ctx, do_final_spool);
 
-#ifdef TEST_GDI2
    sge_shutdown((void**)&ctx, qmaster_exit_state);
-#else
-   sge_shutdown(NULL, qmaster_exit_state);
-#endif   
+
    /* the code above will never be executed, sge_shutdown does an exit() */
 
    /* TODO CR: this function is not called, because sge_shutdown is doing an
                SGE_EXIT() */
    sge_prof_cleanup();
+
    DEXIT;
    return 0;
 } /* main() */

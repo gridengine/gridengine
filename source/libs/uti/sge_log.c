@@ -46,11 +46,10 @@
 #include "sge_prog.h"
 #include "sge_uidgid.h"
 #include "sge_mtutil.h"
+#include "gdi/sge_gdi_ctx.h"
+
 #include "msg_utilib.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 typedef struct {
    pthread_mutex_t  mutex;
@@ -59,7 +58,7 @@ typedef struct {
    int              log_as_admin_user;
    int              verbose;
    int              gui_log;
-   void             *context;
+   void*            context;
 } log_state_t;
 
 typedef struct {
@@ -386,11 +385,8 @@ void log_state_set_log_as_admin_user(int i)
    Log_State.log_as_admin_user = i;
 
    sge_mutex_unlock("Log_State_Lock", "log_state_set_log_as_admin_user", __LINE__, &Log_State.mutex);
-
-   return;
 }
 
-#ifdef TEST_GDI2
 
 void* log_state_get_log_context(void)
 {
@@ -405,18 +401,15 @@ void* log_state_get_log_context(void)
    return log_context;
 }
 
-void log_state_set_log_context(void* context)
+void log_state_set_log_context(void *ctx)
 {
    sge_mutex_lock("Log_State_Lock", "log_state_set_log_context", __LINE__, &Log_State.mutex);
    
-   Log_State.context = context;
+   Log_State.context = ctx;
 
    sge_mutex_unlock("Log_State_Lock", "log_state_set_log_context", __LINE__, &Log_State.mutex);
-
-   return;
 }
 
-#endif
 
 
 /****** uti/log/sge_log() *****************************************************
@@ -463,31 +456,16 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    int levelchar;
    char levelstring[32*4];
    
-#ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)log_state_get_log_context(); 
    /* TODO: this must be kept for qmaster and should be done in a different
             way (qmaster context) !!! */
-#ifdef TEST_QMASTER_GDI2
    u_long32 me = 0;
    const char *progname = NULL;
    const char *unqualified_hostname = NULL;
    int is_daemonized = 0; 
-#else
-   u_long32 me = uti_state_get_mewho();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   int is_daemonized = uti_state_get_daemonized();
-#endif   
-#else
-   u_long32 me = uti_state_get_mewho();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   int is_daemonized = uti_state_get_daemonized();
-#endif   
 
    DENTER(TOP_LAYER, "sge_log");
    
-#ifdef TEST_GDI2
    if (ctx != NULL) {
       me = ctx->get_who(ctx);
       progname = ctx->get_progname(ctx);
@@ -496,7 +474,6 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    } else {
       DPRINTF(("sge_log: ctx is NULL\n"));
    }   
-#endif
 
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {

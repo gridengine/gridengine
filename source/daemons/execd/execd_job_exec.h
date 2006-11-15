@@ -31,7 +31,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-int execd_job_exec(void *context, 
+
+#include "gdi/sge_gdi_ctx.h"
+
+int execd_job_exec(sge_gdi_ctx_class_t *ctx, 
                    struct dispatch_entry *de, 
                    sge_pack_buffer *pb, 
                    sge_pack_buffer *apb, 
@@ -39,7 +42,7 @@ int execd_job_exec(void *context,
                    int *synchron, 
                    char *err_str, 
                    int answer_error);
-int execd_job_slave(void *context, 
+int execd_job_slave(sge_gdi_ctx_class_t *ctx, 
                     struct dispatch_entry *de, 
                     sge_pack_buffer *pb, 
                     sge_pack_buffer *apb, 

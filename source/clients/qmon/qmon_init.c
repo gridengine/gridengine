@@ -51,6 +51,14 @@
 #include "sge_gdi.h" 
 #include "sge_prog.h"
 #include "sge_all_listsL.h" 
+#include "sge_log.h"
+#include "sge_unistd.h"
+#include "qm_name.h"
+#include "sge_hostname.h"
+#include "sge_gdiP.h"
+#include "sgeobj/sge_answer.h"
+#include "gdi/sge_gdi_ctx.h"
+
 #include "qmon_rmon.h"
 #include "qmon_init.h"
 #include "qmon_queue.h"
@@ -64,23 +72,13 @@
 #include "qmon_appres.h"
 #include "qmon_globals.h"
 #include "qmon_util.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "qm_name.h"
-#include "sge_hostname.h"
-#include "sge_any_request.h"
-#include "sge_gdiP.h"
-#include "sgeobj/sge_answer.h"
 #include "qmon_signal.h"
 
 #include "msg_clients_common.h"
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 
 static String icon_names[] = {
@@ -233,7 +231,7 @@ String name
 
 
 /*-------------------------------------------------------------------------*/
-void qmonInitSge(void **context, char *progname, int usage) 
+void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage) 
 {
    int error = 0;
    int endless_loop = 0;
@@ -241,10 +239,7 @@ void qmonInitSge(void **context, char *progname, int usage)
    char* env_var = NULL;
    const char *mastername = NULL;
    u_long32 sge_qmaster_port = 0;
-
-#ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER(GUI_LAYER, "qmonInitSge");
    
@@ -255,29 +250,19 @@ void qmonInitSge(void **context, char *progname, int usage)
       endless_loop = atoi(env_var);
    }
    log_state_set_log_gui(1);
-#ifdef TEST_GDI2
-   error = sge_gdi2_setup(&ctx, QMON, &alp);
-   mastername = ctx->get_sge_root(ctx);
-   sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-#else
-   sge_gdi_param(SET_MEWHO, QMON, NULL);
-   if (!usage) {
-      sge_gdi_param(SET_ISALIVE, 1, NULL);
+   error = sge_gdi2_setup(ctx_ref, QMON, &alp);
+
+   if (*ctx_ref != NULL) {
+      ctx = *ctx_ref;
+      mastername = ctx->get_sge_root(ctx);
+      sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
    }   
-   error=sge_gdi_setup(prognames[QMON], &alp);
-   mastername = sge_get_master(false);
-   sge_qmaster_port = sge_get_qmaster_port();
-#endif   
    if (error != AE_OK) {
 
       answer_list_output(&alp);
       
       if ( mastername != NULL) {
-#ifdef TEST_GDI2
          error=ctx->is_alive(ctx);
-#else
-         error=check_isalive(mastername);
-#endif         
          /* For the default case, just print a simple message */
          if (error == CL_RETVAL_CONNECT_ERROR ||
              error == CL_RETVAL_CONNECTION_NOT_FOUND) {
@@ -302,13 +287,9 @@ void qmonInitSge(void **context, char *progname, int usage)
       }
    }
 
-   while(endless_loop > 0) {
+   while (endless_loop > 0) {
       static int nr_of_errors = 0;
-#ifdef TEST_GDI2      
       error=ctx->is_alive(ctx);
-#else
-      error=check_isalive(mastername);
-#endif      
       printf("checking isalive qmaster (errors=%d, frequency=%d) ...\n", nr_of_errors, endless_loop);
       if (do_qmon_shutdown()) {
          qmonExitFunc(0);
@@ -316,11 +297,7 @@ void qmonInitSge(void **context, char *progname, int usage)
       sleep(endless_loop);
    }
    log_state_set_log_gui(0);
-#ifdef TEST_GDI2   
-   if (context) {   
-      *context = ctx;
-   }   
-#endif   
+
    DEXIT;
 }
 
@@ -345,11 +322,8 @@ XtPointer cad
 ) {
    DENTER(GUI_LAYER, "qmonExitCB");
 
-#ifdef TEST_GDI2
    sge_gdi2_shutdown((void**)&ctx);
-#else
-   sge_gdi_shutdown();
-#endif   
+
    DCLOSE;
    exit(0);
 

@@ -354,4 +354,8 @@
 #define MSG_LIMITRULE_NONAME                     _MESSAGE(64378, _("limitation rule set has no name"))
 #define MSG_CENTRYREFINLIRS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in limitation rule set "SFQ"."))
 
+
+#define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS          _MESSAGE(64380, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ"."))
+#define MSG_CQUEUE_UNUSEDATTRSETTING_SS          _MESSAGE(64381, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
+
 #endif /* __MSG_SGEOBJLIB_H */

@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef TEST_GDI2
-
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -75,7 +73,6 @@ extern lNameSpace nmv[];
 #if  1
 /* TODO: throw this out asap */
 #include "sge_gdi.h"
-#include "sge_any_request.h"
 #include "sge_gdi_request.h"
 void gdi_once_init(void);
 void gdi_init_mt(void);
@@ -83,8 +80,8 @@ void feature_mt_init(void);
 void sc_mt_init(void);
 #endif
 
-#include "sge_gdi_ctx.h"
-#include "sge_gdi2.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 #ifdef NEW_GDI_STATE 
 typedef struct {
@@ -1994,7 +1991,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    DENTER(TOP_LAYER, "sge_setup2");
 
    if (context == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_GDI_CONTEXT_NULL);
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_GDI_CONTEXT_NULL);
       DRETURN(AE_ERROR);
    }
 
@@ -2004,7 +2001,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    */
    sge_root = getenv("SGE_ROOT");
    if (sge_root == NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "SGE_ROOT is NULL");
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SGEROOTNOTSET);
       DRETURN(AE_ERROR);
    }
    sge_cell = getenv("SGE_CELL")?getenv("SGE_CELL"):DEFAULT_CELL;
@@ -2023,12 +2020,12 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 /* } end sge_mt_init */
 
    if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "can't get user name");
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEUSER);
       DRETURN(AE_ERROR);
    }
 
    if (sge_gid2group(getegid(), group, sizeof(group), MAX_NIS_RETRIES)) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, "can't get group name");
+      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEGROUP);
       DRETURN(AE_ERROR);
    }
 
@@ -2042,7 +2039,6 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
       DRETURN(AE_ERROR);
    }
 
-#ifdef TEST_GDI2
    /* 
    ** TODO: we set the log state context here 
    **       this should be done more explicitily !!!
@@ -2050,12 +2046,11 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    log_state_set_log_context(*context);
 
    /* 
-   ** TODO: bootstarp info is used in cull functions sge_hostcpy
+   ** TODO: bootstrap info is used in cull functions sge_hostcpy
    **       ignore_fqdn, domain_name
    **       Therefore we have to set it into the thread ctx
    */
    sge_gdi_set_thread_local_ctx(*context);
-#endif   
 
    DRETURN(AE_OK);
 }
@@ -2134,5 +2129,3 @@ static int reresolve_qualified_hostname(sge_gdi_ctx_class_t *thiz) {
    DRETURN(ret);
 }
 
-
-#endif /* TEST_GDI2 */

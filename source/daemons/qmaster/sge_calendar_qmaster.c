@@ -56,17 +56,13 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
-#include "sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 int 
-calendar_mod(void *context, lList **alpp, lListElem *new_cal, lListElem *cep, int add, 
+calendar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_cal, lListElem *cep, int add, 
              const char *ruser, const char *rhost, gdi_object_t *object, 
              int sub_command, monitoring_t *monitor) 
 {
@@ -107,17 +103,11 @@ ERROR:
 }
 
 int 
-calendar_spool(void *context, lList **alpp, lListElem *cep, gdi_object_t *object) 
+calendar_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *cep, gdi_object_t *object) 
 {
    lList *answer_list = NULL;
    bool dbret;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "calendar_spool");
 
@@ -138,7 +128,7 @@ calendar_spool(void *context, lList **alpp, lListElem *cep, gdi_object_t *object
 }
 
 int 
-sge_del_calendar(void *context, lListElem *cep, lList **alpp, char *ruser, char *rhost) 
+sge_del_calendar(sge_gdi_ctx_class_t *ctx, lListElem *cep, lList **alpp, char *ruser, char *rhost) 
 {
    const char *cal_name;
    lList **master_calendar_list = object_type_get_master_list(SGE_TYPE_CALENDAR);
@@ -190,7 +180,7 @@ sge_del_calendar(void *context, lListElem *cep, lList **alpp, char *ruser, char 
    /* remove timer for this calendar */
    te_delete_one_time_event(TYPE_CALENDAR_EVENT, 0, 0, cal_name);
 
-   sge_event_spool(context, 
+   sge_event_spool(ctx, 
                    alpp, 0, sgeE_CALENDAR_DEL, 
                    0, 0, cal_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);
@@ -223,7 +213,7 @@ sge_del_calendar(void *context, lListElem *cep, lList **alpp, char *ruser, char 
 *     MT-NOTE: sge_calendar_event_handler() is not MT safe 
 *
 *******************************************************************************/
-void sge_calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor) 
+void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor) 
 {
    lListElem *cep;
    const char* cal_name = te_get_alphanumeric_key(anEvent);
@@ -241,7 +231,7 @@ void sge_calendar_event_handler(void *context, te_event_t anEvent, monitoring_t 
       return;
    }
       
-   calendar_update_queue_states(context, cep, 0, NULL, &ppList, monitor);
+   calendar_update_queue_states(ctx, cep, 0, NULL, &ppList, monitor);
    lFreeList(&ppList);
 
    sge_free((char *)cal_name);
@@ -252,7 +242,7 @@ void sge_calendar_event_handler(void *context, te_event_t anEvent, monitoring_t 
    return;
 } /* sge_calendar_event_handler() */
 
-int calendar_update_queue_states(void *context, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
+int calendar_update_queue_states(sge_gdi_ctx_class_t *ctx, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    const char *cal_name = lGetString(cep, CAL_name);
    lList *state_changes_list = NULL;
@@ -268,7 +258,7 @@ int calendar_update_queue_states(void *context, lListElem *cep, lListElem *old_c
 
    state = calender_state_changes(cep, &state_changes_list, &when, NULL);
    
-   qinstance_change_state_on_calendar_all(context, cal_name, state, state_changes_list, monitor);
+   qinstance_change_state_on_calendar_all(ctx, cal_name, state, state_changes_list, monitor);
 
    lFreeList(&state_changes_list);
 

@@ -65,7 +65,6 @@
 #include "setup_path.h" 
 #include "sge_afsutil.h"
 #include "sge_conf.h"
-#include "gdi_conf.h"
 #include "sge_job.h"
 #include "sge_qexec.h"
 #include "qm_name.h"
@@ -83,11 +82,9 @@
 #include "msg_qsh.h"
 #include "msg_common.h"
 #include "sge_hostname.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
+
 sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
 static void write_client_name_cache(const char *cache_path, const char *client_name);
 static int open_qrsh_socket(int *port);
@@ -109,13 +106,13 @@ static int start_client_program(const char *client_name,
                                 int sock);
 static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host);
 /* static char *get_rshd_name(char *hostname); */
-static const char *get_client_name(void *context, int is_rsh, int is_rlogin, int inherit_job);
+static const char *get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
 static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,
                                 int is_qlogin, int is_rsh, int is_qsh); 
-static void delete_job(void *context, u_long32 job_id, lList *lp);
+static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
 
@@ -940,7 +937,7 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *
 */
 static const char *
-get_client_name(void *context, int is_rsh, int is_rlogin, int inherit_job)
+get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit_job)
 {
    /* this is what we return */
    const char *client_name  = NULL;
@@ -959,18 +956,10 @@ get_client_name(void *context, int is_rsh, int is_rlogin, int inherit_job)
    char cache_name_buffer[SGE_PATH_MAX];
    dstring cache_name_dstring;
    const char *cache_name = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    u_long32 progid = ctx->get_who(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
-#else
-   u_long32 progid = uti_state_get_mewho();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *cell_root = path_state_get_cell_root();
-   const char *sge_root = path_state_get_sge_root();
-#endif   
 
    DENTER(TOP_LAYER, "get_client_name");
 
@@ -1021,7 +1010,6 @@ get_client_name(void *context, int is_rsh, int is_rlogin, int inherit_job)
       config_name  = "qlogin_command";
    }
   
-#ifdef TEST_GDI2
    /* get configuration from qmaster */
    if(gdi2_get_configuration(ctx, qualified_hostname, &global, &local) ||
       merge_configuration(progid, cell_root, global, local, &conf_list)) {
@@ -1032,19 +1020,6 @@ get_client_name(void *context, int is_rsh, int is_rlogin, int inherit_job)
       DEXIT;
       return NULL;
    }
-
-#else
-   /* get configuration from qmaster */
-   if(get_configuration(qualified_hostname, &global, &local) ||
-      merge_configuration(progid, cell_root, global, local, &conf_list)) {
-      ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
-      lFreeList(&conf_list);
-      lFreeElem(&global);
-      lFreeElem(&local);
-      DEXIT;
-      return NULL;
-   }
-#endif
 
    /* search for config entry */
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
@@ -1329,12 +1304,7 @@ int main(int argc, char **argv)
    const char* username = NULL;
    const char* mastername = NULL;
 
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#else
-   void *ctx = NULL;
-#endif
-
 
    DENTER_MAIN(TOP_LAYER, "qsh");
 
@@ -1356,7 +1326,6 @@ int main(int argc, char **argv)
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(my_who);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, my_who, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT(NULL, 1);
@@ -1371,32 +1340,9 @@ int main(int argc, char **argv)
    username = ctx->get_username(ctx);
    mastername = ctx->get_master(ctx, false);
 
-#else
-   sge_mt_init();
-
-   sge_gdi_param(SET_MEWHO, my_who, NULL);
-   if (sge_gdi_setup(prognames[my_who], &alp)!=AE_OK) {
-      answer_list_output(&alp);
-      sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
-   }
-
-
-   progname = uti_state_get_sge_formal_prog_name();
-   qualified_hostname = uti_state_get_unqualified_hostname();
-   qualified_hostname = uti_state_get_qualified_hostname();
-   sge_root = path_state_get_sge_root();
-   cell_root = path_state_get_cell_root();
-   myuid = uti_state_get_uid();
-   username = uti_state_get_user_name();
-   mastername = sge_get_master(false);
-#endif
-
    /*
    ** begin to work
    */
-
-   
 
    /* 
    ** set verbosity default: qlogin and qsh: verbose to be backwards compatible,
@@ -1717,19 +1663,11 @@ int main(int argc, char **argv)
       cl_commlib_shutdown_handle(cl_com_get_handle(progname,0),CL_FALSE);
 #endif
 
-#ifdef TEST_GDI2
       tid = sge_qexecve(ctx,
                         host, NULL, 
                         lGetString(job, JB_cwd), 
                         lGetList(job, JB_env_list),
                         lGetList(job, JB_path_aliases)); 
-#else
-      tid = sge_qexecve(NULL,
-                        host, NULL, 
-                        lGetString(job, JB_cwd), 
-                        lGetList(job, JB_env_list),
-                        lGetList(job, JB_path_aliases)); 
-#endif
       if(tid == NULL) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,
             qexec_last_err() ? qexec_last_err() : "unknown"));
@@ -1788,11 +1726,7 @@ int main(int argc, char **argv)
       DPRINTF(("B E F O R E     S E N D I N G! ! ! ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("=====================================================\n"));
 
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION , &lp_jobs, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION , &lp_jobs, NULL, NULL);
-#endif      
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);
@@ -1911,11 +1845,7 @@ int main(int argc, char **argv)
          /* get job from qmaster: to handle qsh and to detect deleted qrsh job */
          what = lWhat("%T(%I)", JB_Type, JB_ja_tasks); 
          where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id); 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &lp_poll, where, what);
-#else
-         alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &lp_poll, where, what);
-#endif   
 
          do_exit = parse_result_list(alp, &alp_error);
    
@@ -2007,14 +1937,11 @@ int main(int argc, char **argv)
    return exit_status;
 }
 
-static void delete_job(void *context, u_long32 job_id, lList *jlp) 
+static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp) 
 {
    lListElem *jep;
    lList* idlp = NULL;
    char job_str[128];
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    if (!jlp) {
       return;
@@ -2027,11 +1954,7 @@ static void delete_job(void *context, u_long32 job_id, lList *jlp)
    sprintf(job_str, sge_u32, job_id);
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
-#ifdef TEST_GDI2
    ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
-#else   
-   sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
-#endif   
    /*
    ** no error handling here, we try to delete the job
    ** if we can

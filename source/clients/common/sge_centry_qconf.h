@@ -32,45 +32,47 @@
  *
  ************************************************************************/
 
+#include "gdi/sge_gdi_ctx.h"
+
 lListElem *
-centry_get_via_gdi(void *context, lList **answer_list, const char *group);
+centry_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *group);
 
 bool 
-centry_add_del_mod_via_gdi(void *context, lListElem *this_elem, lList **answer_list,
+centry_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command);
 
 bool 
-centry_show(void *context, lList **answer_list, const char *name);
+centry_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
 bool 
-centry_add(void *context, lList **answer_list, const char *name);
+centry_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
 bool 
-centry_modify(void *context, lList **answer_list, const char *name);
+centry_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
 bool 
-centry_delete(void *context, lList **answer_list, const char *name);
+centry_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
 bool 
-centry_add_from_file(void *context, lList **answer_list, const char *filename);
+centry_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
 bool 
-centry_modify_from_file(void *context, lList **answer_list, const char *filename);
+centry_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
 lList *
-centry_list_get_via_gdi(void *context, lList **answer_list);
+centry_list_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 bool 
-centry_list_modify(void *context, lList **answer_list);
+centry_list_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 bool
-centry_list_modify_from_file(void *context, lList **answer_list, const char *filename);
+centry_list_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
 bool
-centry_list_show(void *context, lList **answer_list);
+centry_list_show(sge_gdi_ctx_class_t *ctx, lList **answer_list);
 
 bool
-centry_list_add_del_mod_via_gdi(void *context, lList **this_list, lList **answer_list,
+centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lList **answer_list,
                                 lList **old_list);
 
 #endif /* __SGE_CENTRY_QCONF */

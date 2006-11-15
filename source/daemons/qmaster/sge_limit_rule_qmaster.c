@@ -56,11 +56,6 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "uti/sge_string.h"
-#include "sge_bootstrap.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 static bool
 limit_rule_reinit_consumable_actual_list(lListElem *lirs, lList **answer_list);
@@ -121,7 +116,7 @@ filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm,
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_mod(void *context,
+int lirs_mod(sge_gdi_ctx_class_t *ctx,
              lList **alpp, lListElem *new_lirs, lListElem *lirs, int add, const char *ruser, 
              const char *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor)
 {
@@ -219,16 +214,11 @@ ERROR:
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object)
+int lirs_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_t *object)
 {
    lList *answer_list = NULL;
    bool dbret;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "lirs_spool");
 
@@ -279,7 +269,7 @@ int lirs_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object)
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int lirs_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
+int lirs_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    const char *lirs_name;
 
@@ -323,7 +313,7 @@ int lirs_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *
 *  NOTES
 *     MT-NOTE: sge_del_limit_rule_set() is MT safe 
 *******************************************************************************/
-int sge_del_limit_rule_set(void *context,
+int sge_del_limit_rule_set(sge_gdi_ctx_class_t *ctx,
                     lListElem *ep, lList **alpp, lList **lirs_list, 
                     char *ruser, char *rhost)
 {
@@ -365,7 +355,7 @@ int sge_del_limit_rule_set(void *context,
 
    lirs_update_categories(NULL, found);
 
-   sge_event_spool(context,
+   sge_event_spool(ctx,
                    alpp, 0, sgeE_LIRS_DEL, 
                    0, 0, lirs_name, NULL, NULL,
                    NULL, NULL, NULL, true, true);

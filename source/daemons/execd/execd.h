@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_execd_register_at_qmaster(void *context);
+#include "gdi/sge_gdi_ctx.h"
+
+int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx);
 
 #endif /* __EXECD_MAIN_H */

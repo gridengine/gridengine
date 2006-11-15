@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "spool/sge_spooling_utilities.h"
+#include "gdi/sge_gdi_ctx.h"
 
 typedef struct object_info_entry {
    u_long32 target;
@@ -45,7 +46,7 @@ typedef struct object_info_entry {
    bool (*pre_gdi_function)(lList *list, lList **answer_list);
 } object_info_entry;
 
-int sge_parse_qconf(void *context, char **argv);
+int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char **argv);
 
 
 #endif /* __PARSE_QCONF_H */

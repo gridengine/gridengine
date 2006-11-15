@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
+#include "gdi/sge_gdi_ctx.h"
                                                               
-lList *write_job_defaults(void *context, lListElem *job, char *filename, int flags);
+lList *write_job_defaults(sge_gdi_ctx_class_t *ctx, lListElem *job, char *filename, int flags);
 
 #endif /* __WRITE_JOB_DEFAULTS_H */
 

@@ -70,9 +70,6 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
 static int fd_pipe[2];
@@ -323,7 +320,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *  SEE ALSO
 *     sge_os/sge_daemonize_finalize()
 *******************************************************************************/
-int sge_daemonize_prepare(void *context) {
+int sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    pid_t pid;
    fd_set keep_open;
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
@@ -337,12 +334,7 @@ int sge_daemonize_prepare(void *context) {
    char domname[256];
 #endif
 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    int is_daemonized = ctx->is_daemonized(ctx);
-#else
-   int is_daemonized = uti_state_get_daemonized();
-#endif   
 
    DENTER(TOP_LAYER, "sge_daemonize_prepare");
 
@@ -508,15 +500,10 @@ int sge_daemonize_prepare(void *context) {
 *  SEE ALSO
 *     sge_os/sge_daemonize_prepare()
 *******************************************************************************/
-int sge_daemonize_finalize(void *context) 
+int sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
 {
    char tmp_buffer[4];
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    int is_daemonized = ctx->is_daemonized(ctx);
-#else
-   int is_daemonized = uti_state_get_daemonized();
-#endif
 
    DENTER(TOP_LAYER, "sge_daemonize_finalize");
 
@@ -555,11 +542,7 @@ int sge_daemonize_finalize(void *context)
    SETPGRP;
 
    /* now have finished daemonizing */
-#ifdef TEST_GDI2
    ctx->set_daemonized(ctx, true);
-#else
-   uti_state_set_daemonized(1);
-#endif   
 
    DRETURN(true);
 }
@@ -592,12 +575,9 @@ int sge_daemonize_finalize(void *context)
 *  NOTES
 *     MT-NOTES: sge_daemonize() is not MT safe
 ******************************************************************************/
-int sge_daemonize(fd_set *keep_open, void *context)
+int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *ctx)
 {
-#ifdef TEST_GDI2
- sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
-   
+
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    int fd;
 #endif
@@ -619,11 +599,7 @@ int sge_daemonize(fd_set *keep_open, void *context)
    }
 #endif
  
-#ifdef TEST_GDI2
    if (ctx->is_daemonized(ctx)) {
-#else
-   if (uti_state_get_daemonized()) {
-#endif
       DRETURN(1);
    }
  
@@ -673,11 +649,7 @@ int sge_daemonize(fd_set *keep_open, void *context)
 
    SETPGRP;
  
-#ifdef TEST_GDI2
    ctx->set_daemonized(ctx, true);
-#else
-   uti_state_set_daemonized(1);
-#endif
  
    DRETURN(1);
 }     

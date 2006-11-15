@@ -40,12 +40,10 @@
 #include "sge_string.h"
 #include "sge_answer.h"
 #include "sge_userset.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_qconf.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -
@@ -59,7 +57,7 @@
 
 */
 int sge_client_add_user(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lList *user_args,
 lList *acl_args 
@@ -71,10 +69,6 @@ lList *acl_args
    lEnumeration *what;
    u_long32 status;
    int already;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
-
 
    DENTER(TOP_LAYER, "sge_client_add_user");
 
@@ -90,11 +84,7 @@ lList *acl_args
          user_name=lGetString(userarg, UE_name);
    
          /* get old acl */
-#ifdef TEST_GDI2
          answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
-#else
-         answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
-#endif         
          lFreeList(&answers);
 
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -102,13 +92,8 @@ lList *acl_args
                lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
 
                /* mod the acl */
-#ifdef TEST_GDI2
                answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
                         NULL, NULL);   
-#else
-               answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
-                        NULL, NULL);   
-#endif                        
             } else {
                already = 1;
             }
@@ -118,13 +103,8 @@ lList *acl_args
             lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
             
             /* add the acl */
-#ifdef TEST_GDI2
             answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_ADD, &acl, 
                      NULL, NULL);   
-#else
-            answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_ADD, &acl, 
-                     NULL, NULL);   
-#endif                     
          }
 
          if (already) {
@@ -170,7 +150,7 @@ lList *acl_args
 
 */
 int sge_client_del_user(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lList *user_args,
 lList *acl_args 
@@ -181,9 +161,6 @@ lList *acl_args
    lCondition *where;
    lEnumeration *what;
    u_long32 status;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
 
    DENTER(TOP_LAYER, "sge_client_del_user");
 
@@ -198,11 +175,7 @@ lList *acl_args
          char *cp = NULL;
          user_name=lGetString(userarg, UE_name);
          /* get old acl */
-#ifdef TEST_GDI2
          answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
-#else
-         answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
-#endif         
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
          lFreeList(&answers);
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -210,11 +183,7 @@ lList *acl_args
             cp = NULL;
             if (lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lDelSubStr(lFirst(acl), UE_name, user_name, US_entries);
-#ifdef TEST_GDI2               
                answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
-#else
-               answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
-#endif               
                cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
                status = lGetUlong(lFirst(answers), AN_status);
                lFreeList(&answers);
@@ -278,7 +247,7 @@ lList *acl_args
 
 */
 int sge_client_get_acls(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lList *acl_args,
 lList **dst 
@@ -288,9 +257,6 @@ lList **dst
    lCondition *where, *newcp;
    lEnumeration *what;
    const char *acl_name;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
    
    DENTER(TOP_LAYER, "sge_client_get_acls");
 
@@ -305,11 +271,7 @@ lList **dst
          where = lOrWhere(where, newcp);
    }
    what = lWhat("%T(ALL)", US_Type);
-#ifdef TEST_GDI2
    answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
-#else
-   answers = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
-#endif   
    lFreeWhat(&what);
    lFreeWhere(&where);
 

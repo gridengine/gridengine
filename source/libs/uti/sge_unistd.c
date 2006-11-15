@@ -47,11 +47,7 @@
 #include "sge_dstring.h"
 #include "msg_utilib.h"
 #include "sge_prog.h"
-
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 typedef enum {
    FILE_TYPE_NOT_EXISTING,
@@ -302,32 +298,23 @@ int sge_chdir(const char *dir)
 *     Calls 'exit_func' if installed. Stops monitoring with DCLOSE 
 *
 *  INPUTS
-*     void **context - address of the context, the context is freed in exit_func
+*     sge_gdi_ctx_class_t **ref_ctx - address of the context, the context is freed in exit_func
 *     int i          - exit state 
 *
 *  SEE ALSO
 *     uti/unistd/sge_install_exit_func()
 ******************************************************************************/
-void sge_exit(void **context, int i) 
+void sge_exit(void **ref_ctx, int i) 
 {
    sge_exit_func_t exit_func = NULL;
-   
 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t **ref_ctx = (sge_gdi_ctx_class_t**)context;
-#endif   
-   
    DENTER(TOP_LAYER, "sge_exit");
-#ifdef TEST_GDI2
    if (ref_ctx && *ref_ctx) {
       sge_gdi_ctx_class_t *ctx = *ref_ctx;
       exit_func = ctx->get_exit_func(ctx);
    }   
-#else
-   exit_func = uti_state_get_exit_func();
-#endif   
    if (exit_func) {
-      exit_func(context, i);
+      exit_func(ref_ctx, i);
    }
    DEXIT;
    exit(i);

@@ -110,9 +110,6 @@
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /****** qmaster/job/spooling ***************************************************
 *
@@ -168,7 +165,7 @@ static int mod_job_attributes(lListElem *new_job, lListElem *jep, lList **alpp,
 
 static int compress_ressources(lList **alpp, lList *rl); 
 
-static void set_context(lList *ctx, lListElem *job); 
+static void set_context(lList *jbctx, lListElem *job); 
 
 static u_long32 guess_highest_job_number(void);
 
@@ -191,7 +188,7 @@ static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_fl
                                   int all_users_flag, int all_jobs_flag, char *ruser, 
                                   int is_array, u_long32 start, u_long32 end, u_long32 step);   
                                   
-static u_long32 sge_get_job_number(void *context, monitoring_t *monitor);
+static u_long32 sge_get_job_number(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor);
 
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 
@@ -217,7 +214,7 @@ static const char JOB_NAME_DEL = ':';
 /* MT-Note: it is thread safe. It is using the global lock to secure the   */
 /*          none safe functions                                            */
 /*-------------------------------------------------------------------------*/
-int sge_gdi_add_job(void *context,
+int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                     lListElem *jep, lList **alpp, lList **lpp, char *ruser,
                     char *rhost, uid_t uid, gid_t gid, char *group, 
                     sge_gdi_request *request, monitoring_t *monitor) 
@@ -237,15 +234,8 @@ int sge_gdi_add_job(void *context,
    dstring str_wrapper;
    lList* user_lists = NULL;
    lList* xuser_lists = NULL;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-   const char *sge_root = path_state_get_sge_root();
-#endif
 
    DENTER(TOP_LAYER, "sge_gdi_add_job");
 
@@ -388,7 +378,7 @@ int sge_gdi_add_job(void *context,
       
       /* get new job numbers until we find one that is not yet used */
       do {
-         job_number = sge_get_job_number(context, monitor);
+         job_number = sge_get_job_number(ctx, monitor);
       } while (job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number));
       lSetUlong(jep, JB_job_number, job_number);
 
@@ -619,7 +609,7 @@ int sge_gdi_add_job(void *context,
       {
          char* enforce_user = mconf_get_enforce_user();
          if (enforce_user && !strcasecmp(enforce_user, "auto")) {
-            int status = sge_add_auto_user(context, ruser, alpp, monitor);
+            int status = sge_add_auto_user(ctx, ruser, alpp, monitor);
             if (status != STATUS_OK) {
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
                FREE(enforce_user);
@@ -793,7 +783,7 @@ int sge_gdi_add_job(void *context,
 
       job_suc_pre(jep);
 
-      if (!sge_event_spool(context, alpp, 0, sgeE_JOB_ADD, 
+      if (!sge_event_spool(ctx, alpp, 0, sgeE_JOB_ADD, 
                            job_number, 0, NULL, NULL, NULL,
                            jep, NULL, NULL, true, true)) {
          ERROR((SGE_EVENT, MSG_JOB_NOWRITE_U, sge_u32c(job_number)));
@@ -922,7 +912,7 @@ int sge_gdi_add_job(void *context,
 /*-------------------------------------------------------------------------*/
 
 int sge_gdi_del_job(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *idep,
 lList **alpp,
 char *ruser,
@@ -953,13 +943,7 @@ int sub_command, monitoring_t *monitor
    u_long32 start_time;
    lList *user_list = lGetList(idep, ID_user_list);
    lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -1188,7 +1172,7 @@ int sub_command, monitoring_t *monitor
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
         
-                  sge_commit_job(context, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                  sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
                                  COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
                                  COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
                   deleted_unenrolled_tasks = 1;
@@ -1261,12 +1245,12 @@ int sub_command, monitoring_t *monitor
                   if (lGetString(tmp_task, JAT_master_queue) && is_pe_master_task_send(tmp_task)) {
                      job_ja_task_send_abort_mail(job, tmp_task, ruser,
                                                  rhost, NULL);
-                     get_rid_of_job_due_to_qdel(context,
+                     get_rid_of_job_due_to_qdel(ctx,
                                                 job, tmp_task,
                                                 alpp, ruser,
                                                 lGetUlong(idep, ID_force), monitor);
                   } else {
-                     sge_commit_job(context, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN, monitor);
+                     sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN, monitor);
                      showmessage = 1;
                      if (!alltasks) {
                         range_list_insert_id(&range_list, NULL, task_number);
@@ -1336,7 +1320,7 @@ int sub_command, monitoring_t *monitor
    }    
 
    /* remove all orphaned queue intances, which are empty. */
-   cqueue_list_del_all_orphaned(context, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
+   cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
 
    DRETURN(STATUS_OK);
 }
@@ -1698,7 +1682,7 @@ void job_ja_task_send_abort_mail(const lListElem *job,
    }
 }
 
-void get_rid_of_job_due_to_qdel(void *context,
+void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
                                 lListElem *j,
                                 lListElem *t,
                                 lList **answer_list,
@@ -1720,7 +1704,7 @@ void get_rid_of_job_due_to_qdel(void *context,
       answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 
                       ANSWER_QUALITY_ERROR);
    }
-   if (sge_signal_queue(context, SGE_SIGKILL, qep, j, t, monitor)) {
+   if (sge_signal_queue(ctx, SGE_SIGKILL, qep, j, t, monitor)) {
       if (force) {
          if (job_is_array(j)) {
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELTASK_SUU,
@@ -1730,7 +1714,7 @@ void get_rid_of_job_due_to_qdel(void *context,
                    ruser, sge_u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(context, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
          cancel_job_resend(job_number, task_number);
          j = NULL;
          /* IZ 664: Where is SGE_EVENT initialized??? 
@@ -1755,7 +1739,7 @@ void get_rid_of_job_due_to_qdel(void *context,
                    ruser, sge_u32c(job_number)));
          }
          /* 3: JOB_FINISH reports aborted */
-         sge_commit_job(context, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         sge_commit_job(ctx, j, t, NULL, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
          cancel_job_resend(job_number, task_number);
          j = NULL;
       } else {
@@ -1782,20 +1766,15 @@ void get_rid_of_job_due_to_qdel(void *context,
       answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
                       ANSWER_QUALITY_INFO);
    }
-   job_mark_job_as_deleted(context, j, t);
+   job_mark_job_as_deleted(ctx, j, t);
    DRETURN_VOID;
 }
 
-void job_mark_job_as_deleted(void *context,
+void job_mark_job_as_deleted(sge_gdi_ctx_class_t *ctx,
                              lListElem *j,
                              lListElem *t)
 {
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "job_mark_job_as_deleted");
    if (j && t) {
@@ -1847,7 +1826,7 @@ enum {
 };
 
 int sge_gdi_mod_job(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *jep, /* reduced JB_Type */
 lList **alpp,
 char *ruser,
@@ -1867,12 +1846,7 @@ int sub_command
    bool job_name_flag = false;
    char *job_mod_name = NULL;
    const char *job_name = NULL;
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
  
    DENTER(TOP_LAYER, "sge_gdi_mod_job");
 
@@ -3538,37 +3512,37 @@ lList *rl     /* RE_Type */
 ** when no group tag is given at the beginning of the incoming list
 */
 static void set_context(
-lList *ctx, /* VA_Type */
+lList *jbctx, /* VA_Type */
 lListElem *job  /* JB_Type */
 ) {
-   lList* newctx = NULL;
-   lListElem* ctxep;
+   lList* newjbctx = NULL;
+   lListElem* jbctxep;
    lListElem* temp;
    char   mode = '+';
    
-   newctx = lGetList(job, JB_context);
+   newjbctx = lGetList(job, JB_context);
 
    /* if the incoming list is empty, then simply clear the context */
-   if(!ctx || !lGetNumberOfElem(ctx)) {
+   if(!jbctx || !lGetNumberOfElem(jbctx)) {
       lSetList(job, JB_context, NULL);
-      newctx = NULL;
+      newjbctx = NULL;
    }
    else {
       /* if first element contains no tag => assume (=, ) */
-      switch(*lGetString(lFirst(ctx), VA_variable)) {
+      switch(*lGetString(lFirst(jbctx), VA_variable)) {
          case '+':
          case '-':
          case '=':
             break;
          default:
             lSetList(job, JB_context, NULL);
-            newctx = NULL;
+            newjbctx = NULL;
             break;
       }
    }
 
-   for_each(ctxep, ctx) {
-      switch(*(lGetString(ctxep, VA_variable))) {
+   for_each(jbctxep, jbctx) {
+      switch(*(lGetString(jbctxep, VA_variable))) {
          case '+':
             mode = '+';
             break;
@@ -3577,23 +3551,23 @@ lListElem *job  /* JB_Type */
             break;
          case '=':
             lSetList(job, JB_context, NULL);
-            newctx = NULL;
+            newjbctx = NULL;
             mode = '+';
             break;
          default:
             switch(mode) {
                case '+':
-                  if(!newctx)
-                     lSetList(job, JB_context, newctx = lCreateList("context list", VA_Type));
-                  if((temp = lGetElemStr(newctx, VA_variable, lGetString(ctxep, VA_variable))))
-                     lSetString(temp, VA_value, lGetString(ctxep, VA_value));
+                  if(!newjbctx)
+                     lSetList(job, JB_context, newjbctx = lCreateList("context list", VA_Type));
+                  if((temp = lGetElemStr(newjbctx, VA_variable, lGetString(jbctxep, VA_variable))))
+                     lSetString(temp, VA_value, lGetString(jbctxep, VA_value));
                   else
-                     lAppendElem(newctx, lCopyElem(ctxep));
+                     lAppendElem(newjbctx, lCopyElem(jbctxep));
                   break;
                case '-':
 
-                  lDelSubStr(job, VA_variable, lGetString(ctxep, VA_variable), JB_context); 
-                  /* WARNING: newctx is not valid when complete list was deleted */
+                  lDelSubStr(job, VA_variable, lGetString(jbctxep, VA_variable), JB_context); 
+                  /* WARNING: newjbctx is not valid when complete list was deleted */
                   break;
             }
             break;
@@ -3602,7 +3576,7 @@ lListElem *job  /* JB_Type */
 }
 
 /************************************************************************/
-static u_long32 sge_get_job_number(void *context, monitoring_t *monitor)
+static u_long32 sge_get_job_number(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor)
 {
    u_long32 job_nr;
    bool is_store_job = false;
@@ -3625,7 +3599,7 @@ static u_long32 sge_get_job_number(void *context, monitoring_t *monitor)
                   &job_number_control.job_number_mutex);
   
    if (is_store_job) {
-      sge_store_job_number(context, NULL, monitor);
+      sge_store_job_number(ctx, NULL, monitor);
    }
   
    DRETURN(job_nr);
@@ -3663,7 +3637,7 @@ FCLOSE_ERROR:
    DRETURN_VOID;
 }
 
-void sge_store_job_number(void *context, te_event_t anEvent, monitoring_t *monitor) {
+void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor) {
    u_long32 job_nr = 0;
    bool changed = false;
 
@@ -3928,7 +3902,7 @@ int *trigger
    DRETURN(0);
 }
 
-int sge_gdi_copy_job(void *context,
+int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
                      lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, 
                      uid_t uid, gid_t gid, char *group, sge_gdi_request *request, 
                      monitoring_t *monitor) 
@@ -3937,12 +3911,7 @@ int sge_gdi_copy_job(void *context,
    int ret;
    lListElem *old_jep, *new_jep;
    int dummy_trigger = 0;
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "sge_gdi_copy_job");
 
@@ -3997,7 +3966,7 @@ int sge_gdi_copy_job(void *context,
    }
 
    /* call add() method */
-   ret = sge_gdi_add_job(context, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request, monitor);
+   ret = sge_gdi_add_job(ctx, new_jep, alpp, lpp, ruser, rhost, uid, gid, group, request, monitor);
 
    lFreeElem(&new_jep);
 
@@ -4020,27 +3989,17 @@ int sge_gdi_copy_job(void *context,
 *     MT-NOTE: sge_job_spool() is MT safe, it uses the global lock (read)
 *
 *******************************************************************************/
-void sge_job_spool(void *context) {
+void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
    lListElem *jep = NULL;
    lList *answer_list = NULL;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "sge_job_spool");
 
    if (!job_spooling) {
 
       /* the job spooling is disabled, we have to force the spooling */
-#ifdef TEST_QMASTER_GDI2
       ctx->set_job_spooling(ctx, true);
-#else
-      bootstrap_set_job_spooling(true);
-#endif
 
       INFO((SGE_EVENT, "job spooling is disabled - spooling the jobs"));
       
@@ -4095,7 +4054,7 @@ void sge_job_spool(void *context) {
                for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
                   const char *pe_task_id_str = lGetString(pe_task, PET_id);
                   
-                  if (!sge_event_spool(context, &answer_list, 0, sgeE_PETASK_ADD, 
+                  if (!sge_event_spool(ctx, &answer_list, 0, sgeE_PETASK_ADD, 
                                   job_number, jataskid, pe_task_id_str, NULL,
                                   NULL, jep, ja_task, pe_task, false, true)) {
                      is_success = false;
@@ -4107,7 +4066,7 @@ void sge_job_spool(void *context) {
                }
             }
             
-            if (is_success && !sge_event_spool(context, &answer_list, 0, sgeE_JOB_ADD, 
+            if (is_success && !sge_event_spool(ctx, &answer_list, 0, sgeE_JOB_ADD, 
                               job_number, 0, NULL, NULL, NULL,
                               jep, NULL, NULL, false, true)) {
                is_success = false;
@@ -4127,11 +4086,7 @@ void sge_job_spool(void *context) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       
       /* reset spooling */
-#ifdef TEST_QMASTER_GDI2
       ctx->set_job_spooling(ctx, false);
-#else
-      bootstrap_set_job_spooling(false);
-#endif      
       answer_list_output(&answer_list);
    }
 

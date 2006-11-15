@@ -36,16 +36,12 @@
 extern "C" {
 #endif
 
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
-#endif
 
 typedef struct qstat_env_str qstat_env_t;
 
 struct qstat_env_str {
-#ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx;
-#endif
 
    /*  Input parameters */
    lList *resource_list;   /* -l resource_request           */ 

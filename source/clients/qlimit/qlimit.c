@@ -83,10 +83,7 @@
 #include "uti/setup_path.h"
 #include "read_defaults.h"
 #include "uti/sge_io.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 static report_handler_t* create_xml_report_handler(lList **alpp);
 
@@ -223,36 +220,20 @@ int main(int argc, char **argv)
    lList *pe_list = NULL;
    lList *project_list = NULL;
    lList *cqueue_list = NULL;
-
    lList *alp = NULL;
    report_handler_t *report_handler = NULL;
-   
    int qlimit_result = 0;
-
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "qlimit");
 
    log_state_set_log_gui(true);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QLIMIT, &alp) != AE_OK) {
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);
    }
-#else
-   sge_mt_init();
-
-   sge_gdi_param(SET_MEWHO, QLIMIT, NULL);
-   if (sge_gdi_setup(prognames[QLIMIT], &alp) != AE_OK) {
-      answer_list_output(&alp);
-      sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
-   }
-#endif
 
    sge_setup_sig_handlers(QLIMIT);
    
@@ -261,13 +242,8 @@ int main(int argc, char **argv)
    */
    {
       dstring file = DSTRING_INIT;
-#ifdef TEST_GDI2
       const char *user = ctx->get_username(ctx);
       const char *cell_root = ctx->get_cell_root(ctx);
-#else
-      const char *user = uti_state_get_user_name();
-      const char *cell_root = path_state_get_cell_root();
-#endif
 
       /* arguments from SGE_ROOT/common/sge_qlimit file */
       get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QLIMIT_FILE);
@@ -283,14 +259,14 @@ int main(int argc, char **argv)
          answer_list_output(&alp);
          lFreeList(&pcmdline);
          sge_prof_cleanup();
-         SGE_EXIT(NULL, 1);
+         SGE_EXIT((void**)&ctx, 1);
       }
    }
    if (sge_parse_cmdline_qlimit(argv, &pcmdline, &alp) == false) {
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /*
@@ -311,15 +287,11 @@ int main(int argc, char **argv)
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
-#ifdef TEST_GDI2
    qlimit_result = qlimit_output(ctx, host_list, resource_match_list, user_list, pe_list, project_list, cqueue_list, &alp, report_handler);
-#else
-   qlimit_result = qlimit_output(NULL, host_list, resource_match_list, user_list, pe_list, project_list, cqueue_list, &alp, report_handler);
-#endif
-   
+
    if (report_handler != NULL ) {
       report_handler->destroy(&report_handler, &alp);
    }
@@ -327,11 +299,11 @@ int main(int argc, char **argv)
    if (qlimit_result != 0) {
       answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    sge_prof_cleanup();
-   SGE_EXIT(NULL, 0); /* 0 means ok - others are errors */
+   SGE_EXIT((void**)&ctx, 0); /* 0 means ok - others are errors */
    DEXIT;
    return 0;
 }

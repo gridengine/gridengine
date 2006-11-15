@@ -40,8 +40,6 @@
 #include <string.h>
 #include <strings.h>
 
-#include "sge_any_request.h"
-#include "sge_ack.h"
 #include "sge_unistd.h"
 #include "commlib.h"
 #include "commproc.h"
@@ -3154,3 +3152,4 @@ int dummy_event_client(void) {
    return 0;
 }
 #endif
+

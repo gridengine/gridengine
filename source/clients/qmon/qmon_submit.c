@@ -97,14 +97,12 @@
 #include "sge_ulong.h"
 #include "sge_ja_task.h"
 #include "sge_string.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
-extern sge_gdi_ctx_class_t *ctx;
-#endif
-
 #include "uti/sge_string.h"
 #include "uti/setup_path.h"
+
+
+extern sge_gdi_ctx_class_t *ctx;
 
 extern char **environ;
 
@@ -909,11 +907,7 @@ static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad)
    char buf[512];
    String dsp;
 
-#ifdef TEST_GDI2   
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
@@ -983,11 +977,7 @@ int submode
 ) {
    Boolean sensitive, sensitive2;
 
-#ifdef TEST_GDI2
    const char *username = ctx->get_username(ctx);
-#else
-   const char *username = uti_state_get_user_name();
-#endif   
 
    DENTER(GUI_LAYER, "qmonSubmitSetSensitive");
 
@@ -1127,11 +1117,7 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
             return;
          }
 
-#ifdef TEST_GDI2
          alp = write_job_defaults(ctx, jep, filename, 0);
-#else
-         alp = write_job_defaults(NULL, jep, filename, 0);
-#endif         
 
          qmonMessageBox(w, alp, 0);
 
@@ -1284,16 +1270,9 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
    Boolean status = False;
    u_long32 job_number;
    int just_verify = 0;
-
-#ifdef TEST_GDI2
    const char *username = ctx->get_username(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
    const char *mastername = ctx->get_master(ctx, false);
-#else
-   const char *username = uti_state_get_user_name();
-   const char *sge_root = path_state_get_sge_root();
-   const char *mastername = sge_get_master(false);
-#endif   
   
    DENTER(GUI_LAYER, "qmonSubmitJobSubmit");
 
@@ -1540,11 +1519,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          printf("________________________________________\n");
       }
 
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
       if (!qmonMessageBox(w, alp, 0)) {
          updateJobListCB(w, NULL, NULL);
          XmtMsgLinePrintf(submit_message, "Job %d altered", 
@@ -1624,21 +1599,12 @@ int read_defaults
    String dir_pre;
    SGE_STRUCT_STAT statb;
 
-#ifdef TEST_GDI2
    u_long32 myuid = ctx->get_uid(ctx);
    u_long32 prog_number = ctx->get_who(ctx);
    const char *username = ctx->get_username(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   u_long32 myuid = uti_state_get_uid();
-   u_long32 prog_number = uti_state_get_mewho();
-   const char *username = uti_state_get_user_name();
-   const char *cell_root = path_state_get_cell_root();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(GUI_LAYER, "qmonSubmitReadScript");
 
@@ -1858,14 +1824,8 @@ char *prefix
    StringConst project;
    StringConst ckpt_obj;
    const char* tmp_string;
-
-#ifdef TEST_GDI2   
    const char* username = ctx->get_username(ctx);
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char* username = uti_state_get_user_name();
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
    
    DENTER(GUI_LAYER, "qmonCullToSM");
 
@@ -2060,18 +2020,10 @@ int save
    lList *perl = NULL;
    lList *alp = NULL;
    lList *path_alias = NULL;
-
-#ifdef TEST_GDI2   
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *username = ctx->get_username(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   const char *username = uti_state_get_user_name();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
    
    DENTER(GUI_LAYER, "qmonSMToCull");
 
@@ -3063,18 +3015,13 @@ static void qmonSubmitCtxList(Widget w, XtPointer cld, XtPointer cad)
 static void qmonSubmitClear(Widget w, XtPointer cld, XtPointer cad)
 {
 
-#ifdef TEST_GDI2
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
 
    DENTER(GUI_LAYER, "qmonSubmitClear");
    
    /*
    ** free currently set lists and reset to default values
    */
-   
    qmonFreeSMData(&SMData);
    qmonInitSMData(&SMData);
 

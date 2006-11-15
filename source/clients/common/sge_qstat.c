@@ -83,9 +83,7 @@
 #include "sge_urgency.h"
 #include "sge_qinstance_type.h"
 #include "sge_ulong.h"
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 
 #include "sge_qstat.h"
@@ -1020,26 +1018,15 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    int ce_id, eh_id, sc_id, gc_id, hgrp_id = 0;
    int show_zombies = (show & QSTAT_DISPLAY_ZOMBIES) ? 1 : 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
-
-#ifdef TEST_GDI2
    const char *cell_root = qstat_env->ctx->get_cell_root(qstat_env->ctx);
    u_long32 progid = qstat_env->ctx->get_who(qstat_env->ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   u_long32 progid = uti_state_get_mewho();
-#endif
 
    DENTER(TOP_LAYER, "qstat_env_get_all_lists");
 
    q_all = lWhat("%T(ALL)", CQ_Type);
    
-#ifdef TEST_GDI2
    q_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
                                     NULL, NULL, q_all, NULL, &state, true);
-#else
-   q_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET,
-                        NULL, NULL, q_all, NULL, &state, true);
-#endif
    lFreeWhat(&q_all);
    lFreeWhere(&qw);
  
@@ -1054,13 +1041,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
       lCondition *where = qstat_get_JB_Type_selection(user_list, show);
       lEnumeration *what = qstat_get_JB_Type_filter(qstat_env);
 
-#ifdef TEST_GDI2
       j_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
                            NULL, where, what, NULL, &state, true);
-#else
-      j_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET,
-                           NULL, where, what, NULL, &state, true);
-#endif
       lFreeWhere(&where);
 
       if (answer_list_has_error(alpp)) {
@@ -1080,13 +1062,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
             zw = lOrWhere(zw, nw);
       }
 
-#ifdef TEST_GDI2
       z_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
                            NULL, zw, qstat_get_JB_Type_filter(qstat_env), NULL, &state, true);
-#else
-      z_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_ZOMBIE_LIST, SGE_GDI_GET, 
-                           NULL, zw, qstat_get_JB_Type_filter(qstat_env), NULL, &state, true);
-#endif
       lFreeWhere(&zw);
 
       if (answer_list_has_error(alpp)) {
@@ -1098,13 +1075,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    ** complexes
    */
    ce_all = lWhat("%T(ALL)", CE_Type);
-#ifdef TEST_GDI2
    ce_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                         NULL, NULL, ce_all, NULL, &state, true);
-#else
-   ce_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                        NULL, NULL, ce_all, NULL, &state, true);
-#endif                        
    lFreeWhat(&ce_all);
 
    if (answer_list_has_error(alpp)) {
@@ -1116,13 +1088,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */
    where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    eh_all = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2
    eh_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
                         NULL, where, eh_all, NULL, &state, true);
-#else
-   eh_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
-                        NULL, where, eh_all, NULL, &state, true);
-#endif                        
    lFreeWhat(&eh_all);
    lFreeWhere(&where);
 
@@ -1135,13 +1102,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */ 
    if (pe_l) {   
       pe_all = lWhat("%T(%I%I%I%I%I)", PE_Type, PE_name, PE_slots, PE_job_is_first_task, PE_control_slaves, PE_urgency_slots);
-#ifdef TEST_GDI2
       pe_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
                            NULL, pw, pe_all, NULL, &state, true);
-#else
-      pe_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET,
-                           NULL, pw, pe_all, NULL, &state, true);
-#endif
       lFreeWhat(&pe_all);
       lFreeWhere(&pw);
 
@@ -1155,13 +1117,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */ 
    if (ckpt_l) {
       ckpt_all = lWhat("%T(%I)", CK_Type, CK_name);
-#ifdef TEST_GDI2
       ckpt_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET,
                            NULL, NULL, ckpt_all, NULL, &state, true);
-#else
-      ckpt_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_CKPT_LIST, SGE_GDI_GET,
-                           NULL, NULL, ckpt_all, NULL, &state, true);
-#endif
       lFreeWhat(&ckpt_all);
 
       if (answer_list_has_error(alpp)) {
@@ -1174,13 +1131,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */ 
    if (acl_l) {
       acl_all = lWhat("%T(ALL)", US_Type);
-#ifdef TEST_GDI2
       acl_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
                            NULL, NULL, acl_all, NULL, &state, true);
-#else
-      acl_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
-                           NULL, NULL, acl_all, NULL, &state, true);
-#endif
       lFreeWhat(&acl_all);
 
       if (answer_list_has_error(alpp)) {
@@ -1193,13 +1145,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */ 
    if (project_l) {
       up_all = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
       up_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
                            NULL, NULL, up_all, NULL, &state, true);
-#else
-      up_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
-                           NULL, NULL, up_all, NULL, &state, true);
-#endif
       lFreeWhat(&up_all);
 
       if (answer_list_has_error(alpp)) {
@@ -1215,13 +1162,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    /*sc_what = lWhat("%T(%I %I)", SC_Type, SC_user_sort, SC_job_load_adjustments);*/ 
    sc_what = lWhat("%T(ALL)", SC_Type);
 
-#ifdef TEST_GDI2
    sc_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
                         NULL, NULL, sc_what, NULL, &state, true);
-#else
-   sc_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_SC_LIST, SGE_GDI_GET, 
-                        NULL, NULL, sc_what, NULL, &state, true);
-#endif
    lFreeWhat(&sc_what);
 
    if (answer_list_has_error(alpp)) {
@@ -1232,13 +1174,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    ** hgroup 
    */
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
-#ifdef TEST_GDI2
    hgrp_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
                         NULL, NULL, hgrp_what, NULL, &state, true);
-#else
-   hgrp_id = sge_gdi_multi(alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                        NULL, NULL, hgrp_what, NULL, &state, true);
-#endif
    lFreeWhat(&hgrp_what);
 
    if (answer_list_has_error(alpp)) {
@@ -1250,13 +1187,8 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    */
    gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
-#ifdef TEST_GDI2
    gc_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                         NULL, gc_where, gc_what, &mal, &state, true);
-#else
-   gc_id = sge_gdi_multi(alpp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                        NULL, gc_where, gc_what, &mal, &state, true);
-#endif
    lFreeWhat(&gc_what);
    lFreeWhere(&gc_where);
 

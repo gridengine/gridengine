@@ -38,16 +38,17 @@
 
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
 
-void resend_signal_event(void *context, te_event_t anEvent, monitoring_t *monitor);
+void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 void rebuild_signal_events(void);
-void sge_gdi_qmod(void *context,
+void sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
                   char *host, sge_gdi_request *request, sge_gdi_request *answer,
                   uid_t uid, gid_t gid, char *user, char *group,
                   monitoring_t *monitor);
 
-int sge_signal_queue(void *context, int how, lListElem *qep, lListElem *jep, lListElem *jatep, monitoring_t *monitor);
+int sge_signal_queue(sge_gdi_ctx_class_t *ctx, int how, lListElem *qep, lListElem *jep, lListElem *jatep, monitoring_t *monitor);
 
 #endif /* __SGE_QMOD_QMASTER_H */
 

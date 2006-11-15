@@ -37,6 +37,7 @@
 #include "sge_object.h"
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
 
 typedef enum {
@@ -63,10 +64,10 @@ bool
 reporting_initialize(lList **answer_list);
 
 bool
-reporting_shutdown(void *context, lList **answer_list, bool do_spool);
+reporting_shutdown(sge_gdi_ctx_class_t *ctx, lList **answer_list, bool do_spool);
 
 void
-reporting_trigger_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+reporting_trigger_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);
@@ -83,7 +84,7 @@ reporting_create_job_log(lList **answer_list,
                          const char *message);
 
 bool
-reporting_create_acct_record(void *context,
+reporting_create_acct_record(sge_gdi_ctx_class_t *ctx,
                              lList **answer_list, 
                              lListElem *job_report, 
                              lListElem *job, 

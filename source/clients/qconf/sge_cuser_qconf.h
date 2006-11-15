@@ -32,25 +32,27 @@
  *
  ************************************************************************/
 
+#include "gdi/sge_gdi_ctx.h"
 
-lListElem *cuser_get_via_gdi(void *context, lList **answer_list, const char *cuser);
+lListElem *cuser_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *cuser);
 
-bool cuser_add_del_mod_via_gdi(void *context, lListElem *this_elem, lList **answer_list,
+bool cuser_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list,
                                u_long32 gdi_command);
 
-bool cuser_provide_modify_context(lListElem **this_elem,
+bool cuser_provide_modify_context(sge_gdi_ctx_class_t *ctx,
+                                  lListElem **this_elem,
                                   lList **answer_list);
 
-bool cuser_show(void *context, lList **answer_list, const char *name);
+bool cuser_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool cuser_add(void *context, lList **answer_list, const char *name);
+bool cuser_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool cuser_modify(void *context, lList **answer_list, const char *name);
+bool cuser_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool cuser_delete(void *context, lList **answer_list, const char *name);
+bool cuser_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool cuser_add_from_file(void *context, lList **answer_list, const char *filename);
+bool cuser_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
-bool cuser_modify_from_file(void *context, lList **answer_list, const char *filename);
+bool cuser_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
 #endif /* __SGE_CUSER_QCONF */

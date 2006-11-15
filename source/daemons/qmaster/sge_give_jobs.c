@@ -50,7 +50,6 @@
 #include "sge_stdlib.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "sge_any_request.h"
 #include "commlib.h"
 #include "pack_job_delivery.h"
 #include "sge_subordinate_qmaster.h" 
@@ -92,7 +91,6 @@
 #include "sge_ckpt.h"
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
-#include "sge_todo.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"
@@ -104,13 +102,9 @@
 #include "uti/sge_bootstrap.h"
 #include "sched/sge_lirs_schedd.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 
 static void 
-sge_clear_granted_resources(void *context,
+sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                             lListElem *jep, lListElem *ja_task, int incslots, 
                             monitoring_t *monitor);
 
@@ -123,18 +117,18 @@ static void
 release_successor_jobs(lListElem *jep);
 
 static int 
-send_slave_jobs(void *context, 
+send_slave_jobs(sge_gdi_ctx_class_t *ctx, 
                 const char *target, lListElem *jep, lListElem *jatep, 
                 lListElem *pe, monitoring_t *monitor); 
                 
 
 static int 
-send_slave_jobs_wc(void *context, 
+send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, 
                    const char *target, lListElem *tmpjep, lListElem *jatep, 
                    lListElem *pe, lList *qlp, monitoring_t *monitor);
 
 static int 
-send_job(void *context, const char *rhost, const char *target, lListElem *jep, lListElem *jatep, 
+send_job(sge_gdi_ctx_class_t *ctx, const char *rhost, const char *target, lListElem *jep, lListElem *jatep, 
          lListElem *pe, lListElem *hep, int master);
 
 static int 
@@ -160,7 +154,7 @@ copyJob(lListElem *job, lListElem *ja_task);
  Do everything to make sure the execd is prepared for receiving the job.
  ************************************************************************/
 /* pe = is NULL for serial jobs*/
-int sge_give_job(void *context,
+int sge_give_job(sge_gdi_ctx_class_t *ctx,
                  lListElem *jep, lListElem *jatep, lListElem *master_qep, 
                  lListElem *pe, lListElem *hep, monitoring_t *monitor)
 {
@@ -211,7 +205,7 @@ int sge_give_job(void *context,
       }
    }
 
-   switch (send_slave_jobs(context, target, jep, jatep, pe, monitor)) {
+   switch (send_slave_jobs(ctx, target, jep, jatep, pe, monitor)) {
       case -1 : ret = -1;
       case  0 : sent_slaves = 1;
          break;
@@ -225,7 +219,7 @@ int sge_give_job(void *context,
    if (!sent_slaves) {
       /* wait till all slaves are acked */
       lSetUlong(jatep, JAT_next_pe_task_id, 1);
-      ret = send_job(context, rhost, target, jep, jatep, pe, hep, 1);
+      ret = send_job(ctx, rhost, target, jep, jatep, pe, hep, 1);
       MONITOR_MESSAGES_OUT(monitor);
    }
 
@@ -269,7 +263,7 @@ int sge_give_job(void *context,
 *     ???/???
 *******************************************************************************/
 static int 
-send_slave_jobs(void *context, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, monitoring_t *monitor)
+send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, monitoring_t *monitor)
                 
 {
    lListElem *tmpjep, *qep, *tmpjatep;
@@ -363,7 +357,7 @@ send_slave_jobs(void *context, const char *target, lListElem *jep, lListElem *ja
       pe = lDechainElem(master_pe_list, pe);
    }
 
-   ret = send_slave_jobs_wc(context, target, tmpjep, jatep, pe, qlp, monitor);
+   ret = send_slave_jobs_wc(ctx, target, tmpjep, jatep, pe, qlp, monitor);
 
    lFreeElem(&tmpjep);
    lFreeList(&qlp);
@@ -403,7 +397,7 @@ send_slave_jobs(void *context, const char *target, lListElem *jep, lListElem *ja
 *
 *******************************************************************************/
 static int 
-send_slave_jobs_wc(void *context, const char *target, lListElem *tmpjep, lListElem *jatep, 
+send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpjep, lListElem *jatep, 
                    lListElem *pe, lList *qlp, monitoring_t *monitor)
 {
    lListElem *gdil_ep = NULL;
@@ -417,13 +411,7 @@ send_slave_jobs_wc(void *context, const char *target, lListElem *tmpjep, lListEl
    bool is_init_pb = true;
    sge_pack_buffer pb;
    object_description *object_base = object_type_get_object_description();
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *sge_root = ctx->get_sge_root(ctx);
-#else
-   const char *sge_root = path_state_get_sge_root();
-#endif   
 
    DENTER(TOP_LAYER, "send_slave_jobs_wc");
 
@@ -517,11 +505,7 @@ send_slave_jobs_wc(void *context, const char *target, lListElem *tmpjep, lListEl
       ** security hook
       */
       tgt2cc(tmpjep, hostname, target);
-#ifdef TEST_QMASTER_GDI2
       failed = gdi2_send_message_pb(ctx, 0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
-#else
-      failed = gdi_send_message_pb(0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
-#endif      
       MONITOR_MESSAGES_OUT(monitor);
       /*
       ** security hook
@@ -550,7 +534,7 @@ send_slave_jobs_wc(void *context, const char *target, lListElem *tmpjep, lListEl
 }   
 
 static int 
-send_job(void *context, 
+send_job(sge_gdi_ctx_class_t *ctx, 
          const char *rhost, const char *target, lListElem *jep, lListElem *jatep,
          lListElem *pe, lListElem *hep, int master) 
 {
@@ -566,17 +550,9 @@ send_job(void *context,
    cl_com_handle_t* handle = NULL;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
    lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char* sge_root = ctx->get_sge_root(ctx);
    const char* myprogname = ctx->get_progname(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   const char* sge_root = path_state_get_sge_root();
-   const char* myprogname = uti_state_get_sge_formal_prog_name();
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif   
 
    DENTER(TOP_LAYER, "send_job");
 
@@ -728,11 +704,7 @@ send_job(void *context,
    */
    tgt2cc(jep, rhost, target);
 
-#ifdef TEST_QMASTER_GDI2
    failed = gdi2_send_message_pb(ctx, 0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
-#else
-   failed = gdi_send_message_pb(0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
-#endif   
 
    /*
    ** security hook
@@ -763,7 +735,7 @@ send_job(void *context,
    return 0;
 }
 
-void sge_job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    lListElem* jep, *jatep, *ep, *hep, *pe, *mqep;
    lList* jatasks;
@@ -851,7 +823,7 @@ void sge_job_resend_event_handler(void *context, te_event_t anEvent, monitoring_
       }
 
       /* send job to execd */
-      sge_give_job(context, jep, jatep, mqep, pe, hep, monitor);
+      sge_give_job(ctx, jep, jatep, mqep, pe, hep, monitor);
  
       /* reset timer */
       lSetUlong(jatep, JAT_start_time, now);
@@ -909,7 +881,7 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
  Remove zombie jobs, which have expired (currently, we keep a list of
  conf.zombie_jobs entries)
  ***********************************************************************/
-void sge_zombie_job_cleanup_handler(void *context, te_event_t anEvent, monitoring_t *monitor)
+void sge_zombie_job_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    lListElem *dep;
    lList *master_zombie_list = *(object_type_get_master_list(SGE_TYPE_ZOMBIE));
@@ -968,7 +940,7 @@ void sge_zombie_job_cleanup_handler(void *context, te_event_t anEvent, monitorin
 *     See sge_commit_mode_t typedef for documentation on mode.
 *     See sge_commit_flags_t typedef for documentation on commit_flags.
 *******************************************************************************/
-void sge_commit_job(void *context, 
+void sge_commit_job(sge_gdi_ctx_class_t *ctx, 
                     lListElem *jep, lListElem *jatep, lListElem *jr, 
                     sge_commit_mode_t mode, int commit_flags, monitoring_t *monitor)
 {
@@ -995,16 +967,9 @@ void sge_commit_job(void *context,
    lListElem *ep = NULL;
 
    /* need hostname for job_log */
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   const char *sge_root = path_state_get_sge_root();
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif   
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -1081,7 +1046,7 @@ void sge_commit_job(void *context,
       {
          const char *session = lGetString (jep, JB_session);
 
-         sge_event_spool(context, &answer_list, now, sgeE_JATASK_MOD,
+         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
@@ -1137,7 +1102,7 @@ void sge_commit_job(void *context,
                   if (sge_hostcmp(master_host, granted_queue_JG_qhostname )) {
                      host = host_list_locate(master_exechost_list, granted_queue_JG_qhostname ); 
                      
-                     add_to_reschedule_unknown_list(context,
+                     add_to_reschedule_unknown_list(ctx,
                         host, 
                         lGetUlong(jep, JB_job_number),
                         lGetUlong(jatep, JAT_task_number),
@@ -1158,7 +1123,7 @@ void sge_commit_job(void *context,
             granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
             granted_queue = lFirst(granted_list);
             host = host_list_locate(master_exechost_list, lGetHost(granted_queue, JG_qhostname));
-            add_to_reschedule_unknown_list(context,
+            add_to_reschedule_unknown_list(ctx,
                                            host, lGetUlong(jep, JB_job_number),
                                            lGetUlong(jatep, JAT_task_number),
                                            RESCHEDULE_SKIP_JR);
@@ -1223,13 +1188,13 @@ void sge_commit_job(void *context,
          }
       }   
 
-      sge_clear_granted_resources(context, jep, jatep, 1, monitor);
+      sge_clear_granted_resources(ctx, jep, jatep, 1, monitor);
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
-         sge_event_spool(context, &answer_list, now, sgeE_JATASK_MOD, 
+         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
@@ -1238,12 +1203,12 @@ void sge_commit_job(void *context,
 
    case COMMIT_ST_FINISHED_FAILED:
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
-      remove_from_reschedule_unknown_lists(context, jobid, jataskid);
+      remove_from_reschedule_unknown_lists(ctx, jobid, jataskid);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
       }
       if (!unenrolled_task) { 
-         sge_clear_granted_resources(context, jep, jatep, 1, monitor);
+         sge_clear_granted_resources(ctx, jep, jatep, 1, monitor);
       }
       sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
       sge_bury_job(job_spooling, sge_root, jep, jobid, jatep, spool_job, no_events);
@@ -1251,7 +1216,7 @@ void sge_commit_job(void *context,
    case COMMIT_ST_FINISHED_FAILED_EE:
       jobid = lGetUlong(jep, JB_job_number);
       reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
-      remove_from_reschedule_unknown_lists(context, jobid, jataskid);
+      remove_from_reschedule_unknown_lists(ctx, jobid, jataskid);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
 
@@ -1260,7 +1225,7 @@ void sge_commit_job(void *context,
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
       }
-      sge_clear_granted_resources(context, jep, jatep, 1, monitor);
+      sge_clear_granted_resources(ctx, jep, jatep, 1, monitor);
       job_enroll(jep, NULL, jataskid);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event( now, sgeE_JOB_FINAL_USAGE, jobid,
@@ -1291,7 +1256,7 @@ void sge_commit_job(void *context,
           */
          char *save = strdup(SGE_EVENT); 
          
-         sge_event_spool(context, &answer_list, 0, sgeE_JATASK_MOD, 
+         sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, false, true);
          strcpy(SGE_EVENT, save);
@@ -1341,12 +1306,12 @@ void sge_commit_job(void *context,
       reporting_create_job_log(NULL, now, JL_RESTART, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, SGE_EVENT);
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
-      sge_clear_granted_resources(context, jep, jatep, 0, monitor);
+      sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
-         sge_event_spool(context, &answer_list, now, sgeE_JATASK_MOD, 
+         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
@@ -1471,7 +1436,7 @@ lListElem *jep
  **** used slots of this job.
  **** if it is 0, QU_job_slots_used is untouched.
  ****/
-static void sge_clear_granted_resources(void *context,
+static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                                         lListElem *job, lListElem *ja_task,
                                         int incslots, monitoring_t *monitor) {
    int pe_slots = 0;
@@ -1503,7 +1468,7 @@ static void sge_clear_granted_resources(void *context,
    now = sge_get_gmt();
 
    /* unsuspend queues on subordinate */
-   cqueue_list_x_on_subordinate_gdil(context, master_list, false, gdi_list, monitor);
+   cqueue_list_x_on_subordinate_gdil(ctx, master_list, false, gdi_list, monitor);
 
    global_host_ep = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);
 

@@ -58,7 +58,7 @@
 
 */
 int sge_add_manop(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *ep,
 lList **alpp,
 char *ruser,
@@ -123,7 +123,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
 
    /* update on file */
-   if(!sge_event_spool(context, alpp, 0,
+   if(!sge_event_spool(ctx, alpp, 0,
                        target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
                        0, 0, manop_name, NULL, NULL,
                        added, NULL, NULL, true, true)) {
@@ -150,7 +150,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 
 */
 int sge_del_manop(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *ep,
 lList **alpp,
 char *ruser,
@@ -223,7 +223,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-   if (!sge_event_spool(context,
+   if (!sge_event_spool(ctx,
                         alpp, 0, target == SGE_MANAGER_LIST ? 
                                  sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
                            0, 0, manop_name, NULL, NULL,

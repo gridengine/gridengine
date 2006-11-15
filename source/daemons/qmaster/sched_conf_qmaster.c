@@ -50,28 +50,19 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
-#include "sge_bootstrap.h"
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
-static void check_reprioritize_interval(void *context, lList **alpp, char *ruser, char *rhost);
+static void check_reprioritize_interval(sge_gdi_ctx_class_t *ctx, lList **alpp, char *ruser, char *rhost);
 
 
-int sge_read_sched_configuration(void *context, lListElem *aSpoolContext, lList **anAnswer)
+int sge_read_sched_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList **anAnswer)
 {
    lList *sched_conf = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "sge_read_sched_configuration");
 
@@ -96,7 +87,7 @@ int sge_read_sched_configuration(void *context, lListElem *aSpoolContext, lList 
       return -1;
    } 
 
-   check_reprioritize_interval(context, anAnswer, "local" , "local");
+   check_reprioritize_interval(ctx, anAnswer, "local" , "local");
 
    DEXIT;
    return 0;
@@ -110,7 +101,7 @@ int sge_read_sched_configuration(void *context, lListElem *aSpoolContext, lList 
   Master_Sched_Config_List. So we replace it with the new one.
  ************************************************************/
 int sge_mod_sched_configuration(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *confp,
 lList **alpp,
 char *ruser,
@@ -141,7 +132,7 @@ char *rhost
       return STATUS_EUNKNOWN;
    }
 
-   if (!sge_event_spool(context,
+   if (!sge_event_spool(ctx,
                         alpp, 0, sgeE_SCHED_CONF, 
                         0, 0, "schedd_conf", NULL, NULL,
                         confp, NULL, NULL, true, true)) {
@@ -150,7 +141,7 @@ char *rhost
       return -1;
    }
 
-   check_reprioritize_interval(context, alpp, ruser, rhost);
+   check_reprioritize_interval(ctx, alpp, ruser, rhost);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", "scheduler configuration"));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -160,7 +151,7 @@ char *rhost
 } /* sge_mod_sched_configuration */
 
 
-static void check_reprioritize_interval(void *context, lList **alpp, char *ruser, char *rhost)
+static void check_reprioritize_interval(sge_gdi_ctx_class_t *ctx, lList **alpp, char *ruser, char *rhost)
 {
    DENTER(TOP_LAYER, "check_reprioritize_interval");
 
@@ -170,7 +161,7 @@ static void check_reprioritize_interval(void *context, lList **alpp, char *ruser
 
       sge_set_conf_reprioritize(conf, flag);
 
-      sge_mod_configuration(context, conf, alpp, ruser, rhost);
+      sge_mod_configuration(ctx, conf, alpp, ruser, rhost);
 
       lFreeElem(&conf);
    }

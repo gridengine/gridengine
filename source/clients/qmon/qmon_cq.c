@@ -82,13 +82,11 @@
 #include "sge_complex_schedd.h"
 #include "qstat_printing.h"
 #include "sge_centry.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-extern sge_gdi_ctx_class_t *ctx;
-#endif
-
 #include "sge_qstat.h"
+#include "sge_gdi_ctx.h"
+
+extern sge_gdi_ctx_class_t *ctx;
+
 
 static Widget qmon_cq = 0;
 static Widget cq_cqfolder = 0;
@@ -1674,11 +1672,7 @@ static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad)
                str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
                if ( str && *str != '\0' ) { 
                   DPRINTF(("CQ to delete: %s\n", str));
-#ifdef TEST_GDI2
                   cqueue_delete(ctx, &alp, str);
-#else
-                  cqueue_delete(NULL, &alp, str);
-#endif
                }
             }
          }

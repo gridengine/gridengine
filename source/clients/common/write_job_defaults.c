@@ -72,7 +72,7 @@ static lList *write_defaults_file(lList *lp, char *filename, int flags);
 **   containing the option switches 
 */
 lList *write_job_defaults(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *job,
 char *filename,
 int flags 
@@ -85,7 +85,7 @@ int flags
    
    DENTER(TOP_LAYER, "write_job_defaults");
 
-   alp = cull_unparse_job_parameter(context, &cmdline, job, flags);
+   alp = cull_unparse_job_parameter(ctx, &cmdline, job, flags);
    for_each(aep, alp) {
       answer_exit_if_not_recoverable(aep);
       status = answer_get_status(aep); 

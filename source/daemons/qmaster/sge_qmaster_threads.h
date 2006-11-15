@@ -32,20 +32,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdi_request.h"
+#include "gdi/sge_gdi_request.h"
+#include "gdi/sge_gdi_ctx.h"
 
 void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 /* thread management */
-void sge_create_and_join_threads(void *context);
+void sge_create_and_join_threads(sge_gdi_ctx_class_t *ctx);
 
 /* misc functions */
 bool sge_daemonize_qmaster(void);
 void sge_become_admin_user(const char *admin_user);
-void sge_exit_func(void **context, int);
+void sge_exit_func(void **ctx_ref, int);
 void sge_start_heartbeat(void);
 void sge_start_periodic_tasks(void);
-void sge_qmaster_shutdown(void *context, bool do_spool);
+void sge_qmaster_shutdown(sge_gdi_ctx_class_t *ctx, bool do_spool);
 void sge_register_event_handler(void); 
 int sge_get_qmaster_exit_state(void);
 

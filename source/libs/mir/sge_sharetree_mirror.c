@@ -73,7 +73,7 @@
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
 sge_callback_result
-sharetree_update_master_list(void *context, object_description *object_base, sge_object_type type, sge_event_action action,
+sharetree_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, sge_event_action action,
                              lListElem *event, void *clientdata)
 {
    lList **list = NULL;

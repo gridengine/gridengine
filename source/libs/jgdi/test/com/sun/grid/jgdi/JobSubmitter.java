@@ -97,7 +97,7 @@ public class JobSubmitter {
                     + File.separatorChar + arch
         };
 
-       if(logger.isLoggable(Level.INFO)) {
+        if(logger.isLoggable(Level.INFO)) {
             
            StringBuffer buf = new StringBuffer();
            for(int i = 0; i < cmd.length; i++) {

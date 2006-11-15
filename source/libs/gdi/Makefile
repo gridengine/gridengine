@@ -36,23 +36,15 @@ GDILIB_DIR = $(SDIR)/libs/gdi
 
 GDILIB = libgdi$(LIBEXT)
 
-GDILIB_SRC = gdi_setup.c \
-         gdi_tsm.c \
-         gdi_checkpermissions.c \
-         gdi_conf.c \
-         pack_job_delivery.c \
-         sge_any_request.c \
-         sge_ack.c \
-         sge_gdi_ctx.c \
-         sge_gdi2.c \
-         sge_gdi_request.c \
-         sge_qexec.c \
-         qm_name.c \
-         sge_security.c \
-         setup.c \
-         sge_qtcsh.c \
-         sge_todo.c \
-         version.c
+GDILIB_SRC = pack_job_delivery.c \
+             sge_gdi_request.c \
+             sge_gdi_ctx.c \
+             sge_gdi2.c \
+             sge_qexec.c \
+             qm_name.c \
+             sge_security.c \
+             sge_qtcsh.c \
+             version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
 
@@ -94,15 +86,6 @@ include $(GDILIB_DIR)/gdi_dependencies
 version.o:	$(GDILIB_DIR)/version.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/version.c
 
-gdi_conf.o:	$(GDILIB_DIR)/gdi_conf.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_conf.c
-
-gdi_setup.o:	$(GDILIB_DIR)/gdi_setup.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_setup.c
-
-sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ack.c
-
 sge_qexec.o:	$(GDILIB_DIR)/sge_qexec.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qexec.c
 
@@ -115,31 +98,17 @@ sge_gdi2.o:	$(GDILIB_DIR)/sge_gdi2.c
 sge_gdi_ctx.o:	$(GDILIB_DIR)/sge_gdi_ctx.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_ctx.c
 		
-sge_any_request.o:	$(GDILIB_DIR)/sge_any_request.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_any_request.c
-
 pack_job_delivery.o:	$(GDILIB_DIR)/pack_job_delivery.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/pack_job_delivery.c
 
 qm_name.o: 	$(GDILIB_DIR)/qm_name.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/qm_name.c
 
-gdi_tsm.o: 	$(GDILIB_DIR)/gdi_tsm.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_tsm.c
-
-gdi_checkpermissions.o: 	$(GDILIB_DIR)/gdi_checkpermissions.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/gdi_checkpermissions.c
-
 sge_security.o: $(GDILIB_DIR)/sge_security.c 
 		$(CC) $(CFLAGS) $(NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_security.c
-
-setup.o: $(GDILIB_DIR)/setup.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup.c
 
 sge_qtcsh.o: $(GDILIB_DIR)/sge_qtcsh.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qtcsh.c
 
-sge_todo.o: $(GDILIB_DIR)/sge_todo.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_todo.c
 #---------------------------------------------------------------------
 # test programs

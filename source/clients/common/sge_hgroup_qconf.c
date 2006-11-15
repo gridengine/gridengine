@@ -50,15 +50,12 @@
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "sgeobj/sge_hgroupL.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 static void 
 hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);
 static bool
-hgroup_provide_modify_context(void *context, lListElem **this_elem, lList **answer_list,
+hgroup_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list,
                                    bool ignore_unchanged_message);
 
 
@@ -91,15 +88,11 @@ hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent)
 }
 
 bool 
-hgroup_add_del_mod_via_gdi(void *context,
+hgroup_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
 {
    bool ret = true;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
 
    DENTER(TOP_LAYER, "hgroup_add_del_mod_via_gdi");
    if (this_elem != NULL) {
@@ -110,27 +103,18 @@ hgroup_add_del_mod_via_gdi(void *context,
       element = lCopyElem(this_elem);
       hgroup_list = lCreateList("", HGRP_Type);
       lAppendElem(hgroup_list, element);
-#ifdef TEST_GDI2      
       gdi_answer_list = ctx->gdi(ctx, SGE_HGROUP_LIST, gdi_command,
                                 &hgroup_list, NULL, NULL);
-#else
-      gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, gdi_command,
-                                &hgroup_list, NULL, NULL);
-#endif                                
       answer_list_replace(answer_list, &gdi_answer_list);
       lFreeList(&hgroup_list);
    }
    DRETURN(ret);
 }
 
-lListElem *hgroup_get_via_gdi(void *context,
+lListElem *hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx,
                               lList **answer_list, const char *name) 
 {
    lListElem *ret = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
-
 
    DENTER(TOP_LAYER, "hgroup_get_via_gdi");
    if (name != NULL) {
@@ -142,13 +126,8 @@ lListElem *hgroup_get_via_gdi(void *context,
       what = lWhat("%T(ALL)", HGRP_Type);
       where = lWhere("%T(%I==%s)", HGRP_Type, HGRP_name, 
                      name);
-#ifdef TEST_GDI2                     
       gdi_answer_list = ctx->gdi(ctx, SGE_HGROUP_LIST, SGE_GDI_GET, 
                                 &houstgroup_list, where, what);
-#else
-      gdi_answer_list = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, 
-                                &houstgroup_list, where, what);
-#endif
       lFreeWhat(&what);
       lFreeWhere(&where);
 
@@ -161,22 +140,15 @@ lListElem *hgroup_get_via_gdi(void *context,
    DRETURN(ret);
 }
 
-static bool hgroup_provide_modify_context(void *context, lListElem **this_elem, lList **answer_list,
+static bool hgroup_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list,
                                    bool ignore_unchanged_message)
 {
    bool ret = false;
    int status = 0;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
-#else
-   uid_t uid = uti_state_get_uid();
-   gid_t gid = uti_state_get_gid();
-#endif   
    
    DENTER(TOP_LAYER, "hgroup_provide_modify_context");
    if (this_elem != NULL && *this_elem != NULL) {
@@ -264,7 +236,7 @@ static bool hgroup_provide_modify_context(void *context, lListElem **this_elem, 
 *     MT-NOTE: hgroup_add() is MT safe 
 *
 *******************************************************************************/
-bool hgroup_add(void *context, lList **answer_list, const char *name, bool is_name_validate ) 
+bool hgroup_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name, bool is_name_validate ) 
 {
    bool ret = true;
 
@@ -276,17 +248,17 @@ bool hgroup_add(void *context, lList **answer_list, const char *name, bool is_na
          ret = false;
       }
       if (ret) {
-         ret = hgroup_provide_modify_context(context, &hgroup, answer_list, true);
+         ret = hgroup_provide_modify_context(ctx, &hgroup, answer_list, true);
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(context, hgroup, answer_list, SGE_GDI_ADD); 
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_ADD); 
       } 
    }  
   
    DRETURN(ret); 
 }
 
-bool hgroup_add_from_file(void *context, lList **answer_list, const char *filename) 
+bool hgroup_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename) 
 {
    bool ret = true;
    int fields_out[MAX_NUM_FIELDS];
@@ -318,7 +290,7 @@ bool hgroup_add_from_file(void *context, lList **answer_list, const char *filena
          ret = false;
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(context, hgroup, answer_list, SGE_GDI_ADD); 
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_ADD); 
       }
       lFreeElem(&hgroup);
    }
@@ -326,13 +298,13 @@ bool hgroup_add_from_file(void *context, lList **answer_list, const char *filena
    DRETURN(ret);
 }
 
-bool hgroup_modify(void *context, lList **answer_list, const char *name)
+bool hgroup_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "hgroup_modify");
    if (name != NULL) {
-      lListElem *hgroup = hgroup_get_via_gdi(context, answer_list, name);
+      lListElem *hgroup = hgroup_get_via_gdi(ctx, answer_list, name);
 
       if (hgroup == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_ERROR1,
@@ -340,10 +312,10 @@ bool hgroup_modify(void *context, lList **answer_list, const char *name)
          ret = false;
       }
       if (ret == true) {
-         ret = hgroup_provide_modify_context(context, &hgroup, answer_list, false);
+         ret = hgroup_provide_modify_context(ctx, &hgroup, answer_list, false);
       }
       if (ret == true) {
-         ret = hgroup_add_del_mod_via_gdi(context, hgroup, answer_list, SGE_GDI_MOD);
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_MOD);
       }
       lFreeElem(&hgroup);
    }
@@ -351,7 +323,7 @@ bool hgroup_modify(void *context, lList **answer_list, const char *name)
    DRETURN(ret);
 }
 
-bool hgroup_modify_from_file(void *context, lList **answer_list, const char *filename)
+bool hgroup_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename)
 {
    bool ret = true;
    int fields_out[MAX_NUM_FIELDS];
@@ -385,7 +357,7 @@ bool hgroup_modify_from_file(void *context, lList **answer_list, const char *fil
          ret = false;
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(context, hgroup, answer_list, SGE_GDI_MOD);
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_MOD);
       }
       if (hgroup) {
          lFreeElem(&hgroup);
@@ -395,7 +367,7 @@ bool hgroup_modify_from_file(void *context, lList **answer_list, const char *fil
    DRETURN(ret);
 }
 
-bool hgroup_delete(void *context, lList **answer_list, const char *name)
+bool hgroup_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
@@ -404,19 +376,19 @@ bool hgroup_delete(void *context, lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_create(answer_list, name, NULL, true); 
    
       if (hgroup != NULL) {
-         ret = hgroup_add_del_mod_via_gdi(context, hgroup, answer_list, SGE_GDI_DEL); 
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_DEL); 
       }
    }
    DRETURN(ret);
 }
 
-bool hgroup_show(void *context, lList **answer_list, const char *name)
+bool hgroup_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "hgroup_show");
    if (name != NULL) {
-      lListElem *hgroup = hgroup_get_via_gdi(context, answer_list, name); 
+      lListElem *hgroup = hgroup_get_via_gdi(ctx, answer_list, name); 
    
       if (hgroup != NULL) {
          const char *filename;
@@ -438,13 +410,10 @@ bool hgroup_show(void *context, lList **answer_list, const char *name)
    DRETURN(ret);
 }
 
-bool hgroup_show_structure(void *context, lList **answer_list, const char *name, 
+bool hgroup_show_structure(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name, 
                            bool show_tree)
 {
    bool ret = true;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "hgroup_show_tree");
    if (name != NULL) {
@@ -455,11 +424,7 @@ bool hgroup_show_structure(void *context, lList **answer_list, const char *name,
       lListElem *alep = NULL;
 
       what = lWhat("%T(ALL)", HGRP_Type);
-#ifdef TEST_GDI2      
       alp = ctx->gdi(ctx, SGE_HGROUP_LIST, SGE_GDI_GET, &hgroup_list, NULL, what);
-#else
-      alp = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, &hgroup_list, NULL, what);
-#endif      
       lFreeWhat(&what);
 
       alep = lFirst(alp);

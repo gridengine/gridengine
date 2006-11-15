@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_qmaster_timed_event.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #define MAX_JOB_DELIVER_TIME (5*60)
 
@@ -57,17 +58,17 @@ typedef enum {
    COMMIT_ST_FAILED_AND_ERROR = 8    /* job failed and error state set             */
 } sge_commit_mode_t;
 
-int sge_give_job(void *context,
+int sge_give_job(sge_gdi_ctx_class_t *ctx,
                  lListElem *jep, lListElem *jatep, lListElem *master_qep, 
                  lListElem *pep, lListElem *hep, monitoring_t *monitor);
 
-void sge_commit_job(void *context,
+void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                     lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_mode_t mode, 
                     int commit_flags, monitoring_t *monitor);
 
-void sge_zombie_job_cleanup_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void sge_zombie_job_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
-void sge_job_resend_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
 void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid);
 

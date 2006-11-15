@@ -46,7 +46,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "setup.h"
 
 #include "sge_answer.h"
 #include "sge_profiling.h"

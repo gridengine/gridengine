@@ -63,9 +63,6 @@
 
 #include "msg_daemons_common.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 static char *sge_unparse_checkpoint_attr(int opr, char *string);
 /* static char *sge_unparse_hold_list(u_long32 hold); */
@@ -79,7 +76,7 @@ static int sge_unparse_resource_list(lListElem *job, int nm, lList **pcmdline, l
 static int sge_unparse_string_option(lListElem *job, int nm, char *option, lList **pcmdline, lList **alpp);
 
 lList *cull_unparse_job_parameter(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **pcmdline,
 lListElem *job,
 int flags 
@@ -91,16 +88,8 @@ int flags
    lList *lp;
    int ret;
    lListElem *ep_opt;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *username = ctx->get_username(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *username = uti_state_get_user_name();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif   
-   
 
    DENTER(TOP_LAYER, "cull_unparse_job_parameter");
 

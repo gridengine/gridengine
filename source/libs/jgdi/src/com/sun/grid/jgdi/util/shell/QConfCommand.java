@@ -32,26 +32,28 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.util.OutputTable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.logging.Level;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *
  * @author rh150277
  */
 public class QConfCommand extends AbstractCommand {
-   
-   
-   /** Creates a new instance of QModCommand */
-   public QConfCommand(Shell shell, String name) {
-      super(shell, name);
-   }
-   
-   public String getUsage() {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      pw.println("usage: qconf [options]");
+    
+    
+    /** Creates a new instance of QModCommand */
+    public QConfCommand(Shell shell, String name) {
+        super(shell, name);
+    }
+    
+    public String getUsage() {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        pw.println("usage: qconf [options]");
 //      pw.println("   [-aattr obj_nm attr_nm val obj_id_lst]   add to a list attribute of an object");
 //      pw.println("   [-Aattr obj_nm fname obj_id_lst]         add to a list attribute of an object");
 //      pw.println("   [-acal calendar_name]                    add a new calendar");
@@ -65,6 +67,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-ah hostname]                           add an administrative host");
 //      pw.println("   [-ahgrp group]                           add new host group entry");
 //      pw.println("   [-Ahgrp file]                            add new host group entry from file");
+//      pw.println("   [-alrs [lirs_list]]                      add limitation rule set(s)");
+//      pw.println("   [-Alrs fname]                            add limitation rule set(s) from file");
 //      pw.println("   [-am user_list]                          add user to manager list");
 //      pw.println("   [-ao user_list]                          add user to operator list");
 //      pw.println("   [-ap pe-name]                            add a new parallel environment");
@@ -81,8 +85,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-Au fname]                              add userset from file");
 //      pw.println("   [-auser]                                 add user");
 //      pw.println("   [-Auser fname]                           add user from file");
-      pw.println("   [-clearusage]                            clear all user/project sharetree usage");
-      pw.println("   [-cq destin_id_list]                     clean queue");
+        pw.println("   [-clearusage]                            clear all user/project sharetree usage");
+        pw.println("   [-cq destin_id_list]                     clean queue");
 //      pw.println("   [-dattr obj_nm attr_nm val obj_id_lst]   delete from a list attribute of an object");
 //      pw.println("   [-Dattr obj_nm fname obj_id_lst]         delete from a list attribute of an object");
 //      pw.println("   [-dcal calendar_name]                    remove a calendar");
@@ -91,6 +95,7 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-de host_list]                          remove an exec server");
 //      pw.println("   [-dh host_list]                          remove an administrative host");
 //      pw.println("   [-dhgrp group]                           delete host group entry");
+//      pw.println("   [-dlrs lirs_list]                        delete limitation rule set(s)");
 //      pw.println("   [-dm user_list]                          remove user from manager list");
 //      pw.println("   [-do user_list]                          remove user from operator list");
 //      pw.println("   [-dp pe-name]                            remove a parallel environment");
@@ -103,9 +108,9 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-dul listname_list]                     remove userset list(s) completely");
 //      pw.println("   [-duser user_list]                       delete user");
 //      pw.println("   [-help]                                  print this help");
-      pw.println("   [-ke[j] host_list                        shutdown execution daemon(s)");
-      pw.println("   [-k{m|s}]                                shutdown master|scheduling daemon");
-      pw.println("   [-kec evid_list]                         kill event client");
+        pw.println("   [-ke[j] host_list                        shutdown execution daemon(s)");
+        pw.println("   [-k{m|s}]                                shutdown master|scheduling daemon");
+        pw.println("   [-kec evid_list]                         kill event client");
 //      pw.println("   [-mattr obj_nm attr_nm val obj_id_lst]   modify an attribute (or element in a sublist) of an object");
 //      pw.println("   [-Mattr obj_nm fname obj_id_lst]         modify an attribute (or element in a sublist) of an object");
 //      pw.println("   [-mc ]                                   modify complex attributes");
@@ -121,6 +126,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-Me fname]                              modify exec server from file");
 //      pw.println("   [-mhgrp group]                           modify host group entry");
 //      pw.println("   [-Mhgrp file]                            modify host group entry from file");
+//      pw.println("   [-mlrs [lirs_list]]                      modify limitation rule set(s)");
+//      pw.println("   [-Mlrs fname]                            modify limitation rule set(s) from file");
 //      pw.println("   [-mp pe-name]                            modify a parallel environment");
 //      pw.println("   [-Mp fname]                              modify a parallel environment from file");
 //      pw.println("   [-mprj project]                          modify a project");
@@ -153,7 +160,9 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-shgrp_tree group]                      show host group and used hostgroups as tree");
 //      pw.println("   [-shgrp_resolved group]                  show host group with resolved hostlist");
 //      pw.println("   [-shgrpl]                                show host group list");
-//      pw.println("   [-sds]                                   show detached settings");
+        pw.println("   [-sds]                                   show detached settings");
+//      pw.println("   [-slrs [lirs_list]]                      show limitation rule set(s)");
+//      pw.println("   [-slrsl]                                 show limitation rule set list");
 //      pw.println("   [-sm]                                    show a list of all managers");
 //      pw.println("   [-so]                                    show a list of all operators");
 //      pw.println("   [-sobjl obj_nm2 attr_nm val]             show objects which match the given value");
@@ -173,10 +182,11 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-suser user_list]                       show user(s)");
 //      pw.println("   [-sul]                                   show a list of all userset lists");
 //      pw.println("   [-suserl]                                show a list of all users");
-      pw.println("   [-tsm]                                   trigger scheduler monitoring");
+        pw.println("   [-tsm]                                   trigger scheduler monitoring");
 //      pw.println("complex_list            complex[,complex,...]");
-      pw.println("destin_id_list          queue[ queue ...]");
+        pw.println("destin_id_list          queue[ queue ...]");
 //      pw.println("listname_list           listname[,listname,...]");
+//      pw.println("lirs_list               lirs_name[,lirs_name,...]");        
 //      pw.println("node_list               node_path[,node_path,...]");
 //      pw.println("node_path               [/]node_name[[/.]node_name...]");
 //      pw.println("node_shares_list        node_path=shares[,node_path=shares,...]");
@@ -185,97 +195,121 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("attr_nm                 (see man pages)");
 //      pw.println("obj_id_lst              objectname [ objectname ...]");
 //      pw.println("project_list            project[,project,...]");
-      pw.println("evid_list               all | evid[,evid,...]");
-      pw.println("host_list               all | hostname[,hostname,...]");
+        pw.println("evid_list               all | evid[,evid,...]");
+        pw.println("host_list               all | hostname[,hostname,...]");
 //      pw.println("obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\"");
 //      pw.println("obj_nm3                 \"queue\"");
-      return sw.getBuffer().toString();
-   }
-   
-   
-   public void run(String[] args) throws Exception {
-      
-      JGDI jgdi = getShell().getConnection();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-      if(args.length == 0) {
-         throw new IllegalArgumentException("Invalid number of arguments");
-      }
-      
-      
-      boolean force = false;
-      
-      for(int i = 0; i < args.length; i++) {
-         if (args[i].equals("-tsm")) {
-            jgdi.triggerSchedulerMonitoring();
-            break;
-         } else if (args[i].equals("-clearusage")) {
-            jgdi.clearShareTreeUsage();
-            break;
-         } else if (args[i].equals("-cq")) {
-            i++;
-            if(i>= args.length) {
-               throw new IllegalArgumentException("missing destin_id_list");
-            }
-            String [] queues = parseDestinIdList(args[i]);
-            jgdi.cleanQueues(queues);
-            break;
-         } else if (args[i].equals("-kec")) {
-            
-            i++;
-            if(i>= args.length) {
-               throw new IllegalArgumentException("missing evid_list");
-            }
-            if(args[i].equals("all")) {
-               jgdi.killAllEventClients();
+        return sw.getBuffer().toString();
+    }
+    
+    
+    public void run(String[] args) throws Exception {
+        
+        JGDI jgdi = getShell().getConnection();
+        
+        if (jgdi == null) {
+            throw new IllegalStateException("Not connected");
+        }
+        if(args.length == 0) {
+            throw new IllegalArgumentException("Invalid number of arguments");
+        }
+        
+        PrintWriter pw = new PrintWriter(System.out);
+        
+        boolean force = false;
+        
+        for(int i = 0; i < args.length; i++) {
+            if (args[i].equals("-tsm")) {
+                jgdi.triggerSchedulerMonitoring();
+                break;
+            } else if (args[i].equals("-clearusage")) {
+                jgdi.clearShareTreeUsage();
+                break;
+            } else if (args[i].equals("-cq")) {
+                i++;
+                if(i>= args.length) {
+                    throw new IllegalArgumentException("missing destin_id_list");
+                }
+                String [] queues = parseDestinIdList(args[i]);
+                jgdi.cleanQueues(queues);
+                break;
+            } else if (args[i].equals("-kec")) {
+                
+                i++;
+                if(i>= args.length) {
+                    throw new IllegalArgumentException("missing evid_list");
+                }
+                if(args[i].equals("all")) {
+                    jgdi.killAllEventClients();
+                } else {
+                    String idStr [] = args[i].split(" ");
+                    int [] ids = new int[idStr.length];
+                    
+                    for(int idIndex = 0; idIndex < idStr.length; idIndex++) {
+                        try {
+                            ids[idIndex] = Integer.parseInt(idStr[idIndex]);
+                        } catch(NumberFormatException nfe) {
+                            throw new IllegalArgumentException(idStr[idIndex] + " is not a valid event client id");
+                        }
+                    }
+                    
+                    jgdi.killEventClients(ids);
+                }
+                break;
+            } else if (args[i].equals("-km")) {
+                jgdi.killMaster();
+                break;
+            } else if (args[i].equals("-ks")) {
+                jgdi.killScheduler();
+                break;
+            } else if (args[i].equals("-sds")) {
+                pw.println(jgdi.showDetachedSettingsAll());
+                pw.flush();
+                break;
+            } else if (args[i].equals("-secl")) {
+                List evcl = jgdi.getEventClientList();
+                if (evcl.size() > 0) {
+                    OutputTable table = new OutputTable(com.sun.grid.jgdi.configuration.EventClient.class);
+                    table.addCol("id", "ID", 8, OutputTable.Column.RIGHT);
+                    table.addCol("name", "Name", 15, OutputTable.Column.LEFT);
+                    table.addCol("host", "HOST", 25, OutputTable.Column.LEFT);
+                    table.printHeader(pw);
+                    table.printDelimiter(pw, '-');
+                    Iterator iter = evcl.iterator();
+                    while (iter.hasNext()) {
+                        com.sun.grid.jgdi.configuration.EventClient evc = (com.sun.grid.jgdi.configuration.EventClient)iter.next();
+                        table.printRow(pw, evc);
+                    }
+                } else {
+                    pw.println("no event clients registered");
+                }
+                pw.flush();
+                break;
+            } else if (args[i].startsWith("-ke") ) {
+                boolean terminateJobs = args[i].endsWith("j");
+                i++;
+                if(i>= args.length) {
+                    throw new IllegalArgumentException("missing host_list");
+                }
+                if(args[i].equals("all")) {
+                    jgdi.killAllExecds(terminateJobs);
+                } else {
+                    String hosts [] = args[i].split(" ");
+                    jgdi.killExecd(hosts, terminateJobs);
+                }
+                break;
             } else {
-               String idStr [] = args[i].split(" ");
-               int [] ids = new int[idStr.length]; 
-               
-               for(int idIndex = 0; idIndex < idStr.length; idIndex++) {
-                  try {
-                     ids[idIndex] = Integer.parseInt(idStr[idIndex]);
-                  } catch(NumberFormatException nfe) {
-                     throw new IllegalArgumentException(idStr[idIndex] + " is not a valid event client id");
-                  }                  
-               }
-               
-               jgdi.killEventClients(ids);
+                throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
             }
-            break;
-         } else if (args[i].equals("-km")) {
-            jgdi.killMaster();
-            break;
-         } else if (args[i].equals("-ks")) {
-            jgdi.killScheduler();
-            break;
-         } else if (args[i].startsWith("-ke") ) {
-            boolean terminateJobs = args[i].endsWith("j");
-            i++;
-            if(i>= args.length) {
-               throw new IllegalArgumentException("missing host_list");
-            }
-            if(args[i].equals("all")) {
-               jgdi.killAllExecds(terminateJobs);
-            } else {
-               String hosts [] = args[i].split(" ");
-               jgdi.killExecd(hosts, terminateJobs);
-            }
-            break;
-         } else {
-            throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
-         }
-      }
-   }
-   
-   
-   private String [] parseDestinIdList(String arg) {
-      String [] ret = arg.split(" ");
-      return ret;
-   }
-   
-   
-   
+        }
+    }
+    
+    
+    private String [] parseDestinIdList(String arg) {
+        String [] ret = arg.split(" ");
+        return ret;
+    }
+    
+    
+    
 }

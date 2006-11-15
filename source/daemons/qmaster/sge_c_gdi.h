@@ -41,11 +41,12 @@
 #include "uti/sge_monitor.h"
 #include "cull.h"
 #include "sgeobj/sge_object.h"
+#include "gdi/sge_gdi_ctx.h"
 
 typedef struct _gdi_object_t gdi_object_t;
 
 typedef int (*modifier_func_t)(
-   void *context,
+   sge_gdi_ctx_class_t *ctx,
    lList **alpp,
    lListElem *new_cal,   /* destination */
    lListElem *cep,       /* reduced element */
@@ -58,7 +59,7 @@ typedef int (*modifier_func_t)(
 );
 
 typedef int (*writer_func_t)(
-   void *context,
+   sge_gdi_ctx_class_t *ctx,
    lList **alpp,
    lListElem *ep,      /* new modified element */
    gdi_object_t *this   /* some kind of "this" */
@@ -68,7 +69,7 @@ typedef int (*writer_func_t)(
 typedef lList ** (*getMasterList)(void);
 
 typedef int (*on_success_func_t)(
-   void *context,
+   sge_gdi_ctx_class_t *ctx,
    lListElem *ep,       /* new modified and already spooled element */
    lListElem *old_ep,   /* old element is NULL in add case */
    gdi_object_t *this,  /* some kind of "this" */
@@ -90,11 +91,11 @@ struct _gdi_object_t {
 gdi_object_t *get_gdi_object(u_long32);
 
 void 
-sge_c_gdi(void *context, char *host, sge_gdi_request *request, sge_gdi_request *answer,
+sge_c_gdi(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *answer,
           sge_pack_buffer *pb, monitoring_t *monitor);
 
 int 
-sge_gdi_add_mod_generic(void *context, 
+sge_gdi_add_mod_generic(sge_gdi_ctx_class_t *ctx, 
                         lList **alpp, lListElem *instructions, int add, 
                         gdi_object_t *object, const char *ruser, 
                         const char *rhost, int sub_command, lList **ppList, 

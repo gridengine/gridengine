@@ -35,9 +35,11 @@
 #include "sge_answerL.h"
 
 typedef enum {
-   ANSWER_QUALITY_ERROR = 0,
-   ANSWER_QUALITY_WARNING = 1,
-   ANSWER_QUALITY_INFO = 2
+   ANSWER_QUALITY_CRITICAL = 0,
+   ANSWER_QUALITY_ERROR = 1,
+   ANSWER_QUALITY_WARNING = 2,
+   ANSWER_QUALITY_INFO = 3,
+   ANSWER_QUALITY_END = 4  /* needs to be last element */
 } answer_quality_t;
 
 /* 
@@ -112,6 +114,7 @@ bool answer_list_has_error(lList **answer_list);
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream);
 
 int answer_list_print_err_warn(lList **answer_list,
+                               const char *critical_prefix,
                                const char *err_prefix,
                                const char *warn_prefix);
 

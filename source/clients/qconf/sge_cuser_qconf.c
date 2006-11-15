@@ -42,25 +42,20 @@
 #include "parse_qconf.h"
 #include "spool/classic/read_write_ume.h"
 #include "sge_edit.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 #ifndef __SGE_NO_USERMAPPING__
 
 bool 
-cuser_add_del_mod_via_gdi(void *context,
+cuser_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx,
                           lListElem *this_elem, lList **answer_list,
                           u_long32 gdi_command)
 {
    bool ret = false;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
 
    DENTER(TOP_LAYER, "cuser_add_del_mod_via_gdi");
 
@@ -70,7 +65,7 @@ cuser_add_del_mod_via_gdi(void *context,
 
       cuser_list = lCreateList("", CU_Type);
       lAppendElem(cuser_list, this_elem);
-      gdi_answer_list = sge_gdi(SGE_USER_MAPPING_LIST, gdi_command,
+      gdi_answer_list = ctx->gdi(ctx, SGE_USER_MAPPING_LIST, gdi_command,
                                 &cuser_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
    }
@@ -78,12 +73,9 @@ cuser_add_del_mod_via_gdi(void *context,
    DRETURN(ret);
 }
 
-lListElem *cuser_get_via_gdi(void *context, lList **answer_list, const char *name) 
+lListElem *cuser_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name) 
 {
    lListElem *ret = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
 
    DENTER(TOP_LAYER, "cuser_get_via_gdi");
 
@@ -95,7 +87,7 @@ lListElem *cuser_get_via_gdi(void *context, lList **answer_list, const char *nam
 
       what = lWhat("%T(ALL)", CU_Type);
       where = lWhere("%T(%I==%s)", CU_Type, CU_name, name);
-      gdi_answer_list = sge_gdi(SGE_USER_MAPPING_LIST, SGE_GDI_GET, 
+      gdi_answer_list = ctx->gdi(ctx, SGE_USER_MAPPING_LIST, SGE_GDI_GET, 
                                 &cuser_list, where, what);
       lFreeWhat(&what);
       lFreeWhere(&where);
@@ -110,17 +102,19 @@ lListElem *cuser_get_via_gdi(void *context, lList **answer_list, const char *nam
    DRETURN(ret);
 }
 
-bool cuser_provide_modify_context(lListElem **this_elem, lList **answer_list)
+bool cuser_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list)
 {
    bool ret = false;
    int status = 0;
+   uid_t uid = ctx->get_uid(ctx);
+   gid_t gid = ctx->get_gid(ctx);
    
    DENTER(TOP_LAYER, "cuser_provide_modify_context");
 
    if (this_elem != NULL && *this_elem) {
       char *filename = write_ume(2, 1, *this_elem); 
  
-      status = sge_edit(filename);
+      status = sge_edit(filename, uid, gid);
       if (status >= 0) {
          lListElem *cuser;
 
@@ -143,7 +137,7 @@ bool cuser_provide_modify_context(lListElem **this_elem, lList **answer_list)
    DRETURN(ret);
 }
 
-bool cuser_add(void *context, lList **answer_list, const char *name) 
+bool cuser_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name) 
 {
    bool ret = true;
 
@@ -155,17 +149,17 @@ bool cuser_add(void *context, lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= cuser_provide_modify_context(&cuser, answer_list);
+         ret &= cuser_provide_modify_context(ctx, &cuser, answer_list);
       }
       if (ret) {
-         ret &= cuser_add_del_mod_via_gdi(context, cuser, answer_list, SGE_GDI_ADD); 
+         ret &= cuser_add_del_mod_via_gdi(ctx, cuser, answer_list, SGE_GDI_ADD); 
       } 
    }  
   
    DRETURN(ret); 
 }
 
-bool cuser_add_from_file(void *context, lList **answer_list, const char *filename) 
+bool cuser_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename) 
 {
    bool ret = true;
 
@@ -178,20 +172,20 @@ bool cuser_add_from_file(void *context, lList **answer_list, const char *filenam
          ret = false;
       }
       if (ret) {
-         ret &= cuser_add_del_mod_via_gdi(context, cuser, answer_list, SGE_GDI_ADD); 
+         ret &= cuser_add_del_mod_via_gdi(ctx, cuser, answer_list, SGE_GDI_ADD); 
       } 
    }  
   
    DRETURN(ret); 
 }
 
-bool cuser_modify(void *context, lList **answer_list, const char *name)
+bool cuser_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "cuser_modify");
    if (name != NULL) {
-      lListElem *cuser = cuser_get_via_gdi(context, answer_list, name);
+      lListElem *cuser = cuser_get_via_gdi(ctx, answer_list, name);
 
       if (cuser == NULL) {
          sprintf(SGE_EVENT, MSG_CUSER_DOESNOTEXIST_S, name);
@@ -200,10 +194,10 @@ bool cuser_modify(void *context, lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= cuser_provide_modify_context(&cuser, answer_list);
+         ret &= cuser_provide_modify_context(ctx, &cuser, answer_list);
       }
       if (ret) {
-         ret &= cuser_add_del_mod_via_gdi(context, cuser, answer_list, SGE_GDI_MOD);
+         ret &= cuser_add_del_mod_via_gdi(ctx, cuser, answer_list, SGE_GDI_MOD);
       }
       if (cuser) {
          lFreeElem(&cuser);
@@ -213,7 +207,7 @@ bool cuser_modify(void *context, lList **answer_list, const char *name)
    DRETURN(ret);
 }
 
-bool cuser_modify_from_file(void *context, lList **answer_list, const char *filename)
+bool cuser_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename)
 {
    bool ret = true;
 
@@ -230,7 +224,7 @@ bool cuser_modify_from_file(void *context, lList **answer_list, const char *file
          ret = false;
       }
       if (ret) {
-         ret &= cuser_add_del_mod_via_gdi(context, cuser, answer_list, SGE_GDI_MOD);
+         ret &= cuser_add_del_mod_via_gdi(ctx, cuser, answer_list, SGE_GDI_MOD);
       }
       if (cuser != NULL) {
          lFreeElem(&cuser);
@@ -240,7 +234,7 @@ bool cuser_modify_from_file(void *context, lList **answer_list, const char *file
    DRETURN(ret);
 }
 
-bool cuser_delete(void *context, lList **answer_list, const char *name)
+bool cuser_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
@@ -250,20 +244,20 @@ bool cuser_delete(void *context, lList **answer_list, const char *name)
       lListElem *cuser = cuser_create(answer_list, name, NULL); 
    
       if (cuser != NULL) {
-         ret &= cuser_add_del_mod_via_gdi(context, cuser, answer_list, SGE_GDI_DEL); 
+         ret &= cuser_add_del_mod_via_gdi(ctx, cuser, answer_list, SGE_GDI_DEL); 
       }
    }
 
    DRETURN(ret);
 }
 
-bool cuser_show(void *context, lList **answer_list, const char *name)
+bool cuser_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "cuser_show");
    if (name != NULL) {
-      lListElem *cuser = cuser_get_via_gdi(context, answer_list, name); 
+      lListElem *cuser = cuser_get_via_gdi(ctx, answer_list, name); 
    
       if (cuser != NULL) {
          write_ume(0, 0, cuser);

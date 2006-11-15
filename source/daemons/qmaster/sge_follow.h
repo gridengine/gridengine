@@ -34,15 +34,16 @@
 
 #include "uti/sge_monitor.h"
 #include "sgeobj/sge_object.h"
+#include "gdi/sge_gdi_ctx.h"
 
 int 
-sge_follow_order(void *context,
+sge_follow_order(sge_gdi_ctx_class_t *ctx,
                  lListElem *order, lList **alpp, char *ruser, 
                  char *rhost, lList **topp, monitoring_t *monitor, 
                  object_description *object_base);
 
 int 
-distribute_ticket_orders(void *context, 
+distribute_ticket_orders(sge_gdi_ctx_class_t *ctx, 
                  lList *ticket_orders, monitoring_t *monitor, 
                  object_description *object_base);
 

@@ -71,9 +71,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 typedef struct { 
    lList*           list;   /* 'CONF_Type' list, holding the cluster configuration */
@@ -87,12 +84,12 @@ static char *Static_Conf_Entries[] = { "execd_spool_dir", NULL };
 
 
 static int check_config(lList **alpp, lListElem *conf);
-static int do_mod_config(void *context, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer);
+static int do_mod_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer);
 static lListElem* is_reprioritize_missing(lList *theOldConfEntries, lList *theNewConfEntries);
 static int check_static_conf_entries(lList *theOldConfEntries, lList *theNewConfEntries, lList **anAnswer);
-static int exchange_conf_by_name(void *context, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer);
+static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer);
 static bool has_reschedule_unknown_change(lList *theOldConfEntries, lList *theNewConfEntries);
-static int do_add_config(void *context, char *aConfName, lListElem *aConf, lList**anAnswer);
+static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *aConf, lList**anAnswer);
 static int remove_conf_by_name(char *aConfName);
 static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName);
 static u_long32 sge_get_config_version_for_host(const char* aName);
@@ -103,22 +100,14 @@ static bool sge_get_conf_reprioritize(const lListElem *aConf);
  * This is the bootstrap function for the configuration module. It does populate
  * the list with the cluster configuration.
  */
-int sge_read_configuration(void *context, lListElem *aSpoolContext, lList *anAnswer)
+int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList *anAnswer)
 {
    lListElem *local = NULL;
    lListElem *global = NULL;
    int ret = -1;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context; 
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    u_long32 progid = ctx->get_who(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   u_long32 progid = uti_state_get_mewho();
-#endif   
 
    DENTER(TOP_LAYER, "sge_read_configuration");
    
@@ -163,7 +152,7 @@ int sge_read_configuration(void *context, lListElem *aSpoolContext, lList *anAns
  * necessary to introduce something like 'protected' configuration entries.
  */
 int 
-sge_del_configuration(void *context,
+sge_del_configuration(sge_gdi_ctx_class_t *ctx,
                       lListElem *aConf, lList **anAnswer, 
                       char *aUser, char *aHost)
 {
@@ -221,7 +210,7 @@ sge_del_configuration(void *context,
       DRETURN(STATUS_EEXIST);
    }
 
-   sge_event_spool(context, anAnswer, 0, sgeE_CONFIG_DEL, 0, 0, unique_name, NULL, NULL, NULL, NULL, NULL, true, true);
+   sge_event_spool(ctx, anAnswer, 0, sgeE_CONFIG_DEL, 0, 0, unique_name, NULL, NULL, NULL, NULL, NULL, true, true);
     
    remove_conf_by_name(unique_name);
    
@@ -264,24 +253,15 @@ sge_del_configuration(void *context,
 *     MT-NOTE: sge_mod_configuration() is MT safe 
 *
 *******************************************************************************/
-int sge_mod_configuration(void *context, lListElem *aConf, lList **anAnswer, char *aUser,
-                          char *aHost)
+int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **anAnswer, char *aUser, char *aHost)
 {
    lListElem *old_conf;
    const char *tmp_name = NULL;
    char unique_name[CL_MAXHOSTLEN];
    int ret = -1;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *cell_root = ctx->get_cell_root(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    u_long32 progid = ctx->get_who(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-   u_long32 progid = uti_state_get_mewho();
-#endif
 
    DENTER(TOP_LAYER, "sge_mod_configuration");
 
@@ -311,7 +291,7 @@ int sge_mod_configuration(void *context, lListElem *aConf, lList **anAnswer, cha
    if ((old_conf = sge_get_configuration_for_host(unique_name)) != NULL) {
       int ret = -1;
       
-      ret = do_mod_config(context, unique_name, old_conf, aConf, anAnswer);
+      ret = do_mod_config(ctx, unique_name, old_conf, aConf, anAnswer);
       
       lFreeElem(&old_conf);
       
@@ -322,7 +302,7 @@ int sge_mod_configuration(void *context, lListElem *aConf, lList **anAnswer, cha
          DRETURN(STATUS_EUNKNOWN);
       }
    } else {
-      do_add_config(context, unique_name, aConf, anAnswer);
+      do_add_config(ctx, unique_name, aConf, anAnswer);
             
       INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS, aUser, aHost, unique_name, MSG_OBJ_CONF));            
       answer_list_add(anAnswer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -773,7 +753,7 @@ bool sge_conf_is_reprioritize(void)
  * NOTE: Either 'anOldConf' or 'aNewConf' could be an empty configuration!
  * Empty configurations do not contain any 'CONF_entries'.
  */
-static int do_mod_config(void *context, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer)
+static int do_mod_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer)
 {
    lList *old_entries = NULL;
    lList *new_entries = NULL;
@@ -792,7 +772,7 @@ static int do_mod_config(void *context, char *aConfName, lListElem *anOldConf, l
       DRETURN(-1);
    }
       
-   exchange_conf_by_name(context, aConfName, anOldConf, aNewConf, anAnswer);
+   exchange_conf_by_name(ctx, aConfName, anOldConf, aNewConf, anAnswer);
 
    if (has_reschedule_unknown_change(old_entries, new_entries) == true) {
       update_reschedule_unknown_timout_values(aConfName);
@@ -868,7 +848,7 @@ static lListElem* is_reprioritize_missing(lList *theOldConfEntries, lList *theNe
  *
  * NOTE: 'anOldConf' is a *COPY* of the old configuration entry.
  */
-static int exchange_conf_by_name(void *context, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer)
+static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *anOldConf, lListElem *aNewConf, lList**anAnswer)
 {
    lListElem *elem = NULL;
    u_long32 old_version, new_version = 0;
@@ -896,7 +876,7 @@ static int exchange_conf_by_name(void *context, char *aConfName, lListElem *anOl
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
-   sge_event_spool(context, anAnswer, 0, sgeE_CONFIG_MOD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
+   sge_event_spool(ctx, anAnswer, 0, sgeE_CONFIG_MOD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
    
    DRETURN(0);
 }
@@ -930,7 +910,7 @@ static bool has_reschedule_unknown_change(lList *theOldConfEntries, lList *theNe
    DRETURN(res);
 }
 
-static int do_add_config(void *context, char *aConfName, lListElem *aConf, lList**anAnswer)
+static int do_add_config(sge_gdi_ctx_class_t *ctx, char *aConfName, lListElem *aConf, lList**anAnswer)
 {
    lListElem *elem = NULL;
 
@@ -944,7 +924,7 @@ static int do_add_config(void *context, char *aConfName, lListElem *aConf, lList
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
-   sge_event_spool(context, anAnswer, 0, sgeE_CONFIG_ADD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
+   sge_event_spool(ctx, anAnswer, 0, sgeE_CONFIG_ADD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
    
    DRETURN(0);
 }

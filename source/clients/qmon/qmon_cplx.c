@@ -70,11 +70,9 @@
 #include "qmon_cplx.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
+
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 enum _cplx_mode {
    CPLX_ADD_MODE,
@@ -274,11 +272,7 @@ static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad)
    entries = qmonGetCE_Type(attr_mx);
    old_entries = lCopyList("", qmonMirrorList(SGE_CENTRY_LIST));
    /* centry_list_add_del_mod_via_gdi free entries and old_entries */
-#ifdef TEST_GDI2   
    centry_list_add_del_mod_via_gdi(ctx, &entries, &alp, &old_entries);                     
-#else   
-   centry_list_add_del_mod_via_gdi(NULL, &entries, &alp, &old_entries);                     
-#endif   
    error = qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
 

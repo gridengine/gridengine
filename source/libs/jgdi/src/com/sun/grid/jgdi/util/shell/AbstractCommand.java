@@ -61,7 +61,7 @@ public abstract class AbstractCommand implements HistoryCommand {
       return shell;
    }
    
-   public String[] parceWCQueueList(String arg) {
+   public String[] parseWCQueueList(String arg) {
       String [] ret = arg.split(",");
       if(getLogger().isLoggable(Level.FINE)) {
          StringBuffer buf = new StringBuffer();

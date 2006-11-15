@@ -60,7 +60,7 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
-int cuser_mod(void *context,
+int cuser_mod(sge_gdi_ctx_class_t *ctx,
               lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
               int add, const char *remote_user, const char *remote_host,
               gdi_object_t *object, int sub_command, monitoring_t *monitor) 
@@ -76,7 +76,7 @@ int cuser_mod(void *context,
          const char *name = lGetPosString(reduced_elem, pos);
 
          if (add) {
-            if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, "cuser") == STATUS_OK) {
+            if (verify_str_key(answer_list, name, MAX_VERIFY_STRING, "cuser", KEY_TABLE) == STATUS_OK) {
                lSetString(cuser, CU_name, name);
             } else {
                ERROR((SGE_EVENT, MSG_UM_CLUSTERUSERXNOTGUILTY_S, name));
@@ -171,7 +171,7 @@ int cuser_mod(void *context,
    }
 }
 
-int cuser_success(void *context, lListElem *cuser, lListElem *old_cuser, 
+int cuser_success(sge_gdi_ctx_class_t *ctx, lListElem *cuser, lListElem *old_cuser, 
                     gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    DENTER(TOP_LAYER, "usermap_success");
@@ -182,16 +182,11 @@ int cuser_success(void *context, lListElem *cuser, lListElem *old_cuser,
    return 0;
 }
 
-int cuser_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *object) 
+int cuser_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *upe, gdi_object_t *object) 
 {  
    lList *answer_list = NULL;
    bool dbret;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "usermap_spool");
  
@@ -211,7 +206,7 @@ int cuser_spool(void *context, lList **alpp, lListElem *upe, gdi_object_t *objec
    return dbret ? 0 : 1;
 }
 
-int cuser_del(lListElem *this_elem, lList **answer_list, 
+int cuser_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list, 
               char *remote_user, char *remote_host) 
 {
    bool ret = true;
@@ -225,7 +220,7 @@ int cuser_del(lListElem *this_elem, lList **answer_list,
          lListElem *cuser = cuser_list_locate(master_cuser_list, name);
    
          if (cuser != NULL) {
-            if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
+            if (sge_event_spool(ctx, answer_list, 0, sgeE_CUSER_DEL,
                                 0, 0, name, NULL, NULL,
                                 NULL, NULL, NULL, true, true)) {
                lRemoveElem(master_cuser_list, &cuser);

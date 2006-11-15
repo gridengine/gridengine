@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
+#include "gdi/sge_gdi_ctx.h"
 
 /*
 
@@ -45,9 +45,9 @@
    may also be mixed.
    
 */
-int sge_client_get_acls(void *context, lList **alpp, lList *acl_args, lList **dst);
-int sge_client_add_user(void *context, lList **alpp, lList *user_args, lList *acl_args);
-int sge_client_del_user(void *context, lList **alpp, lList *user_args, lList *acl_args);
+int sge_client_get_acls(sge_gdi_ctx_class_t *ctx, lList **alpp, lList *acl_args, lList **dst);
+int sge_client_add_user(sge_gdi_ctx_class_t *ctx, lList **alpp, lList *user_args, lList *acl_args);
+int sge_client_del_user(sge_gdi_ctx_class_t *ctx, lList **alpp, lList *user_args, lList *acl_args);
 
 
 #endif /* _SGE_CLIENT_ACCESS_H */

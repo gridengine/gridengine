@@ -35,20 +35,21 @@
 #include "sge_c_gdi.h"
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
 
-int calendar_mod(void *context,
+int calendar_mod(sge_gdi_ctx_class_t *ctx,
                  lList **alpp, lListElem *new_cal, lListElem *cep, int add, 
                  const char *ruser, const char *rhost, gdi_object_t *object, 
                  int sub_command, monitoring_t *monitor);
 
-int calendar_spool(void *context, lList **alpp, lListElem *cep, gdi_object_t *object);
+int calendar_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *cep, gdi_object_t *object);
 
-int calendar_update_queue_states(void *context, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+int calendar_update_queue_states(sge_gdi_ctx_class_t *ctx, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
-int sge_del_calendar(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost);
+int sge_del_calendar(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ruser, char *rhost);
 
-void sge_calendar_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
 #endif /* __SGE_CALENDAR_QMASTER_H */
 

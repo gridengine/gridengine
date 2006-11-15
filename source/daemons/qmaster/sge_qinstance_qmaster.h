@@ -33,23 +33,24 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-#include "cull.h"
+#include "cull/cull.h"
+#include "gdi/sge_gdi_ctx.h"
 
 bool
-qinstance_change_state_on_command(void *context,
+qinstance_change_state_on_command(sge_gdi_ctx_class_t *ctx,
                                   lListElem *this_elem, lList**answer_list,
                                   u_long32 transition, bool force_transition,
                                   const char *user, const char *host,
                                   bool is_operator, bool is_owner, monitoring_t *monitor);
 
 bool
-qinstance_change_state_on_calendar(void *context,
+qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
                                    lListElem *this_elem,
                                    const lListElem *calendar, 
                                    monitoring_t *monitor);
 
 bool
-qinstance_modify_attribute(void *context,
+qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, lList **answer_list,
                            const lListElem *cqueue,
                            int attribute_name,
@@ -65,7 +66,7 @@ qinstance_modify_attribute(void *context,
                            monitoring_t *monitor);
 
 bool 
-qinstance_change_state_on_calendar_all(void *context,
+qinstance_change_state_on_calendar_all(sge_gdi_ctx_class_t *ctx,
                                        const char* cal_name,  
                                        u_long32 cal_order, 
                                        const lList *state_change_list, 

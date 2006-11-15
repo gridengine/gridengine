@@ -42,7 +42,6 @@
 
 #include "sge_unistd.h"
 #include "sge_gdi.h"
-#include "setup.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"

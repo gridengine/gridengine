@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "evc/sge_event_client2.h"
+
 /* 
  *  internal interfaces between modules of default scheduler (private)
  */
@@ -60,12 +62,12 @@ typedef struct {
  * external interface of default scheduler used schedd framework (public)
  */
 
-typedef int (*default_scheduler_alg_t)(void *context, sge_Sdescr_t *, lList**);
+typedef int (*default_scheduler_alg_t)(sge_evc_class_t *evc, sge_Sdescr_t *, lList**);
 
-int scheduler(void *context, sge_Sdescr_t *lists, lList **orders);
+int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **orders);
 
 #ifdef SCHEDULER_SAMPLES
-int my_scheduler(void *context, sge_Sdescr_t *lists, lList **orders);
+int my_scheduler(ge_evc_class_t *evc, sge_Sdescr_t *lists, lList **orders);
 #endif
 
 

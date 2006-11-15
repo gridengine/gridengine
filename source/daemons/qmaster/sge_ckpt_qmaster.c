@@ -53,22 +53,17 @@
 #include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_utility.h"
-#include "sge_todo.h"
 #include "sge_utility_qmaster.h"
 #include "symbols.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "sge_parse_num_par.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#include "sge_parse_num_par.h"
-#include "sge_bootstrap.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME
@@ -115,7 +110,7 @@
 *     0 - success
 *     STATUS_EUNKNOWN - an error occured
 ******************************************************************************/ 
-int ckpt_mod(void *context,
+int ckpt_mod(sge_gdi_ctx_class_t *ctx,
              lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
              const char *ruser, const char *rhost, gdi_object_t *object, 
              int sub_command, monitoring_t *monitor) 
@@ -232,16 +227,11 @@ ERROR:
 *     0 - success
 *     STATUS_EEXIST - an error occured
 ******************************************************************************/
-int ckpt_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object) 
+int ckpt_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_t *object) 
 {  
    lList *answer_list = NULL;
    bool dbret;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "ckpt_spool");
 
@@ -289,7 +279,7 @@ int ckpt_spool(void *context, lList **alpp, lListElem *ep, gdi_object_t *object)
 *  RESULT
 *     0 - success
 ******************************************************************************/ 
-int ckpt_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+int ckpt_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *ckpt_name;
 
@@ -330,7 +320,7 @@ int ckpt_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *
 *     0 - success
 *     STATUS_EUNKNOWN - an error occured
 ******************************************************************************/ 
-int sge_del_ckpt(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost) 
+int sge_del_ckpt(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ruser, char *rhost) 
 {
    lListElem *found;
    int pos;
@@ -391,7 +381,7 @@ int sge_del_ckpt(void *context, lListElem *ep, lList **alpp, char *ruser, char *
    }
 
    /* remove ckpt file 1st */
-   if (!sge_event_spool(context, alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
+   if (!sge_event_spool(ctx, alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
                         NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);

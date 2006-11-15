@@ -33,10 +33,11 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "gdi/sge_gdi_ctx.h"
 
-int sge_add_manop(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
+int sge_add_manop(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
-int sge_del_manop(void *context, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
+int sge_del_manop(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);
 
 #endif /* _SGE_MANOP_QMASTER_H_ */
 

@@ -39,7 +39,6 @@
 #include "commlib.h"
 #include "sge_time.h"
 #include "sge_event_master.h"
-#include "sge_any_request.h"
 #include "sig_handlers.h"
 #include "sge_log.h"
 #include "sge_gdi_request.h"
@@ -53,7 +52,6 @@
 #include "sge_conf.h"
 #include "sge_bootstrap.h"
 #include "sge_security.h"
-#include "sge_ack.h"
 #include "sge_ja_taskL.h"
 #include "sge_job.h"
 #include "sge_qinstance.h"
@@ -63,11 +61,6 @@
 
 #include "msg_qmaster.h"
 #include "msg_common.h"
-/*#include "msg_gdilib.h"*/
-
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 typedef struct {
    char snd_host[CL_MAXHOSTLEN]; /* sender hostname; NULL -> all              */
@@ -155,12 +148,12 @@ static request_handling_t eval_gdi_and_block(sge_gdi_request *req_head);
 static void eval_atomic(request_handling_t type);
 static void eval_atomic_end(request_handling_t type); 
 
-static request_handling_t do_gdi_request(void *context, struct_msg_t*, monitoring_t *monitor);
-static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor);
+static request_handling_t do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
+static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
 
-static request_handling_t do_report_request(void *context, struct_msg_t*, monitoring_t *monitor);
-static void do_event_client_exit(void *context, struct_msg_t *aMsg, monitoring_t *monitor);
-static void sge_c_job_ack(void *context,
+static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t*, monitoring_t *monitor);
+static void do_event_client_exit(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor);
+static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx,
                           char *host,
                           char *commproc,
                           u_long32 ack_tag, 
@@ -403,15 +396,11 @@ eval_atomic_end(request_handling_t type)
 *     MT-NOTE: This function should only be used as a 'thread function'
 *
 *******************************************************************************/
-void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *monitor)
+void *sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
 {
    int res;
    struct_msg_t msg;
    request_handling_t type = ATOMIC_NONE;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
 
    DENTER(TOP_LAYER, "sge_qmaster_process_message");
    
@@ -427,17 +416,10 @@ void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *moni
     * timeout (syncron receive timeout) when no messages are there to read.
     *
     */
-#ifdef TEST_QMASTER_GDI2
-
    MONITOR_IDLE_TIME((res = sge_gdi2_get_any_request(ctx, msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
                                 &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time(),
                                 mconf_is_monitor_message());
-#else
-   MONITOR_IDLE_TIME((res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, 
-                                &msg.tag, 1, 0, &msg.request_mid)), monitor, mconf_get_monitor_time(),
-                                mconf_is_monitor_message());
-#endif
-   
+
    MONITOR_MESSAGES(monitor);      
    
    if (res != CL_RETVAL_OK) {
@@ -448,17 +430,17 @@ void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *moni
    switch (msg.tag)
    {
       case TAG_GDI_REQUEST: 
-         type = do_gdi_request(context, &msg, monitor);
+         type = do_gdi_request(ctx, &msg, monitor);
          break;
       case TAG_ACK_REQUEST:
-         do_c_ack(context, &msg, monitor);
+         do_c_ack(ctx, &msg, monitor);
          break;
       case TAG_EVENT_CLIENT_EXIT:
-         do_event_client_exit(context, &msg, monitor);
+         do_event_client_exit(ctx, &msg, monitor);
          MONITOR_ACK(monitor);   
          break;
       case TAG_REPORT_REQUEST: 
-         type = do_report_request(context, &msg, monitor);
+         type = do_report_request(ctx, &msg, monitor);
          break;
       default: 
          DPRINTF(("***** UNKNOWN TAG TYPE %d\n", msg.tag));
@@ -498,7 +480,7 @@ void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *moni
 *     'sge_gdi_request' structures.
 *******************************************************************************/
 static request_handling_t 
-do_gdi_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
+do_gdi_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    request_handling_t type = ATOMIC_NONE;
 
@@ -506,10 +488,6 @@ do_gdi_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
    sge_gdi_request *req_head = NULL;  /* head of request linked list */
    sge_gdi_request *resp_head = NULL; /* head of response linked list */
    sge_pack_buffer pb;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-#endif
 
    DENTER(TOP_LAYER, "do_gdi_request");
 
@@ -547,26 +525,12 @@ do_gdi_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
          /* this is needed to identify a multi-gdi pack buffer */
          resp->next = ((req->next != NULL) ? resp : NULL);
 
-         sge_c_gdi(context, aMsg->snd_host, req, resp, &pb, monitor);
+         sge_c_gdi(ctx, aMsg->snd_host, req, resp, &pb, monitor);
       }
 
-#if 0
-      sge_send_gdi_request(ASYNC, aMsg->snd_host, aMsg->snd_name,
-                        (int)aMsg->snd_id, resp_head, NULL, aMsg->request_mid,
-                        &alp);
-#else
-
-#ifdef TEST_QMASTER_GDI2
       sge_gdi2_send_any_request(ctx, ASYNC, NULL,
                                 aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &pb,
                                 TAG_GDI_REQUEST, aMsg->request_mid, &alp);
-#else
-      sge_send_any_request(ASYNC, NULL, aMsg->snd_host,
-                           aMsg->snd_name, aMsg->snd_id, &pb,
-                           TAG_GDI_REQUEST, aMsg->request_mid, &alp);
-#endif
-
-#endif
 
       clear_packbuffer(&pb);
       MONITOR_MESSAGES_OUT(monitor);
@@ -599,19 +563,12 @@ do_gdi_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
 *     void - none 
 *
 *******************************************************************************/
-static request_handling_t do_report_request(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
+static request_handling_t do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    lList *rep = NULL;
    request_handling_t type = ATOMIC_NONE;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
-#else
-   const char *myprogname = uti_state_get_sge_formal_prog_name();
-   const char *admin_user = bootstrap_get_admin_user();
-#endif   
 
    DENTER(TOP_LAYER, "do_report_request");
 
@@ -629,7 +586,7 @@ static request_handling_t do_report_request(void *context, struct_msg_t *aMsg, m
 
    MONITOR_WAIT_TIME((type = eval_message_and_block(*aMsg)), monitor); 
 
-   sge_c_report(context, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
+   sge_c_report(ctx, aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, rep, monitor);
    lFreeList(&rep);
 
    DEXIT;
@@ -660,7 +617,7 @@ static request_handling_t do_report_request(void *context, struct_msg_t *aMsg, m
 *     MT-NOTE: do_event_client_exit() is NOT MT safe. 
 *
 *******************************************************************************/
-static void do_event_client_exit(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
+static void do_event_client_exit(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor)
 {
    u_long32 client_id = 0;
 
@@ -682,14 +639,8 @@ static void do_event_client_exit(void *context, struct_msg_t *aMsg, monitoring_t
    **       with the request owner
    */
    if (client_id == 1) {
-#ifdef TEST_QMASTER_GDI2
-      sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
       const char *admin_user = ctx->get_admin_user(ctx);
       const char *myprogname = ctx->get_progname(ctx);
-#else
-      const char *admin_user = bootstrap_get_admin_user();
-      const char *myprogname = uti_state_get_sge_formal_prog_name();
-#endif      
       if (false == sge_security_verify_unique_identifier(true, admin_user, myprogname, 0,
                                                aMsg->snd_host, aMsg->snd_name, aMsg->snd_id)) {
          DEXIT;
@@ -717,18 +668,11 @@ static void do_event_client_exit(void *context, struct_msg_t *aMsg, monitoring_t
  if the counterpart uses the dispatcher ack_tag is the
  TAG we sent to the counterpart.
  ****************************************************/
-static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor) 
+static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *monitor) 
 {
    u_long32 ack_tag, ack_ulong, ack_ulong2;
-
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *myprogname = ctx->get_progname(ctx);
-#else
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *myprogname = uti_state_get_sge_formal_prog_name();
-#endif   
 
    DENTER(TOP_LAYER, "do_c_ack");
 
@@ -760,7 +704,7 @@ static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
             return;
          }
          /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
-         sge_c_job_ack(context, aMsg->snd_host, aMsg->snd_name, ack_tag, ack_ulong, ack_ulong2, monitor);
+         sge_c_job_ack(ctx, aMsg->snd_host, aMsg->snd_name, ack_tag, ack_ulong, ack_ulong2, monitor);
          break;
 
       case ACK_EVENT_DELIVERY:
@@ -783,7 +727,7 @@ static void do_c_ack(void *context, struct_msg_t *aMsg, monitoring_t *monitor)
 }
 
 /***************************************************************/
-static void sge_c_job_ack(void *context, char *host, char *commproc, u_long32 ack_tag, 
+static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, char *host, char *commproc, u_long32 ack_tag, 
                           u_long32 ack_ulong, u_long32 ack_ulong2, 
                           monitoring_t *monitor) 
 {
@@ -791,14 +735,7 @@ static void sge_c_job_ack(void *context, char *host, char *commproc, u_long32 ac
    lListElem *jep = NULL;
    lListElem *jatep = NULL;
    lList *answer_list = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
-
-   
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 

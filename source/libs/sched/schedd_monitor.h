@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "gdi/sge_gdi_ctx.h"
+
 #define SCHED_LOG_NAME "schedd_runlog"
 
 /* free answer list if anyone is registered */
@@ -57,7 +59,7 @@ char* schedd_get_log_string(void);
 
 #define SCHED_MON(x) (sprintf x,schedd_log(log_string))
 
-void schedd_set_schedd_log_file(void *context);
+void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx);
 
 #endif /* __SCHEDD_MONITOR_H */
 

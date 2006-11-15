@@ -34,7 +34,8 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
-void *sge_qmaster_process_message(void *context, void *anArg, monitoring_t *monitor);
+void *sge_qmaster_process_message(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor);
 
 #endif /* _SGE_QMASTER_PROCESS_MESSAGE_H_ */

@@ -71,7 +71,6 @@
 #include "sge_userset.h"
 #include "sge_utility.h"
 #include "sge_limit_rule.h"
-#include "sge_todo.h"
 
 #include "sge_str.h"
 
@@ -1058,9 +1057,6 @@ int read_all_configurations(lList **alpp,
    char fstr[256];
    lListElem *el;
    int ret;
-#ifndef TEST_QMASTER_GDI2   
-   static int admin_user_initialized = 0;
-#endif   
 
    DENTER(TOP_LAYER, "read_all_configurations");
 
@@ -1084,23 +1080,6 @@ int read_all_configurations(lList **alpp,
       DRETURN(-1);
    }
 
-#ifndef TEST_QMASTER_GDI2   
-   if (!admin_user_initialized) {
-      const char *admin_user = NULL;
-      char err_str[MAX_STRING_SIZE];
-      int lret;
-
-      admin_user = bootstrap_get_admin_user();
-      lret = sge_set_admin_username(admin_user, err_str);
-      if (lret == -1) {
-         ERROR((SGE_EVENT, err_str));
-         DRETURN(-1);
-      }
-      admin_user_initialized = 1;
-   }
-#endif   
-
-   
    /* read local configurations from local_conf_dir */ 
    dir = opendir(local_config_dir);
    if (!dir) {

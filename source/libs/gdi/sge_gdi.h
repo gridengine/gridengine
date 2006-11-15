@@ -34,7 +34,6 @@
 
 /* may be this should be included by the gdi user */
 #include "cull.h"
-#include "gdi_setup.h"
 #include "sge_hostname.h"
 
 #ifdef  __cplusplus
@@ -138,28 +137,10 @@ typedef struct {
    sge_gdi_request *last;
    u_long32 sequence_id;
 } state_gdi_multi;
+
 /* to be used for initializing state_gdi_multi */
 #define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
 
-#ifndef TEST_GDI2
-lList 
-*sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
-
-int 
-sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, 
-              lCondition *cp, lEnumeration *enp, lList **malpp, 
-              state_gdi_multi *state, bool do_copy);
-int 
-sge_gdi_multi_sync(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList **lp, 
-              lCondition *cp, lEnumeration *enp, lList **malpp, 
-              state_gdi_multi *state, bool do_copy, bool do_sync);
-
-bool
-gdi_receive_multi_async(sge_gdi_request **answer, lList **malpp, bool is_sync);
-
-#endif
-
- 
 bool sge_gdi_extract_answer(lList **alpp, u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
 
 /**
@@ -173,6 +154,43 @@ typedef struct {
    u_long32 gdi_request_mid; /* message id of the send, used to identify the answer*/
    state_gdi_multi out;
 } gdi_send_t;
+
+
+/* from gdi_checkpermissions.h */
+#define MANAGER_CHECK     (1<<0)
+#define OPERATOR_CHECK    (1<<1)
+/*
+#define USER_CHECK        (1<<2)
+#define SGE_USER_CHECK    (1<<3)
+*/
+
+/* from gdi_setup.h */
+/* these values are standarized gdi return values */
+enum {
+   AE_ERROR = -1,
+   AE_OK = 0,
+   AE_ALREADY_SETUP,
+   AE_UNKNOWN_PARAM,
+   AE_QMASTER_DOWN
+};
+
+/* from gdi_tsm.h */
+#define MASTER_KILL       (1<<0)
+#define SCHEDD_KILL       (1<<1)
+#define EXECD_KILL        (1<<2)
+#define JOB_KILL          (1<<3)
+#define EVENTCLIENT_KILL  (1<<4)
+
+/* from sge_ack.h */
+enum {
+   ACK_JOB_DELIVERY,     /* sent back by execd, when master gave him a job    */
+   ACK_SIGNAL_DELIVERY,  /* sent back by execd, when master sends a queue     */
+   ACK_JOB_EXIT,         /* sent back by qmaster, when execd sends a job_exit */
+   ACK_SIGNAL_JOB,       /* sent back by qmaster, when execd reports a job as */
+                         /* running - that was not supposed to be there       */
+   ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
+};
+
 
 #ifdef  __cplusplus
 }

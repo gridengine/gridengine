@@ -42,11 +42,9 @@
 #include "sge_dstring.h"
 #include "sge_prog.h"
 #include "version.h"
-
-#ifdef TEST_GDI2
 #include "sge_gdi_ctx.h"
+
 extern sge_gdi_ctx_class_t *ctx;
-#endif
 
 
 static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s%s";
@@ -61,17 +59,12 @@ static char mailto[] = "For further information and feedback please subscribe to
 void qmonAboutMsg(Widget w, XtPointer cld, XtPointer cad)
 {
 #if 0
+
    dstring ds;
    char buffer[256];
-#ifdef TEST_GDI2
    const char* username = ctx->get_username(ctx);
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char* default_cell = ctx->get_default_cell(ctx);
-#else
-   const char* username = uti_state_get_user_name();
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-   const char* default_cell = uti_state_get_default_cell();
-#endif   
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
@@ -87,16 +80,9 @@ void qmonAboutMsg(Widget w, XtPointer cld, XtPointer cad)
    DEXIT;
 #else
    char buffer[256];
-#ifdef TEST_GDI2
    const char* username = ctx->get_username(ctx);
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char* default_cell = ctx->get_default_cell(ctx);
-#else
-   const char* username = uti_state_get_user_name();
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-   const char* default_cell = uti_state_get_default_cell();
-#endif   
-
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    sprintf(buffer, "%s %s", GE_LONGNAME, GDI_VERSION);  

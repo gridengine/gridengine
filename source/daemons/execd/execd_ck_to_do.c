@@ -85,10 +85,6 @@
 
 #include "sge_str.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 #if COMPILE_DC
 static int reprioritization_enabled = 0;
 #endif
@@ -101,8 +97,8 @@ sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
 static bool
 sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 
-static int sge_start_jobs(void *context);
-static int exec_job_or_task(void *context, lListElem *jep, lListElem *jatep, lListElem *petep);
+static int sge_start_jobs(sge_gdi_ctx_class_t *ctx);
+static int exec_job_or_task(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *petep);
 
 static bool should_reprioritize(void);
 static void force_job_rlimit(const char* qualified_hostname);
@@ -358,7 +354,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 #define OLD_JOB_INTERVAL 60
 
 int 
-execd_ck_to_do(void *context,
+execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
                struct dispatch_entry *de, 
                sge_pack_buffer *pb, 
                sge_pack_buffer *apb,
@@ -376,13 +372,7 @@ execd_ck_to_do(void *context,
    lListElem *jep, *jatep;
    int was_communication_error = CL_RETVAL_OK;
    int return_value = 0;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -486,7 +476,7 @@ execd_ck_to_do(void *context,
        * a job start if we reset jobs_to_start after sge_start_jobs()
        */
       jobs_to_start = 0;
-      sge_start_jobs(context);
+      sge_start_jobs(ctx);
    }
 
    if (sge_sig_handler_dead_children != 0) {
@@ -615,7 +605,7 @@ execd_ck_to_do(void *context,
       if (last_report_send < now) {
          last_report_send = now;
          /* send all reports */
-         was_communication_error = sge_send_all_reports(context, now, 0, execd_report_sources);
+         was_communication_error = sge_send_all_reports(ctx, now, 0, execd_report_sources);
          DPRINTF(("----> was_communication_error: "SFQ" ("sge_U32CFormat")\n", 
                   cl_get_error_text(was_communication_error), 
                   sge_u32c(was_communication_error)));
@@ -735,7 +725,7 @@ sge_kill_petasks(const lListElem *job, const lListElem *ja_task)
 
 
 /*****************************************************************************/
-static int sge_start_jobs(void *context)
+static int sge_start_jobs(sge_gdi_ctx_class_t *ctx)
 {
    lListElem *jep, *jatep, *petep;
    int state_changed;
@@ -751,11 +741,11 @@ static int sge_start_jobs(void *context)
 
    for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         state_changed = exec_job_or_task(context, jep, jatep, NULL);
+         state_changed = exec_job_or_task(ctx, jep, jatep, NULL);
 
          /* visit all tasks */
          for_each(petep, lGetList(jatep, JAT_task_list))
-            state_changed |= exec_job_or_task(context, jep, jatep, petep);
+            state_changed |= exec_job_or_task(ctx, jep, jatep, petep);
 
          /* now save this job so we are up to date on restart */
          if (state_changed) {
@@ -773,7 +763,7 @@ static int sge_start_jobs(void *context)
 
 
 static int exec_job_or_task(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *jep,
 lListElem *jatep,
 lListElem *petep
@@ -783,13 +773,7 @@ lListElem *petep
    u_long32 now;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id = NULL;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-#else
-   const char *qualified_hostname = uti_state_get_qualified_hostname();
-#endif
 
    DENTER(TOP_LAYER, "exec_job_or_task");
 
@@ -877,7 +861,7 @@ lListElem *petep
       pid = -1; 
       strcpy(err_str, "FAILURE_BEFORE_EXEC");
    } else {
-      pid = sge_exec_job(context, jep, jatep, petep, err_str, 256);
+      pid = sge_exec_job(ctx, jep, jatep, petep, err_str, 256);
    }   
 
    if (pid < 0) {

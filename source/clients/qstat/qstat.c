@@ -87,11 +87,7 @@
 #include "read_defaults.h"
 #include "setup_path.h"
 #include "sgeobj/sge_ulong.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
+#include "gdi/sge_gdi_ctx.h"
 #include "sge_qstat.h"
 #include "qstat_xml.h"
 #include "qstat_cmdline.h"
@@ -108,8 +104,8 @@ static lList *sge_parse_qstat(lList **ppcmdline,
                               char **hostname, 
                               lList **ppljid, 
                               u_long32 *isXML);
-static int qstat_show_job(void *context, lList *jid, u_long32 isXML);
-static int qstat_show_job_info(void *context, u_long32 isXML);
+static int qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid, u_long32 isXML);
+static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML);
 
 typedef struct qstat_stdout_ctx_str qstat_stdout_ctx_t;
 
@@ -207,19 +203,11 @@ char **argv
    lList *ref_list = NULL;
    lListElem *aep = NULL;
    char *hostname = NULL;
-
    const char *username = NULL;
    const char *cell_root = NULL;
-
    qstat_env_t qstat_env;
-   
    u_long32 isXML = 0;
-   
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#else
-   void *ctx = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -236,7 +224,6 @@ char **argv
    sge_setup_sig_handlers(QSTAT);
    log_state_set_log_gui(true);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QSTAT, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
@@ -246,18 +233,6 @@ char **argv
    cell_root = ctx->get_cell_root(ctx);
    lInit(nmv);      
    qstat_env.ctx = ctx;
-
-#else
-   sge_mt_init();
-
-   sge_gdi_param(SET_MEWHO, QSTAT, NULL);
-   if (sge_gdi_setup(prognames[QSTAT], &alp)!=AE_OK) {
-      answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
-   }
-   username = uti_state_get_user_name();
-   cell_root = path_state_get_cell_root();
-#endif
 
    if (!strcmp(sge_basename(*argv++, '/'), "qselect")) {
       qstat_env.qselect_mode = 1;
@@ -1771,7 +1746,7 @@ static int qselect_stdout_report_queue(qselect_handler_t* handler, const char* q
 ** returns 0 on success, non-zero on failure
 */
 static int qstat_show_job(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList *jid_list,
 u_long32 isXML
 ) {
@@ -1786,19 +1761,11 @@ u_long32 isXML
    bool jobs_exist = true;
    lListElem* mes;
 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
-
    DENTER(TOP_LAYER, "qstat_show_job");
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-#ifdef TEST_GDI2   
    alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
-#else
-   alp = sge_gdi(SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
-#endif   
    lFreeWhat(&what);
 
    if (!isXML){
@@ -1832,11 +1799,7 @@ u_long32 isXML
    }
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
-#ifdef TEST_GDI2   
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
-#else   
-   alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
-#endif   
    lFreeWhere(&where);
    lFreeWhat(&what);
 
@@ -1941,7 +1904,7 @@ u_long32 isXML
    return 0;
 }
 
-static int qstat_show_job_info(void *context, u_long32 isXML)
+static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
 {
    lList *ilp = NULL, *mlp = NULL;
    lListElem* aep = NULL;
@@ -1958,19 +1921,12 @@ static int qstat_show_job_info(void *context, u_long32 isXML)
    int first_row = 1;
    lListElem *sme;
    lListElem *jid_ulng = NULL; 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "qstat_show_job_info");
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-#ifdef TEST_GDI2   
    alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
-#else   
-   alp = sge_gdi(SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
-#endif   
    lFreeWhat(&what);
    if (isXML){
       xml_qstat_show_job_info(&ilp, &alp);

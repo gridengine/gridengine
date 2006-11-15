@@ -36,12 +36,11 @@
 #include "setup_path.h"
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
-#include "gdi_setup.h"
 #include "sge_profiling.h"
 #include "lck/sge_lock.h"
 #include "sgeobj/sge_object.h"
-
 #include "sgeobj/sge_schedd_conf.h"
+#include "gdi/sge_gdi_ctx.h"
 
 /****** common/sge_mt_init/sge_mt_init() ***************************************
 *  NAME

@@ -149,14 +149,14 @@ public class QModCommand extends AbstractCommand {
             if(i>=args.length) {
                throw new IllegalArgumentException("job_wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.suspendQueues(queues, force);
          } else if (args[i].equals("-uq")) {
             i++;
             if(i>=args.length) {
                throw new IllegalArgumentException("job_wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.unsuspendQueues(queues, force);
          } else if (args[i].equals("-r")) {
             i++;
@@ -178,7 +178,7 @@ public class QModCommand extends AbstractCommand {
             if(i>=args.length) {
                throw new IllegalArgumentException("wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.clearQueues(queues, force);
             break;
          } else if (args[i].equals("-rq")) {
@@ -186,7 +186,7 @@ public class QModCommand extends AbstractCommand {
             if(i>=args.length) {
                throw new IllegalArgumentException("wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.rescheduleQueues(queues, force);
             break;
          } else if (args[i].equals("-d")) {
@@ -195,7 +195,7 @@ public class QModCommand extends AbstractCommand {
             if(i>=args.length) {
                throw new IllegalArgumentException("wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.disableQueues(queues, force);
             break;
          } else if (args[i].equals("-e")) {
@@ -204,7 +204,7 @@ public class QModCommand extends AbstractCommand {
             if(i>=args.length) {
                throw new IllegalArgumentException("wc_queue_list is missing");
             }
-            String queues [] = parceWCQueueList(args[i]);
+            String queues [] = parseWCQueueList(args[i]);
             jgdi.enableQueues(queues, force);
             break;
          } else if ( args[i].equals("-f") ) {

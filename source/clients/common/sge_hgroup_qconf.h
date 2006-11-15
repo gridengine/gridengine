@@ -32,25 +32,26 @@
  *
  ************************************************************************/
 
+#include "gdi/sge_gdi_ctx.h"
 
-lListElem *hgroup_get_via_gdi(void *context, lList **answer_list, const char *group);
+lListElem *hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *group);
 
-bool hgroup_add_del_mod_via_gdi(void *context, lListElem *this_elem, lList **answer_list,
+bool hgroup_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_list,
                                    u_long32 gdi_command);
 
-bool hgroup_show(void *context, lList **answer_list, const char *name);
+bool hgroup_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool hgroup_show_structure(void *context, lList **answer_list, const char *name,
+bool hgroup_show_structure(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name,
                            bool show_tree);
 
-bool hgroup_add(void *context, lList **answer_list, const char *name, bool is_name_validate);
+bool hgroup_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name, bool is_name_validate);
 
-bool hgroup_modify(void *context, lList **answer_list, const char *name);
+bool hgroup_modify(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool hgroup_delete(void *context, lList **answer_list, const char *name);
+bool hgroup_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);
 
-bool hgroup_add_from_file(void *context, lList **answer_list, const char *filename);
+bool hgroup_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
-bool hgroup_modify_from_file(void *context, lList **answer_list, const char *filename);
+bool hgroup_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *filename);
 
 #endif /* __SGE_HOSTGROUP_QCONF */

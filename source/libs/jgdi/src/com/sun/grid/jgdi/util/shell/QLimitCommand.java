@@ -77,6 +77,7 @@ public class QLimitCommand extends AbstractCommand {
    
    
    public void run(String[] args) throws Exception {
+    
       QLimitOptions options = parse(args);
       
       JGDI jgdi = getShell().getConnection();

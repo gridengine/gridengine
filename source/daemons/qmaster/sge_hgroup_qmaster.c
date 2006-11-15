@@ -61,14 +61,10 @@
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
-#include "sge_bootstrap.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /* EB: ADOC: add comments */
 
@@ -79,7 +75,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
                     lList **occupant_groups);
 
 static void 
-hgroup_commit(void *context, lListElem *hgroup);
+hgroup_commit(sge_gdi_ctx_class_t *ctx, lListElem *hgroup);
 
 static void 
 hgroup_rollback(lListElem *this_elem);
@@ -205,7 +201,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
 }
 
 static void 
-hgroup_commit(void *context, lListElem *hgroup) 
+hgroup_commit(sge_gdi_ctx_class_t *ctx, lListElem *hgroup) 
 {
    lList *cqueue_master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
@@ -219,7 +215,7 @@ hgroup_commit(void *context, lListElem *hgroup)
       lListElem *org_queue = lGetElemStr(cqueue_master_list, CQ_name, name);
 
       next_cqueue = lNext(cqueue);
-      cqueue_commit(context, cqueue);
+      cqueue_commit(ctx, cqueue);
       lDechainElem(cqueue_list, cqueue);
       lRemoveElem(cqueue_master_list, &org_queue);
       lAppendElem(cqueue_master_list, cqueue);
@@ -237,7 +233,7 @@ hgroup_rollback(lListElem *this_elem)
 }
 
 int 
-hgroup_mod(void *context,
+hgroup_mod(sge_gdi_ctx_class_t *ctx,
            lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
            int add, const char *remote_user, const char *remote_host, 
            gdi_object_t *object, int sub_command, monitoring_t *monitor) 
@@ -389,7 +385,7 @@ hgroup_mod(void *context,
                   if (ret) {
                      bool refresh_all_values = ((add_hosts != NULL) || (rem_hosts != NULL)) ? true : false;
 
-                     ret &= cqueue_handle_qinstances(context,
+                     ret &= cqueue_handle_qinstances(ctx,
                                                      new_cqueue, answer_list, 
                                                      reduced_elem,
                                                      real_add_hosts, 
@@ -434,7 +430,7 @@ hgroup_mod(void *context,
          if (ret) {
             lList *list = *(object_type_get_master_list(SGE_TYPE_EXECHOST));
 
-            ret &= host_list_add_missing_href(context, list, answer_list, add_hosts, monitor);
+            ret &= host_list_add_missing_href(ctx, list, answer_list, add_hosts, monitor);
          }
 
          lFreeList(&add_hosts);
@@ -452,7 +448,7 @@ hgroup_mod(void *context,
 }
 
 int 
-hgroup_del(void *context,
+hgroup_del(sge_gdi_ctx_class_t *ctx,
            lListElem *this_elem, lList **answer_list, 
            char *remote_user, char *remote_host) 
 {
@@ -548,7 +544,7 @@ hgroup_del(void *context,
              * Try to unlink the concerned spoolfile
              */
             if (ret) {
-               if (sge_event_spool(context, answer_list, 0, sgeE_HGROUP_DEL, 
+               if (sge_event_spool(ctx, answer_list, 0, sgeE_HGROUP_DEL, 
                                    0, 0, name, NULL, NULL,
                                    NULL, NULL, NULL, true, true)) {
                   /*
@@ -599,7 +595,7 @@ hgroup_del(void *context,
 }
 
 int 
-hgroup_success(void *context, lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+hgroup_success(sge_gdi_ctx_class_t *ctx, lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *name = lGetHost(hgroup, HGRP_name);
 
@@ -615,7 +611,7 @@ hgroup_success(void *context, lListElem *hgroup, lListElem *old_hgroup, gdi_obje
    /*
     * QI add or delete events. Finalize operation.
     */
-   hgroup_commit(context, hgroup);
+   hgroup_commit(ctx, hgroup);
     
    DEXIT;
    return 0;
@@ -623,7 +619,7 @@ hgroup_success(void *context, lListElem *hgroup, lListElem *old_hgroup, gdi_obje
 
 
 int 
-hgroup_spool(void *context, lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
+hgroup_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
 {
    bool tmp_ret = true;
    bool dbret;
@@ -632,12 +628,7 @@ hgroup_spool(void *context, lList **answer_list, lListElem *this_elem, gdi_objec
    lListElem *cqueue = NULL;
    dstring key_dstring = DSTRING_INIT;
    lList *spool_answer_list = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    bool job_spooling = ctx->get_job_spooling(ctx);
-#else
-   bool job_spooling = bootstrap_get_job_spooling();
-#endif
 
    DENTER(TOP_LAYER, "hgroup_spool");
 

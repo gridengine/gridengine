@@ -60,12 +60,10 @@
 #include "show_job.h"
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 
 
@@ -532,7 +530,7 @@ const struct test_name2number_map {
 };
 #define FIRST_NON_AUTOMATED_TEST ST_INPUT_BECOMES_OUTPUT
 
-static int test(void *context, int *argc, char **argv[], int parse_args);
+static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_args);
 static int submit_and_wait(int n);
 static int submit_sleeper(int n);
 static int submit_input_mirror(int n, const char *mirror_job, 
@@ -626,11 +624,9 @@ int main(int argc, char *argv[])
    int failed = 0;
    int i; 
    char diag[DRMAA_ERROR_STRING_BUFFER];
-
-#ifdef TEST_GDI2
    sge_gdi_ctx_class_t *ctx = NULL;
    lList *alp = NULL;
-#endif
+
    DENTER_MAIN(TOP_LAYER, "qsub");
 
    if (argc == 1) 
@@ -654,16 +650,14 @@ int main(int argc, char *argv[])
          is_sun_grid_engine = 0;
    }
 
-#ifdef TEST_GDI2
    /*
    ** since drmaa doesn't give an explicit handle to the context and sge_gdi 
    ** is used below, we provide our own context here
    */
    if (sge_gdi2_setup(&ctx, JAPI, &alp) != AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT((void **)&ctx, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
-#endif
 
    while (argc > 1) {
       /* map test name to test number */
@@ -698,11 +692,7 @@ int main(int argc, char *argv[])
                      DRMAA_CONTROL_HOLD, DRMAA_CONTROL_RELEASE, DRMAA_CONTROL_TERMINATE, -1 };
                for (i=0; ctrl_ops[i] != -1; i++) {
                   ctrl_op = ctrl_ops[i]; 
-#ifdef TEST_GDI2
                   if (test(ctx, &argc, &argv, 0)!=0) {
-#else
-                  if (test(NULL, &argc, &argv, 0)!=0) {
-#endif                  
                      printf("test \"%s\" with \"%s\" failed\n", 
                            test_map[i].test_name, drmaa_ctrl2str(ctrl_ops[i]));
                      failed = 1;
@@ -716,11 +706,7 @@ int main(int argc, char *argv[])
             }
 
             default:
-#ifdef TEST_GDI2
                if (test(ctx, &argc, &argv, 0)!=0) {
-#else
-               if (test(NULL, &argc, &argv, 0)!=0) {
-#endif                  
                   printf("test #%d failed\n", i);
                   failed = 1;
                   drmaa_exit(NULL, 0);
@@ -735,11 +721,7 @@ int main(int argc, char *argv[])
          }
       } else {
          printf("starting test \"%s\"\n", test_map[i].test_name);
-#ifdef TEST_GDI2         
          if (test(ctx, &argc, &argv, 1)!=0) {
-#else
-         if (test(NULL, &argc, &argv, 1)!=0) {
-#endif         
             printf("test \"%s\" failed\n", test_map[i].test_name);
             failed = 1;
             drmaa_exit(NULL, 0);
@@ -748,16 +730,15 @@ int main(int argc, char *argv[])
            printf("successfully finished test \"%s\"\n", test_map[i].test_name);
       }
    } 
-#ifdef TEST_GDI2
+   sge_gdi2_shutdown((void**)&ctx);
    sge_gdi_ctx_class_destroy(&ctx);
-#endif
 
    sge_prof_cleanup();
    return failed;
 }
 
 
-static int test(void *context, int *argc, char **argv[], int parse_args)
+static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_args)
 {
    bool bBulkJob = false;
    int  i;
@@ -766,10 +747,6 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
    int do_while_end = 0;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*) context;
-#endif   
 
    switch (test_case) {
    case ST_ERROR_CODES:
@@ -2883,17 +2860,13 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
             {
                lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
                lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-#ifdef TEST_GDI2
                alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#else
-               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#endif               
                job_ep = lFirst(job_lp);
                lFreeWhere(&where);
                lFreeWhat(&what);
             }
             {
-               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Critical", "GDI Error: ", "Message from GDI: ");
 
                if (tmp_ret > 0) {
                   fprintf (stderr, "problem talking to gdi\n");
@@ -3355,17 +3328,13 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
             {
                lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
                lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-#ifdef TEST_GDI2
                alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#else
-               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#endif               
                job_ep = lFirst(job_lp);
                lFreeWhere(&where);
                lFreeWhat(&what);
             }
             {
-               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Critical", "GDI Error: ", "Message from GDI: ");
 
                if (tmp_ret > 0) {
                   fprintf (stderr, "problem talking to gdi\n");
@@ -3464,17 +3433,13 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
             {
                lCondition *where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
                lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-#ifdef TEST_GDI2
                alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#else
-               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#endif               
                job_ep = lFirst(job_lp);
                lFreeWhere(&where);
                lFreeWhat(&what);
             }
             {
-               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Critical", "GDI Error: ", "Message from GDI: ");
 
                if (tmp_ret > 0) {
                   fprintf (stderr, "problem talking to gdi\n");
@@ -3589,17 +3554,13 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
             {
                lCondition* where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
                lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-#ifdef TEST_GDI2
                alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#else
-               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#endif               
                job_ep = lFirst(job_lp);
                lFreeWhere(&where);
                lFreeWhat(&what);
             }
             {
-               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Critical", "GDI Error: ", "Message from GDI: ");
 
                if (tmp_ret > 0) {
                   fprintf (stderr, "problem talking to gdi\n");
@@ -3698,17 +3659,13 @@ static int test(void *context, int *argc, char **argv[], int parse_args)
             {
                lCondition *where = lWhere ("%T(%I==%u)", JB_Type, JB_job_number, (u_long32)atol(jobid));
                lEnumeration *what = lWhat("%T (%I %I)", JB_Type, JB_job_number, JB_job_name);
-#ifdef TEST_GDI2
                alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#else
-               alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &job_lp, where, what);
-#endif               
                job_ep = lFirst(job_lp);
                lFreeWhere(&where);
                lFreeWhat(&what);
             }
             {
-               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Error: ", "Message from GDI: ");
+               int tmp_ret = answer_list_print_err_warn(&alp, "GDI Critical", "GDI Error: ", "Message from GDI: ");
 
                if (tmp_ret > 0) {
                   fprintf (stderr, "problem talking to gdi\n");

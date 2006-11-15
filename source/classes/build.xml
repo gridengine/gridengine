@@ -35,6 +35,7 @@ ___INFO__MARK_END__-->
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
       <property name="sge.srcdir" location=".."/>
+      <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
       

@@ -33,6 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "gdi/sge_gdi_ctx.h"
+
 typedef enum {
    JGDI_SUCCESS,
    JGDI_ERROR,

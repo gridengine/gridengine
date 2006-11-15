@@ -79,12 +79,12 @@ typedef struct {
 } change_state_t;
 
 static bool
-qinstance_change_state_on_calender_(void *context,
+qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                     lListElem *qi_elem, u_long32 cal_order, 
                                     lList **state_change_list, monitoring_t *monitor);
 
 bool
-qinstance_modify_attribute(void *context,
+qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, lList **answer_list,
                            const lListElem *cqueue, 
                            int attribute_name, 
@@ -143,7 +143,7 @@ qinstance_modify_attribute(void *context,
                            new_value ? new_value : "<null>"));
 #endif
                   if (calendar != NULL) { 
-                     qinstance_change_state_on_calendar(context, this_elem, calendar, monitor);
+                     qinstance_change_state_on_calendar(ctx, this_elem, calendar, monitor);
                   } else {
                      qinstance_state_set_cal_disabled(this_elem, false);
                      qinstance_state_set_cal_suspended(this_elem, false);
@@ -445,7 +445,7 @@ qinstance_modify_attribute(void *context,
                    * freshly added.
                    */
                   if (initial_modify == false) {
-                     qinstance_initialize_sos_attr(context, this_elem, monitor);
+                     qinstance_initialize_sos_attr(ctx, this_elem, monitor);
                   }
 
                   /*
@@ -477,11 +477,11 @@ qinstance_modify_attribute(void *context,
                   /*
                    * (Un)suspend subordinated queue instances
                    */
-                  cqueue_list_x_on_subordinate_so(context,
+                  cqueue_list_x_on_subordinate_so(ctx,
                                                   master_list, answer_list, 
                                                   false, unsuspended_so, false,
                                                   monitor);
-                  cqueue_list_x_on_subordinate_so(context,
+                  cqueue_list_x_on_subordinate_so(ctx,
                                                   master_list, answer_list, 
                                                   true, suspended_so, false,
                                                   monitor);
@@ -586,7 +586,7 @@ qinstance_modify_attribute(void *context,
 }
 
 bool
-qinstance_change_state_on_command(void *context,
+qinstance_change_state_on_command(sge_gdi_ctx_class_t *ctx,
                                   lListElem *this_elem, lList**answer_list,
                                   u_long32 transition, bool force_transition,
                                   const char *user, const char *host,
@@ -641,14 +641,14 @@ qinstance_change_state_on_command(void *context,
                   if ((!qinstance_state_is_susp_on_sub(this_elem) &&
                        !qinstance_state_is_cal_suspended(this_elem)) ||
                       force_transition) {
-                     sge_signal_queue(context, SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
+                     sge_signal_queue(ctx, SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
                      did_something = true;
                   }   
                break;
             case QI_DO_UNSUSPEND :    
                   if (!qinstance_state_is_susp_on_sub(this_elem) &&
                       !qinstance_state_is_cal_suspended(this_elem)) {
-                     sge_signal_queue(context, SGE_SIGCONT, this_elem, NULL, NULL, monitor);
+                     sge_signal_queue(ctx, SGE_SIGCONT, this_elem, NULL, NULL, monitor);
                      did_something = true;
                   }   
                break;
@@ -679,7 +679,7 @@ qinstance_change_state_on_command(void *context,
          if (did_something) {
             qinstance_increase_qversion(this_elem);
             reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
-            ret &= sge_event_spool(context,
+            ret &= sge_event_spool(ctx,
                                    answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,
@@ -749,7 +749,7 @@ qinstance_change_state_on_command(void *context,
 *     MT-NOTE: qinstance_change_state_on_calendar() is MT safe 
 *
 *******************************************************************************/
-bool qinstance_change_state_on_calendar(void *context,
+bool qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
              lListElem *this_elem, const lListElem *calendar, monitoring_t *monitor)
 {
    bool ret = true;
@@ -763,7 +763,7 @@ bool qinstance_change_state_on_calendar(void *context,
 
       state = calender_state_changes(calendar, &state_changes_list, &when, NULL);
 
-      ret = qinstance_change_state_on_calender_(context, this_elem, state, &state_changes_list, monitor);
+      ret = qinstance_change_state_on_calender_(ctx, this_elem, state, &state_changes_list, monitor);
 
    }
    DEXIT;
@@ -794,7 +794,7 @@ bool qinstance_change_state_on_calendar(void *context,
 *     Directly access the cluster queue list
 *
 *******************************************************************************/
-bool qinstance_change_state_on_calendar_all(void *context,
+bool qinstance_change_state_on_calendar_all(sge_gdi_ctx_class_t *ctx,
                                             const char* cal_name, u_long32 cal_order, 
                                             const lList *state_change_list, monitoring_t *monitor)
 {
@@ -814,7 +814,7 @@ bool qinstance_change_state_on_calendar_all(void *context,
 
          if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
             lList *copy_state_change_list = lCopyList("state list", state_change_list);
-            ret = qinstance_change_state_on_calender_(context, qinstance, cal_order, &copy_state_change_list, monitor);
+            ret = qinstance_change_state_on_calender_(ctx, qinstance, cal_order, &copy_state_change_list, monitor);
          }
       }
    }
@@ -846,7 +846,7 @@ bool qinstance_change_state_on_calendar_all(void *context,
 *     MT-NOTE: qinstance_change_state_on_calender_() is MT safe 
 *
 *******************************************************************************/
-static bool qinstance_change_state_on_calender_(void *context,
+static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                                 lListElem *this_elem, u_long32 cal_order, 
                                                 lList **state_change_list, monitoring_t *monitor) 
 {
@@ -877,7 +877,7 @@ static bool qinstance_change_state_on_calender_(void *context,
          } else if (qinstance_state_is_manual_suspended(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOUSADM_S, name));
          } else {
-            sge_signal_queue(context, SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
+            sge_signal_queue(ctx, SGE_SIGSTOP, this_elem, NULL, NULL, monitor);
          }
       } else {
          if (qinstance_state_is_susp_on_sub(this_elem)) {
@@ -885,7 +885,7 @@ static bool qinstance_change_state_on_calender_(void *context,
          } else if (qinstance_state_is_manual_suspended(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOSADM_S, name));
          } else {
-            sge_signal_queue(context, SGE_SIGCONT, this_elem, NULL, NULL, monitor);
+            sge_signal_queue(ctx, SGE_SIGCONT, this_elem, NULL, NULL, monitor);
          }
       }
       state_changed = true;

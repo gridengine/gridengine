@@ -53,14 +53,12 @@
 #include "read_defaults.h"
 #include "sge_centry.h"
 #include "sge_profiling.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qalter.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 /* when this character is modified, it has also be modified
    the JOB_NAME_DEL in daemons/qmaster/sge_job_qmaster.c 
@@ -92,10 +90,7 @@ char **argv
    u_long32 gdi_cmd = SGE_GDI_MOD; 
    int tmp_ret;
    int me_who;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
-
 
    DENTER_MAIN(TOP_LAYER, "qalter");
 
@@ -124,24 +119,16 @@ char **argv
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(me_who);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, me_who, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
-#else
-   sge_gdi_param(SET_MEWHO, me_who, NULL);
-   if (sge_gdi_setup(prognames[me_who], &alp)) {
-      answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
-   }
-#endif   
 
    /*
    ** begin to work
    */
    opt_list_append_opts_from_qalter_cmdline(me_who, &cmdline, &alp, argv + 1, environ);
-   tmp_ret = answer_list_print_err_warn(&alp, MSG_QALTER, MSG_QALTERWARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, MSG_QALTER, MSG_QALTER, MSG_QALTERWARNING);
    if (tmp_ret > 0) {
       SGE_EXIT(NULL, tmp_ret);
    }
@@ -171,7 +158,7 @@ char **argv
       SGE_EXIT(NULL, 0);
    }
 
-   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, NULL, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       SGE_EXIT(NULL, tmp_ret);
    }
@@ -195,11 +182,7 @@ char **argv
    if (all_users)
       gdi_cmd |= SGE_GDI_ALL_USERS;
 
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
-#else
-   alp = sge_gdi(SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
-#endif   
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
       if (ret==0) {
@@ -219,11 +202,7 @@ char **argv
    }
 
    sge_prof_cleanup();
-#ifdef TEST_GDI2
    SGE_EXIT((void**)&ctx, ret);
-#else
-   SGE_EXIT(NULL, ret);
-#endif   
 
    DRETURN(0);
 }

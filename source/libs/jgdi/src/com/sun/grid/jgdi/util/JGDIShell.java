@@ -752,6 +752,7 @@ public class JGDIShell implements Runnable, Shell {
                NameCallback cb = (NameCallback)callbacks[i];
                
                if(cb.getPrompt().indexOf("alias") >= 0) {
+                  logger.fine("user.name: " + System.getProperty("user.name"));
                   cb.setName(System.getProperty("user.name"));
                } else {
                   throw new UnsupportedCallbackException(callbacks[i]);

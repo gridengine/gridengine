@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
+#include "evc/sge_event_client2.h"
 
 typedef struct {
    lList *configOrderList;   /* Type: ORT_unsuspend_on_threshold, ORT_suspend_on_threshold */
@@ -60,8 +61,8 @@ lList *create_delete_job_orders(lList *finished_jobs, lList *order_list);
 lList *sge_join_orders(order_t *orders);
 int sge_GetNumberOfOrders(order_t *orders); 
 
-int sge_send_orders2master(void *evc_context, lList **orders);
-int sge_send_job_start_orders(void *evc_context, order_t *orders);
+int sge_send_orders2master(sge_evc_class_t *evc, lList **orders);
+int sge_send_job_start_orders(sge_evc_class_t *evc, order_t *orders);
 
 #endif /* _SGE_ORDERS_H_ */
 

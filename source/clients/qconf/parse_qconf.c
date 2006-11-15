@@ -63,8 +63,6 @@
 #include "sge_sharetree.h"
 #include "sge_userset.h"
 #include "sge_feature.h"
-#include "gdi_tsm.h"
-#include "gdi_checkpermissions.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_str.h"
@@ -103,38 +101,35 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_cqueueL.h"
 #include "sgeobj/sge_subordinateL.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qconf.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 static int sge_next_is_an_opt(char **ptr);
 static int sge_error_and_exit(const char *ptr);
 
 /* ------------------------------------------------------------- */
-static bool show_object_list(void *context, u_long32, lDescr *, int, char *);
-static int show_processors(void *context);
-static int show_eventclients(void *context);
+static bool show_object_list(sge_gdi_ctx_class_t *ctx, u_long32, lDescr *, int, char *);
+static int show_processors(sge_gdi_ctx_class_t *ctx);
+static int show_eventclients(sge_gdi_ctx_class_t *ctx);
 
 static bool show_gdi_request_answer(lList *alp);
 static bool show_gdi_request_answer_list(lList *alp);
 /* ------------------------------------------------------------- */
 static void parse_name_list_to_cull(char *name, lList **lpp, lDescr *dp, int nm, char *s);
-static bool add_host_of_type(void *context, lList *arglp, u_long32 target);
-static bool del_host_of_type(void *context, lList *arglp, u_long32 target);
-static int print_acl(void *context, lList *arglp);
-static int qconf_modify_attribute(void *context, lList **alpp, int from_file, char ***spp, lListElem **epp, int sub_command, struct object_info_entry *info_entry); 
+static bool add_host_of_type(sge_gdi_ctx_class_t *ctx, lList *arglp, u_long32 target);
+static bool del_host_of_type(sge_gdi_ctx_class_t *ctx, lList *arglp, u_long32 target);
+static int print_acl(sge_gdi_ctx_class_t *ctx, lList *arglp);
+static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx, lList **alpp, int from_file, char ***spp, lListElem **epp, int sub_command, struct object_info_entry *info_entry); 
 static lListElem *edit_exechost(lListElem *ep, uid_t uid, gid_t gid);
-static int edit_usersets(void *context, lList *arglp);
+static int edit_usersets(sge_gdi_ctx_class_t *ctx, lList *arglp);
 
 /************************************************************************/
-static int print_config(void *context, const char *config_name);
-static int delete_config(void *context, const char *config_name);
-static int add_modify_config(void *context, const char *config_name, const char *filename, u_long32 flags);
+static int print_config(sge_gdi_ctx_class_t *ctx, const char *config_name);
+static int delete_config(sge_gdi_ctx_class_t *ctx, const char *config_name);
+static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *config_name, const char *filename, u_long32 flags);
 static lList* edit_sched_conf(lList *confl, uid_t uid, gid_t gid);
 static lListElem* edit_userprj(lListElem *ep, bool user, uid_t uid, gid_t gid);
 static lListElem *edit_sharetree(lListElem *ep, uid_t uid, gid_t gid);
@@ -142,8 +137,8 @@ static lListElem *edit_sharetree(lListElem *ep, uid_t uid, gid_t gid);
 static char **sge_parser_get_next(char **head);
 
 /************************************************************************/
-static int qconf_is_manager(void *context, const char *user);
-static int qconf_is_adminhost(void *context, const char *host);
+static int qconf_is_manager(sge_gdi_ctx_class_t *ctx, const char *user);
+static int qconf_is_adminhost(sge_gdi_ctx_class_t *ctx, const char *host);
 /************************************************************************/
 
 static const char *write_attr_tmp_file(const char *name, const char *value, 
@@ -164,7 +159,7 @@ static char **sge_parser_get_next(char **arg)
 
 /*------------------------------------------------------------*/
 int sge_parse_qconf(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 char *argv[]
 ) {
    int status;
@@ -181,23 +176,12 @@ char *argv[]
    const char *filename_stdout;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
-
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char* username = ctx->get_username(ctx);
    const char* default_cell = ctx->get_default_cell(ctx);
    u_long32 prog_number = ctx->get_who(ctx);
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
-#else
-   const char* qualified_hostname = uti_state_get_qualified_hostname();
-   const char* username = uti_state_get_user_name();
-   const char* default_cell = uti_state_get_default_cell();
-   u_long32 prog_number = uti_state_get_mewho();
-   uid_t uid = uti_state_get_uid();
-   gid_t gid = uti_state_get_gid();
-#endif
 
    DENTER(TOP_LAYER, "sge_parse_qconf");
 
@@ -217,8 +201,8 @@ char *argv[]
       if ((strcmp("-acal", *spp) == 0) ||
           (strcmp("-Acal", *spp) == 0)) {
          if (!strcmp("-acal", *spp)) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             spp = sge_parser_get_next(spp);
            
@@ -308,11 +292,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("cal to add", CAL_Type); 
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -332,8 +312,8 @@ char *argv[]
           (strcmp("-Ackpt", *spp) == 0)) {
 
          if (!strcmp("-ackpt", *spp)) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             spp = sge_parser_get_next(spp);
 
@@ -434,11 +414,7 @@ char *argv[]
          lp = lCreateList("CKPT list to add", CK_Type); 
          lAppendElem(lp, ep);
 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CKPT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif
 
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
@@ -458,8 +434,8 @@ char *argv[]
          lListElem *hep = NULL;
 
          cp = NULL;
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             host = sge_strdup(host, *spp);
@@ -488,11 +464,7 @@ char *argv[]
          /* get a template host entry .. */
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_GET, &arglp, where, what);
-#else
-         alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &arglp, where, what);
-#endif         
          lFreeWhat(&what);
          lFreeWhere(&where);
 
@@ -537,11 +509,7 @@ char *argv[]
 
          lp = lCreateList("hosts to add", EH_Type);
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
          lFreeList(&lp);
 
          aep = lFirst(alp);
@@ -613,14 +581,9 @@ char *argv[]
             DRETURN(1);
          }
 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif
 
          aep = lFirst(alp);
-        
          answer_exit_if_not_recoverable(aep); 
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          lFreeList(&alp);
@@ -637,7 +600,7 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, AH_Type, AH_name, *spp);
-         if (add_host_of_type(context, lp, SGE_ADMINHOST_LIST) != 0) {
+         if (add_host_of_type(ctx, lp, SGE_ADMINHOST_LIST) != 0) {
             sge_parse_return = 1;
          }
          
@@ -655,9 +618,9 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         limit_rule_set_add(context, &alp, name);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         limit_rule_set_add(ctx, &alp, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -675,10 +638,10 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
-         limit_rule_set_add_from_file(context, &alp, file);
+         limit_rule_set_add_from_file(ctx, &alp, file);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -693,11 +656,7 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_MANAGER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -714,11 +673,7 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
-#ifdef TEST_GDI2         
          alp = ctx->gdi(ctx, SGE_OPERATOR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -735,8 +690,8 @@ char *argv[]
          spooling_field *fields = sge_build_PE_field_list (false, false);
 
          if (!strcmp("-ap", *spp)) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
            
             spp = sge_parser_get_next(spp);
 
@@ -845,12 +800,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("PE list to add", PE_Type); 
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PE_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -867,8 +817,8 @@ char *argv[]
       /* "-auser" */
 
       if (strcmp("-auser", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp++;
         
@@ -881,12 +831,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("User list to add", UP_Type); 
          lAppendElem(lp, newep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
@@ -909,8 +854,8 @@ char *argv[]
       /* "-aprj" */
 
       if (strcmp("-aprj", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
         
          /* get a template for editing */
          ep = getUserPrjTemplate(); 
@@ -921,13 +866,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("Project list to add", UP_Type); 
          lAppendElem(lp, newep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif         
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -989,13 +928,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("User to add", UP_Type); 
          lAppendElem(lp, ep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
@@ -1062,12 +995,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("Project list to add", UP_Type); 
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text)); 
@@ -1091,7 +1019,7 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, SH_Type, SH_name, *spp);
-         if (!add_host_of_type(context, lp, SGE_SUBMITHOST_LIST)) {
+         if (!add_host_of_type(ctx, lp, SGE_SUBMITHOST_LIST)) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -1107,16 +1035,12 @@ char *argv[]
          lListElem *unspecified = NULL;
          
          if(strcmp("-astree", *spp) == 0) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif            
             lFreeWhat(&what);
 
             aep = lFirst(alp);
@@ -1188,11 +1112,7 @@ char *argv[]
          lAppendElem(newlp, ep);
 
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_ADD, &newlp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_ADD, &newlp, NULL, what);
-#endif         
          lFreeWhat(&what);
 
          ep = lFirst(alp);
@@ -1221,11 +1141,7 @@ char *argv[]
 
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif         
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -1325,11 +1241,7 @@ char *argv[]
 
          if (modified) {
             what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2            
             alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-#else
-            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-#endif            
             lFreeWhat(&what);
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
@@ -1372,7 +1284,7 @@ char *argv[]
          lString2List(*spp, &arglp, US_Type, US_name, ", ");
 
          /* add all users/groups from lp to the acls in alp */
-         sge_client_add_user(context, &alp, lp, arglp);
+         sge_client_add_user(ctx, &alp, lp, arglp);
 
          answer_list_on_error_print_or_exit(&alp, stderr);         
          lFreeList(&alp);
@@ -1388,16 +1300,12 @@ char *argv[]
       if (strcmp("-clearusage", *spp) == 0) {
          lList *lp2=NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          /* get user list */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif         
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -1411,11 +1319,7 @@ char *argv[]
  
          /* get project list */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_GET, &lp2, NULL, what);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp2, NULL, what);
-#endif         
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -1441,21 +1345,13 @@ char *argv[]
 
          /* update user usage */
          if (lp && lGetNumberOfElem(lp) > 0) {
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif            
             answer_list_on_error_print_or_exit(&alp, stderr);
          }
 
          /* update project usage */
          if (lp2 && lGetNumberOfElem(lp2) > 0) {
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
-#endif            
             answer_list_on_error_print_or_exit(&alp, stderr);
          }
          
@@ -1476,11 +1372,7 @@ char *argv[]
          lSetString(ep, CAL_name, *spp);
          lp = lCreateList("cal's to del", CAL_Type);
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1499,11 +1391,7 @@ char *argv[]
          lSetString(ep, CK_name, *spp);
          lp = lCreateList("ckpt interfaces to del", CK_Type);
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CKPT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1518,7 +1406,7 @@ char *argv[]
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, EH_Type, EH_name, *spp);
-         if (!del_host_of_type(context, lp, SGE_EXECHOST_LIST)) {
+         if (!del_host_of_type(ctx, lp, SGE_EXECHOST_LIST)) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -1532,7 +1420,7 @@ char *argv[]
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, AH_Type, AH_name, *spp);
-         if (!del_host_of_type(context, lp, SGE_ADMINHOST_LIST)) {
+         if (!del_host_of_type(ctx, lp, SGE_ADMINHOST_LIST)) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -1547,11 +1435,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, LIRS_Type, LIRS_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_LIRS_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_LIRS_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1568,11 +1452,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_MANAGER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1589,11 +1469,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, MO_Type, MO_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_OPERATOR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_OPERATOR_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1613,11 +1489,7 @@ char *argv[]
          lSetString(ep, PE_name, *spp);
          lp = lCreateList("pe's to del", PE_Type);
          lAppendElem(lp, ep);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PE_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1632,7 +1504,7 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to del", &lp, SH_Type, SH_name, *spp);
-         if (!del_host_of_type(context, lp, SGE_SUBMITHOST_LIST)) {
+         if (!del_host_of_type(ctx, lp, SGE_SUBMITHOST_LIST)) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -1661,7 +1533,7 @@ char *argv[]
          lString2List(*spp, &arglp, US_Type, US_name, ", ");
 
          /* remove users/groups from lp from the acls in alp */
-         sge_client_del_user(context, &alp, lp, arglp);
+         sge_client_del_user(ctx, &alp, lp, arglp);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&lp);
          lFreeList(&alp);
@@ -1680,11 +1552,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, US_Type, US_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1701,11 +1569,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1724,11 +1588,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
 
          lString2List(*spp, &lp, UP_Type, UP_name, ", ");
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1748,11 +1608,7 @@ char *argv[]
 
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -1822,11 +1678,7 @@ char *argv[]
 
          if (modified) {
             what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-#else
-            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &lp, NULL, what);
-#endif
             lFreeWhat(&what);
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
@@ -1852,11 +1704,7 @@ char *argv[]
       if (strcmp("-dstree", *spp) == 0) {
          /* no adminhost/manager check needed here */
          
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_DEL, NULL, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_DEL, NULL, NULL, NULL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1879,11 +1727,7 @@ char *argv[]
       if (strcmp("-ks", *spp) == 0) {
          /* no adminhost/manager check needed here */
 
-#ifdef TEST_GDI2
          alp = ctx->kill(ctx, NULL, default_cell, 0, SCHEDD_KILL);
-#else
-         alp = gdi_kill(NULL, default_cell, 0, SCHEDD_KILL);
-#endif         
          for_each(aep, alp) {
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK)
@@ -1902,11 +1746,7 @@ char *argv[]
 
       if (strcmp("-km", *spp) == 0) {
          /* no adminhost/manager check needed here */
-#ifdef TEST_GDI2
          alp = ctx->kill(ctx, NULL, default_cell, 0, MASTER_KILL);
-#else
-         alp = gdi_kill(NULL, default_cell, 0, MASTER_KILL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -1926,21 +1766,12 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
          /* found namelist -> process */
-#ifdef TEST_GDI2
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
             alp = ctx->kill(ctx, NULL, default_cell, 0, opt);
          } else {
             lString2List(*spp, &lp, ID_Type, ID_str, ", ");
             alp = ctx->kill(ctx, lp, default_cell, 0, opt);
          }      
-#else
-         if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, default_cell, 0, opt);
-         } else {
-            lString2List(*spp, &lp, ID_Type, ID_str, ", ");
-            alp = gdi_kill(lp, default_cell, 0, opt);
-         }      
-#endif         
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -1978,7 +1809,6 @@ char *argv[]
                continue;
          }
 
-#ifdef TEST_GDI2
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
             alp = ctx->kill(ctx, NULL, default_cell, 0, opt);
          } else {   
@@ -1986,15 +1816,6 @@ char *argv[]
             lString2List(*spp, &lp, EH_Type, EH_name, ", ");
             alp = ctx->kill(ctx, lp, default_cell, 0, opt);
          }
-#else
-         if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
-            alp = gdi_kill(NULL, default_cell, 0, opt);
-         } else {   
-            /* found namelist -> process */
-            lString2List(*spp, &lp, EH_Type, EH_name, ", ");
-            alp = gdi_kill(lp, default_cell, 0, opt);
-         }
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -2009,10 +1830,10 @@ char *argv[]
       if (strcmp("-mc", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
-         if (!centry_list_modify(context, &answer_list)) {
+         if (!centry_list_modify(ctx, &answer_list)) {
             sge_parse_return = 1;
          }
          show_gdi_request_answer_list(answer_list);
@@ -2028,18 +1849,14 @@ char *argv[]
       if ((strcmp("-mcal", *spp) == 0) || 
           (strcmp("-Mcal", *spp) == 0)) {
          if (!strcmp("-mcal", *spp)) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             spp = sge_parser_get_next(spp);
            
             where = lWhere("%T( %I==%s )", CAL_Type, CAL_name, *spp);
             what = lWhat("%T(ALL)", CAL_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-            alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
             lFreeWhere(&where);
             lFreeWhat(&what);
 
@@ -2139,13 +1956,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("calendar to add", CAL_Type); 
          lAppendElem(lp, ep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -2171,7 +1982,7 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
-         if (!centry_list_modify_from_file(context, &answer_list, file)) {
+         if (!centry_list_modify_from_file(ctx, &answer_list, file)) {
             show_gdi_request_answer_list(answer_list);
             sge_parse_return = 1;
          }   
@@ -2186,19 +1997,15 @@ char *argv[]
       if ((strcmp("-mckpt", *spp) == 0) || 
           (strcmp("-Mckpt", *spp) == 0)) {
          if (strcmp("-mckpt", *spp) == 0) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             spp = sge_parser_get_next(spp);
 
             /* get last version of this pe from qmaster */
             where = lWhere("%T( %I==%s )", CK_Type, CK_name, *spp);
             what = lWhat("%T(ALL)", CK_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-            alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
             lFreeWhere(&where);
             lFreeWhat(&what);
 
@@ -2309,13 +2116,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("CKPT list to add", CK_Type); 
          lAppendElem(lp, ep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CKPT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -2378,12 +2179,7 @@ char *argv[]
             DRETURN(1);
          }
 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -2398,8 +2194,8 @@ char *argv[]
       /* "-me [server_name,...]" */
 
       if (strcmp("-me", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("hosts to change", &arglp, EH_Type, EH_name, 
@@ -2421,11 +2217,7 @@ char *argv[]
             /* get the existing host entry .. */
             where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
             what = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-            alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
             lFreeWhere(&where);
             lFreeWhat(&what);
 
@@ -2451,12 +2243,7 @@ char *argv[]
             lFreeList(&lp);
             lp = lCreateList("host to mod", EH_Type);
             lAppendElem(lp, ep);
-            
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
             ep = lFirst(alp);
             answer_exit_if_not_recoverable(ep);
             if (answer_get_status(ep) == STATUS_OK)
@@ -2478,9 +2265,9 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         limit_rule_set_modify(context, &alp, name);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         limit_rule_set_modify(ctx, &alp, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -2493,8 +2280,8 @@ char *argv[]
          const char *file = NULL;
          const char *name = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
@@ -2507,7 +2294,7 @@ char *argv[]
             name = *spp;
          }
 
-         limit_rule_set_modify_from_file(context, &alp, file, name);
+         limit_rule_set_modify_from_file(ctx, &alp, file, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
 
          spp++;
@@ -2521,19 +2308,15 @@ char *argv[]
          spooling_field *fields = sge_build_PE_field_list (false, false);
 
          if (!strcmp("-mp", *spp)) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
          
             spp = sge_parser_get_next(spp);
 
             /* get last version of this pe from qmaster */
             where = lWhere("%T( %I==%s )", PE_Type, PE_name, *spp);
             what = lWhat("%T(ALL)", PE_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-            alp = sge_gdi(SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
             lFreeWhere(&where);
             lFreeWhat(&what);
 
@@ -2659,13 +2442,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("PE list to add", PE_Type); 
          lAppendElem(lp, ep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PE_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -2707,11 +2484,7 @@ char *argv[]
          lListElem *answer_ep;
 
          what = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2
          answer_list = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_GET, &list, NULL, what);
-#else
-         answer_list = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &list, NULL, what);
-#endif
          lFreeWhat(&what);
 
          answer_ep = lFirst(answer_list);
@@ -2929,11 +2702,7 @@ char *argv[]
          lListElem *answer_ep;
 
          what = lWhat("%T(ALL)", CQ_Type);
-#ifdef TEST_GDI2
          answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_GET, &list, NULL, what);
-#else
-         answer_list = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_GET, &list, NULL, what);
-#endif
          lFreeWhat(&what);
 
          answer_ep = lFirst(answer_list);
@@ -3122,7 +2891,7 @@ char *argv[]
 
       /* */
       DTRACE;
-      ret = qconf_modify_attribute(context, &alp, from_file, &spp, &ep, 
+      ret = qconf_modify_attribute(ctx, &alp, from_file, &spp, &ep, 
             sub_command, &(info_entry[index])); 
 
       /* Error handling */
@@ -3232,11 +3001,11 @@ char *argv[]
    }
 
 #ifndef __SGE_NO_USERMAPPING__
-   if ( strcmp(info_entry[index].object_name, SGE_CQUEUE_LIST )) {
+   if (strcmp(info_entry[index].object_name, SGE_CQUEUE_LIST)) {
 #endif
 
       /* now get the queue, delete the objects and send the queue back to the master */
-      cqueue = cqueue_get_via_gdi(context, &alp, object);
+      cqueue = cqueue_get_via_gdi(ctx, &alp, object);
 
       if (cqueue == NULL) {
          ERROR((SGE_EVENT, MSG_CQUEUE_DOESNOTEXIST_S, object));  
@@ -3248,7 +3017,7 @@ char *argv[]
       
       parse_name_list_to_cull("attribute list", &lp, US_Type, US_name, attr);
       if (cqueue_purge_host(cqueue, &alp, lp, hgroup_or_hostname) == true) {
-         cqueue_add_del_mod_via_gdi(context, cqueue, &alp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
+         cqueue_add_del_mod_via_gdi(ctx, cqueue, &alp, SGE_GDI_MOD | SGE_GDI_SET_ALL);
       }
       else {
          WARNING((SGE_EVENT, MSG_PARSE_ATTR_ARGS_NOT_FOUND, attr, hgroup_or_hostname));
@@ -3287,8 +3056,8 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-Msconf" */
       if (strcmp("-Msconf", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          
          spp = sge_parser_get_next(spp);
 
@@ -3326,12 +3095,7 @@ char *argv[]
             continue;
          }
 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SC_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) == STATUS_OK)
@@ -3351,16 +3115,12 @@ char *argv[]
       /* "-msconf"  modify scheduler configuration */
 
       if (strcmp("-msconf", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -3377,11 +3137,7 @@ char *argv[]
 
          lFreeList(&lp);
          what = lWhat("%T(ALL)", SC_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SC_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-#endif
          lFreeWhat(&what);
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
@@ -3402,16 +3158,12 @@ char *argv[]
          lListElem *unspecified = NULL;
          
          if(strcmp("-mstree", *spp) == 0) {
-            qconf_is_adminhost(context, qualified_hostname);
-            qconf_is_manager(context, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
+            qconf_is_manager(ctx, username);
 
             /* get the sharetree .. */
             what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
             lFreeWhat(&what);
 
             aep = lFirst(alp);
@@ -3481,11 +3233,7 @@ char *argv[]
          lAppendElem(newlp, ep);
 
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_MOD, &newlp, NULL, what);
-#endif
          lFreeWhat(&what);
          ep = lFirst(alp);
          answer_exit_if_not_recoverable(ep);
@@ -3504,15 +3252,15 @@ char *argv[]
 
       if (strcmp("-mu", *spp) == 0) {
          /* check for adminhost and manager privileges */
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
 
          /* get userset */
          parse_name_list_to_cull("usersets", &lp, US_Type, US_name, *spp);
 
-         if (edit_usersets(context, lp) != 0) {
+         if (edit_usersets(ctx, lp) != 0) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -3574,11 +3322,7 @@ char *argv[]
          /* get userset from qmaster */
          where = lWhere("%T( %I==%s )", US_Type, US_name, usersetname);
          what = lWhat("%T(ALL)", US_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -3606,11 +3350,7 @@ char *argv[]
          acl = lCreateList("modified usersetlist", US_Type); 
          lAppendElem(acl,ep);
 
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
-#endif
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
@@ -3676,12 +3416,7 @@ char *argv[]
 
          acl = lCreateList("usersetlist list to add", US_Type); 
          lAppendElem(acl,ep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_ADD, &acl, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USERSET_LIST, SGE_GDI_ADD, &acl, NULL, NULL);
-#endif
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
@@ -3703,19 +3438,15 @@ char *argv[]
       /* "-muser username" */
 
       if (strcmp("-muser", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
         
          /* get user */
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -3750,13 +3481,7 @@ char *argv[]
             /* send it to qmaster */
             lp = lCreateList("User list to modify", UP_Type); 
             lAppendElem(lp, newep);
-
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             if (answer_get_status(aep) != STATUS_OK) {
@@ -3780,19 +3505,15 @@ char *argv[]
       /* "-mprj projectname" */
 
       if (strcmp("-mprj", *spp) == 0) {
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
         
          /* get project */
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
                   
@@ -3818,11 +3539,7 @@ char *argv[]
          /* look whether name has changed. If so we have to delete the
             project with the old name */
          /*if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-            alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -3832,13 +3549,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("Project list to modify", UP_Type); 
          lAppendElem(lp, newep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -3905,11 +3616,7 @@ char *argv[]
          /* get user */
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, username);
          what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
                   
@@ -3941,13 +3648,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("User list to modify", UP_Type); 
          lAppendElem(lp, newep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
@@ -4019,11 +3720,7 @@ char *argv[]
          /* get project */
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, projectname);
          what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
                   
@@ -4055,13 +3752,7 @@ char *argv[]
          /* send it to qmaster */
          lp = lCreateList("Project list to modify", UP_Type); 
          lAppendElem(lp, newep);
-
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
-
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -4079,7 +3770,7 @@ char *argv[]
       if (strcmp("-sc", *spp) == 0) {
          lList *answer_list = NULL;
 
-         if (!centry_list_show(context, &answer_list)) {
+         if (!centry_list_show(ctx, &answer_list)) {
             show_gdi_request_answer(answer_list);
             sge_parse_return = 1;
          }   
@@ -4096,11 +3787,7 @@ char *argv[]
          /* get the existing pe entry .. */
          where = lWhere("%T( %I==%s )", CAL_Type, CAL_name, *spp);
          what = lWhat("%T(ALL)", CAL_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_CALENDAR_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -4136,7 +3823,7 @@ char *argv[]
       /* "-scall" */
 
       if (strcmp("-scall", *spp) == 0) {
-         if (!show_object_list(context, SGE_CALENDAR_LIST, CAL_Type, CAL_name, "calendar")) { 
+         if (!show_object_list(ctx, SGE_CALENDAR_LIST, CAL_Type, CAL_name, "calendar")) { 
             sge_parse_return = 1; 
          }
          spp++;
@@ -4157,13 +3844,13 @@ char *argv[]
          const char *host;
 
          if (!strcmp("-aconf", *spp)) {
-            qconf_is_manager(context, username);
-            qconf_is_adminhost(context, qualified_hostname);
+            qconf_is_manager(ctx, username);
+            qconf_is_adminhost(ctx, qualified_hostname);
             action = 1;
          }
          else if (!strcmp("-mconf", *spp)) {
-            qconf_is_manager(context, username);
-            if (qconf_is_adminhost(context, qualified_hostname) != 0) {
+            qconf_is_manager(ctx, username);
+            if (qconf_is_adminhost(ctx, qualified_hostname) != 0) {
                DRETURN(1);
             }
             action = 2;
@@ -4208,19 +3895,19 @@ char *argv[]
             host = lGetHost(hep, EH_name);
 
             if (action == 0) {
-               if (print_config(context, host) != 0) {
+               if (print_config(ctx, host) != 0) {
                   sge_parse_return = 1;
                }
             } else if (action == 1) {
-               if (add_modify_config(context, host, NULL, 1) != 0) {
+               if (add_modify_config(ctx, host, NULL, 1) != 0) {
                   sge_parse_return = 1;
                }
             } else if (action == 2) {
-               if (add_modify_config(context, host, NULL, 0) != 0) {
+               if (add_modify_config(ctx, host, NULL, 0) != 0) {
                   sge_parse_return = 1;
                }
             } else if (action == 3) {
-               if (add_modify_config(context, host, cp, 0) != 0) {
+               if (add_modify_config(ctx, host, cp, 0) != 0) {
                   sge_parse_return = 1;
                }
             }
@@ -4242,11 +3929,7 @@ char *argv[]
          /* get the existing ckpt entry .. */
          where = lWhere("%T( %I==%s )", CK_Type, CK_name, *spp);
          what = lWhat("%T(ALL)", CK_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_CKPT_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -4281,7 +3964,7 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-sckptl" */
       if (strcmp("-sckptl", *spp) == 0) {
-         if (!show_object_list(context, SGE_CKPT_LIST, CK_Type, CK_name,
+         if (!show_object_list(ctx, SGE_CKPT_LIST, CK_Type, CK_name,
                "ckpt interface definition")) {
             sge_parse_return = 1; 
          }
@@ -4292,7 +3975,7 @@ char *argv[]
       /* "-sconfl" */
 
       if (strcmp("-sconfl", *spp) == 0) {
-         if (!show_object_list(context, SGE_CONFIG_LIST, CONF_Type, CONF_hname, "config")) {
+         if (!show_object_list(ctx, SGE_CONFIG_LIST, CONF_Type, CONF_hname, "config")) {
             sge_parse_return = 1;
          }
          spp++;
@@ -4329,12 +4012,12 @@ char *argv[]
                   break;
                }
                host = lGetHost(hep, EH_name);
-               ret = delete_config(context, host);
+               ret = delete_config(ctx, host);
                /*
                ** try the unresolved name if this was different
                */
                if (ret && strcmp(cp, host)) {
-                  delete_config(context, cp);
+                  delete_config(ctx, cp);
                }
             } /* end for */
 
@@ -4374,11 +4057,7 @@ char *argv[]
          /* get the existing host entry .. */
          where = lWhere("%T( %Ih=%s )", EH_Type, EH_name, host);
          what = lWhat("%T(ALL)", EH_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -4423,14 +4102,14 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-secl" */
       if (strcmp("-secl", *spp) == 0) {
-         show_eventclients(context);
+         show_eventclients(ctx);
          spp++;
          continue;
       }
 /*-----------------------------------------------------------------------------*/
       /* "-sel" */
       if (strcmp("-sel", *spp) == 0) {
-         if (!show_object_list(context, SGE_EXECHOST_LIST, EH_Type, EH_name, 
+         if (!show_object_list(ctx, SGE_EXECHOST_LIST, EH_Type, EH_name, 
                "execution host")) { 
             sge_parse_return = 1; 
          }
@@ -4440,14 +4119,14 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-sep" */
       if (strcmp("-sep", *spp) == 0) {
-         show_processors(context);
+         show_processors(ctx);
          spp++;
          continue;
       }
 /*----------------------------------------------------------------------------*/
       /* "-sh" */
       if (strcmp("-sh", *spp) == 0) {
-         if (!show_object_list(context, SGE_ADMINHOST_LIST, AH_Type, AH_name, 
+         if (!show_object_list(ctx, SGE_ADMINHOST_LIST, AH_Type, AH_name, 
                "administrative host")) {
             sge_parse_return = 1; 
          }
@@ -4464,7 +4143,7 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         ret = limit_rule_show(context, &alp, name);
+         ret = limit_rule_show(ctx, &alp, name);
          if (!ret) {
             show_gdi_request_answer(alp);
          }
@@ -4477,7 +4156,7 @@ char *argv[]
 /*----------------------------------------------------------------------------*/
       /* "-slrsl " */
       if (strcmp("-slrsl", *spp) == 0) {
-         if (!show_object_list(context, SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list")) {
+         if (!show_object_list(ctx, SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -4487,7 +4166,7 @@ char *argv[]
       /* "-sm" */
 
       if (strcmp("-sm", *spp) == 0) {
-         if (!show_object_list(context, SGE_MANAGER_LIST, MO_Type, MO_name, "manager")) {
+         if (!show_object_list(ctx, SGE_MANAGER_LIST, MO_Type, MO_name, "manager")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -4501,11 +4180,7 @@ char *argv[]
          /* get the existing pe entry .. */
          where = lWhere("%T( %I==%s )", PE_Type, PE_name, *spp);
          what = lWhat("%T(ALL)", PE_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_PE_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
 
@@ -4546,7 +4221,7 @@ char *argv[]
 /*-----------------------------------------------------------------------------*/
       /* "-spl" */
       if (strcmp("-spl", *spp) == 0) {
-         if (!show_object_list(context, SGE_PE_LIST, PE_Type, PE_name,
+         if (!show_object_list(ctx, SGE_PE_LIST, PE_Type, PE_name,
                "parallel environment")) {
             sge_parse_return = 1; 
          }
@@ -4557,7 +4232,7 @@ char *argv[]
       /* "-so" */
 
       if (strcmp("-so", *spp) == 0) {
-         if (!show_object_list(context, SGE_OPERATOR_LIST, MO_Type, MO_name, "operator")) {
+         if (!show_object_list(ctx, SGE_OPERATOR_LIST, MO_Type, MO_name, "operator")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -4570,11 +4245,7 @@ char *argv[]
       if (strcmp("-ssconf", *spp) == 0) {
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -4616,11 +4287,7 @@ char *argv[]
 
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -4671,11 +4338,7 @@ char *argv[]
 
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -4722,11 +4385,7 @@ char *argv[]
 
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -4764,11 +4423,7 @@ char *argv[]
       if (strcmp("-bonsai", *spp) == 0) {
          /* get the sharetree .. */
          what = lWhat("%T(ALL)", STN_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
          lFreeWhat(&what);
 
          aep = lFirst(alp);
@@ -4793,7 +4448,7 @@ char *argv[]
       /* "-ss" */
       if (strcmp("-ss", *spp) == 0) {
 
-         if (!show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
+         if (!show_object_list(ctx, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
                "submit host")) {
             sge_parse_return = 1; 
          }
@@ -4806,7 +4461,7 @@ char *argv[]
 
       if (strcmp("-sss", *spp) == 0) {
          /* ... */
-         if (!show_object_list(context, SGE_EVENT_LIST, EV_Type, EV_host, "scheduling host")) {
+         if (!show_object_list(ctx, SGE_EVENT_LIST, EV_Type, EV_host, "scheduling host")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -4820,7 +4475,7 @@ char *argv[]
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("acl`s to show", &lp, 
                US_Type, US_name, *spp);
-         if (print_acl(context, lp) != 0) {
+         if (print_acl(ctx, lp) != 0) {
             sge_parse_return = 1;
          }
          lFreeList(&lp);
@@ -4837,7 +4492,7 @@ char *argv[]
 #ifndef __SGE_NO_USERMAPPING__
       /* "-sumapl" */
       if (strcmp("-sumapl", *spp) == 0) {
-         if (!show_object_list(context, SGE_USER_MAPPING_LIST, CU_Type, CU_name, "user mapping entries")) {
+         if (!show_object_list(ctx, SGE_USER_MAPPING_LIST, CU_Type, CU_name, "user mapping entries")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -4862,7 +4517,7 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         cuser_modify_from_file(context, &answer_list, file);
+         cuser_modify_from_file(ctx, &answer_list, file);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          
@@ -4879,7 +4534,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         cuser_show(context, &answer_list, *spp);
+         cuser_show(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -4910,12 +4565,12 @@ char *argv[]
       if (strcmp("-mumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_modify(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_modify(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -4931,12 +4586,12 @@ char *argv[]
       if (strcmp("-mce", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         centry_modify(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         centry_modify(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -4954,8 +4609,8 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_delete(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_delete(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -4998,7 +4653,7 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
    
-         cuser_add_from_file(context, &answer_list, file);
+         cuser_add_from_file(ctx, &answer_list, file);
          show_gdi_request_answer(answer_list); 
          lFreeList(&answer_list);
          spp++;
@@ -5013,12 +4668,12 @@ char *argv[]
       if (strcmp("-aumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_add(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_add(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5036,12 +4691,12 @@ char *argv[]
       if (strcmp("-ace", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         centry_add(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         centry_add(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5066,7 +4721,7 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         cuser_modify_from_file(context, &answer_list, file);
+         cuser_modify_from_file(ctx, &answer_list, file);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          
@@ -5083,7 +4738,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         cuser_show(context, &answer_list, *spp);
+         cuser_show(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5099,7 +4754,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         centry_show(context, &answer_list, *spp);
+         centry_show(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5114,12 +4769,12 @@ char *argv[]
       if (strcmp("-mumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_modify(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_modify(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5135,12 +4790,12 @@ char *argv[]
       if (strcmp("-mce", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         centry_modify(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         centry_modify(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5158,8 +4813,8 @@ char *argv[]
          lList *answer_list = NULL;
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_delete(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_delete(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5172,7 +4827,7 @@ char *argv[]
 
       /* "-shgrpl" */
       if (strcmp("-shgrpl", *spp) == 0) {
-         if (!show_object_list(context, SGE_HGROUP_LIST, HGRP_Type, HGRP_name, 
+         if (!show_object_list(ctx, SGE_HGROUP_LIST, HGRP_Type, HGRP_name, 
                           "host group list")) {
             sge_parse_return = 1; 
          }
@@ -5186,9 +4841,9 @@ char *argv[]
          bool ret = true;
 
          spp = sge_parser_get_next(spp);
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = hgroup_modify(context, &answer_list, *spp);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = hgroup_modify(ctx, &answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5209,9 +4864,9 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = hgroup_modify_from_file(context, &answer_list, file);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = hgroup_modify_from_file(ctx, &answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5236,9 +4891,9 @@ char *argv[]
             is_validate_name = true;
          }
          
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = hgroup_add(context, &answer_list, group, is_validate_name);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = hgroup_add(ctx, &answer_list, group, is_validate_name);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5259,9 +4914,9 @@ char *argv[]
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = hgroup_add_from_file(context, &answer_list, file);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = hgroup_add_from_file(ctx, &answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5276,8 +4931,8 @@ char *argv[]
          bool ret = true;
    
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         ret = hgroup_delete(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         ret = hgroup_delete(ctx, &answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5292,7 +4947,7 @@ char *argv[]
          bool ret = true;
 
          spp = sge_parser_get_next(spp);
-         ret = hgroup_show(context, &answer_list, *spp);
+         ret = hgroup_show(ctx, &answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5308,7 +4963,7 @@ char *argv[]
          bool ret = true;
 
          spp = sge_parser_get_next(spp);
-         ret = hgroup_show_structure(context, &answer_list, *spp, true);
+         ret = hgroup_show_structure(ctx, &answer_list, *spp, true);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5323,7 +4978,7 @@ char *argv[]
          bool ret = true;
 
          spp = sge_parser_get_next(spp);
-         ret = hgroup_show_structure(context, &answer_list, *spp, false);
+         ret = hgroup_show_structure(ctx, &answer_list, *spp, false);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5338,7 +4993,7 @@ char *argv[]
 
       /* "-sql" */
       if (strcmp("-sql", *spp) == 0) {
-         if (!show_object_list(context, SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list")) {
+         if (!show_object_list(ctx, SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -5352,9 +5007,9 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = cqueue_modify(context, &answer_list, *spp);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = cqueue_modify(ctx, &answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5369,15 +5024,15 @@ char *argv[]
          char* file = NULL;
          bool ret = true;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
          } else {
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
-         ret = cqueue_modify_from_file(context, &answer_list, file);
+         ret = cqueue_modify_from_file(ctx, &answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5396,9 +5051,9 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = cqueue_add(context, &answer_list, name);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = cqueue_add(ctx, &answer_list, name);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5413,8 +5068,8 @@ char *argv[]
          char* file = NULL;
          bool ret = true;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
          if (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             file = *spp;
@@ -5422,7 +5077,7 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          
-         ret = cqueue_add_from_file(context, &answer_list, file);
+         ret = cqueue_add_from_file(ctx, &answer_list, file);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5438,9 +5093,9 @@ char *argv[]
 
          spp = sge_parser_get_next(spp);
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
-         ret = cqueue_delete(context, &answer_list, *spp);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
+         ret = cqueue_delete(ctx, &answer_list, *spp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          sge_parse_return = ret ? 0 : 1;
@@ -5459,7 +5114,7 @@ char *argv[]
             lString2List(*spp, &arglp, QR_Type, QR_name, ", ");
          }
          
-         ret = cqueue_show(context, &answer_list, arglp);
+         ret = cqueue_show(ctx, &answer_list, arglp);
          lFreeList(&arglp);
          ret &= show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
@@ -5476,11 +5131,7 @@ char *argv[]
          for_each(ep, lp) {
             lSetUlong(ep, ID_action, QI_DO_CLEAN);
          }
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
-#else
-         alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -5491,7 +5142,7 @@ char *argv[]
       if (strcmp("-sds", *spp) == 0) {
          lList *answer_list = NULL;
 
-         cqueue_list_sick(context, &answer_list);
+         cqueue_list_sick(ctx, &answer_list);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5534,7 +5185,7 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
          }
    
-         cuser_add_from_file(context, &answer_list, file);
+         cuser_add_from_file(ctx, &answer_list, file);
          show_gdi_request_answer(answer_list); 
          lFreeList(&answer_list);
          spp++;
@@ -5549,12 +5200,12 @@ char *argv[]
       if (strcmp("-aumap", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
-         qconf_is_manager(context, username);
-         cuser_add(context, &answer_list, *spp);
+         qconf_is_manager(ctx, username);
+         cuser_add(ctx, &answer_list, *spp);
          show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -5570,12 +5221,12 @@ char *argv[]
       if (strcmp("-ace", *spp) == 0) {
          lList *answer_list = NULL;
 
-         qconf_is_adminhost(context, qualified_hostname);
-         qconf_is_manager(context, username);
+         qconf_is_adminhost(ctx, qualified_hostname);
+         qconf_is_manager(ctx, username);
 
          spp = sge_parser_get_next(spp);
          qconf_is_manager(username);
-         if (!centry_add(context, &answer_list, *spp)) {
+         if (!centry_add(ctx, &answer_list, *spp)) {
             show_gdi_request_answer(answer_list);
             sge_parse_return = 1;
          }   
@@ -5606,11 +5257,7 @@ char *argv[]
             /* get user */
             where = lWhere("%T( %I==%s )", UP_Type, UP_name, user);
             what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
             alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
             lFreeWhere(&where);
             lFreeWhat(&what);
                         
@@ -5660,11 +5307,7 @@ char *argv[]
          /* get project */
          where = lWhere("%T( %I==%s )", UP_Type, UP_name, *spp);
          what = lWhat("%T(ALL)", UP_Type);
-#ifdef TEST_GDI2
          alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
          lFreeWhere(&where);
          lFreeWhat(&what);
                   
@@ -5701,7 +5344,7 @@ char *argv[]
 
       /* "-ss" */
       if (strcmp("-ss", *spp) == 0) {
-         if (!show_object_list(context, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
+         if (!show_object_list(ctx, SGE_SUBMITHOST_LIST, SH_Type, SH_name, 
                "submit")) {
             sge_parse_return = 1; 
          }
@@ -5712,7 +5355,7 @@ char *argv[]
       /* "-sul" */
 
       if (strcmp("-sul", *spp) == 0) {
-         if (!show_object_list(context, SGE_USERSET_LIST, US_Type, US_name, 
+         if (!show_object_list(ctx, SGE_USERSET_LIST, US_Type, US_name, 
                "userset list")) {
             sge_parse_return = 1; 
          }
@@ -5725,7 +5368,7 @@ char *argv[]
        /* "-suserl" */
 
       if (strcmp("-suserl", *spp) == 0) {
-         if (!show_object_list(context, SGE_USER_LIST, UP_Type, UP_name, 
+         if (!show_object_list(ctx, SGE_USER_LIST, UP_Type, UP_name, 
                "user list")) {
             sge_parse_return = 1; 
          }
@@ -5738,7 +5381,7 @@ char *argv[]
        /* "-sprjl" */
 
       if (strcmp("-sprjl", *spp) == 0) {
-         if (!show_object_list(context, SGE_PROJECT_LIST, UP_Type, UP_name, 
+         if (!show_object_list(ctx, SGE_PROJECT_LIST, UP_Type, UP_name, 
                "project list")) {
             sge_parse_return = 1; 
          }
@@ -5752,11 +5395,7 @@ char *argv[]
 
       if (strcmp("-tsm", *spp) == 0) {
          /* no adminhost/manager check needed here */
-#ifdef TEST_GDI2
          alp = ctx->tsm(ctx, NULL, NULL);
-#else
-         alp = gdi_tsm(NULL, NULL);
-#endif
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          
@@ -5866,7 +5505,7 @@ static int sge_error_and_exit(const char *ptr) {
 }
 
 static bool add_host_of_type(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList *arglp,
 u_long32 target 
 ) {
@@ -5877,9 +5516,6 @@ u_long32 target
    lDescr *type = NULL;
    char *name = NULL;
    bool ret = true;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "add_host_of_type");
 
@@ -5921,11 +5557,7 @@ u_long32 target
 
 
       /* add the new host to the host list */
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, target, SGE_GDI_ADD, &lp, NULL, NULL);
-#else
-      alp = sge_gdi(target, SGE_GDI_ADD, &lp, NULL, NULL);
-#endif
 
       /* report results */
       ep = lFirst(alp);
@@ -5946,15 +5578,12 @@ u_long32 target
 
 /* ------------------------------------------------------------ */
 
-static bool del_host_of_type(void *context, lList *arglp, u_long32 target )
+static bool del_host_of_type(sge_gdi_ctx_class_t *ctx, lList *arglp, u_long32 target )
 {
    lListElem *argep=NULL, *ep=NULL;
    lList *lp=NULL, *alp=NULL;
    lDescr *type = NULL;
    bool ret = true;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "del_host_of_type");
 
@@ -5978,11 +5607,7 @@ static bool del_host_of_type(void *context, lList *arglp, u_long32 target )
       lAppendElem(lp, ep);
 
       /* delete element */
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, target, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-      alp = sge_gdi(target, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif
 
       /* print results */
       if (answer_list_has_error(&alp)) {
@@ -6330,7 +5955,7 @@ gid_t gid
 
 /* ------------------------------------------------------------ */
 
-static bool show_object_list(void *context, u_long32 target, lDescr *type, int keynm, char *name) 
+static bool show_object_list(sge_gdi_ctx_class_t *ctx, u_long32 target, lDescr *type, int keynm, char *name) 
 {
    lEnumeration *what = NULL;
    lCondition *where = NULL;
@@ -6340,10 +5965,6 @@ static bool show_object_list(void *context, u_long32 target, lDescr *type, int k
    int dataType;
    bool ret = true;
    
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
-
    DENTER(TOP_LAYER, "show_object_list");
 
    what = lWhat("%T(%I)", type, keynm);
@@ -6367,11 +5988,7 @@ static bool show_object_list(void *context, u_long32 target, lDescr *type, int k
       break;
    } 
 
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, target, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(target, SGE_GDI_GET, &lp, where, what);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 
@@ -6418,24 +6035,17 @@ static bool show_object_list(void *context, u_long32 target, lDescr *type, int k
    DRETURN(ret);
 }
 
-static int show_eventclients(void *context)
+static int show_eventclients(sge_gdi_ctx_class_t *ctx)
 {
    lEnumeration *what = NULL;
    lList *alp = NULL, *lp = NULL;
    lListElem *ep = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "show_eventclients");
 
    what = lWhat("%T(%I %I %I)", EV_Type, EV_id, EV_name, EV_host);
 
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_EVENT_LIST, SGE_GDI_GET, &lp, NULL, what);
-#else
-   alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_GET, &lp, NULL, what);
-#endif
    lFreeWhat(&what);
 
    ep = lFirst(alp);
@@ -6469,7 +6079,7 @@ static int show_eventclients(void *context)
 
 
 
-static int show_processors(void *context)
+static int show_processors(sge_gdi_ctx_class_t *ctx)
 {
    lEnumeration *what = NULL;
    lCondition *where = NULL;
@@ -6477,9 +6087,6 @@ static int show_processors(void *context)
    lListElem *ep = NULL;
    const char *cp = NULL;
    u_long32 sum = 0;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "show_processors");
 
@@ -6487,11 +6094,7 @@ static int show_processors(void *context)
    where = lWhere("%T(!(%Ic=%s || %Ic=%s))", EH_Type, EH_name, 
                   SGE_TEMPLATE_NAME, EH_name, SGE_GLOBAL_NAME);
 
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 
@@ -6585,7 +6188,7 @@ static bool show_gdi_request_answer_list(lList *alp)
       -1 failed to get any acl
 */
 static int print_acl(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList *arglp 
 ) {
    lList *acls = NULL;
@@ -6598,7 +6201,7 @@ lList *arglp
    DENTER(TOP_LAYER, "print_acl");
 
    /* get all acls named in arglp, put them into acls */
-   if (sge_client_get_acls(context, NULL, arglp, &acls)) {
+   if (sge_client_get_acls(ctx, NULL, arglp, &acls)) {
       DRETURN(-1);
    }
 
@@ -6644,7 +6247,7 @@ lList *arglp
       -2 if failed due to disk error
  **************************************************************/
 static int edit_usersets(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList *arglp
 ) {
    lList *usersets = NULL;
@@ -6656,20 +6259,13 @@ lList *arglp
    int cmd;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
-#else   
-   uid_t uid = uti_state_get_uid();
-   gid_t gid = uti_state_get_gid();
-#endif
-
 
    DENTER(TOP_LAYER, "edit_usersets");
 
    /* get all usersets named in arglp, put them into usersets */
-   if (sge_client_get_acls(context, NULL, arglp, &usersets)) {
+   if (sge_client_get_acls(ctx, NULL, arglp, &usersets)) {
       DRETURN(-1);
    }
 
@@ -6737,11 +6333,7 @@ lList *arglp
       /* Create List; append Element; and do a modification gdi call */
       lp = lCreateList("userset list", US_Type);
       lAppendElem(lp, changed_ep);
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_USERSET_LIST, cmd, &lp, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_USERSET_LIST, cmd, &lp, NULL, NULL);
-#endif
       lFreeList(&lp);
 
       for_each(aep, alp) 
@@ -6756,7 +6348,7 @@ lList *arglp
   -sconf option 
  ***************************************************************************/
 static int print_config(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 const char *config_name 
 ) {
    lCondition *where = NULL;
@@ -6766,9 +6358,6 @@ const char *config_name
    int fail=0;
    const char *cfn = NULL;
    spooling_field *fields = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif   
    
    DENTER(TOP_LAYER, "print_config");
 
@@ -6781,11 +6370,7 @@ const char *config_name
 
    where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 
@@ -6826,24 +6411,17 @@ const char *config_name
  * delete_config
  *------------------------------------------------------------------------*/
 static int delete_config(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 const char *config_name 
 ) {
    lList *alp = NULL, *lp = NULL;
    lListElem *ep = NULL;
    int fail = 0;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
    
    DENTER(TOP_LAYER, "delete_config");
 
    lAddElemHost(&lp, CONF_hname, config_name, CONF_Type);
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#else
-   alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
-#endif
 
    ep = lFirst(alp);
    fprintf(stderr, "%s\n", lGetString(ep, AN_text));
@@ -6862,7 +6440,7 @@ const char *config_name
  ** flags = 1 = add, 2 = modify, 3 = modify if exists, add if not
  *------------------------------------------------------------------------*/
 static int add_modify_config(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 const char *cfn,
 const char *filename,
 u_long32 flags 
@@ -6877,24 +6455,14 @@ u_long32 flags
    spooling_field *fields = NULL;
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
-#else
-   uid_t uid = uti_state_get_uid();
-   gid_t gid = uti_state_get_gid();
-#endif
    
    DENTER(TOP_LAYER, "add_modify_config");
 
    where = lWhere("%T(%Ih=%s)", CONF_Type, CONF_hname, cfn);
    what = lWhat("%T(ALL)", CONF_Type);
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 
@@ -7037,11 +6605,7 @@ u_long32 flags
    lp = lCreateList("modified configuration", CONF_Type); 
    lAppendElem(lp, ep);
      
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#else
-   alp = sge_gdi(SGE_CONFIG_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-#endif
    lFreeList(&lp);
             
    /* report results */
@@ -7074,14 +6638,11 @@ u_long32 flags
 **   given user is manager
 */
 static int qconf_is_manager(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 const char *user 
 ) {
    int perm_return;
    lList *alp = NULL; 
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "qconf_is_manager");
 
@@ -7090,11 +6651,7 @@ const char *user
       /* no input name */
       DRETURN(-1);
    }
-#ifdef TEST_GDI2
    perm_return = sge_gdi2_check_permission(ctx, &alp, MANAGER_CHECK);
-#else
-   perm_return = sge_gdi_check_permission(&alp, MANAGER_CHECK);
-#endif   
    if (perm_return == true) {
      /* user is manager */
      if (alp != NULL) {
@@ -7145,7 +6702,7 @@ const char *user
 **   given host is contained 
 */
 static int qconf_is_adminhost(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 const char *host 
 ) {
    lCondition *where = NULL;
@@ -7154,9 +6711,6 @@ const char *host
    lListElem *aep = NULL;
    lList *lp = NULL;
    lListElem  *ep = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
 
    DENTER(TOP_LAYER, "qconf_is_adminhost");
 
@@ -7171,11 +6725,7 @@ const char *host
    */
    where = lWhere("%T(%Ih=%s)", AH_Type, AH_name, host);
    what = lWhat("%T(ALL)", AH_Type);
-#ifdef TEST_GDI2
    alp = ctx->gdi(ctx, SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#else
-   alp = sge_gdi(SGE_ADMINHOST_LIST, SGE_GDI_GET, &lp, where, what);
-#endif
    lFreeWhat(&what);
    lFreeWhere(&where);
 
@@ -7255,7 +6805,7 @@ const char *host
 *     1 for error
 *     0 for success
 ******************************************************************************/
-static int qconf_modify_attribute(void *context,
+static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                   lList **alpp, int from_file, char ***spp,
                                   lListElem **epp, int sub_command, 
                                   struct object_info_entry *info_entry) 
@@ -7264,9 +6814,6 @@ static int qconf_modify_attribute(void *context,
    lListElem *add_qp = NULL;
    lList *qlp = NULL;
    lEnumeration *what = NULL;
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-#endif
    
    DENTER(TOP_LAYER, "qconf_modify_attribute");    
 
@@ -7437,13 +6984,8 @@ static int qconf_modify_attribute(void *context,
    
    if (info_entry->pre_gdi_function == NULL || 
       info_entry->pre_gdi_function(qlp, alpp)) {
-#ifdef TEST_GDI2
       *alpp = ctx->gdi(ctx, info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
                       NULL, what);
-#else
-      *alpp = sge_gdi(info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
-                      NULL, what);
-#endif
    }
    lFreeWhat(&what);
    lFreeList(&qlp);

@@ -32,8 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int execd_ck_to_do(void *context, dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
+#include "gdi/sge_gdi_ctx.h"
 
+int execd_ck_to_do(sge_gdi_ctx_class_t *ctx, dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, u_long *rcvtimeout, int *synchron, char *err_str, int answer_error);
 int register_at_ptf(lListElem *jep, lListElem *jatep, lListElem *petep);
 
 #endif /* __EXECD_CK_TO_DO_H */

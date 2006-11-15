@@ -77,18 +77,15 @@
 #include "sge_mt_init.h"
 #include "sge_qhost.h"
 #include "sge_qstat.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 
 static int sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, 
                             lList *pel, u_long32 show, report_handler_t *report_handler, lList **alpp);
 static int sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show, report_handler_t *report_handler, lList **alpp);
-static int sge_print_host(void* ctx, lListElem *hep, lList *centry_list, report_handler_t *report_handler, lList **alpp);
+static int sge_print_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *centry_list, report_handler_t *report_handler, lList **alpp);
 static int reformatDoubleValue(char *result, char *format, const char *oldmem);
-static bool get_all_lists(void *ctx, lList **answer_list, lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
+static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 
 int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_match_list, 
               lList *resource_list, u_long32 show, lList **alpp, report_handler_t* report_handler) {
@@ -222,7 +219,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
 
 /*-------------------------------------------------------------------------*/
 static int sge_print_host(
-void* ctx,
+sge_gdi_ctx_class_t *gdi_ctx,
 lListElem *hep,
 lList *centry_list,
 report_handler_t *report_handler,
@@ -236,14 +233,8 @@ lList **alpp
    dstring rs = DSTRING_INIT;     
    u_long32 dominant = 0;
    int ret = QHOST_SUCCESS;
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *gdi_ctx = (sge_gdi_ctx_class_t*)ctx;
    sge_bootstrap_state_class_t *bootstrap_state = gdi_ctx->get_sge_bootstrap_state(gdi_ctx);
    bool ignore_fqdn = bootstrap_state->get_ignore_fqdn(bootstrap_state); 
-#else
-   bool ignore_fqdn = bootstrap_get_ignore_fqdn();
-#endif
 
    DENTER(TOP_LAYER, "sge_print_host");
    
@@ -723,7 +714,7 @@ const char *oldmem
  **** WARNING: Lists previously stored in this pointers are not destroyed!!
  ****/
 static bool get_all_lists(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **answer_list,
 lList **queue_l,
 lList **job_l,
@@ -743,15 +734,8 @@ u_long32 show
    lList *conf_l = NULL;
    int q_id, j_id = 0, ce_id, eh_id, pe_id, gc_id;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
-   
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
-#else
-   const char *cell_root = path_state_get_cell_root();
-   u_long32 progid = uti_state_get_mewho();
-#endif
 
    DENTER(TOP_LAYER, "get_all_lists");
    
@@ -780,14 +764,9 @@ u_long32 show
       where = nw;
    eh_all = lWhat("%T(ALL)", EH_Type);
    
-#ifdef TEST_GDI2
    eh_id = ctx->gdi_multi(ctx,
                           answer_list, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
                           NULL, where, eh_all, NULL, &state, true);
-#else
-   eh_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
-                        NULL, where, eh_all, NULL, &state, true);
-#endif                        
    lFreeWhat(&eh_all);
    lFreeWhere(&where);
 
@@ -798,14 +777,9 @@ u_long32 show
 
    q_all = lWhat("%T(ALL)", QU_Type);
    
-#ifdef TEST_GDI2
    q_id = ctx->gdi_multi(ctx, 
                          answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
                          NULL, NULL, q_all, NULL, &state, true);
-#else
-   q_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
-                        NULL, NULL, q_all, NULL, &state, true);
-#endif
    lFreeWhat(&q_all);
    lFreeWhere(&qw);
 
@@ -872,14 +846,9 @@ u_long32 show
 /* printf("======================================\n"); */
 /* lWriteWhereTo(jw, stdout); */
 
-#ifdef TEST_GDI2
       j_id = ctx->gdi_multi(ctx, 
                          answer_list, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
                          NULL, jw, j_all, NULL, &state, true);
-#else
-      j_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
-                        NULL, jw, j_all, NULL, &state, true);
-#endif
       lFreeWhat(&j_all);
       lFreeWhere(&jw);
 
@@ -892,14 +861,9 @@ u_long32 show
    ** complexes
    */
    ce_all = lWhat("%T(ALL)", CE_Type);
-#ifdef TEST_GDI2
    ce_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
                           NULL, NULL, ce_all, NULL, &state, true);
-#else
-   ce_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
-                        NULL, NULL, ce_all, NULL, &state, true);
-#endif
    lFreeWhat(&ce_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -911,14 +875,9 @@ u_long32 show
    */
    pe_all = lWhat("%T(ALL)", PE_Type);
    
-#ifdef TEST_GDI2
    pe_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
                           NULL, NULL, pe_all, NULL, &state, true);
-#else
-   pe_id = sge_gdi_multi(answer_list, SGE_GDI_RECORD, SGE_PE_LIST, SGE_GDI_GET, 
-                           NULL, NULL, pe_all, NULL, &state, true);
-#endif
    lFreeWhat(&pe_all);
 
    if (answer_list_has_error(answer_list)) {
@@ -931,14 +890,9 @@ u_long32 show
    gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    
-#ifdef TEST_GDI2
    gc_id = ctx->gdi_multi(ctx, 
                           answer_list, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                           NULL, gc_where, gc_what, &mal, &state, true);
-#else
-   gc_id = sge_gdi_multi(answer_list, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
-                        NULL, gc_where, gc_what, &mal, &state, true);
-#endif
    lFreeWhat(&gc_what);
    lFreeWhere(&gc_where);
 

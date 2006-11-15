@@ -72,8 +72,6 @@
 #define MSG_CQUEUE_DOESNOTEXIST_S     _MESSAGE(1033, _("Cluster queue entry "SFQ" does not exist"))
 #define MSG_CQUEUE_FILENOTCORRECT_S   _MESSAGE(1034, _("Cluster queue file "SFQ" is not correct"))
 #define MSG_CQUEUE_NOQMATCHING_S      _MESSAGE(1035, _("No cluster queue or queue instance matches the phrase "SFQ))
-#define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS  _MESSAGE(1036, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ"."))
-#define MSG_CQUEUE_UNUSEDATTRSETTING_SS  _MESSAGE(1037, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
 #define MSG_CQUEUE_NAMENOTCORRECT_SS  _MESSAGE(1038, _("The queue name "SFQ" is not correct.  Queue names may not begin with @.  Perhaps you mean \"*"SFN"\"?"))
 
 #define MSG_PE_NOSUCHPARALLELENVIRONMENT                 _MESSAGE(1039, _("error: no such parallel environment"))

@@ -91,34 +91,28 @@
 #include "uti/sge_bootstrap.h"
 
 
-
-
-#ifdef TEST_QMASTER_GDI2
-#include "sge_gdi_ctx.h"
-#endif
-
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, sge_pack_buffer *pb, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor);
 
-static void sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, int return_list_flag, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor);
 
-static void sge_c_gdi_del(void *context,
+static void sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                           char *host, sge_gdi_request *request, sge_gdi_request *answer, 
                           int sub_command, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor);
 
-static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, int sub_command, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor);
 
-static void sge_c_gdi_copy(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                            sge_gdi_request *answer, int sub_command, 
                            uid_t uid, gid_t gid, char *user, char *group, 
                            monitoring_t *monitor);
@@ -127,7 +121,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
                                 uid_t uid, gid_t gid, char *user, char *group, 
                                 monitoring_t *monitor);
 
-static void sge_c_gdi_replace(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, int sub_command, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor);
@@ -135,7 +129,7 @@ static void sge_c_gdi_replace(void *context, gdi_object_t *ao, char *host, sge_g
 static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer,
                                  uid_t uid, gid_t gid, char *user, char *group); 
 
-static void sge_c_gdi_trigger(void *context, char *host, sge_gdi_request *request, sge_gdi_request *answer, 
+static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *answer, 
                               uid_t uid, gid_t gid, char *user, char *group, 
                               monitoring_t *monitor, object_description *object_base);
 
@@ -157,7 +151,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
                                   bool is_locked, monitoring_t *monitor,
                                   object_description *object_base);
 
-static int schedd_mod(void *context, 
+static int schedd_mod(sge_gdi_ctx_class_t *ctx, 
                       lList **alpp, lListElem *modp, lListElem *ep, int add, 
                       const char *ruser, const char *rhost, gdi_object_t *object, 
                       int sub_command, monitoring_t *monitor );
@@ -267,7 +261,7 @@ int id
 /* ------------------------------------------------------------ */
 
 void 
-sge_c_gdi(void *context, char *host, sge_gdi_request *request, sge_gdi_request *response,
+sge_c_gdi(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *response,
           sge_pack_buffer *pb, monitoring_t *monitor) 
 {
    const char *target_name = NULL;
@@ -280,14 +274,8 @@ sge_c_gdi(void *context, char *host, sge_gdi_request *request, sge_gdi_request *
    char group[128] = "";
    lList *local_answer_list = NULL;
    object_description *object_base = object_type_get_object_description();
-#ifdef TEST_QMASTER_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t*)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *progname = ctx->get_progname(ctx);
-#else   
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-#endif   
 
    DENTER(TOP_LAYER, "sge_c_gdi");
 
@@ -424,23 +412,23 @@ sge_c_gdi(void *context, char *host, sge_gdi_request *request, sge_gdi_request *
          break;
 
       case SGE_GDI_ADD:
-         sge_c_gdi_add(context, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
+         sge_c_gdi_add(ctx, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
          break;
 
       case SGE_GDI_DEL:
-         sge_c_gdi_del(context, host, request, response, sub_command, uid, gid, user, group, monitor);
+         sge_c_gdi_del(ctx, host, request, response, sub_command, uid, gid, user, group, monitor);
          break;
 
       case SGE_GDI_MOD:
-         sge_c_gdi_mod(context, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
+         sge_c_gdi_mod(ctx, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
          break;
 
       case SGE_GDI_COPY:
-         sge_c_gdi_copy(context, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
+         sge_c_gdi_copy(ctx, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
          break;
 
       case SGE_GDI_TRIGGER:
-         sge_c_gdi_trigger(context, host, request, response, uid, gid, user, group, monitor, object_base);
+         sge_c_gdi_trigger(ctx, host, request, response, uid, gid, user, group, monitor, object_base);
          break;
 
       case SGE_GDI_PERMCHECK:
@@ -448,7 +436,7 @@ sge_c_gdi(void *context, char *host, sge_gdi_request *request, sge_gdi_request *
          break;
 
       case SGE_GDI_REPLACE:
-         sge_c_gdi_replace(context, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
+         sge_c_gdi_replace(ctx, ao, host, request, response, sub_command, uid, gid, user, group, monitor);
          break;
 
       default:
@@ -764,7 +752,7 @@ static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRe
  * MT-NOTE: sge_c_gdi_add() is MT safe
  */
 static void 
-sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
               sge_gdi_request *answer, int sub_command, 
               uid_t uid, gid_t gid, char *user, char *group, 
               monitoring_t *monitor) 
@@ -831,7 +819,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
                   
                   for(i = 0; i < multi_job; i++) {
                      lListElem *clone = lCopyElem(ep);
-                     sge_gdi_add_job(context,
+                     sge_gdi_add_job(ctx,
                                      clone, &(answer->alp), 
                                      (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
                                      &(answer->lp) : NULL, 
@@ -841,7 +829,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
                   
                } else {
                   /* submit needs to know user and group */
-                  sge_gdi_add_job(context, 
+                  sge_gdi_add_job(ctx, 
                                   ep, &(answer->alp), 
                                   (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
                                   &(answer->lp) : NULL, 
@@ -851,7 +839,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
          }
       } else if (request->target == SGE_SC_LIST ) {
          for_each (ep, request->lp) {
-            sge_mod_sched_configuration(context, ep, &(answer->alp), user, host);
+            sge_mod_sched_configuration(ctx, ep, &(answer->alp), user, host);
          }
       } 
       else {
@@ -870,7 +858,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
             switch (request->target) {
 
                case SGE_ORDER_LIST:
-                 switch (sge_follow_order(context, ep, &(answer->alp), user, host, &ticket_orders, monitor, object_base)) {
+                 switch (sge_follow_order(ctx, ep, &(answer->alp), user, host, &ticket_orders, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
                        break;
@@ -890,15 +878,15 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
                
                case SGE_MANAGER_LIST:
                case SGE_OPERATOR_LIST:
-                  sge_add_manop(context, ep, &(answer->alp), user, host, request->target);
+                  sge_add_manop(ctx, ep, &(answer->alp), user, host, request->target);
                   break;
 
                case SGE_USERSET_LIST:
-                  sge_add_userset(context, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
+                  sge_add_userset(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
                   break;
 
                case SGE_SHARETREE_LIST:
-                  sge_add_sharetree(context, ep, object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user, host);
+                  sge_add_sharetree(ctx, ep, object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user, host);
                   break;
 
                default:
@@ -909,10 +897,10 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
                   } 
                   
                   if (request->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], request->commproc)) {
-                     sge_execd_startedup(context, ep, &(answer->alp), user, host, request->target, monitor);
+                     sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target, monitor);
                   } 
                   else {
-                     sge_gdi_add_mod_generic(context, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
+                     sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
                   }
                   break;
             }
@@ -938,7 +926,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
       if (sge_conf_is_reprioritize()) {
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-         distribute_ticket_orders(context, ticket_orders, monitor, object_base);
+         distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
       }
@@ -958,7 +946,7 @@ sge_c_gdi_add(void *context, gdi_object_t *ao, char *host, sge_gdi_request *requ
  * MT-NOTE: sge_c_gdi-del() is MT safe
  */
 static void 
-sge_c_gdi_del(void *context,
+sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
               char *host, sge_gdi_request *request, sge_gdi_request *answer,
               int sub_command, uid_t uid, gid_t gid, char *user, char *group, 
               monitoring_t *monitor)
@@ -989,7 +977,7 @@ sge_c_gdi_del(void *context,
       {
          case SGE_SHARETREE_LIST:
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-            sge_del_sharetree(context, object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user,host);
+            sge_del_sharetree(ctx, object_base[SGE_TYPE_SHARETREE].list, &(answer->alp), user,host);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             break;
             
@@ -1022,66 +1010,66 @@ sge_c_gdi_del(void *context,
             case SGE_ADMINHOST_LIST:
             case SGE_SUBMITHOST_LIST:
             case SGE_EXECHOST_LIST:
-               sge_del_host(context, ep, &(answer->alp), user, host, request->target, *object_base[SGE_TYPE_HGROUP].list);
+               sge_del_host(ctx, ep, &(answer->alp), user, host, request->target, *object_base[SGE_TYPE_HGROUP].list);
                break;
 
             case SGE_CQUEUE_LIST:
-               cqueue_del(context, ep, &(answer->alp), user, host);
+               cqueue_del(ctx, ep, &(answer->alp), user, host);
                break;
 
             case SGE_JOB_LIST:
                sge_set_commit_required();
-               sge_gdi_del_job(context, ep, &(answer->alp), user, host, sub_command, monitor);
+               sge_gdi_del_job(ctx, ep, &(answer->alp), user, host, sub_command, monitor);
                sge_commit();
                break;
 
             case SGE_CENTRY_LIST:
-               sge_del_centry(context, ep, &(answer->alp), user, host);
+               sge_del_centry(ctx, ep, &(answer->alp), user, host);
                break;
 
             case SGE_PE_LIST:
-               sge_del_pe(context, ep, &(answer->alp), user, host); 
+               sge_del_pe(ctx, ep, &(answer->alp), user, host); 
                break;
 
             case SGE_MANAGER_LIST:
             case SGE_OPERATOR_LIST:
-               sge_del_manop(context, ep, &(answer->alp), user, host, request->target);
+               sge_del_manop(ctx, ep, &(answer->alp), user, host, request->target);
                break;
 
             case SGE_CONFIG_LIST:
-               sge_del_configuration(context, ep, &(answer->alp), user, host);
+               sge_del_configuration(ctx, ep, &(answer->alp), user, host);
                break;
 
             case SGE_USER_LIST:
-               sge_del_userprj(context, ep, &(answer->alp), object_base[SGE_TYPE_USER].list, user, host, 1);
+               sge_del_userprj(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USER].list, user, host, 1);
                break;
 
             case SGE_USERSET_LIST:
-               sge_del_userset(context, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
+               sge_del_userset(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
                break;
 
             case SGE_PROJECT_LIST:
-               sge_del_userprj(context, ep, &(answer->alp), object_base[SGE_TYPE_PROJECT].list, user, host, 0);
+               sge_del_userprj(ctx, ep, &(answer->alp), object_base[SGE_TYPE_PROJECT].list, user, host, 0);
                break;
 
             case SGE_LIRS_LIST:
-               sge_del_limit_rule_set(context, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
+               sge_del_limit_rule_set(ctx, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
                break;
 
             case SGE_CKPT_LIST:
-               sge_del_ckpt(context, ep, &(answer->alp), user, host); 
+               sge_del_ckpt(ctx, ep, &(answer->alp), user, host); 
                break;
 
             case SGE_CALENDAR_LIST:
-               sge_del_calendar(context, ep, &(answer->alp), user, host);
+               sge_del_calendar(ctx, ep, &(answer->alp), user, host);
                break;
    #ifndef __SGE_NO_USERMAPPING__
             case SGE_USER_MAPPING_LIST:
-               cuser_del(ep, &(answer->alp), user, host);
+               cuser_del(ctx, ep, &(answer->alp), user, host);
                break;
    #endif
             case SGE_HGROUP_LIST:
-               hgroup_del(context, ep, &(answer->alp), user, host);
+               hgroup_del(ctx, ep, &(answer->alp), user, host);
                break;
             default:
                SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -1100,7 +1088,7 @@ sge_c_gdi_del(void *context,
 /* 
  * MT-NOTE: sge_c_gdi_copy() is MT safe
  */
-static void sge_c_gdi_copy(void *context, 
+static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, 
                            gdi_object_t *ao, char *host, sge_gdi_request *request, 
                            sge_gdi_request *answer, int sub_command, 
                            uid_t uid, gid_t gid, char *user, char *group, 
@@ -1135,7 +1123,7 @@ static void sge_c_gdi_copy(void *context,
       {
          case SGE_JOB_LIST:
             /* gdi_copy_job uses the global lock internal */
-            sge_gdi_copy_job(context, ep, &(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, 
+            sge_gdi_copy_job(ctx, ep, &(answer->alp), (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(answer->lp) : NULL, 
                              user, host, uid, gid, group, request, monitor);
             break;
 
@@ -1263,7 +1251,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
   return;
 }
 
-static void sge_c_gdi_replace(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, int sub_command, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor)
@@ -1293,12 +1281,12 @@ static void sge_c_gdi_replace(void *context, gdi_object_t *ao, char *host, sge_g
             /* delete all currently defined rule sets */
             ep = lFirst(*object_base[SGE_TYPE_LIRS].list);
             while (ep != NULL) {
-               sge_del_limit_rule_set(context, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
+               sge_del_limit_rule_set(ctx, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
                ep = lFirst(*object_base[SGE_TYPE_LIRS].list);
             }
 
             for_each(ep, request->lp) {
-               sge_gdi_add_mod_generic(context, &(answer->alp), ep, 1, ao, user, host, SGE_GDI_SET_ALL, &ppList, monitor);
+               sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, SGE_GDI_SET_ALL, &ppList, monitor);
             }
             lFreeList(&ppList);
 
@@ -1318,7 +1306,7 @@ static void sge_c_gdi_replace(void *context, gdi_object_t *ao, char *host, sge_g
 /*
  * MT-NOTE: sge_c_gdi_trigger() is MT safe
  */
-static void sge_c_gdi_trigger(void *context, char *host, sge_gdi_request *request, sge_gdi_request *answer, 
+static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, char *host, sge_gdi_request *request, sge_gdi_request *answer, 
                               uid_t uid, gid_t gid, char *user, char *group, 
                               monitoring_t *monitor, object_description *object_base)
 {
@@ -1343,7 +1331,7 @@ static void sge_c_gdi_trigger(void *context, char *host, sge_gdi_request *reques
             }
       
             if (SGE_EXECHOST_LIST == target) {
-               sge_gdi_kill_exechost(context, host, request, answer, uid, gid, user, group);
+               sge_gdi_kill_exechost(ctx, host, request, answer, uid, gid, user, group);
             }
             
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1362,7 +1350,7 @@ static void sge_c_gdi_trigger(void *context, char *host, sge_gdi_request *reques
        case SGE_JOB_LIST:
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
             sge_set_commit_required();
-            sge_gdi_qmod(context, host, request, answer, uid, gid, user, group, monitor);
+            sge_gdi_qmod(ctx, host, request, answer, uid, gid, user, group, monitor);
             sge_commit();
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          break; 
@@ -1579,7 +1567,7 @@ trigger_scheduler_monitoring(char *aHost, sge_gdi_request *aRequest, sge_gdi_req
 /*
  * MT-NOTE: sge_c_gdi_mod() is MT safe
  */
-static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_request *request, 
+static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_request *request, 
                           sge_gdi_request *answer, int sub_command, 
                           uid_t uid, gid_t gid, char *user, char *group, 
                           monitoring_t *monitor)
@@ -1607,7 +1595,7 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
       }
 
       if (request->target == SGE_CONFIG_LIST) {
-         sge_mod_configuration(context, ep, &(answer->alp), user, host);      
+         sge_mod_configuration(ctx, ep, &(answer->alp), user, host);      
       }
       else if (request->target == SGE_EVENT_LIST) {
          /* fill address infos from request into event client that must be added */
@@ -1625,7 +1613,7 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
          }   
       }
       else if (request->target == SGE_SC_LIST) {
-         sge_mod_sched_configuration(context, ep, &(answer->alp), user, host);
+         sge_mod_sched_configuration(ctx, ep, &(answer->alp), user, host);
       }
       else {
          if (!is_locked) {
@@ -1637,16 +1625,16 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
          switch (request->target)
          {
             case SGE_JOB_LIST:
-               sge_gdi_mod_job(context, ep, &(answer->alp), user, host, sub_command);
+               sge_gdi_mod_job(ctx, ep, &(answer->alp), user, host, sub_command);
                break;
 
             case SGE_USERSET_LIST:
-               sge_mod_userset(context, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list,
+               sge_mod_userset(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list,
                                user, host);
                break;
 
             case SGE_SHARETREE_LIST:
-               sge_mod_sharetree(context, ep, object_base[SGE_TYPE_SHARETREE].list,
+               sge_mod_sharetree(ctx, ep, object_base[SGE_TYPE_SHARETREE].list,
                                  &(answer->alp), user, host);
                break;
             default:
@@ -1655,7 +1643,7 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
                   answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                   break;
                }
-               sge_gdi_add_mod_generic(context, &(answer->alp), ep, 0, ao, user, host, sub_command, &ppList, monitor);
+               sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 0, ao, user, host, sub_command, &ppList, monitor);
                break;
          }
       }
@@ -1671,7 +1659,7 @@ static void sge_c_gdi_mod(void *context, gdi_object_t *ao, char *host, sge_gdi_r
       switch (request->target) {
          case SGE_CENTRY_LIST:
             DPRINTF(("rebuilding consumable debitation\n"));
-            centry_redebit_consumables(context, ppList);
+            centry_redebit_consumables(ctx, ppList);
             break;
       }
    }
@@ -2014,7 +2002,7 @@ sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *mon
    replace old object by new queue
 */
 int sge_gdi_add_mod_generic(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *instructions, /* our instructions - a reduced object */
 int add,                 /* true in case of add */
@@ -2101,7 +2089,7 @@ monitoring_t *monitor
    }
 
    /* MODIFY NEW QUEUE USING REDUCED QUEUE AS INSTRUCTION */
-   if (object->modifier(context, &tmp_alp, new_obj, instructions, add, ruser, rhost, 
+   if (object->modifier(ctx, &tmp_alp, new_obj, instructions, add, ruser, rhost, 
          object, sub_command, monitor)) {
       
       if (alpp) {
@@ -2125,7 +2113,7 @@ monitoring_t *monitor
 
 
    /* write on file */
-   if (object->writer(context, alpp, new_obj, object)) {
+   if (object->writer(ctx, alpp, new_obj, object)) {
       lFreeElem(&new_obj);
       lFreeList(&tmp_alp);
       DEXIT;
@@ -2167,7 +2155,7 @@ monitoring_t *monitor
       lAppendElem(*master_list, new_obj);
    }
    if (object->on_success) {
-      object->on_success(context, new_obj, old_obj, object, ppList, monitor);
+      object->on_success(ctx, new_obj, old_obj, object, ppList, monitor);
    }
 
    lFreeElem(&old_obj);
@@ -2202,7 +2190,7 @@ gdi_object_t *get_gdi_object(u_long32 target)
 }
 
 static int schedd_mod(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *modp,
 lListElem *ep,

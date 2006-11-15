@@ -68,8 +68,8 @@
 #include "sge_report.h"
 #include "sge_report_execd.h"
 #include "sge_userset.h"
-#include "sge_todo.h"
 #include "sge_cqueue.h"
+#include "sge_answer.h"
 
 #include "sge_reporting_qmaster.h"
 
@@ -92,7 +92,7 @@
 
  for functions regarding rusage see sge_rusage.c
  ************************************************************************/
-void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep, monitoring_t *monitor) 
+void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lListElem *jatep, monitoring_t *monitor) 
 {
    lListElem *queueep = NULL;
    const char *err_str = NULL;
@@ -171,11 +171,11 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
    if (((lGetUlong(jatep, JAT_state) & JDELETED) == JDELETED) ||
          (failed && !lGetString(jep, JB_exec_file)) ||
          (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
    } 
      /*
       * case 2: set job in error state
@@ -187,13 +187,13 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
    else if ((failed && general_failure==GFSTATE_JOB)) {
       DPRINTF(("set job "sge_u32"."sge_u32" in ERROR state\n", 
                lGetUlong(jep, JB_job_number), jataskid));
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_ERROR, MSG_EXECD, hostname, 
                                jr, jep, jatep, NULL, MSG_LOG_JERRORSET);
       lSetUlong(jatep, JAT_start_time, 0);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 3: job being rescheduled because it wasnt even started
@@ -206,8 +206,8 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
                                hostname, jr, jep, jatep, NULL, 
                                MSG_LOG_JNOSTARTRESCHEDULE);
       ja_task_message_add(jatep, 1, err_str);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       lSetUlong(jatep, JAT_start_time, 0);
    }
       /*
@@ -223,11 +223,11 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 5: job being rescheduled because it was interrupted and a checkpoint exists
@@ -239,10 +239,10 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_MIGRATE, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JCKPTRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 6: job being rescheduled because of exit 99 
@@ -253,18 +253,18 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_RESTART, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT, monitor);
    }
       /*
        * case 7: job finished 
        */
    else {
-      reporting_create_acct_record(context, NULL, jr, jep, jatep, false);
+      reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
-      sge_commit_job(context, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
+      sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
    }
 
    if (queueep != NULL) {
@@ -307,7 +307,7 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
                   ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
                   if (qinstance != queueep) {
-                     sge_event_spool(context, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+                     sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                                      0, 0, lGetString(qinstance, QU_qname), 
                                      lGetHost(qinstance, QU_qhostname), NULL,
                                      qinstance, NULL, NULL, true, true);
@@ -337,12 +337,12 @@ void sge_job_exit(void *context, lListElem *jr, lListElem *jep, lListElem *jatep
          sge_dstring_free(&error);
       }
 
-      sge_event_spool(context, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+      sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                       0, 0, lGetString(queueep, QU_qname), 
                       lGetHost(queueep, QU_qhostname), NULL,
                       queueep, NULL, NULL, true, spool_queueep);
 
-      cqueue_list_del_all_orphaned(context, *object_base[SGE_TYPE_CQUEUE].list, &answer_list);
+      cqueue_list_del_all_orphaned(ctx, *object_base[SGE_TYPE_CQUEUE].list, &answer_list);
 
       answer_list_output(&answer_list);
    }

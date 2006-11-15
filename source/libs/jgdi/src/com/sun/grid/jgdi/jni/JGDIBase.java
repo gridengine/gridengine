@@ -131,8 +131,6 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     *  
     *  @param options the options for the qlimit algorithm
     *  @return  list of {@link com.sun.grid.jgdi.monitoring.QLimit} instances
-    * @todo beta ??
-    *       <p>QLimit not yet implemented</p>
     */
    public QLimitResult getQLimit(QLimitOptions options) throws JGDIException {
       QLimitResultImpl ret  = new QLimitResultImpl();
@@ -233,11 +231,6 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    /**
     * @inherited
     */
-   public native List getEventClients() throws JGDIException;
-   
-   /**
-    * @inherited
-    */
    public native void killAllEventClients() throws JGDIException;
    
    /**
@@ -253,10 +246,19 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    
    /**
     * @inherited
-    * @todo alpha ?? RH
-    *       Not tested
     */
    public native String getSchedulerHost() throws JGDIException;
 
+   /**
+    * @inherited
+    */
+   public native String showDetachedSettings(String[] queues) throws JGDIException;
+
+   /**
+    * @inherited
+    */
+   public native String showDetachedSettingsAll() throws JGDIException;
+   
+   
    private native void getQLimit(QLimitOptions options, QLimitResultImpl ret) throws JGDIException;
 }

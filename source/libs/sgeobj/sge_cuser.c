@@ -44,6 +44,7 @@
 #include "sge_href.h"
 #include "sge_attr.h"
 #include "sge_cuser.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -169,7 +170,7 @@ cuser_list_get_master_list(void)
     /* depending on the setting, we want to return the local thread setting and
        not the global master list. The object_type_get_master_list_mt knows, which
        one to get */
-    return object_type_get_master_list_mt(SGE_TYPE_CUSER);
+    return object_type_get_master_list(SGE_TYPE_CUSER);
 }
 
 lListElem *

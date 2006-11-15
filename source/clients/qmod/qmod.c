@@ -45,7 +45,6 @@
 #include "sge_language.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
-#include "gdi_tsm.h"
 #include "sge_id.h"
 #include "sge_qinstance_state.h"
 
@@ -58,10 +57,7 @@
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
 #include "sge_profiling.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
@@ -80,10 +76,7 @@ char **argv
    lList *ref_list = NULL;
    lList *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
-
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
@@ -92,20 +85,10 @@ char **argv
    log_state_set_log_gui(1);
    sge_setup_sig_handlers(QMOD);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QMOD, &alp) != AE_OK) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
-
-#else
-   sge_gdi_param(SET_MEWHO, QMOD, NULL);
-   if (sge_gdi_setup(prognames[QMOD], &alp)!=AE_OK) {
-      answer_list_output(&alp);
-      SGE_EXIT(NULL, 1);
-   }
-#endif   
-
 
    /*
    ** static func for parsing all qmod specific switches
@@ -121,7 +104,7 @@ char **argv
       }
       lFreeList(&alp);
       lFreeList(&pcmdline);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    alp = sge_parse_qmod(&pcmdline, &ref_list, &force);
@@ -136,7 +119,7 @@ char **argv
       lFreeList(&alp);
       lFreeList(&pcmdline);
       lFreeList(&ref_list);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
    
    {
@@ -147,11 +130,7 @@ char **argv
    }
 
    if (ref_list) {
-#ifdef TEST_GDI2
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
-#else
-      alp = sge_gdi(SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
-#endif      
    }
 
    /*
@@ -167,7 +146,7 @@ char **argv
 
    sge_prof_cleanup();
 
-   SGE_EXIT(NULL, 0);
+   SGE_EXIT((void**)&ctx, 0);
    DEXIT;
    return 0;
 }

@@ -72,19 +72,16 @@
 #include "msg_execd.h"
 #include "msg_gdilib.h"
 
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
 
 extern volatile int jobs_to_start;
 
-static int handle_job(void *context,
+static int handle_job(sge_gdi_ctx_class_t *ctx,
                       lListElem *jelem, 
                       lListElem *jatep, 
                       struct dispatch_entry *de, 
                       sge_pack_buffer *pb, 
                       int slave);
-static int handle_task(void *context,
+static int handle_task(sge_gdi_ctx_class_t *ctx,
                        lListElem *petrep, 
                        struct dispatch_entry *de, 
                        sge_pack_buffer *pb, 
@@ -107,7 +104,7 @@ real execution is done by the cyclic execd_ck_to_do()
    jobs/<jid>          for the job structure
 
  *************************************************************************/
-int execd_job_exec(void *context, 
+int execd_job_exec(sge_gdi_ctx_class_t *ctx, 
                    struct dispatch_entry *de,
                    sge_pack_buffer *pb, 
                    sge_pack_buffer *apb,
@@ -118,14 +115,8 @@ int execd_job_exec(void *context,
 {
    int ret = 1;
    u_long32 feature_set;
-#ifdef TEST_GDI2   
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *admin_user = ctx->get_admin_user(ctx);
    const char *progname = ctx->get_progname(ctx);
-#else
-   const char *admin_user = bootstrap_get_admin_user();
-   const char *progname = uti_state_get_sge_formal_prog_name();
-#endif   
 
    DENTER(TOP_LAYER, "execd_job_exec");
 
@@ -166,7 +157,7 @@ int execd_job_exec(void *context,
          DPRINTF(("new job %ld.%ld\n", 
             (long) lGetUlong(job, JB_job_number),
             (long) lGetUlong(ja_task, JAT_task_number)));
-         ret = handle_job(context, job, ja_task, de, pb, 0);
+         ret = handle_job(ctx, job, ja_task, de, pb, 0);
          if(ret != 0) {
             lFreeElem(&job);
          }
@@ -190,7 +181,7 @@ int execd_job_exec(void *context,
             (long) lGetUlong(petrep, PETR_jobid), 
             (long) lGetUlong(petrep, PETR_jataskid)));
 
-      ret = handle_task(context, petrep, de, pb, apb, synchron);
+      ret = handle_task(ctx, petrep, de, pb, apb, synchron);
 
       lFreeElem(&petrep);
    }
@@ -202,7 +193,7 @@ int execd_job_exec(void *context,
    DRETURN(0);
 }
 
-int execd_job_slave(void *context,
+int execd_job_slave(sge_gdi_ctx_class_t *ctx,
                     struct dispatch_entry *de,
                     sge_pack_buffer *pb, 
                     sge_pack_buffer *apb,
@@ -238,7 +229,7 @@ int execd_job_slave(void *context,
    for_each(ja_task, lGetList(jelem, JB_ja_tasks)) {
       DPRINTF(("Job: %ld Task: %ld\n", (long) lGetUlong(jelem, JB_job_number),
          (long) lGetUlong(ja_task, JAT_task_number)));
-      ret = handle_job(context, jelem, ja_task, de, pb, 1);
+      ret = handle_job(ctx, jelem, ja_task, de, pb, 1);
    }
 
    if (ret)  {
@@ -249,7 +240,7 @@ int execd_job_slave(void *context,
 }
 
 static int handle_job(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *jelem,
 lListElem *jatep,
 struct dispatch_entry *de,
@@ -267,16 +258,8 @@ int slave
    int fd;
    const void *iterator = NULL;
    bool report_job_error = true;   /* send job report on error? */
-
-#ifdef TEST_GDI2
-   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    const char *sge_root = ctx->get_sge_root(ctx);
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
-#else
-   const char *sge_root = path_state_get_sge_root();
-   const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-#endif
-   
 
    DENTER(TOP_LAYER, "handle_job");
 
@@ -505,7 +488,7 @@ Error:
       jr = execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
       
       if (mail_on_error) {
-         reaper_sendmail(context, jelem, jr);
+         reaper_sendmail(ctx, jelem, jr);
       }
    }
 
@@ -702,7 +685,7 @@ job_get_queue_for_task(lListElem *jatep, lListElem *petep,
 }
 
 static int handle_task(
-void *context,
+sge_gdi_ctx_class_t *ctx,
 lListElem *petrep,
 struct dispatch_entry *de,
 sge_pack_buffer *pb, 
@@ -720,17 +703,9 @@ int *synchron
    int tid = 0;
    const void *iterator;
    dstring err_str = DSTRING_INIT;
-
-#ifdef TEST_GDI2
-sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
-const char *progname = ctx->get_progname(ctx);
-const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
-const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
-#else
-const char *progname = uti_state_get_sge_formal_prog_name();
-const char *qualified_hostname = uti_state_get_qualified_hostname();
-const char *unqualified_hostname = uti_state_get_unqualified_hostname();
-#endif
+   const char *progname = ctx->get_progname(ctx);
+   const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
+   const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
 
    DENTER(TOP_LAYER, "handle_task");
 

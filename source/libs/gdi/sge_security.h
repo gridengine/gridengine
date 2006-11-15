@@ -34,10 +34,7 @@
 
 #include "cull.h"
 #include "sge_gdiP.h"
-#include "dispatcher.h"
 #include "sge_qmaster_timed_event.h"
-#include "cl_data_types.h"
-#include "cl_commlib.h"
 
 
 #ifdef KERBEROS
@@ -47,28 +44,6 @@
 
 
 void sge_security_exit(int i);
-
-#ifndef TEST_GDI2
-int sge_security_initialize(const char *prog_name, const char *username);
-
-int gdi_receive_message(char *fromcommproc, 
-                        u_short *fromid, 
-                        char *fromhost, 
-                        int *tag, 
-                        char **buffer, 
-                        u_long32 *buflen, 
-                        int synchron);
-
-int gdi_send_message(int synchron, 
-                     const char *tocomproc, 
-                     int toid, 
-                     const char *tohost, 
-                     int tag, 
-                     char *buffer, 
-                     int buflen, 
-                     u_long32 *mid);
-
-#endif
 
 #ifdef SECURE
 /* int 0 on success, -1 on failure */
@@ -112,7 +87,7 @@ bool sge_security_verify_unique_identifier(bool check_admin_user,
                                            const char* commproc, 
                                            unsigned long commid);
 
-void sge_security_event_handler(void *context, te_event_t anEvent, monitoring_t *monitor);
+void sge_security_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
 
 #endif /* __SGE_SECURITY_H */

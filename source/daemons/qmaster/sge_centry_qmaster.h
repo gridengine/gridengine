@@ -34,24 +34,25 @@
 
 #include "sge_c_gdi.h"
 #include "uti/sge_monitor.h"
+#include "gdi/sge_gdi_ctx.h"
 
 int 
-sge_del_centry(void *context, lListElem *cxp, lList **alpp, char *ruser, char *rhost);
+sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *cxp, lList **alpp, char *ruser, char *rhost);
 
 int 
-centry_success(void *context, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
+centry_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor);
 
 int 
-centry_spool(void *context, lList **alpp, lListElem *cep, gdi_object_t *object);
+centry_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *cep, gdi_object_t *object);
 
 int 
-centry_mod(void *context,
+centry_mod(sge_gdi_ctx_class_t *ctx,
            lList **alpp, lListElem *new_complex, lListElem *ep, int add, 
            const char *ruser, const char *rhost, gdi_object_t *object, 
            int sub_command, monitoring_t *monitor);
 
 void
-centry_redebit_consumables(void *context, const lList *centries);
+centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries);
 
 #endif /* __SGE_CENTRY_QMASTER_H */
 

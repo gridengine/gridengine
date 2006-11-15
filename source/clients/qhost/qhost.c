@@ -78,10 +78,7 @@
 #include "sge_mt_init.h"
 #include "sge_qhost.h"
 #include "sge_object.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#endif
+#include "gdi/sge_gdi_ctx.h"
 
 
 extern char **environ;
@@ -279,35 +276,18 @@ char **argv
    report_handler_t *report_handler = NULL;
    bool is_ok = false;
    int qhost_result = 0;
-
-#ifdef TEST_GDI2   
    sge_gdi_ctx_class_t *ctx = NULL;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "qhost");
 
    log_state_set_log_gui(true);
    sge_setup_sig_handlers(QHOST);
 
-#ifdef TEST_GDI2
    if (sge_gdi2_setup(&ctx, QHOST, &alp) != AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);
    }
-
-#else
-   sge_mt_init();
-
-   sge_gdi_param(SET_MEWHO, QHOST, NULL);
-   if (sge_gdi_setup(prognames[QHOST], &alp) != AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
-   }
-#endif
-
-   
 
    /*
    ** stage 1 of commandline parsing
@@ -344,13 +324,8 @@ char **argv
       SGE_EXIT(NULL, 1);
    }
 
-#ifdef TEST_GDI2
    qhost_result = do_qhost(ctx, host_list, ul, resource_match_list, resource_list, 
                               show, &alp, report_handler);
-#else
-   qhost_result = do_qhost(NULL, host_list, ul, resource_match_list, resource_list, 
-                              show, &alp, report_handler);
-#endif
 
    if (report_handler != NULL) {
       report_handler->destroy(&report_handler, &alp);

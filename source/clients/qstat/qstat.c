@@ -303,7 +303,7 @@ char **argv
       lList *answer_list = NULL;
       int ret = 0;
 
-      str_list_transform_user_list(&(qstat_env.user_list), &answer_list);
+      str_list_transform_user_list(&(qstat_env.user_list), &answer_list, username);
       
       if (qstat_env.qselect_mode) {
          qselect_handler_t handler;
@@ -1716,7 +1716,7 @@ static int cqueue_summary_stdout_report_cqueue(cqueue_summary_handler_t *handler
 
 /* ----------------------- qselect stdout handler --------------------------- */
 
-void qselect_stdout_init(qselect_handler_t* handler, lList **alpp) 
+static void qselect_stdout_init(qselect_handler_t* handler, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qselect_stdout_init");
 

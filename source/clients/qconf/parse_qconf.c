@@ -5106,20 +5106,20 @@ char *argv[]
 
       /* "-sq [pattern[,pattern,...]]" */
       if (strcmp("-sq", *spp) == 0) {
-         lList *answer_list = NULL;
-         bool ret = true;
 
          while (!sge_next_is_an_opt(spp)) {
             spp = sge_parser_get_next(spp);
             lString2List(*spp, &arglp, QR_Type, QR_name, ", ");
          }
          
-         ret = cqueue_show(ctx, &answer_list, arglp);
+         sge_parse_return &= cqueue_show(ctx, &alp, arglp);
          lFreeList(&arglp);
-         ret &= show_gdi_request_answer(answer_list);
-         lFreeList(&answer_list);
-         sge_parse_return = ret ? 0 : 1;
          
+         if (answer_list_has_error(&alp)) {
+            sge_parse_return = 1;
+         }
+         sge_parse_return &= show_gdi_request_answer(alp);
+         lFreeList(&alp);
          spp++;
          continue;
       }
@@ -5132,6 +5132,9 @@ char *argv[]
             lSetUlong(ep, ID_action, QI_DO_CLEAN);
          }
          alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &lp, NULL, NULL);
+         if (answer_list_has_error(&alp)) {
+            sge_parse_return = 1;
+         }
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -5143,7 +5146,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          cqueue_list_sick(ctx, &answer_list);
-         show_gdi_request_answer(answer_list);
+         sge_parse_return = show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;
@@ -6150,7 +6153,7 @@ static bool show_gdi_request_answer(lList *alp)
     
       for_each(aep,alp) {
          answer_exit_if_not_recoverable(aep);
-         ret &= (lGetUlong (aep, AN_status) == STATUS_OK);
+         ret &= (lGetUlong(aep, AN_status) == STATUS_OK);
       }
       aep = lLast(alp);
       fprintf(stderr, "%s\n", lGetString(aep, AN_text));

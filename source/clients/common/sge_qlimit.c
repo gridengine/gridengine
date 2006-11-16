@@ -102,7 +102,7 @@ static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **lirs_l, lList **cent
 static char *qlimit_get_next_filter(stringT filter, const char *cp);
 static bool qlimit_print_out_rule(lListElem *rule, dstring rule_name, const char *limit_name,
                                   const char *usage_value, const char *limit_value, qlimit_filter_t filter,
-                                  lListElem *centry, report_handler_t* report_handler, lList **alpp);
+                                  lListElem *centry, report_handler_t* report_handler, lList *printed_rules, lList **alpp);
 
 static bool qlimit_print_out_filter(lListElem *filter, const char *name, const char *value, dstring *buffer, report_handler_t *report_handler, lList **alpp);
 
@@ -169,8 +169,8 @@ bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
    ret = get_all_lists(ctx, &lirs_list, &centry_list, &userset_list, &hgroup_list, &exechost_list, host_list, alpp);
 
    if (ret == true) {
-      bool printheader = true;
       lListElem *lirs = NULL;
+      lList* printed_rules = NULL;  /* Hash list of already printed limitation rules (possible with -u user1,user2,user3...) */
 
       global_host = host_list_locate(exechost_list, SGE_GLOBAL_NAME);
 
@@ -189,13 +189,7 @@ bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
          if (lGetBool(lirs, LIRS_enabled) == false) {
             continue;
          }
-         if (report_handler == NULL) {
-            if (printheader == true) {
-               printheader = false;
-               printf(HEAD_FORMAT, MSG_HEADER_RULE, MSG_HEADER_LIMIT, MSG_HEADER_FILTER);
-               printf("--------------------------------------------------------------------------------\n");
-            }
-         }
+
          for_each(rule, lGetList(lirs, LIRS_rule)) { 
             lListElem *user_ep = lFirst(user_list);
             lListElem *project_ep = lFirst(project_list);
@@ -341,7 +335,7 @@ bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
                                        qf.host = host;
                                        ret = qlimit_print_out_rule(rule, rule_name, limit_name, 
                                                                    sge_dstring_get_string(&value_str), sge_dstring_get_string(&limit_str),
-                                                                   qf, raw_centry, report_handler, alpp);
+                                                                   qf, raw_centry, report_handler, printed_rules, alpp);
 
                                        sge_dstring_free(&limit_str);
                                        sge_dstring_free(&value_str);
@@ -353,7 +347,7 @@ bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
                                     DPRINTF(("found centry %s - static value\n", limit_name));
                                     ret = qlimit_print_out_rule(rule, rule_name, limit_name, 
                                                                 NULL, lGetString(limit, LIRL_value),
-                                                                qf, raw_centry, report_handler, alpp);
+                                                                qf, raw_centry, report_handler, printed_rules, alpp);
 
                                  }
                               }
@@ -370,6 +364,7 @@ bool qlimit_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
       if (report_handler != NULL) {
          report_handler->report_finished(report_handler, alpp);
       }
+      lFreeList(&printed_rules);
    }
 
 qlimit_output_error:
@@ -618,19 +613,44 @@ static char *qlimit_get_next_filter(stringT filter, const char *cp)
 *                   false on error
 *
 *  NOTES
-*     MT-NOTE: qlimit_print_out_rule() is MT safe 
+*     MT-NOTE: qlimit_print_out_rule() is not MT safe 
 *
 *******************************************************************************/
 static bool qlimit_print_out_rule(lListElem *rule, dstring rule_name, const char *limit_name,
                                   const char *usage_value, const char *limit_value, qlimit_filter_t qfilter,
-                                  lListElem *centry, report_handler_t* report_handler, lList **alpp) 
+                                  lListElem *centry, report_handler_t* report_handler, lList *printed_rules, lList **alpp) 
 {
+   static bool printheader = true;
    bool ret = true;
    dstring filter_str = DSTRING_INIT;
    dstring limitation = DSTRING_INIT;
+   dstring token = DSTRING_INIT;
+
+   sge_dstring_sprintf(&token, "%s,%s,%s,%s,%s,%s,%s", sge_dstring_get_string(&rule_name),
+                                                             limit_name,
+                                                             qfilter.user? qfilter.user: "",
+                                                             qfilter.project? qfilter.project: "",
+                                                             qfilter.pe? qfilter.pe: "",
+                                                             qfilter.queue? qfilter.queue: "",
+                                                             qfilter.host? qfilter.host: "");
+
+   if (lGetElemStr(printed_rules, ST_name, sge_dstring_get_string(&token)) != NULL) {
+      sge_dstring_free(&token);
+      sge_dstring_free(&filter_str);
+      sge_dstring_free(&limitation);
+      return ret;
+   }
+
+   lAddElemStr(&printed_rules, ST_name, sge_dstring_get_string(&token), ST_Type);
 
    if (report_handler != NULL) {
       report_handler->report_limit_rule_begin(report_handler, sge_dstring_get_string(&rule_name), alpp);
+   } else {
+      if (printheader == true) {
+         printheader = false;
+         printf(HEAD_FORMAT, MSG_HEADER_RULE, MSG_HEADER_LIMIT, MSG_HEADER_FILTER);
+         printf("--------------------------------------------------------------------------------\n");
+      }
    }
 
    qlimit_print_out_filter(lGetObject(rule, LIR_filter_users), "users", qfilter.user, &filter_str, report_handler, alpp);
@@ -657,6 +677,7 @@ static bool qlimit_print_out_rule(lListElem *rule, dstring rule_name, const char
       printf(HEAD_FORMAT, sge_dstring_get_string(&rule_name), sge_dstring_get_string(&limitation), sge_dstring_get_string(&filter_str));
    }
 
+   sge_dstring_free(&token);
    sge_dstring_free(&filter_str);
    sge_dstring_free(&limitation);
    return ret;

@@ -73,7 +73,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
                                       lSetHost(jr, nm, s);
 
 static double 
-reporting_get_double_usage (lList *usage_list, lList *reported_list, 
+reporting_get_double_usage(lList *usage_list, lList *reported_list, 
                             const char *name, const char *rname, double def);
 /* ------------------------------------------------------------
 
@@ -340,7 +340,7 @@ sge_write_rusage(dstring *buffer,
 *     MT-NOTE: reporting_get_double_usage() is MT-safe
 */
 static double 
-reporting_get_double_usage (lList *usage_list, lList *reported_list, 
+reporting_get_double_usage(lList *usage_list, lList *reported_list, 
                             const char *name, const char *rname, double def) 
 {
    double usage;

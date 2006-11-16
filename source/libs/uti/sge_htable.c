@@ -162,7 +162,7 @@ static void sge_htable_resize(htable ht, int grow)
    } 
 
    otable = ht->table;
-   otablesize =  1 << ht->size;
+   otablesize = 1 << ht->size;
 
    if (grow) {
       ht->size++;
@@ -267,8 +267,8 @@ void sge_htable_destroy(htable ht)
             free((char *)bucket);
         }
     }
-    free((char *) ht->table);
-    free((char *) ht);
+    free((char *)ht->table);
+    free((char *)ht);
 }
 
 /****** uti/htable/sge_htable_for_each() **************************************
@@ -415,7 +415,7 @@ void sge_htable_delete(htable table, const void* key)
             if(bucket->key != NULL) {
                free((char *)bucket->key);
             }
-            free((char *) bucket);
+            free((char *)bucket);
             table->numentries--;
             if (table->numentries < (table->mask >> HASH_RESIZE_DOWN_THRESHOLD))
                 sge_htable_resize(table, False);

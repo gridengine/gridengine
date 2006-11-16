@@ -99,8 +99,7 @@ str_list_append_to_dstring(const lList *this_list, dstring *string,
       }
       ret = sge_dstring_get_string(string);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/str/str_list_parse_from_string() *******************************
@@ -152,8 +151,7 @@ str_list_parse_from_string(lList **this_list,
       }
       sge_free_saved_vars(context);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/str/str_list_is_valid() ****************************************
@@ -195,12 +193,11 @@ str_list_is_valid(const lList *this_list, lList **answer_list)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
-str_list_transform_user_list(lList **this_list, lList **answer_list)
+str_list_transform_user_list(lList **this_list, lList **answer_list, const char *username)
 {
    bool ret = true;
 
@@ -214,31 +211,18 @@ str_list_transform_user_list(lList **this_list, lList **answer_list)
          if (string != NULL) {
             /*
              * '$user' will be replaced by the current unix username
-             * '*'     emty the remove the list 
+             * '*'     empty the remove the list 
              */
             if (strcasecmp(string, "$user") == 0) {
-               uid_t uid = getuid();
-               char username[128];
-
-               if (sge_uid2user(uid, username, sizeof(username), 
-                                MAX_NIS_RETRIES) == 0) {
-                  lSetString(elem, ST_name, username);
-               } else { 
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                          ANSWER_QUALITY_ERROR,
-                                          MSG_FUNC_GETPWUIDXFAILED_IS,
-                                          (int)uid, strerror(errno));
-                  ret = false;
-                  break;
-               }
+               lSetString(elem, ST_name, username);
             } else if (strcmp(string, "*") == 0) {
                lFreeList(this_list);
                break;
             }
          }
       }
+   } else {
+      lAddElemStr(this_list, ST_name, username, ST_Type);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
-

@@ -400,10 +400,10 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx,
              (action & QI_DO_SUSPEND) != 0 || 
              (action & QI_DO_UNSUSPEND) != 0|| 
              (action & QI_DO_CLEAN) != 0))
-            WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
+            ERROR((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
-            WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
-         answer_list_add(&alp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+            ERROR((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
+         answer_list_add(&alp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       }
    }
 
@@ -430,8 +430,8 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
    isoperator = manop_is_operator(user);
 
    if (!isowner) {
-      WARNING((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_full_name)));
-      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+      ERROR((SGE_EVENT, MSG_QUEUE_NOCHANGEQPERMS_SS, user, lGetString(qep, QU_full_name)));
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -497,8 +497,8 @@ monitoring_t *monitor
    job_id = lGetUlong(jep, JB_job_number);
 
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
-      WARNING((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, sge_u32c(job_id)));
-      answer_list_add(answer, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_WARNING);
+      ERROR((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, sge_u32c(job_id)));
+      answer_list_add(answer, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -588,9 +588,9 @@ monitoring_t *monitor
    DENTER(TOP_LAYER, "qmod_queue_weakclean");
 
    if (!isoperator && !isowner) {
-      WARNING((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user, 
+      ERROR((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user, 
          lGetString(qep, QU_full_name)));
-      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }
@@ -627,8 +627,8 @@ monitoring_t *monitor
    DPRINTF(("cleaning queue >%s<\n", qname ));
    
    if (!manop_is_manager(user)) {
-      WARNING((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
-      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
+      ERROR((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
+      answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
    }

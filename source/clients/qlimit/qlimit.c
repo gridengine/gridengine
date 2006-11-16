@@ -222,7 +222,7 @@ int main(int argc, char **argv)
    lList *cqueue_list = NULL;
    lList *alp = NULL;
    report_handler_t *report_handler = NULL;
-   int qlimit_result = 0;
+   bool qlimit_result = true;
    sge_gdi_ctx_class_t *ctx = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qlimit");
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
       report_handler->destroy(&report_handler, &alp);
    }
    
-   if (qlimit_result != 0) {
+   if (qlimit_result == false) {
       answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);

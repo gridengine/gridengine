@@ -492,7 +492,7 @@ static void qmonCQHighlight(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonCQHighlight");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
         item=ret->items[i];
@@ -521,7 +521,7 @@ static void qmonCQMenu(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonCQMenu");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
 
@@ -543,7 +543,7 @@ static void qmonCQActivate(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonCQActivate");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("ACTIVATE: item=%s count=%d\n",ret->item->text,ret->count);
       count=0;
       while (count<ret->count) {

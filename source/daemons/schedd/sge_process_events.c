@@ -338,12 +338,12 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
 #ifdef DONT_TRACE_SCHEDULING
    {
       monitoring_level tmp;
-      rmon_mlcpy(&tmp, &DEBUG_ON);
-      rmon_mlclr(&DEBUG_ON);
+      rmon_mlcpy(&tmp, &RMON_DEBUG_ON);
+      rmon_mlclr(&RMON_DEBUG_ON);
 #endif
       ((default_scheduler_alg_t) sched_funcs[current_scheduler].alg)(evc, &copy, &orders);
 #ifdef DONT_TRACE_SCHEDULING
-      rmon_mlcpy(&DEBUG_ON, &tmp);
+      rmon_mlcpy(&RMON_DEBUG_ON, &tmp);
    }
 #endif
    

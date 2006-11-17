@@ -332,7 +332,7 @@ static void qmonSchedOk(Widget w, XtPointer cld, XtPointer cad)
 
    if (sep && qmonSchedGet(sep)) {
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___SCHEDULER_CONF________________________\n");
          lWriteListTo(scl, stdout);
          printf("_______________________________________\n");

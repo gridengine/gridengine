@@ -26,18 +26,21 @@ done
 
 if [ $CSP -eq 1 ]; then
    PRE_ARGS="$PRE_ARGS -Djava.security.policy=util/jgdi.policy"
-   PRE_ARGS="$PRE_ARGS -Djava.security.auth.login.config==util/jaas.config"
+   PRE_ARGS="$PRE_ARGS -Djava.security.auth.login.config=util/jaas.config"
    PRE_ARGS="$PRE_ARGS -Djava.security.manager"
 fi
 
 
 PRE_ARGS="$PRE_ARGS -Djava.util.logging.config.file=util/shell_logging.properties"
 
-if [ $SGE_ROOT != "" ]; then
-   CP=$SGE_ROOT/lib/jgdi.jar
-else
+#if [ $SGE_ROOT != "" ]; then
+#   CP=$SGE_ROOT/lib/jgdi.jar
+#else
    CP=build/classes
-fi
+#fi
+
+echo "READLINE_JAVA_JAR: $READLINE_JAVA_JAR"
+echo "READLINE_LIB_PATH: $READLINE_LIB_PATH"
 
 if [ "$READLINE_JAVA_JAR" != "" ]; then
    CP="$CP:$READLINE_JAVA_JAR"
@@ -56,8 +59,4 @@ if [ $CONNECT -eq 1 ]; then
 fi
 
 run $PRE_ARGS -cp $CP com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
-
-
-
-
 

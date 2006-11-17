@@ -384,4 +384,4 @@ Qmon*xmtMessageDialog*foreground:           $warning_color
 #include "../clients/qmon/qmon_qcustom.ad"
 #include "../clients/qmon/qmon_calendar.ad"
 #include "../clients/qmon/qmon_loadmon.ad"
-#include "../clients/qmon/qmon_lirs.ad"
+#include "../clients/qmon/qmon_resource_quota.ad"

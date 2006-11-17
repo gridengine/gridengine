@@ -952,7 +952,7 @@ int filter_queues(lList **filtered_queue_list,
       }
    }   
 
-   if (rmon_mlgetl(&DEBUG_ON, GDI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GDI_LAYER) & INFOPRINT) {
       lListElem *cqueue;
       for_each(cqueue, queue_list) {
          lListElem *qep;

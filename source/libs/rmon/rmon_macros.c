@@ -57,8 +57,8 @@ enum {
    RMON_BUF_SIZE = 5120  /* size of buffer used for monitoring messages */
 };
 
-monitoring_level DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
-monitoring_level DEBUG_ON_STORAGE = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
+monitoring_level RMON_DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
+monitoring_level RMON_DEBUG_ON_STORAGE = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
 
 static const char* empty = "    ";
 
@@ -142,7 +142,7 @@ static void rmon_ctx_key_destroy(void * ctx)
 *     It is safe to call the remaining RMON functions, like 'rmon_menter()' or
 *     'rmon_mexit()', from within multiple threads. 'rmon_mopen()' is the only
 *     RMON function which does change the critical global variables ('mtype',
-*     'rmon_fp' and 'DEBUG_ON'). 'rmon_menter()' and 'rmon_mexit()' are used by
+*     'rmon_fp' and 'RMON_DEBUG_ON'). 'rmon_menter()' and 'rmon_mexit()' are used by
 *     the macro 'DENTER' and 'DEXIT', respectively.
 *     
 *******************************************************************************/
@@ -189,7 +189,7 @@ int rmon_condition(int layer, int class)
    /* if debug printing is on we use a lock for further layer checking */
    RMON_CONDITION_LOCK();
 #endif
-   ret_val = ((mtype != RMON_NONE) && (class & MLGETL(&DEBUG_ON, layer))) ? 1 : 0;
+   ret_val = ((mtype != RMON_NONE) && (class & MLGETL(&RMON_DEBUG_ON, layer))) ? 1 : 0;
 #ifdef DEBUG_CLIENT_SUPPORT
    RMON_CONDITION_UNLOCK();
 #endif
@@ -226,18 +226,18 @@ void rmon_debug_client_callback(int dc_connected, int debug_level) {
 #ifdef DEBUG_CLIENT_SUPPORT
    RMON_CONDITION_LOCK();
 
-   /* we are saving the old value of the DEBUG_ON structure into DEBUG_ON_STORAGE */
+   /* we are saving the old value of the RMON_DEBUG_ON structure into RMON_DEBUG_ON_STORAGE */
    if (dc_connected) {
       /* TODO: support rmon debug levels with $SGE_DEBUG_LEVEL string ? 
        *       if so, the debug_level parameter should be a string value
        */
-      (&DEBUG_ON)->ml[TOP_LAYER]   = 2; 
+      (&RMON_DEBUG_ON)->ml[TOP_LAYER]   = 2; 
       if (debug_level > 1) {
-         (&DEBUG_ON)->ml[TOP_LAYER]   = 3; 
+         (&RMON_DEBUG_ON)->ml[TOP_LAYER]   = 3; 
       }
       mtype = RMON_LOCAL;
    } else {
-      (&DEBUG_ON)->ml[TOP_LAYER]   = (&DEBUG_ON_STORAGE)->ml[TOP_LAYER]; 
+      (&RMON_DEBUG_ON)->ml[TOP_LAYER]   = (&RMON_DEBUG_ON_STORAGE)->ml[TOP_LAYER]; 
       mtype = mtype_storage;
    }
    RMON_CONDITION_UNLOCK();
@@ -320,7 +320,7 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
 {
    int ret = -1;
 
-   rmon_mlclr(&DEBUG_ON);
+   rmon_mlclr(&RMON_DEBUG_ON);
    rmon_fp = stderr;
 
    ret = set_debug_level_from_env();
@@ -624,8 +624,8 @@ static int set_debug_level_from_env(void)
    }
 
    for (i = 0; i < N_LAYER; i++) {
-      rmon_mlputl(&DEBUG_ON, i, l[i]);
-      rmon_mlputl(&DEBUG_ON_STORAGE, i, l[i]);
+      rmon_mlputl(&RMON_DEBUG_ON, i, l[i]);
+      rmon_mlputl(&RMON_DEBUG_ON_STORAGE, i, l[i]);
    }
 
    free((char *)s);

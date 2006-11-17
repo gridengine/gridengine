@@ -130,7 +130,7 @@ static XmtMenuItem task_menu_items[] = {
 
    {XmtMenuItemPushButton, "@{Browser Dialog}", 'B', "Alt<Key>B", "Alt+B",
          qmonBrowserOpen, NULL},
-   {XmtMenuItemPushButton, "@{Limit Rule Configuration}", 'L', "Alt<Key>L", "Alt+L",
+   {XmtMenuItemPushButton, "@{Resource Quota Configuration}", 'L', "Alt<Key>L", "Alt+L",
          qmonRQSPopup, NULL},
    {XmtMenuItemEnd}
 };
@@ -214,7 +214,7 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupCkptConfig, NULL, "@{@fBCheckpoint Configuration}" },
    { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
-   { qmonRQSPopup, NULL, "@{@fBLimit Rule Configuration}" },
+   { qmonRQSPopup, NULL, "@{@fBResource Quota Configuration}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }
 };
@@ -265,7 +265,7 @@ Widget parent
       "CKPT_CONFIG",
       "TICKET_OVERVIEW",
       "PROJECT_CONFIG",
-      "LIMITRULE_CONFIG",
+      "RQS_CONFIG",
       "BROWSER",
       "EXIT" };
 #define AUTOMATIC_MAINBAR   

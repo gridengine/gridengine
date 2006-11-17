@@ -612,7 +612,7 @@ void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad)
       /*
       ** for debugging
       */
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___JOB_BEFORE_ALTER_____________________\n");
          lWriteElemTo(job_to_set, stdout);
          printf("________________________________________\n");
@@ -1360,7 +1360,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }   
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___SUBMITTED_JOB________________________\n");
          lWriteListTo(lp, stdout);
          printf("________________________________________\n");
@@ -1513,7 +1513,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___QALTERED_JOB________________________\n");
          lWriteListTo(lp, stdout);
          printf("________________________________________\n");
@@ -1683,7 +1683,7 @@ int read_defaults
    /*
    ** for debugging
    */
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("___PARSED_SCRIPT_+DEFAULTS_____________\n");
       lWriteElemTo(job, stdout);
       printf("________________________________________\n");

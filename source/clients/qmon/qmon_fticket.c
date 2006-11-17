@@ -319,7 +319,7 @@ static void qmonFTOkay(Widget w, XtPointer cld, XtPointer cad)
       XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
 
       
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Policy-------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -362,7 +362,7 @@ static void qmonFTOkay(Widget w, XtPointer cld, XtPointer cad)
          XmtMsgLinePrintf(fticket_message, "Success");
       XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
    
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Ratios-------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -926,7 +926,7 @@ static void qmonOTOkay(Widget w, XtPointer cld, XtPointer cad)
          XmtMsgLinePrintf(oticket_message, "Success");
       XmtMsgLineClear(oticket_message, DISPLAY_MESSAGE_DURATION); 
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("----Override Policy--------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");

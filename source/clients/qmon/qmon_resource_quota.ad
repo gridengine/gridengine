@@ -33,36 +33,36 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! LIRS Dialog  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*lirs_shell.xmtChildren: XmtLayout lirs;
-Qmon*lirs.autoUnmanage:      False
-Qmon*lirs.deleteResponse:    XmUNMAP
-Qmon*lirs.fontList:          $dialog_font
+Qmon*rqs_shell.xmtChildren: XmtLayout rqs;
+Qmon*rqs.autoUnmanage:      False
+Qmon*rqs.deleteResponse:    XmUNMAP
+Qmon*rqs.fontList:          $dialog_font
 
-Qmon*lirs.xmtChildren:  \
-   XmScrolledText    lirs_text; \
-   XmPushButton      lirs_cancel, \
-                     lirs_okay, \
-                     lirs_help;
+Qmon*rqs.xmtChildren:  \
+   XmScrolledText    rqs_text; \
+   XmPushButton      rqs_cancel, \
+                     rqs_okay, \
+                     rqs_help;
                      
 
-Qmon*lirs.layout: \
+Qmon*rqs.layout: \
    Row { \
       Stretchable Col { \
-         Stretchable Caption tl "@{Resource Quotas}" 5 in % 5 in lirs_text \
+         Stretchable Caption tl "@{Resource Quotas}" 5 in % 5 in rqs_text \
       } \
       Fixed Shadowed Col { \
-         lirs_okay \
-         lirs_cancel \
-         lirs_help \
+         rqs_okay \
+         rqs_cancel \
+         rqs_help \
          <>\
       } \
    }
 
-Qmon*lirs_text.editMode:                MULTI_LINE_EDIT
+Qmon*rqs_text.editMode:                MULTI_LINE_EDIT
 
-Qmon*lirs_okay.labelString:             @{Ok}
-Qmon*lirs_cancel.labelString:           @{Cancel}
-Qmon*lirs_help.labelString:             @{Help}
+Qmon*rqs_okay.labelString:             @{Ok}
+Qmon*rqs_cancel.labelString:           @{Cancel}
+Qmon*rqs_help.labelString:             @{Help}
 
-Qmon*lirs_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+Qmon*rqs_help.activateCallback:   XmtHelpDisplayContextHelp(self);
 

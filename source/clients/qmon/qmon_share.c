@@ -548,7 +548,7 @@ static void qmonShareTreeOkay(Widget w, XtPointer cld, XtPointer cad)
 
       qmonMessageBox(w, alp, 0);
    
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Share Tree Parameters--------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -1197,7 +1197,7 @@ static void qmonShareTreeHighlight(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonShareTreeHighlight");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
         item=ret->items[i];
@@ -1277,7 +1277,7 @@ static void qmonShareTreeMenu(Widget w, XtPointer cld, XtPointer cad)
       return;
    }   
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
 
@@ -1387,7 +1387,7 @@ static void qmonShareTreeActivate(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonShareTreeActivate");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("ACTIVATE: item=%s count=%d\n",ret->item->text,ret->count);
       count=0;
       while (count<ret->count) {

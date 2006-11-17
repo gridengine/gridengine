@@ -1177,7 +1177,7 @@ case HP1164:
       set SHARED_CFLAGS = "-fPIC"
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    else
-      set SHARED_CFLAGS = "+z"
+      set SHARED_CFLAGS = "+Z"
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 

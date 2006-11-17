@@ -131,7 +131,7 @@ sge_processes_irix.o: 	$(DAEMONS_COMMON_DIR)/sge_processes_irix.c
 		$(CC) $(CFLAGS) -c $(DAEMONS_COMMON_DIR)/sge_processes_irix.c
 
 pdc.o: 	$(DAEMONS_COMMON_DIR)/pdc.c
-		$(CC) $(CFLAGS) $(GCCC_NOERR_FLAGS) -c $(DAEMONS_COMMON_DIR)/pdc.c
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(GCCC_NOERR_FLAGS) -c $(DAEMONS_COMMON_DIR)/pdc.c
 
 procfs.o: 	$(DAEMONS_COMMON_DIR)/procfs.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(DAEMONS_COMMON_DIR)/procfs.c

@@ -93,7 +93,7 @@ Qmon*CKPT_CONFIG.labelType:        PIXMAP
 Qmon*BROWSER.labelType:            PIXMAP
 Qmon*TICKET_OVERVIEW.labelType:    PIXMAP
 Qmon*PROJECT_CONFIG.labelType:     PIXMAP
-Qmon*LIMITRULE_CONFIG.labelType:   PIXMAP
+Qmon*RQS_CONFIG.labelType:         PIXMAP
 Qmon*EXIT.labelType:               PIXMAP
 !!
 !! Icons for the main toolbar
@@ -112,7 +112,7 @@ Qmon*CKPT_CONFIG.labelPixmap:      toolbar_ckpt
 Qmon*TICKET_OVERVIEW.labelPixmap:  toolbar_ticket
 Qmon*PROJECT_CONFIG.labelPixmap:   toolbar_prj
 Qmon*BROWSER.labelPixmap:          toolbar_browser
-Qmon*LIMITRULE_CONFIG.labelPixmap: toolbar_limitrule
+Qmon*RQS_CONFIG.labelPixmap:       toolbar_rqs
 Qmon*EXIT.labelPixmap:             toolbar_exit
 
 

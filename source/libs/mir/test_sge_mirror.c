@@ -47,15 +47,13 @@
 
 #include "sge_mirror.h"
 #include "sge_event.h"
-
-#ifdef TEST_GDI2
-#include "sge_gdi_ctx.h"
-#include "sge_event_client2.h"
-#endif
+#include "sge_answer.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "evc/sge_event_client2.h"
 
 
 static sge_callback_result
-print_event(void *evc_context, object_description *object_base, sge_object_type type, 
+print_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
             sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
@@ -71,67 +69,44 @@ print_event(void *evc_context, object_description *object_base, sge_object_type 
    /* create a callback error to test error handling */
    if(type == SGE_TYPE_GLOBAL_CONFIG) {
       DEXIT;
-      return false;
+      return SGE_EMA_FAILURE;
    }
    
    DEXIT;
-   return true;
+   return SGE_EMA_OK;
 }
 
 int main(int argc, char *argv[])
 {
    int cl_err = 0;
-   lListElem *event_client = NULL;
-#ifdef TEST_GDI2
-   sge_error_class_t *eh = NULL;
+   lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL; 
    sge_evc_class_t *evc = NULL;
-#else
-   lList *alp = NULL;
-#endif   
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    sge_setup_sig_handlers(QEVENT);
 
-#ifdef TEST_GDI2
    /* setup event client */
-   cl_err = sge_gdi2_setup(&ctx, QEVENT, eh);
-   if ( cl_err != AE_OK) {
-      showError(eh);
-      sge_error_class_destroy(&eh);
-      SGE_EXIT(1);
-   }
-#else
-   lInit(nmv);
-   sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if (sge_gdi_setup(prognames[QEVENT], &alp)!=AE_OK) {
+   cl_err = sge_gdi2_setup(&ctx, QEVENT, &alp);
+   if (cl_err != AE_OK) {
       answer_list_output(&alp);
-      SGE_EXIT(1);
+      SGE_EXIT((void**)&ctx, 1);
    }
-#endif   
 
-#ifdef TEST_GDI2
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp)) {
+      answer_list_output(&alp);
+      SGE_EXIT((void**)&ctx, 1);
+   }
+
    sge_mirror_initialize(evc, EV_ID_ANY, "test_sge_mirror", true);
-   event_client = evc->ec_get_event_client(evc);
-   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
    
    while(!shut_me_down) {
-      sge_mirror_process_events(evc, event_client);
+      sge_mirror_process_events(evc);
    }
 
-   sge_mirror_shutdown(evc, &event_client);
-#else
-   sge_mirror_initialize(NULL, EV_ID_ANY, "test_sge_mirror");
-   event_client = ec_get_event_client();
-   sge_mirror_subscribe(event_client, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
-   
-   while(!shut_me_down) {
-      sge_mirror_process_events(NULL, event_client);
-   }
-
-   sge_mirror_shutdown(NULL, &event_client);
-#endif   
+   sge_mirror_shutdown(evc);
 
    DEXIT;
    return EXIT_SUCCESS;

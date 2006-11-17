@@ -892,7 +892,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
 
       xhost = XmtCreateXmString(host ? host : "global");
       
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___CLUSTER_CONF________________________\n");
          lWriteListTo(confl, stdout);
          printf("_______________________________________\n");

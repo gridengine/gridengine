@@ -327,7 +327,7 @@ static void HighlightCallback(w,client,call)
 
    DENTER(GUI_LAYER, "HighlightCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       ret=(ListTreeMultiReturnStruct *)call;
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
@@ -351,7 +351,7 @@ static void MenuCallback(w,client,call)
 
    DENTER(GUI_LAYER, "MenuCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
 
@@ -366,7 +366,7 @@ static void ActivateCallback(w,client,call)
 
    DENTER(GUI_LAYER, "ActivateCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       ret=(ListTreeActivateStruct *)call;
       printf("ACTIVATE: item=%s count=%d\n",ret->item->text,ret->count);
       count=0;

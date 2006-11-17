@@ -77,7 +77,7 @@ public class QQuotaCommand extends AbstractCommand {
    
    
    public void run(String[] args) throws Exception {
-    
+      
       QQuotaOptions options = parse(args);
       
       JGDI jgdi = getShell().getConnection();
@@ -85,42 +85,43 @@ public class QQuotaCommand extends AbstractCommand {
       if (jgdi == null) {
          throw new IllegalStateException("Not connected");
       }
-  
+      
       PrintWriter pw = new PrintWriter(System.out);
       QQuotaResult res = jgdi.getQQuota(options);
-
-      pw.println("limitation rule    limit                filter");
-      pw.println("--------------------------------------------------------------------------------");
-      Iterator iter = res.getResourceQuotaRules().iterator();
-      while (iter.hasNext()) {
-         ResourceQuotaRuleInfo info = (ResourceQuotaRuleInfo)iter.next();
-         // need a Formatter here
-         pw.print(info.getResouceQuotaRuleName());
-         Iterator liter = info.getLimits().iterator();
-         while (liter.hasNext()) {
-            ResourceQuota relim = (ResourceQuota)liter.next();
-            pw.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
+      
+      if (res.getResourceQuotaRules().size() > 0) {
+         pw.println("resource quota rule    limit                filter");
+         pw.println("--------------------------------------------------------------------------------");
+         Iterator iter = res.getResourceQuotaRules().iterator();
+         while (iter.hasNext()) {
+            ResourceQuotaRuleInfo info = (ResourceQuotaRuleInfo)iter.next();
+            // need a Formatter here
+            pw.print(info.getResouceQuotaRuleName());
+            Iterator liter = info.getLimits().iterator();
+            while (liter.hasNext()) {
+               ResourceQuota relim = (ResourceQuota)liter.next();
+               pw.print(" " + relim.getName() + "=" + relim.getUsageValue() + "/" + relim.getLimitValue());
+            }
+            if (!info.getUsers().isEmpty()) {
+               pw.print(" users" + info.getUsers());
+            }
+            if (!info.getProjects().isEmpty()) {
+               pw.print(" projects" + info.getProjects());
+            }
+            if (!info.getPes().isEmpty()) {
+               pw.print(" pes" + info.getPes());
+            }
+            if (!info.getQueues().isEmpty()) {
+               pw.print(" queues" + info.getQueues());
+            }
+            if (!info.getHosts().isEmpty()) {
+               pw.print(" hosts" + info.getHosts());
+            }
+            
+            pw.println();
          }
-         if (!info.getUsers().isEmpty()) {
-            pw.print(" users" + info.getUsers());
-         }
-         if (!info.getProjects().isEmpty()) {
-            pw.print(" projects" + info.getProjects());
-         }
-         if (!info.getPes().isEmpty()) {
-            pw.print(" pes" + info.getPes());
-         }
-         if (!info.getQueues().isEmpty()) {
-            pw.print(" queues" + info.getQueues());
-         }
-         if (!info.getHosts().isEmpty()) {
-            pw.print(" hosts" + info.getHosts());
-         }
-         
-         pw.println();
+         pw.flush();
       }
-      pw.flush();
-    
       
    }
    

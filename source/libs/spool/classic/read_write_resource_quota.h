@@ -1,5 +1,5 @@
-#ifndef _READ_WRITE_LIMIT_RULE_H
-#define _READ_WRITE_LIMIT_RULE_H
+#ifndef _READ_WRITE_RESOURCE_QUOTA_H
+#define _READ_WRITE_RESOURCE_QUOTA_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,12 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int read_limit_rule_set_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
+int read_rqs_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
                          int spool, int flag, int *tag, int parsing_type);
 
-lList *cull_read_in_limit_rule_sets(const char *fname, lList **alpp);
+lList *cull_read_in_rqs_list(const char *fname, lList **alpp);
 
-char *write_limit_rule_set(int spool, int how, const lListElem *ep);
-char *write_limit_rule_sets(int spool, int how, const lList *lp);
+char *write_rqs(int spool, int how, const lListElem *ep);
+char *write_rqs_list(int spool, int how, const lList *lp);
 
-#endif /* _READ_WRITE_LIMIT_RULE_H */
+#endif /* _READ_WRITE_RESOURCE_QUOTA_H */

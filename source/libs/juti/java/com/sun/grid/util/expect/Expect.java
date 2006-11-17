@@ -201,15 +201,16 @@ public class Expect {
                 
                 
                 if(LOGGER.isLoggable(Level.FINE)) {
-                    String str = received.toString().replace("\r", "");
-
-                    StringBuilder buf = new StringBuilder();
-                    for(int i = 0; i < str.length(); i++) {
-                        if(str.charAt(i) == '\n') {
+                    StringBuffer buf = new StringBuffer();
+                    for(int i = 0; i < received.length(); i++) {
+                        char c = received.charAt(i);
+                        if(c == '\n') {
                             LOGGER.log(Level.FINE, "got ''{0}<NL>''", buf.toString());
                             buf.setLength(0);
+                        } else if ( c == '\r' ) {
+                            continue;
                         } else {
-                            buf.append(str.charAt(i));
+                            buf.append(received.charAt(i));
                         }
                     }
                     if(buf.length() > 0) {

@@ -146,7 +146,7 @@ public class GridCAImpl implements GridCA {
             pb.command().add(autoFile.getAbsolutePath());
             pb.command().add("-init");
             
-            execute(pb);
+            execute(pb, false);
             
             LOGGER.log(Level.FINE, "gridCAImpl.initSuccess");
 
@@ -175,31 +175,37 @@ public class GridCAImpl implements GridCA {
 
 
     
+    protected void execute(Expect pb)  throws GridCAException {
+        execute(pb, true);
+    } 
     
-    protected void execute(Expect pb) throws GridCAException {
+    protected void execute(Expect pb, boolean setLock) throws GridCAException {
         LOGGER.entering("GridCAImpl", "execute");
 
         // Since the sge_ca infrastructure can not be shared
         // between processes we have to create a file lock
-        
-        File lockFile = new File(config.getCaLocalTop(), "lock");
-        RandomAccessFile raf;
-        try {
-            raf = new RandomAccessFile(lockFile, "rw");
-        } catch (IOException ex) {
-            throw RB.newGridCAException(ex, "gridCAImpl.error.lockFileNotFound",
-                    new Object [] { lockFile, ex.getLocalizedMessage() });
-        }
-        
-        
-        FileLock lock;
-        try {
-            lock = raf.getChannel().lock();
-        } catch (IOException ex) {
-            throw RB.newGridCAException(ex, "gridCAImpl.error.lock", 
-                      new Object [] { lockFile, ex.getLocalizedMessage() });
-        }
-        
+        File lockFile = null;
+        RandomAccessFile raf = null;
+        FileLock lock = null;
+        if(setLock) {
+            lockFile = new File(config.getCaLocalTop(), "lock");
+            
+            try {
+                raf = new RandomAccessFile(lockFile, "rw");
+            } catch (IOException ex) {
+                throw RB.newGridCAException(ex, "gridCAImpl.error.lockFileNotFound",
+                        new Object [] { lockFile, ex.getLocalizedMessage() });
+            }
+
+
+            
+            try {
+                lock = raf.getChannel().lock();
+            } catch (IOException ex) {
+                throw RB.newGridCAException(ex, "gridCAImpl.error.lock", 
+                          new Object [] { lockFile, ex.getLocalizedMessage() });
+            }
+        }        
         try {
             ErrorHandler eh = new ErrorHandler();
             pb.add(eh);
@@ -223,15 +229,17 @@ public class GridCAImpl implements GridCA {
                 }
             }
         } finally {
-            try {
-                lock.release();
-            } catch (IOException ex) {
-                // Ingore
-            }
-            try {
-                raf.close();
-            } catch (IOException ex) {
-                // Ingore
+            if(setLock) {
+                try {
+                    lock.release();
+                } catch (IOException ex) {
+                    // Ingore
+                }
+                try {
+                    raf.close();
+                } catch (IOException ex) {
+                    // Ingore
+                }
             }
         }
         LOGGER.exiting("GridCAImpl", "execute");

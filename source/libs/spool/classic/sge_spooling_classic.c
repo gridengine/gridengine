@@ -78,7 +78,7 @@
 #include "read_write_userset.h"
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
-#include "read_write_limit_rule.h"
+#include "read_write_resource_quota.h"
 #include "sched_conf.h"
 #include "read_write_centry.h"
 
@@ -446,7 +446,7 @@ spool_classic_default_maintenance_func(lList **answer_list,
          sge_mkdir(UME_DIR, 0755, true, false);
          sge_mkdir(USER_DIR, 0755, true, false);
          sge_mkdir(PROJECT_DIR, 0755, true, false);
-         sge_mkdir(LIMITRULESETS_DIR, 0755, true, false);
+         sge_mkdir(RESOURCEQUOTAS_DIR, 0755, true, false);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          break;
       default:
@@ -724,8 +724,8 @@ spool_classic_default_list_func(lList **answer_list,
             ret = false;
          }
          break;
-      case SGE_TYPE_LIRS:
-         if (sge_read_limit_rule_set_list_from_disk(list, LIMITRULESETS_DIR, answer_list) != 0) {
+      case SGE_TYPE_RQS:
+         if (sge_read_rqs_list_from_disk(list, RESOURCEQUOTAS_DIR, answer_list) != 0) {
             ret = false;
          }
          break;
@@ -877,17 +877,17 @@ spool_classic_default_read_func(lList **answer_list,
          ep = cull_read_in_host_group(HGROUP_DIR, key, 1, 0, NULL, NULL); 
          break;
      
-      case SGE_TYPE_LIRS:
+      case SGE_TYPE_RQS:
          {
             char file_name_buf[SGE_PATH_MAX];
             dstring file_name;
-            lList *lirs_list = NULL;
+            lList *rqs_list = NULL;
 
             sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
-            sge_dstring_sprintf(&file_name, "%s/%s", LIMITRULESETS_DIR, key);
-            lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&file_name), NULL);
-            ep = lCopyElem(lFirst(lirs_list));
-            lFreeList(&lirs_list);
+            sge_dstring_sprintf(&file_name, "%s/%s", RESOURCEQUOTAS_DIR, key);
+            rqs_list = cull_read_in_rqs_list(sge_dstring_get_string(&file_name), NULL);
+            ep = lCopyElem(lFirst(rqs_list));
+            lFreeList(&rqs_list);
          }
          break;
       default:
@@ -1159,8 +1159,8 @@ spool_classic_default_write_func(lList **answer_list,
          if (!write_host_group(1, 2, object))
             ret = false;
          break;
-      case SGE_TYPE_LIRS:
-         if (!write_limit_rule_set(1, 2, object))
+      case SGE_TYPE_RQS:
+         if (!write_rqs(1, 2, object))
             ret = false;
          break;
       default:
@@ -1315,8 +1315,8 @@ spool_classic_default_delete_func(lList **answer_list,
       case SGE_TYPE_HGROUP:
          ret = sge_unlink(HGROUP_DIR, key);
          break;
-      case SGE_TYPE_LIRS:
-         ret = sge_unlink(LIMITRULESETS_DIR, key);
+      case SGE_TYPE_RQS:
+         ret = sge_unlink(RESOURCEQUOTAS_DIR, key);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

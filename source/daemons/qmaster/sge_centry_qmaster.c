@@ -395,7 +395,7 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
                         *object_base[SGE_TYPE_CQUEUE].list,
                         *object_base[SGE_TYPE_EXECHOST].list,
-                        *object_base[SGE_TYPE_LIRS].list)) {
+                        *object_base[SGE_TYPE_RQS].list)) {
                   if (sge_event_spool(ctx, answer_list, 0, sgeE_CENTRY_DEL, 
                                       0, 0, name, NULL, NULL,
                                       NULL, NULL, NULL, true, true)) {

@@ -49,7 +49,7 @@
 #include "sge_resource_utilization.h"
 #include "sge_schedd_conf.h"
 #include "sge_serf.h"
-#include "sgeobj/sge_limit_rule.h"
+#include "sgeobj/sge_resource_quota.h"
 
 static void utilization_normalize(lList *diagram);
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration);
@@ -62,7 +62,7 @@ static void utilization_find_time_or_prevstart_or_prev(lList *diagram,
       u_long32 time, lListElem **hit, lListElem **before);
 
 static int 
-lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
+rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
                          lListElem *rule, dstring rue_name, lList *centry_list,
                          int slots, const char *obj_name, u_long32 start_time,
                          u_long32 end_time);
@@ -599,7 +599,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       const char *queue_instance = lGetString(gel, JG_qname);
 
       char *at_sign = NULL;
-      lListElem *lirs = NULL;
+      lListElem *rqs = NULL;
 
       if ((at_sign = strchr(queue_instance, '@'))) {
          int size = at_sign - queue_instance;
@@ -610,22 +610,22 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
          queue = strdup(queue_instance);
       }
       
-      for_each(lirs, a->lirs_list) {
+      for_each(rqs, a->rqs_list) {
          lListElem *rule = NULL;
 
-         if (!lGetBool(lirs, LIRS_enabled)) {
+         if (!lGetBool(rqs, RQS_enabled)) {
             continue;
          }
 
-         rule = lirs_get_matching_rule(lirs, user, project, pe, host, queue, a->acl_list,
+         rule = rqs_get_matching_rule(rqs, user, project, pe, host, queue, a->acl_list,
                                        a->hgrp_list, NULL);
          if (rule != NULL) {
 
-            limit_rule_get_rue_string(&rue_name, rule, user, project,
+            rqs_get_rue_string(&rue_name, rule, user, project,
                                 host, queue, pe);
 
-            lirs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
-                                     a->centry_list, slots, lGetString(lirs, LIRS_name),
+            rqs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
+                                     a->centry_list, slots, lGetString(rqs, RQS_name),
                                      a->start, a->duration);
          }
       }
@@ -699,13 +699,13 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
    DRETURN(mods);
 }
 
-/****** sge_resource_utilization/lirs_add_job_utilization() ********************
+/****** sge_resource_utilization/rqs_add_job_utilization() ********************
 *  NAME
-*     lirs_add_job_utilization() -- Debit assignment's utilization in a limitation
+*     rqs_add_job_utilization() -- Debit assignment's utilization in a limitation
 *                                   rule
 *
 *  SYNOPSIS
-*     static int lirs_add_job_utilization(lListElem *jep, u_long32 task_id, 
+*     static int rqs_add_job_utilization(lListElem *jep, u_long32 task_id, 
 *     const char *type, lListElem *rule, dstring rue_name, lList *centry_list, 
 *     int slots, const char *obj_name, u_long32 start_time, u_long32 end_time) 
 *
@@ -716,7 +716,7 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 *     lListElem *jep       - job element (JB_Type)
 *     u_long32 task_id     - task id to debit
 *     const char *type     - String denoting type of utilization entry 
-*     lListElem *rule      - limitation rule (LIR_Type)
+*     lListElem *rule      - limitation rule (RQR_Type)
 *     dstring rue_name     - rue_name where to debit
 *     lList *centry_list   - master centry list (CE_Type)
 *     int slots            - slots to debit
@@ -728,14 +728,14 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 *     static int - amount of modified limits
 *
 *  NOTES
-*     MT-NOTE: lirs_add_job_utilization() is MT safe 
+*     MT-NOTE: rqs_add_job_utilization() is MT safe 
 *
 *  SEE ALSO
 *     sge_resource_utilization/rc_add_job_utilization()
 *     sge_resource_utilization/add_job_utilization()
 *******************************************************************************/
 static int 
-lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
+rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
    lListElem *rule, dstring rue_name, lList *centry_list, int slots, const char *obj_name,
    u_long32 start_time, u_long32 end_time)
 {
@@ -744,10 +744,10 @@ lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
    const char *centry_name;
    int mods = 0;
 
-   DENTER(TOP_LAYER, "lirs_add_job_utilization");
+   DENTER(TOP_LAYER, "rqs_add_job_utilization");
 
    if (jep != NULL) {
-      limit_list = lGetList(rule, LIR_limit);
+      limit_list = lGetList(rule, RQR_limit);
 
       for_each(limit, limit_list) {
          bool tmp_ret;
@@ -755,7 +755,7 @@ lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          lListElem *rue_elem;
          double dval;
 
-         centry_name = lGetString(limit, LIRL_name);
+         centry_name = lGetString(limit, RQRL_name);
          
          if (!(raw_centry = centry_list_locate(centry_list, centry_name))) {
             /* ignoring not defined centry */
@@ -766,9 +766,9 @@ lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
             continue;
          }
 
-         rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage);
+         rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage);
          if(rue_elem == NULL) {
-            rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), LIRL_usage, RUE_Type);
+            rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage, RUE_Type);
             /* RUE_utilized_now is implicitly set to zero */
          }
 
@@ -776,7 +776,7 @@ lirs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          if (tmp_ret && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
             utilization_add(rue_elem, start_time, end_time, slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, LIRS_TAG, obj_name, type);
+               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type);
             mods++;
          }
       }

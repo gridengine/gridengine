@@ -50,8 +50,8 @@
 #include "sge_centry_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_pe_qmaster.h"
-#include "sge_limit_rule_qmaster.h"
-#include "sge_limit_rule.h"
+#include "sge_resource_quota_qmaster.h"
+#include "sge_resource_quota.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_event_master.h"
@@ -189,7 +189,7 @@ static gdi_object_t gdi_object[] = {
    { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    SGE_TYPE_CKPT,            ckpt_mod,     ckpt_spool,     ckpt_success },
    { SGE_JOB_SCHEDD_INFO_LIST,   0,         NULL,      "schedd info",             SGE_TYPE_JOB_SCHEDD_INFO, NULL,         NULL,           NULL },
    { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         SGE_TYPE_ZOMBIE,          NULL,         NULL,           NULL },
-   { SGE_LIRS_LIST,         LIRS_name, LIRS_Type, "limitation rule",         SGE_TYPE_LIRS,            lirs_mod,     lirs_spool,     lirs_success },
+   { SGE_RQS_LIST,         RQS_name, RQS_Type, "resource quotas",         SGE_TYPE_RQS,            rqs_mod,     rqs_spool,     rqs_success },
 #ifndef __SGE_NO_USERMAPPING__
    { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      SGE_TYPE_CUSER,           cuser_mod,    cuser_spool,    cuser_success },
 #endif
@@ -1052,8 +1052,8 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                sge_del_userprj(ctx, ep, &(answer->alp), object_base[SGE_TYPE_PROJECT].list, user, host, 0);
                break;
 
-            case SGE_LIRS_LIST:
-               sge_del_limit_rule_set(ctx, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
+            case SGE_RQS_LIST:
+               rqs_del(ctx, ep, &(answer->alp), object_base[SGE_TYPE_RQS].list, user, host);
                break;
 
             case SGE_CKPT_LIST:
@@ -1275,14 +1275,14 @@ static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *
 
    switch (request->target)
    {
-      case SGE_LIRS_LIST:
+      case SGE_RQS_LIST:
          {
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
             /* delete all currently defined rule sets */
-            ep = lFirst(*object_base[SGE_TYPE_LIRS].list);
+            ep = lFirst(*object_base[SGE_TYPE_RQS].list);
             while (ep != NULL) {
-               sge_del_limit_rule_set(ctx, ep, &(answer->alp), object_base[SGE_TYPE_LIRS].list, user, host);
-               ep = lFirst(*object_base[SGE_TYPE_LIRS].list);
+               rqs_del(ctx, ep, &(answer->alp), object_base[SGE_TYPE_RQS].list, user, host);
+               ep = lFirst(*object_base[SGE_TYPE_RQS].list);
             }
 
             for_each(ep, request->lp) {
@@ -1700,7 +1700,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
    case SGE_HGROUP_LIST:
-   case SGE_LIRS_LIST:
+   case SGE_RQS_LIST:
       /* user must be a manager */
       MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
       if (!manop_is_manager(user)) {
@@ -1794,7 +1794,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
    case SGE_HGROUP_LIST:
-   case SGE_LIRS_LIST:
+   case SGE_RQS_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
       if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
@@ -1935,7 +1935,7 @@ sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request, monitoring_t *mon
    case SGE_JOB_LIST:
    case SGE_ZOMBIE_LIST:
    case SGE_JOB_SCHEDD_INFO_LIST:
-   case SGE_LIRS_LIST:
+   case SGE_RQS_LIST:
       
       /* host must be admin or submit host */
       if ( !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host) &&

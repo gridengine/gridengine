@@ -48,7 +48,7 @@ QCONF_ADD_SRC = \
                sge_hgroup_qconf.c \
                sge_centry_qconf.c \
                sge_cqueue_qconf.c \
-               sge_limit_rule_qconf.c \
+               sge_resource_quota_qconf.c \
                sge_mt_init.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 

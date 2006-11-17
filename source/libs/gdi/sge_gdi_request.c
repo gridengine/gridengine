@@ -662,8 +662,8 @@ static const char *target2string(u_long32 target)
       case SGE_HGROUP_LIST:
          ret = "SGE_HGROUP_LIST";
          break;
-      case SGE_LIRS_LIST:
-         ret = "SGE_LIRS_LIST";
+      case SGE_RQS_LIST:
+         ret = "SGE_RQS_LIST";
          break;
       default:
          ret = "unknown list";

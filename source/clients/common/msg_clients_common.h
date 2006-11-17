@@ -79,8 +79,8 @@
 
 #define MSG_CENTRY_NULL_NAME          _MESSAGE(1041, _("Invalid complex attribute definition"))
 #define MSG_CENTRY_NULL_SHORTCUT_S    _MESSAGE(1042, _("Complex attribute "SFQ" has no shortcut defined"))
-#define MSG_LIRSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("limitation rule set "SFQ" not found in file "SFQ))
-#define MSG_NOLIRSFOUND              _MESSAGE(1044, _("No limitation rule set found"))
+#define MSG_RQSNOTFOUNDINFILE_SS    _MESSAGE(1043, _("resource quota set "SFQ" not found in file "SFQ))
+#define MSG_NORQSFOUND              _MESSAGE(1044, _("No resource quota set found"))
 
 
 #define MSG_HEADER_HOSTNAME              "HOSTNAME"
@@ -98,16 +98,9 @@
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1052, _("ERROR! wrong argument to -s option"))
 
 
-#define MSG_HEADER_RULE "limitation rule"
+#define MSG_HEADER_RULE "resource quota rule"
 #define MSG_HEADER_LIMIT "limit"
 #define MSG_HEADER_FILTER "filter"
-
-
-
-#define MSG_HEADER_RULE "limitation rule"
-#define MSG_HEADER_LIMIT "limit"
-#define MSG_HEADER_FILTER "filter"
-
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

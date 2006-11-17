@@ -369,10 +369,10 @@ typedef enum {
    sgeE_HGROUP_DEL,
    sgeE_HGROUP_MOD,
 
-   sgeE_LIRS_LIST,
-   sgeE_LIRS_ADD,
-   sgeE_LIRS_DEL,
-   sgeE_LIRS_MOD,
+   sgeE_RQS_LIST,
+   sgeE_RQS_ADD,
+   sgeE_RQS_DEL,
+   sgeE_RQS_MOD,
 
    sgeE_EVENTSIZE 
 } ev_event;

@@ -196,7 +196,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
    lList *master_project_list = *object_type_get_master_list(SGE_TYPE_PROJECT);
    lList *master_exechost_list= *object_type_get_master_list(SGE_TYPE_EXECHOST);
-   lList *master_lirs_list= *object_type_get_master_list(SGE_TYPE_LIRS);
+   lList *master_rqs_list= *object_type_get_master_list(SGE_TYPE_RQS);
    
    DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
@@ -217,7 +217,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
       sge_rebuild_job_category(master_job_list, 
             master_userset_list, 
             master_project_list,
-            master_lirs_list);
+            master_rqs_list);
       /* category references are used in the access tree
          so rebuilding categories makes necessary to rebuild
          the access tree */
@@ -280,11 +280,11 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    copy.project_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_PROJECT));
    copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
    copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
-   copy.lirs_list = lCopyList("", master_lirs_list);
+   copy.rqs_list = lCopyList("", master_rqs_list);
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-            "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
+            "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(copy.all_queue_list),
             lGetNumberOfElem(copy.job_list),
@@ -299,14 +299,14 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
             lGetNumberOfElem(copy.ckpt_list),
             lGetNumberOfElem(copy.user_list),
             lGetNumberOfElem(copy.project_list),
-            lGetNumberOfElem(copy.lirs_list),
+            lGetNumberOfElem(copy.rqs_list),
             lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
             lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
            ));
 
    if (getenv("SGE_ND")) {
       printf("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-         "P:%d, CKPT:%d, US:%d, PR:%d, LIRS:%d, S:nd:%d/lf:%d \n",
+         "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(copy.all_queue_list),
          lGetNumberOfElem(copy.job_list),
@@ -321,7 +321,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
          lGetNumberOfElem(copy.ckpt_list),
          lGetNumberOfElem(copy.user_list),
          lGetNumberOfElem(copy.project_list),
-         lGetNumberOfElem(copy.lirs_list),
+         lGetNumberOfElem(copy.rqs_list),
          lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
@@ -371,7 +371,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lFreeList(&(copy.project_list));
    lFreeList(&(copy.ckpt_list));
    lFreeList(&(copy.hgrp_list));
-   lFreeList(&(copy.lirs_list));
+   lFreeList(&(copy.rqs_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -931,7 +931,7 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
             sge_add_job_category(job,
                                  *object_type_get_master_list(SGE_TYPE_USERSET),
                                  *object_type_get_master_list(SGE_TYPE_PROJECT),
-                                 *object_type_get_master_list(SGE_TYPE_LIRS));
+                                 *object_type_get_master_list(SGE_TYPE_RQS));
 
             job_get_submit_task_ids(job, &start, &end, &step);
 
@@ -955,7 +955,7 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
                sge_add_job_category(job,
                                     *object_type_get_master_list(SGE_TYPE_USERSET),
                                     *object_type_get_master_list(SGE_TYPE_PROJECT),
-                                    *object_type_get_master_list(SGE_TYPE_LIRS));
+                                    *object_type_get_master_list(SGE_TYPE_RQS));
                break;
 
             case sgeE_JOB_FINAL_USAGE:
@@ -1218,7 +1218,7 @@ int subscribe_default_scheduler(sge_evc_class_t *evc)
    sge_mirror_subscribe(evc, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(evc, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_LIRS,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_RQS,           NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/

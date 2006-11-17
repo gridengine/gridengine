@@ -300,7 +300,7 @@ const spool_flatfile_instr qconf_ce_list_sfi =
    { NoName, NoName, NoName }
 };
 
-const spool_flatfile_instr qconf_sub_limit_rule_sfi = 
+const spool_flatfile_instr qconf_sub_rqs_sfi = 
 {
    NULL,
    true,
@@ -320,7 +320,7 @@ const spool_flatfile_instr qconf_sub_limit_rule_sfi =
    { NoName, NoName, NoName }
 };
 
-const spool_flatfile_instr qconf_limit_rule_set_sfi = 
+const spool_flatfile_instr qconf_rqs_sfi = 
 {
    NULL,
    true,
@@ -336,7 +336,7 @@ const spool_flatfile_instr qconf_limit_rule_set_sfi =
    '\0',
    '{',
    '}',
-   &qconf_sub_limit_rule_sfi,
+   &qconf_sub_rqs_sfi,
    { NoName, NoName, NoName }
 };
 

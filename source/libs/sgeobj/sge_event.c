@@ -400,17 +400,17 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
-   case sgeE_LIRS_LIST:
-      sge_dstring_sprintf(buffer, MSG_EVENT_LIRSLISTXELEMENTS_II, (int)number, n);
+   case sgeE_RQS_LIST:
+      sge_dstring_sprintf(buffer, MSG_EVENT_RQSLISTXELEMENTS_II, (int)number, n);
       break;
-   case sgeE_LIRS_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDLIRSX_IS, (int)number, strkey);
+   case sgeE_RQS_ADD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDRQSX_IS, (int)number, strkey);
       break;
-   case sgeE_LIRS_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELLIRSX_IS, (int)number, strkey);
+   case sgeE_RQS_DEL:
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELRQSX_IS, (int)number, strkey);
       break;
-   case sgeE_LIRS_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODLIRSX_IS, (int)number, strkey);
+   case sgeE_RQS_MOD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODRQSX_IS, (int)number, strkey);
       break;
 
    /* -------------------- */

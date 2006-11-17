@@ -72,7 +72,7 @@
 #include "sgeobj/sge_usageL.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_usersetL.h"
-#include "sgeobj/sge_limit_ruleL.h"
+#include "sgeobj/sge_resource_quotaL.h"
 #include "spool/classic/read_write_pe.h"
 #include "spool/classic/read_write_cal.h"
 #include "spool/classic/read_write_centry.h"
@@ -86,7 +86,7 @@
 #include "spool/classic/read_write_userprj.h"
 #include "spool/classic/read_write_userset.h"
 #include "spool/classic/read_write_sharetree.h"
-#include "spool/classic/read_write_limit_rule.h"
+#include "spool/classic/read_write_resource_quota.h"
 #include "spool/classic/rw_configuration.h"
 #include "spool/classic/sched_conf.h"
 #include "spool/sge_spooling_utilities.h"
@@ -116,7 +116,7 @@ static int HGRP_test(void);
 static int CU_test(void);
 #endif
 static int CONF_test(void);
-static int LIRS_test(void);
+static int RQS_test(void);
 
 #ifndef __SGE_NO_USERMAPPING__
 const spool_flatfile_instr qconf_comma_braced_sfi = 
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
                                QU_test,
                                HGRP_test,
                                CONF_test,
-                               LIRS_test,
+                               RQS_test,
 #ifndef __SGE_NO_USERMAPPING__
                                CU_test,
 #endif
@@ -3043,7 +3043,7 @@ static int CONF_test(void) {
    return ret;
 }
 
-static int LIRS_test(void) {
+static int RQS_test(void) {
    int ret = 0;
    lListElem *ep = NULL;
    lListElem *ep2 = NULL;
@@ -3053,125 +3053,125 @@ static int LIRS_test(void) {
    lList *limit_list= NULL;
    lList *alp = NULL;
    spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/LIRS_cl";
+   const char *file1 = "/var/tmp/RQS_cl";
    const char *file2 = NULL;
-   lList* lirs_list = lCreateList("test", LIRS_Type);
+   lList* rqs_list = lCreateList("test", RQS_Type);
 
-   ep = lCreateElem(LIRS_Type);
-   lSetString(ep, LIRS_name, "Test_Name1");
-   lSetString(ep, LIRS_description, "Test Description");
-   lSetBool(ep, LIRS_enabled, false);
-   lp1 = lCreateList("Rule_List", LIR_Type);
+   ep = lCreateElem(RQS_Type);
+   lSetString(ep, RQS_name, "Test_Name1");
+   lSetString(ep, RQS_description, "Test Description");
+   lSetBool(ep, RQS_enabled, false);
+   lp1 = lCreateList("Rule_List", RQR_Type);
    /* rule 1 */
-   ep2 = lCreateElem(LIR_Type);
-      ep3 = lCreateElem(LIRF_Type);
-      lSetBool(ep3, LIRF_expand, true);
-      lAddSubStr(ep3, ST_name, "Test_User1", LIRF_scope, ST_Type);
+   ep2 = lCreateElem(RQR_Type);
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, true);
+      lAddSubStr(ep3, ST_name, "Test_User1", RQRF_scope, ST_Type);
 
-      lAddSubStr(ep3, ST_name, "Test_User2", LIRF_xscope, ST_Type);
-      lAddSubStr(ep3, ST_name, "Test_User3", LIRF_xscope, ST_Type);
-      lSetObject(ep2, LIR_filter_users, ep3);
+      lAddSubStr(ep3, ST_name, "Test_User2", RQRF_xscope, ST_Type);
+      lAddSubStr(ep3, ST_name, "Test_User3", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_users, ep3);
 
-      limit_list = lCreateList("Limit_List", LIRL_Type);
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "slots");
-      lSetString(limit, LIRL_value, "2*$num_proc");
+      limit_list = lCreateList("Limit_List", RQRL_Type);
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "slots");
+      lSetString(limit, RQRL_value, "2*$num_proc");
       lAppendElem(limit_list, limit);
-      lSetList(ep2, LIR_limit, limit_list);
+      lSetList(ep2, RQR_limit, limit_list);
    lAppendElem(lp1, ep2);
    /* rule 2 */
-   ep2 = lCreateElem(LIR_Type);
-      ep3 = lCreateElem(LIRF_Type);
-      lSetBool(ep3, LIRF_expand, true);
-      lAddSubStr(ep3, ST_name, "Test_Queue1", LIRF_scope, ST_Type);
+   ep2 = lCreateElem(RQR_Type);
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, true);
+      lAddSubStr(ep3, ST_name, "Test_Queue1", RQRF_scope, ST_Type);
 
-      lAddSubStr(ep3, ST_name, "Test_Queue2", LIRF_xscope, ST_Type);
-      lSetObject(ep2, LIR_filter_queues, ep3);
+      lAddSubStr(ep3, ST_name, "Test_Queue2", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_queues, ep3);
 
-      limit_list = lCreateList("Limit_List", LIRL_Type);
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "arch");
-      lSetString(limit, LIRL_value, "lx24-amd64");
+      limit_list = lCreateList("Limit_List", RQRL_Type);
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "arch");
+      lSetString(limit, RQRL_value, "lx24-amd64");
       lAppendElem(limit_list, limit);
-      lSetList(ep2, LIR_limit, limit_list);
+      lSetList(ep2, RQR_limit, limit_list);
    lAppendElem(lp1, ep2);
    /* rule 3 */
-   ep2 = lCreateElem(LIR_Type);
-   lSetString(ep2, LIR_name, "rule3");
-      ep3 = lCreateElem(LIRF_Type);
-      lSetBool(ep3, LIRF_expand, true);
-      lAddSubStr(ep3, ST_name, "Test_Pe1", LIRF_scope, ST_Type);
+   ep2 = lCreateElem(RQR_Type);
+   lSetString(ep2, RQR_name, "rule3");
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, true);
+      lAddSubStr(ep3, ST_name, "Test_Pe1", RQRF_scope, ST_Type);
 
-      lAddSubStr(ep3, ST_name, "Test_Pe2", LIRF_xscope, ST_Type);
-      lSetObject(ep2, LIR_filter_pes, ep3);
+      lAddSubStr(ep3, ST_name, "Test_Pe2", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_pes, ep3);
 
-      limit_list = lCreateList("Limit_List", LIRL_Type);
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "mem");
-      lSetString(limit, LIRL_value, "1G");
+      limit_list = lCreateList("Limit_List", RQRL_Type);
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "mem");
+      lSetString(limit, RQRL_value, "1G");
       lAppendElem(limit_list, limit);
-      lSetList(ep2, LIR_limit, limit_list);
+      lSetList(ep2, RQR_limit, limit_list);
    lAppendElem(lp1, ep2);
-   lSetList(ep, LIRS_rule, lp1);
-   lAppendElem(lirs_list, ep);
+   lSetList(ep, RQS_rule, lp1);
+   lAppendElem(rqs_list, ep);
 
    /* rule 4 */
-   ep = lCreateElem(LIRS_Type);
-   lSetString(ep, LIRS_name, "Test_Name2");
-   lSetString(ep, LIRS_description, "Test Description");
-   lSetBool(ep, LIRS_enabled, true);
-   lp1 = lCreateList("Rule_List", LIR_Type);
-   ep2 = lCreateElem(LIR_Type);
-      ep3 = lCreateElem(LIRF_Type);
-      lSetBool(ep3, LIRF_expand, false);
-      lAddSubStr(ep3, ST_name, "roland", LIRF_scope, ST_Type);
+   ep = lCreateElem(RQS_Type);
+   lSetString(ep, RQS_name, "Test_Name2");
+   lSetString(ep, RQS_description, "Test Description");
+   lSetBool(ep, RQS_enabled, true);
+   lp1 = lCreateList("Rule_List", RQR_Type);
+   ep2 = lCreateElem(RQR_Type);
+      ep3 = lCreateElem(RQRF_Type);
+      lSetBool(ep3, RQRF_expand, false);
+      lAddSubStr(ep3, ST_name, "roland", RQRF_scope, ST_Type);
 
-      lAddSubStr(ep3, ST_name, "andre", LIRF_xscope, ST_Type);
-      lSetObject(ep2, LIR_filter_users, ep3);
+      lAddSubStr(ep3, ST_name, "andre", RQRF_xscope, ST_Type);
+      lSetObject(ep2, RQR_filter_users, ep3);
 
-      limit_list = lCreateList("Limit_List", LIRL_Type);
+      limit_list = lCreateList("Limit_List", RQRL_Type);
       /* first limit */
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "mem");
-      lSetString(limit, LIRL_value, "10G");
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "mem");
+      lSetString(limit, RQRL_value, "10G");
       lAppendElem(limit_list, limit);
       /* second limit */
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "arch");
-      lSetString(limit, LIRL_value, "sol-sparc64");
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "arch");
+      lSetString(limit, RQRL_value, "sol-sparc64");
       lAppendElem(limit_list, limit);
 
-      lSetList(ep2, LIR_limit, limit_list);
+      lSetList(ep2, RQR_limit, limit_list);
    lAppendElem(lp1, ep2);
-   lSetList(ep, LIRS_rule, lp1);
-   lAppendElem(lirs_list, ep);
+   lSetList(ep, RQS_rule, lp1);
+   lAppendElem(rqs_list, ep);
 
-   fields = sge_build_LIRS_field_list(false, false);
+   fields = sge_build_RQS_field_list(false, false);
 
-   printf("LIRF: No Args\n");   
+   printf("RQRF: No Args\n");   
 
-   /* Write a LIRS file using classic spooling */
-   file1 = write_limit_rule_sets(0, 1, lirs_list);
+   /* Write a RQS file using classic spooling */
+   file1 = write_rqs_list(0, 1, rqs_list);
 
-   /* Read a LIRS file using flatfile spooling */
-   lFreeList(&lirs_list);
-   lirs_list = spool_flatfile_read_list(&alp, LIRS_Type, fields, NULL, true, &qconf_limit_rule_set_sfi,
+   /* Read a RQS file using flatfile spooling */
+   lFreeList(&rqs_list);
+   rqs_list = spool_flatfile_read_list(&alp, RQS_Type, fields, NULL, true, &qconf_rqs_sfi,
                                    SP_FORM_ASCII, NULL, file1);
 
-   /* Write a LIRS file using flatfile spooling */
-   file2 = spool_flatfile_write_list(&alp, lirs_list, fields, &qconf_limit_rule_set_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
+   /* Write a RQS file using flatfile spooling */
+   file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
 
-   /* Read a LIRS file using classic spooling */
-   lFreeList(&lirs_list);
-   lirs_list = cull_read_in_limit_rule_sets(file2, &alp);
+   /* Read a RQS file using classic spooling */
+   lFreeList(&rqs_list);
+   rqs_list = cull_read_in_rqs_list(file2, &alp);
 
    unlink(file2);
    FREE(file2);
 
 #if 1 
-   file2 = spool_flatfile_write_list(&alp, lirs_list, fields, &qconf_limit_rule_set_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
+   file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
 #else
-   file2 = write_limit_rule_sets(0, 1, lirs_list);
+   file2 = write_rqs_list(0, 1, rqs_list);
 #endif
 
    ret = diff(file1, file2);
@@ -3185,7 +3185,7 @@ static int LIRS_test(void) {
 
    answer_list_output(&alp);
 
-   lFreeList(&lirs_list);
+   lFreeList(&rqs_list);
 
    return ret;
 }

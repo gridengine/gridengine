@@ -40,12 +40,12 @@ CLIENTS_COMMON_SRC = qstat_printing.c \
                      write_job_defaults.c \
                      sge_hgroup_qconf.c \
                      sge_cqueue_qconf.c \
-                     sge_limit_rule_qconf.c \
+                     sge_resource_quota_qconf.c \
                      sge_cqueue_qstat.c \
                      sge_centry_qconf.c \
                      sge_qhost.c \
                      sge_qstat.c \
-                     sge_qlimit.c
+                     sge_qquota.c
 
 
 CLIENTS_COMMON_OBJS = $(CLIENTS_COMMON_SRC:.c=.o)
@@ -97,8 +97,8 @@ sge_centry_qconf.o: $(CLIENTS_COMMON_DIR)/sge_centry_qconf.c
 sge_cqueue_qconf.o: $(CLIENTS_COMMON_DIR)/sge_cqueue_qconf.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_cqueue_qconf.c
 
-sge_limit_rule_qconf.o: $(CLIENTS_COMMON_DIR)/sge_limit_rule_qconf.c
-		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_limit_rule_qconf.c
+sge_resource_quota_qconf.o: $(CLIENTS_COMMON_DIR)/sge_resource_quota_qconf.c
+		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_resource_quota_qconf.c
 
 sge_cqueue_qstat.o: $(CLIENTS_COMMON_DIR)/sge_cqueue_qstat.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_cqueue_qstat.c
@@ -109,6 +109,6 @@ sge_qhost.o: $(CLIENTS_COMMON_DIR)/sge_qhost.c
 sge_qstat.o: $(CLIENTS_COMMON_DIR)/sge_qstat.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qstat.c
 
-sge_qlimit.o: $(CLIENTS_COMMON_DIR)/sge_qlimit.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qlimit.c
+sge_qquota.o: $(CLIENTS_COMMON_DIR)/sge_qquota.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qquota.c
 

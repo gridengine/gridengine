@@ -48,7 +48,7 @@
 #define SGE_GLOBAL_NAME          "global"
 #define SGE_QUEUE_NAME           "queue"
 #define SGE_HOST_NAME            "host"
-#define SGE_LIRS_NAME            "limitation_ruleset"
+#define SGE_RQS_NAME             "resource_quota"
 
 /* sge object names */
 #define SGE_OBJ_QUEUE                  "queue"
@@ -59,7 +59,7 @@
 #define SGE_OBJ_CKPT                   "ckpt"
 #define SGE_OBJ_CALENDAR               "cal"
 #define SGE_OBJ_USER_MAPPING           "usermapping"
-#define SGE_OBJ_LIRS                   "limitation_ruleset"
+#define SGE_OBJ_RQS                    "resource_quota"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_FORMULA          "load_formula"
@@ -74,7 +74,7 @@
 #define SGE_ATTR_USER_LISTS            "user_lists"
 #define SGE_ATTR_XUSER_LISTS           "xuser_lists"
 #define SGE_ATTR_PROJECTS              "projects"
-#define SGE_ATTR_LIMITRULES            "limitation_rules"
+#define SGE_ATTR_RQSRULES              "resource_quota_rules"
 #define SGE_ATTR_XPROJECTS             "xprojects"
 #define SGE_ATTR_USAGE_SCALING         "usage_scaling"
 #define SGE_ATTR_SEQ_NO                "seq_no"
@@ -113,7 +113,7 @@
 #define SGE_ATTR_PE_NAME               "pe_name"
 #define SGE_ATTR_CKPT_NAME             "ckpt_name"
 #define SGE_ATTR_HGRP_NAME             "group_name"
-#define SGE_ATTR_LIRS_NAME             "name"
+#define SGE_ATTR_RQS_NAME             "name"
 #define SGE_ATTR_CALENDAR_NAME         "calendar_name"
 #define SGE_ATTR_YEAR                  "year"
 #define SGE_ATTR_WEEK                  "week"
@@ -193,7 +193,7 @@
 #define ZOMBIE_DIR                "zombies"
 #define MAN_DIR                   "managers"
 #define OP_DIR                    "operators"
-#define LIMITRULESETS_DIR         "limit_rule_sets"
+#define RESOURCEQUOTAS_DIR        "resource_quotas"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"

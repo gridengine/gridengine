@@ -342,17 +342,17 @@
 #define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
 
 
-#define MSG_LIMITRULE_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
+#define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
 
-#define MSG_EVENT_LIRSLISTXELEMENTS_II           _MESSAGE(64371, _("%d. EVENT LIRS ENTRY LIST %d Elements"))
-#define MSG_EVENT_DELLIRSX_IS                    _MESSAGE(64372, _("%d. EVENT DEL LIRS ENTRY "SFN""))
-#define MSG_EVENT_ADDLIRSX_IS                    _MESSAGE(64373, _("%d. EVENT ADD LIRS ENTRY "SFN""))
-#define MSG_EVENT_MODLIRSX_IS                    _MESSAGE(64374, _("%d. EVENT MOD LIRS ENTRY "SFN""))
-#define MSG_LIMITRULE_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
-#define MSG_LIMITRULE_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
-#define MSG_LIMITRULE_NORULES                    _MESSAGE(64377, _("limitation rule set has no rules"))
-#define MSG_LIMITRULE_NONAME                     _MESSAGE(64378, _("limitation rule set has no name"))
-#define MSG_CENTRYREFINLIRS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in limitation rule set "SFQ"."))
+#define MSG_EVENT_RQSLISTXELEMENTS_II           _MESSAGE(64371, _("%d. EVENT RQS ENTRY LIST %d Elements"))
+#define MSG_EVENT_DELRQSX_IS                    _MESSAGE(64372, _("%d. EVENT DEL RQS ENTRY "SFN""))
+#define MSG_EVENT_ADDRQSX_IS                    _MESSAGE(64373, _("%d. EVENT ADD RQS ENTRY "SFN""))
+#define MSG_EVENT_MODRQSX_IS                    _MESSAGE(64374, _("%d. EVENT MOD RQS ENTRY "SFN""))
+#define MSG_RESOURCEQUOTA_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
+#define MSG_RESOURCEQUOTA_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
+#define MSG_RESOURCEQUOTA_NORULES                    _MESSAGE(64377, _("resource quota set has no rules"))
+#define MSG_RESOURCEQUOTA_NONAME                     _MESSAGE(64378, _("resource quota set has no name"))
+#define MSG_CENTRYREFINRQS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in resource quota set "SFQ"."))
 
 
 #define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS          _MESSAGE(64380, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ"."))

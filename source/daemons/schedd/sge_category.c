@@ -142,7 +142,7 @@ void sge_print_categories(void)
 /*                                                                         */
 /*  TODO SG: split this into seperate functions                            */
 /*-------------------------------------------------------------------------*/
-int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list, const lList *lirs_list)
+int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list, const lList *rqs_list)
 {
 
    lListElem *cat = NULL;
@@ -158,7 +158,7 @@ int sge_add_job_category(lListElem *job, lList *acl_list, const lList *prj_list,
       Builds the category for the resource matching
    */   
    
-   sge_build_job_category_dstring(&category_str, job, acl_list, prj_list, &did_project, lirs_list);
+   sge_build_job_category_dstring(&category_str, job, acl_list, prj_list, &did_project, rqs_list);
 
    if (sge_dstring_strlen(&category_str) == 0) {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
@@ -377,7 +377,7 @@ void sge_set_job_category_message_added(lRef cat)
 /*-------------------------------------------------------------------------*/
 /* rebuild the category references                                         */
 /*-------------------------------------------------------------------------*/
-int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_list, const lList *lirs_list)
+int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_list, const lList *rqs_list)
 {
    lListElem *job;
 
@@ -389,7 +389,7 @@ int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_
    lFreeList(&CS_CATEGORY_LIST);
 
    for_each (job, job_list) {
-      sge_add_job_category(job, acl_list, prj_list, lirs_list);
+      sge_add_job_category(job, acl_list, prj_list, rqs_list);
    } 
    DRETURN(0);
 }

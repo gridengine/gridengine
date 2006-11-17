@@ -95,7 +95,7 @@ enum {
  DRMAA           ,       /* 42 */
  QPING           ,       /* 43 */
  SGE_PASSWD      ,       /* 44 */
- QLIMIT          ,       /* 45 */
+ QQUOTA          ,       /* 45 */
  JGDI            ,       /* 46 */
  QTCSH           ,       /* 47 */
  SGE_SHARE_MON           /* 48 */

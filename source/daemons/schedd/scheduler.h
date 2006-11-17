@@ -55,7 +55,7 @@ typedef struct {
    lList *ckpt_list;        /* CK_Type */
    lList *running_per_user; /* JC_Type */
    lList *hgrp_list;        /* HGRP_Type */
-   lList *lirs_list;        /* LIRS_Type */
+   lList *rqs_list;        /* RQS_Type */
 } sge_Sdescr_t;
 
 /*

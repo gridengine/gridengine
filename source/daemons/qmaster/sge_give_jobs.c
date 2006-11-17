@@ -100,7 +100,7 @@
 #include "spool/sge_spooling.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
-#include "sched/sge_lirs_schedd.h"
+#include "sched/sge_resource_quota_schedd.h"
 
 
 static void 
@@ -961,9 +961,9 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
    lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
-   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
+   lList *master_rqs_list = *object_base[SGE_TYPE_RQS].list;
    lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
-   lListElem *lirs = NULL;
+   lListElem *rqs = NULL;
    lListElem *ep = NULL;
 
    /* need hostname for job_log */
@@ -1021,14 +1021,14 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
             lListElem_clear_changed_info(queue);
 
-            /* debit limitation rule set */
-            for_each(lirs, master_lirs_list) {
-               if (lirs_debit_consumable(lirs, jep, ep, lGetString(jatep, JAT_granted_pe), master_centry_list, 
+            /* debit resource quota set */
+            for_each(rqs, master_rqs_list) {
+               if (rqs_debit_consumable(rqs, jep, ep, lGetString(jatep, JAT_granted_pe), master_centry_list, 
                                          master_userset_list, master_hgroup_list, tmp_slot) > 0) {
                   /* this info is not spooled */
-                  sge_add_event(0, sgeE_LIRS_MOD, 0, 0, 
-                                lGetString(lirs, LIRS_name), NULL, NULL, lirs);
-                  lListElem_clear_changed_info(lirs);
+                  sge_add_event(0, sgeE_RQS_MOD, 0, 0, 
+                                lGetString(rqs, RQS_name), NULL, NULL, rqs);
+                  lListElem_clear_changed_info(rqs);
                }
             }
          } else {
@@ -1453,8 +1453,8 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
    lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
    lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
    lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
-   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
-   lListElem *lirs = NULL;
+   lList *master_rqs_list = *object_base[SGE_TYPE_RQS].list;
+   lListElem *rqs = NULL;
    lListElem *global_host_ep = NULL;
  
    DENTER(TOP_LAYER, "sge_clear_granted_resources");
@@ -1507,16 +1507,16 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             }
             qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot);
 
-            /* undebit limitation rule set */
-            for_each(lirs, master_lirs_list) {
-               DPRINTF(("undebiting lirs %s\n", lGetString(lirs, LIRS_name)));
-               if (lirs_debit_consumable(lirs, job, ep, lGetString(ja_task, JAT_granted_pe),
+            /* undebit resource quota set */
+            for_each(rqs, master_rqs_list) {
+               DPRINTF(("undebiting rqs %s\n", lGetString(rqs, RQS_name)));
+               if (rqs_debit_consumable(rqs, job, ep, lGetString(ja_task, JAT_granted_pe),
                                          master_centry_list, master_userset_list, master_hgroup_list,
                                          -tmp_slot) > 0) {
                   /* this info is not spooled */
-                  sge_add_event(0, sgeE_LIRS_MOD, 0, 0, 
-                                lGetString(lirs, LIRS_name), NULL, NULL, lirs);
-                  lListElem_clear_changed_info(lirs);
+                  sge_add_event(0, sgeE_RQS_MOD, 0, 0, 
+                                lGetString(rqs, RQS_name), NULL, NULL, rqs);
+                  lListElem_clear_changed_info(rqs);
                }
             }
 

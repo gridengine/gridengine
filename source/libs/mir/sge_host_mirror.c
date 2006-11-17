@@ -45,7 +45,7 @@
 *     host_update_master_list() -- update the master hostlists
 *
 *  SYNOPSIS
-*     sge_callback_result lirs_update_master_list(object_description 
+*     sge_callback_result rqs_update_master_list(object_description 
 *     *object_base, sge_object_type type, sge_event_action action, lListElem 
 *     *event, void *clientdata) 
 *

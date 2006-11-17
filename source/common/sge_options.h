@@ -269,14 +269,14 @@ enum {
    cu_OPT,       /* SGEEE sharetree - clear all user/project usage */
    R_OPT,        /* SGEEE sharetree - clear all user/project usage */
 
-   /* added for limitation rule sets */
-   slrs_OPT,     /* show limitation rule set */
-   slrsl_OPT,    /* show limitation rule set list */
-   alrs_OPT,     /* add limitation rule set */
-   Alrs_OPT,     /* add limitation rule set from file */
-   mlrs_OPT,     /* modfiy limitation rule set */
-   Mlrs_OPT,     /* modify limitation rule set from file */
-   dlrs_OPT      /* delete limitation rule set */
+   /* added for resource quota sets */
+   srqs_OPT,     /* show resource quota set */
+   srqsl_OPT,    /* show resource quota set list */
+   arqs_OPT,     /* add resource quota set */
+   Arqs_OPT,     /* add resource quota set from file */
+   mrqs_OPT,     /* modfiy resource quota set */
+   Mrqs_OPT,     /* modify resource quota set from file */
+   drqs_OPT      /* delete resource quota set */
 };
 
 /* macros used in parsing */

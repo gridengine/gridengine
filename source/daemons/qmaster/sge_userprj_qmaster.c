@@ -71,8 +71,8 @@
 #include "sge_cqueue.h"
 #include "sge_suser.h"
 #include "sge_lock.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sge_resource_quota_qmaster.h"
 
 #include "uti/sge_bootstrap.h"
 
@@ -228,12 +228,12 @@ Error:
 int userprj_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
-   lListElem *lirs;
+   lListElem *rqs;
    
    DENTER(TOP_LAYER, "userprj_success");
 
-   for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, lGetString(ep, UP_name))) {
+   for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
+      if (scope_is_referenced_rqs(rqs, RQR_filter_projects, lGetString(ep, UP_name))) {
          lSetBool(ep, UP_consider_with_categories, true);
          break;
       }
@@ -712,10 +712,10 @@ void sge_userprj_spool(sge_gdi_ctx_class_t *ctx) {
 *******************************************************************************/
 static bool project_still_used(const char *p)
 {
-   const lListElem *qc, *cq, *hep, *lirs;
+   const lListElem *qc, *cq, *hep, *rqs;
 
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_projects, p)) {
+   for_each (rqs, *object_type_get_master_list(SGE_TYPE_RQS)) {
+      if (scope_is_referenced_rqs(rqs, RQR_filter_projects, p)) {
          return true;
       }
    }

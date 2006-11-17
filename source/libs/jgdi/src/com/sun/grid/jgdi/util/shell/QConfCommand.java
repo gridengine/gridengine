@@ -67,8 +67,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-ah hostname]                           add an administrative host");
 //      pw.println("   [-ahgrp group]                           add new host group entry");
 //      pw.println("   [-Ahgrp file]                            add new host group entry from file");
-//      pw.println("   [-alrs [lirs_list]]                      add limitation rule set(s)");
-//      pw.println("   [-Alrs fname]                            add limitation rule set(s) from file");
+//      pw.println("   [-arqs [rqs_list]]                       add resource quota set(s)");
+//      pw.println("   [-Arqs fname]                            add resource quota set(s) from file");
 //      pw.println("   [-am user_list]                          add user to manager list");
 //      pw.println("   [-ao user_list]                          add user to operator list");
 //      pw.println("   [-ap pe-name]                            add a new parallel environment");
@@ -95,7 +95,7 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-de host_list]                          remove an exec server");
 //      pw.println("   [-dh host_list]                          remove an administrative host");
 //      pw.println("   [-dhgrp group]                           delete host group entry");
-//      pw.println("   [-dlrs lirs_list]                        delete limitation rule set(s)");
+//      pw.println("   [-drqs rqs_list]                        delete resource quota set(s)");
 //      pw.println("   [-dm user_list]                          remove user from manager list");
 //      pw.println("   [-do user_list]                          remove user from operator list");
 //      pw.println("   [-dp pe-name]                            remove a parallel environment");
@@ -126,8 +126,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-Me fname]                              modify exec server from file");
 //      pw.println("   [-mhgrp group]                           modify host group entry");
 //      pw.println("   [-Mhgrp file]                            modify host group entry from file");
-//      pw.println("   [-mlrs [lirs_list]]                      modify limitation rule set(s)");
-//      pw.println("   [-Mlrs fname]                            modify limitation rule set(s) from file");
+//      pw.println("   [-mrqs [rqs_list]]                      modify resource quota set(s)");
+//      pw.println("   [-Mrqs fname]                            modify resource quota set(s) from file");
 //      pw.println("   [-mp pe-name]                            modify a parallel environment");
 //      pw.println("   [-Mp fname]                              modify a parallel environment from file");
 //      pw.println("   [-mprj project]                          modify a project");
@@ -161,8 +161,8 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("   [-shgrp_resolved group]                  show host group with resolved hostlist");
 //      pw.println("   [-shgrpl]                                show host group list");
         pw.println("   [-sds]                                   show detached settings");
-//      pw.println("   [-slrs [lirs_list]]                      show limitation rule set(s)");
-//      pw.println("   [-slrsl]                                 show limitation rule set list");
+//      pw.println("   [-srqs [rqs_list]]                      show resource quota set(s)");
+//      pw.println("   [-srqsl]                                 show resource quota set list");
 //      pw.println("   [-sm]                                    show a list of all managers");
 //      pw.println("   [-so]                                    show a list of all operators");
 //      pw.println("   [-sobjl obj_nm2 attr_nm val]             show objects which match the given value");
@@ -186,7 +186,7 @@ public class QConfCommand extends AbstractCommand {
 //      pw.println("complex_list            complex[,complex,...]");
         pw.println("destin_id_list          queue[ queue ...]");
 //      pw.println("listname_list           listname[,listname,...]");
-//      pw.println("lirs_list               lirs_name[,lirs_name,...]");        
+//      pw.println("rqs_list               rqs_name[,rqs_name,...]");        
 //      pw.println("node_list               node_path[,node_path,...]");
 //      pw.println("node_path               [/]node_name[[/.]node_name...]");
 //      pw.println("node_shares_list        node_path=shares[,node_path=shares,...]");

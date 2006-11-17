@@ -70,7 +70,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
-#include "sge_limit_rule.h"
+#include "sge_resource_quota.h"
 
 #include "sge_str.h"
 
@@ -92,7 +92,7 @@
 #include "sge_hgroup.h"
 #include "read_write_host_group.h"
 #include "read_write_qinstance.h"
-#include "read_write_limit_rule.h"
+#include "read_write_resource_quota.h"
 
 #include "setup_path.h"
 #include "sge_uidgid.h"
@@ -690,13 +690,13 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **
    DRETURN(0);
 }
 
-int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory, lList **alpp)
+int sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alpp)
 {
    lList *dir_entries = NULL;
-   DENTER(TOP_LAYER, "sge_read_limit_rule_set_list_from_disk");
+   DENTER(TOP_LAYER, "sge_read_rqs_list_from_disk");
 
    if (*list == NULL) {
-      *list = lCreateList("", LIRS_Type);
+      *list = lCreateList("", RQS_Type);
    }
 
    dir_entries = sge_get_dirents(directory);
@@ -704,54 +704,54 @@ int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory, 
       lListElem *dir_entry = NULL;
       
       if (!sge_silent_get()) {
-         printf("%s\n", MSG_CONFIG_READINGINLIRS);
+         printf("%s\n", MSG_CONFIG_READINGINRQS);
       }
 
       for_each(dir_entry, dir_entries) {
-         lListElem *lirs = NULL;
+         lListElem *rqs = NULL;
          dstring filename = DSTRING_INIT;
-         const char *lirs_name;
+         const char *rqs_name;
 
-         lirs_name = lGetString(dir_entry, ST_name);
-         if (lirs_name[0] != '.') {
-           lList *tmp_lirs_list = NULL;
+         rqs_name = lGetString(dir_entry, ST_name);
+         if (rqs_name[0] != '.') {
+           lList *tmp_rqs_list = NULL;
            if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_LIRS_S, lirs_name);
+               printf(MSG_SETUP_RQS_S, rqs_name);
                printf("\n");
            }
-           if (verify_str_key(NULL, lirs_name, MAX_VERIFY_STRING,
-                              "lirs", KEY_TABLE) != STATUS_OK) {
+           if (verify_str_key(NULL, rqs_name, MAX_VERIFY_STRING,
+                              "rqs", KEY_TABLE) != STATUS_OK) {
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
-           sge_dstring_sprintf(&filename, "%s/%s", directory, lirs_name);
-           tmp_lirs_list = cull_read_in_limit_rule_sets(sge_dstring_get_string(&filename), alpp);
-           lirs = lCopyElem(lFirst(tmp_lirs_list));
-           lFreeList(&tmp_lirs_list);
+           sge_dstring_sprintf(&filename, "%s/%s", directory, rqs_name);
+           tmp_rqs_list = cull_read_in_rqs_list(sge_dstring_get_string(&filename), alpp);
+           rqs = lCopyElem(lFirst(tmp_rqs_list));
+           lFreeList(&tmp_rqs_list);
 
-           if (!lirs) {
+           if (!rqs) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
-                      lirs_name));
+                      rqs_name));
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
 
-           if (!limit_rule_set_verify_attributes(lirs, alpp, true)) {
+           if (!rqs_verify_attributes(rqs, alpp, true)) {
                ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
-                      lirs_name));
-               lFreeElem(&lirs);
+                      rqs_name));
+               lFreeElem(&rqs);
                sge_dstring_free(&filename);
                lFreeList(&dir_entries);
                DRETURN(-1);
            }
 
-           lAppendElem(*list, lirs);
+           lAppendElem(*list, rqs);
 
          } else {
-            sge_unlink(directory, lirs_name);
+            sge_unlink(directory, rqs_name);
          }
          sge_dstring_free(&filename);
       }

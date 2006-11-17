@@ -96,8 +96,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST; 
      case OA_LISTNAME_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST; 
-     case OA_LIRS_LIST:
-         return MSG_GDI_ARGUMENTSYNTAX_OA_LIRS_LIST; 
+     case OA_RQS_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_RQS_LIST; 
      case OA_MAIL_ADDRESS:
          return MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS; 
      case OA_MAIL_LIST:
@@ -299,14 +299,14 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Ahgrp_OPT, MSG_GDI_UTEXT_Ahgrp_OPT);
    }
 
-   if (VALID_OPT(alrs_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_alrs_OPT, MSG_GDI_UTEXT_alrs_OPT);
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(arqs_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_arqs_OPT, MSG_GDI_UTEXT_arqs_OPT);
+      MARK(OA_RQS_LIST);
    }
 
-   if (VALID_OPT(Alrs_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_Alrs_OPT, MSG_GDI_UTEXT_Alrs_OPT);
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(Arqs_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_Arqs_OPT, MSG_GDI_UTEXT_Arqs_OPT);
+      MARK(OA_RQS_LIST);
    }
 
    if (VALID_OPT(am_OPT, prog_number)) {
@@ -491,9 +491,9 @@ FILE *fp
       MARK(OA_DATE_TIME);
    }
 
-   if (VALID_OPT(dlrs_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_dlrs_OPT, MSG_GDI_UTEXT_dlrs_OPT);
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(drqs_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_drqs_OPT, MSG_GDI_UTEXT_drqs_OPT);
+      MARK(OA_RQS_LIST);
    }
 
    if (VALID_OPT(dm_OPT, prog_number)) {
@@ -734,14 +734,14 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Mhgrp_OPT, MSG_GDI_UTEXT_Mhgrp_OPT);
    }
 
-   if (VALID_OPT(mlrs_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_mlrs_OPT, MSG_GDI_UTEXT_mlrs_OPT);
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(mrqs_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_mrqs_OPT, MSG_GDI_UTEXT_mrqs_OPT);
+      MARK(OA_RQS_LIST);
    }
 
-   if (VALID_OPT(Mlrs_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_Mlrs_OPT, MSG_GDI_UTEXT_Mlrs_OPT);
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(Mrqs_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_Mrqs_OPT, MSG_GDI_UTEXT_Mrqs_OPT);
+      MARK(OA_RQS_LIST);
    }
 
    if (VALID_OPT(mp_OPT, prog_number)) {
@@ -1023,14 +1023,14 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_sick_OPT , MSG_GDI_UTEXT_sick_OPT );
    }
 
-   if (VALID_OPT(slrs_OPT,  prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_slrs_OPT , MSG_GDI_UTEXT_slrs_OPT );
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(srqs_OPT,  prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_srqs_OPT , MSG_GDI_UTEXT_srqs_OPT );
+      MARK(OA_RQS_LIST);
    }
 
-   if (VALID_OPT(slrsl_OPT,  prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_slrsl_OPT , MSG_GDI_UTEXT_slrsl_OPT );
-      MARK(OA_LIRS_LIST);
+   if (VALID_OPT(srqsl_OPT,  prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_srqsl_OPT , MSG_GDI_UTEXT_srqsl_OPT );
+      MARK(OA_RQS_LIST);
    }
 
    if (VALID_OPT(sm_OPT, prog_number)) {

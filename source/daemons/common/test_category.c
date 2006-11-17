@@ -50,7 +50,7 @@ typedef struct {
    char       *owner;                  /* the job owner */
    char       *group;                  /* the job group */
    char       *checkpointing;          /* the checkpointing */
-   char       *lirs;                   /* the limitation rule set */
+   char       *rqs;                    /* the resource quota set */
    char       *hard_resource_list;     /* the hard requested resources */
    char       *soft_resource_list;     /* the soft requested resources */
    char       *hard_queue_list;        /* the hard requested queues */
@@ -97,8 +97,8 @@ static data_entry_t tests[] = { {1, 128, NULL, "user", NULL, NULL, NULL, NULL, N
                                 {15, 128, NULL, "user", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1},    
                                 {16, 128, "my_pr", "user", NULL, "my_check", NULL, "arch test_arch lic 1 memory 1GB", "arch test_arch lic 1 memory 1GB", 
                                     "my.q@test m1.q@what-ever test@*", "my.q@test m1.q@what-ever test@*", "my_pe 1-10", 1},
-                                {17, 128, NULL, "lirs_user", NULL, NULL, "my_lirs", NULL, NULL, NULL, NULL, NULL, 0},
-                                {18, 128, NULL, "user", NULL, NULL, "my_lirs", NULL, NULL, NULL, NULL, NULL, 0},
+                                {17, 128, NULL, "rqs_user", NULL, NULL, "my_rqs", NULL, NULL, NULL, NULL, NULL, 0},
+                                {18, 128, NULL, "user", NULL, NULL, "my_rqs", NULL, NULL, NULL, NULL, NULL, 0},
 
 /* stop entry */                {-1,  0, NULL,   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0} 
                               };  
@@ -122,7 +122,7 @@ static char *result_category[] = { NULL,
                                    "-q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
                                    "-U test2_acc,test1_acc",
                                    "-U test2_acc,test1_acc -q m1.q@what-ever,my.q@test,test@* -masterq m1.q@what-ever,my.q@test,test@* -l arch=test_arch,lic=1,memory=1GB -soft -l arch=test_arch,lic=1,memory=1GB -pe my_pe 1-10 -ckpt my_check -P my_pr",
-                                   "-u lirs_user",
+                                   "-u rqs_user",
                                    NULL,
                                    NULL
                                  };
@@ -210,40 +210,40 @@ static lList *test_create_project(const char *project)
    return project_list;
 }
 
-static lList *test_create_lirs(void)
+static lList *test_create_rqs(void)
 {
-   lList* lirs_list = lCreateList("my_lirs", LIRS_Type);
-   lListElem* lirs;
+   lList* rqs_list = lCreateList("my_rqs", RQS_Type);
+   lListElem* rqs;
    lList* rule_list;
    lListElem* rule;
    lListElem* filter;
    lListElem* limit;
    lList * limit_list;
    
-   lirs = lCreateElem(LIRS_Type);
-   lSetString(lirs, LIRS_name, "Test_Name1");
-   lSetBool(lirs, LIRS_enabled, true);
-   rule_list = lCreateList("Rule_List", LIR_Type);
+   rqs = lCreateElem(RQS_Type);
+   lSetString(rqs, RQS_name, "Test_Name1");
+   lSetBool(rqs, RQS_enabled, true);
+   rule_list = lCreateList("Rule_List", RQR_Type);
 
-   rule = lCreateElem(LIR_Type);
-      filter = lCreateElem(LIRF_Type);
-      lSetBool(filter, LIRF_expand, true);
-      lAddSubStr(filter, ST_name, "lirs_user", LIRF_scope, ST_Type);
+   rule = lCreateElem(RQR_Type);
+      filter = lCreateElem(RQRF_Type);
+      lSetBool(filter, RQRF_expand, true);
+      lAddSubStr(filter, ST_name, "rqs_user", RQRF_scope, ST_Type);
 
-      lSetObject(rule, LIR_filter_users, filter);
+      lSetObject(rule, RQR_filter_users, filter);
 
-      limit_list = lCreateList("limit_list", LIRL_Type);
-      limit = lCreateElem(LIRL_Type);
-      lSetString(limit, LIRL_name, "slots");
-      lSetString(limit, LIRL_value, "2*$num_proc");
+      limit_list = lCreateList("limit_list", RQRL_Type);
+      limit = lCreateElem(RQRL_Type);
+      lSetString(limit, RQRL_name, "slots");
+      lSetString(limit, RQRL_value, "2*$num_proc");
       lAppendElem(limit_list, limit);
-      lSetList(rule, LIR_limit, limit_list);
+      lSetList(rule, RQR_limit, limit_list);
    lAppendElem(rule_list, rule);
-   lSetList(lirs, LIRS_rule, rule_list);
-   lAppendElem(lirs_list, lirs);
+   lSetList(rqs, RQS_rule, rule_list);
+   lAppendElem(rqs_list, rqs);
 
 
-   return lirs_list;
+   return rqs_list;
 }
 
 /****** test_category/test_create_request() ************************************
@@ -523,7 +523,7 @@ end:
 *     MT-NOTE: test_performance() is MT safe 
 *
 *******************************************************************************/
-static double test_performance(lListElem *job_elem, int max, lList* access_list, const lList *project_list, const lList *lirs_list) 
+static double test_performance(lListElem *job_elem, int max, lList* access_list, const lList *project_list, const lList *rqs_list) 
 {
    int i;
    dstring category_str = DSTRING_INIT;
@@ -533,7 +533,7 @@ static double test_performance(lListElem *job_elem, int max, lList* access_list,
    
    gettimeofday(&before, NULL); 
    for (i = 0; i < max; i++) {
-      sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, lirs_list);
+      sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, rqs_list);
       sge_dstring_clear(&category_str);
    }
    gettimeofday(&after, NULL);
@@ -572,7 +572,7 @@ static int test(data_entry_t *test, char *result, int count)
    lListElem *job_elem = NULL;
    lList *access_list = NULL;
    lList *project_list = NULL;
-   lList *lirs_list = NULL;
+   lList *rqs_list = NULL;
 
    printf("\ntest %d:\n-------\n", test->test_nr);
    
@@ -584,14 +584,14 @@ static int test(data_entry_t *test, char *result, int count)
    if (test->project) {
       project_list = test_create_project(test->project);
    }
-   if (test->lirs) {
-      lirs_list = test_create_lirs();
+   if (test->rqs) {
+      rqs_list = test_create_rqs();
    }
 
    if (job_elem != NULL) {
        dstring category_str = DSTRING_INIT;
 
-       sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, lirs_list);
+       sge_build_job_category_dstring(&category_str, job_elem, access_list, project_list, NULL, rqs_list);
 
        printf("got     : <%s>\n", sge_dstring_get_string(&category_str)!=NULL?sge_dstring_get_string(&category_str):"<NULL>");
 
@@ -616,7 +616,7 @@ static int test(data_entry_t *test, char *result, int count)
             printf("test with %dx :", i);
             job_elem = test_create_job(test, i);
             if (job_elem != NULL) {
-               double time = test_performance(job_elem, max, access_list, NULL, lirs_list); 
+               double time = test_performance(job_elem, max, access_list, NULL, rqs_list); 
                if (time > 1) {
                   max /= 10;
                }
@@ -640,7 +640,7 @@ static int test(data_entry_t *test, char *result, int count)
    }
    lFreeElem(&job_elem);
    lFreeList(&access_list);
-   lFreeList(&lirs_list);
+   lFreeList(&rqs_list);
    return ret;
 }
 

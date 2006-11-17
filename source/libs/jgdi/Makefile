@@ -43,14 +43,14 @@ JGDI_SRC   = jgdi.c \
              jgdi_event_gen.c \
              jgdi_qhost.c \
              jgdi_qstat.c \
-             jgdi_qlimit.c \
+             jgdi_qquota.c \
              jgdi_mapping.c \
              jgdi_wrapper.c \
              jgdi_logging.c
 
 JGDI_OBJS  = $(JGDI_SRC:.c=.o)
 
-JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_qlimit.c sge_cqueue_qstat.c qstat_printing.c show_job.c
+JGDI_ADD_SRC = sge_qhost.c sge_qstat.c sge_qquota.c sge_cqueue_qstat.c qstat_printing.c show_job.c
 
 JGDI_ADD_OBJS = $(JGDI_ADD_SRC:.c=.o) $(SCHEDLIB_OBJS) $(DRMAA_OBJS)
 
@@ -101,8 +101,8 @@ jgdi_qhost.o:  $(JGDI_DIR)/jgdi_qhost.c
 jgdi_qstat.o:  $(JGDI_DIR)/jgdi_qstat.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_qstat.c
 
-jgdi_qlimit.o:  $(JGDI_DIR)/jgdi_qlimit.c
-	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_qlimit.c
+jgdi_qquota.o:  $(JGDI_DIR)/jgdi_qquota.c
+	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_qquota.c
 
 #############################################################################
 

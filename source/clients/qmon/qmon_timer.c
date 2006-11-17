@@ -78,7 +78,7 @@ static char *sge_gdi_list_timers[] = {
    "ZOMBIE_JOBS",
    "USER_MAPPING",
    "HGROUP",
-   "LIRS",
+   "RQS",
    "END"
 };
 
@@ -110,7 +110,7 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_ZOMBIE_LIST, 0, 1, 0, NULL },
    { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
    { SGE_HGROUP_LIST, 0, 1, 0, NULL },
-   { SGE_LIRS_LIST, 0, 1, 0, NULL },
+   { SGE_RQS_LIST, 0, 1, 0, NULL },
    { 0, 0, 0, 0, NULL}
 };
 

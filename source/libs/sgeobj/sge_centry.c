@@ -50,7 +50,7 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_object.h"
-#include "sgeobj/sge_limit_rule.h"
+#include "sgeobj/sge_resource_quota.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -379,7 +379,7 @@ bool
 centry_is_referenced(const lListElem *centry, lList **answer_list,
                      const lList *master_cqueue_list,
                      const lList *master_exechost_list,
-                     const lList *master_lirs_list)
+                     const lList *master_rqs_list)
 {
    bool ret = false;
    const char *centry_name = lGetString(centry, CE_name);
@@ -432,13 +432,13 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
       }
    }
    if (!ret) {
-      lListElem *lirs = NULL;
-      for_each(lirs, master_lirs_list) {
-         if (sge_centry_referenced_in_lirs(lirs, centry)) {
+      lListElem *rqs = NULL;
+      for_each(rqs, master_rqs_list) {
+         if (sge_centry_referenced_in_rqs(rqs, centry)) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
-                                    MSG_CENTRYREFINLIRS_SS,
-                                    centry_name, lGetString(lirs, LIRS_name));
+                                    MSG_CENTRYREFINRQS_SS,
+                                    centry_name, lGetString(rqs, RQS_name));
             ret = true;
             break;
          }

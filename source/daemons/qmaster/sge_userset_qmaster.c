@@ -51,8 +51,8 @@
 #include "sge_utility.h"
 #include "sge_cqueue.h"
 #include "sge_attrL.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sge_resource_quota_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -151,12 +151,12 @@ char *rhost
 
    {
       dstring ds = DSTRING_INIT;
-      lListElem *lirs;
+      lListElem *rqs;
 
       sge_dstring_sprintf(&ds, "@%s", userset_name);
 
-      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+      for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
+         if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
             lSetBool(ep, US_consider_with_categories, true);
             break;
          }
@@ -339,12 +339,12 @@ char *rhost
 
    {
       dstring ds = DSTRING_INIT;
-      lListElem *lirs;
+      lListElem *rqs;
 
       sge_dstring_sprintf(&ds, "@%s", userset_name);
 
-      for_each(lirs, *(object_type_get_master_list(SGE_TYPE_LIRS))) {
-         if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+      for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
+         if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
             lSetBool(ep, US_consider_with_categories, true);
             break;
          }
@@ -830,13 +830,13 @@ const char *userset_name
 *******************************************************************************/
 static bool userset_still_used(const char *u)
 {
-   const lListElem *qc, *cq, *hep, *lirs;
+   const lListElem *qc, *cq, *hep, *rqs;
    dstring ds = DSTRING_INIT;
 
    sge_dstring_sprintf(&ds, "@%s", u);
 
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (scope_is_referenced_lirs(lirs, LIR_filter_users, sge_dstring_get_string(&ds))) {
+   for_each (rqs, *object_type_get_master_list(SGE_TYPE_RQS)) {
+      if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
          sge_dstring_free(&ds);
          return true;
       }

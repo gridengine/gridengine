@@ -67,7 +67,7 @@
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
-#include "sgeobj/sge_limit_rule.h"
+#include "sgeobj/sge_resource_quota.h"
 
 
 const spool_instr spool_config_subinstr = {
@@ -508,8 +508,8 @@ bool spool_default_validate_func(lList **answer_list,
             ret = false;
          }
          break;
-      case SGE_TYPE_LIRS:
-         if (!limit_rule_set_verify_attributes(object, answer_list, true)) {
+      case SGE_TYPE_RQS:
+         if (!rqs_verify_attributes(object, answer_list, true)) {
             ret = false;
          }
          break;

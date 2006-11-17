@@ -83,10 +83,10 @@
 #include "sge_cuser_qconf.h"
 #include "sge_centry_qconf.h"
 #include "sge_cqueue_qconf.h"
-#include "sge_limit_rule_qconf.h"
+#include "sge_resource_quota_qconf.h"
 #include "sge_edit.h"
 #include "sge_cqueue.h"
-#include "sge_limit_rule.h"
+#include "sge_resource_quota.h"
 #include "sge_qinstance.h"
 #include "sge_href.h"
 #include "sge_qref.h"
@@ -610,8 +610,8 @@ char *argv[]
          continue;
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-alrs lrs_name" */
-      if (strcmp("-alrs", *spp) == 0) {
+      /* "-arqs rqs_name" */
+      if (strcmp("-arqs", *spp) == 0) {
          const char *name = "template";
 
          if (!sge_next_is_an_opt(spp)) {
@@ -620,7 +620,7 @@ char *argv[]
          }
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
-         limit_rule_set_add(ctx, &alp, name);
+         rqs_add(ctx, &alp, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -628,8 +628,8 @@ char *argv[]
          continue;
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-Alrs fname" */
-      if(strcmp("-Alrs", *spp) == 0) {
+      /* "-Arqs fname" */
+      if(strcmp("-Arqs", *spp) == 0) {
          const char *file = NULL;
 
          if (!sge_next_is_an_opt(spp)) {
@@ -641,7 +641,7 @@ char *argv[]
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
 
-         limit_rule_set_add_from_file(ctx, &alp, file);
+         rqs_add_from_file(ctx, &alp, file);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -1429,13 +1429,13 @@ char *argv[]
          continue;
       }
 /*----------------------------------------------------------------------------*/
-      /* "-dlrs lrs_name[,lrs_name,...]" */
-      if (strcmp("-dlrs", *spp) == 0) {
+      /* "-drqs rqs_name[,rqs_name,...]" */
+      if (strcmp("-drqs", *spp) == 0) {
          /* no adminhost/manager check needed here */
          spp = sge_parser_get_next(spp);
 
-         lString2List(*spp, &lp, LIRS_Type, LIRS_name, ", ");
-         alp = ctx->gdi(ctx, SGE_LIRS_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
+         lString2List(*spp, &lp, RQS_Type, RQS_name, ", ");
+         alp = ctx->gdi(ctx, SGE_RQS_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
          lFreeList(&lp);
@@ -2257,8 +2257,8 @@ char *argv[]
          continue;
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-mlrs lrs_name" */
-      if (strcmp("-mlrs", *spp) == 0) { 
+      /* "-mrqs rqs_name" */
+      if (strcmp("-mrqs", *spp) == 0) { 
          const char *name = NULL; 
 
          if (!sge_next_is_an_opt(spp)) {
@@ -2267,7 +2267,7 @@ char *argv[]
          }
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
-         limit_rule_set_modify(ctx, &alp, name);
+         rqs_modify(ctx, &alp, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -2275,8 +2275,8 @@ char *argv[]
          continue;
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-Mlrs fname [lrs_name,...]" */
-      if (strcmp("-Mlrs", *spp) == 0) {
+      /* "-Mrqs fname [rqs_name,...]" */
+      if (strcmp("-Mrqs", *spp) == 0) {
          const char *file = NULL;
          const char *name = NULL;
 
@@ -2294,7 +2294,7 @@ char *argv[]
             name = *spp;
          }
 
-         limit_rule_set_modify_from_file(ctx, &alp, file, name);
+         rqs_modify_from_file(ctx, &alp, file, name);
          answer_list_on_error_print_or_exit(&alp, stderr);
 
          spp++;
@@ -2829,7 +2829,7 @@ char *argv[]
          {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   NULL,     &qconf_sfi,        NULL},
          {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   NULL,     &qconf_sfi,        NULL},
          {SGE_HGROUP_LIST,     SGE_OBJ_HGROUP,    HGRP_Type, SGE_ATTR_HGRP_NAME, HGRP_name, NULL,     &qconf_sfi,        NULL},
-         {SGE_LIRS_LIST,       SGE_OBJ_LIRS,      LIRS_Type, SGE_ATTR_LIRS_NAME, LIRS_name, NULL,     &qconf_limit_rule_set_sfi,        lir_xattr_pre_gdi},
+         {SGE_RQS_LIST,        SGE_OBJ_RQS,       RQS_Type,  SGE_ATTR_RQS_NAME,  RQS_name, NULL,      &qconf_rqs_sfi,    rqs_xattr_pre_gdi},
          {0,                   NULL,              0,         NULL,               0,         NULL,     NULL,        NULL}
       }; 
 /* *INDENT-ON* */
@@ -2844,7 +2844,7 @@ char *argv[]
       /* These have to be freed later */
       info_entry[1].fields = sge_build_EH_field_list (false, false, false);
       info_entry[2].fields = sge_build_PE_field_list (false, false);
-      info_entry[5].fields = sge_build_LIRS_field_list (false, false);
+      info_entry[5].fields = sge_build_RQS_field_list (false, false);
       /* These do not */
       info_entry[3].fields = CK_fields;
       info_entry[4].fields = HGRP_fields;
@@ -4134,8 +4134,8 @@ char *argv[]
          continue;
       }
 /*----------------------------------------------------------------------------*/
-      /* "-slrs [lrs_name,...]" */
-      if (strcmp("-slrs", *spp) == 0) {
+      /* "-srqs [rqs_name,...]" */
+      if (strcmp("-srqs", *spp) == 0) {
          const char *name = NULL;
          bool ret = true;
 
@@ -4143,7 +4143,7 @@ char *argv[]
             spp = sge_parser_get_next(spp);
             name = *spp;
          }
-         ret = limit_rule_show(ctx, &alp, name);
+         ret = rqs_show(ctx, &alp, name);
          if (!ret) {
             show_gdi_request_answer(alp);
          }
@@ -4154,9 +4154,9 @@ char *argv[]
          continue;
       }
 /*----------------------------------------------------------------------------*/
-      /* "-slrsl " */
-      if (strcmp("-slrsl", *spp) == 0) {
-         if (!show_object_list(ctx, SGE_LIRS_LIST, LIRS_Type, LIRS_name, "limit rule set list")) {
+      /* "-srqsl " */
+      if (strcmp("-srqsl", *spp) == 0) {
+         if (!show_object_list(ctx, SGE_RQS_LIST, RQS_Type, RQS_name, "resource quota set list")) {
             sge_parse_return = 1; 
          }
          spp++;
@@ -6852,7 +6852,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       *spp = sge_parser_get_next (*spp);
       value = (const char *)strdup (**spp);
 
-      if (!strcmp(info_entry->object_name, SGE_OBJ_LIRS) && !strcmp(name, "limit")) {
+      if (!strcmp(info_entry->object_name, SGE_OBJ_RQS) && !strcmp(name, "limit")) {
          sge_dstring_append(&delim, " to ");
       } else {
          sge_dstring_append_char(&delim, info_entry->instr->name_value_delimiter);

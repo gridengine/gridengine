@@ -127,15 +127,15 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    /**
     *  Get the limit information.
     *
-    *  The CLI equivialent of this method is <code>qlimit</code> (see man qlimit(1)).
+    *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
     *  
-    *  @param options the options for the qlimit algorithm
-    *  @return  list of {@link com.sun.grid.jgdi.monitoring.QLimit} instances
+    *  @param options the options for the qquota algorithm
+    *  @return  list of {@link com.sun.grid.jgdi.monitoring.QQuota} instances
     */
-   public QLimitResult getQLimit(QLimitOptions options) throws JGDIException {
-      QLimitResultImpl ret  = new QLimitResultImpl();
+   public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException {
+      QQuotaResultImpl ret  = new QQuotaResultImpl();
       
-      getQLimit(options, ret);
+      getQQuota(options, ret);
       
       return ret;
    }
@@ -260,5 +260,5 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    public native String showDetachedSettingsAll() throws JGDIException;
    
    
-   private native void getQLimit(QLimitOptions options, QLimitResultImpl ret) throws JGDIException;
+   private native void getQQuota(QQuotaOptions options, QQuotaResultImpl ret) throws JGDIException;
 }

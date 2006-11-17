@@ -214,8 +214,8 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_JOB_CATEGORY_FILTER_     :
          return MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER_      ;
 
-      case SCHEDD_INFO_CANNOTRUNLIRS_SSS        :
-         return MSG_SCHEDD_INFO_CANNOTRUNLIRS_SSS         ;
+      case SCHEDD_INFO_CANNOTRUNRQS_SSS        :
+         return MSG_SCHEDD_INFO_CANNOTRUNRQS_SSS         ;
 
       case SCHEDD_INFO_JOBDYNAMICALLIMIT_SS   :
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS      ;
@@ -366,8 +366,8 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_CANNOTRUNINQUEUECAL   :
          return MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL    ;
 
-      case SCHEDD_INFO_CANNOTRUNLIRS:
-         return MSG_SCHEDD_INFO_CANNOTRUNLIRS;
+      case SCHEDD_INFO_CANNOTRUNRQS:
+         return MSG_SCHEDD_INFO_CANNOTRUNRQS;
 
       case SCHEDD_INFO_JOBDYNAMICALLIMIT:
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT;

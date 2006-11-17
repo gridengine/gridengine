@@ -139,8 +139,8 @@ extern const spool_flatfile_instr qconf_sub_param_sfi;
 extern const spool_flatfile_instr qconf_comma_sfi;
 extern const spool_flatfile_instr qconf_ce_sfi;
 extern const spool_flatfile_instr qconf_ce_list_sfi;
-extern const spool_flatfile_instr qconf_sub_limit_rule_sfi;
-extern const spool_flatfile_instr qconf_limit_rule_set_sfi;
+extern const spool_flatfile_instr qconf_sub_rqs_sfi;
+extern const spool_flatfile_instr qconf_rqs_sfi;
 extern const spool_flatfile_instr qconf_sub_name_value_comma_braced_sfi;
 
 const char *

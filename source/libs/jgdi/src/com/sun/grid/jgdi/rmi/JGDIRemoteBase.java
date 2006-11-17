@@ -34,7 +34,7 @@ package com.sun.grid.jgdi.rmi;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
-import com.sun.grid.jgdi.monitoring.QLimitOptions;
+import com.sun.grid.jgdi.monitoring.QQuotaOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
@@ -49,7 +49,7 @@ import java.util.List;
  * @author richard.hierlmeier@sun.com
  *
  * @todo   optional ??
- *         <p>add qlimit functions</p>
+ *         <p>add qquota functions</p>
  *
  * @todo   optional ??
  *         <p>add qstat functions</p>
@@ -148,12 +148,12 @@ public interface JGDIRemoteBase extends Remote {
     /**
      *  Get the limit information.
      *
-     *  The CLI equivialent of this method is <code>qlimit</code> (see man qlimit(1)).
+     *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
      *
-     *  @param options the options for the qlimit algorithm
-     *  @return  list of {@link com.sun.grid.jgdi.monitoring.QLimit} instances
+     *  @param options the options for the qquota algorithm
+     *  @return  list of {@link com.sun.grid.jgdi.monitoring.QQuota} instances
      */
-    public List getQLimit(QLimitOptions options) throws RemoteException;
+    public List getQQuota(QQuotaOptions options) throws RemoteException;
     
     
     // -------- Managing interface methods --------------------------------------

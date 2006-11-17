@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2006/10/24 08:05:00 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2006/11/17 15:23:25 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2006/10/24 08:05:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2006/11/17 15:23:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -116,8 +116,8 @@ to the format specified in
 .M hostgroup 5 .
 Requires root or manager privileges. 
 .\"
-.IP "\fB\-Alrs fname\fP \fI<add LRS configuration>\fP"
-Add the limitation rule set (LRS) defined in the
+.IP "\fB\-Arqs fname\fP \fI<add RQS configuration>\fP"
+Add the resource quota set (RQS) defined in the
 file named \fBfname\fP to the xxQS_NAMExx
 cluster. Requires root or manager privileges.
 .\"
@@ -218,17 +218,17 @@ will be deleted. The file format of \fBfile\fP must comply
 to the format specified in 
 .M hostgroup 5 . Requires root or manager privilege.
 .\" 
-.IP "\fB\-Mlrs fname [mlrs_name]\fP	\fI<modify LRS configuration>\fP"
-Same as \fB\-mlrs\fP (see below) but
+.IP "\fB\-Mrqs fname [mrqs_name]\fP	\fI<modify RQS configuration>\fP"
+Same as \fB\-mrqs\fP (see below) but
 instead of invoking an editor to modify the
-LRS configuration, the file \fBfname\fP
+RQS configuration, the file \fBfname\fP
 is considered to
 contain a changed configuration. The name of the rule set in \fBfname\fP
-must be the same as lrs_name. If lrs_name is not set, all rule sets
+must be the same as rqs_name. If rqs_name is not set, all rule sets
 are overwritten by the rule sets in \fBfname\fP
 Refer to
-.M xxqs_name_sxx_lrs 5
-for details on the LRS configuration format.
+.M xxqs_name_sxx_rqs 5
+for details on the RQS configuration format.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-Mp fname\fP	\fI<modify PE configuration>\fP"
@@ -321,7 +321,7 @@ Allows adding specifications to a single
 configuration list attribute in multiple instances
 of an object with a single command. Currently
 supported objects are the queue, the host, the host group, 
-the parallel environment, the limitation rule sets
+the parallel environment, the resource quota sets
 and the checkpointing interface configuration being specified as
 .I queue
 ,
@@ -331,7 +331,7 @@ and the checkpointing interface configuration being specified as
 ,
 .I pe
 ,
-.I lrs
+.I rqs
 or
 .I ckpt
 in \fBobj_spec\fP. 
@@ -351,7 +351,7 @@ be deleted with \fB\-dattr\fP, modified with \fB\-mattr\fP, and
 replaced with \fB\-rattr\fP.
 .br
 For the obj_spec 
-.I lrs
+.I rqs
 the obj_instance is a unique identifier for a specific rule. The identifier
 consisists of a rule-set name and either the number of the rule in the list,
 or the name of the rule, separated by a /
@@ -480,21 +480,21 @@ changing the entry and
 exiting the editor. 
 Requires root or manager privileges.
 .\" 
-.IP "\fB\-alrs [pe_name]\fP	\fI<add new LRS>\fP"
-Adds one or more \fILimitation Rule Set\fP (LRS) description
+.IP "\fB\-arqs [rqs_name]\fP	\fI<add new RQS>\fP"
+Adds one or more \fIResource Quota Set\fP (RQS) description
 under the names
-.B lrs_name
+.B rqs_name
 to the list
-of LRSs maintained by xxQS_NAMExx (see
-.M xxqs_name_sxx_lrs 5
-for details on the format of a LRS definition).
+of RQSs maintained by xxQS_NAMExx (see
+.M xxqs_name_sxx_rqs 5
+for details on the format of a RQS definition).
 .I Qconf
-retrieves a default LRS configuration
+retrieves a default RQS configuration
 and executes
 .M vi 1
 (or $EDITOR if the EDITOR environment variable is set) to
-allow you to customize the LRS configuration. Upon exit
-from the editor, the LRS is registered with
+allow you to customize the RQS configuration. Upon exit
+from the editor, the RQS is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
@@ -666,8 +666,8 @@ Requires root or manager privileges.
 .\" .B group.
 .\" Requires root or manager privileges.
 .\" host group end
-.IP "\fB\-dlrs lrs_name_list\fP	\fI<delete LRS>\fP"
-Deletes the specified limitation rule sets (LRS).
+.IP "\fB\-drqs rqs_name_list\fP	\fI<delete RQS>\fP"
+Deletes the specified resource quota sets (RQS).
 Requires root or manager privileges.
 .\"
 .IP "\fB\-dm user[,user,...]\fP	\fI<delete managers>\fP"
@@ -846,17 +846,17 @@ The format of the host group configuration is described in
 .M hostgroup 5 . 
 Requires root or manager privileges.
 .\"
-.IP "\fB\-mlrs [lrs_name]\fP	\fI<modify LRS configuration>\fP"
-Retrieves the limitation rule set (LRS)configuration defined in lrs_name,
-or if lrs_name is not given, retrieves all limitation rule sets,
+.IP "\fB\-mrqs [rqs_name]\fP	\fI<modify RQS configuration>\fP"
+Retrieves the resource quota set (RQS)configuration defined in rqs_name,
+or if rqs_name is not given, retrieves all resource quota sets,
 executes an editor (either
 .M vi 1
 or the editor indicated by the EDITOR environment variable)
 and registers the new configuration with the
 .M xxqs_name_sxx_qmaster 8 .
 Refer to
-.M xxqs_name_sxx_lrs 5
-for details on the LRS configuration format.
+.M xxqs_name_sxx_rqs 5
+for details on the RQS configuration format.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mp pe_name\fP	\fI<modify PE configuration>\fP"
@@ -1072,14 +1072,14 @@ Shows a list of all hosts which are part of the definition of
 host group. If the host group definition contains sub host groups
 than also these groups are resolved and the hostnames are printed.
 .\" 
-.IP "\fB\-slrs [lrs_name_list]\fP	\fI<show LRS configuration>\fP"
+.IP "\fB\-srqs [rqs_name_list]\fP	\fI<show RQS configuration>\fP"
 Show the definition of the
-.I limitation rule sets
-(LRS) specified by the argument.
+.I resource quota sets
+(RQS) specified by the argument.
 .\"
-.IP "\fB\-slrsl\fP	\fI<show LRS\-list>\fP"
+.IP "\fB\-srqsl\fP	\fI<show RQS\-list>\fP"
 Show a list of all currently defined
-\fIlimitation rule sets\fPs (LRSs).
+\fIresource quota sets\fPs (RQSs).
 .\"
 .IP "\fB\-sm\fP	\fI<show managers>\fP"
 Displays the managers list.

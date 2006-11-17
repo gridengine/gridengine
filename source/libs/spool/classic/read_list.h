@@ -44,7 +44,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory, lList **al
 int sge_read_userset_list_from_disk(lList **list, const char *directory, lList **alpp);
 int sge_read_host_group_entries_from_disk(void);
 int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_limit_rule_set_list_from_disk(lList **list, const char *directory, lList **alpp);
+int sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alpp);
 int read_all_centries(lList **list, const char *directory, lList **alpp);
 
 int read_all_configurations(lList **answer_list,

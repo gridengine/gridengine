@@ -110,7 +110,7 @@
 *        SGE_TYPE_CENTRY   
 *        SGE_TYPE_ZOMBIE
 *        SGE_TYPE_SUSER
-*        SGE_TYPE_LIRS
+*        SGE_TYPE_RQS
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -146,7 +146,7 @@ typedef enum {
    SGE_TYPE_CENTRY,           /*25*/   
    SGE_TYPE_ZOMBIE,           /*26*/
    SGE_TYPE_SUSER,            /*27*/
-   SGE_TYPE_LIRS,             /*28*/
+   SGE_TYPE_RQS,              /*28*/
 
 
    /*

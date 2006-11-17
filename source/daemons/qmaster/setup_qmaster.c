@@ -104,8 +104,8 @@
 #include "sge_event_master.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
-#include "sgeobj/sge_limit_rule.h"
-#include "sge_limit_rule_qmaster.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sge_resource_quota_qmaster.h"
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -908,8 +908,8 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CALENDAR].list, SGE_TYPE_CALENDAR);
    answer_list_output(&answer_list);
 
-   DPRINTF(("limitation rule list -----------------------\n"));
-   spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_LIRS].list, SGE_TYPE_LIRS);
+   DPRINTF(("resource quota list -----------------------\n"));
+   spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_RQS].list, SGE_TYPE_RQS);
    answer_list_output(&answer_list);
 
 #ifndef __SGE_NO_USERMAPPING__
@@ -997,7 +997,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /* 
       if the job is in state running 
       we have to register each slot 
-      in a queue, in the limitation rule sets
+      in a queue, in the resource quota sets
       and in the parallel 
       environment if the job is a 
       parallel one
@@ -1206,7 +1206,7 @@ static int debit_all_jobs_from_qs()
    int ret = 0;
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
-   lList *master_lirs_list = *object_base[SGE_TYPE_LIRS].list;
+   lList *master_rqs_list = *object_base[SGE_TYPE_RQS].list;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
 
@@ -1234,15 +1234,15 @@ static int debit_all_jobs_from_qs()
                lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
             } else {
                /* debit in all layers */
-               lListElem *lirs = NULL;
+               lListElem *rqs = NULL;
                debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
                                      "global"), master_centry_list, slots);
                debit_host_consumable(jep, host_list_locate(
                         *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)), 
                         master_centry_list, slots);
                qinstance_debit_consumable(qep, jep, master_centry_list, slots);
-               for_each (lirs, master_lirs_list) {
-                  lirs_debit_consumable(lirs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
+               for_each (rqs, master_rqs_list) {
+                  rqs_debit_consumable(rqs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
                                         *(object_type_get_master_list(SGE_TYPE_USERSET)), *(object_type_get_master_list(SGE_TYPE_HGROUP)), slots);
                }
 
@@ -1271,7 +1271,7 @@ static int debit_all_jobs_from_qs()
 static void init_categories(void)
 {
    const lListElem *cq, *pe, *hep, *ep;
-   lListElem *acl, *prj, *lirs;
+   lListElem *acl, *prj, *rqs;
    lList *u_list = NULL, *p_list = NULL;
    lList *master_project_list = (*object_type_get_master_list(SGE_TYPE_PROJECT));
    lList *master_userset_list = (*object_type_get_master_list(SGE_TYPE_USERSET));
@@ -1280,13 +1280,13 @@ static void init_categories(void)
 
    /*
     * collect a list of references to usersets/projects used in
-    * the limitation rule sets
+    * the resource quota sets
     */
-   for_each (lirs, *object_type_get_master_list(SGE_TYPE_LIRS)) {
-      if (!all_projects && !lirs_diff_projects(lirs, NULL, &p_list, NULL, master_project_list)) {
+   for_each (rqs, *object_type_get_master_list(SGE_TYPE_RQS)) {
+      if (!all_projects && !rqs_diff_projects(rqs, NULL, &p_list, NULL, master_project_list)) {
          all_projects = true;
       }
-      if (!all_usersets && !lirs_diff_usersets(lirs, NULL, &u_list, NULL, master_userset_list)) {
+      if (!all_usersets && !rqs_diff_usersets(rqs, NULL, &u_list, NULL, master_userset_list)) {
          all_usersets = true;
       }
       if (all_usersets && all_projects) {

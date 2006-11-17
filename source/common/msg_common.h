@@ -307,7 +307,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_LIRS_LIST            "lirs_list               lirs_name[,lirs_name,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_RQS_LIST             "rqs_list                rqs_name[,rqs_name,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST            "mail_list               mail_address[,mail_address,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS         "mail_options            `e' `b' `a' `n' `s'"
@@ -331,7 +331,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"limitation_ruleset\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3         "obj_nm3                 \"queue\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
@@ -1045,21 +1045,21 @@
 #define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN))
 #define MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS   _MESSAGE(60614, _("Change of "SFQ" will not be effective before sge_execd restart as described in sge_conf(5)"))
 
-#define MSG_OBJ_LIRS                       _MESSAGE(60615, _("limitation rule set"))
-#define MSG_GDI_USAGE_slrs_OPT             "[-slrs [lirs_list]]"
-#define MSG_GDI_UTEXT_slrs_OPT             _MESSAGE(60616, _("show limitation rule set"))
-#define MSG_GDI_USAGE_slrsl_OPT            "[-slrsl]"
-#define MSG_GDI_UTEXT_slrsl_OPT            _MESSAGE(60617, _("show limitation rule set list"))
-#define MSG_GDI_USAGE_alrs_OPT             "[-alrs [lirs_list]]"
-#define MSG_GDI_UTEXT_alrs_OPT             _MESSAGE(60618, _("add limitation rule set(s)"))
-#define MSG_GDI_USAGE_Alrs_OPT             "[-Alrs fname]"
-#define MSG_GDI_UTEXT_Alrs_OPT             _MESSAGE(60619, _("add limitation rule set(s) from file"))
-#define MSG_GDI_USAGE_dlrs_OPT             "[-dlrs lirs_list]"
-#define MSG_GDI_UTEXT_dlrs_OPT             _MESSAGE(60620, _("delete limitation rule set(s)"))
-#define MSG_GDI_USAGE_mlrs_OPT             "[-mlrs [lirs_list]]"
-#define MSG_GDI_UTEXT_mlrs_OPT             _MESSAGE(60621, _("modify limitation rule set(s)"))
-#define MSG_GDI_USAGE_Mlrs_OPT             "[-Mlrs fname [lirs_list]]"
-#define MSG_GDI_UTEXT_Mlrs_OPT             _MESSAGE(60622, _("modify limitation rule set(s) from file"))
+#define MSG_OBJ_RQS                        _MESSAGE(60615, _("resource quota set"))
+#define MSG_GDI_USAGE_srqs_OPT             "[-srqs [rqs_list]]"
+#define MSG_GDI_UTEXT_srqs_OPT             _MESSAGE(60616, _("show resource quota set"))
+#define MSG_GDI_USAGE_srqsl_OPT            "[-srqsl]"
+#define MSG_GDI_UTEXT_srqsl_OPT            _MESSAGE(60617, _("show resource quota set list"))
+#define MSG_GDI_USAGE_arqs_OPT             "[-arqs [rqs_list]]"
+#define MSG_GDI_UTEXT_arqs_OPT             _MESSAGE(60618, _("add resource quota set(s)"))
+#define MSG_GDI_USAGE_Arqs_OPT             "[-Arqs fname]"
+#define MSG_GDI_UTEXT_Arqs_OPT             _MESSAGE(60619, _("add resource quota set(s) from file"))
+#define MSG_GDI_USAGE_drqs_OPT             "[-drqs rqs_list]"
+#define MSG_GDI_UTEXT_drqs_OPT             _MESSAGE(60620, _("delete resource quota set(s)"))
+#define MSG_GDI_USAGE_mrqs_OPT             "[-mrqs [rqs_list]]"
+#define MSG_GDI_UTEXT_mrqs_OPT             _MESSAGE(60621, _("modify resource quota set(s)"))
+#define MSG_GDI_USAGE_Mrqs_OPT             "[-Mrqs fname [rqs_list]]"
+#define MSG_GDI_UTEXT_Mrqs_OPT             _MESSAGE(60622, _("modify resource quota set(s) from file"))
 /*
  * Objects and components
  */

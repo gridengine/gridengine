@@ -73,7 +73,7 @@
 *     Is the given name a hostgroup name 
 *
 *  NOTE
-*     This function is also used for usergroup in limitation rule sets
+*     This function is also used for usergroup in resource quota sets
 *
 *  INPUTS
 *     const char *name - hostname or hostgroup name 

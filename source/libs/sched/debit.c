@@ -48,7 +48,7 @@
 #include "sge_orderL.h"
 #include "sge_log.h"
 #include "msg_schedd.h"
-#include "sched/sge_lirs_schedd.h"
+#include "sched/sge_resource_quota_schedd.h"
 
 static int 
 debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
@@ -140,7 +140,7 @@ debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,
       }   
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
       debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
-      debit_job_from_lirs(a->job, a->gdil, a->lirs_list, a->pe, a->centry_list, a->acl_list, a->hgrp_list);
+      debit_job_from_rqs(a->job, a->gdil, a->rqs_list, a->pe, a->centry_list, a->acl_list, a->hgrp_list);
    }
 
    add_job_utilization(a, type);

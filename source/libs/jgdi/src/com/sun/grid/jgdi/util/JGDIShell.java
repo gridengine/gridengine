@@ -43,7 +43,7 @@ import com.sun.grid.jgdi.util.shell.QModCommand;
 import com.sun.grid.jgdi.util.shell.QStatCommand;
 import com.sun.grid.jgdi.util.shell.QHostCommand;
 import com.sun.grid.jgdi.util.shell.QDelCommand;
-import com.sun.grid.jgdi.util.shell.QLimitCommand;
+import com.sun.grid.jgdi.util.shell.QQuotaCommand;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -106,7 +106,7 @@ public class JGDIShell implements Runnable, Shell {
       cmdMap.put("qstat", new QStatCommand(this, "qstat"));
       cmdMap.put("qhost", new QHostCommand(this, "qhost"));
       cmdMap.put("qdel", new QDelCommand(this, "qdel"));
-      cmdMap.put("qlimit", new QLimitCommand(this, "qlimit"));
+      cmdMap.put("qquota", new QQuotaCommand(this, "qquota"));
       
       cmdSet = new TreeSet(cmdMap.keySet());
       

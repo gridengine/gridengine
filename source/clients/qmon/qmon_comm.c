@@ -95,7 +95,7 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL },
    { 0, SGE_USER_MAPPING_LIST, USER_MAPPING_T, NULL, 0, NULL, NULL },
    { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL },
-   { 0, SGE_LIRS_LIST, LIRS_T, NULL, 0, NULL, NULL }
+   { 0, SGE_RQS_LIST, RQS_T, NULL, 0, NULL, NULL }
 };
    
 static char *sge_gdi_list_types[] = {
@@ -124,7 +124,7 @@ static char *sge_gdi_list_types[] = {
    "ZOMBIE_JOBS",
    "USER_MAPPING",
    "HGROUP",
-   "LIRS"
+   "RQS"
 };
 
 
@@ -159,7 +159,7 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_ZOMBIE_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
    QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
-   QmonMirrorList[SGE_LIRS_LIST].what = lWhat("%T(ALL)", LIRS_Type);
+   QmonMirrorList[SGE_RQS_LIST].what = lWhat("%T(ALL)", RQS_Type);
 
    DEXIT;
 }

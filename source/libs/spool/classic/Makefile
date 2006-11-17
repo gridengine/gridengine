@@ -49,7 +49,7 @@ SPOOLCLIB_SRC = \
          read_write_host_group.c \
          read_write_centry.c \
          read_write_job.c \
-         read_write_limit_rule.c \
+         read_write_resource_quota.c \
          read_write_manop.c \
          read_write_pe.c \
          read_write_qinstance.c \
@@ -130,8 +130,8 @@ read_write_host_group.o:	$(SPOOLCLIB_DIR)/read_write_host_group.c
 read_write_job.o:	$(SPOOLCLIB_DIR)/read_write_job.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_job.c
 
-read_write_limit_rule.o:	$(SPOOLCLIB_DIR)/read_write_limit_rule.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_limit_rule.c
+read_write_resource_quota.o:	$(SPOOLCLIB_DIR)/read_write_resource_quota.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_resource_quota.c
 
 read_write_manop.o:	$(SPOOLCLIB_DIR)/read_write_manop.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_manop.c

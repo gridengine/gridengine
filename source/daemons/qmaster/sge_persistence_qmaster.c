@@ -416,13 +416,13 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          element = object;
          object_type = SGE_TYPE_USERSET;
          break;
-      case sgeE_LIRS_LIST:
-      case sgeE_LIRS_ADD:
-      case sgeE_LIRS_DEL:
-      case sgeE_LIRS_MOD:
+      case sgeE_RQS_LIST:
+      case sgeE_RQS_ADD:
+      case sgeE_RQS_DEL:
+      case sgeE_RQS_MOD:
          key = strkey;
          element = object;
-         object_type = SGE_TYPE_LIRS;
+         object_type = SGE_TYPE_RQS;
          break;
 #ifndef __SGE_NO_USERMAPPING__
       case sgeE_CUSER_LIST:
@@ -472,7 +472,7 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
          case sgeE_USERSET_DEL:
-         case sgeE_LIRS_DEL:
+         case sgeE_RQS_DEL:
 #ifndef __SGE_NO_USERMAPPING__
          case sgeE_CUSER_DEL:
 #endif

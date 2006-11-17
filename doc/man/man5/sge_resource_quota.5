@@ -1,0 +1,226 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2006/11/17 15:23:26 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2006/11/17 15:23:26 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.\"
+.SH NAME
+xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
+.\"
+.SH DESCRIPTION
+Resource quota sets (rqs) are a flexible way to set a maximum resource consumption for any job requests. They are used by the scheduler to select the next possible jobs for running.
+The job request distinction is done by a set of user, project, cluster queue, host and pe filter criteria.
+.PP
+By using the resource quota sets admistrators are allowed to define a fine granular resource quota
+configuration. This helps restricting some job requests to a lesser resource usage and granting
+other job requests a higher resource usage.
+.PP
+A list of currently configured rqs can be displayed via the
+.M qconf 1
+\fB\-srqsl\fP option. The contents of each listed rqs definition
+can be shown via the \fB\-srqs\fP switch. The output follows the
+.I  xxQS_NAME_Sxx_resource_quota
+format description. New rqs can be created and existing can be
+modified via the \fB\-arqs\fP, \fB\-mrqs\fP and \fB\-drqs\fP options to
+.M qconf 1 .
+.PP
+A resource quota set defines a maximum resource quota for a particular job request. All of the
+configured rule sets apply all of the time. This means that if multiple resource quota sets
+are defined, the most restrictive set is used.
+.PP
+Every resource quota set consist of one or more resource quota rules. These rules are evaluated
+in order, and the first rule that matches a specific request will be used. A resource quota
+set always results in at most one effective resource quota rule for a specific request.
+.\"
+.\"
+.SH FORMAT
+A resource quota set definition contains the following parameters:
+.SS "\fBname\fP"
+The resource quota set name.
+.SS "\fBenabled\fP"
+If set to \fItrue\fP the resource quota set is active and will be considered
+for scheduling decisions. The default value is \fIfalse\fP.
+.SS "\fBdescription\fP"
+This description field is optional and can be set to arbitrary string. The
+default value is \fINONE\fP.
+.SS "\fBlimit\fP"
+Every resource quota set needs at least one resource quota rule definition started by
+the limit field. It's possible to define more resource quota rules divided by a new line.
+A resource quota rule consists of an optional name, the filters for a specific job
+request and the resource quota limit.
+.PP
+By default, the expressed limit counts for the entire filter scope. To express a
+filter-scope-specific limit, it's possible to define an expanded list by quoting the scope
+list with the '\'' sign. It's only possible to set one complete filter in an expanded list.
+.\"
+The tags for expressing a resource quota rule are:
+.IP "name"
+The name of the rule. The use is optional. The rule name must be unique in one
+resource quota set.
+.IP "users"
+Contains a comma separated list of UNIX users or ACLs (see
+.M access_list 5 ).
+This parameter filters for jobs by a user in the list or one of the ACLs
+in the list. Any user not in the list will not be considered for the resource quota
+rule. The default value is '*', which means any user. An ACL is differentiated
+from a UNIX user name by prefixing the ACL name with an '@' sign. To exclude a
+user or ACL from the rule, the name can be prefixed with the '!' sign. Defined
+UNIX user or ACL names need not be known in the xxQS_NAMExx configuration.
+.IP "projects"
+Contains a comma separated list of projects (see
+.M project 5 ).
+This parameter filters for jobs requesting a project in the list. Any
+project not in the list will not be considered for the resource quota rule. If no
+project filter is specified, all projects and jobs with no requested project
+match the rule. The value '*' means all jobs with requested projects. To
+exclude a project from the rule, the name can be prefixed with the '!' sign.
+The value '!*' means only jobs with no project requested.
+.IP "pes"
+Contains a comma separated list of PEs (see
+.M sge_pe 5 ).
+This parameter filters for jobs requesting a pe in the list. Any PE not in
+the list will not be considered for the resource quota rule. If no pe filter is
+specified, all pe and jobs with no requested pe matches the rule. The value '*'
+means all jobs with requested pe. To exclude a pe from the rule, the name can
+be prefixed with the '!' sign. The value '!*' means only jobs with no pe
+requested.
+.IP "queues"
+Contains a comma separated list of cluster queues (see
+.M queue_conf 5 ).
+This parameter filters for jobs that may be scheduled in a queue in the list.
+Any queue not in the list will not be considered for the resource quota rule. The
+default value is '*', which means any queue. To exclude a queue from the rule,
+the name can be prefixed with the '!' sign.
+.IP "hosts"
+Contains a comma separated list of host or hostgroups (see
+.M host 5
+and
+.M hostgroup 5 ).
+This parameter filters for jobs that may be scheduled in a host in the list or a
+host contained in a hostgroup in the list. Any host not in the list will not be considered
+for the resource quota rule. The default value is '*', which means any hosts. To
+exclude a host or hostgroup from the rule, the name can be prefixed with the
+'!' sign.
+.IP "to"
+This mandatory field defines the quota for resource attributes for this rule. The quota
+is expressed by one or more limit definitions separated by commas. The
+configuration allows two kind of limits definitions
+.RS
+.IP "static limits"
+Static limits sets static values as quotas. Each limits consists of a complex
+attribute followed by an "=" sign and the value specification compliant with
+the complex attribute type (see
+.M complex 5 ).
+.IP "dynamic limits"
+A dynamic limit is a simple algebraic expression used to derive the limit
+value. To be dynamic, the formula can reference a complex attribute whose
+value is used for the calculation of the resulting limit.
+The formula expression syntax is that of
+a sum of weighted complex values, that is:
+.sp 1
+.nf
+.RS
+$complex1[*w1][{+|-}$complex2[*w2][{+|-}...]]
+.RE
+.fi
+.sp 1
+The weighting factors (w1, ...) are positive integers. 
+The complex values (complex1, ...)
+are specified by the name defined as type INT or DOUBLE in the complex list
+(see
+.M complex 5 ).
+.br
+.B Note:
+Dynamic limits can only configured for a host-specific rule.
+.RE
+.\"
+.\"
+.SH EXAMPLES
+The following is the simplest form of a resource quota set. It restricts all
+users together to the maximal use of 100 slots in the whole cluster.
+.nf
+
+=======================================================================
+{
+   name         max_u_slots
+   description  "All users max use of 100 slots"
+   enabled      true
+   limit        to slots=100
+}
+=======================================================================
+
+.fi
+.sp 1
+The next example restricts user1 and user2 to 6g virtual_free
+and all other users to the maximal use of 4g virtual_free on
+every host in hostgroup lx_hosts.
+.nf
+
+=======================================================================
+{
+   name         max_virtual_free_on_lx_hosts
+   description  "resource quota for virtual_free restriction"
+   enabled      true
+   limit        users `user1,user2` hosts `@lx_host` to virtual_free=6g
+   limit        users `*` hosts `@lx_host` to virtual_free=4g
+}
+=======================================================================
+
+.fi
+.sp 1
+The next example shows the use of a dynamic limit. It restricts
+all users together to a maximum use of the double size of num_proc.
+.nf
+
+=======================================================================
+{
+   name         max_slots_on_every_host
+   enabled      true
+   limit        hosts `*` to slots=$num_proc*2
+}
+=======================================================================
+
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M access_list 5 ,
+.M complex 5 ,
+.M host 5 ,
+.M hostgroup 5 ,
+.M qconf 1 ,
+.M qquota 1 ,
+.M project 5 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

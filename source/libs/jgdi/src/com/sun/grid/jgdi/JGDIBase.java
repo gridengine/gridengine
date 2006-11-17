@@ -31,11 +31,11 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
-import com.sun.grid.jgdi.monitoring.QLimitResult;
+import com.sun.grid.jgdi.monitoring.QQuotaResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
-import com.sun.grid.jgdi.monitoring.QLimitOptions;
+import com.sun.grid.jgdi.monitoring.QQuotaOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
 import java.util.List;
@@ -133,13 +133,13 @@ public interface JGDIBase {
     /**
      *  Get the limit information.
      *
-     *  The CLI equivialent of this method is <code>qlimit</code> (see man qlimit(1)).
+     *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
      *
-     *  @param options  qlimit summary options
-     *  @return the <code>QLimitResult</code> object with the qlimit summary information
+     *  @param options  qquota summary options
+     *  @return the <code>QQuotaResult</code> object with the qquota summary information
      *  @throws com.sun.grid.jgdi.JGDIException on any error in the GDI layer
      */
-    public QLimitResult getQLimit(QLimitOptions options) throws JGDIException;
+    public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException;
     
     
     // -------- Managing interface methods --------------------------------------

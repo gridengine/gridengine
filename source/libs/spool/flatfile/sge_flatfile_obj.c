@@ -51,7 +51,7 @@
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_pe.h"
-#include "sgeobj/sge_limit_rule.h"
+#include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_schedd_conf.h"
@@ -146,9 +146,9 @@ static int write_CQ_hostlist(const lListElem *ep, int nm,
                              dstring *buffer, lList **alp);
 static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
                        lList **alp);
-static int read_LIR_obj(lListElem *ep, int nm, const char *buffer,
+static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
                                     lList **alp);
-static int write_LIR_obj(const lListElem *ep, int nm, dstring *buffer,
+static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer,
                        lList **alp);
 
 /* Field lists for context-independent spooling of sub-lists */
@@ -320,20 +320,20 @@ static spooling_field HR_sub_fields[] = {
    {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
-static spooling_field LIRL_sub_fields[] = {
-   {  LIRL_name,           0, NULL,                NULL, NULL, NULL, NULL},
-   {  LIRL_value,          0, NULL,                NULL, NULL, NULL, NULL},
+static spooling_field RQRL_sub_fields[] = {
+   {  RQRL_name,           0, NULL,                NULL, NULL, NULL, NULL},
+   {  RQRL_value,          0, NULL,                NULL, NULL, NULL, NULL},
    {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
-static spooling_field LIR_sub_fields[] = {
-   {  LIR_name,            0, "name",              NULL, NULL, NULL, NULL},
-   {  LIR_filter_users,    0, "users",             NULL, NULL, read_LIR_obj, write_LIR_obj},
-   {  LIR_filter_projects, 0, "projects",          NULL, NULL, read_LIR_obj, write_LIR_obj},
-   {  LIR_filter_pes,      0, "pes",               NULL, NULL, read_LIR_obj, write_LIR_obj},
-   {  LIR_filter_queues,   0, "queues",            NULL, NULL, read_LIR_obj, write_LIR_obj},
-   {  LIR_filter_hosts,    0, "hosts",             NULL, NULL, read_LIR_obj, write_LIR_obj},
-   {  LIR_limit,           0, "to",                LIRL_sub_fields,  &qconf_sub_name_value_comma_sfi, NULL, NULL},
+static spooling_field RQR_sub_fields[] = {
+   {  RQR_name,            0, "name",              NULL, NULL, NULL, NULL},
+   {  RQR_filter_users,    0, "users",             NULL, NULL, read_RQR_obj, write_RQR_obj},
+   {  RQR_filter_projects, 0, "projects",          NULL, NULL, read_RQR_obj, write_RQR_obj},
+   {  RQR_filter_pes,      0, "pes",               NULL, NULL, read_RQR_obj, write_RQR_obj},
+   {  RQR_filter_queues,   0, "queues",            NULL, NULL, read_RQR_obj, write_RQR_obj},
+   {  RQR_filter_hosts,    0, "hosts",             NULL, NULL, read_RQR_obj, write_RQR_obj},
+   {  RQR_limit,           0, "to",                RQRL_sub_fields,  &qconf_sub_name_value_comma_sfi, NULL, NULL},
    {  NoName,              0, NULL,                NULL, NULL, NULL, NULL}
 };
 
@@ -1039,20 +1039,20 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
    return fields;
 }
 
-spooling_field *sge_build_LIRS_field_list(bool spool, bool to_stdout)
+spooling_field *sge_build_RQS_field_list(bool spool, bool to_stdout)
 {
    spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*5);
 
    int count = 0;
 
-   create_spooling_field(&fields[count++], LIRS_name, 12, "name",
+   create_spooling_field(&fields[count++], RQS_name, 12, "name",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], LIRS_description, 12, "description",
+   create_spooling_field(&fields[count++], RQS_description, 12, "description",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], LIRS_enabled, 12, "enabled",
+   create_spooling_field(&fields[count++], RQS_enabled, 12, "enabled",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], LIRS_rule, 12, "limit",
-                          LIR_sub_fields, &qconf_sub_limit_rule_sfi, NULL, NULL);
+   create_spooling_field(&fields[count++], RQS_rule, 12, "limit",
+                          RQR_sub_fields, &qconf_sub_rqs_sfi, NULL, NULL);
 
    create_spooling_field(&fields[count++], NoName, 12, NULL, NULL, NULL, NULL,
                           NULL);
@@ -1458,16 +1458,16 @@ static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
    return 1;
 }
 
-/****** sge_flatfile_obj/read_LIR_obj() ****************************************
+/****** sge_flatfile_obj/read_RQR_obj() ****************************************
 *  NAME
-*     read_LIR_obj() -- parse a LIR object from string
+*     read_RQR_obj() -- parse a RQR object from string
 *
 *  SYNOPSIS
-*     static int read_LIR_obj(lListElem *ep, int nm, const char *buffer, lList 
+*     static int read_RQR_obj(lListElem *ep, int nm, const char *buffer, lList 
 *     **alp) 
 *
 *  FUNCTION
-*     Reads in a LIR Element from string
+*     Reads in a RQR Element from string
 *
 *  INPUTS
 *     lListElem *ep      - Store for parsed Elem
@@ -1480,33 +1480,33 @@ static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
 *                  0 on error
 *
 *  NOTES
-*     MT-NOTE: read_LIR_obj() is MT safe 
+*     MT-NOTE: read_RQR_obj() is MT safe 
 *
 *******************************************************************************/
-static int read_LIR_obj(lListElem *ep, int nm, const char *buffer,
+static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
                              lList **alp) {
    lListElem *filter = NULL;
    int ret = 1;
 
-   DENTER(TOP_LAYER, "read_LIR_obj");
+   DENTER(TOP_LAYER, "read_RQR_obj");
 
-   if ((ret = LIRF_object_parse_from_string(&filter, buffer, alp)) == 1) {
+   if ((ret = rqs_parse_filter_from_string(&filter, buffer, alp)) == 1) {
       lSetObject(ep, nm, filter);
    } 
 
    DRETURN(ret);
 }
 
-/****** sge_flatfile_obj/write_LIR_obj() ***************************************
+/****** sge_flatfile_obj/write_RQR_obj() ***************************************
 *  NAME
-*     write_LIR_obj() -- converts a element to string
+*     write_RQR_obj() -- converts a element to string
 *
 *  SYNOPSIS
-*     static int write_LIR_obj(const lListElem *ep, int nm, dstring *buffer, lList 
+*     static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer, lList 
 *     **alp) 
 *
 *  FUNCTION
-*     Prints out a LIR Element to a string
+*     Prints out a RQR Element to a string
 *
 *  INPUTS
 *     const lListElem *ep - Elem to be converted
@@ -1519,10 +1519,10 @@ static int read_LIR_obj(lListElem *ep, int nm, const char *buffer,
 *                  0 on error
 *
 *  NOTES
-*     MT-NOTE: write_LIR_obj() is MT safe 
+*     MT-NOTE: write_RQR_obj() is MT safe 
 *
 *******************************************************************************/
-static int write_LIR_obj(const lListElem *ep, int nm, dstring *buffer,
+static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer,
                        lList **alp) {
-   return LIRF_object_append_to_dstring(lGetObject(ep, nm), buffer, alp);
+   return rqs_append_filter_to_dstring(lGetObject(ep, nm), buffer, alp);
 }

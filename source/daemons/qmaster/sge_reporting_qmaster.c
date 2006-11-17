@@ -589,7 +589,7 @@ reporting_create_acct_record(sge_gdi_ctx_class_t *ctx,
 
       sge_build_job_category_dstring(&category_dstring, job, 
                                      *(userset_list_get_master_list()), *object_type_get_master_list(SGE_TYPE_PROJECT), NULL,
-                                     *object_type_get_master_list(SGE_TYPE_LIRS));
+                                     *object_type_get_master_list(SGE_TYPE_RQS));
       category_string = sge_dstring_get_string(&category_dstring);                                          
 
       /* accounting records will only be written at job end, not for intermediate

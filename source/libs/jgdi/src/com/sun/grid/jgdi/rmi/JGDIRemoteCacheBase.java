@@ -34,7 +34,7 @@ package com.sun.grid.jgdi.rmi;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
-import com.sun.grid.jgdi.monitoring.QLimitOptions;
+import com.sun.grid.jgdi.monitoring.QQuotaOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
@@ -228,7 +228,7 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
         return null;
     }
     
-    public List getQLimit(QLimitOptions options) throws RemoteException {
+    public List getQQuota(QQuotaOptions options) throws RemoteException {
         return null;
     }
     

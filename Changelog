@@ -1,3 +1,6 @@
+RC-2006-11-19-0: Enhancem:  fixed some typos
+                 Changed:   profiling.txt
+
 AA-2006-11-17-0: Bugfix:    o broken build on solaris86
                             o moved test_sge_mirror
                             o resource quota renamings

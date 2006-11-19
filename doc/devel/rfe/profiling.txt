@@ -6,20 +6,20 @@
 0. Introduction:
 ----------------
 
-   This document gives a brief summary on the profiling capabilities build 
+   This document gives a brief summary on the profiling capabilities built
    into the Grid Engine Software. The profiling facility is one component in
-   the troubleshooting and profiling enviroment. In addition the profiling
+   the troubleshooting and profiling environment. In addition the profiling
    component Grid Engine provides: health monitoring through qping, monitoring
    for the qmaster, and monitoring for the scheduler. 
-   The profiling facility can be used to analys bottlenecks within the software
+   The profiling facility can be used to analyse bottlenecks within the software
    or outside and provide guidence for tuning Grid Engine.
 
 1. Format:
 ----------
 
    The format of the profiling output is not fixed and can change from one version
-   to another or even inbetwen version. It is used as a trouble shooting tool and
-   will be adapted to new needs when ever they arrise. The document is based on
+   to another or even inbetween version. It is used as a trouble shooting tool and
+   will be adapted to new needs when ever they arise. This document is based on
    the profiling output of SGE 6.0u8.
 
 2. Scheduler:
@@ -56,15 +56,15 @@
    Lines Explained:
    ----------------
    [1]  - Is generated from the event processing.
-          <NR> events - number of events processed (recived from the qmaster)
+          <NR> events - number of events processed (received from the qmaster)
           time s      - time needed to update the internal data
    
    [2]  - Time needed to compute the urgency policy for all jobs in the system
    [3]  - Time needed to compute the different steps from the ticket policy
           init - time needed to setup the internal data structures
-          pass 0 - time for data preperation (tfirst pass)
-          pass 1 - time for data preperation (tsecond pass)
-          pass 2 - time for data preperation (third pass)
+          pass 0 - time for data preparation (tfirst pass)
+          pass 1 - time for data preparation (tsecond pass)
+          pass 2 - time for data preparation (third pass)
           calc   - time for the ticket calculation
    [3a] - Same as [3]. This step is used to correct the tickets for the running jobs.
    [4]  - Time needed to normalize the tickets to a range of 0 to 1
@@ -74,7 +74,7 @@
    [7]  - Time needed to sort the job list to reflect the job priority
 
    [8]  - Time needed to assign jobs to the compute resources and sending the job start
-          oders to the qmaster. The following numbers show the jobs, which were assigned:
+          orders to the qmaster. The following numbers show the jobs, which were assigned:
            <NR> fast - number of sequential jobs without soft requests 
            <NR> comp - number of sequential jobs with soft requests
            <NR> pe   - number of parallel jobs
@@ -93,7 +93,7 @@
           <NR> J(xxx)     - number of job in the different states in the grid
           <NR> C          - number of complex attributes in the grid
           <NR> ACL        - number of access list in the grid
-          <NR> PE         - number of parallel enviroment objects in the grid
+          <NR> PE         - number of parallel environment objects in the grid
           <NR> U          - number of users in the grid
           <NR> D          - number of departments in the grid
           <NR> PRJ        - number of projects in the grid
@@ -101,7 +101,7 @@
           <NR> CKPT       - number of check pointing objects in the grid
           <NR> RU         - number of jobs running per user
           <NR> gMes       - number of global messages created in this scheduling run
-          <NR> jMes       - number of job related messages created in thi scheduling run
+          <NR> jMes       - number of job related messages created in this scheduling run
           <1/2> pre-send  - shows the orders send during the dispatching run [8]
                            1 - number of orders send
                            2 - number of sends

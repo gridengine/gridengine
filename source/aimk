@@ -1843,7 +1843,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
          set DEPEND = "../3rdparty/sge_depend/${COMPILE_ARCH}/sge_depend -l -S -Y ${DEPEND_FLAGS}"
          breaksw
       default
-         set param = $argv
+         set param = "$argv"
          set DEPEND = ""
       breaksw
    endsw

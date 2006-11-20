@@ -35,6 +35,7 @@ import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QQuotaOptions;
+import com.sun.grid.jgdi.monitoring.QQuotaResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
@@ -70,7 +71,6 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
     public void removeJGDIRemoteCacheListener(JGDIRemoteCacheListener lis) {
         listeners.remove(lis);
     }
-    
     
     public void setJGDI(JGDIRemote jgdi) {
         this.jgdi = jgdi;
@@ -228,7 +228,7 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
         return null;
     }
     
-    public List getQQuota(QQuotaOptions options) throws RemoteException {
+    public QQuotaResult getQQuota(QQuotaOptions options) throws RemoteException {
         return null;
     }
     
@@ -248,10 +248,6 @@ public class JGDIRemoteCacheBase implements JGDIRemoteBase {
     }
     
     public void killAllExecds(boolean terminateJobs) throws RemoteException {
-    }
-    
-    public List getEventClients() throws RemoteException {
-        return null;
     }
     
     public void killEventClients(int[] ids) throws RemoteException {

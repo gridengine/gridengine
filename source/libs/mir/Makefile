@@ -46,15 +46,21 @@ MIRLIB_SRC =                           \
                sge_sharetree_mirror.c  \
                sge_sched_conf_mirror.c
 
+MIRLIB_TEST_PROGS = test_sge_mirror
+
+MIRLIB_TEST_SRC = test_sge_mirror.c
+
+MIRLIB_TEST_OBJS = $(MIRLIB_TEST_SRC:.c=.o)
+
 MIRLIB_OBJS = $(MIRLIB_SRC:.c=.o)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-mirlib: $(MIRLIB) test_sge_mirror
+mirlib: $(MIRLIB) $(MIRLIB_TEST_PROGS)
 
 mirlib_clean:
-		$(RM) $(MIRLIB_OBJS) libmir.a libmir$(SHAREDEXT)
+		$(RM) $(MIRLIB_OBJS) libmir.a libmir$(SHAREDEXT) $(MIRLIB_TEST_PROGS) $(MIRLIB_TEST_OBJS) 
 
 mirlib_depend:
 		$(DEPEND) -f$(MIRLIB_DIR)/mir_dependencies $(MIRLIB_DIR)/*.c

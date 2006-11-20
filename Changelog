@@ -1,3 +1,8 @@
+RD-2006-11-20-1: Cleanup:   - removed sge_bitop.c and sge_crc.c
+                            - aimk clean now removes sge_test_mirror
+                            - fixed build error for java
+                 Review:    AA
+
 RH-2006-11-20-0: Enhancem.: o jgdi version 0.91 with a threadsafe JGDI
                               connection object
                  Review:    AA
@@ -8856,3 +8861,4 @@ JG-2004-04-06-0: Enhancem.: write intermediate accounting records to reporting
 MD-2004-04-06-0: Bugfix:    - Improper variable comparison
                             - autoinstall does not work
                             - changed logfile dir
+

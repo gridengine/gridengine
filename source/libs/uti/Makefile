@@ -42,9 +42,7 @@ UTILIB_DRMAA_SRC = \
          sge_afsutil.c \
          sge_arch.c \
          sge_bitfield.c \
-         sge_bitop.c \
          sge_bootstrap.c \
-         sge_crc.c \
          sge_dstring.c \
          sge_edit.c \
          sge_hostname.c \
@@ -154,12 +152,6 @@ sge_os.o: 	$(UTILIB_DIR)/sge_os.c
 
 pids_standalone.o: $(UTILIB_DIR)/sge_os.c
 		$(CC) -DNO_COD_COMPILE_DEBUG $(CFLAGS) -o pids_standalone.o $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_os.c
-
-sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_crc.c
-
-sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitop.c
 
 sge_bootstrap.o:	$(UTILIB_DIR)/sge_bootstrap.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bootstrap.c

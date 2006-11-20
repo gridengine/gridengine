@@ -56,12 +56,6 @@
 */ 
 #define MSG_PERROR_PSTATDYNAMIC     _MESSAGE(49012, _("Pstat: PSTAT_DYNAMIC"))
 #define MSG_INFO_NUMBOFPROCESSORS_I _MESSAGE(49013, _("Number of Processors '%d'"))
-/* 
-** utilib/sge_bitop.c
-*/ 
-#define MSG_MEMORY_NOMEMORYFORBYTEARRAY_S    _MESSAGE(49014, _(SFN": can't malloc memory for byte array"))
-#define MSG_FILE_NOOPENFORWRITEING_SS        _MESSAGE(49015, _(SFN": unable to open file "SFN" for writing!"))
-
 
 /* 
 ** utilib/sge_unistd.c

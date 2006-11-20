@@ -5146,7 +5146,7 @@ char *argv[]
          lList *answer_list = NULL;
 
          cqueue_list_sick(ctx, &answer_list);
-         sge_parse_return = show_gdi_request_answer(answer_list);
+         show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;

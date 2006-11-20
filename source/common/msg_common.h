@@ -1047,7 +1047,7 @@
 
 #define MSG_OBJ_RQS                        _MESSAGE(60615, _("resource quota set"))
 #define MSG_GDI_USAGE_srqs_OPT             "[-srqs [rqs_list]]"
-#define MSG_GDI_UTEXT_srqs_OPT             _MESSAGE(60616, _("show resource quota set"))
+#define MSG_GDI_UTEXT_srqs_OPT             _MESSAGE(60616, _("show resource quota set(s)"))
 #define MSG_GDI_USAGE_srqsl_OPT            "[-srqsl]"
 #define MSG_GDI_UTEXT_srqsl_OPT            _MESSAGE(60617, _("show resource quota set list"))
 #define MSG_GDI_USAGE_arqs_OPT             "[-arqs [rqs_list]]"

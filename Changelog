@@ -1,3 +1,7 @@
+RD-2006-11-20-0: Bugfix:    fixed some issues introduced by resource quota
+                            renaming
+                 Review:    AA
+
 RC-2006-11-19-0: Enhancem:  fixed some typos
                  Changed:   profiling.txt
 

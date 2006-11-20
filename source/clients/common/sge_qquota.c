@@ -149,6 +149,7 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
 
    lListElem* global_host = NULL;
    lListElem* exec_host = NULL;
+   lList* printed_rules = NULL;  /* Hash list of already printed resource quota rules (possible with -u user1,user2,user3...) */
 
    bool ret = true;
    int xml_ret = 0;
@@ -170,8 +171,7 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
 
    if (ret == true) {
       lListElem *rqs = NULL;
-      lList* printed_rules = NULL;  /* Hash list of already printed resource quota rules (possible with -u user1,user2,user3...) */
-
+      printed_rules = lCreateList("rule_hash", ST_Type); 
       global_host = host_list_locate(exechost_list, SGE_GLOBAL_NAME);
 
       if (report_handler != NULL) {
@@ -364,7 +364,6 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
       if (report_handler != NULL) {
          report_handler->report_finished(report_handler, alpp);
       }
-      lFreeList(&printed_rules);
    }
 
 qquota_output_error:
@@ -374,6 +373,7 @@ qquota_output_error:
    lFreeList(&userset_list);
    lFreeList(&hgroup_list);
    lFreeList(&exechost_list);
+   lFreeList(&printed_rules);
 
    DRETURN(ret);
 }

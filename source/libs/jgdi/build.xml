@@ -435,6 +435,13 @@
             templateFile="templates/java_jni_jgdi.jsp">
             <pattern objectFilter="root primitive_root"/>
          </templateconv>
+         
+         <templateconv scope="definition"
+            outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/SynchronizedJGDI.java"
+            templateFile="templates/java_synchronized_jgdi.jsp">
+            <pattern objectFilter="root primitive_root"/>
+         </templateconv>
+         
                                               
          <templateconv scope="objects"
             outputFile="${build.dir}/jgdi.c"

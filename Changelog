@@ -1,3 +1,7 @@
+RH-2006-11-20-0: Enhancem.: o jgdi version 0.91 with a threadsafe JGDI
+                              connection object
+                 Review:    AA
+                           
 RD-2006-11-20-0: Bugfix:    fixed some issues introduced by resource quota
                             renaming
                  Review:    AA

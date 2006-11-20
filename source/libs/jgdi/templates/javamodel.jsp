@@ -144,7 +144,6 @@ public interface <%=classname%> extends <%
    /**
     *  Get the number of values for  the default <code><%=mapAttr.getKeyName()%></code>
     *  (<%=mapAttr.getDefaultKey()%>).
-    *  @param <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
     */
    public int getDefault<%=gsname%>Count();
    

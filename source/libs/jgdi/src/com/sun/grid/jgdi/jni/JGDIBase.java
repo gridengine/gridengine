@@ -130,7 +130,7 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
     *  
     *  @param options the options for the qquota algorithm
-    *  @return  list of {@link com.sun.grid.jgdi.monitoring.QQuota} instances
+    *  @return  the {@link com.sun.grid.jgdi.monitoring.QQuotaResult}
     */
    public QQuotaResult getQQuota(QQuotaOptions options) throws JGDIException {
       QQuotaResultImpl ret  = new QQuotaResultImpl();
@@ -140,121 +140,115 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
       return ret;
    }
    
-   /**
+   /*
     * @inherited
     */
    public native void cleanQueues(String[] queues) throws JGDIException;
    
    
-   /**
+   /*
     * @inherited
     */
    public native void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
-   /**
+   
+   /*
     * @inherited
     */
    public native void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
-   /**
+   
+   /*
     * @inherited
     */
    public native void suspendQueues(String[] queues, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
-    * @todo alpha ?? RH
-    *       Quality type of answer list is not correct (no error reporting)
     */
    public native void suspendJobs(String[] jobs, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
-    * @todo alpha ?? RH
-    *       Quality type of answer list is not correct (no error reporting)
     */
    public native void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
-    * @todo alpha ?? RH
-    *       Native part is missing
     */
    public native void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void clearJobs(String[] jobs, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
-    * @todo alpha ?? RH
-    *       Native part yet not implemented
     */
    public native void clearQueues(String[] queues, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void disableQueues(String[] queues, boolean force) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void enableQueues(String[] queues, boolean force) throws JGDIException;
    
    
-   /**
+   /*
     * @inherited
     */
    public native void killAllExecds(boolean terminateJobs) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void killEventClients(int[] ids) throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void triggerSchedulerMonitoring() throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void clearShareTreeUsage() throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void killAllEventClients() throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void killMaster() throws JGDIException;
    
-   /**
+   /*
     * @inherited
     */
    public native void killScheduler() throws JGDIException;
    
    
-   /**
+   /*
     * @inherited
     */
    public native String getSchedulerHost() throws JGDIException;
 
-   /**
+   /*
     * @inherited
     */
    public native String showDetachedSettings(String[] queues) throws JGDIException;
 
-   /**
+   /*
     * @inherited
     */
    public native String showDetachedSettingsAll() throws JGDIException;

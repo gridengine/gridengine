@@ -40,21 +40,21 @@ import java.util.Set;
 public interface QQuotaResult {
    
    /**
-    *  Get a set of all limit names
-    *  @return set of limit names 
+    *  Get a set of all resource quota rule names
+    *  @return set of resource quota
     */
    public Set getResourceQuotaRuleNames();
    
    /**
-    *  Get the host info for a host
-    *  @param  host  name of the host
-    *  @return the host info
+    *  Get a resource quotal
+    *  @param  quotaname  name of the resource quota
+    *  @return the resource quota information
     */
-   public ResourceQuotaRuleInfo getResourceQuotaRuleInfo(String limit_name);
+   public ResourceQuotaRuleInfo getResourceQuotaRuleInfo(String quotaname);
    
    /**
-    *  Get a list of all available limit rule info objects
-    *  @return list of all available limit rule info objects
+    *  Get a list of all available resource quota info objects
+    *  @return list of all available resource quota info objects
     */
    public List getResourceQuotaRules();
    

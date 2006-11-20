@@ -60,8 +60,6 @@ public class JGDIFactory {
     *
     * @param url  JGDI connection url in the form
     *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
-    * @param username name of the JGDI user
-    * @param password password of the JGDI user
     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
     * @return the <code>JGDI<code> instance
     */
@@ -71,6 +69,19 @@ public class JGDIFactory {
       ret.init(url);
       
       return ret;
+   }
+   
+   /**
+    * Get a synchronized instance of a <code>JGDI</code> object. 
+    *
+    * @param url  JGDI connection url in the form
+    *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
+    * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+    * @return the <code>JGDI<code> instance
+    * @since  0.91
+    */
+   public static JGDI newSynchronizedInstance(String url)  throws JGDIException {
+       return new com.sun.grid.jgdi.jni.SynchronizedJGDI(newInstance(url));
    }
    
    

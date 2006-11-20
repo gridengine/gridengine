@@ -43,21 +43,23 @@ public class ResourceQuotaImpl implements ResourceQuota, Serializable {
     private String usageValue;
     
     /**
-     * Create a new limit rule info object
+     * Create a new resource quota info object
      */
     public ResourceQuotaImpl() {}
     
     /**
      * Create a new limit rule info object
-     * @param resourceQuotaRuleName  name of the limit rule
+     * @param name  name of the resource quota
      */
     public ResourceQuotaImpl(String name) {
         setName(name);
     }
 
     /**
-     * Create a new limit rule info object
-     * @param resourceQuotaRuleName  name of the limit rule
+     * Create a new resource quota
+     * @param name  name of the resource quota
+     * @param limitValue the limit value
+     * @param usageValue the usage value
      */
     public ResourceQuotaImpl(String name, String limitValue, String usageValue) {
         setName(name);
@@ -91,7 +93,7 @@ public class ResourceQuotaImpl implements ResourceQuota, Serializable {
     
     /**
      *  Set the limit value
-     *  @param resourceQuotaRuleName the limit rule name
+     *  @param limitValue the limit value
      */
     public void setLimitValue(String limitValue) {
         this.limitValue = limitValue;

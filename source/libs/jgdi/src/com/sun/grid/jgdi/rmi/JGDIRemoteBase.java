@@ -35,6 +35,7 @@ import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QQuotaOptions;
+import com.sun.grid.jgdi.monitoring.QQuotaResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
@@ -151,9 +152,9 @@ public interface JGDIRemoteBase extends Remote {
      *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
      *
      *  @param options the options for the qquota algorithm
-     *  @return  list of {@link com.sun.grid.jgdi.monitoring.QQuota} instances
+     *  @return  list of {@link com.sun.grid.jgdi.monitoring.QQuotaResult} instances
      */
-    public List getQQuota(QQuotaOptions options) throws RemoteException;
+    public QQuotaResult getQQuota(QQuotaOptions options) throws RemoteException;
     
     
     // -------- Managing interface methods --------------------------------------
@@ -222,17 +223,6 @@ public interface JGDIRemoteBase extends Remote {
      * @throws RemoteException on any error on the GDI layer
      */
     public void killAllExecds(boolean terminateJobs) throws RemoteException;
-    
-    /**
-     * <p>Get all registered events clients</p>
-     * <p>Requires root or manager privilege.</p>
-     * <p>The CLI equivialent for this method is <code>qconf -secl</code> (see man qconf(1)).</p>
-     *
-     * @return list of event clients
-     * @throws RemoteException RemoteException on any error on the GDI level
-     */
-    public List getEventClients() throws RemoteException;
-    
     
     /**
      * <p>Used to shutdown event clients registered at qmaster(8), except

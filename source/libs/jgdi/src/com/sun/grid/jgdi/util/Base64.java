@@ -97,7 +97,7 @@ public class Base64 {
      * Translates the specified Base64 string (as per Preferences.get(byte[]))
      * into a byte array.
      * 
-     * @throw IllegalArgumentException if <tt>s</tt> is not a valid Base64
+     * @throws IllegalArgumentException if <tt>s</tt> is not a valid Base64
      *        string.
      */
     public static byte[] decode(String s) {

@@ -44,7 +44,19 @@
       <aimk_call args="-only-core jgdi_clean"/>
    </target>
 
-   <target name="aimk.template" depends="aimk.init, init">
+   <target name="aimk.template.required" depends="aimk.init, init">
+      <uptodate targetfile="${build.dir}/sge_all_listsL.template"
+                property="aimk.template.uptodate">
+          <srcfiles dir="${sge.srcdir}" includes="**/*L.h"/>
+      </uptodate>
+   </target>
+   
+   <target name="aimk.template" depends="aimk.init, init, aimk.template.required"
+           unless="aimk.template.uptodate">
+       <dependset>
+           <srcfileset dir="${sge.srcdir}" includes="**/*L.h"/>
+           <targetfileset dir="${build.dir}" includes="sge_all_listsL.template"/>
+       </dependset>
       <aimk_call args="-only-core jgdi_template"/>
    </target>
    
@@ -166,12 +178,15 @@
          <src refid="jgdi.srcpath"/>
          <classpath refid="compile.classpath"/>
       </javac>
-        
-      <rmic base="${classes.dir}" includes="com/sun/grid/jgdi/rmi/*Impl.class"> 
-         <classpath location="${classes.dir}"/>
+      
+      <rmic base="${classes.dir}" includes="com/sun/grid/jgdi/rmi/JGDIRemote*Impl.class">   
+          <!-- rmic checks wether the *_Skel.class files are generated, however
+               they are only generated for rmi version 1.1. We have to generate
+               the complatible version -->
+          <compilerarg line="-vcompat"/>
       </rmic>
-        
    </target>
+
 
    <target name="jar.init" depends="init">
        <fileset id="jar.classes" dir="${classes.dir}">

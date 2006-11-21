@@ -1,3 +1,6 @@
+RH-2006-11-21-0: Cleanup:   - fine tuning of jgdi build process
+                 Review:    AA
+
 RD-2006-11-20-1: Cleanup:   - removed sge_bitop.c and sge_crc.c
                             - aimk clean now removes sge_test_mirror
                             - fixed build error for java

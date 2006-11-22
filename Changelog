@@ -1,3 +1,8 @@
+JG-2006-11-23-0: Enhancem.: Include java targets in standard build (aimk),
+                            -no-java can be used to exclude java targets.
+                            Some cleanup.
+                 Review:    AA
+
 CR-2006-11-22-0: Bugfix:    - fixed problem in sge_strdup function when an
                               empty string (string with length 0) is duplicated
                  Review:    AA

@@ -443,7 +443,9 @@ spool_classic_default_maintenance_func(lList **answer_list,
          sge_mkdir(USERSET_DIR, 0755, true, false);
          sge_mkdir(CAL_DIR, 0755, true, false);
          sge_mkdir(HGROUP_DIR, 0755, true, false);
+#ifndef __SGE_NO_USERMAPPING__
          sge_mkdir(UME_DIR, 0755, true, false);
+#endif
          sge_mkdir(USER_DIR, 0755, true, false);
          sge_mkdir(PROJECT_DIR, 0755, true, false);
          sge_mkdir(RESOURCEQUOTAS_DIR, 0755, true, false);

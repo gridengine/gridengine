@@ -103,7 +103,7 @@
     </target>
     
     <target name="-pre-compile" unless="isJavaBuildHost">
-        <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+        <waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
            <available file="${dist.jar}"/>
         </waitfor>
         <available file="${dist.jar}" property="jar.available"/>

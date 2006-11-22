@@ -152,7 +152,6 @@ usage:
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks"
    echo "-intl             -> compile with internationalization library (libintl)"
-   echo "-java             -> compile Java[TM] class files"
    echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
@@ -247,7 +246,7 @@ set NOERR_SSH        = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
 set JAVA_LFLAGS      = ""
-set JAVA             = 0
+set JAVA             = 1
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
@@ -527,9 +526,6 @@ while ($#argv >= 1 && $?found)
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
-   case  "-java"
-      set JAVA = 1
-      breaksw
    case  "-javadoc"
       set BUILDJAVADOC = 1
       breaksw
@@ -609,6 +605,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-core":
       set CORE   = 1
+      set JAVA   = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -618,6 +615,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-depend":
       set CORE       = 0
+      set JAVA       = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
@@ -631,6 +629,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qmake":
       set CORE   = 0
+      set JAVA   = 0
       set QMAKE  = 1
       set QMON   = 0
       set QTCSH  = 0
@@ -640,6 +639,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qmon":
       set CORE   = 0
+      set JAVA   = 0
       set QMAKE  = 0
       set QMON   = 1
       set QTCSH  = 0
@@ -649,6 +649,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
+      set JAVA   = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 1
@@ -658,6 +659,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-wingrid":
       set CORE   = 0
+      set JAVA   = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -667,6 +669,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-remote":
       set CORE   = 0
+      set JAVA   = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0

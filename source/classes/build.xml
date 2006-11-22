@@ -120,7 +120,7 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
-       <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+       <waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${jar}"/>
        </waitfor>
        
@@ -183,7 +183,7 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="api.wait" depends="api.init" unless="isJavaBuildHost">
-       <waitfor maxwait="2" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+       <waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${api.jar}"/>
        </waitfor>
        

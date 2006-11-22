@@ -1,3 +1,7 @@
+CR-2006-11-22-0: Bugfix:    - fixed problem in sge_strdup function when an
+                              empty string (string with length 0) is duplicated
+                 Review:    AA
+
 RH-2006-11-21-0: Cleanup:   - fine tuning of jgdi build process
                  Review:    AA
 

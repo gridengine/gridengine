@@ -514,11 +514,9 @@ char *sge_strdup(char *old, const char *s)
    }
 
    n = strlen(s);
-   if (n) {
-      old = malloc(n + 1);
-      if (old) {
-         strcpy(old, s);
-      }
+   old = malloc(n + 1);
+   if (old) {
+      strcpy(old, s);
    }
 
    return old;

@@ -570,9 +570,6 @@ int main(int argc, char **argv)
       foreground = 0;   /* no output to stderr */
    }
 
-   /* make sure pending SIGPIPE signals logged in trace file */ 
-   set_sig_handler(SIGPIPE);
-   sge_set_def_sig_mask(SIGPIPE, NULL);
    set_shepherd_signal_mask();
       
    config_errfunc = shepherd_error;
@@ -1553,6 +1550,26 @@ static void set_shepherd_signal_mask(void)
 {
    struct sigaction sigact, sigact_old;
    sigset_t mask;
+
+   /* make sure pending SIGPIPE signals logged in trace file */ 
+   set_sig_handler(SIGPIPE);
+   {
+      sigset_t sigset;
+      sigemptyset(&sigset);
+
+      /* already set a handler for SIGPIPE */
+      sigaddset(&sigset, SIGPIPE);
+       /* don't touch shepherds known signals (handlers set in set_shepherd_signal_mask) */
+      sigaddset(&sigset, SIGTTOU);
+      sigaddset(&sigset, SIGTTIN);
+      sigaddset(&sigset, SIGUSR1);
+      sigaddset(&sigset, SIGUSR2);
+      sigaddset(&sigset, SIGCONT);
+      sigaddset(&sigset, SIGWINCH);
+      sigaddset(&sigset, SIGTSTP);
+      sge_set_def_sig_mask(&sigset, NULL);
+   }
+
       
    /* get mask */
    sigprocmask(SIG_SETMASK, NULL, &mask);
@@ -2166,7 +2183,7 @@ static int start_async_command(const char *descr, char *cmd)
          shepherd_trace_sprintf("%s: can't chdir to %s", descr, cwd);
       }   
 
-      sge_set_def_sig_mask(0, NULL);
+      sge_set_def_sig_mask(NULL, NULL);
       start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "", 0);
       return 0;   
    }

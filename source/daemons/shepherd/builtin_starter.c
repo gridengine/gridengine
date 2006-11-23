@@ -742,7 +742,7 @@ int truncate_stderr_out
    else
       strcpy(argv0, shell_basename);
 
-   sge_set_def_sig_mask(0, NULL);
+   sge_set_def_sig_mask(NULL, NULL);
    sge_unblock_all_signals();
    
    /*

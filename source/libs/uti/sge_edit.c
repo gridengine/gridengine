@@ -107,7 +107,7 @@ int sge_edit(const char *fname, uid_t myuid, gid_t mygid)
    } else {
       const char *cp = NULL;
 
-      sge_set_def_sig_mask(0, NULL);   
+      sge_set_def_sig_mask(NULL, NULL);
       sge_unblock_all_signals();
       setuid(getuid());
       setgid(getgid());

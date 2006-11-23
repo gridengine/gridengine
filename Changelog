@@ -1,3 +1,11 @@
+CR-2006-11-23-0  Bugfix:    Fixed wrong shepherd signal handler initalization
+                            qdel of just submitted job
+                            (merged from s2 branch)
+                 Issue:     126
+                 Bugster:   6287963
+                 Changed:   qsh, shepherd, utilib
+                 Review:    AA
+
 CR-2006-11-23-0: Enhancem.: new paramater "maxwait" for java build timeout
                  Changed:   source/classes/build.xml source/libs/jgdi/build.xml
                             source/libs/juti/build.xml source/build.properties

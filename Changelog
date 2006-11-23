@@ -1,3 +1,6 @@
+HP-2006-11-23-0: Bugfix:    Fixed broken build of Win32 binaries
+                 Changed:   aimk
+
 AA-2006-11-22-0: Bugfix:    qevent fix for broken testsuite
                  Review:    CR
 

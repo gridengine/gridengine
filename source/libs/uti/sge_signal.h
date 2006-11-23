@@ -36,6 +36,8 @@
 #   include "basis_types.h"
 #endif
 
+#include <signal.h>
+
 #define SGE_SIGHUP                         901
 #define SGE_SIGINT                         902
 #define SGE_SIGQUIT                        903
@@ -91,7 +93,7 @@ u_long32 sge_sys_str2signal(const char *str);
 
 typedef void (*err_func_t)(char *s);
  
-void sge_set_def_sig_mask(int, err_func_t);
+void sge_set_def_sig_mask(sigset_t*, err_func_t);
 void sge_unblock_all_signals(void);
 
 

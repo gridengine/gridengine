@@ -340,41 +340,64 @@ const char *sge_sys_sig2str(u_long32 sys_sig)
 *     Set signal mask to default for all signals except given signal
 *
 *  INPUTS
-*     int sig_num         - signal number
+*     sigset_t sig_num    - signals which should be ignored
+*                           (use sigemptyset and sigaddset to set signals,
+*                           if NULL, no signals are ignored)
 *     err_func_t err_func - callback function to report errors
 *
 *  NOTES
 *     MT-NOTE: sge_set_def_sig_mask() is MT safe
 *
 ******************************************************************************/
-void sge_set_def_sig_mask(int sig_num, err_func_t err_func)
+void sge_set_def_sig_mask(sigset_t* sig_num, err_func_t err_func)
 {
-   int i;
+   int i = 1;
    struct sigaction sig_vec;
-   char err_str[256];
- 
-   errno = 0;
-   for (i=1; i < NSIG; i++) {
-#if !defined(HPUX)
-      if (i != SIGKILL && i != SIGSTOP && i != sig_num)
-#else
-      if (i != SIGKILL && i != SIGSTOP &&
-          i != _SIGRESERVE && i != SIGDIL && i != sig_num)
-#endif
-      {
-         sigemptyset(&sig_vec.sa_mask);
-         sig_vec.sa_flags = 0;
-         sig_vec.sa_handler = 0;
-         sig_vec.sa_handler = SIG_DFL;
-         if (sigaction(i, &sig_vec, NULL)) {
-            sprintf(err_str, MSG_PROC_SIGACTIONFAILED_IS, i, strerror(errno));
-            if (err_func) {
-               err_func(err_str);
-            }
+   
+   while (i < NSIG) {
+      /*
+       * never set default handler for 
+       * SIGKILL and SIGSTOP
+       */
+      if ((i == SIGKILL) || (i == SIGSTOP)) {
+         i++;
+         continue;
+      }
+
+      /*
+       * on HPUX don't set default handler for
+       * _SIGRESERVE and SIGDIL
+       */
+#if defined(HPUX)
+      if ((i == _SIGRESERVE) || (i == SIGDIL)) {
+         i++;
+         continue;
+      }
+#endif     
+
+      /*
+       * never set default handler for signals set
+       * in sig_num if not NULL 
+       */
+      if (sig_num != NULL && sigismember(sig_num, i)) {
+         i++;
+         continue;
+      }
+
+      errno = 0;
+      sigemptyset(&sig_vec.sa_mask);
+      sig_vec.sa_flags = 0;
+      sig_vec.sa_handler = 0;
+      sig_vec.sa_handler = SIG_DFL;
+      if (sigaction(i, &sig_vec, NULL)) {
+         if (err_func) {
+            char err_str[256];
+            snprintf(err_str, 256, MSG_PROC_SIGACTIONFAILED_IS, i, strerror(errno));
+            err_func(err_str);
          }
       }
+      i++;
    }
- 
 }   
 
 /****** uti/signal/sge_unblock_all_signals() **********************************

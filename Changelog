@@ -1,3 +1,10 @@
+CR-2006-11-23-0  Bugfix:    Fixed wrong shepherd signal handler initalization
+                            qdel of just submitted job
+                 Issue:     126
+                 Bugster:   6287963
+                 Changed:   qsh, shepherd, utilib
+                 Review:    AA
+
 HP-2006-11-20-0: Bugfix:    Fixed broken build of Win32 binaries
                  Changed:   aimk
 

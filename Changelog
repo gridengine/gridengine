@@ -1,3 +1,8 @@
+CR-2006-11-23-0: Enhancem.: new paramater "maxwait" for java build timeout
+                 Changed:   source/classes/build.xml source/libs/jgdi/build.xml
+                            source/libs/juti/build.xml source/build.properties
+                 Review:    AA
+
 HP-2006-11-23-0: Bugfix:    Fixed broken build of Win32 binaries
                  Changed:   aimk
 

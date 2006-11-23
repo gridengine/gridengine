@@ -180,8 +180,8 @@ int inc_qmaster_heartbeat(char *file, int write_timeout , int* beat_value) {
       return -2;   
    }
 
-   /* write in curent data */
-   if (fprintf(fp, "%d\n", hb) == EOF) {
+   /* write in curent data (always write 5 characters) */
+   if (fprintf(fp, "%05d\n", hb) == EOF) {
       FCLOSE(fp);
       ERROR((SGE_EVENT, MSG_HEART_WRITE_ERROR_SS, file, strerror(errno))); 
       DEXIT;

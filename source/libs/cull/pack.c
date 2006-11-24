@@ -253,10 +253,7 @@ void clear_packbuffer(
 sge_pack_buffer *pb 
 ) {
    if (pb != NULL) {
-      if (pb->head_ptr != NULL) {
-         free(pb->head_ptr);
-         pb->head_ptr = NULL;
-      }
+      FREE(pb->head_ptr);
    }
    return;
 }

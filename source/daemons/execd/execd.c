@@ -335,10 +335,6 @@ char **argv
    /***** MAIN LOOP *****/
    while (shut_me_down != 1) {
 
-      /* use auto acknowlege feature of dispatcher for the following
-         inbound messages */
-      static int tagarray[] = { TAG_SIGJOB, TAG_SIGQUEUE, TAG_NONE };
-
      if (thread_prof_active_by_id(pthread_self())) {
          prof_start(SGE_PROF_CUSTOM1, NULL);
          prof_set_level_name(SGE_PROF_CUSTOM1, "Execd Thread", NULL); 
@@ -355,7 +351,7 @@ char **argv
 
       i = dispatch(ctx, execd_dispatcher_table, 
                    sizeof(execd_dispatcher_table)/sizeof(dispatch_entry),
-                   tagarray, dispatch_timeout, err_str, dispatcher_errfunc, 1);
+                   dispatch_timeout, err_str, dispatcher_errfunc);
 
       if (sge_sig_handler_sigpipe_received) {
           sge_sig_handler_sigpipe_received = 0;

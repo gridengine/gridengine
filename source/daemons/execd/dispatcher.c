@@ -53,30 +53,16 @@
 #include "sge_bootstrap.h"
 #include "sge_prog.h"
 
-/* number of messages to cache in server process
-   the rest stays in commd */
-#define RECEIVE_CACHESIZE 10
-
 /* range for sleep if we cant contact commd */
 #define CONNECT_PROBLEM_SLEEP_MIN 10
 #define CONNECT_PROBLEM_SLEEP_MAX 120
 #define CONNECT_PROBLEM_SLEEP_INC 10
-
-/* Cache we need for buffering inbound messages */
-typedef struct pbcache {
-   sge_pack_buffer *pb;  /* data */
-   dispatch_entry *de;   /* sender */
-   struct pbcache *next;
-} pbcache;
-
 
 static int match_dpe(dispatch_entry *dea, dispatch_entry *deb);
 static int authorize_dpe(const char* admin_user, dispatch_entry *deb);
 static int receive_message_cach_n_ack(sge_gdi_ctx_class_t *ctx,
                                       dispatch_entry *de, 
                                       sge_pack_buffer **pb, 
-                                      int *tagarray, 
-                                      int cachesize, 
                                       void (*errfunc)(const char *));
 static int sendAckPb(sge_gdi_ctx_class_t *ctx, 
                      sge_pack_buffer *apb, 
@@ -84,39 +70,9 @@ static int sendAckPb(sge_gdi_ctx_class_t *ctx,
                      char *commproc, 
                      u_short id,
                      void (*errfunc)(const char *err_str));
-static int isIn(int tag, int *tagarray);
-static int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray); 
 static int alloc_de(dispatch_entry *de);
 static void free_de(dispatch_entry *de);
 static int copy_de(dispatch_entry *dedst, dispatch_entry *desrc);
-static int receive_message(sge_gdi_ctx_class_t *ctx, 
-                           dispatch_entry *de, 
-                           sge_pack_buffer **pb, 
-                           int* tagarray,
-                           void (*errfunc)(const char *));
-
-
-
-
-
-static int receive_message(sge_gdi_ctx_class_t *ctx, 
-                           dispatch_entry *de, 
-                           sge_pack_buffer **pb, 
-                           int* tagarray, 
-                           void (*errfunc)(const char *)) 
-{
-   int ret;
-   DENTER(TOP_LAYER, "receive_message");
-
-   ret = receive_message_cach_n_ack(ctx, de, pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
-
-   DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", 
-            cl_get_error_text(ret), de->host, de->commproc, de->id)); 
-   
-   DEXIT;
-   return ret;
-}
-
 
 /*********************************************************
  dispatch loop
@@ -131,9 +87,6 @@ static int receive_message(sge_gdi_ctx_class_t *ctx,
     ->err_str is filled when a fatal error happens
     ->errfunc(char *) is called with an error string, if non fatal errors 
                       happen
-    ->wait4commd =1 -> wait until commd can be contacted
-                 =0 -> return immediately if no connect can be done
-
     returns commlib errorcodes or CL_FIRST_FREE_EC
             in case of CL_FIRST_FREE_EC err_str is filled
     returns 0 on normal termination (triggered by a message function)
@@ -159,11 +112,9 @@ static int receive_message(sge_gdi_ctx_class_t *ctx,
 int dispatch( sge_gdi_ctx_class_t *ctx,
               dispatch_entry*   table,
               int               tabsize, 
-              int*              tagarray, 
               u_long            rcvtimeout,
               char*             err_str, 
-              void              (*errfunc)(const char *), 
-              int               wait4commd)
+              void              (*errfunc)(const char *))
 {
    /* CR - TODO: rework complete dispatch function(s) for NGC */
    dispatch_entry de,   /* filled with received mask */
@@ -217,7 +168,7 @@ int dispatch( sge_gdi_ctx_class_t *ctx,
             de.id = 0;
       }
 
-      MONITOR_IDLE_TIME((i = receive_message(ctx, &de, &pb, tagarray, errfunc)), (&monitor), monitor_time, false);
+      MONITOR_IDLE_TIME((i = receive_message_cach_n_ack(ctx, &de, &pb, errfunc)), (&monitor), monitor_time, false);
       MONITOR_MESSAGES((&monitor));
       
       switch (i) {
@@ -301,7 +252,7 @@ int dispatch( sge_gdi_ctx_class_t *ctx,
 
             sigprocmask(SIG_SETMASK, &old_sigset, NULL);
 
-            cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
+            cl_commlib_trigger(ctx->get_com_handle(ctx), 0);
 
             rcvtimeoutt = MIN(rcvtimeout, rcvtimeoutt);
             
@@ -439,188 +390,90 @@ static int authorize_dpe(const char *admin_user, dispatch_entry *deb)
 static int receive_message_cach_n_ack( sge_gdi_ctx_class_t *ctx,
                                        dispatch_entry*    de,
                                        sge_pack_buffer**  pb,
-                                       int*               tagarray,
-                                       int                cachesize,
-                                       void               (*errfunc)(const char *)) {
-   static int cached_pbs = 0;      /* number of cached pbs */
-   static pbcache *cache=NULL, *cacheend=NULL;  /* ptr to first and last cached element */
-   pbcache *new, *lastBeforeThisCall=cacheend, *cacheptr, *cacheptrlast;
 
-   char *buffer;
-   u_long32 buflen;
-   sge_pack_buffer apb;    /* for sending acknowledge answers back to sender */
-   dispatch_entry deact, lastde;
-   int i, receive_blocking;
-   u_long32 tmpul, tmpul2;
+
+                                       void               (*errfunc)(const char *)) {
+   char* buffer     = NULL;
+   u_long32 buflen  = 0;
+   int i            = 0;
+
 
    DENTER(TOP_LAYER, "receive_message_cach_n_ack");
 
-/*    DPRINTF(("----------------- message cache holds %d entries\n", cached_pbs)); */
+   /* here we receive a message (wait select timeout if there is no message) */
+   i = gdi2_receive_message(ctx, de->commproc, &(de->id), de->host, 
+                              &(de->tag), &buffer, &buflen, 0);
 
-   apb.head_ptr = NULL;        /* mark uninitialized */
-   alloc_de(&deact);
-   alloc_de(&lastde);
 
-   /* We do a blocking wait if there is no message in our cache we could 
-      deliver to the caller. Else we get all we can get and then return
-      what we already have. ++ TODO use this pointers later too */
-   cacheptr = cache;
-   receive_blocking = 1;
+   DPRINTF(("receiving message returned "SFQ"\n", cl_get_error_text(i)));
 
-   while (cacheptr) {
-      if (match_dpe(cacheptr->de, de)) { 
-         receive_blocking = 0;
-         DPRINTF(("there is already a message to deliver in the cache (before communication)\n"));
-         break;
+   if (i == CL_RETVAL_OK) {
+      sge_pack_buffer* mypb = NULL;
+      int pack_ret;
+/*
+      DPRINTF(("host: %s\n", de->host ));
+      DPRINTF(("comp: %s\n", de->commproc ));
+      DPRINTF(("  id: %d\n", de->id ));
+*/
+
+      /* unpack the message */
+      mypb = (sge_pack_buffer*) malloc(sizeof(sge_pack_buffer));
+      if (mypb == NULL) {
+         return CL_RETVAL_MALLOC;
       }
-      cacheptr = cacheptr->next;
-   }
 
+      pack_ret = init_packbuffer_from_buffer(mypb, buffer, buflen);
+      if(pack_ret != PACK_SUCCESS) {
+         ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
+         return CL_RETVAL_UNKNOWN;
+      }
+      
 
+      /*  assemble pb for acknowledges */
+      switch (de->tag) {
+         case TAG_SIGJOB:
+         case TAG_SIGQUEUE: {
 
-   /* Read what we can get. If we have nothing to process we wait synchron
-      for the next message to arrive. */
-   i = CL_RETVAL_OK;
-   while (cached_pbs < cachesize && i == CL_RETVAL_OK) {
-      copy_de(&deact, de);
+            sge_pack_buffer apb;
+            u_long32 tmpul   = 0;
+            u_long32 tmpul2  = 0;
 
-      cl_commlib_trigger(cl_com_get_handle( "execd" ,1), receive_blocking);
-
-      i = gdi2_receive_message(ctx, deact.commproc, &deact.id, deact.host, 
-                              &deact.tag, &buffer, &buflen, 0);
-
-      DPRINTF(("receiving message (cached="sge_U32CFormat") returned "SFQ"\n", sge_u32c(cached_pbs), cl_get_error_text(i)));
-
-
-      receive_blocking = 0;   /* second receive is always non blocking */
-      if (i == CL_RETVAL_OK) {
-         int pack_ret;
-
-
-         new = (pbcache *)malloc(sizeof(pbcache));        
-         new->pb = (sge_pack_buffer *)malloc(sizeof(sge_pack_buffer));
-         memset (new->pb, 0, sizeof(sge_pack_buffer));
-         new->de = (dispatch_entry *)malloc(sizeof(dispatch_entry));
-         memset (new->de, 0, sizeof(dispatch_entry));
-         alloc_de(new->de);
-         copy_de(new->de, &deact);
-         new->next = 0;
-         pack_ret = init_packbuffer_from_buffer(new->pb, buffer, buflen);
-         if(pack_ret != PACK_SUCCESS) {
-            ERROR((SGE_EVENT, MSG_EXECD_INITPACKBUFFERFAILED_S, cull_pack_strerror(pack_ret)));
-            continue;
-         }
-
-         if (cache)
-            cacheend->next = new;
-         else
-            cache = new;
-         cacheend = new;
-         cached_pbs++;
-
-         /* if this is the same receiver as the last one, we could add the
-            acknowledge to apb. Else we have to send the acknowledge and
-            reinitialize apb */
-
-         if (apb.head_ptr) {  /* only if there is already an acknowlege */
-            if (lastde.id != deact.id || sge_hostcmp(lastde.host, deact.host) ||
-                strcmp(lastde.commproc, deact.commproc)) {
-               /* this is another sender -> send ack to last sender */
-               DPRINTF(("(1) sending acknowledge to (%s,%s,%d)\n",
-                        lastde.host, lastde.commproc, lastde.id));
-               if ((i = sendAckPb(ctx, &apb, lastde.host, lastde.commproc, 
-                                  lastde.id, errfunc)) != CL_RETVAL_OK) {
-                  /* We cant send acknowledges, so we have to delete all 
-                     newly received pbs with an acknowledgable tag */
-                  DPRINTF(("can't send acknowledge, removing messages (1)\n"));
-                  cached_pbs -= deleteCacheTags(!lastBeforeThisCall? &cache: 
-                        &(lastBeforeThisCall->next), tagarray);
-               }
-               clear_packbuffer(&apb);
-               copy_de(&lastde, &deact);
-            }
-         }
-         else {
-            copy_de(&lastde, &deact);
-         }
-
-
-         /*  assemble pb for acknowledges */
-         if (isIn(deact.tag, tagarray)) {
-            if (unpackint(new->pb, &tmpul) == PACK_SUCCESS &&
-                unpackint(new->pb, &tmpul2) == PACK_SUCCESS ) {
-               if (!apb.head_ptr)
-                  if(init_packbuffer(&apb, 1024, 0) != PACK_SUCCESS) {    /* big enough */
-                     i = CL_RETVAL_MALLOC;
-                  }
-               if(i == CL_RETVAL_OK) {   
-                  packint(&apb, deact.tag);
+            if (unpackint(mypb, &tmpul) == PACK_SUCCESS &&
+                unpackint(mypb, &tmpul2) == PACK_SUCCESS ) {
+               if(init_packbuffer(&apb, 1024, 0) == PACK_SUCCESS) {
+                  packint(&apb, de->tag);
                   packint(&apb, tmpul);                  /* ack ulong 1 */
                   packint(&apb, tmpul2);                 /* ack ulong 2 */
+
+                  DPRINTF(("(2) sending acknowledge to (%s,%s,%d)\n", de->host, de->commproc, de->id));
+                  i = sendAckPb(ctx, &apb, de->host, de->commproc, de->id, errfunc);
+                  clear_packbuffer(&apb);
+               } else {
+                  return CL_RETVAL_MALLOC;
                }
+            } else {
+               ERROR((SGE_EVENT, "unpacking failed"));
+               return CL_RETVAL_UNKNOWN;
             }
+            break;
          }
       }
+
+
+      *pb = mypb;
+
+/*
+      DPRINTF(("return de host: %s\n", de->host ));
+      DPRINTF(("return de comp: %s\n", de->commproc ));
+      DPRINTF(("return de id  : %d\n", de->id ));
+*/
+   } else {
+/*
+      DPRINTF(("nothing in commlib, trigger commlib ...\n"));
+*/
+      cl_commlib_trigger(ctx->get_com_handle(ctx), 1);
    }
-
-
-
-   /* write answer to sender */
-   if (apb.head_ptr) {  /* only if there is an acknowlege */
-      DPRINTF(("(2) sending acknowledge to (%s,%s,%d)\n", lastde.host, lastde.commproc, lastde.id));
-      if ((i = sendAckPb(ctx, &apb, lastde.host, lastde.commproc, lastde.id,
-                         errfunc)) != CL_RETVAL_OK) {
-         /* we have to delete all newly received pbs with an 
-            acknowledgable tag */
-         DPRINTF(("can't send acknowledge, removing messages (2)\n"));
-/*          deleteCacheTags(lastBeforeThisCall, tagarray); */
-         cached_pbs -= deleteCacheTags(!lastBeforeThisCall? &cache: &(lastBeforeThisCall->next) , tagarray);
-      }
-      clear_packbuffer(&apb);
-   }
-
-   /* search first entry in cache who matches 
-      remove element from cache 
-      set callers dispatch table entry to indicate the sender of the message
-      set the error state to OK (true also if last read gives an error */
-   *pb = NULL; /* may be there is none */
-   if (cache) {
-      cacheptr = cache;
-      cacheptrlast = NULL;
-      while (cacheptr) {
-         if (match_dpe(cacheptr->de, de)) { 
-            free_de(de);
-            memcpy((char *)de, (char *)cache->de, sizeof(dispatch_entry));
-            *pb = cacheptr->pb;
-            free(cacheptr->de);
-            cached_pbs--;
-            i = CL_RETVAL_OK;  /* if we have a pb for delivery we never indicate an 
-                           error */
-
-            /* dechain cache element */
-            if (cacheptrlast) {
-               cacheptrlast->next = cacheptr->next;
-               if (!cacheptr->next)
-                  cacheend = cacheptrlast;
-            }
-            else {
-               cache = cacheptr->next;
-               if (!cacheptr->next)
-                  cacheend = NULL;
-            }
-
-            free(cacheptr);
-            break;      /* found -> leave loop */
-         }
-         cacheptrlast = cacheptr;
-         cacheptr = cacheptr->next;
-      }
-   }
-   free_de(&deact);
-   free_de(&lastde);
-
-   DEXIT;
-   return i;
+   DRETURN(i);
 }
 
 
@@ -644,63 +497,10 @@ static int sendAckPb(sge_gdi_ctx_class_t *ctx,
       (*errfunc)(err_str);
    }
 
-   DEXIT;
-   return i;
+   DRETURN(i);
 }
 
-/***********************************************************
- look for tag in tagarray
- ***********************************************************/
-static int isIn(
-int tag, 
-int *tagarray 
-) {
-   DENTER(CULL_LAYER, "isIn");
 
-   while (*tagarray != TAG_NONE) {
-      if (*tagarray == tag) {
-         DEXIT;
-         return 1;
-      }
-      tagarray++;
-   }
-
-   DEXIT;
-   return 0;
-}
-
-/*********************************************************
- remove all pbs from the cache list which are
- - behind lastBeforeThisCall
- - are present in tagarray
- *********************************************************/
-static int deleteCacheTags(
-pbcache **lpp,
-int *tagarray 
-) {
-   int n = 0;
-   pbcache *to_del;
-
-   DENTER(CULL_LAYER, "deleteCacheTags");
-
-   while (*lpp) {
-      if (isIn((*lpp)->de->tag, tagarray)) {
-         to_del = *lpp;
-         *lpp = (*lpp)->next; /* unchain to_del */
-         
-         clear_packbuffer(to_del->pb);
-         free(to_del->pb);
-         free_de(to_del->de);
-         free(to_del->de);
-         free(to_del);
-         n++;
-      } else 
-         lpp = &((*lpp)->next); 
-   }
-
-   DEXIT;
-   return n;
-}
 
 /**************************************************/
 static int alloc_de(de)       /* malloc fields in de */

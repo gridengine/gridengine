@@ -1,8 +1,14 @@
-CR-2006-11-23-1  Cleanup:   qmaster heartbeat file writing differs from 
+CR-2006-11-24-0: Cleanup:   o removed needless execd cache for commlib messages
+                            o using free in FREE macro (sge_free() needless here)
+                            o using FREE macro in clear_packbuffer()
+                 Changed:   execd, culllib, utilib
+                 Review:    RD
+
+CR-2006-11-23-1: Cleanup:   qmaster heartbeat file writing differs from 
                             V60s2_BRANCH (seems to be a forgotten merge)
                  Review:    RD
 
-CR-2006-11-23-0  Bugfix:    Fixed wrong shepherd signal handler initalization
+CR-2006-11-23-0: Bugfix:    Fixed wrong shepherd signal handler initalization
                             qdel of just submitted job
                             (merged from s2 branch)
                  Issue:     126

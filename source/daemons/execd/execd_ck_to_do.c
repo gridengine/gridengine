@@ -386,6 +386,15 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
    krb_renew_tgts(Master_Job_List);
 #endif
 
+   /* start jobs if present */
+   if (jobs_to_start) {
+      /* reset jobs_to_start before starting jobs. We may loose
+       * a job start if we reset jobs_to_start after sge_start_jobs()
+       */
+      jobs_to_start = 0;
+      sge_start_jobs(ctx);
+   }
+
    /*
     * Collecting usage and repriorization is only necessary if there are
     * jobs/tasks on this execution host.
@@ -470,14 +479,6 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
 #endif
    }
       
-   /* start jobs if present */
-   if (jobs_to_start) {
-      /* reset jobs_to_start before starting jobs. We may loose
-       * a job start if we reset jobs_to_start after sge_start_jobs()
-       */
-      jobs_to_start = 0;
-      sge_start_jobs(ctx);
-   }
 
    if (sge_sig_handler_dead_children != 0) {
       /* reap max. 10 jobs which generated a SIGCLD */

@@ -68,8 +68,8 @@ typedef struct dispatch_entry {
 
 
 int dispatch(sge_gdi_ctx_class_t *ctx, 
-             dispatch_entry *table, int tabsize, int *tagarray, 
+             dispatch_entry *table, int tabsize,
              u_long rcvtimeout, char *err_str, 
-             void (*errfunc)(const char *), int wait4commd);
+             void (*errfunc)(const char *));
 
 #endif /* _DISPATCHER_H */

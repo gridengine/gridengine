@@ -34,7 +34,10 @@ JG-2006-11-23-0: Enhancem.: Include java targets in standard build (aimk),
 
 CR-2006-11-22-0: Bugfix:    - fixed problem in sge_strdup function when an
                               empty string (string with length 0) is duplicated
-                 Review:    AA
+                            (segmentation fault with empty string)
+                 Bugster:   6497217
+                 Issue:     2122
+                 Review:    AA, RD
 
 RH-2006-11-21-0: Cleanup:   - fine tuning of jgdi build process
                  Review:    AA

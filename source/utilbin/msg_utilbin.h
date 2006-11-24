@@ -205,6 +205,8 @@
 #define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: %s (%d)"))
 #define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))
 #define MSG_PWD_CANTLOADRANDFILE_SS _MESSAGE(57328,         _(SFN": can't load rand file %s"))
+<<<<<<< msg_utilbin.h
+#define MSG_PWD_FILE_CORRUPTED      _MESSAGE(57329,         _(SFN": sgepasswd file corrupted"))
 
 /*
  * utilbin/authuser
@@ -223,5 +225,6 @@
 #define MSG_AUTHUSER_NO_PW_ENTRY_SS       _MESSAGE(213105, _("password: can not get password entry of user "SFN": "SFN))
 #define MSG_AUTHUSER_ERROR                _MESSAGE(213106, _("Error: "))
 #define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213107, _("Wrong user or password"))
+>>>>>>> 1.37
 
 #endif /* __MSG_UTILBIN_H */

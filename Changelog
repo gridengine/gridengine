@@ -1,3 +1,13 @@
+RM-2006-11-24-0: Bugfix:    o fixed sgepasswd segmentatation fault that occured
+                              when sgepasswd was called with corrupted sgepasswd
+                              file
+                 Changed:   source/libs/uti/sge_uidgid.h 
+                            source/libs/uti/sge_uidgid.c
+                            source/utilbin/msg_utibin.h
+                            source/utilbin/sge_passwd.c
+                 Bugster:   6472859
+                 Review:    HP
+
 CR-2006-11-24-0: Cleanup:   o removed needless execd cache for commlib messages
                             o using free in FREE macro (sge_free() needless here)
                             o using FREE macro in clear_packbuffer()
@@ -86,6 +96,7 @@ RH-2006-11-13-0: Bugfix:    Broken compile of jgdi on denethor
 JG-2006-11-13-0: Bugfix:    Fixed messages file msg_utilbin.h.
                  Review:    AA 
 
+>>>>>>> 1.3551
 RD-2006-11-10-0: Bugfix:    fixed some limitation rule set bugs 
                             - qconf -Xattr with limitation_rule set were broken
                             - filter matching on queue level was broken

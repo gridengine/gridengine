@@ -884,7 +884,12 @@ sge_passwd_delete(const char *username, const char *domain)
    /*
     * Read password table
     */
-   password_read_file(&users, &encryped_pwd, sge_get_file_passwd());
+   if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2) {
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
+      exit(1);
+   }
+
 
    if (domain != NULL && domain[0] != '\0') {
       strcpy(user, domain);
@@ -937,7 +942,12 @@ sge_passwd_show(const char *username)
    /*
     * Read password table
     */
-   password_read_file(&users, &encryped_pwd, sge_get_file_passwd());
+   if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2) {
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
+      exit(1);
+   }
+
 
    /*
     * Check if there is an old entry in the password file
@@ -1003,7 +1013,11 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
    /*
     * Read password table
     */
-   password_read_file(&users, &encryped_pwd, sge_get_file_passwd());
+   if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2){
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
+      exit(1); 
+   }
 
    DPRINTF(("read password table\n"));
 

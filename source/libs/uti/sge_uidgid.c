@@ -62,6 +62,8 @@
 
 enum { SGE_MAX_USERGROUP_BUF = 255 };
 
+const int MAX_LINE_LENGTH = 10000;
+
 typedef struct {
    pthread_mutex_t mutex;  /* TODO: use RW-lock instead */
    uid_t uid;
@@ -1439,9 +1441,30 @@ sge_get_file_passwd(void)
    DEXIT;
    return file;
 }  
-
-/* Not MT-Safe */
-/* Count number of lines in sgepasswd file */
+/****** uti/uidgid/password_get_size()****************************************
+*  NAME
+*     password_get_size() - count number of lines in sgepasswd file 
+*                            
+*  SYNOPSIS
+*     static int password_get_size(const char *filename) 
+*
+*  FUNCTION
+*     This function counts the lines in sgepasswd file, it also checks if any 
+*     line in file is not too long, if such situation occurs that line has
+*     more than MAX_LINE_LENGHT characters the funtion returns error state -1
+*
+*  INPUTS
+*     const char *filename - name of the file on which the fuction is run 
+*
+*  RESULT
+*     int - returns number of lines in sgepasswd file if function has run 
+*           successfully
+*         -1 - if there is a line in a file that is longer than MAX_LINE_LENGTH  
+*
+*  NOTES
+*     MT-NOTE: password_get_size() is not MT safe
+*
+*******************************************************************************/
 static int 
 password_get_size(const char *filename)
 {
@@ -1454,8 +1477,11 @@ password_get_size(const char *filename)
       bool do_loop = true;
 
       while (do_loop) {
-         char input[10000];
-
+         char input[MAX_LINE_LENGTH];
+         if (get_file_line_size(fp) > MAX_LINE_LENGTH){
+	    ret = -1;
+            break;
+         }
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
             ret++;
          } else {
@@ -1469,8 +1495,93 @@ FCLOSE_ERROR:
    return ret;
 }
 
-/* Not MT-Safe */
-/* Read in sgepasswd file, reserve 2 entries */
+/****** uti/uidgid/get_file_line_size()****************************************
+*  NAME
+*     get_file_line_size() - helper function that counts the characters in
+*                            current line of file 
+*  SYNOPSIS
+*     int get_file_line_size(FILE* fp)
+*
+*  FUNCTION
+*     This helper function counts the characters in current line of file, 
+*     it restores file position pointer to the position that was before 
+*     entering function. Function  can be called on any opened file with read 
+*     permissions.
+*
+*  INPUTS
+*     FILE* fp - handler of the file in which the characters in current line 
+*                are counted 
+*
+*  RESULT
+*     int - returns number of characters in current line of file,
+*           if number of characters is bigger than MAX_LENGTH_LINE,
+*           it returns MAX_LINE_LENGTH+1 value 
+*
+*  NOTES
+*     MT-NOTE: get_file_line_size() is not MT safe
+*
+*******************************************************************************/
+
+int
+get_file_line_size(FILE* fp)
+{
+  int i = 0;
+  fpos_t pos; 
+  char tmp = NULL;
+  fgetpos(fp,&pos);
+  while ((tmp!= '\n') && (i<=MAX_LINE_LENGTH)) {
+      if (fscanf(fp, "%c", &tmp) == 1) {
+	 ++i;
+      }else { 
+	    break;
+      } 
+  }
+  fsetpos(fp,&pos);
+  return i;
+}
+/****** uti/uidgid/password_read_file()*****************************************
+*  NAME
+*     password_read_file() - read in sgepasswd file 
+*                            
+*  SYNOPSIS
+*     int password_read_file(char **users[], char**encryped_pwds[], 
+*                            const char *filename) 
+*
+*  FUNCTION
+*     This function reads usernames and enrypted passwords from sgepasswd file 
+*     and saves them in arrays that are part if function output, if the file
+*     could not be opened for reading or the file contains corrupted line,
+*     (too long line, line that doesn't contain username and password),
+*     the proper error state is returned 
+*
+*  INPUTS
+*     const char* filename - name with path of the sgepasswd file that is
+*                            going to be read
+*
+*  OUTPUTS
+*     char** users[] - array of strings to which are written the usernames
+*                      that are read from sgepasswd, if sgepasswd could not be
+*                      opened there are reserved 2 entries with NULL values, 
+*                      if the sgepasswd file is corrupted, no entries are 
+*                      reserved
+* 
+*     char** encrypted_pwds[] - array of strings to which are written encrypted
+*                               passwords that are read from sgepasswd
+*                               if sgepasswd could not be opened there are
+*                               reserved 2 entries with NULL values,
+*                               if the sgepasswd file is corrupted, 
+*                               no entries are reserved
+*
+*  RESULT
+*     int - error state 
+*         0 - OK, no errors
+*         1 - sgepasswd could not be opened for reading
+*         2 - sgepasswd file is corrupted 
+*
+*  NOTES
+*     MT-NOTE: password_read_file() is not MT safe
+*
+*******************************************************************************/
 int
 password_read_file(char **users[], char**encryped_pwds[], const char *filename) 
 {
@@ -1481,13 +1592,19 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
    fp = fopen(filename, "r");   
    if (fp != NULL) {
       bool do_loop = true;
-      size_t size = password_get_size(filename) + 2;
+      size_t size = password_get_size(filename);
+      if (size == -1){
+         /*file corrupted*/
+         ret = 2;
+         size = 0;
+         do_loop = false; 
+      } 
+      size = size + 2;
       size_t i = 0;
-
       *users = malloc(size * sizeof(char*));
       *encryped_pwds = malloc(size * sizeof(char*));
       while (do_loop) {
-         char input[10000];
+         char input[MAX_LINE_LENGTH];
          char *uname = NULL;
          char *pwd = NULL;
          struct saved_vars_s *context;
@@ -1496,18 +1613,36 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
             uname = sge_strtok_r(input, " ", &context);
             pwd = sge_strtok_r(NULL, " ", &context);
+            if ((uname == NULL) || (pwd == NULL)){
+                do_loop = false;
+                /*file corrupted*/
+                ret = 2;
+                break;
+            }
             (*users)[i] = strdup(uname);
             (*encryped_pwds)[i] = strdup(pwd);
             i++;
          } else {
             do_loop = false;
          }
+
+	 free(input);
          sge_free_saved_vars(context);
       }
+      if (ret == 2){
+	for (int j=0;j<i;++j){
+            free((*users)[j]);
+            free((*encryped_pwds)[j]);
+        }
+        free(users);
+        free(encryped_pwds);
+        DPRINTF(("sgepasswd file is corrupted"));
+      }else{
       (*users)[i] = NULL;
       (*encryped_pwds)[i] = NULL; i++;
       (*users)[i] = NULL;
       (*encryped_pwds)[i] = NULL; i++;
+      }
 
       FCLOSE(fp); 
    } else {

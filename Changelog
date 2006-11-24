@@ -1,3 +1,13 @@
+CR-2006-11-24-0: Bugfix:    fixed problem in sge_strdup function when an
+                            empty string (string with length 0) is duplicated
+                               (segmentation fault with empty string)
+                               (merged from maintrunk)
+                 Cleanup:   removed sge_free() call from FREE() makro     
+                 Bugster:   6497217
+                 Issue:     2122
+                 Changed:   libuti
+                 Review:    RD
+
 CR-2006-11-23-0  Bugfix:    Fixed wrong shepherd signal handler initalization
                             qdel of just submitted job
                  Issue:     126

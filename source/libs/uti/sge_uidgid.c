@@ -1626,22 +1626,23 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
             do_loop = false;
          }
 
-	 free(input);
+         free(input);
          sge_free_saved_vars(context);
       }
-      if (ret == 2){
-	for (int j=0;j<i;++j){
+      if (ret == 2) {
+         int j;
+         for (j = 0; j < i; j++) {
             free((*users)[j]);
             free((*encryped_pwds)[j]);
-        }
-        free(users);
-        free(encryped_pwds);
-        DPRINTF(("sgepasswd file is corrupted"));
-      }else{
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
+         }
+         free(users);
+         free(encryped_pwds);
+         DPRINTF(("sgepasswd file is corrupted"));
+      } else {
+         (*users)[i] = NULL;
+         (*encryped_pwds)[i] = NULL; i++;
+         (*users)[i] = NULL;
+         (*encryped_pwds)[i] = NULL; i++;
       }
 
       FCLOSE(fp); 

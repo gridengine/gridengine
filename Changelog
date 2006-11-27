@@ -1,3 +1,6 @@
+HP-2006-11-27-0: Bugfix:    fixed memory leak in sgepasswd
+                 Changed:   source/libs/uti/sge_uidgid.c
+
 RM-2006-11-24-0: Bugfix:    o fixed sgepasswd segmentatation fault that occured
                               when sgepasswd was called with corrupted sgepasswd
                               file

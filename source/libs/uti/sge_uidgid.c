@@ -1626,7 +1626,6 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
             do_loop = false;
          }
 
-         free(input);
          sge_free_saved_vars(context);
       }
       if (ret == 2) {
@@ -1635,8 +1634,8 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
             free((*users)[j]);
             free((*encryped_pwds)[j]);
          }
-         free(users);
-         free(encryped_pwds);
+         free(*users);
+         free(*encryped_pwds);
          DPRINTF(("sgepasswd file is corrupted"));
       } else {
          (*users)[i] = NULL;

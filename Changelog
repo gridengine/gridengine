@@ -1,3 +1,7 @@
+BD-2006-11-28-1: Bugfix:    Don't include nonexistant crypt.h on FreeBSD
+                            (as on Darwin)
+                 Changed:   source/utilbin/authuser.c
+
 BD-2006-11-28-0: Enhancem:  PDC for FreeBSD
                  Changed :  execd, shepherd
                  Review:    RC

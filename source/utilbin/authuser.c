@@ -54,7 +54,7 @@
 #else
 
 #  include <pwd.h>
-#  ifndef DARWIN
+#  if !(defined(DARWIN) || defined(FREEBSD))
 #     include <crypt.h>
 #  endif
 #  include <unistd.h>

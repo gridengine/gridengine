@@ -342,7 +342,7 @@ static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg)
  * value (if string) from *cpp and writes new value into *cpp
  * logging is done to file
  *----------------------------------------------------*/
-void chg_conf_val(
+static void chg_conf_val(
 lList *lp_cfg,
 char *name,
 char **cpp,

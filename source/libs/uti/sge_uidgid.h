@@ -63,8 +63,6 @@ void uidgid_mt_init(void);
 bool sge_is_start_user_superuser(void);
 int password_read_file(char **users[], char **encryped_pwds[], const char *filename);
 const char* sge_get_file_passwd(void);
-int get_file_line_size(FILE* fp); 
-
 
 int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);

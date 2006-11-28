@@ -84,8 +84,9 @@ static int sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lLi
                             lList *pel, u_long32 show, report_handler_t *report_handler, lList **alpp);
 static int sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show, report_handler_t *report_handler, lList **alpp);
 static int sge_print_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *centry_list, report_handler_t *report_handler, lList **alpp);
-static int reformatDoubleValue(char *result, char *format, const char *oldmem);
+static int reformatDoubleValue(char *result, const char *format, const char *oldmem);
 static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
+static void free_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel);
 
 int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_match_list, 
               lList *resource_list, u_long32 show, lList **alpp, report_handler_t* report_handler) {
@@ -115,6 +116,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
                              user_list,
                              show);
    if (have_lists == false) {
+      free_all_lists(&ql, &jl, &cl, &ehl, &pel);
       DRETURN(QHOST_ERROR);
    }   
 
@@ -128,6 +130,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
 
       if (centry_list_fill_request(resource_match_list, alpp, cl, true, true, false)) {
          /* TODO: error message gets written by centry_list_fill_request into SGE_EVENT */
+         free_all_lists(&ql, &jl, &cl, &ehl, &pel);
          DRETURN(QHOST_ERROR);
       }
 
@@ -183,6 +186,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    if(report_handler != NULL) {
       ret = report_handler->report_started(report_handler, alpp);
       if (ret != QHOST_SUCCESS) {
+         free_all_lists(&ql, &jl, &cl, &ehl, &pel);
          DRETURN(ret);
       }
    }
@@ -214,6 +218,8 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    if (report_handler != NULL) {
       ret = report_handler->report_finished(report_handler, alpp);
    }
+
+   free_all_lists(&ql, &jl, &cl, &ehl, &pel);
    DRETURN(ret);
 }
 
@@ -667,12 +673,8 @@ lList **alpp
 
 /*-------------------------------------------------------------------------*/
 
-static int reformatDoubleValue(
-char *result,
-char *format,
-const char *oldmem 
-) {
-   char c;
+static int reformatDoubleValue(char *result, const char *format, const char *oldmem)
+{
    double dval;
    int ret = 1;
 
@@ -682,7 +684,7 @@ const char *oldmem
       if (dval==DBL_MAX) {
          strcpy(result, "infinity");
       } else {
-         c = '\0';
+         int c = '\0';
 
          if (fabs(dval) >= 1024*1024*1024) {
             dval /= 1024*1024*1024;
@@ -897,6 +899,7 @@ u_long32 show
    lFreeWhere(&gc_where);
 
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
 
@@ -907,6 +910,7 @@ u_long32 show
    sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
                                  mal, exechost_l);
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
 
@@ -914,6 +918,7 @@ u_long32 show
    sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
                                  mal, queue_l);
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
 
@@ -923,6 +928,7 @@ u_long32 show
       sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_JOB_LIST, j_id,
                                     mal, job_l);
       if (answer_list_has_error(answer_list)) {
+         lFreeList(&mal);
          DRETURN(false);
       }
       /*
@@ -940,6 +946,7 @@ u_long32 show
    sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
                                  mal, centry_l);
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
 
@@ -947,20 +954,53 @@ u_long32 show
    sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_PE_LIST, pe_id,
                                  mal, pe_l);
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
 
    /* --- apply global configuration for sge_hostcmp() scheme */
-   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
+   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CONFIG_LIST, gc_id,
+                          mal, &conf_l);
    if (answer_list_has_error(answer_list)) {
+      lFreeList(&mal);
       DRETURN(false);
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
       merge_configuration(progid, cell_root, lFirst(conf_l), local, NULL);
    }
-
+   
+   lFreeList(&conf_l);
    lFreeList(&mal);
-
    DRETURN(true);
+}
+
+/****** sge_qhost/free_all_lists() *********************************************
+*  NAME
+*     free_all_lists() -- frees all lists
+*
+*  SYNOPSIS
+*     static void free_all_lists(lList **ql, lList **jl, lList **cl, lList 
+*     **ehl, lList **pel) 
+*
+*  FUNCTION
+*     The function frees all of the given list pointers
+*
+*  INPUTS
+*     lList **ql  - ??? 
+*     lList **jl  - ??? 
+*     lList **cl  - ??? 
+*     lList **ehl - ??? 
+*     lList **pel - ??? 
+*
+*  NOTES
+*     MT-NOTE: free_all_lists() is MT safe 
+*******************************************************************************/
+static void free_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel)
+{
+   lFreeList(ql);
+   lFreeList(jl);
+   lFreeList(cl);
+   lFreeList(ehl);
+   lFreeList(pel);
 }

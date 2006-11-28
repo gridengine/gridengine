@@ -1,3 +1,9 @@
+RD-2006-11-28-0: Bugfix:    - recheckin of RD-2006-03-22-0
+                              changes were lost due to gdi2 merge
+                            - fixed some memory leaks in qhost
+                 Changed:   qhost, qstat
+                 Review:    JG
+
 HP-2006-11-28-0: Bugfix:    fixed broken builds on several architectures
                             moved variable declarations to top of function
                             bodies, cleaned up code.

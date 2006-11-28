@@ -61,6 +61,8 @@
 #define UIDGID_LAYER CULL_LAYER 
 #define MAX_LINE_LENGTH 10000
 
+#define MAX_LINE_LENGTH 10000
+
 enum { SGE_MAX_USERGROUP_BUF = 255 };
 
 typedef struct {
@@ -100,6 +102,8 @@ static void uidgid_state_set_last_uid(uid_t uid);
 static void uidgid_state_set_last_username(const char *user);
 static void uidgid_state_set_last_gid(gid_t gid);
 static void uidgid_state_set_last_groupname(const char *group);
+
+static int get_file_line_size(FILE* fp); 
 
 #if defined(INTERIX)
 static int uidgid_read_passwd(const char *user, char **pass, char *err_str);
@@ -1439,7 +1443,8 @@ sge_get_file_passwd(void)
    } 
    DEXIT;
    return file;
-}  
+}
+
 /****** uti/uidgid/password_get_size()****************************************
 *  NAME
 *     password_get_size() - count number of lines in sgepasswd file 
@@ -1490,8 +1495,7 @@ password_get_size(const char *filename)
       FCLOSE(fp); 
    }
 FCLOSE_ERROR:
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** uti/uidgid/get_file_line_size()****************************************
@@ -1521,7 +1525,7 @@ FCLOSE_ERROR:
 *
 *******************************************************************************/
 
-int
+static int
 get_file_line_size(FILE *fp)
 {
    fpos_t pos; 
@@ -1529,14 +1533,14 @@ get_file_line_size(FILE *fp)
    int    i = 0;
 
    fgetpos(fp,&pos);
-   while ((tmp!= '\n') && (i<=MAX_LINE_LENGTH)) {
+   while ((tmp !=  '\n') && (i <= MAX_LINE_LENGTH)) {
       if (fscanf(fp, "%c", &tmp) == 1) {
 	      i++;
       } else { 
 	      break;
       } 
   }
-  fsetpos(fp,&pos);
+  fsetpos(fp, &pos);
   return i;
 }
 /****** uti/uidgid/password_read_file()*****************************************
@@ -1587,19 +1591,19 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
 {
    struct saved_vars_s *context;
    int    j;
-   int    i = 0;
    int    ret = 0;
    FILE   *fp = NULL;
    char   *uname = NULL;
    char   *pwd = NULL;
    char   input[MAX_LINE_LENGTH];
-   bool   do_loop = true;
-   size_t size = 0;
 
    DENTER(TOP_LAYER, "password_read_file");
    fp = fopen(filename, "r");   
    if (fp != NULL) {
-      size = password_get_size(filename);
+      bool do_loop = true;
+      size_t size = password_get_size(filename);
+      int i = 0;
+
       if (size == -1){
          /*file corrupted*/
          ret = 2;
@@ -1609,6 +1613,7 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
       size = size + 2;
       *users = malloc(size * sizeof(char*));
       *encryped_pwds = malloc(size * sizeof(char*));
+
       while (do_loop) {
          uname = NULL;
          pwd = NULL;
@@ -1621,11 +1626,11 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
                 do_loop = false;
                 /*file corrupted*/
                 ret = 2;
-                break;
+            } else {
+               (*users)[i] = strdup(uname);
+               (*encryped_pwds)[i] = strdup(pwd);
+               i++;
             }
-            (*users)[i] = strdup(uname);
-            (*encryped_pwds)[i] = strdup(pwd);
-            i++;
          } else {
             do_loop = false;
          }

@@ -640,12 +640,12 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
    DRETURN(ret);
 }
 
-/****** gdi/request/sge_get_gdi_request() *************************************
+/****** gdi/request/sge_get_gdi2_request() *************************************
 *  NAME
 *     sge_get_gdi_request() -- ??? 
 *
 *  SYNOPSIS
-*     static int sge_get_gdi_request(char *host, char *commproc, 
+*     static int sge_get_gdi2_request(char *host, char *commproc, 
 *                                    u_short *id, sge_gdi_request** arp) 
 *
 *  FUNCTION
@@ -668,7 +668,7 @@ static int sge_send_gdi2_request(int sync, sge_gdi_ctx_class_t *ctx,
 *        -5 no peer enrolled
 *
 *  NOTES
-*     MT-NOTE: sge_get_gdi_request() is MT safe (assumptions)
+*     MT-NOTE: sge_get_gdi2_request() is MT safe (assumptions)
 *******************************************************************************/
 static int sge_get_gdi2_request(sge_gdi_ctx_class_t *ctx,
                                 int *commlib_error,

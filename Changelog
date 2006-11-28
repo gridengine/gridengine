@@ -1,3 +1,13 @@
+RM-2006-11-28-0: Bugfix:    o fixed sgepasswd segmentatation fault that occured
+                              when sgepasswd was called with corrupted sgepasswd
+                              file
+                 Changed:   source/libs/uti/sge_uidgid.h
+                            source/libs/uti/sge_uidgid.c
+                            source/utilbin/msg_utibin.h
+                            source/utilbin/sge_passwd.c
+                 Bugster:   6472859
+                 Review:    HP
+
 CR-2006-11-24-0: Bugfix:    fixed problem in sge_strdup function when an
                             empty string (string with length 0) is duplicated
                                (segmentation fault with empty string)

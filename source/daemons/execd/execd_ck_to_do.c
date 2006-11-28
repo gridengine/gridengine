@@ -923,7 +923,7 @@ lListElem *pe_task
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX) || defined(FREEBSD)
    gid_t addgrpid;
    dstring addgrpid_path = DSTRING_INIT;
 #else   
@@ -938,7 +938,7 @@ lListElem *pe_task
       pe_task_id = lGetString(pe_task, PET_id);
    }
 
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX) || defined(FREEBSD)
    /**
     ** read additional group id and use it as osjobid 
     **/

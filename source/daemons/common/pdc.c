@@ -126,6 +126,17 @@ int main(int argc,char *argv[])
 #include <sys/types.h>
 #endif
 
+#if defined(FREEBSD)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+
+#include <fcntl.h>
+#include <kvm.h>
+#include <limits.h>
+#endif
+
+
 #if defined(HP1164)
 #include <sys/param.h>
 #include <sys/pstat.h>
@@ -201,12 +212,57 @@ int sup_grp_in_proc;
    }
 #endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA)
+#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA) || defined(FREEBSD)
 
 void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
    tShepherd_trace shepherd_trace)
 {
+#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA)
    procfs_kill_addgrpid(add_grp_id, sig, shepherd_trace);      
+#elif defined(FREEBSD)
+   kvm_t *kd;
+   int i, nprocs;
+   struct kinfo_proc *procs;
+   char kerrbuf[_POSIX2_LINE_MAX];
+
+   kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, kerrbuf);
+   if (kd == NULL) {
+#if DEBUG
+      fprintf(stderr, "kvm_getprocs: error %s\n", kerrbuf);
+#endif
+      return;
+   }
+
+   procs = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nprocs);
+   if (procs == NULL) {
+#if DEBUG
+      fprintf(stderr, "kvm_getprocs: error %s\n", kvm_geterr(kd));
+#endif
+      kvm_close(kd);
+      return;
+   }
+   for (; nprocs >= 0; nprocs--, procs++) {
+      for (i = 0; i < procs->ki_ngroups; i++) {
+         if (procs->ki_groups[i] == add_grp_id) {
+	    char err_str[256];
+
+	    if (procs->ki_uid != 0 && procs->ki_ruid != 0 &&
+		procs->ki_svuid != 0 &&
+		procs->ki_rgid != 0 && procs->ki_svgid != 0) {
+	       kill(procs->ki_pid, sig);
+	       sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI ,
+		       sge_u32c(procs->ki_pid), add_grp_id);
+	    } else {
+	       sprintf(err_str, MSG_SGE_DONOTKILLROOTPROCESSXY_UI ,
+		       sge_u32c(procs->ki_pid), add_grp_id);
+	    }
+	    if (shepherd_trace)
+	       shepherd_trace(err_str);
+	 }
+      }
+   }
+   kvm_close(kd);
+#endif
 }
 #endif
 
@@ -1589,6 +1645,95 @@ psRetrieveOSJobData(void)
         idx = pstat_buffer[count-1].pst_idx + 1;
       }
    }
+#elif defined(FREEBSD)
+   {
+      kvm_t *kd;
+      int i, nprocs;
+      struct kinfo_proc *procs;
+      char kerrbuf[_POSIX2_LINE_MAX];
+      job_elem_t *job_elem;
+      double old_time = 0.0;
+      uint64 old_vmem = 0;
+ 
+      kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, kerrbuf);
+      if (kd == NULL) {
+#if DEBUG
+         fprintf(stderr, "kvm_getprocs: error %s\n", kerrbuf);
+#endif
+         DEXIT;
+         return -1;
+      }
+
+      procs = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nprocs);
+      if (procs == NULL) {
+#if DEBUG
+         fprintf(stderr, "kvm_getprocs: error %s\n", kvm_geterr(kd));
+#endif
+         kvm_close(kd);
+         DEXIT;
+         return -1;
+      }
+      for (; nprocs >= 0; nprocs--, procs++) {
+         for (curr=job_list.next; curr != &job_list; curr=curr->next) {
+            job_elem = LNK_DATA(curr, job_elem_t, link);
+
+            for (i = 0; i < procs->ki_ngroups; i++) {
+               if (job_elem->job.jd_jid == procs->ki_groups[i]) {
+                  lnk_link_t  *curr2;
+                  proc_elem_t *proc_elem;
+                  int newprocess;
+
+		  newprocess = 1;
+		  if (job_elem->job.jd_proccount != 0) {
+                     for (curr2=job_elem->procs.next; curr2 != &job_elem->procs; curr2=curr2->next) {
+                        proc_elem = LNK_DATA(curr2, proc_elem_t, link);
+
+                        if (proc_elem->proc.pd_pid == procs->ki_pid) {
+                           newprocess = 0;
+                           break;
+                        }
+		     }
+		  }
+                  if (newprocess) {
+                     proc_elem = malloc(sizeof(proc_elem_t));
+                     if (proc_elem == NULL) {
+			 kvm_close(kd);
+                        DEXIT;
+                        return 0;
+                     }
+
+                     memset(proc_elem, 0, sizeof(proc_elem_t));
+                     proc_elem->proc.pd_length = sizeof(psProc_t);
+                     proc_elem->proc.pd_state  = 1; /* active */
+                     proc_elem->proc.pd_pstart = procs->ki_start.tv_sec;
+
+                     LNK_ADD(job_elem->procs.prev, &proc_elem->link);
+                     job_elem->job.jd_proccount++;
+                  } else {
+                     /* save previous usage data - needed to build delta usage */
+                     old_time = proc_elem->proc.pd_utime + proc_elem->proc.pd_stime;
+                     old_vmem  = proc_elem->vmem;
+                  }
+                  proc_elem->proc.pd_tstamp = time_stamp;
+                  proc_elem->proc.pd_pid    = procs->ki_pid;
+
+                  proc_elem->proc.pd_utime  = procs->ki_rusage.ru_utime.tv_sec;
+                  proc_elem->proc.pd_stime  = procs->ki_rusage.ru_stime.tv_sec;
+
+                  proc_elem->proc.pd_uid    = procs->ki_uid;
+                  proc_elem->proc.pd_gid    = procs->ki_rgid;
+                  proc_elem->vmem           = procs->ki_size;
+                  proc_elem->rss            = procs->ki_rssize;
+
+                  proc_elem->mem = ((proc_elem->proc.pd_stime + proc_elem->proc.pd_utime) - old_time) *
+                                   (( old_vmem + proc_elem->vmem)/2);
+	       }
+	    }
+         }
+      }
+
+      kvm_close(kd);
+   }
 #elif defined(NECSX4) || defined(NECSX5)
    {
       for (curr=job_list.next; curr != &job_list; curr=curr->next) {
@@ -2136,7 +2281,7 @@ psRetrieveOSJobData(void)
 
       }
 
-#elif defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164)
+#elif defined(ALPHA) || defined(FREEBSD) || defined(LINUX) || defined(SOLARIS) || defined(HP1164)
       {
          int proccount;
          lnk_link_t *currp, *nextp;

@@ -905,7 +905,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 #endif
 #endif /* WIN32 */
  
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
    /* add Additional group id to current list of groups */
    if (add_grp) {
       if (sge_add_group(add_grp, err_str) == -1) {

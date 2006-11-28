@@ -44,7 +44,7 @@
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
-#if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST) || defined(HP1164) || defined(HP1164)
+#if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST) || defined(HP1164) || defined(HP1164) || defined(FREEBSD)
 #   define USE_DC
 #endif
 
@@ -82,7 +82,7 @@
 #  include <sys/category.h>
 #endif
 
-#if defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#if defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
 #  include <sys/resource.h>
 #endif
 
@@ -219,7 +219,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri);
 
 static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri);
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
 
 static void ptf_setpriority_addgrpid(lListElem *job, lListElem *osjob,
                                      long pri);
@@ -367,7 +367,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
       lSetDouble(usage, UA_value, 0);
       lAppendElem(usage_list, usage);
 
-#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164) || defined(AIX)
+#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164) || defined(AIX) || defined(FREEBSD)
       usage = lCreateElem(UA_Type);
       lSetString(usage, UA_name, USAGE_ATTR_VMEM);
       lSetDouble(usage, UA_value, 0);
@@ -496,7 +496,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
    ptf_setpriority_ash(job, osjob, pri);
 #elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    ptf_setpriority_jobid(job, osjob, pri);
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
    ptf_setpriority_addgrpid(job, osjob, pri);
 #endif
 }
@@ -715,7 +715,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
    DEXIT;
 }
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
 
 /****** execd/ptf/ptf_setpriority_addgrpid() **********************************
 *  NAME
@@ -726,9 +726,9 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 *                                       long *pri)
 *
 *  FUNCTION
-*     This function is only available for the architecture SOLARIS, ALPHA and
-*     LINUX. All processes belonging to "job" and "osjob" will get a new i
-*     priority.
+*     This function is only available for the architecture SOLARIS, ALPHA,
+*     LINUX, and FREEBSD. All processes belonging to "job" and "osjob" will
+*     get a new priority.
 *
 *     This function assumes the the "max" priority is smaller than the "min"
 *     priority.
@@ -1983,7 +1983,7 @@ int ptf_init(void)
       }
    }
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
    if (getuid() == 0) {
       if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {
          ERROR((SGE_EVENT, MSG_PRIO_SETPRIOFAILED_S, strerror(errno)));

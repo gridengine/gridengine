@@ -109,7 +109,7 @@ static int arch_dep_config(FILE *fp, lList *cplx, char *err_str);
 extern char execd_spool_dir[SGE_PATH_MAX];
 
 #if COMPILE_DC
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
 /* local functions */
 static int addgrpid_already_in_use(long);
 static long get_next_addgrpid(lList *, long);
@@ -146,7 +146,7 @@ lListElem *petep
 }
 
 #if COMPILE_DC
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
 static long get_next_addgrpid(
 lList *rlp,
 long last_addgrpid 
@@ -252,7 +252,7 @@ int err_length) {
    char dce_wrapper_cmd[128];
 
 #if COMPILE_DC
-#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
    static gid_t last_addgrpid;
 #endif
 #endif   
@@ -791,7 +791,7 @@ int err_length) {
 
 #ifdef COMPILE_DC
 
-#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX)
+#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
 
       {
          lList *rlp = NULL;

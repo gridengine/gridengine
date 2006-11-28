@@ -2337,9 +2337,9 @@ shepherd_signal_job(pid_t pid, int sig) {
         kill(pid, sig);
         sge_switch2admin_user();
 
-#if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX)
+#if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(FREEBSD)
         if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {                        
-#   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA)
+#   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(FREEBSD)
             if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
                 gid_t add_grp_id;
                 char *cp = search_conf_val("add_grp_id");

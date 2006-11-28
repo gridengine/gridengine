@@ -1,3 +1,9 @@
+HP-2006-11-28-0: Bugfix:    fixed broken builds on several architectures
+                            moved variable declarations to top of function
+                            bodies, cleaned up code.
+                 Changed:   source/libs/uti/sge_uidgid.c
+                            source/libs/uti/sge_uidgid.h
+
 HP-2006-11-27-0: Bugfix:    fixed memory leak in sgepasswd
                  Changed:   source/libs/uti/sge_uidgid.c
 

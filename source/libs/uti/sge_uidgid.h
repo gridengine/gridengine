@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
 #include <sys/types.h> 
 #include <grp.h>
 
@@ -60,7 +61,7 @@
 void uidgid_mt_init(void);
 
 bool sge_is_start_user_superuser(void);
-int password_read_file(char **users[], char**encryped_pwds[], const char *filename);
+int password_read_file(char **users[], char **encryped_pwds[], const char *filename);
 const char* sge_get_file_passwd(void);
 int get_file_line_size(FILE* fp); 
 

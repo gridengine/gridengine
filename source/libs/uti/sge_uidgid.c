@@ -59,10 +59,9 @@
 #endif
 
 #define UIDGID_LAYER CULL_LAYER 
+#define MAX_LINE_LENGTH 10000
 
 enum { SGE_MAX_USERGROUP_BUF = 255 };
-
-const int MAX_LINE_LENGTH = 10000;
 
 typedef struct {
    pthread_mutex_t mutex;  /* TODO: use RW-lock instead */
@@ -1469,7 +1468,8 @@ static int
 password_get_size(const char *filename)
 {
    size_t ret = 0;
-   FILE *fp = NULL;
+   FILE   *fp = NULL;
+   char   input[MAX_LINE_LENGTH];
 
    DENTER(TOP_LAYER, "password_get_size");
    fp = fopen(filename, "r");   
@@ -1477,9 +1477,8 @@ password_get_size(const char *filename)
       bool do_loop = true;
 
       while (do_loop) {
-         char input[MAX_LINE_LENGTH];
-         if (get_file_line_size(fp) > MAX_LINE_LENGTH){
-	    ret = -1;
+         if (get_file_line_size(fp) > MAX_LINE_LENGTH) {
+	         ret = -1;
             break;
          }
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
@@ -1523,17 +1522,18 @@ FCLOSE_ERROR:
 *******************************************************************************/
 
 int
-get_file_line_size(FILE* fp)
+get_file_line_size(FILE *fp)
 {
-  int i = 0;
-  fpos_t pos; 
-  char tmp = NULL;
-  fgetpos(fp,&pos);
-  while ((tmp!= '\n') && (i<=MAX_LINE_LENGTH)) {
+   fpos_t pos; 
+   char   tmp = '\0';
+   int    i = 0;
+
+   fgetpos(fp,&pos);
+   while ((tmp!= '\n') && (i<=MAX_LINE_LENGTH)) {
       if (fscanf(fp, "%c", &tmp) == 1) {
-	 ++i;
-      }else { 
-	    break;
+	      i++;
+      } else { 
+	      break;
       } 
   }
   fsetpos(fp,&pos);
@@ -1585,14 +1585,21 @@ get_file_line_size(FILE* fp)
 int
 password_read_file(char **users[], char**encryped_pwds[], const char *filename) 
 {
-   int ret = 0;
-   FILE *fp = NULL;
+   struct saved_vars_s *context;
+   int    j;
+   int    i = 0;
+   int    ret = 0;
+   FILE   *fp = NULL;
+   char   *uname = NULL;
+   char   *pwd = NULL;
+   char   input[MAX_LINE_LENGTH];
+   bool   do_loop = true;
+   size_t size = 0;
 
    DENTER(TOP_LAYER, "password_read_file");
    fp = fopen(filename, "r");   
    if (fp != NULL) {
-      bool do_loop = true;
-      size_t size = password_get_size(filename);
+      size = password_get_size(filename);
       if (size == -1){
          /*file corrupted*/
          ret = 2;
@@ -1600,14 +1607,11 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          do_loop = false; 
       } 
       size = size + 2;
-      size_t i = 0;
       *users = malloc(size * sizeof(char*));
       *encryped_pwds = malloc(size * sizeof(char*));
       while (do_loop) {
-         char input[MAX_LINE_LENGTH];
-         char *uname = NULL;
-         char *pwd = NULL;
-         struct saved_vars_s *context;
+         uname = NULL;
+         pwd = NULL;
          context = NULL;
 
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
@@ -1629,8 +1633,7 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          sge_free_saved_vars(context);
       }
       if (ret == 2) {
-         int j;
-         for (j = 0; j < i; j++) {
+         for (j=0; j<i; j++) {
             free((*users)[j]);
             free((*encryped_pwds)[j]);
          }

@@ -85,9 +85,9 @@ int sstate
       {"searching requested shell", SSTATE_NO_SHELL},
       {"changing into working directory", SSTATE_NO_CWD},
       {"rescheduling on application error", SSTATE_APPERROR},
-	  {"No password file, or missing", SSTATE_PASSWD_FILE_ERROR},
-	  {"entry is missing in password file", SSTATE_PASSWD_MISSING},
-	  {"wrong password", SSTATE_PASSWD_WRONG}
+      {"No password file, or missing", SSTATE_PASSWD_FILE_ERROR},
+      {"entry is missing in password file", SSTATE_PASSWD_MISSING},
+      {"wrong password", SSTATE_PASSWD_WRONG}
    };
 
    for (i=0; i<sizeof(state_message)/sizeof(struct _state_message); i++) {

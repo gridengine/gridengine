@@ -861,15 +861,15 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
       if(pw->pw_uid >= 1000000 && wl_use_sgepasswd()) {
          char *pass=NULL;
          char buf[1000]="\0";
-		 int res;
+         int res;
          err_str[0]='\0';
 
          res = uidgid_read_passwd(pw->pw_name, &pass, err_str);
 
-		 if(res != 0) {
-			 FREE(pass);
-			 return res;
-		 }
+         if(res != 0) {
+            FREE(pass);
+            return res;
+         }
 
          if(wl_setuser(pw->pw_uid, pw->pw_gid, pass, err_str) != 0) {
             FREE(pass);
@@ -1662,9 +1662,9 @@ int uidgid_read_passwd(const char *user, char **pass, char *err_str)
                             &buffer_deco_length, &buffer_deco);
          ret = buffer_decrypt((const char*)buffer_deco, buffer_deco_length,
                    &buffer_decr, &buffer_decr_size, &buffer_decr_length, err_str);
-		 if (ret == 1) {
-			 ret = 3; //password is not correct need to distinguish from passwd_file_error
-		 }
+         if (ret == 1) {
+             ret = 3; //password is not correct need to distinguish from passwd_file_error
+         }
          *pass = buffer_decr; 
          FREE(buffer_deco);
       }

@@ -331,18 +331,18 @@ int truncate_stderr_out
       seteuid(uid);
 
       if(res == 0) {
-		  strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-		  FREE(pass);
-	  } else {
-		  if(res == 1) {
-			  shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-		  } else if (res == 2) {
-			  shepherd_state = SSTATE_PASSWD_MISSING;
-		  } else if (res == 3) {
-			  shepherd_state = SSTATE_PASSWD_WRONG;
-		  }
-		  shepherd_error(err_str);
-	  }
+          strlcpy(user_passwd, pass, MAX_STRING_SIZE);
+          FREE(pass);
+      } else {
+          if(res == 1) {
+              shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+          } else if (res == 2) {
+              shepherd_state = SSTATE_PASSWD_MISSING;
+          } else if (res == 3) {
+              shepherd_state = SSTATE_PASSWD_WRONG;
+          }
+          shepherd_error(err_str);
+      }
    }
 #endif
 
@@ -380,12 +380,12 @@ int truncate_stderr_out
       shepherd_trace(err_str);
    } else if (ret > 0) {
       if(ret == 1) {
-		  shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-	  } else if (ret == 2) {
-		  shepherd_state = SSTATE_PASSWD_MISSING;
-	  } else if (ret == 3) {
-		  shepherd_state = SSTATE_PASSWD_WRONG;
-	  }
+          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+      } else if (ret == 2) {
+          shepherd_state = SSTATE_PASSWD_MISSING;
+      } else if (ret == 3) {
+          shepherd_state = SSTATE_PASSWD_WRONG;
+      }
       shepherd_error(err_str);
    }
 

@@ -1,3 +1,7 @@
+HP-2006-11-29-0: Bugfix:    fixed broken build after checkin RM-2006-11-28-0
+                 Changed:   source/libs/uti/sge_uidgid.h
+                            source/libs/uti/sge_uidgid.c
+
 MP-2006-11-29-0: Bugfix:    fixed problem with with shepherd that when password 
                             is missing or bad from the sgepasswd file, not the whole
                             queue goes into error state but only the job

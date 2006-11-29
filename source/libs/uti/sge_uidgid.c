@@ -1409,14 +1409,13 @@ static int
 password_get_size(const char *filename)
 {
    size_t ret = 0;
-   FILE *fp = NULL;
-   char input[MAX_LINE_LENGTH];
+   FILE   *fp = NULL;
+   char   input[MAX_LINE_LENGTH];
+   bool   do_loop = true;
 
    DENTER(TOP_LAYER, "password_get_size");
    fp = fopen(filename, "r");
    if (fp != NULL) {
-      bool do_loop = true;
-
       while (do_loop) {
          if (get_file_line_size(fp) > MAX_LINE_LENGTH) {
             ret = -1;
@@ -1465,8 +1464,9 @@ int
 get_file_line_size(FILE* fp)
 {
    fpos_t pos;
-   char tmp = '\0';
-   int i = 0;
+   char   tmp = '\0';
+   int    i = 0;
+   
    fgetpos(fp,&pos);
    while ((tmp!= '\n') && (i<=MAX_LINE_LENGTH)) {
       if (fscanf(fp, "%c", &tmp) == 1) {
@@ -1568,9 +1568,8 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          } else {
             do_loop = false;
          }
-
          sge_free_saved_vars(context);
-         }
+      }
       if (ret == 2) {
          for (j=0;j<i;++j) {
             free((*users)[j]);
@@ -1580,10 +1579,10 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          free(*encryped_pwds);
          DPRINTF(("sgepasswd file is corrupted"));
       } else {
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
-      (*users)[i] = NULL;
-      (*encryped_pwds)[i] = NULL; i++;
+         (*users)[i] = NULL;
+         (*encryped_pwds)[i] = NULL; i++;
+         (*users)[i] = NULL;
+         (*encryped_pwds)[i] = NULL; i++;
       }
 
       FCLOSE(fp);

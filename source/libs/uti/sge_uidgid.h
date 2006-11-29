@@ -32,6 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
 #include <sys/types.h> 
 #include <grp.h>
 

@@ -1,3 +1,9 @@
+AH-2006-11-29-0: Bugfix:    qsub -sync y is used when many jobs are in the 
+                            system
+                 Bugster:   6497575
+                 Issue:     2125
+                 Review:    TBD (DT?)
+
 BD-2006-11-28-1: Bugfix:    Don't include nonexistant crypt.h on FreeBSD
                             (as on Darwin)
                  Changed:   source/utilbin/authuser.c

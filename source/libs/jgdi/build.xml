@@ -573,7 +573,7 @@
       </cullconv>
    </target>
     
-   <target name="gensrc.native" depends="jni.init, gensrc.init, compile, aimk.template, aimk.drmaa"
+   <target name="gensrc.native" depends="jni.init, gensrc.init, compile, aimk.template"
       description="Create a all generated native source files"
       if="isJavaBuildHost">  
       <cullconv packageName="com.sun.grid.jgdi.configuration"
@@ -717,9 +717,7 @@
       
       <fail message="Unsuported ARCH ${sge.arch}" unless="sge.src.arch"/>
       
-      <assert_prop property="sge.root"/>
-      
-      <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}:${sge.root}/lib/${sge.arch}"/>       
+      <property name="sge.lib.path" value="${sge.srcdir}/${sge.src.arch}"/>       
       <property name="sge.jvmargs"  value="-Djava.library.path=${sge.lib.path} ${datamodel}"/>
       <echo>sge.jvmargs = ${sge.jvmargs}</echo>
    </target>

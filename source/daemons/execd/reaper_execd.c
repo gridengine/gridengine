@@ -669,6 +669,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    /* general_failure */
    switch (failed) {
    case SSTATE_BEFORE_PROLOG:
+   case SSTATE_PASSWD_FILE_ERROR:
    /* for CR 6252457 this block should be removed, but for a real fix the
       host or queue error detection must be improved
    */
@@ -748,8 +749,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
    case SSTATE_APPERROR:
-   case SSTATE_PASSWD_ERROR:
    case SSTATE_SERVICE_ERROR:
+   case SSTATE_PASSWD_MISSING:
+   case SSTATE_PASSWD_WRONG:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);

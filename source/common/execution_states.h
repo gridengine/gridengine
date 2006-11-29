@@ -89,8 +89,10 @@
 #define SSTATE_NO_CWD              28
 #define SSTATE_AFS_PROBLEM         29
 #define SSTATE_APPERROR            30
-#define SSTATE_PASSWD_ERROR        31
+#define SSTATE_PASSWD_FILE_ERROR   31
 #define SSTATE_SERVICE_ERROR       32
+#define SSTATE_PASSWD_MISSING      33
+#define SSTATE_PASSWD_WRONG        34
 
 
 #define MAX_SSTATE SSTATE_APPERROR

@@ -1,3 +1,15 @@
+MP-2006-11-29-0: Bugfix:    fixed problem with with shepherd that when password 
+                            is missing or bad from the sgepasswd file, not the whole
+                            queue goes into error state but only the job
+                 Changed:   source/common/execution_states.c
+                            source/common/execution_states.h
+	                    source/daemons/execd/reaper_execd.c
+                            source/daemons/shepherd/builtin_starter.c
+                            source/libs/uti/sge_uidgid.c
+                            source/libs/uti/sge_uidgid.h
+                 Bugster:   6347256
+                 Review:    HP
+
 RM-2006-11-28-0: Bugfix:    o fixed sgepasswd segmentatation fault that occured
                               when sgepasswd was called with corrupted sgepasswd
                               file

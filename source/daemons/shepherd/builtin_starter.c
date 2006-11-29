@@ -132,6 +132,7 @@ int truncate_stderr_out
    int   is_rsh = 0;
    int   is_rlogin = 0;
    int   qlogin_starter = 0;
+   int   res;
    char  *shell_path = NULL;
    char  *stdin_path = NULL;
    char  *stdout_path = NULL;
@@ -326,15 +327,22 @@ int truncate_stderr_out
 
       uid = geteuid();
       seteuid(SGE_SUPERUSER_UID);
-      sge_get_passwd(target_user, &pass, err_str);
+      res = uidgid_read_passwd(target_user, &pass, err_str);
       seteuid(uid);
 
-      if(pass == NULL) {
-         shepherd_error(err_str);
-      } else {
-         strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-         FREE(pass);
-      }
+      if(res == 0) {
+		  strlcpy(user_passwd, pass, MAX_STRING_SIZE);
+		  FREE(pass);
+	  } else {
+		  if(res == 1) {
+			  shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+		  } else if (res == 2) {
+			  shepherd_state = SSTATE_PASSWD_MISSING;
+		  } else if (res == 3) {
+			  shepherd_state = SSTATE_PASSWD_WRONG;
+		  }
+		  shepherd_error(err_str);
+	  }
    }
 #endif
 
@@ -370,14 +378,14 @@ int truncate_stderr_out
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
       shepherd_trace(err_str);
-   } 
-   else if (ret > 0) {
-      if(ret == 2) {
-         shepherd_state = SSTATE_PASSWD_ERROR;
-      }
-      /*
-      ** violation of min_gid or min_uid
-      */
+   } else if (ret > 0) {
+      if(ret == 1) {
+		  shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+	  } else if (ret == 2) {
+		  shepherd_state = SSTATE_PASSWD_MISSING;
+	  } else if (ret == 3) {
+		  shepherd_state = SSTATE_PASSWD_WRONG;
+	  }
       shepherd_error(err_str);
    }
 

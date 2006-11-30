@@ -100,8 +100,10 @@ sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
 static int sge_start_jobs(sge_gdi_ctx_class_t *ctx);
 static int exec_job_or_task(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *petep);
 
+#ifdef COMPILE_DC
 static bool should_reprioritize(void);
 static void force_job_rlimit(const char* qualified_hostname);
+#endif
 
 extern volatile int jobs_to_start;
 
@@ -1069,7 +1071,6 @@ FCLOSE_ERROR:
    DEXIT;
    return 1;
 }
-#endif
 
 static bool should_reprioritize(void)
 {
@@ -1109,3 +1110,4 @@ static bool should_reprioritize(void)
    return ret;
 } /* should_reprioritize */
 
+#endif

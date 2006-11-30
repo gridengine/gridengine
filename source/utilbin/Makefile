@@ -242,10 +242,10 @@ sgepasswd: sge_passwd_main.o version.o $(LCKLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(R
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) sge_passwd_main.o version.o $(FSTYPELIBS) $(WINGRIDLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(SECLIBS_STATIC) $(LIBS) $(DLLIB)
 
 sge_passwd_main.o: $(UTILBIN_DIR)/sge_passwd.c
-		$(CC) -DDEFINE_SGE_PASSWD_MAIN  $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -o $@ -c $(UTILBIN_DIR)/sge_passwd.c
+		$(CC) -DDEFINE_SGE_PASSWD_MAIN  $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(NOERR_CFLAG) $(MEMCFLAG) $(GCC_NODUPLWARN) -o $@ -c $(UTILBIN_DIR)/sge_passwd.c
 
 sge_passwd.o: $(UTILBIN_DIR)/sge_passwd.c
-		$(CC) $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_passwd.c
+		$(CC) $(CFLAGS) -ULOAD_OPENSSL $(NOERR_PROTO) $(NOERR_CFLAG) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/sge_passwd.c
 
 #---------------------------------------------------------------------
 AUTHUSER_ADD_LIBS = -luti -llck -lrmon $(DLLIB)

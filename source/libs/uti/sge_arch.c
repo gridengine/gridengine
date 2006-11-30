@@ -106,12 +106,6 @@ const char *sge_get_arch(void)
 #      define ARCHBIN "lx26-ia64"
 #   elif defined(LINUXPPC_26)
 #      define ARCHBIN "lx26-ppc"
-#   elif defined(SLINUX_22)   
-#      define ARCHBIN "lx22-sparc"
-#   elif defined(SLINUX_24)   
-#      define ARCHBIN "lx24-sparc"
-#   elif defined(SLINUX_26)   
-#      define ARCHBIN "lx26-sparc"
 #   elif defined(LINUXSPARC_26)   
 #      define ARCHBIN "lx26-sparc"
 #   elif defined(LINUXSPARC64_26)   

@@ -1785,7 +1785,7 @@ copygrp(struct group *tgrp, struct group *grp, char *buffer, size_t bufsize)
    for (i = 0; tgrp->gr_mem[i] != NULL; i++) {
       strcpy(grp->gr_mem[i], tgrp->gr_mem[i]);
    }
-   *(grp->gr_mem[i]) = NULL;
+   grp->gr_mem[i] = NULL;
 
    return 0;
 }

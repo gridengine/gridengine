@@ -54,7 +54,7 @@
 #else
 
 #  include <pwd.h>
-#  if !(defined(DARWIN) || defined(FREEBSD))
+#  if !(defined(DARWIN) || defined(FREEBSD) || defined(NETBSD))
 #     include <crypt.h>
 #  endif
 #  include <unistd.h>
@@ -74,7 +74,7 @@
 #include <security/pam_appl.h>
 #endif
 
-#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD) || defined(ALPHA5) || defined(WINDOWS)
+#if defined(DARWIN) || defined(AIX51) || defined(AIX43) || defined(INTERIX) || defined(FREEBSD) || defined(ALPHA5) || defined(WINDOWS) || defined(NETBSD)
 #define JUTI_NO_SHADOW
 #else
 #include <shadow.h>

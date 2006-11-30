@@ -1,4 +1,9 @@
-AA-2006-11-29-0: Bugfix:    sge.root property assertion removed in libs/jgdi/build.xml
+JG-2006-11-30-0: Enhancem.: NetBSD port (merge from V60_s2_BRANCH).
+                            Removed -Wno-strict-aliasing in Linux builds.
+                 Review:    RD
+
+AA-2006-11-29-0: Bugfix:    sge.root property assertion removed in 
+                            libs/jgdi/build.xml
             
 AH-2006-11-29-0: Bugfix:    qsub -sync y is used when many jobs are in the 
                             system

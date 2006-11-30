@@ -325,6 +325,11 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       DEFAULTMANPATH=`/usr/bin/manpath -q`
       PATH=$SAFE_PATH
       ;;
+   nbsd-*)
+      PATH=$OLD_PATH
+      DEFAULTMANPATH=/usr/pkg/man:/usr/local/man:/usr/X11R6/man:/usr/share/man
+      PATH=$SAFE_PATH
+      ;;
    hp*)
       DEFAULTMANPATH=/usr/man:/usr/contrib/man:/usr/local/man
       SHARED_LIBRARY_PATH="SHLIB_PATH"

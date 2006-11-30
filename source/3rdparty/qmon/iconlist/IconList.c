@@ -1,4 +1,4 @@
-/* $Id: IconList.c,v 1.3 2005/05/03 09:18:02 roland Exp $ */
+/* $Id: IconList.c,v 1.4 2006/11/30 13:29:21 joga Exp $ */
 /*
  * Copyright 1996 John L. Cwikla
  *
@@ -48,6 +48,10 @@
 #include <Xm/PrimitiveP.h>
 #else
 #include <Xm/Traversal.h>
+#endif
+
+#ifdef LesstifVersion
+#undef NeedWidePrototypes
 #endif
 
 #ifndef SOLARIS

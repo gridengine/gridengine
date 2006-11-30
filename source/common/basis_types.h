@@ -76,7 +76,7 @@ typedef enum {
 #define NONE_STR  "NONE"
 #define NONE_LEN  4
 
-#if defined(NETBSD) || defined(LINUXAMD64)
+#if defined(FREEBSD) || defined(NETBSD) || defined(LINUXAMD64)
 #  define sge_U32CFormat "%u"  
 #  define sge_u32c(x)  (unsigned int)(x)
 
@@ -112,7 +112,7 @@ extern "C" {
 #  define u_long32 u_int
 #elif defined(WIN32NATIVE)
 #  define u_long32 unsigned long
-#elif defined(FREEBSD)
+#elif defined(FREEBSD) || defined(NETBSD)
 #  define u_long32 uint32_t
 #else
 #  define u_long32 u_long
@@ -122,7 +122,7 @@ extern "C" {
 
 /* set sge_u32 and sge_x32 for 64 or 32 bit machines */
 /* sge_uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
-#if defined(TARGET_64BIT) || defined(FREEBSD)
+#if defined(TARGET_64BIT) || defined(FREEBSD) || defined(NETBSD)
 #  define sge_u32    "%d"
 #  define sge_uu32   "%u"
 #  define sge_x32    "%x"

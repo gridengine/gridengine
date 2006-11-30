@@ -150,7 +150,7 @@ messages:
 # rules to build binaries
 ###############################################################################
 qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
-	$(LD_WRAPPER) $(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(SLIBS) $(LIBS) 
+	$(LD_WRAPPER) $(CC) $(LFLAGS) $(LDFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(SLIBS) $(LIBS) 
 
 ############################################################################
 # ListTree Demo prog

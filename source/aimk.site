@@ -34,9 +34,9 @@
 # Set default aimk switches
 #
 switch($buildarch)
-   case "win32-x86":
-   case "lx22-alpha":
    case "aix43":
+   case "lx22-alpha":
+   case "win32-x86":
       set argv = ( -no-jni -no-java $* )
       breaksw
    default:

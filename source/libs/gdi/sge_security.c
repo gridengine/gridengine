@@ -73,6 +73,10 @@
 #include <openssl/evp.h>
 #endif
 
+#ifdef INTERIX
+#include "misc.h"
+#endif
+
 #define SGE_SEC_BUFSIZE 1024
 
 #define ENCODE_TO_STRING   1
@@ -212,6 +216,11 @@ int sge_ssl_setup_security_path(const char *progname) {
    char *reconnect_file = NULL;
    char *crl_file       = NULL;
 
+   char *user_name = sge_strdup(NULL, uti_state_get_user_name());
+#ifdef INTERIX
+   user_name = wl_strip_hostname(user_name);
+#endif
+
    DENTER(TOP_LAYER, "setup_ssl_security_path");
 
    if (progname == NULL) {
@@ -315,10 +324,10 @@ int sge_ssl_setup_security_path(const char *progname) {
       struct passwd pw_struct;
       char buffer[2048];
 
-      pw = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
+      pw = sge_getpwnam_r(user_name, &pw_struct, buffer, sizeof(buffer));
 
       if (!pw) {   
-         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, uti_state_get_user_name()));
+         CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, user_name));
          SGE_EXIT(1);
       }
       userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
@@ -345,8 +354,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(key_file, &sbuf)) { 
       free(key_file);
       key_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserKey) + 4);
-      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserKey);
+                              strlen(user_name) + strlen(UserKey) + 4);
+      sprintf(key_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserKey);
    }   
 
    rand_file = sge_malloc(strlen(user_local_dir) + (sizeof("private")-1) + strlen(RandFile) + 3);
@@ -355,8 +364,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(rand_file, &sbuf)) { 
       free(rand_file);
       rand_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(RandFile) + 4);
-      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), RandFile);
+                              strlen(user_name) + strlen(RandFile) + 4);
+      sprintf(rand_file, "%s/userkeys/%s/%s", ca_local_root, user_name, RandFile);
    }   
 
    if (SGE_STAT(key_file, &sbuf)) { 
@@ -381,8 +390,8 @@ int sge_ssl_setup_security_path(const char *progname) {
    if (SGE_STAT(cert_file, &sbuf)) {
       free(cert_file);
       cert_file = sge_malloc(strlen(ca_local_root) + (sizeof("userkeys")-1) + 
-                              strlen(uti_state_get_user_name()) + strlen(UserCert) + 4);
-      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, uti_state_get_user_name(), UserCert);
+                              strlen(user_name) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/userkeys/%s/%s", ca_local_root, user_name, UserCert);
    }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 
@@ -394,7 +403,8 @@ int sge_ssl_setup_security_path(const char *progname) {
 	reconnect_file = sge_malloc(strlen(userdir) + strlen(ReconnectFile) + 2); 
    sprintf(reconnect_file, "%s/%s", userdir, ReconnectFile);
    DPRINTF(("reconnect_file: %s\n", reconnect_file));
-    
+   
+   free(user_name);
    free(userdir);
    free(ca_root);
    if (!getenv("SGE_NO_CA_LOCAL_ROOT")) {

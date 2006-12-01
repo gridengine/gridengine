@@ -1460,62 +1460,104 @@ int use_starter_method /* If this flag is set the shellpath contains the
        * optional. */
 
 #if defined(INTERIX)
-   if(strcmp(childname, "job") == 0 
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
-      int  ret;
-      int  win32_exit_status = 0;
-      char **env;
-      char err_msg[MAX_STRING_SIZE];
-      char failed_str[MAX_STRING_SIZE+128];
+      if(strcmp(childname, "job") == 0 
+         && wl_get_GUI_mode(sge_get_environment()) == true) {
+         int  ret;
+         int  win32_exit_status = 0;
+         char **env;
+         char err_msg[MAX_STRING_SIZE];
+         enum en_JobStatus job_status;
+         int failure = -1;
 
-      shepherd_trace_sprintf("starting job remote: %s", filename);
+         shepherd_trace_sprintf("starting job remote: %s", filename);
 
-      env = sge_get_environment();
-      ret = wl_start_job_remote(filename, args, env, 
-                          job_user, user_passwd, 
-                          &win32_exit_status, err_msg);
+         env = sge_get_environment();
+         ret = wl_start_job_remote(filename, args, env, 
+                             job_user, user_passwd, 
+                             &win32_exit_status, &job_status, err_msg);
 
-      if(ret != 0) {
-         shepherd_state = SSTATE_SERVICE_ERROR;
-         sprintf(failed_str, "Job execution by SGE_Helper_Service failed: %s", 
-            err_msg);
-         shepherd_error(failed_str);
-      } else {
-         shepherd_trace_sprintf("exit_status: %d", win32_exit_status);
-      }
 
-      exit(win32_exit_status);
-   } else 
-#endif
-   {
-      shepherd_trace("not a GUI job, starting directly");
-      if (!inherit_env()) {
-         /* The closest thing to execvp that takes an environment pointer is
-          * execve.  The problem is that execve does not resolve the path.
-          * As there is no reasonable way to resolve the path ourselves, we
-          * have to resort to this ugly hack.  Don't try this at home. */
-         char **tmp = environ;
+         switch(ret) {
+            case 0:
+               // job was successfully placed into job queue, parse job_status
+               switch(job_status) {
+                  case js_Finished:
+                     // everything ok, exit_status of job is valid.
+                     break;
 
-         environ = sge_get_environment();
-         execvp(filename, args);
-         environ = tmp;
-      }
-      else {
-         execvp(filename, args);
-      }
+                  case js_Deleted:
+                     // job was deleted, this is ok, expect exit_status to
+                     // be invalid
+                     break;
 
-      /* Aaaah - execvp() failed */
+                  case js_Failed:
+                     // job start failed, err_msg contains reason
+                     failure = SSTATE_HELPER_SERVICE_BEFORE_JOB;
+                     break;
+
+                  // unexpected job stati - set host to error
+                  case js_Invalid:
+                  case js_Received:
+                  case js_ToBeStarted:
+                  case js_Started:
+                  default:
+                     failure = SSTATE_HELPER_SERVICE_ERROR;
+                     break;
+               }
+               shepherd_trace_sprintf("exit_status: %d", win32_exit_status);
+               break;
+
+            case 254:
+               // job already existed in Helper Services list
+               // could be a scheduler error, set job in error state
+               failure = SSTATE_HELPER_SERVICE_BEFORE_JOB;
+               break;
+
+            case 255:
+               // sending job to service failed
+               failure = SSTATE_HELPER_SERVICE_ERROR;
+               break;
+
+            default:
+               // was not able to contact service
+               failure = SSTATE_HELPER_SERVICE_ERROR;
+               break;
+         }
+         if(failure != -1) {
+            shepherd_state = failure;
+            shepherd_error(err_msg);
+         }
+         exit(win32_exit_status);
+      } else 
+   #endif
       {
-         char failed_str[2048+128];
-         sprintf(failed_str, "%s failed: %s", err_str, strerror(errno));
+         if (!inherit_env()) {
+            /* The closest thing to execvp that takes an environment pointer is
+             * execve.  The problem is that execve does not resolve the path.
+             * As there is no reasonable way to resolve the path ourselves, we
+             * have to resort to this ugly hack.  Don't try this at home. */
+            char **tmp = environ;
 
-         /* most of the problems here are related to the shell
-            i.e. -S /etc/passwd */
-         shepherd_state = SSTATE_NO_SHELL;
-         /* EXIT HERE IN CASE IF FAILURE */
-         shepherd_error(failed_str);
+            environ = sge_get_environment();
+            execvp(filename, args);
+            environ = tmp;
+         }
+         else {
+            execvp(filename, args);
+         }
+
+         /* Aaaah - execvp() failed */
+         {
+            char failed_str[2048+128];
+            sprintf(failed_str, "%s failed: %s", err_str, strerror(errno));
+
+            /* most of the problems here are related to the shell
+               i.e. -S /etc/passwd */
+            shepherd_state = SSTATE_NO_SHELL;
+            /* EXIT HERE IN CASE IF FAILURE */
+            shepherd_error(failed_str);
+         }
       }
-   }
    }
 }
 

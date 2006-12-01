@@ -1,3 +1,7 @@
+HP-2006-12-01-0: Enhancem.: Enhanced error handling for Windows GUI jobs
+                 Changed:   shepherd, execd
+                 Review:    MD
+
 RD-2006-12-01-0: Bugfix:    fixed qacct -l h=<hostname> dump core
                  Changed:   qacct
                  Bugster:   6425823

@@ -1185,6 +1185,51 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
    return res;
 } /* sge_getgrgid_r() */
 
+/****** sge_uidgid/sge_is_user_superuser() *************************************
+*  NAME
+*     sge_is_user_superuser() -- check if provided user is the superuser
+*
+*  SYNOPSIS
+*     bool sge_is_user_superuser(const char *name); 
+*
+*  FUNCTION
+*     Checks platform indepently if the provided user is the superuser.  
+*
+*  INPUTS
+*     const char *name - name of the user to check
+*
+*  RESULT
+*     bool - true if it is the superuser,
+*            false if not.
+*
+*  NOTES
+*     MT-NOTE: sge_is_user_superuser() is MT safe. 
+*
+*******************************************************************************/
+bool sge_is_user_superuser(const char *name)
+{
+   bool ret;
+
+#if defined(INTERIX)
+   char buffer[1000];
+   char *plus_sign;
+
+   wl_get_superuser_name(buffer, 1000);
+
+   /* strip Windows domain name from user name */
+   plus_sign = strstr(buffer, "+");
+   if(plus_sign!=NULL) {
+      plus_sign++;
+      strcpy(buffer, plus_sign);
+   }
+   ret = (strcmp(name, buffer) == 0) ? true : false;
+#else
+   ret = (strcmp(name, "root") == 0) ? true : false;
+#endif
+
+   return ret;
+}
+
 /****** libs/uti/uidgid_state_get_*() ************************************
 *  NAME
 *     uidgid_state_set_*() - read access to lib/uti/sge_uidgid.c global variables

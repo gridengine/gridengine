@@ -207,7 +207,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
          char *ca_local_dir = NULL;
          /* If the user is root, use /var/sgeCA.  Otherwise, use /tmp/sgeCA */
 #if 0
-         if (geteuid () == 0) {
+         if (geteuid () == SGE_SUPERUSER_ID) {
             ca_local_dir = CA_LOCAL_DIR;
          }
          else {
@@ -1442,7 +1442,6 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 int sge_security_verify_user(const char *host, const char *commproc, u_long32 id,
                              const char *admin_user, const char *gdi_user, const char *progname) 
 {
-
    DENTER(TOP_LAYER, "sge_security_verify_user");
 
    if (gdi_user == NULL || host == NULL || commproc == NULL) {
@@ -1450,8 +1449,10 @@ int sge_security_verify_user(const char *host, const char *commproc, u_long32 id
      DRETURN(False);
    }
 
-   if (is_daemon(commproc) && (strcmp(gdi_user, admin_user) != 0) && (strcmp(gdi_user, "root") != 0)) {
-     DRETURN(False);
+   if (is_daemon(commproc) 
+       && strcmp(gdi_user, admin_user) != 0 
+       && sge_is_user_superuser(gdi_user) == false) {
+      DRETURN(False);
    }
 
    if (!is_daemon(commproc)) {
@@ -1504,8 +1505,8 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
       }
 
       if (check_admin_user) {
-        if ( strcmp(unique_identifier, user) != 0 &&
-             strcmp(unique_identifier, "root") != 0) {
+        if (strcmp(unique_identifier, user) != 0 
+            && sge_is_user_superuser(unique_identifier) == false) { 
             DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             FREE(unique_identifier);

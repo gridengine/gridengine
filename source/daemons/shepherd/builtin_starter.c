@@ -132,7 +132,6 @@ int truncate_stderr_out
    int   is_rsh = 0;
    int   is_rlogin = 0;
    int   qlogin_starter = 0;
-   int   res;
    char  *shell_path = NULL;
    char  *stdin_path = NULL;
    char  *stdout_path = NULL;
@@ -166,6 +165,7 @@ int truncate_stderr_out
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
+   int   res;
    char target_user_buffer[TARGET_USER_BUFFER_SIZE];
 #endif
 

@@ -1,3 +1,7 @@
+HP-2006-12-01-1: Enhancem.: Enhanced error handling for Windows GUI jobs
+                 Changed:   shepherd, execd
+                 Review:    MD
+
 HP-2006-12-01-0: Bugfix:    o replaced usage of UID 0 and "root" with calls to
                               platform independent functions
                             o map gdi request user name "Administrator" to

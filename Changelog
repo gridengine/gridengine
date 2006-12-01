@@ -1,3 +1,9 @@
+RD-2006-12-01-0: Bugfix:    fixed qacct -l h=<hostname> dump core
+                 Changed:   qacct
+                 Bugster:   6425823
+                 Issue:     2127 
+                 Review:    JG
+
 HP-2006-11-29-0: Bugfix:    fixed broken build after checkin RM-2006-11-28-0
                  Changed:   source/libs/uti/sge_uidgid.h
                             source/libs/uti/sge_uidgid.c
@@ -7,7 +13,7 @@ MP-2006-11-29-0: Bugfix:    fixed problem with with shepherd that when password
                             queue goes into error state but only the job
                  Changed:   source/common/execution_states.c
                             source/common/execution_states.h
-	                    source/daemons/execd/reaper_execd.c
+                            source/daemons/execd/reaper_execd.c
                             source/daemons/shepherd/builtin_starter.c
                             source/libs/uti/sge_uidgid.c
                             source/libs/uti/sge_uidgid.h

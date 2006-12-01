@@ -179,6 +179,7 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "qacct");
 
    sge_prof_setup();
+   sc_init_mt();
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 

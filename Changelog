@@ -1,3 +1,11 @@
+AH-2006-12-04-0: Bugfix:    qmaster performance gets throttled if 
+                            qsub -sync y is used when many jobs are in 
+                            the system 
+                            (fix test_drmaa ST_RECOVERABLE_SESSION)
+                 Bugster:   6497575
+                 Issue:     2125
+                 Review:    RD
+
 CR-2006-12-04-0: Bugfix:    hostname resolving should not be case sensitive
                  Issue:     1905
                  BT:        6353558
@@ -29,7 +37,6 @@ AH-2006-11-29-0: Bugfix:    qsub -sync y is used when many jobs are in the
                             system
                  Bugster:   6497575
                  Issue:     2125
-                 Review:    TBD (DT?)
 
 BD-2006-11-28-1: Bugfix:    Don't include nonexistant crypt.h on FreeBSD
                             (as on Darwin)

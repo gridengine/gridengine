@@ -4210,18 +4210,6 @@ static void *japi_implementation_thread(void *p)
             disconnected = false;
          }
          
-         if (!up_and_running) {
-            /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
-            DPRINTF(("signalling event client thread is up and running\n"));
-
-            JAPI_LOCK_EC_STATE();
-            japi_ec_state = JAPI_EC_UP;
-            DPRINTF (("EC STATE is now %d\n", japi_ec_state));
-               pthread_cond_signal(&japi_ec_state_starting_cv);
-            JAPI_UNLOCK_EC_STATE();
-            up_and_running = true;
-         }
-
          for_each (event, event_list) {
             u_long32 type, intkey, intkey2;
             type = lGetUlong(event, ET_type);
@@ -4415,6 +4403,18 @@ static void *japi_implementation_thread(void *p)
             } /* else if type == sgeE_QMASTER_GOES_DOWN */
          } /* for_each */
          lFreeList(&event_list);
+
+         if (!up_and_running) {
+            /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
+            DPRINTF(("signalling event client thread is up and running\n"));
+
+            JAPI_LOCK_EC_STATE();
+            japi_ec_state = JAPI_EC_UP;
+            DPRINTF (("EC STATE is now %d\n", japi_ec_state));
+               pthread_cond_signal(&japi_ec_state_starting_cv);
+            JAPI_UNLOCK_EC_STATE();
+            up_and_running = true;
+         }
       } /* else */
 
       if (!stop_ec) {

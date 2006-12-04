@@ -237,7 +237,7 @@ int cl_host_alias_list_get_local_resolved_name(cl_raw_list_t* list_p, char* alia
 
    elem = cl_host_alias_list_get_first_elem(list_p);
    while ( elem != NULL) { 
-      if ( strcmp(alias_name,elem->alias_name) == 0) {
+      if ( strcasecmp(alias_name,elem->alias_name) == 0) {
          *local_resolved_name = strdup(elem->local_resolved_hostname);
          if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
             free(*local_resolved_name);
@@ -280,7 +280,7 @@ int cl_host_alias_list_get_alias_name(cl_raw_list_t* list_p, char* local_resolve
 
    elem = cl_host_alias_list_get_first_elem(list_p);
    while ( elem != NULL) { 
-      if ( strcmp(local_resolved_name,elem->local_resolved_hostname) == 0) {
+      if ( strcasecmp(local_resolved_name,elem->local_resolved_hostname) == 0) {
          *alias_name = strdup(elem->alias_name);
          if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
             free(*alias_name);

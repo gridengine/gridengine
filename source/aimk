@@ -1274,6 +1274,10 @@ case LINUXSPARC64:
       endif
    endif
 
+   if ($buildarch == "lx24-x86" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
+      set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
+   endif
+
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
 
    if ("$ADOC" == 1) then

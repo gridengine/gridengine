@@ -1,3 +1,9 @@
+CR-2006-12-04-0: Bugfix:    hostname resolving should not be case sensitive
+                            (merge from maintrunk)
+                 Issue:     1905
+                 BT:        6353558
+                 Review:    RD
+
 HP-2006-12-01-0: Enhancem.: Enhanced error handling for Windows GUI jobs
                  Changed:   shepherd, execd
                  Review:    MD

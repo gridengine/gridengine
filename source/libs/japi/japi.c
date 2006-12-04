@@ -229,6 +229,7 @@ static pthread_mutex_t japi_session_mutex = PTHREAD_MUTEX_INITIALIZER;
 enum { 
    JAPI_EC_DOWN,
    JAPI_EC_UP,
+   JAPI_EC_RESTARTING,
    JAPI_EC_STARTING,
    JAPI_EC_FINISHING,
    JAPI_EC_FAILED
@@ -581,7 +582,7 @@ int japi_init(const char *contact, const char *session_key_in,
    
    if (enable_wait) {
       /* spawn implementation thread japi_implementation_thread() */
-      ret = japi_enable_job_wait (session_key_in, session_key_out, handler,
+      ret = japi_enable_job_wait(session_key_in, session_key_out, handler,
                                   diag);
    }
    else {
@@ -696,7 +697,11 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
    
    /* Note that we're in the process of starting up so that other calls to this
     * function fail. */
-   japi_ec_state = JAPI_EC_STARTING;
+   if (!session_key_in)
+      japi_ec_state = JAPI_EC_STARTING;
+   else
+      japi_ec_state = JAPI_EC_RESTARTING;
+
    /* It's safe to unlock both locks here because we have the ec
     * state set so that no other functions can disturb us. */
    JAPI_UNLOCK_EC_STATE();
@@ -758,7 +763,7 @@ int japi_enable_job_wait(const char *session_key_in, dstring *session_key_out,
 
    /* We wait for !JAPI_EC_STARTING here instead of JAPI_EC_UP because the
     * event client thread may not succeed in starting up. */
-   while (japi_ec_state == JAPI_EC_STARTING) {
+   while (japi_ec_state == JAPI_EC_STARTING || japi_ec_state == JAPI_EC_RESTARTING) {
       pthread_cond_wait(&japi_ec_state_starting_cv, &japi_ec_state_mutex);
    }
 
@@ -958,7 +963,8 @@ int japi_exit(int flag, dstring *diag)
     */
    JAPI_LOCK_EC_STATE();
    DPRINTF(("Notify event client about shutdown\n"));
-   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_STARTING)) {
+   if ((japi_ec_state == JAPI_EC_UP) || (japi_ec_state == JAPI_EC_STARTING) || 
+                                        (japi_ec_state == JAPI_EC_RESTARTING)) {
       int my_state = japi_ec_state;
       /* If the event client thread is running, it will check the state at the
        * beginning of every cycle.  If the state is set to JAPI_EC_FINISHING
@@ -4047,6 +4053,78 @@ int japi_get_drm_system(dstring *drm, dstring *diag, int me)
    return DRMAA_ERRNO_SUCCESS;
 }
 
+/****** japi/japi_subscribe_job_list() *****************************************
+*  NAME
+*     japi_subscribe_job_list() -- Do event subscription for job list
+*
+*  SYNOPSIS
+*     static void japi_subscribe_job_list(const char *japi_session_key,
+*     sge_evc_class_t *evc)
+*
+*  FUNCTION
+*     Event subscription for job list can be very costly. It requires
+*     qmaster to copy the entire job list temporarily at the time when
+*     an event is registered. For that reason subscribing the job list
+*     was factorized out, so that it can be done only when required.
+*     Subscribing the job list event is required only in cases
+*
+*     (a) when the client event client connection breaks down e.g.
+*         due to qmaster be shut-down and restarted
+*
+*     (b) when a JAPI session is restarted e.g when DRMAA is used
+*
+*  INPUTS
+*     const char *japi_session_key - JAPI session key
+*
+*  NOTES
+*     MT-NOTE: japi_subscribe_job_list() is MT safe
+*******************************************************************************/
+static void japi_subscribe_job_list(const char *japi_session_key)
+{
+   const int job_nm[] = {
+      JB_job_number,
+      JB_project,
+      JB_type,
+      JB_ja_tasks,
+      JB_ja_structure,
+      JB_ja_n_h_ids,
+      JB_ja_u_h_ids,
+      JB_ja_s_h_ids,
+      JB_ja_o_h_ids,
+      JB_ja_z_ids,
+      JB_ja_template,
+      NoName
+   };
+
+   lCondition *where = NULL;
+   lEnumeration *what = NULL;
+   lListElem *where_el = NULL;
+   lListElem *what_el = NULL;
+
+   ec_subscribe(sgeE_JOB_LIST);
+
+   where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key);
+   what = lIntVector2What(JB_Type, job_nm);
+
+   where_el = lWhereToElem(where);
+   what_el = lWhatToElem(what);
+
+   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
+
+   lFreeWhere(&where);
+   lFreeWhat(&what);
+   if (where_el) {
+      lFreeElem(&where_el);
+   }
+
+   if (what_el) {
+      lFreeElem(&what_el);
+   }
+
+   return;
+}
+
+
 /****** JAPI/japi_implementation_thread() **************************************
 *  NAME
 *     japi_implementation_thread() -- Control flow implementation thread
@@ -4063,25 +4141,6 @@ int japi_get_drm_system(dstring *drm, dstring *diag, int me)
 *******************************************************************************/
 static void *japi_implementation_thread(void *p)
 {
-   const int job_nm[] = {       
-      JB_job_number,
-      JB_project,
-      JB_type,
-      JB_ja_tasks,
-      JB_ja_structure,
-      JB_ja_n_h_ids,
-      JB_ja_u_h_ids,
-      JB_ja_s_h_ids,
-      JB_ja_o_h_ids,
-      JB_ja_z_ids,
-      JB_ja_template,
-      NoName
-   };
-   
-   lCondition *where = NULL;
-   lEnumeration *what = NULL;
-   lListElem *where_el = NULL;
-   lListElem *what_el = NULL;
    lList *alp = NULL, *event_list = NULL;
    lListElem *event;
    char buffer[1024];
@@ -4094,17 +4153,20 @@ static void *japi_implementation_thread(void *p)
                                   qmaster. */
    bool disconnected = false; /* Whether we are currently connected to the
                                  qmaster. */
+   bool restarting;
+   bool job_list_subscribed = false;
 
    DENTER(TOP_LAYER, "japi_implementation_thread");
 
    /* Check EC state before we bother starting.  This also prevents the event
     * client thread from having a race condition with japi_enable_job_wait(). */
    JAPI_LOCK_EC_STATE();
-   if (japi_ec_state != JAPI_EC_STARTING) {
+   if (japi_ec_state != JAPI_EC_STARTING && japi_ec_state != JAPI_EC_RESTARTING) {
       JAPI_UNLOCK_EC_STATE();
       lFreeList(&alp);
       goto SetupFailed;
    }
+   restarting = (japi_ec_state == JAPI_EC_RESTARTING)?true:false;
    JAPI_UNLOCK_EC_STATE();
    
    sge_getme(prog_number);
@@ -4151,24 +4213,12 @@ static void *japi_implementation_thread(void *p)
    ec_set_busy_handling(EV_THROTTLE_FLUSH); 
    ec_set_flush_delay(flush_delay_rate); 
    ec_set_session(japi_session_key);
-   ec_subscribe(sgeE_JOB_LIST);
-   
-   where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key);
-   what = lIntVector2What(JB_Type, job_nm); 
 
-   where_el = lWhereToElem(where);
-   what_el = lWhatToElem(what);
-   
-   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
-
-   lFreeWhere(&where);
-   lFreeWhat(&what);
-   if (where_el) {
-      lFreeElem(&where_el);
-   }
-   
-   if (what_el) {
-      lFreeElem(&what_el);
+   /* subscription of the entire job list at start-up
+      required only for session reconnect (DRMAA) */
+   if (restarting) {
+      japi_subscribe_job_list(japi_session_key);
+      job_list_subscribed = true;
    }
 
    ec_subscribe(sgeE_JOB_FINISH);
@@ -4184,7 +4234,7 @@ static void *japi_implementation_thread(void *p)
 
    /* Check again before we commit to this. */
    JAPI_LOCK_EC_STATE();
-   if (japi_ec_state != JAPI_EC_STARTING) {
+   if (japi_ec_state != JAPI_EC_STARTING && japi_ec_state != JAPI_EC_RESTARTING) {
       JAPI_UNLOCK_EC_STATE();
       lFreeList(&alp);
       goto SetupFailed;
@@ -4245,11 +4295,16 @@ static void *japi_implementation_thread(void *p)
             if (error_handler != NULL) {
                error_handler (MSG_JAPI_RECONNECTED);
             }
+            if (!job_list_subscribed) {
+               japi_subscribe_job_list(japi_session_key);
+               ec_mark4registration();
+               job_list_subscribed = true;
+            }
             
             DPRINTF ((MSG_JAPI_RECONNECTED));
             disconnected = false;
          }
-         
+
          for_each (event, event_list) {
             u_long32 type, intkey, intkey2;
             type = lGetUlong(event, ET_type);
@@ -4322,17 +4377,6 @@ static void *japi_implementation_thread(void *p)
 
                JAPI_UNLOCK_JOB_LIST();
 
-               if (!up_and_running) {
-                  /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
-                  DPRINTF(("signalling event client thread is up and running\n"));
-
-                  JAPI_LOCK_EC_STATE();
-                  japi_ec_state = JAPI_EC_UP;
-                  DPRINTF (("EC STATE is now %d\n", japi_ec_state));
-                     pthread_cond_signal(&japi_ec_state_starting_cv);
-                  JAPI_UNLOCK_EC_STATE();
-                  up_and_running = true;
-               }
             } /* if type == sgeE_JOB_LIST */
             else if (type == sgeE_JOB_FINISH) {
                /* - move job/task to JJ_finished_jobs */
@@ -4461,6 +4505,19 @@ static void *japi_implementation_thread(void *p)
             } /* else if type == sgeE_QMASTER_GOES_DOWN */
          } /* for_each */
          lFreeList(&event_list);
+
+         if (!up_and_running) {
+            /* set japi_ec_state to JAPI_EC_UP and notify initialization thread */
+            DPRINTF(("signalling event client thread is up and running\n"));
+
+            JAPI_LOCK_EC_STATE();
+            japi_ec_state = JAPI_EC_UP;
+            DPRINTF (("EC STATE is now %d\n", japi_ec_state));
+               pthread_cond_signal(&japi_ec_state_starting_cv);
+            JAPI_UNLOCK_EC_STATE();
+            up_and_running = true;
+         }
+         
       } /* else */
 
       if (!stop_ec) {

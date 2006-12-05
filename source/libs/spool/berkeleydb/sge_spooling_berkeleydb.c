@@ -51,6 +51,7 @@
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_suser.h"
 
 #include "spool/sge_spooling_utilities.h"
 #include "spool/sge_spooling_database.h"
@@ -683,7 +684,8 @@ spool_berkeleydb_default_list_func(lList **answer_list,
                            }
                         }
                      }
-
+                     job_list_register_new_job(*(object_type_get_master_list(SGE_TYPE_JOB)), mconf_get_max_jobs(), 1);
+                     suser_register_new_job(job, mconf_get_max_u_jobs(), 1);
                      if (!ret) {
                         break;
                      }

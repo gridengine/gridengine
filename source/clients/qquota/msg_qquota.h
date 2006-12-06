@@ -45,5 +45,8 @@
 #define MSG_QQUOTA_P_OPT_USAGE        _MESSAGE(10004, _("display only selected projects"))
 #define MSG_QQUOTA_q_OPT_USAGE        _MESSAGE(10005, _("display only selected queues"))
 
+#define MSG_QQUOTA_HELP_WCPROJECT     _MESSAGE(10010, _("wildcard expression matching a project"))
+#define MSG_QQUOTA_HELP_WCPE          _MESSAGE(10011, _("wildcard expression matching a parallel environment"))
+
 #endif /* __MSG_QQUOTA_H */
 

@@ -347,14 +347,26 @@ qquota_usage(FILE *fp)
 
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    fprintf(fp,"%s qquota [options]\n", MSG_SRC_USAGE);
-   fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
-   fprintf(fp, "  [-h host_list]             %s\n", MSG_QQUOTA_h_OPT_USAGE);
-   fprintf(fp, "  [-l resource_attributes]   %s\n", MSG_QQUOTA_l_OPT_USAGE);
-   fprintf(fp, "  [-u user_list]             %s\n", MSG_QQUOTA_u_OPT_USAGE);
-   fprintf(fp, "  [-pe pe_list]              %s\n", MSG_QQUOTA_pe_OPT_USAGE);
-   fprintf(fp, "  [-P project_list]          %s\n", MSG_QQUOTA_P_OPT_USAGE); 
-   fprintf(fp, "  [-q wc_queue_list]         %s\n", MSG_QQUOTA_q_OPT_USAGE); 
-   fprintf(fp, "  [-xml]                     %s\n", MSG_COMMON_xml_OPT_USAGE);
+   fprintf(fp, "  [-help]                              %s\n", MSG_COMMON_help_OPT_USAGE);
+   fprintf(fp, "  [-h wc_host_list|wc_hostgroup_list]  %s\n", MSG_QQUOTA_h_OPT_USAGE);
+   fprintf(fp, "  [-l resource_attributes]             %s\n", MSG_QQUOTA_l_OPT_USAGE);
+   fprintf(fp, "  [-u wc_user]                         %s\n", MSG_QQUOTA_u_OPT_USAGE);
+   fprintf(fp, "  [-pe wc_pe_list]                     %s\n", MSG_QQUOTA_pe_OPT_USAGE);
+   fprintf(fp, "  [-P wc_project_list]                 %s\n", MSG_QQUOTA_P_OPT_USAGE); 
+   fprintf(fp, "  [-q wc_cqueue_list]                  %s\n", MSG_QQUOTA_q_OPT_USAGE); 
+   fprintf(fp, "  [-xml]                               %s\n", MSG_COMMON_xml_OPT_USAGE);
+   fprintf(fp, "\n");
+   fprintf(fp, "resource_attributes      resource_name,resource_name,...\n");
+   fprintf(fp, "wc_cqueue                %s\n", MSG_QSTAT_HELP_WCCQ);
+   fprintf(fp, "wc_cqueue_list           wc_cqueue[,wc_cqueue,...]\n");
+   fprintf(fp, "wc_host                  %s\n", MSG_QSTAT_HELP_WCHOST);
+   fprintf(fp, "wc_host_list             wc_host[,wc_host,...]\n");
+   fprintf(fp, "wc_hostgroup             %s\n", MSG_QSTAT_HELP_WCHG);
+   fprintf(fp, "wc_hostgroup_list        wc_hostgroup[,wc_hostgroup,...]\n");
+   fprintf(fp, "wc_pe                    %s\n", MSG_QQUOTA_HELP_WCPE);
+   fprintf(fp, "wc_pe_list               wc_pe[,wc_pe,...]\n");
+   fprintf(fp, "wc_project               %s\n", MSG_QQUOTA_HELP_WCPROJECT);
+   fprintf(fp, "wc_project_list          wc_project[,wc_project,...]\n");
 
    DRETURN(true);
 }

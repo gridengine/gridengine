@@ -136,6 +136,13 @@ int main(int argc,char *argv[])
 #include <limits.h>
 #endif
 
+#if defined(DARWIN)
+#include <sys/sysctl.h>
+#include <mach/mach.h>
+#include <mach/task.h>
+#include <mach/mach_init.h>
+#endif
+
 
 #if defined(HP1164)
 #include <sys/param.h>
@@ -212,7 +219,7 @@ int sup_grp_in_proc;
    }
 #endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA) || defined(FREEBSD)
+#if defined(LINUX) || defined(SOLARIS) || defined(ALPHA) || defined(FREEBSD) || defined(DARWIN)
 
 void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
    tShepherd_trace shepherd_trace)
@@ -228,7 +235,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
    kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, kerrbuf);
    if (kd == NULL) {
 #if DEBUG
-      fprintf(stderr, "kvm_getprocs: error %s\n", kerrbuf);
+      fprintf(stderr, "kvm_openfiles: error %s\n", kerrbuf);
 #endif
       return;
    }
@@ -247,8 +254,8 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
 	    char err_str[256];
 
 	    if (procs->ki_uid != 0 && procs->ki_ruid != 0 &&
-		procs->ki_svuid != 0 &&
-		procs->ki_rgid != 0 && procs->ki_svgid != 0) {
+           procs->ki_svuid != 0 &&
+           procs->ki_rgid != 0 && procs->ki_svgid != 0) {
 	       kill(procs->ki_pid, sig);
 	       sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI ,
 		       sge_u32c(procs->ki_pid), add_grp_id);
@@ -262,6 +269,47 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
       }
    }
    kvm_close(kd);
+#elif defined(DARWIN)
+   int i, nprocs;
+   struct kinfo_proc *procs;
+   struct kinfo_proc *procs_begin;
+   int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+   size_t bufSize = 0;
+
+   if (sysctl(mib, 4, NULL, &bufSize, NULL, 0) < 0) {
+      return;
+   }
+   if ((procs = (struct kinfo_proc *)malloc(bufSize)) == NULL) {
+      return;
+   }
+   if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
+      FREE(procs);
+      return;
+   }
+   procs_begin = procs;
+   nprocs = bufSize/sizeof(struct kinfo_proc);
+
+   for (; nprocs >= 0; nprocs--, procs++) {
+      for (i = 0; i < procs->kp_eproc.e_ucred.cr_ngroups; i++) {
+         if (procs->kp_eproc.e_ucred.cr_groups[i] == add_grp_id) {
+            char err_str[256];
+
+            if (procs->kp_eproc.e_ucred.cr_uid != 0 && procs->kp_eproc.e_pcred.p_ruid != 0 &&
+                procs->kp_eproc.e_pcred.p_svuid != 0 &&
+                procs->kp_eproc.e_pcred.p_rgid != 0 && procs->kp_eproc.e_pcred.p_svgid != 0) {
+               kill(procs->kp_proc.p_pid, sig);
+               sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI ,
+                  sge_u32c(procs->kp_proc.p_pid), add_grp_id);
+            } else {
+               sprintf(err_str, MSG_SGE_DONOTKILLROOTPROCESSXY_UI ,
+                  sge_u32c(procs->kp_proc.p_pid), add_grp_id);
+            }
+            if (shepherd_trace)
+               shepherd_trace(err_str);
+         }
+      }
+   }
+   FREE(procs_begin)
 #endif
 }
 #endif
@@ -1435,9 +1483,7 @@ free_job(job_elem_t *job_elem)
    free(job_elem);
 }
 
-int
-psRetrieveOSJobData(void)
-{
+static int psRetrieveOSJobData(void) {
    lnk_link_t *curr, *next;
    time_t time_stamp = get_gmt();
    static time_t next_time, pnext_time;
@@ -1457,8 +1503,7 @@ psRetrieveOSJobData(void)
    DENTER(TOP_LAYER, "psRetrieveOSJobData");
 
    if (time_stamp <= next_time) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
    next_time = time_stamp + ps_config.job_collection_interval;
 
@@ -1523,8 +1568,7 @@ psRetrieveOSJobData(void)
                 proc_elem = (proc_elem_t *) malloc(sizeof(proc_elem_t));
 
                 if (proc_elem == NULL) {
-                    DEXIT;
-                    return 0;
+                    DRETURN(0);
                 }
 
                 memset(proc_elem, 0, sizeof(proc_elem_t));
@@ -1601,8 +1645,7 @@ psRetrieveOSJobData(void)
                 proc_elem = (proc_elem_t *) malloc(sizeof(proc_elem_t));
 
                 if (proc_elem == NULL) {
-                    DEXIT;
-                    return 0;
+                    DRETURN(0);
                 }
 
                 memset(proc_elem, 0, sizeof(proc_elem_t));
@@ -1654,24 +1697,18 @@ psRetrieveOSJobData(void)
       job_elem_t *job_elem;
       double old_time = 0.0;
       uint64 old_vmem = 0;
- 
+
       kd = kvm_openfiles(NULL, NULL, NULL, O_RDONLY, kerrbuf);
       if (kd == NULL) {
-#if DEBUG
-         fprintf(stderr, "kvm_getprocs: error %s\n", kerrbuf);
-#endif
-         DEXIT;
-         return -1;
+         DPRINTF(("kvm_openfiles: error %s\n", kerrbuf));
+         DRETURN(-1);
       }
 
       procs = kvm_getprocs(kd, KERN_PROC_ALL, 0, &nprocs);
       if (procs == NULL) {
-#if DEBUG
-         fprintf(stderr, "kvm_getprocs: error %s\n", kvm_geterr(kd));
-#endif
+         DPRINTF(("kvm_getprocs: error %s\n", kvm_geterr(kd)));
          kvm_close(kd);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
       for (; nprocs >= 0; nprocs--, procs++) {
          for (curr=job_list.next; curr != &job_list; curr=curr->next) {
@@ -1681,10 +1718,9 @@ psRetrieveOSJobData(void)
                if (job_elem->job.jd_jid == procs->ki_groups[i]) {
                   lnk_link_t  *curr2;
                   proc_elem_t *proc_elem;
-                  int newprocess;
-
-		  newprocess = 1;
-		  if (job_elem->job.jd_proccount != 0) {
+                  int newprocess = 1;
+                  
+                  if (job_elem->job.jd_proccount != 0) {
                      for (curr2=job_elem->procs.next; curr2 != &job_elem->procs; curr2=curr2->next) {
                         proc_elem = LNK_DATA(curr2, proc_elem_t, link);
 
@@ -1692,14 +1728,13 @@ psRetrieveOSJobData(void)
                            newprocess = 0;
                            break;
                         }
-		     }
-		  }
+                     }
+                  }
                   if (newprocess) {
                      proc_elem = malloc(sizeof(proc_elem_t));
                      if (proc_elem == NULL) {
-			 kvm_close(kd);
-                        DEXIT;
-                        return 0;
+                        kvm_close(kd);
+                        DRETURN(0);
                      }
 
                      memset(proc_elem, 0, sizeof(proc_elem_t));
@@ -1724,15 +1759,126 @@ psRetrieveOSJobData(void)
                   proc_elem->proc.pd_gid    = procs->ki_rgid;
                   proc_elem->vmem           = procs->ki_size;
                   proc_elem->rss            = procs->ki_rssize;
-
                   proc_elem->mem = ((proc_elem->proc.pd_stime + proc_elem->proc.pd_utime) - old_time) *
-                                   (( old_vmem + proc_elem->vmem)/2);
-	       }
-	    }
+                                    ((old_vmem + proc_elem->vmem)/2);
+               }
+            }
          }
       }
-
       kvm_close(kd);
+   }
+#elif defined(DARWIN)
+   {
+      int i, nprocs;
+      struct kinfo_proc *procs;
+      struct kinfo_proc *procs_begin;
+      job_elem_t *job_elem;
+      double old_time = 0.0;
+      uint64 old_vmem = 0;
+      int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+      size_t bufSize = 0;
+
+      if (sysctl(mib, 4, NULL, &bufSize, NULL, 0) < 0) {
+         DPRINTF(("sysctl() failed(1)\n"));
+         DRETURN(-1);
+      }
+      if ((procs = (struct kinfo_proc *)malloc(bufSize)) == NULL) {
+         DPRINTF(("malloc() failed\n"));
+         DRETURN(-1);
+      }
+      if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
+         DPRINTF(("sysctl() failed(2)\n"));
+         FREE(procs);
+         DRETURN(-1);
+      }
+      procs_begin = procs;
+      nprocs = bufSize/sizeof(struct kinfo_proc);
+      
+      for (; nprocs >= 0; nprocs--, procs++) {
+         for (curr=job_list.next; curr != &job_list; curr=curr->next) {
+            job_elem = LNK_DATA(curr, job_elem_t, link);
+
+            for (i = 0; i < procs->kp_eproc.e_ucred.cr_ngroups; i++) {
+               if (job_elem->job.jd_jid == procs->kp_eproc.e_ucred.cr_groups[i]) {
+                  lnk_link_t  *curr2;
+                  proc_elem_t *proc_elem;
+                  int newprocess = 1;
+                  
+                  if (job_elem->job.jd_proccount != 0) {
+                     for (curr2=job_elem->procs.next; curr2 != &job_elem->procs; curr2=curr2->next) {
+                        proc_elem = LNK_DATA(curr2, proc_elem_t, link);
+
+                        if (proc_elem->proc.pd_pid == procs->kp_proc.p_pid) {
+                           newprocess = 0;
+                           break;
+                        }
+                     }
+                  }
+                  if (newprocess) {
+                     proc_elem = malloc(sizeof(proc_elem_t));
+                     if (proc_elem == NULL) {
+                        FREE(procs_begin);
+                        DRETURN(0);
+                     }
+
+                     memset(proc_elem, 0, sizeof(proc_elem_t));
+                     proc_elem->proc.pd_length = sizeof(psProc_t);
+                     proc_elem->proc.pd_state  = 1; /* active */
+                     proc_elem->proc.pd_pstart = procs->kp_proc.p_starttime.tv_sec;
+
+                     LNK_ADD(job_elem->procs.prev, &proc_elem->link);
+                     job_elem->job.jd_proccount++;
+                  } else {
+                     /* save previous usage data - needed to build delta usage */
+                     old_time = proc_elem->proc.pd_utime + proc_elem->proc.pd_stime;
+                     old_vmem  = proc_elem->vmem;
+                  }
+                  proc_elem->proc.pd_tstamp = time_stamp;
+                  proc_elem->proc.pd_pid    = procs->kp_proc.p_pid;
+                  DPRINTF(("pid: %d\n", proc_elem->proc.pd_pid));
+
+                  {
+                     struct task_basic_info t_info;
+                     struct task_thread_times_info t_times_info;
+                     mach_port_t task;
+                     unsigned int info_count = TASK_BASIC_INFO_COUNT;
+
+                     if (task_for_pid(mach_task_self(), proc_elem->proc.pd_pid, &task) != KERN_SUCCESS) {
+                        DPRINTF(("task_for_pid() error"));
+                     } else {
+                        if (task_info(task, TASK_BASIC_INFO, (task_info_t)&t_info, &info_count) != KERN_SUCCESS) {
+                           DPRINTF(("task_info() error"));
+                        } else {
+                           proc_elem->vmem           = t_info.virtual_size/1024;
+                           DPRINTF(("vmem: %d\n", proc_elem->vmem));
+                           proc_elem->rss            = t_info.resident_size/1024;
+                           DPRINTF(("rss: %d\n", proc_elem->rss));
+                        }
+
+                        info_count = TASK_THREAD_TIMES_INFO_COUNT;
+                        if (task_info(task, TASK_THREAD_TIMES_INFO, (task_info_t)&t_times_info, &info_count) != KERN_SUCCESS) {
+                           DPRINTF(("task_info() error\n"));
+                        } else {
+                           proc_elem->proc.pd_utime  = t_times_info.user_time.seconds;
+                           DPRINTF(("user_time: %d\n", proc_elem->proc.pd_utime));
+                           proc_elem->proc.pd_stime  = t_times_info.system_time.seconds;
+                           DPRINTF(("system_time: %d\n", proc_elem->proc.pd_stime));
+                        }
+                     }
+                  }
+
+                  proc_elem->proc.pd_uid    = procs->kp_eproc.e_ucred.cr_uid;
+                  DPRINTF(("uid: %d\n", proc_elem->proc.pd_uid));
+                  proc_elem->proc.pd_gid    = procs->kp_eproc.e_pcred.p_rgid;
+                  DPRINTF(("gid: %d\n", proc_elem->proc.pd_gid));
+                  proc_elem->mem = ((proc_elem->proc.pd_stime + proc_elem->proc.pd_utime) - old_time) *
+                                         ((old_vmem + proc_elem->vmem)/2);
+                  DPRINTF(("mem %d\n", proc_elem->mem));
+               }
+            }
+         }
+      }
+      FREE(procs_begin);
    }
 #elif defined(NECSX4) || defined(NECSX5)
    {
@@ -1800,13 +1946,11 @@ psRetrieveOSJobData(void)
       clk_tck = sysconf(_SC_CLK_TCK);
 
    if (read_kernel_table(SESS, (void **)&st, &st_size, &nsess)<0) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (read_kernel_table(PROCTAB, (void **)&pt, &pt_size, &nproc)<0) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* scan session table */
@@ -1873,8 +2017,7 @@ psRetrieveOSJobData(void)
          proc_elem = (proc_elem_t *)malloc(sizeof(proc_elem_t));
          if (!proc_elem) {
             sprintf(ps_errstr, MSG_MEMORY_MALLOCFAILURE );
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
          memset(proc_elem, 0, sizeof(proc_elem_t));
          proc_elem->proc.pd_length = sizeof(psProc_t);
@@ -2281,7 +2424,7 @@ psRetrieveOSJobData(void)
 
       }
 
-#elif defined(ALPHA) || defined(FREEBSD) || defined(LINUX) || defined(SOLARIS) || defined(HP1164)
+#elif defined(ALPHA) || defined(FREEBSD) || defined(LINUX) || defined(SOLARIS) || defined(HP1164) || defined(DARWIN)
       {
          int proccount;
          lnk_link_t *currp, *nextp;
@@ -2395,8 +2538,7 @@ psRetrieveOSJobData(void)
       pnext_time = time_stamp + ps_config.prc_collection_interval;
 
    sprintf(ps_errstr, MSG_SGE_PSRETRIEVEOSJOBDATASUCCESSFULLYCOMPLETED );
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static time_t start_time;

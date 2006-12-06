@@ -127,7 +127,7 @@ void setosjobid(pid_t sid, gid_t *add_grp_id_ptr, struct passwd *pw)
    sprintf(err_str, "setosjobid: uid = "pid_t_fmt", euid = "pid_t_fmt, getuid(), geteuid());
    shepherd_trace(err_str);
 
-#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD)
+#  if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
       /* Read SgeId from config-File and create Addgrpid-File */
       {  
          char *cp;

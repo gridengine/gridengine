@@ -302,7 +302,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       fprintf(fp, "job_identifier_list      [job_id|job_name|pattern]{, [job_id|job_name|pattern]}\n");
       fprintf(fp, "resource_list            resource[=value][,resource[=value],...]\n");
       fprintf(fp, "user_list                user|@group[,user|@group],...]\n");
-      fprintf(fp, "resource_attributes      resource,resource,.\n");
+      fprintf(fp, "resource_attributes      resource,resource,...\n");
       fprintf(fp, "wc_cqueue                %s\n", MSG_QSTAT_HELP_WCCQ);
       fprintf(fp, "wc_host                  %s\n", MSG_QSTAT_HELP_WCHOST);
       fprintf(fp, "wc_hostgroup             %s\n", MSG_QSTAT_HELP_WCHG);

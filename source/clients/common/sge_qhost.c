@@ -727,7 +727,7 @@ lList *hostref_list,
 lList *user_list,
 u_long32 show
 ) {
-   lCondition *where= NULL, *nw = NULL, *qw = NULL, *jw = NULL, *gc_where;
+   lCondition *where= NULL, *nw = NULL, *jw = NULL, *gc_where;
    lEnumeration *q_all = NULL, *j_all = NULL, *ce_all = NULL, 
                 *eh_all = NULL, *pe_all = NULL, *gc_what;
    lListElem *ep = NULL;
@@ -783,7 +783,6 @@ u_long32 show
                          answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
                          NULL, NULL, q_all, NULL, &state, true);
    lFreeWhat(&q_all);
-   lFreeWhere(&qw);
 
    if (answer_list_has_error(answer_list)) {
       DRETURN(false);

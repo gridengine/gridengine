@@ -152,13 +152,13 @@ sge_write_rusage(dstring *buffer,
       if (pe_task != NULL) {
          reported_list = lGetList(pe_task, PET_reported_usage);
          if (reported_list == NULL) {
-            reported_list = lCreateList("reported usage", UA_Type);
+            reported_list = lCreateList("reported_usage", UA_Type);
             lSetList(pe_task, PET_reported_usage, reported_list);
          }
       } else {
          reported_list = lGetList(ja_task, JAT_reported_usage_list);
          if (reported_list == NULL) {
-            reported_list = lCreateList("reported usage", UA_Type);
+            reported_list = lCreateList("reported_usage", UA_Type);
             lSetList(ja_task, JAT_reported_usage_list, reported_list);
          }
       }

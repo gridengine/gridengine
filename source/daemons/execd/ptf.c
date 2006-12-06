@@ -44,7 +44,7 @@
 
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
-#if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST) || defined(HP1164) || defined(HP1164) || defined(FREEBSD)
+#if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST) || defined(HP1164) || defined(HP1164) || defined(FREEBSD) || defined(DARWIN)
 #   define USE_DC
 #endif
 
@@ -82,7 +82,7 @@
 #  include <sys/category.h>
 #endif
 
-#if defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
+#if defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
 #  include <sys/resource.h>
 #endif
 
@@ -219,7 +219,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri);
 
 static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri);
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
 
 static void ptf_setpriority_addgrpid(lListElem *job, lListElem *osjob,
                                      long pri);
@@ -367,7 +367,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
       lSetDouble(usage, UA_value, 0);
       lAppendElem(usage_list, usage);
 
-#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164) || defined(AIX) || defined(FREEBSD)
+#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(HP1164) || defined(AIX) || defined(FREEBSD) || defined(DARWIN)
       usage = lCreateElem(UA_Type);
       lSetString(usage, UA_name, USAGE_ATTR_VMEM);
       lSetDouble(usage, UA_value, 0);
@@ -496,7 +496,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
    ptf_setpriority_ash(job, osjob, pri);
 #elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    ptf_setpriority_jobid(job, osjob, pri);
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
    ptf_setpriority_addgrpid(job, osjob, pri);
 #endif
 }
@@ -715,7 +715,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
    DEXIT;
 }
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
 
 /****** execd/ptf/ptf_setpriority_addgrpid() **********************************
 *  NAME
@@ -727,7 +727,7 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 *
 *  FUNCTION
 *     This function is only available for the architecture SOLARIS, ALPHA,
-*     LINUX, and FREEBSD. All processes belonging to "job" and "osjob" will
+*     LINUX, DARWIN and FREEBSD. All processes belonging to "job" and "osjob" will
 *     get a new priority.
 *
 *     This function assumes the the "max" priority is smaller than the "min"
@@ -851,7 +851,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
 
    if (!where) {
       CRITICAL((SGE_EVENT, MSG_WHERE_FAILEDTOBUILDWHERECONDITION));
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (job_elem && (*job_elem)) {
@@ -869,8 +869,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
    }
 
    lFreeWhere(&where);
-   DEXIT;
-   return osjob;
+   DRETURN(osjob);
 }
 
 
@@ -1089,7 +1088,7 @@ static void ptf_get_usage_from_data_collector(void)
                   INCPROCPTR(procs, procs->pd_length);
                }
 
-               jobs = (struct psJob_s *) procs;
+               jobs = (struct psJob_s *)procs;
                lSetList(osjob, JO_pid_list, pidlist);
             } else {
                lSetList(osjob, JO_pid_list, NULL);
@@ -1983,7 +1982,7 @@ int ptf_init(void)
       }
    }
 
-#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD)
+#elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
    if (getuid() == 0) {
       if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {
          ERROR((SGE_EVENT, MSG_PRIO_SETPRIOFAILED_S, strerror(errno)));

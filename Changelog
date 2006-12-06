@@ -1,3 +1,10 @@
+RD-2006-12-06-0: Enhancem:  PDC for DARWIN
+                            improved qquota help output
+                 Changed:   execd, shepherd
+                 Issue:     2130
+                 Bugtraq:   6501447
+                 Review:    JG
+
 MP-2006-12-06-0: Bugfix:    fixed shepherd error state when there is a problem 
                             with the sgepasswd file only when the file is missing
                             should the whole shepherd go into error state,

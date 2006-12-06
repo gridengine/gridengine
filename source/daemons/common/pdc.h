@@ -187,7 +187,7 @@ extern long pagesize;
    int sup_groups_in_proc(void);
 #endif
 
-#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(FREEBSD)
+#if defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN)
    void pdc_kill_addgrpid(gid_t, int, tShepherd_trace);
 #endif
 

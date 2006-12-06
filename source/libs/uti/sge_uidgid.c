@@ -867,6 +867,10 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
          res = uidgid_read_passwd(pw->pw_name, &pass, err_str);
 
          if(res != 0) {
+            /* map uidgid_read_passwd() return value to
+             * sge_set_uid_gid_addgrp() return value.
+             */
+            res++;
             FREE(pass);
             return res;
          }
@@ -876,7 +880,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
             sprintf(buf, MSG_SYSTEM_SETUSERFAILED_UU, sge_u32c(pw->pw_uid),
                     sge_u32c(pw->pw_gid));
             strcat(err_str, buf);
-            return 2;
+            return 4;
          }
          FREE(pass);
       }

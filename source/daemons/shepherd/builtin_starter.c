@@ -169,6 +169,7 @@ int truncate_stderr_out
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
+   int   res;
    char target_user_buffer[TARGET_USER_BUFFER_SIZE];
 #endif
 
@@ -327,13 +328,12 @@ int truncate_stderr_out
       && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       char *pass = NULL;
       uid_t uid;
-      int   res;
 
       uid = geteuid();
       seteuid(SGE_SUPERUSER_UID);
-      sge_get_passwd(target_user, &pass, err_str);
+      res = uidgid_read_passwd(target_user, &pass, err_str);
       seteuid(uid);
-      
+
       if(res == 0) {
          strlcpy(user_passwd, pass, MAX_STRING_SIZE);
          FREE(pass);
@@ -383,12 +383,12 @@ int truncate_stderr_out
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
       shepherd_trace(err_str);
    } 
-   else if (ret > 0) {
-      if(ret == 1) {
+   else if (ret > 1) {
+      if(ret == 2) {
          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-      } else if (ret == 2) {
-         shepherd_state = SSTATE_PASSWD_MISSING;
       } else if (ret == 3) {
+         shepherd_state = SSTATE_PASSWD_MISSING;
+      } else if (ret == 4) {
          shepherd_state = SSTATE_PASSWD_WRONG;
       }
       /*

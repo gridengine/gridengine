@@ -1,3 +1,10 @@
+MP-2006-12-06-1: Bugfix:    Windows SGE_HELPER_SERVICE created registry entries
+                            completely temporary and no other application 
+                            could write to that path.
+                 Changed:   experimental/wingrid/SGE_Helper_Service/Communication.cpp
+                 Bugster:   6471881
+                 Review     HP
+ 
 MP-2006-12-06-0: Bugfix:    fixed error handling values in the shepherd 
                  Changed:   /source/daemons/shepherd/builtin_starter.c
                             /source/libs/uti/sge_uidgid.c

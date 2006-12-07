@@ -383,7 +383,7 @@ int truncate_stderr_out
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
       shepherd_trace(err_str);
    } 
-   else if (ret > 1) {
+   else if (ret > 0) {
       if(ret == 2) {
          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
       } else if (ret == 3) {

@@ -1,11 +1,14 @@
+RD-2006-12-07-0: Docs:      Clearified mem description in accounting.5
+                 Review:    AH
+
 MP-2006-12-07-1: Bugfix:    Adding missing error handing for calls to
                             sge_set_uid_gid_addgrp() function
-         Changed:   daemons/shepherd/builtin_starter.c
-         Review:    HP
+                 Changed:   daemons/shepherd/builtin_starter.c
+                 Review:    HP
 
 MP-2006-12-07-0: Bugfix:    error handling didn't account for value of 1
-         Changed:           source/daemons/shepherd/builtin_starter.c
-         Review:            HP
+                 Changed:           source/daemons/shepherd/builtin_starter.c
+                 Review:            HP
 
 RD-2006-12-06-0: Enhancem:  PDC for DARWIN
                             improved qquota help output
@@ -2475,7 +2478,7 @@ RC-2005-10-08-1: Enhancem:  support gcc4 as the build compiler (con't)
 
 RC-2005-10-08-0: Enhancem:  PDC for AIX
                  Changed :  execd, shepherd
-                 Review  :  pending
+                 Review  :  RD
 
 RC-2005-10-07-0: Enhancem:  PDC for HP-UX
                  Changed :  execd, shepherd

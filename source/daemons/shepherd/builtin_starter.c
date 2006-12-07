@@ -789,16 +789,19 @@ int truncate_stderr_out
                                       add_grp_id, err_str, use_qsub_gid, gid);
       }
       if (ret < 0) {
-         shepherd_trace(err_str);
-         sprintf(err_str, "try running further with uid=%d", (int)getuid());
-         shepherd_trace(err_str);
-      } 
-      else if (ret > 0) {
-         /*
-         ** violation of min_gid or min_uid
-         */
-         shepherd_error(err_str);
-      }
+        shepherd_trace(err_str);
+        sprintf(err_str, "try running further with uid=%d", (int)getuid());
+        shepherd_trace(err_str);
+      } else if (ret > 0) {
+        if(ret == 2) {
+          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+        } else if (ret == 3) {
+          shepherd_state = SSTATE_PASSWD_MISSING;
+        } else if (ret == 4) {
+          shepherd_state = SSTATE_PASSWD_WRONG;
+        }
+        shepherd_error(err_str);
+      }      
    }
    shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
       (int)getuid(), (int)geteuid());

@@ -466,10 +466,10 @@ If the scope contains a usergroup then it gets also expanded and the limit count
 For example if a hostgroup @lx_hosts contains host durin and carc both rules are equivalent:
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
 <pre>1)
-  limit users * on host durin to virtual_free=10g
-  limit users * on host carc to virtual_free=10g
+  limit users * hosts durin to virtual_free=10g
+  limit users * hosts carc to virtual_free=10g
 2)
-  limit users * on host `@lx_hosts` to virtual_free=10g
+  limit users * hosts `@lx_hosts` to virtual_free=10g
 </pre>
 </td></tr></tbody></table>
 <p>
@@ -994,14 +994,14 @@ Rule Set:
 
 {
  name max_linux
- limit users * on hosts @linux to slots=5
+ limit users * hosts @linux to slots=5
 }
 
 {
  name max_per_host
- limit users roland on hosts `@linux` to slots=2
- limit users `*` on hosts `@linux` to slots=1
- limit users * on hosts * to slots=0
+ limit users roland hosts `@linux` to slots=2
+ limit users `*` hosts `@linux` to slots=1
+ limit users * hosts * to slots=0
 }
 </pre>
 </td></tr></tbody></table>

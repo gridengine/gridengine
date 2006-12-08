@@ -89,6 +89,9 @@ PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 MPI_FILES="README README.atm mpi.template mpich.template"
 MPI_SCRIPTS="hostname  mpi.sh mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
 
+DTRACE_FILES="README-dtrace.txt monitor.d"
+DTRACE_SCRIPTS="monitor.sh"
+
 MYRINET_FILES="README README.x mpi.template mpich.template \
                mpich_multi.template"
 MYRINET_SCRIPTS="gmps sge_mpirun sge_mpirun.x startmpi.sh startmpi.sh.x \
@@ -142,6 +145,7 @@ ErrUsage()
    echo "       \"common\"     = arch. independent, no man/ and no doc/"
    echo "       \"distcommon\" = arch. independent stuff + man + doc/"
    echo "       \"doc\"        = doc/ directory tree"
+   echo "       \"dtrace\"     = Dtrace scripts"
    echo "       \"examples\"   = examples/ directory tree without binaries"
    echo "       \"iscript\"    = install script"
    echo "       \"jobs\"       = examples/jobsbin/ example binaries"
@@ -478,6 +482,7 @@ instutiltree=false
 instexamples=false
 instman=false
 instdoc=false
+instdtrace=false
 insttxtdoc=false
 instjavadoc=false
 instpvm=false
@@ -767,6 +772,7 @@ for prog in $PROG; do
          instcommon=true
          inst3rdparty=true
          instckpt=true
+         instdtrace=true
          instexamples=true
          instiscript=true
          instmpi=true
@@ -791,6 +797,10 @@ for prog in $PROG; do
          insttxtdoc=true
          instcommon=true
          instjavadoc=true
+         ;;
+      dtrace)    
+         instdtrace=true
+         instcommon=true
          ;;
       examples)
          instexamples=true
@@ -1007,6 +1017,24 @@ if [ $instcommon = true ]; then
       done
 
       Cleanup include
+   fi
+
+   if [ $instdtrace = true ]; then
+      echo Installing \"Dtrace scripts\"
+      rm -rf $DEST_SGE_ROOT/dtrace
+      MakeDir dtrace
+
+      for f in $DTRACE_FILES; do
+         Execute cp scripts/dtrace/$f $DEST_SGE_ROOT/dtrace
+         Execute chmod 644 $DEST_SGE_ROOT/dtrace/$f
+      done
+
+      for f in $DTRACE_SCRIPTS; do
+         Execute cp scripts/dtrace/$f $DEST_SGE_ROOT/dtrace
+         Execute chmod 755 $DEST_SGE_ROOT/dtrace/$f
+      done
+
+      Cleanup dtrace
    fi
 
    if [ $instmpi = true ]; then

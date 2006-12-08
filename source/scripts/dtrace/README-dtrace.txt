@@ -1,5 +1,5 @@
-                            Monitoring Grid Engine with dtrace
-                            ----------------------------------
+                Monitoring Grid Engine Masters with dtrace
+                ------------------------------------------
 
 Content
 -------
@@ -131,6 +131,10 @@ Content
           Shows incoming qmaster request probes. This option allows 
           diving into cases where you presume there must be someone
           flooding your qmaster.
+
+      -verify
+
+          Just verify probes are functioning and exit(0) then.
 
    besides, for ease of use any critical/error/warning logging appears
    in monitor.sh output.

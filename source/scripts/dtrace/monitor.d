@@ -34,6 +34,7 @@
       $3 = interval
       $4 = show qmaster spooling probes
       $5 = show incoming qmaster request probes
+      $6 = do probe verification only
 */
 
 BEGIN
@@ -78,6 +79,13 @@ pid$1::sge_log:entry, pid$2::sge_log:entry
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 profile:::tick-$3
+/$6 == 1/
+{
+   exit(0);
+}
+
+profile:::tick-$3
+/$6 == 0/
 {
    printf("%20Y | %7d %7d|%4d %4d %4d|%7d %7d %7d|%7d %7d|%7d %7d %7d %7d|%7d %7d %7d %7d",
         walltimestamp, wrt, wrt_total/1000000, rep, gdi, ack, dsp, dsp_total, sad, 
@@ -100,6 +108,7 @@ profile:::tick-$3
    ulck0 = 0;
    lck1 = 0;
    ulck1 = 0;
+
 }
 
 /* -------------------------------------- [spooling] ---------------------------------- */
@@ -281,3 +290,4 @@ pid$1::cl_message_list_append_send:return
 }
 
 /* --------------------------------------- [locks] ------------------------------------ */
+

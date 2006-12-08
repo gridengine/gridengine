@@ -8,6 +8,7 @@ Usage()
    echo "   -interval   <time>     use statistics interval other than \"15sec\""
    echo "   -spooling              show qmaster spooling probes"
    echo "   -requests              show incoming qmaster request probes"
+   echo "   -verify                do probe verifcation only"
 }
 
 # monitor.sh defaults
@@ -15,9 +16,14 @@ cell=default
 interval=15sec
 spooling_probes=0
 request_probes=0
+verify=0
 
 while [ $# -gt 0 ]; do
    case "$1" in
+      -verify)
+         verify=1
+         shift
+         ;;
       -spooling)
          spooling_probes=1
          shift
@@ -63,4 +69,4 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-/usr/sbin/dtrace -s ./monitor.d $master $schedd $interval $spooling_probes $request_probes
+/usr/sbin/dtrace -s ./monitor.d $master $schedd $interval $spooling_probes $request_probes $verify

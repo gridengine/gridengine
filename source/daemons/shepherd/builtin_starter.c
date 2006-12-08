@@ -169,7 +169,6 @@ int truncate_stderr_out
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
-   int   res;
    char target_user_buffer[TARGET_USER_BUFFER_SIZE];
 #endif
 
@@ -326,8 +325,9 @@ int truncate_stderr_out
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
       && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
-      char *pass = NULL;
+      char  *pass = NULL;
       uid_t uid;
+      int   res;
 
       uid = geteuid();
       seteuid(SGE_SUPERUSER_UID);

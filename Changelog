@@ -1,3 +1,7 @@
+HP-2006-12-08-0: Enhancem.: Code cleanup and improved documentation for checkin
+                            MP-2006-12-06-0
+                 Changed:   shepherd/builtin_starter.c, libs/uti/sge_uidgid.c
+                          
 RD-2006-12-08-0: Docs:      Corrected examples in Resource Quota Spec
                  Review:    JG
 

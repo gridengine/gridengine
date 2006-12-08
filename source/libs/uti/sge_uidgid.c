@@ -809,7 +809,9 @@ static int get_group_buffer_size(void)
 *         0 - OK
 *        -1 - we can't switch to user since we are not root
 *         1 - we can't switch to user or we can't set add_grp
-*         2 - switch to user failed
+*         2 - can't read sgepasswd file
+*         3 - no password entry in sgepasswd file
+*         4 - switch to user failed, likely wrong password for this user
 ******************************************************************************/
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, char *err_str,

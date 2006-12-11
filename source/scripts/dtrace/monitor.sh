@@ -58,12 +58,13 @@ if [ $SGE_ROOT = "" ]; then
    exit 1
 fi
 
-master=`cat $SGE_ROOT/$cell/spool/qmaster/qmaster.pid`
+qmaster_spool_dir=`grep '^qmaster_spool_dir' $SGE_ROOT/$cell/common/bootstrap|awk '{ print $2 }'`
+master=`cat $qmaster_spool_dir/qmaster.pid`
 if [ $? -ne 0 ]; then
    echo "Couldn't read sge_qmaster pid from \$SGE_ROOT/$cell/spool/qmaster/qmaster.pid"
    exit 1
 fi
-schedd=`cat $SGE_ROOT/$cell/spool/qmaster/schedd/schedd.pid`
+schedd=`cat $qmaster_spool_dir/schedd/schedd.pid`
 if [ $? -ne 0 ]; then
    echo "Couldn't read sge_schedd pid from \$SGE_ROOT/$cell/spool/qmaster/schedd/schedd.pid"
    exit 1

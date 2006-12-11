@@ -1,3 +1,6 @@
+AH-2006-12-11-0: Enhancem.: Determine qmaster_spool_dir based on bootstrap
+                            file in Dtrace monitor
+
 AH-2006-12-08-1: Enhancem.: Added probe verification option to Dtrace monitor
 
 AH-2006-12-08-0: Enhancem.: Added Dtrace monitor to distribution

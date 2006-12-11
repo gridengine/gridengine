@@ -256,4 +256,14 @@ authuser: authuser.o juti.o
 authuser.o: $(UTILBIN_DIR)/authuser.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/authuser.c -o authuser.o
 
+AUTHUSER_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
+
+authuser.exe: authuser.obj juti.obj
+	$(WINCC) authuser.obj juti.obj /link /OUT:authuser.exe $(AUTHUSER_WINLFLAGS) $(WINLIBS) netapi32.lib
+
+authuser.obj: $(UTILBIN_DIR)/authuser.c
+	$(WINCC) $(WINCFLAGS) -c $(UTILBIN_DIR)/authuser.c
+
+juti.obj: $(SDIR)/libs/juti/juti.c
+	$(WINCC) $(WINCFLAGS) -c $(SDIR)/libs/juti/juti.c
 

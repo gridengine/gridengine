@@ -1,3 +1,6 @@
+HP-2006-12-11-0: Enhancem.: Addes Windows version of authuser binary
+                 Changed:   utilbin/Makefile
+
 AH-2006-12-11-0: Enhancem.: Determine qmaster_spool_dir based on bootstrap
                             file in Dtrace monitor
 

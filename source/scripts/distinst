@@ -120,7 +120,7 @@ ErrUsage()
 {
    echo "Usage: distinst [-opts] [other archs] [-- other progs]"
    echo "       -all           = all binaries + common"
-   echo "       -allall        = all binaries + common + doc"
+   echo "       -allall        = all binaries + common + doc + arco"
    echo "       -basedir <dir> = define base directory for distribution"
    echo "       -bin           = all binaries and libraries"
    echo "       -help_arch     = show architectures table"
@@ -141,6 +141,7 @@ ErrUsage()
    echo "       -v             = more verbose"
    echo "       -vdir <dir>    = define version directory for distribution"
    echo "<other progs>:"
+   echo "       \"arco\"       = ARCo files (dbwriter, reporting)"
    echo "       \"ckpt\"       = checkpointing support files"
    echo "       \"common\"     = arch. independent, no man/ and no doc/"
    echo "       \"distcommon\" = arch. independent stuff + man + doc/"
@@ -496,6 +497,7 @@ inst3rdparty=false
 instclassictargets=false
 instopenssl=true
 instbdb=true
+instarco=false
 
 # Note: Until now default is 'true', but this is just intermediately
 # Actually it must be 'false'. Please remove this comment afterwards.
@@ -545,7 +547,7 @@ fi
 while [ $# -ge 1 ]; do
    case "$1" in
    -allall)
-      PROG="$DEFAULTPROG distcommon"
+      PROG="$DEFAULTPROG distcommon arco"
       instsharedlibs=true
       ;;
    -all)
@@ -767,6 +769,9 @@ echo
 
 for prog in $PROG; do
    case $prog in
+      arco)
+         instarco=true
+         ;;
       common|distcommon) 
          instdrmaa=true
          instcommon=true
@@ -1183,6 +1188,24 @@ if [ $instcommon = true ]; then
    echo
 fi
 
+if [ $instarco = true ]; then
+   ARCO_SOURCE_DIR=`pwd`/../arco/source
+   if [ -d "$ARCO_SOURCE_DIR" ]; then 
+      echo Installing \"ARCo\" directory tree
+      Execute rm -rf $DEST_SGE_ROOT/reporting
+      Execute rm -rf $DEST_SGE_ROOT/dbwriter
+      (cd $DEST_SGE_ROOT; \
+       Execute $TAR xvpzf $ARCO_SOURCE_DIR/dbwriter/dbwriter.tar.gz; \
+       Execute $TAR xvpzf $ARCO_SOURCE_DIR/reporting/reporting.tar.gz; \
+       chown -R root:root $DEST_SGE_ROOT/reporting $DEST_SGE_ROOT/dbwriter )
+      Cleanup reporting dbwriter 
+      echo ARCo part done
+      echo
+   else
+      echo "ARCo dir \"$ARCO_SOURCE_DIR\" does not exist"
+   fi
+fi
+
 # ------------------  Copy architecure dependent stuff ----------------------
 #
 
@@ -1206,7 +1229,7 @@ for i in $ARCH; do
 
       for prog in $PROG; do
          case $prog in
-            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin)
+            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin|arco)
                : 
                ;;
             qmake)

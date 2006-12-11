@@ -1,4 +1,8 @@
-HP-2006-12-11-0: Enhancem.: Addes Windows version of authuser binary
+RD-2006-12-11-0: Enhancem.: Added arco switch to distinst & mk_dist
+                 Changed:   scripts/mk_dist scripts/distinst
+                 Review:    AA
+
+HP-2006-12-11-0: Enhancem.: Added Windows version of authuser binary
                  Changed:   utilbin/Makefile
 
 AH-2006-12-11-0: Enhancem.: Determine qmaster_spool_dir based on bootstrap
@@ -214,7 +218,6 @@ RH-2006-11-13-0: Bugfix:    Broken compile of jgdi on denethor
 JG-2006-11-13-0: Bugfix:    Fixed messages file msg_utilbin.h.
                  Review:    AA 
 
->>>>>>> 1.3551
 RD-2006-11-10-0: Bugfix:    fixed some limitation rule set bugs 
                             - qconf -Xattr with limitation_rule set were broken
                             - filter matching on queue level was broken

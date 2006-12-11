@@ -54,6 +54,7 @@ ErrUsage()
    echo "    -bin               create tar.gz files from binaries in bin/,"
    echo "                       utilbin/ and examples/jobsbin"
    echo "    -common            create tar.gz file of \"common\" files"
+   echo "    -arco              create tar.gz file of \"arco\" files"
    echo "    -doc               create tar.gz file of \"doc\" files"  
    echo "    -rpm               create RPM packages instead of tar files"
    echo ""
@@ -162,6 +163,12 @@ while [ $ARGC -gt 0 ]; do
       shift 
       ARGC=`expr $ARGC - 1`
       ;;
+   -arco)
+      echo "Creating tar file with arco files of distribution"
+      makearco=true
+      shift 
+      ARGC=`expr $ARGC - 1`
+      ;;
    -doc)
       echo "Creating tar file with doc files of distribution"
       makedoc=true
@@ -238,6 +245,7 @@ COMMON_DOCS="doc/README* doc/*.asc doc/javadocs"
 COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs \
                 examples/drmaa include inst_sge install_qmaster \
                 install_execd man mpi pvm qmon util lib/drmaa.jar"
+ARCO_PACKAGE="dbwriter reporting"
 
 if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage
@@ -263,6 +271,24 @@ if [ $makecommon = true ]; then
      filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
      echo Command: $TAR cvzf $filename $COMMON_PACKAGE
                   $TAR cvzf $filename $COMMON_PACKAGE
+     cd ..
+   fi
+fi
+
+if [ $makearco = true ]; then
+   # do any necessary postprocessing of the "arco" package here
+   if [ -f localext/$VDIR/mk_dist.private.arco ]; then
+      echo executing commands from mk_dist.private.arco
+      . ./localext/$VDIR/mk_dist.private.arco
+   fi
+
+   if [ $makerpm = true ]; then
+      CreateRpm arco noarch $ARCO_PACKAGE
+   else
+     cd $VDIR
+     filename=$BASEDIR/${PRODUCT}-${VERSION}-arco.tar.gz
+     echo Command: $TAR cvzf $filename $ARCO_PACKAGE
+                  $TAR cvzf $filename $ARCO_PACKAGE
      cd ..
    fi
 fi

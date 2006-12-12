@@ -1464,6 +1464,10 @@ int use_starter_method /* If this flag is set the shellpath contains the
                              job_user, user_passwd, 
                              &win32_exit_status, &job_status, err_msg);
 
+         shepherd_trace_sprintf("start_job_remote returned with %d, "
+            "job_status = %d, win32_exit_status = %d",
+            ret, job_status, win32_exit_status);
+
          switch(ret) {
             case 0:
                // job was successfully placed into job queue, parse job_status

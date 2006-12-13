@@ -1,5 +1,5 @@
-RD-2006-12-13-0: CVS        Created V61snapshot1_TAG
-----------------------------------------------------
+RD-2006-12-13-0: CVS        Created V61preview_TAG
+--------------------------------------------------
 
 JG-2006-12-13-0: Cleanup:   Removed testsuite - it has been moved to the 
                             testsuite subproject.

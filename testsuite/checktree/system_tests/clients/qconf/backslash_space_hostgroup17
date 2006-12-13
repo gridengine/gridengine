@@ -1,3 +1,0 @@
-# This tests tabs as field/value delimiter
-group_name	@parent17
-hostlist	@hostgroup1 @hostgroup2 @hostgroup3 @areallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallyreallylonghostgroupname

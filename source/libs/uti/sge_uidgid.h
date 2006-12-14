@@ -65,7 +65,9 @@ int password_read_file(char **users[], char **encryped_pwds[], const char *filen
 const char* sge_get_file_passwd(void);
 int get_file_line_size(FILE* fp);
 
-int sge_set_admin_username(const char *username, char *err_str);
+int  sge_set_admin_username(const char *username, char *err_str);
+bool sge_is_admin_user(const char *username);
+
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
 int sge_run_as_user(void);
@@ -82,7 +84,7 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
                               char *buffer, size_t bufsize);
 struct group *sge_getgrgid_r(gid_t gid, struct group *pg, 
                              char *buffer, size_t bufsize, int retries);
- 
+
 /*
  * Deprecated functions. Do not use anymore!
  */

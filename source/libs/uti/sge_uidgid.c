@@ -52,6 +52,7 @@
 #include "msg_utilib.h"
 #include "sge_string.h"
 #include "sge_stdio.h"
+#include "sge_bootstrap.h"
 
 #if defined( INTERIX )
 #   include "misc.h"
@@ -59,8 +60,6 @@
 #endif
 
 #define UIDGID_LAYER CULL_LAYER 
-#define MAX_LINE_LENGTH 10000
-
 #define MAX_LINE_LENGTH 10000
 
 enum { SGE_MAX_USERGROUP_BUF = 255 };
@@ -219,7 +218,6 @@ int sge_set_admin_username(const char *user, char *err_str)
    gid_t gid;
 #if defined( INTERIX )
    char fq_name[1024];
-   char hostname[128];
 #endif
 
    DENTER(UIDGID_LAYER, "sge_set_admin_username");
@@ -231,8 +229,7 @@ int sge_set_admin_username(const char *user, char *err_str)
     * full qualified name must not be constructed!
     */
    if(strcasecmp(user, "none") != 0) {
-      gethostname(hostname, 1023);
-      snprintf(fq_name, 1023, "%s+%s", hostname, user);
+      wl_build_fq_local_name(user, fq_name);
       user = fq_name;
    }
 #endif
@@ -270,6 +267,50 @@ int sge_set_admin_username(const char *user, char *err_str)
    DEXIT;
    return ret;
 } /* sge_set_admin_username() */           
+
+/****** uti/uidgid/sge_is_admin_user() ****************************************
+*  NAME
+*     sge_is_admin_user() -- Check if user is SGE admin user
+*
+*  SYNOPSIS
+*     bool sge_is_admin_user(const char *username)
+*
+*  FUNCTION
+*     Checks if the given user is the SGE admin user.
+*
+*  INPUTS
+*     const char *username - given user name
+*
+*  RESULT
+*     bool - true if the given user is the SGE admin user
+*            false if not.
+*
+*  NOTES
+*     MT-NOTE: sge_is_admin_user() is MT safe.
+* 
+*  SEE ALSO
+******************************************************************************/
+bool sge_is_admin_user(const char *username)
+{
+   const char *admin_user;
+#ifdef INTERIX
+   char       fq_name[1024];
+#endif
+
+   admin_user = bootstrap_get_admin_user();
+
+#ifdef INTERIX
+   /* For Interix: Construct full qualified admin user name.
+    * As admin user is always local, use hostname as domain name.
+    * If admin user is "none", it is a special case and
+    * full qualified name must not be constructed!
+    */
+   wl_build_fq_local_name(admin_user, fq_name);
+   admin_user = fq_name;
+#endif
+
+   return strcmp(username, admin_user)==0 ? true : false;
+} /* sge_is_admin_user() */
 
 /****** uti/uidgid/sge_switch2admin_user() ************************************
 *  NAME
@@ -768,7 +809,6 @@ static int get_group_buffer_size(void)
    return sz;
 }
 
-
 /****** uti/uidgid/sge_set_uid_gid_addgrp() ***********************************
 *  NAME
 *     sge_set_uid_gid_addgrp() -- Set uid and gid of calling process
@@ -921,16 +961,17 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 
 #if defined( INTERIX )
       /*
-       * Do only for domain users and if windomacc=true is set.
+       * Do only if windomacc=true is set and user is not the SGE admin user
        */
-      if(pw->pw_uid >= 1000000 && wl_use_sgepasswd()) {
-         char *pass=NULL;
-         char buf[1000]="\0";
-         int res;
-         err_str[0]='\0';
+      if (wl_use_sgepasswd()==true 
+          && sge_is_admin_user(pw->pw_name)==false) {
+         char *pass = NULL;
+         char buf[1000] = "\0";
+         int  res;
 
+         err_str[0] = '\0';
          res = uidgid_read_passwd(pw->pw_name, &pass, err_str);
-     
+
          if(res != 0) {
             /* map uidgid_read_passwd() return value to
              * sge_set_uid_gid_addgrp() return value.
@@ -1497,43 +1538,42 @@ sge_get_file_passwd(void)
 
 /****** uti/uidgid/password_get_size()****************************************
 *  NAME
-*     password_get_size() - count number of lines in sgepasswd file 
-*                            
+*     password_get_size() - count number of lines in sgepasswd file
+*
 *  SYNOPSIS
-*     static int password_get_size(const char *filename) 
+*     static int password_get_size(const char *filename)
 *
 *  FUNCTION
-*     This function counts the lines in sgepasswd file, it also checks if any 
+*     This function counts the lines in sgepasswd file, it also checks if any
 *     line in file is not too long, if such situation occurs that line has
 *     more than MAX_LINE_LENGHT characters the funtion returns error state -1
 *
 *  INPUTS
-*     const char *filename - name of the file on which the fuction is run 
+*     const char *filename - name of the file on which the fuction is run
 *
 *  RESULT
-*     int - returns number of lines in sgepasswd file if function has run 
+*     int - returns number of lines in sgepasswd file if function has run
 *           successfully
-*         -1 - if there is a line in a file that is longer than MAX_LINE_LENGTH  
+*         -1 - if there is a line in a file that is longer than MAX_LINE_LENGTH
 *
 *  NOTES
 *     MT-NOTE: password_get_size() is not MT safe
 *
 *******************************************************************************/
-static int 
+static int
 password_get_size(const char *filename)
 {
    size_t ret = 0;
    FILE   *fp = NULL;
    char   input[MAX_LINE_LENGTH];
+   bool   do_loop = true;
 
    DENTER(TOP_LAYER, "password_get_size");
-   fp = fopen(filename, "r");   
+   fp = fopen(filename, "r");
    if (fp != NULL) {
-      bool do_loop = true;
-
       while (do_loop) {
          if (get_file_line_size(fp) > MAX_LINE_LENGTH) {
-	         ret = -1;
+            ret = -1;
             break;
          }
          if (fscanf(fp, "%[^\n]\n", input) == 1) {
@@ -1542,7 +1582,7 @@ password_get_size(const char *filename)
             do_loop = false;
          }
       }
-      FCLOSE(fp); 
+      FCLOSE(fp);
    }
 FCLOSE_ERROR:
    DRETURN(ret);
@@ -1551,24 +1591,24 @@ FCLOSE_ERROR:
 /****** uti/uidgid/get_file_line_size()****************************************
 *  NAME
 *     get_file_line_size() - helper function that counts the characters in
-*                            current line of file 
+*                            current line of file
 *  SYNOPSIS
 *     int get_file_line_size(FILE* fp)
 *
 *  FUNCTION
-*     This helper function counts the characters in current line of file, 
-*     it restores file position pointer to the position that was before 
-*     entering function. Function  can be called on any opened file with read 
+*     This helper function counts the characters in current line of file,
+*     it restores file position pointer to the position that was before
+*     entering function. Function  can be called on any opened file with read
 *     permissions.
 *
 *  INPUTS
-*     FILE* fp - handler of the file in which the characters in current line 
-*                are counted 
+*     FILE* fp - handler of the file in which the characters in current line
+*                are counted
 *
 *  RESULT
 *     int - returns number of characters in current line of file,
 *           if number of characters is bigger than MAX_LENGTH_LINE,
-*           it returns MAX_LINE_LENGTH+1 value 
+*           it returns MAX_LINE_LENGTH+1 value
 *
 *  NOTES
 *     MT-NOTE: get_file_line_size() is not MT safe
@@ -1578,35 +1618,35 @@ FCLOSE_ERROR:
 static int
 get_file_line_size(FILE *fp)
 {
-   fpos_t pos; 
+   fpos_t pos;
    char   tmp = '\0';
    int    i = 0;
 
    fgetpos(fp,&pos);
-   while ((tmp !=  '\n') && (i <= MAX_LINE_LENGTH)) {
+   while ((tmp != '\n') && (i <= MAX_LINE_LENGTH)) {
       if (fscanf(fp, "%c", &tmp) == 1) {
-	      i++;
-      } else { 
-	      break;
-      } 
+         i++;
+      } else {
+         break;
+      }
   }
   fsetpos(fp, &pos);
   return i;
 }
 /****** uti/uidgid/password_read_file()*****************************************
 *  NAME
-*     password_read_file() - read in sgepasswd file 
-*                            
+*     password_read_file() - read in sgepasswd file
+*
 *  SYNOPSIS
-*     int password_read_file(char **users[], char**encryped_pwds[], 
-*                            const char *filename) 
+*     int password_read_file(char **users[], char**encryped_pwds[],
+*                            const char *filename)
 *
 *  FUNCTION
-*     This function reads usernames and enrypted passwords from sgepasswd file 
+*     This function reads usernames and enrypted passwords from sgepasswd file
 *     and saves them in arrays that are part if function output, if the file
 *     could not be opened for reading or the file contains corrupted line,
 *     (too long line, line that doesn't contain username and password),
-*     the proper error state is returned 
+*     the proper error state is returned
 *
 *  INPUTS
 *     const char* filename - name with path of the sgepasswd file that is
@@ -1615,29 +1655,29 @@ get_file_line_size(FILE *fp)
 *  OUTPUTS
 *     char** users[] - array of strings to which are written the usernames
 *                      that are read from sgepasswd, if sgepasswd could not be
-*                      opened there are reserved 2 entries with NULL values, 
-*                      if the sgepasswd file is corrupted, no entries are 
+*                      opened there are reserved 2 entries with NULL values,
+*                      if the sgepasswd file is corrupted, no entries are
 *                      reserved
-* 
+*
 *     char** encrypted_pwds[] - array of strings to which are written encrypted
 *                               passwords that are read from sgepasswd
 *                               if sgepasswd could not be opened there are
 *                               reserved 2 entries with NULL values,
-*                               if the sgepasswd file is corrupted, 
+*                               if the sgepasswd file is corrupted,
 *                               no entries are reserved
 *
 *  RESULT
-*     int - error state 
+*     int - error state
 *         0 - OK, no errors
 *         1 - sgepasswd could not be opened for reading
-*         2 - sgepasswd file is corrupted 
+*         2 - sgepasswd file is corrupted
 *
 *  NOTES
 *     MT-NOTE: password_read_file() is not MT safe
 *
 *******************************************************************************/
 int
-password_read_file(char **users[], char**encryped_pwds[], const char *filename) 
+password_read_file(char **users[], char**encryped_pwds[], const char *filename)
 {
    struct saved_vars_s *context;
    int    j;
@@ -1646,20 +1686,20 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
    char   *uname = NULL;
    char   *pwd = NULL;
    char   input[MAX_LINE_LENGTH];
+   bool   do_loop = true;
+   size_t size = 0;
+   int    i = 0;
 
    DENTER(TOP_LAYER, "password_read_file");
-   fp = fopen(filename, "r");   
+   fp = fopen(filename, "r");
    if (fp != NULL) {
-      bool do_loop = true;
-      size_t size = password_get_size(filename);
-      int i = 0;
-
+      size = password_get_size(filename);
       if (size == -1){
          /*file corrupted*/
          ret = 2;
          size = 0;
-         do_loop = false; 
-      } 
+         do_loop = false;
+      }
       size = size + 2;
       *users = malloc(size * sizeof(char*));
       *encryped_pwds = malloc(size * sizeof(char*));
@@ -1676,6 +1716,7 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
                 do_loop = false;
                 /*file corrupted*/
                 ret = 2;
+                do_loop = false;
             } else {
                (*users)[i] = strdup(uname);
                (*encryped_pwds)[i] = strdup(pwd);
@@ -1684,7 +1725,6 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          } else {
             do_loop = false;
          }
-
          sge_free_saved_vars(context);
       }
       if (ret == 2) {
@@ -1702,14 +1742,14 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
          (*encryped_pwds)[i] = NULL; i++;
       }
 
-      FCLOSE(fp); 
+      FCLOSE(fp);
    } else {
       *users = malloc(2 * sizeof(char*));
       *encryped_pwds = malloc(2 * sizeof(char*));
       (*users)[0] = NULL;
       (*encryped_pwds)[0] = NULL;
       (*users)[1] = NULL;
-      (*encryped_pwds)[1] = NULL; 
+      (*encryped_pwds)[1] = NULL;
 
       /* Can't read passwd file */
       ret = 1;

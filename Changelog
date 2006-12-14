@@ -1,3 +1,11 @@
+HP-2006-12-14-0: Bugfix:    Only the execd_params value enable_windowmacc now
+                            desides if passwords from sgepasswd are to be used
+                            for switching the user, no longer if the user is
+                            a Windows domain user, too.
+                 Changed:   libs/uti/sge_uidgid.c, libs/uti/sge_uidgid.h
+                 Bugster:   6504566
+                 Review:    MD
+
 RH-2006-12-14-1: Bugfix:    ant clean targets failed due to nfs problems.
                             Workaround: directories are deleted twice with 
                             a sleep between the first and the second delete

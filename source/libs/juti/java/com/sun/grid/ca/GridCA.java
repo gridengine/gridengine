@@ -37,9 +37,6 @@ import java.security.cert.X509Certificate;
 /**
  * This interface defines all methods which can be exeucted on the 
  * Grid Certificate Authority.
- *
- *
- * @author richard.hierlmeier@sun.com
  */
 public interface GridCA {
     

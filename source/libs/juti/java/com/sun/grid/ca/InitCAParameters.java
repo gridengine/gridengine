@@ -42,14 +42,12 @@ import javax.security.auth.callback.TextOutputCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 
 /**
- *
- * @author richard.hierlmeier@sun.com
+ * This class hold the parameters for Certificate Authority
  */
 public class InitCAParameters implements java.io.Serializable {
     
     /**
      *  Defines a parameter for the init ca command.
-     *  @author richard.hierlmeier@sun.com
      */
     public static class ParamDef {
         
@@ -214,7 +212,7 @@ public class InitCAParameters implements java.io.Serializable {
      * @throws java.io.IOException if the callback handler throws a IOException
      * @throws javax.security.auth.callback.UnsupportedCallbackException if the the callback handler does not 
      *            support <code>NameCallback</code> or <code>TextOutputCallback</code>
-     * @return 
+     * @return the <code>InitCAParameters</code> object with the queried values
      */
     public static InitCAParameters queryNewInstance(CallbackHandler callbackHandler) throws IOException, UnsupportedCallbackException {
         

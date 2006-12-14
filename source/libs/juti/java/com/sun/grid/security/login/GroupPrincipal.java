@@ -34,8 +34,7 @@ package com.sun.grid.security.login;
 import java.security.Principal;
 
 /**
- *
- * @author aa114085
+ *  Generic <code>Principal</code> represent a group of users
  */
 public class GroupPrincipal  implements
         Principal,

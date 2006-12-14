@@ -47,7 +47,6 @@ import javax.security.auth.login.LoginException;
 /**
  * This class used by the <code>UnixLoginModule</code> to execute the authuser binary
  *
- * @author richard.hierlmeier@sun.com
  */
 class AuthUserWrapper {
     

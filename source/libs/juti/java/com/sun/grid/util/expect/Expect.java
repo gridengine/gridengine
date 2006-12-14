@@ -81,8 +81,6 @@ import java.util.logging.Logger;
  *
  * </pre>
  *
- * 
- * @author  richard.hierlmeier@sun.com
  */
 public class Expect {
     
@@ -330,7 +328,7 @@ public class Expect {
     
     /**
      *  print a string to stdin
-     *  @param x the string
+     *  @param s the string
      */ 
     public void print(String s) {
         if(LOGGER.isLoggable(Level.FINE)) {
@@ -352,7 +350,7 @@ public class Expect {
     
     /**
      *  print an object to stdin
-     *  @param x the object
+     *  @param obj the object
      */ 
     public void print(Object obj) {
         if(LOGGER.isLoggable(Level.FINE)) {
@@ -374,7 +372,7 @@ public class Expect {
     
     /**
      *  print an integer to stdin
-     *  @param x the integer
+     *  @param i the integer
      */ 
     public void print(int i) {
         if(LOGGER.isLoggable(Level.FINE)) {
@@ -385,7 +383,7 @@ public class Expect {
     
     /**
      *  print a boolean to stdin
-     *  @param x the boolean
+     *  @param b the boolean
      */ 
     public void print(boolean b) {
         if(LOGGER.isLoggable(Level.FINE)) {
@@ -418,7 +416,7 @@ public class Expect {
     
     /**
      *  print a long to stdin
-     *  @param x the long
+     *  @param l the long
      */ 
     public void print(long l) {
         if(LOGGER.isLoggable(Level.FINE)) {

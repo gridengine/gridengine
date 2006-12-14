@@ -66,7 +66,6 @@ import java.util.logging.Logger;
  * Uses the sge_ca script which is delivered with gridengine to perform
  * actions on the gridengine ca.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class GridCAImpl implements GridCA {
     

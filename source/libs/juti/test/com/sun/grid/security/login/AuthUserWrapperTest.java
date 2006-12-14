@@ -42,7 +42,6 @@ import junit.framework.TestCase;
 
 /**
  *
- * @author rh150277
  */
 public class AuthUserWrapperTest extends TestCase{
     

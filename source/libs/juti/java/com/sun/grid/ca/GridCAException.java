@@ -37,7 +37,6 @@ import java.util.ResourceBundle;
 /**
  * This exception wraps all errors of the GridCA
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class GridCAException extends Exception {
 

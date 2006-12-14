@@ -79,8 +79,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
  *
  * </pre>
  *
- *
- * @author richard.hierlmeier@sun.com
  */
 public class Main {
     

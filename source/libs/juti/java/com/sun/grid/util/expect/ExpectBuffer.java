@@ -42,7 +42,6 @@ import java.util.logging.Logger;
  * The <code>Expect</code>object uses the <code>append</code> methods to add
  * new content to the buffer.
  * 
- * @author richard.hierlmeier@sun.com
  */
 public class ExpectBuffer {
 

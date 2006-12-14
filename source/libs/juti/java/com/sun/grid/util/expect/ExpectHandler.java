@@ -39,7 +39,6 @@ import java.io.IOException;
  * The <code>handle</code> is called every time when new output has been 
  * received from stdout or stderror of the process.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public interface ExpectHandler {
   

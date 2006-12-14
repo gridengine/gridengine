@@ -294,9 +294,12 @@
    </target>
 
    <target depends="init, aimk.clean" description="Clean all build products." name="clean">
+      <delete dir="${build.dir}" failonerror="true"/>
+      <delete file="${jar}" failonerror="true"/>
+      <ant dir="cullconv" antfile="build.xml" target="clean"/>
+      <sleep seconds="2"/>
       <delete dir="${build.dir}"/>
       <delete file="${jar}"/>
-      <ant dir="cullconv" antfile="build.xml" target="clean"/>
    </target>
     
 

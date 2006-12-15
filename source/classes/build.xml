@@ -232,8 +232,25 @@ ___INFO__MARK_END__-->
       </delete>
    </target>
    
-   <target depends="init" description="Clean all build products." name="clean">
+   
+   <target name="clean" depends="init, java.clean, java.clean.warn" 
+           description="Clean all build products."/>
+
+   <!-- 
+   =============================================================================
+   The java.clean target is only executed on the java build host
+   Do not wonder that your files are not deleted if the java.buildhost
+   property is not set 
+   =============================================================================
+   -->
+   <target name="java.clean" depends="init" if="isJavaBuildHost">
       <delete dir="${classes.dir}"/>
+   </target>
+   
+   <target name="java.clean.warn" depends="init" unless="isJavaBuildHost">
+       <echo level="warning">Warning: Do not delete</echo>
+       <echo level="warning">         ${classes.dir}</echo>
+       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
    </target>
 
 </project>

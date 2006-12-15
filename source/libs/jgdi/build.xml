@@ -85,11 +85,6 @@
            <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
        </condition>
        
-       <echo>isJavaBuildHost = ${isJavaBuildHost}</echo>
-       
-       
-      
-      
       <property name="build.dir"  location="build"/>
       <property name="classes.dir"  location="${build.dir}/classes"/>
       <property name="src.dir"      location="src" />
@@ -293,15 +288,28 @@
       style="util/todo.xsl"/>
    </target>
 
-   <target depends="init, aimk.clean" description="Clean all build products." name="clean">
-      <delete dir="${build.dir}" failonerror="true"/>
-      <delete file="${jar}" failonerror="true"/>
-      <ant dir="cullconv" antfile="build.xml" target="clean"/>
-      <sleep seconds="2"/>
+   <target name="clean" depends="init, java.clean, java.clean.warn, aimk.clean" 
+           description="Clean all build products."/>
+
+   <!-- 
+   =============================================================================
+   The java.clean target is only executed on the java build host
+   Do not wonder that your files are not deleted if the java.buildhost
+   property is not set 
+   =============================================================================
+   -->
+   <target name="java.clean" depends="init" if="isJavaBuildHost">
       <delete dir="${build.dir}"/>
       <delete file="${jar}"/>
+      <ant dir="cullconv" antfile="build.xml" target="clean"/>
    </target>
-    
+   
+   <target name="java.clean.warn" depends="init" unless="isJavaBuildHost">
+       <echo level="warning">Warning: Do not delete</echo>
+       <echo level="warning">         ${build.dir} and</echo>
+       <echo level="warning">         ${jar}</echo>
+       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
+   </target>
 
    <target name="gensrc" depends="jni.init" if="isJavaBuildHost"
       description="Create a all generated source files">  

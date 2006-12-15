@@ -530,9 +530,6 @@ is divided into following sections:
     -->
     <target name="deps-clean" depends="init" unless="no.deps"/>
     <target name="-do-clean" depends="init">
-        <delete dir="${build.dir}" failonerror="false"/>
-        <delete dir="${dist.dir}" failonerror="false"/>
-        <sleep seconds="2"/>
         <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
     </target>

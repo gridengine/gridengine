@@ -1639,7 +1639,7 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
       }
       
       lp = lCreateListHash("Events", lGetElemDescr(element), false);       
-      lAppendElem (lp, lCopyElemHash(element, false));
+      lAppendElem(lp, lCopyElemHash(element, false));
 
       /* restore the original event object */
       if (temp_sub_lp != NULL) {

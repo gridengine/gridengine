@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2006/11/17 15:23:25 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2006/12/15 12:24:18 $     Revision: $Revision: 1.27 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2006/11/17 15:23:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2006/12/15 12:24:18 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -227,7 +227,7 @@ contain a changed configuration. The name of the rule set in \fBfname\fP
 must be the same as rqs_name. If rqs_name is not set, all rule sets
 are overwritten by the rule sets in \fBfname\fP
 Refer to
-.M xxqs_name_sxx_rqs 5
+.M xxqs_name_sxx_resource_quota 5
 for details on the RQS configuration format.
 Requires root or manager privilege.
 .\"
@@ -486,7 +486,7 @@ under the names
 .B rqs_name
 to the list
 of RQSs maintained by xxQS_NAMExx (see
-.M xxqs_name_sxx_rqs 5
+.M xxqs_name_sxx_resource_quota 5
 for details on the format of a RQS definition).
 .I Qconf
 retrieves a default RQS configuration
@@ -855,7 +855,7 @@ or the editor indicated by the EDITOR environment variable)
 and registers the new configuration with the
 .M xxqs_name_sxx_qmaster 8 .
 Refer to
-.M xxqs_name_sxx_rqs 5
+.M xxqs_name_sxx_resource_quota 5
 for details on the RQS configuration format.
 Requires root or manager privilege.
 .\"

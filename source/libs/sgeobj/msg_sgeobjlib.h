@@ -342,7 +342,8 @@
 #define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
 
 
-#define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
+#define MSG_RESOURCEQUOTA_NORULEDEFINED         _MESSAGE(64369, _("no resource quota rule specified for modification"))
+#define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST   _MESSAGE(64370, _("no valid expanded list"))
 
 #define MSG_EVENT_RQSLISTXELEMENTS_II           _MESSAGE(64371, _("%d. EVENT RQS ENTRY LIST %d Elements"))
 #define MSG_EVENT_DELRQSX_IS                    _MESSAGE(64372, _("%d. EVENT DEL RQS ENTRY "SFN""))

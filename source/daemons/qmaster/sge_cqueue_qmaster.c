@@ -743,7 +743,7 @@ int cqueue_success(sge_gdi_ctx_class_t *ctx,
    /*
     * CQ modify or add event
     */
-   sge_add_event( 0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
+   sge_add_event(0, old_cqueue?sgeE_CQUEUE_MOD:sgeE_CQUEUE_ADD, 0, 0, 
                  lGetString(cqueue, CQ_name), NULL, NULL, cqueue);
 
    /*
@@ -815,9 +815,7 @@ int cqueue_success(sge_gdi_ctx_class_t *ctx,
       }
    }
 
-
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 void cqueue_commit(sge_gdi_ctx_class_t *ctx, lListElem *cqueue) 

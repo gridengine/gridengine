@@ -88,12 +88,12 @@ filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm,
 *
 *  INPUTS
 *     lList **alpp          - referenct to an answer list
-*     lListElem *new_rqs   - if a new rqs object will be created by this
+*     lListElem *new_rqs    - if a new rqs object will be created by this
 *                             function, then new_rqs is a newly initialized
 *                             CULL object.
 *                             if this function was called due to a modify request
 *                             than new_rqs will contain the old data
-*     lListElem *rqs       - a reduced rqs object which contails all
+*     lListElem *rqs        - a reduced rqs object which contails all
 *                             necessary information to create a new object
 *                             or modify parts of an existing one
 *     int add               - 1 if a new element should be added to the master list
@@ -135,7 +135,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
    /* Name has to be a valid name */
    if (add && verify_str_key(alpp, rqs_name, MAX_VERIFY_STRING,
                              MSG_OBJ_RQS, KEY_TABLE) != STATUS_OK) {
-      DRETURN(STATUS_EUNKNOWN);
+      goto ERROR;
    }
 
    /* ---- RQS_description */
@@ -165,16 +165,17 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
                /* ---- RQR_limit */
                attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
             } else {
-               ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+               ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NORULEDEFINED));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                ANSWER_QUALITY_ERROR);
-                
+               goto ERROR;                 
             }
          }
       }
    }
+
    if (!rqs_verify_attributes(new_rqs, alpp, true)) {
-      DRETURN(STATUS_EUNKNOWN);
+      goto ERROR;
    }
    if (rules_changed && lGetBool(new_rqs, RQS_enabled) == true) {
       rqs_reinit_consumable_actual_list(new_rqs, alpp);
@@ -271,7 +272,7 @@ int rqs_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_
 *******************************************************************************/
 int rqs_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
-   const char *rqs_name;
+   const char *rqs_name = NULL;
 
    DENTER(TOP_LAYER, "rqs_success");
 
@@ -279,7 +280,7 @@ int rqs_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_
 
    rqs_update_categories(ep, old_ep);
 
-   sge_add_event( 0, old_ep?sgeE_RQS_MOD:sgeE_RQS_ADD, 0, 0, 
+   sge_add_event(0, old_ep?sgeE_RQS_MOD:sgeE_RQS_ADD, 0, 0, 
                  rqs_name, NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
 

@@ -1,3 +1,7 @@
+RD-2006-12-15-0: Bugfix:    - Fixed qmaster crash with resource quotas
+                            - corrected qconf man page
+                 Review:    JG
+
 RH-2006-12-15-1: Bugfix:    Clean target deletes java parts
                             only if executed on java build hosts
                  Changed:   jgdi, juti and drmaa build.xml

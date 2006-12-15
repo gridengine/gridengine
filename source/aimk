@@ -363,8 +363,6 @@ set JUTI_CLEAN  = juti_clean
 set JUTI_DEPEND  = juti_depend
 
 set AUTHUSER_ALL  = authuser
-set AUTHUSER_CLEAN = ""
-set AUTHUSER_DEPEND = ""
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
@@ -1348,8 +1346,6 @@ case WIN32_X86:
    set JUTI_DEPEND      = ""
    set JUTI_CLEAN       = ""
    set AUTHUSER_ALL     = authuser.exe
-   set AUTHUSER_CLEAN   = authuser_clean
-   set AUTHUSER_DEPEND  = authuser_depend
    
    set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
    set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
@@ -1963,7 +1959,6 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
-      "AUTHUSER_ALL=$AUTHUSER_ALL" "AUTHUSER_CLEAN=$AUTHUSER_CLEAN" "AUTHUSER_DEPEND=$AUTHUSER_DEPEND" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 
    if ( $status != 0 ) then
@@ -2193,7 +2188,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
-         "AUTHUSER_ALL=$AUTHUSER_ALL" "AUTHUSER_CLEAN=$AUTHUSER_CLEAN" "AUTHUSER_DEPEND=$AUTHUSER_DEPEND" \
+         "AUTHUSER_ALL=$AUTHUSER_ALL" \
          $argv
    if ( $status != 0 ) then
       echo not done

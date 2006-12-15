@@ -59,7 +59,7 @@ UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
 utilbin:	$(UTILBIN_TARGETS)
 
 utilbin_clean:
-		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS)
+		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS) juti.obj
 
 utilbin_depend:
 	$(DEPEND) -f$(UTILBIN_DIR)/utilbin_dependencies $(UTILBIN_DIR)/*.c

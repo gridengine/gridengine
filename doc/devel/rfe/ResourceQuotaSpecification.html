@@ -344,7 +344,8 @@ necessary.
 SEPARATOR:    ','
 STRING:       [^\n]*
 QUOTE:        '\"'
-EXPANDER:     '`'
+S_EXPANDER:   '{'
+E_EXPANDER:   '}'
 NOT:          '!'
 BOOL:         [tT][rR][uU][eE]
               | 1
@@ -353,7 +354,7 @@ BOOL:         [tT][rR][uU][eE]
 NAME:         [a-zA-Z][a-zA-Z0-9_-]*
 LISTVALUE:    ALL | [NOT]STRING
 LIST:         LISTVALUE [SEPARATOR VALUE]*
-NOTSCOPE:     LIST | EXPANDER LIST EXPANDER
+NOTSCOPE:     LIST | S_EXPANDER LIST E_EXPANDER
 SCOPE:        ALL | STRING [SEPARATOR STRING]*
 RESOURCEPAIR: STRING=STRING
 RESOURCE:     RESOURCEPAIR [SEPARATOR RESOURCEPAIR]*
@@ -458,7 +459,7 @@ This is very cumbersome for large numbers of users or user groups. For
 this case a rule can be defined with an expanded list. This would look
 like:
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>  limit users `roland, andre` to virtual_free=5g
+<pre>  limit users {roland, andre} to virtual_free=5g
 </pre>
 </td></tr></tbody></table>
 <p>
@@ -469,7 +470,7 @@ For example if a hostgroup @lx_hosts contains host durin and carc both rules are
   limit users * hosts durin to virtual_free=10g
   limit users * hosts carc to virtual_free=10g
 2)
-  limit users * hosts `@lx_hosts` to virtual_free=10g
+  limit users * hosts {@lx_hosts} to virtual_free=10g
 </pre>
 </td></tr></tbody></table>
 <p>
@@ -481,12 +482,12 @@ the excluded user, even if the user is explicitly added to the rule.
 </p><p>
 For example, user "roland" is also member of usergroup "staff". If a resource quota rule looks like this:
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>  limit users staff,!roland to slots=10
+<pre>  limit users @staff,!roland to slots=10
 </pre>
 </td></tr></tbody></table>
 the limit will not be effective for user "roland".  Even if the resource quota rule looks like this:
 <table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>  limit users staff,!roland,roland to slots=10
+<pre>  limit users @staff,!roland,roland to slots=10
 </pre>
 </td></tr></tbody></table>
 the rule will not be effective for user "roland"
@@ -513,7 +514,7 @@ Note, no blanks are allowed in the limit formula.
 The following example clarifies the use of dynamical limits:
 Users are allowed to user 5 slots per CPU on all linux hosts.
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>  limit hosts `@linux_hosts` to slots=5*$num_proc
+<pre>  limit hosts {@linux_hosts} to slots=5*$num_proc
 </pre>
 </td></tr></tbody></table>
 <p>The complex attribute num_proc is defined on all hosts and its value
@@ -535,7 +536,7 @@ referenced complex value definition (for example slots=INT,
 num_proc=INT)
 </li>
 <li> The resource quota rule must be defined as an expanded list for
-the layer the complex is defined. (for example hosts `*` for $num_proc
+the layer the complex is defined. (for example hosts {*} for $num_proc
 reference) It's not allowed to reference a complex for a sum of scopes
 (for example hosts * for $num_proc).
 </li>
@@ -999,8 +1000,8 @@ Rule Set:
 
 {
  name max_per_host
- limit users roland hosts `@linux` to slots=2
- limit users `*` hosts `@linux` to slots=1
+ limit users roland hosts {@linux} to slots=2
+ limit users {*} hosts {@linux} to slots=1
  limit users * hosts * to slots=0
 }
 </pre>

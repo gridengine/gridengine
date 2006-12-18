@@ -87,7 +87,7 @@ bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList 
    lList *lp = NULL;
    lList *scope_list = NULL;
    lList *xscope_list = NULL;
-   char delims[] = "\t \v\r,`"; 
+   char delims[] = "\t \v\r,{}"; 
 
    DENTER(TOP_LAYER, "rqs_parse_filter_from_string");
 
@@ -97,10 +97,10 @@ bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList 
 
    tmp_filter = lCreateElem(RQRF_Type);
 
-   if ( buffer[0] == '`' ) {
+   if ( buffer[0] == '{' ) {
       /* We have a expanded list */
       lSetBool(tmp_filter, RQRF_expand, true);
-      if (buffer[strlen(buffer)-1] != '`') {
+      if (buffer[strlen(buffer)-1] != '}') {
          ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST));
          answer_list_add(alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DRETURN(false);
@@ -168,7 +168,7 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    expand = lGetBool(filter, RQRF_expand) ? true : false;
 
    if (expand) {
-      sge_dstring_append(buffer, "`");
+      sge_dstring_append(buffer, "{");
    }
 
    tlp = lGetList(filter, RQRF_scope);
@@ -195,7 +195,7 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    }
 
    if (expand) {
-      sge_dstring_append(buffer, "`");
+      sge_dstring_append(buffer, "}");
    }
 
    return ret; 

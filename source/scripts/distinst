@@ -1416,9 +1416,8 @@ for i in $ARCH; do
                   libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
                   if [ -f $libname ]; then
                      InstallProg $libname
-                  elif [ $exit_on_error = true ]; then
-                     echo "\"$libname\" not found. Installation failed."
-                     exit 1
+                  else
+                     echo "\"$libname\" not found. Assuming binaries are statically linked."
                   fi
                done
             fi

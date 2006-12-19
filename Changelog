@@ -6,6 +6,8 @@ HP-2006-12-15-0: Cleanup:   Removed special target for Windows authuser.exe
 
 RD-2006-12-15-0: Bugfix:    - Fixed qmaster crash with resource quotas
                             - corrected qconf man page
+                 Bugster:   6506115
+                 Issue:     2135
                  Review:    JG
 
 RH-2006-12-15-1: Bugfix:    Clean target deletes java parts

@@ -514,12 +514,12 @@ Note, no blanks are allowed in the limit formula.
 The following example clarifies the use of dynamical limits:
 Users are allowed to user 5 slots per CPU on all linux hosts.
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>  limit hosts {@linux_hosts} to slots=5*$num_proc
+<pre>  limit hosts {@linux_hosts} to slots=$num_proc*5
 </pre>
 </td></tr></tbody></table>
 <p>The complex attribute num_proc is defined on all hosts and its value
 is the processor count on every host. The limit is calculated by the
-formula "5*$num_proc" and so is different on some hosts. On a 2 CPU
+formula "$num_proc*5" and so is different on some hosts. On a 2 CPU
 host users can run 10 slots whereas on a 1 CPU host users only can run
 5 slots.
 </p><p>

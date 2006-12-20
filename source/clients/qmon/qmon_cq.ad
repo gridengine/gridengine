@@ -143,7 +143,8 @@ Qmon*qmon_cq.cq.cq_cqfolder.tabsPerRow:  4
 Qmon*qmon_cq.cq.cq_cqfolder.resizeChildren:  True
 Qmon*qmon_cq.cq.cq_cqfolder.xmtChildren: \
    XmtLayout   clusterqueue_layout, \
-               qinstance_layout;
+               qinstance_layout, \
+               qhost_layout;
                
 !!               clustertree_layout;
 
@@ -231,6 +232,52 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.clip.translation
    Title "@{@fBOperations}"; \
    ------;\
    "@{_Delete}" [Ctrl-D] DeleteLines(*qinstance_settings);
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! qhost_layout
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout.tabLabel: @{@fBHosts}
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout.xmtChildren: \
+   Matrix_2xN      qhost_settings;
+
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout.layout: \
+    qhost_settings
+
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.traversalOn: False
+
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.rows: 30
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.visibleRows: 30
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.fixedColumns: 1
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.visibleColumns: 8
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columns: 11
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnWidths: 10,10,5,7,6,8,8,8,8,8,8 
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnMaxLengths: 200,20,20,20,20,20,20,20,20,20,20
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnLabels: @{Host},@{Arch},@{#CPU},@{LoadAvg},@{%CPU}, @{MemUsed},@{MemTotal},\
+                            @{SwapUsed}, @{SwapTotal}, @{VirtUsed}, @{VirtTotal}
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.gridType:     GRID_CELL_SHADOW
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.cellShadowType: SHADOW_IN
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.cellShadowThickness: 1
+
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()
+
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.clip.translations: #override\n\
+         Shift<Btn1Down>:  SelectCell(end)\n\
+         Ctrl<Btn1Down>:   SelectCell(toggle)\n\
+         <Btn1Down>:       SelectCell(begin)\n\
+         Ctrl<Btn2Down>:   ResizeColumns()
+
+!Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.xmtChildren: unmanaged XmtPopupMenu del_menu;
+!Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.menuPost: <Btn3Down>
+
+!Qmon**del_menu.items: \
+   Title "@{@fBOperations}"; \
+   ------;\
+   "@{_Delete}" [Ctrl-D] DeleteLines(*qhost_settings);
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

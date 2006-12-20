@@ -88,7 +88,7 @@
 
 #define ISTRACE (rmon_condition(xaybzc, TRACE))
 
-#define TRACEON  (rmon_is_enabled() && !rmon_mliszero(&DEBUG_ON))
+#define TRACEON  (rmon_is_enabled() && !rmon_mliszero(&RMON_DEBUG_ON))
 
 #define DCLOSE
 

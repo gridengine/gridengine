@@ -117,9 +117,7 @@ static int userset_type_state = US_ACL;
 
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupManopConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupManopConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -173,9 +171,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownManopConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownManopConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownManopConfig");
 
@@ -322,9 +318,7 @@ void updateManopList(void)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonManopDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonManopDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    int type = dialog_mode;
    lList *lp = NULL;
@@ -389,9 +383,7 @@ XtPointer cld, cad;
 }
          
 /*-------------------------------------------------------------------------*/
-static void qmonManopAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonManopAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    int type = dialog_mode;
    lList *lp = NULL;
@@ -465,9 +457,7 @@ XtPointer cld, cad;
 }
          
 /*-------------------------------------------------------------------------*/
-static void qmonManopFolderChange(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonManopFolderChange(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
@@ -512,9 +502,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonManopHelp(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonManopHelp(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget widget = 0;
    
@@ -608,9 +596,7 @@ lListElem *ep
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectUserset(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectUserset(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *usetname;
@@ -640,9 +626,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetType(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetType(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonUsersetType");
 
@@ -723,9 +707,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetAdd(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonUsersetAdd");
@@ -750,9 +732,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetModify(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *usetname;
    Cardinal usetnum;
@@ -800,9 +780,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 
 #if 0 /* EB: not used */
-static void qmonUsersetName(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetName(Widget w, XtPointer cld, XtPointer cad)
 {
    String name = NULL;
 
@@ -829,9 +807,7 @@ XtPointer cld, cad;
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetUserAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetUserAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    String user = NULL;
 
@@ -849,9 +825,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetOk(Widget w, XtPointer cld, XtPointer cad)
 {
    String usetname = NULL;
    XmString xusetname = NULL;
@@ -930,9 +904,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonUsersetCancel");
 
@@ -942,9 +914,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUsersetDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUsersetDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -989,9 +959,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonUserAskForProject(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixLabelActivateCallbackStruct *cbs = 
                             (XbaeMatrixLabelActivateCallbackStruct *) cad;

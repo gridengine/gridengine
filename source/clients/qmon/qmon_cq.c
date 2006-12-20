@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <ctype.h>
+#include <float.h>
+#include <math.h>
 
 #include <Xm/ToggleB.h>
 #include <Xmt/Xmt.h>
@@ -82,6 +84,8 @@
 #include "sge_complex_schedd.h"
 #include "qstat_printing.h"
 #include "sge_centry.h"
+#include "sge_string.h"
+#include "sge_bootstrap.h"
 
 static Widget qmon_cq = 0;
 static Widget cq_cqfolder = 0;
@@ -111,6 +115,9 @@ static Widget current_matrix = 0;
 
 
 /*-------------------------------------------------------------------------*/
+static Widget qhost_settings = 0;
+static void qmonCQUpdateQhostMatrix(void);
+
 static void qmonCQPopdown(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCQCreate(Widget shell);
 static void qmonQinstanceHandleEnterLeave(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
@@ -198,12 +205,15 @@ static ListTreeItem* cq_add_aqtlist(Widget tree, ListTreeItem *parent,
                            StringConst attribute_name);
 #endif
 
+static void qmonCQStartUpdate(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCQStopUpdate(Widget w, XtPointer cld, XtPointer cad);
+
+
+
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonCQPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonCQPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -225,13 +235,20 @@ XtPointer cld, cad;
    } 
    
    /*
+   ** show qhost_settings folder only if showHostTab == true
+   ** this can be set in ~/Qmon file or changed in Q to default to true
+   */
+   if (!SHOW_HOST_TAB) {
+      XmTabDeleteFolder(cq_cqfolder, XtParent(qhost_settings));
+   }
+   
+   /*
    ** fill the displayed dialogues
    */
    qmonQCUReadPreferences();
    qmonCQUpdate(qmon_cq, NULL, NULL);
    XmTabSetTabWidget(cq_cqfolder, current_matrix, True);
 
-   
    xmui_manage(qmon_cq);
 
    /* set default cursor */
@@ -244,9 +261,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
 /*-------------------------------------------------------------------------*/
-static void qmonCQPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
 
    DENTER(GUI_LAYER, "qmonCQPopdown");
@@ -289,12 +304,21 @@ Widget parent
                            "cq_message", &cq_message,
                            "cluster_queue_settings", &cluster_queue_settings,
                            "qinstance_settings", &qinstance_settings,
+                           "qhost_settings", &qhost_settings,
                            "cq_cqfolder", &cq_cqfolder,
                            "cq_explain", &cq_explain,
                            "cq_explain_states", &cq_explain_states,
                            NULL);
    
    current_matrix = cluster_queue_settings;
+
+   if (SHOW_HOST_TAB && AUTOMATIC_UPDATE_HOST_TAB) {
+      /* start the needed timers and the corresponding update routines */
+      XtAddCallback(XtParent(cq_layout), XmNpopupCallback,
+          qmonCQStartUpdate, NULL);
+      XtAddCallback(XtParent(cq_layout), XmNpopdownCallback,
+          qmonCQStopUpdate, NULL);
+   }    
 
    /*
    ** callbacks
@@ -394,10 +418,14 @@ void qmonCQUpdate( Widget w, XtPointer cld, XtPointer cad)
    }
 
    XmtDisplayBusyCursor(w);
-   if (current_matrix == cluster_queue_settings)
+   if (current_matrix == cluster_queue_settings) {
       qmonCQUpdateCQMatrix();
-   else if (current_matrix == qinstance_settings)
+   } else if (current_matrix == qinstance_settings) {
       qmonCQUpdateQIMatrix();
+   } else if (current_matrix == qhost_settings) {
+      qmonCQUpdateQhostMatrix();
+   }   
+      
 /*    qmonCQUpdateTree(); */
 
    XmtDisplayDefaultCursor(w);
@@ -410,9 +438,7 @@ static char search_for[256] = "";
 static ListTreeMultiReturnStruct *matches;
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQFindNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQFindNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    ListTreeItem *item = NULL;
@@ -450,9 +476,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQFindNextNode(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQFindNextNode(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget)cld;
    static int count = 0;
@@ -500,9 +524,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQHighlight(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQHighlight(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeMultiReturnStruct *ret = (ListTreeMultiReturnStruct*)cad;
    ListTreeItem *item;
@@ -510,7 +532,7 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonCQHighlight");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
         item=ret->items[i];
@@ -532,16 +554,14 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQMenu(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQMenu(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeItemReturnStruct *ret = (ListTreeItemReturnStruct *)cad;
    char name[BUFSIZ];
 
    DENTER(GUI_LAYER, "qmonCQMenu");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
 
@@ -556,16 +576,14 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCQActivate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCQActivate(Widget w, XtPointer cld, XtPointer cad)
 {
    ListTreeActivateStruct *ret = (ListTreeActivateStruct*)cad;
    int count;
 
    DENTER(GUI_LAYER, "qmonCQActivate");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf("ACTIVATE: item=%s count=%d\n",ret->item->text,ret->count);
       count=0;
       while (count<ret->count) {
@@ -1670,7 +1688,7 @@ static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad)
    int rows;
    lList *alp = NULL;
    const char *str;
-   Boolean status, answer;
+   Boolean status, answer = False;
    Widget matrix = cluster_queue_settings;
 
    DENTER(GUI_LAYER, "qmonCQDelete");
@@ -1798,7 +1816,21 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(cq_load, False);
       XtSetSensitive(cq_explain_states, False);
       XtSetSensitive(cq_explain, False);
-   } else { 
+   } else if (!strcmp(XtName(cbs->tab_child), "qhost_layout")) {
+      current_matrix = qhost_settings;
+      qmonCQUpdateQhostMatrix();
+
+      XtSetSensitive(cq_force, False);
+      XtSetSensitive(cq_suspend, False);
+      XtSetSensitive(cq_resume, False);
+      XtSetSensitive(cq_disable, False);
+      XtSetSensitive(cq_enable, False);
+      XtSetSensitive(cq_reschedule, False);
+      XtSetSensitive(cq_clear_error, False);
+      XtSetSensitive(cq_load, False);
+      XtSetSensitive(cq_explain_states, False);
+      XtSetSensitive(cq_explain, False);
+   } else {
       current_matrix = qinstance_settings;
       qmonCQUpdateQIMatrix();
 
@@ -2135,6 +2167,160 @@ static void qmonCQUpdateQIMatrix(void)
    lFreeList(&fql);
 
    DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQUpdateQhostMatrix(void)
+{
+   lList *alp = NULL;
+   lList *ehl = NULL;
+   lList *cl = NULL;
+   lListElem *eh = NULL;
+   lListElem *lep = NULL;
+   int row;
+   int num_rows;
+
+   DENTER(GUI_LAYER, "qmonCQUpdateQhostMatrix");
+
+   if (!qmon_cq) {
+     DEXIT;
+     return;
+   }
+
+   qmonMirrorMultiAnswer(EXECHOST_T | CENTRY_T, &alp);
+   if (alp) {
+      qmonMessageBox(qhost_settings, alp, 0);
+      lFreeList(&alp);
+      DEXIT;
+      return;
+   }
+
+   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
+   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   /*
+   lWriteListTo(ehl, stdout);
+   lWriteListTo(cl, stdout);
+   */
+   lPSortList(ehl, "%I+", EH_name);
+   
+   XtVaSetValues(qhost_settings, XmNcells, NULL, NULL);
+   
+   row=0;
+   for_each(eh, ehl) {
+     char buffer[80];
+     char *s;
+     dstring rs = DSTRING_INIT;
+     u_long32 dominant = 0;
+     int column =0, i=0;
+     char *fields[] = {LOAD_ATTR_MEM_USED, LOAD_ATTR_MEM_TOTAL, 
+		       LOAD_ATTR_SWAP_USED, LOAD_ATTR_SWAP_TOTAL,
+		       LOAD_ATTR_VIRTUAL_USED, LOAD_ATTR_VIRTUAL_TOTAL};
+     
+     num_rows = XbaeMatrixNumRows(qhost_settings);
+     if (row >= num_rows) {
+       XbaeMatrixAddRows(qhost_settings, num_rows, 
+			 NULL, NULL, NULL, 1);
+     }
+     
+     if(!strcmp(lGetHost(eh, EH_name), SGE_TEMPLATE_NAME) || !strcmp(lGetHost(eh, EH_name), SGE_GLOBAL_NAME)) {
+       continue;
+     }
+     strcpy(buffer, (char *)lGetHost(eh, EH_name));
+     if (bootstrap_get_ignore_fqdn() && (s = strchr(buffer, '.')))
+       *s = '\0';
+      
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_ARCH, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       sge_strlcpy(buffer, sge_get_dominant_stringval(lep, &dominant, &rs),
+		   sizeof(buffer));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+     
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_NUM_PROC, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       sge_strlcpy(buffer, sge_get_dominant_stringval(lep, &dominant, &rs),
+		   sizeof(buffer));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_LOAD_AVG, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       reformatDoubleValue(buffer, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+       
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_NP_LOAD_AVG, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       /* lWriteElemTo(lep, stdout); */
+       sprintf(buffer, "%.1f%%", 100 * lGetDouble(lep, CE_pj_doubleval));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+       
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     for (i = 0; i < 6 ; i++) {
+       lep=get_attribute_by_name(NULL, eh, NULL, fields[i], cl, DISPATCH_TIME_NOW, 0);
+       if (lep) {
+	 reformatDoubleValue(buffer, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+	 sge_dstring_clear(&rs);
+	 lFreeElem(&lep);
+       }
+       else
+	 strcpy(buffer, "-");
+       
+       XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+     }
+     row++;
+   }
+   /* shrink back excess rows */
+   num_rows = XbaeMatrixNumRows(qhost_settings);
+   row = MAX(row, 30);
+   if (num_rows > row) {
+     XbaeMatrixDeleteRows(qhost_settings, row, num_rows - row);
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQStartUpdate(Widget w, XtPointer cld, XtPointer cad)
+{
+  DENTER(GUI_LAYER, "qmonCQStartUpdate");
+
+  qmonTimerAddUpdateProc(EXECHOST_T, "qmonCQUpdateQhostMatrix", qmonCQUpdateQhostMatrix);
+  qmonStartTimer(EXECHOST_T);
+
+  DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCQStopUpdate(Widget w, XtPointer cld, XtPointer cad)
+{
+  DENTER(GUI_LAYER, "qmonCQStopUpdate");
+
+  qmonStopTimer(EXECHOST_T);
+  qmonTimerRmUpdateProc(EXECHOST_T, "qmonCQUpdateQhostMatrix");
+
+  DEXIT;
 }
 
 /*-------------------------------------------------------------------------*/

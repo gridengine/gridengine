@@ -42,6 +42,8 @@ typedef struct _tApplicationResources {
    int multi_click_time;
    int msg_how;
    String htmlHelpFile;
+   Boolean showHostTab;
+   Boolean automaticUpdateHostTab;
 /*
    int queue_grid_xoffset;
    int queue_grid_yoffset;
@@ -65,9 +67,11 @@ extern tApplicationResources     QmonApplicationResources;
 #define MULTI_CLICK_TIME \
    QmonApplicationResources.multi_click_time
 
-#define QMON_VERSION       QmonApplicationResources.qmon_version
-#define MSG_HOW            QmonApplicationResources.msg_how
-#define HTMLHELPFILE       QmonApplicationResources.htmlHelpFile
+#define QMON_VERSION                   QmonApplicationResources.qmon_version
+#define MSG_HOW                        QmonApplicationResources.msg_how
+#define HTMLHELPFILE                   QmonApplicationResources.htmlHelpFile
+#define SHOW_HOST_TAB                  QmonApplicationResources.showHostTab
+#define AUTOMATIC_UPDATE_HOST_TAB      QmonApplicationResources.automaticUpdateHostTab
 
 void qmonGetApplicationResources(Widget top, ArgList args, Cardinal num_args);
 

@@ -33,9 +33,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <limits.h>
-#include <math.h>
-#include <float.h>
-
 #include "basis_types.h"
 #include "sge.h"
 
@@ -86,7 +83,6 @@ static void qhost_usage(FILE *fp);
 static void sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, lList *pel, u_long32 show);
 static void sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show);
 static void sge_print_host(lListElem *hep, lList *centry_list);
-static int reformatDoubleValue(char *result, char *format, const char *oldmem);
 static void get_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 
 extern char **environ;
@@ -817,44 +813,6 @@ lListElem *ep;
    return alp;
 }
 
-/*-------------------------------------------------------------------------*/
-static int reformatDoubleValue(
-char *result,
-char *format,
-const char *oldmem 
-) {
-   char c;
-   double dval;
-   int ret = 1;
-
-   DENTER(TOP_LAYER, "reformatDoubleValue");
-
-   if (parse_ulong_val(&dval, NULL, TYPE_MEM, oldmem, NULL, 0)) {
-      if (dval==DBL_MAX) {
-         strcpy(result, "infinity");
-      } else {
-         c = '\0';
-
-         if (fabs(dval) >= 1024*1024*1024) {
-            dval /= 1024*1024*1024;
-            c = 'G';
-         } else if (fabs(dval) >= 1024*1024) {
-            dval /= 1024*1024;
-            c = 'M';
-         } else if (fabs(dval) >= 1024) {
-            dval /= 1024;
-            c = 'K';
-         }
-         sprintf(result, format, dval, c);
-      }
-   }
-   else {
-      strcpy(result, "?E"); 
-      ret = 0;
-   }
-   DEXIT;
-   return ret;
-}
 
 /****
  **** get_all_lists (static)

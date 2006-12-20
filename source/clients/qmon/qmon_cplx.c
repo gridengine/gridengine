@@ -113,9 +113,7 @@ static void qmonCplxStartUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxStopUpdate(Widget w, XtPointer cld, XtPointer cad);
 #endif
 /*-------------------------------------------------------------------------*/
-void qmonPopupCplxConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupCplxConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -244,9 +242,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownCplxConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownCplxConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownCplxConfig");
 
@@ -257,9 +253,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad)
 {
    static lEnumeration *what = NULL;
    lList *entries = NULL;
@@ -729,9 +723,7 @@ static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad)
    DEXIT;
 }
 /*-------------------------------------------------------------------------*/
-static void qmonCplxSelectAttr(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixSelectCellCallbackStruct *cbs = 
             (XbaeMatrixSelectCellCallbackStruct*) cad;

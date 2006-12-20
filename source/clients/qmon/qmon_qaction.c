@@ -753,9 +753,7 @@ enum {
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */ 
 /*-------------------------------------------------------------------------*/
-void qmonQCPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonQCPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget layout;
    XmString title;
@@ -864,9 +862,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-void qmonQCPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonQCPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    
    DENTER(TOP_LAYER, "qmonQCPopdown");
@@ -1312,9 +1308,7 @@ Widget parent
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
 
@@ -1338,9 +1332,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCToggleAction(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCToggleAction(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonQCToggleAction");
 
@@ -1380,9 +1372,7 @@ XtPointer cld, cad;
 
 #if 0
 /*-------------------------------------------------------------------------*/
-static void qmonQCResetAll(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCResetAll(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString xmhost = NULL;
 
@@ -1403,9 +1393,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCClone(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean status = False;
    lList *ql = NULL;
@@ -1464,9 +1452,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCCheckHost(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCCheckHost(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*)cad;
    static char unique[CL_MAXHOSTLEN];
@@ -1497,9 +1483,7 @@ XtPointer cld, cad;
 }
 #endif
 /*-------------------------------------------------------------------------*/
-static void qmonQCCheckName(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCCheckName(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonQCCheckName");
 
@@ -1510,9 +1494,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    bool ret = True;
@@ -1763,9 +1745,7 @@ static void qmonQCMem(Widget w, XtPointer cld, XtPointer cad)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCTime(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCTime(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget input_field = (Widget) cld;
    char stringval[256];
@@ -1792,9 +1772,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCCalendar(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCCalendar(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget input_field = (Widget) cld;
    char buf[256];
@@ -1843,9 +1821,7 @@ XtPointer cld, cad;
 /* L I M I T    P A G E                                                    */
 /*-------------------------------------------------------------------------*/
 #if 0
-static void qmonQCLimitNoEdit(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCLimitNoEdit(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixEnterCellCallbackStruct *cbs =
          (XbaeMatrixEnterCellCallbackStruct*) cad;
@@ -1865,9 +1841,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCLimitCheck(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCLimitCheck(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixLeaveCellCallbackStruct *cbs =
          (XbaeMatrixLeaveCellCallbackStruct*) cad;
@@ -1903,9 +1877,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* S U B O R D I N A T E S   P A G E                                       */
 /*-------------------------------------------------------------------------*/
-static void qmonQCSOQ(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad)
 {
    XbaeMatrixDefaultActionCallbackStruct *cbs =
          (XbaeMatrixDefaultActionCallbackStruct*) cad;
@@ -1956,9 +1928,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* A C C E S S L I S T     P A G E                                         */
 /*-------------------------------------------------------------------------*/
-static void qmonQCAccessToggle(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCAccessToggle(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
    
@@ -1977,9 +1947,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCAccessAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCAccessAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount, i;
@@ -2016,9 +1984,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCAccessRemove(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCAccessRemove(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount;
@@ -2048,9 +2014,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R O J E C T     P A G E                                               */
 /*-------------------------------------------------------------------------*/
-static void qmonQCProjectToggle(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCProjectToggle(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
    
@@ -2069,9 +2033,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCProjectAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCProjectAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount, i;
@@ -2108,9 +2070,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCProjectRemove(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCProjectRemove(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *selectedItems;
    Cardinal selectedItemCount;
@@ -2138,9 +2098,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonQCOwnerAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonQCOwnerAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString xnew = NULL;
    String new = NULL;

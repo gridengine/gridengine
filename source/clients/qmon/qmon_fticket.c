@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <Xmt/Xmt.h>
 #include <Xmt/Create.h>
@@ -144,9 +145,7 @@ static void ParametersToCull(lListElem *sep, tFREntry *data);
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonFTicketPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonFTicketPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -176,9 +175,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-void qmonOTicketPopup(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonOTicketPopup(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
 
@@ -211,9 +208,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 /* P R I V A T E                                                           */
 /*-------------------------------------------------------------------------*/
-static void qmonFOTicketPopdown(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFOTicketPopdown(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget ticket = (Widget)cld;
 
@@ -225,11 +220,8 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTOpenLink(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTOpenLink(Widget w, XtPointer cld, XtPointer cad)
+{
    tFOTInfo *info = (tFOTInfo *) cld;
 
    DENTER(GUI_LAYER, "qmonFOTOpenLink");
@@ -260,9 +252,7 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFTOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -328,7 +318,7 @@ XtPointer cld, cad;
       XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
 
       
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Policy-------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -371,7 +361,7 @@ XtPointer cld, cad;
          XmtMsgLinePrintf(fticket_message, "Success");
       XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
    
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Ratios-------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -566,11 +556,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTEnterCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTEnterCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixEnterCellCallbackStruct *cbs =
       (XbaeMatrixEnterCellCallbackStruct*) cad;
    String str;
@@ -586,11 +573,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFOTLeaveCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFOTLeaveCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixLeaveCellCallbackStruct *cbs = 
          (XbaeMatrixLeaveCellCallbackStruct *)cad;
 
@@ -612,11 +596,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTLeaveCell(
-Widget w,
-XtPointer cld,
-XtPointer cad 
-) {
+static void qmonFTLeaveCell(Widget w, XtPointer cld, XtPointer cad)
+{
    XbaeMatrixLeaveCellCallbackStruct *cbs = 
          (XbaeMatrixLeaveCellCallbackStruct *)cad;
 
@@ -779,9 +760,7 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonFTUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonFTUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -836,9 +815,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonOTUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonOTUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -904,9 +881,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonOTOkay(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonOTOkay(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -951,7 +926,7 @@ XtPointer cld, cad;
          XmtMsgLinePrintf(oticket_message, "Success");
       XmtMsgLineClear(oticket_message, DISPLAY_MESSAGE_DURATION); 
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("----Override Policy--------------------\n");
          lWriteListTo(lp, stdout);
          printf("_______________________________________\n");
@@ -1201,18 +1176,19 @@ lListElem *sep
    DENTER(GUI_LAYER, "CullToParameters");
 
    /* USER */
-   data->fticket_user = (int)(lGetDouble(sep, SC_weight_user)*1000);
+   data->fticket_user = (int)floor(lGetDouble(sep, SC_weight_user)*1000 + 0.5);
    
    /* USERSET */
-   data->fticket_userset = (int)(lGetDouble(sep, SC_weight_department)*1000);
+   data->fticket_userset = (int)floor(lGetDouble(sep, SC_weight_department)*1000 + 0.5);
    
    /* PROJECT */
-   data->fticket_project = (int)(lGetDouble(sep, SC_weight_project)*1000);
+   data->fticket_project = (int)floor(lGetDouble(sep, SC_weight_project)*1000 + 0.5);
    
    /* JOB */
-   data->fticket_job = (int)(lGetDouble(sep, SC_weight_job)*1000);
-   if (data->fticket_user+data->fticket_userset+data->fticket_project+
-         data->fticket_job != 1000) {
+   data->fticket_job = (int)floor(lGetDouble(sep, SC_weight_job)*1000.0 + 0.5);
+
+   if ((data->fticket_user + data->fticket_userset + data->fticket_project +
+         data->fticket_job) != 1000) {
       data->fticket_user = 250;
       data->fticket_userset = 250;
       data->fticket_project = 250;

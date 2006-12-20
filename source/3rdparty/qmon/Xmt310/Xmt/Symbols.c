@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: Symbols.c,v 1.1 2001/07/18 11:06:03 root Exp $
+ * $Id: Symbols.c,v 1.1.1.1.28.1 2006/12/20 16:42:32 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,24 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: Symbols.c,v $
- * Revision 1.1  2001/07/18 11:06:03  root
- * Initial revision
+ * Revision 1.1.1.1.28.1  2006/12/20 16:42:32  andre
+ * AA-2006-12-20-0: Bugfix:    o ansi prototypes in qmon
+ *                             o reprioritize field in qmon cluster config missing (CR 6353526/IZ 1904)
+ *                             o host already exists when modifying cluster settings (CR 6494508/IZ 2080)
+ *                             o qmon should refresh job list when switching tabs (IZ 2111)
+ *                             o qmon: missing dependency on libevc (IZ 2118)
+ *                             o qmon: QIM task error message not displayed in "Why ?" (IZ 2119)
+ *                             o qmon: row numbers of job tabs keep on increasing (IZ 2120)
+ *                             o qmon: adding qhost-like load listing (IZ 2126)
+ *                             o qmon job control: display wider default columns (CR 6506677/IZ 721/IZ 2121)
+ *                             o Sorting by different fields (CR 6506637 / IZ 571)
+ *                             o DEBUG_ON->RMON_DEBUG_ON
+ *                             o sge_ca script fix for no des encryption of p12
+ *                             o commlib segv fix for not loadable openssl
+ *                  Review:    AH, RD
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:03  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -407,7 +423,7 @@ XtArgVal *valuep;
 	_XtCopyToArg(&s->addr, (XtArgVal *) &valuep, s->size);
 	break;
     case XmtSymbolRESOURCE:
-	XtVaGetValues((Widget)s->addr, s->resource_name, valuep);
+	XtVaGetValues((Widget)s->addr, s->resource_name, valuep, NULL);
 	break;
     }
 }

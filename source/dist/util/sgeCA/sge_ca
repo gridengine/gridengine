@@ -483,7 +483,7 @@ MakePKCS12()
       unixuser=`echo $line|cut -d: -f1`
       $INFOTEXT "Generating %s.p12." \
          "$unixuser"
-      $P12 -export -inkey $CALOCALTOP/userkeys/$unixuser/key.pem -out $CALOCALTOP/userkeys/$unixuser/$unixuser.p12 -in $CALOCALTOP/userkeys/$unixuser/cert.pem -certfile $CALOCALTOP/cacert.pem -caname "SGE CA"
+      $P12 -export -nodes -inkey $CALOCALTOP/userkeys/$unixuser/key.pem -out $CALOCALTOP/userkeys/$unixuser/$unixuser.p12 -in $CALOCALTOP/userkeys/$unixuser/cert.pem -certfile $CATOP/cacert.pem -caname "SGE CA"
    done   
 }
 

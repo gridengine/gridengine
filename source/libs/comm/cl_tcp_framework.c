@@ -1311,6 +1311,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
 #else
    socklen_t fromlen = 0;
 #endif
+
    int retval;
    int server_fd = -1;
    cl_com_tcp_private_t* private = NULL;
@@ -1506,6 +1507,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 #else
    socklen_t socklen = sizeof(socket_error);
 #endif
+
 
 #ifdef USE_POLL
    struct pollfd *ufds;

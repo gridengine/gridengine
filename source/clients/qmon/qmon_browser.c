@@ -74,9 +74,7 @@ static void qmonBrowserSetState(Widget w, XtPointer cld, XtPointer cad);
 /*-------------------------------------------------------------------------*/
    
 /*-------------------------------------------------------------------------*/
-void qmonBrowserOpen(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonBrowserOpen(Widget w, XtPointer cld, XtPointer cad)
 {
    
    DENTER(TOP_LAYER, "qmonBrowserOpen");
@@ -139,9 +137,7 @@ int obj_id
 }
 
 /*-------------------------------------------------------------------------*/
-void qmonBrowserMessages(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonBrowserMessages(Widget w, XtPointer cld, XtPointer cad)
 {
    char *host = (char*)cld;
    char filename[SGE_PATH_MAX];
@@ -213,9 +209,7 @@ char *title
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonBrowserClose(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonBrowserClose(Widget w, XtPointer cld, XtPointer cad)
 {
    
    DENTER(TOP_LAYER, "qmonBrowserClose");
@@ -229,9 +223,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonBrowserClear(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonBrowserClear(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget browser = (Widget) cld;
 
@@ -243,9 +235,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonBrowserSetState(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonBrowserSetState(Widget w, XtPointer cld, XtPointer cad)
 {
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct*) cad;
    Widget browser = (Widget) cld;

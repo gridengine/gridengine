@@ -176,9 +176,7 @@ static Widget sconf_job_range = 0;
 
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupSchedConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupSchedConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *scl = NULL;
@@ -305,9 +303,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSchedOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSchedOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *scl = NULL;
    lListElem *sep = NULL;
@@ -336,7 +332,7 @@ XtPointer cld, cad;
 
    if (sep && qmonSchedGet(sep)) {
 
-      if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___SCHEDULER_CONF________________________\n");
          lWriteListTo(scl, stdout);
          printf("_______________________________________\n");
@@ -367,9 +363,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonSchedCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSchedCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonSchedCancel");
 
@@ -379,9 +373,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSchedTime(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSchedTime(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget input_field = (Widget) cld;
    char stringval[256];
@@ -660,11 +652,8 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonLoadNamesSC(
-Widget w,
-XtPointer cld,
-XtPointer cad  
-) {
+static void qmonLoadNamesSC(Widget w, XtPointer cld, XtPointer cad)
+{
    lList *cl = NULL;
    lList *ehl = NULL;
    lList *entries = NULL;
@@ -712,11 +701,8 @@ XtPointer cad
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSchedJobInfo(
-Widget w,
-XtPointer cld,
-XtPointer cad  
-) {
+static void qmonSchedJobInfo(Widget w, XtPointer cld, XtPointer cad)
+{
    XmtChooserCallbackStruct *cbs = (XmtChooserCallbackStruct *) cad;
  
    DENTER(GUI_LAYER, "qmonSchedJobInfo");

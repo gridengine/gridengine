@@ -32,6 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <math.h>
+#include <float.h>
+
+
 #define QSTAT_INDENT    "       "
 #define QSTAT_INDENT2   "                         "
 
@@ -109,5 +113,7 @@ sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p,
 
 void 
 qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string);
+
+int reformatDoubleValue(char *result, char *format, const char *oldmem);
 
 #endif /* __QSTAT_PRINTING_H */

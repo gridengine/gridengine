@@ -149,11 +149,11 @@ static tJobField job_items[] = {
    { 1, JB_priority, "@{Priority}", 8, 20, PrintPriority },
    { 1, JB_job_name, "@{Name}", 10, 50, PrintString },
    { 1, JB_owner, "@{Owner}", 10, 50, PrintString },
-   { 1, JAT_status, "@{Status}", 8, 30, PrintStatus },
-   { 1, 0, "@{Queue}", 10, 500, PrintGrantedQueue},
-   { 0, JB_submission_time, "@{SubmitTime}", 12, 30, PrintTime },
-   { 0, JAT_start_time, "@{StartTime}", 12, 30, PrintStartTime },
-   { 0, JB_execution_time, "@{ScheduleTime}", 12, 30, PrintTime },
+   { 1, JAT_status, "@{Status}", 7, 30, PrintStatus },
+   { 1, 0, "@{Queue}", 16, 500, PrintGrantedQueue},
+   { 0, JB_submission_time, "@{SubmitTime}", 19, 30, PrintTime },
+   { 0, JAT_start_time, "@{StartTime}", 19, 30, PrintStartTime },
+   { 0, JB_execution_time, "@{ScheduleTime}", 19, 30, PrintTime },
    { 0, JB_account, "@{AccountString}", 15, 50, PrintString },
 #if 0 /* JG: removed JB_cell from job object */   
    { 0, JB_cell, "@{Cell}", 10, 30, PrintString },
@@ -1336,9 +1336,7 @@ int cols
 }
 
 /*-------------------------------------------------------------------------*/
-static void okCB(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void okCB(Widget w, XtPointer cld, XtPointer cad)
 {
    int nr_fields = 0;
    int i, j;
@@ -1404,9 +1402,7 @@ XtPointer cld,cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void cancelCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void cancelCB(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "cancelCB");
    
@@ -1417,9 +1413,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void saveCB(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void saveCB(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -1450,9 +1444,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void addToSelected(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void addToSelected(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *items;
    Cardinal itemCount;
@@ -1474,9 +1466,7 @@ XtPointer cld,cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void rmFromSelected(w, cld, cad)
-Widget w;
-XtPointer cld,cad;
+static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *items;
    Cardinal itemCount;
@@ -1644,6 +1634,10 @@ int how
 
 #else   
 
+   XtVaSetValues( list, 
+                  XmNitems, NULL,
+                  XmNitemCount, 0,
+                  NULL);
    for (i=FIRST_FIELD; i<num_jobs; i++) {
       if (how == FILL_ALL) {
          DPRINTF(("XmListAddItemUniqueSorted: '%s'\n", job_items[i].name));
@@ -1663,9 +1657,7 @@ int how
 
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupJCU(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupJCU(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(TOP_LAYER, "qmonPopupJCU");
 
@@ -1845,9 +1837,7 @@ XtPointer cld
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterClear(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterClear(Widget w, XtPointer cld, XtPointer cad)
 {
 
 
@@ -1866,9 +1856,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterSet(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterSet(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *arl = NULL;
    lListElem *ep = NULL;
@@ -1901,9 +1889,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterEditResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 {
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;
    long how = (long)cld;
@@ -1975,9 +1961,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobFilterRemoveResource(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad)
 {
 
    XmIconListCallbackStruct *cbs = (XmIconListCallbackStruct*) cad;

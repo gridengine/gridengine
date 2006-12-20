@@ -179,9 +179,7 @@ static int qmonTOVUpdateFill(Widget w, lList **alpp);
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
-void qmonPopupTicketOverview(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupTicketOverview(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *alp = NULL;
    DENTER(GUI_LAYER, "qmonPopupTicketOverview");
@@ -230,9 +228,7 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownTicketOverview(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownTicketOverview(Widget w, XtPointer cld, XtPointer cad)
 {
    Boolean status = True;
    Boolean answer = False;
@@ -261,9 +257,7 @@ XtPointer cld, cad;
 
 #if 0
 /*-------------------------------------------------------------------------*/
-static void qmonTOVStartUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonTOVStartUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonTOVStartUpdate");
   
@@ -275,9 +269,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobStopUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonJobStopUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonJobStopUpdate");
   
@@ -366,9 +358,7 @@ Widget parent
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonTOVInput(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonTOVInput(Widget w, XtPointer cld, XtPointer cad)
 {
    tTOVEntry data;
 
@@ -442,9 +432,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonTOVUpdate(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonTOVUpdate(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonTOVUpdate");
    
@@ -479,9 +467,7 @@ static int qmonTOVUpdateFill(Widget w, lList **alpp)
 }   
 
 /*-------------------------------------------------------------------------*/
-static void qmonTOVApply(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonTOVApply(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *scl;
    lList *alp = NULL;

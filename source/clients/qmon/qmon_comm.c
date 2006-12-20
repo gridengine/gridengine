@@ -763,9 +763,7 @@ int action
 
 
 /*-------------------------------------------------------------------------*/
-void qmonShowMirrorList(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonShowMirrorList(Widget w, XtPointer cld, XtPointer cad)
 {
    int type = (int)(long) cld;
    
@@ -780,8 +778,7 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-u_long32 l2s(
-u_long32 ltype 
-) {
+u_long32 l2s(u_long32 ltype)
+{
    return  QmonMirrorList[ltype].selector;
 }   

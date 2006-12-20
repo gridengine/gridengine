@@ -38,7 +38,7 @@
 #include "rmon_monitoring_level.h"
 typedef void              (*rmon_print_callback_func_t) (const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
 
-extern monitoring_level DEBUG_ON;
+extern monitoring_level RMON_DEBUG_ON;
 
 int  rmon_condition(int layer, int debug_class);
 int  rmon_is_enabled(void);

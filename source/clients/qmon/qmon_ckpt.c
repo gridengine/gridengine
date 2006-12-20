@@ -103,9 +103,7 @@ static Widget qmonCreateCkptAsk(Widget parent);
 static Boolean qmonCkptGetAsk(lListElem *pep);
 
 /*-------------------------------------------------------------------------*/
-void qmonPopupCkptConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonPopupCkptConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget shell;
    lList *alp = NULL;
@@ -170,9 +168,7 @@ void updateCkptList(void)
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonPopdownCkptConfig(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonPopdownCkptConfig(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonPopdownCkptConfig");
 
@@ -263,9 +259,7 @@ lListElem *ep
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonSelectCkpt(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonSelectCkpt(Widget w, XtPointer cld, XtPointer cad)
 {
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *ckpt_name;
@@ -366,9 +360,7 @@ Widget parent
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCkptAdd(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCkptAdd(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonCkptAdd");
 
@@ -383,9 +375,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCkptModify(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCkptModify(Widget w, XtPointer cld, XtPointer cad)
 {
    XmString *ckptnames;
    Cardinal ckptnum;
@@ -425,9 +415,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCkptOk(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCkptOk(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *ckptl = NULL;
    lList *alp;
@@ -484,9 +472,7 @@ XtPointer cld, cad;
 
 
 /*-------------------------------------------------------------------------*/
-static void qmonCkptCancel(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCkptCancel(Widget w, XtPointer cld, XtPointer cad)
 {
    DENTER(GUI_LAYER, "qmonCkptCancel");
 
@@ -496,9 +482,7 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCkptDelete(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void qmonCkptDelete(Widget w, XtPointer cld, XtPointer cad)
 {
    lList *lp = NULL;
    lList *alp = NULL;

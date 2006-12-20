@@ -319,9 +319,7 @@ typedef struct _tShareTreeData {
 
 
 /*-------------------------------------------------------------------------*/
-static void HighlightCallback(w,client,call)
-Widget w;
-XtPointer client, call;
+static void HighlightCallback(Widget w, XtPointer client, XtPointer call)
 {
    ListTreeMultiReturnStruct *ret;
    ListTreeItem *item;
@@ -329,7 +327,7 @@ XtPointer client, call;
 
    DENTER(GUI_LAYER, "HighlightCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       ret=(ListTreeMultiReturnStruct *)call;
       printf("HIGHLIGHT: count=%d\n",ret->count);
       for (i=0; i<ret->count; i++) {
@@ -347,15 +345,13 @@ XtPointer client, call;
 }
 
 /*-------------------------------------------------------------------------*/
-static void MenuCallback(w,client,call)
-Widget w;
-XtPointer client, call;
+static void MenuCallback(Widget w, XtPointer client, XtPointer call)
 {
    ListTreeItemReturnStruct *ret = (ListTreeItemReturnStruct *)call;
 
    DENTER(GUI_LAYER, "MenuCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       printf ("MENU: item=%s\n", ret->item->text);
    }
 
@@ -363,16 +359,14 @@ XtPointer client, call;
 }
 
 /*-------------------------------------------------------------------------*/
-static void ActivateCallback(w,client,call)
-Widget w;
-XtPointer client, call;
+static void ActivateCallback(Widget w, XtPointer client, XtPointer call)
 {
    ListTreeActivateStruct *ret;
    int count;
 
    DENTER(GUI_LAYER, "ActivateCallback");
 
-   if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
       ret=(ListTreeActivateStruct *)call;
       printf("ACTIVATE: item=%s count=%d\n",ret->item->text,ret->count);
       count=0;
@@ -648,9 +642,7 @@ ListTreeItem *item
 #endif
 
 /*-------------------------------------------------------------------------*/
-static void showtree(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showtree(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    lList *shac = NULL;
@@ -674,9 +666,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -695,9 +685,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showsimpleshare(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showsimpleshare(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -716,9 +704,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showusage(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showusage(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;
@@ -737,9 +723,7 @@ XtPointer cld, cad;
 }
    
 /*-------------------------------------------------------------------------*/
-static void showpath(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+static void showpath(Widget w, XtPointer cld, XtPointer cad)
 {
    Widget tree = (Widget) cld;
    ListTreeItem *item = NULL;

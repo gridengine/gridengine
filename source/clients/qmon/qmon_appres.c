@@ -60,7 +60,15 @@ static XtResource resources[] = {
 
    { "htmlHelpFile", "htmlHelpFile", XtRString,
       sizeof(String), XtOffsetOf(tApplicationResources, htmlHelpFile),
-      XtRImmediate, (XtPointer) NULL }
+      XtRImmediate, (XtPointer) NULL },
+
+   { "showHostTab", "showHostTab", XtRBoolean,
+      sizeof(int), XtOffsetOf(tApplicationResources, showHostTab),
+      XtRImmediate, (XtPointer)False },
+
+   { "automaticUpdateHostTab", "automaticUpdateHostTab", XtRBoolean,
+      sizeof(int), XtOffsetOf(tApplicationResources, automaticUpdateHostTab),
+      XtRImmediate, (XtPointer)False }
 
 };
 
@@ -84,6 +92,8 @@ Cardinal num_args
    DPRINTF(("fetch_time: %d\n", FETCH_TIME));
    DPRINTF(("multi_click_time: %d\n", MULTI_CLICK_TIME));
    DPRINTF(("htmlHelpFile: %s\n", HTMLHELPFILE ? HTMLHELPFILE : "NA"));
+   DPRINTF(("showHostTab: %s\n", SHOW_HOST_TAB ? "true" : "false"));
+   DPRINTF(("automaticUpdateHostTab: %s\n", AUTOMATIC_UPDATE_HOST_TAB ? "true" : "false"));
 
    DEXIT;
 

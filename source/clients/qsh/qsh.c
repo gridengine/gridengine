@@ -1550,7 +1550,7 @@ int main(int argc, char **argv)
    if (!existing_job) {
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
-      if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
+      if (rmon_mlgetl(&RMON_DEBUG_ON, TOP_LAYER) & INFOPRINT) { 
          lWriteElemTo(job, stdout);
       }
 #endif

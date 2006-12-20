@@ -161,7 +161,9 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
       CL_LOG(CL_LOG_WARNING,"freeing sirm in message struct");
       cl_com_free_sirm_message(&((*message)->message_sirm));
    }
-   free((*message)->message);
+   if ((*message)->message != NULL) {
+      free((*message)->message);
+   }   
    free(*message);
    *message = NULL;
    return CL_RETVAL_OK;

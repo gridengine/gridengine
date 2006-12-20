@@ -341,9 +341,7 @@ String name
 /*-------------------------------------------------------------------------*/
 /* check interactive job, cld contains the job_number                      */
 /*-------------------------------------------------------------------------*/
-void qmonTimerCheckInteractive(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
+void qmonTimerCheckInteractive(Widget w, XtPointer cld, XtPointer cad)
 {
    static tTimer timer;
    static Boolean initialized = False;

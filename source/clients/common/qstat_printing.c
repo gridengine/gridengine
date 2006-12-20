@@ -1695,3 +1695,42 @@ void qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string)
 
    return;
 }
+
+/*-------------------------------------------------------------------------*/
+int reformatDoubleValue(
+char *result,
+char *format,
+const char *oldmem 
+) {
+   char c;
+   double dval;
+   int ret = 1;
+
+   DENTER(TOP_LAYER, "reformatDoubleValue");
+
+   if (parse_ulong_val(&dval, NULL, TYPE_MEM, oldmem, NULL, 0)) {
+      if (dval==DBL_MAX) {
+         strcpy(result, "infinity");
+      } else {
+         c = '\0';
+
+         if (fabs(dval) >= 1024*1024*1024) {
+            dval /= 1024*1024*1024;
+            c = 'G';
+         } else if (fabs(dval) >= 1024*1024) {
+            dval /= 1024*1024;
+            c = 'M';
+         } else if (fabs(dval) >= 1024) {
+            dval /= 1024;
+            c = 'K';
+         }
+         sprintf(result, format, dval, c);
+      }
+   }
+   else {
+      strcpy(result, "?E"); 
+      ret = 0;
+   }
+   DEXIT;
+   return ret;
+}

@@ -33,7 +33,7 @@
 ***  (long) may need to be changed on different hardwares.
 **/
 
-#if defined(ALPHA) || defined(SOLARIS64) || defined(LINUXAMD64_24) || defined(ALINUX_22) || defined(SOLARISAMD64) || defined(LINUXIA64) 
+#if defined(ALPHA) || defined(SOLARIS64) || defined(LINUXAMD64) || defined(ALINUX_22) || defined(SOLARISAMD64) || defined(LINUXIA64)
 typedef long PointerSizedIntegral;
 #else
 typedef int PointerSizedIntegral;

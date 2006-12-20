@@ -58,6 +58,7 @@ include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
+include $(SDIR)/libs/evc/Makefile
 include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
@@ -70,8 +71,8 @@ QMON_3RD  = $(SDIR)/3rdparty/qmon/$(COMPILE_ARCH)
 
 QMON_TARGETS = qmon
 
-QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
-             qmon_signal.c qmon_timer.c qmon_comm.c \
+QMON_SRC =  qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
+            qmon_signal.c qmon_timer.c qmon_comm.c \
             qmon_start.c qmon_browser.c qmon_jobcustom.c qmon_qaction.c \
             qmon_widgets.c qmon_appres.c qmon_init.c qmon_request.c \
             qmon_cplx.c qmon_host.c qmon_manop.c qmon_about.c \
@@ -82,7 +83,7 @@ QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
             qmon_cq.c
 
-QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
+QMON_AD   = $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_browser.ad \
             $(QMON_DIR)/qmon_host.ad \
             $(QMON_DIR)/qmon_job.ad \
@@ -113,7 +114,10 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
             sge_cqueue_qconf.c sge_mt_init.c \
             sge_cqueue_qstat.c \
             read_write_complex.c \
-            read_object.c
+            read_object.c \
+            qstat_printing.c \
+            show_job.c \
+            sig_handlers.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             

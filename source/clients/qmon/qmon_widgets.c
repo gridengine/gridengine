@@ -247,17 +247,13 @@ Cardinal argcount
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonHideCursor(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonHideCursor(Widget w, XtPointer cld, XtPointer cad)
 {
    XtVaSetValues(w, XmNcursorPositionVisible, False, NULL);
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonShowCursor(w, cld, cad)
-Widget w;
-XtPointer cld, cad; 
+static void qmonShowCursor(Widget w, XtPointer cld, XtPointer cad)
 {
    XtVaSetValues(w, XmNcursorPositionVisible, True, NULL);
 }

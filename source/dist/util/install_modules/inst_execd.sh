@@ -486,8 +486,14 @@ GetLocalExecdSpoolDir()
    $INFOTEXT -u "\nLocal execd spool directory configuration"
    $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
-             "spool directory is configured.\n\n Now you can enter a local spool " \
-             "directory for this host.\n"
+             "spool directory is configured.\n\n Now you can configure a local spool " \
+             "directory for this host.\nATTENTION: The local spool directory doesn't have " \
+             "to be located on a local\ndrive. It is specific to the <local> host and can " \
+             "be located on network drives,\ntoo. But for performance reasons, spooling to a " \
+             "local drive is recommended.\n\nFOR WINDOWS USER: On Windows systems the " \
+             "local spool directory MUST be set\nto a local harddisk directory.\nInstalling " \
+             "an execd without local spool directory makes the host unuseable.\nLocal " \
+             "spooling on local harddisk is mandatory for Windows systems.\n"
    $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
    ret=$?
 

@@ -407,8 +407,8 @@ ErrUsage()
              "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated spooling server\n" \
              "   -udb       uninstall Berkeley DB RPC spooling server\n" \
-             "   -bup       backup of your configuration (Berkeley DB spooling)\n" \
-             "   -rst       restore configuration from backup (Berkeley DB spooling)\n" \
+             "   -bup       backup of your configuration\n" \
+             "   -rst       restore configuration from backup\n" \
              "   -upd       upgrade cluster from 5.x to 6.0\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
@@ -521,6 +521,12 @@ CheckRSHConnection()
 #
 CheckConfigFile()
 {
+   if [ "$SGE_EXECD_PORT" = "" ]; then
+      $INFOTEXT -log "The SGE_EXECD_PORT has not been set in config file!\n"
+      MoveLog
+      exit 1
+   fi
+
    if [ "$CSP" = "true" ]; then
       if [ "$CSP_COUNTRY_CODE" = "" -o `echo $CSP_COUNTRY_CODE | wc -c` != 3 ]; then
          $INFOTEXT -log "The CSP_COUNTRY_CODE entry contains more or less than 2 characters!\n"
@@ -2153,7 +2159,7 @@ BackupCheckBootStrapFile()
             BDB_HOME=`Enter`
          fi
       
-         if [ `hostname` != "$BDB_SERVER" ]; then
+         if [ `$SGE_UTILBIN/gethostname -aname` != "$BDB_SERVER" ]; then
             $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
             $INFOTEXT -n "Exiting backup!\n"
             exit 1
@@ -2554,39 +2560,53 @@ CopyCA()
       return
    fi
 
-   for RHOST in `$SGE_BIN/qconf -sh`; do
-      if [ "$RHOST" != "$HOST" ]; then
-         CheckRSHConnection $RHOST
-         if [ "$?" = 0 ]; then
-            $INFOTEXT "Copying certificates to host %s" $RHOST
-            $INFOTEXT -log "Copying certificates to host %s" $RHOST
-            echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
-            if [ "$SGE_QMASTER_PORT" = "" ]; then 
-               $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
-            else
-               $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
-            fi
+   #ToDo: What about the submit hosts? RFE: -instsubmit + copycert functionality
+   CopyCaToHostType admin 
+
+}
+
+# copy the ca certs to all cluster host, which equals the given host type
+CopyCaToHostType()
+{
+   if [ "$1" -eq "admin" ]; then
+      cmd="$SGE_BIN/qconf -sh"
+   elif [ "$1" -eq "submit" ]; then
+      cmd="$SGE_BIN/qconf -ss"
+   fi
+
+   for RHOST in `$cmd`; do
+         if [ "$RHOST" != "$HOST" ]; then
+            CheckRSHConnection $RHOST
             if [ "$?" = 0 ]; then
-               $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
-               $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
-               if [ "$SGE_QMASTER_PORT" = "" ]; then
-                  echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+               $INFOTEXT "Copying certificates to host %s" $RHOST
+               $INFOTEXT -log "Copying certificates to host %s" $RHOST
+               echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
+               if [ "$SGE_QMASTER_PORT" = "" ]; then 
+                  $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
                else
-                  echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                  $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
+               fi
+               if [ "$?" = 0 ]; then
+                  $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
+                  $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
+                  if [ "$SGE_QMASTER_PORT" = "" ]; then
+                     echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                  else
+                     echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                  fi
+               else
+                  $INFOTEXT "The certificate copy failed!"      
+                  $INFOTEXT -log "The certificate copy failed!"      
                fi
             else
-               $INFOTEXT "The certificate copy failed!"      
-               $INFOTEXT -log "The certificate copy failed!"      
+               $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
+               $INFOTEXT "Certificates couldn't be copied!"
+               $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
+               $INFOTEXT -log "Certificates couldn't be copied!"
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
             fi
-         else
-            $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
-            $INFOTEXT "Certificates couldn't be copied!"
-            $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
-            $INFOTEXT -log "Certificates couldn't be copied!"
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
-      fi
-   done
+      done
 }
 
 #-------------------------------------------------------------------------

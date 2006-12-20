@@ -293,13 +293,13 @@ CheckRunningQmaster()
       SGE_QMASTER_PORT=`$utilbin_dir/getservbyname -number sge_qmaster`
    fi
 
-   while [ $running = "false" -a $loop -ne 10 ]; do 
+   while [ $running = "false" -a $loop -ne 30 ]; do 
       $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null 2>&1
 
       if [ "$?" = 0 ]; then
          running=true
       else
-         sleep 3 
+         sleep 2 
          masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
          loop=`expr $loop + 1`
       fi

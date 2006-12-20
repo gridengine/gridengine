@@ -793,6 +793,7 @@ if [ $SHADOW = "install" ]; then
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin echo $SHADOW_HOST >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       for s in `echo $ALREADY_SHADOWS`; do
          ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
@@ -823,6 +824,7 @@ if [ $SHADOW = "install" ]; then
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
          for s in `echo $ALREADY_SHADOWS`; do
             ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters

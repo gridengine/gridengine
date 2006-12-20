@@ -1,0 +1,117 @@
+Source Code Review Form 
+=======================
+(version 1.2)
+
+Date: 08/12/06
+
+1 Identification
+
+MD-2006-12-20-0: Bugfix:    o inst_sge -help wrongly indicates -bup/-rst 
+                              works with BDB spooling only
+                            o Add information that Windows execd spool dir 
+                              has to be local
+                            o Berkeley DB backup failed when using hostname 
+                              with a fully qualified domain name
+                            o The inst_common.sh is missing $SGE_EXECD_PORT
+                            o can't start qmaster message appears, but 
+                              qmaster is started
+                            o inst_sge script does not add the master host 
+                              to the shadow_masters file
+                            o Installation dialog for windows domain 
+                              users is not necessary
+                 Changed:   inst_sge, install_modules, rc_templates
+                 Bugtraq:   6444537, 6491741, 6437853, 6438084, 6291036, 
+                            6332587, 6464939
+                 Issue:     2132, 2133, 2134, 1635, 1920
+                 Review:    HP
+
+
+2 Conformance to specification
+
+2 [x ] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide
+3.1 [x ] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view)
+3.2 [x ] yes
+3.2 [ ] no - comment:
+
+3.3 -help output
+3.3 [x ] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format)
+3.4 [x ] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats
+3.5 [x ] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR and Issuezilla
+3.6 [x ] yes
+3.6 [ ] no - comment:
+
+3.7 Issuezilla
+3.7 [x ] yes
+3.7 [ ] no - comment:
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [x ] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [x ] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [x ] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 flawfinder diff
+No new flaws.
+5.1 [x ] yes
+5.1 [ ] no
+
+5.2 Used memory leak debugger
+5.2 [x ] yes
+5.2 [ ] no - comment:
+
+5.3 Manual tests
+Description:
+Successfull execution
+5.3 [x ] yes
+5.3 [ ] no - comment:
+
+5.4 Testsuite covers issue
+5.4 [x ] yes
+
+5.5 If 5.4 = no: Testsuite issue created
+5.5 [ ] yes
+5.5 [ ] no - comment: 
+
+5.6 Testsuite run successfull
+5.6 [x ] yes
+5.6 [ ] no - comment:
+
+
+6 Comments
+
+
+7 Accepted
+7 [x ] yes
+7 [ ] no - comment:
+
+

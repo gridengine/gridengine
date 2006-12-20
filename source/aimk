@@ -45,6 +45,9 @@ unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
+set WINCC=""
+set WINCFLAGS=""
+set WINLIBS=""
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -2188,7 +2191,8 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
-         "AUTHUSER_ALL=$AUTHUSER_ALL" \
+         "AUTHUSER_ALL=$AUTHUSER_ALL" "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" \
+         "WINLIBS=$WINLIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done

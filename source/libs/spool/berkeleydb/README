@@ -18,7 +18,7 @@ Building Berkeley DB
 ====================
 
 1. Download the sources from www.sleepycat.com.
-Grid Engine Requires a version >= 4.2, the current version is 4.4.20.
+Grid Engine Requires a version >= 4.2, the default version used for maintrunk is 4.4.20.
 
 2. Build and install the Berkeley DB:
 Untar the source code distribution.

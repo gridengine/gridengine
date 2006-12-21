@@ -921,7 +921,7 @@ int sge_set_environment()
          return 1;
       }
       value = strtok(NULL, "\n");
-      if (!value)
+      if (value == NULL)
          value = "";
 
       sge_set_env_value(name, value);
@@ -1048,9 +1048,8 @@ int sge_set_env_value(const char *name, const char* value)
             ret = 0;
          }
       }
-   }
-   else {
-      ret = sge_setenv (name, value);
+   } else {
+      ret = sge_setenv(name, value);
    }
    
    return ret;

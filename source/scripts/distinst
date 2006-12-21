@@ -1481,9 +1481,8 @@ for i in $ARCH; do
                      InstallProg $libname
                   elif [ -f $libname2 ]; then   
                      InstallProg $libname2
-                  elif [ $exit_on_error = true ]; then
-                     echo "\"$libname\" not found. Installation failed."
-                     exit 1
+                  else
+                     echo "Neither \"$libname\" nor \"$libname2\" found. Assuming binaries are statically linked against Berkeley DB."
                   fi
                done
             fi

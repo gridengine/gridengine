@@ -852,6 +852,7 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
 {
    lListElem *elem = NULL;
    u_long32 old_version, new_version = 0;
+   const char *old_conf_name = lGetHost(anOldConf, CONF_hname);
    
    DENTER(TOP_LAYER, "remove_conf_by_name");
 
@@ -862,11 +863,11 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
    lSetUlong(aNewConf, CONF_version, new_version); 
      
    /* Make sure, 'aNewConf' does have a unique name */
-   lSetHost(aNewConf, CONF_hname, aConfName);   
+   lSetHost(aNewConf, CONF_hname, old_conf_name);   
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
-   elem = lGetElemHost(Cluster_Config.list, CONF_hname, aConfName);
+   elem = lGetElemHost(Cluster_Config.list, CONF_hname, old_conf_name);
 
    lRemoveElem(Cluster_Config.list, &elem);
    
@@ -876,7 +877,7 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
-   sge_event_spool(ctx, anAnswer, 0, sgeE_CONFIG_MOD, 0, 0, aConfName, NULL, NULL, elem, NULL, NULL, true, true);
+   sge_event_spool(ctx, anAnswer, 0, sgeE_CONFIG_MOD, 0, 0, old_conf_name, NULL, NULL, elem, NULL, NULL, true, true);
    
    DRETURN(0);
 }

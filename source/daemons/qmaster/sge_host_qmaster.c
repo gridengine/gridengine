@@ -553,7 +553,7 @@ gdi_object_t *object
          host_type = SGE_TYPE_SUBMITHOST;
          break;
    }
-     
+    
    dbret = spool_write_object(alpp, spool_get_default_context(), ep, key, host_type);
    answer_list_output(&answer_list);
 

@@ -1197,9 +1197,10 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             lc_factor = ((double)ulc_factor)/100;
       }
 
-      ret = find_best_result(ret, rc_time_by_slots(&a, requested_attr, load_attr, config_attr, actual_attr, 
-               NULL, allow_non_requestable, NULL, slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, 
-               &start_time, lGetHost(host, EH_name)));
+      ret = rc_time_by_slots(&a, requested_attr, load_attr, config_attr, 
+                             actual_attr, NULL, allow_non_requestable, NULL, 
+                             slots, DOMINANT_LAYER_HOST, lc_factor, HOST_TAG, 
+                             &start_time, lGetHost(host, EH_name));
 
 /* queue */
      if((ret == DISPATCH_OK || ret == DISPATCH_MISSING_ATTR) && queue){

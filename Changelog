@@ -1,3 +1,8 @@
+EB-2006-12-21-0: Bugfix:    qselect matches wrong resource which have been 
+                            overridden at lower level
+                 Bugtraq:   6475272
+                 Review:    RD
+
 EB-2006-12-21-0: Bugfix:    ignore_fqdn is broken for the local configuration
                  Bugtraq:   6488244
                  Review:    RD

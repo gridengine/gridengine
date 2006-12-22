@@ -37,6 +37,7 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_dstring.h"
+#include "sge_varargs.h"
 
 #define REALLOC_CHUNK   1024
 #define BUFFER_SIZE 20000

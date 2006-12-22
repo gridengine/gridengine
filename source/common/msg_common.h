@@ -393,7 +393,7 @@
 #define MSG_GDI_USAGE_Ap_OPT_FNAME                       "[-Ap fname]"
 #define MSG_GDI_UTEXT_Ap_OPT_FNAME                       _MESSAGE(23306, _("add a new parallel environment from file"))
 
-#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq ]"
+#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [queue_name]]"
 #define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new cluster queue"))
 
 #define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"

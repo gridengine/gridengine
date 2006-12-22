@@ -3639,7 +3639,7 @@ lListElem *job  /* JB_Type */
             switch(mode) {
                case '+':
                   if(!newctx)
-                     lSetList(job, JB_context, newctx = lCreateList("context list", VA_Type));
+                     lSetList(job, JB_context, newctx = lCreateList("context_list", VA_Type));
                   if((temp = lGetElemStr(newctx, VA_variable, lGetString(ctxep, VA_variable))))
                      lSetString(temp, VA_value, lGetString(ctxep, VA_value));
                   else

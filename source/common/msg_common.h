@@ -441,7 +441,7 @@
 #define MSG_GDI_UTEXT_Mprj_OPT_PROJECT                   _MESSAGE(23318, _("modify project from file"))
 
 #define MSG_GDI_USAGE_A_OPT_ACCOUNT_STRING               "[-A account_string]"
-#define MSG_GDI_UTEXT_A_OPT_ACCOUNT_STRING               _MESSAGE(23319, _("use account at host"))
+#define MSG_GDI_UTEXT_A_OPT_ACCOUNT_STRING               _MESSAGE(23319, _("account string in accounting record"))
 
 #define MSG_GDI_USAGE_Aq_OPT_FNAME                       "[-Aq fname]"
 #define MSG_GDI_UTEXT_Aq_OPT_FNAME                       _MESSAGE(23320, _("add a queue from file"))

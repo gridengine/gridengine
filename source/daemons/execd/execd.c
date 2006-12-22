@@ -234,6 +234,11 @@ char **argv
    }     
    lInit(nmv);
 
+   /* unset XAUTHORITY if set */
+   if (getenv("XAUTHORITY") != NULL) {
+      sge_unsetenv("XAUTHORITY");
+   }
+
    parse_cmdline_execd(argv);   
    
    /* exit if we can't get communication handle (bind port) */

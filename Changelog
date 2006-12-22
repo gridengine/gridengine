@@ -1,3 +1,9 @@
+CR-2006-12-21-0: Bugfix:    qsh does not work if XAUTHORITY is set in root
+                            environment
+                 BT:        6482762
+                 Issue:     2128
+                 Review:    RD
+
 JG-2006-12-20-0: Bugfix:    sge_shepherd dumped core on linux amd64 for qrsh 
                             jobs with very long commandline (> 10k).
                  Bugster:   6506115

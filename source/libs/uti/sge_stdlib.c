@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
+#include <unistd.h>
 
 #include "sge_stdlib.h"
 #include "sge_dstring.h"
@@ -280,57 +282,62 @@ int sge_setenv(const char *name, const char *value)
    return ret;
 }
 
-/****** sge_stdlib/sge_clrenv() ************************************************
+
+/****** sge_env/sge_unsetenv() *************************************************
 *  NAME
-*     sge_clrenv() -- Remove variable from environment
+*     sge_unsetenv() -- unset environment variable
 *
 *  SYNOPSIS
-*     int sge_clrenv(const char *name) 
+*     void sge_unsetenv(const char* varName) 
 *
 *  FUNCTION
-*     Remove variable from environment.
+*     Some architectures doesn't support unsetenv(), sge_unsetenv() is used
+*     to unset an environment variable. 
 *
 *  INPUTS
-*     const char *name - the env var to be removed
+*     const char* varName - name of envirionment variable
 *
 *  RESULT
-*     int - error state
-*         1 - success
-*         0 - error 
+*     void - no return value
 *
 *  NOTES
-*     MT-NOTE: sge_setenv() is MT safe
+*     MT-NOTE: sge_unsetenv() is not MT safe 
 *******************************************************************************/
-int sge_clrenv(const char *name)
-{
+void sge_unsetenv(const char* varName) {
+#ifdef USE_SGE_UNSETENV
    extern char **environ;
-   char **p;
-   int namelen = strlen(name);
+   char* searchString = NULL;
 
-   /* search for the env var */
-   for (p=environ; p[0]; p++) {
-      if (strncmp(p[0], name, namelen)==0 && p[0][namelen] == '=')
-         break;
+   if (varName != NULL) {
+      size_t length = (strlen(varName) + 2) * sizeof(char);
+      searchString = malloc(length);
+      if (searchString != NULL) {
+         bool found = false;
+         int i;
+         snprintf(searchString, length, "%s=", varName);
+         
+         /* At first we have to search the index of varName */
+         for (i=0; i < ARG_MAX && environ[i] != NULL; i++) {
+            if (strstr(environ[i],searchString) != NULL) {
+               found = true;
+               break;
+            }
+         }
+        
+         /* At second we remove varName by copying varName+1 to varName */ 
+         if (found == true) {
+            for (; i < ARG_MAX-1 && environ[i] != NULL; i++) {
+               environ[i] = environ[i+1];
+            }
+            environ[i] = NULL; 
+         }
+         FREE(searchString);
+      }
    }
-
-   /* not found */
-   if (!*p)
-      return 0;
-
-   do {
-      p[0] = p[1];
-   } while (*++p);
-
-   return 1;
-}
-
-#if 0
-void trace_environ()
-{
-   extern char **environ;
-   char **p;
-   for (p=environ; *p; p++) {
-      printf("%s\n", *p);
-   }
-}
+#else
+   unsetenv(varName);
 #endif
+}
+
+
+

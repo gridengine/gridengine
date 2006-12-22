@@ -2632,3 +2632,17 @@ PreInstallCheck()
 {
    CheckBinaries
 }
+
+RemoveHostFromList()
+{
+   source_list = $1
+   host_to_remove = $2
+
+   help_list=""
+   for hh in $source_list; do
+      if [ $host_to_remove != $hh ]; then
+         help_list="$help_list $hh"
+      fi
+   done
+   echo $help_list
+}

@@ -1,3 +1,10 @@
+MD-2006-12-22-0: Bugfix:    o The execd auto_install takes too long because 
+                            of long delays after a parallel install block
+                 Bugtraq:   6421696
+                 Issue:     2153
+                 Review:    HP
+                 Changed:   inst_sge, inst_common.sh
+
 CR-2006-12-21-0: Bugfix:    qsh does not work if XAUTHORITY is set in root
                             environment
                             (merge from maintrunk)

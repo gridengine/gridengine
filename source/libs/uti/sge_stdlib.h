@@ -70,6 +70,6 @@ char *sge_free(char *cp);
 const char *sge_getenv(const char *env_str); 
 int sge_putenv(const char *var);
 int sge_setenv(const char *name, const char *value);
-int sge_clrenv(const char *name);
+void sge_unsetenv(const char* name);
 
 #endif /* __SGE_STDLIB_H */

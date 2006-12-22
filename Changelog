@@ -1,3 +1,10 @@
+CR-2006-12-21-0: Bugfix:    qsh does not work if XAUTHORITY is set in root
+                            environment
+                            (merge from maintrunk)
+                 BT:        6482762
+                 Issue:     2128
+                 Review:    RD
+
 EB-2006-12-21-0: Bugfix:    qselect matches wrong resource which have been 
                             overridden at lower level
                  Bugtraq:   6475272

@@ -225,9 +225,13 @@ char **argv
    }     
    lInit(nmv);
 
+   /* unset XAUTHORITY if set */
+   if (getenv("XAUTHORITY") != NULL) {
+      sge_unsetenv("XAUTHORITY");
+   }
+
    parse_cmdline_execd(argv);   
    
-
    /* exit if we can't get communication handle (bind port) */
    max_enroll_tries = 30;
    while ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {

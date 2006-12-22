@@ -1692,7 +1692,6 @@ int read_defaults
    /*
    ** stage three fill the dialog
    */
-   qmonFreeSMData(&SMData);
    qmonCullToSM(job, &SMData, prefix);
    lFreeElem(&job);
    XmtDialogSetDialogValues(submit_layout, &SMData);
@@ -1833,6 +1832,7 @@ char *prefix
    ** free any allocated memory
    */
    qmonFreeSMData(data); 
+   qmonInitSMData(data);
 
 
    /* 
@@ -1904,12 +1904,12 @@ char *prefix
    }
 
    {
-      lList *env_list = lGetList(jep, JB_env_list);
+      lList *env_list = lCopyList("blub", lGetList(jep, JB_env_list));
       lList *prefix_vars = NULL;
 
       var_list_split_prefix_vars(&env_list, &prefix_vars, VAR_PREFIX);
-      data->env_list = lCopyList("JB_env_list", lGetList(jep, JB_env_list));
-      lAddList(lGetList(jep, JB_env_list), &prefix_vars);
+      lFreeList(&prefix_vars);
+      data->env_list = env_list;
    }
 
    data->ctx_list = lCopyList("JB_ctx_list", lGetList(jep, JB_context));

@@ -1,3 +1,17 @@
+AA-2006-12-22-0: Bugfix:    Merge of V60u10 fixes and Hintak add-ons
+                            o reprioritize field in qmon cluster config missing (CR 6353526/IZ 1904)
+                            o host already exists when modifying cluster settings (CR 6494508/IZ 2080)
+                            o qmon should refresh job list when switching tabs (IZ 2111)
+                            o qmon: missing dependency on libevc (IZ 2118)
+                            o qmon: QIM task error message not displayed in "Why ?" (IZ 2119)
+                            o qmon: row numbers of job tabs keep on increasing (IZ 2120)
+                            o qmon: adding qhost-like load listing (IZ 2126)
+                            o qmon job control: display wider default columns (CR 6506677/IZ 721/IZ 2121)
+                            o Sorting by different fields (CR 6506637 / IZ 571)
+                            o qmon_howto addition of qhost folder and job control column size descr.
+                 Review:    RD,AH           
+                            
+                            
 JG-2006-12-22-0: Bugfix:    Fixed broken build introduced by JG-2006-12-20-0.
                  Review:    RD
 

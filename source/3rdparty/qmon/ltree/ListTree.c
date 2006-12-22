@@ -47,7 +47,7 @@
 #ifdef LISTTREE_DEBUG
 #include <stdlib.h>
 #include <stdarg.h>
-static void LT_DBG(int line,const char *fcn,char *fmt, ...)
+static void LT_DBG(int line, const char *fcn, const char *fmt, ...)
 {
    va_list ap;
   
@@ -59,7 +59,7 @@ static void LT_DBG(int line,const char *fcn,char *fmt, ...)
 #define DARG __LINE__,__FUNCTION__
 #define LT_DBGW(a) fprintf(stderr,"%s:%d %s()   %s\n",__FILE__,__LINE__,__FUNCTION__, a)
 #else
-static void LT_DBG(int line,const char *fcn,char *fmt, ...)
+static void LT_DBG(int line, const char *fcn, const char *fmt, ...)
 {
 }
 #define DARG __LINE__,__FUNCTION__

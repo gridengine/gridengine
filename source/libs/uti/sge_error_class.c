@@ -231,6 +231,7 @@ static sge_error_iterator_class_t* sge_error_iterator_class_create(sge_error_cla
    ret->get_type = sge_error_iterator_get_type;
    ret->next = sge_error_iterator_next;
    
+   DEXIT;
    return ret;
 }
 
@@ -395,7 +396,7 @@ void sge_error_to_dstring(sge_error_class_t *eh, dstring *ds) {
 
    while (iter && iter->next(iter)) {
       if (first) {
-         first = true;
+         first = false;
       } else {   
          sge_dstring_append(ds, "\n");
       }   

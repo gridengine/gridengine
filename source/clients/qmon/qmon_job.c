@@ -146,11 +146,14 @@ static Boolean AskForHold(Widget w, Cardinal *hold, dstring *dyn_tasks);
 static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad);
-/* static void qmonJobSort(Widget w, XtPointer cld, XtPointer cad); */
+static void qmonJobSort(Widget w, XtPointer cld, XtPointer cad);
 /*-------------------------------------------------------------------------*/
 static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, dstring *sb);
 static int show_info_for_job(FILE *fp, lList **alpp, dstring *sb);
 
+static int field_sort_by;
+static int field_sort_direction;
+static int jobnum_sort_direction;
 
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
@@ -370,14 +373,12 @@ Widget parent
                      qmonMatrixSelect, (XtPointer) rw);
    XtAddCallback(job_pending_jobs, XmNselectCellCallback, 
                      qmonMatrixSelect, (XtPointer) pw);
-#if 0                     
    XtAddCallback(job_pending_jobs, XmNlabelActivateCallback, 
                      qmonJobSort, NULL);
    XtAddCallback(job_running_jobs, XmNlabelActivateCallback, 
                      qmonJobSort, NULL);
    XtAddCallback(job_zombie_jobs, XmNlabelActivateCallback, 
                      qmonJobSort, NULL);
-#endif                     
    XtAddCallback(job_suspend, XmNactivateCallback, 
                      qmonJobChangeState, (XtPointer)QI_DO_SUSPEND);
    XtAddCallback(job_unsuspend, XmNactivateCallback, 
@@ -396,6 +397,10 @@ Widget parent
                      NULL); 
 
    current_matrix = job_pending_jobs;
+   /* initialising sort order to decreasing priority then increasing job number */
+   field_sort_by = SGEJ_priority;
+   field_sort_direction = SGEJ_sort_decending;
+   jobnum_sort_direction = SGEJ_sort_ascending; 
 
    DEXIT;
 }
@@ -540,7 +545,6 @@ XtPointer cad
    DEXIT;
 }
 
-#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonJobSort(
 Widget w,
@@ -549,16 +553,56 @@ XtPointer cad
 ) {
    XbaeMatrixLabelActivateCallbackStruct *cbs = 
             (XbaeMatrixLabelActivateCallbackStruct *) cad;
-/*    lList *entries = NULL; */
-/*    int column_nm[] = {CE_name, CE_shortcut, CE_valtype, CE_relop, CE_consumable, CE_default}; */
-   
+   /* SGEJ_state is not a typo - PrintStatus uses both JAT_status and JAT_state */
+   int column_nm[] = {SGEJ_job_number, SGEJ_priority, SGEJ_job_name, SGEJ_owner, SGEJ_state, SGEJ_master_queue};
+   /* 
+   ** Mapping the columns to these internal resources:
+   ** JB_job_number    (Ulong)
+   ** JAT_prio         (Double)
+   ** JB_job_name      (String)
+   ** JB_owner         (String)
+   ** JAT_state        (Ulong)
+   ** JAT_master_queue (String)
+   */
    DENTER(GUI_LAYER, "qmonJobSort");
-
-   printf("JobSort = cbs->column = %d\n", cbs->column);
+ 
+   DPRINTF(("JobSort = cbs->column = %d\n", cbs->column));
    
+   /* not coping beyond 6th column */
+   if ( cbs->column > 5) {
+      DEXIT;
+      return;
+   }
+   /* 
+   ** Here is what we are going to do for sorting:
+   ** if the user clicks on a column, we'll sort ascending,
+   ** doing a 2nd time toggles to decending; except
+   ** we always toggle on the job number the first time
+   ** it is selected from a different column, since it is
+   ** always a secondary sort key and if it is selected
+   ** the user most likely wants a toggle.
+   */
+      
+   if (column_nm[cbs->column] == field_sort_by) {
+      /* toggling sort order */
+      field_sort_direction = !field_sort_direction;     
+   } else {
+      field_sort_by = column_nm[cbs->column];
+      field_sort_direction = SGEJ_sort_ascending;
+      /* switching from another field to job number also toggles */
+      if (field_sort_by == SGEJ_job_number) {
+         field_sort_direction = !jobnum_sort_direction;
+      }
+   }
+
+   /* recording the last chosen job number sort direction */
+   if (field_sort_by == SGEJ_job_number) {
+      jobnum_sort_direction = field_sort_direction;
+   }
+   updateJobList();
+    
    DEXIT;
 }
-#endif
 
 /*----------------------------------------------------------------------------*/
 void updateJobList(void)
@@ -583,6 +627,7 @@ void updateJobList(void)
    lList *zl = NULL;
    static Boolean filter_on = False;
    int row = 0, pow = 0, zow = 0;
+   int current_rows = 0, desired_rows = 0; /* used at the end to shrink tabs */
          
    DENTER(GUI_LAYER, "updateJobList");
    
@@ -678,7 +723,7 @@ void updateJobList(void)
    ** sort the jobs according to priority
    */
    if (lGetNumberOfElem(jl)>0 ) {
-      sgeee_sort_jobs(&jl);
+      sgeee_sort_jobs_by(&jl, field_sort_by, field_sort_direction, jobnum_sort_direction);
    }
  
    /*
@@ -853,6 +898,7 @@ void updateJobList(void)
    ** update the zombie job entries
    */
    zl = qmonMirrorList(SGE_ZOMBIE_LIST);
+   sgeee_sort_jobs_by(&zl,  field_sort_by, field_sort_direction, jobnum_sort_direction);
 
 /* lWriteListTo(zl, stdout); */
 
@@ -888,6 +934,23 @@ void updateJobList(void)
          }
          zow += tow;
       }
+   }
+
+   /* shrinking excessive vertical size of tabs from previous runs of updateJobList() */  
+   current_rows = XbaeMatrixNumRows(job_running_jobs);
+   desired_rows = MAX(row, 20);
+   if (current_rows > desired_rows) {
+     XbaeMatrixDeleteRows(job_running_jobs, desired_rows, current_rows - desired_rows);
+   }   
+   current_rows = XbaeMatrixNumRows(job_pending_jobs);
+   desired_rows = MAX(pow, 20);
+   if (current_rows > desired_rows) {
+     XbaeMatrixDeleteRows(job_pending_jobs, desired_rows, current_rows - desired_rows);
+   }
+   current_rows = XbaeMatrixNumRows(job_zombie_jobs);
+   desired_rows = MAX(zow, 20);
+   if (current_rows > desired_rows) {
+     XbaeMatrixDeleteRows(job_zombie_jobs, desired_rows, current_rows - desired_rows);
    }
 
    XbaeMatrixEnableRedisplay(job_running_jobs, True);
@@ -1784,6 +1847,7 @@ static void qmonJobFolderChange(Widget w, XtPointer cld, XtPointer cad)
       XtSetSensitive(job_priority, True);
       XtSetSensitive(job_select_all, True);
    }
+   updateJobList();
 
    DEXIT;
 }
@@ -1869,12 +1933,14 @@ dstring *sb
    /* print scheduler job information and global scheduler info */
    for_each (j_elem, jlp) {
       u_long32 jid = lGetUlong(j_elem, JB_job_number);
-      lListElem *sme;
+      lListElem *sme = NULL;
+      lListElem *jatep = NULL;
  
-      if (line_separator)
+      if (line_separator) {
          sge_dstring_sprintf_append(sb, "\n");
-      else
+      } else {
          line_separator = 1;
+      }   
 /*       cull_show_job(j_elem, 0); */
       if (schedd_info && (sme = lFirst(ilp))) {
          int first_run = 1;
@@ -1909,6 +1975,26 @@ dstring *sb
             lFreeWhere(&where);
          }
       }
+
+      /* dump any associated task error info */
+      for_each (jatep, lGetList(j_elem, JB_ja_tasks)) {
+         lListElem *mesobj = NULL;
+         bool first = true;
+
+         if (first) {
+            /* start task error info on a new line */
+            sge_dstring_sprintf_append(sb, "\n"); 
+            first = false;
+         }
+         for_each(mesobj, lGetList(jatep, JAT_message_list)) {
+            const char *message = lGetString(mesobj, QIM_message);
+            if (message != NULL) {
+               sge_dstring_sprintf_append(sb, "Error for job %u: %s\n",
+                                          jid, message);
+            }
+         }
+      }
+
    }                      
  
    lFreeList(&ilp);
@@ -1917,6 +2003,10 @@ dstring *sb
    return 0;
 }
  
+/* show_info_for_job: show "Why ?" when none is selected
+**
+** derived from qstat_show_job
+*/
 static int show_info_for_job(
 FILE *fp,
 lList **alpp,
@@ -1938,7 +2028,7 @@ dstring *sb
    lListElem *sme;
    lListElem *jid_ulng = NULL;
  
-   DENTER(TOP_LAYER, "qstat_show_job");
+   DENTER(TOP_LAYER, "show_info_for_job");
  
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
@@ -1946,8 +2036,9 @@ dstring *sb
    lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
-         if (fp)
+         if (fp) {
             fprintf(fp, "%s", lGetString(aep, AN_text));
+         }
          if (alpp) {
             answer_list_add(alpp, lGetString(aep, AN_text),
                   lGetUlong(aep, AN_status), lGetUlong(aep, AN_quality));

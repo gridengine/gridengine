@@ -394,7 +394,7 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
 #endif 
 
                       
-auth_result_t do_pam_authenticate(const char* service, const char *username, 
+static auth_result_t do_pam_authenticate(const char* service, const char *username, 
                                   const char *password,
                                   error_handler_t *error_handler)
 {
@@ -581,7 +581,7 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
 }
 #endif
 
-auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
+static auth_result_t get_crypted_password(const char* username, char* buffer, size_t size,
                                 error_handler_t *error_handler) {
                      
 #if defined(AIX43) || defined(AIX51)

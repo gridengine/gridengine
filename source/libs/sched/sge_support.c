@@ -167,12 +167,10 @@ calculate_decay_constant( double halftime,
    if (halftime < 0) {
       *decay_rate = 1.0;
       *decay_constant = 0;
-   } 
-   else if (halftime == 0) {
+   } else if (halftime == 0) {
       *decay_rate = 0;
       *decay_constant = 1.0;
-   } 
-   else {
+   } else {
       *decay_rate = - log(0.5) / (halftime * 60);
       *decay_constant = 1 - (*decay_rate * sge_usage_interval);
    }
@@ -818,8 +816,15 @@ search_userprj_node( lListElem *ep,      /* root of the tree */
 
 void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
 {
+  sgeee_sort_jobs_by(job_list, SGEJ_priority, SGEJ_sort_decending , SGEJ_sort_ascending); /* decreasing priority then increasing job number */
+}
+
+void sgeee_sort_jobs_by( lList **job_list , int by_SGEJ_field, int field_sort_direction, int jobnum_sort_direction) /* JB_Type */
+{
+
    lListElem *job = NULL, *nxt_job = NULL;     
    lList *tmp_list = NULL;    /* SGEJ_Type */
+   char *sortorder = NULL;
 
    DENTER(TOP_LAYER, "sgeee_sort_jobs");
 
@@ -864,14 +869,37 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
 
          lSetDouble(tmp_sge_job, SGEJ_priority,
                     lGetDouble(tmp_task, JAT_prio));
+         if (by_SGEJ_field != SGEJ_priority) { 
+            lSetUlong(tmp_sge_job, SGEJ_state,
+                       lGetUlong(tmp_task, JAT_state));
+            lSetString(tmp_sge_job, SGEJ_master_queue,
+                       lGetString(tmp_task, JAT_master_queue));
+         }           
       }
 
+      /*
+      ** JB_job_number    (Ulong)
+      ** JAT_prio         (Double)
+      ** JB_job_name      (String)
+      ** JB_owner         (String)
+      ** JAT_status       (Ulong)
+      ** JAT_master_queue (String)
+      */
+
       lSetUlong(tmp_sge_job, SGEJ_job_number, lGetUlong(job, JB_job_number));
+      if (by_SGEJ_field != SGEJ_priority) { 
+         lSetString(tmp_sge_job, SGEJ_job_name, lGetString(job, JB_job_name));
+         lSetString(tmp_sge_job, SGEJ_owner, lGetString(job, JB_owner));
+      }
       lSetRef(tmp_sge_job, SGEJ_job_reference, job);
 #if 0
-      DPRINTF(("JOB: "sge_u32" PRIORITY: "sge_u32"\n", 
+      DPRINTF(("JOB: "sge_u32" PRIORITY: %f NAME: %s OWNER: %s QUEUE: %s STATUS: "sge_u32"\n", 
          lGetUlong(tmp_sge_job, SGEJ_job_number), 
-         lGetDouble(tmp_sge_job, SGEJ_priority)));
+         lGetDouble(tmp_sge_job, SGEJ_priority),
+         lGetString(tmp_sge_job, SGEJ_job_name) ? lGetString(tmp_sge_job, SGEJ_job_name) : "",
+         lGetString(tmp_sge_job, SGEJ_owner) ? lGetString(tmp_sge_job, SGEJ_owner) : "",
+         lGetString(tmp_sge_job, SGEJ_master_queue) ? lGetString(tmp_sge_job, SGEJ_master_queue) :"", 
+         lGetUlong(tmp_sge_job, SGEJ_state)));
 #endif
       lAppendElem(tmp_list, tmp_sge_job);
       
@@ -881,7 +909,17 @@ void sgeee_sort_jobs( lList **job_list )              /* JB_Type */
    /*-----------------------------------------------------------------
     * Sort tmp list
     *-----------------------------------------------------------------*/
-   lPSortList(tmp_list, "%I- %I+", SGEJ_priority, SGEJ_job_number);
+   if ((field_sort_direction) && (jobnum_sort_direction)) {
+      sortorder = "%I+ %I+";
+   } else if (!field_sort_direction) {
+      sortorder = "%I- %I+";
+   } else if (!jobnum_sort_direction) {
+      sortorder = "%I+ %I-";
+   } else {
+      sortorder = "%I- %I-";
+   }
+
+   lPSortList(tmp_list, sortorder, by_SGEJ_field, SGEJ_job_number);
 
    /*-----------------------------------------------------------------
     * rebuild job_list according sort order

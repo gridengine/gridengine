@@ -69,8 +69,7 @@ char *sge_malloc(int size)
    DENTER(BASIS_LAYER, "sge_malloc");
 
    if (!size) {
-      DEXIT;
-      return (NULL);
+      DRETURN(NULL);
    }
 
    cp = (char *) malloc(size);
@@ -80,10 +79,7 @@ char *sge_malloc(int size)
       abort();
    }
 
-   memset(cp, 0, size);
-
-   DEXIT;
-   return (cp);
+   DRETURN(cp);
 }   
 
 /****** uti/stdlib/sge_realloc() **********************************************
@@ -117,8 +113,7 @@ char *sge_realloc(char *ptr, int size)
       if (ptr) {
          FREE(ptr);
       }
-      DEXIT;
-      return (NULL);
+      DRETURN(NULL);
    }
 
    cp = (char *) realloc(ptr, size);
@@ -129,8 +124,7 @@ char *sge_realloc(char *ptr, int size)
       abort();
    }
 
-   DEXIT;
-   return (cp);
+   DRETURN(cp);
 }             
 
 /****** uti/stdlib/sge_free() *************************************************

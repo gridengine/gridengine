@@ -506,7 +506,7 @@ resulting limit. The limit formula expression syntax is that of a
 summation weighted complex values, that is:
 </p><p>
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>   $complex1[*w1][{+|-}$complex2[*w2][{+|-}...]]
+<pre>   {w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
 </pre>
 </td></tr></tbody></table>
 Note, no blanks are allowed in the limit formula.
@@ -575,14 +575,14 @@ The resource quota sets are defined as:
 </p><table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
 <pre>{
   name ruleset1
-  limit user roland to compiler_lic=3
-  limit project * to compiler_lic=2
-  limit user * to compiler_lic=1
+  limit users roland to compiler_lic=3
+  limit projects * to compiler_lic=2
+  limit users * to compiler_lic=1
 
 }
 {
   name ruleset2
-  limit user * to compiler_lic=20
+  limit users * to compiler_lic=20
 }
 </pre>
 </td></tr></tbody></table>
@@ -602,7 +602,7 @@ The second rule set ruleset2 express:
 </li>
 </ul>
 <p>Inside ruleset1 the priority is clear defined, user roland will
-always get 3 compiler_lic resources even though he matches to "user *"
+always get 3 compiler_lic resources even though he matches to "users *"
 of the last rule in the rule set and even if he would submit his
 request in a project. Also the interaction between ruleset1 and
 ruleset2 is clear defined and results in a reject if 20 compiler_lic
@@ -747,14 +747,14 @@ $ qconf -mrqs
 </ul>
 Show the definition of the resource quota set (RQS) specified by the argument.
 <table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="1" width="100%"><tbody><tr><td>
-<pre>$ qconf -srl
+<pre>$ qconf -srqs
 ...
   name rule_set_1
 ...
   name rule_set_2
 ...
 
-$ qconf -srl rule_set_1
+$ qconf -srqs rule_set_1
 ...
   name rule_set_1
 ...

@@ -1353,8 +1353,7 @@ bool validate_load_formula(const char *load_formula, lList **answer_list, lList 
                                   STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   ret = false;
                }
-            } 
-            else {
+            } else if (!sge_str_is_number(fact)) {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, 
                               name, fact));
                answer_list_add(answer_list, SGE_EVENT, 

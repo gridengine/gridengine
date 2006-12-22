@@ -66,11 +66,13 @@ SCHEDLIB_SRC = sge_select_queue.c \
 SCHEDLIB_OBJS = $(SCHEDLIB_SRC:.c=.o)
 
 SCHEDLIB_TEST_PROGS = \
-              test_resource_utilization
+              test_resource_utilization \
+              test_sge_load_formula
 
 SCHEDLIB_TEST_PROGS_OBJS = \
               test_resource_utilization.o \
-              sge_resource_utilization_test.o
+              sge_resource_utilization_test.o \
+              test_sge_load_formula
               
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -206,3 +208,9 @@ test_resource_utilization.o: $(SCHEDLIB_DIR)/test_resource_utilization.c
 
 sge_resource_utilization_test.o: $(SCHEDLIB_DIR)/sge_resource_utilization.c
 	$(CC) -o sge_resource_utilization_test.o $(CFLAGS) $(SHARED_CFLAGS) -DMODULE_TEST_SGE_RESOURCE_UTILIZATION -c $(SCHEDLIB_DIR)/sge_resource_utilization.c
+
+test_sge_load_formula: test_sge_load_formula.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_load_formula $(LFLAGS) test_sge_load_formula.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
+
+test_sge_load_formula.o: $(SCHEDLIB_DIR)/test_sge_load_formula.c
+	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/test_sge_load_formula.c

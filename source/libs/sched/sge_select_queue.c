@@ -259,7 +259,6 @@ load_np_value_adjustment(const char* name, lListElem *hep, double *load_correcti
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj)
 {
-   memset(a, 0, sizeof(sge_assignment_t));
    a->job         = job;
    a->ja_task     = ja_task;
    if (is_load_adj) {
@@ -3214,6 +3213,8 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
       u_long32 tt_rqs_all = 0;
 
       if (no_check == false) {
+         dispatch_t rqs_result = DISPATCH_OK;
+
          for_each(rqs, a->rqs_list) {
             const char *user = NULL;
             const char *project = NULL;
@@ -3221,8 +3222,6 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
             const char *queue_name = NULL;
             const lListElem *rule = NULL;
             u_long32 tt_rqs = a->start;
-
-            result = DISPATCH_OK;
 
             if (!lGetBool(rqs, RQS_enabled)) {
                continue;
@@ -3237,14 +3236,14 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
             rule = rqs_get_matching_rule(rqs, user, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
             if (rule != NULL) {
                /* Check booked usage */
-               result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
+               rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
 
-               if (result == DISPATCH_MISSING_ATTR) {
-                  result = DISPATCH_OK;
+               if (rqs_result == DISPATCH_MISSING_ATTR) {
+                  rqs_result = DISPATCH_OK;
                   continue;
                }
                
-               if (result != DISPATCH_OK) {
+               if (rqs_result != DISPATCH_OK) {
                   schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
                   DPRINTF(("resource quota set %s deny job execution\n on %s@%s\n", sge_dstring_get_string(&rule_name), queue_name, host_name));
                   break;
@@ -3252,6 +3251,9 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                tt_rqs_all = MAX(tt_rqs_all, tt_rqs);
             }
          }
+
+         result = find_best_result(rqs_result, result);
+
          if (rqs == NULL) { /* all rule sets checked successfully */
             lSetUlong(queue_instance, QU_tag, 1);
             if (a->is_reservation && (tt_rqs_all != 0)) {
@@ -6932,7 +6934,6 @@ sge_call_pe_qsort(sge_assignment_t *a, const char *qsort_args)
       /*
        * Build queue sort parameters
        */
-      memset(&pqs_params, 0, sizeof(pqs_params));
       pqs_params.job_id = a->job_id;
       pqs_params.task_id = a->ja_task_id;
       pqs_params.slots = a->slots;
@@ -6957,7 +6958,6 @@ sge_call_pe_qsort(sge_assignment_t *a, const char *qsort_args)
       /*
        * For convenience, convert qsort_args into an argument vector qsort_argv.
        */
-      memset(qsort_argv, 0, sizeof(qsort_argv));
       qsort_argv[argc++] = lib_name;
       qsort_argv[argc++] = fn_name;
       while ((tok = sge_strtok_r(NULL, " ", &cntx)) &&

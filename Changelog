@@ -1,3 +1,14 @@
+RD-2006-12-22-0: Bugfix:    - qconf -Arqs added invalid RQS
+                            - removed some unnecessary memset() calls
+                            - Resource quota set breaks the scheduler behavior
+                              with multiple queue instances on exec hosts
+                            - load formula does not recognized float as
+                              weighting factor
+                            - enhanced load formula/dynamic RQS limit syntax
+                 Bugster:   6507572, 6506129, 6507576, 6507579
+                 Issue:     2150, 2149, 2151, 2152
+                 Review:    JG
+
 AA-2006-12-22-0: Bugfix:    Merge of V60u10 fixes and Hintak add-ons
                             o reprioritize field in qmon cluster config missing (CR 6353526/IZ 1904)
                             o host already exists when modifying cluster settings (CR 6494508/IZ 2080)
@@ -10,7 +21,6 @@ AA-2006-12-22-0: Bugfix:    Merge of V60u10 fixes and Hintak add-ons
                             o Sorting by different fields (CR 6506637 / IZ 571)
                             o qmon_howto addition of qhost folder and job control column size descr.
                  Review:    RD,AH           
-                            
                             
 JG-2006-12-22-0: Bugfix:    Fixed broken build introduced by JG-2006-12-20-0.
                  Review:    RD

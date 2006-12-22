@@ -744,7 +744,6 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    }   
 
    filter = malloc(size * sizeof(char*)); 
-   memset(filter, 0, size * sizeof(char*));
 
    if (global){
       build_name_filter(filter, lGetList(global, EH_load_list), HL_name, &pos);

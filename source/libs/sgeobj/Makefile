@@ -341,7 +341,7 @@ test_sge_utility: test_sge_utility.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTI
 
 test_sge_resource_quota: test_sge_resource_quota.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_resource_quota $(LFLAGS) test_sge_resource_quota.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
-   
+
 test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_object.c
 

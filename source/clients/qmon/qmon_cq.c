@@ -70,6 +70,7 @@
 #include "sge_all_listsL.h"
 #include "sge_gdi.h"
 #include "sge_dstring.h"
+#include "sge_string.h"
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"

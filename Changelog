@@ -1,4 +1,9 @@
+RC-2006-12-28-0: Enhancem.: built-in support for getting load info for AIX
+                 Changed:   libuti
+                 Review:    HP
+
 RC-2006-12-26-0: Bugfix:    fixed a typo
+                 Changed:   doc/devel/rfe/ResourceQuotaSpecification.html
 
 OJ-2006-12-22-X: Bugfix:    - qconf -aq help did not display correctly
                               Modified the string to read now 

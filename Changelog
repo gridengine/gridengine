@@ -1,3 +1,11 @@
+HP-2006-12-31-0: Bugfix:    wrong qlogin_daemon or rlogin_daemon in host conf
+                            doesn't set host and job into error state
+                 Changed:   execution_states.c, reaper_execd.c, builtin_starter.c
+                            sge_uidgid.c
+                 Bugtraq:   6349814
+                 Issue:     1914
+                 Review:    TBD
+                 
 MD-2006-12-22-0: Bugfix:    o The execd auto_install takes too long because 
                             of long delays after a parallel install block
                  Bugtraq:   6421696

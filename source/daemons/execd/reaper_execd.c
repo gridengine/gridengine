@@ -474,7 +474,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             failed = shepherd_exit_status;
          else
             failed = ESSTATE_NO_EXITSTATUS;
-      }   
+      } 
       else if (failed != ESSTATE_NO_PID)  /* only set during execd startup */
          failed = shepherd_exit_status_file;
          
@@ -496,9 +496,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       if (failed == ESSTATE_DIED_THRU_SIGNAL)
          sprintf(error, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
       else if (failed == ESSTATE_NO_PID)
-          sprintf(error, MSG_SHEPHERD_NOPIDFILE);
+         sprintf(error, MSG_SHEPHERD_NOPIDFILE);
       else
-          sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_I, failed);
+         sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_I, failed);
    }
 
    /* look for error file this overrules errors found yet */
@@ -670,6 +670,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    switch (failed) {
    case SSTATE_BEFORE_PROLOG:
    case SSTATE_HELPER_SERVICE_ERROR:
+   case SSTATE_CHECK_DAEMON_CONFIG:
+
    /* for CR 6252457 this block should be removed, but for a real fix the
       host or queue error detection must be improved
    */

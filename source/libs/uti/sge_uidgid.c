@@ -290,24 +290,27 @@ int sge_set_admin_username(const char *user, char *err_str)
 ******************************************************************************/
 bool sge_is_admin_user(const char *username)
 {
+   bool       ret = false;
    const char *admin_user;
 #ifdef INTERIX
    char       fq_name[1024];
 #endif
 
    admin_user = bootstrap_get_admin_user();
-
+   if(admin_user != NULL && username != NULL) {
 #ifdef INTERIX
-   /* For Interix: Construct full qualified admin user name.
-    * As admin user is always local, use hostname as domain name.
-    * If admin user is "none", it is a special case and
-    * full qualified name must not be constructed!
-    */
-   wl_build_fq_local_name(admin_user, fq_name);
-   admin_user = fq_name;
+      /* For Interix: Construct full qualified admin user name.
+       * As admin user is always local, use hostname as domain name.
+       * If admin user is "none", it is a special case and
+       * full qualified name must not be constructed!
+       */
+      wl_build_fq_local_name(admin_user, fq_name);
+      admin_user = fq_name;
 #endif
+      ret = strcmp(username, admin_user)==0 ? true : false; 
+   }
 
-   return strcmp(username, admin_user)==0 ? true : false;
+   return ret;
 } /* sge_is_admin_user() */
 
 /****** uti/uidgid/sge_switch2admin_user() ************************************
@@ -904,7 +907,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
        * Do only if windomacc=true is set and user is not the SGE admin user
        */
       if (wl_use_sgepasswd()==true 
-          && sge_is_admin_user(pw->pw_name)==false) {
+          && wl_is_user_id_superuser(pw->pw_uid)==false) {
          char *pass = NULL;
          char buf[1000] = "\0";
          int  res;

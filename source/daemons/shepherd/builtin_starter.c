@@ -34,6 +34,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/resource.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -165,7 +166,6 @@ int truncate_stderr_out
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
-   int   res;
    char target_user_buffer[TARGET_USER_BUFFER_SIZE];
 #endif
 
@@ -321,9 +321,11 @@ int truncate_stderr_out
 #if defined(INTERIX)
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
-      && wl_get_GUI_mode(sge_get_environment()) == true) {
-      char *pass = NULL;
+      && wl_get_GUI_mode(sge_get_environment()) == true
+      && wl_is_user_id_superuser(pw->pw_uid) == false) {
+      char  *pass = NULL;
       uid_t uid;
+      int   res;
 
       uid = geteuid();
       seteuid(SGE_SUPERUSER_UID);
@@ -331,17 +333,17 @@ int truncate_stderr_out
       seteuid(uid);
 
       if(res == 0) {
-          strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-          FREE(pass);
+         strlcpy(user_passwd, pass, MAX_STRING_SIZE);
+         FREE(pass);
       } else {
-          if(res == 1) {
-              shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-          } else if (res == 2) {
-              shepherd_state = SSTATE_PASSWD_MISSING;
-          } else if (res == 3) {
-              shepherd_state = SSTATE_PASSWD_WRONG;
-          }
-          shepherd_error(err_str);
+         if(res == 1) {
+            shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+         } else if (res == 2) {
+            shepherd_state = SSTATE_PASSWD_MISSING;
+         } else if (res == 3) {
+            shepherd_state = SSTATE_PASSWD_WRONG;
+         }
+         shepherd_error(err_str);
       }
    }
 #endif
@@ -380,11 +382,11 @@ int truncate_stderr_out
       shepherd_trace(err_str);
    } else if (ret > 0) {
       if(ret == 2) {
-          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+         shepherd_state = SSTATE_PASSWD_FILE_ERROR;
       } else if (ret == 3) {
-          shepherd_state = SSTATE_PASSWD_MISSING;
+         shepherd_state = SSTATE_PASSWD_MISSING;
       } else if (ret == 4) {
-          shepherd_state = SSTATE_PASSWD_WRONG;
+         shepherd_state = SSTATE_PASSWD_WRONG;
       }
       shepherd_error(err_str);
    }
@@ -742,9 +744,9 @@ int truncate_stderr_out
    if (use_login_shell) {
       strcpy(argv0, "-");
       strcat(argv0, shell_basename);
-   }
-   else
+   } else {
       strcpy(argv0, shell_basename);
+   }
 
    sge_set_def_sig_mask(NULL, NULL);
    sge_unblock_all_signals();
@@ -806,7 +808,7 @@ int truncate_stderr_out
    if (!is_qlogin && !atoi(get_conf_val("handle_as_binary"))) {
       if (strcasecmp(shell_start_mode, "raw_exec")) {
          SGE_STRUCT_STAT sbuf;
-         char file[SGE_PATH_MAX + 1];
+         char file[SGE_PATH_MAX+1];
          char *pc;
    
          sge_strlcpy(file, script_file, SGE_PATH_MAX);
@@ -817,7 +819,7 @@ int truncate_stderr_out
   
          if (SGE_STAT(file, &sbuf)) {
             /*
-            ** generate a friendly error messages especially for interactive jobs
+            ** generate a friendly error message especially for interactive jobs
             */
             if (is_interactive) {
                sprintf(err_str, "unable to find xterm executable \"%s\" for interactive job", file);
@@ -863,7 +865,7 @@ int sge_set_environment()
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
 
-   setup_environment ();
+   setup_environment();
    
    if (!(fp = fopen("environment", "r"))) {
       sprintf(err_str, "can't open environment file: %s",
@@ -1064,9 +1066,8 @@ int sge_set_env_value(const char *name, const char* value)
             ret = 0;
          }
       }
-   }
-   else {
-      ret = sge_setenv (name, value);
+   } else {
+      ret = sge_setenv(name, value);
    }
    
    return ret;
@@ -1210,7 +1211,7 @@ static char **read_job_args(char **preargs, int extra_args)
 
 /*--------------------------------------------------------------------
  * set_shepherd_signal_mask
- * set signal mask that shpher can handle signals from execd
+ * set signal mask that shepherd can handle signals from execd
  *--------------------------------------------------------------------*/
 void start_command(
 const char *childname,
@@ -1351,20 +1352,27 @@ int use_starter_method /* If this flag is set the shellpath contains the
       args[njob_args + 7] = NULL;
    /* No need to test for binary since qlogin handles that itself */
    } else if (is_qlogin) {
-      
+      char *conf_name = NULL;
 #if 0
      shepherd_trace("Case 6: qlogin");
 #endif
       pre_args_ptr[0] = script_file;
-      if(is_rsh) {
-         pre_args_ptr[1] = get_conf_val("rsh_daemon");
+      if (is_rsh) {
+         conf_name = "rsh_daemon";
       } else {
-         if(is_rlogin) {
-            pre_args_ptr[1] = get_conf_val("rlogin_daemon");
+         if (is_rlogin) {
+            conf_name = "rlogin_daemon";
          } else {
-            pre_args_ptr[1] = get_conf_val("qlogin_daemon");
+            conf_name = "qlogin_daemon";
          }
       }
+      pre_args_ptr[1] = get_conf_val(conf_name);
+
+      if (check_configured_method(pre_args_ptr[1], conf_name, err_str) != 0) {
+         shepherd_state = SSTATE_CHECK_DAEMON_CONFIG;
+         shepherd_error(err_str);
+      }
+
       pre_args_ptr[2] = "-d"; 
       pre_args_ptr[3] = NULL;
       args = read_job_args(pre_args, 0);
@@ -1470,7 +1478,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
          char **env;
          char err_msg[MAX_STRING_SIZE];
          enum en_JobStatus job_status;
-         int failure = -1;
+         int  failure = -1;
 
          shepherd_trace_sprintf("starting job remote: %s", filename);
 
@@ -1532,7 +1540,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
          }
          exit(win32_exit_status);
       } else 
-   #endif
+#endif
       {
          if (!inherit_env()) {
             /* The closest thing to execvp that takes an environment pointer is
@@ -1562,6 +1570,51 @@ int use_starter_method /* If this flag is set the shellpath contains the
          }
       }
    }
+}
+
+int check_configured_method(
+const char *method,
+const char *name,
+char *err_str
+) {
+   SGE_STRUCT_STAT     statbuf;
+   unsigned int        file_perm = S_IXOTH;
+   int                 ret = 0;
+   char                *command;
+   struct saved_vars_s *context = NULL;
+
+   /*
+    * The configured method can include some pameters, e.g.
+    * qlogin_daemon                /usr/sbin/in.telnetd -i
+    * Only the command itself must be checked.
+    */
+
+   command = sge_strtok_r(method, " ", &context);
+
+   if (strncmp(command, "/", 1) != 0) {
+      sprintf(err_str, "%s \"%s\" is not an absolute path", name, command);
+      ret = -1;
+   } else {
+      if (SGE_STAT(command, &statbuf) != 0) {
+         sprintf(err_str, "%s \"%s\" can't be read: %s (%d)",
+            name, command, strerror(errno), errno);
+         ret = -1;
+      } else {
+         if (getuid() == statbuf.st_uid) {
+            file_perm = file_perm | S_IXUSR;
+         }
+         if (getgid() == statbuf.st_gid) {
+            file_perm = file_perm | S_IXGRP;
+         }
+         if ((statbuf.st_mode & file_perm) == 0) {
+            sprintf(err_str, "%s \"%s\" is not executable", name, command);
+            ret = -1;
+         }
+      }
+   }
+
+   sge_free_saved_vars(context);
+   return ret;
 }
 
 static char *build_path(
@@ -1697,11 +1750,11 @@ parse_script_params(char **script_file)
 
 /****** Shepherd/inherit_env() *************************************************
 *  NAME
-*     inherit_env () -- Test whether the evironment should be inherited from the
+*     inherit_env() -- Test whether the evironment should be inherited from the
 *                       parent process or not
 *
 *  SYNOPSIS
-*     static bool inherit_env ()
+*     static bool inherit_env()
 *
 *  FUNCTION
 *     Tests the INHERIT_ENV execd param to see if the job should inherit the
@@ -1713,17 +1766,17 @@ parse_script_params(char **script_file)
 *  NOTES
 *      MT-NOTE: inherit_env() is not MT safe
 *******************************************************************************/
-static bool inherit_env ()
+static bool inherit_env()
 {
    if (inherit_environ == -1) {
       /* We have to use search_conf_val() instead of get_conf_val() because this
        * change is happening in a patch, and we can't break backward
        * compatibility.  In a later release, this should probably be changed to
        * use get_conf_val() instead. */
-      char *inherit = search_conf_val ("inherit_env");
+      char *inherit = search_conf_val("inherit_env");
       
       if (inherit != NULL) {
-         inherit_environ = (strcmp (inherit, "1") == 0);
+         inherit_environ = (strcmp(inherit, "1") == 0);
       }
       else {
          /* This should match the default set in sgeobj/sge_conf.c. */
@@ -1737,7 +1790,7 @@ static bool inherit_env ()
 #if 0 /* Not currently used, but looks kinda useful... */
 /****** Shepherd/set_inherit_env() *********************************************
 *  NAME
-*     set_inherit_env () -- Set whether the evironment should be inherited from
+*     set_inherit_env() -- Set whether the evironment should be inherited from
 *                           the parent process or not
 *
 *  SYNOPSIS

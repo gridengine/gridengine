@@ -225,14 +225,9 @@ static int spool_local_conf(int argc, char *argv[])
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
          ret = EXIT_FAILURE;
       } else {
-         lListElem *context = spool_create_dynamic_context(NULL, 
-                              bootstrap_get_spooling_method(),
-                              bootstrap_get_spooling_lib(), 
-                              bootstrap_get_spooling_params());
-
          /* check if a config is already there */
-         lListElem *le = spool_read_object(NULL, context, SGE_TYPE_CONFIG, argv[3]); 
-         if ( le == NULL) { 
+         lListElem *le = spool_read_object(NULL, spool_get_default_context(), SGE_TYPE_CONFIG, argv[3]); 
+         if (le == NULL) { 
             /* put config into a list - we can't spool free objects */
             if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG)) {
@@ -426,7 +421,7 @@ int main(int argc, char *argv[])
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "spooldefaults");
 
    log_state_set_log_gui(0);
 

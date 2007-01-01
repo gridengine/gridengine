@@ -541,6 +541,7 @@ int main(int argc, char **argv)
    char buffer[256];
 
 #if 0
+   /* for profiling shepherd (code coverage) we need to set the profile name */
    if (getenv("SUN_PROFDATA_DIR") != NULL) {
       sge_setenv("SUN_PROFDATA", "sge_shepherd.profile");
    }

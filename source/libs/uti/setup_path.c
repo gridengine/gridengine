@@ -316,7 +316,7 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    } 
 
    cell_root = sge_malloc(strlen(sge_root) + strlen(sge_cell) + 2);
-   if (!cell_root) {
+   if (cell_root == NULL) {
       if (error_dstring == NULL) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
          SGE_EXIT(1);
@@ -337,6 +337,7 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
          } else {
             sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOSGECELL_S, 
                                 cell_root);
+            FREE(cell_root);
             DEXIT;
             return false;
          }

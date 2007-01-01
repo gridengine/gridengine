@@ -18,7 +18,7 @@ Building Berkeley DB
 ====================
 
 1. Download the sources from www.sleepycat.com.
-Grid Engine Requires a version >= 4.2, the current version is 4.2.52.
+Grid Engine Requires a version >= 4.2, the default version for Gridengine 6.0 is 4.2.52.
 
 2. Build and install the Berkeley DB:
 Untar the source code distribution.
@@ -50,6 +50,11 @@ hp11-64:       CFLAGS=+DD64 LDFLAGS=+DD64
 irix65:        CFLAGS="-n32 -mips3"
 lx24-amd64:    --with-mutex=x86/gcc-assembly
 sol-sparc64:   CFLAGS="-xarch=v9" CPPFLAGS="-xarch=v9" LDFLAGS="-xarch=v9"
+
+Do consider using the --disable-shared switch.
+When using the shared libraries (to be installed in $SGE_ROOT/lib),
+there are issues with dynamic loading of ldap pam libs on certain linux
+distributions.
 
 make
 

@@ -39,9 +39,6 @@ switch($buildarch)
    case "aix43":
       set argv = ( -no-jni $* )
       breaksw
-   deafult:
-      set argv = ( $* )
-      breaksw
 endsw
 
 #

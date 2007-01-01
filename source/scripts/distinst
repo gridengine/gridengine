@@ -1332,7 +1332,7 @@ for i in $ARCH; do
             shlibext="sl"
             jnilibext="sl"
             ;;
-         darwin-*)
+         darwin*)
             shlibext="dylib"
             jnilibext="jnilib"
             ;;

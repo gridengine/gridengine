@@ -1,3 +1,6 @@
+JG-2007-01-01-1: Bugfix:    Fixed distinst for darwin.
+                 Review:    TBD
+
 JG-2007-01-01-0: Bugfix:    Fixed a memory leak in setup error handling.
                             Removed duplicated spooling context from 
                             spooldefaults.

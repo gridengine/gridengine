@@ -1,3 +1,7 @@
+HP-2007-01-03-0: Bugfix:    Fixed wrong comments.
+                            Added review document for checkin HP-2006-12-31-0.
+                 Changed:   builtin_starter.c, sge_uidgid.c
+
 MD-2007-01-03-0: Bugfix:    autoinstall fix, EXECD_HOST_LIST check failed
                  Review:    JG
                  Changed:   inst_sge

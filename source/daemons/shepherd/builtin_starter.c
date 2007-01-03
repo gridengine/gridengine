@@ -319,6 +319,13 @@ int truncate_stderr_out
    shepherd_error_init( );
 
 #if defined(INTERIX)
+   /*
+    * Try to read password from sgepasswd file only if target_user 
+    * is not superuser
+    * This is the case for all non-interactive jobs, for qrsh
+    * it usually is the superuser.
+    * 'pw' is the pw of the target_user.
+    */
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
       && wl_get_GUI_mode(sge_get_environment()) == true

@@ -904,7 +904,9 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 
 #if defined( INTERIX )
       /*
-       * Do only if windomacc=true is set and user is not the SGE admin user
+       * Do only if windomacc=true is set and user is not the superuser.
+       * For non-interactive jobs, user shouldn't be the superuser.
+       * For qrsh, user usually is the superuser.
        */
       if (wl_use_sgepasswd()==true 
           && wl_is_user_id_superuser(pw->pw_uid)==false) {

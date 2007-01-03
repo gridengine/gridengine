@@ -668,6 +668,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    switch (failed) {
    case SSTATE_BEFORE_PROLOG:
    case SSTATE_HELPER_SERVICE_ERROR:
+   case SSTATE_CHECK_DAEMON_CONFIG:
+
    /* for CR 6252457 this block should be removed, but for a real fix the
       host or queue error detection must be improved
    */

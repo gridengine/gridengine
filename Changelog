@@ -1,3 +1,11 @@
+HP-2007-03-01-0: Bugfix:    wrong qlogin_daemon or rlogin_daemon in host conf
+                            doesn't set host and job into error state
+                 Changed:   execution_states.c, reaper_execd.c, 
+                            builtin_starter.c sge_uidgid.c
+                 Bugtraq:   6349814
+                 Issue:     1914
+                 Review:    MD
+
 MD-2007-01-03-0: Bugfix:    autoinstall fix, EXECD_HOST_LIST check failed
                             merges from V60s2_BRANCH
                  Review:    JG

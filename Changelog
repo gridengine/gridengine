@@ -1,3 +1,7 @@
+MD-2007-01-03-1: Bugfix:    csp fix added arch hp11 to SEC_COUNT case switch
+                 Review:    AA
+                 Changed:   inst_qmaster.sh
+
 HP-2007-01-03-0: Bugfix:    Fixed wrong comments.
                             Added review document for checkin HP-2006-12-31-0.
                  Changed:   builtin_starter.c, sge_uidgid.c

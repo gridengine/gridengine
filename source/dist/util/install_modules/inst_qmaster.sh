@@ -634,7 +634,7 @@ SetProductMode()
 
       case $SGE_ARCH in
 
-      aix*)
+      aix* | hp11*)
           SEC_COUNT=`strings -a $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
           ;;
          *)

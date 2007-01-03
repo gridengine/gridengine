@@ -524,7 +524,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
                fi 
             done 
          done
-         if [ $TMP_EXEC_HOST_LIST = "" ]; then
+         if [ "x$TMP_EXEC_HOST_LIST"= "x" ]; then
             install_is_done="true"
          fi
    done
@@ -585,11 +585,11 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       # This code will be executed in case inst_sge -x -host <remote host> 
       if [ -f $EXEC_HOST_LIST ]; then
          for h in `cat $EXEC_HOST_LIST`; do
-           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+           if [ "$QMASTER" = "install" -o "$NOREMOTE" = "false" ]; then
                $INFOTEXT "Starting remote installation on host %s" $h
                $INFOTEXT "This part runs in automatic mode," \
                          "be sure to have a valid configuration file"
-               if [ $CONFIG_FILE = "undef" ]; then
+               if [ "$CONFIG_FILE" = "undef" ]; then
                   $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
                   CONFIG_FILE=`Enter`
                   export CONFIG_FILE
@@ -605,13 +605,13 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
            fi
          done
       else
-         if [ $EXEC_HOST_LIST != "undef" ]; then 
+         if [ "$EXEC_HOST_LIST" != "undef" ]; then 
             for h in $EXEC_HOST_LIST; do
-              if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+              if [ "$QMASTER" = "install" -o "$NOREMOTE" = "false" ]; then
                   $INFOTEXT "Starting remote installation on host %s" $h
                   $INFOTEXT "This part runs in automatic mode," \
                             "be sure to have a valid configuration file"
-                  if [ $CONFIG_FILE = "undef" ]; then
+                  if [ "$CONFIG_FILE" = "undef" ]; then
                      $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
                      CONFIG_FILE=`Enter`
                      export CONFIG_FILE

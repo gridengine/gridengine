@@ -2635,8 +2635,8 @@ PreInstallCheck()
 
 RemoveHostFromList()
 {
-   source_list = $1
-   host_to_remove = $2
+   source_list=$1
+   host_to_remove=$2
 
    help_list=""
    for hh in $source_list; do

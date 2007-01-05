@@ -1,3 +1,6 @@
+MD-2007-01-05-0: Bugfix:    fixed syntax error in script
+                 Changed:   inst_common.sh
+
 MD-2007-01-03-1: Bugfix:    csp fix added arch hp11 to SEC_COUNT case switch
                  Review:    AA
                  Changed:   inst_qmaster.sh

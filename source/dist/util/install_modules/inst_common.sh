@@ -2568,9 +2568,9 @@ CopyCA()
 # copy the ca certs to all cluster host, which equals the given host type
 CopyCaToHostType()
 {
-   if [ "$1" -eq "admin" ]; then
+   if [ "$1" = "admin" ]; then
       cmd="$SGE_BIN/qconf -sh"
-   elif [ "$1" -eq "submit" ]; then
+   elif [ "$1" = "submit" ]; then
       cmd="$SGE_BIN/qconf -ss"
    fi
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: hostnameutils.1,v $     Last Update: $Date: 2004/08/25 12:16:11 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: hostnameutils.1,v $     Last Update: $Date: 2007/01/05 20:31:02 $     Revision: $Revision: 1.2.10.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOSTNAMEUTILS 1 "$Date: 2004/08/25 12:16:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH HOSTNAMEUTILS 1 "$Date: 2007/01/05 20:31:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "gethostname   \-" 1i
 get local hostname.
@@ -62,19 +62,19 @@ and
 .I gethostbyname
 are used to get the local resolved host name.
 .I gethostbyaddr
-is used to get the hostname of a specified IP address (4 dotted number).
+is used to get the hostname of a specified IP address (dotted decimal notation).
 .I getservbyname
 can be used to get the configured port number of a service (e.g. from /etc/services).
 .PP
-The hostname utils are primarily used from the xxQS_NAMExx installation scripts.
+The hostname utils are primarily used by the xxQS_NAMExx installation scripts.
 .I gethostname
 ,
 .I gethostbyname
 and
 .I gethostbyaddr
 called without any option will print out the hostname, all specified aliases, and the
-IP address of the local resolved hostname.
-A call of
+IP address of the locally resolved hostname.
+Calling
 .I getservbyname
 without any option will print out the full service entry.
 .PP
@@ -88,29 +88,29 @@ Prints a list of all options.
 .\"
 .SS "\fB\-name\fP"
 .PP
-This option only reports the main name of the host.
+This option only reports the primary name of the host.
 .SS "\fB\-aname\fP"
 .PP
 If this option is set, the xxQS_NAMExx host alias file is used for host name
-resolving. It is necessary to set the environment variable xxQS_NAME_Sxx_ROOT and
-if more than one cell is defined also xxQS_NAME_Sxx_CELL.
+resolving. It is necessary to set the environment variable xxQS_NAME_Sxx_ROOT and,
+if more than one cell is defined, also xxQS_NAME_Sxx_CELL.
 .PP
-The option will print out the xxQS_NAMExx host name.
+This option will print out the xxQS_NAMExx host name.
 .SS "\fB\-all\fP"
 .PP
 By using the \fB\-all\fP option all available host information will be printed.
-This contains the host name, the xxQS_NAMExx host name, all host aliases, 
+This information includes the host name, the xxQS_NAMExx host name, all host aliases, 
 and the IP address of the host.
 .SS "\fB\-number\fP"
 .PP
 This option will print out the port number of the specified service name.
 .SS "\fB<name>\fP"
 .PP
-This is the host name for which the information is requested.
+The host name for which the information is requested.
 .SS "\fB<ip>\fP"
-This is the IP address (4 dotted number) for which the information is requested.
+The IP address (dotted decimal notation) for which the information is requested.
 .SS "\fB<service>\fP"
-This is the service name for which the information is requested (e.g. ftp, sge_qmaster or sge_execd).
+The service name for which the information is requested (e.g. ftp, sge_qmaster or sge_execd).
 .\"
 .\"
 .SH "EXAMPLES"

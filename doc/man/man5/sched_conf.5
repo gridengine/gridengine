@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2006/03/10 16:15:12 $     Revision: $Revision: 1.26.2.2 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/01/05 20:31:01 $     Revision: $Revision: 1.26.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2006/03/10 16:15:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2007/01/05 20:31:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -134,11 +134,11 @@ load of the hosts with the \fBload_formula\fP (see above) and to compare
 the load and consumable values against the load threshold lists
 defined in the queue configurations (see
 .M queue_conf 5 ).
-If your \fBload_formula\fP simply consists of the default CPU load average 
-parameter \fInp_load_avg\fP and if your jobs are very compute intensive, you might
+If the \fBload_formula\fP consists simply of the default CPU load average 
+parameter \fInp_load_avg\fP, and if the jobs are very compute intensive, one might
 want to set the \fBjob_load_adjustments\fP list to \fInp_load_avg=1.00\fP,
 which means that every new job dispatched to a host will require
-100 % CPU time and thus the machine's load is instantly raised by 1.00.
+100 % CPU time, and thus the machine's load is instantly increased by 1.00.
 .SS "\fBload_adjustment_decay_time\fP"
 The load corrections in the "\fBjob_load_adjustments\fP" list above
 are decayed linearly over time from the point of the job start, where
@@ -322,32 +322,31 @@ This is foreseen for passing additional parameters to the xxQS_NAMExx
 scheduler. The following values are recognized:
 .\"
 .IP "\fIDURATION_OFFSET\fP"
-If set overrides the default of 60 seconds that is assumed as offset by 
-xxQS_NAMExx scheduler when planning resource utilization as delta
-between net job runtimes and gross time until resources are available 
-again. Jobs net runtime as specified with -l h_rt=...  or -l s_rt=... or 
-\fBdefault_duration\fP always differ from jobs gross runtime due to delays before
-and after actual job start. Amongst these delays before job start is the time 
+If set, overrides the default of value 60 seconds.  This parameter is used by 
+the xxQS_NAMExx scheduler when planning resource utilization as the delta
+between net job runtimes and total time until resources become available 
+again. Net job runtime as specified with -l h_rt=...  or -l s_rt=... or
+\fBdefault_duration\fP always differs from total job runtime due to delays before
+and after actual job start and finish. Among the delays before job start is the time 
 until the end of a \fBschedule_interval\fP, the time it takes to deliver a job to 
 .M sge_execd 8
-and the delays \fBprolog\fP in
+and the delays caused by \fBprolog\fP in
 .M queue_conf 5
 , \fBstart_proc_args\fP in
 .M sge_pe 5
 and \fBstarter_method\fP in
 .M queue_conf 5 
-may effectuate. The 
-delays after a jobs actual run comprises delays due to a forced job termination 
-(\fBnotify\fP, \fBterminate_method\fP or \fBcheckpointing\fP), procedure runs 
+. The delays after job finish include delays due to a forced job termination 
+(\fBnotify\fP, \fBterminate_method\fP or \fBcheckpointing\fP), procedures run 
 after acutal job 
-finished such as \fBstop_proc_args\fP in
+finish, such as \fBstop_proc_args\fP in
 .M sge_pe 5 
 or \fBepilog\fP in
 .M queue_conf 5 
-and the delay until a new \fBschedule_interval\fP. 
+, and the delay until a new \fBschedule_interval\fP. 
 .br
-If the offset is too low resource reservations (see \fBmax_reservation\fP)  
-can be delayed repeatedly due to a too optistic job circulation time.
+If the offset is too low, resource reservations (see \fBmax_reservation\fP)  
+can be delayed repeatedly due to an overly optistic job circulation time.
 .\"
 .IP "\fIJC_FILTER\fP"
 If set to true, the scheduler limits the number of jobs it looks at during
@@ -382,7 +381,7 @@ following values are available:
 .br
 auto       : the scheduler selects the best algorithm
 .br
-least      : starts the resource matching with the least slot amount first
+least      : starts the resource matching with the lowest slot amount first
 .br
 bin        : starts the resource matching in the middle of the pe slot range
 .br

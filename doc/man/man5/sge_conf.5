@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2006/06/21 12:54:10 $     Revision: $Revision: 1.46.2.7 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/01/05 20:31:01 $     Revision: $Revision: 1.46.2.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2006/06/21 12:54:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/01/05 20:31:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -977,7 +977,7 @@ seconds and 20 seconds.
 .PP
 .IP "\fILOG_MONITOR_MESSAGE\fP"
 Monitoring information is logged into the messages files by default. This
-information is can be accessed via by
+information can be accessed via by
 .M qping 1 .
 If monitoring is always enabled, the messages files can become quite large.
 This switch disables logging into the messages files, making
@@ -1037,8 +1037,8 @@ If this parameter is set then xxQS_NAMExx uses the supplementary group ids
 when a job should be deleted.
 .PP
 .IP "\fIENABLE_WINDOMACC\fP"
-If this parameter is set to true, on Windows hosts Windows Domain accounts (WinDomAcc)
-are used. These require the use of
+If this parameter is set to true, Windows Domain accounts (WinDomAcc)
+are used on Windows hosts. These accounts require the use of
 .M sgepasswd 1
 (see also
 .M sgepasswd 5 ).
@@ -1370,7 +1370,7 @@ to turn off the reprioritization of jobs, one should set the \fBreprioritize\fP 
 to false and the \fBreprioritize_interval\fP to 0 (the default).
 .sp 1
 This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
+overridden by the execution host local configuration.
 .\"
 .\"
 .\"

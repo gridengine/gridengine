@@ -1,3 +1,7 @@
+DT-2007-01-05-0: Docs:      o Reviewed all man page changes since u4
+                            o Corrected language errors
+                 Changed:   Man pages
+
 OJ-2007-01-03-0: Bugfix     - qconf -aq help did not display correctly
                               Modified the string to read now
                               [-aq [queue_name]] in V60s2_BRANCH

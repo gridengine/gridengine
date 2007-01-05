@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2007/01/05 19:56:13 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2007/01/05 19:56:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_execd \- xxQS_NAMExx job execution agent
 .\"
@@ -61,8 +61,8 @@ Prints a listing of all options.
 .SH "LOAD SENSORS"
 If a \fBload sensor\fP is configured for
 .I xxqs_name_sxx_execd
-via either the global or the 
-execution host specific cluster configuration (See
+via either the global host configuration or the 
+execution-host-specific cluster configuration (See
 .M xxqs_name_sxx_conf 5 .),
 the executable path of the load sensor is invoked by
 .I xxqs_name_sxx_execd
@@ -74,16 +74,16 @@ sensor may be a script or a binary executable. In either case
 its handling of the STDIN and STDOUT streams and its control
 flow must comply to the following rules:
 .PP
-The load sensor has to be written as an infinite loop waiting at
+The load sensor must be written as an infinite loop waiting at
 a certain point for input from STDIN. If the string "quit"
 is read from STDIN, the load sensor should exit.  When an
-end-of-line is read from STDIN a load data retrieval cycle should
+end-of-line is read from STDIN, a load data retrieval cycle should
 start. The load sensor then performs whatever
 operation is necessary to compute the desired load figures.
 At the end of the cycle the load sensor writes the result to
 stdout. The format is as follows:
 .IP "\(bu" 3n
-A load value report starts with a line containing nothing but the word  "start".
+A load value report starts with a line containing only the word  "start".
 .IP "\(bu" 3n
 Individual load values are separated by newlines.
 .IP "\(bu" 3n
@@ -103,7 +103,7 @@ list exists, the reported load value is not used.
 .IP "\(bu" 3n
 The third part is the measured load value.
 .IP "\(bu" 3n
-A load value report ends with a line with the word "end".
+A load value report ends with a line with only the word "end".
 .\" 
 .SH "ENVIRONMENTAL VARIABLES"
 .\" 

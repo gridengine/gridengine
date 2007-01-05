@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qhold.1,v $     Last Update: $Date: 2005/11/09 17:44:39 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: qhold.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOLD 1 "$Date: 2005/11/09 17:44:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOLD 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhold \- hold back xxQS_NAMExx jobs from execution
 .SH SYNTAX
@@ -96,11 +96,11 @@ Prints a listing of all options.
 .IP "\fB\-u username,...\fP"
 Changes are only made on those jobs which were submitted by
 users specified in the list of usernames.
-For managers it is possible to use the \fB\qhold -u "*"\fP command
+Managers are allowed to use the \fB\qhold -u "*"\fP command
 to set a hold for all jobs of all users.
 .sp 1
-If you use the \fB\-u\fP switch it is be permitted to
-specify a additional \fI\job/task_id_list\fP.   
+If a user uses the \fB\-u\fP switch, the user may
+specify an additional \fI\job/task_id_list\fP.   
 .\"
 .IP "\fBjob/task_id_list\fP"
 Specified by the following form:

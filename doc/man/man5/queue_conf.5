@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2006/06/27 09:52:06 $     Revision: $Revision: 1.23 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.24 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2006/06/27 09:52:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -56,7 +56,7 @@ would be zero it can be left out but the separating colon must remain
 Memory specifiers are positive decimal, hexadecimal or octal integer constants
 which may be followed by a multiplier letter. Valid multiplier letters are
 k, K, m, M, g and G, where k means multiply the value by 1000, K multiply by
-1024, m multiply by 1000*1000, M multiplies by 1024*1024, g multiply by 
+1024, m multiply by 1000*1000, M multiply by 1024*1024, g multiply by 
 1000*1000*1000 and G multiply by 1024*1024*1024. If no multiplier is present, 
 the value is just counted in bytes.
 .PP
@@ -92,7 +92,7 @@ Configurations containing override values for hosts not enlisted
 under 'hostname' are accepted but are indicated by \fB\-sick\fP
 of 
 .M qconf 1
-The cluster queue should contain a non-ambiguous specification
+The cluster queue should contain an unambiguous specification
 for each configuration attribute of each queue instance specified
 under hostname in \fIqueue_conf\fP. Ambiguous configurations with more
 than one attribute setting resulting from overlapping host groups
@@ -248,11 +248,11 @@ pe_list pe_name
 .PP
 (type string; default: batch interactive).
 .SS "\fBpe_list\fP"
-The list of administrator defined parallel environments to be associated with
+The list of administrator-defined parallel environments to be associated with
 the queue. The default is
 .I NONE.
 .SS "\fBckpt_list\fP"
-The list of administrator defined checkpointing interfaces to be associated 
+The list of administrator-defined checkpointing interfaces to be associated 
 with the queue. The default is
 .I NONE.
 .SS "\fBrerun\fP"
@@ -522,7 +522,7 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the queue.
 .SS "\fBsubordinate_list\fP"
-A list of xxQS_NAMExx cluster queues. Relationship however are in effect
+A list of xxQS_NAMExx cluster queues. Subordinate relationships are in effect
 only between queue instances residing at the same host. If there is a 
 queue instance (be in the sub- or superordinated one) on only one
 particular host this relationship is ignored.

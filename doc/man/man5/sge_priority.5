@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2005/11/23 21:44:08 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2005/11/23 21:44:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -84,7 +84,7 @@ between 0 and 1.
              weight_urgency  * nurg + 
              weight_ticket   * ntckts
 
-The higher a job's priority value the earlier it gets dispatched.
+The higher a job's priority value, the earlier it gets dispatched.
 .\"
 .\"
 .PP
@@ -105,18 +105,18 @@ requirements of a job into a single numeric value.
 with an "hrr" for each hard resource request.
 Depending on the resource type two different methods are used to 
 determine the value to be used for "hrr" here. For numeric type resource
-requests the "hrr" represents how much of a resource a job requests (on a
+requests, the "hrr" represents how much of a resource a job requests (on a
 per-slot basis for pe jobs) and how "important" this resource is
 considered in comparison to other resources. This is expressed by the
 formula:
 
    hrr      = rurg * assumed_slot_allocation * request
 
-with the resources urgency value ("rurg") as specified 
+where the resource's urgency value ("rurg") is as specified 
 under \fBurgency\fP in 
 .M complex 5 , 
-the job's assumed_slot_allocation representing the number of slots
-supposedly assigned to the job and the per slot request as 
+the job's assumed_slot_allocation represents the number of slots
+supposedly assigned to the job, and the per-slot request is that which was
 specified using the -l 
 .M qsub 1
 option. For string type requests the formula is simply

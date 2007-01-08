@@ -215,7 +215,7 @@ extern int main(int argc, char** argv)
   /* delete all threads */
   while ( (thread_p=cl_thread_list_get_first_thread(thread_list)) != NULL ) {
      gettimeofday(&now,NULL);
-     printf("shutting down therad %s (%ld)...", thread_p->thread_name, (unsigned long) now.tv_sec);
+     printf("shutting down thread %s (%ld)...", thread_p->thread_name, (unsigned long) now.tv_sec);
      fflush(stdout);
      cl_thread_list_delete_thread(thread_list, thread_p);
      gettimeofday(&now,NULL);

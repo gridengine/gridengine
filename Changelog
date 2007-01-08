@@ -1,3 +1,8 @@
+JG-2007-01-08-0: Bugfix:    Backup script failed in case of inconsistent 
+                            hostname resolving.
+                 Review:    MD
+                 Cleanup:   Fixed typo.
+
 DT-2007-01-05-0: Docs:      o Reviewed all man page changes since u4
                             o Corrected language errors
                  Changed:   Man pages

@@ -1688,7 +1688,7 @@ RestoreConfig()
          done
 
          if [ -d $master_spool ]; then
-            if [ -d $master_spool/job_scipts ]; then
+            if [ -d $master_spool/job_scripts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool/job_scripts
@@ -1704,7 +1704,6 @@ RestoreConfig()
             fi
          done
       else
-
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
                :
@@ -1724,7 +1723,7 @@ RestoreConfig()
 
          master_spool_tmp=`echo $master_spool | cut -d";" -f2`
          if [ -d $master_spool_tmp ]; then
-            if [ -d $master_spool_tmp/job_scipts ]; then
+            if [ -d $master_spool_tmp/job_scripts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
@@ -1810,7 +1809,7 @@ RestoreConfig()
          done
 
          if [ -d $master_spool ]; then
-            if [ -d $master_spool/job_scipts ]; then
+            if [ -d $master_spool/job_scripts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool/job_scripts
@@ -1846,7 +1845,7 @@ RestoreConfig()
 
          master_spool_tmp=`echo $master_spool | cut -d";" -f2`
          if [ -d $master_spool_tmp ]; then
-            if [ -d $master_spool_tmp/job_scipts ]; then
+            if [ -d $master_spool_tmp/job_scripts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
@@ -2147,6 +2146,7 @@ BackupCheckBootStrapFile()
       else
          is_rpc=1
          BDB_SERVER=`echo $db_home | cut -d":" -f1`
+         BDB_SERVER=`$SGE_UTILBIN/gethostbyname -aname $BDB_SERVER`
          BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
 
          if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
@@ -2424,6 +2424,7 @@ RestoreCheckBootStrapFile()
       else
          is_rpc=1
          BDB_SERVER=`echo $db_home | cut -d":" -f1`
+         BDB_SERVER=`$SGE_UTILBIN/gethostbyname -aname $BDB_SERVER`
          BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
 
          if [ -f $BACKUP_DIR/sgebdb ]; then
@@ -2447,7 +2448,7 @@ RestoreCheckBootStrapFile()
             BDB_HOME=`Enter`
          fi
       
-         if [ `hostname` != "$BDB_SERVER" ]; then
+         if [ `$SGE_UTILBIN/gethostname -aname` != "$BDB_SERVER" ]; then
             $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
             $INFOTEXT -n "Exiting backup!\n"
             exit 1

@@ -358,7 +358,7 @@ void sge_start_heartbeat(void)
 
    
    /* this is for testsuite shadowd test */
-   if ( getenv("SGE_TEST_HEARTBEAT_TIMEOUT") != NULL) {
+   if (getenv("SGE_TEST_HEARTBEAT_TIMEOUT") != NULL) {
       int test_timeout = atoi(getenv("SGE_TEST_HEARTBEAT_TIMEOUT"));
       set_inc_qmaster_heartbeat_test_mode(test_timeout);
       DPRINTF(("heartbeat timeout test enabled (timeout="sge_U32CFormat")\n", sge_u32c(test_timeout)));

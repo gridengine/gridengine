@@ -95,9 +95,9 @@ public class JGDIRemoteDescriptor extends AbstractClassDescriptor {
       
   if ( !cullObj.hasGetListOperation()) {
 %>
-      // add( new SimplePropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class,  "<%=name%>", -1, false, true));
+      // add( new SimplePropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class,  "<%=name%>", -1, false, true, false));
 <% } else { %>
-      add( new PlainListPropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class, "<%=name%>", -1, false, false));
+      add( new PlainListPropertyDescriptor(JGDIRemote.class, "<%=idlname%>", <%=idlname%>.class, "<%=name%>", -1, false, false, false));
 <% } %>      
 <% } // end of while %>
    }

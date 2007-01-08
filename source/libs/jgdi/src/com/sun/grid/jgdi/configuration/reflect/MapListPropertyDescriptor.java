@@ -50,8 +50,8 @@ public abstract class MapListPropertyDescriptor extends PropertyDescriptor {
    protected MapListPropertyDescriptor(Class beanClass, String propertyName, 
                              Class propertyType, String cullType, Class keyType, String cullListType, int cullFieldName, 
                              int keyCullFieldName, int valueCullFieldName, 
-                             Object defaultKey, boolean readOnly ) {
-      super(beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly);
+                             Object defaultKey, boolean readOnly, boolean configurable ) {
+      super(beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly, configurable);
       this.keyCullFieldName = keyCullFieldName;
       this.valueCullFieldName = valueCullFieldName;
       this.keyType = keyType;

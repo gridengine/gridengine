@@ -1,3 +1,6 @@
+AA-2007-01-08-0: Enhancem:  configurable flag for jgdi objects (maybe incomplete)
+                 Review:    RH
+                 
 JG-2007-01-08-0: Bugfix:    Backup script failed in case of inconsistent 
                             hostname resolving.
                  Review:    MD

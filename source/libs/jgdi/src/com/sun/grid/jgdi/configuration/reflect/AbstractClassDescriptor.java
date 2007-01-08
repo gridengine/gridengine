@@ -64,16 +64,16 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
       propertyMap.put( property.getPropertyName(), property );
    }
    
-   protected SimplePropertyDescriptor addSimple( String name, Class type, String cullType, int cullFieldName, boolean required, boolean readOnly ) {
+   protected SimplePropertyDescriptor addSimple( String name, Class type, String cullType, int cullFieldName, boolean required, boolean readOnly, boolean configurable ) {
       SimplePropertyDescriptor prop =  
-             new SimplePropertyDescriptor( beanClass, name, type, cullType, cullFieldName, required, readOnly );
+             new SimplePropertyDescriptor( beanClass, name, type, cullType, cullFieldName, required, readOnly, configurable );
       add( prop );
       return prop;
    }
    
-   protected ListPropertyDescriptor addList( String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly ) {
+   protected ListPropertyDescriptor addList( String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly, boolean configurable ) {
       ListPropertyDescriptor prop = 
-           new DefaultListPropertyDescriptor( beanClass, name, type, cullType, cullFieldName, browsable, readOnly );
+           new DefaultListPropertyDescriptor( beanClass, name, type, cullType, cullFieldName, browsable, readOnly, configurable );
       prop.setReadOnly(true);
       add( prop );
       return prop;
@@ -81,24 +81,24 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
    
    protected MapPropertyDescriptor addMap(String name, Class type, String cullType, Class keyType,
                          int cullFieldName, int keyCullFieldName, int valueCullFieldName, 
-                         Object defaultKey, boolean readOnly )
+                         Object defaultKey, boolean readOnly, boolean configurable )
    {
       MapPropertyDescriptor prop = 
          new DefaultMapPropertyDescriptor(beanClass, name, type, cullType, keyType,
                                           cullFieldName, keyCullFieldName, valueCullFieldName,
-                                          defaultKey, readOnly);
+                                          defaultKey, readOnly, configurable);
       add(prop);
       return prop;
    }
 
    protected MapListPropertyDescriptor addMapList(String name, Class type, String cullType, Class keyType, String cullListType,
                          int cullFieldName, int keyCullFieldName, int valueCullFieldName,
-                         Object defaultKey, boolean readOnly )
+                         Object defaultKey, boolean readOnly, boolean configurable )
    {
       MapListPropertyDescriptor prop = 
          new DefaultMapListPropertyDescriptor(beanClass, name, type, cullType, keyType, cullListType,
                                           cullFieldName, keyCullFieldName, valueCullFieldName,
-                                          defaultKey, readOnly);
+                                          defaultKey, readOnly, configurable);
       add(prop);
       return prop;
    }

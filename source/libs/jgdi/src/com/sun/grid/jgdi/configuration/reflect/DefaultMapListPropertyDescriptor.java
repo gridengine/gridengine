@@ -57,9 +57,9 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
    public DefaultMapListPropertyDescriptor(Class beanClass, String propertyName, 
                              Class propertyType, String cullType, Class keyType, String cullListType,
                              int cullFieldName, int keyCullFieldName, int valueCullFieldName, 
-                             Object defaultKey, boolean readOnly ) {
+                             Object defaultKey, boolean readOnly, boolean configurable ) {
       super(beanClass, propertyName, propertyType, cullType, keyType, cullListType, 
-            cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly);
+            cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
       
       getMethod = findMethod("get", new Class [] { keyType, Integer.TYPE });
       getCountMethod = findMethod("get", "Count", new Class[] { keyType } );

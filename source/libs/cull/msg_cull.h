@@ -58,19 +58,7 @@
 /* 
 ** cull/src/cull_multitype.c
 */ 
-#define MSG_CULL_POINTER_GETLISTREF_NULLELEMENTFORX_S    _MESSAGE(41017, _("!!!!!!!!!! lGetListRef(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_POINTER_GETULONG_NULLELEMENTFORX_S      _MESSAGE(41018, _("!!!!!!!!!! lGetUlong(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_POINTER_GETSTRING_NULLELEMENTFORX_S     _MESSAGE(41019, _("!!!!!!!!!! lGetString(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_POINTER_GETHOST_NULLELEMENTFORX_S       _MESSAGE(41020, _("!!!!!!!!!! lGetHost(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_POINTER_GETLIST_NULLELEMENTFORX_S       _MESSAGE(41021, _("!!!!!!!!!! lGetList(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_POINTER_GETREF_NULLELEMENTFORX_S        _MESSAGE(41022, _("!!!!!!!!!! lGetRef(): got NULL element for %s !!!!!!!!!!"))
-#define MSG_CULL_GETLISTREF_XNOTFOUNDINELEMENT_S         _MESSAGE(41023, _("!!!!!!!!!! lGetListRef(): "SFN" not found in element !!!!!!!!!!"))
-#define MSG_CULL_GETLIST_XNOTFOUNDINELEMENT_S            _MESSAGE(41024, _("!!!!!!!!!! lGetList(): "SFN" not found in element !!!!!!!!!!"))
 #define MSG_CULL_GETINT_WRONGTYPEFORFIELDXY_SS           _MESSAGE(41025, _("lGetInt: wrong type for field "SFN" ("SFN")"))
-#define MSG_CULL_GETULONG_NOSUCHNAMEXYINDESCRIPTOR_IS    _MESSAGE(41026, _("lGetUlong: no such name (%d, "SFN") in descriptor"))
-#define MSG_CULL_GETSTRING_NOSUCHNAMEXYINDESCRIPTOR_IS   _MESSAGE(41027, _("lGetString: no such name (%d, "SFN") in descriptor"))
-#define MSG_CULL_GETHOST_NOSUCHNAMEXYINDESCRIPTOR_IS     _MESSAGE(41028, _("lGetHost: no such name (%d, "SFN") in descriptor"))
-#define MSG_CULL_GETREF_NOSUCHNAMEXYINDESCRIPTOR_IS      _MESSAGE(41168, _("lGetREF: no such name (%d, %s) in descriptor"))
 #define MSG_CULL_GETULONG_WRONGTYPEFORFIELDXY_SS         _MESSAGE(41029, _("lGetUlong: wrong type for field "SFN" ("SFN")"))
 #define MSG_CULL_GETSTRING_WRONGTYPEFORFILEDXY_SS        _MESSAGE(41030, _("lGetString: wrong type for field "SFN" ("SFN")"))
 #define MSG_CULL_GETHOST_WRONGTYPEFORFILEDXY_SS          _MESSAGE(41031, _("lGetHost: wrong type for field "SFN" ("SFN")"))
@@ -97,26 +85,15 @@
 #define MSG_CULL_ADDSUBHOSTERRORXRUNTIMETYPE_S            _MESSAGE(41052, _("error: lAddSubHost("SFN"): run time type error"))
 #define MSG_CULL_ADDELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41053, _("error: lAddElemStr("SFN"): run time type error"))
 #define MSG_CULL_ADDELEMHOSTERRORXRUNTIMETYPE_S           _MESSAGE(41054, _("error: lAddElemHost("SFN"): run time type error"))
-#define MSG_CULL_DELSUBSTRERRORXRUNTIMETYPEERROR_S       _MESSAGE(41055, _("error: lDelSubStr("SFN"): run time type error"))
-/* #define MSG_CULL_DELSUBHOSTERRORXRUNTIMETYPEERROR_S       _message(41056, _("error: lDelSubHost("SFN"): run time type error")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_DELELEMSTRERRORXRUNTIMETYPEERROR_S      _MESSAGE(41057, _("error: lDelElemStr("SFN"): run time type error"))
-/* #define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPEERROR_S      _message(41058, _("error: lDelElemHost("SFN"): run time type error")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_CULL_GETSUBSTRERRORXRUNTIMETYPE_S            _MESSAGE(41059, _("error: lGetSubStr("SFN"): run time type error"))
 #define MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S           _MESSAGE(41060, _("error: lGetElemStr("SFN"): run time type error"))
 #define MSG_CULL_ADDSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41062, _("error: lAddSubUlong("SFN"): run time type error"))
 #define MSG_CULL_ADDELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41063, _("error: lAddElemUlong("SFN"): run time type error"))
-#define MSG_CULL_DELSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41064, _("error: lDelSubUlong("SFN"): run time type error"))
 #define MSG_CULL_DELELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41065, _("error: lDelElemUlong("SFN"): run time type error"))
-#define MSG_CULL_GETSUBULONGERRORXRUNTIMETYPE_S          _MESSAGE(41066, _("error: lGetSubUlong("SFN"): run time type error"))
 #define MSG_CULL_GETELEMULONGERRORXRUNTIMETYPE_S         _MESSAGE(41067, _("error: lGetElemUlong("SFN"): run time type error"))
-/* #define MSG_CULL_ADDSUBCASESTRERRORXRUNTIMETYPE_S        _message(41068, _("error: lAddSubCaseStr("SFN"): run time type error")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_CULL_ADDELEMCASESTRERRORXRUNTIMETYPE_S       _message(41069, _("error: lAddElemCaseStr("SFN"): run time type error")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_CULL_DELSUBCASESTRERRORXRUNTIMETYPE_S        _MESSAGE(41070, _("error: lDelSubCaseStr("SFN"): run time type error"))
 #define MSG_CULL_DELELEMCASESTRERRORXRUNTIMETYPE_S       _MESSAGE(41071, _("error: lDelElemCaseStr("SFN"): run time type error"))
 #define MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPE_S          _MESSAGE(41072, _("error: lDelElemHost("SFN"): run time type error"))
-#define MSG_CULL_GETSUBCASESTRERRORXRUNTIMETYPE_S        _MESSAGE(41073, _("error: lGetSubCaseStr("SFN"): run time type error"))
 #define MSG_CULL_GETELEMCASESTRERRORXRUNTIMETYPE_S       _MESSAGE(41074, _("error: lGetElemCaseStr("SFN"): run time type error"))
-/* #define MSG_CULL_GETELEMCASEHOSTERRORXRUNTIMETYPE_S      _message(41075, _("error: lGetElemCaseHost("SFN"): run time type error")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETELEMHOSTERRORXRUNTIMETYPE_S          _MESSAGE(41076, _("error: lGetElemHost("SFN"): run time type error"))
 #define MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION          _MESSAGE(41077, _("!!!!!!!!!! lGetPosUlong() got an invalid pos !!!!!!!!!!!!"))
 #define MSG_CULL_GETPOSLIST_GOTANINVALIDPOS              _MESSAGE(41078, _("!!!!!!!!!!!11 lGetPosList() got an invalid pos !!!!!!!!"))
@@ -214,12 +191,8 @@
 
 
 #define MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS              _MESSAGE(41158, _("!!!!!!!!!!!11 lGetPosObject() got an invalid pos !!!!!!!!"))
-#define MSG_CULL_POINTER_GETOBJECT_NULLELEMENTFORX_S       _MESSAGE(41159, _("!!!!!!!!!! lGetObject(): got NULL element for "SFN" !!!!!!!!!!"))
-#define MSG_CULL_GETOBJECT_XNOTFOUNDINELEMENT_S            _MESSAGE(41160, _("!!!!!!!!!! lGetObject(): "SFN" not found in element !!!!!!!!!!"))
 #define MSG_CULL_GETOBJECT_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41161, _("lGetObject: wrong type for field "SFN" ("SFN")"))
-#define MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S        _MESSAGE(41162, _("!!!!!!!!!! lDechainObject(): "SFN" not found in element !!!!!!!!!!"))
 #define MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S       _MESSAGE(41163, _("lDechainObject: wrong type for field "SFN" ("SFN")"))
-/* #define MSG_CULL_DECHAINOBJECT_INCONSISTENTCONTENT_S       _message(41164, _("lDechainObject: element to dechain from field "SFQ" is not the requested element")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41165, _("lGetBool: wrong type for field "SFN" ("SFN")"))
 #define MSG_CULL_SETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41166, _("lSetBool: wrong type for field "SFN" ("SFN")"))
 #define MSG_CULL_WHERE_SHOULDBEBOOL                      _MESSAGE(41167, _("lWhere (should be a lBoolT)"))

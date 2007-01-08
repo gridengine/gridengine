@@ -1,3 +1,5 @@
+CR-2007-01-08-0: Cleanup:   removed all unused message macros
+
 DT-2007-01-05-0: Docs:      o Reviewed all man page changes since u4
                             o Corrected language errors
                             - Merged from Maintrunk DT-2007-01-05

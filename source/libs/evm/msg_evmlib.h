@@ -59,6 +59,5 @@
 #define MSG_WRONG_USER_FORFIXEDID         _MESSAGE(66016, _("only a manager can register event clients with a fixed id"))
 #define MSG_TO_MANY_DYNAMIC_EC_U          _MESSAGE(66017, _("cannot register event client. Only "sge_U32CFormat" event clients are allowed in the system"))
 #define MSG_SET_MAXDYNEVENTCLIENT_U       _MESSAGE(66018, _("max dynamic event clients is set to "sge_U32CFormat))
-#define MSG_ARRAY_OUT_OF_SYNC_U           _MESSAGE(66019, _("the internal event client storage was out of sync for client with id "sge_U32CFormat))
 
 #endif /* __MSG_EVMLIB_H */

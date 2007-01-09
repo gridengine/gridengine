@@ -1289,8 +1289,6 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                sge_dstring_init(&tmp_reason, tmp_reason_buf, sizeof(tmp_reason_buf));
 
                /* build the default request */
-               parse_ulong_val(&dval, NULL, valtype, def_req, NULL, 0);
-
                lSetString(default_request, CE_stringval, def_req);
                lSetDouble(default_request, CE_doubleval, dval);
 
@@ -3337,16 +3335,28 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
          DPRINTF(("checking limit %s\n", lGetString(raw_centry, CE_name)));
       }
 
-      /* check for implicit slot request */
+      /* check for implicit slot and default request */
       if (job_centry == NULL) {
-         if ( strcmp(lGetString(raw_centry, CE_name), "slots") == 0 ) {
+         if (strcmp(lGetString(raw_centry, CE_name), "slots") == 0) {
             job_centry = implicit_slots_request;
+         } else if (lGetString(raw_centry, CE_default) != NULL && lGetBool(raw_centry, CE_consumable)) {
+            double request;
+            parse_ulong_val(&request, NULL, lGetUlong(raw_centry, CE_valtype), lGetString(raw_centry, CE_default), NULL, 0);
+
+            /* default requests with zero value are ignored */
+            if (request == 0.0) {
+               continue;
+            }
+            lSetString(raw_centry, CE_stringval, lGetString(raw_centry, CE_default));
+            lSetDouble(raw_centry, CE_doubleval, request);
+            job_centry = raw_centry; 
+            DPRINTF(("using default request for %s!\n", lGetString(raw_centry, CE_name)));
          } else if (is_forced == true) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_NOTREQFORCEDRES); 
             ret = DISPATCH_NEVER_CAT;
             break;
          } else {
-            /* ignoring because centry was not requested */
+            /* ignoring because centry was not requested and is no consumable */
             DPRINTF(("complex not requested!\n"));
             continue;
          }
@@ -5211,7 +5221,7 @@ parallel_queue_slots(sge_assignment_t *a,lListElem *qep, int *slots, int *slots_
 *                  -1 assignment will never be possible for all jobs of that category
 ******************************************************************************/
 static dispatch_t 
-sequential_queue_time( u_long32 *start, const sge_assignment_t *a,
+sequential_queue_time(u_long32 *start, const sge_assignment_t *a,
                                 int *violations, lListElem *qep) 
 {
    dstring reason; 

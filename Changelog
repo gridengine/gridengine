@@ -1,3 +1,9 @@
+RD-2007-01-09-0: Bugfix:    Default requests for complexes not honored by
+                            resource quotas
+                 Bugtraq:   6510635
+                 Issue:     2146
+                 Review:    JG
+
 AA-2007-01-08-0: Enhancem:  configurable flag for jgdi objects (maybe incomplete)
                  Review:    RH
                  
@@ -42,8 +48,8 @@ RC-2006-12-26-0: Bugfix:    fixed a typo
 OJ-2006-12-22-X: Bugfix:    - qconf -aq help did not display correctly
                               Modified the string to read now 
                               [-aq [queue_name]]
-		 Issue:     1885
-		 Review:    DT
+                 Issue:     1885
+                 Review:    DT
 
 RD-2006-12-22-0: Bugfix:    - qconf -Arqs added invalid RQS
                             - removed some unnecessary memset() calls
@@ -9186,4 +9192,5 @@ JG-2004-04-06-0: Enhancem.: write intermediate accounting records to reporting
 MD-2004-04-06-0: Bugfix:    - Improper variable comparison
                             - autoinstall does not work
                             - changed logfile dir
+
 

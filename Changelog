@@ -1,6 +1,7 @@
 EB-2007-01-07-0: Bugfix:    qmaster dies when modifying slots value
                             for queue domain when queuename is missing
                  Bugtraq:   6509684
+                 Issue:     2158
                  Review:    JG
 
 JG-2007-01-10-0: Bugfix:    o spooledit didn't dump QINSTANCE objects of version

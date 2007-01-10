@@ -1461,13 +1461,16 @@ sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;
    sge_object_type i;
-   char *type_name = strdup(name);
-   char *colon = strchr(type_name, ':');
+   char *type_name;
+   char *colon;
+
+   DENTER(OBJECT_LAYER, "object_name_get_type");
+
+   type_name = strdup(name);
+   colon = strchr(type_name, ':');
    if (colon != NULL) {
       *colon = '\0';
    }
-
-   DENTER(OBJECT_LAYER, "object_name_get_type");
 
    for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
       if (strcasecmp(object_base[i].type_name, type_name) == 0) {

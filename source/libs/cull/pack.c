@@ -837,8 +837,8 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
       return ret;
    }
 
-   /* bitfield size must match descr size */
-   if (size != descr_size) {
+   /* size may not be bigger than bitfield initialized from descr information */
+   if (size > descr_size) {
       DEXIT;
       return PACK_ENOMEM;
    }

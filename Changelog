@@ -1,3 +1,10 @@
+JG-2007-01-10-0: Bugfix:    o spooledit didn't dump QINSTANCE objects of version
+                              6.0
+                            o spooledit didn't dump USERSET objects
+                 Bugster:   6511171
+                 Issue:     2157
+                 Review:    RD
+
 JG-2007-01-08-0: Bugfix:    Backup script failed in case of inconsistent 
                             hostname resolving.
                  Review:    MD

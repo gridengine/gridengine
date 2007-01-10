@@ -1060,6 +1060,9 @@
 #define MSG_GDI_UTEXT_mrqs_OPT             _MESSAGE(60621, _("modify resource quota set(s)"))
 #define MSG_GDI_USAGE_Mrqs_OPT             "[-Mrqs fname [rqs_list]]"
 #define MSG_GDI_UTEXT_Mrqs_OPT             _MESSAGE(60622, _("modify resource quota set(s) from file"))
+#define MSG_OBJ_NAME_MISSING               _MESSAGE(60623, _("Object name missing in request"))
+
+
 /*
  * Objects and components
  */

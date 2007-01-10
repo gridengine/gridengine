@@ -1,3 +1,9 @@
+EB-2007-01-10-0: Bugfix:    qmaster dies when modifying slots value
+                            for queue domain when queuename is missing
+                 Bugtraq:   6509684
+                 Issue:     2158
+                 Review:    JG
+
 JG-2007-01-10-0: Bugfix:    o spooledit didn't dump QINSTANCE objects of version
                               6.0
                             o spooledit didn't dump USERSET objects
@@ -170,6 +176,7 @@ HP-2006-12-11-0: Enhancem.: Added Windows version of authuser binary
 AH-2006-12-11-0: Enhancem.: Determine qmaster_spool_dir based on bootstrap
                             file in Dtrace monitor
 
+>>>>>>> 1.3612
 AH-2006-12-08-1: Enhancem.: Added probe verification option to Dtrace monitor
 
 AH-2006-12-08-0: Enhancem.: Added Dtrace monitor to distribution

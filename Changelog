@@ -1,3 +1,10 @@
+JG-2007-01-10-0: Bugfix:    o spooledit didn't dump QINSTANCE objects of version
+                              6.0
+                            o spooledit didn't dump USERSET objects
+                 Bugster:   6511171
+                 Issue:     2157
+                 Review:    RD
+
 RD-2007-01-09-0: Bugfix:    Default requests for complexes not honored by
                             resource quotas
                  Bugtraq:   6510635

@@ -1445,6 +1445,8 @@ const char *object_type_get_name(const sge_object_type type)
 *
 *  FUNCTION
 *     returns the type id a an object given by "name" 
+*     We allow to pass in names in the form <object_name>:<key>, e.g.
+*     USERSET:deadlineusers.
 *
 *  INPUTS
 *     const char *name - object name 
@@ -1459,18 +1461,22 @@ sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;
    sge_object_type i;
+   char *type_name = strdup(name);
+   char *colon = strchr(type_name, ':');
+   if (colon != NULL) {
+      *colon = '\0';
+   }
 
    DENTER(OBJECT_LAYER, "object_name_get_type");
 
    for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-      int length = strlen(object_base[i].type_name);
-
-      if (!strncasecmp(object_base[i].type_name, name, length)) {
+      if (strcasecmp(object_base[i].type_name, type_name) == 0) {
          ret = i;
          break;
       }
    }
 
+   FREE(type_name);
    DRETURN(ret);
 }
 

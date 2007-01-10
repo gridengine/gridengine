@@ -1970,6 +1970,13 @@ monitoring_t *monitor
       old_obj = lGetElemStr(*(object->master_list), object->key_nm, name);
    }
 
+   if (name == NULL) {
+      answer_list_add(alpp, MSG_OBJ_NAME_MISSING, 
+                      STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
    if ((old_obj && add) ||
       (!old_obj && !add)) {
       ERROR((SGE_EVENT, add?

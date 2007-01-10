@@ -1054,6 +1054,7 @@
 #define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
 #define MSG_FUNC_GETPWUIDXFAILED_IS        _MESSAGE(60613, _("failed to getpwuid(%d): "SFN))
 #define MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS   _MESSAGE(60614, _("Change of "SFQ" will not be effective before sge_execd restart as described in sge_conf(5)"))
+#define MSG_OBJ_NAME_MISSING  _MESSAGE(60615, _("Object name missing in request"))
 
 
 /*

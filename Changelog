@@ -1,3 +1,13 @@
+AH-2007-01-11-0: Enhancem:  Enabled distinst code that assumes $ORIGIN relative 
+                            RUNPATH is set with OpenSSL and BDB libraries and 
+                            binaries. If no such libraries/binaries are available
+                            distinst option -shlibpath still can be used to cause 
+                            old LD_LIBRARY_PATH behaviour be effective.
+                            (see AH-2006-10-12-0)
+                 Bugster:   6456290
+                 Issue:     2090
+                 Review:    RD
+
 EB-2007-01-10-0: Bugfix:    qmaster dies when modifying slots value
                             for queue domain when queuename is missing
                  Bugtraq:   6509684
@@ -176,7 +186,6 @@ HP-2006-12-11-0: Enhancem.: Added Windows version of authuser binary
 AH-2006-12-11-0: Enhancem.: Determine qmaster_spool_dir based on bootstrap
                             file in Dtrace monitor
 
->>>>>>> 1.3612
 AH-2006-12-08-1: Enhancem.: Added probe verification option to Dtrace monitor
 
 AH-2006-12-08-0: Enhancem.: Added Dtrace monitor to distribution

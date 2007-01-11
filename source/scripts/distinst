@@ -498,10 +498,7 @@ instclassictargets=false
 instopenssl=true
 instbdb=true
 instarco=false
-
-# Note: Until now default is 'true', but this is just intermediately
-# Actually it must be 'false'. Please remove this comment afterwards.
-enforce_shlibpath=true
+enforce_shlibpath=false
 
 cmdname=`basename $0`
 

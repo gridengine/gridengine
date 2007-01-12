@@ -1,3 +1,5 @@
+RD-2007-01-12-0: Doc:       added Advance Reservation Specification Document
+
 AH-2007-01-11-0: Enhancem:  Enabled distinst code that assumes $ORIGIN relative 
                             RUNPATH is set with OpenSSL and BDB libraries and 
                             binaries. If no such libraries/binaries are available

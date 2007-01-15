@@ -2591,10 +2591,15 @@ CopyCaToHostType()
                   $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
                   $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
                   if [ "$SGE_QMASTER_PORT" = "" ]; then
-                     echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                     PORT_DIR="sge_qmaster"
                   else
-                     echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                     PORT_DIR="port$SGE_QMASTER_PORT"
                   fi
+                  echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
+                  echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
+                  for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
+                     echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
+                  done
                else
                   $INFOTEXT "The certificate copy failed!"      
                   $INFOTEXT -log "The certificate copy failed!"      

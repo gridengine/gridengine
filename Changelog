@@ -1,3 +1,8 @@
+MD-2007-01-15-0: Bugfix:    o fixed syntax error
+                            o fixed permission setting at csp install
+                            o fixed remote install mechanism
+                 Review:    HP
+ 
 EB-2007-01-10-0: Bugfix:    qmaster dies when modifying slots value
                             for queue domain when queuename is missing
                  Bugtraq:   6509684

@@ -1385,18 +1385,15 @@ for i in $ARCH; do
                if [ $DSTARCH = tru64 ]; then
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
                elif [ $DSTARCH = darwin -o $DSTARCH = darwin-x86 ];  then
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
                else
                   libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
                fi
 
                if [ -f $libname ]; then
                   InstallProg $libname
-                  if [ $DSTARCH = tru64 ]; then
+                  if [ $DSTARCH = tru64 -o $DSTARCH = darwin -o $DSTARCH = darwin-x86 ]; then
                      :
-                  elif [ $DSTARCH = darwin -o $DSTARCH = darwin-x86 ]; then
-                     (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
-                      ln -s $lib.0.9.7.$shlibext $lib.$shlibext)
                   else
                      (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
                   fi
@@ -1405,9 +1402,6 @@ for i in $ARCH; do
                   exit 1
                fi
             done
-            if [ $DSTARCH = darwin -o $DSTARCH = darwin-x86 ]; then
-               InstallProg "$OPENSSLBASE/$DSTARCH/lib/libssl.bundle"
-            fi
          fi
 
          if [ $DSTARCH != win32-x86 ]; then

@@ -218,7 +218,7 @@ case $ARCH in
    if [ -x /sw/bin/Eterm ]; then
       XTERM=/sw/bin/Eterm
    else
-      XTERM=/usr/bin/X11/xterm
+      XTERM=/usr/X11R6/bin/xterm
    fi
    MAILER=/usr/bin/mail
    QLOGIN_COMMAND=telnet

@@ -879,7 +879,7 @@ case ALPHA5:
    endif
 
    set NOERR_CFLAG  = "-w"
-   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5"
+   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5 -DUSE_SGE_UNSETENV"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD      = $CC

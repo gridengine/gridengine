@@ -72,7 +72,7 @@ SCHEDLIB_TEST_PROGS = \
 SCHEDLIB_TEST_PROGS_OBJS = \
               test_resource_utilization.o \
               sge_resource_utilization_test.o \
-              test_sge_load_formula
+              test_sge_load_formula.o
               
 ###############################################################################
 # global rules: all, clean, depend, messages

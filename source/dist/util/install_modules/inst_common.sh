@@ -419,7 +419,7 @@ ErrUsage()
              "   -udb       uninstall Berkeley DB RPC spooling server\n" \
              "   -bup       backup of your configuration\n" \
              "   -rst       restore configuration from backup\n" \
-             "   -upd       upgrade cluster from 5.x to 6.0\n" \
+             "   -upd       upgrade cluster from 5.x to 6.1\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
@@ -2579,9 +2579,9 @@ CopyCA()
 # copy the ca certs to all cluster host, which equals the given host type
 CopyCaToHostType()
 {
-   if [ "$1" -eq "admin" ]; then
+   if [ "$1" = "admin" ]; then
       cmd="$SGE_BIN/qconf -sh"
-   elif [ "$1" -eq "submit" ]; then
+   elif [ "$1" = "submit" ]; then
       cmd="$SGE_BIN/qconf -ss"
    fi
 
@@ -2601,10 +2601,15 @@ CopyCaToHostType()
                   $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
                   $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
                   if [ "$SGE_QMASTER_PORT" = "" ]; then
-                     echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                     PORT_DIR="sge_qmaster"
                   else
-                     echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
+                     PORT_DIR="port$SGE_QMASTER_PORT"
                   fi
+                  echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
+                  echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
+                  for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
+                     echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
+                  done
                else
                   $INFOTEXT "The certificate copy failed!"      
                   $INFOTEXT -log "The certificate copy failed!"      
@@ -2652,8 +2657,8 @@ PreInstallCheck()
 
 RemoveHostFromList()
 {
-   source_list = $1
-   host_to_remove = $2
+   source_list=$1
+   host_to_remove=$2
 
    help_list=""
    for hh in $source_list; do

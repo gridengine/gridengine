@@ -454,6 +454,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
    fi
 
     TMP_EXEC_HOST_LIST=$EXEC_HOST_LIST
+    CURRENTLY_INSTALLING_HOSTS=""
 
     if [ "$NOREMOTE" = false ]; then
 
@@ -466,23 +467,34 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
             installed=$?
 
             if [ "$installed" = 0 ]; then
-               if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
-                  LOCALINST=true
-               else
+               #if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
+               #   LOCALINST=true
+               #else
+               currently_running="false"
+               for runnings in $CURRENTLY_INSTALLING_HOSTS; do
+                  if [ "$runnings" = "$h" ]; then
+                     currently_running="true"
+                     break
+                  fi
+               done
+               if [ "$currently_running" = "false" ]; then 
                   CheckRSHConnection $h
                   if [ "$?" = 0 ]; then 
                      $INFOTEXT -log "remote installation on host %s" $h
                      qconf -ah $h
                      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $h /bin/sh &
                      inst_counter=`expr $inst_counter + 1`
+                     CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $h"
                   else
                      $INFOTEXT -log "rsh/ssh connection to host %s is not working" $h
                      TMP_EXEC_HOST_LIST=`RemoveHostFromList $TMP_EXEC_HOST_LIST $h`
+                  fi
                fi
-            fi
+               #fi
             else 
                $INFOTEXT -log "Host %s already installed" $h
                TMP_EXEC_HOST_LIST=`RemoveHostFromList $TMP_EXEC_HOST_LIST $h`
+               CURRENTLY_INSTALLING_HOSTS=`RemoveHostFromList $CURRENTLY_INSTALLING_HOSTS $h`
             fi
 
             is_done=0
@@ -585,7 +597,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       # This code will be executed in case inst_sge -x -host <remote host> 
       if [ -f $EXEC_HOST_LIST ]; then
          for h in `cat $EXEC_HOST_LIST`; do
-           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+           if [ "$QMASTER" = "install" -o "$NOREMOTE" = "false" ]; then
                $INFOTEXT "Starting remote installation on host %s" $h
                $INFOTEXT "This part runs in automatic mode," \
                          "be sure to have a valid configuration file"

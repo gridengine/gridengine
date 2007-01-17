@@ -1,3 +1,9 @@
+RD-2007-01-17-0: Bugfix:    qmaster core dump with usersets referenced in RQS
+                            unix groups are not considered by RQS
+                 Issue:     2161, 2162
+                 Bugster:   6513944, 6513967
+                 Review:    JG
+
 CR-2007-01-17-0: Bugfix:    scheduler now writes pid file in daemonize phase
                  Review:    JG
 

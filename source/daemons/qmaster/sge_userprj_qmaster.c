@@ -769,7 +769,7 @@ void project_update_categories(const lList *added, const lList *removed)
       p = lGetString(ep, UP_name);
       DPRINTF(("added project: \"%s\"\n", p));
       prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
-      if (lGetBool(prj, UP_consider_with_categories)==false) {
+      if (prj && lGetBool(prj, UP_consider_with_categories)==false) {
          lSetBool(prj, UP_consider_with_categories, true);
          sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
       }
@@ -780,7 +780,7 @@ void project_update_categories(const lList *added, const lList *removed)
       DPRINTF(("removed project: \"%s\"\n", p));
       prj = lGetElemStr(*object_type_get_master_list(SGE_TYPE_PROJECT), UP_name, p);
 
-      if (!project_still_used(p)) {
+      if (prj && !project_still_used(p)) {
          lSetBool(prj, UP_consider_with_categories, false);
          sge_add_event(0, sgeE_PROJECT_MOD, 0, 0, p, NULL, NULL, prj);
       }

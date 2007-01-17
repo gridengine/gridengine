@@ -272,11 +272,8 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
    DENTER(TOP_LAYER, "sge_resolve_hostname");
 
    if (hostname == NULL) {
-      DEXIT;
-      return CL_RETVAL_PARAMS;
-   }
-
-   if (hostname != NULL) {
+      ret = CL_RETVAL_PARAMS;
+   } else {
       /* 
        * these "spezial" names are resolved:
        *    "global", "unknown", "template")
@@ -306,8 +303,7 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       }
    } 
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool

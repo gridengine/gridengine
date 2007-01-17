@@ -164,7 +164,12 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
    /* 
    ** -u if referenced in resource quota sets
    */
-   if (sge_user_is_referenced_in_rqs(rqs_list, lGetString(job, JB_owner), acl_list)) {
+
+   /* RD TODO: A possible performance enhancement is to split user and group inside category.
+      Some users are only referenced by the unix group. Their jobs could be grouped
+      together by referencing only the group in the category string
+   */
+   if (sge_user_is_referenced_in_rqs(rqs_list, lGetString(job, JB_owner), lGetString(job, JB_group), acl_list)) {
       if (sge_dstring_strlen(category_str) > 0) {
          sge_dstring_append(category_str, " ");
       }

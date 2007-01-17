@@ -346,7 +346,7 @@ int sge_contained_in_access_list(const char *user, const char *group,
    bool found = false;
    lList *user_list = lGetList(acl, US_entries);
 
-   DENTER(TOP_LAYER,"sge_contained_in_access_list");
+   DENTER(TOP_LAYER, "sge_contained_in_access_list");
    if (group != NULL) {
       dstring group_entry = DSTRING_INIT;
 

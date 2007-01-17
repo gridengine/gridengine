@@ -1324,13 +1324,11 @@ int lDiffListStr(int nm, lList **lpp1, lList **lpp2)
    DENTER(CULL_LAYER, "lDiffListStr");
 
    if (!lpp1 || !lpp2) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (!*lpp1 || !*lpp2) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    ep = lFirst(*lpp1);
@@ -1346,6 +1344,5 @@ int lDiffListStr(int nm, lList **lpp1, lList **lpp2)
       }
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }

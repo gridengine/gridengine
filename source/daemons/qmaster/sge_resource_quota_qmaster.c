@@ -546,14 +546,16 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
 *******************************************************************************/
 static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_nm, lList **scope_l, int nm, const lDescr *dp, lList* master_list)
 {
-   lListElem *filter = lGetObject(rule, filter_nm);
+   lListElem *filter = NULL;
    bool ret = true;
 
    DENTER(TOP_LAYER, "filter_diff_usersets_or_projects");
 
-   if (filter == NULL || master_list == NULL) {
+   if (rule == NULL || filter == NULL || master_list == NULL) {
       DRETURN(ret);
    }
+
+   filter = lGetObject(rule, filter_nm);
 
    if (filter_nm != RQR_filter_users && filter_nm != RQR_filter_projects) {
       DRETURN(ret);

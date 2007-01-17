@@ -1683,10 +1683,12 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = sparc
              breaksw
          case lx24-amd64:
+         case lx26-amd64:
          case sol-amd64:
              set JAVA_LIB_ARCH = amd64
              breaksw
          case lx24-ia64:
+         case lx26-ia64:
              set JAVA_LIB_ARCH = ia64
              breaksw
          case hp11:

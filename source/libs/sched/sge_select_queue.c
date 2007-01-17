@@ -3215,6 +3215,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
 
          for_each(rqs, a->rqs_list) {
             const char *user = NULL;
+            const char *group = NULL;
             const char *project = NULL;
             const char *host_name = NULL;
             const char *queue_name = NULL;
@@ -3226,12 +3227,13 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
             }
 
             user = lGetString(a->job, JB_owner);
+            group = lGetString(a->job, JB_group);
             project = lGetString(a->job, JB_project);
             host_name = lGetHost(queue_instance, QU_qhostname);
             queue_name = lGetString(queue_instance, QU_qname);
 
             sge_dstring_clear(&rule_name);
-            rule = rqs_get_matching_rule(rqs, user, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
+            rule = rqs_get_matching_rule(rqs, user, group, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
             if (rule != NULL) {
                /* Check booked usage */
                rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
@@ -4198,6 +4200,7 @@ parallel_rqs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qen
       DRETURN(result);
    } else {
       const char* user = lGetString(a->job, JB_owner);
+      const char* group = lGetString(a->job, JB_group);
       const char* project = lGetString(a->job, JB_project);
       const char* pe = lGetString(a->job, JB_pe);
       lListElem *rqs = NULL;
@@ -4215,7 +4218,7 @@ parallel_rqs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qen
             continue;
          }
          sge_dstring_clear(&rule_name);
-         rule = rqs_get_matching_rule(rqs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
+         rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
          if (rule != NULL) {
             lList *limit_list = lGetList(rule, RQR_limit);
             lListElem *limit = NULL;
@@ -4899,6 +4902,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             /* get rqs slots for this queue instance */
                lListElem *rqs = NULL;
                const char* user = lGetString(a->job, JB_owner);
+               const char* group = lGetString(a->job, JB_group);
                const char* project = lGetString(a->job, JB_project);
                const char *pe = lGetString(a->job, JB_pe);
                const char *queue = lGetString(qep, QU_qname); 
@@ -4914,7 +4918,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                      continue;
                   }
                   sge_dstring_clear(&rule_name);
-                  rule = rqs_get_matching_rule(rqs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
+                  rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
                   if (rule != NULL) {
                      u_long32 lir_level = lGetUlong(rule, RQR_level);
                      lListElem *jc_tmp = NULL;
@@ -4984,7 +4988,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                         continue;
                      }
                      sge_dstring_clear(&rule_name);
-                     rule = rqs_get_matching_rule(rqs, user, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
+                     rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list, a->hgrp_list, &rule_name);
                      if (rule != NULL) {
                         lListElem *jc_tmp = NULL;
                         u_long32 lir_level = lGetUlong(rule, RQR_level);

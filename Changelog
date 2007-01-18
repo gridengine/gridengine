@@ -1,3 +1,7 @@
+MD-2007-01-18-0: Bugfix:    path to openssl lib in distinst.site was wrong
+                 Reveiw:    RD
+                 Changed:   distinst.site
+
 GH-2007-01-18-0: Bugfix:    problems with sge_qstat(5) file
                  Bugtraq:   6452471
                  Issue:     2088

@@ -1,5 +1,6 @@
 GH-2007-01-18-0: Bugfix:    problems with sge_qstat(5) file
                  Bugtraq:   6452471
+                 Issue:     2088
                  Review:    AH
 
 RD-2007-01-17-0: Bugfix:    qmaster core dump with usersets referenced in RQS

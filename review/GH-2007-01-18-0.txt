@@ -7,6 +7,7 @@ Date: 2007-01-18
 1 Identification
 GH-2007-01-18-0  Bugfix:  problems with sge_qstat(5) file
                  Bugtraq: 6452471
+                 Issue:   2088
                  Review:  AH
 
 

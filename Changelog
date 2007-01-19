@@ -1,3 +1,8 @@
+PJ-2007-01-19-0: RFE:       Evaluation Expression Support.
+                 Issue:     56
+                 Bugster:   6205203,5101053,5101735
+                 Review:    AH
+
 AA-2007-01-19-0: Enhancem:  o -wd functionality in qsub,qalter,qsh,qrsh and qmon
                             o sge_event_client2.* -> sge_event_client.*
                             o act_qmaster, bootstrap error messages

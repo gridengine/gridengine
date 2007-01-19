@@ -40,6 +40,7 @@
 #include "sge_unistd.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_eval_expression.h"
 
 #include "sge_attr.h"
 #include "sge_answer.h"
@@ -663,8 +664,7 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
                         const char *hostname = NULL;
 
                         hostname = lGetHost(qinstance, QU_qhostname);
-                        if (!fnmatch(h_pattern, hostname, 0) ||
-                            !sge_hostcmp(h_pattern, hostname)) {
+                        if (!sge_eval_expression(TYPE_HOST, h_pattern, hostname, NULL)) {
                            const char *filename;
                            spooling_field *fields = sge_build_QU_field_list(true, false);
 

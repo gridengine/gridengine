@@ -65,6 +65,8 @@
 #include "msg_clients_common.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_eval_expression.h"
+
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
@@ -415,8 +417,8 @@ lList **alpp
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
       for_each(qep, qinstance_list) {
-         if (!sge_hostcmp(lGetHost(qep, QU_qhostname), 
-                          lGetHost(host, EH_name))) {
+         if (!sge_eval_expression(TYPE_HOST, lGetHost(host, EH_name),
+              lGetHost(qep, QU_qhostname), NULL)) {
             char buf[80];
             
             if (show & QHOST_DISPLAY_QUEUES) {

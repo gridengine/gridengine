@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\" Copyright: 2004-2007 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/01/05 20:35:01 $     Revision: $Revision: 1.34 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.35 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/01/05 20:35:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -154,7 +154,8 @@ Prints a listing of all options.
 .IP "\fB\-j [job_list]\fP"
 Prints either for all pending jobs or the jobs contained in job_list 
 various information. The job_list can contain job_ids, job_names, or 
-patterns. 
+wildcard expression
+.M sge_types 1 . 
 .sp
 For jobs in E(rror) state the error reason is displayed. For jobs that
 could not be dispatched during in the last scheduling interval the 
@@ -199,7 +200,7 @@ general.
 (see OUTPUT FORMATS below).
 .\"
 .IP "\fB\-q wc_queue_list\fP"
-Specifies a wildcard queue list to which job
+Specifies a wildcard expression queue list to which job
 information is to be displayed. Find the definition of \fBwc_queue_list\fP
 in
 .M sge_types 1 .

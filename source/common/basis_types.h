@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef WINDOWS
 
 #include <sys/types.h>
 
@@ -99,7 +98,7 @@ typedef enum {
 #if defined(HP11) || defined(HP1164)
 #  include <limits.h>
 #else
-#  ifndef WIN32NATIVE
+#  if !(defined(WIN32NATIVE) || defined(WINDOWS))
 #     include <sys/param.h>
 #  endif
 #endif
@@ -250,5 +249,4 @@ typedef char stringT[MAX_STRING_SIZE];
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
 
-#endif /* WINDOWS */
 #endif /* __BASIS_TYPES_H */

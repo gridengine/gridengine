@@ -459,7 +459,12 @@ AddQueue()
       fi
    fi
 
-   slots=`$SGE_UTILBIN/loadcheck -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
+   if [ "$SGE_ARCH" != "win32-x86" ]; then
+      LOADCHECK_COMMAND="$SGE_UTILBIN/loadcheck"
+   else
+      LOADCHECK_COMMAND="$SGE_UTILBIN/loadcheck.exe"
+   fi
+   slots=`$LOADCHECK_COMMAND -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
 
    $INFOTEXT -u "\nAdding a queue for this host"
    $INFOTEXT "\nWe can now add a queue instance for this host:\n\n" \

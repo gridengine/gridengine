@@ -297,7 +297,7 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            testsuidroot authuser uidgid infotext"
 
 WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
-              gethostbyaddr gethostbyname gethostname getservbyname loadcheck \
+              gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
               now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
               infotext"
 
@@ -351,7 +351,7 @@ fi
          "qtcsh           qping           qquotai         sgepasswd\n" \
          "qloadsensor.exe\n\n" \
          "and the binaries in >%s< should be:\n\n" \
-         "adminrun        gethostbyaddr  loadcheck      rlogin         uidgid\n" \
+         "adminrun        gethostbyaddr  loadcheck.exe  rlogin         uidgid\n" \
          "authuser.exe    checkprog      gethostbyname  now            rsh\n" \
          "infotext        checkuser      gethostname    openssl        rshd\n" \
          "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \

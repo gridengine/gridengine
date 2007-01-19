@@ -1,3 +1,10 @@
+HP-2007-01-19-0: Bugfix:    loadcheck reports on a hyperthreaded CPU only
+                            one processor on Windows
+                 Changed:   loadcheck.c, utilbin/Makefile, aimk, distinst
+                            inst_common.sh, inst_execd.sh
+                 Bugster:   6233523
+                 Review:    MD
+
 PJ-2007-01-19-0: RFE:       Evaluation Expression Support.
                  Issue:     56
                  Bugster:   6205203,5101053,5101735

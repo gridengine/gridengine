@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#ifndef WINDOWS
 #include <unistd.h>
 
 #include "basis_types.h"
@@ -42,13 +44,17 @@
 #include "sge_prog.h"
 #include "sge_host.h"
 #include "sgermon.h"
+#else
+#include "msg_utilbin.h"
+#include <windows.h>
+#endif
 
 void usage(void);
 void print_mem_load(char *, char *, int, double, char*);
 
 void usage()
 {
-   fprintf(stderr, "%s loadcheck [-int] [-loadval name]\n",MSG_UTILBIN_USAGE);
+   fprintf(stderr, "%s loadcheck [-int] [-loadval name]\n", MSG_UTILBIN_USAGE);
    exit(1);
 }
    
@@ -69,7 +75,9 @@ int main(int argc, char *argv[])
    int i, pos = 0, print_as_int = 0, precision;
    char *m;
 
+#ifndef WINDOWS
    DENTER_MAIN(TOP_LAYER, "loadcheck");
+#endif
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__   
    /* init language output for gettext() , it will use the right language */
@@ -105,13 +113,35 @@ int main(int argc, char *argv[])
       precision = 6;
    }   
 
-   if ((pos && !strcmp("arch", argv[pos])) || !pos)
-      printf("arch            %s\n", sge_get_arch());
+   if ((pos && !strcmp("arch", argv[pos])) || !pos) {
+      const char *arch = "";
+#if defined(WINDOWS)
+      arch = "win32-x86";
+#else
+      arch = sge_get_arch();
+#endif 
+      printf("arch            %s\n", arch);
+   }
       
-   if ((pos && !strcmp("num_proc", argv[pos])) || !pos)    
-      printf("num_proc        %d\n", sge_nprocs());
+   if ((pos && !strcmp("num_proc", argv[pos])) || !pos) {
+      int nprocs = 1;
+#if defined(WINDOWS)
+      SYSTEM_INFO system_info;
 
-	 loads = sge_getloadavg(avg, 3);
+      GetSystemInfo(&system_info);
+      nprocs = system_info.dwNumberOfProcessors;
+#else
+      nprocs = sge_nprocs();
+#endif
+      printf("num_proc        %d\n", nprocs);
+   }
+
+#if defined(WINDOWS)
+   loads = 0;
+   avg[0] = avg[1] = avg[2] = 0;
+#else
+	loads = sge_getloadavg(avg, 3);
+#endif
 
    if (loads>0 && ((pos && !strcmp("load_short", argv[pos])) || !pos)) 
       printf("load_short      %.2f\n", avg[0]);
@@ -131,7 +161,9 @@ int main(int argc, char *argv[])
    if (sge_loadmem(&mem_info)) {
       fprintf(stderr, MSG_SYSTEM_RETMEMORYINDICESFAILED );
       fprintf(stderr, "\n");
+#ifndef WINDOWS
       DEXIT;
+#endif
       return 1;
    }
 
@@ -160,8 +192,9 @@ int main(int argc, char *argv[])
       print_mem_load("cpu", name,  1, total, "%");
    }
 #endif /* SGE_LOADCPU */
-
+#ifndef WINDOWS
    DEXIT;
+#endif
 	return 0;
 }
 

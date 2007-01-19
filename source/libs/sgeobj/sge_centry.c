@@ -50,6 +50,7 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_object.h"
+#include "sge_eval_expression.h"
 #include "sgeobj/sge_resource_quota.h"
 
 #include "msg_common.h"
@@ -190,7 +191,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
             char str_value[100];
             dstring ds;
             sge_dstring_init(&ds, str_value, sizeof(str_value));
-            sge_dstring_sprintf(&ds, "%.0f", dval);
+            sge_dstring_sprintf(&ds, "%.0f", dval );
             DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
                      lGetString(this_elem, CE_stringval), str_value));
             lSetString(this_elem, CE_stringval, str_value);
@@ -216,7 +217,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       case TYPE_HOST:
          /* resolve hostname and store it */
          ret = sge_resolve_host(this_elem, CE_stringval);
-         if (ret != CL_RETVAL_OK) {
+         if (ret != CL_RETVAL_OK ) {
             if (ret == CL_RETVAL_GETHOSTNAME_ERROR) {
 /*                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s)); */
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SGETEXT_CANTRESOLVEHOST_S, s);
@@ -1245,6 +1246,15 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
          } 
       }
    }
+   
+/* do complex attributes syntax verification */
+  if (ret) {  
+    lListElem *elem;
+    for_each(elem, this_list){
+      ret = object_verify_expression_syntax(elem, answer_list);
+      if(!ret) break;
+    }
+  }   
    DRETURN(ret);
 }
 

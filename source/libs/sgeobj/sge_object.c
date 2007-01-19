@@ -76,6 +76,7 @@
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sgeobj/sge_suser.h"
+#include "sge_eval_expression.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -2848,5 +2849,50 @@ object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm)
       ret = false;
    }
 
+   return ret;
+}
+
+/****** sge_object/object_verify_expression_syntax() *****************************
+*  NAME
+*     object_verify_expression_syntax() -- verify string attribute expression syntax
+*
+*  SYNOPSIS
+*     bool 
+*     object_verify_expression_syntax(const lListElem *ep, lList **answer_list) 
+*
+*  FUNCTION
+*     Verifies that a string is expression in correct format.
+*
+*  INPUTS
+*     const lListElem *ep - the object to verify
+*     lList **answer_list - answer list to pass back error messages
+*
+*  RESULT
+*     bool - true on success,
+*            false on error with error message in answer_list
+*
+*  NOTES
+*     MT-NOTE: object_verify_expression_syntax() is MT safe 
+*
+*  SEE ALSO
+*******************************************************************************/
+bool 
+object_verify_expression_syntax(const lListElem *elem, lList **answer_list)
+{
+   bool ret = true;
+   const char *expr;
+   lUlong type;
+   type = lGetUlong(elem, CE_valtype); 
+   switch(type){
+      case TYPE_STR:  
+      case TYPE_CSTR: 
+      case TYPE_RESTR: 
+      case TYPE_HOST:  
+         expr = lGetString(elem, CE_stringval);         
+         if (sge_eval_expression(type,expr,"*",answer_list)==-1) {
+            ret = false;
+         }
+         break;
+   }    
    return ret;
 }

@@ -343,5 +343,6 @@ bool object_verify_ulong_not_null(const lListElem *ep, lList **answer_list, int 
 bool object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_double_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm);
+bool object_verify_expression_syntax(const lListElem *ep, lList **answer_list);
 
 #endif /* __SGE_OBJECT_H */

@@ -86,6 +86,8 @@ void sge_host_list_print(FILE *fp);
 char *sge_host_get_mainname(host *h);
 
 int sge_hostcmp(const char *h1, const char *h2);
+
+int sge_hostmatch(const char *h1, const char *h2);
  
 void sge_hostcpy(char *dst, const char *raw);       
 

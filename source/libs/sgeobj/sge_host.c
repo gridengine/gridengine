@@ -35,6 +35,7 @@
 #include "sge_object.h"
 #include "sge_conf.h"
 #include "sge_host.h"
+#include "sge_string.h"
 #include "sge_qinstance.h"
 #include "commlib.h"
 #include "sgermon.h"
@@ -208,7 +209,6 @@ const char *host_get_load_value(lListElem *host, const char *name)
    return value;
 }
 
-
 /* MT-NOTE: sge_resolve_host() is MT safe */
 int sge_resolve_host(lListElem *ep, int nm) 
 {
@@ -254,6 +254,7 @@ int sge_resolve_host(lListElem *ep, int nm)
        case lStringT:
           lSetPosString(ep, pos, unique);
           break;
+          
 
        case lHostT:
           lSetPosHost(ep, pos, unique);
@@ -272,28 +273,28 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
    DENTER(TOP_LAYER, "sge_resolve_hostname");
 
    if (hostname == NULL) {
-      ret = CL_RETVAL_PARAMS;
-   } else {
+      DEXIT;
+      return CL_RETVAL_PARAMS;
+   }
+   /* Optimized algorithm for resolving the names (to possitive logic) */
+   strcpy(unique, hostname);
+
+   /* Check to find hostname only if it was not contained in expression */
+   if (!sge_is_expression(hostname)) {
       /* 
        * these "spezial" names are resolved:
        *    "global", "unknown", "template")
        */
       switch (nm) {
       case CE_stringval:
-         if (!strcmp(hostname, SGE_UNKNOWN_NAME)) {
-            strcpy(unique, hostname);
-            ret = CL_RETVAL_OK;
-         } else {
+         if (strcmp(hostname, SGE_UNKNOWN_NAME)!=0) {
             ret = getuniquehostname(hostname, unique, 0);
          }
          break;
       case EH_name:
       case CONF_hname:
-         if (!strcmp(hostname, SGE_GLOBAL_NAME) || 
-             !strcmp(hostname, SGE_TEMPLATE_NAME)) {
-            strcpy(unique, hostname);
-            ret = CL_RETVAL_OK;
-         } else {
+         if ((strcmp(hostname, SGE_GLOBAL_NAME)!=0) && 
+             (strcmp(hostname, SGE_TEMPLATE_NAME)!=0)) {
             ret = getuniquehostname(hostname, unique, 0);
          }
          break;

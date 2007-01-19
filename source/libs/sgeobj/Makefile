@@ -91,7 +91,8 @@ SGEOBJLIB_SRC = \
          sge_userset.c \
          sge_utility.c \
          str2nm_converter.c \
-         sge_var.c
+         sge_var.c\
+         sge_eval_expression.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
 
@@ -102,14 +103,16 @@ SGEOBJLIB_TEST_PROGS = \
               test_sge_range \
               test_sge_schedd_conf \
               test_sge_utility \
-              test_sge_resource_quota
+              test_sge_resource_quota\
+              test_eval_expression\
 
 SGEOBJLIB_TEST_PROGS_OBJS = \
               test_sge_object.o \
               test_sge_range.o \
               test_sge_schedd_conf.o \
               test_sge_utility.o \
-              test_sge_resource_quota.o
+              test_sge_resource_quota.o\
+              test_eval_expression.o
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -307,6 +310,9 @@ sge_var.o: $(SGEOBJLIB_DIR)/sge_var.c
 str2nm_converter.o: $(SGEOBJLIB_DIR)/str2nm_converter.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/str2nm_converter.c
 		
+sge_eval_expression.o: $(SGEOBJLIB_DIR)/sge_eval_expression.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_eval_expression.c
+
 ###############################################################################
 # rules to build object codes for CULL data types
 ###############################################################################
@@ -325,7 +331,7 @@ sge_feature.o: $(SGEOBJLIB_DIR)/sge_feature.c
 ###############################################################################
 
 test_sge_object: test_sge_object.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(SECLIB) $(DLLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
 
 test_sge_range: test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(WINGRIDLIB) $(UTILIB) $(RMONLIB) $(LCKLIB) $(LIBS)
@@ -341,6 +347,9 @@ test_sge_utility: test_sge_utility.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTI
 
 test_sge_resource_quota: test_sge_resource_quota.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_resource_quota $(LFLAGS) test_sge_resource_quota.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
+   
+test_eval_expression: test_eval_expression.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_eval_expression $(LFLAGS) test_eval_expression.o $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
 
 test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_object.c
@@ -359,3 +368,6 @@ test_sge_utility.o: $(SGEOBJLIB_DIR)/test_sge_utility.c
 
 test_sge_resource_quota.o: $(SGEOBJLIB_DIR)/test_sge_resource_quota.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_resource_quota.c
+
+test_eval_expression.o: $(SGEOBJLIB_DIR)/test_eval_expression.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/test_eval_expression.c

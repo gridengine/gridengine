@@ -35,6 +35,7 @@
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
+#include <fnmatch.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -1170,6 +1171,7 @@ char *sge_host_get_mainname(host *h)
 *
 *  SEE ALSO
 *     uti/hostname/sge_hostcmp()
+*     uti/hostname/sge_hostmatch()
 *
 *  NOTES:
 *     MT-NOTE: sge_hostcpy() is MT safe
@@ -1206,6 +1208,7 @@ void sge_hostcpy(char *dst, const char *raw)
  
       sge_strlcpy(dst, raw, CL_MAXHOSTLEN);
    }
+   
    return;
 }  
 
@@ -1230,6 +1233,7 @@ void sge_hostcpy(char *dst, const char *raw)
 *     int - 0, 1 or -1
 *
 *  SEE ALSO
+*     uti/hostname/sge_hostmatch()
 *     uti/hostname/sge_hostcpy()
 *
 *  NOTES:
@@ -1247,7 +1251,7 @@ int sge_hostcmp(const char *h1, const char*h2)
       sge_hostcpy(h1_cpy,h1);
       sge_hostcpy(h2_cpy,h2);
  
-      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy);
+      cmp = SGE_STRCASECMP(h1_cpy, h2_cpy); 
 
       DPRINTF(("sge_hostcmp(%s, %s) = %d\n", h1_cpy, h2_cpy));
    }
@@ -1256,3 +1260,50 @@ int sge_hostcmp(const char *h1, const char*h2)
    return cmp;
 }
 
+/****** uti/hostname/sge_hostmatch() ********************************************
+*  NAME
+*     sge_hostmatch() -- fnmatch() for hostnames
+*
+*  SYNOPSIS
+*     int sge_hostmatch(const char *h1, const char*h2)
+*
+*  FUNCTION
+*     fnmatch() for hostnames. Honours some configuration values:
+*        - Domain name may be ignored
+*        - Domain name may be replaced by a 'default domain'
+*        - Hostnames may be used as they are.
+*
+*  INPUTS
+*     const char *h1 - 1st hostname
+*     const char *h2 - 2nd hostname
+*
+*  RESULT
+*     int - 0, 1 or -1
+*
+*  SEE ALSO
+*     uti/hostname/sge_hostcmp()
+*     uti/hostname/sge_hostcpy()
+*
+*  NOTES:
+*     MT-NOTE: sge_hostmatch() is MT safe
+******************************************************************************/
+int sge_hostmatch(const char *h1, const char*h2)
+{
+   int cmp = -1;
+   char h1_cpy[CL_MAXHOSTLEN+1], h2_cpy[CL_MAXHOSTLEN+1];
+ 
+ 
+   DENTER(BASIS_LAYER, "sge_hostmatch");
+ 
+   if (h1 != NULL && h2 != NULL) {
+      sge_hostcpy(h1_cpy,h1);
+      sge_hostcpy(h2_cpy,h2);
+ 
+      cmp=fnmatch(h1_cpy, h2_cpy, 0);
+
+      DPRINTF(("sge_hostmatch(%s, %s) = %d\n", h1_cpy, h2_cpy));
+   }
+ 
+   DEXIT;
+   return cmp;
+}

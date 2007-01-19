@@ -414,13 +414,13 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
                                       sge_u32c(sge_qmaster_port),
-                                      mastername));
+                                      mastername?mastername:"<NULL>"));
             } else { /* For unusual errors, give more detail */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
                                       sge_u32c(sge_qmaster_port),
-                                      mastername,
+                                      mastername?mastername:"<NULL>",
                                       cl_get_error_text(commlib_error)));
             }
             break;

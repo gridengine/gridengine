@@ -563,6 +563,12 @@ int *all_users
       if (lGetList(job, JB_shell_list))
          nm_set(job_field, JB_shell_list);
 
+      
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
+         lSetString(job, JB_cwd, lGetString(ep, SPA_argval_lStringT));
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_cwd);
+      }
     
       /*
       ** to be processed in original order, set -V equal to -v

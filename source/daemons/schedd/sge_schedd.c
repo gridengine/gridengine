@@ -83,7 +83,6 @@
 #include "sgeobj/sge_schedd_conf.h"
 
 #include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "evc/sge_event_client2.h"
+#include "evc/sge_event_client.h"
 
 /* 
  *  internal interfaces between modules of default scheduler (private)

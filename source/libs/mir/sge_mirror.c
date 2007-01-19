@@ -82,7 +82,6 @@
 
 #include "mir/sge_mirror.h"
 #include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
 
 /* Datastructure for internal storage of subscription information
  * and callbacks.

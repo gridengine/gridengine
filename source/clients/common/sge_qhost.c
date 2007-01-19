@@ -120,6 +120,12 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       DRETURN(QHOST_ERROR);
    }   
 
+   /* 
+   ** delete ok message 
+   */
+   lFreeList(alpp);
+
+
    centry_list_init_double(cl);
 
    /*
@@ -183,7 +189,10 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       lInsertElem(ehl, NULL, ep); 
    }
    
-   if(report_handler != NULL) {
+   /*
+   ** output handling
+   */
+   if (report_handler != NULL) {
       ret = report_handler->report_started(report_handler, alpp);
       if (ret != QHOST_SUCCESS) {
          free_all_lists(&ql, &jl, &cl, &ehl, &pel);
@@ -200,7 +209,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
          }
       } else {
          ret = report_handler->report_host_begin(report_handler, lGetHost(ep, EH_name), alpp);
-         if(ret != QHOST_SUCCESS) {
+         if (ret != QHOST_SUCCESS) {
             break;
          }
       }
@@ -210,7 +219,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       if (report_handler != NULL) {
          DPRINTF(("report host_finished: %s\n", lGetHost(ep, EH_name)));
          ret = report_handler->report_host_finished(report_handler, lGetHost(ep, EH_name), alpp);
-         if(ret != QHOST_SUCCESS) {
+         if (ret != QHOST_SUCCESS) {
             break;
          }
       }
@@ -263,10 +272,10 @@ lList **alpp
                sizeof(arch_string)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(arch_string, "-");
-   
+   }
+
    /*
    ** num_proc
    */
@@ -276,9 +285,9 @@ lList **alpp
                sizeof(num_proc)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(num_proc, "-");
+   }
 
    /*
    ** load_avg
@@ -288,9 +297,9 @@ lList **alpp
       reformatDoubleValue(load_avg, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(load_avg, "-");
+   }
 
    /*
    ** mem_total
@@ -300,9 +309,9 @@ lList **alpp
       reformatDoubleValue(mem_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(mem_total, "-");
+   }
 
    /*
    ** mem_used
@@ -312,9 +321,9 @@ lList **alpp
       reformatDoubleValue(mem_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(mem_used, "-");
+   }
 
    /*
    ** swap_total
@@ -324,9 +333,9 @@ lList **alpp
       reformatDoubleValue(swap_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(swap_total, "-");
+   }
 
    /*
    ** swap_used
@@ -336,9 +345,9 @@ lList **alpp
       reformatDoubleValue(swap_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   }            
-   else
+   } else {
       strcpy(swap_used, "-");
+   }
    
 
    if (report_handler) {
@@ -451,7 +460,7 @@ lList **alpp
                   sprintf(buf, "%d/%d ",
                           qinstance_slots_used(qep),
                           (int)lGetUlong(qep, QU_job_slots));
-                   printf("%-9.9s", buf);
+                  printf("%-9.9s", buf);
                } else {
                   ret = report_handler->report_queue_ulong_value(report_handler,
                                           lGetString(qep, QU_qname),
@@ -571,7 +580,7 @@ lList **alpp
                found = 1;
                if (first) {
                   first = 0;
-                  if(report_handler == NULL ) {
+                  if (report_handler == NULL ) {
                      printf("    Host Resource(s):   ");
                   }
                }

@@ -413,10 +413,7 @@ char **argv
          }
       }
 
-      for_each(aep, answer_list) {
-         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-      }
-      lFreeList(&answer_list);
+      answer_list_output(&answer_list);
 
       if (ret != 0) {
          SGE_EXIT(NULL, 1);

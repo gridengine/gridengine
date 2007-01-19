@@ -110,6 +110,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH; 
      case OA_NODE_SHARES_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST; 
+     case OA_PATH:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_PATH; 
      case OA_PATH_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST; 
      case OA_FILE_LIST:
@@ -1182,6 +1184,11 @@ FILE *fp
 
    if (VALID_OPT(w_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_w_OPT_EWNV, MSG_GDI_UTEXT_w_OPT_EWNV );
+   }
+
+   if (VALID_OPT(wd_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_wd_OPT, MSG_GDI_UTEXT_wd_OPT);
+      MARK(OA_PATH);
    }
 
    if (VALID_OPT(AT_OPT, prog_number)) {

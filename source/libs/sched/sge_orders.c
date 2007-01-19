@@ -46,8 +46,6 @@
 #include "msg_common.h"
 #include "sge_profiling.h"
 #include "sge_order.h"
-#include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
 
 /****** sge_orders/sge_add_schedd_info() ***************************************
 *  NAME

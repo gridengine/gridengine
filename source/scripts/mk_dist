@@ -44,7 +44,7 @@ RPMSPECFILE=sge.spec
 ErrUsage()
 {
    echo "Usage: mk_dist -vdir vdir -version version [-basedir dir] \\"
-   echo "               [-bin] [-common] [-doc] binarchs ..." 
+   echo "               [-bin] [-common] [-arco] [-doc] binarchs ..." 
    echo ""
    echo "    -vdir vdir         use subdirectory vdir to create distribution"
    echo "    -version <version> string to build filename of distribution"

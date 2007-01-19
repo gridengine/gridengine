@@ -49,7 +49,7 @@
 #include "sge_log.h"
 #include "sge_error_class.h"
 #include "jgdi_common.h"
-#include "sge_event_client2.h"
+#include "sge_event_client.h"
 #include "jgdi_event.h"
 #include "sge_mirror.h"
 #include "sge_eventL.h"

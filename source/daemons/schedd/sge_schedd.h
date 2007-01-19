@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
-#include "evc/sge_event_client2.h"
+#include "evc/sge_event_client.h"
 
 
 typedef struct {

@@ -48,8 +48,6 @@
 #include "sge_mirror.h"
 #include "sge_event.h"
 #include "sge_answer.h"
-#include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
 
 
 static sge_callback_result

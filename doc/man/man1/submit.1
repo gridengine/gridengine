@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.61 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/01/19 08:06:58 $     Revision: $Revision: 1.62 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/01/19 08:06:58 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1450,6 +1450,21 @@ the format as described for the
 \fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
 .M qstat 1
 manual page.
+.\"
+.IP "\fB\-wd working_dir\fP"
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
+\fIqalter\fP only.
+.sp 1
+Execute the job from the directory specified in working_dir.
+This switch will activate xxQS_NAMExx's path aliasing facility, if the
+corresponding
+configuration files are present (see
+.M xxqs_name_sxx_aliases 5 ).
+.sp 1
+.I Qalter
+allows changing this option even while the job executes. The modified
+parameter will only be in effect after a restart or migration of the job,
+however.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.

@@ -365,21 +365,12 @@ u_long32 flags
       }
 
 /*-----------------------------------------------------------------------------*/
-      /* "-cwd" */
+      /* "-cwd" is mapped as -wd with NULL path, this case is handled in the second parsing stage*/
 
       if (!strcmp("-cwd", *sp)) {
-/* I've added a -wd option to cull_parse_job_parameter() to deal with the
- * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
- * handled by cull_parse_job_parameter() that -cwd should just become an alias
- * for -wd.  The code to do that is ifdef'ed out below just in case we decide
- * it's a good idea. */
-#if 0
-         ep_opt = sge_add_arg (args, wd_OPT, lStringT, "-wd", SGE_HOME_DIRECTORY);
-         lSetString (ep, SPA_argval_lStringT, SGE_HOME_DIRECTORY);
-         DPRINTF(("\"%s\" => -wd\n", *sp));
-#endif         
-         ep_opt = sge_add_noarg(pcmdline, cwd_OPT, *sp, NULL);
+         ep_opt = sge_add_noarg(pcmdline, wd_OPT, "-wd", NULL);
          DPRINTF(("\"%s\"\n", *sp));
+         
          sp++;
          continue;
       }
@@ -1664,6 +1655,26 @@ DTRACE;
 
       }
 /*-----------------------------------------------------------------------------*/
+      /* "-wd" */
+
+      if (!strcmp("-wd", *sp)) {
+
+         sp++;
+         if (!*sp) {
+            sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S , *(sp - 1));
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         ep_opt = sge_add_arg(pcmdline, wd_OPT, lStringT, "-wd", *sp);
+         lSetString(ep_opt, SPA_argval_lStringT, *sp);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
       /* "-@" */
       /* reentrancy is built upon here */
 
@@ -2522,3 +2533,4 @@ static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
    
    return 1;
 }
+

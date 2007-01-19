@@ -117,6 +117,7 @@ typedef struct _tSMEntry {
    String   directive_prefix;
    String   cell;
    String   account_string;
+   String   wd_path;
    String   pe;
    lList    *task_range;            /* RN_Type */
    lList    *job_args;              /* ST_Type */
@@ -195,6 +196,11 @@ XtResource sm_resources[] = {
    { "account_string", "account_string", XtRString,
       sizeof(String),
       XtOffsetOf(tSMEntry, account_string),
+      XtRImmediate, NULL },
+
+   { "wd_path", "wd_path", XtRString,
+      sizeof(String),
+      XtOffsetOf(tSMEntry, wd_path),
       XtRImmediate, NULL },
 
    { "priority", "priority", XtRInt,
@@ -396,6 +402,7 @@ static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCheckJobName(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitLoadDefault(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitGreyOut(Widget w, XtPointer cld, XtPointer cad);
 
 static Boolean qmonCullToSM(lListElem *jep, tSMEntry *data, char *prefix);
 static Boolean qmonSMToCull(tSMEntry *data, lListElem *jep, int save);
@@ -428,6 +435,7 @@ static Widget submit_deadline_row = 0;
 static Widget submit_deadline = 0;
 static Widget submit_deadlinePB = 0;
 static Widget submit_cwd = 0;
+static Widget submit_wd = 0;
 static Widget submit_shell = 0;
 static Widget submit_shellPB = 0;
 static Widget submit_output_merge = 0;
@@ -769,6 +777,7 @@ Widget parent
                           "submit_stderror", &submit_stderror,
                           "submit_output_merge", &submit_output_merge,
                           "submit_cwd", &submit_cwd,
+                          "submit_wd", &submit_wd,
                           "submit_notify", &submit_notify,
                           "submit_reservation", &submit_reservation,
                           "submit_hold", &submit_hold,
@@ -874,6 +883,9 @@ Widget parent
                      qmonSubmitToggleHoldNow, NULL);
    XtAddCallback(submit_hold, XmNvalueChangedCallback,
                      qmonSubmitToggleHoldNow, NULL);
+   XtAddCallback(submit_cwd, XmNvalueChangedCallback,
+                     qmonSubmitGreyOut, NULL);
+
 
    XtAddEventHandler(XtParent(submit_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
@@ -1076,6 +1088,25 @@ static void qmonSubmitOutputMerge(Widget w, XtPointer cld, XtPointer cad)
    else {
       XtSetSensitive(submit_stderror, True);
       XtSetSensitive(submit_stderrorPB, True);
+   }
+   
+   DEXIT;
+}   
+
+/*-------------------------------------------------------------------------*/
+/* set sensitivity of submit_wd                                            */
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitGreyOut(Widget w, XtPointer cld, XtPointer cad)
+{  
+   XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*)cad;
+
+   DENTER(GUI_LAYER, "qmonSubmitGreyOut");
+   
+   if (cbs->set) {
+      XtSetSensitive(submit_wd, False);
+   }
+   else {
+      XtSetSensitive(submit_wd, True);
    }
    
    DEXIT;
@@ -1766,6 +1797,11 @@ tSMEntry *data
       data->account_string = NULL;
    }   
 
+   if (data->wd_path) {
+      XtFree((char*)data->wd_path);
+      data->wd_path = NULL;
+   }   
+
    if (data->pe) {
       XtFree((char*)data->pe);
       data->pe = NULL;
@@ -1819,6 +1855,7 @@ char *prefix
    StringConst job_name;
    StringConst directive_prefix;
    StringConst account_string;
+   StringConst wd_path;
    StringConst pe;
    StringConst project;
    StringConst ckpt_obj;
@@ -1893,6 +1930,11 @@ char *prefix
    else
       data->account_string = NULL;
 
+   if ((wd_path = (StringConst)lGetString(jep, JB_cwd)))
+      data->wd_path = XtNewString(wd_path);
+   else
+      data->wd_path = NULL;
+
    data->shell_list = lCopyList("JB_shell_list", lGetList(jep, JB_shell_list));
    
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
@@ -1963,11 +2005,6 @@ char *prefix
    else
       data->pe = NULL;
 
-   if (lGetString(jep, JB_cwd))
-      data->cwd = 1;
-   else
-      data->cwd = 0;
-      
 #if FIXME
    if (job_is_array(jep)) {
       data->task_range = lCopyList("JB_ja_structure", 
@@ -2190,7 +2227,18 @@ int save
       lSetString(jep, JB_cwd, cwd_string(env_value));
       lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
       lFreeList(&path_alias);
-   }
+   } else {
+      if (data->wd_path) {
+         char *wdp = qmon_trim(data->wd_path);
+         if (wdp[0] != '\0') {
+            lSetString(jep, JB_cwd, wdp);
+            lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
+            lFreeList(&path_alias);
+         } else {
+            lSetString(jep, JB_cwd, NULL);
+         }   
+      }
+   }   
 
    lSetString(jep, JB_account, data->account_string);
  

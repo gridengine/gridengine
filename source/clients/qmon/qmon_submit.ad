@@ -100,6 +100,7 @@ Qmon*submit_general.xmtChildren: \
                      submit_name = job_name, \
                      submit_tasks = job_tasks, \
                      submit_project = project,  \
+                     submit_wd = wd_path, \
                      submit_prefix = directive_prefix; \
    TimeInput         submit_execution_time = execution_time; \
    StrListField      submit_job_args = job_args, \
@@ -109,10 +110,10 @@ Qmon*submit_general.xmtChildren: \
                      submit_stderror = stderror_path_list, \
                      submit_shell = shell_list; \
    XmToggleButton    submit_output_merge = merge_output, \
-                     submit_cwd = cwd, \
                      submit_notify  = notify, \
                      submit_hold = hold, \
                      submit_reservation = reservation, \
+                     submit_cwd = cwd, \
                      submit_now = now; \
    Spinbox           submit_priority = priority; \
    Spinbox           submit_jobshare = jobshare; \
@@ -149,7 +150,10 @@ Qmon*submit_general.layout: \
             <> \
             Fixed FlushBottom submit_projectPB \
          } \
-         Fixed submit_cwd \
+         Col { \
+            Fixed submit_cwd \
+            Caption tl "@{Working Directory}" 30 em submit_wd \
+         } \
          Row { \
             Centered Caption tl "@{Shell}" 30 em submit_shell \
             <> \
@@ -235,6 +239,7 @@ Qmon*submit_layout*submit_script.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_scriptPB.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_name.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_priority.navigationType: TAB_GROUP
+Qmon*submit_layout*submit_wd.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_cwd.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_shell.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_shellPB.navigationType: TAB_GROUP
@@ -434,6 +439,9 @@ Qmon*submit_mail_userPB.labelInsensitivePixmap: mailbox_ins
 
 Qmon*submit_resources.labelType:      PIXMAP
 Qmon*submit_resources.labelPixmap:    resources
+
+!Qmon*submit_cwd.labelType:      PIXMAP
+!Qmon*submit_cwd.labelPixmap:    script_file
 
 Qmon*submit_exec_timePB.labelType:              PIXMAP
 Qmon*submit_exec_timePB.labelPixmap:            21cal

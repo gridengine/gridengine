@@ -262,10 +262,8 @@ static int xml_report_queue_ulong_value(report_handler_t* handler, const char* q
 int main(int argc, char **argv);
 
 /************************************************************************/
-int main(
-int argc,
-char **argv 
-) {
+int main(int argc, char **argv)
+{
    lList *pcmdline = NULL;
    lList *ul = NULL;
    lList *host_list = NULL;
@@ -300,7 +298,7 @@ char **argv
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void **)&ctx, 1);
    }
 
    /*
@@ -331,14 +329,14 @@ char **argv
       report_handler->destroy(&report_handler, &alp);
    }
    
-   if (qhost_result != 0) {
+   if (qhost_result != QHOST_SUCCESS) {
       answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    sge_prof_cleanup();
-   SGE_EXIT(NULL, 0); /* 0 means ok - others are errors */
+   SGE_EXIT((void**)&ctx, 0); /* 0 means ok - others are errors */
    DEXIT;
    return 0;
 }

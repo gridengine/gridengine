@@ -52,6 +52,7 @@
 #include "lck/sge_mtutil.h"
 #include "uti/sge_stdio.h"
 #include "sge_string.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #include "msg_common.h"
 
@@ -435,7 +436,7 @@ char** pargs /* The array to contain the parsed arguments */
 *     sge_get_qtask_args() -- get args for a qtask entry
 *
 *  SYNOPSIS
-*     char** sge_get_qtask_args(sge_gdi_ctx_class_t *ctx, char *taskname, lList *alp)
+*     char** sge_get_qtask_args(void *ctx, char *taskname, lList *alp)
 *
 *  FUNCTION
 *     This function reads the qtask files and returns an array of args for the
@@ -443,7 +444,7 @@ char** pargs /* The array to contain the parsed arguments */
 *     framework, if it has not already been initialized.
 *
 *  INPUTS
-*     sge_gdi_ctx_class_t *ctx     the communication context
+*     void *ctx         the communication context (sge_gdi_ctx_class_t *)
 *     char *taskname    The name of the entry for which to look in the qtask
 *                       files
 *     lList *alp        For returning error information
@@ -459,12 +460,13 @@ char** pargs /* The array to contain the parsed arguments */
 *              task_config global variable.
 *
 *******************************************************************************/
-char **sge_get_qtask_args(sge_gdi_ctx_class_t *ctx, char *taskname, lList *alp)
+char **sge_get_qtask_args(void *context, char *taskname, lList *alp)
 {
    const char *value = NULL; 
    int num_args = 0;
    lListElem *task = NULL;
    char** args = NULL;
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
    
    DENTER (TOP_LAYER, "sge_get_qtask_args");
    

@@ -37,8 +37,7 @@ EVCLIB_DIR = $(SDIR)/libs/evc
 EVCLIB = libevc$(LIBEXT)
 
 EVCLIB_SRC =   \
-               sge_event_client.c \
-               sge_event_client2.c
+               sge_event_client.c
 
 EVCLIB_OBJS = $(EVCLIB_SRC:.c=.o)
 
@@ -79,9 +78,6 @@ include $(EVCLIB_DIR)/evc_dependencies
 ###############################################################################
 sge_event_client.o:	$(EVCLIB_DIR)/sge_event_client.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(EVCLIB_DIR)/sge_event_client.c
-
-sge_event_client2.o:	$(EVCLIB_DIR)/sge_event_client2.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(EVCLIB_DIR)/sge_event_client2.c
 
 #---------------------------------------------------------------------
 # test programs

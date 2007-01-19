@@ -108,7 +108,6 @@
 
 
 #include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 

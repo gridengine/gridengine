@@ -79,7 +79,7 @@
 
 const char *default_prefix = "#$";
 
-static char *reroot_path (lListElem* pjob, const char *path, lList **alpp);
+static char *reroot_path(lListElem* pjob, const char *path, lList **alpp);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -297,31 +297,6 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
       lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, &ep);
-   }
-
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
-      char tmp_str[SGE_PATH_MAX + 1];
-      char *path = NULL;
-
-      if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         /* If getcwd() fails... */
-         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
-                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DRETURN(answer);
-      }
-      
-      path = reroot_path (*pjob, tmp_str, &answer);
-      
-      if (path == NULL) {
-         DRETURN(answer);
-      }
-      
-      lSetString(*pjob, JB_cwd, path);
-      lRemoveElem(cmdline, &ep);
-      
-      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      
-      FREE (path);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
@@ -549,44 +524,38 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       lRemoveElem(cmdline, &ep);
    }
 
-   /* There is technically no conflict between -cwd and -wd.  They both set the
-    * working directory, and by virtue of it's position in this method, -wd will
-    * always override -cwd.  However, at least at the moment, -wd can only come
-    * from the DRMAA attributes, and -cwd cannot come from the DRMAA attributes.
-    * Therefore, -wd should override -cwd.  Lucky me. */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
-      const char *wd = lGetString(ep, SPA_argval_lStringT);
-      char *path = NULL;
+      const char *path = lGetString(ep, SPA_argval_lStringT);
+      bool is_cwd = false;
 
-/* I've added a -wd option to cull_parse_job_parameter() to deal with the
- * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
- * handled by cull_parse_job_parameter() that -cwd should just become an alias
- * for -wd.  The code to do that is ifdef'ed out below just in case we decide
- * it's a good idea. */
-#if 0
-      if (strcmp (wd, SGE_HOME_DIRECTORY) == 0) {
-         wd = (char *)malloc (sizeof (char) * (SGE_PATH_MAX + 1));
+      if (path == NULL) {
+         char tmp_str[SGE_PATH_MAX + 1];
 
-         if (getcwd (wd, sizeof (wd)) == 0) {
+         is_cwd = true;
+         if (!getcwd(tmp_str, sizeof(tmp_str))) {
             /* If getcwd() fails... */
-            answer_list_add (&answer, MSG_ANSWER_GETCWDFAILED, 
-                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            DRETURN(answer);
+         }
+         
+         path = reroot_path(*pjob, tmp_str, &answer);
+         
+         if (path == NULL) {
             DRETURN(answer);
          }
       }
-#endif
 
-      lSetString(*pjob, JB_cwd, wd);
+      lSetString(*pjob, JB_cwd, path);
       lRemoveElem(cmdline, &ep);
-   
-      /* If -cwd didn't already set the JB_path_aliases field, set it. */
-      if (lGetList (*pjob, JB_path_aliases) == NULL) {
-         lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      }
       
-      FREE (path);
+      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
+
+      if (is_cwd) {
+         FREE(path);
+      }
    }
-   
+
    lFreeList(&path_alias);
    
    /*

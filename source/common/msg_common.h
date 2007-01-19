@@ -315,6 +315,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST            "path_list               [host:]path[,[host:]path,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_PATH                 "working_directory       path"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_FILE_LIST            "file_list               [host:]file[,[host:]file,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY             "priority                -1023 - 1024"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_RESOURCE_LIST        "resource_list           resource[=value][,resource[=value],...]"
@@ -1062,6 +1063,9 @@
 #define MSG_GDI_UTEXT_Mrqs_OPT             _MESSAGE(60622, _("modify resource quota set(s) from file"))
 #define MSG_OBJ_NAME_MISSING               _MESSAGE(60623, _("Object name missing in request"))
 
+
+#define MSG_GDI_USAGE_wd_OPT               "[-wd working_directory]"
+#define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
 
 /*
  * Objects and components

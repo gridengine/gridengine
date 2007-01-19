@@ -86,7 +86,6 @@
 #include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
 #include "sgeee.h"
-#include "evc/sge_event_client2.h"
 
 
 /* defined in sge_schedd.c */

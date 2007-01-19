@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef TEST_GDI2
-
 #include "sgeobj/sge_conf.h"
 #include "gdi/sge_gdi_ctx.h"
 
@@ -163,9 +161,6 @@ void gdi_rmon_print_callback_function(const char *progname,
 #ifdef  __cplusplus
 }
 #endif
-
-
-#endif /* TEST_GDI2 */
 
 #endif
 

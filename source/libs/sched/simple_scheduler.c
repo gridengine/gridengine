@@ -63,9 +63,6 @@
 #include "sge_event_client.h"
 #include "sge_event.h"
 
-#include "gdi/sge_gdi_ctx.h"
-#include "evc/sge_event_client2.h"
-
 /* examples for retrieving information from SGE's master lists */
 static void print_load_value(lListElem *host, const char *name, const char *format);
 static void get_cluster_info(void);

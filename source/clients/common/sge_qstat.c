@@ -499,7 +499,6 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
    lListElem *qep = NULL;
    int ret = 0;
    
-   
    DENTER(TOP_LAYER,"qstat_handle_running_jobs");
    
    /* handle running jobs of a queue */ 
@@ -1667,7 +1666,7 @@ error:
 }
 
 
-int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
+static int handle_finished_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
    lListElem *jep, *jatep;
    int ret = 0;
    int count = 0;
@@ -1771,7 +1770,7 @@ error:
    DRETURN(ret);
 }
 
-int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
+static int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
    
    lListElem *jep;
    int ret = 0;
@@ -3385,11 +3384,11 @@ static void print_qstat_env_to(qstat_env_t *qstat_env, FILE* file) {
          i++;
       }
    }
-   fprintf(file,"qselect_mode = %x\n", (int)qstat_env->qselect_mode);
-   fprintf(file,"group_opt = %x\n", (int)qstat_env->group_opt);
-   fprintf(file,"queue_state = %x\n", (int)qstat_env->queue_state);
-   fprintf(file,"explain_bits = %x\n", (int)qstat_env->explain_bits);
-   fprintf(file,"job_info = %x\n", (int)qstat_env->job_info);
+   fprintf(file, "qselect_mode = %x\n", (int)qstat_env->qselect_mode);
+   fprintf(file, "group_opt = %x\n", (int)qstat_env->group_opt);
+   fprintf(file, "queue_state = %x\n", (int)qstat_env->queue_state);
+   fprintf(file, "explain_bits = %x\n", (int)qstat_env->explain_bits);
+   fprintf(file, "job_info = %x\n", (int)qstat_env->job_info);
    fprintf(file, "======================================================\n");
    
    

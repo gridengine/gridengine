@@ -70,7 +70,6 @@
 #include "sge_mt_init.h"
 
 #include "gdi/sge_gdi_ctx.h"
-#include "sge_event_client2.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */

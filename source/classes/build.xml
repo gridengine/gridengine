@@ -63,7 +63,11 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
       <mkdir dir="${classes.dir}"/>
-      <javac debug="true" deprecation="true" destdir="${classes.dir}">
+      <javac debug="true"
+             deprecation="true"
+             destdir="${classes.dir}"
+             source="1.4"
+             target="1.4">
          <src path="${src.dir}/"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
@@ -74,7 +78,12 @@ ___INFO__MARK_END__-->
 
    <target depends="init,compile" description="Compile test classes." name="compile.test" if="isJavaBuildHost">
       <mkdir dir="${classes.dir.test}"/>
-      <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}:${libs.junit.classpath}">
+      <javac debug="true"
+             deprecation="true"
+             destdir="${classes.dir.test}"
+             classpath="${classes.dir}:${libs.junit.classpath}"
+             source="1.4"
+             target="1.4">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/*.java"/>

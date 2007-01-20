@@ -760,7 +760,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
              test_error_code("DRMAA_ERRNO_NO_MEMORY", DRMAA_ERRNO_NO_MEMORY, 6) &&
              test_error_code("DRMAA_ERRNO_INVALID_CONTACT_STRING", DRMAA_ERRNO_INVALID_CONTACT_STRING, 7) &&
              test_error_code("DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR", DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, 8) &&
-#ifdef DRMAA_10
+#ifndef DRMAA_95
              test_error_code("DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED", DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, 9) &&
              test_error_code("DRMAA_ERRNO_DRMS_INIT_FAILED", DRMAA_ERRNO_DRMS_INIT_FAILED, 10) &&
              test_error_code("DRMAA_ERRNO_ALREADY_ACTIVE_SESSION", DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, 11) &&
@@ -1157,7 +1157,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             
             printf("submitted bulk job with jobids:\n");
 
-#ifdef DRMAA_10
+#ifndef DRMAA_95
             drmaa_errno = drmaa_get_num_job_ids(jobids, &size);
             
             if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -1180,7 +1180,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
             drmaa_errno = drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
 
-#ifdef DRMAA_10
+#ifndef DRMAA_95
             if (drmaa_errno != DRMAA_ERRNO_NO_MORE_ELEMENTS) {
                fprintf(stderr, "Got incorrect return value from drmaa_get_next_job_id()\n");
                return 1;
@@ -1907,7 +1907,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             return 1;
          }             
 
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          drmaa_errno = drmaa_get_num_attr_names(vector, &size);
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -1922,7 +1922,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          }
 
 
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          if (size != 0) {
             fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_names()\n");
             return 1;
@@ -1960,7 +1960,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
 
          printf("version %d.%d\n", major, minor);
 
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          if ((major != 1) || (minor != 0)) {
             fprintf(stderr, "drmaa_version() failed -- incorrect version number : %d.%d\n", major, minor);
             return 1;
@@ -4136,7 +4136,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             return 1;
          }
          
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          drmaa_errno = drmaa_get_num_attr_values(rusage, &size);
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
@@ -4150,7 +4150,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             printf("%s\n", value);
          }
       
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          if (size != 0) {
             fprintf(stderr, "Got incorrect size from drmaa_get_num_attr_values()\n");
             return 1;

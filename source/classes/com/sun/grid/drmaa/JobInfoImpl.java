@@ -120,13 +120,17 @@ public class JobInfoImpl implements JobInfo {
     }
     
     private static Map nameValuesToMap(String[] nameValuePairs) {
-        Map map = new HashMap();
-        
-        for (int count = 0; count < nameValuePairs.length; count++) {
-            int equals = nameValuePairs[count].indexOf('=');
-            map.put(nameValuePairs[count].substring(0, equals), nameValuePairs[count].substring(equals + 1));
+        Map map = null;
+
+        if (nameValuePairs != null) {
+            map = new HashMap();
+
+            for (int count = 0; count < nameValuePairs.length; count++) {
+                int equals = nameValuePairs[count].indexOf('=');
+                map.put(nameValuePairs[count].substring(0, equals), nameValuePairs[count].substring(equals + 1));
+            }
         }
-        
+
         return map;
     }
 }

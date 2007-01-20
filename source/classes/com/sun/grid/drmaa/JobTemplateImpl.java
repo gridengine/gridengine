@@ -510,9 +510,14 @@ public class JobTemplateImpl implements JobTemplate {
      * @see #setEmail(java.util.Set)
      */
     public Set getEmail() throws DrmaaException {
-        String[] emails = this.getAttribute(EMAIL_ADDRESS);
-        
-        return new HashSet(Arrays.asList(emails));
+        String[] result = this.getAttribute(EMAIL_ADDRESS);
+        Set returnValue = null;
+
+        if (result != null) {
+            returnValue = new HashSet(Arrays.asList(result));
+        }
+
+        return returnValue;
     }
     
     /**
@@ -1030,7 +1035,14 @@ public class JobTemplateImpl implements JobTemplate {
      * @return {@inheritDoc}
      */
     public Set getAttributeNames() throws DrmaaException {
-        return new HashSet(Arrays.asList(session.nativeGetAttributeNames(id)));
+        String[] result = session.nativeGetAttributeNames(id);
+        Set returnValue = new HashSet();
+
+        if (result != null) {
+            returnValue.addAll(Arrays.asList(result));
+        }
+
+        return returnValue;
     }
     
     /**

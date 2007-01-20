@@ -130,12 +130,12 @@ public class SessionImplTest extends TestCase {
         
         String version = Settings.get(Settings.VERSION);
         
-        assertEquals(version, session.getDrmaaImplementation());
+        assertTrue(session.getDrmaaImplementation().equals(version));
         
         this.initSession();
         
         try {
-            assertEquals(version, session.getDrmaaImplementation());
+            assertTrue(session.getDrmaaImplementation().equals(version));
         } finally {
             this.exitSession();
         }

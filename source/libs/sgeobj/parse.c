@@ -113,15 +113,15 @@ lList **popt_list,
 u_long32 opt_number,
 u_long32 opt_type,
 const char *opt_switch,
-const char *opt_switch_arg 
+const char *opt_switch_arg
 ) {
    lListElem *ep;
-
+   
    DENTER(TOP_LAYER, "sge_add_arg");
-
+   
    if (!popt_list) {
-      DEXIT;
-      return NULL;
+       DEXIT;
+       return NULL;
    }
 
    ep = lAddElemStr(popt_list, SPA_switch, opt_switch, SPA_Type);

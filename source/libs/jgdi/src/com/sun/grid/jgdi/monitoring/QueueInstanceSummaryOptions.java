@@ -36,8 +36,6 @@ import com.sun.grid.jgdi.monitoring.filter.JobStateFilter;
 import com.sun.grid.jgdi.monitoring.filter.ParallelEnvironmentFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 
-
-
 /**
  * Options for the QueueInstanceSummary algorithm
  * @author  richard.hierlmeier@sun.com

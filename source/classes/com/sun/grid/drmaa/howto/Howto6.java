@@ -30,7 +30,10 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import org.ggf.drmaa.*;
+import org.ggf.drmaa.DrmaaException;
+import org.ggf.drmaa.Session;
+import org.ggf.drmaa.SessionFactory;
+import org.ggf.drmaa.Version;
 
 public class Howto6 {
    public static void main (String[] args) {

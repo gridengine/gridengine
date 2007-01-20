@@ -1119,7 +1119,7 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
    switch (iter->iterator_type) {
    case JAPI_ITERATOR_BULK_JOBS:
       if (iter->it.ji.next_pos > iter->it.ji.end) {
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          DRETURN(DRMAA_ERRNO_NO_MORE_ELEMENTS);
 #else
          DRETURN(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE);
@@ -1133,7 +1133,7 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
       DRETURN(DRMAA_ERRNO_SUCCESS);
    case JAPI_ITERATOR_STRINGS:
       if (!iter->it.si.next_pos) {
-#ifdef DRMAA_10
+#ifndef DRMAA_95
          DRETURN(DRMAA_ERRNO_NO_MORE_ELEMENTS);
 #else
          DRETURN(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE);
@@ -2398,7 +2398,7 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
       u_long32 jobid, taskid;  
       bool is_array;
     
-      /* assumption is all job_ids can be parsed w/ error by japi_parse_jobid() 
+      /* assumption is all job_ids can be parsed w/o error by japi_parse_jobid() 
          this must be ensured before japi_synchronize_jobids_retry() is called */
       japi_parse_jobid(job_ids[i], &jobid, &taskid, &is_array, NULL);
 
@@ -3795,7 +3795,7 @@ const char *japi_strerror(int drmaa_errno)
       /* -------------- init and exit specific --------------- */
       { DRMAA_ERRNO_INVALID_CONTACT_STRING, "Initialization failed due to invalid contact string." },
       { DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, "DRMAA could not use the default contact string to connect to DRM system." },
-#ifdef DRMAA_10
+#ifndef DRMAA_95
       { DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, "No default contact string was provided or selected." },
 #endif
       { DRMAA_ERRNO_DRMS_INIT_FAILED, "Initialization failed due to failure to init DRM system." },
@@ -3819,7 +3819,7 @@ const char *japi_strerror(int drmaa_errno)
       { DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, "The job is not in a HOLD state." },
       { DRMAA_ERRNO_EXIT_TIMEOUT, "time-out condition" },
       { DRMAA_ERRNO_NO_RUSAGE, "no usage information was returned for the completed job" },
-#ifdef DRMAA_10
+#ifndef DRMAA_95
       { DRMAA_ERRNO_NO_MORE_ELEMENTS, "no more elements are contained in the opaque string vector" },
 #endif
 
@@ -3874,7 +3874,7 @@ int japi_get_contact(dstring *contact, dstring *diag)
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifdef DRMAA_10
+#ifndef DRMAA_95
    else if (contact == NULL) {
       japi_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(japi_errno, diag);

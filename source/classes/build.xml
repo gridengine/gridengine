@@ -83,31 +83,21 @@ ___INFO__MARK_END__-->
          <include name="DrmaaSuite.java"/>
       </javac>
    </target>
-   
 
    <target name="jar.init" depends="init">
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
          <include name="com/sun/grid/drmaa/*.class"/>
       </fileset>
-      <fileset id="jar.test.classes" dir="${classes.dir.test}">
-         <include name="org/ggf/drmaa/*.class"/>
-         <include name="com/sun/grid/*.class"/>
-         <include name="com/sun/grid/drmaa/*.class"/>
-         <include name="TestDrmaa*.class"/>
-         <include name="DrmaaSuite.class"/>
-      </fileset>
       <fileset id="jar.meta" dir="${src.dir}">
          <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
       </fileset>
       <dependset>
          <srcfileset refid="jar.classes"/>
-         <srcfileset refid="jar.test.classes"/>
          <srcfileset refid="jar.meta"/>
          <targetfileset file="${jar}"/>
       </dependset>
    </target>
-   
 
    <target depends="jar.build, jar.wait" description="Build release jar." name="jar"/>
 
@@ -117,6 +107,7 @@ ___INFO__MARK_END__-->
          <fileset refid="jar.meta"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
+      <delete file="${jar}.tmp"/>
    </target>
 
    <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">

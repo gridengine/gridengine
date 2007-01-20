@@ -84,21 +84,21 @@ public class JobInfoImplTest extends TestCase {
    }
    
    /** Test of getExitStatus method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testGetExitStatus () {
+   public void testGetExitStatus () throws DrmaaException {
       System.out.println ("testGetExitStatus");
 
       assertEquals (15, ji_ok.getExitStatus ());
    }
    
    /** Test of getTerminatingSignal method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testGetTerminatingSignal () {
+   public void testGetTerminatingSignal () throws DrmaaException {
       System.out.println ("testGetTerminatingSignal");
 
       assertEquals (SIG, ji_sig.getTerminatingSignal ());
    }
    
    /** Test of hasCoreDump method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testHasCoreDump () {
+   public void testHasCoreDump () throws DrmaaException {
       System.out.println ("testHasCoreDump");
 
       assertFalse (ji_ok.hasCoreDump ());
@@ -108,7 +108,7 @@ public class JobInfoImplTest extends TestCase {
    }
    
    /** Test of hasExited method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testHasExited () {
+   public void testHasExited () throws DrmaaException {
       System.out.println ("testHasExited");
       
       assertTrue (ji_ok.hasExited ());
@@ -118,7 +118,7 @@ public class JobInfoImplTest extends TestCase {
    }
    
    /** Test of hasSignaled method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testHasSignaled () {
+   public void testHasSignaled () throws DrmaaException {
       System.out.println ("testHasSignaled");
 
       assertFalse (ji_ok.hasSignaled ());
@@ -128,7 +128,7 @@ public class JobInfoImplTest extends TestCase {
    }
    
    /** Test of wasAborted method, of class com.sun.grid.drmaa.JobInfoImpl. */
-   public void testWasAborted () {
+   public void testWasAborted () throws DrmaaException {
       System.out.println ("testWasAborted");
       
       assertFalse (ji_ok.wasAborted ());

@@ -30,7 +30,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import org.ggf.drmaa.*;
+import org.ggf.drmaa.PartialTimestamp;
+import org.ggf.drmaa.PartialTimestampFormat;
 
 public class Howto7 {
    public static void main (String[] args) {

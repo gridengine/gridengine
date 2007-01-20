@@ -73,14 +73,15 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
-DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
+DRMAA_SHARED_LIB_VERSIONS="0.95 1.0"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAAJ_FILES="CLASSES/drmaa.jar"
+DRMAAJ_FILES="CLASSES/drmaa"
+DRMAAJ_05_DIR=""
 
 JNI_SHARED_LIBRARIES="libdrmaa libjuti libjgdi"
 
-JUTIJ_FILES="CLASSES/juti/juti.jar"
-JGDIJ_FILES="libs/jgdi/build/jgdi.jar"
+JUTIJ_FILES="CLASSES/juti/juti"
+JGDIJ_FILES="libs/jgdi/build/jgdi"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -137,6 +138,7 @@ ErrUsage()
    echo "       -classic-targets = qmaster+spool* from <ARCHDIR>_classic"
    echo "       -resetarch     = set PROG="" (useful to override distinst.privat)"
    echo "       -resetprog     = set ARCH="" (useful to override distinst.privat)"
+   echo "       -s2 <dir>      = the location of the s2 branch for copying the DRMAA Java language binding 0.5 JAR files"
    echo "       -tcc           = create file .COMMON_CHANGED if common changed"
    echo "       -v             = more verbose"
    echo "       -vdir <dir>    = define version directory for distribution"
@@ -384,7 +386,7 @@ Cleanup()
 }
 
 #-------------------------------------------------------------------------
-# Install user group permissions source destination
+# Install user.group permissions source destination
 Install()
 {
    Execute cp $3 $4
@@ -626,6 +628,10 @@ while [ $# -ge 1 ]; do
    -noopenssl)
       instopenssl=false
       ;;
+   -s2)
+      shift
+      DRMAAJ_05_DIR=$1
+      ;;
    -shlibpath)
       enforce_shlibpath=true
       ;;
@@ -704,6 +710,12 @@ else
       echo
       exit 1
    fi
+fi
+
+if [ "$DRMAAJ_05_DIR" = "" ]; then
+   echo
+   echo WARNING: The DRMAA Java Language Binding 0.5 JAR files will not be installed!
+   echo
 fi
 
 whoseargs="archs"
@@ -1010,13 +1022,35 @@ if [ $instcommon = true ]; then
       done
 
       for filename in $DRMAAJ_FILES $JUTIJ_FILES $JGDIJ_FILES; do
+         filename="${filename}.jar"
          if [ -f $filename ]; then
-             echo Installing `basename $filename`
-             Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
-             MakeDir lib
-             Install 0.0 644 $filename $DEST_SGE_ROOT/lib
+            echo Installing `basename $filename`
+            Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
+            MakeDir lib
+            Install 0.0 644 $filename $DEST_SGE_ROOT/lib/`basename $filename`
+         elif [ $exit_on_error = true ]; then
+            echo "\"$filename\" not found. Installation failed."
+            exit 1
          fi
       done
+
+      # If the s2 source directory is set, copy the DRMAA files from it and
+      # rename them.
+      if [ "$DRMAAJ_05_DIR" != "" ]; then
+         for filename in $DRMAAJ_FILES; do
+            filename05="${filename}-0.5.jar"
+            filename="${filename}.jar"
+            if [ -f $DRMAAJ_05_DIR/$filename ]; then
+               echo Installing `basename $filename05`
+               Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename05`
+               MakeDir lib
+               Install 0.0 644 $DRMAAJ_05_DIR/$filename $DEST_SGE_ROOT/lib/`basename $filename05`
+            elif [ $exit_on_error = true ]; then
+               echo "\"$DRMAAJ_05_DIR/$filename\" not found. Installation failed."
+               exit 1
+            fi
+         done
+      fi
 
       Cleanup include
    fi
@@ -1447,15 +1481,17 @@ for i in $ARCH; do
             for lib in $OPENSSL_SHARED_LIBRARIES; do
 
                if [ $DSTARCH = tru64 ]; then
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
+                  libname="$lib.$shlibext"
                elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$OPENSSLSOVERSION.$shlibext"
+                  libname="$lib.0.9.7.$shlibext"
                else
-                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.$OPENSSLSOVERSION"
-                  # for lib dir without $DSTARCH, e.g. /usr on linux
-                  if [ ! -f $libname ]; then
-                     libname="$OPENSSLBASE/lib/$lib.$shlibext.$OPENSSLSOVERSION"
-                  fi   
+                  libname="$lib.$shlibext.0.9.7"
+               fi
+
+               if [ -f $OPENSSLBASE/$DSTARCH/lib/$libname ]; then
+                  libname=$OPENSSLBASE/$DSTARCH/lib/$libname
+               elif [ -f $OPENSSLBASE/lib/$libname ]; then
+                  libname=$OPENSSLBASE/lib/$libname
                fi
 
                if [ -f $libname ]; then
@@ -1478,8 +1514,14 @@ for i in $ARCH; do
          if [ $DSTARCH != win32-x86 ]; then
             if [ $instbdb = true ]; then
                for lib in $BERKELEYDB_SHARED_LIBRARIES; do
-                  libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
-                  libname2="$BERKELEYDBBASE/lib/$lib.$shlibext"
+                  libname="$lib.$shlibext"
+
+                  if [ -f $BERKELEYDBBASE/$DSTARCH/lib/$libname ]; then
+                     libname=$BERKELEYDBBASE/$DSTARCH/lib/$libname
+                  elif [ -f $BERKELEYDBBASE/lib/$libname ]; then
+                     libname=$BERKELEYDBBASE/lib/$libname
+                  fi
+
                   if [ -f $libname ]; then
                      InstallProg $libname
                   elif [ -f $libname2 ]; then   
@@ -1497,6 +1539,7 @@ for i in $ARCH; do
                      InstallProg $libname
                   elif [ $exit_on_error = true ]; then
                      echo "\"$libname\" not found. Installation failed."
+                     exit 1
                   fi
                done
             done

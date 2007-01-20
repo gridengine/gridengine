@@ -111,9 +111,14 @@ libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests
+# The libdrmaa95.so link is specifically for linking the test_drmaa.0.95 binary.
+# On platforms that don't support SONAME, the binary will remember drmaa95 as
+# the linked library, meaning that the testsuite must add the compiled source
+# directory to the shared lib path before running test_drmaa.0.95
 libdrmaa$(SHAREDEXT): $(DRMAALIB_V)
-	rm -f libdrmaa$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).0.95 libdrmaa$(SHAREDEXT); 
+	rm -f libdrmaa$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).1.0 libdrmaa$(SHAREDEXT)
 	../scripts/link_jnilib.sh libdrmaa  $(SHAREDEXT) $(JAVA_SHAREDEXT)
+	rm -f libdrmaa95$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).0.95 libdrmaa95$(SHAREDEXT)
 
 	
 ###############################################################################
@@ -130,39 +135,39 @@ include $(JAPILIB_DIR)/howto/Makefile
 # rules to build object codes
 ###############################################################################
 drmaa.1.0.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.1.0.o
 
 drmaa.0.95.o: $(JAPILIB_DIR)/drmaa.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/drmaa.c -o drmaa.0.95.o
 
 japi.1.0.o: $(JAPILIB_DIR)/japi.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.1.0.o
 
 japi.0.95.o: $(JAPILIB_DIR)/japi.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/japi.c -o japi.0.95.o
 
 com_sun_grid_drmaa_SessionImpl.1.0.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_10 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.1.0.o
 
 com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -DDRMAA_95 -c $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.c -o com_sun_grid_drmaa_SessionImpl.0.95.o
 
 #---------------------------------------------------------------------
 
 test_drmaa: test_drmaa.1.0 test_drmaa.0.95
-	rm -f test_drmaa ; ln -s test_drmaa.0.95 test_drmaa
+	rm -f test_drmaa ; ln -s test_drmaa.1.0 test_drmaa
 
 test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)
 
 test_drmaa.0.95: test_drmaa.0.95.o $(DRMAALIB) $(WINGRIDLIB_DEP)
-	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o $(LFLAGS) $(LIBS) -ldrmaa $(WINGRIDLIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.0.95.o -DDRMAA_95 $(LFLAGS) $(LIBS) -ldrmaa95 $(WINGRIDLIB)
 
 test_drmaa.1.0.o: $(JAPILIB_DIR)/test_drmaa.c
-	$(CC) $(CFLAGS) -DDRMAA_10 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.1.0.o
 
 test_drmaa.0.95.o: $(JAPILIB_DIR)/test_drmaa.c
-	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.0.95.o
+	$(CC) $(CFLAGS) -DDRMAA_95 -c $(JAPILIB_DIR)/test_drmaa.c -o test_drmaa.0.95.o
 
 test_drmaa_sync: test_drmaa_sync.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_sync.o $(LFLAGS) $(LIBS) -ldrmaa

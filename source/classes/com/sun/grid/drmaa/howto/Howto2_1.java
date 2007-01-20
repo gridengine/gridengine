@@ -30,6 +30,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
+import java.util.Collections;
 import org.ggf.drmaa.*;
 
 public class Howto2_1 {
@@ -41,7 +42,7 @@ public class Howto2_1 {
          session.init (null);
          JobTemplate jt = session.createJobTemplate ();
          jt.setRemoteCommand ("sleeper.sh");
-         jt.setArgs (new String[] {"5"});
+         jt.setArgs (Collections.singletonList("5"));
          
          java.util.List ids = session.runBulkJobs (jt, 1, 30, 2);
          java.util.Iterator i = ids.iterator ();

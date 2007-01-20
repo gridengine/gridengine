@@ -30,7 +30,9 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import org.ggf.drmaa.*;
+import org.ggf.drmaa.DrmaaException;
+import org.ggf.drmaa.Session;
+import org.ggf.drmaa.SessionFactory;
 
 public class Howto1 {
    public static void main (String[] args) {
@@ -38,7 +40,7 @@ public class Howto1 {
       Session session = factory.getSession ();
       
       try {
-         session.init (null);
+         session.init ("");
          session.exit ();
       }
       catch (DrmaaException e) {

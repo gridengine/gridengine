@@ -47,6 +47,7 @@
 #else
 #include "msg_utilbin.h"
 #include <windows.h>
+#include <io.h>
 #endif
 
 void usage(void);
@@ -127,13 +128,18 @@ int main(int argc, char *argv[])
       int nprocs = 1;
 #if defined(WINDOWS)
       SYSTEM_INFO system_info;
+      char        buf[100];
 
       GetSystemInfo(&system_info);
       nprocs = system_info.dwNumberOfProcessors;
+      sprintf(buf, "num_proc        %d", nprocs);
+      fflush(stdout);
+      write(1, (const void*)buf, (unsigned int)strlen(buf));
+      write(1, (const void*)"\0x0a", (unsigned int)1);
 #else
       nprocs = sge_nprocs();
-#endif
       printf("num_proc        %d\n", nprocs);
+#endif
    }
 
 #if defined(WINDOWS)

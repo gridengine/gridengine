@@ -1,3 +1,8 @@
+HP-2007-01-22-0: Cleanup:   Replaced CR+LF with CR in num_proc output
+                            for HP-2007-01-19-0
+                 Changed:   loadcheck.c
+                 Review:    MD
+
 RD-2007-01-22-0: Cleanup:   - removed unused clients in definitions
                             - switched qdel_help to sge_help
 

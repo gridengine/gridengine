@@ -49,10 +49,7 @@ extern "C" {
 #define MSG_JAPI_NEGATIVE_TIMEOUT  _MESSAGE(45508, _("Negative timeout values are not allowed."))
 #define MSG_JAPI_EC_THREAD_NOT_STARTED_S  _MESSAGE(45509, _("Couldn't create event client thread: "SFN))
 #ifdef ENABLE_PERSISTENT_JAPI_SESSIONS
-#define MSG_JAPI_PWNAM_FAILED_S  _MESSAGE(45511, _("Unable to determine home directory for user "SFQ))
-#define MSG_JAPI_MKDIR_FAILED_SS  _MESSAGE(45512, _("Unable to create directory, "SFN": "SFN))
 #endif
-#define MSG_JAPI_CANNOT_REOPEN_SESSION_S  _MESSAGE(45513, _("Unable to reopen session "SFQ))
 #define MSG_JAPI_CANNOT_CLOSE_COMMLIB_S  _MESSAGE(45514, _("Unable to shutdown commlib handle: "SFN))
 #define MSG_JAPI_BAD_GDI_ANSWER_LIST  _MESSAGE(45515, _("Error reading answer list from qmaster"))
 #define MSG_JAPI_JOB_ALREADY_EXISTS_S  _MESSAGE(45516, _("Job with given job id already exists: "SFQ))

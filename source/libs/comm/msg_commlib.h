@@ -86,14 +86,12 @@
 
 
 #define MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR   _MESSAGE(85049, _("client certificate doesn't verify"))
-#define MSG_CL_COMMLIB_SSL_PEER_NAME_MATCH_ERROR      _MESSAGE(85050, _("peer name not matching"))
 #define MSG_CL_COMMLIB_SSL_PEER_CERT_GET_ERROR        _MESSAGE(85051, _("cannot get peer certificate"))
 #define MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR       _MESSAGE(85052, _("user id doesn't verify"))
 #define MSG_CL_COMMLIB_SSL_USER_ID_GET_ERROR          _MESSAGE(85053, _("cannot get user id"))
 #define MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR _MESSAGE(85054, _("client did not send peer certificate"))
 #define MSG_CL_COMMLIB_SSL_HANDSHAKE_ERROR            _MESSAGE(85055, _("SSL handshake error"))
 #define MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR _MESSAGE(85056, _("commlib ssl verify callback function failed"))
-#define MSG_CL_COMMLIB_SSL_PEER_NAME_GET_ERROR        _MESSAGE(85057, _("could not get peer_CN from peer certificate"))
 #define MSG_CL_COMMLIB_SSL_SERVER_CERT_NOT_SENT_ERROR _MESSAGE(85058, _("service did not send peer certificate"))
 #define MSG_CL_COMMLIB_SSL_MESSAGE_SIZE_EXEED_ERROR   _MESSAGE(85059, _("message size exceeds integer size on this architecture"))
 #define MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR_S     _MESSAGE(85060, _("ssl accept timeout for client "SFQ""))
@@ -110,7 +108,6 @@
 #define MSG_CL_COMMLIB_SSL_ERROR_33558541             _MESSAGE(85501, _("please check the permissions of the pem certificate file"))
 #define MSG_CL_COMMLIB_SSL_ERROR_336151573            _MESSAGE(85502, _("the used certificate is expired"))
 #define MSG_CL_COMMLIB_SSL_ERROR_336105650            _MESSAGE(85503, _("the used certificate is expired or invalid"))
-#define MSG_CL_COMMLIB_SSL_ERROR_336151576            _MESSAGE(85504, _("certificate signed by unknown CA"))
 
 
 

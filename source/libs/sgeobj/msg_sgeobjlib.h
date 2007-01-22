@@ -52,8 +52,6 @@
 #define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFQ" is an invalid job-task identifier"))
 #define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFN"' option (The -t option needs a leading job name)."))
 
-#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(64026, _("Group "SFQ" already contained in userset "SFQ))
-#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(64027, _("User "SFQ" already contained in userset "SFQ))
 
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()"))
@@ -317,7 +315,6 @@
 #define MSG_PATH_TOOLONG_I _MESSAGE(64330, _("a path or filename may not exceed %d characters"))
 #define MSG_PATH_ALIAS_INVALID_PATH _MESSAGE(64331, _("paths may not be empty strings"))
 #define MSG_HOSTNAME_NOT_EMPTY _MESSAGE(64332, _("hostnames may not be empty string"))
-#define MSG_HOSTNAME_TOOLONG _MESSAGE(64333, _("hostnames too long"))
 
 #define MSG_EVENT_INVALIDNAME _MESSAGE(64340, _("invalid event client name"))
 #define MSG_EVENT_ONLYADMINMAYSTARTSPECIALEVC _MESSAGE(64341, _("only admin user or root may start special event clients"))
@@ -350,7 +347,6 @@
 #define MSG_EVENT_ADDRQSX_IS                    _MESSAGE(64373, _("%d. EVENT ADD RQS ENTRY "SFN""))
 #define MSG_EVENT_MODRQSX_IS                    _MESSAGE(64374, _("%d. EVENT MOD RQS ENTRY "SFN""))
 #define MSG_RESOURCEQUOTA_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
-#define MSG_RESOURCEQUOTA_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
 #define MSG_RESOURCEQUOTA_NORULES                    _MESSAGE(64377, _("resource quota set has no rules"))
 #define MSG_RESOURCEQUOTA_NONAME                     _MESSAGE(64378, _("resource quota set has no name"))
 #define MSG_CENTRYREFINRQS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in resource quota set "SFQ"."))
@@ -360,7 +356,6 @@
 #define MSG_CQUEUE_UNUSEDATTRSETTING_SS          _MESSAGE(64381, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
 
 #define MSG_EVAL_EXPRESSION_PARSE_ERROR          _MESSAGE(64382, _("Parse error on position %d of the expression "SFQ"."))
-#define MSG_EVAL_EXPRESSION_INVALID_VALUE        _MESSAGE(64383, _("Expression or value is NULL."))
 #define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid lenght of value exeed the limit %d characters."))
 #define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid lenght of expression exeed the limit %d characters."))
 

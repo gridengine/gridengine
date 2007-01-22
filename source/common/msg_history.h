@@ -122,9 +122,6 @@
 #define MSG_HISTORY_SHOWJOB_IO                "io"
 #define MSG_HISTORY_SHOWJOB_IOW               "iow"
 #define MSG_HISTORY_SHOWJOB_MAXVMEM           "maxvmem"
-#define MSG_HISTORY_GETALLLISTSGETCOMPLEXLISTFAILED      _MESSAGE(25111, _("get_all_lists: failed to get complex list"))
-#define MSG_HISTORY_GETALLLISTSGETEXECHOSTLISTFAILED     _MESSAGE(25112, _("get_all_lists: failed to get exechost list"))
-#define MSG_HISTORY_GETALLLISTSGETQUEUELISTFAILED        _MESSAGE(25113, _("get_all_lists: failed to get queue list"))
 
 
 

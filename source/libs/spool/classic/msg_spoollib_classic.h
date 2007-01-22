@@ -126,7 +126,6 @@
  * read_write_queue.c
  */
 #define MSG_ERROR_CLASSIC_SPOOLING           _MESSAGE(61120, _("error: error message not spooled! (no classic spooling support)"))
-#define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS  _MESSAGE(61121, _("getuniquehostname() failed resolving "SFN": "SFN))
 
 /*
  * read_write_userprj.c

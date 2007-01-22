@@ -51,44 +51,28 @@ enum {
  QCONF           ,       /* 2  */        
  QDEL            ,       /* 3 */
  QHOLD           ,       /* 4 */
- QIDLE           ,       /* 5 */
  QMASTER         ,       /* 6 */
  QMOD            ,       /* 7 */
- QMOVE           ,       /* 8 */
- QMSG            ,       /* 9 */
  QRESUB          ,       /* 10 */
  QRLS            ,       /* 11 */
  QSELECT         ,       /* 12 */
  QSH             ,       /* 13 */
  QRSH            ,       /* 14 */
  QLOGIN          ,       /* 15 */
- QSIG            ,       /* 16 */
  QSTAT           ,       /* 17 */
  QSUB            ,       /* 18 */
  EXECD           ,       /* 19 */
- MAX_ANCILLARY   = EXECD , /* 19 */
  QEVENT,                 /* 20 */
  QUSERDEFINED    ,       /* 21 */
  ALL_OPT         ,       /* 22 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
 
- QUSAGE          ,       /* 23 */
- DCMD            ,       /* 24 */
- DSH             ,       /* 25 */
  QMON            ,       /* 26 */
  SCHEDD          ,       /* 27 */
- QSCHED          ,       /* 28 */
  QACCT           ,       /* 29 */
- QSTD            ,       /* 30 */
- COMMD           ,       /* 31 */
  SHADOWD         ,       /* 32 */
- CW3             ,       /* 33 */
- PVM_TASKER      ,       /* 34 */
- QIDLD           ,       /* 35 */
- PVM_RMANAGER    ,       /* 36 */
  QHOST           ,       /* 37 */
- COMMDCNTL       ,       /* 38 */ 
  SPOOLDEFAULTS   ,       /* 39 */
  JAPI            ,       /* 40 */
  JAPI_EC         ,       /* 41 */

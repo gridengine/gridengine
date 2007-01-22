@@ -72,10 +72,9 @@ enum {
    v_OPT,
    verify_OPT,
    V_OPT,
-   DESTIN_OPR,
    JOB_ID_OPR,
+   JOB_TASK_OPR,
 
-   MESSAGE_OPR,
    SCRIPT_OPR,
    help_OPT,
    cwd_OPT,
@@ -160,7 +159,6 @@ enum {
    tsm_OPT, 
    msconf_OPT,   /* modify SGE scheduler configuration */
    Msconf_OPT,   /* mofify SGE scheduler configuration from file*/
-   lj_OPT,
    aus_OPT,     /* SGE add user */
    Aus_OPT,     /* SGE add user from file */
    mus_OPT,     /* SGE modify user */

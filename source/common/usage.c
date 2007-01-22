@@ -224,7 +224,13 @@ FILE *fp
    else
       strcpy(namebuf, prog_name);
          
-   fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
+   if (VALID_OPT(JOB_ID_OPR, prog_number)) {
+      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID);
+   } else if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
+      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_USAGE_JOB_ID_OPR);
+   } else {
+      fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
+   }
 
    /* reset all option markers */
    memset(marker, 0, sizeof(marker));
@@ -597,9 +603,7 @@ FILE *fp
    }
 
    if (VALID_OPT(help_OPT, prog_number)) {
-
       PRINTITD(MSG_GDI_USAGE_help_OPT , MSG_GDI_UTEXT_help_OPT );
-
    }
 
    if (VALID_OPT(hold_jid_OPT, prog_number)) {
@@ -650,10 +654,6 @@ FILE *fp
    if (VALID_OPT(l_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_l_OPT_RESOURCE_LIST , MSG_GDI_UTEXT_l_OPT_RESOURCE_LIST );
       MARK(OA_RESOURCE_LIST);
-   }
-
-   if (VALID_OPT(lj_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_lj_OPT_LOG_FILE , MSG_GDI_UTEXT_lj_OPT_LOG_FILE );
    }
 
    if (VALID_OPT(m_OPT, prog_number)) {
@@ -915,8 +915,7 @@ FILE *fp
    if (VALID_OPT(s_OPT, prog_number)) {
       if (prog_number == EXECD || prog_number == SCHEDD) { 
          usage_silent(fp);
-      } else 
-      if (prog_number == QSELECT) {
+      } else if (prog_number == QSELECT) {
          PRINTIT(MSG_GDI_USAGE_s_OPT_STATES );
          MARK(OA_STATES);
       }
@@ -1158,9 +1157,15 @@ FILE *fp
    }
 
    if (VALID_OPT(u_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
-         MSG_GDI_UTEXT_u_OPT_USERLISTORUALL );
-      PRINTITD("", MSG_GDI_UTEXT_ATTACH__u_OPT_USERLISTORUALL );
+     
+      if (prog_number == QDEL) {
+         PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
+         MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL);
+      } else {
+         PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
+         MSG_GDI_UTEXT_u_OPT_USERLISTORUALL);
+         PRINTITD("", MSG_GDI_UTEXT_ATTACH__u_OPT_USERLISTORUALL );
+      }
       MARK(OA_USER_LIST);
    }
  
@@ -1195,17 +1200,9 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_AT_OPT_FILE, MSG_GDI_UTEXT_AT_OPT_FILE );
    }
 
-   if (VALID_OPT(DESTIN_OPR, prog_number)) {
-      PRINTIT(get_argument_syntax(prog_number, OA_DESTIN_ID_LIST)); /* ??? used in qmove */
-   }
-
    if (VALID_OPT(JQ_DEST_OPR, prog_number)) {
       PRINTIT(MSG_GDI_USAGE_JQ_DEST_OPR );
       MARK(OA_JOB_QUEUE_DEST);
-   }
-
-   if (VALID_OPT(MESSAGE_OPR, prog_number)) {
-      PRINTIT(MSG_GDI_USAGE_MESSAGE_OPR );
    }
 
    if (VALID_OPT(JOB_ID_OPR, prog_number)) {
@@ -1215,6 +1212,13 @@ FILE *fp
           (prog_number != QRLS)) {
          MARK(OA_JOB_ID_LIST);
       }
+   }
+
+   if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_TASK_OPR , MSG_GDI_UTEXT_JOB_ID_OPR );
+      MARK(OA_JOB_TASK_LIST);
+      MARK(OA_JOB_TASKS);
+      MARK(OA_TASK_ID_RANGE);
    }
 
    if (VALID_OPT(SCRIPT_OPR, prog_number)) {
@@ -1231,6 +1235,7 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
    }
 
+   fprintf(fp, "\n");
    print_marked(prog_number, fp);
 
    if (prog_number == QSTAT) {

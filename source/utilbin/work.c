@@ -54,7 +54,12 @@ int nproc = 0;
 /* mem load profile */
 int stack_mb = 0;
 int stack_kb = 0;
+
+#if defined(DARWIN) || defined(LINUX)
 int malloc_mb = 0;
+#else
+size_t malloc_mb = 0;
+#endif
 int malloc_kb = 0;
 
 /* io load profile */

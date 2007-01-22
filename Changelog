@@ -1,3 +1,6 @@
+RD-2007-01-22-0: Cleanup:   - removed unused clients in definitions
+                            - switched qdel_help to sge_help
+
 CR-2007-01-22-0: Cleanup:   removed unreferenced message macro definitions
 
 DT-2007-01-19-1: Enhancem.: o Set target source levels for DRMAA Java language

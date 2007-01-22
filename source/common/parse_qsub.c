@@ -772,33 +772,6 @@ u_long32 flags
          continue;
       }
 
-/*----------------------------------------------------------------------------*/
-      /* "-lj filename     log job processing */
-
-      if (!strcmp("-lj", *sp)) {
-
-         /* next field is filename */
-         sp++;
-         if (!*sp) {
-             sprintf(str,
-             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-lj");
-             answer_list_add(&answer, str, 
-                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-
-         /*
-         ** problem: lj_OPT is not in list because someone ...
-         ** ... see comment in parse.c
-         */
-         ep_opt = sge_add_arg(pcmdline, lj_OPT, lStringT, *(sp - 1), *sp);
-         lSetString(ep_opt, SPA_argval_lStringT, *sp);
-
-         sp++;
-         continue;
-      }
-
 /*---------------------------------------------------------------------------*/
       /* "-l resource_list" */
 

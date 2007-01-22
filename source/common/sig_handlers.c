@@ -160,8 +160,7 @@ int me_who
    if ((me_who == QCONF) ||
        (me_who == EXECD) || 
        (me_who == QMASTER) ||
-       (me_who == SCHEDD) || 
-       (me_who == PVM_TASKER)) {
+       (me_who == SCHEDD)) {
       sigcld_pipe_vec.sa_handler = sge_reap;
       sigfillset(&sigcld_pipe_vec.sa_mask);
       sigdelset(&sigcld_pipe_vec.sa_mask, SIGQUIT);

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/01/05 19:56:09 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/01/23 10:05:22 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2007/01/05 19:56:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2007/01/23 10:05:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -57,7 +57,7 @@ The different types of records and their structure are described in the followin
 .SS new_job
 The new_job record is written whenever a new job enters the system (usually by a submitting command). It has the following fields:
 .IP "\fBsubmission_time\fP"
-Time when the job was submitted.
+Time (GMT unix time stamp) when the job was submitted.
 .IP "\fBjob_number\fP"
 The job number.
 .IP "\fBtask_number\fP"
@@ -101,7 +101,7 @@ The host from which the action was initiated (e.g. the submit host, the qmaster 
 .IP "\fBstate_time\fP"
 Reserved field for later use.
 .IP "\fBsubmission_time\fP"
-Time when the job was submitted.
+Time (GMT unix time stamp) when the job was submitted.
 .IP "\fBjob_name\fP"
 The job name (from -N submission option)
 .IP "\fBowner\fP"
@@ -144,13 +144,13 @@ Priority value assigned to the job corresponding to the \fBpriority\fP
 parameter in the queue configuration (see
 .M queue_conf 5 ).
 .IP "\fBsubmission_time\fP"
-Submission time in seconds (since epoch format).
+Submission time (GMT unix time stamp).
 For slave tasks of tightly integrated parallel jobs, the submission_time is 
 always set to 0.
 .IP "\fBstart_time\fP"
-Start time in seconds (since epoch format).
+Start time (GMT unix time stamp).
 .IP "\fBend_time\fP"
-End time in seconds (since epoch format).
+End time (GMT unix time stamp).
 .IP "\fBfailed\fP"
 Indicates the problem which occurred in case a job could not be started on 
 the execution host (e.g. because the owner of the job did not have a valid 
@@ -225,7 +225,7 @@ The cluster queue name.
 .IP "\fBhostname\fP"
 The hostname of a specific queue instance.
 .IP "\fBreport_time\fP"
-The time (GMT unix timestamp) when a state change was triggered.
+The time (GMT unix time stamp) when a state change was triggered.
 .IP "\fBstate\fP"
 The new queue state.
 .SS queue_consumable
@@ -235,7 +235,7 @@ The cluster queue name.
 .IP "\fBhostname\fP"
 The hostname of a specific queue instance.
 .IP "\fBreport_time\fP"
-The time (GMT unix timestamp) when a state change was triggered.
+The time (GMT unix time stamp) when a state change was triggered.
 .IP "\fBstate\fP"
 The new queue state.
 .IP "\fBconsumables\fP"
@@ -247,7 +247,7 @@ It contains the following information:
 .IP "\fBhostname\fP"
 The name of the host.
 .IP "\fBreport_time\fP"
-The time (GMT unix timestamp) when the reported information was generated.
+The time (GMT unix time stamp) when the reported information was generated.
 .IP "\fBstate\fP"
 The new host state.
 Currently, xxQS_NAMExx doesn't track a host state, the field is reserved for 
@@ -262,7 +262,7 @@ It contains the following information:
 .IP "\fBhostname\fP"
 The name of the host.
 .IP "\fBreport_time\fP"
-The time (GMT unix timestamp) when the reported information was generated.
+The time (GMT unix time stamp) when the reported information was generated.
 .IP "\fBstate\fP"
 The new host state.
 Currently, xxQS_NAMExx doesn't track a host state, the field is reserved for 

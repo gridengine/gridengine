@@ -942,6 +942,7 @@ JG-2006-07-25-0: Bugfix:    sge_share_mon did not work with automatic policy
                             Merge of JG-2006-07-24-0 from V60s2_BRANCH.
                  Bugfix:    sge_share_mon was broken (missing MT init).
                  Bugster:   6448704, 6449439
+                 Issue:     2167
                  Review:    RD
 
 JG-2006-07-25-0: Testsuite: Use sharetree infrastructure provided by

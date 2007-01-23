@@ -61,6 +61,8 @@ RD-2007-01-17-0: Bugfix:    qmaster core dump with usersets referenced in RQS
                  Review:    JG
 
 CR-2007-01-17-0: Bugfix:    scheduler now writes pid file in daemonize phase
+                 Bugtraq:   6516288
+                 Issue:     2171
                  Review:    JG
 
 MD-2007-01-17-0: Bugfix:    merged from V60s2_BRANCH

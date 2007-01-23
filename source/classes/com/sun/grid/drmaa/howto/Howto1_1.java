@@ -30,31 +30,21 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import java.util.Collections;
 import org.ggf.drmaa.DrmaaException;
-import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
 import org.ggf.drmaa.SessionFactory;
 
-public class Howto2_1 {
+public class Howto1_1 {
    public static void main(String[] args) {
       SessionFactory factory = SessionFactory.getFactory();
       Session session = factory.getSession();
-      
+
       try {
          session.init("");
-         JobTemplate jt = session.createJobTemplate();
-         jt.setRemoteCommand("sleeper.sh");
-         jt.setArgs(Collections.singletonList("5"));
+         String contact = session.getContact();
+         session.exit();
          
-         java.util.List ids = session.runBulkJobs(jt, 1, 30, 2);
-         java.util.Iterator i = ids.iterator();
-         
-         while (i.hasNext()) {
-            System.out.println("Your job has been submitted with id " + i.next());
-         }
-         
-         session.deleteJobTemplate(jt);
+         session.init(contact);
          session.exit();
       } catch (DrmaaException e) {
          System.out.println("Error: " + e.getMessage());

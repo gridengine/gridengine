@@ -35,11 +35,11 @@
 
 DRMAA_HOWTO_DIR   = $(JAPILIB_DIR)/howto
 
-DRMAA_HOWTO_SRC   = howto1.c howto2.c howto2_1.c howto3.c howto3_1.c howto3_2.c howto4.c howto5.c howto6.c
+DRMAA_HOWTO_SRC   = howto1.c howto1_1.c howto2.c howto2_1.c howto3.c howto3_1.c howto3_2.c howto4.c howto5.c howto6.c
 
 DRMAA_HOWTO_OBJS  = $(DRMAA_HOWTO_SRC:.c=.o)
 
-DRMAA_HOWTO_ALL   = howto1 howto2 howto2_1 howto3 howto3_1 howto3_2 howto4 howto5 howto6
+DRMAA_HOWTO_ALL   = howto1 howto1_1 howto2 howto2_1 howto3 howto3_1 howto3_2 howto4 howto5 howto6
 
 drmaa_howto_all: $(DRMAA_HOWTO_ALL)
 
@@ -54,6 +54,12 @@ howto1: howto1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 
 howto1.o: $(DRMAA_HOWTO_DIR)/howto1.c
 	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto1.c
+
+howto1_1: howto1_1.o $(DRMAALIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto1_1 howto1_1.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)
+
+howto1_1.o: $(DRMAA_HOWTO_DIR)/howto1_1.c
+	$(CC) $(CFLAGS) -c $(DRMAA_HOWTO_DIR)/howto1_1.c
 
 howto2: howto2.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o howto2 howto2.o $(LFLAGS) -ldrmaa $(WINGRIDLIB) $(LIBS) $(SLIBS) $(DLLIB)

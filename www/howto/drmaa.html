@@ -134,6 +134,82 @@
       will return the error code <CODE>DRMAA_ERRNO_NO_ACTIVE_SESSION</CODE>.
    </P>
 
+   <H3>Example 1_1</H3>
+
+<PRE>01: #include <stdio.h>
+02: #include "drmaa.h"
+03:
+04: int main (int argc, char **argv) {
+05:    char error[DRMAA_ERROR_STRING_BUFFER];
+06:    int errnum = 0;
+07:    char contact[DRMAA_CONTACT_BUFFER];
+08:
+09:    errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
+10:
+11:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+12:       fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
+13:       return 1;
+14:    }
+15:
+16:    printf ("DRMAA library was started successfully\n");
+17:
+18:    errnum = drmaa_get_contact (contact, DRMAA_CONTACT_BUFFER, error,
+19:                                DRMAA_ERROR_STRING_BUFFER);
+20:
+21:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+22:       fprintf (stderr, "Could not get the contact string: %s\n", error);
+23:       return 1;
+24:    }
+25:
+26:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+27:
+28:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+29:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+30:       return 1;
+31:    }
+32:
+33:    errnum = drmaa_init (contact, error, DRMAA_ERROR_STRING_BUFFER);
+34:
+35:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+36:       fprintf (stderr, "Could not reinitialize the DRMAA library: %s\n", error);
+37:       return 1;
+38:    }
+39:
+40:    printf ("DRMAA library was restarted successfully\n");
+41:
+42:    errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
+43:
+44:    if (errnum != DRMAA_ERRNO_SUCCESS) {
+45:       fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
+46:       return 1;
+47:    }
+48:
+49:    return 0;
+50: }</PRE>
+
+   <p style="margin-bottom: 0cm">
+      This example is very similar to Example 1.  The difference is that it uses
+      the Grid Engine feature of reconnectable sessions.  The DRMAA concept of
+      a session is translated into a session tag in the Grid Engine job
+      structure.  That means that every job knows to which session it belongs.
+      With reconnectable sessions, it's possible to initialize the DRMAA library
+      to a previous session, allowing the library access to that session's job
+      list.  The only limitation, though, is that jobs which end between the
+      calls to exit() and init() will be lost, as the reconnecting session will
+      no longer see these jobs, and so won't know about them.
+   </p>
+
+   <p style="margin-bottom: 0cm">
+      Through line 16, this example is very similar to Example 1.  On line 18,
+      however, we use the drmaa_get_contact() function to get the contact
+      information for this session.  On line 26 we then exit the session.  On
+      line 33, we use the stored contact information to reconnect to the
+      previous session.  Had we submitted jobs before calling exit(), those jobs
+      would now be available again for operations such as drmaa_wait() and
+      drmaa_synchronize().  Finally, on line 42 we exit the session a second
+      time.
+   </p>
+
    <H2>
       <FONT COLOR="#336699">
          Running a Job

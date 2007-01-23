@@ -34,31 +34,30 @@ import org.ggf.drmaa.PartialTimestamp;
 import org.ggf.drmaa.PartialTimestampFormat;
 
 public class Howto7 {
-   public static void main (String[] args) {
+   public static void main(String[] args) {
       try {
-         PartialTimestamp date = new PartialTimestamp ();
-         PartialTimestampFormat format = new PartialTimestampFormat ();
-
-         date.set (PartialTimestamp.HOUR_OF_DAY, 13);
-         date.set (PartialTimestamp.MINUTE, 0);
+         PartialTimestamp date = new PartialTimestamp();
+         PartialTimestampFormat format = new PartialTimestampFormat();
          
-         System.out.println (format.format (date));
+         date.set(PartialTimestamp.HOUR_OF_DAY, 13);
+         date.set(PartialTimestamp.MINUTE, 0);
          
-         date.setModifier (PartialTimestamp.DAY_OF_MONTH, 1);
+         System.out.println(format.format(date));
          
-         System.out.println (format.format (date));
-         System.out.println (date.getTime ().toString ());
-
-         date.setTimeInMillis (System.currentTimeMillis ());
+         date.setModifier(PartialTimestamp.DAY_OF_MONTH, 1);
          
-         System.out.println (format.format (date));
+         System.out.println(format.format(date));
+         System.out.println(date.getTime().toString());
          
-         date = format.parse ("01/05 14:07:29");
+         date.setTimeInMillis(System.currentTimeMillis());
          
-         System.out.println (format.format (date));
-      }
-      catch (java.text.ParseException e) {
-         System.out.println ("Error: " + e.getMessage ());
+         System.out.println(format.format(date));
+         
+         date = format.parse("01/05 14:07:29");
+         
+         System.out.println(format.format(date));
+      } catch (java.text.ParseException e) {
+         System.out.println("Error: " + e.getMessage());
       }
    }
 }

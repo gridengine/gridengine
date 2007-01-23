@@ -35,16 +35,15 @@ import org.ggf.drmaa.Session;
 import org.ggf.drmaa.SessionFactory;
 
 public class Howto1 {
-   public static void main (String[] args) {
-      SessionFactory factory = SessionFactory.getFactory ();
-      Session session = factory.getSession ();
+   public static void main(String[] args) {
+      SessionFactory factory = SessionFactory.getFactory();
+      Session session = factory.getSession();
       
       try {
-         session.init ("");
-         session.exit ();
-      }
-      catch (DrmaaException e) {
-         System.out.println ("Error: " + e.getMessage ());
+         session.init("");
+         session.exit();
+      } catch (DrmaaException e) {
+         System.out.println("Error: " + e.getMessage());
       }
    }
 }

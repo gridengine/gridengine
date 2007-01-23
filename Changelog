@@ -1,3 +1,6 @@
+DT-2007-01-23-1: Docs:      o Updated the DRMAA howto page and classes for 1.0.
+                 Changed:   www, Java howto examples
+
 PJ-2007-01-23-0: RFE:       Evaluation Expression Support. Test suite fix
                             PJ-2007-01-19-0, detected in testsuite/tests
                  Review:    AH
@@ -9,7 +12,7 @@ AA-2007-01-23-0: Enhancem:  o problem in qsh, qrsh due to fix AA-2007-01-19-0
                  Review:    RD
 
 DT-2007-01-23-0: Cleanup:   o Added missing mk_dist support for DRMAA 1.0
-                 Changed:  mk_dist
+                 Changed:   mk_dist
 
 RD-2007-01-23-1: Cleanup:   added missing checkin for RD-2007-01-22-0
                  Review:    AA

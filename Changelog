@@ -1,3 +1,7 @@
+PJ-2007-01-23-0: RFE:       Evaluation Expression Support. Test suite fix
+                            PJ-2007-01-19-0, detected in testsuite/tests
+                 Review:    AH
+
 AA-2007-01-23-0: Enhancem:  o problem in qsh, qrsh due to fix AA-2007-01-19-0
                               detected in testsuite/tests
                  Bugtraq:   6515122

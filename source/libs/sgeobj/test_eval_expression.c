@@ -197,9 +197,15 @@ static int test_match(u_long32 type, const char *expression, const char *value, 
 
 static int test_tolower(char *expression, char *value, int expected) {
    int match;
-   sge_strtolower(expression,255);
-   sge_strtolower(value,255);
-   match = strcmp(expression,value);
+   char *t1;
+   char *t2;
+   t1=strdup(expression);
+   t2=strdup(value);
+   sge_strtolower(t1,255);
+   sge_strtolower(t2,255);
+   match = strcmp(t1,t2);
+   free(t1);
+   free(t2);
    if(match!=expected) {
       fprintf(stderr, "!!!UNEXPECTED RESULT!!!: %s => strcmp(sge_strtolower(%s),sge_strtolower(%s)), expected: %s \n",
       RESULT(match) , expression, value, RESULT(expected) );

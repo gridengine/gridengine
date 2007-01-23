@@ -216,13 +216,18 @@ char *argv[]
    }
    FREE(local_host);
 
+   /*
+    *  startup and write pid file before finalize the deamonize action!
+    *  parent process should not terminate before the pidfile is updated
+    */
+   starting_up();
+   sge_write_pid(SCHEDD_PID_FILE);
+
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
       sge_daemonize_finalize();
    }
 
-   starting_up();
-   sge_write_pid(SCHEDD_PID_FILE);
 
    /* This is the timeout used for waiting for events. */
    cl_com_set_synchron_receive_timeout(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0), 

@@ -1,3 +1,9 @@
+CR-2007-01-23-0: Bugfix:    Scheduler does not write pid file in daemonize phase
+                            (merge from maintrunk)
+                 Bugtraq:   6516288
+                 Issue:     2171
+                 Review:    JG 
+
 RD-2007-01-23-0: CVS        Created V60u10_TAG
 ----------------------------------------------
 

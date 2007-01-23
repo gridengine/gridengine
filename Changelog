@@ -8,6 +8,7 @@ HP-2007-01-16-0: Bugfix:    Fixed broken build on tru64
 
 AA-2007-01-16-0: Bugfix:    o openssl lib for darwin -> distinst
                             o xterm setting for darwin in arch_variables
+                 Bugtraq:   6513233, 6513226
                  Review:    CR
 
 MD-2007-01-15-0: Bugfix:    o fixed syntax error

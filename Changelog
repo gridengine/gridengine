@@ -1,3 +1,6 @@
+DT-2007-01-23-0: Cleanup:   o Added missing mk_dist support for DRMAA 1.0
+                 Changed:  mk_dist
+
 RD-2007-01-23-1: Cleanup:   added missing checkin for RD-2007-01-22-0
                  Review:    AA
 
@@ -8,6 +11,7 @@ RD-2007-01-23-0: Doc:       unified time definition for accounting and reporting
 DT-2007-01-22-0: Cleanup:   o Replaced distinst -s2 switch with base dir in
                               distinst.site
                  Review:    pending(AH)
+                 Changed:   distinst, distinst.site
 
 HP-2007-01-22-0: Cleanup:   Replaced CR+LF with CR in num_proc output
                             for HP-2007-01-19-0
@@ -21,6 +25,7 @@ CR-2007-01-22-0: Cleanup:   removed unreferenced message macro definitions
 
 DT-2007-01-19-1: Enhancem.: o Set target source levels for DRMAA Java language
                               binding.
+                 Changed:   classes/build.xml
 
 DT-2007-01-19-0: Enhancem.: o Upgraded DRMAA Java language binding to 1.0
                             o Made the DRMAA C binding 1.0 the default

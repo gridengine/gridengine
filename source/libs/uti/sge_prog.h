@@ -49,40 +49,40 @@
 enum {
  QALTER =  1 , 
  QCONF           ,       /* 2  */        
- QDEL            ,       /* 3 */
- QHOLD           ,       /* 4 */
- QMASTER         ,       /* 6 */
- QMOD            ,       /* 7 */
- QRESUB          ,       /* 10 */
- QRLS            ,       /* 11 */
- QSELECT         ,       /* 12 */
- QSH             ,       /* 13 */
- QRSH            ,       /* 14 */
- QLOGIN          ,       /* 15 */
- QSTAT           ,       /* 17 */
- QSUB            ,       /* 18 */
- EXECD           ,       /* 19 */
- QEVENT,                 /* 20 */
- QUSERDEFINED    ,       /* 21 */
- ALL_OPT         ,       /* 22 */
+ QDEL            ,       /* 3  */
+ QHOLD           ,       /* 4  */
+ QMASTER         ,       /* 5  */
+ QMOD            ,       /* 6  */
+ QRESUB          ,       /* 7  */
+ QRLS            ,       /* 8  */
+ QSELECT         ,       /* 9  */
+ QSH             ,       /* 10 */
+ QRSH            ,       /* 11 */
+ QLOGIN          ,       /* 12 */
+ QSTAT           ,       /* 13 */
+ QSUB            ,       /* 14 */
+ EXECD           ,       /* 15 */
+ QEVENT,                 /* 16 */
+ QUSERDEFINED    ,       /* 17 */
+ ALL_OPT         ,       /* 18 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
 
- QMON            ,       /* 26 */
- SCHEDD          ,       /* 27 */
- QACCT           ,       /* 29 */
- SHADOWD         ,       /* 32 */
- QHOST           ,       /* 37 */
- SPOOLDEFAULTS   ,       /* 39 */
- JAPI            ,       /* 40 */
- JAPI_EC         ,       /* 41 */
- DRMAA           ,       /* 42 */
- QPING           ,       /* 43 */
- SGE_PASSWD      ,       /* 44 */
- QQUOTA          ,       /* 45 */
- JGDI            ,       /* 46 */
- QTCSH           ,       /* 47 */
- SGE_SHARE_MON           /* 48 */
+ QMON            ,       /* 19 */
+ SCHEDD          ,       /* 20 */
+ QACCT           ,       /* 21 */
+ SHADOWD         ,       /* 22 */
+ QHOST           ,       /* 23 */
+ SPOOLDEFAULTS   ,       /* 24 */
+ JAPI            ,       /* 25 */
+ JAPI_EC         ,       /* 26 */
+ DRMAA           ,       /* 27 */
+ QPING           ,       /* 28 */
+ SGE_PASSWD      ,       /* 29 */
+ QQUOTA          ,       /* 30 */
+ JGDI            ,       /* 31 */
+ QTCSH           ,       /* 32 */
+ SGE_SHARE_MON           /* 33 */
 };
 
 typedef void (*sge_exit_func_t)(void **ctx_ref, int);

@@ -1,3 +1,7 @@
+HP-2007-01-23-0: Bugfix:    Added new shepherd states to admin mail
+                 Changed:   execution_states.h, admin_mail.c
+                 Review:    MD
+
 CR-2007-01-23-0: Bugfix:    Scheduler does not write pid file in daemonize phase
                             (merge from maintrunk)
                  Bugtraq:   6516288

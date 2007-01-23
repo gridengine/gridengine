@@ -1,0 +1,167 @@
+MySQL Database Software
+=======================
+
+ARCo uses views and therefore it supports MySQL database of version 5.0.x and higher (previous versions of MySQL database doesn't support views. 
+Detailed information on the MySQL database software can be found in the MySQL documentation http://dev.mysql.com/doc/index.html. 
+
+Case sensitivity in MySQL database:
+===================================
+In MySQL, databases correspond to directories within the data directory. Each table within a database corresponds to at least one file 
+within the database directory (and possibly more, depending on the storage engine). Consequently, the case sensitivity of the underlying 
+operating system determines the case sensitivity of database and table names. This means database and table names are case sensitive 
+in most varieties of Unix, and not case sensitive in Windows.
+
+Installation of MySQL database on UNIX systems
+==============================================
+
+1. step: Select the appropriate installation version for your system on http://www.mysql.com and download it. Standard installation directory 
+for UNIX systems is /usr/local/mysql, if you install it into a different directory, you have to change the settings for the scripts provided 
+in the package.
+
+Create the symbolic link:
+# ln -s ${preffered_installation_directory}/mysql-standard-5.0.26-solaris10-i386 mysql
+
+You will find several files and subdirectories in the mysql directory. The most important for installation purposes are the bin and scripts 
+subdirectories:
+
+* The bin directory contains client programs and the server.
+
+* The scripts directory contains the mysql_install_db script used to initialize the 'mysql' database containing the grant tables that store 
+  the server access permissions.
+
+MySQL programs:
+
+1) The MySQL server and server startup scripts:
+* mysqld is the MySQL server.
+* mysqld_safe, mysql.server, and mysqld_multi are server startup scripts.
+* mysql_install_db initializes the data directory and the initial databases.
+* mysqlmanager MySQL instance manager.
+
+2) Client programs that access the server:
+* mysql is a command-line client for executing SQL statements interactively or in batch mode.
+* mysqladmin is an administrative client.
+* mysqlcheck performs table maintenance operations.
+* mysqldump and mysqlhotcopy make database backups.
+* mysqlimport imports data files.
+* mysqlshow displays information about databases and tables.
+
+3) Utility programs that operate independently of the server:
+* myisamchk performs table maintenance operations.
+* myisampack produces compressed, read-only tables.
+* mysqlbinlog is a tool for processing binary log files.
+* perror displays the meaning of error codes.
+
+2. step: Add a login user and group for mysqld to run as:
+# groupadd mysql
+# useradd -g mysql mysql
+
+3. step: Create the MySQL grant tables:
+# scripts/mysql_install_db --user=mysql
+
+4. step: Change the ownership of program binaries to 'root' and ownership of the data directory to the user that you run mysqld as.
+# chown -R root .
+# chown -R mysql data
+# chgrp -R mysql .
+
+5. step: Start the MySQL server
+# bin/mysqld_safe --user=mysql &
+
+6. step: Set up the root password
+# ./bin/mysqladmin -u root password 'new-password'
+# ./bin/mysqladmin -u root -h ${hostname} password 'new-password'
+
+Tips:
+=====
+* Copy support-files/mysql.server to /etc/init.d and link it to /etc/rc3.d/S99mysql and /etc/rc0.d/K01mysql to start MySQL server at boot time.
+  Change the basedir and datadir variables if not installed in /usr/local/mysql.
+* Add the full pathname of this directory to your PATH environment variable so that your shell finds the MySQL programs properly.
+
+Howto:
+======
+Examples of usage of mysql command:
+-----------------------------------
+# mysql --help
+# mysql  -h <host> -u <user> -p <database_name> -p<my_password>
+# mysql <  batch_file_path  [ # mysql < batch_file_path | more , # mysql < batch_file_path > mysql.out
+
+mysql> SHOW VARIABLES; ... list the environment variables
+mysql> SELECT USER(); 
++----------------------+
+| user()               |
++----------------------+
+| arco_write@localhost |
++----------------------+
+1 row in set (0.19 sec)
+
+mysql> SELECT VERSION(); 
++-----------------+
+| version()       |
++-----------------+
+| 5.0.26-standard |
++-----------------+
+1 row in set (0.02 sec)
+
+Databases: 
+
+mysql> SHOW DATABASES; ... show all databases
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| arco               |
+| mysql              |
+| test               |
++--------------------+
+4 rows in set (0.23 sec)
+
+mysql> CREATE DATABASE <database_name>; ... create new database
+mysql> USE <database_name>; ... select the database to use
+mysql> SELECT DATABASE();  ... currently used database
+
+mysql> SHOW TABLES;
+mysql> CREATE TABLE <table_name> (<column1> <column1_type>, <column2> <column2_type>, ...);
+mysql> DESCRIBE <table_name>;
+mysql> SHOW INDEX FROM <table_name>;
+mysql> INSERT INTO <table_name> VALUES (...);
+mysql> UPDATE <table_name> SET <column_name1> = '<column_value1>' WHERE <column_name2> = '<column_value2>'
+mysq>DELETE FROM <table_name>
+
+Account management:
+
+mysql> CREATE USER user [IDENTIFIED BY [PASSWORD] 'password'] [, user [IDENTIFIED BY [PASSWORD] 'password']] ...
+mysql> DROP USER user [, user] ...
+
+MySQL privileges system:
+
+- identification in MySQL database: username & hostname
+ 
+mysql> use information_schema;
+mysql> select * from user_privileges; [ mysql> show tables for more information ]
+
+mysql> show grants for '<username>'@'<hostname>';
+mysql> GRANT ALL ON <database_name>.* TO '<your_mysql_name>'@'<your_client_host>';
+mysql> REVOKE ALL ON *.* TO ...
+
+mysql> QUIT [\q]
+
+How to Set Up ARCo database:
+===============================
+
+1. step: Log in to the database as a superuser
+# mysql -u root -p<password>
+2. step: Create user & grant privileges for arco_read, arco_write:
+
+mysql> GRANT ALL on *.* to 'arco_write'@'<hostname>' identified by '<password>' with GRANT OPTION;
+mysql> GRANT ALL on *.* to 'arco_write'@'localhost' identified by '<password>' with GRANT OPTION;
+mysql> GRANT ALL on *.* to 'arco_write'@'*' identified by '<password>' with GRANT OPTION;
+
+mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'<hostname>' identified by '<password>';
+mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'localhost' identified by '<password>';
+mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'*' identified by '<password>';
+
+3. step: Log in to the database as a arco_write user:
+# mysql -u arco_write -p<password>
+4. step: Create arco database:
+mysql> CREATE DATABASE ARCO;
+
+5. step: Install the Accounting and Reporting Software

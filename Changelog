@@ -360,6 +360,7 @@ JG-2006-07-24-0: Bugfix:    sge_share_mon did not work with automatic policy
                  Bugfix:    sharetree node names in sge_share_mon and in 
                             reporting did not contain the whole path.
                  Bugster:   6448704, 6449439
+                 Issue:     2167
                  Review:    RD
 
 RD-2006-07-17-0: Bugfix:    Fixed berkeleydb spooling and CSP mode on

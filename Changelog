@@ -1,3 +1,6 @@
+RD-2007-01-23-0: CVS        Created V60u10_TAG
+----------------------------------------------
+
 DT-2007-01-19-0: Testsuite: o Updated DRMAA Java binding tests
 
 HP-2007-01-16-0: Bugfix:    Fixed broken build on tru64

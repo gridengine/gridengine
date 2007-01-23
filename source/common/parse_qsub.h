@@ -73,6 +73,8 @@ int cull_parse_jid_hold_list(lList **lpp, char *str);
 int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment);
 
+char *reroot_path(lListElem* pjob, const char *path, lList **alpp);
+
 #endif /* PARSE_QSUBL_H */
 
 

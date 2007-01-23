@@ -2011,7 +2011,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
             strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
-            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j")
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
@@ -2027,6 +2027,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRLOGIN(jb_now)) {
             if(strcmp(cp, "-display") == 0 ||
                strcmp(cp, "-cwd") == 0 ||
+               strcmp(cp, "-wd") == 0 ||
                strcmp(cp, "-v") == 0 ||
                strcmp(cp, "-V") == 0
               ) {
@@ -2058,6 +2059,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          /* qrsh -inherit only allowes -cwd and setting of environment */
          if(tightly_integrated) {
             if(strcmp(cp, "-cwd") &&
+               strcmp(cp, "-wd") &&
                strcmp(cp, "-display") &&
                strcmp(cp, "-v") &&
                strcmp(cp, "-V")

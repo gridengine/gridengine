@@ -55,7 +55,7 @@
                target="_blank">http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/index.html</a></p>
             <li><b>Rewrite the MANIFEST file of the jdbc Oracle 10.2. jar file</b></li>
             <ul>
-            <li>Extract the content of the jar file to the selected directory: jar xvf ojdbc14.jar</li>
+            <li>Extract the content of the jar file to the selected directory: <b><i>jar xvf ojdbc14.jar</i></b></li>
             <li>Update the content of the MANIFEST file in your editor</li>
             <p>The original content of the MANIFEST file of ojdbc14.jar file looks like:</p>
             <p style="font-size: 70%; color: gray; padding-left: 50px;">
@@ -92,7 +92,7 @@
                 Implementation-Time:    Wed Jun 22 18:55:48 2005<br />
                 <br />
             </p>
-            <li>Create the jar file with the updated manifest file: jar cfm ojdbc14.jar META-INF/MANIFEST.MF  oracle/</li>
+            <li>Create the jar file with the updated manifest file: <b><i>jar cfm ojdbc14.jar META-INF/MANIFEST.MF  oracle/</i></b></li>
             <li>Use the modified jdbc driver</li>
         </p>
         </ul>

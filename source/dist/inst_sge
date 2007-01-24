@@ -389,6 +389,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
     $INFOTEXT -log "Starting qmaster installation!"
  fi
 
+ LicenseAgreement
  WelcomeTheUser
  CheckForLocalHostResolving
  CheckWhoInstallsSGE

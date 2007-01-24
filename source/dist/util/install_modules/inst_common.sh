@@ -114,6 +114,7 @@ BasicSettings()
 
   RM="rm -f"
   TOUCH="touch"
+  MORE="more"
 
 }
 
@@ -2667,4 +2668,23 @@ RemoveHostFromList()
       fi
    done
    echo $help_list
+}
+
+
+LicenseAgreement()
+{
+   if [ "$AUTO" = "true" ]; then
+      return
+   fi
+
+   if [ -f $PWD/doc/LICENSE ]; then
+      $MORE $PWD/doc/LICENSE
+
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you accept the license agreement? (y/n) [n] >> "
+
+      if [ "$?" = 1 ]; then
+         exit 1
+      fi
+      $CLEAR
+   fi
 }

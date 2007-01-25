@@ -135,6 +135,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    */
    if (lGetNumberOfElem(resource_match_list)) {
       int selected;
+      lListElem *global = NULL;
 
       if (centry_list_fill_request(resource_match_list, alpp, cl, true, true, false)) {
          /* TODO: error message gets written by centry_list_fill_request into SGE_EVENT */
@@ -148,23 +149,32 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             lSetUlong(host, EH_tagged, 0);
          }  
       }   
+      
          
       /* prepare request */
-      for_each(ep, ehl) {
-
-         /* prepare complex attributes */
-         if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
-            continue;
-
-         DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
-
-         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
-                                     true, -1, NULL, NULL, NULL);
-
-         if (selected) { 
+      global = lGetElemHost(ehl, EH_name, "global");
+      selected = sge_select_queue(resource_match_list, NULL, global, ehl, cl,
+                                  true, -1, NULL, NULL, NULL);
+      if (selected) {
+         for_each(ep, ehl) {
             lSetUlong(ep, EH_tagged, 1);
-         } else {
-            lSetUlong(ep, EH_tagged, 0);
+         }
+      } else {
+         for_each(ep, ehl) {
+            /* prepare complex attributes */
+            if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
+               continue;
+
+            DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
+
+            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+                                        true, -1, NULL, NULL, NULL);
+
+            if (selected) { 
+               lSetUlong(ep, EH_tagged, 1);
+            } else {
+               lSetUlong(ep, EH_tagged, 0);
+            }
          }
       }
 

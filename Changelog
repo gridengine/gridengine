@@ -1,3 +1,6 @@
+EB-2007-01-25-0: Bugfix:    qhost -l <consumable> selected unsufficient numer of hosts
+                 Review:    JG 
+
 JG-2007-01-25-0: Bugfix:    qhost didn't output error message in certain error 
                             situations (e.g. no bootstrap file exists).
                  Review:    AA

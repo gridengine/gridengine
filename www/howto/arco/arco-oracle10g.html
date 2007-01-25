@@ -17,7 +17,7 @@
             classes defined in the package that originated from the same JAR file. ARCo module is a web-based 
             tool deployed on the Sun Web Console, which use it's class loader to load the class from the jdbc 
             driver jar file, and due to this security protection there is thrown this exception:<br />
-            <p style="font-size: 70%; color: gray; padding-left: 50px;">
+            <p style="font-size: 85%; padding-left: 50px;">
                 Sealing violation loading oracle.jdbc.pool.OracleDataSource : Package oracle.jdbc.pool is sealed. <br />
                 (java.lang.SecurityException) <br />
                 at <br />
@@ -42,7 +42,7 @@
                 com.sun.grid.arco.web.arcomodule.query.SimpleTab.createChild(SimpleTab.java:89)<br />
                 com.iplanet.jato.view.ContainerViewBase.ensureChild(ContainerViewBase.java:187)
             </p>
-            Please, refer to <a href="http://java.sun.com/javase/6/docs/technotes/guides/extensions/spec.html#sealing" 
+            Please refer to <a href="http://java.sun.com/javase/6/docs/technotes/guides/extensions/spec.html#sealing" 
                                 target="_blank">http://java.sun.com/javase/6/docs/technotes/guides/extensions/spec.html#sealing</a>
             for more information about sealed option of the jar files.
         </p>
@@ -58,7 +58,7 @@
             <li>Extract the content of the jar file to the selected directory: <b><i>jar xvf ojdbc14.jar</i></b></li>
             <li>Update the content of the MANIFEST file in your editor</li>
             <p>The original content of the MANIFEST file of ojdbc14.jar file looks like:</p>
-            <p style="font-size: 70%; color: gray; padding-left: 50px;">
+            <p style="font-size: 85%; padding-left: 50px;">
                 Manifest-Version: 1.0<br />
                 Specification-Title:    Oracle JDBC driver classes for use with JDK14<br />
                 Sealed: true<br />
@@ -79,8 +79,8 @@
                 Name: oracle/sql/converter_xcharset/<br />
                 Sealed: false<br />
             </p>
-            <p>To run ARCo with this driver you should remove the sealed option from the MANIFEST file, so the result look like:</p>
-            <p style="font-size: 70%; color: gray; padding-left: 50px;">
+            <p>To run ARCo with this driver you should remove the sealed option from the MANIFEST file, so the result looks like:</p>
+            <p style="font-size: 85%; padding-left: 50px;">
                 Manifest-Version: 1.0<br />
                 Specification-Title:    Oracle JDBC driver classes for use with JDK14<br />
                 Created-By: 1.4.2_08 (Sun Microsystems Inc.)<br />

@@ -282,7 +282,7 @@ int main(int argc, char **argv)
    sge_setup_sig_handlers(QHOST);
 
    if (sge_gdi2_setup(&ctx, QHOST, &alp) != AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+      answer_list_output(&alp);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);
    }

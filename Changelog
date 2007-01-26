@@ -1,3 +1,6 @@
+JG-2007-01-26-0: Bugfix:    Fixed a typo in complex.5 manpage.
+                 Issue:     1946
+
 HP-2007-01-23-0: Bugfix:    Added new shepherd states to admin mail
                  Changed:   execution_states.h, admin_mail.c
                  Review:    MD

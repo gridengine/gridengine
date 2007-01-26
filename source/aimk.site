@@ -45,6 +45,7 @@ switch($buildarch)
 endsw
 
 # JAVA settings
+setenv ARCH $buildarch
 setenv EN_QUIET 1
 switch($buildarch)
    case "sol-amd64":

@@ -10,6 +10,7 @@
       
       <macrodef name="myant">
          <attribute name="target" default=""/>
+         <!-- attribute name="args" default="${sge.ant.args}"/ -->
          <attribute name="dir"    default="${basedir}"/>
          <sequential>
             <java classname="org.apache.tools.ant.launch.Launcher" 
@@ -20,6 +21,7 @@
                   <pathelement path="${java.class.path}"/>
                   <pathelement location="${libs.junit.classpath}"/>
                </classpath>
+               <!-- arg line="@{args} @{target}"/ -->
                <arg line="@{target}"/>
             </java>
          </sequential>         

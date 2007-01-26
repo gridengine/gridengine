@@ -1,3 +1,7 @@
+AA-2007-01-26-0: Enhancem:  o build support for aimk -32/-64 for jgdi
+                              for hp11/hp11-64 and sol-sparc/sol-sparc64
+                 Review:    RD
+                 
 JG-2007-01-26-0: Bugfix:    Fixed a typo in complex.5 manpage.
                  Issue:     1946
 

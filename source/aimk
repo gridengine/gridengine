@@ -48,6 +48,7 @@ set buildarch    = UNKNOWN
 set WINCC        = ""
 set WINCFLAGS    = ""
 set WINLIBS      = ""
+set AIMK_TARGETOPT   = 0
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -85,6 +86,7 @@ set i = 1
 while ($i <= $#argv)
    switch ("$argv[$i]")
    case "-32":
+      set AIMK_TARGETOPT = 1
       set TARGET_BITS = TARGET_32BIT
       if ($BUILDARCH == SOLARIS64) then
          set BUILDARCH = SOLARIS  
@@ -98,6 +100,7 @@ while ($i <= $#argv)
       endif
       breaksw
    case "-64":
+      set AIMK_TARGETOPT = 1
       set TARGET_BITS = TARGET_64BIT
       if ($BUILDARCH == HP11) then
          set BUILDARCH = HP1164
@@ -2212,7 +2215,14 @@ endif
 if ( "$JAVA" > 0 ) then
    echo _____Making JAVA targets_____
 
-   ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
+   # ant -D does not work, so we set an env var
+   if ( $AIMK_TARGETOPT == 1) then
+      setenv AIMK_TARGET_BITS $TARGET_BITS
+      setenv aimk_buildarch $buildarch
+   endif
+   ant -f build.xml $argv
+   # how to propagate ant opts to first and then second build.xml
+   # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
    
    if ( $status != 0 ) then
       echo not done

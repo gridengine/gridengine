@@ -1,3 +1,6 @@
+JG-2007-01-26-0: Bugfix:    Fixed a typo in complex.5 manpage.
+                 Issue:     1946
+
 EB-2007-01-25-0: Bugfix:    qhost -l <consumable> selected unsufficient numer of hosts
                  Review:    JG 
 

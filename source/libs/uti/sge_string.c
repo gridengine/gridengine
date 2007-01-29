@@ -504,22 +504,24 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 ******************************************************************************/
 char *sge_strdup(char *old, const char *s) 
 {
-   int n;
+   const char *ret = NULL;
+
+   /* 
+    * target (old) and source (s) might point to the same object!
+    * therefore free old only after the dup
+    */
+   if (s != NULL) {
+      int n = strlen(s);
+      ret = malloc(n + 1);
+      if (ret != NULL) {
+         strcpy(ret, s);
+      }
+   }
 
    /* free and NULL the old pointer */
    FREE(old);
 
-   if (!s) {
-      return NULL;
-   }
-
-   n = strlen(s);
-   old = malloc(n + 1);
-   if (old) {
-      strcpy(old, s);
-   }
-
-   return old;
+   return ret;
 }
 
 /****** uti/string/sge_strip_blanks() *****************************************

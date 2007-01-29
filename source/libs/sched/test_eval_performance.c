@@ -56,8 +56,14 @@
 #define F 1
 #define ERROR -1
 #define RESULT(match) (match == -1) ? "ERROR" : (match == 0) ? "TRUE" : "FALSE"
+
+#ifndef __INSURE__
 #define BALANCE_LOOP_COUNT 20
 #define LOOP_COUNT 300000
+#else
+#define BALANCE_LOOP_COUNT 2
+#define LOOP_COUNT 300
+#endif
 
 /* Local functions and variables */
 static int tests(int (*test)(u_long32, const char *, const char *, int));

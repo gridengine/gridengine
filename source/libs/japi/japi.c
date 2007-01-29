@@ -2009,7 +2009,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
             id_entry = lAddElemStr(&id_list, ID_str, sge_dstring_get_string(&job_task_specifier), ID_Type);
             if (array) {
-               lList *tlp;
+               lList *tlp = NULL;
                lXchgList(id_entry, ID_ja_structure, &tlp);
                range_list_insert_id(&tlp, NULL, taskid);
                lXchgList(id_entry, ID_ja_structure, &tlp);

@@ -731,11 +731,11 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
 
    /* remove the host name part of the queue instance name */
    at_sign = strchr(queue_instance, '@');
-   if (at_sign != NULL ) {
+   if (at_sign != NULL) {
       int size = at_sign - queue_instance;
-      qname = malloc(sizeof(char)*size);
+      qname = malloc(sizeof(char) * (size + 1));
       qname = strncpy(qname, queue_instance, size);
-      qname[size]='\0';
+      qname[size] = '\0';
    } else {
       qname = strdup(queue_instance);
    }

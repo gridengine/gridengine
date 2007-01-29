@@ -604,9 +604,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
 
       if ((at_sign = strchr(queue_instance, '@'))) {
          int size = at_sign - queue_instance;
-         queue = malloc(sizeof(char)*size);
+         queue = malloc(sizeof(char) * (size + 1));
          queue = strncpy(queue, queue_instance, size);
-         queue[size]='\0';
+         queue[size] = '\0';
       } else {
          queue = strdup(queue_instance);
       }

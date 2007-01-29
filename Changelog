@@ -1,3 +1,6 @@
+JG-2007-01-29-0: Bugfix:    Fixed memory access errors.
+                 Review:    RD
+
 AA-2007-01-26-0: Enhancem:  o build support for aimk -32/-64 for jgdi
                               for hp11/hp11-64 and sol-sparc/sol-sparc64
                  Review:    RD

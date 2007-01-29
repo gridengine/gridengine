@@ -41,7 +41,9 @@
 # variables
 #
 set noglob
-unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH
+unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB
+unsetenv AIMK_TARGET_BITS aimk_buildarch
+
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
@@ -182,6 +184,7 @@ usage:
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
    echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
+   echo "-only-64          -> build only 64 bit shared libraries for SOLARIS64, don't build 32 bit shared libraries"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
@@ -211,6 +214,8 @@ set SOURCE           = `pwd`
 set SDIR             = ".."
 set MSDIR            = ""
 set MAKEFILE         = "${SDIR}/common/Makefile.global"
+set SOLARIS_ONLY_64  = 0
+set ONLY_PARAM_SPEC  = 0
 
 # SGE_INPUT_CFLAGS will be taken from environment and added to CFLAGS
 if ( $?SGE_INPUT_CFLAGS ) then
@@ -617,6 +622,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-depend":
       set CORE       = 0
@@ -628,9 +634,11 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case  "-only-java"
       set JAVA = 2
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -641,6 +649,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qmon":
       set CORE   = 0
@@ -651,6 +660,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
@@ -661,6 +671,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-wingrid":
       set CORE   = 0
@@ -671,6 +682,7 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 1
       set MAKEWINGRIDLIB = 1
+      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-remote":
       set CORE   = 0
@@ -681,6 +693,10 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
+      breaksw
+   case "-only-64"
+      set SOLARIS_ONLY_64 = 1
       breaksw
    case "-parallel":
       set argv     = ($argv[2-])
@@ -2516,6 +2532,17 @@ if ( "$ADOC" == 1) then
 
    echo "Creating documentation for libs: libdrmaa.texi"
 endif
-
 echo done.
+
+# On SOLARIS64, if there was no special target (i.e. $argv = "") 
+# and no "-only-*" parameter specified, the shared libraries for
+# SOLARIS are also built.
+if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
+      echo ""
+      echo "Executing aimk again to build 32 bit shared libraries."
+      ./aimk -32 -only-core libdrmaa.so libdrmaa95.so libjgdi.so
+      exit $status
+   endif
+endif
+
 exit 0

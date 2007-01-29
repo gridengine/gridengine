@@ -79,12 +79,14 @@ UTILIB_ADD_OBJS = peopen_standalone.o pids_standalone.o
 UTILIB_TEST_OBJS = \
          test_sge_profiling.o \
          test_sge_bitfield.o \
-         test_sge_dstring.o
+         test_sge_dstring.o \
+         test_threads.o
 
 UTILIB_TEST_PROGS = \
          test_sge_profiling \
          test_sge_bitfield \
-         test_sge_dstring
+         test_sge_dstring \
+         test_threads
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -247,3 +249,9 @@ test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
 
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c
+
+test_threads: test_threads.o
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_threads $(LFLAGS) test_threads.o $(LIBS)
+
+test_threads.o: $(UTILIB_DIR)/test_threads.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_threads.c

@@ -1,3 +1,8 @@
+JG-2007-01-29-1: Enhancem.: Added module test to verify if build options contain
+                            the necessary options and defines for multi 
+                            threading.
+                 Review:    RD
+
 JG-2007-01-29-0: Bugfix:    Fixed memory access errors.
                  Review:    RD
 
@@ -8,7 +13,8 @@ AA-2007-01-26-0: Enhancem:  o build support for aimk -32/-64 for jgdi
 JG-2007-01-26-0: Bugfix:    Fixed a typo in complex.5 manpage.
                  Issue:     1946
 
-EB-2007-01-25-0: Bugfix:    qhost -l <consumable> selected unsufficient numer of hosts
+EB-2007-01-25-0: Bugfix:    qhost -l <consumable> selected unsufficient number 
+                            of hosts
                  Review:    JG 
 
 JG-2007-01-25-0: Bugfix:    qhost didn't output error message in certain error 

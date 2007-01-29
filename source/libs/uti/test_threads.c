@@ -30,13 +30,75 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef __SGE_VARARGS_H__
-#define __SGE_VARARGS_H__
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <pthread.h>
 
-#include <stdarg.h>
+void *t1_errno(void *args)
+{
+   int i;
+   int *ret = (int *)args;
+   
+   *ret = 0;
 
-#ifndef va_copy
-   #define va_copy(dst, src) memcpy(&dst, &src, sizeof(va_list))
-#endif
+   errno = 5;
+   for (i = 0; i < 5; i++) {
+      if (errno != 5) {
+         fprintf(stderr, "t1: errno = %d\n", errno);
+         *ret = 1;
+         break;
+      }
+      sleep(1);
+   }
 
-#endif /* __SGE_VARARGS_H__ */
+   return NULL;
+}
+
+void *t2_errno(void *args)
+{
+   int i;
+   int *ret = (int *)args;
+   FILE *fd;
+
+   *ret = 0;
+
+   errno = 0;
+   fd = fopen("/tmp/blablablanotexisting", "r");
+   if (fd != NULL) {
+      fprintf(stderr, "file /tmp/blablablanotexisting does exist, please remove it!\n");
+      *ret = 1;
+   } else {
+      for (i = 0; i < 5; i++) {
+         if (errno != ENOENT) {
+            fprintf(stderr, "t2: errno = %d\n", errno);
+            *ret = 1;
+            break;
+         }
+         sleep(1);
+      }
+   }
+
+   return NULL;
+}
+
+
+int main(int argc, const char *argv[])
+{
+   pthread_t t1, t2;
+   int ret1, ret2;
+
+   printf("testing access to errno from two threads\n");
+
+   pthread_create(&t1, NULL, t1_errno, (void*)&ret1);
+   pthread_create(&t2, NULL, t2_errno, (void*)&ret2);
+
+   pthread_join(t1, NULL);
+   pthread_join(t2, NULL);
+
+   if (ret1 != 0 || ret2 != 0) {
+      return 1;
+   }
+
+   return 0;
+}

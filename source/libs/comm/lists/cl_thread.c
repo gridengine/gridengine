@@ -368,6 +368,19 @@ int cl_thread_trigger_thread_condition(cl_thread_condition_t* condition, int do_
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_thread_cleanup_global_thread_config_key()"
+void cl_thread_cleanup_global_thread_config_key()
+{
+   pthread_mutex_lock(&global_thread_config_key_mutex);
+   if (global_thread_config_key_done == 1) {
+      pthread_key_delete(global_thread_config_key);
+      global_thread_config_key_done = 0;
+   }
+   pthread_mutex_unlock(&global_thread_config_key_mutex);
+}
 
 
 /* if no start_routine is given (=NULL) the cl_thread_settings_t struct is

@@ -1,3 +1,9 @@
+AA-2007-01-29-0: Bugfix:    Fixed access to already freed memory in cl_get_com_handle()
+                            added cl_thread_cleanup_global_thread_config_key()
+                 Bugfix:    6518607
+                 Issue:     2178
+                 Review:    CR
+
 JG-2007-01-29-2: Bugfix:    Fixed access to already freed memory in sge_execd 
                             and sge_shadowd.
                  Review:    AA

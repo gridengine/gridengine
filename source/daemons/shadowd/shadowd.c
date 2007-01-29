@@ -163,14 +163,7 @@ main(int argc, char **argv)
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
-   const char* qmaster_spool_dir = NULL;
-   const char* bootstrap_file = NULL;
-   const char* admin_user = NULL;
-   const char* unqualified_hostname = NULL;
-   const char* qualified_hostname = NULL;
-   const char* shadow_master_file = NULL;
-   const char* act_qmaster_file = NULL;
-   const char* bootstrap_binary_path = NULL;
+   pid_t shadowd_pid;
 
 #if 1
 
@@ -234,63 +227,52 @@ char qmaster_out_file[SGE_PATH_MAX];
    ctx->set_exit_func(ctx, shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
 
-   qmaster_spool_dir = ctx->get_qmaster_spool_dir(ctx);
-   bootstrap_file = ctx->get_bootstrap_file(ctx);
-   admin_user = ctx->get_admin_user(ctx);
-   unqualified_hostname = ctx->get_unqualified_hostname(ctx);
-   qualified_hostname = ctx->get_qualified_hostname(ctx);
-   shadow_master_file = ctx->get_shadow_master_file(ctx);
-   act_qmaster_file = ctx->get_act_qmaster_file(ctx);
-   bootstrap_binary_path = ctx->get_binary_path(ctx);
+   if (ctx->get_qmaster_spool_dir(ctx) != NULL) {
+      char *shadowd_name = SGE_SHADOWD;
 
-   {
-      pid_t shadowd_pid;
+      /* is there a running shadowd on this host (with unqualified name) */
+      sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, ctx->get_qmaster_spool_dir(ctx), 
+              ctx->get_unqualified_hostname(ctx));
 
-      if (qmaster_spool_dir != NULL) {
-         char *shadowd_name = SGE_SHADOWD;
-
-         /* is there a running shadowd on this host (with unqualified name) */
-         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, qmaster_spool_dir, unqualified_hostname);
-
-         DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
-         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
-            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
-               CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT((void**)&ctx, 1);
-            }
+      DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
+      if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
+         DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
+         if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
+            CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
+            SGE_EXIT((void**)&ctx, 1);
          }
-
-         ctx->prepare_enroll(ctx);
-
-         /* is there a running shadowd on this host (with aliased name) */
-         sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, qmaster_spool_dir, qualified_hostname);
-         DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
-         if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
-            DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
-            if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
-               CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
-               SGE_EXIT((void**)&ctx, 1);
-            }
-         }  
-      } else {
-         ctx->prepare_enroll(ctx);
       }
+
+      ctx->prepare_enroll(ctx);
+
+      /* is there a running shadowd on this host (with aliased name) */
+      sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE, ctx->get_qmaster_spool_dir(ctx), 
+              ctx->get_qualified_hostname(ctx));
+      DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
+      if ((shadowd_pid = sge_readpid(shadowd_pidfile))) {
+         DPRINTF(("shadowd_pid: "sge_U32CFormat"\n", sge_u32c(shadowd_pid)));
+         if (!sge_checkprog(shadowd_pid, shadowd_name, PSCMD)) {
+            CRITICAL((SGE_EVENT, MSG_SHADOWD_FOUNDRUNNINGSHADOWDWITHPIDXNOTSTARTING_I, (int) shadowd_pid));
+            SGE_EXIT((void**)&ctx, 1);
+         }
+      }  
+   } else {
+      ctx->prepare_enroll(ctx);
    }
 
    parse_cmdline_shadowd(argc, argv);
 
-   if (qmaster_spool_dir == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, bootstrap_file));
+   if (ctx->get_qmaster_spool_dir(ctx) == NULL) {
+      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, ctx->get_bootstrap_file(ctx)));
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (chdir(qmaster_spool_dir)) {
-      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S, qmaster_spool_dir));
+   if (chdir(ctx->get_qmaster_spool_dir(ctx))) {
+      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTCHANGETOQMASTERSPOOLDIRX_S, ctx->get_qmaster_spool_dir(ctx)));
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (sge_set_admin_username(admin_user, err_str)) {
+   if (sge_set_admin_username(ctx->get_admin_user(ctx), err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -300,8 +282,8 @@ char qmaster_out_file[SGE_PATH_MAX];
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   sprintf(shadow_err_file, "messages_shadowd.%s", unqualified_hostname);
-   sprintf(qmaster_out_file, "messages_qmaster.%s", unqualified_hostname);
+   sprintf(shadow_err_file, "messages_shadowd.%s", ctx->get_unqualified_hostname(ctx));
+   sprintf(qmaster_out_file, "messages_qmaster.%s", ctx->get_unqualified_hostname(ctx));
    sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_MODE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
    log_state_set_log_as_admin_user(1);
@@ -355,8 +337,11 @@ char qmaster_out_file[SGE_PATH_MAX];
                /*
                 * check if we are a possible new qmaster host (lock file of qmaster active, etc.)
                 */
-               ret = check_if_valid_shadow(binpath, oldqmaster, act_qmaster_file, shadow_master_file, 
-                                           qualified_hostname, bootstrap_binary_path);
+               ret = check_if_valid_shadow(binpath, oldqmaster, 
+                                           ctx->get_act_qmaster_file(ctx), 
+                                           ctx->get_shadow_master_file(ctx), 
+                                           ctx->get_qualified_hostname(ctx), 
+                                           ctx->get_binary_path(ctx));
 
                if (ret == 0) {
                   /* we can start a qmaster on this host */
@@ -369,7 +354,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                      latest_heartbeat = get_qmaster_heartbeat( QMASTER_HEARTBEAT_FILE, 30);
                      /* TODO: what do we when there is a timeout ??? */
                      DPRINTF(("old qmaster name in act_qmaster and old heartbeat\n"));
-                     if (!compare_qmaster_names(act_qmaster_file, oldqmaster) &&
+                     if (!compare_qmaster_names(ctx->get_act_qmaster_file(ctx), oldqmaster) &&
                          !shadowd_is_old_master_enrolled(sge_test_heartbeat, sge_get_qmaster_port(), oldqmaster) && 
                          (latest_heartbeat == heartbeat)) {
                         char qmaster_name[256];

@@ -1,3 +1,7 @@
+JG-2007-01-29-2: Bugfix:    Fixed access to already freed memory in sge_execd 
+                            and sge_shadowd.
+                 Review:    AA
+
 JG-2007-01-29-1: Enhancem.: Added module test to verify if build options contain
                             the necessary options and defines for multi 
                             threading.

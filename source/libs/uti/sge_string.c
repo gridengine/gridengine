@@ -504,7 +504,7 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 ******************************************************************************/
 char *sge_strdup(char *old, const char *s) 
 {
-   const char *ret = NULL;
+   char *ret = NULL;
 
    /* 
     * target (old) and source (s) might point to the same object!

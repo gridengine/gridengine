@@ -165,15 +165,6 @@ switch($buildarch)
       set WIN32_VS_L1 = "${WIN32_VS_BASE}\Vc7\Lib"
       set WIN32_VS_L2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Lib"
       set WIN32_VS_L3 = "${WIN32_VS_BASE}\Vc7\atlmfc\lib"
-      breaksw
-   deafult:
-      set WIN32_VS_BASE = ""
-      set WIN32_VS_I1 = ""
-      set WIN32_VS_I2 = ""
-      set WIN32_VS_I3 = ""
-      set WIN32_VS_L1 = ""
-      set WIN32_VS_L2 = ""
-      set WIN32_VS_L3 = ""
+      set WINTEMPDIR  = "C:\\TEMP"
       breaksw
 endsw
-

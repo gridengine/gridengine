@@ -986,8 +986,10 @@ case DARWIN_X86:
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"
    set JAVA_ARCH = ""
-   set JAVA_BINDIR = "Commands"
-   set JAVA_INCL = "Versions/1.3.1/Headers"
+   if ( $BUILDARCH == "darwin" ) then
+      set JAVA_BINDIR = "Commands"
+      set JAVA_INCL = "Versions/1.3.1/Headers"
+   endif
    set JAVA_SHAREDEXT = ".jnilib"
    unset REL
    breaksw
@@ -1812,7 +1814,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    endif
    cd "${COMPILE_ARCH}"
 
-   set WINCC = cl.exe
+   set WINCC = "env TMP=$WINTEMPDIR cl.exe"
 
    if ( $DEBUGGED == 1 ) then
       set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"

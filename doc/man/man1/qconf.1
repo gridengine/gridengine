@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2006/12/15 12:24:18 $     Revision: $Revision: 1.27 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2007/01/30 08:00:39 $     Revision: $Revision: 1.28 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2006/12/15 12:24:18 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2007/01/30 08:00:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -94,7 +94,7 @@ to the list of supported checkpointing environments.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-Aconf file_list\fP	\fI<add configurations>\fP"
-Add the cluster configurations (see
+Add the configurations (see
 .M xxqs_name_sxx_conf 5 )
 specified in the files
 enlisted in the comma separated \fBfile_list\fP. The configuration
@@ -412,7 +412,7 @@ the editor, the checkpointing environment is registered with
 Requires root/manager privileges.
 .\"
 .IP "\fB\-aconf host,...\fP	\fI<add configuration>\fP"
-Successively adds cluster configurations (see
+Successively adds configurations (see
 .M xxqs_name_sxx_conf 5 )
 For the hosts in the
 comma separated \fIfile_list\fP.
@@ -645,8 +645,8 @@ root/manager privileges.
 Deletes the specified checkpointing environment. Requires root/manager 
 privileges.
 .\"
-.IP "\fB\-dconf host,...\fP	\fI<delete configuration>\fP"
-The configuration entry for the specified hosts is deleted
+.IP "\fB\-dconf host,...\fP	\fI<delete local configuration>\fP"
+The local configuration entries for the specified hosts are deleted
 from the configuration list.
 Requires root or manager privilege.
 .\"
@@ -814,9 +814,9 @@ and the changed configuration is registered with
 .M xxqs_name_sxx_qmaster 8
 upon exit of the editor.
 If the optional host argument is omitted or if the
-special host name "global" is specified, the cell
+special host name \fBglobal\fB is specified, the
 global configuration is modified.
-The  format of the host configuration is 
+The  format of the configuration is 
 described in 
 .M xxqs_name_sxx_conf 5 .
 .br
@@ -1022,21 +1022,20 @@ Show a list of the names of all checkpointing environments currently
 configured.
 .\"
 .IP "\fB\-sconf [host,...|global]\fP	\fI<show configuration>\fP"
-Print the cluster configuration being in effect globally or
-on specified host(s). If the optional comma separated host
+Print the global or local (host specific) configuration.
+If the optional comma separated host
 list argument is omitted or the special string \fBglobal\fP is
-given, the global cell configuration is displayed.
-For any other
-hostname in the list the merger of the global configuration
-and the host specific configuration is displayed.
-The  format of the host configuration is 
+given, the global configuration is displayed.
+The configuration in effect on a certain host is the merger of 
+the global configuration and the host specific local configuration.
+The  format of the configuration is 
 described in 
 .M xxqs_name_sxx_conf 5 .
 .\"
 .IP "\fB\-sconfl\fP	\fI<show configuration list>\fP"
 Display a list of hosts for which configurations are
-available. The special host name "global" refers to the
-cell global configuration.
+available. The special host name \fBglobal\fB refers to the
+global configuration.
 .\"
 .IP "\fB\-sds\fP	\fI<show detached settings>\fP"
 Displays detached settings in the cluster configuration.

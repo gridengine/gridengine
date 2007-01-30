@@ -1,3 +1,8 @@
+JG-2007-01-30-0: Bugfix:    Fixed qconf manpage (-aconf/dconf/mconf/sconf 
+                            switches)
+                 Issue:     2105
+                 Review:    AH
+
 HP-2007-01-29-1: Enhancem.: On SOLARIS64, if no target and no "-only-*"
                             parameter is specified, SOLARIS shared libraries
                             are also built now.

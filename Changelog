@@ -1,3 +1,8 @@
+JG-2007-01-30-0: Bugfix:    Fixed qconf manpage (-aconf/dconf/mconf/sconf 
+                            switches)
+                 Issue:     2105
+                 Review:    AH
+
 AA-2007-01-29-0: Bugfix:    Fixed access to already freed memory in
                             cl_get_com_handle()
                             added cl_thread_cleanup_global_thread_config_key()

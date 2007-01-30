@@ -32,6 +32,9 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
+
+SHELL = /bin/sh
+
 SGEOBJLIB_DIR = $(SDIR)/libs/sgeobj
 
 SGEOBJLIB = libsgeobj$(LIBEXT)
@@ -91,7 +94,7 @@ SGEOBJLIB_SRC = \
          sge_userset.c \
          sge_utility.c \
          str2nm_converter.c \
-         sge_var.c\
+         sge_var.c \
          sge_eval_expression.c
 
 SGEOBJDLIB_OBJS = $(SGEOBJDLIB_SRC:.c=.o)
@@ -103,8 +106,8 @@ SGEOBJLIB_TEST_PROGS = \
               test_sge_range \
               test_sge_schedd_conf \
               test_sge_utility \
-              test_sge_resource_quota\
-              test_eval_expression\
+              test_sge_resource_quota \
+              test_eval_expression
 
 SGEOBJLIB_TEST_PROGS_OBJS = \
               test_sge_object.o \
@@ -254,7 +257,6 @@ sge_qinstance_type.o: $(SGEOBJLIB_DIR)/sge_qinstance_type.c
 sge_order.o: $(SGEOBJLIB_DIR)/sge_order.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_order.c
 
-      
 sge_qref.o: $(SGEOBJLIB_DIR)/sge_qref.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qref.c
 

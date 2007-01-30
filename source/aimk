@@ -1241,6 +1241,8 @@ case LINUXSPARC64:
    set MAKEWINGRIDAPP   = 0
    set AUTHLIBS = "-lcrypt -lpam"
 
+   set CFLAGS = "-D_REENTRANT $CFLAGS"
+
    if ( $BUILDARCH == LINUXSPARC ) then
       set COMPILE_DC = 0
    else
@@ -1353,7 +1355,7 @@ case LINUXSPARC64:
    
 case WIN32_X86:
    set CC = gcc
-   set WINCC = cl.exe
+   set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
    set MAKE = gmake
 

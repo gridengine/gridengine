@@ -1241,7 +1241,7 @@ case LINUXSPARC64:
    set MAKEWINGRIDAPP   = 0
    set AUTHLIBS = "-lcrypt -lpam"
 
-   set CFLAGS = "-D_REENTRANT $CFLAGS"
+   set CFLAGS = "$CFLAGS"
 
    if ( $BUILDARCH == LINUXSPARC ) then
       set COMPILE_DC = 0

@@ -1,16 +1,20 @@
-= Evaluation Expression Support =
+= Evaluation Expression Support in Grid Engine 6.1 =
+
+== Copyright statement ==
+
+'''Note:''' This document is under Grid Engine project [http://gridengine.sunsource.net/license.html SISSL license].
 
 * Date 2007/01/22
 
 == Introduction ==
 
-N1GE 6.0 supports a RESTRING in a complex configuration allowing to specify an OR delimited "|" list of patterns for limiting the jobs.
+Grid Engine 6.0 already supports a RESTRING in a complex configuration allowing to specify an OR delimited "|" list of patterns for limiting the jobs.
 
-A support for more flexible RESTRING expressions (see complex(5)) is possible. A more flexible syntax for pattern matching will be introduced in future releases.
+This document describes enhanced and more flexible RESTRING expressions (see complex(5)) for Grid Engine 6.1. As a matter of course even more flexible syntax for pattern matching is perceivable.
 
 === Project Overview ===
 
-SGE 6.0 introduced a new complex type RESTRING that allows logical OR connected regular expressions for string resources. SGE 6.1 will introduce a more flexible syntax for pattern matching. Specifically, the NOT operator ("don't schedule my job to a 'linux' host")
+Grid Engine 6.0 introduced a new complex type RESTRING that allows logical OR connected regular expressions for string resources. Grid Engine 6.1 will introduce a more flexible syntax for pattern matching. Specifically, the NOT operator ("don't schedule my job to a 'linux' host")
 
 Examples:
 
@@ -57,7 +61,8 @@ All the complex string attributes (CSTRING, STRING, RESTRING, HOST) will support
 
 === RESTRING ===
 
-RESTRING becomes obsolete. RESTRING can be kept for interface compatibility but STRING and RESTIRNG will use the same matching code. This behavior would be documented. The RESTRING would become deprecated [complex(5)] interface and would disappear with the next major (7.0) release.
+RESTRING becomes obsolete. RESTRING can be kept for interface compatibility, but STRING and RESTIRNG will use the same matching code. This behavior needs to be documented. The RESTRING becomes deprecated [complex(5)] interface and 
+shall disappear with the next major (7.0) release.
 
 === Hostname Expression Support ===
 
@@ -76,7 +81,7 @@ Allowed characters could be a broad range a-z,A-Z,0-9,_,-,#,=,<,>,.,,(comma)
 All characters could be allowed at all positions of the attributes or hostnames. Only valid hostnames will be accepted.
 
 == Project Benefit ==
-The adherence to accepted industry standards of the syntax for wildcard expression matching definitions will provide a wider acceptance among the customer base.
+The adherence to accepted industry standards of the syntax for wildcard expression matching definitions will provide a wider acceptance amongst Grid Engine users.
 
 = System Enhancement =
 

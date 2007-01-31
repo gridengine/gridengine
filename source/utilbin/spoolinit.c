@@ -107,15 +107,12 @@ int main(int argc, char *argv[])
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "spoolinit");
 
-   sge_prof_setup();
-
+   log_state_set_log_gui(1);
+   log_state_set_log_level(LOG_WARNING);
    sge_mt_init();
-
    lInit(nmv);
-
-   sge_getme(SPOOLDEFAULTS);
 
    if (argc < 2) {
       usage(argv[0]);

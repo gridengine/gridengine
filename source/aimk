@@ -908,10 +908,6 @@ case AIX51:
    breaksw
 
 case ALPHA5:
-   if ( $CORE == 1 ) then
-      set MAKESNPRINTF = 1
-   endif
-
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1

@@ -1524,10 +1524,8 @@ for i in $ARCH; do
 
                   if [ -f $libname ]; then
                      InstallProg $libname
-                  elif [ -f $libname2 ]; then   
-                     InstallProg $libname2
                   else
-                     echo "Neither \"$libname\" nor \"$libname2\" found. Assuming binaries are statically linked against Berkeley DB."
+                     echo "\"$libname\" not found. Assuming binaries are statically linked."
                   fi
                done
             fi

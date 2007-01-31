@@ -1,3 +1,8 @@
+JG-2007-01-31-0: Bugfix:    Fixed initialization of spoolinit.
+                            Fixed distinst with static linking of bdb.
+                            Fixed broken build on tru64.
+                 Review:    AA
+
 LP-2007-01-31-1: Bugfix:    Project man page contains different attribute names.
                  Issue:     2181
                  Bugtraq:   6518689

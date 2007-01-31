@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: project.5,v $     Last Update: $Date: 2007/01/05 20:31:01 $     Revision: $Revision: 1.4.16.1 $
+.\" $RCSfile: project.5,v $     Last Update: $Date: 2007/01/31 11:00:56 $     Revision: $Revision: 1.4.16.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH PROJECT 5 "$Date: 2007/01/05 20:31:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH PROJECT 5 "$Date: 2007/01/31 11:00:56 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 project \- xxQS_NAMExx project entry file format
@@ -58,11 +58,11 @@ The project name.
 The amount of override tickets currently assigned to the project.
 .IP "\fBfshare\fP"
 The current functional share of the project.
-.IP "\fBfacl\fP"
+.IP "\fBacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
 referring to those users being allowed to submit jobs to the project.
-.IP "\fBfxacl\fP"
+.IP "\fBxacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
 referring to those users being not allowed to submit jobs to the project.

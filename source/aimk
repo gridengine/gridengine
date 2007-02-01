@@ -1164,12 +1164,12 @@ case HP1164:
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
+   set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
+
    if ($BUILDARCH == HP11) then
-      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
       set AUTHLIBS = "-lsec -lpam"
    else
-      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR_M"
       set MEMFLAG = +DD64
       set COMPILE_DC = 1
       set AUTHLIBS = "-lsec"

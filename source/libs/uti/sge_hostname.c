@@ -758,8 +758,13 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 #ifdef GETHOSTBYADDR
 #define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX >= 11 */
-   DPRINTF (("Getting host by addr - Thread safe\n"));
+   DPRINTF(("Getting host by addr - Thread safe\n"));
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
+   /*
+    * JG: TODO: shouldn't it be 
+    * he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
+    */
+
    /* The location of the error code is actually undefined.  I'm just
     * assuming that it's in h_errno since that's where it is in the unsafe
     * version.
@@ -784,7 +789,8 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 
 #if defined(CRAY)
    he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
-#else   
+#else
+   /* JG: TODO: shouldn't it always be sizeof(struct in_addr)? */
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
 

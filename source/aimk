@@ -1726,6 +1726,9 @@ if ( $JNI == 1 ) then
          case tru64:
              set JAVA_LIB_ARCH = "" 
              breaksw
+         case aix51:
+             set JAVA_LIB_ARCH = "" 
+             breaksw
          default:
              set JAVA_LIB_ARCH = ""
              echo "WARNING: no JAVA_LIB_ARCH for architecture $buildarch"
@@ -1909,7 +1912,7 @@ if ( "$BUILDJAVADOC" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else    
+   else
       echo done
       exit 0
    endif
@@ -2541,7 +2544,7 @@ echo done.
 if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
       echo ""
       echo "Executing aimk again to build 32 bit shared libraries."
-      ./aimk -32 -only-core libdrmaa.so libdrmaa95.so libjgdi.so
+      ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
       exit $status
    endif
 endif

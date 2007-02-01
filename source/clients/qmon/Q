@@ -55,8 +55,8 @@ Qmon*MainControl.MainRowCol.numColumns:  2
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! show the Host tab in Queue Configuration
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*showHostTab:  FALSE
-Qmon*automaticUpdateHostTab: FALSE
+Qmon*showHostTab:  TRUE
+Qmon*automaticUpdateHostTab: TRUE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! job configuration settings

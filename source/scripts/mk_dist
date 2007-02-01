@@ -118,6 +118,7 @@ CreateRpm() # Arguments: package arch files
 # MAIN section
 #
 
+makearco=false
 makebin=false
 makecommon=false
 makedoc=false
@@ -242,7 +243,7 @@ done
 
 DOC_PACKAGE=""
 COMMON_DOCS="doc/README* doc/*.asc doc/javadocs"
-COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs \
+COMMON_PACKAGE="3rd_party catman ckpt examples/jobs \
                 examples/drmaa include inst_sge install_qmaster \
                 install_execd man mpi pvm qmon util lib/drmaa.jar \
                 lib/juti.jar lib/jgdi.jar lib/drmaa-0.5.jar"
@@ -266,12 +267,12 @@ if [ $makecommon = true ]; then
    fi
 
    if [ $makerpm = true ]; then
-      CreateRpm common noarch $COMMON_PACKAGE
+      CreateRpm common noarch $COMMON_PACKAGE $COMMON_DOCS
    else
      cd $VDIR
      filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
-     echo Command: $TAR cvzf $filename $COMMON_PACKAGE
-                  $TAR cvzf $filename $COMMON_PACKAGE
+     echo Command: $TAR cvzf $filename $COMMON_PACKAGE $COMMON_DOCS
+                  $TAR cvzf $filename $COMMON_PACKAGE $COMMON_DOCS
      cd ..
    fi
 fi
@@ -342,7 +343,11 @@ if [ $makebin = true ]; then
       cd $VDIR
       echo creating tar.gz files for $SELECTED_ARCHS
       for i in $SELECTED_ARCHS; do
-         ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i"
+         if [ $i = "sol-sparc64" ]; then
+            ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i lib/sol-sparc"
+         else
+            ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i"
+         fi
          filename=$BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz         
          echo Command: $TAR cvzf $filename $ADIR
                        $TAR cvzf $filename $ADIR

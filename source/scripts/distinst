@@ -1392,7 +1392,10 @@ for i in $ARCH; do
                if [ "$DSTARCH" = "win32-x86" ]; then
                   InstallProg $prog
                fi
-            elif [ "$DSTARCH" != "win32-x86" -o "$prog" != "spooledit" ]; then
+            elif [ "$DSTARCH" = "win32-x86" -a \( "$prog" = "spooledit" -o "$prog" = "sgepasswd" \) ]; then
+               # Don't install sgepasswd and spooledit for win23-x86
+               :
+            else
                InstallProg $prog
             fi
          done
@@ -1452,6 +1455,19 @@ for i in $ARCH; do
                     -a "$lib" != "libspoolf" \) ]; then
                if [ -f $lib.$shlibext ]; then
                   InstallProg $lib.$shlibext
+                  if [ "$DSTARCH" = "sol-sparc64" ]; then
+                     if [ "$lib" = "libjuti" -o "$lib" = "libjgdi" ]; then
+                        # Install the 32bit libraries
+                        DSTARCH="sol-sparc"
+                        SetArchBin $DSTARCH
+
+                        Execute mkdir -p $DEST_SGE_ROOT/lib/sol-sparc
+                        InstallProg ../$ARCHBIN/$lib.$shlibext
+
+                        DSTARCH="sol-sparc64"
+                        SetArchBin $DSTARCH
+                     fi
+                  fi
                fi
             fi
          done
@@ -1535,6 +1551,17 @@ for i in $ARCH; do
                   libname=$lib.$shlibext.$version
                   if [ -f $libname ]; then
                      InstallProg $libname
+                     if [ "$DSTARCH" = "sol-sparc64" ]; then
+                        # Install the 32bit libraries
+                        DSTARCH="sol-sparc"
+                        SetArchBin $DSTARCH
+
+                        Execute mkdir -p $DEST_SGE_ROOT/lib/sol-sparc
+                        InstallProg ../$ARCHBIN/$libname
+
+                        DSTARCH="sol-sparc64"
+                        SetArchBin $DSTARCH
+                     fi
                   elif [ $exit_on_error = true ]; then
                      echo "\"$libname\" not found. Installation failed."
                      exit 1
@@ -1544,6 +1571,11 @@ for i in $ARCH; do
 
             ( cd $DEST_SGE_ROOT/lib/$DSTARCH
             ln -s $libname $lib.$shlibext )
+
+            if [ "$DSTARCH" = "sol-sparc64" ]; then
+               ( cd $DEST_SGE_ROOT/lib/sol-sparc
+               ln -s $libname $lib.$shlibext )
+            fi
 
             for lib in $JNI_SHARED_LIBRARIES; do
                # On MacOS X, the JVM expects a special JNI extension for shared libraries

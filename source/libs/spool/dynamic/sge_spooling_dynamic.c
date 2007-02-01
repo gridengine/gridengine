@@ -96,12 +96,28 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
                                         "so"
 #endif
                                        );
+
+#if defined(HP1164)   
+   /*
+   ** need to switch to start user for HP
+   */
+   sge_switch2start_user();
+#endif   
+
    /* open the shared lib */
    shlib_handle = dlopen(shlib_fullname, RTLD_NOW 
 #if defined(DARWIN)
                          | RTLD_GLOBAL
 #endif
                         );
+                        
+#if defined(HP1164)   
+   /*
+   ** need to switch to start user for HP
+   */
+   sge_switch2admin_user();
+#endif
+
    if (shlib_handle == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 

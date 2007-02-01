@@ -1909,6 +1909,9 @@ if ( "$BUILDJAVADOC" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
+   else    
+      echo done
+      exit 0
    endif
 
 endif

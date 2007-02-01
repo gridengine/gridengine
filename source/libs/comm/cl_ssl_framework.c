@@ -1054,7 +1054,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif /* RTLD_NODELETE */
 
-#elif defined(HP11)
+#elif defined(HP11) || defined(HP1164)
 #ifdef RTLD_NODELETE
       cl_com_ssl_crypto_handle = dlopen ("libssl.sl", RTLD_LAZY | RTLD_NODELETE);
 #else

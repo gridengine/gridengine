@@ -1,0 +1,15 @@
+Bugs fixed in SGE 6.1_preview2 since release 6.1_preview1
+---------------------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        5093930   ARCo should work with MySQL 
+-        5101053   Regular expressions should also be mentioned in qsub in addition to complex 
+-        5101735   Needs more boolean operators support for resource requests 
+56       6205203   Logical OR operator works only with complex attributes of type RESTRING 
+2135     6506115   Invalid qconf -mattr crashes qmaster 
+2150     6507572   qconf -Arqs added invalid RQS 
+2146     6510635   Default requests for complexes not honored by resource quotas 
+2161     6513944   qmaster core dump with usersets referenced in RQS 
+2162     6513967   unix groups are not considered by RQS 
+2166     6515122   add -wd working_dir in addition to -cwd option for submission 

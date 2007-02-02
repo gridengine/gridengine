@@ -1,3 +1,5 @@
+RD-2007-02-02-0: Bugfix:    removed hp11-64 from arch and arch.dist
+
 RD-2007-02-01-0: Bugfix:    - added 32bit libs to sol-sparc64 in distint & mk_dist
                             - added resource_quotas classic spooling to backup
                             - enabled HostTab in qmon

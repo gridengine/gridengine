@@ -1,3 +1,8 @@
+PJ-2007-02-02-0: Bugfix:    Broken output of job name with 'qsub -N'.
+                 Issue:     2061
+                 Bugtraq:   6494390
+                 Review:    RD
+
 RD-2007-02-02-1: CVS        Created V61preview2_TAG
 ---------------------------------------------------
 

@@ -1541,7 +1541,7 @@ error:
 
 /* ------------------- Job Handler ------------------------------------------ */
 
-int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
+static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp) {
    
    lListElem *nxt, *jep, *jatep, *nxt_jatep;
    lList* ja_task_list = NULL;

@@ -1178,7 +1178,7 @@ static int job_stdout_requested_pe(job_handler_t *handler, const char* pe_name, 
    
 }
 
-int job_stdout_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) 
+static int job_stdout_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) 
 {
    const char* name = "Granted PE";
    int len = MAX(1,17 - strlen(name));   

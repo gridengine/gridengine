@@ -825,7 +825,7 @@ static void set_shadow_masters_file(sge_path_state_class_t *thiz, const char *sh
    es->shadow_masters_file = sge_strdup(es->shadow_masters_file, shadow_masters_file);
 }
 
-void set_sched_conf_file(sge_path_state_class_t *thiz, const char* sched_conf_file) {
+static void set_sched_conf_file(sge_path_state_class_t *thiz, const char* sched_conf_file) {
    sge_path_state_t *es = (sge_path_state_t *) thiz->sge_path_state_handle;
    es->sched_conf_file = sge_strdup(es->sched_conf_file, sched_conf_file);
 }

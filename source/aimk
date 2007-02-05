@@ -1188,7 +1188,16 @@ case HP1164:
          endif
       endif
       set CXX = "aCC"
-      set CFLAGS = "-Ae $MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
+      # Extended ANSI mode. Same as -Aa -D_HPUX_SOURCE +e.
+      set CFLAGS = "-Ae $CFLAGS"
+
+      # Enable all warnings
+      #set CFLAGS = "+w1 $CFLAGS"
+
+      # unix 98 mode (??)
+      set CFLAGS = "-D_XOPEN_SOURCE_EXTENDED $CFLAGS"
+
+      set CFLAGS = "$MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1220,6 +1229,15 @@ case HP1164:
 
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
+
+   # interesting compiler options
+   # +ESlit or +ESconstlit (place consts / string literals in read only memory
+   # we could use higher optimization +O3 or +O4
+   # -z
+   # +w1 (All warnings)
+   # +W arg1,arg2,.. suppress individual warnings
+   # -D_XOPEN_UNIX
+   # -D_XOPEN_SOURCE_EXTENDED
 
    # http://docs.hp.com/en/B2355-90968/linkertasks.htm#BAJEBEEC
    # set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch

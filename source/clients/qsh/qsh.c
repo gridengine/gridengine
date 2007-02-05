@@ -43,7 +43,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
-#if defined(INTERIX)
+#if defined(INTERIX) || defined(HPUX)
 #include <arpa/inet.h>
 #endif
 
@@ -294,7 +294,7 @@ static int open_qrsh_socket(int *port) {
    
    /* find out assigned port number and pass it to caller */
    length = sizeof server;
-   if (getsockname(sock,(struct sockaddr *) &server,&length) == -1) {
+   if (getsockname(sock, (struct sockaddr *)&server, &length) == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERRORGETTINGSOCKETNAME_S, strerror(errno)));
       sge_prof_cleanup();
       DEXIT;

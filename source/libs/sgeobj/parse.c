@@ -485,9 +485,10 @@ parse_group_options(lList *string_list, lList **answer_list)
 
    for_each(str_elem, string_list) {
       const char *letter_string = lGetString(str_elem, ST_name);
-      int i;
+      size_t i, len;
+      len = strlen(letter_string);
 
-      for (i = 0; i < strlen(letter_string); i++) {
+      for (i = 0; i < len; i++) {
          char letter = letter_string[i];
 
          if (letter == 'd') {

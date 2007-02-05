@@ -1109,7 +1109,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
    return ret;
 }
 
-bool
+static bool
 spool_berkeleydb_option_func(lList **answer_list, lListElem *rule, 
                              const char *option) 
 {

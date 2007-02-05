@@ -1631,7 +1631,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-int 
+static int 
 gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomproc, int toid, 
                  const char *tohost, int tag, char *buffer, 
                  int buflen, u_long32 *mid) 

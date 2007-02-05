@@ -11,16 +11,16 @@ SYNTAX
 
 DESCRIPTION
      <I>Qdel</I> provides a means for a user/operator/manager to  delete
-     one  or more jobs. A manager/operator can delete jobs of any
-     user while a user can only delete his own jobs. In case that
-     a  manager wants to delete another users job, he can specify
-     the job id. If the manager is using a job name  or  pattern,
-     he  has also to specify the user name via "-u wc_user_list".
-     A "qdel wc_job_name" deletes per default only  the  jobs  of
-     the  calling  user.  <I>Qdel</I> deletes jobs in the order in which
-     their job identifiers are presented. Find additional  infor-
-     mation    concerning   <I>wc</I>_<I>user</I>_<I>list</I>   and   <I>wc</I>_<I>job</I>_<I>list</I>   in
-     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     one or more jobs. A manager/operator can delete jobs belong-
+     ing to any user, while a regular user can only delete his or
+     her  own  jobs.  If a manager wants to delete another user's
+     job, the manager can specify the job id. If the  manager  is
+     using a job name or pattern, he or she must also specify the
+     user's name via "-u wc_user_list". A "qdel wc_job_name" will
+     delete  only  the jobs of the calling user by default.  <I>Qdel</I>
+     deletes jobs in the order in which their job identifiers are
+     presented.    Find    additional    information   concerning
+     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 OPTIONS
      -f   Force action for running jobs. The job(s)  are  deleted

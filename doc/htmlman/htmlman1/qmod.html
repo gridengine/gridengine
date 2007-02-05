@@ -48,8 +48,15 @@ OPTIONS
      -r   If applied to queues, reschedules  all  jobs  currently
           running  in  this  queue.   If applied to running jobs,
           reschedules  the  jobs.  Requires   root   or   manager
-          privileges.  Do not use this switch anymore, use -rj /-
-          rq instead.
+          privileges.  Do  not  use this switch anymore.  Use -rj
+          /-rq instead.  In order for a job to be rescheduled, it
+          or  the  queue  in  which it is executing must have the
+          rerun flag activated.  (See -r option  in  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          man  page and the <I>rerun</I> option in the <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> man
+          page for more  information.)   Additional  restrictions
+          apply  for  parallel  and checkpointing jobs.  (See the
+          <I>reschedule</I>_<I>unknown</I> description in the  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  man
+          page for details).
 
      -rj  If applied  to  running  jobs,  reschedules  the  jobs.
           Requires root or manager privileges.
@@ -60,8 +67,8 @@ OPTIONS
 
      -s   If applied to queues, suspends the queues and any  jobs
           which  might  be  active.  If  applied to running jobs,
-          suspends the jobs. Do not use this switch anymore,  use
-          -sj / -sq instead.
+          suspends the jobs. Use of this  switch  is  now  depre-
+          cated. -sj / -sq should be used instead.
 
      -sj  If applied to running jobs, suspends the jobs. If a job
           is  both suspended explicitly and via suspension of its
@@ -99,7 +106,6 @@ ENVIRONMENTAL VARIABLES
                          The  name  of  the  default  cell,  i.e.
                          default.
 
-
      SGE_DEBUG_LEVEL
                     If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
@@ -124,12 +130,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
 
 
 

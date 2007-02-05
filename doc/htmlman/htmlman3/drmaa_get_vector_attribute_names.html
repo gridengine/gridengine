@@ -4,8 +4,8 @@
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
      drmaa_get_attribute_names, drmaa_get_vector_attribute_names,
-     drmaa_get_next_attr_name,  drmaa_release_attr_names  - DRMAA
-     job template attributes
+     drmaa_get_next_attr_name,          drmaa_get_num_attr_names,
+     drmaa_release_attr_names - DRMAA job template attributes
 
 SYNOPSIS
      #include "drmaa.h"
@@ -28,6 +28,17 @@ SYNOPSIS
           int value_len
      );
 
+     int drmaa_get_next_attr_value(
+          drmaa_attr_values_t* values,
+          char *value,
+          int value_len
+     );
+
+     int drmaa_get_num_attr_names(
+          drmaa_attr_names_t* values,
+          int *size
+     );
+
      void drmaa_release_attr_names(
           drmaa_attr_names_t* values
      );
@@ -39,11 +50,13 @@ DESCRIPTION
      includes  supported  DRMAA reserved attribute names and Grid
      Engine native attribute names. The names in the names string
      vector  can  be extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html">drmaa_get_next_attr_name(3)</A></B>.
-     The caller is responsible for  releasing  the  names  string
-     vector        returned        into        <I>values</I>       using
-     <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.  Use <B><A HREF="../htmlman3/drmaa_set_attribute.html">drmaa_set_attribute(3)</A></B> and
-     <B><A HREF="../htmlman3/drmaa_get_attribute.html">drmaa_get_attribute(3)</A></B> for setting and inspecting non-vector
-     attributes.
+     The number of names in the names string vector can be deter-
+     mined  using  <B><A HREF="../htmlman3/drmaa_get_num_attr_names.html">drmaa_get_num_attr_names(3)</A></B>.   Note  that this
+     function is only available in the 1.0  implementation.   The
+     caller  is responsible for releasing the names string vector
+     returned into <I>values</I> using <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.  Use
+     <B><A HREF="../htmlman3/drmaa_set_attribute.html">drmaa_set_attribute(3)</A></B>  and  <B><A HREF="../htmlman3/drmaa_get_attribute.html">drmaa_get_attribute(3)</A></B> for set-
+     ting and inspecting non-vector attributes.
 
   drmaa_get_vector_attribute_names()
      The drmaa_get_vector_attribute_names() function returns into
@@ -62,7 +75,19 @@ DESCRIPTION
   drmaa_get_next_attr_name()
      Each time drmaa_get_next_attr_name() is  called  it  returns
      into  the  buffer,  <I>value</I>, up to <I>value</I>_<I>len</I> bytes of the next
-     entry stored in the DRMAA names string vector, <I>values</I>.
+     entry stored in the DRMAA names string vector, <I>values</I>.  With
+     the  DRMAA  1.0  library,  once  the  names  list  has  been
+     exhausted, DRMAA_ERRNO_NO_MORE_ELEMENTS is  returned.   With
+     the  DRMAA  0.95  library,  once  the  names  list  has been
+     exhausted, DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is  returned.
+     In  order to use the DRMAA 0.95 library, you must define the
+     DRMAA_95 macro,  either  in  your  application  directly  or
+     through a compiler flag, such as -DDRMAA_95.
+
+  drmaa_get_num_attr_names()
+     The drmaa_get_num_attr_names() returns into <I>size</I> the  number
+     of  entries in the DRMAA names string vector.  This function
+     is only available in the 1.0 implementation.
 
   drmaa_release_attr_names()
      The   drmaa_release_attr_names()   function   releases   all
@@ -105,8 +130,8 @@ DESCRIPTION
      attribute below for more information.
 
      If the  drmaa_native_specification  attribute  is  set,  all
-     options  contained  therein  will  be  applied  to  the  job
-     template.  See the drmaa_native_specification below for more
+     options  contained  therein  will be applied to the job tem-
+     plate.  See the drmaa_native_specification  below  for  more
      information.
 
      Other DRMAA attributes will override any previous  settings.
@@ -114,6 +139,14 @@ DESCRIPTION
      the drmaa_join_files attribute is set to "n",  the  ultimate
      result  is  that  the  input  and  output  files will remain
      separate.
+
+     For various reasons, some options are  silently  ignored  by
+     DRMAA.   Setting  any  of these options will have no effect.
+     The ignored options are: -cwd, -help, -t, -verify, -w w, and
+     -w  v.   The  -cwd  option  can  be reenabled by setting the
+     environment  variable,  SGE_DRMAA_ALLOW_CWD.   However,  the
+     -cwd  option  is not thread safe and should not be used in a
+     multi-threaded context.
 
   Attribute Correlations
      The following DRMAA attributes correspond to  the  following
@@ -210,6 +243,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      started with an empty input stream. If the standard input is
      set  it specifies the network path of the job's input stream
      file.
+
      When the 'drmaa_transfer_files' job  template  attribute  is
      supported  and  contains  the  character 'i', the input file
      will be fetched by Grid Engine from the  specified  host  or
@@ -279,8 +313,8 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      to  the  submit  host  if no <I>hostname</I> is specified. When the
      'drmaa_transfer_files' job template attribute  is  not  sup-
      ported or does not contain the character 'e', the error file
-     is always kept at the host where the job is executed regard-
-     less of any <I>hostname</I> specified.
+     is always kept  at  the  host  where  the  job  is  executed
+     regardless of any <I>hostname</I> specified.
 
      If the DRMAA job template will be used for of bulk job  sub-
      mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
@@ -418,6 +452,7 @@ ENVIRONMENTAL VARIABLES
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
                          set.
+
                          The  name  of  the  default  cell,  i.e.
                          default.
 
@@ -434,6 +469,7 @@ ENVIRONMENTAL VARIABLES
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
+
 
 RETURN VALUES
      Upon  successful  completion,   drmaa_get_attribute_names(),
@@ -475,41 +511,6 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>and <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

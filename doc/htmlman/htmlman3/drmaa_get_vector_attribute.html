@@ -6,8 +6,9 @@ NAME
      drmaa_allocate_job_template,      drmaa_delete_job_template,
      drmaa_set_attribute,                    drmaa_get_attribute,
      drmaa_set_vector_attribute,      drmaa_get_vector_attribute,
-     drmaa_get_next_attr_value,  drmaa_release_attr_values - Grid
-     Engine DRMAA job template handling
+     drmaa_get_next_attr_value,        drmaa_get_num_attr_values,
+     drmaa_release_attr_values - Grid Engine DRMAA  job  template
+     handling
 
 SYNOPSIS
      #include "drmaa.h"
@@ -63,6 +64,11 @@ SYNOPSIS
           int value_len
      );
 
+     int drmaa_get_num_attr_values(
+          drmaa_attr_values_t* values,
+          int *size
+     );
+
      void drmaa_release_attr_values(
           drmaa_attr_values_t* values
      );
@@ -80,8 +86,8 @@ DESCRIPTION
 
   drmaa_set_attribute()
      The drmaa_set_attribute() function stores  the  <I>value</I>  under
-     <I>name</I>  for  the  referred  DRMAA job template, <I>jt</I> . Only non-
-     vector attributes may be passed.
+     <I>name</I>  for the given DRMAA job template, <I>jt</I> . Only non-vector
+     attributes may be passed.
 
   drmaa_get_attribute()
      The drmaa_get_attribute() function returns into <I>value</I> up  to
@@ -91,8 +97,8 @@ DESCRIPTION
   drmaa_set_vector_attribute()
      The drmaa_set_vector_attribute() function stores the strings
      in <I>value</I> under <I>name</I> in the list of vector attributes for the
-     refered DRMAA job template, <I>jt</I> . Only vector attributes  may
-     be passed. The <I>value</I> pointer array must be <I>NULL</I> terminated.
+     given DRMAA job template, <I>jt</I> . Only vector attributes may be
+     passed. The <I>value</I> pointer array must be <I>NULL</I> terminated.
 
   drmaa_get_vector_attribute()
      The  drmaa_get_vector_attribute()  function   returns   into
@@ -106,7 +112,19 @@ DESCRIPTION
   drmaa_get_next_attr_value()
      Each time drmaa_get_next_attr_value() is called  it  returns
      into <I>value</I> up to <I>value</I>_<I>len</I> bytes of the next entry stored in
-     the DRMAA values string vector, <I>values</I>.
+     the DRMAA values string vector, <I>values</I>.  With the DRMAA  1.0
+     library,   once   the   values   list  has  been  exhausted,
+     DRMAA_ERRNO_NO_MORE_ELEMENTS is returned.   With  the  DRMAA
+     0.95  library,  once  the  values  list  has been exhausted,
+     DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE is returned.   In  order
+     to  use the DRMAA 0.95 library, you must define the DRMAA_95
+     macro, either in your application directly or through a com-
+     piler flag, such as -DDRMAA_95.
+
+  drmaa_get_num_attr_values()
+     The drmaa_get_num_attr_values() returns into <I>size</I> the number
+     of entries in the DRMAA values string vector.  This function
+     is only available in the 1.0 implementation.
 
   drmaa_release_attr_values()
      The  drmaa_release_attr_values()   function   releases   all
@@ -192,7 +210,6 @@ ERRORS
   DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES
      The value of this attribute is conflicting with a previously
      set attributes.
-
      The drmaa_get_attribute()  and  drmaa_get_vector_attribute()
      will fail if:
 
@@ -207,6 +224,41 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

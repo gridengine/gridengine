@@ -17,58 +17,60 @@ FORMAT
      colon  (':')  signs.  The  entries  denote in their order of
      appearance:
 
-     qname
-          Name of the cluster queue in which the job has run.
+  qname
+     Name of the cluster queue in which the job has run.
 
-     hostname
-          Name of the execution host.
+  hostname
+     Name of the execution host.
 
-     group
-          The effective group id of the job owner when  executing
-          the job.
+  group
+     The effective group id of the job owner when  executing  the
+     job.
 
-     owner
-          Owner of the Grid Engine job.
+  owner
+     Owner of the Grid Engine job.
 
-     job_name
-          Job name.
+  job_name
+     Job name.
 
-     job_number
-          Job identifier - job number.
+  job_number
+     Job identifier - job number.
 
-     account
-          An account  string  as  specified  by  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
-          <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> -A option.
+  account
+     An account string as specified by the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>
+     -A option.
 
      priority
           Priority value assigned to the job corresponding to the
           priority  parameter  in  the  queue  configuration (see
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
-     submission_time
-          Submission time in seconds (since epoch format).
+  submission_time
+     Submission time (GMT unix time stamp).  For slave  tasks  of
+     tightly  integrated  parallel  jobs,  the submission_time is
+     always set to 0.
 
-     start_time
-          Start time in seconds (since epoch format).
+  start_time
+     Start time (GMT unix time stamp).
 
-     end_time
-          End time in seconds (since epoch format).
 
-     failed
-          Indicates the problem which  occurred  in  case  a  job
-          could  not  be  started  on  the  execution  host (e.g.
-          because the owner of the  job  did  not  have  a  valid
-          account on that machine). If Grid Engine tries to start
-          a job multiple times, this may lead to multiple entries
-          in  the  accounting  file corresponding to the same job
-          ID.
+  end_time
+     End time (GMT unix time stamp).
 
-     exit_status
-          Exit status of the job script (or Grid Engine  specific
-          status in case of certain error conditions).
+  failed
+     Indicates the problem which occurred in case a job could not
+     be  started on the execution host (e.g. because the owner of
+     the job did not have a valid account on  that  machine).  If
+     Grid  Engine  tries  to start a job multiple times, this may
+     lead to multiple entries in the accounting file  correspond-
+     ing to the same job ID.
 
-     ru_wallclock
-          Difference between end_time and start_time (see above).
+  exit_status
+     Exit status of the  job  script  (or  Grid  Engine  specific
+     status in case of certain error conditions).
+
+  ru_wallclock
+     Difference between end_time and start_time (see above).
 
      The remainder of the accounting entries follows the contents
      of  the  standard  UNIX  rusage  structure  as  described in
@@ -94,42 +96,45 @@ FORMAT
           ru_nvcsw
           ru_nivcsw
 
-     project
-          The project which was assigned to the job.
+  project
+     The project which was assigned to the job.
 
-     department
-          The department which was assigned to the job.
+  department
+     The department which was assigned to the job.
 
-     granted_pe
-          The parallel environment which was  selected  for  that
-          job.
+  granted_pe
+     The parallel environment which was selected for that job.
 
-     slots
-          The number of slots which were dispatched to the job by
-          the scheduler.
 
-     task_number
-          Array job task index number.
+  slots
+     The number of slots which were dispatched to the job by  the
+     scheduler.
 
-     cpu  The cpu time usage in seconds.
+  task_number
+     Array job task index number.
 
-     mem  The integral memory usage in Gbytes seconds.
+  cpu
+     The cpu time usage in seconds.
 
-     io   The amount of data transferred in  input/output  opera-
-          tions.
+  mem
+     The integral memory usage in Gbytes cpu seconds.
 
-     category
-          A string specifying the job category.
+  io
+     The amount of data transferred in input/output operations.
 
-     iow  The io wait time in seconds.
+  category
+     A string specifying the job category.
 
-     pe_taskid
-          If this identifier is set the task was part of a paral-
-          lel  job  and  was  passed  to Grid Engine via the qrsh
-          -inherit interface.
+  iow
+     The io wait time in seconds.
 
-     maxvmem
-          The maximum vmem size in bytes.
+  pe_taskid
+     If this identifier is set the task was part  of  a  parallel
+     job  and  was  passed  to  Grid Engine via the qrsh -inherit
+     interface.
+
+  maxvmem
+     The maximum vmem size in bytes.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>,
@@ -138,11 +143,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

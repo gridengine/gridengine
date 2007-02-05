@@ -24,10 +24,12 @@ DESCRIPTION
 
      Memory specifiers are positive decimal, hexadecimal or octal
      integer  constants  which  may  be  followed by a multiplier
-     letter. Valid multiplier letters are k, K, m and M, where  k
-     means multiply the value by 1000, K multiply by 1024, m mul-
-     tiply by 1000*1000 and M multiplies by 1024*1024. If no mul-
-     tiplier is present, the value is just counted in bytes.
+     letter. Valid multiplier letters are k, K, m, M,  g  and  G,
+     where  k  means  multiply  the  value by 1000, K multiply by
+     1024, m multiply by 1000*1000, M multiply  by  1024*1024,  g
+     multiply by 1000*1000*1000 and G multiply by 1024*1024*1024.
+     If no multiplier is present, the value is  just  counted  in
+     bytes.
 
      If more than one host  is  specified  under  'hostlist'  (by
      means  of  a  list  of  hosts or with host groups) it can be
@@ -51,8 +53,8 @@ DESCRIPTION
      ride   the   default   setting.  Tuples  with  a  host  name
      host_identifier override both the default and the host group
      setting. Note that also with the enhanced <I>queue</I>_<I>conf</I> specif-
-     ier syntax a default setting is always needed for all confi-
-     guration attributes.
+     ier syntax a  default  setting  is  always  needed  for  all
+     configuration attributes.
 
      Integrity verifications will be applied  on  the  configura-
      tion.
@@ -62,7 +64,7 @@ DESCRIPTION
      for a particular host are rejected.  Configurations contain-
      ing  override values for hosts not enlisted under 'hostname'
      are accepted but are indicated  by  -sick  of  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  The
-     cluster  queue  should contain a non-ambiguous specification
+     cluster  queue  should  contain an unambiguous specification
      for each configuration  attribute  of  each  queue  instance
      specified under hostname in <I>queue</I>_<I>conf</I>. Ambiguous configura-
      tions with more than one attribute  setting  resulting  from
@@ -104,8 +106,6 @@ FORMAT
      condition for this node. Arbitrary load values being defined
      in the "host" and "global"  complexes  (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for
      details) can be used.
-
-
      The syntax is that of a comma separated list with each  list
      element  consisting  of  the  name of a load value, an equal
      sign and the threshold value being intended to  trigger  the
@@ -152,12 +152,11 @@ FORMAT
      scheduling priority, positive values (up to +20)  correspond
      to a lower scheduling priority.
 
-     The value of priority has  no  effect  because  SGE  adjusts
-     priorities dynamically to implement the SGE entitlement pol-
-     icy goals. Dynamic priority adjustment can be switched  off,
-     by  setting  the reprioritize_interval to 00:00:00, which is
-     the default value. In this case,  the  setting  of  priority
-     also will haven't an effect.
+     Note, the value of priority has no effect,  if  Grid  Engine
+     adjusts  priorities  dynamically  to  implement ticket-based
+     entitlement policy goals.  Dynamic  priority  adjustment  is
+     switched   off  by  default  due to <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B> reprioritize
+     being set to false.
 
   min_cpu_interval
      The time between two automatic checkpoints in case of  tran-
@@ -210,11 +209,11 @@ FORMAT
      (type string; default: batch interactive).
 
   pe_list
-     The list of administrator defined parallel  environments  to
+     The list of administrator-defined parallel  environments  to
      be associated with the queue. The default is <I>NONE</I>.
 
   ckpt_list
-     The list of administrator defined  checkpointing  interfaces
+     The list of administrator-defined  checkpointing  interfaces
      to be associated with the queue. The default is <I>NONE</I>.
 
   rerun
@@ -493,14 +492,14 @@ FORMAT
      queue.
 
   subordinate_list
-     A list of Grid Engine cluster queues.  Relationship  however
-     are  in  effect only between queue instances residing at the
-     same host. If there is a queue instance (be in the  sub-  or
-     superordinated  one)  on only one particular host this rela-
-     tionship is ignored.  queue instances residing on  the  same
-     host  will  be  suspended  when a specified count of jobs is
-     running in this queue instance.  The list  specification  is
-     the  same  as  that  of the load_thresholds parameter above,
+     A list of Grid Engine cluster queues. Subordinate  relation-
+     ships are in effect only between queue instances residing at
+     the same host. If there is a queue instance (be in the  sub-
+     or  superordinated  one)  on  only  one particular host this
+     relationship is ignored.  queue instances  residing  on  the
+     same  host  will be suspended when a specified count of jobs
+     is running in this queue instance.  The  list  specification
+     is  the same as that of the load_thresholds parameter above,
      e.g. low_pri_q=5,small_q. The numbers denote the  job  slots
      of  the  queue that have to be filled to trigger the suspen-
      sion of the subordinated queue. If no value  is  assigned  a

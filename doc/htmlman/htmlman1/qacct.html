@@ -8,11 +8,10 @@ NAME
 SYNOPSIS
      qacct [ -A Account ] [ -b BeginTime ] [ -d Days ] [ -e  End-
      Time  ] [ -g [GroupId|GroupName] ] [ -h [HostName] ] [ -help
-     ] [ -j [JobId|JobName|pattern] ] [ -l attr=val,...  ]  [  -o
-     [Owner]      ]     [     -pe     [PEname]     ]     [     -q
-     [CQ_name|QI_name|Q_domain|pattern] ] [ -slots [SlotNumber] ]
-     [ -t task_id_range_list ] [ -P [Project] ] [ -D [Department]
-     ] [ -f <I>AcctFileName</I> ]
+     ] [ -j [wc_job] ] [ -l attr=val,... ] [ -o [Owner] ]  [  -pe
+     [PEname]  ]  [  -q [wc_queue] ] [ -slots [SlotNumber] ] [ -t
+     task_id_range_list ] [ -P [Project] ] [ -D [Department] ]  [
+     -f <I>AcctFileName</I> ]
 
 DESCRIPTION
      The <I>qacct</I>  utility  scans  the  accounting  data  file  (see
@@ -54,9 +53,9 @@ OPTIONS
 
      -g [GroupId|GroupName]
           The numeric system group id or the  group  alphanumeric
-          name  of  the job owners to be included in the account-
-          ing. If GroupId/GroupName is omitted,  all  groups  are
-          accounted.
+          name   of   the  job  owners  to  be  included  in  the
+          accounting. If GroupId/GroupName is omitted, all groups
+          are accounted.
 
      -h [HostName]
           The  case-insensitive  name  of  the  host  upon  which
@@ -66,8 +65,8 @@ OPTIONS
      -help
           Display help information for the <I>qacct</I> command.
 
-     -j [[JobName|JobId|pattern]]
-          The name, a pattern for matching names, or  ID  of  the
+     -j [[wc_queue_name]]
+          The name, a expression for matching names, or ID of the
           job  during  execution for which accounting information
           is printed. If neither a name nor an ID  is  given  all
           jobs are enlisted.
@@ -95,11 +94,11 @@ OPTIONS
           summarized.  If PEname is not given, accounting data is
           listed for each parallel environment separately.
 
-     -q [CQ_name|QI_name|Q_domain|pattern]
-          A pattern for queues for which usage is summarized. All
-          queue instances matching the pattern will be listed. If
-          no pattern is specified, a cluster queue  summary  will
-          be given.
+     -q [wc_queue_name]
+          A expression for queues for which usage is  summarized.
+          All  queue  instances  matching  the expression will be
+          listed. If no expression is specified, a cluster  queue
+          summary will be given.
 
      -slots [SlotNumber]
           The number of queue slots for which  usage  is  summar-
@@ -120,12 +119,12 @@ OPTIONS
      -P [Project]
           The name of the project for which usage is  summarized.
           If  Project is not given, accounting data is listed for
-          each owner project separately.
+          each owning project separately.
 
      -D [Department]
           The name of the department for which usage  is  summar-
           ized.   If  Department is not given, accounting data is
-          listed for each owner department separately.
+          listed for each owning department separately.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -157,9 +156,9 @@ ENVIRONMENTAL VARIABLES
                     "sge_qmaster" instead to define that port.
 
      SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>   is   expected  to  listen  for
-                    communication requests.   Most  installations
-                    will use a services map entry for the service
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map  entry  for the service
                     "sge_execd" instead to define that port.
 
 FILES
@@ -174,6 +173,7 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
 
 
 

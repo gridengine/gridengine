@@ -83,8 +83,9 @@ FORMAT
           refers  to a host on which parallel processes are to be
           run. The first entry of each line denotes the hostname,
           the second entry the number of parallel processes to be
-          run on the host and the third entry a  processor  range
-          to be used in case of a multiprocessor machines.
+          run on the host, the third entry the name of the queue,
+          and  the  fourth  entry a processor range to be used in
+          case of a multiprocessor machine.
 
      $<I>host</I>
           The name of the host on which the start-up or stop pro-
@@ -105,10 +106,10 @@ FORMAT
           Number of slots granted for the job.
 
      $<I>processors</I>
-          The  processors  string  as  contained  in  the   queue
-          configuration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue
-          (the queue in which the start-up  and  stop  procedures
-          are started).
+          The processors string as contained in the queue  confi-
+          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
+          queue in which the start-up  and  stop  procedures  are
+          started).
 
      $<I>queue</I>
           The cluster queue of the master queue instance.
@@ -205,10 +206,9 @@ FORMAT
      jobs might finally get.
 
      The assumed slot allocation has a meaning  when  determining
-     the resource request based priority contribution for numeric
+     the resource-request-based priority contribution for numeric
      resources as described in <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> and  is  displayed
      when <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> is run without -g t option.
-
 
      The following methods are supported:
 
@@ -225,7 +225,7 @@ FORMAT
                to the PE's slots setting is assumed.
 
      avg:      The average of all numbers  occurring  within  the
-               jobs PE range request is assumed.
+               job's PE range request is assumed.
 
 RESTRICTIONS
      Note, that the functionality of the start-up,  shutdown  and

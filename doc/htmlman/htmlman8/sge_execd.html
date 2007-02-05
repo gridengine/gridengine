@@ -19,27 +19,28 @@ OPTIONS
 
 LOAD SENSORS
      If a load sensor is configured for <I>sge</I>_<I>execd</I> via either  the
-     global  or the execution host specific cluster configuration
-     (See <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.), the executable path of the  load  sensor
-     is  invoked by <I>sge</I>_<I>execd</I> on a regular basis and delivers one
-     or multiple load figures for the execution host (e.g.  users
-     currently logged in) or the complete cluster (e.g. free disk
-     space on a network wide scratch file system). The load  sen-
-     sor  may  be a script or a binary executable. In either case
-     its handling of the STDIN and STDOUT streams and its control
-     flow must comply to the following rules:
+     global  host  configuration  or  the execution-host-specific
+     cluster configuration  (See  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.),  the  executable
+     path of the load sensor is invoked by <I>sge</I>_<I>execd</I> on a regular
+     basis and delivers one or multiple load figures for the exe-
+     cution  host  (e.g.   users currently logged in) or the com-
+     plete cluster (e.g.  free  disk  space  on  a  network  wide
+     scratch  file  system). The load sensor may be a script or a
+     binary executable. In either case its handling of the  STDIN
+     and  STDOUT  streams and its control flow must comply to the
+     following rules:
 
-     The load sensor has to be written as an infinite loop  wait-
-     ing  at  a certain point for input from STDIN. If the string
+     The load sensor must be written as an infinite loop  waiting
+     at  a  certain  point  for  input  from STDIN. If the string
      "quit" is read from STDIN,  the  load  sensor  should  exit.
-     When an end-of-line is read from STDIN a load data retrieval
-     cycle should start. The load sensor then  performs  whatever
-     operation  is necessary to compute the desired load figures.
-     At the end of the cycle the load sensor writes the result to
-     stdout. The format is as follows:
+     When  an  end-of-line  is  read  from  STDIN,  a  load  data
+     retrieval cycle should start. The load sensor then  performs
+     whatever  operation is necessary to compute the desired load
+     figures.  At the end of the cycle the load sensor writes the
+     result to stdout. The format is as follows:
 
-     <B>o</B>  A load value report starts with a line containing nothing
-        but the word  "start".
+     <B>o</B>  A load value report starts with a  line  containing  only
+        the word  "start".
 
      <B>o</B>  Individual load values are separated by newlines.
 
@@ -58,7 +59,8 @@ LOAD SENSORS
 
      <B>o</B>  The third part is the measured load value.
 
-     <B>o</B>  A load value report ends with a line with the word "end".
+     <B>o</B>  A load value report ends with a line with only  the  word
+        "end".
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -118,8 +120,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

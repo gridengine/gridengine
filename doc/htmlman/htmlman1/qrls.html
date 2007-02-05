@@ -8,7 +8,7 @@ NAME
 SYNTAX
      qrls [ -h {u|o|s},...  ] [ -help ] [ job/task_id_list ]
 
-     qrls [ -h {u|o|s},...  ] [ -help ] -u user_list | -uall
+     qrls [ -h {u|o|s},...  ] [ -help ] -u user_list
 
 DESCRIPTION
      <I>Qrls</I> provides a means for a user/operator/manager to release
@@ -46,14 +46,14 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -u username,... | -uall
+     -u username,...
           Modifies the hold state of those jobs which  were  sub-
           mitted  by  users  specified  in the list of usernames.
-          For managers it is possible to use the qrls -uall  com-
-          mand to modify the hold state for jobs of all users.
+          Managers are allowed to use the qrls -u "*" command  to
+          modify the hold state for jobs of all users.
 
-          If you use the -u or -uall switch it is be permitted to
-          specify an additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
+          If a user uses the -u switch, the user may  specify  an
+          additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
 
      job/task_id_list
           Specified by the following form:

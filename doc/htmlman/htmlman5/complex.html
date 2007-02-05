@@ -24,17 +24,16 @@ DESCRIPTION
 
   defining resource attributes
      The complex configuration should not be  accessed  directly.
-     In  order  to  add  or modify complexe entries, the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+     In  order  to  add  or  modify complex entries, the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
      options -Mc and -mc should be used instead.  While  the  -Mc
-     option  take a <I>complex</I> configuration file as an argument and
+     option takes a <I>complex</I> configuration file as an argument and
      overrides the current configuration, the -mc option bring up
-     an  editor  filled in with the current .I complex configura-
-     tion.
+     an editor filled in with the current <I>complex</I> configuration.
 
      The provided  list  contains  all  definitions  of  resource
      attributes  in  the system. Adding a new entry means to pro-
      vide: name, shortcut, type, relop, requestable,  consumable,
-     default,  and rgency. The fields are described below. Chang-
+     default, and urgency. The fields are described below. Chang-
      ing one is easily done by updated the field  to  change  and
      removing  an  entry by deleting its definition. An attribute
      can only be removed, when it is not referenced in a host  or
@@ -188,39 +187,42 @@ FORMAT
         used in a load formula (refer to <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> ) TRUE and
         FALSE get mapped into '1' and '0'.
 
-     <B>o</B>  With STRING all strings are allowed and <B><A HREF="../htmlman3/strcmp.html">strcmp(3)</A></B> is used
-        for comparisons.
-
-     <B>o</B>  CSTRING is like STRING except comparisons are case insen-
-        sitive.
-
-     <B>o</B>  RESTRING is like STRING with regular expression matching.
-        The syntax follows the following rules:
-
-         - "*"   : matches any character and any number of chars
-                   (between 0 and inv).
-         - "?"   : matches any character. It cannot be no
-                   character
-         - "."   : is the character ".". It has no other meaning
-         - "\"   : escape character. "\\" = "\", "\*" = "*",
-                   "\?" = "?"
-         - "[xx]": specifies an array or a range of allowed
-                   characters for one character at a specific
-                   position
-         - "|"   : logical "or". Can only be used on the highest
-                   level and cannot be escaped.
+     <B>o</B>  With STRING all strings are allowed and is used for wild-
+        card  regular  boolean  expression  matching.  Please see
+        <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B> manpage for expression definition.
 
         Examples:
          -l arch="*x24*|sol*"  :
               results in "arch=lx24-x86" OR "arch=lx24-amd64"
                  OR "arch=sol-sparc" OR "arch=sol-sparc64"
                  OR "arch=sol-x86" OR ...
-         -l arch="[lx24-x86|sol-sparc]"  :
-              results in "arch=[lx24-x86" OR "arch=sol-sparc]"
+         -l arch="sol-x??"  :
+              results in "arch=sol-x86" OR "arch=sol-x64" OR ...
+         -l arch="lx2[246]-x86"  :
+              results in "arch=lx22-x86" OR "arch=lx24-x86"
+                 OR "arch=lx26-x86"
+         -l arch="lx2[4-6]-x86"  :
+              results in "arch=lx24-x86" OR "arch=lx25-x86"
+                 OR "arch=lx26-x86"
+         -l arch="lx2[24-6]-x86"  :
+              results in "arch=lx22-x86" OR "arch=lx24-x86"
+                 OR "arch=lx25-x86" OR "arch=lx26-x86"
+         -l arch="!lx24-x86&amp;!sol-sparc"  :
+              results in NOT "arch=lx24-x86" NEITHER "arch=sol-sparc"
+         -l arch="lx24-[^x]86"  :
+              results in "arch=lx24-^86" OR "arch=lx24-x86"
+         -l arch="lx2[4|6]-x86"  :
+              results in "arch=lx2[4" OR "arch=6"
 
 
-     <B>o</B>  HOST is like CSTRING but the string must be a valid host-
-        name.
+     <B>o</B>  CSTRING is like STRING except comparisons are case insen-
+        sitive.
+
+     <B>o</B>  RESTRING is like STRING and it will be deprecated in  the
+        future.
+
+     <B>o</B>  HOST is like CSTRING but  the  expression  must  match  a
+        valid hostname.
 
   relop
      The relation operator. The relation operator  is  used  when
@@ -243,7 +245,7 @@ FORMAT
      resource  has  to  be defined. This can be done on a cluster
      global, per host and per  queue  basis.  The  definition  of
      resource  availability  is performed with the complex_values
-     entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queu_conf.html">queu_conf(5)</A></B>.
+     entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
   consumable
      The consumable parameter can be set  to  either  'yes'  ('y'

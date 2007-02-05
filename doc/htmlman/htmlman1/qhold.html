@@ -8,7 +8,7 @@ NAME
 SYNTAX
      qhold [ -h {u|o|s},...  ] [ -help ] [ job/task_id_list ]
 
-     qhold [ -h {u|o|s},...  ] [ -help ] -u user_list | -uall
+     qhold [ -h {u|o|s},...  ] [ -help ] -u user_list
 
 DESCRIPTION
      <I>Qhold</I> provides a means for a user/operator/manager to  place
@@ -46,14 +46,14 @@ OPTIONS
      -help
           Prints a listing of all options.
 
-     -u username,... | -uall
+     -u username,...
           Changes are only made on those jobs which were  submit-
-          ted  by  users specified in the list of usernames.  For
-          managers it is possible to use the qhold -uall  command
-          to set a hold for all jobs of all users.
+          ted  by  users  specified  in  the  list  of usernames.
+          Managers are allowed to use the qhold -u "*" command to
+          set a hold for all jobs of all users.
 
-          If you use the -u or -uall switch it is be permitted to
-          specify a additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
+          If a user uses the -u switch, the user may  specify  an
+          additional <I>job</I>/<I>task</I>_<I>id</I>_<I>list</I>.
 
      job/task_id_list
           Specified by the following form:

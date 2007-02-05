@@ -1,3 +1,10 @@
+MD-2007-02-05-0: Enhancem:  o remote installation of execd's need 
+                              enhancement, rework, cleanup 
+                 Changed:   inst_sge, install_modules
+                 Bugtraq:   6513433 
+                 Issue:     2182
+                 Review:    HP
+
 PJ-2007-02-02-0: Bugfix:    Broken output of job name with 'qsub -N'.
                  Issue:     2061
                  Bugtraq:   6494390

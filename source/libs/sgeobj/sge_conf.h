@@ -43,7 +43,7 @@ typedef int (*tDaemonizeFunc)(void *ctx);
 /* This list is *ONLY* used by the execd and should be moved eventually */
 extern lList *Execd_Config_List;
 
-int merge_configuration(u_long32 progid, const char *cell_root, lListElem *global, lListElem *local, lList **lpp);
+int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_root, lListElem *global, lListElem *local, lList **lpp);
 void sge_show_conf(void);
 void conf_update_thread_profiling(const char *thread_name);
 

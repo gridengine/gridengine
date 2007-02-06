@@ -130,7 +130,8 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
       DRETURN(-1);
    }
 
-   ret = merge_configuration(progid, cell_root, global, local, NULL);
+   ret = merge_configuration(&anAnswer, progid, cell_root, global, local, NULL);
+   answer_list_output(&anAnswer);
 
    lFreeElem(&local);
    lFreeElem(&global);
@@ -319,6 +320,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
    if (!strcmp(unique_name, SGE_GLOBAL_NAME) || !sge_hostcmp(unique_name, qualified_hostname)) {
       lListElem *local = NULL;
       lListElem *global = NULL;
+      lList *answer_list = NULL;
       int accounting_flush_time = mconf_get_accounting_flush_time();
 
       if ((local = sge_get_configuration_for_host(qualified_hostname)) == NULL) {
@@ -329,9 +331,10 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
          ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       }
             
-      if (merge_configuration(progid, cell_root, global, local, NULL) != 0) {
+      if (merge_configuration(&answer_list, progid, cell_root, global, local, NULL) != 0) {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, qualified_hostname));
       }
+      answer_list_output(&answer_list);
 
       /* Restart the accounting flush event if needed. */
       if ((accounting_flush_time == 0) &&

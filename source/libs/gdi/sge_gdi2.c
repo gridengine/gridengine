@@ -2076,7 +2076,7 @@ volatile int* abort_flag
       }
    }
   
-   ret = merge_configuration(progid, cell_root, global, local, NULL);
+   ret = merge_configuration(NULL, progid, cell_root, global, local, NULL);
    if (ret) {
       DPRINTF(("Error %d merging configuration \"%s\"\n", ret, qualified_hostname));
    }
@@ -2125,7 +2125,7 @@ lList **conf_list
       DRETURN(-1);
    }
 
-   ret = merge_configuration(progid, cell_root, global, local, NULL);
+   ret = merge_configuration(NULL, progid, cell_root, global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, qualified_hostname));
       lFreeElem(&global);

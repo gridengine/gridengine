@@ -281,6 +281,7 @@
 #define MSG_OBJECT_VALUEMISSING        _MESSAGE(64279, _("Value missing"))
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults"))
+#define MSG_CONF_INVALIDPARAM_SSI      _MESSAGE(64302, _("invalid setting for "SFQ", attribute "SFQ" - using default %d"))
 #define MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U _MESSAGE(64302, _("nr of dynamic event clients exceeds max file descriptor limit, setting MAX_DYN_EC="sge_U32CFormat))
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value"))

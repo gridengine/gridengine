@@ -1336,7 +1336,7 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
 
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(progid, cell_root, lFirst(conf_l), local, NULL);
+      merge_configuration(NULL, progid, cell_root, lFirst(conf_l), local, NULL);
    }
    lFreeList(&conf_l);
    lFreeList(&mal);

@@ -1,3 +1,9 @@
+JG-2007-02-06-0: Bugfix:    meaningless error message in clients when 
+                            reporting_param flush_time is incorrectly set.
+                 Bugtraq:   6499217
+                 Issue:     2183
+                 Review:    RD
+
 RD-2007-02-05-0: Enhancem:  added qquota schema file
                  Review:    AA
 

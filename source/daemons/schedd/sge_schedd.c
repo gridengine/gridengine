@@ -668,7 +668,7 @@ int sge_before_dispatch(sge_evc_class_t *evc)
       lListElem *global = NULL, *local = NULL;
 
       if (gdi2_get_configuration(ctx, SGE_GLOBAL_NAME, &global, &local) == 0) {
-         merge_configuration(progid, cell_root, global, local, NULL);
+         merge_configuration(NULL, progid, cell_root, global, local, NULL);
       }   
       lFreeElem(&global);
       lFreeElem(&local);

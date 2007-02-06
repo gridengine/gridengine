@@ -44,7 +44,7 @@ typedef int (*tDaemonizeFunc)(void);
 extern lList *Execd_Config_List;
 
 void sge_set_defined_defaults(lList **lpCfg);
-int merge_configuration(lListElem *global, lListElem *local, lList **lpp);
+int merge_configuration(lList **answer_list, lListElem *global, lListElem *local, lList **lpp);
 void sge_show_conf(void);
 void conf_update_thread_profiling(const char *thread_name);
 

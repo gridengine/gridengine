@@ -1423,6 +1423,7 @@ for i in $ARCH; do
                      InstallProg $libname
                   elif [ $exit_on_error = true ]; then
                      echo "\"$libname\" not found. Installation failed."
+                     exit 1
                   fi
                done
             done

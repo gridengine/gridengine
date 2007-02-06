@@ -128,7 +128,8 @@ int sge_read_configuration(lListElem *aSpoolContext, lList *anAnswer)
       return -1;
    }
 
-   ret = merge_configuration(global, local, NULL);
+   ret = merge_configuration(&anAnswer, global, local, NULL);
+   answer_list_output(&anAnswer);
 
    lFreeElem(&local);
    lFreeElem(&global);
@@ -340,10 +341,10 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser,
    ** is the configuration change relevant for the qmaster itsself?
    ** if so, initialise conf struct anew
    */
-   if (!strcmp(unique_name, SGE_GLOBAL_NAME) || !sge_hostcmp(unique_name, uti_state_get_qualified_hostname()))
-   {
+   if (!strcmp(unique_name, SGE_GLOBAL_NAME) || !sge_hostcmp(unique_name, uti_state_get_qualified_hostname())) {
       lListElem *local = NULL;
       lListElem *global = NULL;
+      lList *answer_list = NULL;
       int accounting_flush_time = mconf_get_accounting_flush_time();
 
       if ((local = sge_get_configuration_for_host(uti_state_get_qualified_hostname())) == NULL)
@@ -356,10 +357,10 @@ int sge_mod_configuration(lListElem *aConf, lList **anAnswer, char *aUser,
          ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
       }
             
-      if (merge_configuration(global, local, NULL) != 0) 
-      {
+      if (merge_configuration(&answer_list, global, local, NULL) != 0) {
          ERROR((SGE_EVENT, MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S, uti_state_get_qualified_hostname()));
       }
+      answer_list_output(&answer_list);
 
       /* Restart the accounting flush event if needed. */
       if ((accounting_flush_time == 0) &&

@@ -1195,7 +1195,7 @@ case HP1164:
       #set CFLAGS = "+w1 $CFLAGS"
 
       # unix 98 mode (??)
-      set CFLAGS = "-D_XOPEN_SOURCE_EXTENDED $CFLAGS"
+      # set CFLAGS = "-D_XOPEN_SOURCE_EXTENDED $CFLAGS"
 
       set CFLAGS = "$MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
    endif
@@ -1217,7 +1217,9 @@ case HP1164:
    if ($BUILDARCH == HP11) then
       set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32 -Wl,+s"
    else
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
+      #set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
+      set ORIGINORIGIN = '$$ORIGIN'
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s -Wl,+b,'$ORIGINORIGIN'/../../lib/$buildarch"
    endif
 
    set XMTDEF   = "-DNO_EDITRES"
@@ -1242,6 +1244,10 @@ case HP1164:
    # http://docs.hp.com/en/B2355-90968/linkertasks.htm#BAJEBEEC
    # set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch
    # echo "aimk RUNPATH: #${RUNPATH}#"
+   if ($BUILDARCH == HP1164) then
+      set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch
+      echo "aimk RUNPATH: #${RUNPATH}#"
+   endif
    breaksw
    
 case ALINUX:

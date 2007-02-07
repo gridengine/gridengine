@@ -87,7 +87,7 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
 gethostname:	gethostname.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) 
-		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
+		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) $(DLLIB) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c

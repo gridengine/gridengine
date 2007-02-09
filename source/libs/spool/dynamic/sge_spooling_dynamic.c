@@ -113,7 +113,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
                         
 #if defined(HP1164)   
    /*
-   ** switch back to admin user for HP
+   ** need to switch to start user for HP
    */
    sge_switch2admin_user();
 #endif

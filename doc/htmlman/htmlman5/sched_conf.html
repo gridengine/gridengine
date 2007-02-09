@@ -32,7 +32,7 @@ FORMAT
      tained for each host.  The load formula expression syntax is
      that of a summation weighted load values, that is:
 
-          {w1|load_val1[*w1]}[{+|-}{w2|load_val2[*w2]}[{+|-}...]]
+          load_val1[*w1][{+|-}load_val2[*w2][{+|-}...]]
 
      Note, no blanks are allowed in the load formula.
      The load values and consumable  resources  (load_val1,  ...)
@@ -79,13 +79,13 @@ FORMAT
      the  combined  and  weighted  load  of  the  hosts  with the
      load_formula (see above) and to compare the load and consum-
      able  values against the load threshold lists defined in the
-     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If    the
-     load_formula consists simply of the default CPU load average
-     parameter <I>np</I>_<I>load</I>_<I>avg</I>, and if  the  jobs  are  very  compute
-     intensive,  one  might  want to set the job_load_adjustments
+     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If   your
+     load_formula simply consists of the default CPU load average
+     parameter <I>np</I>_<I>load</I>_<I>avg</I> and if  your  jobs  are  very  compute
+     intensive,  you  might  want to set the job_load_adjustments
      list to <I>np</I>_<I>load</I>_<I>avg</I>=<I>1</I>.<I>00</I>, which means  that  every  new  job
-     dispatched  to  a host will require 100 % CPU time, and thus
-     the machine's load is instantly increased by 1.00.
+     dispatched  to  a  host will require 100 % CPU time and thus
+     the machine's load is instantly raised by 1.00.
 
   load_adjustment_decay_time
      The load  corrections  in  the  "job_load_adjustments"  list
@@ -148,9 +148,8 @@ FORMAT
      for achieving the share entitlements as defined by the share
      tree.  The halftime defines the time interval in which accu-
      mulated usage will have been decayed to  half  its  original
-     value.  Valid  values are specified in hours or according to
-     the time format as specified in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
-     If the value is set to 0, the usage is not decayed.
+     value.  Valid values are specified of type time as specified
+     in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
   usage_weight_list
      Grid Engine accounts for the consumption  of  the  resources
@@ -258,36 +257,14 @@ FORMAT
      This is foreseen for passing additional  parameters  to  the
      Grid Engine scheduler. The following values are recognized:
 
-     <I>DURATION</I>_<I>OFFSET</I>
-          If set, overrides the  default  of  value  60  seconds.
-          This  parameter  is  used  by the Grid Engine scheduler
-          when planning resource utilization as the delta between
-          net  job runtimes and total time until resources become
-          available again. Net job runtime as specified  with  -l
-          h_rt=...   or  -l  s_rt=...  or default_duration always
-          differs from total job runtime due to delays before and
-          after  actual  job  start  and finish. Among the delays
-          before job start  is  the  time  until  the  end  of  a
-          schedule_interval,  the  time it takes to deliver a job
-          to <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and the  delays  caused  by  prolog  in
-          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>   ,   start_proc_args  in  <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  and
-          starter_method      in      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>      (notify,
-          terminate_method   or  checkpointing),  procedures  run
-          after acutal job  finish,  such  as  stop_proc_args  in
-          <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  or  epilog  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> , and the delay
-          until a new schedule_interval.
-          If the offset is too low,  resource  reservations  (see
-          max_reservation)  can  be  delayed repeatedly due to an
-          overly optistic job circulation time.
-
      <I>JC</I>_<I>FILTER</I>
           If set to true, the scheduler limits the number of jobs
           it  looks  at during a scheduling run. At the beginning
           of the scheduling run it assigns each  job  a  specific
-          category,  which is based on the job's requests, prior-
-          ity settings, and the job owner. All  scheduling  poli-
-          cies will assign the same importance to each job in one
-          category. Therefore the number  of  jobs  per  category
+          category,   which  is  based  on  the  job's  requests,
+          priority settings, and the job  owner.  All  scheduling
+          policies will assign the same importance to each job in
+          one category. Therefore the number of jobs per category
           have  a  FIFO order and can be limited to the number of
           free slots in the system.
 
@@ -312,29 +289,14 @@ FORMAT
           resources      utilization      in       the       file
           &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
 
-     <I>SELECT</I>_<I>PE</I>_<I>RANGE</I>_<I>ALG</I>
-          This parameter sets the  algorithm  for  the  pe  range
-          computation. The default is automatic, which means that
-          the scheduler will select the best one, and  it  should
-          not be necessary to change it to a different setting in
-          normal operation. If a custom setting  is  needed,  the
-          following values are available:
-          auto       : the scheduler selects the best algorithm
-          least      : starts  the  resource  matching  with  the
-          lowest slot amount first
-          bin        : starts the resource matching in the middle
-          of the pe slot range
-          highest    : starts  the  resource  matching  with  the
-          highest slot amount first
-
      Changing params will take immediate effect.  The default for
      params is none.
 
-  reprioritize_interval
-     Interval (HH:MM:SS) to reprioritize jobs  on  the  execution
-     hosts  based  on  the  current ticket amount for the running
-     jobs. If the interval is set to 00:00:00  the  reprioritiza-
-     tion is turned off. The default value is 00:00:00.
+  reprioritize_interval"
+     Interval (HH:MM:SS) to reprioritize jobs on the  exec  hosts
+     based  on the current ticket amount for the running jobs. If
+     the interval is set  to  00:00:00  the  reprioritization  is
+     turned off. The default value is 00:00:00.
 
   report_pjob_tickets
      This parameter allows to tune the  system's  scheduling  run
@@ -352,19 +314,13 @@ FORMAT
      the pending job ticket calculation to account for jobs which
      have just ended. This allows the user the pending jobs algo-
      rithm to count finished jobs against a user or project for a
-     configurable decayed time period. This feature is turned off
-     by default, and the halftime is used instead.
-     The halflife_decay_list also allows one  to  configure  dif-
-     ferent  decay  rates for each usage type being tracked (cpu,
-     io, and mem). The list is specified in the following format:
-
-          &lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;[:&lt;USAGE_TYPE&gt;=&lt;TIME&gt;]]
-
-     &lt;Usage_TYPE&gt; can be one of the following: cpu, io, or mem.
-     &lt;TIME&gt; can be -1, 0 or a timespan specified in  minutes.  If
-     &lt;TIME&gt;  is  -1,  only the usage of currently running jobs is
-     used. 0 means that the usage is not decayed.
-
+     configurable  decayed  time  period.  The default is set so,
+     that finished jobs are not considered. It is  also  used  to
+     determine  if  the  job  usage has been added to the user or
+     project usage_list.
+     The halflife_decay_list also allows to  configure  different
+     decay  rates for each usage type being tracked (cpu, io, and
+     mem).
 
   policy_hierarchy
      This parameter sets up a dependency chain  of  ticket  based
@@ -408,6 +364,7 @@ FORMAT
      with the object. If set to "false" or "0", each job  associ-
      ated  with  a  functional  object,  gets the full functional
      shares of that object. The default value is "true".
+
 
   max_functional_jobs_to_schedule
      The maximum number of pending jobs to schedule in the  func-
@@ -467,6 +424,49 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

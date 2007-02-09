@@ -45,10 +45,6 @@
 #include "misc.h"
 #endif
 
-#ifdef HPUX
-#include <arpa/inet.h>
-#endif
-
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG

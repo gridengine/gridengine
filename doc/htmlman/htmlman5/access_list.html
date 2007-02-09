@@ -15,9 +15,9 @@ DESCRIPTION
      mat description. New access lists can be created and  exist-
      ing can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
-     Departments are a special form of access list that addition-
-     ally  allow  assignment  of  functional  shares and override
-     tickets.
+     Departments are a special form of access list and  allow  in
+     addition  assignment of functional shares and override tick-
+     ets.
 
 FORMAT
      The following list of <I>access</I>_<I>list</I> parameters  specifies  the
@@ -45,13 +45,13 @@ FORMAT
      the access list or the department. Only symbolic  names  are
      allowed.  A group is differentiated from a user name by pre-
      fixing the group name with a '@'  sign.  Pure  access  lists
-     allow enlisting any user or group in any access list.
+     allows enlisting any user or group in any access list.
 
-     When using departments, each user or group enlisted may only
-     be  enlisted  in one department, in order to ensure a unique
-     assignment of jobs to departments. To jobs  whose  users  do
-     not  match  with  any  of the users or groups enlisted under
-     entries the <I>defaultdepartment</I> is assigned, if existing.
+     With departments each user or group enlisted may be enlisted
+     in  only  one  department,  to ensure a unique assignment of
+     jobs to departments. To jobs whose users do not  match  with
+     any  of  the  users  or  groups  enlisted  under entries the
+     <I>defaultdepartment</I> is assigned, if existing.
 
 
 SEE ALSO

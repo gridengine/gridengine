@@ -72,7 +72,7 @@ setenv TMPDIR /tmp
 # is installed
 #
 set OPENSSL_SOVERSION = 0.9.7l
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7l-origin/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-$OPENSSL_SOVERSION/$buildarch
 
 
 # 

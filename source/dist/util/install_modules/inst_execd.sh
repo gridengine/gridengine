@@ -631,10 +631,13 @@ ExecdAlreadyInstalled()
    hostname=$1
    ret="undef"
 
-   load=`qhost -h $hostname | tail -1 | awk '{ print $4 }'`
-   memuse=`qhost -h $hostname | tail -1 | awk '{ print $6 }'`
-   if [ "$load" != "-" -a "$memuse" != "-" ]; then
-      $INFOTEXT -log "Execd return load and memuse values: LOAD: %s, MEMUSE: %s!\nExecution host %s is already installed!" $load $memuse $hostname
+   ret=`qconf -sconf $hostname | grep execd_spool_dir | awk '{ print $2 }'`
+   if [ ! -d $ret/$hostname ]; then
+      ret=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
+
+   if [ -d $ret/$hostname ]; then
+      $INFOTEXT -log "Found execd spool directory: $s!\nExecution host %s is already installed!" $ret/$hostname $hostname
       return 1 
    else
       return 0 

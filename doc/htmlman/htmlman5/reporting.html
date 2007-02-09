@@ -19,9 +19,9 @@ DESCRIPTION
 
 FORMAT
      The reporting file is an ASCII file.  Each line contains one
-     record, and the fields of a record are separated by a delim-
-     iter (:).  The reporting file contains records of  different
-     type. Each record type has a specific record structure.
+     record,  the fields of a record are separated by a delimiter
+     (:).  The reporting file contains records of different type.
+     Each record type has a specific record structure.
 
      The first two fields are common to all reporting records:
 
@@ -32,13 +32,13 @@ FORMAT
           records  and  their structure are described in the fol-
           lowing text.
 
-  new_job
+new_job
      The new_job record is written whenever a new job enters  the
      system (usually by a submitting command). It has the follow-
      ing fields:
 
      submission_time
-          Time (GMT unix time stamp) when the job was submitted.
+          Time when the job was submitted.
 
      job_number
           The job number.
@@ -73,7 +73,7 @@ FORMAT
      priority
           The job priority (from -p submission option).
 
-  job_log
+job_log
      The job_log record is written whenever a job, an array  task
      or a pe tasks is changing status. A status change can be the
      transition from pending to running, but can  also  be  trig-
@@ -113,7 +113,7 @@ FORMAT
           Reserved field for later use.
 
      submission_time
-          Time (GMT unix time stamp) when the job was submitted.
+          Time when the job was submitted.
 
      job_name
           The job name (from -N submission option)
@@ -140,7 +140,7 @@ FORMAT
      message
           A message describing the reported action.
 
-  acct
+acct
      Records of type acct are accounting records. They are  writ-
      ten  whenever a job, a task of an array job or the task of a
      parallel job terminates.  Accounting  records  comprise  the
@@ -175,15 +175,13 @@ FORMAT
           <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
      submission_time
-          Submission time (GMT unix time stamp).  For slave tasks
-          of    tightly    integrated    parallel    jobs,    the
-          submission_time is always set to 0.
+          Submission time in seconds (since epoch format).
 
      start_time
-          Start time (GMT unix time stamp).
+          Start time in seconds (since epoch format).
 
      end_time
-          End time (GMT unix time stamp).
+          End time in seconds (since epoch format).
 
      failed
           Indicates the problem which  occurred  in  case  a  job
@@ -262,11 +260,9 @@ FORMAT
      maxvmem
           The maximum vmem size in bytes.
 
-
-  queue
+queue
      Records of type queue contain state information  for  queues
      (queue instances).  A queue record has the following fields:
-
      qname
           The cluster queue name.
 
@@ -274,13 +270,13 @@ FORMAT
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix time stamp) when a state change  was
+          The time (GMT unix timestamp) when a state  change  was
           triggered.
 
      state
           The new queue state.
 
-  queue_consumable
+queue_consumable
      A queue_consumable record contains information  about  queue
      consumable values in addition to queue state information:
 
@@ -291,7 +287,7 @@ FORMAT
           The hostname of a specific queue instance.
 
      report_time
-          The time (GMT unix time stamp) when a state change  was
+          The time (GMT unix timestamp) when a state  change  was
           triggered.
 
      state
@@ -303,7 +299,7 @@ FORMAT
           able       description       has       the       format
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
-  host
+host
      A host record contains information about hosts and host load
      values.  It contains the following information:
 
@@ -311,7 +307,7 @@ FORMAT
           The name of the host.
 
      report_time
-          The time (GMT unix time stamp) when the reported infor-
+          The time (GMT unix timestamp) when the reported  infor-
           mation was generated.
 
      state
@@ -324,7 +320,7 @@ FORMAT
           load  values  is  separated  by  space.   A  load value
           description has the format &lt;name&gt;=&lt;actual_value&gt;.
 
-  host_consumable
+host_consumable
      A host_consumable record contains  information  about  hosts
      and  host  consumables.  Host consumables can for example be
      licenses.  It contains the following information:
@@ -333,7 +329,7 @@ FORMAT
           The name of the host.
 
      report_time
-          The time (GMT unix time stamp) when the reported infor-
+          The time (GMT unix timestamp) when the reported  infor-
           mation was generated.
 
      state
@@ -353,6 +349,10 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
 
 
 

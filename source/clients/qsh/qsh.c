@@ -43,7 +43,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
-#if defined(INTERIX) || defined(HPUX)
+#if defined(INTERIX)
 #include <arpa/inet.h>
 #endif
 
@@ -264,7 +264,7 @@ static void forward_signal(int sig)
 static int open_qrsh_socket(int *port) {
    int sock;
    struct sockaddr_in server;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
 #else
    socklen_t length;
@@ -294,7 +294,7 @@ static int open_qrsh_socket(int *port) {
    
    /* find out assigned port number and pass it to caller */
    length = sizeof server;
-   if (getsockname(sock, (struct sockaddr *)&server, &length) == -1) {
+   if (getsockname(sock,(struct sockaddr *) &server,&length) == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERRORGETTINGSOCKETNAME_S, strerror(errno)));
       sge_prof_cleanup();
       DEXIT;
@@ -363,7 +363,7 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
             msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
 #else
             msgsock = accept(sock,(struct sockaddr *) 0,(socklen_t *) NULL);
@@ -1012,7 +1012,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
   
    /* get configuration from qmaster */
    if(gdi2_get_configuration(ctx, qualified_hostname, &global, &local) ||
-      merge_configuration(NULL, progid, cell_root, global, local, &conf_list)) {
+      merge_configuration(progid, cell_root, global, local, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);

@@ -97,7 +97,6 @@
 #define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION            _MESSAGE(1051, _("no queues remaining after selection"))
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT                      _MESSAGE(1052, _("ERROR! wrong argument to -s option"))
 
-#define MSG_PARSE_NOOPTIONARGUMENT                           _MESSAGE(1053, _("ERROR! no option argument"))
 
 #define MSG_HEADER_RULE "resource quota rule"
 #define MSG_HEADER_LIMIT "limit"

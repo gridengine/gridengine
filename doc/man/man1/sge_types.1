@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/09 12:37:23 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/09 12:37:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -46,7 +46,7 @@ types is explained in this page.
 .SH "TYPES"
 The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
-.\" expression        => a regular boolean expression
+.\" expression        => an expresion is a regular boolean expression of pattern's
 .\" host              => wc_host without expression
 .\" hostgroup         => wc_hostgroup without expression
 .\" pattern           => a pattern definition
@@ -73,8 +73,8 @@ The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
 .SS "\fBexpression\fP"
 The wildcard expression is a regular boolean expression that consists of
-a couple of \fIpattern\fPs joined by boolean operators. 
-When the wildcard expression is used the following definition applies:
+a couple of \fIpattern\fP's joined by boolean operators and priority brackets. 
+When ever expression are used the following definition applies:
 .PP
 .ta \w'XXXXXXXX'u
 expression	= ["!"] ["("] valExp [")"] [ AND_OR expression ]*
@@ -87,29 +87,29 @@ where:
 .\"
 .nf
 .ta \w'XXXXXXXX'u
-"!"	not operator negate the following pattern or expression 
+"!"	not operator negate the following pattern or expresion 
 "&"	and operator logically and with the following expression
 "|"	or operator logically or with the following expression
-"("	open bracket begin the inner expression.
-")"	close bracket ends the inner expression. 
-"pattern"	see the \fIpattern\fP definition thats follow
+"("	open bracket begin the priority evaluated expression. The close bracket is required
+")"	close bracket ends the priority evaluated expression. 
+"pattern"	see the \fIpattern\fP definition
 .fi
 .PP
-The expression itself should be put into '"' to ensure, that
-the clients get the whole expression.
+The wildcard expresion itself should be put into '"' to ensure, that
+the clients get the expression.
 .PP
 .\"
 .ta
 e.g.
 .RS
 .ta \w'XXXXXXXXXXXXX'u
-"(lx*|sol*)&*64*"	begin with lx or sol and contain somwhere 64
-"rh_3*&!rh_3.1"   can be any string beginning rh_3, but not a rh_3.1
+"!(lx*|sol*)&*64*"	not begin with lx or sol, but contain 64
+"(rh_3*|suse_[89]*)&!rh_3.1"	attribute rh_3*, suse_8* or suse_9*, but do not on a rh_3.1
 
 .fi
 .\"
 .SS "\fBpattern\fP"
-When the patterns are used the following definition applies:
+When ever patterns are used the following definition applies:
 .PP
 .nf
 .ta \w'XXXXXXXX'u
@@ -131,7 +131,7 @@ For more details please see
 .fi
 .PP
 The pattern itself should be put into '"' to ensure, that
-the clients get the pattern.
+the clients get the pattern. The or '|' operator is not supported.
 .PP
 .SS "\fBrange\fP"
 The task range specifier has the form 
@@ -335,7 +335,7 @@ wc_pe_name := pe_name | pattern
 .SH SEE ALSO
 .M qacct 1 ,
 .M qconf 1 ,
-.M qquota 1
+.M qlimit 1
 .\"
 .SH COPYRIGHT
 Copyright: 2004-2007 by Sun Microsystems, Inc.

@@ -1215,11 +1215,7 @@ FILE *fp
    }
 
    if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
-      if (prog_number == QDEL) {
-         PRINTITD(MSG_GDI_USAGE_TASK_OPR , MSG_GDI_UTEXT_TASK_OPR);
-      } else {
-         PRINTITD(MSG_GDI_USAGE_TASK_OPR , MSG_GDI_UTEXT_JOB_ID_OPR);
-      }
+      PRINTITD(MSG_GDI_USAGE_TASK_OPR , MSG_GDI_UTEXT_JOB_ID_OPR );
       MARK(OA_JOB_TASK_LIST);
       MARK(OA_JOB_TASKS);
       MARK(OA_TASK_ID_RANGE);

@@ -446,7 +446,6 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
  if [ "$AUTO" = "true" ]; then
     inst_counter=0
     install_is_done="false"
-    max_retries=20
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
@@ -455,124 +454,99 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
    fi
 
-    EXEC_HOSTS_TO_INSTALL=$EXEC_HOST_LIST
-    EXEC_HOSTS_TO_INSTALL_TMP=$EXEC_HOSTS_TO_INSTALL
+    TMP_EXEC_HOST_LIST=$EXEC_HOST_LIST
     CURRENTLY_INSTALLING_HOSTS=""
-    INSTALLED_EXEC_HOSTS=""
-    FAILED_EXEC_HOSTS=""
 
-   while [ "$install_is_done" = "false" ]; do  #looping as long as installation is not done
-      for hti in $EXEC_HOSTS_TO_INSTALL; do # looping over all host in this list, again and againg, till
-                                            # EXEC_HOSTS_TO_INSTALL list is empty
-         if [ "$NOREMOTE" = "false" ]; then
-            LOCALINST="false"               # in this case the installation has to be executed on any remote host.
-            ExecdAlreadyInstalled $hti
+    if [ "$NOREMOTE" = false ]; then
+
+      LOCALINST=false
+
+      while [ "$install_is_done" = "false" ]; do
+         for h in $TMP_EXEC_HOST_LIST; do
+
+            ExecdAlreadyInstalled $h
             installed=$?
-            currently_running="false"
-            for runnings in $CURRENTLY_INSTALLING_HOSTS; do
-               if [ "$runnings" = "$hti" ]; then             # check if the currently selected host is already installing
-                  currently_running="true"
-                  break
-               fi
-            done
-            if [ "$installed" = 0 -a "$currently_running" = "false" ]; then #if not installed and not installing, do this
-               if [ $hti = `$SGE_UTILBIN/gethostname -aname` ]; then
-                  $INFOTEXT -log "local execd installation on host %s" $hti #the selected host is the local host, start
-                  qconf -ah $hti                                            #installation without rsh/ssh
-                  ./inst_sge -x -auto $FILE -noremote &
-                  inst_counter=`expr $inst_counter + 1`
-                  CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $hti"
-                  EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
-               else
-                  CheckRSHConnection $hti
-                  if [ "$?" = 0 ]; then
-                     #host is remote, start installation via rsh/ssh
-                     $INFOTEXT -log "remote execd installation on host %s" $hti
-                     qconf -ah $hti
-                     echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $hti /bin/sh &
+
+            if [ "$installed" = 0 ]; then
+               #if [ $h = `$SGE_UTILBIN/gethostname -aname` ]; then
+               #   LOCALINST=true
+               #else
+               currently_running="false"
+               for runnings in $CURRENTLY_INSTALLING_HOSTS; do
+                  if [ "$runnings" = "$h" ]; then
+                     currently_running="true"
+                     break
+                  fi
+               done
+               if [ "$currently_running" = "false" ]; then 
+                  CheckRSHConnection $h
+                  if [ "$?" = 0 ]; then 
+                     $INFOTEXT -log "remote installation on host %s" $h
+                     qconf -ah $h
+                     echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | $SHELL_NAME $h /bin/sh &
                      inst_counter=`expr $inst_counter + 1`
-                     CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $hti"
-                     EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
+                     CURRENTLY_INSTALLING_HOSTS="$CURRENTLY_INSTALLING_HOSTS $h"
                   else
-                     #host is remote, start installation via rsh/ssh
-                     $INFOTEXT -log "rsh/ssh connection to host %s is not working" $hti
-                     EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
-                     FAILED_EXEC_HOSTS="$FAILED_EXEC_HOSTS $hti"
+                     $INFOTEXT -log "rsh/ssh connection to host %s is not working" $h
+                     TMP_EXEC_HOST_LIST=`RemoveHostFromList $TMP_EXEC_HOST_LIST $h`
                   fi
                fi
-            else
-               $INFOTEXT -log "Host %s already installed" $hti
-               EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$hti"`
-               CURRENTLY_INSTALLING_HOSTS=`RemoveHostFromList "$CURRENTLY_INSTALLING_HOSTS" "$hti"`
-               INSTALLED_EXEC_HOSTS="$INSTALLED_EXEC_HOSTS $hti"
+               #fi
+            else 
+               $INFOTEXT -log "Host %s already installed" $h
+               TMP_EXEC_HOST_LIST=`RemoveHostFromList $TMP_EXEC_HOST_LIST $h`
+               CURRENTLY_INSTALLING_HOSTS=`RemoveHostFromList $CURRENTLY_INSTALLING_HOSTS $h`
             fi
-         else
-            LOCALINST="true"              # in this case: inst_sge -x -auto <conffile> -noremote was executed (mostly by isnt_sge script)
-            EXEC_HOSTS_TO_INSTALL_TMP=""  # no other EXEC host has to be installed. The list can be cleared
-            break                         # the the loop and jump to local installation
-         fi
-         retries=0
-         while [ "$inst_counter" -ge "$PAR_EXECD_INST_COUNT" -o "$EXEC_HOSTS_TO_INSTALL_TMP" = "" ]; do
-            retries=`expr $retries + 1`
-            for e in $CURRENTLY_INSTALLING_HOSTS; do
-               #looping over the currently running installs and checks if complete or not.
-               #if not complete the host won't be removed from the current list
-               #else the host will be removed from the 
-               if [ "$ignore_fqdn" = "true" ]; then
-                  ExecdAlreadyInstalled `echo $e | cut -d"." -f1`
-                  installed=$?
-               else
-                  #if not ignored check, if a default domain is entered
-                  if [ "$default_domain" != "none" ]; then
-                     #default_domain is entered, check if given hostname is long or not
-                     #given hostname is long the defualt domain won't be added
-                     #given hostname is short, default_domain will be added
-                     hasdot=`echo $e|grep '\.'`
-                     if [ "$hasdot" = "" ]; then
-                        e=$e.$default_domain
-                     fi
-                  fi      
-                  ExecdAlreadyInstalled $e
-                  installed=$?    
-               fi
-               if [ "$installed" = 1 ]; then
-                  #if host is installed refresh the list.
-                  inst_counter=`expr $inst_counter - 1`
-                  retries=0
-                  CURRENTLY_INSTALLING_HOSTS=`RemoveHostFromList "$CURRENTLY_INSTALLING_HOSTS" "$e"`
-                  EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$e"`
-                  INSTALLED_EXEC_HOSTS="$INSTALLED_EXEC_HOSTS $e"
-               fi
-            done
-            sleep 3  #give the install processes time to complete
-            if [ "$retries" -ge "$max_retries" ]; then #if the while loop ran as often as configured in $max_retries
-                                                      #we predict a failure and retries. The current hosts will marked as failed
-                                                      #all lists will be updated and parallel isntall counter will be reset
-               inst_counter=0
-               FAILED_EXEC_HOSTS="$FAILED_EXEC_HOSTS $CURRENTLY_INSTALLING_HOSTS"
-               for e in $CURRENTLY_INSTALLING_HOSTS; do
-                  EXEC_HOSTS_TO_INSTALL_TMP=`RemoveHostFromList "$EXEC_HOSTS_TO_INSTALL_TMP" "$e"`
+
+            is_done=0
+            #removing already installed execd host from TMP_EXEC_HOST_LIST,
+            #if inst_counter equal to configured parallel install limit
+            while [ "$inst_counter" -ge "$PAR_EXECD_INST_COUNT" ]; do
+               is_done=`expr $is_done + 1`
+               TMP_TMP_EXEC_HOST_LIST=$TMP_EXEC_HOST_LIST
+               for e in $TMP_TMP_EXEC_HOST_LIST; do
+                  #checking if fqdn is ignored
+                  #if ignored, use short hostname -> cut after first dot
+                  if [ "$ignore_fqdn" = "true" ]; then
+                     ExecdAlreadyInstalled `echo $e | cut -d"." -f1`
+                     installed=$?
+                  else
+                     #if not ignored check, if a default domain is entered
+                     if [ "$default_domain" != "none" ]; then
+                        #default_domain is entered, check if given hostname is long or not
+                        #given hostname is long the defualt domain won't be added
+                        #given hostname is short, default_domain will be added
+                        hasdot=`echo $e|grep '\.'`
+                        if [ "$hasdot" = "" ]; then
+                           e=$e.$default_domain
+                        fi
+                     fi      
+                     ExecdAlreadyInstalled $e
+                     installed=$?    
+                  fi
+
+                  if [ "$installed" = 1 ]; then
+                     inst_counter=`expr $inst_counter - 1`
+                     is_done=0
+                     TMP_EXEC_HOST_LIST=`RemoveHostFromList $TMP_EXEC_HOST_LIST $e`
+                  fi
                done
-               CURRENTLY_INSTALLING_HOSTS=""
-            fi
-            if [ "$inst_counter" = 0 -o "$EXEC_HOSTS_TO_INSTALL_TMP" = "" ]; then 
-               break
-            fi
+               sleep 3
+               if [ "$is_done" -ge "20" ]; then
+                  inst_counter=0
+               fi 
+            done 
          done
-      done
-      EXEC_HOSTS_TO_INSTALL=$EXEC_HOSTS_TO_INSTALL_TMP #we are looping over a EXECD host list, to prevent
-                                                       #listindex problems if hosts must be removed a TMP list
-                                                       #will be changed, not original. After looprun the original list will be updated
-      if [ "$EXEC_HOSTS_TO_INSTALL" = "" ]; then
-         install_is_done="true"                        #installation is done
-         for e in $FAILED_EXEC_HOSTS; do
-            $INFOTEXT -log "The host %s failed installing an execd" $e #log hostnames, which have been marked as failed to log file
-            $INFOTEXT -log "Please check these hosts, it's also possible that the installation\n timed out and the installation went well, anyhow!"
-         done
-      fi
+         if [ "x$TMP_EXEC_HOST_LIST" = "x" ]; then
+            install_is_done="true"
+         fi
    done
 
-   if [ "$LOCALINST" = "true" ]; then  #do the installation on the local host
+   else
+      LOCALINST=true
+   fi
+
+   if [ "$LOCALINST" = true ]; then
       WelcomeTheUserExecHost
       CheckForLocalHostResolving
       ProcessSGERoot

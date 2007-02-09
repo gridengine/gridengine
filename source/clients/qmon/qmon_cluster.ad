@@ -172,7 +172,6 @@ Qmon*cluster_global_layout.xmtChildren: \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_loglevel = loglevel , \
                   cluster_dfs = dfs , \
-                  cluster_reprioritize = reprioritize , \
                   cluster_enforce_project = enforce_project, \
                   cluster_enforce_user = enforce_user; \
    StringList     cluster_users = cluster_users, \
@@ -229,7 +228,6 @@ Qmon*cluster_global_layout.layout: \
          } \
          Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
          Fixed Caption tl "@{Delegated File Staging}" cluster_dfs \
-         Fixed Caption tl "@{Reprioritize}" cluster_reprioritize \
          <> \
       } \
       ## \
@@ -329,10 +327,6 @@ Qmon*cluster_global_layout.cluster_logmail.strings: \
 
 Qmon*cluster_global_layout.cluster_dfs.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_dfs.strings: \
-   "@{True}", "@{False}"
-
-Qmon*cluster_global_layout.cluster_reprioritize.chooserType: ChooserOption
-Qmon*cluster_global_layout.cluster_reprioritize.strings: \
    "@{True}", "@{False}"
 
 

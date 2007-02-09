@@ -8,9 +8,9 @@ NAME
 DESCRIPTION
      A usermapping entry is used to  define  alias  names  for  a
      cluster user. The user's name known by the scheduling system
-     is known as the cluster user. If the  cluster  user  doesn't
-     match  the user account name on an execution host, the user-
-     mapping feature can solve the problem.
+     is called cluster user. If the cluster  user  doesn't  match
+     the  user account name on an execution host, the usermapping
+     feature can solve the problem.
 
      Each line in the usermapping entry  file  specifies  a  user
      name and the host(s) where he has an account.
@@ -26,16 +26,17 @@ DESCRIPTION
 FORMAT
      A user mapping entry contains two parameters:
 
-  cluster_user
-     The cluster_user keyword defines the cluster user name.  The
-     rest  of  the textline after the keyword "cluster_user" will
-     be taken as cluster user value.
+     cluster_user
+          The cluster_user keyword defines the cluster user name.
+          The   rest   of   the   textline   after   the  keyword
+          "cluster_user" will be taken as cluster user value.
 
 
-  remote_user
-     The user name on an execution host.  Please  note  that  the
-     value  for this attribute might be overwritten for a certain
-     hostgroups or single host.  Find an example below.
+     remote_user
+          The user name on an execution host.  Please  note  that
+          the value for this attribute might be overwritten for a
+          certain hostgroups or single  host.   Find  an  example
+          below.
 
 
 
@@ -52,8 +53,10 @@ EXAMPLE
      cluster system to the user peter on all hosts in the cluster
      except for all hosts which are referenced in  the  hostgroup
      @linux. For all these hosts the user will be mapped to pet1.
-     For the host fangorn the remote user will be peter1.   <I>host-</I>
-     <B><A HREF="../htmlman5/group.html">group(5)</A></B> to obtain for more information about that.
+     For the  host  fangorn  the  remote  user  will  be  peter1.
+     <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B> to obtain for more information about that.
+
+
 
 SEE ALSO
      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B>.
@@ -61,10 +64,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
 
 
 

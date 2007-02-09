@@ -35,5 +35,10 @@
 
 #include "basis_types.h"
 
+#define MSG_PARSE_NOOPTIONARGUMENT    _MESSAGE(7005, _("ERROR! no option argument"))
+#define MSG_QDEL_f_OPT_USAGE             _MESSAGE(7007, _("force action"))
+#define MSG_QDEL_del_list_1_OPT_USAGE    _MESSAGE(7010, _("delete all jobs given in list"))
+#define MSG_QDEL_del_list_3_OPT_USAGE    _MESSAGE(7012, _("delete all jobs of users specified in list"))
+
 #endif /* __MSG_QDEL_H */
 

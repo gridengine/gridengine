@@ -584,6 +584,19 @@ static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
+   /*
+   ** switch to admin user
+   */
+   if (sge_set_admin_username(admin_user, err_str)) {
+      CRITICAL((SGE_EVENT, err_str));
+      SGE_EXIT(NULL, 1);
+   }
+
+   if (sge_switch2admin_user()) {
+      CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSWITCHTOADMINUSER ));
+      SGE_EXIT(NULL, 1);
+   }
+
    ret = ctx->prepare_enroll(ctx);
    ret = gdi2_get_conf_and_daemonize(ctx, daemonize_schedd, &schedd_config_list, &shut_me_down);
    switch(ret) {
@@ -599,22 +612,8 @@ static int sge_setup_sge_schedd(sge_gdi_ctx_class_t *ctx)
    }
 
    sge_show_conf();
+
    lFreeList(&schedd_config_list);
-
-
-   /*
-   ** switch to admin user
-   */
-   if (sge_set_admin_username(admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(NULL, 1);
-   }
-
-   if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSWITCHTOADMINUSER ));
-      SGE_EXIT(NULL, 1);
-   }
-
 
    sge_chdir_exit(qmaster_spool_dir, 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1, 0);
@@ -669,7 +668,7 @@ int sge_before_dispatch(sge_evc_class_t *evc)
       lListElem *global = NULL, *local = NULL;
 
       if (gdi2_get_configuration(ctx, SGE_GLOBAL_NAME, &global, &local) == 0) {
-         merge_configuration(NULL, progid, cell_root, global, local, NULL);
+         merge_configuration(progid, cell_root, global, local, NULL);
       }   
       lFreeElem(&global);
       lFreeElem(&local);

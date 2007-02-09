@@ -459,12 +459,7 @@ AddQueue()
       fi
    fi
 
-   if [ "$SGE_ARCH" != "win32-x86" ]; then
-      LOADCHECK_COMMAND="$SGE_UTILBIN/loadcheck"
-   else
-      LOADCHECK_COMMAND="$SGE_UTILBIN/loadcheck.exe"
-   fi
-   slots=`$LOADCHECK_COMMAND -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
+   slots=`$SGE_UTILBIN/loadcheck -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
 
    $INFOTEXT -u "\nAdding a queue for this host"
    $INFOTEXT "\nWe can now add a queue instance for this host:\n\n" \
@@ -491,14 +486,8 @@ GetLocalExecdSpoolDir()
    $INFOTEXT -u "\nLocal execd spool directory configuration"
    $INFOTEXT "\nDuring the qmaster installation you've already entered " \
              "a global\nexecd spool directory. This is used, if no local " \
-             "spool directory is configured.\n\n Now you can configure a local spool " \
-             "directory for this host.\nATTENTION: The local spool directory doesn't have " \
-             "to be located on a local\ndrive. It is specific to the <local> host and can " \
-             "be located on network drives,\ntoo. But for performance reasons, spooling to a " \
-             "local drive is recommended.\n\nFOR WINDOWS USER: On Windows systems the " \
-             "local spool directory MUST be set\nto a local harddisk directory.\nInstalling " \
-             "an execd without local spool directory makes the host unuseable.\nLocal " \
-             "spooling on local harddisk is mandatory for Windows systems.\n"
+             "spool directory is configured.\n\n Now you can enter a local spool " \
+             "directory for this host.\n"
    $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
    ret=$?
 
@@ -631,10 +620,13 @@ ExecdAlreadyInstalled()
    hostname=$1
    ret="undef"
 
-   load=`qhost -h $hostname | tail -1 | awk '{ print $4 }'`
-   memuse=`qhost -h $hostname | tail -1 | awk '{ print $6 }'`
-   if [ "$load" != "-" -a "$memuse" != "-" ]; then
-      $INFOTEXT -log "Execd return load and memuse values: LOAD: %s, MEMUSE: %s!\nExecution host %s is already installed!" $load $memuse $hostname
+   ret=`qconf -sconf $hostname | grep execd_spool_dir | awk '{ print $2 }'`
+   if [ ! -d $ret/$hostname ]; then
+      ret=`qconf -sconf | grep execd_spool_dir | awk '{ print $2 }'`
+   fi
+
+   if [ -d $ret/$hostname ]; then
+      $INFOTEXT -log "Found execd spool directory: $s!\nExecution host %s is already installed!" $ret/$hostname $hostname
       return 1 
    else
       return 0 

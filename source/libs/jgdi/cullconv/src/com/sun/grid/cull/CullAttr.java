@@ -42,8 +42,7 @@ public class CullAttr {
    
    public static final String CULL_PRIMARY_KEY = "CULL_PRIMARY_KEY";
    public static final String CULL_READ_ONLY   = "CULL_JGDI_RO";
-   public static final String CULL_HIDDEN      = "CULL_JGDI_HIDDEN";
-   public static final String CULL_CONFIGURE   = "CULL_CONFIGURE";
+   public static final String CULL_HIDDEN    = "CULL_JGDI_HIDDEN";
    private CullObject parent;
    private String name;
    private String type;
@@ -52,7 +51,6 @@ public class CullAttr {
    private boolean primaryKey;
    private boolean readOnly = false;
    private boolean hidden = false;
-   private boolean configurable = false;
    
    /** Creates a new instance of CullAttr */
    public CullAttr() {
@@ -114,9 +112,7 @@ public class CullAttr {
          setReadOnly(true);
       } else if ( CULL_HIDDEN.equals(param)) {
          setHidden(true);
-      } else if ( CULL_CONFIGURE.equals(param)) {
-         setConfigurable(true);
-      }   
+      }
    }
    
    public int getParamCount() {
@@ -173,14 +169,6 @@ public class CullAttr {
    
    public void setHidden(boolean hidden) {
       this.hidden = hidden;
-   }
-
-   public boolean isConfigurable() {
-      return configurable;
-   }
-
-   public void setConfigurable(boolean configurable) {
-      this.configurable = configurable;
    }
    
 }

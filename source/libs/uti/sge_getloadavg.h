@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(CRAY) || defined(NEXSX4) || defined(NECSX5) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(HAS_AIX5_PERFLIB) || defined(INTERIX)
+#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(CRAY) || defined(NEXSX4) || defined(NECSX5) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(DARWIN) || defined(FREEBSD) || defined(NETBSD) || defined(TEST_AIX51) || defined(INTERIX)
 #  define SGE_LOADAVG
 #endif
 

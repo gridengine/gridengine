@@ -63,11 +63,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Compile core classes." name="compile" if="isJavaBuildHost">
       <mkdir dir="${classes.dir}"/>
-      <javac debug="true"
-             deprecation="true"
-             destdir="${classes.dir}"
-             source="1.4"
-             target="1.4">
+      <javac debug="true" deprecation="true" destdir="${classes.dir}">
          <src path="${src.dir}/"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/drmaa/*.java"/>
@@ -78,12 +74,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init,compile" description="Compile test classes." name="compile.test" if="isJavaBuildHost">
       <mkdir dir="${classes.dir.test}"/>
-      <javac debug="true"
-             deprecation="true"
-             destdir="${classes.dir.test}"
-             classpath="${classes.dir}:${libs.junit.classpath}"
-             source="1.4"
-             target="1.4">
+      <javac debug="true" deprecation="true" destdir="${classes.dir.test}" classpath="${classes.dir}:${libs.junit.classpath}">
          <src path="${src.dir.test}"/>
          <include name="org/ggf/drmaa/*.java"/>
          <include name="com/sun/grid/*.java"/>
@@ -92,21 +83,31 @@ ___INFO__MARK_END__-->
          <include name="DrmaaSuite.java"/>
       </javac>
    </target>
+   
 
    <target name="jar.init" depends="init">
       <fileset id="jar.classes" dir="${classes.dir}">
          <include name="org/ggf/drmaa/*.class"/>
          <include name="com/sun/grid/drmaa/*.class"/>
       </fileset>
+      <fileset id="jar.test.classes" dir="${classes.dir.test}">
+         <include name="org/ggf/drmaa/*.class"/>
+         <include name="com/sun/grid/*.class"/>
+         <include name="com/sun/grid/drmaa/*.class"/>
+         <include name="TestDrmaa*.class"/>
+         <include name="DrmaaSuite.class"/>
+      </fileset>
       <fileset id="jar.meta" dir="${src.dir}">
          <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
       </fileset>
       <dependset>
          <srcfileset refid="jar.classes"/>
+         <srcfileset refid="jar.test.classes"/>
          <srcfileset refid="jar.meta"/>
          <targetfileset file="${jar}"/>
       </dependset>
    </target>
+   
 
    <target depends="jar.build, jar.wait" description="Build release jar." name="jar"/>
 
@@ -116,7 +117,6 @@ ___INFO__MARK_END__-->
          <fileset refid="jar.meta"/>
       </jar>
       <copy file="${jar}.tmp" tofile="${jar}"/>
-      <delete file="${jar}.tmp"/>
    </target>
 
    <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
@@ -183,7 +183,7 @@ ___INFO__MARK_END__-->
    </target>
 
    <target name="api.wait" depends="api.init" unless="isJavaBuildHost">
-       <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+       <waitfor maxwait="20" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
             <available file="${api.jar}"/>
        </waitfor>
        
@@ -232,25 +232,8 @@ ___INFO__MARK_END__-->
       </delete>
    </target>
    
-   
-   <target name="clean" depends="init, java.clean, java.clean.warn" 
-           description="Clean all build products."/>
-
-   <!-- 
-   =============================================================================
-   The java.clean target is only executed on the java build host
-   Do not wonder that your files are not deleted if the java.buildhost
-   property is not set 
-   =============================================================================
-   -->
-   <target name="java.clean" depends="init" if="isJavaBuildHost">
+   <target depends="init" description="Clean all build products." name="clean">
       <delete dir="${classes.dir}"/>
-   </target>
-   
-   <target name="java.clean.warn" depends="init" unless="isJavaBuildHost">
-       <echo level="warning">Warning: Do not delete</echo>
-       <echo level="warning">         ${classes.dir}</echo>
-       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
    </target>
 
 </project>

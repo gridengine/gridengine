@@ -200,6 +200,7 @@
  * libs/uti/sge_bootstrap
  */
 #define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file"))
+#define MSG_UTI_CANNOTBOOTSTRAP_S              _MESSAGE(49101, _("cannot bootstrap from file "SFN))
 #define MSG_UTI_CANNOTLOCATEATTRIBUTE_SS       _MESSAGE(49102, _("cannot read attribute <"SFN"> from bootstrap file "SFN))
 
 /* 

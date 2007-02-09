@@ -47,6 +47,7 @@ import java.util.Map;
  *  This class defines some helper methods which are vital
  *  for gridengine. 
  *
+ *  @author richard.hierlmeier@sun.com
  */
 public class SGEUtil {
     

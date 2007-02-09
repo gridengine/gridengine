@@ -44,15 +44,15 @@ public class HostInfoDescriptor extends AbstractClassDescriptor {
    public HostInfoDescriptor() {
       super(HostInfo.class, null);
       
-      addSimple("hostname", String.class, null,-1, false, true, false);
-      addSimple("arch", String.class, null, -1, false, true, false);
-      addSimple("loadAvg", String.class, null, -1, false, true, false);
-      addSimple("memTotal", String.class, null, -1, false, true, false);
-      addSimple("memUsed", String.class, null, -1, false, true, false);
-      addSimple("swapTotal", String.class, null, -1, false, true, false);
-      addSimple("swapUsed", String.class, null, -1, false, true, false);
+      addSimple("hostname", String.class, null,-1, false, true);
+      addSimple("arch", String.class, null, -1, false, true);
+      addSimple("loadAvg", String.class, null, -1, false, true);
+      addSimple("memTotal", String.class, null, -1, false, true);
+      addSimple("memUsed", String.class, null, -1, false, true);
+      addSimple("swapTotal", String.class, null, -1, false, true);
+      addSimple("swapUsed", String.class, null, -1, false, true);
       
-      addMap("hostValue", Object.class, null, String.class, -1, -1, -1, null, true, false);
+      addMap("hostValue", Object.class, null, String.class, -1, -1, -1, null, true);
    }
 
    public void validate(Object bean) throws com.sun.grid.jgdi.configuration.reflect.InvalidObjectException {

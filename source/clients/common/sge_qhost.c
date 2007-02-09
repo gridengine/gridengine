@@ -65,8 +65,6 @@
 #include "msg_clients_common.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
-#include "sge_eval_expression.h"
-
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
@@ -122,12 +120,6 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       DRETURN(QHOST_ERROR);
    }   
 
-   /* 
-   ** delete ok message 
-   */
-   lFreeList(alpp);
-
-
    centry_list_init_double(cl);
 
    /*
@@ -135,7 +127,6 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    */
    if (lGetNumberOfElem(resource_match_list)) {
       int selected;
-      lListElem *global = NULL;
 
       if (centry_list_fill_request(resource_match_list, alpp, cl, true, true, false)) {
          /* TODO: error message gets written by centry_list_fill_request into SGE_EVENT */
@@ -149,32 +140,23 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             lSetUlong(host, EH_tagged, 0);
          }  
       }   
-      
          
       /* prepare request */
-      global = lGetElemHost(ehl, EH_name, "global");
-      selected = sge_select_queue(resource_match_list, NULL, global, ehl, cl,
-                                  true, -1, NULL, NULL, NULL);
-      if (selected) {
-         for_each(ep, ehl) {
+      for_each(ep, ehl) {
+
+         /* prepare complex attributes */
+         if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
+            continue;
+
+         DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
+
+         selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+                                     true, -1, NULL, NULL, NULL);
+
+         if (selected) { 
             lSetUlong(ep, EH_tagged, 1);
-         }
-      } else {
-         for_each(ep, ehl) {
-            /* prepare complex attributes */
-            if (!strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME))
-               continue;
-
-            DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
-
-            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
-                                        true, -1, NULL, NULL, NULL);
-
-            if (selected) { 
-               lSetUlong(ep, EH_tagged, 1);
-            } else {
-               lSetUlong(ep, EH_tagged, 0);
-            }
+         } else {
+            lSetUlong(ep, EH_tagged, 0);
          }
       }
 
@@ -201,10 +183,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       lInsertElem(ehl, NULL, ep); 
    }
    
-   /*
-   ** output handling
-   */
-   if (report_handler != NULL) {
+   if(report_handler != NULL) {
       ret = report_handler->report_started(report_handler, alpp);
       if (ret != QHOST_SUCCESS) {
          free_all_lists(&ql, &jl, &cl, &ehl, &pel);
@@ -221,7 +200,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
          }
       } else {
          ret = report_handler->report_host_begin(report_handler, lGetHost(ep, EH_name), alpp);
-         if (ret != QHOST_SUCCESS) {
+         if(ret != QHOST_SUCCESS) {
             break;
          }
       }
@@ -231,7 +210,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
       if (report_handler != NULL) {
          DPRINTF(("report host_finished: %s\n", lGetHost(ep, EH_name)));
          ret = report_handler->report_host_finished(report_handler, lGetHost(ep, EH_name), alpp);
-         if (ret != QHOST_SUCCESS) {
+         if(ret != QHOST_SUCCESS) {
             break;
          }
       }
@@ -284,10 +263,10 @@ lList **alpp
                sizeof(arch_string)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(arch_string, "-");
-   }
-
+   
    /*
    ** num_proc
    */
@@ -297,9 +276,9 @@ lList **alpp
                sizeof(num_proc)); 
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(num_proc, "-");
-   }
 
    /*
    ** load_avg
@@ -309,9 +288,9 @@ lList **alpp
       reformatDoubleValue(load_avg, "%.2f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(load_avg, "-");
-   }
 
    /*
    ** mem_total
@@ -321,9 +300,9 @@ lList **alpp
       reformatDoubleValue(mem_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(mem_total, "-");
-   }
 
    /*
    ** mem_used
@@ -333,9 +312,9 @@ lList **alpp
       reformatDoubleValue(mem_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(mem_used, "-");
-   }
 
    /*
    ** swap_total
@@ -345,9 +324,9 @@ lList **alpp
       reformatDoubleValue(swap_total, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(swap_total, "-");
-   }
 
    /*
    ** swap_used
@@ -357,9 +336,9 @@ lList **alpp
       reformatDoubleValue(swap_used, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
       sge_dstring_clear(&rs);
       lFreeElem(&lep);
-   } else {
+   }            
+   else
       strcpy(swap_used, "-");
-   }
    
 
    if (report_handler) {
@@ -427,8 +406,8 @@ lList **alpp
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
       for_each(qep, qinstance_list) {
-         if (!sge_eval_expression(TYPE_HOST, lGetHost(host, EH_name),
-              lGetHost(qep, QU_qhostname), NULL)) {
+         if (!sge_hostcmp(lGetHost(qep, QU_qhostname), 
+                          lGetHost(host, EH_name))) {
             char buf[80];
             
             if (show & QHOST_DISPLAY_QUEUES) {
@@ -472,7 +451,7 @@ lList **alpp
                   sprintf(buf, "%d/%d ",
                           qinstance_slots_used(qep),
                           (int)lGetUlong(qep, QU_job_slots));
-                  printf("%-9.9s", buf);
+                   printf("%-9.9s", buf);
                } else {
                   ret = report_handler->report_queue_ulong_value(report_handler,
                                           lGetString(qep, QU_qname),
@@ -592,7 +571,7 @@ lList **alpp
                found = 1;
                if (first) {
                   first = 0;
-                  if (report_handler == NULL ) {
+                  if(report_handler == NULL ) {
                      printf("    Host Resource(s):   ");
                   }
                }
@@ -987,7 +966,7 @@ u_long32 show
    }
    if (lFirst(conf_l)) {
       lListElem *local = NULL;
-      merge_configuration(NULL, progid, cell_root, lFirst(conf_l), local, NULL);
+      merge_configuration(progid, cell_root, lFirst(conf_l), local, NULL);
    }
    
    lFreeList(&conf_l);

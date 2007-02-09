@@ -57,6 +57,7 @@ import javax.security.auth.callback.UnsupportedCallbackException;
  *
  * It uses the native library juti to turn of echoing.
  *
+ * @author richard.hierlmeier@sun.com
  * @see com.sun.grid.util.SGEUtil#getPassword
  */
 public class ConsoleCallbackHandler implements CallbackHandler {

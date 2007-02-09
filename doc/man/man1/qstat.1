@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2004-2007 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2006/11/16 09:08:49 $     Revision: $Revision: 1.32 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2006/11/16 09:08:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -99,7 +99,7 @@ Command line can be used to override the flags contained in the files.
 .\"
 .SH OPTIONS
 .IP "\fB\-explain a|A|c|E\fP"
-\'c' displays the reason for the c(onfiguration ambiguous) state of a queue
+\'c' displays the reason for the configuration ambiguous state of a queue
 instance. 'a' shows the reason for the alarm state. Suspend alarm state
 reasons will be displayed by 'A'. 'E' displays the reason for a queue
 instance error state.
@@ -154,8 +154,7 @@ Prints a listing of all options.
 .IP "\fB\-j [job_list]\fP"
 Prints either for all pending jobs or the jobs contained in job_list 
 various information. The job_list can contain job_ids, job_names, or 
-wildcard expression
-.M sge_types 1 . 
+patterns. 
 .sp
 For jobs in E(rror) state the error reason is displayed. For jobs that
 could not be dispatched during in the last scheduling interval the 
@@ -176,7 +175,7 @@ queues on which information is requested. Matching is performed
 on queues based on non-mutable resource availability information 
 only. That means load values are always ignored except the 
 so-called static load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
-"virtual_total") ones. Consumable utilization is also ignored.
+"virtual_total") ones. Also consumable utilization is ignored.
 The pending jobs are restricted to jobs that might run in 
 one of the above queues. In a similar fashion also the queue-job
 matching bases only on non-mutable resource availability 
@@ -200,13 +199,13 @@ general.
 (see OUTPUT FORMATS below).
 .\"
 .IP "\fB\-q wc_queue_list\fP"
-Specifies a wildcard expression queue list to which job
+Specifies a wildcard queue list to which job
 information is to be displayed. Find the definition of \fBwc_queue_list\fP
 in
 .M sge_types 1 .
 .\"
 .IP "\fB\-qs {a|c|d|o|s|u|A|C|D|E|S}\fP"
-Allows for the filtering of queue instances according to state.
+Allows to filter for queue instances in certain states.
 .\"
 .IP "\fB\-r\fP"
 Prints extended information about the resource requirements
@@ -268,8 +267,8 @@ jobs in those queues.
 .sp
 The string
 \fB\ $user\fP
-is a placeholder for the current username. An asterisk "*" can be used 
-as username wildcard to request any users' jobs be displayed. The default
+is a placeholder for the current username. An asterix "*" can be used 
+as username wildcard to request any users jobs be displayed. The default
 value for this switch is \fB\-u $user\fP.
 \"
 .IP "\fB\-urg\fP"
@@ -319,7 +318,7 @@ the number of slots which are in one of these states or in any  combination
 of them: 'cdsuE'
 .IP "\(bu" 3n
 the \fB\-g c\fP option can be used in combination with \fB\-ext\fP. In this
-case, additional columns are added to the output. Each column contains
+case additional columns are added to the output. Each column contains
 the slot count for one of the available queue states.
 .SS "\fBReduced Format (without \-f, \-F, and \-qs)\fP"
 Following the header line a line is printed for each job
@@ -388,7 +387,7 @@ the number of job slots or the function of parallel job tasks
 if \fB\-g t\fP is specified.
 .sp 
 Without \fB\-g t\fP option the total number of slots occupied resp. requested by the job 
-is displayed. For pending parallel jobs with a PE slot range request,
+is displayed. For pending parallel jobs with a PE slot range request 
 the assumed future slot allocation is displayed.
 With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
 latter for parallel jobs only) is displayed.
@@ -485,9 +484,9 @@ If the c(onfiguration ambiguous) state is displayed for a queue
 instance this indicates that the configuration specified for this
 queue instance in
 .M sge_conf 5
-is ambiguous. This state is cleared when
-the configuration becomes unambiguous again. This state prevents further jobs
-from being scheduled to that queue instance. Detailed reasons why
+is ambiguous. The state vanishes when
+the configuration becomes un-ambiguous again. This state prevents from
+scheduling further jobs to that queue instance. Detailed reasons why
 a queue instance entered the c(onfiguration ambiguous) state can
 be found in the
 .M sge_qmaster 8
@@ -495,12 +494,12 @@ messages file and are shown by the
 qstat -explain switch. For queue instances in this state the cluster
 queue's default settings are used for the ambiguous attribute.
 .PP
-If an o(rphaned) state is displayed for a queue instance, it
-indicates that the queue instance is no longer demanded by the current
-cluster queue's configuration or the host group configuration.
-The queue instance is kept because jobs which not yet finished
-jobs are still associated with it, and it will vanish from qstat output
-when these jobs have finished. To quicken vanishing of an orphaned
+If an o(rphaned) state is displayed for a queue instance this
+indicates that the current cluster queue's configuration and
+host group configuration does not any longer demand this queue
+instance. The queue instance is kept because not yet finished
+jobs are still associated and it will vanish from qstat output
+when these jobs are finished. To quicken vanishing of an orphaned
 queue instance associated job(s) can be deleted using 
 .M qdel 1 .
 A queue instance in (o)rphaned state can be revived by changing
@@ -594,7 +593,7 @@ the number of job slots or the function of parallel job tasks
 if \fB\-g t\fP is specified.
 .sp 
 Without \fB\-g t\fP option the number of slots occupied per queue resp. requested by the job 
-is displayed. For pending parallel jobs with a PE slot range request,
+is displayed. For pending parallel jobs with a PE slot range request 
 the assumed future slot allocation is displayed.
 With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
 latter for parallel jobs only) is displayed.
@@ -742,21 +741,21 @@ The deadline initiation time of the job as specified with the
 \fB\-dl\fP option.
 .\"
 .SS "\fBEnhanced Output (with \-pri)\fP"
-For each job, the following additional job priority related items are 
+For each job the following additional job priority related items are 
 displayed (see also
 .M sge_priority 5 ):
 .\"
 .IP "\fBnurg\fP"
-The job's total urgency value in normalized fashion.
+The jobs total urgency value in normalized fashion.
 .\"
 .IP "\fBnpprior\fP"
-The job's \fB\-p\fP priority in normalized fashion.
+The jobs \fB\-p\fP priority in normalized fashion.
 .\"
 .IP "\fBntckts\fP"
-The job's ticket amount in normalized fashion.
+The jobs ticket amount in normalized fashion.
 .\"
 .IP "\fBppri\fP"
-The job's \fB\-p\fP priority as specified by the user.
+The jobs \fB\-p\fP priority as specified by the user.
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

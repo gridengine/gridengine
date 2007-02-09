@@ -1949,17 +1949,17 @@ int lSetString(lListElem *ep, int name, const char *value)
    ** else do a string compare
    */
    str = ep->cont[pos].str;
-   if (value == NULL && str == NULL) {
+   if(value == NULL && str == NULL) {
       changed = 0;
    } else {
-      if (value == NULL || str == NULL) {
+      if(value == NULL || str == NULL) {
          changed = 1;
       } else {
          changed = strcmp(value, str);
       }
    }
 
-   if (changed) {
+   if(changed) {
       /* remove old hash entry */
       if(ep->descr[pos].ht != NULL) {
          cull_hash_remove(ep, pos);
@@ -3820,7 +3820,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 
    *iterator = NULL;
 
-   if (lp->descr[pos].ht != NULL) {
+   if(lp->descr[pos].ht != NULL) {
       /* hash access */
       ep = cull_hash_first(lp->descr[pos].ht, str, 
                            mt_is_unique(lp->descr[pos].mt), iterator);

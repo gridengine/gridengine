@@ -634,7 +634,7 @@ SetProductMode()
 
       case $SGE_ARCH in
 
-      aix* | hp11*)
+      aix*)
           SEC_COUNT=`strings -a $SGE_BIN/sge_qmaster | grep "AIMK_SECURE_OPTION_ENABLED" | wc -l`
           ;;
          *)
@@ -703,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: 6.0u7"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -763,7 +763,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: 6.0u7"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
@@ -1781,13 +1781,12 @@ WindowsSupport()
 WindowsDomainUserAccess()
 {
    $CLEAR
-   #The windows domain user access handling has changed -> WIN_DOMAIN_ACCESS always has to be true
-   #$INFOTEXT -u "Windows Domain User Access"
-   #$INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nDo you want to use Windows Domain Users (answer: y)\n" \
-   #                                               "or are you going to use local Windows Users (answer: n) (y/n) [y] >> "
-   #if [ $? = 0 ]; then
+   $INFOTEXT -u "Windows Domain User Access"
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nDo you want to use Windows Domain Users (answer: y)\n" \
+                                                  "or are you going to use local Windows Users (answer: n) (y/n) [y] >> "
+   if [ $? = 0 ]; then
       WIN_DOMAIN_ACCESS=true
-   #fi
+   fi
 }
 
 

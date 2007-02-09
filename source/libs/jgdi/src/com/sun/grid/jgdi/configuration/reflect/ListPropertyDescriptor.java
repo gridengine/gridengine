@@ -46,8 +46,8 @@ public abstract class ListPropertyDescriptor extends PropertyDescriptor {
    /** Creates a new instance of ListPropertyDescriptor */
    public ListPropertyDescriptor(Class beanClass, String propertyName, 
                                  Class propertyType, String cullType,
-                                 int cullFieldName, boolean browseable, boolean readOnly, boolean configurable ) {
-      super( beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly, configurable);
+                                 int cullFieldName, boolean browseable, boolean readOnly ) {
+      super( beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly);
       setBrowsable(browseable);
    }
    

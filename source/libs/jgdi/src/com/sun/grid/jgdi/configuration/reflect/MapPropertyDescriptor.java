@@ -48,8 +48,8 @@ public abstract class MapPropertyDescriptor extends PropertyDescriptor {
    protected MapPropertyDescriptor(Class beanClass, String propertyName, 
                              Class propertyType, String cullType, Class keyType, int cullFieldName, 
                              int keyCullFieldName, int valueCullFieldName, 
-                             Object defaultKey, boolean readOnly, boolean configurable ) {
-      super(beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly, configurable);
+                             Object defaultKey, boolean readOnly ) {
+      super(beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly);
       this.keyCullFieldName = keyCullFieldName;
       this.valueCullFieldName = valueCullFieldName;
       this.keyType = keyType;

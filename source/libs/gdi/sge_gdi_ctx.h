@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifdef TEST_GDI2
+
 #include "sge_env.h"
 #include "sge_prog.h"
 #include "setup_path.h"
@@ -51,6 +53,7 @@ typedef struct sge_gdi_ctx_class_str sge_gdi_ctx_class_t;
 #include "sge_profiling.h"
 #include "sge_uidgid.h"
 
+/* TODO: adjust this func after making TEST_GDI2 default */
 int sge_gdi2_setup(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp);
 int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp);
 
@@ -183,6 +186,8 @@ sge_gdi_ctx_class_t* sge_gdi_get_thread_local_ctx(void);
 void sge_gdi_set_thread_local_ctx(sge_gdi_ctx_class_t* ctx);
 
 void gdi_mt_init(void);
+
+#endif /* TEST_GDI2 */
 
 #endif /* __SGE_GDI_CTX_H */
 

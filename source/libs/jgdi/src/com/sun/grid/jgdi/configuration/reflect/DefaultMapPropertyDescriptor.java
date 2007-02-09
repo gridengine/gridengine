@@ -51,9 +51,9 @@ public class DefaultMapPropertyDescriptor extends MapPropertyDescriptor {
    protected DefaultMapPropertyDescriptor(Class beanClass, String propertyName, 
                              Class propertyType, String cullType, Class keyType, int cullFieldName, 
                              int keyCullFieldName, int valueCullFieldName, 
-                             Object defaultKey, boolean readOnly, boolean configurable ) {
+                             Object defaultKey, boolean readOnly ) {
       super(beanClass, propertyName, propertyType, cullType, keyType,
-            cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
+            cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly);
       countMethod = findMethod( "get", "Count", null );
       getMethod = findMethod( "get", new Class[] { keyType } );
       keysMethod = findMethod("get", "Keys", null);

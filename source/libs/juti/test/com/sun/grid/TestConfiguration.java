@@ -39,6 +39,7 @@ import java.util.Properties;
 
 /**
  *
+ * @author rh150277
  */
 public class TestConfiguration {
     

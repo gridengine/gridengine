@@ -106,7 +106,6 @@ int lStr2NmGenerator(const char *str, lNameSpace *ns)
 }
 
 
-#if 0
 int main(int argc, char *argv[])
 {
 
@@ -124,6 +123,5 @@ int main(int argc, char *argv[])
     DEXIT;
     return 0;
 }
-#endif
 
 #endif

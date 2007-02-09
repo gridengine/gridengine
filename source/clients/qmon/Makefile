@@ -58,7 +58,6 @@ include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
-include $(SDIR)/libs/evc/Makefile
 include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
@@ -83,7 +82,7 @@ QMON_SRC =  qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
             qmon_cq.c qmon_resource_quota.c
 
-QMON_AD   = $(QMON_DIR)/qmon_main.ad \
+QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_browser.ad \
             $(QMON_DIR)/qmon_host.ad \
             $(QMON_DIR)/qmon_job.ad \
@@ -127,12 +126,12 @@ QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolf.a
 #                -L. -lspoolc -lspoolf -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
                 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon \
+                -L. -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon \
                 -lcomm -lcommlists -luti -llck $(DLLIB)
 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
-                   $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \
+                   $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
                    $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
 

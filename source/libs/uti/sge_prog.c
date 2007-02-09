@@ -60,35 +60,50 @@ const char *prognames[] =
    "qconf"		,       /* 2   */
    "qdel"		,       /* 3   */
    "qhold"		,       /* 4   */
-   "qmaster"	,       /* 5   */
-   "qmod"		,       /* 6   */
-   "qresub"    ,       /* 7   */
-   "qrls"		,       /* 8   */
-   "qselect"	,       /* 9   */
-   "qsh"		   ,       /* 10  */
-   "qrsh"		,       /* 11  */
-   "qlogin"		,       /* 12  */
-   "qstat"		,       /* 13  */
-   "qsub"		,       /* 14  */
-   "execd"		,       /* 15  */
-   "qevent"    ,       /* 16  */
-   "unknown"	,       /* 17  */
-   "unknown"	,       /* 18  */
-   "qmon"		,       /* 19  */
-   "schedd"		,       /* 20  */
-   "qacct"		,       /* 21  */
-   "shadowd"	,       /* 22  */
-   "qhost"		,       /* 23  */
-   "spoolinit" ,       /* 24  */
-   "japi"      ,       /* 25  */
-   "japi_ec"   ,       /* 26  */
-   "drmaa"     ,       /* 27  */
-   "qping"     ,       /* 28  */ 
-   "sgepasswd" ,       /* 29  */
-   "qquota"    ,       /* 30  */
-   "jgdi"      ,       /* 31  */
-   "qtcsh"     ,       /* 32  */
-   "sge_share_mon"     /* 33  */
+   "qidle"		,       /* 5   */
+   "qmaster"	,       /* 6   */
+   "qmod"		,       /* 7   */
+   "qmove"		,       /* 8   */
+   "qmsg"		,       /* 9   */
+   "qresub"    ,       /* 10  */
+   "qrls"		,       /* 11  */
+   "qselect"	,       /* 12  */
+   "qsh"		   ,       /* 13  */
+   "qrsh"		,       /* 14  */
+   "qlogin"		,       /* 15  */
+   "qsig"		,       /* 16  */
+   "qstat"		,       /* 17  */
+   "qsub"		,       /* 18  */
+   "execd"		,       /* 19  */
+   "qevent"    ,       /* 20  */
+   "unknown"	,       /* 21  */
+   "unknown"	,       /* 22  */
+   "qusage"		,       /* 23  */
+   "dcmd"		,       /* 24  */
+   "dsh"		   ,       /* 25  */
+   "qmon"		,       /* 26  */
+   "schedd"		,       /* 27  */
+   "qsched"		,       /* 28  */
+   "qacct"		,       /* 29  */
+   "qstd"		,       /* 30  */
+   "commd"		,       /* 31  */
+   "shadowd"	,       /* 32  */
+   "yyy"	   	,       /* 33, obsolete */
+   "tasker"	  	,       /* 34  */
+   "qidl"		,       /* 35  */
+   "unknown"	,       /* 36  */
+   "qhost"		,       /* 37  */
+   "commdcntl" ,       /* 38  */
+   "spoolinit" ,       /* 39  */
+   "japi"      ,       /* 40  */
+   "japi_ec"   ,       /* 41  */
+   "drmaa"     ,       /* 42  */
+   "qping"     ,       /* 43  */ 
+   "sgepasswd" ,       /* 44  */
+   "qlimit"    ,       /* 45  */
+   "jgdi"      ,       /* 46  */
+   "qtcsh"     ,       /* 47  */
+   "sge_share_mon"     /* 48  */
 };
  
 typedef struct prog_state_str {

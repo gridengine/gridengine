@@ -217,7 +217,7 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
                               qquota_filter.host = lGetString(host_ep, ST_name);
                            }
                          
-                           if (rqs_is_matching_rule(rule, qquota_filter.user, NULL, qquota_filter.project,
+                           if (rqs_is_matching_rule(rule, qquota_filter.user, qquota_filter.project,
                                                      qquota_filter.pe, qquota_filter.host,
                                                      qquota_filter.queue, userset_list, hgroup_list)) {
                               lListElem *limit = NULL;

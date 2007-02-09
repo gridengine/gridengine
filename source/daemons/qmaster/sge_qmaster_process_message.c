@@ -741,7 +741,8 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, char *host, char *commproc, 
 
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
-   if (strcmp(prognames[EXECD], commproc)) {
+   if (strcmp(prognames[EXECD], commproc) &&
+      strcmp(prognames[QSTD], commproc)) {
       ERROR((SGE_EVENT, MSG_COM_ACK_S, commproc));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;

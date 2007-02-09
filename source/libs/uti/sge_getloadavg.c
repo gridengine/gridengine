@@ -134,12 +134,6 @@
 #elif defined(AIX51)
 #  include <sys/sysinfo.h>
 #  include <nlist.h>
-
-#if defined(HAS_AIX5_PERFLIB)
-#  include <sys/proc.h>
-#  include <libperfstat.h>
-#endif
-
 #endif
 
 #define KERNEL_TO_USER_AVG(x) ((double)x/SGE_FSCALE)
@@ -200,7 +194,7 @@ typedef int kernel_fd_type;
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(HAS_AIX5_PERFLIB)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
 
 #ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
@@ -214,7 +208,7 @@ static double get_cpu_load(void);
 static char* skip_token(char *p); 
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
 static int sge_get_kernel_fd(kernel_fd_type *kernel_fd);
 
@@ -231,7 +225,7 @@ static kernel_fd_type kernel_fd;
 /* MT-NOTE: code basing on kernel_initialized global variable needs not to be MT safe */
 static int kernel_initialized = 0;
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || defined(FREEBSD) || defined(TEST_AIX51)
 
 static int sge_get_kernel_address(
 char *name,
@@ -907,21 +901,6 @@ int nelem
    }
 }
 
-#elif defined(HAS_AIX5_PERFLIB)
-
-static int get_load_avg(double loadv[], int nelem)
-{
-   perfstat_cpu_total_t    cpu_total_buffer;
-
-   perfstat_cpu_total(NULL, &cpu_total_buffer, sizeof(perfstat_cpu_total_t), 1);
-
-   loadv[0] = cpu_total_buffer.loadavg[0]/(float)(1<< SBITS);
-   loadv[1] = cpu_total_buffer.loadavg[1]/(float)(1<< SBITS);
-   loadv[2] = cpu_total_buffer.loadavg[2]/(float)(1<< SBITS);
-
-   return 0;
-}
-
 #elif defined(LINUX)
 
 static int get_load_avg(
@@ -1160,7 +1139,7 @@ int nelem
 
 #if defined(SOLARIS) || defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(HAS_AIX5_PERFLIB)
+#elif defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

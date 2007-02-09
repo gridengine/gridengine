@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/02/09 10:45:47 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2006/11/17 15:23:26 $     Revision: $Revision: 1.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/02/09 10:45:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2006/11/17 15:23:26 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
@@ -77,8 +77,8 @@ A resource quota rule consists of an optional name, the filters for a specific j
 request and the resource quota limit.
 .PP
 By default, the expressed limit counts for the entire filter scope. To express a
-filter-scope-specific limit, it's possible to define an expanded list by setting the list
-between '{' '}'. It's only possible to set one complete filter in an expanded list.
+filter-scope-specific limit, it's possible to define an expanded list by quoting the scope
+list with the '\'' sign. It's only possible to set one complete filter in an expanded list.
 .\"
 The tags for expressing a resource quota rule are:
 .IP "name"
@@ -146,11 +146,13 @@ The formula expression syntax is that of
 a sum of weighted complex values, that is:
 .sp 1
 .nf
-{w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
+.RS
+$complex1[*w1][{+|-}$complex2[*w2][{+|-}...]]
+.RE
 .fi
 .sp 1
-The weighting factors (w1, ...) are positive integers or floating point numbers
-in double precision. The complex values (complex1, ...)
+The weighting factors (w1, ...) are positive integers. 
+The complex values (complex1, ...)
 are specified by the name defined as type INT or DOUBLE in the complex list
 (see
 .M complex 5 ).
@@ -186,8 +188,8 @@ every host in hostgroup lx_hosts.
    name         max_virtual_free_on_lx_hosts
    description  "resource quota for virtual_free restriction"
    enabled      true
-   limit        users {user1,user2} hosts {@lx_host} to virtual_free=6g
-   limit        users {*} hosts {@lx_host} to virtual_free=4g
+   limit        users `user1,user2` hosts `@lx_host` to virtual_free=6g
+   limit        users `*` hosts `@lx_host` to virtual_free=4g
 }
 =======================================================================
 
@@ -201,7 +203,7 @@ all users together to a maximum use of the double size of num_proc.
 {
    name         max_slots_on_every_host
    enabled      true
-   limit        hosts {*} to slots=$num_proc*2
+   limit        hosts `*` to slots=$num_proc*2
 }
 =======================================================================
 

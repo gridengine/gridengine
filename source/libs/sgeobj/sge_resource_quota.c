@@ -55,8 +55,7 @@
 #include "sgeobj/sge_host.h"
 #include "uti/sge_string.h"
 
-static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
-static bool rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
+static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list);
 
 /****** sge_resource_quota/rqs_parse_filter_from_string() *************************
 *  NAME
@@ -88,7 +87,7 @@ bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList 
    lList *lp = NULL;
    lList *scope_list = NULL;
    lList *xscope_list = NULL;
-   char delims[] = "\t \v\r,{}"; 
+   char delims[] = "\t \v\r,`"; 
 
    DENTER(TOP_LAYER, "rqs_parse_filter_from_string");
 
@@ -98,10 +97,10 @@ bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList 
 
    tmp_filter = lCreateElem(RQRF_Type);
 
-   if ( buffer[0] == '{' ) {
+   if ( buffer[0] == '`' ) {
       /* We have a expanded list */
       lSetBool(tmp_filter, RQRF_expand, true);
-      if (buffer[strlen(buffer)-1] != '}') {
+      if (buffer[strlen(buffer)-1] != '`') {
          ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST));
          answer_list_add(alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DRETURN(false);
@@ -169,7 +168,7 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    expand = lGetBool(filter, RQRF_expand) ? true : false;
 
    if (expand) {
-      sge_dstring_append(buffer, "{");
+      sge_dstring_append(buffer, "`");
    }
 
    tlp = lGetList(filter, RQRF_scope);
@@ -196,7 +195,7 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    }
 
    if (expand) {
-      sge_dstring_append(buffer, "}");
+      sge_dstring_append(buffer, "`");
    }
 
    return ret; 
@@ -717,7 +716,6 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
    int mods = 0;
    const char* hostname = lGetHost(granted, JG_qhostname);
    const char* username = lGetString(job, JB_owner);
-   const char* groupname = lGetString(job, JB_group);
    char *qname = NULL;
    const char *queue_instance = lGetString(granted, JG_qname);
    const char* project = lGetString(job, JB_project);
@@ -731,16 +729,16 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
 
    /* remove the host name part of the queue instance name */
    at_sign = strchr(queue_instance, '@');
-   if (at_sign != NULL) {
+   if (at_sign != NULL ) {
       int size = at_sign - queue_instance;
-      qname = malloc(sizeof(char) * (size + 1));
+      qname = malloc(sizeof(char)*size);
       qname = strncpy(qname, queue_instance, size);
-      qname[size] = '\0';
+      qname[size]='\0';
    } else {
       qname = strdup(queue_instance);
    }
 
-   rule = rqs_get_matching_rule(rqs, username, groupname, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
+   rule = rqs_get_matching_rule(rqs, username, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
 
    if (rule != NULL) {
       /* debit usage */
@@ -790,7 +788,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
 *
 *******************************************************************************/
 lListElem *
-rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group, const char *project,
+rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *project,
                                   const char* pe, const char *host, const char *queue,
                                   lList *userset_list, lList* hgroup_list, dstring *rule_name)
 {
@@ -803,7 +801,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
    for_each (rule, rule_list) {
       i++;
 
-      if (!rqs_is_matching_rule(rule, user, group, project, pe, host, queue, userset_list, hgroup_list)) {
+      if (!rqs_is_matching_rule(rule, user, project, pe, host, queue, userset_list, hgroup_list)) {
          continue;
       }
       if (lGetString(rule, RQR_name)) {
@@ -927,7 +925,7 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
 *  SEE ALSO
 *     sge_resource_quota/rqs_match_user_host_scope()
 *******************************************************************************/
-static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group) {
+static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list) {
 
    bool found = false;
    lListElem *ep;
@@ -964,7 +962,7 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
                   group_name++; 
                   if (!sge_is_pattern(group_name)) {
                      if ((group_ep = userset_list_locate(master_userset_list, group_name)) != NULL) {
-                        if (sge_contained_in_access_list(query, group, group_ep, NULL) == 1) {
+                        if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
                            found = true;
                            break;
                         }
@@ -972,7 +970,7 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
                   } else {
                      for_each(group_ep, master_userset_list) {
                         if (fnmatch(group_name, lGetString(group_ep, US_name), 0) == 0) {
-                           if (sge_contained_in_access_list(query, group, group_ep, NULL) == 1) {
+                           if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
                               found = true;
                               break;
                            }
@@ -1066,7 +1064,7 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
                group_name++;
                for_each(group_ep, master_userset_list) {
                   if (fnmatch(group_name, lGetString(group_ep, US_name), 0) == 0) {
-                     if (sge_contained_in_access_list(query, group, group_ep, NULL) == 1) {
+                     if (sge_contained_in_access_list(query, NULL, group_ep, NULL) == 1) {
                         found = true;
                         break;
                      }
@@ -1136,27 +1134,28 @@ static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char 
 *
 *******************************************************************************/
 bool
-rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list)
+rqs_is_matching_rule(lListElem *rule, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list)
 {
+
       DENTER(TOP_LAYER, "rqs_is_matching_rule");
 
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, master_hgroup_list, group)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, master_hgroup_list)) {
          DPRINTF(("user doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, master_userset_list, master_hgroup_list)) {
          DPRINTF(("project doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, master_userset_list, master_hgroup_list)) {
          DPRINTF(("pe doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, master_userset_list, master_hgroup_list)) {
          DPRINTF(("queue doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, master_userset_list, master_hgroup_list)) {
          DPRINTF(("host doesn't match\n"));
          DRETURN(false);
       }
@@ -1183,7 +1182,7 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 *     int filter_type            - filter type
 *     const char *value          - value to match
 *     lList *master_userset_list - master userset list (US_Type)
-*     lList *master_hgroup_list  - master hostgroup list (HG_Type)
+*     lList *master_hgroup_list  - master hostgroup list (HG_Type
 *
 *  RESULT
 *     bool - true if the value does match
@@ -1193,8 +1192,8 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 *     MT-NOTE: rqs_filter_match() is MT safe 
 *
 *******************************************************************************/
-static bool 
-rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group) {
+bool
+rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list) {
    bool ret = true;
    lListElem* ep; 
 
@@ -1210,10 +1209,10 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
          {  
             DPRINTF(("matching users or hosts with %s\n", value));
             /* inverse logic because of xscope */
-            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, master_hgroup_list, group) ? false: true;
+            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, master_hgroup_list) ? false: true;
             if (ret == true) { 
                bool found = false;
-               found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, master_hgroup_list, group);
+               found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, master_hgroup_list);
                if (scope != NULL && found == false) {
                   ret = false;
                }
@@ -1284,7 +1283,6 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
 *  INPUTS
 *     const lList *rqs - resource quota set list
 *     const char *user  - user to search
-*     const char *group - user's group
 *     lList *acl_list   - acl list for user resolving
 *
 *  RESULT
@@ -1295,7 +1293,7 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
 *     MT-NOTE: sge_user_is_referenced_in_rqs() is MT safe 
 *
 *******************************************************************************/
-bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list)
+bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, lList *acl_list)
 {
    bool ret = false;
    lListElem *ep;
@@ -1304,7 +1302,7 @@ bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const cha
       lList *rule_list = lGetList(ep, RQS_rule);
       lListElem *rule;
       for_each(rule, rule_list) {
-         if (rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, acl_list, NULL, group)) {
+         if (rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, acl_list, NULL)) {
             ret = true;
             break;
          }

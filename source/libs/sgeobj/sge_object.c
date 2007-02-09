@@ -76,7 +76,6 @@
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sgeobj/sge_suser.h"
-#include "sge_eval_expression.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -1446,8 +1445,6 @@ const char *object_type_get_name(const sge_object_type type)
 *
 *  FUNCTION
 *     returns the type id a an object given by "name" 
-*     We allow to pass in names in the form <object_name>:<key>, e.g.
-*     USERSET:deadlineusers.
 *
 *  INPUTS
 *     const char *name - object name 
@@ -1462,25 +1459,18 @@ sge_object_type object_name_get_type(const char *name)
 {
    sge_object_type ret = SGE_TYPE_ALL;
    sge_object_type i;
-   char *type_name;
-   char *colon;
 
    DENTER(OBJECT_LAYER, "object_name_get_type");
 
-   type_name = strdup(name);
-   colon = strchr(type_name, ':');
-   if (colon != NULL) {
-      *colon = '\0';
-   }
-
    for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-      if (strcasecmp(object_base[i].type_name, type_name) == 0) {
+      int length = strlen(object_base[i].type_name);
+
+      if (!strncasecmp(object_base[i].type_name, name, length)) {
          ret = i;
          break;
       }
    }
 
-   FREE(type_name);
    DRETURN(ret);
 }
 
@@ -2849,50 +2839,5 @@ object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm)
       ret = false;
    }
 
-   return ret;
-}
-
-/****** sge_object/object_verify_expression_syntax() *****************************
-*  NAME
-*     object_verify_expression_syntax() -- verify string attribute expression syntax
-*
-*  SYNOPSIS
-*     bool 
-*     object_verify_expression_syntax(const lListElem *ep, lList **answer_list) 
-*
-*  FUNCTION
-*     Verifies that a string is expression in correct format.
-*
-*  INPUTS
-*     const lListElem *ep - the object to verify
-*     lList **answer_list - answer list to pass back error messages
-*
-*  RESULT
-*     bool - true on success,
-*            false on error with error message in answer_list
-*
-*  NOTES
-*     MT-NOTE: object_verify_expression_syntax() is MT safe 
-*
-*  SEE ALSO
-*******************************************************************************/
-bool 
-object_verify_expression_syntax(const lListElem *elem, lList **answer_list)
-{
-   bool ret = true;
-   const char *expr;
-   lUlong type;
-   type = lGetUlong(elem, CE_valtype); 
-   switch(type){
-      case TYPE_STR:  
-      case TYPE_CSTR: 
-      case TYPE_RESTR: 
-      case TYPE_HOST:  
-         expr = lGetString(elem, CE_stringval);         
-         if (sge_eval_expression(type,expr,"*",answer_list)==-1) {
-            ret = false;
-         }
-         break;
-   }    
    return ret;
 }

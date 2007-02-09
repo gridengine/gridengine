@@ -51,8 +51,8 @@ public class DefaultListPropertyDescriptor extends ListPropertyDescriptor {
    /** Creates a new instance of DefaultListPropertyDescriptor */
    public DefaultListPropertyDescriptor(Class beanClass, String propertyName, 
                                  Class propertyType, String cullType,
-                                 int cullFieldName, boolean browseable, boolean readOnly, boolean configurable) {
-      super( beanClass, propertyName, propertyType, cullType, cullFieldName, browseable, readOnly, configurable);
+                                 int cullFieldName, boolean browseable, boolean readOnly) {
+      super( beanClass, propertyName, propertyType, cullType, cullFieldName, browseable, readOnly );
       
       countMethod = findMethod( "get", "Count", null );
       getMethod = findMethod( "get", new Class[] { Integer.TYPE } );

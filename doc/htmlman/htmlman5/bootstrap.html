@@ -16,7 +16,7 @@ FORMAT
      individual  parameters that compose the bootstrap configura-
      tion for a Grid Engine cluster:
 
-  admin_user
+admin_user
      Administrative user account used  by  Grid  Engine  for  all
      internal  file  handling  (status spooling, message logging,
      etc.). Can be used in cases where the root account does  not
@@ -32,7 +32,7 @@ FORMAT
      The admin_user parameter has no default value,  but  instead
      it is defined during the master installation procedure.
 
-  default_domain
+default_domain
      Only needed if your Grid Engine cluster covers hosts belong-
      ing to more than a single DNS domain. In this case it can be
      used if your hostname resolving yields  both  qualified  and
@@ -47,7 +47,7 @@ FORMAT
      default for default_domain is "none", in which case it  will
      not be used.
 
-  ignore_fqdn
+ignore_fqdn
      Ignore fully qualified domain name component  of  hostnames.
      Should  be set if all hosts belonging to a Grid Engine clus-
      ter are part of a single DNS domain. It is  switched  on  if
@@ -58,13 +58,13 @@ FORMAT
      ignore_fqdn  in  a  running  system  is  not  supported. The
      default for ignore_fqdn is "true".
 
-  spooling_method
+spooling_method
      Defines how <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes its configuration and  the
      status information of a running cluster.
 
      The available spooling methods are <I>berkeleydb</I> and <I>classic</I>.
 
-  spooling_lib
+spooling_lib
      The name of a shared library containing the  spooling_method
      to  be  loaded  at  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> initialization time.  The
      extension characterizing a shared library (.so, .sl,  .dylib
@@ -79,7 +79,7 @@ FORMAT
      (default: berkeleydb) is compiled into the binaries and  the
      parameter spooling_lib will be ignored.
 
-  spooling_params
+spooling_params
      Defines parameters to the chosen spooling method.
 
      Parameters that are needed to initialize the spooling frame-
@@ -96,7 +96,7 @@ FORMAT
      form      &lt;common_dir&gt;;&lt;qmaster     spool     dir&gt;,     e.g.
      /sge/default/common;/sge/default/spool/qmaster
 
-  binary_path
+binary_path
      The directory path where the Grid Engine binaries reside. It
      is  used within Grid Engine components to locate and startup
      other Grid Engine programs.
@@ -110,7 +110,7 @@ FORMAT
 
      The default location for the binary path is &lt;sge_root&gt;/bin
 
-  qmaster_spool_dir
+qmaster_spool_dir
      The location where the master spool directory resides.  Only
      the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B> need to have access to
      this directory. The master spool directory -  in  particular
@@ -126,7 +126,7 @@ FORMAT
      The default location  for  the  master  spool  directory  is
      &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
 
-  product_mode
+product_mode
      The product mode defines the set of features  the  installed
      cluster is using.
 

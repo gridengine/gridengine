@@ -55,11 +55,13 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
 int
 rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const char *pename, lList *centry_list, lList *acl_list, lList *hgrp_list, int slots);
 
-lListElem *rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group, const char *project, const char *pe, const char *host, const char *queue, lList *userset_list, lList* hgroup_list, dstring *rule_name);
+lListElem *rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *userset_list, lList* hgroup_list, dstring *rule_name);
 
-bool rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list);
+bool rqs_is_matching_rule(lListElem *rule, const char *user, const char *project, const char *pe, const char *host, const char *queue, lList *master_userset_list, lList *master_hgroup_list);
 
-bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list);
+bool rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list);
+
+bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, lList *acl_list);
 bool sge_centry_referenced_in_rqs(const lListElem *rqs, const lListElem *centry);
 
 #endif /* __SGE_RESOURCE_QUOTA_H */

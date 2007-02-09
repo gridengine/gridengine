@@ -29,14 +29,28 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+package org.ggf.drmaa;
 
-#ifndef __SGE_VARARGS_H__
-#define __SGE_VARARGS_H__
-
-#include <stdarg.h>
-
-#ifndef va_copy
-   #define va_copy(dst, src) memcpy(&dst, &src, sizeof(va_list))
-#endif
-
-#endif /* __SGE_VARARGS_H__ */
+/** Thrown by Session.wait() when a job has finished
+ * but no resource usage information and exit status data could be provided.
+ * @author dan.templeton@sun.com
+ * @see Session#wait
+ * @since 0.5
+ */
+public class NoResourceUsageException extends DrmaaException {
+	
+	/**
+	 * Creates a new instance of <code>NoResourceUsageInformationException</code> without detail message.
+	 */
+	public NoResourceUsageException () {
+	}
+	
+	
+	/**
+	 * Constructs an instance of <code>NoResourceUsageInformationException</code> with the specified detail message.
+	 * @param msg the detail message.
+	 */
+	public NoResourceUsageException (String msg) {
+		super (msg);
+	}
+}

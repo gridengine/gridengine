@@ -565,7 +565,8 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
 {
    int fd;
 
-   if (me == QMASTER || me == EXECD || me == SCHEDD || me == SHADOWD) {
+   if (me == QMASTER || me == EXECD    || me == QSTD ||
+       me == SCHEDD  ||  me == SHADOWD || me == COMMD) {
       if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
          char msg2log[4*MAX_STRING_SIZE];
          dstring msg;

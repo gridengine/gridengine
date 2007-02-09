@@ -621,17 +621,7 @@ char *argv[]
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
          rqs_add(ctx, &alp, name);
-
-         aep = lFirst(alp);
-         answer_exit_if_not_recoverable(aep);
-         if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s\n", lGetString(aep, AN_text));          
-            lFreeList(&alp);
-            lFreeList(&lp);
-            DRETURN(1);
-         } else {
-            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
          spp++;
@@ -652,17 +642,7 @@ char *argv[]
          qconf_is_manager(ctx, username);
 
          rqs_add_from_file(ctx, &alp, file);
-
-         aep = lFirst(alp);
-         answer_exit_if_not_recoverable(aep);
-         if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s\n", lGetString(aep, AN_text));          
-            lFreeList(&alp);
-            lFreeList(&lp);
-            DRETURN(1);
-         } else {
-            fprintf(stdout, "%s\n", lGetString(aep, AN_text));
-         }
+         answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
          spp++;

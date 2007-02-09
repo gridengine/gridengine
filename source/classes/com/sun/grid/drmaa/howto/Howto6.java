@@ -30,40 +30,38 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import org.ggf.drmaa.DrmaaException;
-import org.ggf.drmaa.Session;
-import org.ggf.drmaa.SessionFactory;
-import org.ggf.drmaa.Version;
+import org.ggf.drmaa.*;
 
 public class Howto6 {
-   public static void main(String[] args) {
-      SessionFactory factory = SessionFactory.getFactory();
-      Session session = factory.getSession();
+   public static void main (String[] args) {
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
-         System.out.println("Supported contact strings: \"" +
-               session.getContact() + "\"");
-         System.out.println("Supported DRM systems: \"" +
-               session.getDrmSystem() + "\"");
-         System.out.println("Supported DRMAA implementations: \"" +
-               session.getDrmaaImplementation() + "\"");
+         System.out.println ("Supported contact strings: \"" +
+                             session.getContact () + "\"");
+         System.out.println ("Supported DRM systems: \"" +
+                             session.getDrmSystem () + "\"");
+         System.out.println ("Supported DRMAA implementations: \"" +
+                             session.getDrmaaImplementation () + "\"");
          
-         session.init("");
+         session.init (null);
          
-         System.out.println("Using contact strings: \"" +
-               session.getContact() + "\"");
-         System.out.println("Using DRM systems: \"" +
-               session.getDrmSystem() + "\"");
-         System.out.println("Using DRMAA implementations: \"" +
-               session.getDrmaaImplementation() + "\"");
+         System.out.println ("Using contact strings: \"" +
+                             session.getContact () + "\"");
+         System.out.println ("Using DRM systems: \"" +
+                             session.getDrmSystem () + "\"");
+         System.out.println ("Using DRMAA implementations: \"" +
+                             session.getDrmaaImplementation () + "\"");
          
-         Version version = session.getVersion();
+         Version version = session.getVersion ();
          
-         System.out.println("Using DRMAA version " + version.toString());
+         System.out.println("Using DRMAA version " + version.toString ());
          
-         session.exit();
-      } catch (DrmaaException e) {
-         System.out.println("Error: " + e.getMessage());
+         session.exit ();
+      }
+      catch (DrmaaException e) {
+         System.out.println ("Error: " + e.getMessage ());
       }
    }
 }

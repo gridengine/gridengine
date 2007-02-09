@@ -47,14 +47,8 @@
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAAJ_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
-#ifndef DRMAA_95
-   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like
-                                   memory allocation, system call failure,
-                                   etc. */
-#else
    DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory
                                    allocation, system call failure, etc. */
-#endif
    DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for
                                               this request. */
    DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed
@@ -71,7 +65,7 @@ enum {
    DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default
                                                  contact string to connect to
                                                  DRM system. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No defaults contact
                                                        string was provided or
                                                        selected. DRMAA requires
@@ -129,7 +123,7 @@ enum {
                                  NullPointerExceptions */
 /* DRMAAJ_ERRNO_NO_MORE_ELEMENTS is not listed here because it is unused in the
  * Java language binding. */
-#ifdef DRMAA_95
+#ifndef DRMAA_10
    DRMAAJ_ERRNO_BUFFER_OVERFLOW, /* This error code is used for
                                     ArrayIndexOutOfBoundsExceptions */
 #endif
@@ -145,13 +139,11 @@ static int list_length = 0;
 static void print_message_and_throw_exception(JNIEnv *env, int errnum,
                                               const char *format, ...);
 static void throw_exception (JNIEnv *env, int errnum, const char *message);
-static jclass get_exception_class(JNIEnv *env, int errnum, const char *message);
 static char *get_exception_class_name (int errnum);
 static drmaa_job_template_t *get_from_list (int id);
 static int insert_into_list (drmaa_job_template_t *jt);
-#ifdef DRMAA_95
-static jobjectArray create_string_array (JNIEnv* env, int num_elem,
-                                         char** strings);
+#ifndef DRMAA_10
+static jobjectArray create_string_array (JNIEnv* env, int num_elem, char** strings);
 #endif
 
 JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeControl
@@ -305,7 +297,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeInit
    }  
 }
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeRunBulkJobs
   (JNIEnv *env, jobject object, jint id, jint start, jint end, jint step)
 {
@@ -513,7 +505,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSynchronize
    }
 }
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
 JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
   (JNIEnv *env, jobject object, jstring jobId, jlong timeout)
 {
@@ -533,7 +525,6 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
    int signaled = 0;
    int count = 0;
    int length = 0;
-   int has_resources = 1;
    
    if (jobId == NULL) {
       print_message_and_throw_exception (env, DRMAAJ_ERRNO_NULL_POINTER,
@@ -544,49 +535,44 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
    
    job_id = (*env)->GetStringUTFChars (env, jobId, NULL);
    
-   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status,
-                        (signed long)timeout, &rusage, error,
-                        DRMAA_ERROR_STRING_BUFFER);
+   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, (signed long)timeout,
+                       &rusage, error, DRMAA_ERROR_STRING_BUFFER);
    (*env)->ReleaseStringUTFChars (env, jobId, job_id);
-
-   if (errnum == DRMAAJ_ERRNO_NO_RUSAGE) {
-       has_resources = 0;
-   } else if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
       throw_exception (env, errnum, error);
       drmaa_release_attr_values (rusage);   
    
       return NULL;
    }
 
-   if (has_resources == 1) {
-       errnum = drmaa_get_num_attr_values(rusage, &length);
-
-       if (errnum != DRMAAJ_ERRNO_SUCCESS) {
-          throw_exception(env, errnum, NULL);
-          drmaa_release_attr_values (rusage);   
-
-          return NULL;
-       }
-
-       clazz = (*env)->FindClass (env, "java/lang/String");
-       resources = (*env)->NewObjectArray(env, length, clazz, NULL);
-
-       for (count = 0; count < length; count++) {
-          errnum = drmaa_get_next_attr_value (rusage, rbuffer, BUFFER_LENGTH);
-
-          if (errnum != DRMAAJ_ERRNO_SUCCESS) {
-             throw_exception (env, errnum, "Reported incorrect number of resource usage entries");
-             drmaa_release_attr_values (rusage);   
-
-             return NULL;
-          }
-
-          tmp_str = (*env)->NewStringUTF (env, rbuffer);
-          (*env)->SetObjectArrayElement(env, resources, count, tmp_str);
-       }
-
-       drmaa_release_attr_values (rusage);
+   errnum = drmaa_get_num_attr_values(rusage, &length);
+   
+   if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+      throw_exception(env, errnum, NULL);
+      drmaa_release_attr_values (rusage);   
+      
+      return NULL;
    }
+   
+   clazz = (*env)->FindClass (env, "java/lang/String");
+   resources = (*env)->NewObjectArray(env, length, clazz, NULL);
+
+   for (count = 0; count < length; count++) {
+      errnum = drmaa_get_next_attr_value (rusage, rbuffer, BUFFER_LENGTH);
+      
+      if (errnum != DRMAAJ_ERRNO_SUCCESS) {
+         throw_exception (env, errnum, "Reported incorrect number of resource usage entries");
+         drmaa_release_attr_values (rusage);   
+
+         return NULL;
+      }
+      
+      tmp_str = (*env)->NewStringUTF (env, rbuffer);
+      (*env)->SetObjectArrayElement(env, resources, count, tmp_str);
+   }
+
+   drmaa_release_attr_values (rusage);   
 
    errnum = drmaa_wifsignaled (&signaled, status, error,
                               DRMAA_ERROR_STRING_BUFFER);
@@ -649,30 +635,29 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeWait
    
    job_id = (*env)->GetStringUTFChars (env, jobId, NULL);
    
-   errnum = drmaa_wait(job_id, buffer, DRMAA_JOBNAME_BUFFER, &status,
-                       (signed long)timeout, &rusage, error,
-                       DRMAA_ERROR_STRING_BUFFER);
-   (*env)->ReleaseStringUTFChars(env, jobId, job_id);
-
+   errnum = drmaa_wait (job_id, buffer, DRMAA_JOBNAME_BUFFER, &status, (signed long)timeout,
+                       &rusage, error, DRMAA_ERROR_STRING_BUFFER);
+   (*env)->ReleaseStringUTFChars (env, jobId, job_id);
+      
    if (errnum != DRMAAJ_ERRNO_SUCCESS) {
-      throw_exception(env, errnum, error);
+      throw_exception (env, errnum, error);
 
       return NULL;
    }
 
-   while ((errnum = drmaa_get_next_attr_value(rusage, rbuffer, BUFFER_LENGTH))
+   while ((errnum = drmaa_get_next_attr_value (rusage, rbuffer, BUFFER_LENGTH))
                                                       == DRMAAJ_ERRNO_SUCCESS) {
       if (count > BUFFER_LENGTH) {
-         print_message_and_throw_exception(env, DRMAAJ_ERRNO_BUFFER_OVERFLOW,
-                                           MSG_JDRMAA_OVERFLOW_DS,
-                                           BUFFER_LENGTH,
-                                           "resource usage entries");
-         drmaa_release_attr_values(rusage);
+         print_message_and_throw_exception (env, DRMAAJ_ERRNO_BUFFER_OVERFLOW,
+                                            MSG_JDRMAA_OVERFLOW_DS,
+                                            BUFFER_LENGTH,
+                                            "resource usage entries");
+         drmaa_release_attr_values (rusage);
 
          return NULL;
       }
-
-      resource_entries[count++] = strdup(rbuffer);
+      
+      resource_entries[count++] = strdup (rbuffer);
    }
 
    length = count;
@@ -845,7 +830,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeSetAttributeVal
    }
 }
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
 JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttributeNames
   (JNIEnv *env, jobject object, jint id)
 {
@@ -861,8 +846,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    int vsize = 0;
    int count = 0;
    
-   errnum = drmaa_get_attribute_names (&names, error,
-                                       DRMAA_ERROR_STRING_BUFFER);
+   errnum = drmaa_get_attribute_names (&names, error, DRMAA_ERROR_STRING_BUFFER);
    
    if (errnum != DRMAAJ_ERRNO_SUCCESS) {
       throw_exception (env, errnum, error);
@@ -870,7 +854,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
       return NULL;
    }
    
-   errnum = drmaa_get_vector_attribute_names (&vnames, error,
+   errnum = drmaa_get_vector_attribute_names (&vnames, error, 
                                              DRMAA_ERROR_STRING_BUFFER);
    
    if (errnum != DRMAAJ_ERRNO_SUCCESS) {
@@ -960,7 +944,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    }
    
    while (drmaa_get_next_attr_name(names, buffer, BUFFER_LENGTH)
-                                                      == DRMAAJ_ERRNO_SUCCESS) {
+                                                       == DRMAAJ_ERRNO_SUCCESS) {
       if (count > BUFFER_LENGTH) {
          print_message_and_throw_exception (env, DRMAAJ_ERRNO_BUFFER_OVERFLOW,
                                             MSG_JDRMAA_OVERFLOW_DS,
@@ -986,7 +970,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    }
    
    while (drmaa_get_next_attr_name(names, buffer, BUFFER_LENGTH)
-                                                      == DRMAAJ_ERRNO_SUCCESS) {
+                                                       == DRMAAJ_ERRNO_SUCCESS) {
       if (count > BUFFER_LENGTH) {
          print_message_and_throw_exception (env, DRMAAJ_ERRNO_BUFFER_OVERFLOW,
                                             MSG_JDRMAA_OVERFLOW_DS,
@@ -1042,12 +1026,12 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    
    name_str = (*env)->GetStringUTFChars(env, name, NULL);
    
-   errnum = drmaa_get_vector_attribute_names(&names, error,
-                                             DRMAA_ERROR_STRING_BUFFER);
+   errnum = drmaa_get_vector_attribute_names(&names, error,  
+                                            DRMAA_ERROR_STRING_BUFFER);
    
    if (errnum == DRMAAJ_ERRNO_SUCCESS) {
       while (drmaa_get_next_attr_name(names, buffer, BUFFER_LENGTH)
-                                                      == DRMAAJ_ERRNO_SUCCESS) {
+                                                       == DRMAAJ_ERRNO_SUCCESS) {
          if (strcmp (buffer, name_str) == 0) {
             is_vector = true;
             break;
@@ -1065,7 +1049,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
    
    if (is_vector) {
       errnum = drmaa_get_vector_attribute (jt, name_str, &values, error,
-                                           DRMAA_ERROR_STRING_BUFFER);
+                                          DRMAA_ERROR_STRING_BUFFER);
       (*env)->ReleaseStringUTFChars(env, name, name_str);
 
       if (errnum == DRMAAJ_ERRNO_INVALID_ATTRIBUTE_VALUE) {
@@ -1077,7 +1061,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
          return NULL;
       }
       else {
-#ifndef DRMAA_95
+#ifdef DRMAA_10
          int count = 0;
          int size = 0;
          
@@ -1112,7 +1096,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SessionImpl_nativeGetAttr
          int max = 0;
          
          while (drmaa_get_next_attr_value(values, buffer, BUFFER_LENGTH)
-                                                      == DRMAAJ_ERRNO_SUCCESS) {
+                                                       == DRMAAJ_ERRNO_SUCCESS) {
             if (count > BUFFER_LENGTH) {
                print_message_and_throw_exception (env,
                                                   DRMAAJ_ERRNO_BUFFER_OVERFLOW,
@@ -1214,43 +1198,31 @@ static void print_message_and_throw_exception(JNIEnv *env, int errnum,
    }
 }
 
-static void throw_exception(JNIEnv *env, int errnum, const char *message)
+static void throw_exception (JNIEnv *env, int errnum, const char *message)
 {
-   const char *error = message;
    jclass newExcCls = NULL;
+   const char *error = message;
 
    if (error == NULL) {
       error = drmaa_strerror(errnum);
    }
-
-   newExcCls = get_exception_class(env, errnum, error);
-
-   if (newExcCls != NULL) {
-      (*env)->ThrowNew(env, newExcCls, error);
-   }
-}
-
-static jclass get_exception_class(JNIEnv *env, int errnum, const char *message)
-{
-   jclass newExcCls = NULL;
-
-   newExcCls = (*env)->FindClass(env, get_exception_class_name(errnum));
+   
+   newExcCls = (*env)->FindClass(env, get_exception_class_name (errnum));
 
    /* If we can't find the exception class, throw a RuntimeException. */
    if (newExcCls == NULL) {
       char no_class_message[MAX_STRING_SIZE];
-
+      
       /* If we can't find the right exception, default to something we
        * really expect to be able to find. */
-      jclass runtime = (*env)->FindClass(env,
-                                         "java/lang/ClassNotFoundException");
-
+      newExcCls = (*env)->FindClass(env, "java/lang/RuntimeException");
+      
       /* If it's still not found, give up. */
-      if (runtime == NULL) {
+      if (newExcCls == NULL) {
          fprintf (stderr, NO_EXECEPTION_CLASS,
                   get_exception_class_name (errnum), drmaa_strerror (errnum),
                   message);
-
+         
          /* This if-else structure should now dump the thread of control out at
           * the end of the method.  Not doing so is an error. */
       }
@@ -1261,11 +1233,13 @@ static jclass get_exception_class(JNIEnv *env, int errnum, const char *message)
                    message);
 
          /* Throw an exception saying we couldn't find the exception. */
-         (*env)->ThrowNew(env, runtime, no_class_message);
+         (*env)->ThrowNew(env, newExcCls, no_class_message);
       }
    }
-
-   return newExcCls;
+   /* If we found the class, throw the new exception. */
+   else {
+      (*env)->ThrowNew(env, newExcCls, message);
+   }
 }
 
 static char *get_exception_class_name (int errnum)
@@ -1278,11 +1252,7 @@ static char *get_exception_class_name (int errnum)
       case DRMAAJ_ERRNO_AUTH_FAILURE:
          return "org/ggf/drmaa/AuthorizationException";
       case DRMAAJ_ERRNO_INVALID_ARGUMENT:
-#ifndef DRMAA_95
-         return "java/lang/IllegalArgumentException";
-#else
          return "org/ggf/drmaa/InvalidArgumentException";
-#endif
       case DRMAAJ_ERRNO_NO_ACTIVE_SESSION:
          return "org/ggf/drmaa/NoActiveSessionException";
       case DRMAAJ_ERRNO_NO_MEMORY:
@@ -1291,7 +1261,7 @@ static char *get_exception_class_name (int errnum)
          return "org/ggf/drmaa/InvalidContactStringException";
       case DRMAAJ_ERRNO_DEFAULT_CONTACT_STRING_ERROR:
          return "org/ggf/drmaa/DefaultContactStringException";
-#ifndef DRMAA_95
+#ifdef DRMAA_10
       case DRMAAJ_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED:
          return "org/ggf/drmaa/NoDefaultContactStringException";
 #endif
@@ -1323,11 +1293,9 @@ static char *get_exception_class_name (int errnum)
          return "org/ggf/drmaa/ReleaseInconsistentStateException";
       case DRMAAJ_ERRNO_EXIT_TIMEOUT:
          return "org/ggf/drmaa/ExitTimeoutException";
-#ifdef DRMAA_95
       case DRMAAJ_ERRNO_NO_RUSAGE:
          return "org/ggf/drmaa/NoResourceUsageException";
-#endif
-       case DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE:
+      case DRMAAJ_ERRNO_INVALID_JOB_TEMPLATE:
          return "org/ggf/drmaa/InvalidJobTemplateException";
       case DRMAAJ_ERRNO_NULL_POINTER:
          return "java/lang/NullPointerException";
@@ -1366,8 +1334,8 @@ static int insert_into_list (drmaa_job_template_t *jt)
 
    /* If there are no empty slots, double the size of the list. */
    tmp_length = list_length * 2;
-   tmp_list = (drmaa_job_template_t **)malloc (sizeof(drmaa_job_template_t *) *
-                                               tmp_length);
+   tmp_list = (drmaa_job_template_t **)malloc (sizeof (drmaa_job_template_t *) *
+                                                                    tmp_length);
    memcpy (tmp_list, job_templates, list_length *
                                                sizeof (drmaa_job_template_t *));
    memset (&tmp_list[count], 0, list_length * sizeof (drmaa_job_template_t *));
@@ -1397,13 +1365,13 @@ static drmaa_job_template_t *get_from_list (int id)
 
       pthread_mutex_unlock(&list_mutex);
    }
+       
    
    return retval;
 }
 
-#ifdef DRMAA_95
-static jobjectArray create_string_array (JNIEnv* env, int num_elem,
-                                         char** strings)
+#ifndef DRMAA_10
+static jobjectArray create_string_array (JNIEnv* env, int num_elem, char** strings)
 {
    jobjectArray ret_val = NULL;
    jclass clazz = NULL;

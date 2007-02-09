@@ -34,8 +34,8 @@ package com.sun.grid.security.login;
 import java.security.Principal;
 
 /**
- *  <code>Prinicipal</code> indentifing a group users. The name of
- *  the group is the group id.
+ *
+ * @author aa114085
  */
 public class NumericGroupPrincipal  implements
         Principal,

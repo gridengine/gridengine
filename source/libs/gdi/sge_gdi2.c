@@ -414,13 +414,13 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER],
                                       sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>"));
+                                      mastername));
             } else { /* For unusual errors, give more detail */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                       MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
                                       sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>",
+                                      mastername,
                                       cl_get_error_text(commlib_error)));
             }
             break;
@@ -1631,7 +1631,7 @@ int gdi2_send_message_pb(sge_gdi_ctx_class_t *ctx,
    NOTES
       MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
-static int 
+int 
 gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomproc, int toid, 
                  const char *tohost, int tag, char *buffer, 
                  int buflen, u_long32 *mid) 
@@ -2076,7 +2076,7 @@ volatile int* abort_flag
       }
    }
   
-   ret = merge_configuration(NULL, progid, cell_root, global, local, NULL);
+   ret = merge_configuration(progid, cell_root, global, local, NULL);
    if (ret) {
       DPRINTF(("Error %d merging configuration \"%s\"\n", ret, qualified_hostname));
    }
@@ -2125,7 +2125,7 @@ lList **conf_list
       DRETURN(-1);
    }
 
-   ret = merge_configuration(NULL, progid, cell_root, global, local, NULL);
+   ret = merge_configuration(progid, cell_root, global, local, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONF_NOMERGECONF_IS, ret, qualified_hostname));
       lFreeElem(&global);

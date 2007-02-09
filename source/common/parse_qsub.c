@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #include "symbols.h"
 #include "sge_all_listsL.h"
@@ -55,8 +54,6 @@
 #include "sge_ulong.h"
 #include "sge_str.h"
 #include "sge_centry.h"
-#include "sge_job.h"
-#include "sge_var.h"
 
 #include "msg_common.h"
 
@@ -368,12 +365,21 @@ u_long32 flags
       }
 
 /*-----------------------------------------------------------------------------*/
-      /* "-cwd" is mapped as -wd with NULL path, this case is handled in the second parsing stage*/
+      /* "-cwd" */
 
       if (!strcmp("-cwd", *sp)) {
-         ep_opt = sge_add_noarg(pcmdline, wd_OPT, "-wd", NULL);
+/* I've added a -wd option to cull_parse_job_parameter() to deal with the
+ * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
+ * handled by cull_parse_job_parameter() that -cwd should just become an alias
+ * for -wd.  The code to do that is ifdef'ed out below just in case we decide
+ * it's a good idea. */
+#if 0
+         ep_opt = sge_add_arg (args, wd_OPT, lStringT, "-wd", SGE_HOME_DIRECTORY);
+         lSetString (ep, SPA_argval_lStringT, SGE_HOME_DIRECTORY);
+         DPRINTF(("\"%s\" => -wd\n", *sp));
+#endif         
+         ep_opt = sge_add_noarg(pcmdline, cwd_OPT, *sp, NULL);
          DPRINTF(("\"%s\"\n", *sp));
-         
          sp++;
          continue;
       }
@@ -770,6 +776,33 @@ u_long32 flags
          
          ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
          lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
+
+         sp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+      /* "-lj filename     log job processing */
+
+      if (!strcmp("-lj", *sp)) {
+
+         /* next field is filename */
+         sp++;
+         if (!*sp) {
+             sprintf(str,
+             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-lj");
+             answer_list_add(&answer, str, 
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         /*
+         ** problem: lj_OPT is not in list because someone ...
+         ** ... see comment in parse.c
+         */
+         ep_opt = sge_add_arg(pcmdline, lj_OPT, lStringT, *(sp - 1), *sp);
+         lSetString(ep_opt, SPA_argval_lStringT, *sp);
 
          sp++;
          continue;
@@ -1631,26 +1664,6 @@ DTRACE;
 
       }
 /*-----------------------------------------------------------------------------*/
-      /* "-wd" */
-
-      if (!strcmp("-wd", *sp)) {
-
-         sp++;
-         if (!*sp) {
-            sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S , *(sp - 1));
-            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-
-         ep_opt = sge_add_arg(pcmdline, wd_OPT, lStringT, "-wd", *sp);
-         lSetString(ep_opt, SPA_argval_lStringT, *sp);
-
-         sp++;
-         continue;
-      }
-
-/*-----------------------------------------------------------------------------*/
       /* "-@" */
       /* reentrancy is built upon here */
 
@@ -2509,40 +2522,3 @@ static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
    
    return 1;
 }
-
-/* This method is not thread safe.  Fortunately, it is only used by the
- * -cwd switch which can be forbiddon in DRMAA. */
-char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
-   const char *home = NULL;
-   char tmp_str[SGE_PATH_MAX + 1];
-   char tmp_str2[SGE_PATH_MAX + 1];
-   char tmp_str3[SGE_PATH_MAX + 1];
-   
-   DENTER (TOP_LAYER, "reroot_path");
-   
-   home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
-   strcpy (tmp_str, path);
-   
-   if (!chdir(home)) {
-      /* If chdir() succeeds... */
-      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-         /* If getcwd() fails... */
-         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
-                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DRETURN(NULL);
-      }
-
-      chdir(tmp_str);
-
-      if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
-         /* If they are equal, build a new CWD using the value of the HOME
-          * as the root instead of whatever that directory is called by
-          * the -(c)wd path. */
-         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
-         strcpy(tmp_str, tmp_str3);
-      }
-   }
-   
-   DRETURN(strdup(tmp_str));
-}
-

@@ -104,10 +104,6 @@ static int init_framework(sge_gdi_ctx_class_t *ctx)
 
    DENTER(TOP_LAYER, "init_framework");
 
-#ifdef HP1164   
-   sge_set_admin_username("none", NULL);
-#endif
-
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(&answer_list, 
                                                    spooling_method,
@@ -432,63 +428,66 @@ int main(int argc, char *argv[])
    DENTER_MAIN(TOP_LAYER, "spooldefaults");
 
    log_state_set_log_gui(0);
+
    sge_prof_setup();
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
       answer_list_output(&answer_list);
-      SGE_EXIT((void **)&ctx, EXIT_FAILURE);
+      SGE_EXIT(NULL, 1);
    }
 
-   /* parse commandline */
-   if (argc < 2) {
-      usage(argv[0]);
-      ret = EXIT_FAILURE;
-   } else {
-      ret = init_framework(ctx);
+   if (ret == EXIT_SUCCESS) {
+      /* parse commandline */
+      if (argc < 2) {
+         usage(argv[0]);
+         ret = EXIT_FAILURE;
+      } else {
+         ret = init_framework(ctx);
 
-      if (ret == EXIT_SUCCESS) {
-         if (strcmp(argv[1], "test") == 0) {
-            /* nothing to do - init_framework succeeded */
-         } else {
-            /* all other commands have at least one parameter */
-            if (argc < 3) {
-               usage(argv[0]);
-               ret = EXIT_FAILURE;
-            } else if (strcmp(argv[1], "adminhosts") == 0) {
-               ret = spool_adminhosts(argc, argv);
-            } else if (strcmp(argv[1], "calendars") == 0) {
-               ret = spool_calendars(argc, argv);
-            } else if (strcmp(argv[1], "ckpts") == 0) {
-               ret = spool_ckpts(argc, argv);
-            } else if (strcmp(argv[1], "complexes") == 0) {
-               ret = spool_complexes(argc, argv);
-            } else if (strcmp(argv[1], "configuration") == 0) {
-               ret = spool_configuration(argc, argv);
-            } else if (strcmp(argv[1], "cqueues") == 0) {
-               ret = spool_cqueues(argc, argv);
-            } else if (strcmp(argv[1], "exechosts") == 0) {
-               ret = spool_exechosts(argc, argv);
-            } else if (strcmp(argv[1], "local_conf") == 0) {
-               ret = spool_local_conf(argc, argv);
-            } else if (strcmp(argv[1], "managers") == 0) {
-               ret = spool_manops(SGE_TYPE_MANAGER, argc, argv);
-            } else if (strcmp(argv[1], "operators") == 0) {
-               ret = spool_manops(SGE_TYPE_OPERATOR, argc, argv);
-            } else if (strcmp(argv[1], "pes") == 0) {
-               ret = spool_pes(argc, argv);
-            } else if (strcmp(argv[1], "projects") == 0) {
-               ret = spool_projects(argc, argv);
-            } else if (strcmp(argv[1], "sharetree") == 0) {
-               ret = spool_sharetree(argc, argv);
-            } else if (strcmp(argv[1], "submithosts") == 0) {
-               ret = spool_submithosts(argc, argv);
-            } else if (strcmp(argv[1], "users") == 0) {
-               ret = spool_users(argc, argv);
-            } else if (strcmp(argv[1], "usersets") == 0) {
-               ret = spool_usersets(argc, argv);
+         if (ret == EXIT_SUCCESS) {
+            if (strcmp(argv[1], "test") == 0) {
+               /* nothing to do - init_framework succeeded */
             } else {
-               usage(argv[0]);
-               ret = EXIT_FAILURE;
+               /* all other commands have at least one parameter */
+               if (argc < 3) {
+                  usage(argv[0]);
+                  ret = EXIT_FAILURE;
+               } else if (strcmp(argv[1], "adminhosts") == 0) {
+                  ret = spool_adminhosts(argc, argv);
+               } else if (strcmp(argv[1], "calendars") == 0) {
+                  ret = spool_calendars(argc, argv);
+               } else if (strcmp(argv[1], "ckpts") == 0) {
+                  ret = spool_ckpts(argc, argv);
+               } else if (strcmp(argv[1], "complexes") == 0) {
+                  ret = spool_complexes(argc, argv);
+               } else if (strcmp(argv[1], "configuration") == 0) {
+                  ret = spool_configuration(argc, argv);
+               } else if (strcmp(argv[1], "cqueues") == 0) {
+                  ret = spool_cqueues(argc, argv);
+               } else if (strcmp(argv[1], "exechosts") == 0) {
+                  ret = spool_exechosts(argc, argv);
+               } else if (strcmp(argv[1], "local_conf") == 0) {
+                  ret = spool_local_conf(argc, argv);
+               } else if (strcmp(argv[1], "managers") == 0) {
+                  ret = spool_manops(SGE_TYPE_MANAGER, argc, argv);
+               } else if (strcmp(argv[1], "operators") == 0) {
+                  ret = spool_manops(SGE_TYPE_OPERATOR, argc, argv);
+               } else if (strcmp(argv[1], "pes") == 0) {
+                  ret = spool_pes(argc, argv);
+               } else if (strcmp(argv[1], "projects") == 0) {
+                  ret = spool_projects(argc, argv);
+               } else if (strcmp(argv[1], "sharetree") == 0) {
+                  ret = spool_sharetree(argc, argv);
+               } else if (strcmp(argv[1], "submithosts") == 0) {
+                  ret = spool_submithosts(argc, argv);
+               } else if (strcmp(argv[1], "users") == 0) {
+                  ret = spool_users(argc, argv);
+               } else if (strcmp(argv[1], "usersets") == 0) {
+                  ret = spool_usersets(argc, argv);
+               } else {
+                  usage(argv[0]);
+                  ret = EXIT_FAILURE;
+               }
             }
          }
       }
@@ -510,8 +509,7 @@ int main(int argc, char *argv[])
 
    sge_prof_cleanup();
 
-   SGE_EXIT((void **)&ctx, ret);
-
+   SGE_EXIT(NULL, ret);
    DEXIT;
    return ret;
 }

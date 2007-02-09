@@ -45,8 +45,8 @@ public class PlainListPropertyDescriptor extends ListPropertyDescriptor {
    /** Creates a new instance of PlainListPropertyDescriptor */
    public PlainListPropertyDescriptor(Class beanClass, String propertyName, 
                                  Class propertyType, String cullType,
-                                 int cullFieldName, boolean browseable, boolean readOnly, boolean configurable) {
-      super( beanClass, propertyName, propertyType, cullType, cullFieldName, browseable, readOnly, configurable );
+                                 int cullFieldName, boolean browseable, boolean readOnly) {
+      super( beanClass, propertyName, propertyType, cullType, cullFieldName, browseable, readOnly );
       
       getListMethod = findMethod("get", "List", null);
    }

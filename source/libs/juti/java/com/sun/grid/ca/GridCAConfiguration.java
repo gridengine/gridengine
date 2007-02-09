@@ -39,6 +39,8 @@ import java.io.Serializable;
  *
  * An object of this class holds all necessary information for a GridCA configuration
  * The <code>validate</code> method determines wheter the configuration is valid
+ * @author richard.hierlmeier@sun.com
+ * @todo  i18n
  */
 public class GridCAConfiguration implements Serializable {
     

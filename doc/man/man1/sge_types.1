@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2004-2007 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/09 12:37:23 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/09 12:37:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -38,7 +38,7 @@ sge_types - xxQS_NAMExx type descriptions
 .SH DESCRIPTION
 .\"
 The xxQS_NAMExx
-user interface consists of several programs and files. Some command-line 
+user interface consists of several programs and files. Some command line 
 switches and several file attributes are types. The syntax for these
 types is explained in this page.
 .PP
@@ -46,13 +46,12 @@ types is explained in this page.
 .SH "TYPES"
 The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
-.\" expression        => a regular boolean expression
-.\" host              => wc_host without expression
-.\" hostgroup         => wc_hostgroup without expression
+.\" host              => wc_host without pattern
+.\" hostgroup         => wc_hostgroup without pattern
 .\" pattern           => a pattern definition
-.\" qdomain           => wc_qdomain without expression
-.\" qinstance         => wc_qinstance without expression
-.\" queue             => wc_queue without expression
+.\" qdomain           => wc_qdomain without pattern
+.\" qinstance         => wc_qinstance without pattern
+.\" queue             => wc_queue without pattern
 .\" range             := n[-m[:s]][,n[-m[:s]],...]
 .\" user              => wc_user without pattern
 .\" user_list         := user[,user,...]
@@ -71,45 +70,8 @@ The syntax of xxQS_NAMExx types in alphabetic order:
 .\" wc_project        := project|pattern
 .\" wc_pe_name        := pe_name|pattern
 .\"
-.SS "\fBexpression\fP"
-The wildcard expression is a regular boolean expression that consists of
-a couple of \fIpattern\fPs joined by boolean operators. 
-When the wildcard expression is used the following definition applies:
-.PP
-.ta \w'XXXXXXXX'u
-expression	= ["!"] ["("] valExp [")"] [ AND_OR expression ]*
-valExp	= pattern | expression
-AND_OR	= "&" | "|"
-.fi
-.PP
-where:
-.PP
-.\"
-.nf
-.ta \w'XXXXXXXX'u
-"!"	not operator negate the following pattern or expression 
-"&"	and operator logically and with the following expression
-"|"	or operator logically or with the following expression
-"("	open bracket begin the inner expression.
-")"	close bracket ends the inner expression. 
-"pattern"	see the \fIpattern\fP definition thats follow
-.fi
-.PP
-The expression itself should be put into '"' to ensure, that
-the clients get the whole expression.
-.PP
-.\"
-.ta
-e.g.
-.RS
-.ta \w'XXXXXXXXXXXXX'u
-"(lx*|sol*)&*64*"	begin with lx or sol and contain somwhere 64
-"rh_3*&!rh_3.1"   can be any string beginning rh_3, but not a rh_3.1
-
-.fi
-.\"
 .SS "\fBpattern\fP"
-When the patterns are used the following definition applies:
+When ever patterns are used the following definition applies:
 .PP
 .nf
 .ta \w'XXXXXXXX'u
@@ -118,20 +80,12 @@ When the patterns are used the following definition applies:
 "?"	matches any character. It cannot be no character
 "."	is the character ".". It has no other meaning
 "\\"	escape character. "\\\\" = "\\", "\\*" = "*", "\\?" = "?"
-"[...]"	specifies an array or a range of allowed 
-	characters for one character at a specific position.
-        Character ranges may be specified using the a-z notation.
-        The caret symbol (^) is \fBnot\fP interpreted as a logical
-        not; it is intrepreted literally.
-
-For more details please see 
-.M fnmatch 5
-.\"
-
+"[xx]"	specifies an array or a range of allowed 
+	characters for one character at a specific position
 .fi
 .PP
 The pattern itself should be put into '"' to ensure, that
-the clients get the pattern.
+the clients get the pattern. The or '|' operator is not supported.
 .PP
 .SS "\fBrange\fP"
 The task range specifier has the form 
@@ -148,7 +102,7 @@ range of the form n-m or a range with a step size.
 .SS "\fBwc_host\fP"
 A wildcard host specification (\fIwc_host\fP) is a 
 wildcard expression which might match one or more hosts used in the cluster.
-The first character of that string never begins with an at-character ('@'), even
+The first character of that string never begins with an at-character '@' even
 if the expression begins with a wildcard character.
 .PP
 .\"
@@ -164,7 +118,7 @@ a*	all host beginning with an 'a'
 .SS "\fBwc_hostgroup\fP"
 A wildcard hostgroup specification (\fIwc_hostgroup\fP) is a 
 wildcard expression which might match one or more hostgroups.
-The first character of that string is always an at-character ('@').
+The first character of that string is always a at-character '@'.
 .PP
 More information concerning hostgroups can be found in
 .M hostgroup 5
@@ -180,8 +134,8 @@ e.g.
 .\"
 .SS "\fBwc_job\fP"
 The wildcard job specification is a placeholder for job ids, job names 
-include job name pattern. A job id always references one
-job, while the names and pattern might reference multiple jobs.
+include job name wildcard expressions. A job id always references one
+job, while the names and patterns might reference multiple jobs.
 .sp 1
 wc_job := job-id | job-name | pattern
 .PP
@@ -215,9 +169,9 @@ for further details on array jobs).
 .SS "\fBwc_qdomain\fP"
 \fIwc_qdomain\fP := \fIwc_cqueue\fP "@" \fIwc_hostgroup\fP
 .PP
-A wildcard expression queue domain specification (\fIwc_qdomain\fP) starts with a wildcard
-expression cluster queue name (\fIwc_cqueue\fP) followed by an at-character '@' 
-and a wildcard expression hostgroup specification (\fIwc_hostgroup\fP).
+A wildcard queue domain specification (\fIwc_qdomain\fP) starts with a wildcard
+cluster queue name (\fIwc_cqueue\fP) followed by an at-character '@' 
+and a wildcard hostgroup specification (\fIwc_hostgroup\fP).
 .PP
 \fIwc_qdomain\fP are used to address a group of queue instances.
 All queue instances residing on a hosts which is part of matching hostgroups
@@ -231,16 +185,14 @@ e.g.
 .ta \w'XXXXXXXXXXXXX'u
 *@@*	all queue instances whose underlaying
 	host is part of at least one hostgroup
-a*@@e*	all queue instances begins with a whose underlaying
-	host is part of at least one hostgroup begin with e
 *@@solaris	all queue instances on hosts part of
 	the @solaris hostgroup
 .fi
 .\"
 .SS "\fBwc_cqueue\fP"
-A wildcard expression cluster queue specification (\fIwc_cqueue\fP) is a 
+A wildcard cluster queue specification (\fIwc_cqueue\fP) is a 
 wildcard expression which might match one or more cluster queues used in the cluster.
-That string never contains an at-character ('@'), even if the expression begins with a 
+That string never contains an at-character '@' even if the expression begins with a 
 wildcard character.
 .PP
 .\"
@@ -251,18 +203,17 @@ e.g.
 .ta \w'XXXXXXXXXXXXX'u
 *	all cluster queues
 a*	all cluster queues beginning with an 'a'
-a*&!adam	all cluster queues beginning with an 'a',but not adam
 .fi
 .\"
 .SS "\fBwc_qinstance\fP"
 \fIwc_qinstance\fP := \fIwc_cqueue\fP "@" \fIwc_host\fP
 .PP
-A wildcard expression queue instance specification (\fIwc_qinstance\fP) starts 
-with a wildcard expression cluster queue name (\fIwc_cqueue\fP) followed by an 
-at-character '@' and a wildcard expression hostname (\fIwc_host\fP).
+A wildcard queue instance specification (\fIwc_qinstance\fP) starts 
+with a wildcard cluster queue name (\fIwc_cqueue\fP) followed by an 
+at-character '@' and a wildcard hostname (\fIwc_host\fP).
 .PP
 \fIwc_qinstance\fP expressions are used to address a group
-of queue instances whose underlaying hostname matches the given expression.
+of queue instances whose underlaying hostname matches the given pattern.
 Please note that the first character of \fIwc_host\fP does never match 
 the at-character '@'. 
 .PP
@@ -274,16 +225,14 @@ e.g.
 *@*	all queue instances in the cluster
 *@b*	all queue instances whose 
 	hostname begins with a 'b'
-*@b*|c*	all queue instances whose 
-	hostname begins with a 'b' or 'c'
 .fi
 .\"
 .SS "\fBwc_queue\fP"
 \fIwc_queue\fP := \fIwc_cqueue\fP | \fIwc_qdomain\fP | \fIwc_qinstance\fP 
 .PP
-A wildcard queue expression (\fIwc_queue\fP) might either be a wildcard expression 
-cluster queue specification (\fIwc_cqueue\fP) or a wildcard expression queue domain
-specification (\fIwc_qdomain\fP) or a wildcard expression queue instance specification
+A wildcard queue expression (\fIwc_queue\fP) might either be a wildcard
+cluster queue specification (\fIwc_cqueue\fP) or a wildcard queue domain
+specification (\fIwc_qdomain\fP) or a wildcard queue instance specification
 (\fIwc_qinstance\fP).
 .PP
 .nf
@@ -292,9 +241,8 @@ e.g.
 .RS
 .ta \w'XXXXXXXXXXXXXXXXX'u
 big_*1	cluster queues which begin with 
-	"big_" and end with "1" 
-big_*&!*1	cluster queues which begin with 
-	"big_" ,but does not end with "1" 
+	"big_" and end with "1"
+big_11@@solaris	@solaris queue domain
 *@fangorn	all qinstances residing on host 
 	fangorn
 .fi
@@ -302,14 +250,14 @@ big_*&!*1	cluster queues which begin with
 .SS "\fBwc_queue_list\fP"
 \fIwc_queue_list\fP := \fIwc_queue\fP ["," \fIwc_queue\fP "," ...]
 .PP
-Comma separated list of wc_queue elements.
+Comma separated list of wildcard queue expressions.
 .PP
 e.g. 
 .RS
 big, medium_*@@sol*, *@fangorn.sun.com
 .PP
 .SS "\fBwc_user\fP"
-A wildcard user name pattern is either a wildcard user name specification
+A wildcard user name expression is either a wildcard user name specification
 or a full user name.
 .PP
 wc_user := user_name | pattern
@@ -320,13 +268,13 @@ A list of user names.
 wc_user_list := wc_user [ , wc_user , ...]
 .PP
 .SS "\fBwc_project\fP"
-A wildcard project name pattern is either a wildcard project name specification
+A wildcard project name expression is either a wildcard project name specification
 or a full project name.
 .PP
 wc_project := project | pattern
 .PP
 .SS "\fBwc_pe_name\fP"
-A wildcard parallel environment name pattern is either a wildcard pe name specification
+A wildcard parallel environment name expression is either a wildcard pe name specification
 or a full pe name.
 .PP
 wc_pe_name := pe_name | pattern
@@ -335,7 +283,7 @@ wc_pe_name := pe_name | pattern
 .SH SEE ALSO
 .M qacct 1 ,
 .M qconf 1 ,
-.M qquota 1
+.M qlimit 1
 .\"
 .SH COPYRIGHT
-Copyright: 2004-2007 by Sun Microsystems, Inc.
+Copyright: 2004 by Sun Microsystems, Inc.

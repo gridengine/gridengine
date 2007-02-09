@@ -60,6 +60,7 @@
 
 static bool sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
 static bool sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, lList **ppuserlist, lList **alpp);
+static bool qdel_usage(FILE *fp, char *what);
 
 extern char **environ;
 
@@ -136,7 +137,7 @@ int main(int argc, char **argv) {
 
    /* Are there jobs which should be deleted? */
    if (!ref_list) {
-      sge_usage(QDEL, stderr);
+      qdel_usage(stderr, NULL);
       printf("%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       goto error_exit;
    }
@@ -371,7 +372,7 @@ lList **alpp
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                               MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
 error:      
-      sge_usage(QDEL, stderr);
+      qdel_usage(stderr, NULL);
       DRETURN(false);
    }
 
@@ -393,9 +394,9 @@ u_long32 *pforce,
 lList **ppuserlist,
 lList **alpp
 ) {
-   u_long32 helpflag;
-   lListElem *ep;
-   bool ret = true;
+u_long32 helpflag;
+lListElem *ep;
+bool ret = true;
 
    DENTER(TOP_LAYER, "sge_parse_qdel");
 
@@ -406,7 +407,7 @@ lList **alpp
    while(lGetNumberOfElem(*ppcmdline))
    {
       if(parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
-         sge_usage(QDEL, stdout);
+         qdel_usage(stdout, NULL);
          DEXIT;
          SGE_EXIT(NULL, 0);
          break;
@@ -440,3 +441,51 @@ lList **alpp
 
    DRETURN(ret);
 }
+
+/****
+ **** qdel_usage (static)
+ ****
+ **** displays usage of qdel on file fp.
+ **** Is what NULL, full usage will be displayed.
+ ****
+ **** Returns always 1.
+ ****
+ **** If what is a pointer to an option-string,
+ **** only usage for that option will be displayed.
+ ****   ** not implemented yet! **
+ ****/
+static bool qdel_usage(
+FILE *fp,
+char *what 
+) {
+   dstring ds;
+   char buffer[256];
+
+   if (fp == NULL) {
+      return false;
+   }
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
+
+   if(!what) {
+      /* display full usage */
+      fprintf(fp, "%s qdel [options] job_task_list\n", MSG_SRC_USAGE);      
+      fprintf(fp, "  [-f]                               %s\n",  MSG_QDEL_f_OPT_USAGE);
+      fprintf(fp, "  [-help]                            %s\n",  MSG_COMMON_help_OPT_USAGE);
+      fprintf(fp, "  [-u user_list]                     %s\n",  MSG_QDEL_del_list_3_OPT_USAGE); 
+      fprintf(fp, "  job_task_list                      %s\n",  MSG_QDEL_del_list_1_OPT_USAGE);
+      fprintf(fp, "\n");
+      fprintf(fp, "job_task_list  job_tasks[ job_tasks[ ...]]\n");
+      fprintf(fp, "job_tasks      {job_id[.task_id_range]|job_name|pattern}[ -t task_id_range]\n");
+      fprintf(fp, "task_id_range  task_id[-task_id[:step]]\n");
+      fprintf(fp, "user_list      {user|pattern}[,{user|pattern}[,...]]\n");
+   } else {
+      /* display option usage */
+      fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S, what);
+      fprintf(fp, "\n");
+   }
+   return true;
+}
+

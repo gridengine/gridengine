@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #include <Xmt/Xmt.h>
 #include <Xmt/Create.h>
@@ -1177,19 +1176,18 @@ lListElem *sep
    DENTER(GUI_LAYER, "CullToParameters");
 
    /* USER */
-   data->fticket_user = (int)floor(lGetDouble(sep, SC_weight_user)*1000 + 0.5);
+   data->fticket_user = (int)(lGetDouble(sep, SC_weight_user)*1000);
    
    /* USERSET */
-   data->fticket_userset = (int)floor(lGetDouble(sep, SC_weight_department)*1000 + 0.5);
+   data->fticket_userset = (int)(lGetDouble(sep, SC_weight_department)*1000);
    
    /* PROJECT */
-   data->fticket_project = (int)floor(lGetDouble(sep, SC_weight_project)*1000 + 0.5);
+   data->fticket_project = (int)(lGetDouble(sep, SC_weight_project)*1000);
    
    /* JOB */
-   data->fticket_job = (int)floor(lGetDouble(sep, SC_weight_job)*1000.0 + 0.5);
-
-   if ((data->fticket_user + data->fticket_userset + data->fticket_project +
-         data->fticket_job) != 1000) {
+   data->fticket_job = (int)(lGetDouble(sep, SC_weight_job)*1000);
+   if (data->fticket_user+data->fticket_userset+data->fticket_project+
+         data->fticket_job != 1000) {
       data->fticket_user = 250;
       data->fticket_userset = 250;
       data->fticket_project = 250;

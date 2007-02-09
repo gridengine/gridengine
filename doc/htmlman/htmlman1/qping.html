@@ -6,9 +6,8 @@ NAME
      qping - check application status of Grid Engine daemons.
 
 SYNTAX
-     qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i &lt;interval&gt;]  [-
-     info]  [-f]  ]  |  [  [-dump_tag  tag  [param]  ] [-dump] [-
-     nonewline] ] ] &lt;host&gt; &lt;port&gt; &lt;name&gt; &lt;id&gt;
+     qping [-help] [-noalias] [ [ [-i &lt;interval&gt;] [-info] [-f]  ]
+     | [ [-dump] [ -nonewline ] ] ] &lt;host&gt; &lt;port&gt; &lt;name&gt; &lt;id&gt;
 
 DESCRIPTION
      <I>Qping</I> is used to validate  the  runtime  status  of  a  Grid
@@ -20,11 +19,11 @@ DESCRIPTION
      with a SIRM (Status Information Response Message) which con-
      tains status information about the consulted daemon.
 
-     The qping -dump and -dump_tag options allowing  an  adminis-
-     trator  to observe the communication protocol data flow of a
-     Grid Engine service daemon. The qping -dump instruction must
-     be  started with root account and on the same host where the
-     observed daemon is running.
+     The qping -dump option allows an  administrator  to  observe
+     the  communication  protocol data flow of a Grid Engine ser-
+     vice daemon. The qping -dump  instruction  must  be  started
+     with  root  account  and on the same host where the observed
+     daemon is running.
 
 OPTIONS
   -f
@@ -107,7 +106,6 @@ OPTIONS
 
 
         qmaster:
-
            The info message contains information about the  qmas-
            ter threads followed by a thread state and time infor-
            mation. Each time when one of the known  threads  pass
@@ -124,9 +122,6 @@ OPTIONS
                  TET:  Timed Event Thread
                  MT:   Message Thread(s)
                  SIGT: SIGnal Thread
-
-                 In addition to these thread names, the name can contain a thread number (for example:
-                 <B><A HREF="../htmlman1/MT.html">MT(1)</A></B>), when multiple instances of this thread are running.
 
               THREAD_STATE:
                  R: Running
@@ -157,10 +152,6 @@ OPTIONS
         After the thread information follows an additional infor-
         mation string which describes the application status.
 
-  <I>Monitor</I>:  If available, displays statistics on  a  thread.  The
-  data  for  each  thread is displayed in one line. The format of
-  this line can be changed at any time. Only  the  master  imple-
-  ments the monitoring.
 
 
   -help
@@ -187,28 +178,10 @@ OPTIONS
      variable.
 
 
-  -ssl
-     This option can be used to specify  an  SSL  (Secure  Socket
-     Layer)  configuration.  The qping will use the configuration
-     to connect to services running SSL. If the SGE settings file
-     is  not  sourced,  you  have  to  use the -noalias option to
-     bypass the need for the SGE_ROOT environment variable.   The
-     following  environment  variables  are used to specifiy your
-     certificates:
-       SSL_CA_CERT_FILE - CA certificate file
-       SSL_CERT_FILE    - certificates file
-       SSL_KEY_FILE     - key file
-       SSL_RAND_FILE    - rand file
-
-
-  -tcp
-     This option is used to select TCP/IP as the protocol used to
-     connect to other services.
-
-
   -nonewline
      Dump output will not have a linebreak within a  message  and
      binary messages are not unpacked.
+
 
   -dump
      This option allows an administrator to observe the  communi-
@@ -228,29 +201,7 @@ OPTIONS
           "hn:X"  -&gt; set hostname output parameter X.
                      X values are "long" or "short"
 
-     Start qping -help to see which columns are available.
-
-
-
-  -dump_tag tag [param]
-     This option has the same the same meaning as -dump, but  can
-     provide  more  information by specifying the debug level and
-     message types qping should print:
-        -dump_tag ALL &lt;debug level&gt;
-           This  option  shows  all   possible   debug   messages
-           (APP+MSG)  for the debug levels, ERROR, WARNING, INFO,
-           DEBUG and DPRINTF. The contacted service must  support
-           this  kind  of debugging. This option is not currently
-           implemented.
-        -dump_tag APP &lt;debug level&gt;
-           This option shows only application debug messages  for
-           the  debug  levels,  ERROR,  WARNING,  INFO, DEBUG and
-           DPRINTF. The contacted service must support this  kind
-           of  debugging.   This  option  is not currently imple-
-           mented.
-        -dump_tag MSG
-           This option  has  the  same  behaviour  as  the  -dump
-           option.
+  Start qping -help to see which columns are available.
 
 
   host
@@ -274,34 +225,34 @@ OPTIONS
 
 
 EXAMPLES
-     &gt;qping master_host 31116 qmaster
-     08/24/2004 16:41:15 endpoint master_host/qmaster/1 at port 31116 is up since 365761 seconds
-     08/24/2004 16:41:16 endpoint master_host/qmaster/1 at port 31116 is up since 365762 seconds
-     08/24/2004 16:41:17 endpoint master_host/qmaster/1 at port 31116 is up since 365763 seconds
+          &gt;qping master_host 31116 qmaster
+          08/24/2004 16:41:15 endpoint master_host/qmaster/1 at port 31116 is up since 365761 seconds
+          08/24/2004 16:41:16 endpoint master_host/qmaster/1 at port 31116 is up since 365762 seconds
+          08/24/2004 16:41:17 endpoint master_host/qmaster/1 at port 31116 is up since 365763 seconds
 
-     &gt; qping -info master_host 31116 qmaster 1
-     08/24/2004 16:42:47:
-     SIRM version:             0.1
-     SIRM message id:          1
-     start time:               08/20/2004 11:05:14 (1092992714)
-     run time [s]:             365853
-     messages in read buffer:  0
-     messages in write buffer: 0
-     nr. of connected clients: 4
-     status:                   0
-     info:                     ok
+          &gt; qping -info master_host 31116 qmaster 1
+          08/24/2004 16:42:47:
+          SIRM version:             0.1
+          SIRM message id:          1
+          start time:               08/20/2004 11:05:14 (1092992714)
+          run time [s]:             365853
+          messages in read buffer:  0
+          messages in write buffer: 0
+          nr. of connected clients: 4
+          status:                   0
+          info:                     ok
 
-     &gt; qping -info execd_host 31117 execd 1
-     08/24/2004 16:43:45:
-     SIRM version:             0.1
-     SIRM message id:          1
-     start time:               08/20/2004 11:06:13 (1092992773)
-     run time [s]:             365852
-     messages in read buffer:  0
-     messages in write buffer: 0
-     nr. of connected clients: 2
-     status:                   0
-     info:                     ok
+          &gt; qping -info execd_host 31117 execd 1
+          08/24/2004 16:43:45:
+          SIRM version:             0.1
+          SIRM message id:          1
+          start time:               08/20/2004 11:06:13 (1092992773)
+          run time [s]:             365852
+          messages in read buffer:  0
+          messages in write buffer: 0
+          nr. of connected clients: 2
+          status:                   0
+          info:                     ok
 
 
 
@@ -319,8 +270,6 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

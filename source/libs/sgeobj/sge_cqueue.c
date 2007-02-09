@@ -66,7 +66,6 @@
 #include "sge_range.h"
 #include "sge_subordinate.h"
 #include "sge_hostname.h"
-#include "sge_eval_expression.h"
 #include "commlib.h"
 
 #include "msg_common.h"
@@ -1223,8 +1222,8 @@ cqueue_list_find_all_matching_references(const lList *this_list,
 
       for_each(cqueue, this_list) {
          const char *cqueue_name = lGetString(cqueue, CQ_name);
-         /* use cqueue expression */         
-         if (!sge_eval_expression(TYPE_STR,cqueue_pattern, cqueue_name, NULL)) {
+         
+         if (!fnmatch(cqueue_pattern, cqueue_name, 0)) {
             if (*qref_list == NULL) {
                *qref_list = lCreateList("", QR_Type);
             }
@@ -1647,6 +1646,7 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
                                  cqueue_attribute_array[index].href_attr);
 
                next_elem = lNext(elem);
+
                if (!sge_hostcmp(hgroup_or_hostname, attr_hostname)) {
                   lRemoveElem(list, &elem);
                }
@@ -1705,8 +1705,8 @@ cqueue_purge_host(lListElem *this_elem, lList **answer_list,
          attr_name = lGetString(ep, US_name);
          DPRINTF((SFQ"\n", attr_name));
       
-         /* purge hostlist */         
-         if (!sge_eval_expression(TYPE_HOST, attr_name, SGE_ATTR_HOSTLIST, NULL)) {
+         /* purge hostlist */ 
+         if (!fnmatch(attr_name, SGE_ATTR_HOSTLIST,0)) {
             sublist = NULL;
             lXchgList(this_elem, CQ_hostlist, &sublist);
             if (lDelElemHost(&sublist, HR_name, hgroup_or_hostname) == 1) {
@@ -1721,8 +1721,8 @@ cqueue_purge_host(lListElem *this_elem, lList **answer_list,
          index = 0;
          while(cqueue_attribute_array[index].name != NULL) {
 
-            /* Does the given attr_wildcard match with the actual attr_name */         
-            if (!sge_eval_expression(TYPE_STR, attr_name, cqueue_attribute_array[index].name, NULL)) {
+            /* Does the given attr_wildcard match with the actual attr_name */ 
+            if (!fnmatch(attr_name, cqueue_attribute_array[index].name, 0)) {
                sublist = lGetList(this_elem, 
                                   cqueue_attribute_array[index].cqueue_attr );
 

@@ -85,6 +85,7 @@
 #define MSG_ANSWER_ARGUMENTMISSINGFORX_S    _MESSAGE(23047, _("argument missing for "SFQ))
 #define MSG_USER_INVALIDNAMEX_S             _MESSAGE(23048, _("invalid user name "SFQ))
 #define MSG_USER_NOHOMEDIRFORUSERX_S        _MESSAGE(23049, _("missing home directory for user "SFQ))
+#define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S  _MESSAGE(23050, _("getuniquehostname() failed resolving: "SFN))
 #define MSG_QUEUE_UNABLE2FINDQ_S            _MESSAGE(23051, _("unable to find queue "SFQ))
 #define MSG_OBJ_USER                        _MESSAGE(23052, _("user"))
 #define MSG_OBJ_GROUP                       _MESSAGE(23053, _("group"))
@@ -298,11 +299,10 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CONTEXT_LIST         "context_list            variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CKPT_SEL             "ckpt_selector           `n' `s' `m' `x' <interval> "
 #define MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME            "date_time               [[CC]YY]MMDDhhmm[.SS]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST       "destin_id_list          queue[,queue,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST       "destin_id_list          queue[ queue ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD      "hold_list               `u' `s' `o'" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID               "job_id_list"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
@@ -315,7 +315,6 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST            "path_list               [host:]path[,[host:]path,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_PATH                 "working_directory       path"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_FILE_LIST            "file_list               [host:]file[,[host:]file,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY             "priority                -1023 - 1024"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_RESOURCE_LIST        "resource_list           resource[=value][,resource[=value],...]"
@@ -394,7 +393,7 @@
 #define MSG_GDI_USAGE_Ap_OPT_FNAME                       "[-Ap fname]"
 #define MSG_GDI_UTEXT_Ap_OPT_FNAME                       _MESSAGE(23306, _("add a new parallel environment from file"))
 
-#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [queue_name]]"
+#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq ]"
 #define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new cluster queue"))
 
 #define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"
@@ -514,8 +513,8 @@
 #define MSG_GDI_USAGE_dul_OPT_LISTNAME_LIST              "[-dul listname_list]"
 #define MSG_GDI_UTEXT_dul_OPT_LISTNAME_LIST              _MESSAGE(23347, _("delete userset list(s) completely"))
 
-#define MSG_GDI_USAGE_DUSER_USER                         "[-duser user_list]"
-#define MSG_GDI_UTEXT_DUSER_USER                         _MESSAGE(23348, _("delete user(s)"))
+#define MSG_GDI_USAGE_DUSER_USER                         "[-duser user]"
+#define MSG_GDI_UTEXT_DUSER_USER                         _MESSAGE(23348, _("delete user"))
 
 #define MSG_GDI_USAGE_dprj_OPT_PROJECT                   "[-dprj project_list]"
 #define MSG_GDI_UTEXT_dprj_OPT_PROJECT                   _MESSAGE(23349, _("delete project"))
@@ -569,6 +568,9 @@
 
 #define MSG_GDI_USAGE_l_OPT_RESOURCE_LIST                "[-l resource_list]"
 #define MSG_GDI_UTEXT_l_OPT_RESOURCE_LIST                _MESSAGE(23365, _("request the given resources"))
+
+#define MSG_GDI_USAGE_lj_OPT_LOG_FILE                    "[-lj log_file]"
+#define MSG_GDI_UTEXT_lj_OPT_LOG_FILE                    _MESSAGE(23366, _("write job logging to log file"))
 
 #define MSG_GDI_USAGE_m_OPT_MAIL_OPTIONS                 "[-m mail_options]"
 #define MSG_GDI_UTEXT_m_OPT_MAIL_OPTIONS                 _MESSAGE(23367, _("define mail notification events"))
@@ -923,8 +925,8 @@
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
+#define MSG_GDI_USAGE_MESSAGE_OPR                        "message"
 #define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
-#define MSG_GDI_USAGE_TASK_OPR                           "job_task_list"
 #define MSG_GDI_USAGE_SCRIPT_OPR                         "[{command|-} [command_args]]"
 #define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"
 #define MSG_GDI_UTEXT_JOB_ID_OPR                         _MESSAGE(23485, _("jobid's (and taskid's) of jobs to be altered"))
@@ -944,7 +946,6 @@
  */
 #define MSG_SGETEXT_NOMEM                       _MESSAGE(23492, _("out of memory"))
 #define MSG_SGETEXT_CANT_OPEN_SS                _MESSAGE(23493, _("can't open "SFQ" ("SFN")"))
-#define MSG_GDI_UTEXT_TASK_OPR                  _MESSAGE(23494, _("delete all jobs given in list"))
 #define MSG_SYSTEM_GETPWNAMFAILED_S             _MESSAGE(23495, _("can't get password entry for user "SFQ". Either the user does not exist or NIS error!") ) 
 #define MSG_SGETEXT_NULLPTRPASSED_S             _MESSAGE(23497, _("NULL ptr passed to "SFN"()"))
 #define MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S     _MESSAGE(23498, _("missing attribute "SFQ" in complexes"))
@@ -1059,13 +1060,6 @@
 #define MSG_GDI_UTEXT_mrqs_OPT             _MESSAGE(60621, _("modify resource quota set(s)"))
 #define MSG_GDI_USAGE_Mrqs_OPT             "[-Mrqs fname [rqs_list]]"
 #define MSG_GDI_UTEXT_Mrqs_OPT             _MESSAGE(60622, _("modify resource quota set(s) from file"))
-#define MSG_OBJ_NAME_MISSING               _MESSAGE(60623, _("Object name missing in request"))
-
-#define MSG_GDI_USAGE_wd_OPT               "[-wd working_directory]"
-#define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
-
-#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
-
 /*
  * Objects and components
  */

@@ -110,6 +110,9 @@ import javax.security.auth.spi.LoginModule;
  *  };
  * </pre>
  * 
+ * @author richard.hierlmeier@sun.com
+ * @see javax.security.auth.callback.NameCallback;
+ * @see javax.security.auth.callback.PasswordCallback;
  */
 public class UnixLoginModule implements LoginModule {
     

@@ -68,27 +68,23 @@ char *err_str
    DENTER(TOP_LAYER, "get_qm_name");
    
    if (!master_host || !master_file) {
-      if (err_str) {
-         if (master_host) {
+      if (err_str)
+         if (master_host)
             sprintf(err_str, MSG_GDI_NULLPOINTERPASSED );
-         }
-      }   
       DRETURN(-1);
    }
 
    if (!(fp=fopen(master_file,"r"))) {
       ERROR((SGE_EVENT, MSG_GDI_FOPEN_FAILED, master_file, strerror(errno)));
-      if (err_str) {
+      if (err_str)
          sprintf(err_str, MSG_GDI_OPENMASTERFILEFAILED_S , master_file);
-      }   
       DRETURN(-1);
    }    
 
    /* read file in one sweep and append O Byte to the end */
    if (!(len = fread(buf, 1, CL_MAXHOSTLEN*3, fp))) {
-      if (err_str) {
+      if (err_str)
          sprintf(err_str, MSG_GDI_READMASTERHOSTNAMEFAILED_S , master_file);
-      }   
    }
    buf[len] = '\0';
    
@@ -100,27 +96,24 @@ char *err_str
    first = cp;
 
    /* read all non white space characters */
-   while (*cp && !(*cp == ' ' || *cp == '\t' || *cp == '\n')) {
+   while (*cp && !(*cp == ' ' || *cp == '\t' || *cp == '\n'))
       cp++;
-   }   
       
    *cp = '\0';
    len = cp - first;
 
    if (len == 0) {
-      if (err_str) {
+      if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEHASZEROLENGTH_S , master_file);
-      }   
       FCLOSE(fp);
       DRETURN(-1);
    }   
        
    if (len > CL_MAXHOSTLEN - 1) {
-      if (err_str) {
+      if (err_str)
          sprintf(err_str, MSG_GDI_MASTERHOSTNAMEEXCEEDSCHARS_SI , 
                  master_file, (int) CL_MAXHOSTLEN);
          sprintf(err_str, "\n");
-      }   
       FCLOSE(fp);
       DRETURN(-1);
    }

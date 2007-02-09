@@ -63,7 +63,6 @@ enum {
    OA_NODE_LIST,
    OA_NODE_PATH,
    OA_NODE_SHARES_LIST,
-   OA_PATH,  
    OA_PATH_LIST,  
    OA_FILE_LIST,
    OA_PRIORITY,

@@ -53,12 +53,11 @@ public class SimplePropertyDescriptor extends PropertyDescriptor {
     * @param cullType       cull type of the property
     * @param required       is this property required
     * @param readOnly       is this property readonly
-    * @param configurable   is this property configurable
     */
    public SimplePropertyDescriptor(Class beanClass, String propertyName, 
                              Class propertyType, String cullType,
-                             int cullFieldName, boolean required, boolean readOnly, boolean configurable) {
-      super(beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly, configurable);
+                             int cullFieldName, boolean required, boolean readOnly ) {
+      super( beanClass, propertyName, propertyType, cullType, cullFieldName, readOnly );
       this.required = required;
       
       String methodName = "get";
@@ -86,7 +85,7 @@ public class SimplePropertyDescriptor extends PropertyDescriptor {
     * @param value  the value
     */   
    public void setValue(Object bean, Object value) {
-      if (isReadOnly()) {
+      if(isReadOnly()) {
          throw new IllegalStateException("Can in invoke setValue on readonly property " 
                                        + getPropertyName() + " of class " + getBeanClass().getName() );
       }

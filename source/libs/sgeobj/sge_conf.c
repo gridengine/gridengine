@@ -529,7 +529,7 @@ tConfEntry conf[]
 *     MT-NOTE: merge_configuration() is MT safe 
 *
 *******************************************************************************/
-int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_root, lListElem *global, lListElem *local, lList **lpp) {
+int merge_configuration(u_long32 progid, const char *cell_root, lListElem *global, lListElem *local, lList **lpp) {
    lList *cl;
    lListElem *elem, *ep2;
    lList *mlist = NULL;
@@ -618,9 +618,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          }
          if (parse_int_param(s, "STREE_SPOOL_INTERVAL", &spool_time, TYPE_TIM)) {
             if (spool_time <= 0) {
-               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
-                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "STREE_SPOOL_INTERVAL",
-                                       STREESPOOLTIMEDEF);
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                spool_time = STREESPOOLTIMEDEF;
             }
             continue;
@@ -797,18 +795,14 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          }
          if (parse_int_param(s, "flush_time", &reporting_flush_time, TYPE_TIM)) {
             if (reporting_flush_time <= 0) {
-               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
-                                       MSG_CONF_INVALIDPARAM_SSI, "reporting_params", "flush_time",
-                                       15);
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                reporting_flush_time = 15;
             }
             continue;
          }
          if (parse_int_param(s, "accounting_flush_time", &accounting_flush_time, TYPE_TIM)) {
             if (accounting_flush_time < 0) {
-               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
-                                       MSG_CONF_INVALIDPARAM_SSI, "reporting_params", "accounting_flush_time",
-                                       -1);
+               WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
                accounting_flush_time = -1;
             }
             

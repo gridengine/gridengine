@@ -199,19 +199,15 @@ char **argv
 ) {
    lList *alp = NULL;
    lList *pcmdline = NULL;
-   lList *pfile = NULL;
    lList *jid_list = NULL;
    lList *ref_list = NULL;
    lListElem *aep = NULL;
-   lListElem *ep_1 = NULL;
-   lListElem *ep_2 = NULL;
    char *hostname = NULL;
    const char *username = NULL;
    const char *cell_root = NULL;
    qstat_env_t qstat_env;
    u_long32 isXML = 0;
    sge_gdi_ctx_class_t *ctx = NULL;
-   bool more = true;
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -249,68 +245,15 @@ char **argv
       dstring file = DSTRING_INIT;
       if (qstat_env.qselect_mode == 0) { /* the .sge_qstat file should only be used in the qstat mode */
          get_root_file_path(&file, cell_root, SGE_COMMON_DEF_QSTAT_FILE);
-         /*
-          * Support of local/global profile for qstat command: we
-          * parse command options from both global and local qstat
-          * profile. Each command option is represented by an
-          * object of type SPA hanging off list 'pfile'.
-          *
-          * Next, parse command line options. Options from here are
-          * put in a separate list 'pcmdline' to allow checking for
-          * conflicting/duplicate options. This is required to
-          * obey the override semantic defined for the command line.
-          */
-         switch_list_qstat_parse_from_file(&pfile, &alp, qstat_env.qselect_mode, 
+         switch_list_qstat_parse_from_file(&pcmdline, &alp, qstat_env.qselect_mode, 
                                            sge_dstring_get_string(&file));
          if (get_user_home_file_path(&file, SGE_HOME_DEF_QSTAT_FILE, username,
                                               &alp)) {
-            switch_list_qstat_parse_from_file(&pfile, &alp, qstat_env.qselect_mode, 
+            switch_list_qstat_parse_from_file(&pcmdline, &alp, qstat_env.qselect_mode, 
                                            sge_dstring_get_string(&file));
          }
       }                                  
       switch_list_qstat_parse_from_cmdline(&pcmdline, &alp, qstat_env.qselect_mode, argv);
-      /*
-       * Walk option list given by command line and check
-       * for matching options from file.
-       */
-      for_each(ep_1, pcmdline) {
-         do {
-            /*
-             * Need that logic to handle multiple SPA
-             * objects representing the same option.
-             */
-            more = false;
-            for_each(ep_2, pfile) {
-               if (strcmp(lGetString(ep_1, SPA_switch),
-                       lGetString(ep_2, SPA_switch)) == 0) {
-                  /*
-                   * Bingo: remove dup.
-                   */
-                  lRemoveElem(pfile, &ep_2);
-                  /*
-                   * Start over again. We assume that the list
-                   * is not that huge. The next iteration we
-                   * may encounter another entry for the option
-                   * just removed.
-                   */
-                  more = true;
-                  break;
-               }
-            }
-         } while(more);
-      }
-      /*
-       * With dups removed we can now safely merge both lists.
-       * Note that we can only append to a non-empty list.
-       */
-      if (lGetNumberOfElem(pcmdline) > 0) {
-         lAppendList(pcmdline, pfile);
-         lFreeList(&pfile);
-      } else if (lGetNumberOfElem(pfile) > 0) {
-         lAppendList(pfile, pcmdline);
-         lFreeList(&pcmdline);
-         pcmdline = pfile;
-      }
       sge_dstring_free(&file);
    }
  
@@ -413,7 +356,10 @@ char **argv
          }
       }
 
-      answer_list_output(&answer_list);
+      for_each(aep, answer_list) {
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+      }
+      lFreeList(&answer_list);
 
       if (ret != 0) {
          SGE_EXIT(NULL, 1);
@@ -1178,7 +1124,7 @@ static int job_stdout_requested_pe(job_handler_t *handler, const char* pe_name, 
    
 }
 
-static int job_stdout_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) 
+int job_stdout_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) 
 {
    const char* name = "Granted PE";
    int len = MAX(1,17 - strlen(name));   

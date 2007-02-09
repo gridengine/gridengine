@@ -187,9 +187,9 @@ static gdi_object_t gdi_object[] = {
    { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 SGE_TYPE_PROJECT,         userprj_mod,  userprj_spool,  userprj_success },
    { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               SGE_TYPE_SHARETREE,       NULL,         NULL,           NULL },
    { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    SGE_TYPE_CKPT,            ckpt_mod,     ckpt_spool,     ckpt_success },
-   { SGE_JOB_SCHEDD_INFO_LIST,   0,    NULL,      "schedd info",             SGE_TYPE_JOB_SCHEDD_INFO, NULL,         NULL,           NULL },
+   { SGE_JOB_SCHEDD_INFO_LIST,   0,         NULL,      "schedd info",             SGE_TYPE_JOB_SCHEDD_INFO, NULL,         NULL,           NULL },
    { SGE_ZOMBIE_LIST,       0,         NULL,      "job zombie list",         SGE_TYPE_ZOMBIE,          NULL,         NULL,           NULL },
-   { SGE_RQS_LIST,          RQS_name,  RQS_Type,  "resource quota set",      SGE_TYPE_RQS,             rqs_mod,      rqs_spool,      rqs_success },
+   { SGE_RQS_LIST,          RQS_name,  RQS_Type,  "resource quota set",      SGE_TYPE_RQS,             rqs_mod,     rqs_spool,     rqs_success },
 #ifndef __SGE_NO_USERMAPPING__
    { SGE_USER_MAPPING_LIST, CU_name,   CU_Type,   "user mapping entry",      SGE_TYPE_CUSER,           cuser_mod,    cuser_spool,    cuser_success },
 #endif
@@ -2068,13 +2068,6 @@ monitoring_t *monitor
       old_obj = lGetElemStr(*object_type_get_master_list(object->list_type), object->key_nm, name);
    }
 
-   if (name == NULL) {
-      answer_list_add(alpp, MSG_OBJ_NAME_MISSING,
-                      STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
    if ((old_obj && add) ||
       (!old_obj && !add)) {
       ERROR((SGE_EVENT, add?
@@ -2097,7 +2090,7 @@ monitoring_t *monitor
 
    /* MODIFY NEW QUEUE USING REDUCED QUEUE AS INSTRUCTION */
    if (object->modifier(ctx, &tmp_alp, new_obj, instructions, add, ruser, rhost, 
-         object, sub_command, monitor) != 0) {
+         object, sub_command, monitor)) {
       
       if (alpp) {
          /* ON ERROR: DISPOSE NEW QUEUE */
@@ -2114,7 +2107,8 @@ monitoring_t *monitor
       }
       lFreeList(&tmp_alp);
       lFreeElem(&new_obj);
-      DRETURN(STATUS_EUNKNOWN);
+      DEXIT;
+      return STATUS_EUNKNOWN;
    }  
 
 

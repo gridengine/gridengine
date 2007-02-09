@@ -129,18 +129,4 @@
         </jar>
     </target>
     
-    <target name="-do-clean" depends="init, -do-clean.do, -do-clean.warning"/>
-    
-    <target name="-do-clean.do" depends="init" if="isJavaBuildHost">
-        <delete dir="${build.dir}"/>
-        <delete dir="${dist.dir}"/>
-    </target>
-
-    <target name="-do-clean.warning" depends="init" unless="isJavaBuildHost">
-       <echo level="warning">Warning: Do not delete</echo>
-       <echo level="warning">         ${build.dir} and</echo>
-       <echo level="warning">         ${dist.dir}</echo>
-       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
-    </target>
-    
 </project>

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: qdel.1,v $     Last Update: $Date: 2004/05/18 14:20:14 $     Revision: $Revision: 1.13 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2004/05/18 14:20:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qdel \- delete xxQS_NAMExx jobs from queues
 .SH SYNTAX
@@ -48,13 +48,13 @@ qdel \- delete xxQS_NAMExx jobs from queues
 .SH DESCRIPTION
 .I Qdel
 provides a means for a user/operator/manager to delete
-one or more jobs. A manager/operator can delete jobs belonging to any
-user, while a regular user can only delete his or her own jobs.
-If a manager wants to delete another user's job, the manager can specify
-the job id. If the manager is using a job name or pattern, he or she
-must also specify the user's name via "-u wc_user_list". A 
-"qdel wc_job_name" will delete only the jobs of the 
-calling user by default.
+one or more jobs. A manager/operator can delete jobs of any
+user while a user can only delete his own jobs. In case that
+a manager wants to delete another users job, he can specify
+the job id. If the manager is using a job name or pattern, he
+has also to specify the user name via "-u wc_user_list". A 
+"qdel wc_job_name" deletes per default only the jobs of the 
+calling user.
 .I Qdel
 deletes jobs in the order in which their job 
 identifiers are presented. Find additional information concerning

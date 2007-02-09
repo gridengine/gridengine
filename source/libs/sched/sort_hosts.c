@@ -191,7 +191,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
       /* ---------------------------------------- */
       /* get scaled load value                    */
       /* determine 1st components value           */
-      if (!(val = strtod(cp, &ptr)) && ptr == cp) {
+      if (!(val = strtol(cp, &ptr, 0)) && ptr == cp) {
          /* it is not an integer ==> it's got to be a load value */
          if (!(par_name = sge_delim_str(cp, &ptr, load_ops)) ||
                get_load_value(&val, global, host, centry_list, par_name)) {
@@ -218,7 +218,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global, lListElem 
          /* look for a weightening factors  */
          /* determine 2nd component's value */
          ptr++;
-         if (!(val2 = strtod(ptr,&ptr2)) && ptr2 == ptr) {
+         if (!(val2 = (double)strtol(ptr,&ptr2,0)) && ptr2 == ptr) {
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
                get_load_value(&val2, global, host, centry_list, par_name)) {

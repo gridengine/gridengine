@@ -1054,7 +1054,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL);
 #endif /* RTLD_NODELETE */
 
-#elif defined(HPUX)
+#elif defined(HP11)
 #ifdef RTLD_NODELETE
       cl_com_ssl_crypto_handle = dlopen ("libssl.sl", RTLD_LAZY | RTLD_NODELETE);
 #else
@@ -3278,7 +3278,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          struct timeval now;
          int socket_error = 0;
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
          int socklen = sizeof(socket_error);
 #else
          socklen_t socklen = sizeof(socket_error);
@@ -3311,7 +3311,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             }
          }
 
-#if defined(SOLARIS) && !defined(SOLARIS64)
+#if defined(SOLARIS) && !defined(SOLARIS64) 
          getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
          getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
@@ -3646,7 +3646,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
    }
 
    if (private->server_port == 0) {
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
       int length;
 #else
       socklen_t length;
@@ -3693,7 +3693,7 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int fromlen = 0;
 #else
    socklen_t fromlen = 0;
@@ -3841,7 +3841,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int socklen = sizeof(socket_error);
 #else
    socklen_t socklen = sizeof(socket_error);
@@ -4306,7 +4306,7 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                connection  = con_elem->connection;
                con_private = cl_com_ssl_get_private(connection);
                socket_error = 0;
-#if defined(SOLARIS) && !defined(SOLARIS64)
+#if defined(SOLARIS) && !defined(SOLARIS64) 
                get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
                get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);

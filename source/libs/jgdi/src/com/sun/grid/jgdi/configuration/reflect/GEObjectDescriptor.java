@@ -42,8 +42,8 @@ public class GEObjectDescriptor extends AbstractClassDescriptor {
    /** Creates a new instance of GEObjectDescriptor */
    protected GEObjectDescriptor(Class beanClass, int nameCullFieldName ) {
       super( beanClass, "SGE_ANY_TYPE" );
-      addSimple("parent", GEObject.class, "SGE_ANY_TYPE", -1, true, false, false);
-      addSimple("name",String.class, "SGE_STRING", nameCullFieldName, true, false, false);
+      addSimple("parent", GEObject.class, "SGE_ANY_TYPE", -1, true, false);
+      addSimple("name",String.class, "SGE_STRING", nameCullFieldName, true, false);
    }
    
    protected GEObjectDescriptor(Class beanClass, String cullName) {

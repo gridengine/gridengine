@@ -52,27 +52,6 @@ Qmon*fetch_time: 30
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*MainControl.MainRowCol.numColumns:  2
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! show the Host tab in Queue Configuration
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*showHostTab:  TRUE
-Qmon*automaticUpdateHostTab: TRUE
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! job configuration settings
-!! Qmon*job_form*columnWidths: nr of characters per column for 
-!!                                the first 6 cols
-!! Qmon*job_form*visibleColumns: nr of visible columns (without scrollbar)
-!!                               if the column sizes shall be bigger this can
-!!                               be lowered to show only the first n cols and
-!!                               the rest can be reached with the horizontal
-!!                               scrollbar
-!!                               
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*job_form*columnWidths:      12,8,10,10,7,16
-Qmon*job_form*visibleColumns:    6
-
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! F O N T S 
 !!

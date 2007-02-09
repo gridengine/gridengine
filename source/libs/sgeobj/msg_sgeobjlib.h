@@ -52,6 +52,8 @@
 #define MSG_JOB_XISINVALIDJOBTASKID_S                    _MESSAGE(64024, _("ERROR! "SFQ" is an invalid job-task identifier"))
 #define MSG_JOB_LONELY_TOPTION_S                          _MESSAGE(64025, _("found lonely '-t "SFN"' option (The -t option needs a leading job name)."))
 
+#define MSG_VALIDQUEUEUSER_GRPXALLREADYINUSERSETY_SS  _MESSAGE(64026, _("Group "SFQ" already contained in userset "SFQ))
+#define MSG_VALIDQUEUEUSER_USRXALLREADYINUSERSETY_SS  _MESSAGE(64027, _("User "SFQ" already contained in userset "SFQ))
 
 #define MSG_JOB_JLPPNULL                  _MESSAGE(64028, _("jlpp == NULL in job_add_job()"))                                                        
 #define MSG_JOB_JEPNULL                   _MESSAGE(64029, _("jep == NULL in job_add_job()"))
@@ -281,7 +283,6 @@
 #define MSG_OBJECT_VALUEMISSING        _MESSAGE(64279, _("Value missing"))
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults"))
-#define MSG_CONF_INVALIDPARAM_SSI      _MESSAGE(64302, _("invalid setting for "SFQ", attribute "SFQ" - using default %d"))
 #define MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U _MESSAGE(64302, _("nr of dynamic event clients exceeds max file descriptor limit, setting MAX_DYN_EC="sge_U32CFormat))
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value"))
@@ -316,6 +317,7 @@
 #define MSG_PATH_TOOLONG_I _MESSAGE(64330, _("a path or filename may not exceed %d characters"))
 #define MSG_PATH_ALIAS_INVALID_PATH _MESSAGE(64331, _("paths may not be empty strings"))
 #define MSG_HOSTNAME_NOT_EMPTY _MESSAGE(64332, _("hostnames may not be empty string"))
+#define MSG_HOSTNAME_TOOLONG _MESSAGE(64333, _("hostnames too long"))
 
 #define MSG_EVENT_INVALIDNAME _MESSAGE(64340, _("invalid event client name"))
 #define MSG_EVENT_ONLYADMINMAYSTARTSPECIALEVC _MESSAGE(64341, _("only admin user or root may start special event clients"))
@@ -340,14 +342,14 @@
 #define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
 
 
-#define MSG_RESOURCEQUOTA_NORULEDEFINED         _MESSAGE(64369, _("no resource quota rule specified for modification"))
-#define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST   _MESSAGE(64370, _("no valid expanded list"))
+#define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST    _MESSAGE(64370, _("no valid expanded list"))
 
 #define MSG_EVENT_RQSLISTXELEMENTS_II           _MESSAGE(64371, _("%d. EVENT RQS ENTRY LIST %d Elements"))
 #define MSG_EVENT_DELRQSX_IS                    _MESSAGE(64372, _("%d. EVENT DEL RQS ENTRY "SFN""))
 #define MSG_EVENT_ADDRQSX_IS                    _MESSAGE(64373, _("%d. EVENT ADD RQS ENTRY "SFN""))
 #define MSG_EVENT_MODRQSX_IS                    _MESSAGE(64374, _("%d. EVENT MOD RQS ENTRY "SFN""))
 #define MSG_RESOURCEQUOTA_DYNAMICLIMITNOTSUPPORTED   _MESSAGE(64375, _("dynamic limits are only supported for per host rules"))
+#define MSG_RESOURCEQUOTA_INVALIDLIMIT               _MESSAGE(64376, _("invalid value for limit "SFN))
 #define MSG_RESOURCEQUOTA_NORULES                    _MESSAGE(64377, _("resource quota set has no rules"))
 #define MSG_RESOURCEQUOTA_NONAME                     _MESSAGE(64378, _("resource quota set has no name"))
 #define MSG_CENTRYREFINRQS_SS                   _MESSAGE(64379, _("Complex attribute "SFQ" is still referenced in resource quota set "SFQ"."))
@@ -355,10 +357,5 @@
 
 #define MSG_CQUEUE_DEFOVERWRITTEN_SSSSS          _MESSAGE(64380, _("default value of "SFQ" is overwritten for hostgroup "SFQ" in queue "SFQ". Not all hosts of "SFQ" are contained in the hostlist specification of queue "SFQ"."))
 #define MSG_CQUEUE_UNUSEDATTRSETTING_SS          _MESSAGE(64381, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
-
-#define MSG_EVAL_EXPRESSION_PARSE_ERROR          _MESSAGE(64382, _("Parse error on position %d of the expression "SFQ"."))
-#define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid lenght of value exeed the limit %d characters."))
-#define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid lenght of expression exeed the limit %d characters."))
-
 
 #endif /* __MSG_SGEOBJLIB_H */

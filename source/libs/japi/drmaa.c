@@ -265,7 +265,8 @@ static const char *drmaa_supported_vector[] = {
 *      MT-NOTE: drmaa_init() is MT safe
 *******************************************************************************/
 int drmaa_init(const char *contact, char *error_diagnosis,
-               size_t error_diag_len) {
+               size_t error_diag_len)
+{
    int ret;
    dstring diag;
    dstring *diagp = NULL;
@@ -1904,7 +1905,7 @@ int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, size_t value_len
    return japi_string_vector_get_next((drmaa_attr_values_t*)values, value?&val:NULL);
 }
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
 /****** DRMAA/drmaa_get_num_attr_names() **************************************
 *  NAME
 *     drmaa_get_num_attr_names() -- Get the number of entries in the vector
@@ -2084,7 +2085,7 @@ int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len,
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    else {
       drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(drmaa_errno, diagp);
@@ -2179,7 +2180,7 @@ int drmaa_get_contact(char *contact, size_t contact_len,
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    else {
       drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(drmaa_errno, diagp);
@@ -2223,7 +2224,7 @@ int drmaa_version(unsigned int *major, unsigned int *minor,
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    }
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    if (major != NULL) {
       *major = 1;
    }

@@ -52,8 +52,8 @@ enum {
 LISTDEF(SME_Type)
    JGDI_ROOT_OBJ(JobSchedulingInfo, SGE_JOB_SCHEDD_INFO_LIST, GET )
    JGDI_EVENT_OBJ(ADD(sgeE_JOB_SCHEDD_INFO_ADD) | MODIFY(sgeE_JOB_SCHEDD_INFO_MOD) | DELETE(sgeE_JOB_SCHEDD_INFO_DEL) | GET_LIST(sgeE_JOB_SCHEDD_INFO_LIST))
-   SGE_LIST(SME_message_list, MES_Type, CULL_DEFAULT | CULL_JGDI_RO)         /* MES_Type */
-   SGE_LIST(SME_global_message_list, MES_Type, CULL_DEFAULT | CULL_JGDI_RO)  /* MES_Type */
+   SGE_LIST(SME_message_list, MES_Type, CULL_DEFAULT)         /* MES_Type */
+   SGE_LIST(SME_global_message_list, MES_Type, CULL_DEFAULT)  /* MES_Type */
 LISTEND 
 
 NAMEDEF(SMEN)

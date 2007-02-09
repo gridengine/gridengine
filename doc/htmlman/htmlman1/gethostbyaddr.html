@@ -27,15 +27,15 @@ SYNTAX
 DESCRIPTION
      <I>gethostname</I> and <I>gethostbyname</I> are  used  to  get  the  local
      resolved  host name.  <I>gethostbyaddr</I> is used to get the host-
-     name of a specified IP address  (dotted  decimal  notation).
-     <I>getservbyname</I>  can be used to get the configured port number
-     of a service (e.g. from /etc/services).
+     name of a specified IP  address  (4  dotted  number).   <I>get-</I>
+     <I>servbyname</I>  can be used to get the configured port number of
+     a service (e.g. from /etc/services).
 
-     The hostname utils are primarily used  by  the  Grid  Engine
+     The hostname utils are primarily used from the  Grid  Engine
      installation   scripts.   <I>gethostname</I>  ,  <I>gethostbyname</I>  and
      <I>gethostbyaddr</I> called without any option will print  out  the
      hostname,  all  specified aliases, and the IP address of the
-     locally resolved hostname.   Calling  <I>getservbyname</I>  without
+     local resolved hostname.  A call  of  <I>getservbyname</I>  without
      any option will print out the full service entry.
 
 OPTIONS
@@ -43,37 +43,37 @@ OPTIONS
      Prints a list of all options.
 
   -name
-     This option only reports the primary name of the host.
+     This option only reports the main name of the host.
 
   -aname
      If this option is set, the Grid Engine host  alias  file  is
      used  for  host  name  resolving. It is necessary to set the
-     environment variable SGE_ROOT and, if more than one cell  is
-     defined, also SGE_CELL.
+     environment variable SGE_ROOT and if more than one  cell  is
+     defined also SGE_CELL.
 
-     This option will print out the Grid Engine host name.
+     The option will print out the Grid Engine host name.
 
 
   -all
      By using the -all option all available host information will
-     be  printed.   This  information includes the host name, the
-     Grid Engine host name, all host aliases, and the IP  address
-     of the host.
+     be  printed.   This  contains the host name, the Grid Engine
+     host name, all host aliases, and the IP address of the host.
 
   -number
      This option will print out the port number of the  specified
      service name.
 
   &lt;name&gt;
-     The host name for which the information is requested.
+     This  is  the  host  name  for  which  the  information   is
+     requested.
 
   &lt;ip&gt;
-     The IP address  (dotted  decimal  notation)  for  which  the
+     This is the IP address  (4  dotted  number)  for  which  the
      information is requested.
 
   &lt;service&gt;
-     The service name for  which  the  information  is  requested
-     (e.g. ftp, sge_qmaster or sge_execd).
+     This is the  service  name  for  which  the  information  is
+     requested (e.g. ftp, sge_qmaster or sge_execd).
 
 EXAMPLES
      The following example shows how to get the  port  number  of

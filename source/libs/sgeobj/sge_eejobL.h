@@ -92,36 +92,18 @@ NAMEEND
 enum {
    SGEJ_priority = SGEJ_LOWERBOUND,
    SGEJ_job_number,
-   SGEJ_job_name,
-   SGEJ_owner,
-   SGEJ_state,
-   SGEJ_master_queue,
    SGEJ_job_reference
-};
-
-/* a boolean for the sort order */
-enum {
-  SGEJ_sort_decending = 0,
-  SGEJ_sort_ascending
 };
 
 LISTDEF(SGEJ_Type)
    SGE_DOUBLE(SGEJ_priority, CULL_DEFAULT)
    SGE_ULONG(SGEJ_job_number, CULL_DEFAULT)
-   SGE_STRING(SGEJ_job_name, CULL_DEFAULT)
-   SGE_STRING(SGEJ_owner, CULL_DEFAULT)
-   SGE_ULONG(SGEJ_state, CULL_DEFAULT)
-   SGE_STRING(SGEJ_master_queue, CULL_DEFAULT)
    SGE_REF(SGEJ_job_reference, JRL_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(SGEJN)
    NAME("SGEJ_priority")
    NAME("SGEJ_job_number")
-   NAME("SGEJ_job_name")
-   NAME("SGEJ_owner")
-   NAME("SGEJ_state")
-   NAME("SGEJ_master_queue")
    NAME("SGEJ_job_reference")
 NAMEEND
 

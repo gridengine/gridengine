@@ -40,6 +40,7 @@
 #define MSG_QSH_GET_CREDSTDERR_S      _MESSAGE(43000, _("get_cred stderr: "SFN))
 #define MSG_QSH_QSUBFAILED            _MESSAGE(43001, _("qsub failed"))
 #define MSG_QSUB_CANTSTARTCOMMANDXTOGETTOKENQSUBFAILED_S    _MESSAGE(43002, _("can't start command "SFQ" to get token - qsub failed"))
+#define MSG_QSH_CANTSTARTCOMMANDXTOGETCREDENTIALSQSUBFAILED_S    _MESSAGE(43003, _("can't start command "SFQ" to get credentials - qsub failed"))
 #define MSG_QSH_CANTGETCREDENTIALS    _MESSAGE(43004, _("warning: could not get credentials"))
 #define MSG_SEC_KRBAUTHFAILURE        _MESSAGE(43013, _("job "sge_U32CFormat" rejected because authentication failed"))
 #define MSG_SEC_KRBAUTHFAILUREONHOST  _MESSAGE(43014, _("job "sge_U32CFormat" rejected because authentication failed on host "SFN))
@@ -55,6 +56,8 @@
 /* 
 ** gdilib/sge_any_request.c
 */ 
+#define MSG_GDI_INITSECURITYDATAFAILED                _MESSAGE(43045, _("failed initialize security data"))
+#define MSG_GDI_INITCOMMLIBFAILED                     _MESSAGE(43046, _("failed initialize communication library"))
 #define MSG_GDI_NO_VALID_PROGRAMM_NAME                _MESSAGE(43047, _("got no valid program name"))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
 #define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN))
@@ -118,6 +121,7 @@
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled"))
 #define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request"))
 #define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST   _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST _MESSAGE(43130, _("NULL rhost passed to sge_send_receive_gdi_request()"))
 #define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43131, _("not enough memory for packing gdi request"))
 #define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43132, _("format error while packing gdi request"))
 #define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43133, _("unexpected error while packing gdi request"))
@@ -146,6 +150,7 @@
 #define MSG_GDI_SINGLE_THREADED_STARTUP      _MESSAGE(43296, _("starting up communication without threads"))
 #define MSG_GDI_CANT_GET_COM_HANDLE_SSUUS    _MESSAGE(43297, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" running on port "sge_U32CFormat": "SFQ))
 #define MSG_GDI_CANT_CONNECT_HANDLE_SSUUS    _MESSAGE(43298, _("communication error for \""SFN"/"SFN"/"sge_U32CFormat"\" using connect port "sge_U32CFormat": "SFQ))
+#define MSG_GDI_COULD_NOT_GET_COM_HANDLE_S   _MESSAGE(43301, _("alive check of qmaster failed for component "SFQ))
 #define MSG_GDI_QMASTER_STILL_RUNNING        _MESSAGE(43302, _("qmaster is still running"))
 #define MSG_GDI_ENDPOINT_UPTIME_UU           _MESSAGE(43303, _("endpoint is up since "sge_U32CFormat" seconds and has status "sge_U32CFormat))
 #define MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S _MESSAGE(43306, _("can't create handle to execd \"%s\""))
@@ -165,6 +170,7 @@
 
 #define MSG_GDI_MASTER_ON_HOST_X_RUNINNG_TERMINATE_S _MESSAGE(55013, _("qmaster on host "SFQ" is still running - terminating"))
 
+#define MSG_GDI_CREATE_EH                _MESSAGE(55014, _("couldn't create error handler"))
 #define MSG_GDI_CONTEXT_NULL             _MESSAGE(55015, _("context is NULL"))
 
 

@@ -48,7 +48,6 @@ public abstract class PropertyDescriptor {
    private boolean readOnly;
    private int hashCode;
    private boolean browsable;
-   private boolean configurable;
    
    /** Some cull type are mapped to a primitive java class
     *  e.g HR_Type -> String 
@@ -67,15 +66,13 @@ public abstract class PropertyDescriptor {
    /** Creates a new instance of PropertyDescriptor */
    protected PropertyDescriptor(Class beanClass, String propertyName, 
                                 Class propertyType, String cullType,
-                                int cullFieldName, boolean readOnly,
-                                boolean configurable) {
+                                int cullFieldName, boolean readOnly ) {
       this.beanClass = beanClass;
       this.propertyName = propertyName;
       this.propertyType = propertyType;
       this.cullType = cullType;
       this.cullFieldName = cullFieldName;
       this.readOnly = readOnly;
-      this.configurable = configurable;
       this.hashCode = beanClass.hashCode() * 31 + propertyName.hashCode();
    }
    
@@ -194,15 +191,6 @@ public abstract class PropertyDescriptor {
    public void setReadOnly(boolean readOnly) {
       this.readOnly = readOnly;
    }
-
-   public boolean isConfigurable() {
-      return configurable;
-   }
-
-   public void setConfigurable(boolean configurable) {
-      this.configurable = configurable;
-   }
-   
    
    /**
     * Getter for property browsable.
@@ -235,5 +223,6 @@ public abstract class PropertyDescriptor {
    public void setCullContentField(int cullContentField) {
       this.cullContentField = cullContentField;
    }
+   
    
 }

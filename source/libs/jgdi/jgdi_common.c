@@ -4700,6 +4700,7 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    lList *lp = NULL;
    lList *hgroup_list = NULL;
    lList *cqueue_list = NULL;
+   bool local_ret = false;
    sge_gdi_ctx_class_t *ctx = NULL;
    lList *alp =NULL;
    jstring jdetachedStr = NULL;

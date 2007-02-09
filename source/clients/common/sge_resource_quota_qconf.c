@@ -352,9 +352,9 @@ bool rqs_add_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char
       rqs_list = spool_flatfile_read_list(answer_list, RQS_Type, fields,
                                           NULL, true, &qconf_rqs_sfi,
                                           SP_FORM_ASCII, NULL, filename);
-      if (!answer_list_has_error(answer_list)) {
-         ret = rqs_add_del_mod_via_gdi(ctx, rqs_list, answer_list, 
-                                       SGE_GDI_ADD | SGE_GDI_SET_ALL); 
+      if (rqs_list != NULL) {
+            ret = rqs_add_del_mod_via_gdi(ctx, rqs_list, answer_list, 
+                                           SGE_GDI_ADD | SGE_GDI_SET_ALL); 
       }
 
       lFreeList(&rqs_list);

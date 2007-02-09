@@ -635,8 +635,6 @@ static int startJob(char *command, char *wrapper, int noshell)
       return(status);
    } else {
       /* child */
-      char buffer[2048];
-      struct passwd pw_struct;
       char *shell    = NULL;
       char *userName = NULL;
       int    argc = 0;
@@ -659,6 +657,8 @@ static int startJob(char *command, char *wrapper, int noshell)
 
       if(!noshell) {
          struct passwd *pw = NULL;
+         struct passwd pw_struct;
+         char buffer[2048];
 
          if((userName = search_conf_val("job_owner")) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETLOGIN_S, strerror(errno));

@@ -41,16 +41,10 @@
 # variables
 #
 set noglob
-unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB
-unsetenv AIMK_TARGET_BITS aimk_buildarch
-
+unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
-set WINCC        = ""
-set WINCFLAGS    = ""
-set WINLIBS      = ""
-set AIMK_TARGETOPT   = 0
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -88,7 +82,6 @@ set i = 1
 while ($i <= $#argv)
    switch ("$argv[$i]")
    case "-32":
-      set AIMK_TARGETOPT = 1
       set TARGET_BITS = TARGET_32BIT
       if ($BUILDARCH == SOLARIS64) then
          set BUILDARCH = SOLARIS  
@@ -102,7 +95,6 @@ while ($i <= $#argv)
       endif
       breaksw
    case "-64":
-      set AIMK_TARGETOPT = 1
       set TARGET_BITS = TARGET_64BIT
       if ($BUILDARCH == HP11) then
          set BUILDARCH = HP1164
@@ -184,7 +176,6 @@ usage:
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
    echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
-   echo "-only-64          -> build only 64 bit shared libraries for SOLARIS64, don't build 32 bit shared libraries"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
@@ -214,8 +205,6 @@ set SOURCE           = `pwd`
 set SDIR             = ".."
 set MSDIR            = ""
 set MAKEFILE         = "${SDIR}/common/Makefile.global"
-set SOLARIS_ONLY_64  = 0
-set ONLY_PARAM_SPEC  = 0
 
 # SGE_INPUT_CFLAGS will be taken from environment and added to CFLAGS
 if ( $?SGE_INPUT_CFLAGS ) then
@@ -247,7 +236,7 @@ set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
-set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS"
+set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS -DTEST_QMASTER_GDI2 -DTEST_GDI2"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
@@ -374,7 +363,8 @@ set JUTI_CLEAN  = juti_clean
 set JUTI_DEPEND  = juti_depend
 
 set AUTHUSER_ALL  = authuser
-set LOADCHECK_ALL = loadcheck
+set AUTHUSER_CLEAN = ""
+set AUTHUSER_DEPEND = ""
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
@@ -622,7 +612,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-depend":
       set CORE       = 0
@@ -634,11 +623,9 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case  "-only-java"
       set JAVA = 2
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -649,7 +636,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qmon":
       set CORE   = 0
@@ -660,7 +646,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
@@ -671,7 +656,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-wingrid":
       set CORE   = 0
@@ -682,7 +666,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 0
       set MAKEWINGRIDAPP = 1
       set MAKEWINGRIDLIB = 1
-      set ONLY_PARAM_SPEC = 1
       breaksw
    case "-only-remote":
       set CORE   = 0
@@ -693,10 +676,6 @@ while ($#argv >= 1 && $?found)
       set REMOTE = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set ONLY_PARAM_SPEC = 1
-      breaksw
-   case "-only-64"
-      set SOLARIS_ONLY_64 = 1
       breaksw
    case "-parallel":
       set argv     = ($argv[2-])
@@ -888,7 +867,7 @@ case AIX51:
    endif
    set CC       = xlc_r
    set CXX      = xlC_r
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DUSE_SGE_UNSETENV -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -908,6 +887,10 @@ case AIX51:
    breaksw
 
 case ALPHA5:
+   if ( $CORE == 1 ) then
+      set MAKESNPRINTF = 1
+   endif
+
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
@@ -934,7 +917,7 @@ case ALPHA5:
    endif
 
    set NOERR_CFLAG  = "-w"
-   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5 -DUSE_SGE_UNSETENV"
+   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD      = $CC
@@ -1135,7 +1118,7 @@ case IRIX65:
    set COMPILE_DC = 1
    set MAKE = gmake
 
-   set CFLAGS   = "$OFLAG -Werror -woff 1035,3201,3496 -n32 -mips3 -mp -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG -DUSE_SGE_UNSETENV $CFLAGS"
+   set CFLAGS   = "$OFLAG -Werror -woff 1035,3201,3496 -n32 -mips3 -mp -DFD_SETSIZE=8192 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set NOERR_CFLAG = "-woff 47,1110,1174,1209"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
@@ -1164,12 +1147,12 @@ case HP1164:
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
-   set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
-
    if ($BUILDARCH == HP11) then
+      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
       set MEMFLAG = +DD32
       set AUTHLIBS = "-lsec -lpam"
    else
+      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR_M"
       set MEMFLAG = +DD64
       set COMPILE_DC = 1
       set AUTHLIBS = "-lsec"
@@ -1188,16 +1171,7 @@ case HP1164:
          endif
       endif
       set CXX = "aCC"
-      # Extended ANSI mode. Same as -Aa -D_HPUX_SOURCE +e.
-      set CFLAGS = "-Ae $CFLAGS"
-
-      # Enable all warnings
-      #set CFLAGS = "+w1 $CFLAGS"
-
-      # unix 98 mode (??)
-      # set CFLAGS = "-D_XOPEN_SOURCE_EXTENDED $CFLAGS"
-
-      set CFLAGS = "$MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1211,15 +1185,13 @@ case HP1164:
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -b +s"
    endif
 
-   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DUSE_SGE_UNSETENV $CFLAGS -D_REENTRANT"
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS -D_REENTRANT"
    set LIBS     = "-lnsl $LIBS"
 
    if ($BUILDARCH == HP11) then
       set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32 -Wl,+s"
    else
-      #set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
-      set ORIGINORIGIN = '$$ORIGIN'
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s -Wl,+b,'$ORIGINORIGIN'/../../lib/$buildarch"
+      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64 -Wl,+s"
    endif
 
    set XMTDEF   = "-DNO_EDITRES"
@@ -1232,22 +1204,9 @@ case HP1164:
    set SHAREDEXT = ".sl"
    set JAVA_ARCH = "hp-ux"
 
-   # interesting compiler options
-   # +ESlit or +ESconstlit (place consts / string literals in read only memory
-   # we could use higher optimization +O3 or +O4
-   # -z
-   # +w1 (All warnings)
-   # +W arg1,arg2,.. suppress individual warnings
-   # -D_XOPEN_UNIX
-   # -D_XOPEN_SOURCE_EXTENDED
-
    # http://docs.hp.com/en/B2355-90968/linkertasks.htm#BAJEBEEC
    # set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch
    # echo "aimk RUNPATH: #${RUNPATH}#"
-   if ($BUILDARCH == HP1164) then
-      set RUNPATH = -Wl,+b,'\$$ORIGIN'/../../lib/$buildarch
-      echo "aimk RUNPATH: #${RUNPATH}#"
-   endif
    breaksw
    
 case ALINUX:
@@ -1260,8 +1219,6 @@ case LINUXSPARC64:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
    set AUTHLIBS = "-lcrypt -lpam"
-
-   set CFLAGS = "$CFLAGS"
 
    if ( $BUILDARCH == LINUXSPARC ) then
       set COMPILE_DC = 0
@@ -1375,7 +1332,6 @@ case LINUXSPARC64:
    
 case WIN32_X86:
    set CC = gcc
-   set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
    set MAKE = gmake
 
@@ -1392,7 +1348,8 @@ case WIN32_X86:
    set JUTI_DEPEND      = ""
    set JUTI_CLEAN       = ""
    set AUTHUSER_ALL     = authuser.exe
-   set LOADCHECK_ALL    = loadcheck.exe
+   set AUTHUSER_CLEAN   = authuser_clean
+   set AUTHUSER_DEPEND  = authuser_depend
    
    set CORE_INCLUDE   = "$CORE_INCLUDE -I../libs/wingrid"
    set WINGRIDLIB     = "-lwingrid $SECLIBS_STATIC"
@@ -1409,13 +1366,13 @@ case WIN32_X86:
       set CXX = gcc
       set CFLAGS = "$DEBUG_FLAG $CFLAGS"
       set CFLAGS = "-DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $CFLAGS"
-      set CFLAGS = "-DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DUSE_SGE_UNSETENV $CFLAGS" 
+      set CFLAGS = "-DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M $CFLAGS" 
       set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS"
       #set LFLAGS = "-Wl,-EL,-b=pe-i1386 $LFLAGS"
    else
       set CC  = cc
       set CXX = cc
-      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH -DUSE_SGE_UNSETENV $CFLAGS"
+      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH $CFLAGS"
       set CFLAGS = "$DEBUG_FLAG $CFLAGS"
    endif
 
@@ -1582,10 +1539,6 @@ case SOLARISAMD64:
       set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
    endif
 
-   if ( $rel < 10 ) then
-      set CFLAGS = "-DUSE_SGE_UNSETENV $CFLAGS"
-   endif
-
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
    set MEMCFLAG = "-Xa"
 
@@ -1727,12 +1680,10 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = sparc
              breaksw
          case lx24-amd64:
-         case lx26-amd64:
          case sol-amd64:
              set JAVA_LIB_ARCH = amd64
              breaksw
          case lx24-ia64:
-         case lx26-ia64:
              set JAVA_LIB_ARCH = ia64
              breaksw
          case hp11:
@@ -1748,9 +1699,6 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = "" 
              breaksw
          case tru64:
-             set JAVA_LIB_ARCH = "" 
-             breaksw
-         case aix51:
              set JAVA_LIB_ARCH = "" 
              breaksw
          default:
@@ -1936,9 +1884,6 @@ if ( "$BUILDJAVADOC" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
-   else
-      echo done
-      exit 0
    endif
 
 endif
@@ -1971,6 +1916,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
       mkdir "${COMPILE_ARCH}"
    endif
    cd "${COMPILE_ARCH}"
+
+   set WINCC = cl.exe
 
    if ( $DEBUGGED == 1 ) then
       set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"
@@ -2016,6 +1963,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
       "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
+      "AUTHUSER_ALL=$AUTHUSER_ALL" "AUTHUSER_CLEAN=$AUTHUSER_CLEAN" "AUTHUSER_DEPEND=$AUTHUSER_DEPEND" \
       "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $param
 
    if ( $status != 0 ) then
@@ -2245,8 +2193,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
-         "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
+         "AUTHUSER_ALL=$AUTHUSER_ALL" "AUTHUSER_CLEAN=$AUTHUSER_CLEAN" "AUTHUSER_DEPEND=$AUTHUSER_DEPEND" \
          $argv
    if ( $status != 0 ) then
       echo not done
@@ -2259,14 +2206,7 @@ endif
 if ( "$JAVA" > 0 ) then
    echo _____Making JAVA targets_____
 
-   # ant -D does not work, so we set an env var
-   if ( $AIMK_TARGETOPT == 1) then
-      setenv AIMK_TARGET_BITS $TARGET_BITS
-      setenv aimk_buildarch $buildarch
-   endif
-   ant -f build.xml $argv
-   # how to propagate ant opts to first and then second build.xml
-   # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
+   ant -Dsge.src.arch=$COMPILE_ARCH -f build.xml $argv
    
    if ( $status != 0 ) then
       echo not done
@@ -2560,17 +2500,6 @@ if ( "$ADOC" == 1) then
 
    echo "Creating documentation for libs: libdrmaa.texi"
 endif
+
 echo done.
-
-# On SOLARIS64, if there was no special target (i.e. $argv = "") 
-# and no "-only-*" parameter specified, the shared libraries for
-# SOLARIS are also built.
-if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
-      echo ""
-      echo "Executing aimk again to build 32 bit shared libraries."
-      ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
-      exit $status
-   endif
-endif
-
 exit 0

@@ -14,7 +14,7 @@
 
    <target name="aimk.init" depends="aimk.init.remote, aimk.init.local"/>
    
-   <target name="aimk.init.remote" if="aimk.remote" depends="jni.init">
+   <target name="aimk.init.remote" if="aimk.remote" depends="init">
       <macrodef name="aimk_call">
          <attribute name="args" default=""/>
          <sequential>
@@ -25,7 +25,7 @@
       </macrodef>
    </target>
    
-   <target name="aimk.init.local" unless="aimk.remote" depends="jni.init">
+   <target name="aimk.init.local" unless="aimk.remote" depends="init">
       <macrodef name="aimk_call">
          <attribute name="args" default=""/>
          <sequential>
@@ -37,12 +37,11 @@
    </target>
 
    <target name="aimk" depends="aimk.init, gensrc.native, javah">
-      <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
-      <aimk_call args="${aimk.targetbits} -only-core jgdi_all"/>
+      <aimk_call args="-only-core jgdi_all"/>
    </target>
 
    <target name="aimk.clean" depends="aimk.init">
-      <aimk_call args="${aimk.targetbits} -only-core jgdi_clean"/>
+      <aimk_call args="-only-core jgdi_clean"/>
    </target>
 
    <target name="aimk.template.required" depends="aimk.init, init">
@@ -58,11 +57,11 @@
            <srcfileset dir="${sge.srcdir}" includes="**/*L.h"/>
            <targetfileset dir="${build.dir}" includes="sge_all_listsL.template"/>
        </dependset>
-      <aimk_call args="${aimk.targetbits} -only-core jgdi_template"/>
+      <aimk_call args="-only-core jgdi_template"/>
    </target>
    
    <target name="aimk.drmaa" depends="aimk.init">
-      <aimk_call args="${aimk.targetbits} -only-core drmaalib"/>
+      <aimk_call args="-only-core drmaalib"/>
    </target>
    
    
@@ -86,6 +85,11 @@
            <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
        </condition>
        
+       <echo>isJavaBuildHost = ${isJavaBuildHost}</echo>
+       
+       
+      
+      
       <property name="build.dir"  location="build"/>
       <property name="classes.dir"  location="${build.dir}/classes"/>
       <property name="src.dir"      location="src" />
@@ -289,28 +293,12 @@
       style="util/todo.xsl"/>
    </target>
 
-   <target name="clean" depends="init, java.clean, java.clean.warn, aimk.clean" 
-           description="Clean all build products."/>
-
-   <!-- 
-   =============================================================================
-   The java.clean target is only executed on the java build host
-   Do not wonder that your files are not deleted if the java.buildhost
-   property is not set 
-   =============================================================================
-   -->
-   <target name="java.clean" depends="init" if="isJavaBuildHost">
+   <target depends="init, aimk.clean" description="Clean all build products." name="clean">
       <delete dir="${build.dir}"/>
       <delete file="${jar}"/>
       <ant dir="cullconv" antfile="build.xml" target="clean"/>
    </target>
-   
-   <target name="java.clean.warn" depends="init" unless="isJavaBuildHost">
-       <echo level="warning">Warning: Do not delete</echo>
-       <echo level="warning">         ${build.dir} and</echo>
-       <echo level="warning">         ${jar}</echo>
-       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
-   </target>
+    
 
    <target name="gensrc" depends="jni.init" if="isJavaBuildHost"
       description="Create a all generated source files">  
@@ -692,21 +680,8 @@
 
       <property environment="env"/>
        
-      <echo message="env.AIMK_TARGET_BITS=${env.AIMK_TARGET_BITS}"/>
-      <echo message="env.aimk_buildarch=${env.aimk_buildarch}"/>
-      <!-- 
-      <echo message="A=${A}"/>
-      <echo message="B=${B}"/>
-      <echo message="C=${C}"/>
-      -->
-
-      <condition property="sge.arch" value="${env.aimk_buildarch}">
-          <isset property="env.aimk_buildarch"/>
-      </condition>
-      <!-- else -->
       <exec executable="${sge.srcdir}/dist/util/arch" outputproperty="sge.arch" 
             failifexecutionfails="true"/>
-
 
       <exec executable="${sge.srcdir}/scripts/compilearch"
             outputproperty="sge.compile.arch"
@@ -726,30 +701,15 @@
       <!-- else -->
       <property name="sge.src.arch" value="${sge.compile.arch}"/>
       
-      <property name="sge.src.targetbits" value="${env.AIMK_TARGET_BITS}"/>
-
       <echo message="sge.arch=${sge.arch}"/>
       <echo message="sge.src.arch=${sge.src.arch}"/> 
-      <echo message="sge.src.targetbits=${sge.src.targetbits}"/> 
      
-
-      <condition property="aimk.targetbits" value="-64">
-          <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
-      </condition>
-      <!-- else if -->
-      <condition property="aimk.targetbits" value="-32">
-          <equals arg1="${sge.src.targetbits}" arg2="TARGET_32BIT"/>
-      </condition>
-      <!-- else -->
-      <property name="aimk.targetbits" value=""/>
-      
       <condition property="datamodel" value="-d64">
          <or>
             <equals arg1="${sge.arch}" arg2="sol-sparc64"/>
             <equals arg1="${sge.arch}" arg2="solaris64"/>
             <equals arg1="${sge.arch}" arg2="sol-amd64"/>
             <equals arg1="${sge.arch}" arg2="lx24-amd64"/>
-            <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
          </or>   
       </condition>
       <!-- else -->

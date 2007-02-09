@@ -79,9 +79,6 @@ static int init_framework(const char *method, const char *shlib,
 
    DENTER(TOP_LAYER, "init_framework");
 
-#ifdef HP1164   
-   sge_set_admin_username("none", NULL);
-#endif
    /* create spooling context */
    spooling_context = spool_create_dynamic_context(&answer_list, method, shlib, 
                                                    libargs);
@@ -110,12 +107,15 @@ int main(int argc, char *argv[])
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "spoolinit");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
-   log_state_set_log_gui(1);
-   log_state_set_log_level(LOG_WARNING);
+   sge_prof_setup();
+
    sge_mt_init();
+
    lInit(nmv);
+
+   sge_getme(SPOOLDEFAULTS);
 
    if (argc < 2) {
       usage(argv[0]);

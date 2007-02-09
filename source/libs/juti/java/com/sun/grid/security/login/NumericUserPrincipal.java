@@ -35,6 +35,7 @@ import java.security.Principal;
 
 /**
  *
+ * @author aa114085
  */
 public class NumericUserPrincipal implements
         Principal,

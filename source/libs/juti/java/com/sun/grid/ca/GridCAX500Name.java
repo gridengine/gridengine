@@ -46,6 +46,7 @@ package com.sun.grid.ca;
  *   ....,UID=&lt;username&gt;,...
  * </pre>
  *
+ * @author  richard.hierlmeier@sun.com
  */
 public class GridCAX500Name {
     

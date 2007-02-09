@@ -34,6 +34,7 @@ package com.sun.grid.ca;
 /**
  * Factory class for instances of <code>GridCA</code>.
  *
+ * @author richard.hierlmeier@sun.com
  */
 public class GridCAFactory {
     

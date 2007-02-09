@@ -89,8 +89,7 @@ int sstate
       {"entry is missing in password file", SSTATE_PASSWD_MISSING},
       {"wrong password", SSTATE_PASSWD_WRONG},
       {"communicating with N1 Grid Engine Helper Service", SSTATE_HELPER_SERVICE_ERROR},
-      {"before job in N1 Grid Engine Helper Service", SSTATE_HELPER_SERVICE_BEFORE_JOB},
-      {"checking configured daemons", SSTATE_CHECK_DAEMON_CONFIG}
+      {"before job in N1 Grid Engine Helper Service", SSTATE_HELPER_SERVICE_BEFORE_JOB}
    };
 
    for (i=0; i<sizeof(state_message)/sizeof(struct _state_message); i++) {

@@ -231,12 +231,15 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    u_long32 end; 
    u_long32 step;
    lList *pe_range = NULL;
+   dstring str_wrapper;
    lList* user_lists = NULL;
    lList* xuser_lists = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
 
    DENTER(TOP_LAYER, "sge_gdi_add_job");
+
+   sge_dstring_init(&str_wrapper, str, sizeof(str));
 
    if ( !jep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -827,15 +830,60 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       sge_deliver_events_immediately(EV_ID_SCHEDD);
    }
 
+   {
+      lListElem *se;
+
+      sge_dstring_clear(&str_wrapper);
+      for_each(se, lGetList(jep, JB_job_args)) {
+         int do_quote = 0;
+         int n;
+         const char *s = lGetString(se,ST_name);
+
+         /* handle NULL as empty string */
+         if (s == NULL) {
+            s = "";
+         }
+         n = strlen(s);
+ 
+         /* quote for empty strings */
+         if (n == 0)
+            do_quote++;
+
+         /* quote when white space is in argument */         
+         if (strchr(s, ' '))
+            do_quote++;
+
+         sge_dstring_append(&str_wrapper, " ");
+         if (sge_dstring_remaining(&str_wrapper)<=0)
+            break;
+
+         if (do_quote != 0) {
+            sge_dstring_append(&str_wrapper, "\"");
+            if (sge_dstring_remaining(&str_wrapper)<=0)
+               break;
+         }
+
+         sge_dstring_append(&str_wrapper, s);
+         if (sge_dstring_remaining(&str_wrapper)<=0)
+            break;
+
+         if (do_quote != 0) {
+            sge_dstring_append(&str_wrapper, "\"");
+            if (sge_dstring_remaining(&str_wrapper)<=0)
+               break;
+         }
+      }
+   }
+
    if (!job_is_array(jep)) {
-      (sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_US,  
+      (sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             sge_u32c(lGetUlong(jep, JB_job_number)), 
-            lGetString(jep, JB_job_name)));
+            lGetString(jep, JB_job_name), str));
    } else {
-      sprintf(SGE_EVENT, MSG_JOB_SUBMITJOBARRAY_UUUUS,
+      sprintf(SGE_EVENT, MSG_JOB_SUBMITJOBARRAY_UUUUSS,
             sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(start), 
             sge_u32c(end), sge_u32c(step), 
-            lGetString(jep, JB_job_name));
+            lGetString(jep, JB_job_name), str);
    }
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 

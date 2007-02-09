@@ -59,8 +59,6 @@ char *sge_strtok(const char *str, const char *delimitor);
 
 bool sge_is_pattern(const char *p);
 
-bool sge_is_expression(const char *p);
-
 char *sge_strtok_r(const char *str, const char *delimitor, 
                    struct saved_vars_s **last);
 
@@ -79,8 +77,6 @@ void sge_strip_blanks(char *str);
 void sge_strip_white_space_at_eol(char *str);
 
 void sge_strtoupper(char *buffer, int max_len);
-
-void sge_strtolower(char *buffer, int max_len);
 
 int sge_strisint(const char *str);
 

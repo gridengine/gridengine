@@ -64,9 +64,7 @@ bool sge_is_start_user_superuser(void);
 int password_read_file(char **users[], char **encryped_pwds[], const char *filename);
 const char* sge_get_file_passwd(void);
 
-int  sge_set_admin_username(const char *username, char *err_str);
-bool sge_is_admin_user(const char *username);
-
+int sge_set_admin_username(const char *username, char *err_str);
 int sge_switch2admin_user(void);
 int sge_switch2start_user(void);
 int sge_run_as_user(void);

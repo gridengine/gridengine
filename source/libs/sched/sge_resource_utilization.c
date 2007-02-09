@@ -588,11 +588,10 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
                a->duration, QUEUE_TAG);
    }
 
-   /* resource quotas */
+   /* limitation rule sets */
    for_each(gel, a->gdil) {
       int slots = lGetUlong(gel, JG_slots);
       const char* user = lGetString(a->job, JB_owner);
-      const char* group = lGetString(a->job, JB_group);
       const char* project = lGetString(a->job, JB_project);
       const char* pe = lGetString(a->job, JB_pe);
       const char* host = lGetHost(gel, JG_qhostname);
@@ -604,9 +603,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
 
       if ((at_sign = strchr(queue_instance, '@'))) {
          int size = at_sign - queue_instance;
-         queue = malloc(sizeof(char) * (size + 1));
+         queue = malloc(sizeof(char)*size);
          queue = strncpy(queue, queue_instance, size);
-         queue[size] = '\0';
+         queue[size]='\0';
       } else {
          queue = strdup(queue_instance);
       }
@@ -618,7 +617,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
             continue;
          }
 
-         rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list,
+         rule = rqs_get_matching_rule(rqs, user, project, pe, host, queue, a->acl_list,
                                        a->hgrp_list, NULL);
          if (rule != NULL) {
 

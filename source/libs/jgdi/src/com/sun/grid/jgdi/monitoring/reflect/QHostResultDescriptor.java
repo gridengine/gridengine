@@ -45,7 +45,7 @@ public class QHostResultDescriptor extends AbstractClassDescriptor {
    public QHostResultDescriptor() {
       super(QHostResult.class, null);
       
-      addList("hostInfo", HostInfo.class, null, -1, false, true, false);
+      addList("hostInfo", HostInfo.class, null, -1, false, true);
    }
 
    public void validate(Object bean) throws com.sun.grid.jgdi.configuration.reflect.InvalidObjectException {

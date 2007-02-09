@@ -262,8 +262,10 @@ static int xml_report_queue_ulong_value(report_handler_t* handler, const char* q
 int main(int argc, char **argv);
 
 /************************************************************************/
-int main(int argc, char **argv)
-{
+int main(
+int argc,
+char **argv 
+) {
    lList *pcmdline = NULL;
    lList *ul = NULL;
    lList *host_list = NULL;
@@ -282,7 +284,7 @@ int main(int argc, char **argv)
    sge_setup_sig_handlers(QHOST);
 
    if (sge_gdi2_setup(&ctx, QHOST, &alp) != AE_OK) {
-      answer_list_output(&alp);
+      answer_exit_if_not_recoverable(lFirst(alp));
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -298,7 +300,7 @@ int main(int argc, char **argv)
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       sge_prof_cleanup();
-      SGE_EXIT((void **)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    /*
@@ -329,14 +331,14 @@ int main(int argc, char **argv)
       report_handler->destroy(&report_handler, &alp);
    }
    
-   if (qhost_result != QHOST_SUCCESS) {
+   if (qhost_result != 0) {
       answer_list_output(&alp);
       sge_prof_cleanup();
-      SGE_EXIT((void**)&ctx, 1);
+      SGE_EXIT(NULL, 1);
    }
 
    sge_prof_cleanup();
-   SGE_EXIT((void**)&ctx, 0); /* 0 means ok - others are errors */
+   SGE_EXIT(NULL, 0); /* 0 means ok - others are errors */
    DEXIT;
    return 0;
 }

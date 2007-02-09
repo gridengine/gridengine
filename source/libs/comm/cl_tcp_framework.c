@@ -405,7 +405,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          int select_back = 0;
          struct timeval now;
          int socket_error = 0;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
          int socklen = sizeof(socket_error);
 #else
          socklen_t socklen = sizeof(socket_error);
@@ -438,9 +438,9 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          }
 
 #if defined(SOLARIS) && !defined(SOLARIS64) 
-         getsockopt(private->sockfd, SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
-         getsockopt(private->sockfd, SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
 #endif
          if (socket_error == 0 || socket_error == EISCONN) {
             CL_LOG(CL_LOG_INFO,"connected");
@@ -1172,7 +1172,7 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection 
    }
 
    if (private->server_port == 0) {
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
       int length;
 #else
       socklen_t length;
@@ -1306,7 +1306,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int fromlen = 0;
 #else
    socklen_t fromlen = 0;
@@ -1501,7 +1501,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
    int get_sock_opt_error = 0;
    char tmp_string[1024];
 
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int socklen = sizeof(socket_error);
 #else
    socklen_t socklen = sizeof(socket_error);

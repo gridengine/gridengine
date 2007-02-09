@@ -114,7 +114,6 @@ BasicSettings()
 
   RM="rm -f"
   TOUCH="touch"
-  MORE="more"
 
 }
 
@@ -298,7 +297,7 @@ UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            testsuidroot authuser uidgid infotext"
 
 WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
-              gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
+              gethostbyaddr gethostbyname gethostname getservbyname loadcheck \
               now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
               infotext"
 
@@ -352,7 +351,7 @@ fi
          "qtcsh           qping           qquotai         sgepasswd\n" \
          "qloadsensor.exe\n\n" \
          "and the binaries in >%s< should be:\n\n" \
-         "adminrun        gethostbyaddr  loadcheck.exe  rlogin         uidgid\n" \
+         "adminrun        gethostbyaddr  loadcheck      rlogin         uidgid\n" \
          "authuser.exe    checkprog      gethostbyname  now            rsh\n" \
          "infotext        checkuser      gethostname    openssl        rshd\n" \
          "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
@@ -418,9 +417,9 @@ ErrUsage()
              "   -usm       uninstall shadow host\n" \
              "   -db        install Berkeley DB on seperated spooling server\n" \
              "   -udb       uninstall Berkeley DB RPC spooling server\n" \
-             "   -bup       backup of your configuration\n" \
-             "   -rst       restore configuration from backup\n" \
-             "   -upd       upgrade cluster from 5.x to 6.1\n" \
+             "   -bup       backup of your configuration (Berkeley DB spooling)\n" \
+             "   -rst       restore configuration from backup (Berkeley DB spooling)\n" \
+             "   -upd       upgrade cluster from 5.x to 6.0\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
@@ -532,12 +531,6 @@ CheckRSHConnection()
 #
 CheckConfigFile()
 {
-   if [ "$SGE_EXECD_PORT" = "" ]; then
-      $INFOTEXT -log "The SGE_EXECD_PORT has not been set in config file!\n"
-      MoveLog
-      exit 1
-   fi
-
    if [ "$CSP" = "true" ]; then
       if [ "$CSP_COUNTRY_CODE" = "" -o `echo $CSP_COUNTRY_CODE | wc -c` != 3 ]; then
          $INFOTEXT -log "The CSP_COUNTRY_CODE entry contains more or less than 2 characters!\n"
@@ -1549,7 +1542,7 @@ BackupConfig()
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
    BUP_CLASSIC_DIR_LIST_TMP="sgeCA local_conf" 
-   BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups resource_quotas managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
+   BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups limit_rule_sets managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
    BUP_SPOOL_DIR_LIST=""
@@ -1689,7 +1682,7 @@ RestoreConfig()
          done
 
          if [ -d $master_spool ]; then
-            if [ -d $master_spool/job_scripts ]; then
+            if [ -d $master_spool/job_scipts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool/job_scripts
@@ -1705,6 +1698,7 @@ RestoreConfig()
             fi
          done
       else
+
          if [ -d $SGE_ROOT/$SGE_CELL ]; then
             if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
                :
@@ -1724,7 +1718,7 @@ RestoreConfig()
 
          master_spool_tmp=`echo $master_spool | cut -d";" -f2`
          if [ -d $master_spool_tmp ]; then
-            if [ -d $master_spool_tmp/job_scripts ]; then
+            if [ -d $master_spool_tmp/job_scipts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
@@ -1810,7 +1804,7 @@ RestoreConfig()
          done
 
          if [ -d $master_spool ]; then
-            if [ -d $master_spool/job_scripts ]; then
+            if [ -d $master_spool/job_scipts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool/job_scripts
@@ -1846,7 +1840,7 @@ RestoreConfig()
 
          master_spool_tmp=`echo $master_spool | cut -d";" -f2`
          if [ -d $master_spool_tmp ]; then
-            if [ -d $master_spool_tmp/job_scripts ]; then
+            if [ -d $master_spool_tmp/job_scipts ]; then
                :
             else
                ExecuteAsAdmin $MKDIR $master_spool_tmp/job_scripts
@@ -2147,7 +2141,6 @@ BackupCheckBootStrapFile()
       else
          is_rpc=1
          BDB_SERVER=`echo $db_home | cut -d":" -f1`
-         BDB_SERVER=`$SGE_UTILBIN/gethostbyname -aname $BDB_SERVER`
          BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
 
          if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
@@ -2170,7 +2163,7 @@ BackupCheckBootStrapFile()
             BDB_HOME=`Enter`
          fi
       
-         if [ `$SGE_UTILBIN/gethostname -aname` != "$BDB_SERVER" ]; then
+         if [ `hostname` != "$BDB_SERVER" ]; then
             $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
             $INFOTEXT -n "Exiting backup!\n"
             exit 1
@@ -2425,7 +2418,6 @@ RestoreCheckBootStrapFile()
       else
          is_rpc=1
          BDB_SERVER=`echo $db_home | cut -d":" -f1`
-         BDB_SERVER=`$SGE_UTILBIN/gethostbyname -aname $BDB_SERVER`
          BDB_BASEDIR=`echo $db_home | cut -d":" -f2`
 
          if [ -f $BACKUP_DIR/sgebdb ]; then
@@ -2449,7 +2441,7 @@ RestoreCheckBootStrapFile()
             BDB_HOME=`Enter`
          fi
       
-         if [ `$SGE_UTILBIN/gethostname -aname` != "$BDB_SERVER" ]; then
+         if [ `hostname` != "$BDB_SERVER" ]; then
             $INFOTEXT -n "You're not on the BDB Server host.\nPlease start the backup on the Server host again!\n"
             $INFOTEXT -n "Exiting backup!\n"
             exit 1
@@ -2572,55 +2564,29 @@ CopyCA()
       return
    fi
 
-   #ToDo: What about the submit hosts? RFE: -instsubmit + copycert functionality
-   CopyCaToHostType admin 
-
-}
-
-# copy the ca certs to all cluster host, which equals the given host type
-CopyCaToHostType()
-{
-   if [ "$1" = "admin" ]; then
-      cmd="$SGE_BIN/qconf -sh"
-   elif [ "$1" = "submit" ]; then
-      cmd="$SGE_BIN/qconf -ss"
-   fi
-
-   for RHOST in `$cmd`; do
-         if [ "$RHOST" != "$HOST" ]; then
-            CheckRSHConnection $RHOST
+   for RHOST in `$SGE_BIN/qconf -sh`; do
+      if [ "$RHOST" != "$HOST" ]; then
+         CheckRSHConnection $RHOST
+         if [ "$?" = 0 ]; then
+            $INFOTEXT "Copying certificates to host %s" $RHOST
+            $INFOTEXT -log "Copying certificates to host %s" $RHOST
+            echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
+            if [ "$SGE_QMASTER_PORT" = "" ]; then 
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
+            else
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
+            fi
             if [ "$?" = 0 ]; then
-               $INFOTEXT "Copying certificates to host %s" $RHOST
-               $INFOTEXT -log "Copying certificates to host %s" $RHOST
-               echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
-               if [ "$SGE_QMASTER_PORT" = "" ]; then 
-                  $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
+               $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
+               $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
+               if [ "$SGE_QMASTER_PORT" = "" ]; then
+                  echo "chown -R $ADMINUSER /var/sgeCA/sge_qmaster/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
                else
-                  $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
-               fi
-               if [ "$?" = 0 ]; then
-                  $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
-                  $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
-                  if [ "$SGE_QMASTER_PORT" = "" ]; then
-                     PORT_DIR="sge_qmaster"
-                  else
-                     PORT_DIR="port$SGE_QMASTER_PORT"
-                  fi
-                  echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
-                  echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
-                  for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
-                     echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
-                  done
-               else
-                  $INFOTEXT "The certificate copy failed!"      
-                  $INFOTEXT -log "The certificate copy failed!"      
+                  echo "chown -R $ADMINUSER /var/sgeCA/port$SGE_QMASTER_PORT/$SGE_CELL/userkeys/$ADMINUSER" | $SHELL_NAME $RHOST /bin/sh &
                fi
             else
-               $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
-               $INFOTEXT "Certificates couldn't be copied!"
-               $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
-               $INFOTEXT -log "Certificates couldn't be copied!"
-               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               $INFOTEXT "The certificate copy failed!"      
+               $INFOTEXT -log "The certificate copy failed!"      
             fi
          else
             $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
@@ -2629,7 +2595,8 @@ CopyCaToHostType()
             $INFOTEXT -log "Certificates couldn't be copied!"
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
-      done
+      fi
+   done
 }
 
 #-------------------------------------------------------------------------
@@ -2654,39 +2621,4 @@ GetAdminUser()
 PreInstallCheck()
 {
    CheckBinaries
-}
-
-RemoveHostFromList()
-{
-   source_list=$1
-   host_to_remove=$2
-   help_list=""
-
-   if [ "$source_list" != "" ]; then
-      for hh in $source_list; do
-         if [ "$host_to_remove" != "$hh" ]; then
-            help_list="$help_list $hh"
-         fi
-      done
-   fi
-   echo $help_list
-}
-
-
-LicenseAgreement()
-{
-   if [ "$AUTO" = "true" ]; then
-      return
-   fi
-
-   if [ -f $PWD/doc/LICENSE ]; then
-      $MORE $PWD/doc/LICENSE
-
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you accept the license agreement? (y/n) [n] >> "
-
-      if [ "$?" = 1 ]; then
-         exit 1
-      fi
-      $CLEAR
-   fi
 }

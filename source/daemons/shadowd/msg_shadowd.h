@@ -48,6 +48,7 @@
 #define MSG_SHADOWD_CANTREADACTQMASTERFILEX_S       _MESSAGE(35007, _("can't read act_qmaster file "SFQ))
 #define MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS       _MESSAGE(35008, _("can't resolve hostname from act_qmaster file "SFQ": "SFQ))
 #define MSG_SHADOWD_NOTASHADOWMASTERFILE_S       _MESSAGE(35009, _("this is not in shadow master file "SFQ))
+#define MSG_SHADOWD_CANTREADBINARYPATHFROMX_S       _MESSAGE(35010, _("can't read binary path \"binary_path\" from "SFQ))
 
 
 #endif /* __MSG_SHADOWD_H */

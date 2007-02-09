@@ -189,6 +189,8 @@ char **argv
    time_t next_prof_output = 0;
    int execd_exit_state = 0;
    lList **master_job_list = NULL;
+   const char* qualified_hostname = NULL;
+   const char* binary_path = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    lList *alp = NULL;
 
@@ -223,17 +225,14 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
    ctx->set_exit_func(ctx, execd_exit_func);
+   qualified_hostname = ctx->get_qualified_hostname(ctx);
+   binary_path = ctx->get_binary_path(ctx);
 
    if ((i=sge_occupy_first_three())>=0) {
       CRITICAL((SGE_EVENT, MSG_FILE_REDIRECTFD_I, i));
       SGE_EXIT((void**)&ctx, 1);
    }     
    lInit(nmv);
-
-   /* unset XAUTHORITY if set */
-   if (getenv("XAUTHORITY") != NULL) {
-      sge_unsetenv("XAUTHORITY");
-   }
 
    parse_cmdline_execd(argv);   
    
@@ -291,7 +290,7 @@ char **argv
 
    /* test load sensor (internal or external) */
    {
-      lList *report_list = sge_build_load_report(ctx->get_qualified_hostname(ctx), ctx->get_binary_path(ctx));
+      lList *report_list = sge_build_load_report(qualified_hostname, binary_path);
       lFreeList(&report_list);
    }
 

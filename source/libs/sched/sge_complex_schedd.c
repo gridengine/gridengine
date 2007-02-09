@@ -35,7 +35,7 @@
 #include <fnmatch.h>
 
 #ifdef WIN32NATIVE
-   #include "win32nativetypes.h"
+#  include "win32nativetypes.h"
 #endif
 
 #include "sge_sched.h"
@@ -46,7 +46,6 @@
 #include "sge_language.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
-#include "sge_eval_expression.h"
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
 #include "sge_host.h"
@@ -745,6 +744,7 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    }   
 
    filter = malloc(size * sizeof(char*)); 
+   memset(filter, 0, size * sizeof(char*));
 
    if (global){
       build_name_filter(filter, lGetList(global, EH_load_list), HL_name, &pos);
@@ -831,7 +831,7 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
             }
          }
          
-         if(add) 
+         if(add)
             filter[(*pos)++] = name; 
       }
 }
@@ -841,16 +841,6 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
 /* s2 the string that should be matched against the pattern */
 int string_base_cmp(u_long32 type, const char *s1, const char *s2)
 {
-   return sge_eval_expression(type, s1, s2, NULL);
-}
-
-/* wrapper for strcmp() of all string types, old version */ 
-/* s1 is the pattern */
-/* s2 the string that should be matched against the pattern */
-/* Old implementation shloud be kept for performance tests */                              
-int string_base_cmp_old(u_long32 type, const char *s1, const char *s2)
-{
-
    int match=0;
 
    switch(type){
@@ -864,7 +854,6 @@ int string_base_cmp_old(u_long32 type, const char *s1, const char *s2)
                            char *s = NULL;
                            struct saved_vars_s *context=NULL;
                            for (s=sge_strtok_r(s1, "|", &context); s; s=sge_strtok_r(NULL, "|", &context)) {
-                              /* Old implementation shloud be kept for performance tests */                              
                               if ((match = fnmatch(s, s2, 0)) == 0) {
                                  break;
                               }   
@@ -875,9 +864,9 @@ int string_base_cmp_old(u_long32 type, const char *s1, const char *s2)
          break;
       default: match = -1;
    }
+
    return match;
 }
-
 
 /* compare string type attributes under consideration of relop */
 static int string_cmp( u_long32 type, u_long32 relop, const char *request,
@@ -1466,7 +1455,7 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
          if (!val_ce) {
             rejected = false;
             break;
-         } 
+         }
 
          switch (type) {
          case TYPE_STR:

@@ -33,8 +33,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
-#include <unistd.h>
 
 #include "sge_stdlib.h"
 #include "sge_dstring.h"
@@ -69,7 +67,8 @@ char *sge_malloc(int size)
    DENTER(BASIS_LAYER, "sge_malloc");
 
    if (!size) {
-      DRETURN(NULL);
+      DEXIT;
+      return (NULL);
    }
 
    cp = (char *) malloc(size);
@@ -79,7 +78,10 @@ char *sge_malloc(int size)
       abort();
    }
 
-   DRETURN(cp);
+   memset(cp, 0, size);
+
+   DEXIT;
+   return (cp);
 }   
 
 /****** uti/stdlib/sge_realloc() **********************************************
@@ -113,7 +115,8 @@ char *sge_realloc(char *ptr, int size)
       if (ptr) {
          FREE(ptr);
       }
-      DRETURN(NULL);
+      DEXIT;
+      return (NULL);
    }
 
    cp = (char *) realloc(ptr, size);
@@ -124,7 +127,8 @@ char *sge_realloc(char *ptr, int size)
       abort();
    }
 
-   DRETURN(cp);
+   DEXIT;
+   return (cp);
 }             
 
 /****** uti/stdlib/sge_free() *************************************************
@@ -276,62 +280,57 @@ int sge_setenv(const char *name, const char *value)
    return ret;
 }
 
-
-/****** sge_env/sge_unsetenv() *************************************************
+/****** sge_stdlib/sge_clrenv() ************************************************
 *  NAME
-*     sge_unsetenv() -- unset environment variable
+*     sge_clrenv() -- Remove variable from environment
 *
 *  SYNOPSIS
-*     void sge_unsetenv(const char* varName) 
+*     int sge_clrenv(const char *name) 
 *
 *  FUNCTION
-*     Some architectures doesn't support unsetenv(), sge_unsetenv() is used
-*     to unset an environment variable. 
+*     Remove variable from environment.
 *
 *  INPUTS
-*     const char* varName - name of envirionment variable
+*     const char *name - the env var to be removed
 *
 *  RESULT
-*     void - no return value
+*     int - error state
+*         1 - success
+*         0 - error 
 *
 *  NOTES
-*     MT-NOTE: sge_unsetenv() is not MT safe 
+*     MT-NOTE: sge_setenv() is MT safe
 *******************************************************************************/
-void sge_unsetenv(const char* varName) {
-#ifdef USE_SGE_UNSETENV
+int sge_clrenv(const char *name)
+{
    extern char **environ;
-   char* searchString = NULL;
+   char **p;
+   int namelen = strlen(name);
 
-   if (varName != NULL) {
-      size_t length = (strlen(varName) + 2) * sizeof(char);
-      searchString = malloc(length);
-      if (searchString != NULL) {
-         bool found = false;
-         int i;
-         snprintf(searchString, length, "%s=", varName);
-         
-         /* At first we have to search the index of varName */
-         for (i=0; i < ARG_MAX && environ[i] != NULL; i++) {
-            if (strstr(environ[i],searchString) != NULL) {
-               found = true;
-               break;
-            }
-         }
-        
-         /* At second we remove varName by copying varName+1 to varName */ 
-         if (found == true) {
-            for (; i < ARG_MAX-1 && environ[i] != NULL; i++) {
-               environ[i] = environ[i+1];
-            }
-            environ[i] = NULL; 
-         }
-         FREE(searchString);
-      }
+   /* search for the env var */
+   for (p=environ; p[0]; p++) {
+      if (strncmp(p[0], name, namelen)==0 && p[0][namelen] == '=')
+         break;
    }
-#else
-   unsetenv(varName);
-#endif
+
+   /* not found */
+   if (!*p)
+      return 0;
+
+   do {
+      p[0] = p[1];
+   } while (*++p);
+
+   return 1;
 }
 
-
-
+#if 0
+void trace_environ()
+{
+   extern char **environ;
+   char **p;
+   for (p=environ; *p; p++) {
+      printf("%s\n", *p);
+   }
+}
+#endif

@@ -86,6 +86,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
 #include "sgeee.h"
+#include "evc/sge_event_client2.h"
 
 
 /* defined in sge_schedd.c */
@@ -840,7 +841,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
    return SGE_EMA_OK;
 }
 
-static sge_callback_result
+sge_callback_result
 sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                              sge_event_action action, lListElem *event, void *clientdata)
 {
@@ -894,7 +895,7 @@ sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_ba
    return SGE_EMA_OK;
 }
 
-static sge_callback_result
+sge_callback_result
 sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                             sge_event_action action, lListElem *event, void *clientdata)
 {
@@ -1000,7 +1001,7 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
 }
 
 
-static sge_callback_result
+sge_callback_result
 sge_process_ja_task_event_before(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                                  sge_event_action action, lListElem *event, void *clientdata)
 {
@@ -1012,7 +1013,7 @@ sge_process_ja_task_event_before(sge_evc_class_t *evc, object_description *objec
    return SGE_EMA_OK;
 }  
 
-static sge_callback_result
+sge_callback_result
 sge_process_global_config_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                                 sge_event_action action, lListElem *event, void *clientdata)
 {
@@ -1028,7 +1029,7 @@ sge_process_global_config_event(sge_evc_class_t *evc, object_description *object
  * Do we really need it?
  * Isn't a job delete event sent after the last array task exited?
  */
-static sge_callback_result
+sge_callback_result
 sge_process_ja_task_event_after(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                                 sge_event_action action, lListElem *event, void *clientdata)
 {
@@ -1191,7 +1192,7 @@ sge_callback_result sge_process_userset_event_before(sge_evc_class_t *evc, objec
 }
 
 
-static sge_callback_result
+sge_callback_result
 sge_process_schedd_monitor_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
                                      sge_event_action action, lListElem *event, void *clientdata)
 {

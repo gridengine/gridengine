@@ -50,7 +50,6 @@
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_object.h"
-#include "sge_eval_expression.h"
 #include "sgeobj/sge_resource_quota.h"
 
 #include "msg_common.h"
@@ -167,8 +166,8 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          lSetString(this_elem, CE_stringval, "TRUE");
          s = lGetString(this_elem, CE_stringval);
       } else {
-/*          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, name)); */
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_VALUEMISSING_S, name);
+         ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
       }
    }
@@ -180,8 +179,8 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       case TYPE_BOO:
       case TYPE_DOUBLE:
          if (!parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
-/*             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp);
+            ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-1);
          }
          lSetDouble(this_elem, CE_doubleval, dval);
@@ -191,7 +190,7 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
             char str_value[100];
             dstring ds;
             sge_dstring_init(&ds, str_value, sizeof(str_value));
-            sge_dstring_sprintf(&ds, "%.0f", dval );
+            sge_dstring_sprintf(&ds, "%.0f", dval);
             DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
                      lGetString(this_elem, CE_stringval), str_value));
             lSetString(this_elem, CE_stringval, str_value);
@@ -200,16 +199,16 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          /* also the CE_default must be parsable for numeric types */
          if ((s=lGetString(this_elem, CE_default))
             && !parse_ulong_val(&dval, NULL, type, s, tmp, sizeof(tmp)-1)) {
-/*             ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp);
+            ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, name, s, tmp));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-1);
          }
 
          /* negative values are not allowed for consumable attributes */
          if (!allow_neg_consumable && lGetBool(this_elem, CE_consumable)
              && lGetDouble(this_elem, CE_doubleval) < (double)0.0) {
-/*             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_CPLX_ATTRIBISNEG_S, name);
+            ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
             DRETURN(-1);
          }
@@ -217,13 +216,13 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
       case TYPE_HOST:
          /* resolve hostname and store it */
          ret = sge_resolve_host(this_elem, CE_stringval);
-         if (ret != CL_RETVAL_OK ) {
+         if (ret != CL_RETVAL_OK) {
             if (ret == CL_RETVAL_GETHOSTNAME_ERROR) {
-/*                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s)); */
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SGETEXT_CANTRESOLVEHOST_S, s);
+               ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             } else {
-/*                ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s)); */
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SGETEXT_INVALIDHOST_S, s);
+               ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             }
             DRETURN(-1);
          }
@@ -235,9 +234,8 @@ centry_fill_and_check(lListElem *this_elem, lList** answer_list, bool allow_empt
          break;
 
       default:
-/*          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type))); */
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type));
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_ATTR_TYPE_U, sge_u32c(type)));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
    }
 
@@ -681,8 +679,8 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
       if (cep != NULL) {
          requestable = lGetUlong(cep, CE_requestable);
          if (!allow_non_requestable && requestable == REQU_NO) {
-/*             ERROR((SGE_EVENT, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name)); */
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name);
+            ERROR((SGE_EVENT, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-1);
          }
 
@@ -704,8 +702,8 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
       } else {
          /* CLEANUP: message should be put into answer_list and
             returned via argument. */
-/*          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name)); */
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name);
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
       }
    }
@@ -1246,15 +1244,6 @@ centry_list_is_correct(lList *this_list, lList **answer_list)
          } 
       }
    }
-   
-/* do complex attributes syntax verification */
-  if (ret) {  
-    lListElem *elem;
-    for_each(elem, this_list){
-      ret = object_verify_expression_syntax(elem, answer_list);
-      if(!ret) break;
-    }
-  }   
    DRETURN(ret);
 }
 
@@ -1364,7 +1353,8 @@ bool validate_load_formula(const char *load_formula, lList **answer_list, lList 
                                   STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   ret = false;
                }
-            } else if (!sge_str_is_number(fact)) {
+            } 
+            else {
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_NOTEXISTING_ATTRIBUTE_SS, 
                               name, fact));
                answer_list_add(answer_list, SGE_EVENT, 

@@ -82,6 +82,7 @@ Qmon*job_main_layout.layout: \
 Qmon*job_form.xmtChildren: \
    Folder         job_folder;
 
+
 Qmon*job_main_layout.job_main_link.labelType:   PIXMAP
 Qmon*job_main_layout.job_main_link.labelPixmap: logo
 Qmon*job_main_layout.job_main_link.shadowThickness:    1
@@ -148,7 +149,9 @@ Qmon*job_running_jobs.fill:                 False
 Qmon*job_running_jobs.reverseSelect:        True
 Qmon*job_running_jobs.fontList:             $matrix_font
 !!Qmon*job_running_jobs.fixedColumns:     5
+Qmon*job_running_jobs.visibleColumns:   6
 Qmon*job_running_jobs.columns:          6
+Qmon*job_running_jobs.columnWidths:     12,8,10,10,8,10
 Qmon*job_running_jobs.columnMaxLengths: 40,20,50,50,30,500
 Qmon*job_running_jobs.rows:             20
 Qmon*job_running_jobs.visibleRows:      17
@@ -163,8 +166,6 @@ Qmon*job_running_jobs.boldLabels:             True
 Qmon*job_running_jobs.buttonLabels:           True
 Qmon*job_running_jobs.columnLabelColor:       $matrix_label
 Qmon*job_running_jobs.columnLabels:           @{JobId}, @{Priority}, @{JobName}, @{Owner}, @{Status}, @{Queue}
-
-Qmon*job_running_jobs*horizontalScrollBarDisplayPolicy: DISPLAY_STATIC
 
 Qmon*job_running_jobs.translations:   #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
@@ -189,7 +190,9 @@ Qmon*job_pending_jobs.fill:                 False
 Qmon*job_pending_jobs.reverseSelect:        True
 Qmon*job_pending_jobs.fontList:             $matrix_font
 !!Qmon*job_pending_jobs.fixedColumns:         5
+Qmon*job_pending_jobs.visibleColumns:       6
 Qmon*job_pending_jobs.columns:              6
+Qmon*job_pending_jobs.columnWidths:     12,8,10,10,8,10
 Qmon*job_pending_jobs.columnMaxLengths: 40,20,50,50,30,500
 Qmon*job_pending_jobs.rows:        20
 Qmon*job_pending_jobs.visibleRows: 17
@@ -204,8 +207,6 @@ Qmon*job_pending_jobs.columnLabels:           @{JobId}, @{Priority}, @{JobName},
 Qmon*job_pending_jobs.boldLabels: True
 Qmon*job_pending_jobs.buttonLabels:        True
 Qmon*job_pending_jobs.columnLabelColor:    $matrix_label
-
-Qmon*job_pending_jobs*horizontalScrollBarDisplayPolicy: DISPLAY_STATIC
 
 Qmon*job_pending_jobs.translations:   #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
@@ -230,7 +231,9 @@ Qmon*job_zombie_jobs.fill:                 False
 Qmon*job_zombie_jobs.reverseSelect:        True
 Qmon*job_zombie_jobs.fontList:             $matrix_font
 !!Qmon*job_zombie_jobs.fixedColumns:         5
+Qmon*job_zombie_jobs.visibleColumns:       6
 Qmon*job_zombie_jobs.columns:              6
+Qmon*job_zombie_jobs.columnWidths:     12,8,10,10,8,10
 Qmon*job_zombie_jobs.columnMaxLengths: 40,20,50,50,30,500
 Qmon*job_zombie_jobs.rows:        20
 Qmon*job_zombie_jobs.visibleRows: 17
@@ -245,8 +248,6 @@ Qmon*job_zombie_jobs.columnLabels:           @{JobId}, @{Priority}, @{JobName}, 
 Qmon*job_zombie_jobs.boldLabels: True
 Qmon*job_zombie_jobs.buttonLabels:        True
 Qmon*job_zombie_jobs.columnLabelColor:    $matrix_label
-
-Qmon*job_zombie_jobs*horizontalScrollBarDisplayPolicy: DISPLAY_STATIC
 
 Qmon*job_zombie_jobs.translations:   #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\

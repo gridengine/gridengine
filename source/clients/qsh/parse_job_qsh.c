@@ -191,6 +191,40 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lRemoveElem(cmdline, &ep);
    }
 
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
+      char tmp_str[SGE_PATH_MAX + 1];
+      char tmp_str2[SGE_PATH_MAX + 1];
+      char tmp_str3[SGE_PATH_MAX + 1];
+      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
+
+      if (!getcwd(tmp_str, sizeof(tmp_str))) {
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return answer;
+      }
+      if (!chdir(env_value)) {
+         if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+         chdir(tmp_str);
+         if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
+            sprintf(tmp_str3, "%s%s", env_value, 
+               (char *) tmp_str + strlen(tmp_str2));
+            strcpy(tmp_str, tmp_str3);
+         }
+      }
+      lSetString(*pjob, JB_cwd, tmp_str);
+      lRemoveElem(cmdline, &ep);
+
+      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
+   }
+   lFreeList(&path_alias);
+
+
    /*
    ** the handling of the path lists is not so trivial
    ** if we have several path lists we have to check
@@ -398,40 +432,6 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lRemoveElem(cmdline, &ep);
    }
 
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
-      const char *path = lGetString(ep, SPA_argval_lStringT);
-      bool is_cwd = false;
-
-      if (path == NULL) {
-         char tmp_str[SGE_PATH_MAX + 1];
-
-         is_cwd = true;
-         if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            /* If getcwd() fails... */
-            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
-                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DRETURN(answer);
-         }
-         
-         path = reroot_path(*pjob, tmp_str, &answer);
-         
-         if (path == NULL) {
-            DRETURN(answer);
-         }
-      }
-
-      lSetString(*pjob, JB_cwd, path);
-      lRemoveElem(cmdline, &ep);
-      
-      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-
-      if (is_cwd) {
-         FREE(path);
-      }
-   }
-
-   lFreeList(&path_alias);
-   
    /*
    * handling for display:
    * command line (-display) has highest priority

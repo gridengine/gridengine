@@ -322,17 +322,9 @@ int truncate_stderr_out
    shepherd_error_init( );
 
 #if defined(INTERIX)
-   /*
-    * Try to read password from sgepasswd file only if target_user 
-    * is not superuser
-    * This is the case for all non-interactive jobs, for qrsh
-    * it usually is the superuser.
-    * 'pw' is the pw of the target_user.
-    */
    if(strcmp(childname, "job") == 0
       && wl_use_sgepasswd() == true
-      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true
-      && wl_is_user_id_superuser(pw->pw_uid) == false) {
+      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
       char  *pass = NULL;
       uid_t uid;
       int   res;
@@ -390,7 +382,8 @@ int truncate_stderr_out
       shepherd_trace(err_str);
       sprintf(err_str, "try running further with uid=%d", (int)getuid());
       shepherd_trace(err_str);
-   } else if (ret > 0) {
+   } 
+   else if (ret > 0) {
       if(ret == 2) {
          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
       } else if (ret == 3) {
@@ -757,9 +750,9 @@ int truncate_stderr_out
    if (use_login_shell) {
       strcpy(argv0, "-");
       strcat(argv0, shell_basename);
-   } else {
-      strcpy(argv0, shell_basename);
    }
+   else
+      strcpy(argv0, shell_basename);
 
    sge_set_def_sig_mask(NULL, NULL);
    sge_unblock_all_signals();
@@ -808,7 +801,7 @@ int truncate_stderr_out
           shepherd_state = SSTATE_PASSWD_WRONG;
         }
         shepherd_error(err_str);
-      }
+      }      
    }
    shepherd_trace_sprintf("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
       (int)getuid(), (int)geteuid());
@@ -832,7 +825,7 @@ int truncate_stderr_out
   
          if (SGE_STAT(file, &sbuf)) {
             /*
-            ** generate a friendly error message especially for interactive jobs
+            ** generate a friendly error messages especially for interactive jobs
             */
             if (is_interactive) {
                sprintf(err_str, "unable to find xterm executable \"%s\" for interactive job", file);
@@ -928,7 +921,7 @@ int sge_set_environment()
          return 1;
       }
       value = strtok(NULL, "\n");
-      if (value == NULL)
+      if (!value)
          value = "";
 
       sge_set_env_value(name, value);
@@ -1055,8 +1048,9 @@ int sge_set_env_value(const char *name, const char* value)
             ret = 0;
          }
       }
-   } else {
-      ret = sge_setenv(name, value);
+   }
+   else {
+      ret = sge_setenv (name, value);
    }
    
    return ret;
@@ -1200,7 +1194,7 @@ static char **read_job_args(char **preargs, int extra_args)
 
 /*--------------------------------------------------------------------
  * set_shepherd_signal_mask
- * set signal mask that shepherd can handle signals from execd
+ * set signal mask that shpher can handle signals from execd
  *--------------------------------------------------------------------*/
 void start_command(
 const char *childname,
@@ -1341,27 +1335,20 @@ int use_starter_method /* If this flag is set the shellpath contains the
       args[njob_args + 7] = NULL;
    /* No need to test for binary since qlogin handles that itself */
    } else if (is_qlogin) {
-      char *conf_name = NULL;
+      
 #if 0
      shepherd_trace("Case 6: qlogin");
 #endif
       pre_args_ptr[0] = script_file;
-      if (is_rsh) {
-         conf_name = "rsh_daemon";
+      if(is_rsh) {
+         pre_args_ptr[1] = get_conf_val("rsh_daemon");
       } else {
-         if (is_rlogin) {
-            conf_name = "rlogin_daemon";
+         if(is_rlogin) {
+            pre_args_ptr[1] = get_conf_val("rlogin_daemon");
          } else {
-            conf_name = "qlogin_daemon";
+            pre_args_ptr[1] = get_conf_val("qlogin_daemon");
          }
       }
-      pre_args_ptr[1] = get_conf_val(conf_name);
-
-      if (check_configured_method(pre_args_ptr[1], conf_name, err_str) != 0) {
-         shepherd_state = SSTATE_CHECK_DAEMON_CONFIG;
-         shepherd_error(err_str);
-      }
-
       pre_args_ptr[2] = "-d"; 
       pre_args_ptr[3] = NULL;
       args = read_job_args(pre_args, 0);
@@ -1564,51 +1551,6 @@ int use_starter_method /* If this flag is set the shellpath contains the
          }
       }
    }
-}
-
-int check_configured_method(
-const char *method,
-const char *name,
-char *err_str
-) {
-   SGE_STRUCT_STAT     statbuf;
-   unsigned int        file_perm = S_IXOTH;
-   int                 ret = 0;
-   char                *command;
-   struct saved_vars_s *context = NULL;
-
-   /*
-    * The configured method can include some pameters, e.g.
-    * qlogin_daemon                /usr/sbin/in.telnetd -i
-    * Only the command itself must be checked.
-    */
-
-   command = sge_strtok_r(method, " ", &context);
-
-   if (strncmp(command, "/", 1) != 0) {
-      sprintf(err_str, "%s \"%s\" is not an absolute path", name, command);
-      ret = -1;
-   } else {
-      if (SGE_STAT(command, &statbuf) != 0) {
-         sprintf(err_str, "%s \"%s\" can't be read: %s (%d)",
-            name, command, strerror(errno), errno);
-         ret = -1;
-      } else {
-         if (getuid() == statbuf.st_uid) {
-            file_perm = file_perm | S_IXUSR;
-         }
-         if (getgid() == statbuf.st_gid) {
-            file_perm = file_perm | S_IXGRP;
-         }
-         if ((statbuf.st_mode & file_perm) == 0) {
-            sprintf(err_str, "%s \"%s\" is not executable", name, command);
-            ret = -1;
-         }
-      }
-   }
-
-   sge_free_saved_vars(context);
-   return ret;
 }
 
 static char *build_path(

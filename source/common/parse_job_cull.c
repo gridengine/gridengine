@@ -79,6 +79,7 @@
 
 const char *default_prefix = "#$";
 
+static char *reroot_path (lListElem* pjob, const char *path, lList **alpp);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -296,6 +297,31 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
       lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, &ep);
+   }
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
+      char tmp_str[SGE_PATH_MAX + 1];
+      char *path = NULL;
+
+      if (!getcwd(tmp_str, sizeof(tmp_str))) {
+         /* If getcwd() fails... */
+         answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         DRETURN(answer);
+      }
+      
+      path = reroot_path (*pjob, tmp_str, &answer);
+      
+      if (path == NULL) {
+         DRETURN(answer);
+      }
+      
+      lSetString(*pjob, JB_cwd, path);
+      lRemoveElem(cmdline, &ep);
+      
+      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
+      
+      FREE (path);
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
@@ -523,38 +549,44 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       lRemoveElem(cmdline, &ep);
    }
 
+   /* There is technically no conflict between -cwd and -wd.  They both set the
+    * working directory, and by virtue of it's position in this method, -wd will
+    * always override -cwd.  However, at least at the moment, -wd can only come
+    * from the DRMAA attributes, and -cwd cannot come from the DRMAA attributes.
+    * Therefore, -wd should override -cwd.  Lucky me. */
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
-      const char *path = lGetString(ep, SPA_argval_lStringT);
-      bool is_cwd = false;
+      const char *wd = lGetString(ep, SPA_argval_lStringT);
+      char *path = NULL;
 
-      if (path == NULL) {
-         char tmp_str[SGE_PATH_MAX + 1];
+/* I've added a -wd option to cull_parse_job_parameter() to deal with the
+ * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
+ * handled by cull_parse_job_parameter() that -cwd should just become an alias
+ * for -wd.  The code to do that is ifdef'ed out below just in case we decide
+ * it's a good idea. */
+#if 0
+      if (strcmp (wd, SGE_HOME_DIRECTORY) == 0) {
+         wd = (char *)malloc (sizeof (char) * (SGE_PATH_MAX + 1));
 
-         is_cwd = true;
-         if (!getcwd(tmp_str, sizeof(tmp_str))) {
+         if (getcwd (wd, sizeof (wd)) == 0) {
             /* If getcwd() fails... */
-            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
-                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DRETURN(answer);
-         }
-         
-         path = reroot_path(*pjob, tmp_str, &answer);
-         
-         if (path == NULL) {
+            answer_list_add (&answer, MSG_ANSWER_GETCWDFAILED, 
+                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DRETURN(answer);
          }
       }
+#endif
 
-      lSetString(*pjob, JB_cwd, path);
+      lSetString(*pjob, JB_cwd, wd);
       lRemoveElem(cmdline, &ep);
-      
-      lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
-
-      if (is_cwd) {
-         FREE(path);
+   
+      /* If -cwd didn't already set the JB_path_aliases field, set it. */
+      if (lGetList (*pjob, JB_path_aliases) == NULL) {
+         lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
       }
+      
+      FREE (path);
    }
-
+   
    lFreeList(&path_alias);
    
    /*
@@ -990,3 +1022,98 @@ FCLOSE_ERROR:
    DRETURN(answer);
 }
 
+/* This method is not thread safe.  Fortunately, it is only used by the
+ * -cwd switch which can be forbiddon in DRMAA. */
+#if 1
+static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
+   const char *home = NULL;
+   char tmp_str[SGE_PATH_MAX + 1];
+   char tmp_str2[SGE_PATH_MAX + 1];
+   char tmp_str3[SGE_PATH_MAX + 1];
+   
+   DENTER (TOP_LAYER, "reroot_path");
+   
+   home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
+   strcpy (tmp_str, path);
+   
+   if (!chdir(home)) {
+      /* If chdir() succeeds... */
+      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+         /* If getcwd() fails... */
+         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         DRETURN(NULL);
+      }
+
+      chdir(tmp_str);
+
+      if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
+         /* If they are equal, build a new CWD using the value of the HOME
+          * as the root instead of whatever that directory is called by
+          * the -(c)wd path. */
+         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
+         strcpy(tmp_str, tmp_str3);
+      }
+   }
+   
+   DRETURN(strdup(tmp_str));
+}
+
+/* This is the threadsafe version of the method.  However, it is untested, so
+ * we'll wait to turn it on until a later patch or update when we've had time
+ * to test it thoroughly. */
+#else
+static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
+   const char *home = NULL;
+   SGE_STRUCT_STAT homestat;
+   SGE_STRUCT_STAT wdstat;
+   char tmp_path[SGE_PATH_MAX + 1];
+   char final_path[SGE_PATH_MAX + 1];
+   
+   DENTER (TOP_LAYER, "reroot_path");
+   
+   home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
+   
+   if ((home != NULL) && (path != NULL)) {
+      const char *sub_path = NULL;
+      
+      strcpy (tmp_path, path);
+      
+      /* Get the fs info for the home directory */
+      SGE_STAT (home, &homestat);
+      
+      do {
+         /* Get the fs info for this path segment */
+         SGE_STAT (tmp_path, &wdstat);
+
+         if ((homestat.st_ino == wdstat.st_ino) &&
+             (homestat.st_dev == wdstat.st_dev)) {
+            int length = strlen (tmp_path);
+            
+            /* Start with the home directory as the root. */
+            strcpy (final_path, home);
+            /* Then attach everything after the matching inode */
+            strcat (final_path, &path[length]);
+            break;
+         }
+
+         /* Find the last segment of the path */
+         sub_path = strrchr (tmp_path, '/');
+
+         if (sub_path != NULL) {
+            /* Remove the last segment of the path */               
+            sub_path[0] = '\0';
+         }
+         else {
+            /* If the path is not absolute, we will never replace the first
+             * character of the path.  Instead, we have to use the NULL we get
+             * here as our signal to give up. */
+            strcpy (final_path, path);
+            break;
+         }
+      } while (tmp_path[0] != '\0');
+   }
+   
+   DRETURN(strdup(final_path));
+}
+#endif

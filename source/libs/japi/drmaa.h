@@ -179,7 +179,7 @@ enum {
    DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default
                                                 contact string to connect to DRM
                                                       system. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, /* No default contact string
                                                       was provided or selected.
                                                       DRMAA requires that the
@@ -229,7 +229,7 @@ enum {
    DRMAA_ERRNO_NO_RUSAGE, /* This error code is returned by drmaa_wait() when a
                              job has finished but no rusage and stat data could
                              be provided. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    DRMAA_ERRNO_NO_MORE_ELEMENTS, /* There are no more elements in the opaque
                                     string vector. */
 #endif
@@ -294,7 +294,7 @@ int drmaa_get_next_attr_value(drmaa_attr_values_t* values, char *value,
 int drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value,
                           size_t value_len);
 
-#ifndef DRMAA_95
+#ifdef DRMAA_10
 /*
  * get element count of opaque string vector
  *

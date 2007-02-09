@@ -1565,7 +1565,7 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp, monitor
 
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                      lGetString(client, EV_name),
-                     sge_u32c(id), lGetHost(client, EV_host)));
+                     (unsigned long)id, lGetHost(client, EV_host)));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       
    }
@@ -1639,7 +1639,7 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
       }
       
       lp = lCreateListHash("Events", lGetElemDescr(element), false);       
-      lAppendElem(lp, lCopyElemHash(element, false));
+      lAppendElem (lp, lCopyElemHash(element, false));
 
       /* restore the original event object */
       if (temp_sub_lp != NULL) {

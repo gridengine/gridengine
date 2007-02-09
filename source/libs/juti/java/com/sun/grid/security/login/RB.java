@@ -38,6 +38,7 @@ import javax.security.auth.login.LoginException;
 /**
  * Helper class i18n.
  *
+ * @author  richard.hierlmeier@sun.com
  */
 class RB {
     

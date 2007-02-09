@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/02/09 12:37:24 $     Revision: $Revision: 1.19 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2006/07/11 09:29:55 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2007/02/09 12:37:24 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2006/07/11 09:29:55 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -58,7 +58,7 @@ The complex configuration should not be accessed directly.
 In order to add or modify complex entries, the
 .M qconf 1
 options -Mc and \-mc should be used instead.
-While the \-Mc option takes a
+While the \-Mc option take a
 .I complex
 configuration file as an argument and overrides the current configuration, 
 the \-mc option bring up an editor filled in with the current
@@ -240,14 +240,31 @@ load formula (refer to
 )
 TRUE and FALSE get mapped into '1' and '0'.
 .IP "\(bu" 3n
-With \fBSTRING\fP all strings are allowed and is used for 
-wildcard regular boolean expression matching. 
-Please see 
-.M sge_types 1 
-manpage for \fBexpression\fP definition.
+With \fBSTRING\fP all strings are allowed and
+.M strcmp 3
+is used for comparisons.
+.IP "\(bu" 3n
+\fBCSTRING\fP is like \fBSTRING\fP except comparisons are case insensitive. 
+.IP "\(bu" 3n
+\fBRESTRING\fP is like \fBSTRING\fP with regular expression matching.
+The syntax follows the following rules:
 .sp 1
 .nf
 .RS
+ - "*"    : matches any character and any number of chars 
+            (0 or more).
+ - "?"    : matches any one character. It must match exactly 1
+            character.
+ - "."    : is the character ".". It has no special meaning
+ - "\\"    : escape character. "\\\\" = "\\", "\\*" = "*", 
+            "\\?" = "?"
+ - "[...]": matches one of the list of characters between the brackets.
+            Character ranges may be specified using the a-z notation.
+            The caret symbol (^) is \fBnot\fP interpreted as a logical
+            not; it is intrepreted literally.
+ - "|"    : logical "or". Can only be used on the highest 
+            level and \fBcannot\fP be escaped.
+
 Examples:
  -l arch="*x24*|sol*"  : 
       results in "arch=lx24-x86" OR "arch=lx24-amd64" 
@@ -264,19 +281,17 @@ Examples:
  -l arch="lx2[24-6]-x86"  : 
       results in "arch=lx22-x86" OR "arch=lx24-x86"  
          OR "arch=lx25-x86" OR "arch=lx26-x86"
- -l arch="!lx24-x86&!sol-sparc"  : 
-      results in NOT "arch=lx24-x86" NEITHER "arch=sol-sparc"
+ -l arch="lx24-x86|sol-sparc"  : 
+      results in "arch=lx24-x86" OR "arch=sol-sparc"
+ -l arch="lx24-[^x]86"  : 
+      results in "arch=lx24-^86" OR "arch=lx24-x86"  
  -l arch="lx2[4|6]-x86"  : 
       results in "arch=lx2[4" OR "arch=6"  
 .RE
 .fi
                                
 .IP "\(bu" 3n
-\fBCSTRING\fP is like \fBSTRING\fP except comparisons are case insensitive. 
-.IP "\(bu" 3n
-\fBRESTRING\fP is like \fBSTRING\fP and it will be deprecated in the future.
-.IP "\(bu" 3n
-\fBHOST\fP is like \fBCSTRING\fP but the expression must match a valid hostname.
+\fBHOST\fP is like \fBCSTRING\fP but the string must be a valid hostname.   
 .\"
 .SS "\fBrelop\fP"
 The
@@ -303,7 +318,7 @@ and per queue basis. The definition of resource availability is performed
 with the complex_values entry in
 .M host_conf 5
 and
-.M queue_conf 5 .
+.M queu_conf 5 .
 .\"
 .SS "\fBconsumable\fP"
 The

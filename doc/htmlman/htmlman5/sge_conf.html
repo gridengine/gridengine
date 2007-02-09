@@ -35,7 +35,7 @@ FORMAT
      individual parameters that compose the global and local con-
      figurations for a Grid Engine cluster:
 
-  execd_spool_dir
+execd_spool_dir
      The execution daemon spool directory path. Again, a feasible
      spool  directory  requires  read/write access permission for
      root. The entry in the global configuration for this parame-
@@ -66,7 +66,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  mailer
+mailer
      mailer is the  absolute  pathname  to  the  electronic  mail
      delivery  agent on your system. It must accept the following
      syntax:
@@ -83,7 +83,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  xterm
+xterm
      xterm is the absolute pathname to the X Window System termi-
      nal emulator, <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B>.
 
@@ -95,7 +95,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  load_sensor
+load_sensor
      A comma separated list of executable shell script  paths  or
      programs  to  be  started  by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and to be used in
      order to retrieve site configurable load  information  (e.g.
@@ -116,7 +116,7 @@ FORMAT
      figurable load sensors defined in load_sensor. This facility
      is intended for pre-installing a default load sensor.
 
-  prolog
+prolog
      The executable path of a shell script that is started before
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs to be  started  after-
@@ -255,7 +255,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  epilog
+epilog
      The executable path of a shell script that is started  after
      execution of Grid Engine jobs with the same environment set-
      ting as that for the Grid Engine jobs  that  has  just  com-
@@ -281,7 +281,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  shell_start_mode
+shell_start_mode
      This parameter defines the  mechanisms  which  are  used  to
      actually  invoke the job scripts on the execution hosts. The
      following values are recognized:
@@ -348,7 +348,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  login_shells
+login_shells
      UNIX command interpreters like the Bourne-Shell (see  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>)
      or  the  C-Shell  (see <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>) can be used by Grid Engine to
      start job scripts. The command interpreters  can  either  be
@@ -371,7 +371,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  min_uid
+min_uid
      min_uid places a lower bound on user IDs that  may  use  the
      cluster. Users whose user ID (as returned by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is
      less than min_uid will not be allowed to  run  jobs  on  the
@@ -384,7 +384,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  min_gid
+min_gid
      This parameter sets the lower bound on group  IDs  that  may
      use  the cluster.  Users whose default group ID (as returned
      by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is less than min_gid will not be allowed  to
@@ -397,7 +397,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  user_lists
+user_lists
      The user_lists parameter contains a comma separated list  of
      so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
      Each user contained in at least one of the  enlisted  access
@@ -414,7 +414,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  xuser_lists
+xuser_lists
      The xuser_lists parameter contains a comma separated list of
      so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
      Each user contained in at least one of the  enlisted  access
@@ -430,7 +430,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  administrator_mail
+administrator_mail
      administrator_mail specifies a comma separated list  of  the
      electronic  mail address(es) of the cluster administrator(s)
      to whom internally-generated problem reports are  sent.  The
@@ -445,7 +445,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  projects
+projects
      The projects list contains all projects  which  are  granted
      access  to Grid Engine. User belonging to none of these pro-
      jects cannot use Grid Engine. If users belong to projects in
@@ -459,7 +459,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  xprojects
+xprojects
      The xprojects list contains all projects which  are  granted
      access  to  Grid Engine. User belonging to one of these pro-
      jects cannot use Grid Engine. If users belong to projects in
@@ -473,7 +473,7 @@ FORMAT
      not   be   overwritten   by   the   execution   host   local
      configuration.
 
-  load_report_time
+load_report_time
      System load is reported periodically by the  execution  dae-
      mons  to  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   The  parameter  load_report_time
      defines the time interval between load reports.
@@ -492,7 +492,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  reschedule_unknown
+reschedule_unknown
      Determines whether  jobs  on  hosts  in  unknown  state  are
      rescheduled   and  thus  sent  to  other  hosts.  Hosts  are
      registered as unknown if <B><A HREF="../htmlman8/sge_master.html">sge_master(8)</A></B> cannot establish con-
@@ -518,12 +518,12 @@ FORMAT
      <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>).   Interactive  jobs  (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,
      <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
 
-     The default for reschedule_unknown is 00:00:00
+     The default for reschedule_unknown id 00:00:00
 
      The global configuration entry for this value  may  be  over
      written by the execution host local configuration.
 
-  max_unheard
+max_unheard
      If <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> could not contact or was not contacted  by
      the  execution daemon of a host for max_unheard seconds, all
      queues residing on that particular host are  set  to  status
@@ -539,7 +539,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  loglevel
+loglevel
      This parameter specifies  the  level  of  detail  that  Grid
      Engine components such as <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> use
      to produce informative, warning or error messages which  are
@@ -568,7 +568,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  max_aj_instances
+max_aj_instances
      This parameter defines the maximum amount of array  task  to
      be  scheduled  to  run  simultaneously  per  array  job.  An
      instance of an array task will be created within the  master
@@ -588,7 +588,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  max_aj_tasks
+max_aj_tasks
      This parameter defines the maximum number of array job tasks
      within  an  array job.  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> will reject all array
      job submissions which request more than  max_aj_tasks  array
@@ -601,7 +601,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  max_u_jobs
+max_u_jobs
      The number of active (not finished)  jobs  which  each  Grid
      Engine  user  can  have in the system simultaneously is con-
      trolled by this parameter. A value greater  than  0  defines
@@ -616,7 +616,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  max_jobs
+max_jobs
      The number of  active  (not  finished)  jobs  simultaneously
      allowed  in  Grid  Engine is controlled by this parameter. A
      value greater than 0 defines the limit. The default value  0
@@ -631,7 +631,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  enforce_project
+enforce_project
      If set to <I>true</I>, users are  required  to  request  a  project
      whenever  submitting a job. See the -P option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for
      details.
@@ -643,7 +643,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  enforce_user
+enforce_user
      If set to <I>true</I>, a <B><A HREF="../htmlman5/user.html">user(5)</A></B> must exist to allow for  job  sub-
      mission. Jobs are rejected if no corresponding user exists.
 
@@ -661,7 +661,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  auto_user_oticket
+auto_user_oticket
      The number of override tickets to  assign  to  automatically
      created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
      cally if the enforce_user attribute is set to <I>auto</I>.
@@ -674,7 +674,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  auto_user_fshare
+auto_user_fshare
      The number of functional shares to assign  to  automatically
      created  <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects. User objects are created automati-
      cally if the enforce_user attribute is set to <I>auto</I>.
@@ -687,7 +687,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  auto_user_default_project
+auto_user_default_project
      The default  project  to  assign  to  automatically  created
      <B><A HREF="../htmlman5/user.html">user(5)</A></B>  objects.  User objects are created automatically if
      the enforce_user attribute is set to <I>auto</I>.
@@ -700,7 +700,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  auto_user_delete_time
+auto_user_delete_time
      The number of seconds of inactivity  after  which  automati-
      cally  created <B><A HREF="../htmlman5/user.html">user(5)</A></B> objects will be deleted. User objects
      are created automatically if the enforce_user  attribute  is
@@ -717,7 +717,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  set_token_cmd
+set_token_cmd
      This parameter is only present if your Grid Engine system is
      licensed to support AFS.
 
@@ -756,7 +756,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  pag_cmd
+pag_cmd
      This parameter is only present if your Grid Engine system is
      licensed to support AFS.
 
@@ -770,7 +770,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  token_extend_time
+token_extend_time
      This parameter is only present if your Grid Engine system is
      licensed to support AFS.
 
@@ -786,7 +786,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  gid_range
+gid_range
      The gid_range is a comma separated list of range expressions
      of  the  form  n-m  (n  as  well  as m being integer numbers
      greater than 99), where m is an abbreviation for m-m.  These
@@ -805,7 +805,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  qmaster_params
+qmaster_params
      A list of additional parameters can be passed  to  the  Grid
      Engine qmaster. The following values are recognized:
 
@@ -862,27 +862,6 @@ FORMAT
           tions to all exec hosts, all event  clients,  and  file
           handles that the qmaster needs.
 
-     <I>MONITOR</I>_<I>TIME</I>
-          Specifies the time interval when the monitoring  infor-
-          mation should be printed. The monitoring is disabled by
-          default and can be enabled by specifying  an  interval.
-          The monitoring is per thread and is written to the mes-
-          sages file or displayed by the "qping -f" command  line
-          tool. Example: MONITOR_TIME=0:0:10 generates and prints
-          the  monitoring  information  approximately  every   10
-          seconds. The specified time is a guideline only and not
-          a fixed interval. The interval that is actually used is
-          printed.   In  this example, the interval could be any-
-          thing between 9 seconds and 20 seconds.
-
-     <I>LOG</I>_<I>MONITOR</I>_<I>MESSAGE</I>
-          Monitoring information  is  logged  into  the  messages
-          files  by default. This information can be accessed via
-          by <B><A HREF="../htmlman1/qping.html">qping(1)</A></B>.  If monitoring is always enabled, the mes-
-          sages  files  can become quite large.  This switch dis-
-          ables logging into the messages files, making <I>qping</I>  -<I>f</I>
-          the only source of monitoring data.
-
      <I>PROF</I>_<I>SIGNAL</I>
           Profiling provides the user with the possibility to get
           system  measurements.  This can be useful for debugging
@@ -925,7 +904,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  execd_params
+execd_params
      This is foreseen for passing additional  parameters  to  the
      Grid  Engine  execution  daemon.  The  following  values are
      recognized:
@@ -934,14 +913,6 @@ FORMAT
           If this parameter is set to true, for reserved usage is
           used for the accounting entries cpu, mem and io instead
           of the measured usage.
-
-     <I>ENABLE</I>_<I>WINDOMACC</I>
-          If this  parameter  is  set  to  true,  Windows  Domain
-          accounts  (WinDomAcc)  are used on Windows hosts. These
-          accounts require the  use  of  <B><A HREF="../htmlman1/sgepasswd.html">sgepasswd(1)</A></B>  (see  also
-          <B><A HREF="../htmlman5/sgepasswd.html">sgepasswd(5)</A></B>).  If this parameter is set to false or is
-          not set, local Windows  accounts  are  used.   On  non-
-          Windows hosts, this parameter is ignored.
 
      <I>KEEP</I>_<I>ACTIVE</I>
           This value should only be set for  debugging  purposes.
@@ -966,6 +937,7 @@ FORMAT
      <I>PROF</I>_<I>EXECD</I>
           Enables the profiling for the execution daemon.   (e.g.
           PROF_EXECD=true)
+
 
      <I>NOTIFY</I>_<I>KILL</I>
           The parameter allows you  to  change  the  notification
@@ -1047,7 +1019,7 @@ FORMAT
           by  the  job  script  itself.   The  default  value for
           SET_LIB_PATH is false.
 
-  reporting_params
+reporting_params
      Used to define the behaviour of  reporting  modules  in  the
      Grid  Engine  qmaster. Changes to the reporting_params takes
      immediate effect.  The following values are recognized:
@@ -1070,31 +1042,16 @@ FORMAT
           <B><A HREF="../htmlman5/ing.html">ing(5)</A></B>  for  further  information about format and con-
           tents of the reporting file.
 
-     <I>flush</I>_<I>time</I>
-          Contents of the reporting file are buffered in the Grid
-          Engine  qmaster  and flushed at a fixed interval.  This
-          interval can be configured with the <I>flush</I>_<I>time</I>  parame-
-          ter.   It  is  specified  as a time value in the format
-          HH:MM:SS.  Sensible values range from a few seconds  to
-          one  minute. Setting it too low may slow down the qmas-
-          ter. Setting it too high will make the qmaster  consume
-          large amounts of memory for buffering data.
 
-     <I>accounting</I>_<I>flush</I>_<I>time</I>
-          Contents of the accounting file  are  buffered  in  the
-          Grid  Engine  qmaster  and flushed at a fixed interval.
-          This   interval   can   be    configured    with    the
-          <I>accounting</I>_<I>flush</I>_<I>time</I>  parameter.  It is specified as a
-          time value in the  format  HH:MM:SS.   Sensible  values
-          range  from a few seconds to one minute. Setting it too
-          low may slow down the qmaster. Setting it too high will
-          make  the  qmaster  consume large amounts of memory for
-          buffering data.  Setting it to  00:00:00  will  disable
-          accounting  data  buffering;  as  soon  as data is gen-
-          erated, it will be written to the accounting file.   If
-          this  parameter  is  not set, the accounting data flush
-          interval will default to the value  of  the  <I>flush</I>_<I>time</I>
-          parameter.
+     <I>flush</I>_<I>time</I>
+          Contents of the accounting and the reporting  file  are
+          buffered  in  the  Grid Engine qmaster and flushed in a
+          fixed interval.  This interval can be  configured  with
+          the  <I>flush</I>_<I>time</I>  parameter.   It  is  specified as time
+          value in the format HH:MM:SS.   Sensible  values  range
+          from some seconds to one minute. Setting it too low may
+          slow down qmaster, setting it too high will make  qmas-
+          ter consume high amounts of memory for buffering data.
 
      <I>joblog</I>
           If this parameter is set to true,  the  reporting  file
@@ -1112,7 +1069,7 @@ FORMAT
           eter.   See  <B><A HREF="../htmlman5/reporting.html">reporting(5)</A></B> for further information about
           sharelog.
 
-  finished_jobs
+finished_jobs
      Grid Engine stores a certain number of <I>just</I> <I>finished</I> jobs to
      provide  post  mortem  status information. The finished_jobs
      parameter defines the number of finished jobs being  stored.
@@ -1127,7 +1084,7 @@ FORMAT
      not  be  overwritten  by the execution host local configura-
      tion.
 
-  qlogin_daemon
+qlogin_daemon
      This parameter  specifies  the  executable  that  is  to  be
      started  on  the server side of a <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B> request. Usually
      this is the fully qualified pathname of the system's  telnet
@@ -1137,10 +1094,11 @@ FORMAT
      Changing qlogin_daemon  will  take  immediate  effect.   The
      default for qlogin_daemon is none.
 
+
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  qlogin_command
+qlogin_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B>  request.   Usually  this  is  the fully qualified
      pathname of the systems's telnet client program. If no value
@@ -1154,7 +1112,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  rlogin_daemon
+rlogin_daemon
      This parameter  specifies  the  executable  that  is  to  be
      started  on  the  server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request without a
      command argument to be executed remotely.  Usually  this  is
@@ -1168,7 +1126,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  rlogin_command
+rlogin_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  without  a command argument to be executed
      remotely. Usually this is the fully  qualified  pathname  of
@@ -1186,12 +1144,13 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  rsh_daemon
+rsh_daemon
      This parameter  specifies  the  executable  that  is  to  be
-     started  on the server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a com-
-     mand argument to be executed remotely.  Usually this is  the
-     fully  qualified  pathname of the system's rsh daemon. If no
-     value is given, a specialized Grid Engine component is used.
+     started  on  the  server  side  of  a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a
+     command argument to be executed remotely.  Usually  this  is
+     the  fully qualified pathname of the system's rsh daemon. If
+     no value is given, a specialized Grid  Engine  component  is
+     used.
 
      Changing rsh_daemon will take immediate effect. The  default
      for rsh_daemon is none.
@@ -1199,8 +1158,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-
-  rsh_command
+rsh_command
      This is the command to be executed on the client side  of  a
      <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
      remotely. Usually this is the fully  qualified  pathname  of
@@ -1219,7 +1177,7 @@ FORMAT
      The  global  configuration  entry  for  this  value  may  be
      overwritten by the execution host local configuration.
 
-  delegated_file_staging
+delegated_file_staging
      This flag must be set to "true" when the prolog  and  epilog
      are  ready  for  delegated  file  staging, so that the DRMAA
      attribute 'drmaa_transfer_files' is supported. To  establish
@@ -1233,16 +1191,13 @@ FORMAT
      the error handling mechanism can handle the error correctly.
      (See also FORBID_APPERROR).
 
-  reprioritize
+reprioritize
      This flag enables or disables the reprioritization  of  jobs
-     based  on  their ticket amount. The reprioritize_interval in
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> takes effect only if reprioritize  is  set  to
-     true.  To  turn  off  job reprioritization, the reprioritize
-     flag must be set to false and the reprioritize_interval to 0
-     which is the default.
-
-     This value is a global configuration parameter only. It can-
-     not be overridden by the execution host local configuration.
+     based  on  their  ticket  amount.  The reprioritize_interval
+     takes only affect  if  reprioritize  is  set  to  true  (the
+     default). In case one wants to turn off the reprioritization
+     of jobs, one should set the reprioritize flag to  false  and
+     the reprioritize_interval to 0.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
@@ -1251,17 +1206,9 @@ SEE ALSO
      <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>,   <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>,  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>
      <I>Administration</I> <I>Guide</I>.
 
-
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
 
 
 

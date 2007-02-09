@@ -39,8 +39,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit \
-                 tst_pthread_signals fstype qping sgepasswd $(AUTHUSER_ALL) \
-                 $(LOADCHECK_ALL)
+                 tst_pthread_signals fstype qping sgepasswd $(AUTHUSER_ALL)
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
@@ -60,7 +59,7 @@ UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
 utilbin:	$(UTILBIN_TARGETS)
 
 utilbin_clean:
-		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS) juti.obj
+		$(RM) $(UTILBIN_TARGETS) $(UTILBIN_OBJS) $(UTILBIN_TARGET_OBJS)
 
 utilbin_depend:
 	$(DEPEND) -f$(UTILBIN_DIR)/utilbin_dependencies $(UTILBIN_DIR)/*.c
@@ -87,7 +86,7 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
 gethostname:	gethostname.o version.o $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) 
-		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) $(DLLIB) $(LIBS)
+		$(CC) -o $@ gethostname.o version.o $(LFLAGS) -luti $(WINGRIDLIB) -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
@@ -177,14 +176,6 @@ loadcheck:	loadcheck.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB
 loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
 
-LOADCHECK_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
-
-loadcheck.exe: loadcheck.obj
-	$(WINCC) loadcheck.obj /link /OUT:loadcheck.exe $(LOADCHECK_WINLFLAGS) $(WINLIBS)
-
-loadcheck.obj: $(UTILBIN_DIR)/loadcheck.c
-	$(WINCC) $(WINCFLAGS) /c $(UTILBIN_DIR)/loadcheck.c
-
 #---------------------------------------------------------------------
 languagetest:   languagetest.o version.o  $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)
 		$(CC) -o $@ languagetest.o version.o $(LFLAGS)  -luti $(WINGRIDLIB) -llck -lrmon $(LIBS)
@@ -271,8 +262,8 @@ authuser.exe: authuser.obj juti.obj
 	$(WINCC) authuser.obj juti.obj /link /OUT:authuser.exe $(AUTHUSER_WINLFLAGS) $(WINLIBS) netapi32.lib
 
 authuser.obj: $(UTILBIN_DIR)/authuser.c
-	$(WINCC) $(WINCFLAGS) /c $(UTILBIN_DIR)/authuser.c
+	$(WINCC) $(WINCFLAGS) -c $(UTILBIN_DIR)/authuser.c
 
 juti.obj: $(SDIR)/libs/juti/juti.c
-	$(WINCC) $(WINCFLAGS) /c $(SDIR)/libs/juti/juti.c
+	$(WINCC) $(WINCFLAGS) -c $(SDIR)/libs/juti/juti.c
 

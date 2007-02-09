@@ -464,7 +464,7 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
    cl_thread_settings_t* thread_config = NULL;
    cl_log_list_data_t*   ldata = NULL;
 
-   if (log_text == NULL || module_name == NULL || function_name == NULL) {
+   if (log_text == NULL || module_name == NULL || function_name == NULL ) {
       return CL_RETVAL_PARAMS;
    }
 

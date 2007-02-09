@@ -165,7 +165,7 @@ HP-UX)
          fi
       else
          ARCH=hp11
-      fi
+       fi
       ;;
       esac
    esac

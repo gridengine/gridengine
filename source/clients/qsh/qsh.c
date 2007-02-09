@@ -43,7 +43,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
-#if defined(INTERIX) || defined(HPUX)
+#if defined(INTERIX)
 #include <arpa/inet.h>
 #endif
 
@@ -264,7 +264,7 @@ static void forward_signal(int sig)
 static int open_qrsh_socket(int *port) {
    int sock;
    struct sockaddr_in server;
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
    int length;
 #else
    socklen_t length;
@@ -294,7 +294,7 @@ static int open_qrsh_socket(int *port) {
    
    /* find out assigned port number and pass it to caller */
    length = sizeof server;
-   if (getsockname(sock, (struct sockaddr *)&server, &length) == -1) {
+   if (getsockname(sock,(struct sockaddr *) &server,&length) == -1) {
       ERROR((SGE_EVENT, MSG_QSH_ERRORGETTINGSOCKETNAME_S, strerror(errno)));
       sge_prof_cleanup();
       DEXIT;
@@ -363,7 +363,7 @@ static int wait_for_qrsh_socket(int sock, int timeout)
       default: 
          if(FD_ISSET(sock, &ready)) {
             /* start accepting connections */
-#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
+#if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5)
             msgsock = accept(sock,(struct sockaddr *) 0,(int *) NULL);
 #else
             msgsock = accept(sock,(struct sockaddr *) 0,(socklen_t *) NULL);
@@ -1012,7 +1012,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
   
    /* get configuration from qmaster */
    if(gdi2_get_configuration(ctx, qualified_hostname, &global, &local) ||
-      merge_configuration(NULL, progid, cell_root, global, local, &conf_list)) {
+      merge_configuration(progid, cell_root, global, local, &conf_list)) {
       ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
@@ -2011,7 +2011,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
             strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
-            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd")
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j")
            ) {
             if(error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
@@ -2027,7 +2027,6 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRLOGIN(jb_now)) {
             if(strcmp(cp, "-display") == 0 ||
                strcmp(cp, "-cwd") == 0 ||
-               strcmp(cp, "-wd") == 0 ||
                strcmp(cp, "-v") == 0 ||
                strcmp(cp, "-V") == 0
               ) {
@@ -2059,7 +2058,6 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          /* qrsh -inherit only allowes -cwd and setting of environment */
          if(tightly_integrated) {
             if(strcmp(cp, "-cwd") &&
-               strcmp(cp, "-wd") &&
                strcmp(cp, "-display") &&
                strcmp(cp, "-v") &&
                strcmp(cp, "-V")

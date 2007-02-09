@@ -49,13 +49,10 @@ DESCRIPTION
   drmaa_get_contact()
      The drmaa_get_contact() returns an opaque string  containing
      contact  information related to the current DRMAA session to
-     be used with the <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> function. In the  1.0  imple-
-     mentation,   the  opaque  string  contains  the  information
-     required by drmaa_init() to reconnect to the current session
-     instead  of  creating  a new session. In the 0.95 implemena-
-     tion, however, the drmaa_get_contact() function  returns  an
-     empty string, and the <I>contact</I> parameter has no effect on the
-     <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> function.
+     be used with the  <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>  function.  In  the  current
+     implementation,  however,  the  drmaa_get_contact() function
+     returns an empty string, and the <I>contact</I>  parameter  has  no
+     effect on the <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> function.
 
      The drmaa_get_contact()  function  returns  the  same  value
      before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
@@ -153,6 +150,9 @@ ERRORS
 
 SEE ALSO
      <B><A HREF="../htmlman3/drmaa_session.html">drmaa_session(3)</A></B>.
+
+
+
 
 
 

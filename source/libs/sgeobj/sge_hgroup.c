@@ -51,7 +51,6 @@
 #include "sge_answer.h"
 #include "sge_cqueue.h"
 #include "sge_hostname.h"
-#include "sge_eval_expression.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_object.h"
@@ -619,9 +618,8 @@ hgroup_list_find_matching_and_resolve(const lList *this_list,
 
       for_each(hgroup, this_list) {
          const char *hgroup_name = lGetHost(hgroup, HGRP_name);
-         
-         /* use hostgroup expression */
-         if (!sge_eval_expression(TYPE_HOST,hgroup_pattern, hgroup_name, NULL)) {
+
+         if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
             lList *tmp_used_hosts = NULL;
             lListElem *tmp_href = NULL;
 
@@ -682,8 +680,7 @@ hgroup_list_find_matching(const lList *this_list, lList **answer_list,
       for_each(hgroup, this_list) {
          const char *hgroup_name = lGetHost(hgroup, HGRP_name);
 
-   /* use hostgroup expression */
-         if (!sge_eval_expression(TYPE_HOST,hgroup_pattern, hgroup_name, NULL)) {
+         if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
             if (href_list != NULL) {
                lAddElemHost(href_list, HR_name, hgroup_name, HR_Type);
             }

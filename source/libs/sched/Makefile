@@ -66,15 +66,11 @@ SCHEDLIB_SRC = sge_select_queue.c \
 SCHEDLIB_OBJS = $(SCHEDLIB_SRC:.c=.o)
 
 SCHEDLIB_TEST_PROGS = \
-              test_eval_performance\
-              test_resource_utilization \
-              test_sge_load_formula
+              test_resource_utilization
 
 SCHEDLIB_TEST_PROGS_OBJS = \
               test_resource_utilization.o \
-              sge_resource_utilization_test.o\
-              test_eval_performance.o \
-              test_sge_load_formula.o
+              sge_resource_utilization_test.o
               
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -202,9 +198,6 @@ simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULL
 test_resource_utilization: test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(SGEOBJDLIB) $(SGEOBJLIB) $(GDILIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_resource_utilization $(LFLAGS) test_resource_utilization.o sge_resource_utilization_test.o sge_mt_init.o $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(DLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(LIBS) $(SECLIB)
 
-test_eval_performance: test_eval_performance.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_eval_performance $(LFLAGS) test_eval_performance.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
-
 simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c
 
@@ -213,13 +206,3 @@ test_resource_utilization.o: $(SCHEDLIB_DIR)/test_resource_utilization.c
 
 sge_resource_utilization_test.o: $(SCHEDLIB_DIR)/sge_resource_utilization.c
 	$(CC) -o sge_resource_utilization_test.o $(CFLAGS) $(SHARED_CFLAGS) -DMODULE_TEST_SGE_RESOURCE_UTILIZATION -c $(SCHEDLIB_DIR)/sge_resource_utilization.c
-
-test_eval_performance.o: $(SCHEDLIB_DIR)/test_eval_performance.c 
-	$(CC) -o test_eval_performance.o $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/test_eval_performance.c
-
-test_sge_load_formula: test_sge_load_formula.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_load_formula $(LFLAGS) test_sge_load_formula.o $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(RMONLIB) $(DLLIB) $(LCKLIB) $(SECLIB) $(LIBS)
-
-test_sge_load_formula.o: $(SCHEDLIB_DIR)/test_sge_load_formula.c
-	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/test_sge_load_formula.c
-

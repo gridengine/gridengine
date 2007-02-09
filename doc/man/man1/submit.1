@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/01/19 11:13:25 $     Revision: $Revision: 1.63 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2006/03/22 13:24:57 $     Revision: $Revision: 1.60 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/01/19 11:13:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2006/03/22 13:24:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -241,8 +241,8 @@ commands instead of the users login shell or any shell specified in the
 command-line.
 .PP
 .I Qalter
-can be used to change the attributes of pending jobs. For array jobs
-with a mix of running and pending tasks
+can be used to change the attributes of pending jobs. For array jobs for
+which some of the tasks are be pending and others are running
 (see the \fB\-t\fP option below), modification with
 .I qalter
 only affects the pending tasks.
@@ -689,20 +689,18 @@ however.
 Prints  a listing of all options.
 .\"
 .IP "\fB\-hold_jid wc_job_list\fP"
-Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only. See 
-.M sge_types 1 . 
-for \fB\wc_job_list\fP deffinition.
+Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
-reference by job name or pattern is only accepted if the 
+reference by job name or regular expression is only accepted if the 
 referenced job is owned by the same user as the referring job. The 
 submitted job is not eligible for execution unless all jobs 
 referenced in the comma-separated job id and/or job name list have 
 completed.  If any of the referenced jobs exits with exit code 100, the
 submitted job will remain ineligible for execution.
 .sp 1
-With the help of job names or regular pattern one can specify
-a job dependency on multiple jobs satisfying the regular pattern
+With the help of job names or regular expressions one can specify
+a job dependency on multiple jobs satisfying the regular expression
 or on all jobs with the requested name. The name dependencies are
 resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
@@ -1258,7 +1256,7 @@ exit code will be that of the first completed job tasks with a non-zero exit
 code, or 0 if all job tasks exited with an exit code of 0.  If any of the job's
 tasks fail to complete successfully,
 .I qsub
-will print out an error message indicating why the job task(s) failed and will
+will print out a error message indicating why the job task(s) failed and will
 have an exit code of 1.  If
 .I qsub
 is interrupted, e.g. with CTRL-C, before the job completes, all of the job's
@@ -1452,21 +1450,6 @@ the format as described for the
 \fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
 .M qstat 1
 manual page.
-.\"
-.IP "\fB\-wd working_dir\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
-\fIqalter\fP only.
-.sp 1
-Execute the job from the directory specified in working_dir.
-This switch will activate xxQS_NAMExx's path aliasing facility, if the
-corresponding
-configuration files are present (see
-.M xxqs_name_sxx_aliases 5 ).
-.sp 1
-.I Qalter
-allows changing this option even while the job executes. The modified
-parameter will only be in effect after a restart or migration of the job,
-however.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.

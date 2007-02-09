@@ -108,6 +108,7 @@
 
 
 #include "gdi/sge_gdi_ctx.h"
+#include "evc/sge_event_client2.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 
@@ -1119,7 +1120,7 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
    switch (iter->iterator_type) {
    case JAPI_ITERATOR_BULK_JOBS:
       if (iter->it.ji.next_pos > iter->it.ji.end) {
-#ifndef DRMAA_95
+#ifdef DRMAA_10
          DRETURN(DRMAA_ERRNO_NO_MORE_ELEMENTS);
 #else
          DRETURN(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE);
@@ -1133,7 +1134,7 @@ int japi_string_vector_get_next(drmaa_attr_values_t* iter, dstring *val)
       DRETURN(DRMAA_ERRNO_SUCCESS);
    case JAPI_ITERATOR_STRINGS:
       if (!iter->it.si.next_pos) {
-#ifndef DRMAA_95
+#ifdef DRMAA_10
          DRETURN(DRMAA_ERRNO_NO_MORE_ELEMENTS);
 #else
          DRETURN(DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE);
@@ -2009,7 +2010,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
             sge_dstring_sprintf(&job_task_specifier, sge_u32, jobid);
             id_entry = lAddElemStr(&id_list, ID_str, sge_dstring_get_string(&job_task_specifier), ID_Type);
             if (array) {
-               lList *tlp = NULL;
+               lList *tlp;
                lXchgList(id_entry, ID_ja_structure, &tlp);
                range_list_insert_id(&tlp, NULL, taskid);
                lXchgList(id_entry, ID_ja_structure, &tlp);
@@ -2398,7 +2399,7 @@ static int japi_synchronize_jobids_retry(const char *job_ids[], bool dispose)
       u_long32 jobid, taskid;  
       bool is_array;
     
-      /* assumption is all job_ids can be parsed w/o error by japi_parse_jobid() 
+      /* assumption is all job_ids can be parsed w/ error by japi_parse_jobid() 
          this must be ensured before japi_synchronize_jobids_retry() is called */
       japi_parse_jobid(job_ids[i], &jobid, &taskid, &is_array, NULL);
 
@@ -3795,7 +3796,7 @@ const char *japi_strerror(int drmaa_errno)
       /* -------------- init and exit specific --------------- */
       { DRMAA_ERRNO_INVALID_CONTACT_STRING, "Initialization failed due to invalid contact string." },
       { DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, "DRMAA could not use the default contact string to connect to DRM system." },
-#ifndef DRMAA_95
+#ifdef DRMAA_10
       { DRMAA_ERRNO_NO_DEFAULT_CONTACT_STRING_SELECTED, "No default contact string was provided or selected." },
 #endif
       { DRMAA_ERRNO_DRMS_INIT_FAILED, "Initialization failed due to failure to init DRM system." },
@@ -3819,7 +3820,7 @@ const char *japi_strerror(int drmaa_errno)
       { DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, "The job is not in a HOLD state." },
       { DRMAA_ERRNO_EXIT_TIMEOUT, "time-out condition" },
       { DRMAA_ERRNO_NO_RUSAGE, "no usage information was returned for the completed job" },
-#ifndef DRMAA_95
+#ifdef DRMAA_10
       { DRMAA_ERRNO_NO_MORE_ELEMENTS, "no more elements are contained in the opaque string vector" },
 #endif
 
@@ -3874,7 +3875,7 @@ int japi_get_contact(dstring *contact, dstring *diag)
    }
 /* This will change the previous behavior for this method, so we have to make it
  * specific to the new library version. */
-#ifndef DRMAA_95
+#ifdef DRMAA_10
    else if (contact == NULL) {
       japi_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
       japi_standard_error(japi_errno, diag);

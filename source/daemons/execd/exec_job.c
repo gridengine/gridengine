@@ -1662,13 +1662,15 @@ int err_length) {
       DPRINTF(("CHILD - About to exec shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
               lGetString(master_q, QU_full_name)));
-      execlp(shepherd_cmd, ps_name, NULL);
-   } else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
+      execlp(mconf_get_shepherd_cmd(), ps_name, NULL);
+   }
+   else if (mconf_get_do_credentials() && feature_is_enabled(FEATURE_DCE_SECURITY)) {
       DPRINTF(("CHILD - About to exec DCE shepherd wrapper job ->%s< under queue -<%s<\n", 
               lGetString(jep, JB_job_name), 
               lGetString(master_q, QU_full_name)));
       execlp(dce_wrapper_cmd, ps_name, NULL);
-   } else if (!feature_is_enabled(FEATURE_AFS_SECURITY) || !pag_cmd ||
+   }
+   else if (!feature_is_enabled(FEATURE_AFS_SECURITY) || !pag_cmd ||
             !strlen(pag_cmd) || !strcasecmp(pag_cmd, "none")) {
       DPRINTF(("CHILD - About to exec ->%s< under queue -<%s<\n",
               lGetString(jep, JB_job_name), 
@@ -1678,7 +1680,8 @@ int err_length) {
          execlp(shepherd_path, ps_name, NULL);
       else
         execlp(shepherd_path, ps_name, "-bg", NULL);
-   } else {
+   }
+   else {
       char commandline[2048];
 
       DPRINTF(("CHILD - About to exec PAG command job ->%s< under queue -<%s<\n",

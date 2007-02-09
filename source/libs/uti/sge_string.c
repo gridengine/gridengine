@@ -504,24 +504,22 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 ******************************************************************************/
 char *sge_strdup(char *old, const char *s) 
 {
-   char *ret = NULL;
-
-   /* 
-    * target (old) and source (s) might point to the same object!
-    * therefore free old only after the dup
-    */
-   if (s != NULL) {
-      int n = strlen(s);
-      ret = malloc(n + 1);
-      if (ret != NULL) {
-         strcpy(ret, s);
-      }
-   }
+   int n;
 
    /* free and NULL the old pointer */
    FREE(old);
 
-   return ret;
+   if (!s) {
+      return NULL;
+   }
+
+   n = strlen(s);
+   old = malloc(n + 1);
+   if (old) {
+      strcpy(old, s);
+   }
+
+   return old;
 }
 
 /****** uti/string/sge_strip_blanks() *****************************************
@@ -785,82 +783,36 @@ int sge_strnullcasecmp(const char *a, const char *b)
 }
 
 /****** uti/string/sge_is_pattern() *******************************************
- *  NAME
- *     sge_is_pattern() -- Test if string contains  wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_pattern(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_pattern() is MT safe
- ******************************************************************************/
+*  NAME
+*     sge_is_pattern() -- Test if string contains  wildcard pattern 
+*
+*  SYNOPSIS
+*     int sge_is_pattern(const char *s) 
+*
+*  FUNCTION
+*     Check whether string 's' contains a wildcard pattern. 
+*
+*  INPUTS
+*     const char *s - string 
+*
+*  RESULT
+*     int - result
+*         0 - no wildcard pattern
+*         1 - it is a wildcard pattern  
+*
+*  NOTES
+*     MT-NOTE: sge_is_pattern() is MT safe
+******************************************************************************/
 bool sge_is_pattern(const char *s) 
 {
    char c;
    while ((c = *s++)) {
-      switch (c) {
-         case '*':
-         case '?':
-         case '[':
-         case ']':
+      if (strchr("*?[]", c)) {
          return true;
       }
    }
    return false;
 }
-
-/****** uti/string/sge_is_expression() *******************************************
- *  NAME
- *     sge_is_expression() -- Test if string contains expressions & wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_expression(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a expressions & a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_expression() is MT safe
- ******************************************************************************/
-bool sge_is_expression(const char *s) 
-{
-   char c;
-   while ((c = *s++)) {
-      switch (c) {
-         case '*':
-         case '?':
-         case '[':
-         case ']':
-         case '&':
-         case '|':
-         case '!':
-         case '(':
-         case ')':
-         return true;
-      }
-   }
-   return false;
-}
-
 
 /****** uti/string/sge_strisint() *********************************************
 *  NAME
@@ -926,40 +878,6 @@ void sge_strtoupper(char *buffer, int max_len)
    }
    DRETURN_VOID;
 } 
-
-/****** uti/hostname/sge_strtolower() ********************************************
-*  NAME
-*     sge_strtolower() -- convert all upper character in the string to lower case
-*
-*  SYNOPSIS
-*     int sge_strtolower(char *buffer)
-*
-*  FUNCTION
-*     sge_strtolower() for hostnames. Honours some configuration values:
-*
-*  INPUTS
-*     char *buffer - string to be lowered
-*
-*  RESULT
-*     no result, this function modify the argument string
-*
-*  SEE ALSO
-*     uti/string/sge_strtoupper()
-*
-*  NOTES:
-*     MT-NOTE: sge_strtolower() is MT safe
-******************************************************************************/
-void sge_strtolower(char *buffer, int max_len)
-{
-   DENTER(BASIS_LAYER, "sge_strtolower");
-   if (buffer != NULL) {
-      int i;
-      for(i=0;buffer[i]!='\0' && i<max_len ;i++){
-         buffer[i]=tolower(buffer[i]);
-      }
-   }
-   DRETURN_VOID;
-}
 
 /****** uti/string/sge_stradup() **********************************************
 *  NAME

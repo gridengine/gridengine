@@ -1133,10 +1133,6 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
       u_long32 sge_execd_port = thiz->get_sge_execd_port(thiz);
       int my_component_id = 0; /* 1 for daemons, 0=automatical for clients */
       
-      if (master == NULL && !(me_who == QMASTER)) { 
-         DRETURN(CL_RETVAL_UNKNOWN);
-      }    
-
       /*
       ** CSP initialize
       */
@@ -1407,7 +1403,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
       DRETURN(CL_RETVAL_PARAMS);
    }
 
-   DPRINTF(("to->comp_host, to->comp_name, to->comp_id: %s/%s/%d\n", comp_host?comp_host:"", comp_name?comp_name:"", comp_id));
+   DPRINTF(("to->comp_host, to->comp_name, to->comp_id: %s/%s/%d\n", comp_host, comp_name, comp_id));
    cl_ret = cl_commlib_get_endpoint_status(handle, (char*)comp_host, (char*)comp_name, comp_id, &status);
    if (cl_ret != CL_RETVAL_OK) {
       sge_gdi_ctx_class_error(thiz, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -1607,7 +1603,6 @@ static sge_bootstrap_state_class_t* get_sge_bootstrap_state(sge_gdi_ctx_class_t 
 static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
    sge_path_state_class_t* path_state = thiz->get_sge_path_state(thiz);
-   sge_error_class_t *eh = es ? es->eh : NULL;
    
    DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_master");
    
@@ -1615,10 +1610,8 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
       char err_str[SGE_PATH_MAX+128];
       char master_name[CL_MAXHOSTLEN];
 
-      if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
-         if (eh != NULL) {
-            eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
-         }
+      if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str)) {         
+         ERROR((SGE_EVENT, MSG_GDI_READMASTERNAMEFAILED_S , err_str));
          DRETURN(NULL);
       } 
       DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
@@ -1993,6 +1986,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    const char *sge_cell = NULL;
    u_long32 sge_qmaster_port = 0;
    u_long32 sge_execd_port = 0;
+   sge_error_class_t *eh = NULL;
 
    DENTER(TOP_LAYER, "sge_setup2");
 
@@ -2037,9 +2031,11 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 
    /* a dynamic eh handler is created */
    *context = sge_gdi_ctx_class_create(progid, prognames[progid], user, group,
-                                       sge_root, sge_cell, sge_qmaster_port, sge_execd_port, alpp);
+                                       sge_root, sge_cell, sge_qmaster_port, sge_execd_port, NULL);
 
    if (*context == NULL) {
+      sge_error_to_answer_list(eh, alpp, true);
+      sge_error_class_destroy(&eh);
       DRETURN(AE_ERROR);
    }
 
@@ -2105,10 +2101,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
    }
 
    ctx = *context_ref;
-   if (ctx->prepare_enroll(ctx) != CL_RETVAL_OK) {
-      sge_gdi_ctx_class_get_errors(ctx, alpp, true);
-      DRETURN(AE_QMASTER_DOWN);
-   }
+   ctx->prepare_enroll(ctx);
 
 #ifdef USE_GDI_STATE
    /* TODO: gdi_state should be part of context */

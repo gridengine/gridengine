@@ -45,7 +45,6 @@ switch($buildarch)
 endsw
 
 # JAVA settings
-setenv ARCH $buildarch
 setenv EN_QUIET 1
 switch($buildarch)
    case "sol-amd64":
@@ -72,7 +71,7 @@ setenv TMPDIR /tmp
 # is installed
 #
 set OPENSSL_SOVERSION = 0.9.7l
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7l-origin/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-$OPENSSL_SOVERSION/$buildarch
 
 
 # 
@@ -188,7 +187,15 @@ switch($buildarch)
       set WIN32_VS_L1 = "${WIN32_VS_BASE}\Vc7\Lib"
       set WIN32_VS_L2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Lib"
       set WIN32_VS_L3 = "${WIN32_VS_BASE}\Vc7\atlmfc\lib"
-      set WINTEMPDIR  = "C:\\TEMP"
+      breaksw
+   default:
+      set WIN32_VS_BASE = ""
+      set WIN32_VS_I1 = ""
+      set WIN32_VS_I2 = ""
+      set WIN32_VS_I3 = ""
+      set WIN32_VS_L1 = ""
+      set WIN32_VS_L2 = ""
+      set WIN32_VS_L3 = ""
       breaksw
 endsw
 

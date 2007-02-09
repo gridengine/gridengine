@@ -48,7 +48,6 @@
 #include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_qref.h"
-#include "sge_eval_expression.h"
 #include "commlib.h"
 
 #include "msg_common.h"
@@ -370,6 +369,9 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
                            &has_hostname, &has_domain);
          cq_pattern = sge_dstring_get_string(&cqueue_name);
 
+         /*
+          * Find all CQ names which match 'cq_pattern' 
+          */
          cqueue_list_find_all_matching_references(cqueue_list, answer_list,
                                                   cq_pattern, &cq_ref_list);
 
@@ -445,8 +447,7 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
       int boo;
       char *wc_cqueue = strdup(qref_pattern);
       wc_cqueue[ s - qref_pattern ] = '\0';
-     /* reject the cluster queue expression support */
-      boo =sge_eval_expression(TYPE_STR,wc_cqueue, cqname, NULL);
+      boo = fnmatch(wc_cqueue, cqname, 0);
       free(wc_cqueue);
       if (!boo) {
          if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
@@ -456,8 +457,7 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
       }
    } else {
       /* use entire qref as wc_queue */
-     /* cqueue expression support */
-      if (!sge_eval_expression(TYPE_STR,qref_pattern, cqname, NULL)) {
+      if (!fnmatch(qref_pattern, cqname, 0)) {
          DEXIT;
          return false;
       }
@@ -559,8 +559,7 @@ qref_list_host_rejected(const char *href, const char *hostname, const lList *hgr
          const char *hgroup_name = lGetHost(hgroup, HGRP_name);
          DPRINTF(("found hostgroup \"%s\" wc_hostgroup: \"%s\"\n",
                hgroup_name, wc_hostgroup));
-         /* use hostgroup expression */
-         if (sge_eval_expression(TYPE_HOST, wc_hostgroup, &hgroup_name[1], NULL) == 0) {         
+         if (fnmatch(wc_hostgroup, &hgroup_name[1], 0) == 0) {
             const lListElem *h;
             for_each (h, lGetList(hgroup, HGRP_host_list)) {
                if (!qref_list_host_rejected(lGetHost(h, HR_name), hostname, hgroup_list)) {
@@ -571,10 +570,17 @@ qref_list_host_rejected(const char *href, const char *hostname, const lList *hgr
          }
       }
    } else { /* wc_host */
-      /* use hostgroup expression */
-      if( sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
+      const char *wc_host = href;
+      if (sge_is_pattern(wc_host)) {
+         if (fnmatch(wc_host, hostname, 0) == 0) {
             DEXIT;
             return false;
+         }
+      } else {
+         if (sge_hostcmp(hostname, wc_host) == 0) {
+            DEXIT;
+            return false;
+         }
       }
    }
 
@@ -728,11 +734,11 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             lList *resolved_qref_list = NULL;
             lList *qref_list = NULL;
             lListElem *resolved_qref = NULL;
+
             qref_resolve_hostname(qref_elem);
             qref_pattern = lGetString(qref_elem, QR_name);
 
             lAddElemStr(&qref_list, QR_name, qref_pattern, QR_Type);
-            /* queue name expression support */
             qref_list_resolve(qref_list, answer_list, &resolved_qref_list,
                               &found_something, master_cqueue_list,
                               master_hgroup_list, true, true);
@@ -793,8 +799,8 @@ qref_resolve_hostname(lListElem *this_elem)
    cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
                      &has_hostname, &has_domain);
    unresolved_name = sge_dstring_get_string(&host_or_hgroup);
-   /* Find all CQ names which match 'cq_pattern' */
-   if (has_hostname && !sge_is_expression(unresolved_name)) {
+
+   if (has_hostname && !sge_is_pattern(unresolved_name)) {
       char resolved_name[CL_MAXHOSTLEN+1];
       int back = getuniquehostname(unresolved_name, resolved_name, 0);
 

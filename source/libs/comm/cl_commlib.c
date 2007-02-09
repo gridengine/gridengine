@@ -679,9 +679,6 @@ int cl_com_cleanup_commlib(void) {
    }
 
    cl_thread_list_cleanup(&cl_com_thread_list);
-   
-   cl_thread_cleanup_global_thread_config_key();
-   
    pthread_mutex_unlock(&cl_com_thread_list_mutex);
 
    CL_LOG(CL_LOG_INFO,"cleanup thread list done");
@@ -1955,11 +1952,7 @@ cl_com_handle_t* cl_com_get_handle(const char* component_name, unsigned long com
    cl_handle_list_elem_t* elem = NULL;
    cl_com_handle_t* ret_handle = NULL;
 
-   if (cl_com_handle_list  == NULL) {
-      return NULL;
-   }
-
-   if ( component_name == NULL) {
+   if ( component_name == NULL || cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_WARNING,"cl_com_get_handle() - parameter error");
       return NULL;
    }

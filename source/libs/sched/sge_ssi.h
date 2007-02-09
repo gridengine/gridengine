@@ -33,7 +33,29 @@
 /*___INFO__MARK_END__*/
 
 
-#include "evc/sge_event_client.h"
+#include "evc/sge_event_client2.h"
+
+/****** schedlib/ssi/--Simple-Scheduler-Interface ***************************************
+*
+*  NAME
+*     Simple-Scheduler-Interface -- Interface for custom schedulers
+*
+*  FUNCTION
+*     SGE provides a very simple interface to custom schedulers.
+*     Such scheduler can be created using the event client or the
+*     event mirror interface.
+*     The interface provides functions to start a job and to
+*     delete a job.
+*
+*     It was created to allow an easier integration of the MAUI scheduler 
+*     into Grid Engine.
+*
+*  SEE ALSO
+*     schedlib/ssi/sge_ssi_job_start()
+*     schedlib/ssi/sge_ssi_job_cancel()
+*
+****************************************************************************
+*/
 
 /****** schedlib/ssi/-Simple-Scheduler-Interface-Typedefs ***************************************
 *
@@ -60,33 +82,12 @@
 ****************************************************************************
 */
 
+#include "evc/sge_event_client2.h"
 
 typedef struct {
    int procs;
    const char *host_name;
 } task_map;
-
-/****** schedlib/ssi/--Simple-Scheduler-Interface ***************************************
-*
-*  NAME
-*     Simple-Scheduler-Interface -- Interface for custom schedulers
-*
-*  FUNCTION
-*     SGE provides a very simple interface to custom schedulers.
-*     Such scheduler can be created using the event client or the
-*     event mirror interface.
-*     The interface provides functions to start a job and to
-*     delete a job.
-*
-*     It was created to allow an easier integration of the MAUI scheduler 
-*     into Grid Engine.
-*
-*  SEE ALSO
-*     schedlib/ssi/sge_ssi_job_start()
-*     schedlib/ssi/sge_ssi_job_cancel()
-*
-****************************************************************************
-*/
 
 bool sge_ssi_job_start(sge_evc_class_t *evc, const char *job_identifier, const char *pe, task_map tasks[]);
 bool sge_ssi_job_cancel(sge_evc_class_t *evc, const char *job_identifier, bool reschedule); 

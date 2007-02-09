@@ -73,11 +73,9 @@
 
 #include "sge_select_queue.h"
 #include "sge_resource_utilization.h"
-#include "sge_eval_expression.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
 
 #define QINSTANCE_LAYER TOP_LAYER
 
@@ -119,11 +117,8 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
          const char *qname = lGetString(ret, QU_qname);
          const char *hname = lGetHost(ret, QU_qhostname);
 
-         /* use qinstance expression */
-         if (!sge_eval_expression(TYPE_CSTR,cqueue_name,qname,NULL)) { 
-           if(!sge_eval_expression(TYPE_HOST,hostname,hname,NULL))  {
-             break;
-           }
+         if (!strcmp(qname, cqueue_name) && !sge_hostcmp(hname, hostname)) {
+            break;
          }
       }
    }
@@ -681,8 +676,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
-         /* use qinstance expression */
-         if ( !sge_eval_expression(TYPE_HOST,hostname_pattern, hostname, answer_list)) { 
+         if ( !sge_hostcmp(hostname_pattern, hostname) || !fnmatch(hostname_pattern, hostname, 0)) {
             if (qref_list != NULL) {
                lAddElemStr(qref_list, QR_name, lGetString(qinstance, QU_full_name), QR_Type);
             }

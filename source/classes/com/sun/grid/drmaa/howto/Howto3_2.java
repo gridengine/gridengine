@@ -30,77 +30,75 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import org.ggf.drmaa.DrmaaException;
-import org.ggf.drmaa.JobInfo;
-import org.ggf.drmaa.JobTemplate;
-import org.ggf.drmaa.Session;
-import org.ggf.drmaa.SessionFactory;
+import java.util.*;
+
+import org.ggf.drmaa.*;
 
 public class Howto3_2 {
-   public static void main(String[] args) {
-      SessionFactory factory = SessionFactory.getFactory();
-      Session session = factory.getSession();
+   public static void main (String[] args) {
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
-         session.init("");
-         JobTemplate jt = session.createJobTemplate();
-         jt.setRemoteCommand("sleeper.sh");
-         jt.setArgs(Collections.singletonList("5"));
+         session.init (null);
+         JobTemplate jt = session.createJobTemplate ();
+         jt.setRemoteCommand ("sleeper.sh");
+         jt.setArgs (new String[] {"5"});
          
          int start = 1;
          int end  = 30;
          int step = 2;
          
-         List ids = session.runBulkJobs(jt, start, end, step);
-         Iterator i = ids.iterator();
+         List ids = session.runBulkJobs (jt, start, end, step);
+         Iterator i = ids.iterator ();
          
-         while (i.hasNext()) {
-            System.out.println("Your job has been submitted with id " + i.next());
+         while (i.hasNext ()) {
+            System.out.println ("Your job has been submitted with id " + i.next ());
          }
          
-         session.deleteJobTemplate(jt);
-         session.synchronize(Collections.singletonList(Session.JOB_IDS_SESSION_ALL),
-               Session.TIMEOUT_WAIT_FOREVER, false);
+         session.deleteJobTemplate (jt);
+         session.synchronize (Collections.singletonList (Session.JOB_IDS_SESSION_ALL),
+         Session.TIMEOUT_WAIT_FOREVER, false);
          
          for (int count = start; count < end; count += step) {
-            JobInfo info = session.wait(Session.JOB_IDS_SESSION_ANY,
-                  Session.TIMEOUT_WAIT_FOREVER);
+            JobInfo info = session.wait (Session.JOB_IDS_SESSION_ANY,
+            Session.TIMEOUT_WAIT_FOREVER);
             
-            if (info.wasAborted()) {
-               System.out.println("Job " + info.getJobId() + " never ran");
-            } else if (info.hasExited()) {
-               System.out.println("Job " + info.getJobId() +
-                     " finished regularly with exit status " +
-                     info.getExitStatus());
-            } else if (info.hasSignaled()) {
-               System.out.println("Job " + info.getJobId() +
-                     " finished due to signal " +
-                     info.getTerminatingSignal());
-            } else {
-               System.out.println("Job " + info.getJobId() +
-                     " finished with unclear conditions");
+            if (info.wasAborted ()) {
+               System.out.println ("Job " + info.getJobId () + " never ran");
+            }
+            else if (info.hasExited ()) {
+               System.out.println ("Job " + info.getJobId () +
+               " finished regularly with exit status " +
+               info.getExitStatus ());
+            }
+            else if (info.hasSignaled ()) {
+               System.out.println ("Job " + info.getJobId () +
+               " finished due to signal " +
+               info.getTerminatingSignal ());
+            }
+            else {
+               System.out.println ("Job " + info.getJobId () +
+               " finished with unclear conditions");
             }
             
-            System.out.println("Job Usage:");
+            System.out.println ("Job Usage:");
             
-            Map rmap = info.getResourceUsage();
-            Iterator r = rmap.keySet().iterator();
+            Map rmap = info.getResourceUsage ();
+            Iterator r = rmap.keySet ().iterator ();
             
-            while (r.hasNext()) {
-               String name = (String)r.next();
-               String value = (String)rmap.get(name);
+            while (r.hasNext ()) {
+               String name = (String)r.next ();
+               String value = (String)rmap.get (name);
                
-               System.out.println("  " + name + "=" + value);
+               System.out.println ("  " + name + "=" + value);
             }
          }
          
-         session.exit();
-      } catch (DrmaaException e) {
-         System.out.println("Error: " + e.getMessage());
+         session.exit ();
+      }
+      catch (DrmaaException e) {
+         System.out.println ("Error: " + e.getMessage ());
       }
    }
 }

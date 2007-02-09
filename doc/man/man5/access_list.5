@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2004/04/19 10:52:07 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCESS_LIST 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCESS_LIST 5 "$Date: 2004/04/19 10:52:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 access_list \- xxQS_NAMExx access list file format
@@ -50,8 +50,8 @@ format description. New access lists can be created and existing can be
 modified via the \fB\-au\fP and \fB\-du\fP options to
 .M qconf 1 .
 .PP
-Departments are a special form of access list that additionally allow
-assignment of functional shares and override tickets. 
+Departments are a special form of access list and allow in 
+addition assignment of functional shares and override tickets. 
 .\"
 .\"
 .SH FORMAT
@@ -76,10 +76,10 @@ The entries parameter contains the comma separated list of
 those UNIX users or UNIX user groups that are assigned to the access list 
 or the department. Only symbolic names are allowed.  A group 
 is differentiated from a user name by prefixing the group name with a '@' sign. 
-Pure access lists allow enlisting any user or group in any access list.  
+Pure access lists allows enlisting any user or group in any access list.  
 .PP
-When using departments, each user or group enlisted may only be enlisted 
-in one department, in order to ensure a unique assignment of jobs to departments. 
+With departments each user or group enlisted may be enlisted 
+in only one department, to ensure a unique assignment of jobs to departments. 
 To jobs whose users do not match with any of the users or groups enlisted under entries the 
 .I defaultdepartment 
 is assigned, if existing. 

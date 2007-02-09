@@ -120,7 +120,7 @@ sge_init_shared_ssl_lib(void)
 #     else
       shared_ssl_lib = dlopen ("libcrypto.bundle", RTLD_NOW | RTLD_GLOBAL );
 #     endif /* RTLD_NODELETE */
-#  elif defined(HP11) || defined(HP1164)
+#  elif defined(HP11)
 #     ifdef RTLD_NODELETE
       shared_ssl_lib = dlopen ("libcrypto.sl", RTLD_LAZY | RTLD_NODELETE);
 #     else

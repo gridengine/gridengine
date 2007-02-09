@@ -39,11 +39,11 @@ OPTIONS
           the comma separated option argument.
 
      -q wc_queue,...
-          Directly specifies the wildcard expression  queue  list
-          to  be  included  in the output. This option usually is
-          only meaningful in  conjunction  with  another  <I>qselect</I>
-          option  to  extract a subset of queue names from a list
-          given by -q.  Description of <I>wc</I>_<I>queue</I> can be  found  in
+          Directly  specifies  the  wildcard  queue  list  to  be
+          included  in  the  output.  This option usually is only
+          meaningful in conjunction with another  <I>qselect</I>  option
+          to extract a subset of queue names from a list given by
+          -q.   Description  of  <I>wc</I>_<I>queue</I>   can   be   found   in
           <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -qs {a|c|d|o|s|u|A|C|D|E|S}
@@ -57,9 +57,9 @@ OPTIONS
 EXAMPLES
      =====================================================
 
-     % qselect -l arch=linux
-     % qselect -l arch=linux -U andreas,shannon
-     % qconf -mattr queue h_vmem=1GB `qselect -l arch=linux`
+     qselect -l arch=linux
+     qselect -l arch=linux -U andreas,shannon
+     qconf -mqattr h_vmem=1GB `qselect -l arch=linux
 
      =====================================================
 
@@ -69,7 +69,7 @@ EXAMPLES
      users  <I>andreas</I>  and  <I>shannon</I>.  The third command changes the
      queue attribute <I>h</I>_<I>vmem</I> to 1 Gigabyte on queues  residing  on
      Linux  machines (see the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> manual page for details on
-     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  manual  page  on
+     the -<I>mqattr</I> option and  the  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  manual  page  on
      details of queue configuration entries).
 
 ENVIRONMENTAL VARIABLES

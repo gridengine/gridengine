@@ -29,53 +29,26 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <stdio.h>
-#include "drmaa.h"
+package org.ggf.drmaa;
 
-int main (int argc, char **argv) {
-   char error[DRMAA_ERROR_STRING_BUFFER];
-   int errnum = 0;
-   char contact[DRMAA_CONTACT_BUFFER];
-
-   errnum = drmaa_init (NULL, error, DRMAA_ERROR_STRING_BUFFER);
-
-   if (errnum != DRMAA_ERRNO_SUCCESS) {
-      fprintf (stderr, "Could not initialize the DRMAA library: %s\n", error);
-      return 1;
-   }
-
-   printf ("DRMAA library was started successfully\n");
-
-   errnum = drmaa_get_contact (contact, DRMAA_CONTACT_BUFFER, error,
-                               DRMAA_ERROR_STRING_BUFFER);
+/** The value or format of an attribute is invalid.
+ * @author dan.templeton@sun.com
+ * @since 0.4.2
+ */
+public abstract class InvalidAttributeException extends DrmaaException {
    
-   if (errnum != DRMAA_ERRNO_SUCCESS) {
-      fprintf (stderr, "Could not get the contact string: %s\n", error);
-      return 1;
+   /**
+    * Creates a new instance of <code>AttributeException</code> without detail message.
+    */
+   public InvalidAttributeException () {
    }
-
-   errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
-
-   if (errnum != DRMAA_ERRNO_SUCCESS) {
-      fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-      return 1;
+   
+   
+   /**
+    * Constructs an instance of <code>AttributeException</code> with the specified detail message.
+    * @param msg the detail message.
+    */
+   public InvalidAttributeException (String msg) {
+      super (msg);
    }
-
-   errnum = drmaa_init (contact, error, DRMAA_ERROR_STRING_BUFFER);
-
-   if (errnum != DRMAA_ERRNO_SUCCESS) {
-      fprintf (stderr, "Could not reinitialize the DRMAA library: %s\n", error);
-      return 1;
-   }
-
-   printf ("DRMAA library was restarted successfully\n");
-
-   errnum = drmaa_exit (error, DRMAA_ERROR_STRING_BUFFER);
-
-   if (errnum != DRMAA_ERRNO_SUCCESS) {
-      fprintf (stderr, "Could not shut down the DRMAA library: %s\n", error);
-      return 1;
-   }
-
-   return 0;
 }

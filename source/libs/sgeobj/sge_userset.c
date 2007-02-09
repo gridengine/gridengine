@@ -149,7 +149,7 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
    for_each (usp, acl_list) {
       if (!lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, lGetString(usp, US_name))) {
          ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, 
-                lGetString(usp, US_name) ? lGetString(usp, US_name) : "<NULL>"));
+                lGetString(usp, US_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -346,7 +346,7 @@ int sge_contained_in_access_list(const char *user, const char *group,
    bool found = false;
    lList *user_list = lGetList(acl, US_entries);
 
-   DENTER(TOP_LAYER, "sge_contained_in_access_list");
+   DENTER(TOP_LAYER,"sge_contained_in_access_list");
    if (group != NULL) {
       dstring group_entry = DSTRING_INIT;
 

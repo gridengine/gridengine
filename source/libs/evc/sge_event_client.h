@@ -1,5 +1,5 @@
-#ifndef __SGE_C_EVENT2_H
-#define __SGE_C_EVENT2_H
+#ifndef __SGE_C_EVENT_H
+#define __SGE_C_EVENT_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,78 +32,80 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#ifndef TEST_GDI2
+
 #include "sge_gdi.h"
-#include "sge_gdi_ctx.h"
+
 #include "sge_eventL.h"
 #include "uti/sge_monitor.h"
-#include "gdi/sge_gdi_ctx.h"
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
-typedef struct sge_evc_class_str sge_evc_class_t; 
 
-struct sge_evc_class_str {
-   void *sge_evc_handle;
 
-   sge_gdi_ctx_class_t* (*get_gdi_ctx)(sge_evc_class_t *thiz);
-   bool (*ec_register)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp);
-   bool (*ec_deregister)(sge_evc_class_t *thiz);
-   bool (*ec_is_initialized)(sge_evc_class_t *thiz);
-   lListElem* (*ec_get_event_client)(sge_evc_class_t *thiz);
+lListElem *ec_get_event_client(void);
+void ec_set_event_client(lListElem *ec);
 
-   bool (*ec_subscribe)(sge_evc_class_t *thiz, ev_event event);
-   bool (*ec_subscribe_all)(sge_evc_class_t *thiz);
+bool ec_prepare_registration(ev_registration_id id, const char *name);
+bool ec_register(lListElem *event_client, bool exit_on_qmaster_down, lList **alpp);
+bool ec_deregister(lListElem **event_client);
+bool ec_is_initialized(lListElem *event_client);
 
-   bool (*ec_unsubscribe)(sge_evc_class_t *thiz, ev_event event);
-   bool (*ec_unsubscribe_all)(sge_evc_class_t *thiz);
 
-   int (*ec_get_flush)(sge_evc_class_t *thiz, ev_event event);
-   bool (*ec_set_flush)(sge_evc_class_t *thiz, ev_event event, bool flush, int interval);
-   bool (*ec_unset_flush)(sge_evc_class_t *thiz, ev_event event);
+bool ec_subscribe(lListElem *event_client, ev_event event);
+bool ec_subscribe_all(lListElem *event_client);
+bool ec_subscribe_flush(lListElem *event_client, ev_event event, int flush);
 
-   bool (*ec_subscribe_flush)(sge_evc_class_t *thiz, ev_event event, int flush);
+bool ec_unsubscribe(lListElem *event_client, ev_event event);
+bool ec_unsubscribe_all(lListElem *event_client);
 
-   bool (*ec_mod_subscription_where)(sge_evc_class_t *thiz, ev_event event, const lListElem *what, const lListElem *where);
+int ec_get_flush(lListElem *event_client, ev_event event);
+bool ec_set_flush(lListElem *event_client, ev_event event, bool flush, int interval);
+bool ec_unset_flush(lListElem *event_client, ev_event event);
 
-   int (*ec_set_edtime)(sge_evc_class_t *thiz, int intval);
-   int (*ec_get_edtime)(sge_evc_class_t *thiz);
+bool ec_mod_subscription_where(lListElem *event_client, ev_event event, const lListElem *what, const lListElem *where);
 
-   bool (*ec_set_busy_handling)(sge_evc_class_t *thiz, ev_busy_handling handling);
-   ev_busy_handling (*ec_get_busy_handling)(sge_evc_class_t *thiz);
 
-   bool (*ec_set_flush_delay)(sge_evc_class_t *thiz, int flush_delay);
-   int (*ec_get_flush_delay)(sge_evc_class_t *thiz);
 
-   bool (*ec_set_busy)(sge_evc_class_t *thiz, int busy);
-   bool (*ec_get_busy)(sge_evc_class_t *thiz);
+int ec_set_edtime(lListElem *event_client, int intval);
+int ec_get_edtime(lListElem *event_client);
 
-   bool (*ec_set_session)(sge_evc_class_t *thiz, const char *session);
-   const char *(*ec_get_session)(sge_evc_class_t *thiz);
+bool ec_set_busy_handling(lListElem *event_client, ev_busy_handling handling);
+ev_busy_handling ec_get_busy_handling(lListElem *event_client);
 
-   ev_registration_id (*ec_get_id)(sge_evc_class_t *thiz);
+bool ec_set_flush_delay(lListElem *event_client, int flush_delay);
+int ec_get_flush_delay(lListElem *event_client);
 
-   bool (*ec_commit)(sge_evc_class_t *thiz, lList **alpp);
-   bool (*ec_commit_multi)(sge_evc_class_t *thiz, lList **malp, state_gdi_multi *state);
+bool ec_set_busy(lListElem *event_client, int busy);
+bool ec_get_busy(lListElem *event_client);
 
-   bool (*ec_get)(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmaster_down);
+bool ec_set_session(lListElem *event_client, const char *session);
+const char *ec_get_session(lListElem *event_client);
 
-   void (*ec_mark4registration)(sge_evc_class_t *thiz);
-   bool (*ec_need_new_registration)(sge_evc_class_t *thiz);
-      
-   bool (*ec_register_local)(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList **alpp);
-   bool (*ec_deregister_local)(sge_evc_class_t *thiz);
-   bool (*ec_commit_local)(sge_evc_class_t *thiz, event_client_update_func_t update_func);
-   /* dump current settings */
-   void (*dprintf)(sge_evc_class_t *thiz);
-};
+ev_registration_id ec_get_id(lListElem *event_client);
 
-sge_evc_class_t *sge_evc_class_create(sge_gdi_ctx_class_t *sge_gdi_ctx,
-                                      ev_registration_id id,
-                                      lList **alpp);
+bool ec_commit(lListElem *event_client);
+bool ec_commit_multi(lListElem *event_client, lList **malp, state_gdi_multi *state);
 
-void sge_evc_class_destroy(sge_evc_class_t **pst);
 
-bool sge_gdi2_evc_setup(sge_evc_class_t **evc_ref, sge_gdi_ctx_class_t *sge_gdi_ctx, ev_registration_id reg_id, lList **alpp);
+bool ec_get(lListElem *event_client, lList **event_list, bool exit_on_qmaster_down);
 
-#endif /* __SGE_C_EVENT2_H */
+void ec_mark4registration(lListElem *event_client);
+bool ec_need_new_registration(void);
+
+
+
+
+void ec_init_local(evm_mod_func_t mod_func, evm_add_func_t add_func,
+                   evm_remove_func_t remove_func, evm_ack_func_t ack_func);
+
+bool ec_commit_local(lListElem *event_client, event_client_update_func_t update_func); 
+bool ec_deregister_local(lListElem **event_client);
+bool ec_register_local(lListElem *event_client, lList **alpp, event_client_update_func_t update_func, monitoring_t *monitor);
+bool ec_ack_local(lListElem *event_client);
+
+#endif /* TEST_GDI2 */
+
+
+#endif /* __SGE_C_EVENT_H */
 

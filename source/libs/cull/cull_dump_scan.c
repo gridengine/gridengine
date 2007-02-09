@@ -1375,7 +1375,7 @@ static int fGetBool(FILE *fp, lBool *cp)
    return 0;
 }
 
-static int fGetList(FILE *fp, lList **lpp) 
+int fGetList(FILE *fp, lList **lpp) 
 {
    char s[READ_LINE_LENGHT + 1];
 
@@ -1414,7 +1414,7 @@ static int fGetList(FILE *fp, lList **lpp)
    return 0;
 }
 
-static int fGetObject(FILE *fp, lListElem **epp) 
+int fGetObject(FILE *fp, lListElem **epp) 
 {
    char s[READ_LINE_LENGHT + 1];
 

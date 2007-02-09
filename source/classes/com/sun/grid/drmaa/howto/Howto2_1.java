@@ -30,34 +30,31 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.drmaa.howto;
 
-import java.util.Collections;
-import org.ggf.drmaa.DrmaaException;
-import org.ggf.drmaa.JobTemplate;
-import org.ggf.drmaa.Session;
-import org.ggf.drmaa.SessionFactory;
+import org.ggf.drmaa.*;
 
 public class Howto2_1 {
-   public static void main(String[] args) {
-      SessionFactory factory = SessionFactory.getFactory();
-      Session session = factory.getSession();
+   public static void main (String[] args) {
+      SessionFactory factory = SessionFactory.getFactory ();
+      Session session = factory.getSession ();
       
       try {
-         session.init("");
-         JobTemplate jt = session.createJobTemplate();
-         jt.setRemoteCommand("sleeper.sh");
-         jt.setArgs(Collections.singletonList("5"));
+         session.init (null);
+         JobTemplate jt = session.createJobTemplate ();
+         jt.setRemoteCommand ("sleeper.sh");
+         jt.setArgs (new String[] {"5"});
          
-         java.util.List ids = session.runBulkJobs(jt, 1, 30, 2);
-         java.util.Iterator i = ids.iterator();
+         java.util.List ids = session.runBulkJobs (jt, 1, 30, 2);
+         java.util.Iterator i = ids.iterator ();
          
-         while (i.hasNext()) {
-            System.out.println("Your job has been submitted with id " + i.next());
+         while (i.hasNext ()) {
+            System.out.println ("Your job has been submitted with id " + i.next ());
          }
          
-         session.deleteJobTemplate(jt);
-         session.exit();
-      } catch (DrmaaException e) {
-         System.out.println("Error: " + e.getMessage());
+         session.deleteJobTemplate (jt);
+         session.exit ();
+      }
+      catch (DrmaaException e) {
+         System.out.println ("Error: " + e.getMessage ());
       }
    }
 }

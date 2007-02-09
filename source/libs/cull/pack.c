@@ -45,10 +45,6 @@
 #include "misc.h"
 #endif
 
-#ifdef HPUX
-#include <arpa/inet.h>
-#endif
-
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG
@@ -838,8 +834,8 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
       return ret;
    }
 
-   /* size may not be bigger than bitfield initialized from descr information */
-   if (size > descr_size) {
+   /* bitfield size must match descr size */
+   if (size != descr_size) {
       DEXIT;
       return PACK_ENOMEM;
    }

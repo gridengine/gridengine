@@ -715,7 +715,7 @@ lList **alpp
 }
 
 /*-------------------------------------------------------------------------*/
-static int sge_unparse_pe(
+int sge_unparse_pe(
 lListElem *job,
 lList **pcmdline,
 lList **alpp 

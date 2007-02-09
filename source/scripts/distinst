@@ -73,14 +73,14 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
-DRMAA_SHARED_LIB_VERSIONS="0.95 1.0"
+DRMAA_SHARED_LIB_VERSIONS="1.0 0.95"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAAJ_FILES="CLASSES/drmaa"
+DRMAAJ_FILES="CLASSES/drmaa.jar"
 
 JNI_SHARED_LIBRARIES="libdrmaa libjuti libjgdi"
 
-JUTIJ_FILES="CLASSES/juti/juti"
-JGDIJ_FILES="libs/jgdi/build/jgdi"
+JUTIJ_FILES="CLASSES/juti/juti.jar"
+JGDIJ_FILES="libs/jgdi/build/jgdi.jar"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -384,7 +384,7 @@ Cleanup()
 }
 
 #-------------------------------------------------------------------------
-# Install user.group permissions source destination
+# Install user group permissions source destination
 Install()
 {
    Execute cp $3 $4
@@ -498,7 +498,10 @@ instclassictargets=false
 instopenssl=true
 instbdb=true
 instarco=false
-enforce_shlibpath=false
+
+# Note: Until now default is 'true', but this is just intermediately
+# Actually it must be 'false'. Please remove this comment afterwards.
+enforce_shlibpath=true
 
 cmdname=`basename $0`
 
@@ -1010,47 +1013,13 @@ if [ $instcommon = true ]; then
       done
 
       for filename in $DRMAAJ_FILES $JUTIJ_FILES $JGDIJ_FILES; do
-         filename="${filename}.jar"
          if [ -f $filename ]; then
-            echo Installing `basename $filename`
-            Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
-            MakeDir lib
-            Install 0.0 644 $filename $DEST_SGE_ROOT/lib/`basename $filename`
-         elif [ $exit_on_error = true ]; then
-            echo "\"$filename\" not found. Installation failed."
-            exit 1
+             echo Installing `basename $filename`
+             Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
+             MakeDir lib
+             Install 0.0 644 $filename $DEST_SGE_ROOT/lib
          fi
       done
-
-      if [ "$DRMAAJ05BASE" != "" ]; then
-         for filename in $DRMAAJ_FILES; do
-            filename=`basename $filename`
-            filename05="${filename}-0.5.jar"
-            filename="${filename}.jar"
-            if [ -f $DRMAAJ05BASE/$filename ]; then
-               echo Installing $filename05
-               Execute rm -f $DEST_SGE_ROOT/lib/$filename05
-               MakeDir lib
-               Install 0.0 644 $DRMAAJ05BASE/$filename $DEST_SGE_ROOT/lib/$filename05
-            elif [ -f $DRMAAJ05BASE/$filename05 ]; then
-               echo Installing $filename05
-               Execute rm -f $DEST_SGE_ROOT/lib/$filename05
-               MakeDir lib
-               Install 0.0 644 $DRMAAJ05BASE/$filename05 $DEST_SGE_ROOT/lib/$filename05
-            elif [ $exit_on_error = true ]; then
-               echo "\"$DRMAAJ05BASE/$filename05\" not found. Installation failed."
-               exit 1
-            else
-               echo
-               echo "\"$DRMAAJ05BASE/$filename05\" not found. Skipping."
-               echo
-            fi
-         done
-      else
-         echo
-         echo "WARNING: DRMAA Java Language Binding 0.5 files will not be installed!!!"
-         echo
-      fi
 
       Cleanup include
    fi
@@ -1270,12 +1239,7 @@ for i in $ARCH; do
             qtcsh)
                echo Installing qtcsh
                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
-               ;;
-            sgepasswd)
-               if [ "$DSTARCH" != "win32-x86" ]; then
-                  InstallProg $prog
-               fi
-               ;;
+               ;; 
             sge_qmaster|spoolinit|spooldefaults)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   if [ $instclassictargets = false ]; then
@@ -1358,12 +1322,6 @@ for i in $ARCH; do
                else
                   InstallProg $prog.exe
                fi
-            elif [ $prog = loadcheck ]; then
-               if [ "$DSTARCH" != "win32-x86" ]; then
-                  InstallProg $prog
-               else
-                  InstallProg $prog.exe
-               fi
             elif [ $prog = berkeley_db_svc -o $prog = db_archive \
                    -o $prog = db_checkpoint -o $prog = db_deadlock \
                    -o $prog = db_dump -o $prog = db_load \
@@ -1397,10 +1355,7 @@ for i in $ARCH; do
                if [ "$DSTARCH" = "win32-x86" ]; then
                   InstallProg $prog
                fi
-            elif [ "$DSTARCH" = "win32-x86" -a "$prog" = "spooledit" ]; then
-               # Don't install spooledit for win32-x86
-               :
-            else
+            elif [ "$DSTARCH" != "win32-x86" -o "$prog" != "spooledit" ]; then
                InstallProg $prog
             fi
          done
@@ -1460,19 +1415,6 @@ for i in $ARCH; do
                     -a "$lib" != "libspoolf" \) ]; then
                if [ -f $lib.$shlibext ]; then
                   InstallProg $lib.$shlibext
-                  if [ "$DSTARCH" = "sol-sparc64" ]; then
-                     if [ "$lib" = "libjuti" -o "$lib" = "libjgdi" ]; then
-                        # Install the 32bit libraries
-                        DSTARCH="sol-sparc"
-                        SetArchBin $DSTARCH
-
-                        Execute mkdir -p $DEST_SGE_ROOT/lib/sol-sparc
-                        InstallProg ../$ARCHBIN/$lib.$shlibext
-
-                        DSTARCH="sol-sparc64"
-                        SetArchBin $DSTARCH
-                     fi
-                  fi
                fi
             fi
          done
@@ -1502,17 +1444,15 @@ for i in $ARCH; do
             for lib in $OPENSSL_SHARED_LIBRARIES; do
 
                if [ $DSTARCH = tru64 ]; then
-                  libname="$lib.$shlibext"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
                elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
-                  libname="$lib.0.9.7.$shlibext"
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$OPENSSLSOVERSION.$shlibext"
                else
-                  libname="$lib.$shlibext.0.9.7"
-               fi
-
-               if [ -f $OPENSSLBASE/$DSTARCH/lib/$libname ]; then
-                  libname=$OPENSSLBASE/$DSTARCH/lib/$libname
-               elif [ -f $OPENSSLBASE/lib/$libname ]; then
-                  libname=$OPENSSLBASE/lib/$libname
+                  libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.$OPENSSLSOVERSION"
+                  # for lib dir without $DSTARCH, e.g. /usr on linux
+                  if [ ! -f $libname ]; then
+                     libname="$OPENSSLBASE/lib/$lib.$shlibext.$OPENSSLSOVERSION"
+                  fi   
                fi
 
                if [ -f $libname ]; then
@@ -1535,18 +1475,15 @@ for i in $ARCH; do
          if [ $DSTARCH != win32-x86 ]; then
             if [ $instbdb = true ]; then
                for lib in $BERKELEYDB_SHARED_LIBRARIES; do
-                  libname="$lib.$shlibext"
-
-                  if [ -f $BERKELEYDBBASE/$DSTARCH/lib/$libname ]; then
-                     libname=$BERKELEYDBBASE/$DSTARCH/lib/$libname
-                  elif [ -f $BERKELEYDBBASE/lib/$libname ]; then
-                     libname=$BERKELEYDBBASE/lib/$libname
-                  fi
-
+                  libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+                  libname2="$BERKELEYDBBASE/lib/$lib.$shlibext"
                   if [ -f $libname ]; then
                      InstallProg $libname
-                  else
-                     echo "\"$libname\" not found. Assuming binaries are statically linked."
+                  elif [ -f $libname2 ]; then   
+                     InstallProg $libname2
+                  elif [ $exit_on_error = true ]; then
+                     echo "\"$libname\" not found. Installation failed."
+                     exit 1
                   fi
                done
             fi
@@ -1556,31 +1493,14 @@ for i in $ARCH; do
                   libname=$lib.$shlibext.$version
                   if [ -f $libname ]; then
                      InstallProg $libname
-                     if [ "$DSTARCH" = "sol-sparc64" ]; then
-                        # Install the 32bit libraries
-                        DSTARCH="sol-sparc"
-                        SetArchBin $DSTARCH
-
-                        Execute mkdir -p $DEST_SGE_ROOT/lib/sol-sparc
-                        InstallProg ../$ARCHBIN/$libname
-
-                        DSTARCH="sol-sparc64"
-                        SetArchBin $DSTARCH
-                     fi
                   elif [ $exit_on_error = true ]; then
                      echo "\"$libname\" not found. Installation failed."
-                     exit 1
                   fi
                done
             done
 
             ( cd $DEST_SGE_ROOT/lib/$DSTARCH
             ln -s $libname $lib.$shlibext )
-
-            if [ "$DSTARCH" = "sol-sparc64" ]; then
-               ( cd $DEST_SGE_ROOT/lib/sol-sparc
-               ln -s $libname $lib.$shlibext )
-            fi
 
             for lib in $JNI_SHARED_LIBRARIES; do
                # On MacOS X, the JVM expects a special JNI extension for shared libraries

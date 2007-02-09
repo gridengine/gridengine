@@ -1,6 +1,11 @@
 PJ-2007-02-09-0: Bugfix:    Manpage complex and sge_types correction.
                  Review:    DT
 
+RD-2007-02-09-0: Bugfix:    - corrected qdel help output
+                            - corrected resource quota man pages
+                            - fixed distinst for sgepasswd on win32-x86
+                 Review:    AA
+
 HP-2007-02-09-0: Bugfix:    roll back of MP-2007-02-08-0 to RD-2007-02-01-0
                             to fix broken build.
                  Changed:   utilbin/sge_passwd.c

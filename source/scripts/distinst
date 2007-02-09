@@ -1270,7 +1270,12 @@ for i in $ARCH; do
             qtcsh)
                echo Installing qtcsh
                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
-               ;; 
+               ;;
+            sgepasswd)
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  InstallProg $prog
+               fi
+               ;;
             sge_qmaster|spoolinit|spooldefaults)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   if [ $instclassictargets = false ]; then
@@ -1392,8 +1397,8 @@ for i in $ARCH; do
                if [ "$DSTARCH" = "win32-x86" ]; then
                   InstallProg $prog
                fi
-            elif [ "$DSTARCH" = "win32-x86" -a \( "$prog" = "spooledit" -o "$prog" = "sgepasswd" \) ]; then
-               # Don't install sgepasswd and spooledit for win23-x86
+            elif [ "$DSTARCH" = "win32-x86" -a "$prog" = "spooledit" ]; then
+               # Don't install spooledit for win32-x86
                :
             else
                InstallProg $prog

@@ -393,9 +393,9 @@ u_long32 *pforce,
 lList **ppuserlist,
 lList **alpp
 ) {
-u_long32 helpflag;
-lListElem *ep;
-bool ret = true;
+   u_long32 helpflag;
+   lListElem *ep;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "sge_parse_qdel");
 

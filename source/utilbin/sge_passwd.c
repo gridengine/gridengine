@@ -203,7 +203,8 @@ sge_init_shared_ssl_lib(void)
         
          ret = 0;
       } else {
-         fprintf(stderr, "%s\n", MSG_PWD_CANT_OPEN_SSL_LIB_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, MSG_PWD_CANT_OPEN_SSL_LIB_S, "sgepasswd");
+         fprintf(stderr, "\n");
          ret = 1;
       }
    } else {
@@ -286,12 +287,12 @@ sge_get_file_pub_key(void)
       const char *cert = getenv("SGE_CERTFILE");
 
       if (cert != NULL) {
-         snprintf(file, 4096, cert);
+         sprintf(file, cert);
       } else {
          const char *sge_root = sge_get_root_dir(0, NULL, 0, 1);
          const char *sge_cell = sge_get_default_cell();
 
-         snprintf(file, 4096, "%s/%s/%s", sge_root, sge_cell, 
+         sprintf(file, "%s/%s/%s", sge_root, sge_cell, 
                  "common/sgeCA/certs/cert.pem");
       }
    } 
@@ -362,25 +363,18 @@ FCLOSE_ERROR:
 }
 
 static EVP_PKEY *
-read_private_key(const char *keyfile, char *ssl_err, size_t buff_size)
+read_private_key(const char *keyfile)
 {
    EVP_PKEY *ret = NULL;
    FILE *fp = NULL;
-   unsigned long error_code;
    union {
       EVP_PKEY *pkey;
       void *pointer;
    } pku;   
 
    DENTER(TOP_LAYER, "read_private_key");
-   if(keyfile == NULL) {
-      snprintf(ssl_err, buff_size, MSG_PWD_FILE_PATH_NULL_S, SGE_PASSWD_PROG_NAME);
-      DEXIT;
-      return NULL;
-   }
    fp = fopen(keyfile, "r");
    if (!fp) {
-      snprintf(ssl_err, buff_size, MSG_PWD_LOAD_PRIV_SSS, SGE_PASSWD_PROG_NAME, keyfile, MSG_PWD_NO_SSL_ERR);
       DEXIT;
       return NULL;
    }
@@ -398,11 +392,7 @@ read_private_key(const char *keyfile, char *ssl_err, size_t buff_size)
 #endif
    FCLOSE(fp);
    if (pku.pkey == NULL) {
-      error_code = ERR_get_error();
-      ERR_error_string(error_code, ssl_err);
-#ifdef DEFINE_SGE_PASSWD_MAIN
       shared_ssl_func__ERR_print_errors_fp(stderr);
-#endif
    }
    ret = pku.pkey;
 FCLOSE_ERROR:
@@ -441,18 +431,18 @@ buffer_read_from_stdin(char **buffer, size_t *size)
    size_t buffer_ptr_length = 0;
 
    DENTER(TOP_LAYER, "buffer_read_from_stdin");
-   while (repeat) {
+	while (repeat) {
       char buffer[512];
       size_t buffer_length;
 
-      buffer_length = read(0, buffer, sizeof(buffer));
-      if (buffer_length <= 0) {
-         if (buffer_length < 0) {
+		buffer_length = read(0, buffer, sizeof(buffer));
+		if (buffer_length <= 0) {
+		   if (buffer_length < 0) {
             fprintf(stderr, "sge_passwd: can't read from stdin\n");
             exit(1);
          }
          repeat = false;
-      } else {
+		} else {
          if (buffer_ptr == NULL) {
             buffer_ptr = malloc(buffer_length + 1);
          } else {
@@ -463,11 +453,11 @@ buffer_read_from_stdin(char **buffer, size_t *size)
             memcpy(buffer_ptr + buffer_ptr_length, buffer, buffer_length);
             buffer_ptr_length += buffer_length;
          } else {
-            fprintf(stderr, MSG_PWD_MALLOC_SS, SGE_PASSWD_PROG_NAME, MSG_PWD_NO_SSL_ERR);
+            fprintf(stderr, MSG_PWD_MALLOC_S, SGE_PASSWD_PROG_NAME);
             exit(1);
          }
       }
-   }
+	}
    *buffer = buffer_ptr;
    *size = (buffer_ptr != NULL) ? strlen(buffer_ptr) : 0;
    DEXIT;
@@ -526,20 +516,20 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
                char **buffer_out, size_t *buffer_out_size, 
                size_t *buffer_out_length)
 {
-   unsigned int ebuflen;
+	unsigned int ebuflen;
    EVP_CIPHER_CTX ectx;
    unsigned char iv[EVP_MAX_IV_LENGTH];
-   unsigned char *ekey[1]; 
-   int ekeylen=0, net_ekeylen=0;
-   EVP_PKEY *pubKey[1];
-   char ebuf[512];
+	unsigned char *ekey[1]; 
+	int ekeylen=0, net_ekeylen=0;
+	EVP_PKEY *pubKey[1];
+	char ebuf[512];
    int ret = 0;
    char rand_file[SGE_PATH_MAX];
-   char err_str[MAX_STRING_SIZE];
+   char err_str[4096];
 
    DENTER(TOP_LAYER, "buffer_encrypt");
    pubKey[0] = read_public_key(sge_get_file_pub_key());
-   if(!pubKey[0]) {
+	if(!pubKey[0]) {
       fprintf(stderr, MSG_PWD_LOAD_PUB_SS, "sgepasswd", sge_get_file_pub_key());
       fprintf(stderr, "\n");
       DEXIT;
@@ -548,12 +538,12 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
 
    ekey[0] = malloc(shared_ssl_func__EVP_PKEY_size(pubKey[0]));  
    if (!ekey[0]) {
-      shared_ssl_func__EVP_PKEY_free(pubKey[0]); 
-      fprintf(stderr, MSG_PWD_MALLOC_SS, SGE_PASSWD_PROG_NAME, MSG_PWD_NO_SSL_ERR);
+	   shared_ssl_func__EVP_PKEY_free(pubKey[0]); 
+      fprintf(stderr, MSG_PWD_MALLOC_S, "sgepasswd");
       fprintf(stderr, "\n");
       DEXIT;
-      exit(1);
-   }
+	   exit(1);
+	}
 
    /*
     * Read rand.seed file
@@ -562,21 +552,21 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
    ret = sge_ssl_rand_load_file(rand_file, 1024);
 
    if(ret <= 0) {
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_CANTLOADRANDFILE_SSS, 
-              "sgepasswd", rand_file, MSG_PWD_NO_SSL_ERR);
+      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
+              "sgepasswd", rand_file);
 
 #ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, "%s\n", err_str);
+      fprintf(stderr, err_str);
 #endif
       DEXIT;
       return;
    }
 
-   memset(iv, '\0', sizeof(iv));
+ 	memset(iv, '\0', sizeof(iv));
 #if 0
-   ret = shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, EVP_des_ede3_cbc(), ekey, &ekeylen, iv, pubKey, 1); 
 #else
-   ret = shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
+	ret = shared_ssl_func__EVP_SealInit(&ectx, shared_ssl_func__EVP_rc4(), ekey, &ekeylen, iv, pubKey, 1); 
 #endif
    if(ret == 0) {
       printf("---> EVP_SealInit\n");
@@ -588,7 +578,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
                "because EVP_SealInit returned invalid value!\n"));
       ekeylen = 128;
    }
-   net_ekeylen = htonl(ekeylen);	
+	net_ekeylen = htonl(ekeylen);	
 
    buffer_append(buffer_out, buffer_out_size, buffer_out_length,
                  (char*)&net_ekeylen, sizeof(net_ekeylen));
@@ -613,7 +603,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
                  ebuf, ebuflen);
 
    shared_ssl_func__EVP_PKEY_free(pubKey[0]);
-   free(ekey[0]);
+	free(ekey[0]);
    DEXIT;
 }
 
@@ -623,65 +613,57 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                size_t *buffer_out_length, char *err_str)
 
 {
-   char buf[520];
-   char ebuf[512];
-   unsigned int buflen;
+	char buf[520];
+	char ebuf[512];
+	unsigned int buflen;
    EVP_CIPHER_CTX ectx;
    unsigned char iv[EVP_MAX_IV_LENGTH];
-   unsigned char *encryptKey; 
-   unsigned int ekeylen; 
-   EVP_PKEY *privateKey;
+	unsigned char *encryptKey; 
+	unsigned int ekeylen; 
+	EVP_PKEY *privateKey;
    char *curr_ptr = (char*)buffer_in;
    const char *file_priv_key=NULL;
    char rand_file[SGE_PATH_MAX];
    int ret = 0;
-   char ssl_err[MAX_STRING_SIZE];
-   unsigned long error_code;
-   char err_msg[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "buffer_decrypt");
-   memset(iv, '\0', sizeof(iv));
+	memset(iv, '\0', sizeof(iv));
    file_priv_key = sge_get_file_priv_key();
-   privateKey = read_private_key(file_priv_key, ssl_err, MAX_STRING_SIZE);
-   if (!privateKey) {
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_LOAD_PRIV_SSS, 
-              SGE_PASSWD_PROG_NAME, file_priv_key, err_msg);
+	privateKey = read_private_key(file_priv_key);
+	if (!privateKey) {
+      sprintf(err_str, MSG_PWD_LOAD_PRIV_SS, 
+              SGE_PASSWD_PROG_NAME, file_priv_key);
 #ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, err_str);
+		fprintf(stderr, err_str);
 #endif
       DEXIT;
       return 1;
-   }
+	}
 
    memcpy(&ekeylen, curr_ptr, sizeof(ekeylen));
    curr_ptr += sizeof(ekeylen);
    buffer_in_length -= sizeof(ekeylen);
-   ekeylen = ntohl(ekeylen);
-   if (ekeylen != shared_ssl_func__EVP_PKEY_size(privateKey)) {
+	ekeylen = ntohl(ekeylen);
+	if (ekeylen != shared_ssl_func__EVP_PKEY_size(privateKey)) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-      error_code = ERR_get_error();
-      ERR_error_string(error_code, err_msg);
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_DECR_SS, SGE_PASSWD_PROG_NAME, err_msg);
+      sprintf(err_str, MSG_PWD_DECR_S, SGE_PASSWD_PROG_NAME);
 #ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, "%s\n", err_str);
+		fprintf(stderr, err_str);
 #endif
       DEXIT;
       return 1;
-   }
+	}
 
-   encryptKey = malloc(sizeof(char) * ekeylen);
-   if (!encryptKey) {
+	encryptKey = malloc(sizeof(char) * ekeylen);
+	if (!encryptKey) {
       shared_ssl_func__EVP_PKEY_free(privateKey);
-      error_code = ERR_get_error();
-      ERR_error_string(error_code, err_msg);
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_MALLOC_SS, 
-         SGE_PASSWD_PROG_NAME, err_msg);
+      sprintf(err_str, MSG_PWD_MALLOC_S, SGE_PASSWD_PROG_NAME);
 #ifdef DEFINE_SGE_PASSWD_MAIN
       fprintf(stderr, err_str);
 #endif
       DEXIT;
       return 1;
-   }
+	}
 
    /*
     * Read rand.seed file
@@ -690,13 +672,11 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    ret = sge_ssl_rand_load_file(rand_file, 1024);
 
    if(ret <= 0) {
-      error_code = ERR_get_error();
-      ERR_error_string(error_code, err_msg);
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_CANTLOADRANDFILE_SSS, 
-              SGE_PASSWD_PROG_NAME, rand_file, err_msg);
+      sprintf(err_str, MSG_PWD_CANTLOADRANDFILE_SS, 
+              SGE_PASSWD_PROG_NAME, rand_file);
 
 #ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, "%s\n", err_str);
+      fprintf(stderr, err_str);
 #endif
       DEXIT;
       return 1;
@@ -709,15 +689,15 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
    curr_ptr += sizeof(iv);
    buffer_in_length -= sizeof(iv);
 #if 0
-   ret = shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, EVP_des_ede3_cbc(), encryptKey, ekeylen, iv, privateKey); 	
 #else
-   ret = shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
+	ret = shared_ssl_func__EVP_OpenInit(&ectx, shared_ssl_func__EVP_rc4(), encryptKey, ekeylen, iv, privateKey); 	
 #endif
    if(ret == 0) {
       printf("----> EVP_OpenInit\n");
       ERR_print_errors_fp(stdout);
    }
-   while (buffer_in_length > 0) {
+	while (buffer_in_length > 0) {
       int readlen = 0;
 
       if (buffer_in_length < sizeof(ebuf)) {
@@ -731,50 +711,20 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
          readlen = sizeof(ebuf);
       }
 
-      ret = shared_ssl_func__EVP_OpenUpdate(&ectx, (unsigned char *)buf, 
-               (int*)&buflen, 
-               (const unsigned char *)ebuf, readlen);
-      if (ret == 0) {
-         error_code = ERR_get_error();
-         ERR_error_string(error_code, err_msg);
-         snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
-#ifdef DEFINE_SGE_PASSWD_MAIN
-         fprintf(stderr, "%s\n", err_str);
-#endif
-         DEXIT;
-         return 1;
-      }
+		shared_ssl_func__EVP_OpenUpdate(&ectx, (unsigned char *)buf, 
+                                      (int*)&buflen, 
+                                      (const unsigned char *)ebuf, readlen);
 
       buffer_append(buffer_out, buffer_out_size, buffer_out_length,
-         buf, buflen);
-   }
+                    buf, buflen);
+	}
 
-   ret = shared_ssl_func__EVP_OpenFinal(&ectx, (unsigned char *)buf, (int*)&buflen);
-   if (ret == 0) {
-      error_code = ERR_get_error();
-      ERR_error_string(error_code, err_msg);
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
-#ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, "%s\n", err_str);
-#endif
-      DEXIT;
-      return 1;
-   }
+   shared_ssl_func__EVP_OpenFinal(&ectx, (unsigned char *)buf, (int*)&buflen);
    buffer_append(buffer_out, buffer_out_size, buffer_out_length,
                  buf, buflen);
 
    shared_ssl_func__EVP_PKEY_free(privateKey);
-   free(encryptKey);
-   error_code = ERR_get_error();
-   if(error_code > 0) {
-      ERR_error_string(error_code, err_msg);
-      snprintf(err_str, MAX_STRING_SIZE, MSG_PWD_SSL_ERR_MSG_SS, SGE_PASSWD_PROG_NAME, err_msg);
-#ifdef DEFINE_SGE_PASSWD_MAIN
-      fprintf(stderr, "%s\n", err_str);
-#endif
-      DEXIT;
-      return 1;
-   }
+	free(encryptKey);
    DEXIT;
    return 0;
 }
@@ -788,7 +738,7 @@ sge_get_file_dotpasswd(void)
       const char *sge_root = sge_get_root_dir(0, NULL, 0, 1);
       const char *sge_cell = sge_get_default_cell();
 
-      snprintf(file, 4096, "%s/%s/common/.sgepasswd", sge_root, sge_cell);
+      sprintf(file, "%s/%s/common/.sgepasswd", sge_root, sge_cell);
    } 
    DEXIT;
    return file;
@@ -935,7 +885,8 @@ sge_passwd_delete(const char *username, const char *domain)
     * Read password table
     */
    if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2) {
-      fprintf(stderr, "%s\n", MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
       exit(1);
    }
 
@@ -982,7 +933,7 @@ sge_passwd_show(const char *username)
       uid_t uid = getuid();
 
       if (sge_uid2user(uid, user, sizeof(user), MAX_NIS_RETRIES)) {
-         fprintf(stderr, "%s\n", MSG_PWD_NO_USERNAME_SU, SGE_PASSWD_PROG_NAME, uid);
+         fprintf(stderr, MSG_PWD_NO_USERNAME_SU, SGE_PASSWD_PROG_NAME, uid);
          exit(7);
       }
    
@@ -992,7 +943,8 @@ sge_passwd_show(const char *username)
     * Read password table
     */
    if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2) {
-      fprintf(stderr, "%s\n", MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
       exit(1);
    }
 
@@ -1062,8 +1014,9 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
     * Read password table
     */
    if (password_read_file(&users, &encryped_pwd, sge_get_file_passwd()) == 2){
-      fprintf(stderr, "%s\n", MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
-      exit(1);
+      fprintf(stderr, MSG_PWD_FILE_CORRUPTED, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
+      exit(1); 
    }
 
    DPRINTF(("read password table\n"));
@@ -1087,7 +1040,8 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
 #endif
 
          if (shared_ssl_func__EVP_read_pw_string(old_passwd, 128, "Old password: ", 0) != 0) {
-            fprintf(stderr, "%s\n", MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, "\n"); 
             exit(2);
          }  
 
@@ -1106,7 +1060,8 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
             exit(1);
          }
          if (strncmp(buffer_decr, old_passwd, 128)) {
-            fprintf(stderr, "%s\n", MSG_PWD_AUTH_FAILURE_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, MSG_PWD_AUTH_FAILURE_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, "\n"); 
             exit(7);
          }
 
@@ -1134,22 +1089,26 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
       unsigned char *buffer_enco = NULL;
 
       if (shared_ssl_func__EVP_read_pw_string(new_passwd, 128, "New password: ", 0) != 0) {
-         fprintf(stderr, "%s\n", MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, "\n");
          exit(2);
       }  
       if (shared_ssl_func__EVP_read_pw_string(new_passwd2, 128, "Re-enter new password: ", 0) != 0) {
-         fprintf(stderr, "%s\n", MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, MSG_PWD_CHANGE_ABORT_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, "\n");
          exit(2);
       }  
       if (strncmp(new_passwd, new_passwd2, 128)) {
-         fprintf(stderr, "%s\n", MSG_PWD_NO_MATCH_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, MSG_PWD_NO_MATCH_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, "\n");
          exit(7);
       } 
 
       DPRINTF(("passwords are equivalent\n"));
 
       if (strlen(new_passwd) == 0) {
-         fprintf(stderr, "%s\n", MSG_PWD_INVALID_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, MSG_PWD_INVALID_S, SGE_PASSWD_PROG_NAME);
+         fprintf(stderr, "\n");
          exit(7);
       }
 
@@ -1200,7 +1159,8 @@ passwd_become_admin_user(const char *admin_user)
    }
 
    if (sge_switch2admin_user()) {
-      fprintf(stderr, "%s\n", MSG_PWD_SWITCH_ADMIN_S, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, MSG_PWD_SWITCH_ADMIN_S, SGE_PASSWD_PROG_NAME);
+      fprintf(stderr, "\n");
       exit(1);
    }
 
@@ -1315,7 +1275,8 @@ int main(int argc, char *argv[])
          uid_t uid = getuid();
 
          if (uid != 0) {
-            fprintf(stderr, "%s\n", MSG_PWD_ONLY_ROOT_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, MSG_PWD_ONLY_ROOT_S, SGE_PASSWD_PROG_NAME);
+            fprintf(stderr, "\n");
             exit(1);
          }
 
@@ -1334,7 +1295,8 @@ int main(int argc, char *argv[])
          uid_t uid = getuid();
 
          if (uid != 0) {
-            fprintf(stderr, "%s\n", MSG_PWD_ONLY_USER_SS, SGE_PASSWD_PROG_NAME, username);
+            fprintf(stderr, MSG_PWD_ONLY_USER_SS, SGE_PASSWD_PROG_NAME, username);
+            fprintf(stderr, "\n");
             exit(1);
          }
          argc--; argv++;
@@ -1344,8 +1306,9 @@ int main(int argc, char *argv[])
 
    if (username == NULL || username[0] == '\0') {
       if (sge_uid2user(starter_uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-         fprintf(stderr, "%s\n", MSG_PWD_NO_USERNAME_SI, SGE_PASSWD_PROG_NAME,
+         fprintf(stderr, MSG_PWD_NO_USERNAME_SI, SGE_PASSWD_PROG_NAME,
                  (int)starter_uid);
+         fprintf(stderr, "\n");
          exit(7);
       }
    }

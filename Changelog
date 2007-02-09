@@ -1,3 +1,8 @@
+HP-2007-02-09-0: Bugfix:    roll back of MP-2007-02-08-0 to RD-2007-02-01-0
+                            to fix broken build.
+                 Changed:   utilbin/sge_passwd.c
+                            utilbin/msg_utilbin.h
+
 MP-2007-02-08-0: Bugfix:    on Windows, execd doesn't provide useful 
                             error messages when SSL keys broken
                  Bugtraq:   6395075

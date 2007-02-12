@@ -91,7 +91,6 @@ lListElem *ar_list_locate(lList *ar_list, u_long32 ar_id)
 *     MT-NOTE: ar_validate() is MT safe 
 *******************************************************************************/
 bool ar_validate(lListElem *object, lList **answer_list, bool in_master) {
-   bool ret = true;
    u_long32 start_time;
    u_long32 end_time;
    u_long32 duration;
@@ -134,7 +133,7 @@ bool ar_validate(lListElem *object, lList **answer_list, bool in_master) {
       goto ERROR;
    }
 
-   if (ret && in_master) {
+   if (in_master) {
       /* AR TBD */
    }
 

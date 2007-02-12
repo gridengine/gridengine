@@ -1,3 +1,7 @@
+RD-2007-02-12-0: Enhancem:  - Added advance reservation object to qmaster
+                            - added rudimental qrsub/qrdel/qrstat clients
+                 Review:    AA
+
 RD-2007-02-09-1: CVS        Created V61_BRANCH
 ----------------------------------------------
 

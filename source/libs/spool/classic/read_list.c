@@ -125,16 +125,16 @@ int sge_read_host_group_entries_from_disk()
         *master_hgroup_list = lCreateList("", HGRP_Type);
      }  
      if (!sge_silent_get()) { 
-        printf("%s\n", MSG_CONFIG_READINGHOSTGROUPENTRYS);
+        printf(MSG_CONFIG_READINGIN_S, HGROUP_DIR);
+        printf("\n");
      }
-     
      for_each(direntry, direntries) {
         hostGroupEntry = lGetString(direntry, ST_name);
 
         if (hostGroupEntry[0] != '.') {
            if (!sge_silent_get()) { 
               printf("\t");
-              printf(MSG_SETUP_HOSTGROUPENTRIES_S, hostGroupEntry);
+              printf(MSG_SETUP_OBJ_SS, SGE_OBJ_HGROUP, hostGroupEntry);
               printf("\n");
            }
 
@@ -156,7 +156,6 @@ int sge_read_host_group_entries_from_disk()
 }
 
 #ifndef __SGE_NO_USERMAPPING__
-
 int sge_read_user_mapping_entries_from_disk()
 { 
   lList*     direntries = NULL; 
@@ -174,16 +173,16 @@ int sge_read_user_mapping_entries_from_disk()
         *(cuser_master_list) = lCreateList("", CU_Type);
      }  
      if (!sge_silent_get()) { 
-        printf("%s\n", MSG_CONFIG_READINGUSERMAPPINGENTRY);
+        printf(MSG_CONFIG_READING_S, "user mapping entries");
+        printf("\n");
      }
-     
      for_each(direntry, direntries) {
          ume = lGetString(direntry, ST_name);
 
          if (ume[0] != '.') {
             if (!sge_silent_get()) { 
                printf("\t");
-               printf(MSG_SETUP_MAPPINGETRIES_S, ume);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_USER_MAPPING, ume);
                printf("\n");
             }
 
@@ -226,9 +225,10 @@ int sge_read_exechost_list_from_disk(lList **list, const char *directory, lList 
 
    direntries = sge_get_dirents(directory);
    if(direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINEXECUTIONHOSTS);
-      
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, EXECHOST_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
 
          host = lGetString(direntry, ST_name);
@@ -296,8 +296,10 @@ int sge_read_adminhost_list_from_disk(lList **list, const char *directory, lList
 
    direntries = sge_get_dirents(directory);
    if(direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINADMINHOSTS);
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, ADMINHOST_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
          host = lGetString(direntry, ST_name);
 
@@ -343,8 +345,10 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory, lLis
 
    direntries = sge_get_dirents(directory);
    if(direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINSUBMITHOSTS);
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, SUBMITHOST_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
          host = lGetString(direntry, ST_name);
          if (host[0] != '.') {
@@ -388,14 +392,15 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp
    direntries = sge_get_dirents(directory);
    if(direntries) {
       if (!sge_silent_get()) {
-         printf("%s\n", MSG_CONFIG_READINGINGPARALLELENV);
+         printf(MSG_CONFIG_READINGIN_S, PE_DIR);
+         printf("\n");
       }
       for_each(direntry, direntries) {
          pe = lGetString(direntry, ST_name);
          if (pe[0] != '.') {
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_PE_S, pe);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_PE, pe);
                printf("\n");
             }
             if (verify_str_key(NULL, pe, MAX_VERIFY_STRING,
@@ -442,15 +447,17 @@ int sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alp
 
    direntries = sge_get_dirents(directory);
    if(direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINCALENDARS);
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, CAL_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
          cal = lGetString(direntry, ST_name);
 
          if (cal[0] != '.') {
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_CALENDAR_S, cal);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_CALENDAR, cal);
                printf("\n");
             }
             if (verify_str_key(NULL, cal, MAX_VERIFY_STRING,
@@ -499,15 +506,17 @@ int sge_read_ckpt_list_from_disk(lList **list, const char *directory, lList **al
 
    direntries = sge_get_dirents(directory);
    if(direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS);
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, CKPTOBJ_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
          ckpt = lGetString(direntry, ST_name);
 
          if (ckpt[0] != '.') {
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_CKPT_S, ckpt);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_CKPT, ckpt);
                printf("\n");
             }
             ep = cull_read_in_ckpt(directory, ckpt, 1, 0, NULL, NULL);
@@ -592,8 +601,10 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **
    if (direntries) {
       const char *queue_str;
       
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINQUEUES);
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, CQUEUE_DIR);
+         printf("\n");
+      } 
       for_each(direntry, direntries) {
 
          queue_str = lGetString(direntry, ST_name);
@@ -601,7 +612,7 @@ int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **
             config_tag = 0;
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_QUEUE_S, queue_str);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_QUEUE, queue_str);
                printf("\n");
             }
             if (verify_str_key(NULL, queue_str, MAX_VERIFY_STRING,
@@ -704,7 +715,8 @@ int sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alp
       lListElem *dir_entry = NULL;
       
       if (!sge_silent_get()) {
-         printf("%s\n", MSG_CONFIG_READINGINRQS);
+         printf(MSG_CONFIG_READINGIN_S, RESOURCEQUOTAS_DIR);
+         printf("\n");
       }
 
       for_each(dir_entry, dir_entries) {
@@ -717,7 +729,7 @@ int sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alp
            lList *tmp_rqs_list = NULL;
            if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_RQS_S, rqs_name);
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_RQS, rqs_name);
                printf("\n");
            }
            if (verify_str_key(NULL, rqs_name, MAX_VERIFY_STRING,
@@ -775,8 +787,10 @@ int sge_read_project_list_from_disk(lList **list, const char *directory, lList *
    
    direntries = sge_get_dirents(directory);
    if (direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINPROJECTS);
+      if (!sge_silent_get())  {
+         printf(MSG_CONFIG_READINGIN_S, PROJECT_DIR);
+         printf("\n");
+      }
 
       for_each(direntry, direntries) {
          const char *userprj_str;
@@ -786,7 +800,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory, lList *
             config_tag = 0;
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_PROJECT_S, lGetString(direntry, ST_name));
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_PROJECT, lGetString(direntry, ST_name));
                printf("\n");
             }
             if (verify_str_key(NULL, userprj_str, MAX_VERIFY_STRING,
@@ -830,9 +844,10 @@ int sge_read_user_list_from_disk(lList **list, const char *directory, lList **al
 
    direntries = sge_get_dirents(directory);
    if (direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINUSERS);
-      
+      if (!sge_silent_get()) { 
+         printf(MSG_CONFIG_READINGIN_S, USER_DIR);
+         printf("\n");
+      }
       for_each(direntry, direntries) {
          const char *direntry_str;
          
@@ -841,7 +856,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory, lList **al
             config_tag = 0;
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_USER_S, lGetString(direntry, ST_name));
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_USER, lGetString(direntry, ST_name));
                printf("\n");
             }
 
@@ -877,8 +892,10 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory, lList *
 
    direntries = sge_get_dirents(directory);
    if (direntries) {
-      if (!sge_silent_get()) 
-         printf("%s\n", MSG_CONFIG_READINGINUSERSETS);
+      if (!sge_silent_get()) {
+         printf(MSG_CONFIG_READINGIN_S, USERSET_DIR);
+         printf("\n");
+      }
 
       for_each(direntry, direntries) {
          const char *userset = lGetString(direntry, ST_name);
@@ -886,7 +903,7 @@ int sge_read_userset_list_from_disk(lList **list, const char *directory, lList *
          if (userset[0] != '.') {
             if (!sge_silent_get()) {
                printf("\t");
-               printf(MSG_SETUP_USERSET_S , lGetString(direntry, ST_name));
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_USERSET, lGetString(direntry, ST_name));
                printf("\n");
             }
             if (verify_str_key(NULL, userset, MAX_VERIFY_STRING,
@@ -993,21 +1010,20 @@ int read_all_centries(lList **list, const char *directory, lList **alpp)
       ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, directory));
       DRETURN(-1);
    }
-   if (!sge_silent_get())
-      printf("%s\n", MSG_CONFIG_READINGINCOMPLEXATTRS);
+   if (!sge_silent_get()) {
+      printf(MSG_CONFIG_READINGIN_S, CENTRY_DIR);
+      printf("\n");
+   }
 
    while (SGE_READDIR_R(dir, (SGE_STRUCT_DIRENT *)dirent, &dent)==0 && dent!=NULL) {
       if (!strcmp(dent->d_name,"..") || !strcmp(dent->d_name,".")) {
          continue;
       }
-#if 0
-      /* Enable this code for debugging */
       if (!sge_silent_get()) {
          printf("\t");
-         printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);
+         printf(MSG_SETUP_OBJ_SS, SGE_OBJ_COMPLEXATTR, dent->d_name);
          printf("\n");
       }  
-#endif
       if ((dent->d_name[0] == '.')) {
          sge_unlink(directory, dent->d_name);
          continue;
@@ -1165,5 +1181,3 @@ int read_all_configurations(lList **alpp,
 
    DRETURN(0);
 }
-
-

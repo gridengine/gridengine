@@ -259,7 +259,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    if (pe_name && verify_str_key(
          alpp, pe_name, MAX_VERIFY_STRING, MSG_OBJ_PE, KEY_TABLE) != STATUS_OK) {
       if (alpp == NULL) { 
-         ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
+         ERROR((SGE_EVENT, MSG_PE_INVALIDCHARACTERINPE_S, pe_name));
       } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR, 
                                  MSG_PE_INVALIDCHARACTERINPE_S, pe_name); 

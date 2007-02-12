@@ -57,9 +57,14 @@
 #define SGE_OBJ_EXECHOST               "exechost"
 #define SGE_OBJ_PE                     "pe"
 #define SGE_OBJ_CKPT                   "ckpt"
-#define SGE_OBJ_CALENDAR               "cal"
+#define SGE_OBJ_CALENDAR               "calendar"
 #define SGE_OBJ_USER_MAPPING           "usermapping"
 #define SGE_OBJ_RQS                    "resource_quota"
+#define SGE_OBJ_PROJECT                "project"
+#define SGE_OBJ_USER                   "user"
+#define SGE_OBJ_USERSET                "userset"
+#define SGE_OBJ_COMPLEXATTR            "complex_attribute"
+#define SGE_OBJ_JOB                    "job"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_FORMULA          "load_formula"
@@ -194,10 +199,12 @@
 #define MAN_DIR                   "managers"
 #define OP_DIR                    "operators"
 #define RESOURCEQUOTAS_DIR        "resource_quotas"
+#define AR_DIR                    "advance_reservations"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"
 #define SEQ_NUM_FILE              "jobseqnum"
+#define ARSEQ_NUM_FILE            "arseqnum"
 #define ALIAS_FILE                "host_aliases"
 #define ACT_QMASTER_FILE          "act_qmaster"
 

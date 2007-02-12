@@ -177,7 +177,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2;
      case OA_OBJECT_NAME3:
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3;
-
+     case OA_TIME:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_TIME;
      default:
          break; 
    }
@@ -236,7 +237,7 @@ FILE *fp
    memset(marker, 0, sizeof(marker));
 
    if (VALID_OPT(a_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_a_OPT_DATE_TIME , MSG_GDI_UTEXT_a_OPT_DATE_TIME );
+      PRINTITD(MSG_GDI_USAGE_a_OPT_DATE_TIME , MSG_GDI_UTEXT_a_OPT_DATE_TIME);
       MARK(OA_DATE_TIME);
    }
 
@@ -444,7 +445,12 @@ FILE *fp
    }
 
    if (VALID_OPT(d_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_d_OPT, MSG_GDI_UTEXT_d_OPT);
+      if (prog_number == QRSUB) {
+         PRINTITD(MSG_GDI_USAGE_d_OPT_TIME, MSG_GDI_UTEXT_d_OPT_TIME);
+         MARK(OA_TIME);
+      } else {
+         PRINTITD(MSG_GDI_USAGE_d_OPT, MSG_GDI_UTEXT_d_OPT);
+      }
    }
 
    if (VALID_OPT(dattr_OPT, prog_number)) {
@@ -568,6 +574,9 @@ FILE *fp
    if (VALID_OPT(e_OPT, prog_number)) {
       if (prog_number == QMOD) {
          PRINTITD(MSG_GDI_USAGE_e_OPT , MSG_GDI_UTEXT_e_OPT);
+      } else if (prog_number == QRSUB) {      
+         PRINTITD(MSG_GDI_USAGE_e_OPT_END_TIME , MSG_GDI_UTEXT_e_OPT_END_TIME);
+         MARK(OA_DATE_TIME);
       } else {
          PRINTITD(MSG_GDI_USAGE_e_OPT_PATH_LIST, MSG_GDI_UTEXT_e_OPT_PATH_LIST );
          MARK(OA_PATH_LIST);

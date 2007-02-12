@@ -37,34 +37,17 @@
 /* 
  * libs/spool/read_list.c
  */
-#define MSG_CONFIG_READINGINEXECUTIONHOSTS      _MESSAGE(61000, _("Reading in execution hosts."))
-#define MSG_CONFIG_READINGINADMINHOSTS          _MESSAGE(61002, _("Reading in administrative hosts."))
-#define MSG_CONFIG_READINGINSUBMITHOSTS         _MESSAGE(61003, _("Reading in submit hosts."))
-#define MSG_CONFIG_READINGINGPARALLELENV        _MESSAGE(61004, _("Reading in parallel environments:"))
-#define MSG_SETUP_PE_S                          _MESSAGE(61005, _("PE "SFQ"."))
-#define MSG_CONFIG_READINGINCALENDARS           _MESSAGE(61006, _("Reading in calendars:"))
-#define MSG_SETUP_CALENDAR_S                    _MESSAGE(61007, _("Calendar "SFQ"."))
-#define MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS _MESSAGE(61008, _("failed parsing year entry in calendar "SFQ": "SFN))
-#define MSG_CONFIG_READINGINCKPTINTERFACEDEFINITIONS   _MESSAGE(61009, _("Reading in ckpt interface definitions:"))
-#define MSG_SETUP_CKPT_S                        _MESSAGE(61010, _("CKPT "SFQ"."))
-#define MSG_CONFIG_READINGINQUEUES              _MESSAGE(61011, _("Reading in queues:"))
-#define MSG_SETUP_QUEUE_S                       _MESSAGE(61012, _("Queue "SFQ"."))
-#define MSG_CONFIG_READINGFILE_SS               _MESSAGE(61013, _("reading file "SFN"/"SFN))
-#define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61015, _("obsolete queue template file deleted"))
+#define MSG_CONFIG_READINGIN_S                  _MESSAGE(61000, _("Reading in "SFN"."))
+#define MSG_SETUP_OBJ_SS                        _MESSAGE(61001, _(SFN" "SFQ"."))
+#define MSG_CONFIG_FAILEDPARSINGYEARENTRYINCALENDAR_SS _MESSAGE(61002, _("failed parsing year entry in calendar "SFQ": "SFN))
+#define MSG_CONFIG_READINGFILE_SS               _MESSAGE(61003, _("reading file "SFN"/"SFN))
+#define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61004, _("obsolete queue template file deleted"))
 #define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT    _MESSAGE(61016, _("found queue 'template', but not in file 'template'; ignoring it!"))
-#define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN))
-#define MSG_CONFIG_READINGINPROJECTS            _MESSAGE(61019, _("Reading in projects:"))
-#define MSG_SETUP_PROJECT_S                     _MESSAGE(61020, _("Project "SFQ"."))
-#define MSG_CONFIG_READINGINUSERSETS            _MESSAGE(61021, _("Reading in usersets:"))
-#define MSG_CONFIG_READINGINUSERS               _MESSAGE(61022, _("Reading in users:"))
-#define MSG_SETUP_USER_S                        _MESSAGE(61023, _("User "SFQ"."))
-#define MSG_SETUP_USERSET_S                     _MESSAGE(61024, _("Userset "SFQ"."))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS     _MESSAGE(61025, _("cannot resolve "SFN" name "SFQ": "SFN))
-#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61026, _("cannot resolve "SFN" name "SFQ))
-#define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61027, _("qmaster is unable to spool "SFN" "SFQ))
-#define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
-#define MSG_CONFIG_READINGINRQS                 _MESSAGE(61029, _("Reading in resource quota set:"))
-#define MSG_SETUP_RQS_S                        _MESSAGE(61030, _("Resource Quota Set "SFQ"."))
+#define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61005, _("cannot recreate queue "SFN" from disk because of unknown host "SFN))
+#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS     _MESSAGE(61006, _("cannot resolve "SFN" name "SFQ": "SFN))
+#define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61007, _("cannot resolve "SFN" name "SFQ))
+#define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61008, _("qmaster is unable to spool "SFN" "SFQ))
+#define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61009, _("can't open directory "SFQ))
 
 /*
  * libs/spool/read_write_manop.c
@@ -77,7 +60,6 @@
  */
 #define MSG_CONFIG_FAILEDREMOVINGSCRIPT_SS            _MESSAGE(61033, _("failed removing script of bad jobfile (reason: "SFN"): please delete "SFQ" manually"))
 #define MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S       _MESSAGE(61034, _("removed script of bad jobfile "SFQ))
-#define MSG_CONFIG_READINGINX_S                       _MESSAGE(61035, _("Reading in "SFN"."))
 #define MSG_CONFIG_NODIRECTORY_S                      _MESSAGE(61036, _(SFQ" is no directory - skipping the entry"))
 #define MSG_CONFIG_CANTFINDSCRIPTFILE_U               _MESSAGE(61037, _("can't find script file for job " sge_U32CFormat " - deleting"))
 #define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U _MESSAGE(61038, _("job file \""sge_U32CFormat"\" has wrong file name - deleting"))
@@ -102,13 +84,7 @@
  * libs/spool/read_list.c continued
  */
 #define MSG_QMASTER_PRJINCORRECT_S       _MESSAGE(61048, _("Spoolfile for project "SFQ" containes invalid name"))
-#define MSG_SETUP_COMPLEX_ATTR_S         _MESSAGE(61049, _("Complex attribute "SFQ"."))
-#define MSG_CONFIG_READINGINCOMPLEXATTRS _MESSAGE(61050, _("Reading in complex attributes."))
 #define MSG_HGROUP_INCFILE_S             _MESSAGE(61051, _("Incorrect spoolfile for hostgroup "SFQ))
-#define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(61052, _("Reading in host group entries:"))
-#define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(61053, _("Host group entries for group "SFQ"."))
-#define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(61054, _("Reading in user mapping entries:"))
-#define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(61055, _("Mapping entries for "SFQ"."))
 
 /*
  * read_object.c
@@ -132,9 +108,9 @@
  */
 #define MSG_RWUSERPRJ_EPISNULLNOUSERORPROJECTELEMENT    _MESSAGE(61130, _("ep == NULL - no user or project element"))
 #define MSG_PROJECT_FOUNDPROJECTXTWICE_S    _MESSAGE(61131, _("found project "SFN" twice"))
-#define MSG_PROJECT_INVALIDPROJECTX_S    _MESSAGE(61132, _("invalid project "SFN))
-#define MSG_JOB_FOUNDJOBWITHWRONGKEY_S    _MESSAGE(61133, _("found job with wrong key "SFQ""))
-#define MSG_JOB_FOUNDJOBXTWICE_U    _MESSAGE(61134, _("found job "sge_U32CFormat" twice"))
+#define MSG_PROJECT_INVALIDPROJECTX_S       _MESSAGE(61132, _("invalid project "SFN))
+#define MSG_JOB_FOUNDJOBWITHWRONGKEY_S      _MESSAGE(61133, _("found job with wrong key "SFQ""))
+#define MSG_JOB_FOUNDJOBXTWICE_U            _MESSAGE(61134, _("found job "sge_U32CFormat" twice"))
 
 /*
  * read_write_userset.c

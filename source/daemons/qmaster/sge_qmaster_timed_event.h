@@ -55,7 +55,9 @@ typedef enum {
    TYPE_REMOTE_EVENT_DELIVERY_EVENT, /* not used */
    TYPE_SECURITY_EVENT, /**/
    TYPE_JOB_NUMBER_EVENT,/**/
-   TYPE_ACCOUNTING_TRIGGER
+   TYPE_ACCOUNTING_TRIGGER,/**/
+   TYPE_AR_ID_EVENT,/**/
+   TYPE_AR_EVENT
 } te_type_t;
 
 typedef enum {

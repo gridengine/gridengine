@@ -68,6 +68,7 @@
 #include "spool/msg_spoollib.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
 #include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 
 const spool_instr spool_config_subinstr = {
@@ -513,6 +514,11 @@ bool spool_default_validate_func(lList **answer_list,
             ret = false;
          }
          break;
+      case SGE_TYPE_AR:
+         if (!ar_validate(object, answer_list, true)) {
+            ret = false;
+         }
+         break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
       case SGE_TYPE_HGROUP:
@@ -577,6 +583,7 @@ spool_default_validate_list_func(lList **answer_list,
          ret = sconf_validate_config_(answer_list);
          break;
       case SGE_TYPE_JOB:
+      case SGE_TYPE_AR:
       default:
          break;
    }

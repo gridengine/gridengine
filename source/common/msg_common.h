@@ -97,12 +97,14 @@
 #define MSG_SGETEXT_MUSTBEOPERATOR_S        _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation"))
 #define MSG_OPTIONWORKSONLYONJOB            _MESSAGE(23061, _("denied: the selected option works only on jobs and not on tasks"))
 #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(23062, _("ERROR! "SFN" option must have argument"))
-#define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S        _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
-#define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23064, _("error closeing "SFN": "SFN))
+#define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
+#define MSG_SGETEXT_MUSTBEMANAGERORUSER_SS  _MESSAGE(23065, _("denied: "SFQ" must be manager or in userset "SFQ))
+#define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23066, _("error closeing "SFN": "SFN))
 
 /*
 ** parse_qsub.c
 */
+#define MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTODOPTION_S  _MESSAGE(23067, _("ERROR! Wrong time format "SFQ" specified to -d option"))
 #define MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S  _MESSAGE(23068, _("ERROR! Wrong date/time format "SFQ" specified to -a option"))
 #define MSG_PARSE_ACOPTIONMUSTHAVECONTEXTLISTLISTARGUMENT _MESSAGE(23069, _("ERROR! -ac option must have a context_list list argument"))
 #define MSG_ANSWER_WRONGCONTEXTLISTFORMATAC_S              _MESSAGE(23070, _("ERROR! Wrong context list format -ac "SFQ))
@@ -346,11 +348,12 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN           "wc_qdomain              wc_cqueue@wc_hostgroup"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_TIME                 "time                    hours:minutes:seconds | seconds"
 
 
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
-#define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a job start time"))
+#define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a start time"))
 
 #define MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST                "[-ac context_list]"
 #define MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST                _MESSAGE(23292, _("add context variable(s)"))
@@ -1065,6 +1068,14 @@
 #define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
 
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
+
+#define MSG_OBJ_AR                         _MESSAGE(60630, _("advance reservation"))
+
+#define MSG_GDI_UTEXT_e_OPT_END_TIME       _MESSAGE(60631, _("request an end time"))
+#define MSG_GDI_USAGE_e_OPT_END_TIME       "[-e date_time]"
+
+#define MSG_GDI_USAGE_d_OPT_TIME           "[-d time]"
+#define MSG_GDI_UTEXT_d_OPT_TIME           _MESSAGE(60632, _("duration of time window"))
 
 /*
  * Objects and components

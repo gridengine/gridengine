@@ -285,7 +285,7 @@ lListElem* rqs_set_defaults(lListElem* rqs)
 *            false on error
 *
 *  NOTES
-*     MT-NOTE: rqs_verify_attributes() is MT safe 
+*     MT-NOTE: rqs_verify_attributes() is not MT safe 
 *******************************************************************************/
 bool rqs_verify_attributes(lListElem *rqs, lList **answer_list, bool in_master)
 {

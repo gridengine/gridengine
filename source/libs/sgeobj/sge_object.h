@@ -111,6 +111,7 @@
 *        SGE_TYPE_ZOMBIE
 *        SGE_TYPE_SUSER
 *        SGE_TYPE_RQS
+*        SGE_TYPE_AR
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -135,10 +136,10 @@ typedef enum {
    SGE_TYPE_PROJECT,          /*14*/
    SGE_TYPE_CQUEUE,           /*15*/
    SGE_TYPE_QINSTANCE,        /*16*/
-   SGE_TYPE_SCHEDD_CONF,       /*17*/
-   SGE_TYPE_SCHEDD_MONITOR,    /*18*/
-   SGE_TYPE_SHUTDOWN,          /*19*/
-   SGE_TYPE_QMASTER_GOES_DOWN, /*20*/
+   SGE_TYPE_SCHEDD_CONF,      /*17*/
+   SGE_TYPE_SCHEDD_MONITOR,   /*18*/
+   SGE_TYPE_SHUTDOWN,         /*19*/
+   SGE_TYPE_QMASTER_GOES_DOWN,/*20*/
    SGE_TYPE_SUBMITHOST,       /*21*/
    SGE_TYPE_USER,             /*22*/
    SGE_TYPE_USERSET,          /*23*/
@@ -147,6 +148,7 @@ typedef enum {
    SGE_TYPE_ZOMBIE,           /*26*/
    SGE_TYPE_SUSER,            /*27*/
    SGE_TYPE_RQS,              /*28*/
+   SGE_TYPE_AR,               /*29*/
 
 
    /*

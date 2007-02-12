@@ -253,8 +253,7 @@ char *attr_name
       lSetUlong(new_ep, nm, lGetUlong(qep, nm));
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* raw doubles without any verification */       

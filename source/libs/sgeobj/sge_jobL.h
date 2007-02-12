@@ -872,7 +872,7 @@ enum {
 };
 
 LISTDEF(JG_Type)
-   SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
+   SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue instance name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
    SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_SUBLIST)/* redundant qualified host name for caching  */  /* CR - hostname change */
    SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */

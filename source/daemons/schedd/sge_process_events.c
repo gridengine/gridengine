@@ -280,10 +280,11 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    copy.ckpt_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_CKPT));
    copy.hgrp_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_HGROUP));
    copy.rqs_list = lCopyList("", master_rqs_list);
+   copy.ar_list = lCopyList("", *object_type_get_master_list(SGE_TYPE_AR));
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-            "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, S:nd:%d/lf:%d \n",
+            "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, AR:%d, S:nd:%d/lf:%d \n",
             lGetNumberOfElem(copy.queue_list),
             lGetNumberOfElem(copy.all_queue_list),
             lGetNumberOfElem(copy.job_list),
@@ -299,13 +300,14 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
             lGetNumberOfElem(copy.user_list),
             lGetNumberOfElem(copy.project_list),
             lGetNumberOfElem(copy.rqs_list),
+            lGetNumberOfElem(copy.ar_list),
             lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
             lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
            ));
 
    if (getenv("SGE_ND")) {
       printf("Q:%d, AQ:%d J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
-         "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, S:nd:%d/lf:%d \n",
+         "P:%d, CKPT:%d, US:%d, PR:%d, RQS:%d, AR:%d, S:nd:%d/lf:%d \n",
          lGetNumberOfElem(copy.queue_list),
          lGetNumberOfElem(copy.all_queue_list),
          lGetNumberOfElem(copy.job_list),
@@ -321,6 +323,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
          lGetNumberOfElem(copy.user_list),
          lGetNumberOfElem(copy.project_list),
          lGetNumberOfElem(copy.rqs_list),
+         lGetNumberOfElem(copy.ar_list),
          lGetNumberOfNodes(NULL, copy.share_tree, STN_children),
          lGetNumberOfLeafs(NULL, copy.share_tree, STN_children)
         );
@@ -371,6 +374,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
    lFreeList(&(copy.ckpt_list));
    lFreeList(&(copy.hgrp_list));
    lFreeList(&(copy.rqs_list));
+   lFreeList(&(copy.ar_list));
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
    prof_free = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7,true, NULL);
@@ -1217,7 +1221,8 @@ int subscribe_default_scheduler(sge_evc_class_t *evc)
    sge_mirror_subscribe(evc, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(evc, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_RQS,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_RQS,            NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_AR,             NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/

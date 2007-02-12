@@ -204,6 +204,7 @@
 */
 #define MSG_OBJ_CALENDAR              _MESSAGE(33132, _("calendar"))
 #define MSG_EVE_TE4CAL_S              _MESSAGE(33133, _("got timer event for unknown calendar "SFQ))
+#define MSG_EVE_TE4AR_U               _MESSAGE(33134, _("got timer event for unknown AR "sge_U32CFormat))
 #define MSG_SGETEXT_REMOVEDFROMLIST_SSSS        _MESSAGE(33135, _(""SFN"@"SFN" removed "SFQ" from "SFN" list"))
 #define MSG_INVALID_CENTRY_DEL_S                _MESSAGE(33136, _("The built-in complex "SFQ" cannot be deleted"))
 
@@ -380,16 +381,16 @@
 #define MSG_JOB_SCRIPTARGS            _MESSAGE(33293, _("script arguments"))
 #define MSG_JOB_CONTEXT               _MESSAGE(33294, _("context"))
 #define MSG_JOB_NODIRECTSLOTS         _MESSAGE(33295, _("denied: use parallel environments instead of requesting slots explicitly"))
-#define MSG_JOB_NOSEQNRREAD_SS        _MESSAGE(33296, _("can't read job sequence number in file "SFQ": "SFN))
-#define MSG_JOB_NOSEQFILEOPEN_SS      _MESSAGE(33297, _("can't open sequence number file "SFQ": for reading: "SFN" -- guessing next job number"))
-#define MSG_JOB_NOSEQFILECREATE_SS    _MESSAGE(33298, _("can't create job sequence number file "SFQ": "SFN" - delaying until next job"))
+#define MSG_NOSEQNRREAD_SSS           _MESSAGE(33296, _("can't read "SFN" sequence number in file "SFQ": "SFN))
+#define MSG_NOSEQFILEOPEN_SSS         _MESSAGE(33297, _("can't open "SFN" sequence number file "SFQ": for reading: "SFN" -- guessing next number"))
+#define MSG_NOSEQFILECREATE_SSS       _MESSAGE(33298, _("can't create "SFN" sequence number file "SFQ": "SFN" - delaying until next job"))
 #define MSG_JOB_NOSUITABLEQ_S         _MESSAGE(33299, _(SFN": no suitable queues"))
 #define MSG_JOB_VERIFYERROR           _MESSAGE(33300, _("error"))
 #define MSG_JOB_VERIFYWARN            _MESSAGE(33301, _("warning"))
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots"))
-#define MSG_JOB_NOSEQFILECLOSE_SS     _MESSAGE(33305, _("can't close sequence number file "SFQ": for reading: "SFN))
+#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33305, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request"))
@@ -751,12 +752,13 @@
 
 #define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
-#define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
-#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS        _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS          _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
 
 /* sge_qmaster_threads.c */
 #define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))
-   
+
+#define MSG_AR_GRANTED_U                            _MESSAGE(33931, _("Your advance reservation "sge_U32CFormat" has been granted"))
+#define MSG_AR_MAXARSPERCLUSTER_U                   _MESSAGE(33932, _("rejected: only "sge_U32CFormat" advance reservations are allowed per cluster"))
 
 #endif
-

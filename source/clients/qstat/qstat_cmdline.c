@@ -95,8 +95,7 @@ switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
          }
       }
    }  
-   DEXIT;
-   return ret; 
+   DRETURN(ret); 
 }
 
 bool

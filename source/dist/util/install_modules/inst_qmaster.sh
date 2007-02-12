@@ -817,6 +817,7 @@ PrintConf()
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
    $ECHO "max_jobs               0"
+   $ECHO "max_advance_reservations 0"
    $ECHO "auto_user_oticket      0"
    $ECHO "auto_user_fshare       0"
    $ECHO "auto_user_default_project none"
@@ -1015,18 +1016,10 @@ AddPEFiles()
 
 
 #-------------------------------------------------------------------------
-# AddDefaultDepartement
+# AddDefaultUsersets
 #
-AddDefaultDepartement()
+AddDefaultUsersets()
 {
-      #$INFOTEXT "Adding SGE >defaultdepartment< userset"
-      #ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
-      #ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
-
-      #$INFOTEXT "Adding SGE >deadlineusers< userset"
-      #ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
-      #ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
-
       $INFOTEXT "Adding SGE default usersets"
       ExecuteAsAdmin $SPOOLDEFAULTS usersets $SGE_ROOT_VAL/util/resources/usersets
 }

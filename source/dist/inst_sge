@@ -412,7 +412,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddActQmaster
  AddDefaultComplexes
  AddPEFiles
- AddDefaultDepartement
+ AddDefaultUsersets
  AddCommonFiles
  CreateSGEStartUpScripts $euid true master
  CreateSGEStartUpScripts $euid true execd 

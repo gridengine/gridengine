@@ -87,6 +87,7 @@ u_long32 mconf_get_max_aj_instances(void);
 u_long32 mconf_get_max_aj_tasks(void);
 u_long32 mconf_get_max_u_jobs(void);
 u_long32 mconf_get_max_jobs(void);
+u_long32 mconf_get_max_advance_reservations(void);
 u_long32 mconf_get_reprioritize(void);
 u_long32 mconf_get_auto_user_fshare(void);
 u_long32 mconf_get_auto_user_oticket(void);

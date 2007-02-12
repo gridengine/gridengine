@@ -1078,19 +1078,19 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    sge_read_sched_configuration(ctx, spooling_context, &answer_list);
    answer_list_output(&answer_list);
 
-   /* SGEEE: read user list */
+   DPRINTF(("user list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_USER].list, SGE_TYPE_USER);
    answer_list_output(&answer_list);
 
    remove_invalid_job_references(job_spooling, 1, object_base);
 
-   /* SGE: read project list */
+   DPRINTF(("project list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_PROJECT].list, SGE_TYPE_PROJECT);
    answer_list_output(&answer_list);
 
    remove_invalid_job_references(job_spooling, 0, object_base);
    
-   /* SGEEE: read share tree */
+   DPRINTF(("share tree list-----------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_SHARETREE].list, SGE_TYPE_SHARETREE);
    answer_list_output(&answer_list);
    ep = lFirst(*object_base[SGE_TYPE_SHARETREE].list);
@@ -1102,7 +1102,11 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       lFreeList(&found);
       lFreeList(&alp); 
    }
-   
+
+   DPRINTF(("advance reservation list -----------------------\n"));
+   spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_AR].list, SGE_TYPE_AR);
+   answer_list_output(&answer_list);
+
    /* RU: */
    /* initiate timer for all hosts because they start in 'unknown' state */ 
    if (*object_base[SGE_TYPE_EXECHOST].list) {

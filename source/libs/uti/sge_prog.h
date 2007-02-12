@@ -62,27 +62,30 @@ enum {
  QSTAT           ,       /* 13 */
  QSUB            ,       /* 14 */
  EXECD           ,       /* 15 */
- QEVENT,                 /* 16 */
- QUSERDEFINED    ,       /* 17 */
- ALL_OPT         ,       /* 18 */
+ QEVENT          ,       /* 16 */
+ QRSUB           ,       /* 17 */
+ QRDEL           ,       /* 18 */
+ QRSTAT          ,       /* 19 */
+ QUSERDEFINED    ,       /* 20 */
+ ALL_OPT         ,       /* 21 */
 
 /* programs with numbers > ALL_OPT do not use the old parsing */
 
- QMON            ,       /* 19 */
- SCHEDD          ,       /* 20 */
- QACCT           ,       /* 21 */
- SHADOWD         ,       /* 22 */
- QHOST           ,       /* 23 */
- SPOOLDEFAULTS   ,       /* 24 */
- JAPI            ,       /* 25 */
- JAPI_EC         ,       /* 26 */
- DRMAA           ,       /* 27 */
- QPING           ,       /* 28 */
- SGE_PASSWD      ,       /* 29 */
- QQUOTA          ,       /* 30 */
- JGDI            ,       /* 31 */
- QTCSH           ,       /* 32 */
- SGE_SHARE_MON           /* 33 */
+ QMON            ,       /* 22 */
+ SCHEDD          ,       /* 23 */
+ QACCT           ,       /* 24 */
+ SHADOWD         ,       /* 25 */
+ QHOST           ,       /* 26 */
+ SPOOLDEFAULTS   ,       /* 27 */
+ JAPI            ,       /* 28 */
+ JAPI_EC         ,       /* 29 */
+ DRMAA           ,       /* 30 */
+ QPING           ,       /* 31 */
+ SGE_PASSWD      ,       /* 32 */
+ QQUOTA          ,       /* 33 */
+ JGDI            ,       /* 34 */
+ QTCSH           ,       /* 35 */
+ SGE_SHARE_MON           /* 36 */
 };
 
 typedef void (*sge_exit_func_t)(void **ctx_ref, int);

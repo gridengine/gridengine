@@ -72,23 +72,26 @@ const char *prognames[] =
    "qsub"		,       /* 14  */
    "execd"		,       /* 15  */
    "qevent"    ,       /* 16  */
-   "unknown"	,       /* 17  */
-   "unknown"	,       /* 18  */
-   "qmon"		,       /* 19  */
-   "schedd"		,       /* 20  */
-   "qacct"		,       /* 21  */
-   "shadowd"	,       /* 22  */
-   "qhost"		,       /* 23  */
-   "spoolinit" ,       /* 24  */
-   "japi"      ,       /* 25  */
-   "japi_ec"   ,       /* 26  */
-   "drmaa"     ,       /* 27  */
-   "qping"     ,       /* 28  */ 
-   "sgepasswd" ,       /* 29  */
-   "qquota"    ,       /* 30  */
-   "jgdi"      ,       /* 31  */
-   "qtcsh"     ,       /* 32  */
-   "sge_share_mon"     /* 33  */
+   "qrsub"     ,       /* 17  */
+   "qrdel"     ,       /* 18  */
+   "qrstat"    ,       /* 19  */
+   "unknown"	,       /* 20  */
+   "unknown"	,       /* 21  */
+   "qmon"		,       /* 22  */
+   "schedd"		,       /* 23  */
+   "qacct"		,       /* 24  */
+   "shadowd"	,       /* 25  */
+   "qhost"		,       /* 26  */
+   "spoolinit" ,       /* 27  */
+   "japi"      ,       /* 28  */
+   "japi_ec"   ,       /* 29  */
+   "drmaa"     ,       /* 30  */
+   "qping"     ,       /* 31  */ 
+   "sgepasswd" ,       /* 32  */
+   "qquota"    ,       /* 33  */
+   "jgdi"      ,       /* 34  */
+   "qtcsh"     ,       /* 35  */
+   "sge_share_mon"     /* 36  */
 };
  
 typedef struct prog_state_str {

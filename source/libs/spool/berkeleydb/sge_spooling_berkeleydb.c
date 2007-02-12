@@ -731,10 +731,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
       }
    }
 
-
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_read_func() *****************
@@ -820,8 +817,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
       }
    }
 
-   DEXIT;
-   return ep;
+   DRETURN(ep);
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_write_func() ****************
@@ -970,8 +966,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** spool/berkeleydb/spool_berkeleydb_default_delete_func() ***************
@@ -1143,6 +1138,5 @@ spool_berkeleydb_option_func(lList **answer_list, lListElem *rule,
       sge_free_saved_vars(context);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }

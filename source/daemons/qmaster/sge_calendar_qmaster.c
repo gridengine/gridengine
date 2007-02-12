@@ -210,7 +210,7 @@ sge_del_calendar(sge_gdi_ctx_class_t *ctx, lListElem *cep, lList **alpp, char *r
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_calendar_event_handler() is not MT safe 
+*     MT-NOTE: sge_calendar_event_handler() is MT safe 
 *
 *******************************************************************************/
 void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor) 
@@ -227,19 +227,17 @@ void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, mo
    {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));   
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);      
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
       
    calendar_update_queue_states(ctx, cep, 0, NULL, &ppList, monitor);
    lFreeList(&ppList);
 
-   sge_free((char *)cal_name);
+   FREE(cal_name);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_calendar_event_handler() */
 
 int calendar_update_queue_states(sge_gdi_ctx_class_t *ctx, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)

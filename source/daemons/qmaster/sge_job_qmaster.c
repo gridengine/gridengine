@@ -3563,17 +3563,17 @@ void sge_init_job_number(void)
    u_long32 job_nr = 0;
    u_long32 guess_job_nr;
   
-   DENTER(TOP_LAYER, "init_job_number");
+   DENTER(TOP_LAYER, "sge_init_job_number");
    
    if ((fp = fopen(SEQ_NUM_FILE, "r"))) {
       if (fscanf(fp, sge_u32, &job_nr) != 1) {
-         ERROR((SGE_EVENT, MSG_JOB_NOSEQNRREAD_SS, SEQ_NUM_FILE, strerror(errno)));
+         ERROR((SGE_EVENT, MSG_NOSEQNRREAD_SSS, SGE_OBJ_JOB, SEQ_NUM_FILE, strerror(errno)));
       }
       FCLOSE(fp);
 FCLOSE_ERROR:
       fp = NULL;
    } else {
-      WARNING((SGE_EVENT, MSG_JOB_NOSEQFILEOPEN_SS, SEQ_NUM_FILE, strerror(errno)));
+      WARNING((SGE_EVENT, MSG_NOSEQFILEOPEN_SSS, SGE_OBJ_JOB, SEQ_NUM_FILE, strerror(errno)));
    }  
    
    guess_job_nr = guess_highest_job_number();
@@ -3593,7 +3593,7 @@ void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    u_long32 job_nr = 0;
    bool changed = false;
 
-   DENTER(TOP_LAYER, "store_job_number");
+   DENTER(TOP_LAYER, "sge_store_job_number");
    
    sge_mutex_lock("job_number_mutex", "sge_store_job_number", __LINE__, 
                   &job_number_control.job_number_mutex);
@@ -3611,7 +3611,7 @@ void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       FILE *fp = fopen(SEQ_NUM_FILE, "w");
 
       if (fp == NULL) {
-         ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECREATE_SS, SEQ_NUM_FILE, strerror(errno)));
+         ERROR((SGE_EVENT, MSG_NOSEQFILECREATE_SSS, SGE_OBJ_JOB, SEQ_NUM_FILE, strerror(errno)));
       } else {
          FPRINTF((fp, sge_u32"\n", job_nr));
          FCLOSE(fp);
@@ -3621,7 +3621,7 @@ void sge_store_job_number(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 
 FPRINTF_ERROR:
 FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_JOB_NOSEQFILECLOSE_SS, SEQ_NUM_FILE, strerror(errno)));
+   ERROR((SGE_EVENT, MSG_NOSEQFILECLOSE_SSS, SGE_OBJ_JOB, SEQ_NUM_FILE, strerror(errno)));
    DRETURN_VOID;
 }
 

@@ -41,6 +41,7 @@
 #define FLG_USE_NO_PSEUDOS       2
 #define FLG_DONT_ADD_SCRIPT      4
 #define FLG_IGNORE_EMBEDED_OPTS  8
+#define FLG_IGN_NO_FILE          16 
 
 extern const char *default_prefix;
 

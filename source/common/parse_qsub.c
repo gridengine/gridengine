@@ -125,8 +125,7 @@ u_long32 flags
    if (!arg_list || !pcmdline) {
       answer_list_add(&answer, MSG_PARSE_NULLPOINTERRECEIVED, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return answer;
+      DRETURN(answer);
    }
 
    sp = arg_list;
@@ -380,13 +379,10 @@ u_long32 flags
 
 /*-----------------------------------------------------------------------------*/
       /* "-C directive_prefix" */
-
       if (!strcmp("-C", *sp)) {
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S
-               ,
-               *sp);
+            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
@@ -407,6 +403,40 @@ u_long32 flags
          if (strlen(*sp) > 0) {
             lSetString(ep_opt, SPA_argval_lStringT, *sp);
          }
+
+         sp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+      /* "-d time */
+      if (!strcmp("-d", *sp)) {
+         double timeval;
+         char tmp[1000];
+
+         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+            answer_list_add_sprintf(&answer, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                    MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+         }
+
+         /* next field is "time" */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-d");
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-d %s\"\n", *sp));
+
+         if (!parse_ulong_val(&timeval, NULL, TYPE_TIM, *sp, tmp, sizeof(tmp)-1)) {
+            answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                    MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTODOPTION_S, *sp);
+            DRETURN(answer);
+         }
+
+         ep_opt = sge_add_arg(pcmdline, d_OPT, lUlongT, *(sp-1), *sp);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, timeval);
 
          sp++;
          continue;
@@ -528,7 +558,13 @@ u_long32 flags
       if (!strcmp("-e", *sp)) {
          lList *path_list = NULL;
 
-         /* next field is path_name */
+         if (prog_number == QRSUB) {
+            if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+               answer_list_add_sprintf(&answer, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                       MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
+            }
+         }
+
          sp++;
          if (!*sp) {
              sprintf(str,
@@ -540,17 +576,26 @@ u_long32 flags
 
          DPRINTF(("\"-e %s\"\n", *sp));
 
-         i_ret = cull_parse_path_list(&path_list, *sp);
-         if (i_ret) {
-             sprintf(str,
-             MSG_PARSE_WRONGPATHLISTFORMATXSPECTOEOPTION_S,
-             *sp);
-             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
+         if (prog_number == QRSUB) {
+            u_long32 timeval;
+            if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp)) {
+               answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                       MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S, *sp);
+               DRETURN(answer);
+            }
+            ep_opt = sge_add_arg(pcmdline, e_OPT, lUlongT, *(sp-1), *sp);
+            lSetUlong(ep_opt, SPA_argval_lUlongT, timeval);
+         } else {
+            /* next field is path_name */
+            i_ret = cull_parse_path_list(&path_list, *sp);
+            if (i_ret) {
+                answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                        MSG_PARSE_WRONGPATHLISTFORMATXSPECTOEOPTION_S, *sp);
+                DRETURN(answer);
+            }
+            ep_opt = sge_add_arg(pcmdline, e_OPT, lListT, *(sp-1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, path_list);
          }
-         ep_opt = sge_add_arg(pcmdline, e_OPT, lListT, *(sp - 1), *sp);
-         lSetList(ep_opt, SPA_argval_lListT, path_list);
 
          sp++;
          continue;
@@ -2511,8 +2556,8 @@ static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
 }
 
 /* This method is not thread safe.  Fortunately, it is only used by the
- * -cwd switch which can be forbiddon in DRMAA. */
-char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
+ * -cwd switch which can be forbidden in DRMAA. */
+char *reroot_path(lListElem* pjob, const char *path, lList **alpp) {
    const char *home = NULL;
    char tmp_str[SGE_PATH_MAX + 1];
    char tmp_str2[SGE_PATH_MAX + 1];

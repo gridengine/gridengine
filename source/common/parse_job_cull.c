@@ -663,7 +663,8 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
 *                              FLG_USE_NO_PSEUDOS:  do not create pseudoargs 
 *                                                   for script pointer and 
 *                                                   length
-*
+*                              FLG_IGN_NO_FILE:     do not show an error if 
+*                                                   script_file was not found
 *  RESULT
 *     lList* - answer list, AN_Type, or NULL if everything was ok, 
 *              the following stati can occur:
@@ -685,7 +686,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
 *  SEE ALSO
 *     centry_list_parse_from_string()
 *     basis_types.h
-*     cod_request(5)
+*     sge_request(5)
 *******************************************************************************/
 lList *parse_script_file(
 u_long32 prog_number,
@@ -715,6 +716,10 @@ u_long32 flags
       /* no place where to put result */
       answer_list_add(&answer, MSG_ANSWER_CANTPROCESSNULLLIST, 
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DRETURN(answer);
+   }
+
+   if ((flags & FLG_IGN_NO_FILE) && sge_is_file(script_file) == 0) {
       DRETURN(answer);
    }
 

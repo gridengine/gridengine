@@ -86,6 +86,7 @@ GetOldConfiguration()
    echo "enforce_user              auto" >> /tmp/configuration.$pid
    echo "reporting_params          accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00" >> /tmp/configuration.$pid
    echo "max_jobs                  0" >> /tmp/configuration.$pid
+   echo "max_advance_reservations  0" >> /tmp/configuration.$pid
    echo "auto_user_oticket         0" >> /tmp/configuration.$pid
    echo "auto_user_fshare          0" >> /tmp/configuration.$pid
    echo "auto_user_default_project none" >> /tmp/configuration.$pid

@@ -103,6 +103,7 @@ static lList *Master_Sharetree_List = NULL;
 static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
 static lList *Master_RQS_List = NULL;
+static lList *Master_AR_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -140,7 +141,8 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
    { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       SU_Type,   SU_name           },
-   { &Master_RQS_List,             NULL,                   "RQS",              RQS_Type, RQS_name         },
+   { &Master_RQS_List,             NULL,                   "RQS",               RQS_Type,  RQS_name          },
+   { &Master_AR_List,              NULL,                   "AR",                AR_Type,   AR_id             },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif

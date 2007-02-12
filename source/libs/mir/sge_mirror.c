@@ -834,7 +834,18 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
 
       case SGE_TYPE_SUSER:
             return SGE_EM_NOT_INITIALIZED;
-            
+      case SGE_TYPE_AR:
+         evc->ec_subscribe(evc, sgeE_AR_LIST);
+         evc->ec_subscribe(evc, sgeE_AR_ADD);
+         evc->ec_subscribe(evc, sgeE_AR_DEL);
+         evc->ec_subscribe(evc, sgeE_AR_MOD);
+         if (what_el && where_el){
+            evc->ec_mod_subscription_where(evc, sgeE_AR_LIST, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_AR_ADD, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_AR_DEL, what_el, where_el); 
+            evc->ec_mod_subscription_where(evc, sgeE_AR_MOD, what_el, where_el); 
+         }
+         break;
       default:
          return SGE_EM_BAD_ARG;
    }
@@ -1077,6 +1088,12 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
       case SGE_TYPE_SUSER:
             DEXIT;
             return SGE_EM_NOT_INITIALIZED;
+      case SGE_TYPE_AR:
+         evc->ec_unsubscribe(evc, sgeE_AR_LIST);
+         evc->ec_unsubscribe(evc, sgeE_AR_ADD);
+         evc->ec_unsubscribe(evc, sgeE_AR_DEL);
+         evc->ec_unsubscribe(evc, sgeE_AR_MOD);
+         break;
       default:
          ERROR((SGE_EVENT, "received invalid event group %d", type));
          DEXIT;
@@ -1556,6 +1573,19 @@ sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list)
             break;
          case sgeE_HGROUP_MOD:
             ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_HGROUP, SGE_EMA_MOD, event);
+            break;
+
+         case sgeE_AR_LIST:
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_AR, SGE_EMA_LIST, event);
+            break;
+         case sgeE_AR_ADD:
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_AR, SGE_EMA_ADD, event);
+            break;
+         case sgeE_AR_DEL:
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_AR, SGE_EMA_DEL, event);
+            break;
+         case sgeE_AR_MOD:
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_AR, SGE_EMA_MOD, event);
             break;
 
          default:

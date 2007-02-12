@@ -1549,7 +1549,7 @@ BackupConfig()
    BUP_BDB_SPOOL_FILE_LIST_TMP="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST_TMP="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters"
    BUP_CLASSIC_DIR_LIST_TMP="sgeCA local_conf" 
-   BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups resource_quotas managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
+   BUP_CLASSIC_SPOOL_FILE_LIST_TMP="jobseqnum advance_reservations admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups resource_quotas managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
    BUP_COMMON_FILE_LIST=""
    BUP_SPOOL_FILE_LIST=""
    BUP_SPOOL_DIR_LIST=""

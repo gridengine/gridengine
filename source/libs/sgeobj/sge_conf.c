@@ -111,6 +111,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_aj_tasks;         /* max. size of an array job */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
     u_long32    max_jobs;             /* max. number of jobs in the system */
+    u_long32    max_advance_reservations; /* max. number of advance reservations in the system */
     u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
     u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
     u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
@@ -125,7 +126,7 @@ static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                        0, 0, 0, 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL,
                                        NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
                                        NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
-                                       0, NULL, 0, NULL };
+                                       0, 0, NULL, 0, NULL };
 static bool is_new_config = false;
 static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
@@ -248,6 +249,7 @@ static void clean_conf(void);
 #define MAX_AJ_TASKS              "75000"
 #define MAX_U_JOBS                "0"
 #define MAX_JOBS                  "0"
+#define MAX_ADVANCE_RESERVATIONS  "0"
 #define REPORTING_PARAMS          "accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
 
 static tConfEntry conf_entries[] = {
@@ -291,6 +293,7 @@ static tConfEntry conf_entries[] = {
  { "max_aj_tasks",      0, MAX_AJ_TASKS,        1, NULL },
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
  { "max_jobs",          0, MAX_JOBS,            1, NULL },
+ { "max_advance_reservations", 0, MAX_ADVANCE_RESERVATIONS, 1, NULL },
  { REPRIORITIZE,        0, "1",                 1, NULL },
  { "auto_user_oticket", 0, "0",                 1, NULL },
  { "auto_user_fshare",  0, "0",                 1, NULL },
@@ -475,6 +478,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "max_aj_tasks", NULL, &Master_Config.max_aj_tasks, TYPE_INT);
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &Master_Config.max_u_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "max_jobs", NULL, &Master_Config.max_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, "max_advance_reservations", NULL, &Master_Config.max_advance_reservations, TYPE_INT);
    chg_conf_val(lpCfg, REPRIORITIZE, NULL, &Master_Config.reprioritize, TYPE_BOO );
    chg_conf_val(lpCfg, "auto_user_oticket", NULL, &Master_Config.auto_user_oticket, TYPE_INT);
    chg_conf_val(lpCfg, "auto_user_fshare", NULL, &Master_Config.auto_user_fshare, TYPE_INT);
@@ -891,6 +895,7 @@ void sge_show_conf()
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) Master_Config.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) Master_Config.max_u_jobs));
    DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) Master_Config.max_jobs));
+   DPRINTF(("conf.max_advance_reservations >%u<\n", (unsigned) Master_Config.max_advance_reservations));
    DPRINTF(("conf.reprioritize           >%u<\n", Master_Config.reprioritize));
    DPRINTF(("conf.auto_user_oticket      >%u<\n", Master_Config.auto_user_oticket));
    DPRINTF(("conf.auto_user_fshare       >%u<\n", Master_Config.auto_user_fshare));
@@ -1553,6 +1558,18 @@ u_long32 mconf_get_max_jobs(void) {
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(max_jobs);
+}
+
+u_long32 mconf_get_max_advance_reservations(void) {
+   u_long32 max_advance_reservations;
+
+   DENTER(TOP_LAYER, "mconf_get_max_advance_reservations");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_advance_reservations = Master_Config.max_advance_reservations;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_advance_reservations);
 }
 
 u_long32 mconf_get_reprioritize(void) {

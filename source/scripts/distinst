@@ -43,7 +43,7 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
              qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
-             qloadsensor.exe sgepasswd qquota"
+             qloadsensor.exe sgepasswd qquota qrsub qrstat qrdel"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \

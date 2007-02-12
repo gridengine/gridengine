@@ -61,7 +61,7 @@ lList **userset_list_get_master_list(void)
 
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
-*     userset_is_deadline_user() -- may user sumbit deadline jobs. 
+*     userset_is_deadline_user() -- may user submit deadline jobs. 
 *
 *  SYNOPSIS
 *     bool userset_is_deadline_user(lList *lp, const char *username) 
@@ -87,6 +87,42 @@ bool userset_is_deadline_user(lList *lp, const char *username)
    if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
          US_entries)) {
       DRETURN(true); /* found user in deadline user list */
+   }
+
+   DRETURN(false);
+}
+
+/****** sge_userset/userset_is_ar_user() ***************************************
+*  NAME
+*     userset_is_ar_user() -- may user request advance reservations
+*
+*  SYNOPSIS
+*     bool userset_is_ar_user(lList *lp, const char *username) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList *lp            - US_Type
+*     const char *username - user name
+*
+*  RESULT
+*     bool - true if user has permission
+*            false if user has no permission
+*  NOTES
+*     MT-NOTE: userset_is_ar_user() is MT safe 
+*******************************************************************************/
+bool userset_is_ar_user(lList *lp, const char *username)
+{
+   lListElem *ar_users;
+
+   DENTER(TOP_LAYER, "userset_is_ar_user");
+
+   ar_users = lGetElemStr(lp, US_name, AR_USERS);
+
+   if (ar_users && lGetSubStr(ar_users, UE_name, username, 
+         US_entries)) {
+      DRETURN(true); /* found user in ar user list */
    }
 
    DRETURN(false);

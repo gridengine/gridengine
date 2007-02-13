@@ -1,3 +1,7 @@
+DT-2007-02-13-0: Docs:      o Corrected man pages from PJ-2007-02-09-0
+                            o Merged from Maintrunk DT-2007-02-13-0
+                 Changed:   man/man1/sge_types.1, man/man5/complexes.5
+
 AH-2007-02-13-0: Bugfix:    Added 'dtrace' directory to common list in
                             scripts/mk_dist.
                  Review:    RD

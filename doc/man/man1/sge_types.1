@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/09 12:37:23 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/13 17:48:27 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/09 12:37:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/13 17:48:27 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -72,10 +72,12 @@ The syntax of xxQS_NAMExx types in alphabetic order:
 .\" wc_pe_name        := pe_name|pattern
 .\"
 .SS "\fBexpression\fP"
-The wildcard expression is a regular boolean expression that consists of
-a couple of \fIpattern\fPs joined by boolean operators. 
-When the wildcard expression is used the following definition applies:
+A wildcard expression is a regular boolean expression that consists of
+one or more \fIpattern\fPs joined by boolean operators. 
+When a wildcard expression is used, the following definition applies:
 .PP
+.\"
+.nf
 .ta \w'XXXXXXXX'u
 expression	= ["!"] ["("] valExp [")"] [ AND_OR expression ]*
 valExp	= pattern | expression
@@ -86,30 +88,32 @@ where:
 .PP
 .\"
 .nf
-.ta \w'XXXXXXXX'u
-"!"	not operator negate the following pattern or expression 
-"&"	and operator logically and with the following expression
-"|"	or operator logically or with the following expression
-"("	open bracket begin the inner expression.
-")"	close bracket ends the inner expression. 
+.ta \w'XXXXXXXXXX'u
+"!"	not operator -- negate the following pattern or expression 
+"&"	and operator -- logically and with the following expression
+"|"	or operator -- logically or with the following expression
+"("	open bracket -- begin an inner expression.
+")"	close bracket -- end an inner expression. 
 "pattern"	see the \fIpattern\fP definition thats follow
 .fi
 .PP
-The expression itself should be put into '"' to ensure, that
-the clients get the whole expression.
+The expression itself should be put inside quotes ('"') to ensure, that
+clients receive the complete expression.
 .PP
 .\"
 .ta
 e.g.
 .RS
-.ta \w'XXXXXXXXXXXXX'u
-"(lx*|sol*)&*64*"	begin with lx or sol and contain somwhere 64
-"rh_3*&!rh_3.1"   can be any string beginning rh_3, but not a rh_3.1
-
+.nf
+.ta \w'XXXXXXXXXXXXXXXXXX'u
+"(lx*|sol*)&*64*" any string beginning with either "lx" or
+                  "sol" and containing "64"
+"rh_3*&!rh_3.1"   any string beginning with "rh_3", except
+                  "rh_3.1"
 .fi
 .\"
 .SS "\fBpattern\fP"
-When the patterns are used the following definition applies:
+When patterns are used the following definitions apply:
 .PP
 .nf
 .ta \w'XXXXXXXX'u
@@ -130,8 +134,8 @@ For more details please see
 
 .fi
 .PP
-The pattern itself should be put into '"' to ensure, that
-the clients get the pattern.
+The pattern itself should be put inside quotes ('"') to ensure, that
+clients receive the complete pattern.
 .PP
 .SS "\fBrange\fP"
 The task range specifier has the form 

@@ -703,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: $SGE_VERSION"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -763,7 +763,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: $SGE_VERSION"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"
@@ -1249,6 +1249,54 @@ AddHosts()
 
 
 #-------------------------------------------------------------------------
+# AddSubmitHosts
+#
+AddSubmitHosts()
+{
+   CERT_COPY_HOST_LIST=""
+   if [ "$AUTO" = "true" ]; then
+      CERT_COPY_HOST_LIST=$SUBMIT_HOST_LIST
+      for h in $SUBMIT_HOST_LIST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding SUBMIT_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding SUBMIT_HOST %s" $tmp
+             $SGE_BIN/qconf -as $tmp
+           done
+        else
+             $INFOTEXT -log "Adding SUBMIT_HOST %s" $h
+             $SGE_BIN/qconf -as $h
+        fi
+      done  
+   else
+      $INFOTEXT -u "\nAdding Grid Engine submit hosts"
+      $INFOTEXT "\nPlease now add the list of hosts, which should become submit hosts.\n" \
+                "Please enter a blank separated list of your submit hosts. You may\n" \
+                "press <RETURN> if the line is getting too long. Once you are finished\n" \
+                "simply press <RETURN> without entering a name.\n\n" \
+                "You also may prepare a file with the hostnames of the machines where you plan\n" \
+                "to install Grid Engine. This may be convenient if you are installing Grid\n" \
+                "Engine on many hosts.\n\n"
+
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+                "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
+      ret=$?
+      if [ $ret = 0 ]; then
+         AddHostsFromFile submit 
+         ret=$?
+      fi
+
+      if [ $ret = 1 ]; then
+         AddHostsFromTerminal submit 
+      fi
+
+      $INFOTEXT -wait -auto $AUTO -n "Finished adding hosts. Hit <RETURN> to continue >> "
+      $CLEAR
+   fi
+}
+
+
+#-------------------------------------------------------------------------
 # AddHostsFromFile: Get a list of hosts and add them as
 # admin and submit hosts
 #
@@ -1261,6 +1309,8 @@ AddHostsFromFile()
       $CLEAR
       if [ "$hosttype" = "execd" ]; then
          $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      elif [ "$hosttype" = "submit" ]; then
+         $INFOTEXT -u "\nAdding submit hosts"
       else
          $INFOTEXT -u "\nAdding admin hosts from file"
       fi
@@ -1278,6 +1328,11 @@ AddHostsFromFile()
             for h in `cat $file`; do
                $SGE_BIN/qconf -ah $h
                $SGE_BIN/qconf -as $h
+            done
+         elif [ "$hosttype" = "submit" ]; then
+            for h in $hlist; do
+               $SGE_BIN/qconf -as $h
+               CERT_COPY_HOST_LIST="$CERT_COPY_HOST_LIST $h" 
             done
          else
             for h in `cat $file`; do
@@ -1301,6 +1356,8 @@ AddHostsFromTerminal()
       $CLEAR
       if [ "$hosttype" = "execd" ]; then
          $INFOTEXT -u "\nAdding admin and submit hosts"
+      elif [ "$hosttype" = "submit" ]; then
+         $INFOTEXT -u "\nAdding submit hosts"
       else
          $INFOTEXT -u "\nAdding admin hosts"
       fi
@@ -1316,6 +1373,11 @@ AddHostsFromTerminal()
          for h in $hlist; do
             $SGE_BIN/qconf -ah $h
             $SGE_BIN/qconf -as $h
+         done
+      elif [ "$hosttype" = "submit" ]; then
+         for h in $hlist; do
+            $SGE_BIN/qconf -as $h
+            CERT_COPY_HOST_LIST="$CERT_COPY_HOST_LIST $h"
          done
       else
          for h in $hlist; do

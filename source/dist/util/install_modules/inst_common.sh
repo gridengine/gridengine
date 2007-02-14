@@ -407,19 +407,23 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-db|-udb|-updatedb \\\n" \
-             "       -upd <sge-root> <sge-cell>|-bup|-rst [-auto <filename>] | [-winupdate] \\\n" \
-             "       [-csp] [-resport] [-afs] [-host <hostname>] [-rsh] [-noremote]\n" \
+             "Usage: %s -m|-um|-x|-ux [all]|-rccreate|-sm|-usm|-s|-db|-udb|-updatedb \\\n" \
+             "       -upd <sge-root> <sge-cell>|-bup|-rst|-copycerts <host|hostlist>| \\\n" \
+             "       -v [-auto <filename>] | [-winupdate] [-csp] [-resport] [-afs] \\\n" \
+             "       [-host <hostname>] [-rsh] [-noremote]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
              "   -ux        uninstall execution host\n" \
              "   -sm        install shadow host\n" \
              "   -usm       uninstall shadow host\n" \
+             "   -s         install submit host(s)\n" \
              "   -db        install Berkeley DB on seperated spooling server\n" \
              "   -udb       uninstall Berkeley DB RPC spooling server\n" \
              "   -bup       backup of your configuration\n" \
              "   -rst       restore configuration from backup\n" \
+             "   -copycerts copy local certificates to given hosts\n" \
+             "   -v         print version\n" \
              "   -upd       upgrade cluster from 5.x to 6.1\n" \
              "   -rccreate  create startup scripts from templates\n" \
              "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
@@ -450,7 +454,8 @@ ErrUsage()
              "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
              "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
              "   <sge-root> = SGE_ROOT directory of old 5.x installation.\n" \
-             "   <sge-cell> = SGE_CELL name of old 5.x installation.\n" $myname
+             "   <sge-cell> = SGE_CELL name of old 5.x installation.\n" \
+             "   inst_sge -copycerts host or inst_sge -copycerts \"host1 host2\"\n" $myname
 
    if [ "$option" != "" ]; then 
       $INFOTEXT -e "   The option %s is not valid!" $option 
@@ -1022,7 +1027,7 @@ PrintLocalConf()
 
    arg=$1
    if [ $arg = 1 ]; then
-      $ECHO "# Version: 6.0u8_1"
+      $ECHO "# Version: $SGE_VERSION"
       $ECHO "#"
       $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
       $ECHO "#"
@@ -1575,7 +1580,7 @@ BackupConfig()
    $INFOTEXT -log "SGE_CELL: %s" $SGE_CELL
 
    BackupCheckBootStrapFile
-   CheckArchBins
+   #CheckArchBins
    SetBackupDir
 
 
@@ -1645,7 +1650,7 @@ RestoreConfig()
 
       cd $SGE_ROOT
       RestoreCheckBootStrapFile "/tmp/bup_tmp_$DATE/"
-      CheckArchBins
+      #CheckArchBins
 
       if [ "$spooling_method" = "berkeleydb" ]; then
          if [ $is_rpc = 0 ]; then
@@ -1772,7 +1777,7 @@ RestoreConfig()
       done
 
       RestoreCheckBootStrapFile $bup_file
-      CheckArchBins
+      #CheckArchBins
   
       if [ "$spooling_method" = "berkeleydb" ]; then 
          if [ "$is_rpc" = 0 ]; then
@@ -1883,18 +1888,18 @@ RestoreConfig()
 
 SwitchArchBup()
 {
-      if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
-         OLD_LD_PATH=$LD_LIBRARY_PATH
-         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
-         export LD_LIBRARY_PATH
-         DUMPIT="$SGE_ROOT/utilbin/sol-sparc/db_dump -f"
-         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
-         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
-         export LD_LIBRARY_PATH
-      else
+#      if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
+#         OLD_LD_PATH=$LD_LIBRARY_PATH
+#         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
+#         export LD_LIBRARY_PATH
+#         DUMPIT="$SGE_ROOT/utilbin/sol-sparc/db_dump -f"
+#         ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+#         LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
+#         export LD_LIBRARY_PATH
+#      else
          DUMPIT="$SGE_UTILBIN/db_dump -f"
          ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
-      fi
+#      fi
 
 }
 
@@ -1904,18 +1909,18 @@ SwitchArchRst()
 {
    dump_dir=$1
 
-         if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
-            OLD_LD_PATH=$LD_LIBRARY_PATH
-            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
-            export LD_LIBRARY_PATH
-            DB_LOAD="$SGE_ROOT/utilbin/sol-sparc/db_load -f"
-            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
-            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
-            export LD_LIBRARY_PATH
-         else
+#         if [ "$is_rpc" = 1 -a "$SGE_ARCH" = "sol-sparc64" ]; then
+#            OLD_LD_PATH=$LD_LIBRARY_PATH
+#            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc"
+#            export LD_LIBRARY_PATH
+#            DB_LOAD="$SGE_ROOT/utilbin/sol-sparc/db_load -f"
+#            ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
+#            LD_LIBRARY_PATH="$OLD_LD_PATH:./lib/sol-sparc64"
+#            export LD_LIBRARY_PATH
+#         else
             DB_LOAD="$SGE_UTILBIN/db_load -f" 
             ExecuteAsAdmin $DB_LOAD $dump_dir/*.dump -h $db_home sge
-         fi
+#         fi
 }
 
 
@@ -2539,24 +2544,48 @@ CheckServiceAndPorts()
 CopyCA()
 {
    if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
-      return
+      $INFOTEXT -log "No CSP system installed!"
+      return 1
    fi
 
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
-      return
+      $INFOTEXT "No CSP system installed!"
+      return 1
    fi
-
+   
+   hosttype="undef"
+   if [ "$1" = "execd" ]; then
+      hosttype="execd"
+      out_text="execution"
+   elif [ "$1" = "submit" ]; then
+      hosttype="submit"
+      out_text="submit"
+   elif [ "$1" = "copyonly" ]; then
+      hosttype="copyonly"
+      out_text="remote"
+   else
+      hosttype="remote"
+      out_text="remote"
+   fi
+       
    $INFOTEXT -u "Installing SGE in CSP mode"
-   $INFOTEXT "\nInstalling SGE in CSP mode needs to move the cert\n" \
-             "files to each execution host. This can be done by script!\n"
-   $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
-             "may do rsh/ssh to the executions host, without being asked for a password!\n"
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
-   "execution host? (y/n) [y] >>"
+   if [ "$hosttype" = "copyonly" ]; then
+      $INFOTEXT "\nThe script copies the cert files to each %s host. \n" $out_text
+      $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
+             "may do rsh/ssh to the %s host, without being asked for a password!\n" $out_text
+      `true`
+   else 
+      $INFOTEXT "\nInstalling SGE in CSP mode needs to copy the cert\n" \
+                "files to each %s host. This can be done by script!\n" $out_text
+      $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
+                "may do rsh/ssh to the %s host, without being asked for a password!\n" $out_text
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
+      "<%s> host? (y/n) [y] >>" $out_text
+   fi
 
    if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
-                "execution host (default: ssh)"
+                "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
       if [ "$?" = 0 ]; then
          SHELL_NAME="rsh"
@@ -2572,8 +2601,13 @@ CopyCA()
       return
    fi
 
-   #ToDo: What about the submit hosts? RFE: -instsubmit + copycert functionality
-   CopyCaToHostType admin 
+   if [ "$hosttype" = "execd" ]; then
+      CopyCaToHostType admin 
+   elif [ "$hosttype" = "submit" ]; then
+      CopyCaToHostType submit
+   elif [ "$hosttype" = "copyonly" -o "$hosttype" = "remote" ]; then
+      CopyCaToHostType remote
+   fi
 
 }
 
@@ -2581,18 +2615,20 @@ CopyCA()
 CopyCaToHostType()
 {
    if [ "$1" = "admin" ]; then
-      cmd="$SGE_BIN/qconf -sh"
+      cmd=`$SGE_BIN/qconf -sh`
    elif [ "$1" = "submit" ]; then
-      cmd="$SGE_BIN/qconf -ss"
+      cmd=`$SGE_BIN/qconf -ss`
+   elif [ "$1" = "remote" ]; then
+      cmd=$CERT_COPY_HOST_LIST
    fi
 
-   for RHOST in `$cmd`; do
+   for RHOST in $cmd; do
          if [ "$RHOST" != "$HOST" ]; then
             CheckRSHConnection $RHOST
             if [ "$?" = 0 ]; then
                $INFOTEXT "Copying certificates to host %s" $RHOST
                $INFOTEXT -log "Copying certificates to host %s" $RHOST
-               echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
+               echo "mkdir /var/sgeCA > /dev/null 2>&1" | $SHELL_NAME $RHOST /bin/sh &
                if [ "$SGE_QMASTER_PORT" = "" ]; then 
                   $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
                else
@@ -2682,7 +2718,7 @@ LicenseAgreement()
    if [ -f $PWD/doc/LICENSE ]; then
       $MORE $PWD/doc/LICENSE
 
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you accept the license agreement? (y/n) [n] >> "
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you agree with that license? (y/n) [n] >> "
 
       if [ "$?" = 1 ]; then
          exit 1

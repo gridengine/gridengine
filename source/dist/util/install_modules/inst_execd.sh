@@ -65,6 +65,31 @@ WelcomeTheUserExecHost()
 }
 
 
+#--------------------------------------------------------------------------
+# WelcomeTheUserSubmitHost
+#
+WelcomeTheUserSubmitHost()
+{
+   if [ "$AUTO" = "true" ]; then
+      return
+   fi
+ 
+   $INFOTEXT -u "\nWelcome to the Grid Engine submit host installation"
+   $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
+             "this step (with >install_qmaster<) prior the submit host installation.\n\n" \
+             "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
+             "also necessary that this host is an administrative host.\n\n" \
+             "The script will check this in a later step or use the following command:\n\n" \
+             "   # qconf -sh\n\n" \
+             "You can add an administrative host with the command:\n\n" \
+             "   # qconf -ah <hostname>\n\n" \
+             "The submit host installation will take only a few minutes.\n"
+
+   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
+
 #-------------------------------------------------------------------------
 # CheckQmasterInstallation
 #

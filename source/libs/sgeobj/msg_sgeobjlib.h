@@ -282,23 +282,23 @@
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults"))
 #define MSG_CONF_INVALIDPARAM_SSI      _MESSAGE(64302, _("invalid setting for "SFQ", attribute "SFQ" - using default %d"))
-#define MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U _MESSAGE(64302, _("nr of dynamic event clients exceeds max file descriptor limit, setting MAX_DYN_EC="sge_U32CFormat))
 #define MSG_CENTRY_QINOTALLOWED        _MESSAGE(64303, _("Queue instance names are not allowed in -l resource requests"))
 #define MSG_OBJECT_VALUENOTULONG_S     _MESSAGE(64304, _(SFQ" is not an u_long32 value"))
 #define MSG_CQUEUE_INVALIDDOMSETTING_SS _MESSAGE(64305, _("Did not modify "SFQ" for host group "SFQ" which does not exist."))
 #define MSG_HGRP_INVALIDHOSTGROUPNAME_S _MESSAGE(64306, _("host group name "SFQ" is not valid"))
 #define MSG_WEIGHTFACTNONUMB_SS         _MESSAGE(64307, _(SFQ" uses "SFQ" as weighting factor (only numbers are allowed)"))
 #define MSG_MULTIPLEWEIGHTFACT_S        _MESSAGE(64308, _(SFQ" may not use multiple weighting factors"))
+#define MSG_CONF_NR_DYNAMIC_EVENT_CLIENT_EXCEEDS_MAX_FILEDESCR_U _MESSAGE(64309, _("nr of dynamic event clients exceeds max file descriptor limit, setting MAX_DYN_EC="sge_U32CFormat))
 
-#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64309, _("can't create queue "SFQ": host "SFQ" is not known"))
-#define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64310, _("Invalid character in pe name of pe "SFQ))
-#define MSG_PE_UNKNOWN_URGENCY_SLOT_SS  _MESSAGE(64311, _("unknown urgency_slot_setting "SFQ" for PE "SFQ))
+#define MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(64310, _("can't create queue "SFQ": host "SFQ" is not known"))
+#define MSG_PE_INVALIDCHARACTERINPE_S   _MESSAGE(64311, _("Invalid character in pe name of pe "SFQ))
+#define MSG_PE_UNKNOWN_URGENCY_SLOT_SS  _MESSAGE(64312, _("unknown urgency_slot_setting "SFQ" for PE "SFQ))
 
 #ifdef SGE_PQS_API
-#define MSG_PQS_NODYNAMICLIBRARY_S       _MESSAGE(64312, _("No dynamic library specified for pe_qsort_args for PE "SFQ))
-#define MSG_PQS_UNABLETOOPENLIBRARY_SSS  _MESSAGE(64313, _("Unable to open "SFQ" library in pe_qsort_args for PE "SFQ" - "SFQ))
-#define MSG_PQS_NOFUNCTIONNAME_S         _MESSAGE(64314, _("No function name specified in pe_qsort_args for PE "SFQ))
-#define MSG_PQS_UNABLELOCATESYMBOL_SSSS  _MESSAGE(64315, _("Unable to locate "SFQ" symbol in "SFQ" library for pe_qsort_args in PE "SFQ" - "SFQ))
+#define MSG_PQS_NODYNAMICLIBRARY_S       _MESSAGE(64313, _("No dynamic library specified for pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLETOOPENLIBRARY_SSS  _MESSAGE(64314, _("Unable to open "SFQ" library in pe_qsort_args for PE "SFQ" - "SFQ))
+#define MSG_PQS_NOFUNCTIONNAME_S         _MESSAGE(64315, _("No function name specified in pe_qsort_args for PE "SFQ))
+#define MSG_PQS_UNABLELOCATESYMBOL_SSSS  _MESSAGE(64316, _("Unable to locate "SFQ" symbol in "SFQ" library for pe_qsort_args in PE "SFQ" - "SFQ))
 #endif
 
 #define MSG_CQUEUE_CQUEUEISNULL_SSSII      _MESSAGE(64317, _("cqueue_list_locate_qinstance("SFQ"): cqueue == NULL("SFQ", "SFQ", %d, %d"))

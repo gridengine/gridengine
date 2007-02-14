@@ -119,6 +119,7 @@ CreateRpm() # Arguments: package arch files
 #
 
 makebin=false
+makearco=false
 makecommon=false
 makedoc=false
 makesgeee=false
@@ -242,7 +243,7 @@ done
 
 DOC_PACKAGE=""
 COMMON_DOCS="doc/README* doc/*.asc doc/javadocs"
-COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs \
+COMMON_PACKAGE="3rd_party catman ckpt examples/jobs \
                 examples/drmaa include inst_sge install_qmaster \
                 install_execd man mpi pvm qmon util lib/drmaa.jar"
 ARCO_PACKAGE="dbwriter reporting"
@@ -265,12 +266,12 @@ if [ $makecommon = true ]; then
    fi
 
    if [ $makerpm = true ]; then
-      CreateRpm common noarch $COMMON_PACKAGE
+      CreateRpm common noarch $COMMON_PACKAGE $COMMON_DOCS
    else
      cd $VDIR
      filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
-     echo Command: $TAR cvzf $filename $COMMON_PACKAGE
-                  $TAR cvzf $filename $COMMON_PACKAGE
+     echo Command: $TAR cvzf $filename $COMMON_PACKAGE $COMMON_DOCS
+                  $TAR cvzf $filename $COMMON_PACKAGE $COMMON_DOCS
      cd ..
    fi
 fi

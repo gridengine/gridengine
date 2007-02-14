@@ -879,7 +879,6 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/pe \
                         $DEST_SGE_ROOT/util/resources/schemas \
                         $DEST_SGE_ROOT/util/resources/schemas/qstat \
-                        $DEST_SGE_ROOT/util/resources/spooling \
                         $DEST_SGE_ROOT/util/resources/starter_methods \
                         $DEST_SGE_ROOT/util/resources/usersets
       
@@ -889,7 +888,6 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/sgeremoterun \
                         $DEST_SGE_ROOT/util/sgeCA/sge_ca \
                         $DEST_SGE_ROOT/util/resources/loadsensors/* \
-                        $DEST_SGE_ROOT/util/resources/spooling/*.sh \
                         $DEST_SGE_ROOT/util/resources/starter_methods/*
 
       Execute chmod 644 $DEST_SGE_ROOT/util/install_modules/* \
@@ -899,7 +897,6 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/centry/* \
                         $DEST_SGE_ROOT/util/resources/pe/* \
                         $DEST_SGE_ROOT/util/resources/schemas/*/* \
-                        $DEST_SGE_ROOT/util/resources/spooling/*.sql \
                         $DEST_SGE_ROOT/util/resources/usersets/*
    fi
    
@@ -1184,7 +1181,12 @@ for i in $ARCH; do
             qtcsh)
                echo Installing qtcsh
                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
-               ;; 
+               ;;
+            sgepasswd)
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  InstallProg $prog
+               fi
+               ;;
             sge_qmaster|spoolinit|spooldefaults)
                if [ "$DSTARCH" != "win32-x86" ]; then
                   if [ $instclassictargets = false ]; then

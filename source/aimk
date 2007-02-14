@@ -1017,7 +1017,7 @@ case DARWIN_PPC:
 #   else
 #      set MOTIFHOME = /usr/local
 #   endif   
-   set MOTIFHOME = /usr/X11R6/openmotif-2.2.3
+   set MOTIFHOME = /Applications/Darwin/openmotif-2.2.3
 
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"

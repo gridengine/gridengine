@@ -1,3 +1,13 @@
+AH-2007-02-14-1: Docs:      - Corrected queue_conf(5) where qconf(1) option
+                              "-sds" was wrongly refered "-sick".
+                            - need to define continuation character behaviour
+                              with configuration files
+                            - describe useful characters for every parameter
+                              with qconf file formats
+                 Bugtraq:   6520257, 6521285
+                 Changed:   Man pages
+                 Review:    RD
+
 RD-2007-02-14-0: Bugfix:    fixed qmon lib error on darwin
                  Review:    JG
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.11.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -55,6 +55,10 @@ specified host.
 .PP
 The special hostname "global" can be used to define cluster global 
 characteristics.
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -62,7 +66,8 @@ The format of a
 .I host_conf
 file is defined as follows:
 .SS "\fBhostname\fP"
-The name of the execution host.
+The execution hosts name as defined for \fIhost_name\fP in
+.M sge_types 1 .
 .SS "\fBload_scaling\fP"
 A comma separated list of scaling values to be applied to each or part
 of the load values being reported by the
@@ -242,6 +247,7 @@ report_variables will override settings from the global host.
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx_types 1 ,
 .M qconf 1 ,
 .M uptime 1 ,
 .M access_list 5 ,

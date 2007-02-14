@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: user.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: user.5,v $     Last Update: $Date: 2007/02/14 13:34:16 $     Revision: $Revision: 1.8.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH USER 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH USER 5 "$Date: 2007/02/14 13:34:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 user \- xxQS_NAMExx user entry file format
@@ -54,12 +54,17 @@ shown via the \fB\-suser\fP switch. The output follows the
 format description. New user entries can be created and existing can be
 modified via the \fB\-auser\fP, \fB\-muser\fP and \fB\-duser\fP options to
 .M qconf 1 .
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
 A user entry contains four parameters:
 .SS "\fBname\fP"
-The user name.
+The user name as defined for \fIuser_name\fP in
+.M sge_types 1 .
 .SS "\fBoticket\fP"
 The amount of override tickets currently assigned to the user.
 .SS "\fBfshare\fP"
@@ -78,6 +83,7 @@ in
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx_types 1 ,
 .M qconf 1 .
 .M sge_conf 5 .
 .\"

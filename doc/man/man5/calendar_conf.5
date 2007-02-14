@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: calendar_conf.5,v $     Last Update: $Date: 2005/05/06 09:11:28 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: calendar_conf.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.8.18.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH CALENDAR_CONF 5 "$Date: 2005/05/06 09:11:28 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH CALENDAR_CONF 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 calendar_conf \- xxQS_NAMExx calendar configuration file format
@@ -51,13 +51,18 @@ options to
 .M qconf 1
 or with the calendar configuration dialog of the graphical user interface
 .M qmon 1 .
-The format of the calendar configuration entries is defined as follows:
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
 .SS "\fBcalendar_name\fP"
 The name of the calendar to be used when attaching it to queues or when 
-administering the calendar definition.
+administering the calendar definition. See \fIcalendar_name\fP in
+.M sge_types 1 
+for a precise definition of valid calendar names.  
 .\"
 .SS "\fByear\fP"
 The queue status definition on a day of the year basis. This field generally
@@ -265,6 +270,7 @@ instead of switching them "off".
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx__types 1 ,
 .M qconf 1 ,
 .M queue_conf 5 .
 .\"

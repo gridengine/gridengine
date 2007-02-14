@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/01/05 19:56:10 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/02/14 13:34:14 $     Revision: $Revision: 1.6.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCESS_LIST 5 "$Date: 2007/01/05 19:56:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCESS_LIST 5 "$Date: 2007/02/14 13:34:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 access_list \- xxQS_NAMExx access list file format
@@ -52,6 +52,10 @@ modified via the \fB\-au\fP and \fB\-du\fP options to
 .PP
 Departments are a special form of access list that additionally allow
 assignment of functional shares and override tickets. 
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -59,7 +63,8 @@ The following list of \fIaccess_list\fP parameters specifies the
 .I access_list
 content:
 .SS "\fBname\fP"
-The name of the access list. 
+The name of the access list as defined for \fIuserset_name\fP in
+.M sge_types 1 .
 .SS "\fBtype\fP"
 The type of the acess list, currently  one  of 
 .I ACL,
@@ -73,7 +78,9 @@ The amount of override tickets currently assigned to the department.
 The current functional share of the department.
 .SS "\fBentries\fP"
 The entries parameter contains the comma separated list of 
-those UNIX users or UNIX user groups that are assigned to the access list 
+those UNIX users (see \fIuser_name\fP in
+.M sge_types 1 )
+or UNIX user groups that are assigned to the access list 
 or the department. Only symbolic names are allowed.  A group 
 is differentiated from a user name by prefixing the group name with a '@' sign. 
 Pure access lists allow enlisting any user or group in any access list.  
@@ -87,6 +94,7 @@ is assigned, if existing.
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M sge_types 1 ,
 .M qconf 1 ,
 .M xxqs_name_sxx_pe 5 ,
 .M queue_conf 5 .

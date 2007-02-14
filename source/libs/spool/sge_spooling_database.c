@@ -344,6 +344,7 @@ spool_database_initialize(lList **answer_list, lListElem *rule)
          case SGE_TYPE_SUBMITHOST:
          case SGE_TYPE_USERSET:
          case SGE_TYPE_HGROUP:
+         case SGE_TYPE_RQS:
 #ifndef __SGE_NO_USERMAPPING__
          case SGE_TYPE_CUSER:
 #endif

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/01/05 19:56:11 $     Revision: $Revision: 1.55 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.56 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/01/05 19:56:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -69,6 +69,10 @@ If a local configuration is available, its entries overwrite the
 corresponding entries of the global configuration. \fBNote:\fP The local
 configuration does not have to contain all valid configuration entries,
 but only those which need to be modified against the global entries.
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT

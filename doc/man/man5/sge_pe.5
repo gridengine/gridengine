@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/01/05 19:56:09 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/01/05 19:56:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -55,6 +55,10 @@ to
 together with a request of a range for the number of parallel process
 to be allocated by the job. Additional \fB\-l\fP options may be used
 to specify the job requirement to further detail.
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -64,7 +68,9 @@ file is defined as follows:
 .\"
 .\"
 .SS "\fBpe_name\fP"
-The name of the parallel environment. To be used in the
+The name of the parallel environment as defined for \fIpe_name\fP in
+.M sge_types 1 . 
+To be used in the
 .M qsub 1
 \fB\-pe\fP switch.
 .\"
@@ -299,6 +305,7 @@ this.
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx__types 1 ,
 .M qconf 1 ,
 .M qdel 1 ,
 .M qmod 1 ,

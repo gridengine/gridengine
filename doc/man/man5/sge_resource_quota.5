@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/02/09 10:45:47 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/02/09 10:45:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
@@ -58,6 +58,10 @@ are defined, the most restrictive set is used.
 Every resource quota set consist of one or more resource quota rules. These rules are evaluated
 in order, and the first rule that matches a specific request will be used. A resource quota
 set always results in at most one effective resource quota rule for a specific request.
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT

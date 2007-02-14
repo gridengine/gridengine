@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/13 17:55:13 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/14 12:58:38 $     Revision: $Revision: 1.16 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/13 17:55:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/14 12:58:38 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -47,15 +47,10 @@ types is explained in this page.
 The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
 .\" expression        => a regular boolean expression
-.\" host              => wc_host without expression
-.\" hostgroup         => wc_hostgroup without expression
 .\" pattern           => a pattern definition
 .\" qdomain           => wc_qdomain without expression
 .\" qinstance         => wc_qinstance without expression
-.\" queue             => wc_queue without expression
 .\" range             := n[-m[:s]][,n[-m[:s]],...]
-.\" user              => wc_user without pattern
-.\" user_list         := user[,user,...]
 .\" wc_host           := wildcard expression matching a host
 .\" wc_hostgroup      := wildcard expression matching a hostgroup
 .\" wc_job            := job-id|job-name|pattern
@@ -70,6 +65,120 @@ The syntax of xxQS_NAMExx types in alphabetic order:
 .\" wc_user_list      := wc_user[,wc_user,...]
 .\" wc_project        := project|pattern
 .\" wc_pe_name        := pe_name|pattern
+.\"
+.SH "OBJECT TYPES"
+These types are used for defining xxQS_NAMExx configuration:
+.\"
+.SS "\fBcalendar_name\fP"
+A calendar name is the name of a xxQS_NAMExx calendar described in
+.M calendar_conf 5 . 
+.PP
+\fIcalendar_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBckpt_name\fP"
+A "ckpt_name" is the name of a xxQS_NAMExx checkpointing interface described in
+.M checkpoint 5 . 
+.PP
+\fIckpt_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBcomplex_name\fP"
+A complex name is the name of a xxQS_NAMExx resource attribute described in 
+.M complex 5 . 
+.PP
+\fIcomplex_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBhost_identifier\fP"
+A host identifier can be either a host name or a host group name. 
+.PP
+\fIhost_identifier\fP := \fIhost_name\fP | \fIhostgroup_name\fP
+.fi
+.\"
+.SS "\fBhostgroup_name\fP"
+A host group name is the name of a xxQS_NAMExx host group described in
+.M hostgroup 5 .
+Note, to allow host group names easily be differed from host names 
+a "@" prefix is used.
+.PP
+\fIhostgroup_name\fP := @\fIobject_name\fP
+.PP
+.fi
+.\"
+.SS "\fBhost_name\fP"
+A host name is the official name of a host node. Host names with a domain 
+specification such as "gridmaster.sun.com" are called fully-qualified host names, 
+whereas host names like "gridmaster" are called short host names. Note, there 
+are the install time parameters default_domain and ignore_fqdn (see 
+.M bootstrap 5 )
+which affect how xxQS_NAMExx deals with host names in general. 
+.fi
+.\"
+.SS "\fBmemory_specifier\fP"
+Memory specifiers are positive decimal, hexadecimal or octal
+integer  constants  which  may  be  followed by a multiplier
+letter. Valid multiplier letters are k, K, m, M,  g  and  G,
+where  k  means  multiply  the  value by 1000, K multiply by
+1024, m multiply by 1000*1000, M multiply  by  1024*1024,  g
+multiply by 1000*1000*1000 and G multiply by 1024*1024*1024.
+If no multiplier is present, the value is  just  counted  in
+bytes.
+.\"
+.SS "\fBpe_name\fP"
+A "pe_name" is the name of a xxQS_NAMExx parallel environment described in
+.M sge_pe 5 . 
+.PP
+\fIpe_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBproject_name\fP"
+A project name is the name of a xxQS_NAMExx project described in
+.M project 5 . 
+.PP
+\fIproject_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBqueue_name\fP"
+A queue name is the name of a xxQS_NAMExx queue described in
+.M queue_conf 5 .
+.PP
+\fIqueue_name \fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBtime_specifier\fP"
+A time specifier either consists of a positive decimal, hexadecimal or 
+octal integer constant, in which case the value is interpreted to be in 
+seconds, or is built by 3 decimal integer numbers separated by colon 
+signs where the first number counts the hours, the second the minutes 
+and the third the seconds. If a number would be zero it can be left 
+out but the separating colon must remain (e.g. 1:0:1 = 1::1 means 1 
+hours and 1 second).
+.\"
+.SS "\fBuser_name\fP"
+A user name can be the name of a 
+.M login 1 
+user or of the xxQS_NAMExx user object described in
+.M user 5 . 
+.PP
+\fIuser_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBuserset_name\fP"
+A user set name is the name of an xxQS_NAMExx access list or department described in
+.M access_list 5 . 
+.PP
+\fIuserset_name\fP := \fIobject_name\fP
+.fi
+.\"
+.SS "\fBobject_name\fP"
+An object name is a sequence of up to 512 ASCII string characters except 
+"\\n", "\\t", "\\r", " ", "/", ":", "\'", "\\", "[", "]", "{", "}", 
+"|", "(", ")", "@", "%", or the " character itself.
+.fi
+.SH "MATCHING TYPES"
+These types are used for matching xxQS_NAMExx configuration:
+.\"
 .\"
 .SS "\fBexpression\fP"
 A wildcard expression is a regular boolean expression that consists of
@@ -104,12 +213,18 @@ clients receive the complete expression.
 .ta
 e.g.
 .RS
+<<<<<<< sge_types.1
+.ta \w'XXXXXXXXXXXXX'u
+"!(lx*|sol*)&*64*"	not begin with lx or sol, but contain 64
+"(rh_3*|suse_[89]*)&!rh_3.1"	attribute rh_3*, suse_8* or suse_9*, but do not on a rh_3.1
+=======
 .nf
 .ta \w'XXXXXXXXXXXXXXXXXX'u
 "(lx*|sol*)&*64*" any string beginning with either "lx" or
                   "sol" and containing "64"
 "rh_3*&!rh_3.1"   any string beginning with "rh_3", except
                   "rh_3.1"
+>>>>>>> 1.15
 .fi
 .\"
 .SS "\fBpattern\fP"

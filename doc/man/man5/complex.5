@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/02/13 17:48:27 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/02/14 12:58:39 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2007/02/13 17:48:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2007/02/14 12:58:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -190,6 +190,12 @@ system checks for the current usage, and if the internal accounting is more
 restrictive than the load sensor report, the internal value is kept; if the
 load sensour report is more restrictive, that one is kept.
 .PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
+.\"
+.\"
+.PP
 .SH FORMAT
 The principal format of a 
 .I complex
@@ -202,8 +208,9 @@ of appearance):
 The name of the complex element to be used to request this attribute
 for a job in the
 .M qsub 1
-\fB\-l\fP option. An attribute
-.B name
+\fB\-l\fP option. A complex attribute
+name (see \fIcomplex_name\fP in 
+.M sge_types 1 ) 
 may appear only once across all 
 complexes, i.e. the complex attribute definition is unique.
 .SS "\fBshortcut\fP"
@@ -400,6 +407,7 @@ for an overview on job priorities.
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
+.M xxqs_name_sxx_types 1 ,
 .M qconf 1 ,
 .M qsub 1 ,
 .M uptime 1 ,

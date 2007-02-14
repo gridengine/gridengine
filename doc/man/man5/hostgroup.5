@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOSTGROUP 5 "$Date: 2006/10/24 08:05:02 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOSTGROUP 5 "$Date: 2007/02/14 12:58:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 hostgroup \- host group entry file format
@@ -53,23 +53,29 @@ format description. New host group entries can be created and existing can be
 modified via the \fB\-ahgrp\fP, \fB\-mhgrp\fP, \fB\-dhgrp\fP and 
 \fB\-?attr\fP options to
 .M qconf 1 .
+.PP
+Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
 A host group entry contains following parameters:
-.SS "\fBgroup_name keyword\fP"
-The group_name keyword defines the host group name. Host group names have to
-begin with a '@' character. 
-
+.SS "\fBgroup_name\fP"
+The group_name defines the host group name. Host group names have to
+begin with an '@' character as explained for \fIhostgroup_name\fP in
+.M sge_types 5 .
 .SS "\fBhostlist\fP"
-The name of all hosts and host groups which are now member of the group 
-specified with \fBgroup_name\fP.  
-If The first character of the hostname is a "@" sign the name is used to 
-reference a 
+The name of all hosts and host groups (see 
+\fIhost_identifier\fP in 
+.M sge_types 1 )
+which are member of the group. As list separators white-spaces are 
+supported only. Default value for this parameter is NONE.
+.PP
+Note, if the first character of the \fIhost_identifier\fP is an "@" sign the name 
+is used to reference a 
 .M hostgroup 5 
-which is taken as sub group of this group. Default for this parameter is
-NONE
-
+which is taken as sub group of this group. 
 .\"
 .\"
 
@@ -90,6 +96,7 @@ The entry will define a new host group called
 .\"
 
 .SH "SEE ALSO"
+.M xxqs_name_sxx__types 1 ,
 .M qconf 1
 .\"
 .SH "COPYRIGHT"

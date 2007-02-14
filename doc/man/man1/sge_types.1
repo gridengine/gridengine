@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/14 12:58:38 $     Revision: $Revision: 1.16 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/14 13:08:30 $     Revision: $Revision: 1.17 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/14 12:58:38 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/14 13:08:30 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -42,9 +42,6 @@ user interface consists of several programs and files. Some command-line
 switches and several file attributes are types. The syntax for these
 types is explained in this page.
 .PP
-.\"
-.SH "TYPES"
-The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
 .\" expression        => a regular boolean expression
 .\" pattern           => a pattern definition
@@ -206,6 +203,7 @@ where:
 "pattern"	see the \fIpattern\fP definition thats follow
 .fi
 .PP
+.\"
 The expression itself should be put inside quotes ('"') to ensure that
 clients receive the complete expression.
 .PP
@@ -213,18 +211,12 @@ clients receive the complete expression.
 .ta
 e.g.
 .RS
-<<<<<<< sge_types.1
-.ta \w'XXXXXXXXXXXXX'u
-"!(lx*|sol*)&*64*"	not begin with lx or sol, but contain 64
-"(rh_3*|suse_[89]*)&!rh_3.1"	attribute rh_3*, suse_8* or suse_9*, but do not on a rh_3.1
-=======
 .nf
 .ta \w'XXXXXXXXXXXXXXXXXX'u
 "(lx*|sol*)&*64*" any string beginning with either "lx" or
                   "sol" and containing "64"
 "rh_3*&!rh_3.1"   any string beginning with "rh_3", except
                   "rh_3.1"
->>>>>>> 1.15
 .fi
 .\"
 .SS "\fBpattern\fP"

@@ -1,3 +1,6 @@
+RD-2007-02-14-1: Cleanup:   removed postgresql specific scripts from installation
+                 Review:    JG
+
 AH-2007-02-14-0: Docs:      - Corrected queue_conf(5) where qconf(1) option
                               "-sds" was wrongly refered "-sick".
                             - need to define continuation character behaviour 

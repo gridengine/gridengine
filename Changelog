@@ -1,5 +1,8 @@
-RD-2007-02-14-2: CVS        Created V61beta_TAG
+RD-2007-02-15-0: CVS        Created V61beta_TAG
 -----------------------------------------------
+
+JG-2007-02-15-0: Bugfix:    Fixed non initialized pointer access in qacct.
+                 Review:    RD
 
 JG-2007-02-14-0: Bugfix:    fixed non unique message id
                  Review:    RD

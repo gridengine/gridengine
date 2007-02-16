@@ -167,8 +167,12 @@ char **argv
    sge_rusage_type totals;
    int ii, i_ret;
    lList *complex_options = NULL;
-   lList *centry_list, *queue_list, *exechost_list;
-   lList *hgrp_list, *queueref_list = NULL, *queue_name_list = NULL;
+   lList *centry_list = NULL;
+   lList *queue_list = NULL;
+   lList *exechost_list = NULL;
+   lList *hgrp_list = NULL;
+   lList *queueref_list = NULL;
+   lList *queue_name_list = NULL;
    lList *sorted_list = NULL;
    lList *alp = NULL;
    int is_path_setup = 0;   

@@ -715,13 +715,16 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
             DEXIT;
             return ret;
          }
-         
          evt_classname = (*env)->GetStringUTFChars(env, evt_classname_obj, 0);
+         if (evt_classname == NULL) {
+            answer_list_add(alpp, "fill_generic_event: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          jgdi_log_printf(env, JGDI_EVENT_LOGGER, WARNING,
                          "generic event did not contain a new version (%s)",
                          evt_classname);
-                         
-         (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);            
+         (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);
       }
    }
    

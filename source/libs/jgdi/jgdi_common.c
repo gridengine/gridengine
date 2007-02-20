@@ -181,7 +181,9 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative(JNIEnv *en
    }
    
    url = (*env)->GetStringUTFChars(env, url_obj, 0);
-   username = (*env)->GetStringUTFChars(env, username_obj, 0);
+   if (username_obj != NULL) {
+      username = (*env)->GetStringUTFChars(env, username_obj, 0);
+   }
    if (private_key_obj != NULL) {
       private_key = (*env)->GetStringUTFChars(env, private_key_obj, 0);
    }
@@ -273,13 +275,22 @@ error:
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDI_getEnv(JNIEnv *env, jobject jgdi, jstring name) {
-
+   const char * env_name = NULL;
+   char* buf;
    
-   const char * env_name = (*env)->GetStringUTFChars(env, name, 0);
-
-   char* buf = getenv( env_name );
-
    DENTER( BASIS_LAYER, "Java_com_sun_grid_jgdi_jni_JGDI_getEnv" );
+   
+   if (name == NULL) {
+      DEXIT;
+      return NULL;
+   }
+   env_name = (*env)->GetStringUTFChars(env, name, 0);
+   if (env_name == NULL) {
+      DEXIT;
+      return NULL;
+   }
+   
+   buf = getenv( env_name );
 
    (*env)->ReleaseStringUTFChars(env, name, env_name );
    
@@ -522,6 +533,11 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
          goto error;
       }
       name = (*env)->GetStringUTFChars(env, (jstring)obj, 0);
+      if (name == NULL) {
+         answer_list_add(alpp, "obj_to_listelem: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         ret = JGDI_ERROR;
+         goto error;
+      }
       lSetString(*elem,MO_name, name);
       (*env)->ReleaseStringUTFChars(env, (jstring)obj, name);
       ret = JGDI_SUCCESS;
@@ -592,27 +608,40 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
    
    DENTER( BASIS_LAYER, "set_elem_attribute" );
    
-   object_class = (*env)->GetObjectClass(env, obj);
-   if(test_jni_error(env, "set_elem_attribute: class of bean object not found", alpp)) {
+   /*TODO LP GetObjectClass(env, NULL) => JVM crash*/
+   if (obj == NULL) {
+      answer_list_add(alpp, "set_elem_attribute: obj is NULL, can't call GetObjectClass(env, NULL)", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return JGDI_ERROR;
+      return JGDI_ILLEGAL_STATE;
    }
+   object_class = (*env)->GetObjectClass(env, obj);
 
    if (PropertyDescriptor_getPropertyName(env, prop_descr, &property_name_str, alpp) != JGDI_SUCCESS) {
       DEXIT;
       return JGDI_ERROR;
    }
-   if (test_jni_error(env, "set_object_attribute: GetStringUTFChars failed", alpp)) {
-      DEXIT;
-      return JGDI_ERROR;
+   if (property_name_str == NULL) {
+       answer_list_add(alpp, "set_elem_attribute: property_name_str is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       DEXIT;
+       return JGDI_ILLEGAL_STATE;
    }
    
    if (PropertyDescriptor_getCullFieldName(env, prop_descr, &elem_field_name, alpp) != JGDI_SUCCESS) {
       DEXIT;
       return JGDI_ERROR;
    }
+   if (elem_field_name == NULL) {
+       answer_list_add(alpp, "set_elem_attribute: elem_field_name is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       DEXIT;
+       return JGDI_ILLEGAL_STATE;
+   }
    
    property_name = (*env)->GetStringUTFChars(env, property_name_str, 0);
+   if (property_name == NULL) {
+       answer_list_add(alpp, "set_elem_attribute: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+       DEXIT;
+       return JGDI_ERROR;
+   }
    
    pos = lGetPosInDescr(descr, elem_field_name);
    if (pos < 0) {
@@ -812,16 +841,27 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
       DEXIT;
       return result;
    }
+   if (property_name_str == NULL) {
+       answer_list_add(alpp, "set_object_attribute: property_name_str is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       DEXIT;
+       return JGDI_ERROR;
+   }
    
    if ((result = PropertyDescriptor_getCullFieldName(env, prop_descr, &elem_field_name, alpp)) != JGDI_SUCCESS) {
       DEXIT;
       return result;
    }
+   if (elem_field_name == NULL) {
+       answer_list_add(alpp, "set_object_attribute: elem_field_name is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       DEXIT;
+       return JGDI_ILLEGAL_STATE;
+   }
    
    property_name = (*env)->GetStringUTFChars(env, property_name_str, 0);
-   if (test_jni_error(env,"set_object_attribute: GetStringUTFChars failed", alpp)) {
+   if (property_name == NULL) {
+      answer_list_add(alpp, "set_object_attribute: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       DEXIT;
-      return JGDI_ILLEGAL_STATE;
+      return JGDI_ERROR;
    }
    
    pos = lGetPosInDescr(descr, elem_field_name);
@@ -1064,43 +1104,52 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          DEXIT;
          return ret;
       }
-      
-      if (key_obj != NULL) {
-         *list = lCreateList("", descr);
-         if (!*list) {
-            answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return JGDI_ERROR;
-         }
-         
-         elem =  lCreateElem(descr);
-         if (!elem) {
-            answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            lFreeList(list);
-            DEXIT;
-            return JGDI_ERROR;
-         }
-         
-         key = (*env)->GetStringUTFChars(env, key_obj, 0);
-         switch(key_field_type) {
-            case lHostT:
-               lSetPosHost(elem, key_field_pos, key);
-               break;
-            case lStringT:
-               lSetPosString(elem, key_field_pos, key);
-               break;
-            default:
-               answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               ret = JGDI_ERROR;
-         }
-         (*env)->ReleaseStringUTFChars(env, key_obj, key);
-         if (ret != JGDI_SUCCESS) {
-            lFreeList(list);
-            DEXIT;
-            return ret;
-         }
-         lAppendElem(*list, elem);
+      if (key_obj == NULL) {
+         answer_list_add(alpp, "get_map: key_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
       }
+      
+      *list = lCreateList("", descr);
+      if (!*list) {
+         answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
+         
+      elem =  lCreateElem(descr);
+      if (!elem) {
+         answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         lFreeList(list);
+         DEXIT;
+         return JGDI_ERROR;
+      }
+         
+      key = (*env)->GetStringUTFChars(env, key_obj, 0);
+      if (key == NULL) {
+         answer_list_add(alpp, "get_map: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         lFreeList(list);
+         DEXIT;
+         return JGDI_ERROR;
+      }
+      switch(key_field_type) {
+         case lHostT:
+            lSetPosHost(elem, key_field_pos, key);
+            break;
+         case lStringT:
+            lSetPosString(elem, key_field_pos, key);
+            break;
+         default:
+            answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = JGDI_ERROR;
+      }
+      (*env)->ReleaseStringUTFChars(env, key_obj, key);
+      if (ret != JGDI_SUCCESS) {
+         lFreeList(list);
+         DEXIT;
+         return ret;
+      }
+      lAppendElem(*list, elem);
       DEXIT;
       return JGDI_SUCCESS;
    } else {
@@ -1169,6 +1218,12 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          if ((ret=MapPropertyDescriptor_get(env, property_descr, bean, key_obj, &value_obj, alpp)) != JGDI_SUCCESS) {
             break;
          }
+         /* LP key_obj should be NULL */
+         if (key_obj == NULL) {
+            answer_list_add(alpp, "get_map: key_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = JGDI_ILLEGAL_STATE;
+            break;
+         }
          
          elem = lCreateElem(descr);
          if (elem == NULL) {
@@ -1180,7 +1235,13 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          lAppendElem(tmp_list, elem);
 
          {
-            const char* key = (*env)->GetStringUTFChars(env, key_obj, 0);
+            const char* key;
+            key = (*env)->GetStringUTFChars(env, key_obj, 0);
+            if (key == NULL) {
+               answer_list_add(alpp, "get_map: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+               ret = JGDI_ERROR;
+               break;
+            }
             switch(key_field_type) {
                case lStringT:
                  lSetPosString(elem, key_field_pos, key);
@@ -1256,7 +1317,17 @@ static jgdi_result_t set_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
          DEXIT;
          return ret;
       }
-      tmp_property_name =  (*env)->GetStringUTFChars(env, property_name_obj, 0);
+      if (property_name_obj == NULL) {
+         answer_list_add(alpp, "set_map_list: property_name_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
+      tmp_property_name = (*env)->GetStringUTFChars(env, property_name_obj, 0);
+      if (tmp_property_name == NULL) {
+         answer_list_add(alpp, "set_map_list: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
       strncpy(property_name, tmp_property_name, 511);
       (*env)->ReleaseStringUTFChars(env, property_name_obj, tmp_property_name );
    }
@@ -1421,7 +1492,17 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
          DEXIT;
          return ret;
       }
+      if (property_name_obj == NULL) {
+         answer_list_add(alpp, "get_map_list: property_name_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
       tmp_name = (*env)->GetStringUTFChars(env, property_name_obj, 0);
+      if (tmp_name == NULL) {
+         answer_list_add(alpp, "get_map_list: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
       strncpy(property_name, tmp_name, 100);
       (*env)->ReleaseStringUTFChars(env, property_name_obj, tmp_name);
    }
@@ -1482,41 +1563,51 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
          DEXIT;
          return ret;
       }
-      if (key_obj != NULL) {
-         *list = lCreateList("", descr);
-         if (!*list) {
-            answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return JGDI_ERROR;
-         }
+      if (key_obj == NULL) {
+         answer_list_add(alpp, "get_map_list: key_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
+      *list = lCreateList("", descr);
+      if (!*list) {
+         answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
          
-         elem =  lCreateElem(descr);
-         if (!elem) {
-            answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            lFreeList(list);
-            DEXIT;
-            return JGDI_ERROR;
-         }
+      elem =  lCreateElem(descr);
+      if (!elem) {
+         answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         lFreeList(list);
+         DEXIT;
+         return JGDI_ERROR;
+      }
          
-         key = (*env)->GetStringUTFChars(env, key_obj, 0);
-         switch(key_field_type) {
-            case lHostT:
-               lSetPosHost(elem, key_field_pos, key);
-               break;
-            case lStringT:
-               lSetPosString(elem, key_field_pos, key);
-               break;
-            default:
-               answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               ret = JGDI_ERROR;
-         }
-         (*env)->ReleaseStringUTFChars(env, key_obj, key);
-         if (ret != JGDI_SUCCESS) {
-            lFreeList(list);
-            lFreeElem(&elem);
-         } else {
-            lAppendElem(*list, elem);
-         }
+      key = (*env)->GetStringUTFChars(env, key_obj, 0);
+      if (key == NULL) {
+         answer_list_add(alpp, "get_map_list: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         lFreeList(list);
+         lFreeElem(&elem);
+         DEXIT;
+         return JGDI_ERROR;
+      }
+      switch(key_field_type) {
+         case lHostT:
+            lSetPosHost(elem, key_field_pos, key);
+            break;
+         case lStringT:
+            lSetPosString(elem, key_field_pos, key);
+            break;
+         default:
+            answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = JGDI_ERROR;
+      }
+      (*env)->ReleaseStringUTFChars(env, key_obj, key);
+      if (ret != JGDI_SUCCESS) {
+         lFreeList(list);
+         lFreeElem(&elem);
+      } else {
+         lAppendElem(*list, elem);
       }
       DEXIT;
       return ret;
@@ -1599,6 +1690,11 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
          if ((ret=Iterator_next(env, iter, &key_obj, alpp)) != JGDI_SUCCESS) {
             break;
          }
+         if (key_obj == NULL) {
+            answer_list_add(alpp, "get_map_list: key_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = JGDI_ILLEGAL_STATE;
+            break;
+         }
          
          if ((ret=MapListPropertyDescriptor_getList(env, property_descr, bean, key_obj, &value_list, alpp)) != JGDI_SUCCESS) {
             break;
@@ -1651,8 +1747,13 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
             }
             
             lSetPosList(elem, value_field_pos, value_list);
-            
             key = (*env)->GetStringUTFChars(env, key_obj, 0);
+            if (key == NULL) {
+               answer_list_add(alpp, "get_map_list: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+               ret = JGDI_ERROR;
+               break;
+            }
+            
             switch(key_field_type) {
                case lHostT:
                   lSetPosHost(elem, key_field_pos, key);
@@ -1665,7 +1766,6 @@ static jgdi_result_t get_map_list(JNIEnv *env, jclass bean_class, jobject bean, 
                   ret = JGDI_ERROR;
             }
             (*env)->ReleaseStringUTFChars(env, key_obj, key);
-
             lAppendElem(tmp_list, elem);
             
             if (ret != JGDI_SUCCESS) {
@@ -1843,16 +1943,36 @@ static jgdi_result_t set_value_in_elem(JNIEnv *env, jobject value_obj, lListElem
          }
       case lStringT:
          {
-            const char *str = (*env)->GetStringUTFChars(env, (jstring)value_obj, 0);
-            lSetPosString(elem, pos, str);
-            (*env)->ReleaseStringUTFChars(env, (jstring)value_obj, str);
+            char *str = NULL;
+            if (value_obj == NULL) {
+               lSetPosString(elem, pos, NULL);
+            } else {
+               str = (char*) (*env)->GetStringUTFChars(env, (jstring)value_obj, 0);
+               if (str == NULL) {
+                  answer_list_add(alpp, "set_object_in_elem: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return JGDI_ERROR;
+               }
+               lSetPosString(elem, pos, str);
+               (*env)->ReleaseStringUTFChars(env, (jstring)value_obj, str);
+            }
             break;
          }
       case lHostT:
          {
-            const char *str = (*env)->GetStringUTFChars(env, (jstring)value_obj, 0);
-            lSetPosHost(elem, pos, str);
-            (*env)->ReleaseStringUTFChars(env, (jstring)value_obj, str);
+            char *str = NULL;
+            if (value_obj == NULL) {
+               lSetPosHost(elem, pos, NULL);
+            } else {
+               str = (char*) (*env)->GetStringUTFChars(env, (jstring)value_obj, 0);
+               if (str == NULL) {
+                  answer_list_add(alpp, "set_object_in_elem: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+                  DEXIT;
+                  return JGDI_ERROR;
+               }
+               lSetPosHost(elem, pos, str);
+               (*env)->ReleaseStringUTFChars(env, (jstring)value_obj, str);
+            }
             break;
          }
       case lDoubleT:
@@ -2473,11 +2593,11 @@ jgdi_result_t get_string(JNIEnv *env, jclass bean_class, jobject obj, const char
       *retstr = NULL;
    } else {
       name = (*env)->GetStringUTFChars(env, jstr, 0);
-      if (test_jni_error( env, "get_string: GetStringUTF failed", alpp)) {
+      if (name == NULL) {
+         answer_list_add(alpp, "get_string: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return JGDI_ERROR;
       }
-
       *retstr = strdup(name);
       (*env)->ReleaseStringUTFChars(env, jstr, name);
    }
@@ -2730,13 +2850,11 @@ jmethodID get_static_methodid( JNIEnv *env, jclass cls, const char* methodName,
       
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               "static method %s(%s) not found in class %s", 
-                              signature, class_name ? class_name : "NA");
-               
+                              signature, class_name ? class_name : "NA");      
+                              
       if (class_name) {
          (*env)->ReleaseStringUTFChars(env, class_name_str, class_name);
       }
-
-
    }
 
    DEXIT;
@@ -3192,7 +3310,7 @@ static void print_stacktrace(JNIEnv* env, jobject exc, dstring* buf) {
      }
      
      stacktrace_str_obj = (jstring)(*env)->CallObjectMethod(env, stacktrace_elem, to_string_mid);
-     if (stacktrace_elem==NULL) {
+     if (stacktrace_str_obj==NULL) {
         sge_dstring_append(buf, "\nERROR: Call of method StackTraceElement.toString failed");
         break;
      }
@@ -3229,14 +3347,24 @@ void object_to_str(JNIEnv* env, jobject obj, char* buf, size_t max_len) {
       clazz = (*env)->GetObjectClass(env, obj);
       
       classname_obj = get_class_name(env, clazz, &alpp);
-      
-      
+      if (classname_obj == NULL) {
+         snprintf(buf, max_len, "object_to_string: classname_obj is NULL");
+         return;
+      }
       mid = get_methodid(env, clazz, "toString", "()Ljava/lang/String;", &alpp);
       
       obj_str_obj = (jstring)(*env)->CallObjectMethod(env, obj, mid );
-      
+      if (obj_str_obj == NULL) {
+         snprintf(buf, max_len, "NULL");
+         return;
+      }
+
       classname = (*env)->GetStringUTFChars(env, classname_obj, 0);
       objStr = (*env)->GetStringUTFChars(env, obj_str_obj, 0);
+      if (classname == NULL || objStr == NULL) {
+         snprintf(buf, max_len, "object_to_string: GetStringUTFChars failed. Out of memory.");
+         return;
+      }
       
       snprintf(buf, max_len, "%s (%s)", objStr, classname );
       
@@ -3258,8 +3386,18 @@ static jgdi_result_t get_descriptor_for_property(JNIEnv *env, jobject property_d
       DEXIT;
       return ret;
    }
-
+   if (cull_type_name_obj == NULL) {
+      answer_list_add(alpp, "get_descriptor_for_property: cull_type_name_obj is NULL. ", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
+   }
+   
    cull_type_name = (*env)->GetStringUTFChars(env, cull_type_name_obj, 0);
+   if (cull_type_name == NULL) {
+      answer_list_add(alpp, "get_descriptor_for_property: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ERROR;
+   }   
 
    *descr = get_descr(cull_type_name);
    if (*descr == NULL) {
@@ -3267,7 +3405,7 @@ static jgdi_result_t get_descriptor_for_property(JNIEnv *env, jobject property_d
                               "get_descriptor_for_property: no descr for cull type %s found",  cull_type_name);
       ret = JGDI_ERROR;
    }
-   (*env)->ReleaseStringUTFChars(env, cull_type_name_obj, cull_type_name );
+   (*env)->ReleaseStringUTFChars(env, cull_type_name_obj, cull_type_name);
    
    DEXIT;
    return ret;
@@ -3286,8 +3424,18 @@ static jgdi_result_t get_list_descriptor_for_property(JNIEnv *env, jobject prope
       DEXIT;
       return ret;
    }
+   if (cull_type_name_obj == NULL) {
+      answer_list_add(alpp, "get_list_descriptor_for_property: cull_type_name_obj is NULL. ", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
+   }
 
    cull_type_name = (*env)->GetStringUTFChars(env, cull_type_name_obj, 0);
+   if (cull_type_name == NULL) {
+      answer_list_add(alpp, "get_list_descriptor_for_property: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ERROR;
+   }
 
    *descr = get_descr(cull_type_name);
    if (descr == NULL) {
@@ -3350,7 +3498,6 @@ static jgdi_result_t string_list_to_list_elem(JNIEnv *env, jobject list, lList *
    
    while (TRUE) {
       if (Iterator_hasNext(env, iter, &has_next, alpp) != JGDI_SUCCESS) {
-        lFreeList(lpp);
         DEXIT;
         return JGDI_ERROR;
       } else if (has_next == false) {
@@ -3358,14 +3505,25 @@ static jgdi_result_t string_list_to_list_elem(JNIEnv *env, jobject list, lList *
       } else {
          jstring str_obj = NULL;
          if (Iterator_next(env, iter, &str_obj, alpp) != JGDI_SUCCESS) {
-            lFreeList(lpp);
             DEXIT;
             return JGDI_ERROR;
          } else {
-           const char* str = (*env)->GetStringUTFChars(env, str_obj, 0);
+           const char* str;
+           if (str_obj != NULL) {
+              str = (*env)->GetStringUTFChars(env, str_obj, 0);
+              if (str == NULL) {
+                 answer_list_add(alpp, "string_list_to_list_elem: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+                 DEXIT;
+                 return JGDI_ERROR;
+              }
+           } else {
+              str = NULL;
+           }
            DPRINTF(("Got %s from list\n", str));
            lAddElemStr(lpp, nm, str, descr);
-           (*env)->ReleaseStringUTFChars(env, str_obj, str);
+           if (str) {
+               (*env)->ReleaseStringUTFChars(env, str_obj, str);
+           }
          }
       }
    }
@@ -3499,8 +3657,13 @@ jgdi_result_t build_filter(JNIEnv *env, jobject filter, lCondition **where, lLis
          return JGDI_ERROR;
       }
       class_name =  (*env)->GetStringUTFChars(env, class_name_obj, 0);
+      if (class_name == NULL) {
+         answer_list_add(alpp, "build_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                              "build_filter: filer must be an instanceof %s",
+                              "build_filter: filter must be an instanceof %s",
                               class_name);
       (*env)->ReleaseStringUTFChars(env, class_name_obj, class_name );
       DEXIT;
@@ -3565,7 +3728,18 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
    
    {
       const char* type = NULL;
-      type = (*env)->GetStringUTFChars(env, type_obj, 0);
+      if (type_obj != NULL) {
+         type = (*env)->GetStringUTFChars(env, type_obj, 0);
+         if (type == NULL) {
+            answer_list_add(alpp, "build_field_filter: GetStringUTFChars failed. Out of the memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
+      } else {
+         answer_list_add(alpp, "build_field_filter: type_obj is NULL.", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ILLEGAL_STATE;
+      }
       descr = get_descr(type);
       if (descr == NULL) {
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -3615,7 +3789,7 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
       
       if (value_obj == NULL) {
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "build_filter: value of filtered primary key field %d is NULL",
+                                 "build_field_filter: value of filtered primary key field %d is NULL",
                                  field_name);
          DEXIT;
          return JGDI_ERROR;
@@ -3623,11 +3797,20 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
       
       value = (*env)->GetStringUTFChars(env, value_obj, 0);
       pattern  = (*env)->GetStringUTFChars(env, pattern_obj, 0);
+      if (value == NULL || pattern == NULL) {
+         answer_list_add(alpp, "build_field_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
       
       *where = lWhere(pattern, descr, field_name, value);
       
-      (*env)->ReleaseStringUTFChars(env, value_obj, value);
-      (*env)->ReleaseStringUTFChars(env, pattern_obj, pattern);
+      if (value) {
+         (*env)->ReleaseStringUTFChars(env, value_obj, value);
+      }
+      if (pattern) {
+         (*env)->ReleaseStringUTFChars(env, pattern_obj, pattern);  
+      }
       
       DEXIT;
       return JGDI_SUCCESS;
@@ -3658,7 +3841,12 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
          }
          
          pattern  = (*env)->GetStringUTFChars(env, pattern_obj, 0);
-         
+         if (pattern == NULL) {
+            answer_list_add(alpp, "build_field_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
+
          *where = lWhere(pattern, descr, field_name, value);
          
          (*env)->ReleaseStringUTFChars(env, pattern_obj, pattern);
@@ -3673,10 +3861,15 @@ static jgdi_result_t build_field_filter(JNIEnv *env, jobject field, lCondition *
          if (Class_getName(env, field_class, &class_name_obj, alpp) != JGDI_SUCCESS) {
             DEXIT;
             return JGDI_ERROR;
-         }
+         }                 
          class_name =  (*env)->GetStringUTFChars(env, class_name_obj, 0);
+         if (class_name == NULL) {
+            answer_list_add(alpp, "build_field_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 "build_filter: filter for class %s not implemented",
+                                 "build_field_filter: filter for class %s not implemented",
                                  class_name);
          (*env)->ReleaseStringUTFChars(env, class_name_obj, class_name );
          DEXIT;
@@ -4043,7 +4236,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi)
    rmon_ctx_t rmon_ctx;
    
    DENTER( TOP_LAYER, "jgdi_clearusage" );
-  
+   
    jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
@@ -4237,10 +4430,17 @@ static void jgdi_qmod(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolea
           if (obj) {
              lListElem *idep = NULL;
              const char* name = (*env)->GetStringUTFChars(env, obj, 0);
+             if (name == NULL) {
+                answer_list_add(&alp, "jgdi_qmod: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+                ret = JGDI_ERROR;
+                goto error;
+             }
              idep = lAddElemStr(&ref_list, ID_str, name, ID_Type);
              lSetUlong(idep, ID_action, transition);
              lSetUlong(idep, ID_force, option);
-             (*env)->ReleaseStringUTFChars(env, obj, name);
+             if (name) {
+               (*env)->ReleaseStringUTFChars(env, obj, name);
+             }
           }
       }
       
@@ -4320,6 +4520,9 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_killExecd(JNIEnv *env
          jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
          if (obj) {
             const char* hostname = (*env)->GetStringUTFChars(env, obj, 0);
+            if (hostname == NULL) {
+               return;  /*LP Out of memoery is already thrown in JVM, just return*/
+            }
             DPRINTF(("hostname: %s\n", hostname));
             lAddElemHost(&lp, EH_name, hostname, EH_Type);
             (*env)->ReleaseStringUTFChars(env, obj, hostname);
@@ -4724,6 +4927,11 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
          jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
          if (obj) {
             const char* queuename = (*env)->GetStringUTFChars(env, obj, 0);
+            if (queuename == NULL) {
+               answer_list_add(&alp, "jgdi_detached_settings: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+               ret = JGDI_ERROR;
+               goto error;
+            }
             DPRINTF(("queuename: %s\n", queuename));
             lAddElemStr(&lp, CQ_name, queuename, CQ_Type);
             (*env)->ReleaseStringUTFChars(env, obj, queuename);

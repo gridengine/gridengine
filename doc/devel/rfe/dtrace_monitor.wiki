@@ -200,7 +200,7 @@ here inadequately set-up spooling (classic over NFS) caused that qmaster was alm
 was a side implication. The bug is described under [http://gridengine.sunsource.net/issues/show_bug.cgi?id=2108 qmaster logging "scheduler tried to remove a incomplete"]
 
 = Reference =
-McDougall, Richard; Mauro, Jim; and Gregg, Brendan. Solaris Performance and Tools, page 57. Prentice Hall PTR, 2007.
+* [http://www.sun.com/books/catalog/solaris_perf_tools.xml McDougall, Richard; Mauro, Jim; and Gregg, Brendan. Solaris Performance and Tools, page 57. Prentice Hall PTR, 2007.]
 
 = See also =
 * [https://dtrace.developer.network.com/nonav/using-dtrace-in-grid.html  Sun Grid Application Observability Using DTrace]

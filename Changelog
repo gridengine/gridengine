@@ -1,3 +1,10 @@
+MD-2007-02-26-0: Bugfix:    Auto installation option failed to save 
+                            the install log 
+                 Changed:   inst_sge, install_modules
+                 Bugtraq:   6472614 
+                 Issue:     2196
+                 Review:    HP
+
 MP-2007-02-22-0: Bugfix:    on Windows, execd doesn't provide useful
                             error messages when SSL keys broken
                  Bugtraq:   6395075

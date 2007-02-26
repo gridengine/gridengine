@@ -384,6 +384,8 @@ fi
 
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
 
+ is_master="true"
+
  if [ "$AUTO" = "true" ]; then
     Stdout2Log
     $INFOTEXT -log "Starting qmaster installation!"

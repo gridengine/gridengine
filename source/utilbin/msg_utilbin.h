@@ -47,8 +47,8 @@
 */ 
 /* #define MSG_SYSTEM_QMASTERNOTALIVE           _message(57004, _("qmaster not alive")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SYSTEM_GDISETUPERROR             _message(57005, _("sge_gdi_setup error")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_MULTIREQUEST_I            _message(57006, _("%d. ----- Multirequest")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_6SINGLEREQUEST_I          _message(57007, _("%d. ----- 6 single requests")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_MULTIREQUEST_I            _message(57006, _(sge_u32". ----- Multirequest")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_SYSTEM_6SINGLEREQUEST_I          _message(57007, _(sge_u32". ----- 6 single requests")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
@@ -196,15 +196,37 @@
 #define MSG_PWD_CHANGE_ABORT_S      _MESSAGE(57316,         _(SFN": password change aborted"))
 #define MSG_PWD_AUTH_FAILURE_S      _MESSAGE(57317,         _(SFN": Authentication failure"))
 #define MSG_PWD_CHANGE_FOR_S        _MESSAGE(57318,         _("Changing password for "SFN""))
-#define MSG_PWD_NO_USERNAME_SI      _MESSAGE(57319,         _(SFN": unable to get name for user with id %d"))
-#define MSG_PWD_LOAD_PRIV_SS        _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password"))
-#define MSG_PWD_DECR_S              _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch"))
-#define MSG_PWD_MALLOC_S            _MESSAGE(57322,         _(SFN": malloc failed"))
+#define MSG_PWD_NO_USERNAME_SI      _MESSAGE(57319,         _(SFN": unable to get name for user with id "sge_u32" "))
+#define MSG_PWD_LOAD_PRIV_SSS       _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password. SSL error: "SFN))
+#define MSG_PWD_DECR_SS             _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch. SSL error: "SFN))
+#define MSG_PWD_MALLOC_SS           _MESSAGE(57322,         _(SFN": malloc failed. SSL error: "SFN))
 #define MSG_PWD_LOAD_PUB_SS         _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password"))
-#define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: %s (%d)"))
-#define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: %s (%d)"))
-#define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: %s (%d)"))
-#define MSG_PWD_CANTLOADRANDFILE_SS _MESSAGE(57328,         _(SFN": can't load rand file %s"))
-#define MSG_PWD_FILE_CORRUPTED      _MESSAGE(57329,         _(SFN": sgepasswd file corrupted"))
+#define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: "SFN" ("sge_u32")"))
+#define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: "SFN" ("sge_u32")"))
+#define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: "SFN" ("sge_u32")"))
+#define MSG_PWD_CANTLOADRANDFILE_SSS _MESSAGE(57328,         _(SFN": can't load rand file "SFN". SSL error: "SFN))
+#define MSG_PWD_FILE_CORRUPTED_S    _MESSAGE(57329,         _(SFN": sgepasswd file corrupted"))
+#define MSG_PWD_FILE_PATH_NULL_S    _MESSAGE(57329,         _(SFN": path to private key file is null"))
+#define MSG_PWD_SSL_ERR_MSG_SS      _MESSAGE(57330,         _(SFN": SSL error message: "SFN))
+#define MSG_PWD_NO_SSL_ERR          _MESSAGE(57331,         _("No SSL error."))
+
+
+/*
+ * utilbin/authuser
+ */
+#define MSG_AUTHUSER_PAM_NOT_AVAILABLE    _MESSAGE(213001, _("pam not available"))
+#define MSG_AUTHUSER_USER_UNKNOWN_S       _MESSAGE(213002, _("user "SFN" unknown")) 
+#define MSG_AUTHUSER_NO_SHADOW_ENTRY_S    _MESSAGE(213003, _("user "SFN" has no shadow entry"))
+#define MSG_AUTHUSER_CRYPT_FAILED_S       _MESSAGE(213004, _("crypt failed: "SFN))
+#define MSG_AUTHUSER_INVALID_PASSWORD     _MESSAGE(213005, _("invalid password"))
+#define MSG_AUTHUSER_PAM_ERROR_S          _MESSAGE(213006, _("PAM error: "SFN)) 
+
+#define MSG_AUTUSER_INVAILD_ARG_COUNT     _MESSAGE(213101, _("invalid number of arguments"))
+#define MSG_AUTUSER_MISSING_PAM_SERVICE   _MESSAGE(213102, _("missing pam service name"))
+#define MSG_AUTUSER_UNKNOWN_PARAM_S       _MESSAGE(213103, _("Unknown param "SFN))
+#define MSG_AUTUSER_UNKNOWN_AUTH_METHOD_S _MESSAGE(213104, _("Unknown <auth_method> "SFN))
+#define MSG_AUTHUSER_NO_PW_ENTRY_SS       _MESSAGE(213105, _("password: can not get password entry of user "SFN": "SFN))
+#define MSG_AUTHUSER_ERROR                _MESSAGE(213106, _("Error: "))
+#define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213107, _("Wrong user or password"))
 
 #endif /* __MSG_UTILBIN_H */

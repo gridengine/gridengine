@@ -1,3 +1,11 @@
+MP-2007-02-26-0: Bugfix:    on Windows, execd doesn't provide useful
+                            error messages when SSL keys broken.
+                            Merge to V60s2 branch.
+                 Bugtraq:   6395075
+                 Changed:   utilbin/sge_passwd.c
+                            utilbin/msg_utilbin.h
+                 Review:    HP
+
 JG-2007-02-16-0: Bugfix:    Fixed non initialized pointer access in qacct.
                             Merge of V61_BRANCH, JG-2007-02-15-0.
                  Bugster:   6525917

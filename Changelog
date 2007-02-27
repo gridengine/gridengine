@@ -1,3 +1,9 @@
+AA-2007-02-27-0: Bugfix:    sge_ca script on no root access fs
+                 Bugtraq:   6528808
+                 Issue:     2198
+                 Changed:   sge_ca
+                 Review:    CR
+
 MD-2007-02-26-0: Bugfix:    Auto installation option failed to save 
                             the install log 
                  Changed:   inst_sge, install_modules

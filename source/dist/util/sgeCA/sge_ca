@@ -1423,6 +1423,7 @@ MakeCADirs()
    $INFOTEXT -log "Creating %s" ${CATOP}/serial
    # TruncCreateAndMakeWriteable ${CATOP}/serial
    ExecuteAsAdmin $TOUCH ${CATOP}/serial
+   ExecuteAsAdmin $CHMOD 666 ${CATOP}/serial
    if [ $? != 0 ]; then
       PrintError "Could not touch file as %s (%s)" $ADMINUSER ${CATOP}/serial
       return 1

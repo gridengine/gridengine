@@ -1427,35 +1427,34 @@ MoveLog()
       return   
    fi
 
-   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
-      master_spool_dir=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+   install_log_dir="$SGE_ROOT/$SGE_CELL/common/install_logs"
+   if [ ! -d $install_log_dir ]; then
+      ExecuteAsAdmin mkdir -p $install_log_dir
+   fi
 
-      if [ -d $master_spool_dir ]; then
-         if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
-            if [ -f /tmp/$LOGSNAME ]; then
-               ExecuteAsAdmin cp -f /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
-            fi
-            RestoreStdout
-            $INFOTEXT "Install log can be found in: %s" $master_spool_dir/uninstall_`hostname`_$DATE.log
-         else
-            if [ -f /tmp/$LOGSNAME ]; then
-               ExecuteAsAdmin cp -f /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
-            fi
-            RestoreStdout
-            $INFOTEXT "Install log can be found in: %s" $master_spool_dir/install_`hostname`_$DATE.log
-         fi
-         if [ -f /tmp/$LOGSNAME ]; then
-            rm -f /tmp/$LOGSNAME 2>&1
-         fi
-      else
-         RestoreStdout
-         $INFOTEXT "%s does not exist.\n Please check your installation!" $master_spool_dir
-         $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME
-      fi
+   if [ "$is_master" = "true" ]; then
+      loghosttype="qmaster"
+      is_master="false"
    else
-         RestoreStdout
-         $INFOTEXT "%s does not exist.\n Qmaster isn't installed, yet!\nPlease check your installation!" $SGE_ROOT/$SGE_CELL/common/bootstrap 
-         $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME 
+      loghosttype="execd"
+   fi
+
+   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+      installtype="uninstall"
+   else
+      installtype="install"
+   fi
+
+   if [ -f /tmp/$LOGSNAME ]; then
+      ExecuteAsAdmin cp -f /tmp/$LOGSNAME $install_log_dir/$loghosttype"_"$installtype"_"`hostname`"_"$DATE.log 2>&1
+   fi
+   RestoreStdout
+
+   if [ -f /tmp/$LOGSNAME ]; then
+      $INFOTEXT "Install log can be found in: %s" $install_log_dir/$loghosttype"_"$installtype"_"`hostname`"_"$DATE.log
+      rm -f /tmp/$LOGSNAME 2>&1
+   else
+      $INFOTEXT "Can't find install log file: /tmp/%s" $LOGSNAME
    fi
 }
 

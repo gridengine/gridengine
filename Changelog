@@ -1,3 +1,10 @@
+MD-2007-02-26-0: Bugfix:    Auto installation option failed to save (merged)
+                            the install log
+                 Changed:   inst_sge, install_modules
+                 Bugtraq:   6472614
+                 Issue:     2196
+                 Review:    HP
+
 AA-2007-02-27-0: Bugfix:    sge_ca script on no root access fs
                  Bugtraq:   6528808
                  Issue:     2198

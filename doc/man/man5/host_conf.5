@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.11.2.1 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/03/01 11:07:11 $     Revision: $Revision: 1.11.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2007/03/01 11:07:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -76,17 +76,7 @@ on the host and being defined in the cluster global "host" complex
 (see
 .M complex 5 ).
 The load scaling factors are intended to level hardware or operating
-system specific differences between execution hosts. If, for example,
-the load average value (load_avg in the "host" complex; see also
-.M uptime 1 )
-of a multiprocessor machine is to be compared with a single processor
-machine the load as reported by the single CPU host needs to be
-weighted up against the multiprocessor load (given the same
-CPU hardware) to be comparable. The load scaling factors are integers being
-multiplied with the reported load quantities to constitute weighted load
-values. Thus, following the example given above, the load value of the
-single processor machine needs to be multiplied by the number of
-processors of the single processor machine to become comparable.
+system specific differences between execution hosts. 
 .sp 1
 The syntax of a load factor specification is as follows: First the name of
 the load value (as defined in the "host" complex) is given and, separated

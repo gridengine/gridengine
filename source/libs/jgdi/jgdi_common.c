@@ -630,7 +630,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
       DEXIT;
       return JGDI_ERROR;
    }
-   if (elem_field_name == NULL) {
+   if (elem_field_name == 0) {
        answer_list_add(alpp, "set_elem_attribute: elem_field_name is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
        DEXIT;
        return JGDI_ILLEGAL_STATE;
@@ -851,7 +851,7 @@ jgdi_result_t set_object_attribute(JNIEnv* env, lListElem *ep, const lDescr* des
       DEXIT;
       return result;
    }
-   if (elem_field_name == NULL) {
+   if (elem_field_name == 0) {
        answer_list_add(alpp, "set_object_attribute: elem_field_name is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
        DEXIT;
        return JGDI_ILLEGAL_STATE;

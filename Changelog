@@ -1,3 +1,9 @@
+AA-2007-03-06-0: Bugfix:    qstat -xml does not show pending/zombie jobs
+                 Bugtraq:   6531317
+                 Issue:     2204
+                 Review:    JG
+                 Changed:   qstat
+
 AH-2007-03-01-1: Docs:      Removed wrong and confusing example in host_conf(5).
                  Issue:     2200
                  Review:    Reuti

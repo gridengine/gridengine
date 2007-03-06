@@ -1515,7 +1515,7 @@ void range_to_dstring(u_long32 start, u_long32 end, int step,
 {
    char tail[256] = "";
 
-   if (dyn_taskrange_str->size > 0) {
+   if (dyn_taskrange_str->length > 0) {
       sge_dstring_append(dyn_taskrange_str, ",");
    }
 

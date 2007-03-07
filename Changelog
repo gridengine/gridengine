@@ -1,3 +1,10 @@
+MP-2007-03-07-0: Bugfix:    scalability issue with qdel and very large
+                            array jobs.
+                 Changed:   qmaster
+                 Bugster:   6288953
+                 Issue:     752
+                 Review:    JG
+
 AA-2007-03-06-0: Bugfix:    qstat -xml does not show pending/zombie jobs
                  Bugtraq:   6531317
                  Issue:     2204

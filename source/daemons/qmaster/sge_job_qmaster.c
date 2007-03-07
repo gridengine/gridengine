@@ -1191,6 +1191,22 @@ int sub_command, monitoring_t *monitor
                     ) {
                      continue;
                   }
+ 
+                  /*If job has large array of tasks, and time to delete the array
+                   * of jobs is greater than MAX_DELETION_TIME, break out of 
+                   * qdel and delete remaining jobs later
+                   */
+                  time = sge_get_gmt();
+                  if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > MAX_DELETION_TIME)) {
+                     INFO((SGE_EVENT, MSG_JOB_DISCONTTASKTRANS_SUU, ruser,
+                           sge_u32c(job_number), sge_u32c(task_number)));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
+                     lFreeWhere(&job_where);
+                     lFreeWhere(&user_where);
+                     FREE(dupped_session);
+                     lFreeList(&range_list);
+                     DRETURN(STATUS_OK);
+                  } 
 
                   reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
 

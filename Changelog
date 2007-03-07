@@ -1,3 +1,9 @@
+AA-2007-03-07-0: Bugfix:    qstat -r -xml is not working
+                 Bugster:   6531921
+                 Issue:     2206
+                 Review:    JG
+                 Changed:   qstat
+                 
 MP-2007-03-07-0: Bugfix:    scalability issue with qdel and very large
                             array jobs.
                  Changed:   qmaster

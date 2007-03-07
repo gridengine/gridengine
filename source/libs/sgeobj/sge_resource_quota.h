@@ -50,7 +50,7 @@ bool rqs_xattr_pre_gdi(lList *this_list, lList **answer_list);
 bool rqs_get_rue_string(dstring *name, const lListElem *rule, const char *user, const char *project, const char *host, const char *queue, const char* pe);
 
 int
-rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slots, lList *centry_list, const char *obj_name);
+rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slots, lList *centry_list, const char *obj_name);
 
 int
 rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const char *pename, lList *centry_list, lList *acl_list, lList *hgrp_list, int slots);

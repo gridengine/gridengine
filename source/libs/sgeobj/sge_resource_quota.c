@@ -749,7 +749,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
       rqs_get_rue_string(&rue_name, rule, username, project,
                                 hostname, qname, pename);
 
-      mods = rqs_debit_rule_usage(job, rule, rue_name, slots, centry_list, lGetString(rqs, RQS_name));
+      mods = rqs_debit_rule_usage(job, rule, &rue_name, slots, centry_list, lGetString(rqs, RQS_name));
 
       sge_dstring_free(&rue_name);
    }
@@ -825,7 +825,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *
 *  SYNOPSIS
 *     int rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring 
-*     rue_name, int slots, lList *centry_list, const char *obj_name) 
+*     *rue_name, int slots, lList *centry_list, const char *obj_name) 
 *
 *  FUNCTION
 *     Debit an amount of slots in all limits of one resource quota rule
@@ -833,7 +833,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *  INPUTS
 *     lListElem *job       - job request (JG_Type)
 *     lListElem *rule      - resource quota rule (RQR_Type)
-*     dstring rue_name     - rue name that counts
+*     dstring *rue_name    - rue name that counts
 *     int slots            - amount of slots to debit
 *     lList *centry_list   - consumable resource list (CE_Type)
 *     const char *obj_name - name of the limit
@@ -845,7 +845,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *     MT-NOTE: rqs_debit_rule_usage() is MT safe 
 *******************************************************************************/
 int
-rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slots, lList *centry_list, const char *obj_name) 
+rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slots, lList *centry_list, const char *obj_name) 
 {
    lList *limit_list;
    lListElem *limit;
@@ -872,9 +872,9 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
          continue;
       }
 
-      rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage);
+      rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage);
       if(rue_elem == NULL) {
-         rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage, RUE_Type);
+         rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage, RUE_Type);
          /* RUE_utilized_now is implicitly set to zero */
       }
 
@@ -882,7 +882,7 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
          bool tmp_ret = job_get_contribution(job, NULL, centry_name, &dval, raw_centry);
          if (tmp_ret && dval != 0.0) {
             DPRINTF(("debiting %f of %s on rqs %s for %s %d slots\n", dval, centry_name,
-                     obj_name, sge_dstring_get_string(&rue_name), slots));
+                     obj_name, sge_dstring_get_string(rue_name), slots));
             lAddDouble(rue_elem, RUE_utilized_now, slots * dval);
             mods++;
          }

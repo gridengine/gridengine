@@ -2032,7 +2032,7 @@ monitoring_t *monitor
       return STATUS_EUNKNOWN;
    }
 
-   /* ep is no element of this type, if ep has no QU_qname */
+   /* ep is no element of this type, if ep doesn't contain the the primary key attribute */
    if (lGetPosViaElem(instructions, object->key_nm, SGE_NO_ABORT) < 0)
    {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(object->key_nm), SGE_FUNC));
@@ -2041,9 +2041,10 @@ monitoring_t *monitor
       return STATUS_EUNKNOWN;
    }
 
-   /* resolve host name in case of objects with hostnames as key 
-      before searching for the objects */
-   
+   /* 
+    * resolve host name in case of objects with hostnames as key 
+    * before searching for the objects 
+    */
    if ( object->key_nm == EH_name || 
         object->key_nm == AH_name || 
         object->key_nm == SH_name ) {
@@ -2057,6 +2058,7 @@ monitoring_t *monitor
       }
    }
 
+   /* get and verify the primary key */
    pos = lGetPosViaElem(instructions,  object->key_nm, SGE_NO_ABORT);
    dataType = lGetPosType(lGetElemDescr(instructions),pos);
    if (dataType == lHostT) {
@@ -2075,6 +2077,7 @@ monitoring_t *monitor
       return STATUS_EEXIST;
    }
 
+   /* prevent duplicates / modifying non existing objects */
    if ((old_obj && add) ||
       (!old_obj && !add)) {
       ERROR((SGE_EVENT, add?
@@ -2085,7 +2088,7 @@ monitoring_t *monitor
       return STATUS_EEXIST;
    }
 
-   /* MAKE A COPY OF THE OLD QUEUE (THIS WILL BECOME THE NEW QUEUE) */
+   /* create a new object (add case), or make a copy of the old object (mod case) */
    if (!(new_obj = (add 
          ? lCreateElem(object->type) 
          : lCopyElem(old_obj)))) {
@@ -2095,12 +2098,12 @@ monitoring_t *monitor
       return STATUS_EEXIST;
    }
 
-   /* MODIFY NEW QUEUE USING REDUCED QUEUE AS INSTRUCTION */
+   /* modify the new object base on information in the request */
    if (object->modifier(ctx, &tmp_alp, new_obj, instructions, add, ruser, rhost, 
          object, sub_command, monitor) != 0) {
       
       if (alpp) {
-         /* ON ERROR: DISPOSE NEW QUEUE */
+         /* ON ERROR: DISPOSE NEW OBJECT */
          /* failure: just append last elem in tmp_alp
             elements before may contain invalid success messages */
          if (tmp_alp) {
@@ -2131,7 +2134,7 @@ monitoring_t *monitor
          *alpp = lCreateList("answer", AN_Type);
       }
    
-      /* copy every entrie from tmp_alp into alpp */
+      /* copy every entry from tmp_alp into alpp */
       for_each (tmp_ep, tmp_alp) {
          lListElem* copy = NULL;
       
@@ -2141,13 +2144,14 @@ monitoring_t *monitor
          } 
       }
    }
+
    lFreeList(&tmp_alp);
    {
       lList **master_list = NULL;
 
       master_list = object_type_get_master_list(object->list_type);
          
-   /* chain out the old object */
+      /* chain out the old object */
       if (old_obj) {
          lDechainElem(*master_list, old_obj);
       }
@@ -2160,6 +2164,8 @@ monitoring_t *monitor
       /* chain in new object */
       lAppendElem(*master_list, new_obj);
    }
+
+   /* once we successfully added/modified the object, do final steps (on_success callback) */
    if (object->on_success) {
       object->on_success(ctx, new_obj, old_obj, object, ppList, monitor);
    }

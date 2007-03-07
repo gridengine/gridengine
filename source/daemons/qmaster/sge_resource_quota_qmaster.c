@@ -81,19 +81,19 @@ filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm,
 *     sub_command, monitoring_t *monitor) 
 *
 *  FUNCTION
-*     This function will be called from the framework which will
+*     This function is called from the framework that
 *     add/modify/delete generic gdi objects.
 *     The purpose of this function is it to add new rqs 
 *     objects or modify existing resource quota sets.
 *
 *  INPUTS
-*     lList **alpp          - referenct to an answer list
+*     lList **alpp          - reference to an answer list
 *     lListElem *new_rqs    - if a new rqs object will be created by this
 *                             function, then new_rqs is a newly initialized
 *                             CULL object.
 *                             if this function was called due to a modify request
 *                             than new_rqs will contain the old data
-*     lListElem *rqs        - a reduced rqs object which contails all
+*     lListElem *rqs        - a reduced rqs object which contains all
 *                             necessary information to create a new object
 *                             or modify parts of an existing one
 *     int add               - 1 if a new element should be added to the master list
@@ -202,7 +202,7 @@ ERROR:
 *
 *  INPUTS
 *     lList **alpp         - reference to an answer list.
-*     lListElem *ep       - rqs object which should be spooled
+*     lListElem *ep        - rqs object which should be spooled
 *     gdi_object_t *object - structure of the gdi framework which contains 
 *                            additional information to perform the request
 *                            (function pointers, names, CULL-types)
@@ -252,7 +252,7 @@ int rqs_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_
 *     After an object was modified/added and spooled successfully 
 *     it is possibly necessary to perform additional tasks.
 *     For example it is necessary to send some events to
-+     other deamon.
+*     other daemon.
 *
 *  INPUTS
 *     lListElem *ep         - new rqs object
@@ -303,7 +303,7 @@ int rqs_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_
 *  INPUTS
 *     lListElem *ep     - element which should be deleted
 *     lList **alpp      - reference to an answer list.
-*     lList **rqs_list - reference to the Master_RQS_LIST
+*     lList **rqs_list  - reference to the Master_RQS_LIST
 *     char *ruser       - username of person who invoked this gdi request
 *     char *rhost       - hostname of the host where someone initiated an gdi call
 *

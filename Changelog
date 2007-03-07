@@ -1,3 +1,9 @@
+JG-2007-03-07-0: Bugfix:    Modifying a resource quota set while there are jobs
+                            running could crash qmaster.
+                 Bugster:   6530335
+                 Issue:     2202
+                 Review:    AA
+
 MP-2007-03-07-0: Bugfix:    scalability issue with qdel and very large
                             array jobs.
                  Changed:   qmaster

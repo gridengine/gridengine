@@ -1,3 +1,9 @@
+JG-2007-03-07-0: Bugfix:    Modifying a resource quota set while there are jobs
+                            running could crash qmaster.
+                 Bugster:   6530335
+                 Issue:     2202
+                 Review:    AA
+
 AA-2007-03-06-0: Bugfix:    qstat -xml does not show pending/zombie jobs
                  Bugtraq:   6531317
                  Issue:     2204

@@ -410,7 +410,8 @@ rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list) {
       for_each(rule, lGetList(rqs, RQS_rule)) {
          lListElem *limit = NULL;
          for_each(limit, lGetList(rule, RQR_limit)) {
-            lList *usage = lGetList(limit, RQRL_usage);
+            lList *usage = NULL;
+            lXchgList(limit, RQRL_usage, &usage);
             lFreeList(&usage);
          }
       }

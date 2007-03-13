@@ -154,8 +154,6 @@ typedef struct {
 
 job_number_t job_number_control = {0, false, PTHREAD_MUTEX_INITIALIZER};
 
-static const int MAX_DELETION_TIME = 3;
-
 static int mod_task_attributes(lListElem *job, lListElem *new_ja_task, lListElem *tep,
                                lList **alpp, char *ruser, char *rhost, int *trigger,
                                int is_array, int is_task_enrolled);
@@ -894,6 +892,7 @@ int sub_command, monitoring_t *monitor
    u_long32 time;
    u_long32 start_time;
    lList *user_list = lGetList(idep, ID_user_list);
+   u_long32 max_job_deletion_time = mconf_get_max_job_deletion_time();
    lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
    bool job_spooling = ctx->get_job_spooling(ctx);
 
@@ -1193,11 +1192,11 @@ int sub_command, monitoring_t *monitor
                   }
  
                   /*If job has large array of tasks, and time to delete the array
-                   * of jobs is greater than MAX_DELETION_TIME, break out of 
+                   * of jobs is greater than MAX_JOB_DELETION_TIME, break out of 
                    * qdel and delete remaining jobs later
                    */
                   time = sge_get_gmt();
-                  if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > MAX_DELETION_TIME)) {
+                  if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > max_job_deletion_time)) {
                      INFO((SGE_EVENT, MSG_JOB_DISCONTTASKTRANS_SUU, ruser,
                            sge_u32c(job_number), sge_u32c(task_number)));
                      answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
@@ -1256,7 +1255,7 @@ int sub_command, monitoring_t *monitor
          }
       
          time = sge_get_gmt();
-         if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > MAX_DELETION_TIME)) {
+         if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > max_job_deletion_time)) {
             INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                   sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 

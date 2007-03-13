@@ -1,4 +1,5 @@
 /*************************************************************************
+ * ___INFO__MARK_BEGIN__
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -26,6 +27,7 @@
  *
  *   All Rights Reserved.
  *
+ * ___INFO__MARK_END__
  ************************************************************************/
 
 /*  Parameters:

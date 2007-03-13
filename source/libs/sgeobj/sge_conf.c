@@ -229,6 +229,14 @@ static void setConfFromCull(lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
 static void clean_conf(void);
 
+/*
+ * This value is used to override the default value for time
+ * in which the qmaster tries deleting jobs, after which it 
+ * stops deleting and deletes remaining jobs at a later time.
+ */
+
+static int max_job_deletion_time = 3;
+
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
 #define EPILOG                    "none"
@@ -599,6 +607,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       monitor_time = 0;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
+      max_job_deletion_time = 3;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -660,6 +669,15 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
                     sizeof("SCHEDULER_TIMEOUT")-1)) {
             scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
+            continue;
+         }
+         if (parse_int_param(s, "max_job_deletion_time", &max_job_deletion_time, TYPE_TIM)) {
+            if (max_job_deletion_time <= 0 || max_job_deletion_time > 5) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "max_job_deletion_time",
+                                       3);
+               max_job_deletion_time = 3;
+            }
             continue;
          }
       }
@@ -2055,4 +2073,16 @@ bool mconf_get_enable_forced_qdel(void) {
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 
+}
+
+int mconf_get_max_job_deletion_time(void) {
+   int deletion_time;
+   
+   DENTER(TOP_LAYER, "mconf_get_max_job_deletion_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   deletion_time = max_job_deletion_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(deletion_time);
 }

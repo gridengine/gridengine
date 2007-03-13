@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<US_Type>
-   <name>${name}</name>
-   <type>2</type>
-   <fshare>0</fshare>
-   <oticket>0</oticket>
-   <jobCnt>0</jobCnt>
-   <pendingJobCnt>0</pendingJobCnt>
-</US_Type>

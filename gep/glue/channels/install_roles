@@ -1,2 +1,0 @@
-/opt/SUNWam/bin/amadmin -u "uid=amAdmin,ou=People,o=Germany.Sun.COM,o=isp" -w toedel123 -t GEPRoles.xml
-

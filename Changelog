@@ -1,3 +1,8 @@
+MP-2007-03-13-0: Enhanc:    created new qmaster parameter for max job
+                            deletion time.
+                 Changed:   sge_conf
+                 Review:    JG
+
 MP-2007-03-07-0: Bugfix:    scalability issue with qdel and very large
                             array jobs.
                  Changed:   qmaster

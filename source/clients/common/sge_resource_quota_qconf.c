@@ -424,7 +424,7 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
 
    status = sge_edit(filename, uid, gid);
 
-   if (status >= 0) {
+   if (status == 0) {
       lList *new_rqs_list = NULL;
 
       /* fields_out field does not work for rqs because of duplicate entry */
@@ -448,6 +448,9 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
          answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
+   } else if (status == 1) {
+      answer_list_add(answer_list, MSG_FILE_FILEUNCHANGED,
+                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    } else {
       answer_list_add(answer_list, MSG_PARSE_EDITFAILED,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);

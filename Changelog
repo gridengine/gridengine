@@ -1,3 +1,7 @@
+AH-2007-03-13-1: Docs:      Mention need to link sge_pe(5) with a queue
+                            with the 'pe_list.
+                 Changed:   sge_pe(5)
+
 JG-2007-03-13-0: Bugfix:    qconf -mqrs modified resource quota, even if the 
                             editor was left without saving.
                  Bugster:   6533754

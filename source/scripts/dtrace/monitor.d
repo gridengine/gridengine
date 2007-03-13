@@ -1,4 +1,5 @@
 /*************************************************************************
+ * ___INFO__MARK_BEGIN__
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -26,6 +27,7 @@
  *
  *   All Rights Reserved.
  *
+ * ___INFO__MARK_END__
  ************************************************************************/
 
 /*  Parameters:
@@ -261,9 +263,6 @@ pid$1::sge_c_gdi_mod:entry, pid$1::sge_c_gdi_add:entry, pid$1::sge_c_gdi_copy:en
 
 
 /* ------------------------------------- [scheduling] --------------------------------- */
-/* pid$2::select_assign_debit:entry
-{
-} */
 /* ---------------------------------- [synchronization] ------------------------------- */
 pid$2::sge_mirror_process_events:entry
 /$5 == 1/

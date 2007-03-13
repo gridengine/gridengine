@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2007/03/13 17:47:52 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2007/03/13 17:47:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -49,6 +49,8 @@ allows for the definition of interfaces to arbitrary parallel environments.
 Once a parallel environment is defined or modified with the \fB\-ap\fP or
 \fB\-mp\fP options to
 .M qconf 1
+and linked with one or more queues via \fIpe_list\fP in 
+.M queue_conf 5
 the environment can be requested for a job via the \fB\-pe\fP switch
 to
 .M qsub 1

@@ -1,3 +1,6 @@
+RD-2007-03-13-0: CVS        Created V61beta2_TAG
+------------------------------------------------
+
 MP-2007-03-13-0: Enhanc:    created new qmaster parameter for max job
                             deletion time.
                  Changed:   sge_conf

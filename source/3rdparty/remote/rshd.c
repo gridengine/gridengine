@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.19 2005/10/08 05:53:47 ron Exp $	*/
+/*	$Id: rshd.c,v 1.19.6.1 2007/03/14 12:44:18 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -41,8 +41,7 @@
  *	command\0
  *	data
  */
-
-#if defined(HP11) || defined(HP1164)
+#if defined(HP11)
 #define _XOPEN_SOURCE_EXTENDED
 #endif
 
@@ -54,6 +53,7 @@
 #define _POSIX_PII_SOCKET
 #endif
 */
+
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
@@ -103,7 +103,7 @@
 typedef int socklen_t;
 #endif
 
-#if defined HP10 || LINUX || NECSX5 || CRAY 
+#if defined HP10 || HP1164 || LINUX || NECSX5 || CRAY 
 #ifndef HAS_IN_PORT_T
 typedef unsigned short in_port_t;
 #endif
@@ -157,7 +157,7 @@ main(argc, argv)
 {
 	struct linger linger;
 	int ch, on = 1;
-#if defined(ALPHA5) || defined(INTERIX)
+#if defined(ALPHA5) || defined(INTERIX) || defined(HP1164)
    int fromlen;
 #else   
    socklen_t fromlen;
@@ -267,7 +267,7 @@ doit(fromp)
       {
 	u_char optbuf[BUFSIZ/3], *cp;
 	char lbuf[BUFSIZ], *lp;
-#if defined(ALPHA5) || defined(INTERIX)
+#if defined(ALPHA5) || defined(INTERIX) || defined(HP1164)
 	int optsize = sizeof(optbuf); 
 #else   
 	socklen_t optsize = sizeof(optbuf); 

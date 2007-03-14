@@ -1,12 +1,12 @@
+RD-2007-03-13-0: CVS        Created V61beta2_TAG
+------------------------------------------------
+
 JG-2007-03-14-0: Bugfix:    Fixed utilbin/hp11-64/rshd.
                  Review:    RD
 
 AH-2007-03-13-0: Docs:      Mention need to link sge_pe(5) with a queue
                             with the 'pe_list.
                  Changed:   sge_pe(5)
-
-RD-2007-03-13-0: CVS        Created V61beta2_TAG
-------------------------------------------------
 
 MP-2007-03-13-0: Enhanc:    created new qmaster parameter for max job
                             deletion time.

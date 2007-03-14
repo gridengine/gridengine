@@ -1,3 +1,6 @@
+JG-2007-03-14-0: Bugfix:    Fixed utilbin/hp11-64/rshd.
+                 Review:    RD
+
 AH-2007-03-13-1: Docs:      Mention need to link sge_pe(5) with a queue
                             with the 'pe_list.
                  Changed:   sge_pe(5)

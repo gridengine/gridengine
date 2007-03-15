@@ -412,6 +412,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
    sge_pack_buffer pb;
    object_description *object_base = object_type_get_object_description();
    const char *sge_root = ctx->get_sge_root(ctx);
+   bool simulate_execd = mconf_get_simulate_execds();
 
    DENTER(TOP_LAYER, "send_slave_jobs_wc");
 
@@ -446,15 +447,17 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
          }
       }
 
-      /* do ask_commproc() only if we are missing load reports */
-      cl_commlib_get_last_message_time(handle, (char*)hostname, (char*)target, 1, &last_heard_from);
-      now = sge_get_gmt();
-      if (last_heard_from + sge_get_max_unheard_value() <= now) {
+      if(!simulate_execd) {
+         /* do ask_commproc() only if we are missing load reports */
+         cl_commlib_get_last_message_time(handle, (char*)hostname, (char*)target, 1, &last_heard_from);
+         now = sge_get_gmt();
+         if (last_heard_from + sge_get_max_unheard_value() <= now) {
 
-         ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, sge_u32c(lGetUlong(tmpjep, JB_job_number))));
-         sge_mark_unheard(hep, target);
-         ret = -1;
-         break;
+            ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, sge_u32c(lGetUlong(tmpjep, JB_job_number))));
+            sge_mark_unheard(hep, target);
+            ret = -1;
+            break;
+         }
       }
 
       /*
@@ -505,7 +508,10 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *tmpj
       ** security hook
       */
       tgt2cc(tmpjep, hostname, target);
-      failed = gdi2_send_message_pb(ctx, 0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
+      if (simulate_execd)
+         failed = CL_RETVAL_OK;
+      else
+         failed = gdi2_send_message_pb(ctx, 0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
       MONITOR_MESSAGES_OUT(monitor);
       /*
       ** security hook
@@ -553,6 +559,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    const char* sge_root = ctx->get_sge_root(ctx);
    const char* myprogname = ctx->get_progname(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
+   bool simulate_execd = mconf_get_simulate_execds();
 
    DENTER(TOP_LAYER, "send_job");
 
@@ -570,14 +577,16 @@ send_job(sge_gdi_ctx_class_t *ctx,
 
    /* do ask_commproc() only if we are missing load reports */
    handle = cl_com_get_handle(myprogname, 0);
-   cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
-   now = sge_get_gmt();
-   if (last_heard_from + sge_get_max_unheard_value() <= now) {
+   if(!simulate_execd) {
+      cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
+      now = sge_get_gmt();
+      if (last_heard_from + sge_get_max_unheard_value() <= now) {
 
-      ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, sge_u32c(lGetUlong(jep, JB_job_number))));
-      sge_mark_unheard(hep, target);
-      DEXIT;
-      return -1;
+         ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, sge_u32c(lGetUlong(jep, JB_job_number))));
+         sge_mark_unheard(hep, target);
+         DEXIT;
+         return -1;
+      }
    }
 
    
@@ -704,7 +713,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
    */
    tgt2cc(jep, rhost, target);
 
-   failed = gdi2_send_message_pb(ctx, 0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
+   if(simulate_execd)
+      failed = CL_RETVAL_OK;
+   else
+      failed = gdi2_send_message_pb(ctx, 0, target, 1, rhost, master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, &pb, &dummymid);
 
    /*
    ** security hook
@@ -737,7 +749,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
 
 void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
-   lListElem* jep, *jatep, *ep, *hep, *pe, *mqep;
+   lListElem* jep, *jatep, *ep, *hep = NULL, *pe, *mqep;
    lList* jatasks;
    const char *qnm, *hnm;
    time_t now;
@@ -763,9 +775,50 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
 
    jatasks = lGetList(jep, JB_ja_tasks);
 
+   if (mconf_get_simulate_execds()) {
+      if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
+         sge_commit_job(ctx, jep, jatep, NULL, COMMIT_ST_ARRIVED, COMMIT_DEFAULT, monitor);
+         /* initialize resending of job if not acknowledged by execd */
+         trigger_job_resend(now, hep, jobid, jataskid);
+      } else { /* must be JRUNNING */
+         lListElem *ue, *jr = lCreateElem(JR_Type);
+         lSetUlong(jr, JR_job_number, jobid);
+         lSetUlong(jr, JR_ja_task_number, jataskid);
+         ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
+         lSetString(jr, JR_queue_name, lGetString(ep, JG_qname));
+         lSetHost(jr, JR_host_name, lGetHost(ep, JG_qhostname));
+         lSetString(jr, JR_owner, lGetString(jep, JB_owner));
+         lSetString(jr, JR_group, lGetString(jep, JB_group));
+         lSetUlong(jr, JR_wait_status, SGE_SET_WEXITSTATUS(SGE_WEXITED_BIT, 0)); /* returned with exit(0) */
+
+         ue = lAddSubStr(jr, UA_name, "submission_time", JR_usage, UA_Type);
+         lSetDouble(ue, UA_value, lGetUlong(jep, JB_submission_time)); 
+
+         ue = lAddSubStr(jr, UA_name, "start_time", JR_usage, UA_Type);
+         lSetDouble(ue, UA_value, lGetUlong(jatep, JAT_start_time)); 
+
+         ue = lAddSubStr(jr, UA_name, "end_time", JR_usage, UA_Type);
+         lSetDouble(ue, UA_value, now); 
+
+         ue = lAddSubStr(jr, UA_name, "ru_wallclock", JR_usage, UA_Type);
+         lSetDouble(ue, UA_value, 3);
+
+         lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
+         reporting_create_acct_record(ctx, NULL, jr, jep, jatep, false);
+         sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT, monitor);
+         lFreeElem(&jr); 
+      }
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+      DEXIT;
+      return;
+   }
+   
+
    /* check whether a slave execd allowance has to be retransmitted */
-   if (lGetUlong(jatep, JAT_status) == JTRANSFERING)
-   {
+   if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
+
       ep = lFirst(lGetList(jatep, JAT_granted_destin_identifier_list));
 
       if (!ep || !(qnm=lGetString(ep, JG_qname)) || !(hnm=lGetHost(ep, JG_qhostname)))
@@ -831,7 +884,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
       /* initialize resending of job if not acknowledged by execd */
       trigger_job_resend(now, hep, lGetUlong(jep, JB_job_number), 
                          lGetUlong(jatep, JAT_task_number));
-   } 
+   }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
@@ -862,7 +915,10 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
 
    DENTER(TOP_LAYER, "trigger_job_resend");
 
-   seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
+   if (mconf_get_simulate_execds())
+      seconds = 3;
+   else
+      seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
    DPRINTF(("TRIGGER JOB RESEND "sge_u32"/"sge_u32" in %d seconds\n", jid, ja_task_id, seconds)); 
 
    when = (time_t)(now + seconds);

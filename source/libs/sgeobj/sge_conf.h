@@ -110,6 +110,7 @@ bool mconf_get_sharetree_reserved_usage(void);
 bool mconf_get_keep_active(void);
 bool mconf_get_enable_windomacc(void);
 bool mconf_get_simulate_hosts(void);
+bool mconf_get_simulate_execds(void);
 long mconf_get_ptf_max_priority(void);
 long mconf_get_ptf_min_priority(void);
 bool mconf_get_use_qsub_gid(void);

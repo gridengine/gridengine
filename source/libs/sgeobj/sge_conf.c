@@ -161,6 +161,9 @@ static int sharelog_time          = 0;
 /* allow the simulation of (non existent) hosts */
 static bool simulate_hosts = false;
 
+/* generally simulate all execd's */
+static bool simulate_execds = false;
+
 /*
  * This value overrides the default scheduler timeout (10 minutes)
  * to allow graceful degradation on extremely busy systems with
@@ -604,6 +607,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       use_qidle = false;
       disable_reschedule = false;   
       simulate_hosts = false;
+      simulate_execds = false;
       prof_message_thrd = false;
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
@@ -668,6 +672,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
+            continue;
+         }
+         if (parse_bool_param(s, "SIMULATE_EXECDS", &simulate_execds)) {
             continue;
          }
          if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
@@ -1804,6 +1811,18 @@ bool mconf_get_simulate_hosts(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = simulate_hosts;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_simulate_execds(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_simulate_execds");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = simulate_execds;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

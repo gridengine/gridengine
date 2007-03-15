@@ -38,6 +38,7 @@
 #include "cull_list.h"
 #include "sge.h"
 
+#include "sge_conf.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
@@ -540,7 +541,10 @@ void
 qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
 {
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_state_set_unknown");
-   qinstance_set_state(this_elem, set_state, QI_UNKNOWN);
+   if (mconf_get_simulate_execds())
+      qinstance_set_state(this_elem, false, QI_UNKNOWN);
+   else
+      qinstance_set_state(this_elem, set_state, QI_UNKNOWN);
    DEXIT;
 }
 

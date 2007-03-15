@@ -1,3 +1,8 @@
+AH-2007-03-15-0: Enhanc:    Added SIMULATE_EXECDS to qmaster_params to
+                            to bypass execd communication in qmaster for 
+                            throughput tests.
+                 Changed:   qmaster
+
 JG-2007-03-14-0: Bugfix:    Fixed utilbin/hp11-64/rshd.
                  Review:    RD
 

@@ -253,7 +253,6 @@ import com.sun.grid.jgdi.TestValueFactory;
 public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {
 
    private JGDI jgdi;
-   private JGDI jgdi_evc;
    private EventClient evc;
    
    public <%=cullObj.getIdlName()%>EventTestCase(String name) {
@@ -270,8 +269,7 @@ public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {
       // System.loadLibrary( "jgdi" );
       
       jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+      evc = createEventClient(0);
       evc.start();
       super.setUp();
       logger.fine("SetUp done");
@@ -282,7 +280,6 @@ public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {
         evc.close();
       } finally {
          jgdi.close();
-         jgdi_evc.close();
       }
    }
    

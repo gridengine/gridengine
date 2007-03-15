@@ -89,14 +89,14 @@ public class JGDIFactory {
     * Create a new event client which receives events from a jgdi
     * connection.
     *
-    * @param jgdi   the jgdi connection
+    * @param url  JGDI connection url in the form
+    *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
     * @param evcId  id of the event client (0 mean dynamically assigned)
     * @throws com.sun.grid.jgdi.JGDIException 
     * @return the new event client
     */
-   public static EventClient createEventClient(JGDI jgdi, int evcId) throws JGDIException {
-      
-      return new com.sun.grid.jgdi.jni.EventClientImpl(jgdi, evcId);
+   public static EventClient createEventClient(String url, int evcId) throws JGDIException {
+      return new com.sun.grid.jgdi.jni.EventClientImpl(url, evcId);
       
    }
    

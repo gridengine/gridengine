@@ -64,7 +64,7 @@ public class EventExample {
          try {
             System.out.println("Successfully connected to " + url);         
 
-            EventClient evc = JGDIFactory.createEventClient(jgdi,0);
+            EventClient evc = JGDIFactory.createEventClient(url,0);
             
             evc.start();
             

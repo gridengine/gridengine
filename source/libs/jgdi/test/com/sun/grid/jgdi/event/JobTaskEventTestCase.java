@@ -47,7 +47,6 @@ import junit.framework.TestSuite;
 public class JobTaskEventTestCase extends BaseTestCase {
    
    private JGDI jgdi;
-   private JGDI jgdi_evc;
    private EventClient evc;
    
    /** Creates a new instance of SpecialEventTestCase */
@@ -58,8 +57,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
    protected void setUp() throws Exception {
       
       jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+      evc = createEventClient(0);
       super.setUp();
       logger.fine("SetUp done");
    }
@@ -69,7 +67,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
         evc.close();
       } finally {
          jgdi.close();
-         jgdi_evc.close();
+         evc.close();
       }
    }
    

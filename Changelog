@@ -1,3 +1,8 @@
+RH-2007-03-15-0: Bugfix:    o jgdi: interface for creating an event client
+                              changed (was not threadsafe)
+                            o SEGV in sge_log.c
+                 Review:    AA
+
 AH-2007-03-15-0: Enhanc:    Added SIMULATE_EXECDS to qmaster_params to
                             to bypass execd communication in qmaster for 
                             throughput tests.

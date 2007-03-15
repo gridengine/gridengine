@@ -91,6 +91,9 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
    sge_evc_array[evc_index] = NULL;
    pthread_mutex_unlock(&sge_evc_mutex);
    if (evc) {
+      /* shutdown the event client */
+      evc->ec_deregister(evc);
+      /* destroy the event client */
       sge_evc_class_destroy(&evc);
    } else {
       THROW_ERROR((env, JGDI_ILLEGAL_STATE, "evc is NULL"));
@@ -179,7 +182,14 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
       DEXIT;
       return ret;
    }
-   *evc = sge_evc_array[index];
+   if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
+       pthread_mutex_lock(&sge_evc_mutex);
+       *evc = sge_evc_array[index];
+       pthread_mutex_unlock(&sge_evc_mutex);
+   } else {
+       answer_list_add(alpp, "event has not a valid evc index", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       ret = JGDI_ILLEGAL_STATE;
+   }
    DEXIT;
    return ret;
 }
@@ -190,14 +200,14 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_register(JNIEnv *env, jobject evcobj)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative(JNIEnv *env, jobject evcobj)
 {
    lList *alp = NULL;
    sge_evc_class_t *sge_evc = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_register");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -234,7 +244,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_register(J
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister(JNIEnv *env, jobject evcobj)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative(JNIEnv *env, jobject evcobj)
 {
    lList *alp = NULL;
    sge_evc_class_t *sge_evc = NULL;
@@ -242,7 +252,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    ev_registration_id id = EV_ID_ANY;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -399,7 +409,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
       return;
    }
 
-   sge_evc->ec_get(sge_evc, &elist, false);
+   sge_evc->ec_get(sge_evc, &elist, true);
 
 
    for_each(ev, elist) {

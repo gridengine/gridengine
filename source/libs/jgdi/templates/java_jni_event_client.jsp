@@ -55,15 +55,16 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
    /**
     *   Create a new event client
     *
-    *   @param jgdi   gdi connection
+    *   @param url  JGDI connection url in the form
+    *               <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
     *   @param regId  event client registration id. If this id is 0 the event
     *                 client id will be dynamically assigned
     *   @throws JGDIException If the native intialization of the event client
     *                        fails.
     *                  
     */
-   public EventClientImpl(JGDI jgdi, int regId) throws JGDIException {
-      super(jgdi, regId);
+   public EventClientImpl(String url, int regId) throws JGDIException {
+      super(url, regId);
    }
 
 <%

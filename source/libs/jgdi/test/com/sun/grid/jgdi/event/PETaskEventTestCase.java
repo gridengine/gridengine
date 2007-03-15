@@ -52,7 +52,6 @@ import junit.framework.TestSuite;
 public class PETaskEventTestCase extends BaseTestCase {
     
     private JGDI jgdi;
-    private JGDI jgdi_evc;
     private EventClient evc;
     
     /** Creates a new instance of PETaskEventTestCase */
@@ -66,8 +65,7 @@ public class PETaskEventTestCase extends BaseTestCase {
     protected void setUp() throws Exception {
         
         jgdi = createJGDI();
-        jgdi_evc = createJGDI();
-        evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+        evc = createEventClient(0);
         super.setUp();
         
         String peName = "pe" + System.currentTimeMillis();
@@ -114,7 +112,6 @@ public class PETaskEventTestCase extends BaseTestCase {
             evc.close();
         } finally {
             jgdi.close();
-            jgdi_evc.close();
         }
     }
     

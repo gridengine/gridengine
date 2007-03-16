@@ -2898,3 +2898,185 @@ object_verify_expression_syntax(const lListElem *elem, lList **answer_list)
    }    
    return ret;
 }
+
+
+/****** sge_object/object_verify_name() *****************************************
+*  NAME
+*     object_verify_name() - verifies object name
+*
+*  SYNOPSIS
+*     int object_verify_name(const lListElem *object, lList **alpp, int name, object_descr) 
+*
+*  FUNCTION
+*     These checks are done for the attribute JB_object_name of 'object':
+*     #1 reject object name if it starts with a digit
+*     A detailed problem description is added to the answer list.
+*
+*  INPUTS
+*     const lListElem *object  - JB_Type elemente
+*     lList **alpp             - the answer list
+*     int   name               - object name  
+*     char *object_descr       - used for the text in the answer list 
+*
+*  RESULT
+*     int - returns != 0 if there is a problem with the object name
+*
+*  MT-NOTE: sge_resolve_host() is MT safe
+*
+******************************************************************************/
+int object_verify_name(const lListElem *object, lList **answer_list, int name, 
+                           const char *object_descr)
+{
+   const char *object_name = lGetString(object, name);
+   int ret = 0;
+   
+   DENTER(TOP_LAYER, "object_verify_name");
+   if (object_name != NULL) {
+      if (isdigit(object_name[0])) {
+         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_NAME_S, object_name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+      else {
+         if (verify_str_key(
+               answer_list, object_name, MAX_VERIFY_STRING,
+               lNm2Str(name), QSUB_TABLE) != STATUS_OK) {
+            ret = STATUS_EUNKNOWN;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}
+
+
+/****** sge_object/object_verify_pe_range() **********************************
+ *  NAME
+ *     object_verify_pe_range() -- Verify validness of a jobs PE range request
+ *
+ *  SYNOPSIS
+ *     int object_verify_pe_range(lList **alpp, const char *pe_name,
+ *     lList *pe_range)
+ *
+ *  FUNCTION
+ *     Verifies a jobs PE range is valid. Currently the following is done
+ *     - make PE range list normalized and ascending
+ *     - ensure PE range min/max not 0
+ *     - in case multiple PEs match the PE request in GEEE ensure
+ *       the urgency slots setting is non-ambiguous
+ *
+ *  INPUTS
+ *     lList **alpp        - Returns answer list with error context.
+ *     const char *pe_name - PE request
+ *     lList *pe_range     - PE range to be verified
+ *     const char *object_descr - object description for user messages
+ *
+ *  RESULT
+ *     static int - STATUS_OK on success
+ *
+ *  NOTES
+ *
+ *******************************************************************************/
+int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
+                                  const char *object_descr)
+{
+   lListElem *relem = NULL;
+   unsigned long pe_range_max;
+   unsigned long pe_range_min;
+   
+   DENTER(TOP_LAYER, "object_verify_pe_range");
+   
+   /* ensure jobs PE range list request is normalized and ascending */
+   range_list_sort_uniq_compress(pe_range, NULL);
+   
+   for_each(relem, pe_range) {
+      pe_range_min = lGetUlong(relem, RN_min);
+      pe_range_max = lGetUlong(relem, RN_max);
+      DPRINTF(("pe max = %ld, pe min = %ld\n", pe_range_max, pe_range_min));
+      if ( pe_range_max == 0 || pe_range_min == 0  ) {
+         ERROR((SGE_EVENT, MSG_OBJECT_PERANGEMUSTBEGRZERO_S, object_descr ));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DRETURN(STATUS_EUNKNOWN);
+      }
+   }
+   
+   /* PE slot ranges used in conjunction with wildcards can cause number of slots
+    finally being used for urgency value computation be ambiguous. We reject such
+    jobs */
+   if (range_list_get_number_of_ids(pe_range)>1) {
+      lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
+      const lListElem *reference_pe = pe_list_find_matching(master_pe_list, pe_name);
+      lListElem *pe;
+      int nslots = pe_urgency_slots(reference_pe, lGetString(reference_pe, PE_urgency_slots), pe_range);
+      for_each(pe, master_pe_list) {
+         if (pe_is_matching(pe, pe_name) &&
+             nslots != pe_urgency_slots(pe, lGetString(pe, PE_urgency_slots), pe_range))
+         {
+            ERROR((SGE_EVENT, MSG_OBJECT_WILD_RANGE_AMBIGUOUS_S, object_descr));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EUNKNOWN);
+         }
+      }
+   }
+   
+   DRETURN(STATUS_OK);
+}
+
+/****** sge_objectcompress_ressources() **********************************
+ *  NAME
+ *     compress_ressources() --  remove multiple requests for one resource
+ *
+ *  SYNOPSIS
+ *     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
+ *
+ *  FUNCTION
+ *     remove multiple requests for one resource
+ *     this can't be done fully in clients without having complex definitions
+ *     -l arch=linux -l a=sun4
+ *
+ *  INPUTS
+ *     lList **alpp        - Returns answer list with error context.
+ *     lList *rl           - object description for user messages
+ *     const char *object_descr - object description 
+ *
+ *  RESULT
+ *     static int - 0 on success
+ *
+ *  NOTES
+ *
+ *******************************************************************************/
+ int compress_ressources(lList **alpp, lList *rl, const char *object_descr ) {
+   lListElem *ep, *prev, *rm_ep;
+   const char *attr_name;
+
+   DENTER(TOP_LAYER, "compress_ressources");
+
+   for_each_rev (ep, rl) { 
+      attr_name = lGetString(ep, CE_name);
+
+      /* ensure 'slots' is not requested explicitly */
+      if (!strcmp(attr_name, "slots")) {
+         ERROR((SGE_EVENT, MSG_OBJECT_NODIRECTSLOTS_S)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
+      }
+
+      /* remove all previous requests with the same name */
+      prev =  lPrev(ep);
+      while ((rm_ep=prev)) {
+         prev = lPrev(rm_ep);
+         if (!strcmp(lGetString(rm_ep, CE_name), attr_name)) {
+            DPRINTF(("resource request -l "SFN"="SFN" overrides previous -l "SFN"="SFN"\n",
+               attr_name, lGetString(ep, CE_stringval), 
+               attr_name, lGetString(rm_ep, CE_stringval)));
+            lRemoveElem(rl, &rm_ep);
+         }
+      }
+   }
+
+   DRETURN(0);
+}
+
+
+
+

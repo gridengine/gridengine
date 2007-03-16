@@ -347,4 +347,8 @@ bool object_verify_double_null(const lListElem *ep, lList **answer_list, int nm)
 bool object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_expression_syntax(const lListElem *ep, lList **answer_list);
 
+int object_verify_name(const lListElem *object, lList **answer_list, int name, const char *object_descr);
+int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range, const char *object_descr);
+int compress_ressources(lList **alpp, lList *rl, const char *object_descr );
+
 #endif /* __SGE_OBJECT_H */

@@ -75,6 +75,10 @@ The list of the functions tracked by the monitor is:
 * sge_unlock()
 * spool_delete_object()
 * spool_write_object()
+* spool_read_object()
+* spool_delete_script()
+* spool_write_script()
+* spool_read_script()
 
 == Appendix ==
 

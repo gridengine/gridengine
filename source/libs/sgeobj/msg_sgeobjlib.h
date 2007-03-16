@@ -291,4 +291,8 @@
 #define MSG_AR_START_IN_PAST                     _MESSAGE(64393, _("start time is in the past"))
 #define MSG_AR_XISINVALIDARID_U                  _MESSAGE(64394, _("ERROR! "sge_U32CFormat" is an invalid advance reservation identifier"))
 
+#define MSG_OBJECT_INVALID_NAME_S                _MESSAGE(64395, _("denied: "SFQ" is not a valid object name (cannot start with a digit)"))
+#define MSG_OBJECT_PERANGEMUSTBEGRZERO_S         _MESSAGE(64396, _(SFQ" rejected: pe range must be greater than zero"))
+#define MSG_OBJECT_WILD_RANGE_AMBIGUOUS_S        _MESSAGE(64397, _(SFQ" rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount"))
+#define MSG_OBJECT_NODIRECTSLOTS_S               _MESSAGE(64398, _(SFQ" denied: use parallel environments instead of requesting slots explicitly"))
 #endif /* __MSG_SGEOBJLIB_H */

@@ -49,11 +49,11 @@ enum {
 
 /* AR states for AR_state */
 enum {
-   AR_WAITING = 0,
-   AR_RUNNING,
-   AR_EXITED,
-   AR_DELETED,
-   AR_ERROR
+   AR_WAITING = 0,  /* w 	waiting - granted but start time not reached */
+   AR_RUNNING,      /* r 	running - start time reached */
+   AR_EXITED,       /* x 	exited - end time reached and doing cleanup */
+   AR_DELETED,      /* d 	deleted - manual deletion */
+   AR_ERROR         /* e 	error - AR became invalid */
 };
 
 /* Advance Reservation Object */
@@ -64,21 +64,21 @@ enum {
    AR_owner,
 
    AR_submission_time,
-   AR_start_time,
-   AR_end_time,
+   AR_start_time,               /* required */
+   AR_end_time,                 /* required */
    AR_duration,
-   AR_verify,
-   AR_error_handling,
+   AR_verify,                   /* just verify the reservation or final case */
+   AR_error_handling,           /* how to deal with soft and hadr exceptions */
 
-   AR_state,
+   AR_state,                    /* state of the AR */
 
-   AR_checkpoint_name,
+   AR_checkpoint_name,          /* Named checkpoint */
 
    AR_resource_list,
    AR_resource_utilization,
    AR_queue_list,
 
-   AR_granted_slots,
+   AR_granted_slots,            /* runtime value */
 
    AR_mail_options,     
    AR_mail_list,

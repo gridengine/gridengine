@@ -257,6 +257,9 @@ enum {
 *
 *        Default is 'n'.
 *
+*     SGE_ULONG(JB_ar) ---> JB_ar
+*        Uniq advance reservation number.
+*
 *     SGE_ULONG(JB_priority) 
 *        Priority ("qsub/qalter -p priority")     
 *
@@ -596,7 +599,8 @@ enum {
    JB_nppri,
    JB_rrcontr,
    JB_dlcontr,
-   JB_wtcontr
+   JB_wtcontr,
+   JB_ar
 };
 
 /* 
@@ -697,7 +701,8 @@ LISTDEF(JB_Type)
    SGE_DOUBLE(JB_rrcontr, CULL_DEFAULT | CULL_JGDI_RO)         
    SGE_DOUBLE(JB_dlcontr, CULL_DEFAULT | CULL_JGDI_RO)         
    SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT | CULL_JGDI_RO)         
-
+   SGE_ULONG(JB_ar, CULL_DEFAULT | CULL_SPOOL)     
+ 
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
     */
@@ -795,6 +800,7 @@ NAMEDEF(JBN)
    NAME("JB_rrcontr")
    NAME("JB_dlcontr")
    NAME("JB_wtcontr")
+   NAME("JB_ar")
 NAMEEND
 
 

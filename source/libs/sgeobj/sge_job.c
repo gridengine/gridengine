@@ -2375,7 +2375,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
 
    DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
 
-   for_each( ep, lGetList(job, name) ){
+   for_each(ep, lGetList(job, name)){
       int res = sge_resolve_host(ep, PN_host);
       DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
       if (res != CL_RETVAL_OK) { 

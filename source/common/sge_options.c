@@ -473,7 +473,11 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* Mrqs_OPT - modify resource quota set from file */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* drqs_OPT - delete resource quota set */
- {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* ar_OPT - advance reservation option */
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+/* he_OPT - ard error handling for qrsub */
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1}
 /*               
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  e  q  q  q  q  n  A
   o  a  c  d  h  m  m  r  r  s  s  r  l  s  s  x  e  r  r  r  o  L

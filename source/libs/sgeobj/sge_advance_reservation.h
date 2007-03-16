@@ -36,6 +36,6 @@
 
 lListElem *ar_list_locate(lList *ar_list, u_long32 job_id);
 
-bool ar_validate(lListElem *object, lList **answer_list, bool in_master);
+bool ar_validate(lListElem *ar, lList **alpp, bool in_master);
 
 #endif /* __SGE_ADVANCE_RESERVATION_H */

@@ -53,6 +53,8 @@
 #include "sge_lock.h"
 #include "sge_mtutil.h"
 #include "uti/sge_time.h"
+#include "sge_utility.h"
+#include "sge_range.h"
 
 #include "sge_utility_qmaster.h"
 
@@ -141,13 +143,62 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
       goto ERROR; 
    }
 
+   
+   /*    AR_name, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_name, object->object_name);
-
+   /*   AR_account, SGE_STRING */
+   attr_mod_zerostr(ar, new_ar, AR_account, object->object_name);
+   /*   AR_owner, SGE_STRING */
+   attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name);
+   /*   AR_start_time, SGE_ULONG          required */
    attr_mod_ulong(ar, new_ar, AR_start_time, object->object_name);
+   /*   AR_end_time, SGE_ULONG            required */
    attr_mod_ulong(ar, new_ar, AR_end_time, object->object_name);
+   /*   AR_duration, SGE_ULONG */
    attr_mod_ulong(ar, new_ar, AR_duration, object->object_name);
-
-   /* AR TBD - add the missing attributes */
+   /*   AR_verify, SGE_ULONG              just verify the reservation or final case */
+   attr_mod_ulong(ar, new_ar, AR_verify, object->object_name);
+   /*   AR_error_handling, SGE_ULONG      how to deal with soft and hard exceptions */
+   attr_mod_ulong(ar, new_ar, AR_error_handling, object->object_name);
+   /*   AR_state, SGE_ULONG               state of the AR */
+   attr_mod_ulong(ar, new_ar, AR_state, object->object_name);
+   /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
+   attr_mod_zerostr(ar, new_ar, AR_checkpoint_name, object->object_name);
+   
+   /*   AR_resource_list, SGE_LIST */
+   /* -PJ- TBD: resource_list */
+   /* attr_mod_sub_list(alpp, new_ar, AR_resource_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_queue_list, SGE_LIST */
+   /* -PJ- TBD: queue_list */
+   /* attr_mod_sub_list(alpp, new_ar, AR_queue_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_granted_slots, SGE_MAP_D ???? */
+    
+   /*   AR_mail_options, SGE_ULONG   */
+   attr_mod_ulong(ar, new_ar, AR_mail_options, object->object_name);
+   
+   /*   AR_mail_list, SGE_LIST */
+   /* -PJ- TBD: mail_list */
+   /* attr_mod_sub_list(alpp, new_ar, AR_mail_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_pe, SGE_STRING */
+   attr_mod_zerostr(ar, new_ar, AR_pe, object->object_name);
+   
+   /*   AR_pe_range, SGE_LIST */
+   /* -PJ- TBD: pe_range */
+   /* attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_acl_list, SGE_LIST */
+   /* -PJ- TBD: acl_listk*/
+   /* attr_mod_sub_list(alpp, new_ar, AR_acl_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_xacl_list, SGE_LIST */
+   /* -PJ- TBD:xacl_list */
+   /* attr_mod_sub_list(alpp, new_ar, AR_xacl_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
+   
+   /*   AR_type, SGE_ULONG     */
+   attr_mod_ulong(ar, new_ar, AR_type, object->object_name);
 
    INFO((SGE_EVENT, MSG_AR_GRANTED_U, sge_u32c(ar_id)));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -307,6 +358,11 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
 
    DENTER(TOP_LAYER, "ar_del");
 
+   /*
+    When the AR end time is reached at first all jobs referring to the
+    AR will be deleted and at second the AR itself will be deleted.
+    No jobs can request the AR handle any longer.
+   */
    if (!ep || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -610,6 +666,14 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 
    DENTER(TOP_LAYER, "sge_ar_event_handler");
 
+   
+   /*
+    To guarantee all jobs are removed from the cluster when AR end time is
+    reached it is necessary to consider the DURATION_OFFSET for Advance Reservation also.
+    This means all jobs submitted to a AR will have a resulting runtime limit of AR duration - DURATION_OFFSET.
+    Jobs requesting a longer runtime will not be scheduled.
+    The AR requester needs to keep this in mind when he creates a new AR.
+    */
    MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
 
    if (!(ar = ar_list_locate(*(object_type_get_master_list(SGE_TYPE_AR)), ar_id))) {
@@ -634,7 +698,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       sge_dstring_free(&buffer);
    } else {
       /* AR_RUNNING */
-       DPRINTF(("AR: started, changing state of AR "sge_u32"\n", ar_id));
+      DPRINTF(("AR: started, changing state of AR "sge_u32"\n", ar_id));
 
       lSetUlong(ar, AR_state, state);
       ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT, ONE_TIME_EVENT, ar_id, AR_EXITED, NULL);

@@ -1080,9 +1080,16 @@
 /*
  * Objects and components
  */
-#define MSG_QMASTER     _MESSAGE(60700, _("master"))
-#define MSG_EXECD       _MESSAGE(60701, _("execution daemon"))
-#define MSG_SCHEDD      _MESSAGE(60702, _("scheduler"))
+#define MSG_QMASTER                       _MESSAGE(60700, _("master"))
+#define MSG_EXECD                         _MESSAGE(60701, _("execution daemon"))
+#define MSG_SCHEDD                        _MESSAGE(60702, _("scheduler"))
+
+/* Ar messages */
+#define MSG_PARSE_INVALID_AR_MUSTBEUINT   _MESSAGE(60703, _("ERROR! invalid advance reservation id, must be an unsigned integer"))
+#define MSG_GDI_USAGE_ar_OPT              "[-ar ar_id]"
+#define MSG_GDI_UTEXT_ar_OPT              _MESSAGE(60704, _("bind job to advance reservation"))
+#define MSG_GDI_USAGE_he_OPT              "[-he  y[es]|n[o]]"
+#define MSG_GDI_UTEXT_he_OPT              _MESSAGE(60705, _("enable/disable hard error handling"))
 
 /* =================================================
  * please do not enter new messages after this point,

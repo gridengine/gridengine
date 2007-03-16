@@ -308,6 +308,10 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_Ahgrp_OPT, MSG_GDI_UTEXT_Ahgrp_OPT);
    }
 
+   if (VALID_OPT(ar_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+   }
+
    if (VALID_OPT(arqs_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_arqs_OPT, MSG_GDI_UTEXT_arqs_OPT);
       MARK(OA_RQS_LIST);
@@ -609,6 +613,10 @@ FILE *fp
 
    if (VALID_OPT(hard_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_hard_OPT , MSG_GDI_UTEXT_hard_OPT );
+   }
+
+   if (VALID_OPT(he_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_he_OPT , MSG_GDI_UTEXT_he_OPT );
    }
 
    if (VALID_OPT(help_OPT, prog_number)) {

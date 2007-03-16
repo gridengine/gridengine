@@ -297,7 +297,6 @@
 #define MSG_JOB_NOSCRIPT              _MESSAGE(33211, _("job rejected: no script in your request"))
 #define MSG_JOB_PEUNKNOWN_S           _MESSAGE(33212, _("job rejected: the requested parallel environment "SFQ" does not exist"))
 #define MSG_JOB_CKPTUNKNOWN_S         _MESSAGE(33213, _("job rejected: the requested checkpointing environment "SFQ" does not exist"))
-#define MSG_JOB_PERANGEMUSTBEGRZERO   _MESSAGE(33214, _("job rejected: pe range must be greater than zero"))
 #define MSG_JOB_CKPTMINUSC            _MESSAGE(33215, _("job rejected: checkpointing with \"-c n\" requested"))
 #define MSG_JOB_NOCKPTREQ             _MESSAGE(33216, _("job rejected: checkpointing without checkpointing environment requested"))
 #define MSG_JOB_CKPTDENIED            _MESSAGE(33217, _("checkpointing denied") )   
@@ -381,7 +380,7 @@
 #define MSG_JOB_QSARGS                _MESSAGE(33292, _("qs args"))
 #define MSG_JOB_SCRIPTARGS            _MESSAGE(33293, _("script arguments"))
 #define MSG_JOB_CONTEXT               _MESSAGE(33294, _("context"))
-#define MSG_JOB_NODIRECTSLOTS         _MESSAGE(33295, _("denied: use parallel environments instead of requesting slots explicitly"))
+
 #define MSG_NOSEQNRREAD_SSS           _MESSAGE(33296, _("can't read "SFN" sequence number in file "SFQ": "SFN))
 #define MSG_NOSEQFILEOPEN_SSS         _MESSAGE(33297, _("can't open "SFN" sequence number file "SFQ": for reading: "SFN" -- guessing next number"))
 #define MSG_NOSEQFILECREATE_SSS       _MESSAGE(33298, _("can't create "SFN" sequence number file "SFQ": "SFN" - delaying until next job"))
@@ -398,7 +397,6 @@
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""sge_U32CFormat"\" may not be it's own jobnet predecessor"))
 #define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found"))
-#define MSG_JOB_MOD_NOJOBNAME_S                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name (job cannot start with a digit)"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "sge_U32CFormat" can't modify running jobs") ) 
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN))
@@ -680,7 +678,7 @@
 #define MSG_QINSTANCE_CHANGEDST_SSSS    _MESSAGE(33724, _(SFN"@"SFN" changed state of "SFQ" ("SFN")"))
 #define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here"))
 #define MSG_QINSTANCE_NQIFOUND_SS       _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ))
-#define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount"))
+
 #define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("warning: "SFQ" has ambiguous value ("SFQ", "SFQ")"))
 #define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN))
 #define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
@@ -761,5 +759,8 @@
 
 #define MSG_AR_GRANTED_U                            _MESSAGE(33931, _("Your advance reservation "sge_U32CFormat" has been granted"))
 #define MSG_AR_MAXARSPERCLUSTER_U                   _MESSAGE(33932, _("rejected: only "sge_U32CFormat" advance reservations are allowed per cluster"))
+#define MSG_JOB_JOBARSET_SSUU                       _MESSAGE(33934, _(SFN"@"SFN" sets job advance reservation of job "sge_U32CFormat" to "sge_U32CFormat))
+#define MSG_JOB_CHANGEJOBAR                         _MESSAGE(33935, _("changed job advance reservation"))
+#define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("job rejected: the advance reservation id "sge_U32CFormat" is invalid"))
 
 #endif

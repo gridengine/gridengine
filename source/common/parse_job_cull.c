@@ -279,6 +279,12 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       lRemoveElem(cmdline, &ep);
    }
 
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-ar"))) {
+      /* the old advance reservation is overwritten */
+      lSetUlong(*pjob, JB_ar, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, &ep);
+   }
+   
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
       lSetUlong(*pjob, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
       lRemoveElem(cmdline, &ep);

@@ -193,6 +193,11 @@ static int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_c
 static void job_list_filter( lList *user_list, const char* jobid, lCondition **job_filter, 
                              lCondition **user_filter);
 
+static int spool_write_script(lListElem *jep, u_long32 jobid);
+#ifdef SOLARIS
+#pragma no_inline(spool_write_script)
+#endif
+
 /* when this character is modified, it has also be modified
    the JOB_NAME_DEL in clients/qalter/qalter.c
    */
@@ -762,17 +767,12 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          if (lGetString(jep, JB_script_file) && 
              !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
 
-            PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-            if (sge_string2file(lGetString(jep, JB_script_ptr), 
-                             lGetUlong(jep, JB_script_size),
-                             lGetString(jep, JB_exec_file))) {
+            if (spool_write_script(jep, job_number)) {
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-               PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
                DRETURN(STATUS_EDISK);
             }
-            PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
          }
 
          /* clean file out of memory */
@@ -3946,3 +3946,38 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
    DRETURN_VOID;
 }
 
+/****** sge_job_qmaster/spool_write_script() ***********************************
+*  NAME
+*     spool_write_script() -- Write job script
+*
+*  SYNOPSIS
+*     static int spool_write_script(lListElem *jep, u_long32 jobid) 
+*
+*  FUNCTION
+*     The function stores the script of a '-b n' job into a file.
+*
+*  INPUTS
+*     lListElem *jep - the job
+*     u_long32 jobid - job id (needed for Dtrace only)
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: spool_write_script() is MT safe 
+*
+*  SEE ALSO
+*     spool_delete_script()
+*     spool_read_script()
+*******************************************************************************/
+static int spool_write_script(lListElem *jep, u_long32 jobid)
+{
+   int ret;
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+
+   ret = sge_string2file(lGetString(jep, JB_script_ptr), 
+                             lGetUlong(jep, JB_script_size),
+                             lGetString(jep, JB_exec_file));
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   return ret;
+}

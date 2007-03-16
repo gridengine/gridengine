@@ -115,11 +115,14 @@ profile:::tick-$3
 
 /* -------------------------------------- [spooling] ---------------------------------- */
 
-pid$1::spool_write_object:entry, pid$1::spool_delete_object:entry
+pid$1::spool_write_object:entry, pid$1::spool_delete_object:entry, pid$1::spool_read_object:entry,
+pid$1::spool_write_script:entry, pid$1::spool_delete_script:entry, pid$1::spool_read_script:entry
 {
    self->spool_start = timestamp;
 }
-pid$1::spool_write_object:return, pid$1::spool_delete_object:return
+
+pid$1::spool_write_object:return, pid$1::spool_delete_object:return, pid$1::spool_read_object:return,
+pid$1::spool_write_script:return, pid$1::spool_delete_script:return, pid$1::spool_read_script:return
 { 
    wrt_total += timestamp - self->spool_start;
    @q[ probefunc ] = quantize((timestamp - self->spool_start)/1000);
@@ -218,6 +221,18 @@ pid$1::sge_unlock:return
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
 /* -------------------------------------- [spooling] ---------------------------------- */
+
+pid$1::spool_read_script:entry,pid$1::spool_write_script:entry,pid$1::spool_delete_script:entry
+/$4 == 1/
+{
+   printf("\t%s(%d) tid %d", probefunc, arg1, tid);
+}
+
+pid$1::spool_read_object:entry
+/$4 == 1/
+{
+   printf("\t%s(%d, %s) tid %d", probefunc, arg3, copyinstr(arg2), tid);
+}
 pid$1::spool_write_object:entry
 /$4 == 1/
 {

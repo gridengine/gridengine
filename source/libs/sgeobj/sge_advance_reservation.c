@@ -58,6 +58,7 @@
 #include "msg_qmaster.h"
 #include "sge_range.h"
 #include "sge_rangeL.h"
+#include "sge_userset.h"
 
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
@@ -212,7 +213,6 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
       {
          const char *pe_name = NULL;
          lList *pe_range = NULL;
-         int ret;
          
          pe_name = lGetString(ar, AR_pe);
          if (pe_name) {
@@ -230,12 +230,12 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
             }
          }
          /*   AR_acl_list, SGE_LIST */
-         if ((ret=userset_list_validate_acl_list(lGetList(ar, AR_acl_list), alpp)) != STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ar, AR_acl_list), alpp) != STATUS_OK) {
             goto ERROR;
          }
          
          /*   AR_xacl_list, SGE_LIST */
-         if ((ret=userset_list_validate_acl_list(lGetList(ar, AR_xacl_list), alpp)) != STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ar, AR_xacl_list), alpp) != STATUS_OK) {
             goto ERROR;
          }
       }

@@ -711,10 +711,10 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       }
       
       /* Verify existence of ar, if ar exists */
-      if (ar_id=lGetUlong(jep, JB_ar)) {
+      if ((ar_id=lGetUlong(jep, JB_ar))) {
           
          if (!ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id)) {
-            ERROR((SGE_EVENT, MSG_JOB_NOAREXISTS_U, ar_id));
+            ERROR((SGE_EVENT, MSG_JOB_NOAREXISTS_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EEXIST);
@@ -891,7 +891,6 @@ int sub_command, monitoring_t *monitor
    u_long32 unenrolled_start = 0;
    u_long32 unenrolled_end = 0;
    u_long32 r_start = 0; 
-   u_long32 ar_id = 0; 
    u_long32 r_end = 0;
    u_long32 step = 0;
    u_long32 job_number = 0;
@@ -3657,7 +3656,7 @@ int *trigger
          DPRINTF(("verify schedulability = %c\n", OPTION_VERIFY_STR[verify_mode]));
 
          /* checkpointing */
-         if (try_it && (ckpt_name=lGetString(jep, JB_checkpoint_name)))
+         if ((ckpt_name=lGetString(jep, JB_checkpoint_name)))
             if (!(a.ckpt = ckpt_list_locate(*object_base[SGE_TYPE_CKPT].list, ckpt_name)))
                try_it = 0;
 
@@ -3684,7 +3683,7 @@ int *trigger
             a.centry_list      = *object_base[SGE_TYPE_CENTRY].list;
             a.acl_list         = *object_base[SGE_TYPE_USERSET].list;
             a.hgrp_list        = *object_base[SGE_TYPE_HGROUP].list;
-            a.rqs_list        = *object_base[SGE_TYPE_RQS].list;
+            a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
             a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
             a.start            = DISPATCH_TIME_NOW;
             a.duration         = 0;
@@ -3699,11 +3698,10 @@ int *trigger
 
             if (lGetString(jep, JB_pe)) {
                sge_select_parallel_environment(&a, *object_base[SGE_TYPE_PE].list);
-               ngranted += nslots_granted(a.gdil, NULL);
             } else {
                sge_sequential_assignment(&a);
-               ngranted += nslots_granted(a.gdil, NULL);
             }
+            ngranted += nslots_granted(a.gdil, NULL);
 
             /* stop redirection of scheduler monitoring messages */
             if (verify_mode==JUST_VERIFY) {

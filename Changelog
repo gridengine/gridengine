@@ -1,3 +1,11 @@
+RD-2007-03-16-0: Bugfix:    - added missing check for JB_verify_suitable_queues
+                            - fixed several compile errors
+                 Review:    AH
+
+PJ-2007-03-16-0: Enhancm:   - added qrsub command line options
+                            - added qmaster advance reservation verification
+                            - added qsub -ar option
+                 Review:    RD
 
 AA-2007-03-16-0: Bugfix:    o qmon advance reservation qrstat, qrsub dialogs
                               prelim version available via task menu

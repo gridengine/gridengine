@@ -3216,7 +3216,14 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* TODO: JB_user_list */
    /* TODO: JB_job_identifier_list */
 
-   /* JB_verify_suitable_q any ulong value */
+   /* JB_verify_suitable_queues must be in range of OPTION_VERIFY_STR */
+   if (ret) {
+      if (lGetUlong(job, JB_verify_suitable_queues) >= (sizeof(OPTION_VERIFY_STR)/sizeof(char)-1)) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "verify");
+            ret = false;
+      }
+   }
 
    /* JB_soft_wallclock_gm must be 0 */
    if (ret) {

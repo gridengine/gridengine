@@ -488,7 +488,6 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
          lAppendList(lists->queue_list, lists->dis_queue_list);
       }
       
-      
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                                  *(splitted_job_lists[SPLIT_SUSPENDED]),
                                  lists->pe_list, lists->host_list, lists->queue_list, 
@@ -619,7 +618,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
       }
    }
 
-   if ( ((max_reserve == 0) && (lGetNumberOfElem(lists->queue_list) == 0)) || /* no reservatoin and no queues avail */
+   if ( ((max_reserve == 0) && (lGetNumberOfElem(lists->queue_list) == 0)) || /* no reservation and no queues avail */
         ((lGetNumberOfElem(lists->queue_list) == 0) && (lGetNumberOfElem(lists->dis_queue_list) == 0))) { /* reservation and no queues avail */
       DPRINTF(("queues dropped because of overload or full: ALL\n"));
       schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);

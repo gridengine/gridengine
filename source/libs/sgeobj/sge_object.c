@@ -3045,7 +3045,7 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
  *  NOTES
  *
  *******************************************************************************/
- int compress_ressources(lList **alpp, lList *rl, const char *object_descr ) {
+int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
    lListElem *ep, *prev, *rm_ep;
    const char *attr_name;
 
@@ -3056,7 +3056,7 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
 
       /* ensure 'slots' is not requested explicitly */
       if (!strcmp(attr_name, "slots")) {
-         ERROR((SGE_EVENT, MSG_OBJECT_NODIRECTSLOTS_S)); 
+         ERROR((SGE_EVENT, MSG_OBJECT_NODIRECTSLOTS_S, object_descr)); 
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
       }
@@ -3076,7 +3076,3 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
 
    DRETURN(0);
 }
-
-
-
-

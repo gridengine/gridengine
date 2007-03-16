@@ -147,6 +147,13 @@ setCheckpointObj(lListElem *job);
 static lListElem* 
 copyJob(lListElem *job, lListElem *ja_task);
 
+static int spool_delete_script(lListElem *jep, u_long32 jobid);
+static int spool_read_script(lListElem *jep, u_long32 jobid);
+#ifdef SOLARIS
+#pragma no_inline(spool_read_script, spool_delete_script)
+#endif
+
+
 /************************************************************************
  Master function to give job to the execd.
 
@@ -538,14 +545,13 @@ send_job(sge_gdi_ctx_class_t *ctx,
          const char *rhost, const char *target, lListElem *jep, lListElem *jatep,
          lListElem *pe, lListElem *hep, int master) 
 {
-   int len, failed;
+   int failed;
    u_long32 now;
    sge_pack_buffer pb;
    u_long32 dummymid = 0;
    lListElem *tmpjep, *qep, *tmpjatep, *tmpgdil_ep=NULL;
    lList *qlp;
    lListElem *gdil_ep;
-   char *str;
    unsigned long last_heard_from;
    cl_com_handle_t* handle = NULL;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
@@ -593,13 +599,12 @@ send_job(sge_gdi_ctx_class_t *ctx,
    /*
    ** if exec_file is not set, then this is an interactive job
    */
-   if (master && job_spooling && lGetString(tmpjep, JB_exec_file)) {
-      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      str = sge_file2string(lGetString(tmpjep, JB_exec_file), &len);
-      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      lXchgString(tmpjep, JB_script_ptr, &str);
-      FREE(str);
-      lSetUlong(tmpjep, JB_script_size, len);
+   if (master && job_spooling && lGetString(tmpjep, JB_exec_file) && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
+      if (spool_read_script(tmpjep, lGetUlong(tmpjep, JB_job_number))) {
+         lFreeElem(&tmpjep);
+         DEXIT;
+         return -1;
+      }
    }
 
    /* insert ckpt object if required **now**. it is only
@@ -1274,11 +1279,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       
       if (!no_unlink) {
          release_successor_jobs(jep);
-         if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling) {
-            PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-            unlink(lGetString(jep, JB_exec_file));
-            lSetString(jep, JB_exec_file, NULL);
-            PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+         if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
+            spool_delete_script(jep, jobid);
          }
       }
       break;
@@ -1877,4 +1879,76 @@ setCheckpointObj(lListElem *job)
    return ret;
 }
 
+/****** sge_give_jobs/spool_read_script() **************************************
+*  NAME
+*     spool_read_script() -- Read job script
+*
+*  SYNOPSIS
+*     static int spool_read_script(lListElem *jep, u_long32 jobid) 
+*
+*  FUNCTION
+*     The function reads the script of a '-b n' job from file.
+*
+*  INPUTS
+*     lListElem *jep - the job
+*     u_long32 jobid - job id (needed for Dtrace only)
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: spool_read_script() is MT safe 
+*
+*  SEE ALSO
+*     spool_write_script()
+*     spool_delete_script()
+*******************************************************************************/
+static int spool_read_script(lListElem *jep, u_long32 jobid)
+{
+   int len;
+   char *str;
 
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   str = sge_file2string(lGetString(jep, JB_exec_file), &len);
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+
+   lXchgString(jep, JB_script_ptr, &str);
+   FREE(str);
+   lSetUlong(jep, JB_script_size, len);
+
+   return 0;
+}
+
+/****** sge_give_jobs/spool_delete_script() ************************************
+*  NAME
+*     spool_delete_script() -- Delete job script
+*
+*  SYNOPSIS
+*     static int spool_delete_script(lListElem *jep, u_long32 jobid) 
+*
+*  FUNCTION
+*     The function removes the file where the script of a '-b n' job is stored.
+*
+*  INPUTS
+*     lListElem *jep - the job
+*     u_long32 jobid - job id (needed for Dtrace only)
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: spool_delete_script() is MT safe 
+*
+*  SEE ALSO
+*     spool_delete_script()
+*     spool_read_script()
+*******************************************************************************/
+static int spool_delete_script(lListElem *jep, u_long32 jobid)
+{
+   int ret;
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   ret = unlink(lGetString(jep, JB_exec_file));
+   lSetString(jep, JB_exec_file, NULL);
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   return ret;
+}

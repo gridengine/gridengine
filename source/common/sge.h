@@ -65,6 +65,7 @@
 #define SGE_OBJ_USERSET                "userset"
 #define SGE_OBJ_COMPLEXATTR            "complex_attribute"
 #define SGE_OBJ_JOB                    "job"
+#define SGE_OBJ_AR                     "ar"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_FORMULA          "load_formula"

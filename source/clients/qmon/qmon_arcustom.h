@@ -1,5 +1,5 @@
-#ifndef _QMON_BROWSER_H_
-#define _QMON_BROWSER_H_
+#ifndef _QMON_ARCUSTOM_H_
+#define _QMON_ARCUSTOM_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,25 +32,32 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <Xm/Xm.h>
 #include "qmon_proto.h"
+#include "qmon_cull.h"
 
+typedef String (*tFieldPrintFunc)(lListElem *ar, int nm); 
 
-/* 
- * !!!! Attention this depends on the ordering of the strings in
- * !!!! the checkbox/palette
- */
-#define BROWSE_STDOUT            (1<<0)
-#define BROWSE_STDERR            (1<<1)
-#define BROWSE_QUEUE             (1<<2)
-#define BROWSE_JOB               (1<<3)
-#define BROWSE_MSG               (1<<4)
-#define BROWSE_AR                (1<<5)
+typedef struct _tARField {
+   int show;
+   int nm;
+   String name;
+   short width;
+   int max_length;
+   tFieldPrintFunc printARField;
+} tARField;
 
+enum fill_mode {
+   FILL_ALL,
+   FILL_SELECTED
+};
 
+void qmonPopupARCU(Widget parent, XtPointer cld, XtPointer cad);
+void qmonCreateARCU(Widget parent, XtPointer cld);
+String* PrintARField(lListElem *ar, int cols);
+lList* qmonARFilterOwners(void);
 
-void qmonBrowserOpen(Widget w, XtPointer cld, XtPointer cad);
-void qmonBrowserShow(const char *s);
-void qmonBrowserMessages(Widget w, XtPointer cld, XtPointer cad);
-Boolean qmonBrowserObjectEnabled(int obj_id);
+int match_ar(lList **ar_list, lList *owner_list, lList *queue_list, lList *complex_list, lList *exec_host_list, lList *request_list);
 
-#endif /* _QMON_BROWSER_H_ */
+#endif /* _QMON_ARCUSTOM_H_ */
+

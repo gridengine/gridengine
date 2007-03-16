@@ -920,6 +920,16 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
          }
 
          /* we could do postprocessing based on ppList here */
+
+         /*
+         ** ppList contains the changed AR element, set in ar_success
+         */
+         if (request->target == SGE_AR_LIST && sub_command & SGE_GDI_RETURN_NEW_VERSION ) {
+            lFreeList(&(answer->lp));
+            answer->lp = ppList;
+            ppList = NULL;
+         }
+
          lFreeList(&ppList);
       }
    }

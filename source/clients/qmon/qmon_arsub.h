@@ -1,5 +1,5 @@
-#ifndef _QMON_BROWSER_H_
-#define _QMON_BROWSER_H_
+#ifndef _QMON_ARSUB_H_
+#define _QMON_ARSUB_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,25 +32,29 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <Xm/Xm.h>
 #include "qmon_proto.h"
 
+typedef struct _tARSubMode {
+   int mode;
+   int sub_mode;
+   u_long32 ar_id;
+} tARSubMode;
 
-/* 
- * !!!! Attention this depends on the ordering of the strings in
- * !!!! the checkbox/palette
- */
-#define BROWSE_STDOUT            (1<<0)
-#define BROWSE_STDERR            (1<<1)
-#define BROWSE_QUEUE             (1<<2)
-#define BROWSE_JOB               (1<<3)
-#define BROWSE_MSG               (1<<4)
-#define BROWSE_AR                (1<<5)
+enum _tARSubSensitivityMode {
+   ARSUB_NORMAL           = 0x01,
+   ARSUB_QSH              = 0x02,
+   ARSUB_BINARY           = 0x04,
+   ARSUB_SCRIPT           = 0x08,
+   ARSUB_QALTER_PENDING   = 0x10,
+   ARSUB_QALTER_RUNNING   = 0x20
+};
 
+void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad);
+void qmonARSubSetResources(lList **hr, lList **sr);
+lList *qmonARSubHR(void);
+lList *qmonARSubSR(void);
+String qmonARSubRequestType(void);
 
+#endif /* _QMON_ARSUB_H_ */
 
-void qmonBrowserOpen(Widget w, XtPointer cld, XtPointer cad);
-void qmonBrowserShow(const char *s);
-void qmonBrowserMessages(Widget w, XtPointer cld, XtPointer cad);
-Boolean qmonBrowserObjectEnabled(int obj_id);
-
-#endif /* _QMON_BROWSER_H_ */

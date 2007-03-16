@@ -254,6 +254,17 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
    te_add_event(ev);
    te_free_event(&ev);
 
+   /*
+   ** return element with correct id
+   */
+   if (ppList != NULL) {
+      if (*ppList == NULL) {
+         *ppList = lCreateList("", AR_Type);
+      }   
+      lAppendElem(*ppList, lCopyElem(ep)); 
+   }
+
+
    DRETURN(0);
 }
 

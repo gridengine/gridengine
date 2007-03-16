@@ -1,5 +1,5 @@
-#ifndef _QMON_BROWSER_H_
-#define _QMON_BROWSER_H_
+#ifndef _QMON_AR_H_
+#define _QMON_AR_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -34,23 +34,10 @@
 
 #include "qmon_proto.h"
 
+void updateARList(void);
+void updateARListCB(Widget w, XtPointer cld, XtPointer cad);
+void qmonARPopup(Widget w, XtPointer cld, XtPointer cad);
+void qmonARReturnMatrix(Widget *run_m, Widget *pen_m);
 
-/* 
- * !!!! Attention this depends on the ordering of the strings in
- * !!!! the checkbox/palette
- */
-#define BROWSE_STDOUT            (1<<0)
-#define BROWSE_STDERR            (1<<1)
-#define BROWSE_QUEUE             (1<<2)
-#define BROWSE_JOB               (1<<3)
-#define BROWSE_MSG               (1<<4)
-#define BROWSE_AR                (1<<5)
+#endif /* _QMON_AR_H_ */
 
-
-
-void qmonBrowserOpen(Widget w, XtPointer cld, XtPointer cad);
-void qmonBrowserShow(const char *s);
-void qmonBrowserMessages(Widget w, XtPointer cld, XtPointer cad);
-Boolean qmonBrowserObjectEnabled(int obj_id);
-
-#endif /* _QMON_BROWSER_H_ */

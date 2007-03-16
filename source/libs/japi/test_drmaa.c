@@ -731,7 +731,6 @@ int main(int argc, char *argv[])
       }
    } 
    sge_gdi2_shutdown((void**)&ctx);
-   sge_gdi_ctx_class_destroy(&ctx);
 
    sge_prof_cleanup();
    return failed;

@@ -2286,6 +2286,7 @@ typedef struct sge_gdi_com_error_type {
    int  com_endpoint_not_unique_counter;  /* counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
    unsigned long com_endpoint_not_unique_time; /* timeout for counts access denied errors (TODO: workaround for BT: 6350264, IZ: 1893) */
 } sge_gdi_com_error_t;
+
 static sge_gdi_com_error_t sge_gdi_communication_error = {CL_RETVAL_OK,
                                                           false,
                                                           CL_RETVAL_OK,

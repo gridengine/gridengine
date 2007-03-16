@@ -1,3 +1,11 @@
+
+AA-2007-03-16-0: Bugfix:    o qmon advance reservation qrstat, qrsub dialogs
+                              prelim version available via task menu
+                            o sge_c_gdi.c return AR_id
+                            o resource quotas CULL_CONFIGURE flag
+                            o lMt2Str helper func
+                 Review:    RD
+
 RH-2007-03-15-0: Bugfix:    o jgdi: interface for creating an event client
                               changed (was not threadsafe)
                             o SEGV in sge_log.c

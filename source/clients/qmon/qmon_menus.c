@@ -71,6 +71,8 @@
 #include "qmon_calendar.h"
 #include "sge_feature.h"
 #include "qmon_resource_quota.h"
+#include "qmon_ar.h"
+#include "qmon_arsub.h"
 
 /*-------------------------------------------------------------------------*/
 #ifdef QMON_DEBUG
@@ -132,6 +134,10 @@ static XmtMenuItem task_menu_items[] = {
          qmonBrowserOpen, NULL},
    {XmtMenuItemPushButton, "@{Resource Quota Configuration}", 'L', "Alt<Key>L", "Alt+L",
          qmonRQSPopup, NULL},
+   {XmtMenuItemPushButton, "@{Advanced Reservation Configuration}", 'V', "Alt<Key>V", "Alt+V",
+         qmonARPopup, NULL},
+   {XmtMenuItemPushButton, "@{Advanced Reservation Submission}", 'U', "Alt<Key>U", "Alt+U",
+         qmonARSubPopup, NULL},
    {XmtMenuItemEnd}
 };
 

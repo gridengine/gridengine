@@ -171,6 +171,32 @@ int lGetPosViaElem(const lListElem *element, int name, int do_abort)
    return pos;
 }
 
+/****** cull/multitype/lMt2Str() **********************************************
+*  NAME
+*     lMt2Str() -- returns the string representation of a type id
+*
+*  SYNOPSIS
+*     char* lMt2Str(int mt) 
+*
+*  FUNCTION
+*     returns the string representation of a type id
+*
+*  INPUTS
+*     int mt - multitype id (e.g. lStringT)
+*
+*  RESULT
+*     char* - string representation of mt 
+*  
+******************************************************************************/
+const char *lMt2Str(int mt) 
+{
+   if (mt >= 0 && mt < sizeof(multitypes)/sizeof(char*)) {
+      return multitypes[mt];
+   } else {
+      return "unknown multitype";
+   }
+}
+
 /****** cull/multitype/lNm2Str() **********************************************
 *  NAME
 *     lNm2Str() -- returns the string representation of a name id

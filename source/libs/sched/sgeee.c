@@ -1698,11 +1698,7 @@ decay_and_sum_usage( sge_ref_t *ref,
  *--------------------------------------------------------------------*/
 
 static void
-calc_job_share_tree_tickets_pass1( sge_ref_t *ref,
-                                   double sum_m_share,
-                                   double sum_proportion,
-                                   double *sum_adjusted_proportion,
-                                   u_long seqno )
+calc_job_share_tree_tickets_pass1(sge_ref_t *ref)
 {
    lListElem *job = ref->job;
    lListElem *node = ref->node;
@@ -1727,10 +1723,7 @@ calc_job_share_tree_tickets_pass1( sge_ref_t *ref,
  *--------------------------------------------------------------------*/
 
 static void
-calc_job_share_tree_tickets_pass2( sge_ref_t *ref,
-                                   double sum_adjusted_proportion,
-                                   double total_share_tree_tickets,
-                                   u_long seqno )
+calc_job_share_tree_tickets_pass2( sge_ref_t *ref, double total_share_tree_tickets)
 {
    double share_tree_tickets;
    lListElem *job = ref->job;
@@ -2690,10 +2683,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
           sum_of_pending_tickets = 0,
           sum_of_active_override_tickets = 0;
 
-   double sum_of_proportions = 0,
-          sum_of_m_shares = 0,
-          sum_of_adjusted_proportions = 0;
-
    u_long curr_time;
    int num_jobs, num_queued_jobs, job_ndx;
 
@@ -3025,11 +3014,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          break;
 
       if (total_share_tree_tickets > 0)
-         calc_job_share_tree_tickets_pass1(&job_ref[job_ndx],
-                                           sum_of_m_shares,
-                                           sum_of_proportions,
-                                           &sum_of_adjusted_proportions,
-                                           sge_scheduling_run);
+         calc_job_share_tree_tickets_pass1(&job_ref[job_ndx]);
 
       if (total_functional_tickets > 0)
          calc_job_functional_tickets_pass1(&job_ref[job_ndx],
@@ -3072,9 +3057,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
          if (total_share_tree_tickets > 0) {
             calc_job_share_tree_tickets_pass2(&job_ref[job_ndx],
-                                           sum_of_adjusted_proportions,
-                                           total_share_tree_tickets,
-                                           sge_scheduling_run);
+                                           total_share_tree_tickets);
          }                                  
 
          if (total_functional_tickets > 0) {

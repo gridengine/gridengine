@@ -1,3 +1,7 @@
+AH-2007-03-19-0: Cleanup:   Removed unused variables and parameters from ticket
+                            scheduler code.
+                 Review:    AA
+
 AH-2007-03-16-1: Enhanc:    Added tracing of job script spooling operations
                             to Dtrace master monitor.
                  Changed:   qmaster

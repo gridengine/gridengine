@@ -4,6 +4,9 @@ MySQL Database Software
 ARCo uses views and therefore it supports MySQL database of version 5.0.x and higher (previous versions of MySQL database doesn't support views. 
 Detailed information on the MySQL database software can be found in the MySQL documentation http://dev.mysql.com/doc/index.html. 
 
+ARCo is a java web based application and needs the jdbc driver for converting jdbc calls into the network protocol used by the MySQL database. 
+You can download the jdbc driver at http://www.mysql.com/products/connector.
+
 Case sensitivity in MySQL database:
 ===================================
 In MySQL, databases correspond to directories within the data directory. Each table within a database corresponds to at least one file 
@@ -161,7 +164,11 @@ mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'*' identified by '<
 
 3. step: Log in to the database as a arco_write user:
 # mysql -u arco_write -p<password>
+
 4. step: Create arco database:
 mysql> CREATE DATABASE ARCO;
 
-5. step: Install the Accounting and Reporting Software
+5. step: Copy the mysql jdbc driver into the $SGE_ROOT/dbwriter/lib and $SGE_ROOT/reporting/WEB-INF/lib
+         directories.
+
+6. step: Install the Accounting and Reporting Software

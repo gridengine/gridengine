@@ -1145,8 +1145,8 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
             return ret;
          }
          lAppendElem(*list, elem);
-         DEXIT;
       }
+      DEXIT;
       return JGDI_SUCCESS;
    } else {
       int value_field_pos;

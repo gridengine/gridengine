@@ -1104,53 +1104,49 @@ static jgdi_result_t get_map(JNIEnv *env, jclass bean_class, jobject bean, jobje
          DEXIT;
          return ret;
       }
-      if (key_obj == NULL) {
-         answer_list_add(alpp, "get_map: key_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return JGDI_ILLEGAL_STATE;
-      }
-      
-      *list = lCreateList("", descr);
-      if (!*list) {
-         answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return JGDI_ERROR;
-      }
+      if (key_obj != NULL) {
+         *list = lCreateList("", descr);
+         if (!*list) {
+            answer_list_add(alpp, "lCreateList failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          
-      elem =  lCreateElem(descr);
-      if (!elem) {
-         answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         lFreeList(list);
-         DEXIT;
-         return JGDI_ERROR;
-      }
+         elem =  lCreateElem(descr);
+         if (!elem) {
+            answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            lFreeList(list);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          
-      key = (*env)->GetStringUTFChars(env, key_obj, 0);
-      if (key == NULL) {
-         answer_list_add(alpp, "get_map: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         lFreeList(list);
+         key = (*env)->GetStringUTFChars(env, key_obj, 0);
+         if (key == NULL) {
+            answer_list_add(alpp, "get_map: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            lFreeList(list);
+            DEXIT;
+            return JGDI_ERROR;
+         }
+         switch(key_field_type) {
+            case lHostT:
+               lSetPosHost(elem, key_field_pos, key);
+               break;
+            case lStringT:
+               lSetPosString(elem, key_field_pos, key);
+               break;
+            default:
+               answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               ret = JGDI_ERROR;
+         }
+         (*env)->ReleaseStringUTFChars(env, key_obj, key);
+         if (ret != JGDI_SUCCESS) {
+            lFreeList(list);
+            DEXIT;
+            return ret;
+         }
+         lAppendElem(*list, elem);
          DEXIT;
-         return JGDI_ERROR;
       }
-      switch(key_field_type) {
-         case lHostT:
-            lSetPosHost(elem, key_field_pos, key);
-            break;
-         case lStringT:
-            lSetPosString(elem, key_field_pos, key);
-            break;
-         default:
-            answer_list_add(alpp, "type key field must be string or host", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            ret = JGDI_ERROR;
-      }
-      (*env)->ReleaseStringUTFChars(env, key_obj, key);
-      if (ret != JGDI_SUCCESS) {
-         lFreeList(list);
-         DEXIT;
-         return ret;
-      }
-      lAppendElem(*list, elem);
-      DEXIT;
       return JGDI_SUCCESS;
    } else {
       int value_field_pos;

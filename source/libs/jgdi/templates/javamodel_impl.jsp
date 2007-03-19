@@ -105,8 +105,8 @@ public class <%=classname%> extends <%
        }
        
        if( attr.getDefault() != null ) {
-          
-          String defaultValue = attr.getDefault();
+          String defaultValue = null;
+          String attrValue = attr.getDefault();
           String attrName = jh.getAttrName(attr);
           String attrType = jh.getFullClassName(attr.getType());
 
@@ -125,16 +125,30 @@ public class <%=classname%> extends <%
              
              com.sun.grid.cull.CullAttr valueAttr = mapAttr.getValueAttr();
              
-             defaultValue = jh.getInitializer(valueAttr, defaultValue);
-
+             if (attrValue.equalsIgnoreCase("NONE")) {
+                defaultValue = null;
+             } else {
+               defaultValue = jh.getInitializer(valueAttr, attrValue);
+             }
+             
              String defaultKey = ((com.sun.grid.cull.CullMapAttr )attr).getDefaultKey();
              if(defaultKey != null) {
               if(attr instanceof com.sun.grid.cull.CullMapListAttr ) {
+                if (gsname.equals("LoadThresholds")) {
+                  String elems[] = attrValue.split("=");
+                  String cls = jh.getInitializer(valueAttr, elems[0]);
 %>
-       addDefault<%=gsname%>(<%=defaultValue%>);
+                     ComplexEntryImpl c = <%=cls%>;
+                     c.setStringval("<%=elems[1]%>");
+                     addDefault<%=gsname%>(c);
 <%
+                } else {
+%>
+                     addDefault<%=gsname%>(<%=defaultValue%>);
+<%
+               }
               } else {
-%>              
+%>
        put<%=gsname%>("<%=defaultKey%>", <%=defaultValue%>);
 <%
               }              
@@ -142,7 +156,12 @@ public class <%=classname%> extends <%
              
           } else {
        
-          defaultValue = jh.getInitializer(attr, defaultValue);
+          if (attrValue.equalsIgnoreCase("NONE")) {
+             defaultValue = null;
+          } else {
+             defaultValue = jh.getInitializer(attr, attrValue);
+          }
+          
           String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                              attrName.substring(1);
       %>
@@ -252,10 +271,7 @@ public class <%=classname%> extends <%
       <%=fullValueClassName%> ret = null;
       if( list != null) {
          ret = (<%=fullValueClassName%>)list.get(index);
-      }
-      if( ret == null ) {
-         throw new IllegalArgumentException("No <%=attrName%> for " + <%=mapAttr.getKeyName()%> + "[" + index + "] set");
-      }      
+      }    
       <% if( jh.isPrimitiv(valueAttr) ) { %>
          return ret.<%=valueClassName%>Value();
       <% } else { %>
@@ -566,16 +582,16 @@ public class <%=classname%> extends <%
     */
    public <%=valueClassName%> get<%=gsname%>(String <%=mapAttr.getKeyName()%>) {
       init<%=gsname%>();
-      <%=fullValueClassName%> ret = (<%=fullValueClassName%>)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
-      if( ret != null ) {
-          <% if( jh.isPrimitiv(valueAttr) ) { %>
-          return ret.<%=valueClassName%>Value();
-          <% } else { %>
-          return ret;
-          <% } %>
-      } else {
-        return getDefault<%=gsname%>();
+      boolean keyExists = m_<%=attrName%>.containsKey(<%=mapAttr.getKeyName()%>);
+      if (!keyExists) {
+         return getDefault<%=gsname%>(); 
       }
+      <%=fullValueClassName%> ret = (<%=fullValueClassName%>)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
+      <% if( jh.isPrimitiv(valueAttr) ) { %>
+        return ret.<%=valueClassName%>Value();
+      <% } else { %>
+        return ret;
+      <% } %>
    }
    
    /**

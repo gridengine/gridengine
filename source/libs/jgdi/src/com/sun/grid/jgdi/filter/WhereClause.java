@@ -43,6 +43,12 @@ public class WhereClause {
    
    /** Creates a new instance of WhereClause */
    public WhereClause(String type, int field, String relop, Object value) {
+      if (type == null) {
+         throw new IllegalArgumentException("type is NULL");
+      }
+      if (relop == null) {
+         throw new IllegalArgumentException("relop is NULL");
+      }
       this.type = type;
       this.field = field;
       StringBuffer buf = new StringBuffer("%T(%I");

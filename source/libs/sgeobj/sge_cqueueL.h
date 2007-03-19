@@ -113,40 +113,40 @@ LISTDEF(CQ_Type)
    SGE_STRING(CQ_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_CONFIGURE | CULL_PRIMARY_KEY)
    SGE_LIST(CQ_hostlist, HR_Type, CULL_SPOOL | CULL_CONFIGURE)
    SGE_LIST(CQ_qinstances, QU_Type, CULL_JGDI_RO)
-
+   
    SGE_MAP_D(CQ_seq_no, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "seqNo") 
    SGE_MAP_D(CQ_nsuspend, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 1, "hostname", "nsuspend")
    SGE_MAP_D(CQ_job_slots, AULNG_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 1, "hostname", "jobSlots")
-
+   
    SGE_MAP_D(CQ_rerun, ABOOL_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "rerun")
-
-   SGE_MAP_D(CQ_s_fsize, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sFSize")
-   SGE_MAP_D(CQ_h_fsize, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hFSize")
-   SGE_MAP_D(CQ_s_data, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sData")
-   SGE_MAP_D(CQ_h_data, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hData")
-   SGE_MAP_D(CQ_s_stack, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sStack")
-   SGE_MAP_D(CQ_h_stack, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hStack")
-   SGE_MAP_D(CQ_s_core, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sCore")
-   SGE_MAP_D(CQ_h_core, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hCore") 
-   SGE_MAP_D(CQ_s_rss, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sRss") 
-   SGE_MAP_D(CQ_h_rss, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hRss")  
-   SGE_MAP_D(CQ_s_vmem, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sVmem") 
-   SGE_MAP_D(CQ_h_vmem, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hVmem")
-
-   SGE_MAP_D(CQ_s_rt, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sRt")
-   SGE_MAP_D(CQ_h_rt, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hRt")
-   SGE_MAP_D(CQ_s_cpu, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "sCpu")
-   SGE_MAP_D(CQ_h_cpu, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "hCpu")   
-
-   SGE_MAP_D(CQ_suspend_interval, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "suspendInterval")
-   SGE_MAP_D(CQ_min_cpu_interval, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "minCpuInterval") 
-   SGE_MAP_D(CQ_notify, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "notify")
-
-   SGE_MAP_D(CQ_tmpdir, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "tmpDir")
-   SGE_MAP_D(CQ_shell, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "shell")
+   
+   SGE_MAP_D(CQ_s_fsize, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sFSize")
+   SGE_MAP_D(CQ_h_fsize, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hFSize")
+   SGE_MAP_D(CQ_s_data, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sData")
+   SGE_MAP_D(CQ_h_data, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hData")
+   SGE_MAP_D(CQ_s_stack, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sStack")
+   SGE_MAP_D(CQ_h_stack, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hStack")
+   SGE_MAP_D(CQ_s_core, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sCore")
+   SGE_MAP_D(CQ_h_core, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hCore") 
+   SGE_MAP_D(CQ_s_rss, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sRss") 
+   SGE_MAP_D(CQ_h_rss, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hRss")  
+   SGE_MAP_D(CQ_s_vmem, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sVmem") 
+   SGE_MAP_D(CQ_h_vmem, AMEM_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hVmem")
+   
+   SGE_MAP_D(CQ_s_rt, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sRt")
+   SGE_MAP_D(CQ_h_rt, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hRt")
+   SGE_MAP_D(CQ_s_cpu, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "sCpu")
+   SGE_MAP_D(CQ_h_cpu, ATIME_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "INFINITY", "hostname", "hCpu")
+   
+   SGE_MAP_D(CQ_suspend_interval, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "00:05:00", "hostname", "suspendInterval")
+   SGE_MAP_D(CQ_min_cpu_interval, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "00:05:00", "hostname", "minCpuInterval")
+   SGE_MAP_D(CQ_notify, AINTER_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "00:00:60", "hostname", "notify")
+      
+   SGE_MAP_D(CQ_tmpdir, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "/tmp", "hostname", "tmpDir") 
+   SGE_MAP_D(CQ_shell, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "/bin/csh", "hostname", "shell")
    SGE_MAP_D(CQ_calendar, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "calendar")
    SGE_MAP_D(CQ_priority, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "0", "hostname", "priority")
-   SGE_MAP_D(CQ_processors, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "1", "hostname", "processors")
+   SGE_MAP_D(CQ_processors, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "UNDEFINED", "hostname", "processors")   
    SGE_MAP_D(CQ_prolog, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "prolog")  
    SGE_MAP_D(CQ_epilog, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "epilog") 
    SGE_MAP_D(CQ_shell_start_mode, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "posix_compliant", "hostname", "shellStartMode")
@@ -154,24 +154,24 @@ LISTDEF(CQ_Type)
    SGE_MAP_D(CQ_suspend_method, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "suspendMethod") 
    SGE_MAP_D(CQ_resume_method, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "resumeMethod") 
    SGE_MAP_D(CQ_terminate_method, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "terminateMethod")
-   SGE_MAP_D(CQ_initial_state, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "default", "hostname", "initialState") 
-
-   SGE_MAPLIST_D(CQ_pe_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "pe")
+   SGE_MAP_D(CQ_initial_state, ASTR_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "default", "hostname", "initialState")
+   
+   SGE_MAPLIST_D(CQ_pe_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "make", "hostname", "pe")
    SGE_MAPLIST_D(CQ_ckpt_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "checkpoint")
-
+   
    SGE_MAPLIST_D(CQ_owner_list, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "owner")
-   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")   
+   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl") 
    SGE_MAPLIST_D(CQ_xacl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")
-
+   
    SGE_MAPLIST_D(CQ_projects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")       
-   SGE_MAPLIST_D(CQ_xprojects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")    
-
-   SGE_MAPLIST_D(CQ_load_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "loadThreshold") 
+   SGE_MAPLIST_D(CQ_xprojects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")   
+   
+   SGE_MAPLIST_D(CQ_load_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "np_load_avg=1.75", "hostname", "loadThreshold") 
    SGE_MAPLIST_D(CQ_suspend_thresholds, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "suspendThreshold")
-   SGE_MAPLIST_D(CQ_consumable_config_list, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "consumable") 
+   SGE_MAPLIST_D(CQ_consumable_config_list, ACELIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "consumable")  
    SGE_MAPLIST_D(CQ_subordinate_list, ASOLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "subordinate")
-
-   SGE_MAP_D(CQ_qtype, AQTLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 0, "hostname", "qType")  
+   
+   SGE_MAP_D(CQ_qtype, AQTLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", 3, "hostname", "qType") /* 0x3 = "BATCH INTERACTIVE" */
 
    SGE_ULONG(CQ_tag, CULL_CONFIGURE)
 LISTEND 

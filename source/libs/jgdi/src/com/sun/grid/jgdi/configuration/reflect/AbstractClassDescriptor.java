@@ -74,7 +74,6 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
    protected ListPropertyDescriptor addList( String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly, boolean configurable ) {
       ListPropertyDescriptor prop = 
            new DefaultListPropertyDescriptor( beanClass, name, type, cullType, cullFieldName, browsable, readOnly, configurable );
-      prop.setReadOnly(true);
       add( prop );
       return prop;
    }

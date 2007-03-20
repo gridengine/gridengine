@@ -41,7 +41,6 @@ import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
-import com.sun.media.protocol.sunvideoplus.OPICapture;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.StringReader;

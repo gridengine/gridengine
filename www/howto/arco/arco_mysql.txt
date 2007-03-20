@@ -22,7 +22,7 @@ for UNIX systems is /usr/local/mysql, if you install it into a different directo
 in the package.
 
 Create the symbolic link:
-# ln -s ${preffered_installation_directory}/mysql-standard-5.0.26-solaris10-i386 mysql
+# ln -s ${installation_directory}/mysql-standard-5.0.26-solaris10-i386 mysql
 
 You will find several files and subdirectories in the mysql directory. The most important for installation purposes are the bin and scripts 
 subdirectories:
@@ -59,12 +59,13 @@ MySQL programs:
 # useradd -g mysql mysql
 
 3. step: Create the MySQL grant tables:
+# cd /usr/local/mysql                       [ mysql installation directory ]
 # scripts/mysql_install_db --user=mysql
 
 4. step: Change the ownership of program binaries to 'root' and ownership of the data directory to the user that you run mysqld as.
-# chown -R root .
-# chown -R mysql data
-# chgrp -R mysql .
+# chown -R root ${installation_directory}/mysql-standard-5.0.26-solaris10-i386
+# chown -R mysql ${installation_directory}/mysql-standard-5.0.26-solaris10-i386/data
+# chgrp -R mysql ${installation_directory}/mysql-standard-5.0.26-solaris10-i386
 
 5. step: Start the MySQL server
 # bin/mysqld_safe --user=mysql &
@@ -168,7 +169,7 @@ mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'*' identified by '<
 4. step: Create arco database:
 mysql> CREATE DATABASE ARCO;
 
-5. step: Copy the mysql jdbc driver into the $SGE_ROOT/dbwriter/lib and $SGE_ROOT/reporting/WEB-INF/lib
+5. step: Copy the mysql jdbc driver into the $SGE_ROOT/dbwriter/lib/ and $SGE_ROOT/reporting/WEB-INF/lib/
          directories.
 
 6. step: Install the Accounting and Reporting Software

@@ -893,6 +893,11 @@ int nelem
             loadavg[2] += cpu_buffer.psp_avg_15_min;
          }
       }
+
+      loadavg[0] /= (double)cpus;
+      loadavg[1] /= (double)cpus;
+      loadavg[2] /= (double)cpus;
+
       return 3;
    } else {
       return -1;

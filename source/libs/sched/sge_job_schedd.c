@@ -46,6 +46,7 @@
 #include "sge_pe_task.h"
 #include "cull_lerrnoP.h"
 #include "msg_schedd.h"
+#include "msg_common.h"
 #include "sge_schedd_text.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
@@ -68,6 +69,82 @@
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
+
+
+
+
+
+/****** scheduler/job_get_duration() *******************************************
+*  NAME
+*     job_get_duration() -- Determine a jobs runtime duration
+*
+*  SYNOPSIS
+*     static bool job_get_duration(u_long32 *duration, const lListElem *jep) 
+*
+*  FUNCTION
+*     The maximum of the time values the user specified with -l h_rt=<time> 
+*     and -l s_rt=<time> is returned in 'duration'. If neither of these 
+*     time values were specified the default duration is used.
+*
+*  INPUTS
+*     u_long32 *duration   - Returns duration on success
+*     const lListElem *jep - The job (JB_Type)
+*
+*  RESULT
+*     static bool - true on success
+*
+*  NOTES
+*     MT-NOTE: job_get_duration() is MT safe 
+*******************************************************************************/
+bool job_get_duration(u_long32 *duration, const lListElem *jep)
+{
+   lListElem *ep;
+   double d_ret = 0, d_tmp;
+   bool got_duration = false;
+   char error_str[1024];
+   const char *s;
+
+   DENTER(TOP_LAYER, "job_get_duration");
+
+   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_H_RT))) {
+      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
+               error_str, sizeof(error_str)-1)==0) {
+         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
+         DRETURN(false);
+      }
+      d_ret = d_tmp;
+      got_duration = true;
+   }
+   
+   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_S_RT))) {
+      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
+               error_str, sizeof(error_str)-1)==0) {
+         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
+         DRETURN(false);
+      }
+
+      if (got_duration) {
+         d_ret = MAX(d_ret, d_tmp);
+      } else {
+         d_ret = d_tmp;
+         got_duration = true;
+      }
+   }
+
+   if (got_duration) {
+      if (d_ret > (double)U_LONG32_MAX) {
+         *duration = U_LONG32_MAX;
+      }   
+      else {
+         *duration = d_ret;
+      }   
+   } 
+   else {
+      *duration = sconf_get_default_duration();
+   }
+
+   DRETURN(true);
+}
 
 /****** sched/sge_job_schedd/get_name_of_split_value() ************************
 *  NAME

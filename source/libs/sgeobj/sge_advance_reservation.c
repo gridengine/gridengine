@@ -204,9 +204,9 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
          goto ERROR;
       }
       /*   AR_mail_options, SGE_ULONG   */
-      /*   -PJ- TBD: check for enum */
+      /*   PJ TBD: check for enum */
       /*   AR_mail_list, SGE_LIST */
-      /*   -PJ- TBD: check list */
+      /*   PJ TBD: check list */
       
       
       /*   AR_pe, SGE_STRING,  AR_pe_range, SGE_LIST */

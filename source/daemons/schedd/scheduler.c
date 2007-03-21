@@ -78,6 +78,7 @@
 #include "msg_qmaster.h"
 #include "sge_schedd_text.h"
 #include "sge_job.h"
+#include "sge_job_schedd.h"
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_centry.h"
@@ -104,9 +105,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *acl_list, lList **user_list, lList **group_list, order_t *orders, 
                     double *total_running_job_tickets, int *sort_hostlist, bool is_start, 
                     bool is_reserve, lList **load_list, lList *hgrp_list, lList *rqs_list);
-
-static bool 
-job_get_duration(u_long32 *duration, const lListElem *jep);
 
 static void 
 prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
@@ -1268,81 +1266,6 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       and debited the job everywhere */
    assignment_release(&a);
    DRETURN(result);
-}
-
-
-
-
-/****** scheduler/job_get_duration() *******************************************
-*  NAME
-*     job_get_duration() -- Determine a jobs runtime duration
-*
-*  SYNOPSIS
-*     static bool job_get_duration(u_long32 *duration, const lListElem *jep) 
-*
-*  FUNCTION
-*     The minimum of the time values the user specified with -l h_rt=<time> 
-*     and -l s_rt=<time> is returned in 'duration'. If neither of these 
-*     time values were specified the default duration is used.
-*
-*  INPUTS
-*     u_long32 *duration   - Returns duration on success
-*     const lListElem *jep - The job (JB_Type)
-*
-*  RESULT
-*     static bool - true on success
-*
-*  NOTES
-*     MT-NOTE: job_get_duration() is MT safe 
-*******************************************************************************/
-static bool job_get_duration(u_long32 *duration, const lListElem *jep)
-{
-   lListElem *ep;
-   double d_ret = 0, d_tmp;
-   bool got_duration = false;
-   char error_str[1024];
-   const char *s;
-
-   DENTER(TOP_LAYER, "job_get_duration");
-
-   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_H_RT))) {
-      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
-               error_str, sizeof(error_str)-1)==0) {
-         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DRETURN(false);
-      }
-      d_ret = d_tmp;
-      got_duration = true;
-   }
-   
-   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_S_RT))) {
-      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
-               error_str, sizeof(error_str)-1)==0) {
-         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DRETURN(false);
-      }
-
-      if (got_duration) {
-         d_ret = MAX(d_ret, d_tmp);
-      } else {
-         d_ret = d_tmp;
-         got_duration = true;
-      }
-   }
-
-   if (got_duration) {
-      if (d_ret > (double)U_LONG32_MAX) {
-         *duration = U_LONG32_MAX;
-      }   
-      else {
-         *duration = d_ret;
-      }   
-   } 
-   else {
-      *duration = sconf_get_default_duration();
-   }
-
-   DRETURN(true);
 }
 
 

@@ -35,7 +35,7 @@
 #define running_status(x) ((x)!=0 && (x)!=JFINISHED)
 #define finished_status(x) ((x)==JFINISHED)
 
-
+bool job_get_duration(u_long32 *duration, const lListElem *jep);
 /* 
  * get order used for job sorting
  */

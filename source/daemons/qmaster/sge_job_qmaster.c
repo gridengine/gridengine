@@ -82,6 +82,7 @@
 #include "sge_security.h"
 #include "sge_range.h"
 #include "sge_job.h"
+#include "sge_job_schedd.h"
 #include "sge_qmaster_main.h"
 #include "sge_suser.h"
 #include "sge_io.h"
@@ -717,22 +718,60 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       
       /* Verify existence of ar, if ar exists */
       if ((ar_id=lGetUlong(jep, JB_ar))) {
-          
-         if (!ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id)) {
+         lListElem *ar;
+         u_long32 ar_start_time, ar_end_time, job_execution_time, job_duration, now_time; 
+
+         DPRINTF(("job -ar "sge_u32"\n", sge_u32c(ar_id)));
+
+         ar=ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id);
+         if (ar == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_NOAREXISTS_U, sge_u32c(ar_id)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EEXIST);
          }
-   /* -PJ- TBD: Rewrite similiar to fit the timeframe
-      if (lGetUlong(*ar, AR_start_time) == 0 && lGetUlong(*ar, AR_end_time) != 0 && lGetUlong(*ar, AR_duration) != 0) {
-      lSetUlong(*ar, AR_start_time, lGetUlong(*ar, AR_end_time) - lGetUlong(*ar, AR_duration));
-   } else if (lGetUlong(*ar, AR_start_time) != 0 && lGetUlong(*ar, AR_end_time) == 0 && lGetUlong(*ar, AR_duration) != 0) {
-      lSetUlong(*ar, AR_end_time, lGetUlong(*ar, AR_start_time) + lGetUlong(*ar, AR_duration));
-   } else if (lGetUlong(*ar, AR_start_time) != 0 && lGetUlong(*ar, AR_end_time) != 0 && lGetUlong(*ar, AR_duration) == 0) {
-      lSetUlong(*ar, AR_duration, lGetUlong(*ar, AR_end_time) - lGetUlong(*ar, AR_start_time));
-   }*/
+         /* fill the job and ar values */         
+         ar_start_time = lGetUlong(ar, AR_start_time);
+         ar_end_time = lGetUlong(ar, AR_end_time);
+         now_time = sge_get_gmt();
+         job_execution_time = lGetUlong(jep, JB_execution_time);
+         
+         /* execution before now is set to at least now */
+         if (job_execution_time < now_time) {
+            job_execution_time = now_time;
+         }   
+         
+         /* to be sure the execution time is NOT before AR start time */
+         if (job_execution_time < ar_start_time) {
+            job_execution_time = ar_start_time;
+         }
+         
+         /* hard_resources h_rt limit */
+         if (job_get_duration(&job_duration, jep) == false) {
+            ERROR((SGE_EVENT, MSG_JOB_WITHARANDNODEFAULTHRT));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN(STATUS_DENIED);
+         }
+         
+         DPRINTF(("job -ar "sge_u32", ar_start_time "sge_u32", ar_end_time "sge_u32
+                  ", job_execution_time "sge_u32", job duration "sge_u32" \n", 
+                  sge_u32c(ar_id),sge_u32c( ar_start_time),sge_u32c(ar_end_time),
+                  sge_u32c(job_execution_time),sge_u32c(job_duration)));
 
+         /* fit the timeframe */
+         if (job_duration > (ar_end_time - ar_start_time)) {
+            ERROR((SGE_EVENT, MSG_JOB_HRTLIMITTOOLONG_U, sge_u32c(ar_id)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN(STATUS_DENIED);
+         }
+         if ((job_execution_time + job_duration) > ar_end_time) {
+            ERROR((SGE_EVENT, MSG_JOB_HRTLIMITOVEREND_U, sge_u32c(ar_id)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN(STATUS_DENIED);
+         }
       }
 
       /* verify schedulability */

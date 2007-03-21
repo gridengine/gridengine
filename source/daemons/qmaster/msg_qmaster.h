@@ -761,6 +761,9 @@
 #define MSG_AR_MAXARSPERCLUSTER_U                   _MESSAGE(33932, _("rejected: only "sge_U32CFormat" advance reservations are allowed per cluster"))
 #define MSG_JOB_JOBARSET_SSUU                       _MESSAGE(33934, _(SFN"@"SFN" sets job advance reservation of job "sge_U32CFormat" to "sge_U32CFormat))
 #define MSG_JOB_CHANGEJOBAR                         _MESSAGE(33935, _("changed job advance reservation"))
-#define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("job rejected: the advance reservation id "sge_U32CFormat" is invalid"))
+#define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("the advance reservation id "sge_U32CFormat" is invalid"))
+#define MSG_JOB_WITHARANDNODEFAULTHRT               _MESSAGE(33937, _("the default job duration limit for jobs with advance reservations should be configured"))
+#define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat"."))
+#define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat"."))
 
 #endif

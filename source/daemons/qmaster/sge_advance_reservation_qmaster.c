@@ -142,7 +142,6 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       goto ERROR; 
    }
-
    
    /*    AR_name, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_name, object->object_name);
@@ -164,39 +163,22 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    attr_mod_ulong(ar, new_ar, AR_state, object->object_name);
    /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
    attr_mod_zerostr(ar, new_ar, AR_checkpoint_name, object->object_name);
-   
    /*   AR_resource_list, SGE_LIST */
-   /* -PJ- TBD: resource_list */
-   /* attr_mod_sub_list(alpp, new_ar, AR_resource_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
+   attr_mod_sub_list(alpp, new_ar , AR_resource_list, AR_name, ar, sub_command, SGE_ATTR_COMPLEX_VALUES, SGE_OBJ_AR, 0); 
    /*   AR_queue_list, SGE_LIST */
-   /* -PJ- TBD: queue_list */
-   /* attr_mod_sub_list(alpp, new_ar, AR_queue_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
-   /*   AR_granted_slots, SGE_MAP_D ???? */
-    
+   attr_mod_sub_list(alpp, new_ar , AR_queue_list, AR_name, ar, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_mail_options, SGE_ULONG   */
    attr_mod_ulong(ar, new_ar, AR_mail_options, object->object_name);
-   
    /*   AR_mail_list, SGE_LIST */
-   /* -PJ- TBD: mail_list */
-   /* attr_mod_sub_list(alpp, new_ar, AR_mail_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
+   attr_mod_sub_list(alpp, new_ar, AR_mail_list, AR_name, ar, sub_command, SGE_ATTR_MAIL_LIST, SGE_OBJ_AR, 0); 
    /*   AR_pe, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_pe, object->object_name);
-   
    /*   AR_pe_range, SGE_LIST */
-   /* -PJ- TBD: pe_range */
-   /* attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
+   attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_PE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_acl_list, SGE_LIST */
-   /* -PJ- TBD: acl_listk*/
-   /* attr_mod_sub_list(alpp, new_ar, AR_acl_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
+   attr_mod_sub_list(alpp, new_ar, AR_acl_list, AR_name, ar, sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_AR, 0);
    /*   AR_xacl_list, SGE_LIST */
-   /* -PJ- TBD:xacl_list */
-   /* attr_mod_sub_list(alpp, new_ar, AR_xacl_list, AR_name, ar, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0); */
-   
+   attr_mod_sub_list(alpp, new_ar, AR_xacl_list, AR_name, ar, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_AR, 0); 
    /*   AR_type, SGE_ULONG     */
    attr_mod_ulong(ar, new_ar, AR_type, object->object_name);
 

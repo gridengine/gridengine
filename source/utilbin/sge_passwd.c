@@ -1357,8 +1357,8 @@ int main(int argc, char *argv[])
 
    if (username == NULL || username[0] == '\0') {
       if (sge_uid2user(starter_uid, username, sizeof(username), MAX_NIS_RETRIES)) {
-         fprintf(stderr, MSG_PWD_NO_USERNAME_SI, SGE_PASSWD_PROG_NAME,
-                 (int)starter_uid);
+         fprintf(stderr, MSG_PWD_NO_USERNAME_SU, SGE_PASSWD_PROG_NAME,
+                 sge_u32c(starter_uid));
          fprintf(stderr, "\n");
          exit(7);
       }

@@ -1,3 +1,5 @@
+AH-2007-03-22-0  Bugfix:    Allow 5.3 be used with Solaris 10 as well
+
 EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is 
                             not reached
                  Issue:     #345 

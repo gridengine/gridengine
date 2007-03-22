@@ -31,26 +31,30 @@
  ************************************************************************/
 ___INFO__MARK_END__-->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://gridengine.sunsource.net/61/qquota"
+            xmlns="http://gridengine.sunsource.net/61/qquota"
             elementFormDefault="qualified">
 
-   <xsd:element name="qquota_result">
+   <xsd:element name="qquota_result" type="QQuotaType"/>
+   
+   <xsd:complexType name="QQuotaType">
       <xsd:sequence>
-       <xsd:element name="qquota_rule" type="QQuotaRuleType" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="qquota_rule" type="QQuotaRuleType" minOccurs="0" maxOccurs="unbounded"/>
       </xsd:sequence>
-   </xsd:element>
+   </xsd:complexType>
    
    <xsd:complexType name="QQuotaRuleType">
       <xsd:sequence>
-         <xsd:element name="user" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>            
-         <xsd:element name="xuser" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>            
-         <xsd:element name="project" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="xproject" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="pe" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="xpe" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="queue" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="xqueue" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="host" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
-         <xsd:element name="xhost" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="users" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>            
+         <xsd:element name="xusers" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>            
+         <xsd:element name="projects" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="xprojects" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="pes" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="xpes" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="queues" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="xqueues" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="hosts" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="xhosts" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
          <xsd:element name="limit" type="ResourceLimitType" minOccurs="0" maxOccurs="unbounded"/>
       </xsd:sequence>
       <xsd:attribute name="name" type="xsd:string" use="required"/>

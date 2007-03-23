@@ -47,14 +47,16 @@ end
 
 
 class Debitable
-	attr_reader :jobs, :wallclock, :cpu, :pending
+	attr_reader :jobs, :wallclock, :cpu, :maxvmem, :maxrss, :pending
 	def initialize()
-		@jobs = @wallclock = @cpu = @pending = 0
+		@jobs = @wallclock = @cpu = @pending = @maxvmem = @maxrss = 0
 	end
 	def debit_record(r)
 		@jobs      += 1
       @wallclock += r.wallclock
       @cpu       += r.cpu
+      @maxvmem   += r.maxvmem
+      @maxrss    += r.maxrss
       if r.rd == 0
               @pending   += r.sd - r.qd
       else
@@ -64,20 +66,23 @@ class Debitable
 	def print_debitable(key, first, size, name)
 		if first
 			puts "###### Table with #{size} #{name}s ######"
-			puts sprintf("|%-10.10s %7.7s | sum %9.9s %9.9s %9.9s | avg %9.9s %9.9s %9.9s | %11.11s |",
-				name, "njobs", "pend", "runtime", "cpu", "pend", "runtime", "cpu", "runtime/cpu") 
+			puts sprintf("|%-10.10s %7.7s | sum %9.9s %9.9s %9.9s %9.9s %9.9s | avg %9.9s %9.9s %9.9s %9.9s %9.9s | %11.11s |",
+				name, "njobs", "pend", "runtime", "cpu", "maxvmem", "maxrss", "pend", "runtime", 
+               "cpu", "maxvmem", "maxrss", "runtime/cpu") 
 		end
 		pavg = pending/jobs
 		wavg = wallclock/jobs
 		cavg = cpu/jobs
+		vavg = maxvmem/jobs
+		ravg = maxrss/jobs
 		if cavg != 0
 			cpu_util = wavg/cavg
 		else
 			cpu_util = 0
 		end
-		puts sprintf("|%-10.10s %7.7s |     %9.9s %9.9s %9.9s |     %9.9s %9.9s %9.9s | %11.11s |", 
-				key, jobs.to_s, pending.to_s, wallclock.to_s, cpu.to_s, 
-						pavg.to_s, wavg.to_s, cavg.to_s, cpu_util.to_s)
+		puts sprintf("|%-10.10s %7.7s |     %9.9s %9.9s %9.9s %9.9s %9.9s |     %9.9s %9.9s %9.9s %9.9s %9.9s | %11.11s |", 
+				key, jobs.to_s, pending.to_s, wallclock.to_s, cpu.to_s, maxvmem.to_s, maxrss.to_s, 
+						pavg.to_s, wavg.to_s, cavg.to_s, vavg.to_s, ravg.to_s, cpu_util.to_s)
 	end
 end
 
@@ -98,9 +103,9 @@ end
 
 
 class Record
-	attr_reader :user, :wallclock, :qd, :sd, :ed, :rd, :cat, :project, :cpu, :queue, :host
+	attr_reader :user, :wallclock, :qd, :sd, :ed, :rd, :cat, :project, :cpu, :queue, :host, :maxrss, :maxvmem
 	def pending_time ; @sd - @qd ; end
-	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host, requeued)
+	def initialize(user, wallclock, qd, sd, ed, cat, project, cpu, queue, host, requeued, maxrss, maxvmem)
 		@qd = qd
 		@sd = sd
 		@ed = ed
@@ -112,15 +117,32 @@ class Record
 		@cat = cat
 		@cpu = cpu
 		@wallclock = wallclock
+		@maxrss = maxrss
+		@maxvmem = maxvmem
 	end
 end
 
 class RecordHash < PrintableHash
+
+   def inscope?(submit, start, ende, first, last)
+      if first != "first"
+         if submit < first.to_i && start < first.to_i && ende < first.to_i
+            return false
+         end
+      end
+      if last != "last"
+         if submit > last.to_i && start > last.to_i && ende > last.to_i
+            return false
+         end
+      end
+      return true
+   end
+
 	# ----- init data structures -----
-	# jobid user wallclock submit start end cat project cpu  queue host taskid
-	#  5     3    13        8      9     10  39    31    36     0  1    35
+	# jobid user wallclock submit start end cat project cpu  queue host taskid ru_maxrss  maxvmem
+	#  5     3    13        8      9     10  39    31    36     0  1    35     16         42
    # should also use taskid 35 to deal with array jobs
-	def initialize(path)
+	def initialize(path, first, last)
 		f = open(path)
 		begin
 			f.each_line do |line|
@@ -138,7 +160,13 @@ class RecordHash < PrintableHash
 				   project = s[31]
 				   cpu     = s[36].to_i
 				   cat     = s[39]
-					if submit != 0 && start != 0 && ende != 0
+				   maxrss  = s[16].to_i
+				   maxvmem = s[42].to_i
+					if submit == 0 || start == 0 || ende == 0
+						# STDERR.puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+               elsif ! inscope?(submit, start, ende, first, last)
+						# STDERR.puts "out of scope record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+               else
                   rd = 0
                   index = 1
                   while self.has_key?([job, task, index]) do
@@ -146,9 +174,7 @@ class RecordHash < PrintableHash
                      index += 1
                      puts "requeued job " + job.to_s + " task #{task} pending #{start - rd} requeued #{rd} #{s[5]}"
 						end
-						self[[job, task, index]] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host, rd)
-					else 
-						puts "invalid record " + job.to_s + " submitted " + submit.to_s + " started " + start.to_s + " ended " + ende.to_s + " wallclock " + wc.to_s
+						self[[job, task, index]] = Record.new(user, wc, submit, start, ende, cat.strip, project, cpu, queue, host, rd, maxrss, maxvmem)
 					end
 				end
 			end
@@ -166,13 +192,13 @@ class RecordHash < PrintableHash
 			run = key[2]
 			if first
 				puts "###### Table with #{self.size} job runs ######"
-				puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
-					"job", "task", "n", "user", "pending", "wallclock", "cpu", "submit", "start", "ended", "category")
+				puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
+					"job", "task", "n", "user", "pending", "wallclock", "cpu", "maxvmem", "maxrss", "submit", "start", "ended", "category")
 				first = false
 			end
-			puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
+			puts sprintf("%-8.8s %-5.5s %-2.2s %-7.7s %7.7s %9.9s %9.9s %9.9s %9.9s %-12.12s %-12.12s %-12.12s %s", 
 					job.to_s, task.to_s, run.to_s, r.user, r.pending_time.to_s, r.wallclock.to_s, 
-						r.cpu.to_s, r.qd.to_s, r.sd.to_s, r.ed.to_s,
+						r.cpu.to_s, r.maxvmem.to_s, r.maxrss.to_s,  r.qd.to_s, r.sd.to_s, r.ed.to_s,
 					"\"" + r.cat + "\"")
 		end
 	end
@@ -503,7 +529,7 @@ class Analyzer
 	end
 
 	def read_records(path)
-		@record = RecordHash.new(path)
+		@record = RecordHash.new(path, @first_ts, @last_ts)
 	end
 
 	# ----- option parsing and usage-----

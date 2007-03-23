@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.1beta2"
+SGE_VERSION="6.1beta"
 
 #Reset PATH to a safe value
 #
@@ -317,19 +317,19 @@ fi
 if [ $WIN_UPDATE = "true" ]; then
    WelcomeTheUserWinUpdate
    SetupWinSvc update #service install due to an update -> param: update
-   exit 0
+   # don't exit but continue with installation of execution daemon
 fi
 
 if [ $WIN_SVC = "install" ]; then
    WelcomeTheUserWinSvc install #install text param
    SetupWinSvc install #service install due to service install switch -> param install
-   exit 0
+   # don't exit but continue with installation of execution daemon
 fi
 
 if [ $WIN_SVC = "uninstall" ]; then
    WelcomeTheUserWinSvc uninstall #uninstall text param
    SetupWinSvc uninstall #service install due to service uninstall switch -> param uninstall
-   exit 0
+   # don't exit but continue with uninstallation of execution daemon
 fi
 
 

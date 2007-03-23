@@ -1137,44 +1137,110 @@ stra_printf(char *stra[])
    }
 }
 
+/****** uti/string/stra_from_str() ********************************************
+*  NAME
+*     str_from_str() -- Extract valid qstat options/paramers from qstat profile.
+*
+*  SYNOPSIS
+*     char **str_from_str(const char *source_str, const char *delim);
+*
+*  FUNCTION
+*     Parse string 'source_str' based on delimeter(s) 'delim' and store
+*     resulting tokens in string array 'ret'. Supports comment lines.
+*
+*  INPUTS
+*     const char *source_str - File content of qstat profile as plain string.
+*     const char *delim      - Sequence of characters used to identify tokens
+*                              and parameters.
+*
+*  RESULT
+*     char** - String array containing tokens found based on 'delim'.
+*
+*  NOTES
+*     It is the caller's responsibilty to free dynamic memory allocated in this
+*     routine.
+*     MT-NOTE: stra_from_str() is MT safe.
+*
+*************************************************************************************/
 char **
 stra_from_str(const char *source_str, const char *delim)
 {
    char **ret = NULL;
 
    if (source_str != NULL && delim != NULL) {
-      struct saved_vars_s *context = NULL;
-      const char *token = NULL;
-      int n = 0;
+      struct saved_vars_s *context1;
+      struct saved_vars_s *context2;
+      const char *token_1 = NULL;
+      const char *token_2 = NULL;
+      int number_of_tokens = 0;
+      int index = 0;
 
-      /* count token */
-      context = NULL;
-      token = sge_strtok_r(source_str, delim, &context);
-      while (token != NULL) {
-         n++;
-         token = sge_strtok_r(NULL, delim, &context);
+      /*
+       * Support of comment lines and multiple options per line
+       * in qstat profiles requires two level parsing. First
+       * level works on a per line basis (delimiter `\n') and
+       * sorts out lines starting with comment sign '#'.
+       *
+       * The result of this process is passed to second
+       * level parsing which scans for options and parameters
+       * per line. Delimiters are ' ', '\n' and '\t'.
+       *
+       * We basically need to do this twice: first to determine
+       * the number of valid tokens and then to populate the
+       * string array.
+       *
+       */
+      /*
+       * Count tokens.
+       */
+      context1 = NULL;
+      token_1 = sge_strtok_r(source_str, "\n", &context1);
+      while (token_1 != NULL) {
+         if (token_1[0] != '#') {
+            context2 = NULL;
+            token_2 = sge_strtok_r(token_1, " \t", &context2);
+            while (token_2 != NULL) {
+               token_2 = sge_strtok_r(NULL, " \t", &context2);
+               number_of_tokens++;
+            }
+            sge_free_saved_vars(context2);
+         }
+         token_1 = sge_strtok_r(NULL, "\n", &context1);
       }
-      sge_free_saved_vars(context);
-   
+      sge_free_saved_vars(context1);
+
+      /*
+       * Note that we need to proceed from here even if we got
+       * no valid options/parameters. This is because caller
+       * expects a zero entry string array with stopper as minimum.
+       */
+
       /* malloc array memory */
-      ret = (char **) malloc(sizeof(char*) * (n+1));
+      ret = (char **) malloc(sizeof(char*) * (number_of_tokens + 1));
 
       if (ret != NULL) {
-
-         /* malloc/copy each token */
-         n = 0;
-         context = NULL;
-         token = sge_strtok_r(source_str, delim, &context);
-         while (token != NULL) {
-            ret[n] = malloc(strlen(token) + 1);
-            strcpy(ret[n], token);
-
-            token = sge_strtok_r(NULL, delim, &context);
-            n++;
+         /*
+          * Allocate and populate string array.
+          */
+         index = 0;
+         context1 = NULL;
+         token_1 = sge_strtok_r(source_str, "\n", &context1);
+         while (token_1 != NULL) {
+            if (token_1[0] != '#') {
+               context2 = NULL;
+               token_2 = sge_strtok_r(token_1, " \t", &context2);
+               while (token_2 != NULL) {
+                  ret[index] = strdup(token_2);
+                  token_2 = sge_strtok_r(NULL, " \t", &context2);
+                  index++;
+               }
+               sge_free_saved_vars(context2);
+            }
+            token_1 = sge_strtok_r(NULL, "\n", &context1);
          }
-         ret[n] = NULL;
-         sge_free_saved_vars(context);
-      } 
+         sge_free_saved_vars(context1);
+         ret[index] = NULL; /* Stopper */
+      }
    }
    return ret;
 }

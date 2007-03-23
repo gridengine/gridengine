@@ -1,3 +1,8 @@
+GH-2007-03-23-0  Bugfix:   problems with sge_qstat(5) file
+                 Bugtraq:  6452471
+                 Issue:    2088
+                 Review:   AH
+
 RD-2007-03-22-0: Bugfix:    Corrected and validated qquota schema file
                  Review:    RH
 

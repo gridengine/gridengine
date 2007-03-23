@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qstat.5,v $     Last Update: $Date: 2007/01/05 19:56:09 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_qstat.5,v $     Last Update: $Date: 2007/03/23 09:41:42 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QSTAT 5 "$Date: 2007/01/05 19:56:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_QSTAT 5 "$Date: 2007/03/23 09:41:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_qstat \- xxQS_NAMExx default qstat file format
@@ -55,7 +55,11 @@ The format of the default files is:
 .\"
 .\"
 .IP "\(bu" 3n
-Each line has to contain any
+The default sge_qstat file may contain an arbitrary number of lines.
+Blank lines and lines with a '#' sign at the first column are skipped.
+.\"
+.\"
+Each line not to be skipped may contain any
 .M qstat 1
 option as described in
 the xxQS_NAMExx Reference Manual. More than one option per line is
@@ -70,6 +74,7 @@ The following is a simple example of a default sge_qstat file:
 .nf
 
 =====================================================
+# Just show me my own running and suspended jobs
 -s rs -u $user
 =====================================================
 

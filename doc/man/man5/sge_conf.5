@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.56 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/03/23 09:50:46 $     Revision: $Revision: 1.57 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/03/23 09:50:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1018,6 +1018,13 @@ default is set to 00:04:00. The setting accepts colon-separated
 string or seconds. There is no setting to turn the sharetree spooling
 off. 
 (e.g. STREE_SPOOL_INTERVAL=00:02:00)
+.PP
+.IP "\fIMAX_JOB_DELETION_TIME\fp
+Sets the value of how long the qmaster will spend deleting jobs. After this time,
+the qmaster will continue with other tasks and schedule the deletion of remaining
+jobs at a later time. The default value is 3 seconds, and will be used if no value
+is entered. The range of valid values is > 0 and <= 5.
+(e.g. MAX_JOB_DELETION_TIME=1)
 .PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.

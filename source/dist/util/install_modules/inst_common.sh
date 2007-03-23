@@ -286,12 +286,12 @@ BINFILES="sge_coshepherd \
           sge_schedd sge_shadowd \
           sge_shepherd qacct qalter qconf qdel qhold \
           qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
-          qstat qsub qtcsh qping qquota"
+          qstat qsub qtcsh qping qquota sgepasswd"
 
 WINBINFILES="sge_coshepherd sge_execd sge_shepherd  \
              qacct qalter qconf qdel qhold qhost qlogin \
              qmake qmod qresub qrls qrsh qselect qsh \
-             qstat qsub qtcsh qping qquota qloadsensor.exe sgepasswd"
+             qstat qsub qtcsh qping qquota qloadsensor.exe"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \

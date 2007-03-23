@@ -1,3 +1,15 @@
+MP-2007-03-23-0: Bugfix:    Add installation of SGE_Helper_Service to
+                            auto installation.
+                 Bugster:   6440226
+                 Issue:     2220
+                 Bugfix:    Binary check in inst_sge is wrong. Windows
+                            does not require sgepasswd, but unix should.
+                 Bugster:   6521802
+                 Issue:     2221
+                 Docs:      Modified man page to reflected new qmaster
+                            parameter MAX_JOB_DELETION_TIME
+                 Review:    JG
+
 GH-2007-03-23-0  Bugfix:   problems with sge_qstat(5) file
                  Bugtraq:  6452471
                  Issue:    2088

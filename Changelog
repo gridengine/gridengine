@@ -1,3 +1,6 @@
+RH-2007-03-26-1: Cleanup:   jgdi: EventType has to be serializable
+                 Review:    AA
+
 RH-2007-03-26-0: Cleanup:   cleanup in jgdi code 
                             - missing "implements Serializable" added
                             - author tags deleted

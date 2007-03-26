@@ -2568,7 +2568,11 @@ echo done.
 if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
       echo ""
       echo "Executing aimk again to build 32 bit shared libraries."
-      ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      if ( "$JAVA" > 0 ) then
+         ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      else 
+         ./aimk -32 -only-core libdrmaa.so libjuti.so
+      endif
       exit $status
    endif
 endif

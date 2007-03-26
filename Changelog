@@ -1,3 +1,7 @@
+HP-2007-03-26-1: Bugfix:    Fixed broken build for sol-sparc64 and -no-java
+                 Changed:   aimk
+                 Review:    AA
+
 RH-2007-03-26-1: Cleanup:   jgdi: EventType has to be serializable
                  Review:    AA
 

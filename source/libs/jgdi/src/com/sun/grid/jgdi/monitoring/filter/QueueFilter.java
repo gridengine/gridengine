@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,9 +41,8 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class QueueFilter {
+public class QueueFilter implements Serializable {
    
    private static Logger logger = Logger.getLogger(QueueFilter.class.getName());
    

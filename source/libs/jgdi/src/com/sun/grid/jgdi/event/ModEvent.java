@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
-public abstract class ModEvent extends ChangedObjectEvent {
+public abstract class ModEvent extends ChangedObjectEvent implements java.io.Serializable {
    
    /** Creates a new instance of AbstractDelEvent */
    public ModEvent(long timestamp, int eventId, Class objectType) {

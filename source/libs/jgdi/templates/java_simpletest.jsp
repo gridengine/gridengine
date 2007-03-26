@@ -63,7 +63,6 @@ import java.util.List;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class <%=classname%>TestCase extends BaseTestCase {
    

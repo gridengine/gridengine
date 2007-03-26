@@ -44,7 +44,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class QueueInstanceSummaryExample {
    

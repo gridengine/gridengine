@@ -244,8 +244,6 @@ import java.util.logging.*;
  *   <code>JGDIRemoteImpl</code> implements an RMI service for
  *   the {@link com.sun.grid.jgdi.JGDI} interface.
  * 
- *   @author andre.alefeld@sun.com
- *   @author richard.hierlmeier@sun.com
  */
 public class JGDIRemoteImpl extends JGDIRemoteBaseImpl implements JGDIRemote {
    

@@ -37,7 +37,6 @@ import com.sun.grid.jgdi.configuration.reflect.AbstractClassDescriptor;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class QHostResultDescriptor extends AbstractClassDescriptor {
    

@@ -34,7 +34,6 @@ package com.sun.grid.jgdi;
 /**
  * Factory class for {@link JGDI} objects.
  *
- * @author richard.hierlmeier@sun.com
  * @see com.sun.grid.jgdi.JGDI
  */
 public class JGDIFactory {

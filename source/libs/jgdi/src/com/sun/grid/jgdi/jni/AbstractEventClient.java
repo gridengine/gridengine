@@ -47,7 +47,6 @@ import java.util.logging.Logger;
 /**
  * Abstract base clase for the event client 
  *
- * @author  richard.hierlmeier@sun.com
  */
 public abstract class AbstractEventClient implements Runnable {
 

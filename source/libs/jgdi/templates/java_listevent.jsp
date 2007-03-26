@@ -50,7 +50,7 @@ import <%=jh.getFullClassName(cullObj)%>;
 
 /**
  */
-public class <%=name%>ListEvent extends ListEvent {
+public class <%=name%>ListEvent extends ListEvent implements java.io.Serializable {
 
 <% // Default constructor ----------------------------------------- %>
   public <%=name%>ListEvent(long timestamp, int eventID) {

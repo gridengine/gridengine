@@ -1,3 +1,8 @@
+RH-2007-03-26-0: Cleanup:   cleanup in jgdi code 
+                            - missing "implements Serializable" added
+                            - author tags deleted
+                 Review:    AA
+
 AH-2007-02-23-0: Enhancem.  Enhanced analyze.rb script
                             - extended meaning of -t to all views
                             - add maxvmem and maxrss to all views

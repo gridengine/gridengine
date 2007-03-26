@@ -39,37 +39,11 @@ import com.sun.grid.jgdi.JGDI;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
-/*
- * Copyright 2003-2004 Sun Microsystems, Inc. All rights reserved.
- * Use is subject to license terms.
- * -----------------------------------------------------------------------------
- * $Id: TestRequestedResourcesForJobs.java,v 1.1 2006/09/15 09:19:58 andre Exp $
- * -----------------------------------------------------------------------------
- */
+
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TestRequestedResourcesForJobs extends com.sun.grid.jgdi.BaseTestCase {
-    
-//   public void testSimple() throws Exception {
-//
-//      JGDI jgdi = createJGDI();
-//      try {
-//         QueueInstanceSummaryOptions options = new QueueInstanceSummaryOptions();
-//         options.setShowRequestedResourcesForJobs(true);
-//         options.setShowFullOutput(true);
-//         options.setShowArrayJobs(true);
-//         // options.setShowExtendedSubTaskInfo(true);
-//
-//         QueueInstanceSummaryResult result = jgdi.getQueueInstanceSummary(options);
-//         PrintWriter pw = new PrintWriter(System.out);
-//         QueueInstanceSummaryPrinter.print(pw, result, options);
-//         pw.flush();
-//      } finally {
-//         jgdi.close();
-//      }
-//   }
     
     
     /** Creates a new instance of TestQHost */

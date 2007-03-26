@@ -42,7 +42,6 @@ import java.util.Set;
  * Objects of this interface holds the monitoring information about
  * a cluster host.
  *
- * @author richard.hierlmeier@sun.com
  */
 public interface HostInfo {
 

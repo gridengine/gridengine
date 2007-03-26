@@ -49,7 +49,6 @@ import junit.framework.TestResult;
 
 /**
  *
- * @author aa114085
  */
 public class BaseTestCase extends TestCase {
     

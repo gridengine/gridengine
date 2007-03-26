@@ -34,9 +34,8 @@ package com.sun.grid.jgdi.event;
 /**
  * Java Wrapper task for the JOB_FINISH event.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class JobFinishEvent extends JobEvent {
+public class JobFinishEvent extends JobEvent implements java.io.Serializable {
     
     /** Creates a new instance of JobFinishEvent */
     public JobFinishEvent(long timestamp, int evtId) {

@@ -47,7 +47,6 @@ import com.sun.grid.jgdi.JGDI;
  *  EventClient implemention which uses native parts
  *
  *  </pre>
- *  @author  richard.hierlmeier@sun.com 
  *
  */
 public class EventClientImpl extends AbstractEventClient implements com.sun.grid.jgdi.EventClient {

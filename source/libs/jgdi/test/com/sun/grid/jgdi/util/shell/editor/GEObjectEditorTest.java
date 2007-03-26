@@ -64,7 +64,6 @@ import java.util.Map;
 
 /**
  *
- * @author lp195527
  */
 public class GEObjectEditorTest extends TestCase {
    private TestGEObject geObj;

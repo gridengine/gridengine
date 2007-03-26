@@ -50,7 +50,6 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemoteBase {
     

@@ -40,9 +40,8 @@ import java.util.List;
  * Base class of all events which signalizes a changes of  
  * objects in the N1[tm] Grid Engine.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public abstract class ChangedObjectEvent extends Event {
+public abstract class ChangedObjectEvent extends Event implements java.io.Serializable {
    
    /** the new version of the changed objects */
    private Object changedObject;

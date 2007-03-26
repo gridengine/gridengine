@@ -50,7 +50,7 @@ import <%=jh.getFullClassName(cullObj)%>;
 
 /**
  */
-public class <%=name%>ModEvent extends ModEvent {
+public class <%=name%>ModEvent extends ModEvent implements java.io.Serializable {
 
 <% // Default constructor ----------------------------------------- %>
   public <%=name%>ModEvent(long timestamp, int eventID) {

@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.filter;
 
 /**
  *
- * @author rh150277
  */
 public class StringWhereClause extends WhereClause {
    

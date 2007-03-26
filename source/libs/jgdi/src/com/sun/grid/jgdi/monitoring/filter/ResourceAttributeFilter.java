@@ -40,7 +40,6 @@ import java.util.StringTokenizer;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class ResourceAttributeFilter implements Serializable {
     

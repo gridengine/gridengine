@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.filter;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public interface JGDIFilter {
    

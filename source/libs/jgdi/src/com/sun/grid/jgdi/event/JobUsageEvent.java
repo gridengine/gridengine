@@ -39,9 +39,8 @@ import java.util.Set;
 /**
  * Java Wrapper class for the JOB_USAGE event.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class JobUsageEvent extends JobEvent {
+public class JobUsageEvent extends JobEvent implements java.io.Serializable {
     
     private Map usage;
     

@@ -43,7 +43,6 @@ import com.sun.grid.jgdi.jni.JGDIImpl;
 
 /**
  *
- * @author lp195527
  */
 public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
    private JGDI jgdi;

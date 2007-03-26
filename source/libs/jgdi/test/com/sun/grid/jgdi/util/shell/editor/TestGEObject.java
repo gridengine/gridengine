@@ -43,7 +43,6 @@ import java.util.Set;
 
 /**
  *
- * @author lp195527
  */
 public class TestGEObject extends GEObjectImpl {
    private java.lang.String m_name;

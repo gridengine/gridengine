@@ -50,7 +50,7 @@ import <%=jh.getFullClassName(cullObj)%>;
 
 /**
  */
-public class <%=name%>DelEvent extends DelEvent {
+public class <%=name%>DelEvent extends DelEvent implements java.io.Serializable {
 
 <% // Default constructor ----------------------------------------- %>
   public <%=name%>DelEvent(long timestamp, int eventID) {

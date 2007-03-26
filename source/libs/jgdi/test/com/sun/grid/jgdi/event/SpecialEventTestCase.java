@@ -42,7 +42,6 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class SpecialEventTestCase extends BaseTestCase {
    

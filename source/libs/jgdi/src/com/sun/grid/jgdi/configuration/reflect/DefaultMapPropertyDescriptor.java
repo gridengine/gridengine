@@ -36,7 +36,6 @@ import java.lang.reflect.Method;
 
 /**
  *
- * @author aa114085
  */
 public class DefaultMapPropertyDescriptor extends MapPropertyDescriptor {
    

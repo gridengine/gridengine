@@ -36,7 +36,6 @@ import java.lang.reflect.*;
 
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public class DefaultListPropertyDescriptor extends ListPropertyDescriptor {
    

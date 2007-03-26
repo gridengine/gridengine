@@ -36,7 +36,6 @@ import java.rmi.RemoteException;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public interface JGDIRemoteFactory extends Remote {
    

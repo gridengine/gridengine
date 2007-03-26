@@ -31,15 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
+
 
 
 /**
  * Options for the {@link com.sun.grid.jgdi.JGDI#getClusterQueueSummary}
  * method.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class ClusterQueueSummaryOptions extends BasicQueueOptions {
+public class ClusterQueueSummaryOptions extends BasicQueueOptions implements Serializable {
    
    /** Creates a new instance of ClusterQueueSummaryOptions */
    public ClusterQueueSummaryOptions() {

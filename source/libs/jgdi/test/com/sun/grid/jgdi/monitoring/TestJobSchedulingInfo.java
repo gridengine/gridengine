@@ -43,7 +43,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
    

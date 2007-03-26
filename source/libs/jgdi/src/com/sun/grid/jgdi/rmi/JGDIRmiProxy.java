@@ -67,7 +67,6 @@ import java.rmi.RemoteException;
  *    
  *  <p>This class uses the logger <code>com.sun.grid.jgdi.rmi</code>.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JGDIRmiProxy {
    

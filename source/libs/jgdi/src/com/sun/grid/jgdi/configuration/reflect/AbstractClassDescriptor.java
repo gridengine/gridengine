@@ -40,7 +40,6 @@ import com.sun.grid.jgdi.configuration.*;
 /**
  * Abstract Base class for <code>ClassDescriptor</code> subclasses
  *
- * @author  richard.hierlmeier@sun.com
  */
 public abstract class AbstractClassDescriptor implements ClassDescriptor {
    

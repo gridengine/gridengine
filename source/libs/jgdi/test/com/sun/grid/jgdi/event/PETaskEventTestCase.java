@@ -47,7 +47,6 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author rh150277
  */
 public class PETaskEventTestCase extends BaseTestCase {
     

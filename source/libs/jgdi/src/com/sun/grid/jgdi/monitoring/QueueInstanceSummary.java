@@ -42,7 +42,6 @@ import java.util.Set;
  * Implementating classes of this interface represent the results of a
  * qstat command.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public interface QueueInstanceSummary {
    /**

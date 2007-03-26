@@ -44,7 +44,6 @@ import javax.security.auth.x500.X500PrivateCredential;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class SecurityHelper {
     

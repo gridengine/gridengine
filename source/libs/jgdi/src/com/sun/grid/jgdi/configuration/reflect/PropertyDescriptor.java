@@ -35,7 +35,6 @@ import java.lang.reflect.*;
 
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public abstract class PropertyDescriptor {
    

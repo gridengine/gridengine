@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.util;
 
 /**
  *
- * @author aa114085
  */
 public class Base64 {
     /**

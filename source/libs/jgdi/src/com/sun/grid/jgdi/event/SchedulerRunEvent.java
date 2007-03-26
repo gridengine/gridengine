@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author rh150277
  */
-public class SchedulerRunEvent extends Event {
+public class SchedulerRunEvent extends Event implements java.io.Serializable {
    
    /** Creates a new instance of SchedulerRunEvent */
    public SchedulerRunEvent(long timestamp, int id) {

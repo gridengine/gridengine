@@ -48,7 +48,6 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
    

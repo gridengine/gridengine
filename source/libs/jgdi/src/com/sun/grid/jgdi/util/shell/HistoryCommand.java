@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.util.shell;
 
 /**
  *
- * @author rh150277
  */
 public interface HistoryCommand extends Command {
    

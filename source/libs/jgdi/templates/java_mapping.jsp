@@ -45,7 +45,6 @@ import java.util.HashMap;
 
 /**
  *  This class provides the mapping from cull type to its java classes
- *  @author richard.hierlmeier@sun.com
  */
 public class CullTypeMapping {
    

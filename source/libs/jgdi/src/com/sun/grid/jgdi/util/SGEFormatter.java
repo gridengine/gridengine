@@ -86,7 +86,6 @@ import java.util.ArrayList;
  *   &lt;log level&gt;:&lt;message&gt;
  *  </pre>
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class SGEFormatter extends Formatter {
 

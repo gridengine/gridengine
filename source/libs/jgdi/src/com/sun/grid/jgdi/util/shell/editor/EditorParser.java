@@ -53,7 +53,6 @@ import java.util.Map;
 
 /**
  *
- * @author lp195527
  */
 public class EditorParser {
    

@@ -73,7 +73,6 @@ import java.util.List;
 
 /**
  *
- * @author rh150277
  */
 public class QConfCommand extends AbstractCommand {
    

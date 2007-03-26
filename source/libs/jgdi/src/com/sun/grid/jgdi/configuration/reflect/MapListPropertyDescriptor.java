@@ -37,7 +37,6 @@ import java.util.Set;
 
 /**
  *
- * @author rh150277
  */
 public abstract class MapListPropertyDescriptor extends PropertyDescriptor {
    

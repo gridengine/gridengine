@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class QueueInstanceUnsuspendEvent extends QueueInstanceModEvent {
+public class QueueInstanceUnsuspendEvent extends QueueInstanceModEvent implements java.io.Serializable {
     
   public QueueInstanceUnsuspendEvent(long timestamp, int eventID) {
      super(timestamp, eventID );

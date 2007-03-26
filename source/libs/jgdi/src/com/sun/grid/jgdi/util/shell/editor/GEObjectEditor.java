@@ -93,7 +93,6 @@ import java.util.Map;
  * <CODE>ClusterQueue geObj = jgdi.getClusterQueue("test");
  * GEObjectEditor.updateObjectWithText(jgdi, geObj, "xacl user4");
  * jgdi.updateClusterQueue(geObj);</CODE>
- * @author lp195527
  */
 public class GEObjectEditor {
    

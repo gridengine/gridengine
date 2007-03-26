@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
-public class ShutdownEvent extends Event {
+public class ShutdownEvent extends Event implements java.io.Serializable {
    
    /** Creates a new instance of ShutdownEvent */
    public ShutdownEvent( long timestamp, int eventId) {

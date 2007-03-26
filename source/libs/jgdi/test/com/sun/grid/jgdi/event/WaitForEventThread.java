@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 /**
  * Helper class for event test cases.
  *
- * @author richard.hierlmeier@sun.com
  */
 public class WaitForEventThread extends Thread implements EventListener {
    

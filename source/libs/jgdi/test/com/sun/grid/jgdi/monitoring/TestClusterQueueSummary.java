@@ -46,12 +46,11 @@ import com.sun.grid.jgdi.configuration.UserSet;
  * Copyright 2003-2004 Sun Microsystems, Inc. All rights reserved.
  * Use is subject to license terms.
  * -----------------------------------------------------------------------------
- * $Id: TestClusterQueueSummary.java,v 1.1 2006/09/15 09:19:58 andre Exp $
+ * $Id: TestClusterQueueSummary.java,v 1.2 2007/03/26 09:26:12 rhierlmeier Exp $
  * -----------------------------------------------------------------------------
  */
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
    

@@ -36,7 +36,6 @@ import java.util.Set;
 /**
  * This interface represent the result of the qhost algorithm.
  * 
- * @author richard.hierlmeier@sun.com
  */
 public interface QHostResult {
    

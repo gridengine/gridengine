@@ -36,10 +36,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
- * @author  richard.hierlmeier@sun.com
+ * Abstract base class for list events
  */
-public abstract class ListEvent extends Event {
+public abstract class ListEvent extends Event implements java.io.Serializable {
    
    /** the list of object */
    private List objects;

@@ -78,7 +78,6 @@ import javax.security.auth.login.LoginException;
 
 /**
  *
- * @author rh150277
  */
 public class JGDIShell implements Runnable, Shell {
    

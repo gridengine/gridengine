@@ -36,7 +36,6 @@ package com.sun.grid.jgdi.monitoring;
  * Instances of this class hold the cluster queue summary information
  * of one queue.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class ClusterQueueSummary {
    

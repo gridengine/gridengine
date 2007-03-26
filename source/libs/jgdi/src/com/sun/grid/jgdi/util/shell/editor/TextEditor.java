@@ -38,7 +38,6 @@ import java.awt.Font;
 
 /**
  *
- * @author  lp195527
  */
 public class TextEditor extends javax.swing.JFrame {
    private boolean isDone=false;

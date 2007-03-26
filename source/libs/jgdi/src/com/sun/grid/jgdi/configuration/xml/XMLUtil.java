@@ -64,7 +64,6 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * This class implements the serialisation/deserialion of cull object
  * int xml.
- * @author richard.hierlmeier@sun.com
  * @todo   alpha ??
  *         <p>Implement missing primitive handlers</p>
  */

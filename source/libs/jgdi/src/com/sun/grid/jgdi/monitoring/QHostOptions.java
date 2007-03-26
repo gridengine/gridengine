@@ -40,7 +40,6 @@ import com.sun.grid.jgdi.monitoring.filter.HostFilter;
 /**
  * Options for the qhost algorithm
  *
- * @author  richard.hierlmeier@sun.com
  * @todo    beta ??
  *          <p>Add javadoc comments</p>
  */

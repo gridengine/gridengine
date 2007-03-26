@@ -52,7 +52,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author lp195527
  */
 public class EditorUtil {
    public static String VALUE_NONE = "NONE";

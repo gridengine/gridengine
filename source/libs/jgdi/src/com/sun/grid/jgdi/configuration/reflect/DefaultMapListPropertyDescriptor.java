@@ -38,7 +38,6 @@ import java.util.Set;
 
 /**
  *
- * @author rh150277
  */
 public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor {
    

@@ -41,7 +41,6 @@ import java.util.*;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class Util {
    

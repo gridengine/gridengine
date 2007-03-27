@@ -1540,6 +1540,11 @@ sge_rusage_type *dusage
 #else
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MAXVMEM,      dusage->maxvmem);
 #endif
+   if (dusage->ar != 0) {
+      printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_ARID, dusage->ar);              /* job-array task number */
+   } else {
+      printf("%-13.12s%s\n",MSG_HISTORY_SHOWJOB_ARID, "undefined");             
+   }
    sge_dstring_free(&string);
 }
 
@@ -2050,6 +2055,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    pc=strtok(NULL, ":");
 
    d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
+   d->ar = ((pc=strtok(NULL, ":")))?atol(pc):0;
 
    /* ... */ 
 

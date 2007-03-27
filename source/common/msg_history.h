@@ -122,8 +122,6 @@
 #define MSG_HISTORY_SHOWJOB_IO                "io"
 #define MSG_HISTORY_SHOWJOB_IOW               "iow"
 #define MSG_HISTORY_SHOWJOB_MAXVMEM           "maxvmem"
-
-
-
+#define MSG_HISTORY_SHOWJOB_ARID              "arid"
 
 #endif /* __MSG_HISTORY_H   */

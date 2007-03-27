@@ -32,28 +32,65 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-int sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_ckpt_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_exechost_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_adminhost_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_submithost_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_project_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_queue_list_from_disk(void);
-int sge_read_user_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_userset_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_host_group_entries_from_disk(void);
-int sge_read_cqueue_list_from_disk(lList **list, const char *directory, lList **alpp);
-int sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alpp);
-int read_all_centries(lList **list, const char *directory, lList **alpp);
+int 
+sge_read_cal_list_from_disk(lList **list, const char *directory, lList **alpp);
 
-int read_all_configurations(lList **answer_list,
-                            lList **lpp,  
-                            const char *global_config_file, 
-                            const char *local_config_dir);
+int 
+sge_read_ckpt_list_from_disk(lList **list, const char *directory, lList **alpp);
 
-int sge_read_user_mapping_entries_from_disk(void);
+int 
+sge_read_exechost_list_from_disk(lList **list, const char *directory, lList **alpp);
 
-int sge_read_qinstance_list_from_disk(lListElem *cqueue);
+int 
+sge_read_adminhost_list_from_disk(lList **list, const char *directory, 
+                                  lList **alpp);
+
+int 
+sge_read_submithost_list_from_disk(lList **list, const char *directory, 
+                                   lList **alpp);
+
+int 
+sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp);
+
+int 
+sge_read_project_list_from_disk(lList **list, const char *directory, 
+                                lList **alpp);
+
+int 
+sge_read_queue_list_from_disk(void);
+
+int 
+sge_read_user_list_from_disk(lList **list, const char *directory, 
+                             lList **alpp);
+
+int 
+sge_read_userset_list_from_disk(lList **list, const char *directory, lList **alpp);
+
+int 
+sge_read_host_group_entries_from_disk(void);
+
+int 
+sge_read_cqueue_list_from_disk(lList **list, const char *directory, 
+                               lList **alpp);
+
+int 
+sge_read_rqs_list_from_disk(lList **list, const char *directory, lList **alpp);
+
+int 
+sge_read_ar_list_from_disk(lList **list, const char *directory, lList **alpp);
+
+int 
+read_all_centries(lList **list, const char *directory, lList **alpp);
+
+int 
+read_all_configurations(lList **answer_list, lList **lpp,  
+                        const char *global_config_file, 
+                        const char *local_config_dir);
+
+int 
+sge_read_user_mapping_entries_from_disk(void);
+
+int 
+sge_read_qinstance_list_from_disk(lListElem *cqueue);
 
 #endif /* __SGE_READ_LIST_H */    

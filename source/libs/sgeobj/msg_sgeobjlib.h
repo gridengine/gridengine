@@ -295,4 +295,13 @@
 #define MSG_OBJECT_PERANGEMUSTBEGRZERO_S         _MESSAGE(64396, _(SFQ" rejected: pe range must be greater than zero"))
 #define MSG_OBJECT_WILD_RANGE_AMBIGUOUS_S        _MESSAGE(64397, _(SFQ" rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount"))
 #define MSG_OBJECT_NODIRECTSLOTS_S               _MESSAGE(64398, _(SFQ" denied: use parallel environments instead of requesting slots explicitly"))
+
+#define MSG_AR_EVENT_STATE_UNKNOWN               _MESSAGE(64399, _("UNKNOWN"))
+#define MSG_AR_EVENT_STATE_CREATION              _MESSAGE(64400, _("CREATED"))
+#define MSG_AR_EVENT_STATE_STARTIME_REACHED      _MESSAGE(64401, _("START TIME REACHED"))
+#define MSG_AR_EVENT_STATE_ENDTIME_REACHED       _MESSAGE(64402, _("END TIME REACHED"))
+#define MSG_AR_EVENT_STATE_SOFT_ERROR            _MESSAGE(64403, _("SOFT ERROR OCCURED"))
+#define MSG_AR_EVENT_STATE_HARD_ERROR            _MESSAGE(64404, _("HARD ERROR OCCURED"))
+#define MSG_AR_EVENT_STATE_TERMINATED            _MESSAGE(64405, _("HARD ERROR OCCURED"))
+
 #endif /* __MSG_SGEOBJLIB_H */

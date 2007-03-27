@@ -79,6 +79,7 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "read_write_resource_quota.h"
+#include "read_write_advance_reservation.h"
 #include "sched_conf.h"
 #include "read_write_centry.h"
 
@@ -733,7 +734,9 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_AR:
-         /* AR TBD: add classic spooling code */
+         if (sge_read_ar_list_from_disk(list, AR_DIR, answer_list) != 0) {
+            ret = false;
+         }
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
@@ -897,7 +900,7 @@ spool_classic_default_read_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_AR:
-         /* AR TBD: add classic spooling code */
+         ep = cull_read_in_ar(AR_DIR, key, 1, 0, NULL, NULL);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1173,7 +1176,8 @@ spool_classic_default_write_func(lList **answer_list,
             ret = false;
          break;
       case SGE_TYPE_AR:
-         /* AR TBD */
+         if (!write_ar(1, 2, object))
+            ret = false;
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

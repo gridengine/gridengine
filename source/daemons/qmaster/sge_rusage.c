@@ -57,7 +57,7 @@
 #define ACTFILE_FPRINTF_FORMAT \
 "%s%c%s%c%s%c%s%c%s%c"sge_u32"%c%s%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c" \
 sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
-sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f" \
+sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f%c"sge_u32"" \
 ARCH_COLUMN \
 "\n"
 
@@ -324,7 +324,8 @@ sge_write_rusage(dstring *buffer,
              USAGE_ATTR_IOW, 0), delimiter,
           none_string(pe_task_id), delimiter,
           usage_list_get_double_usage(usage_list,  
-             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0) 
+             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0), delimiter, 
+          lGetUlong(job, JB_ar)
 #ifdef NEC_ACCOUNTING_ENTRIES
           , delimiter, arch_dep_usage_string
 #endif 

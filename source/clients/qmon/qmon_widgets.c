@@ -715,7 +715,7 @@ Cardinal size
    if (type == QmonQRN_Type) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(list, &range_string, 1);
+      range_list_print_to_string(list, &range_string, true, false);
       strcpy(buf, sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       str = buf;
@@ -723,7 +723,7 @@ Cardinal size
    if (type == QmonQTRN_Type) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(list, &range_string, 0);
+      range_list_print_to_string(list, &range_string, false, false);
       strcpy(buf, sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       str = buf;

@@ -1,3 +1,18 @@
+EB-2007-03-26-0: Enhacem:   - added reporting funtionality for AR.
+                            - added first implementation of classic spooling 
+                              for AR.
+                            - changed accounting file format and qacct (added 
+                              arid).
+                            - changed "acct" entry in reporting file 
+                              (added arid)
+                            - changed man page
+                            - added comments
+                 Review:    RD
+
+                 PLEASE NOTE: Reporting and accounting file format changed.
+                              This might have influence on scripts/applications
+                              which reuse that information (e.g. dbwriter) 
+
 HP-2007-03-26-1: Bugfix:    Fixed broken build for sol-sparc64 and -no-java
                  Changed:   aimk
                  Review:    AA

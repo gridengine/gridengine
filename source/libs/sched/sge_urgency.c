@@ -331,7 +331,7 @@ int sge_job_slot_request(const lListElem *job, const lList *pe_list)
       char pe_range_str[1024];
       dstring pe_range;
       sge_dstring_init(&pe_range, pe_range_str, sizeof(pe_range_str));
-      range_list_print_to_string(range_list, &pe_range, true);
+      range_list_print_to_string(range_list, &pe_range, true, false);
       DPRINTF(("slot request assumed for static urgency is %d for %s PE range due to "
           "PE's \"%s\" setting \"%s\"\n", n, pe_range_str, lGetString(pep, PE_name), 
           urgency_slot_setting));

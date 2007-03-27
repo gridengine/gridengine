@@ -60,6 +60,7 @@ int cull_merge_definition_list(lList **lpp_old, lList *lp_new, int nm_var, int n
 int cull_compress_definition_list(lList *lp_new, int nm_var, int nm_value, int double_keys);
 
 int cull_parse_simple_list(char *str, lList **lpp, char *name, lDescr *descr, int *interpretation_rule);
+
 #if 0
 int cull_parse_job_list(char *str, lList **lpp, char *name, lDescr *descr, int *interpretation_rule);
 #endif
@@ -69,7 +70,12 @@ int cull_parse_string_list(char **pstrlist, const char *listname, lDescr *descr,
 int uni_print_list(FILE *fp, char *buff, u_long32 max_len, const lList *lp, int *which_elements_rule, const char *pdelis[], unsigned long flags);
 
 int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi); 
+
 int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots); 
+
 int fprint_resource_utilizations(FILE *fp, char *str, lList *thresholds, int print_slots); 
+
+int
+fprint_range_list(FILE *fp, char *name, lList *range_list); 
 
 #endif /* __CULL_PARSE_UTIL_H */

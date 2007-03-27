@@ -1,5 +1,5 @@
-#ifndef __SGE_ADVANCE_RESERVATION_QMASTER_H
-#define __SGE_ADVANCE_RESERVATION_QMASTER_H
+#ifndef _READ_WRITE_AR_H
+#define _READ_WRITE_AR_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,32 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgeobj/sge_advance_reservation.h"
+lListElem *
+cull_read_in_ar(const char *dirname, const char *filename, int spool,
+                int type, int *tag, int fields[]);
 
-#include "sge_qmaster_timed_event.h"
-#include "sge_c_gdi.h"
-#include "uti/sge_monitor.h"
-#include "gdi/sge_gdi_ctx.h"
+char *
+write_ar(int spool, int how, const lListElem *pep);
 
-/* funtions called from within gdi framework in qmaster */
-int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar, lListElem *ar, 
-           int add, const char *ruser, const char *rhost, gdi_object_t *object, 
-           int sub_command, monitoring_t *monitor);
+int 
+read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
+             int spool, int flag, int *tag, int parsing_type);
 
-int ar_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *pep, gdi_object_t *object);
+#endif /* _READ_WRITE_AR_H */
 
-int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, 
-               gdi_object_t *object, lList **ppList, monitoring_t *monitor);
-
-/* funtions called via gdi and inside the qmaster */
-int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_list, 
-           char *ruser, char *rhost);
-
-void sge_store_ar_id(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
-
-void sge_init_ar_id(void);
-
-void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
-                          monitoring_t *monitor);
-
-#endif

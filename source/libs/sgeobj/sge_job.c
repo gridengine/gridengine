@@ -2769,7 +2769,7 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
       else {
          dstring range_string = DSTRING_INIT;
 
-         range_list_print_to_string(range_list, &range_string, true);
+         range_list_print_to_string(range_list, &range_string, true, false);
          if (sge_dstring_strlen(category_str) > 0) {
             sge_dstring_append(category_str, " ");
          }

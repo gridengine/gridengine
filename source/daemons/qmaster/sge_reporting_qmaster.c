@@ -58,6 +58,7 @@
 #include "category.h"
 
 /* sgeobj */
+#include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_object.h"
@@ -392,12 +393,13 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
    if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
-      u_long32 job_number, priority, submission_time;
+      u_long32 job_number, priority, submission_time, arid;
       const char *job_name, *owner, *group, *project, *department, *account;
 
       job_number        = lGetUlong(job, JB_job_number);
       priority          = lGetUlong(job, JB_priority);
       submission_time   = lGetUlong(job, JB_submission_time);
+      arid              = lGetUlong(job, JB_ar);
       job_name          = lGetStringNotNull(job, JB_job_name);
       owner             = lGetStringNotNull(job, JB_owner);
       group             = lGetStringNotNull(job, JB_group);
@@ -405,7 +407,20 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"sge_U32CFormat"\n", 
+      sge_dstring_sprintf(&job_dstring, 
+                          sge_U32CFormat"%c"
+                          sge_U32CFormat"%c"
+                          "%d%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          sge_U32CFormat"%c"
+                          sge_U32CFormat
+                          "\n", 
                           submission_time, REPORTING_DELIMITER,
                           job_number, REPORTING_DELIMITER,
                           -1, REPORTING_DELIMITER, /* means: no ja_task yet */
@@ -416,7 +431,8 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
                           project, REPORTING_DELIMITER,
                           department, REPORTING_DELIMITER,
                           account, REPORTING_DELIMITER,
-                          priority);
+                          priority, REPORTING_DELIMITER,
+                          arid);
 
       /* write record to reporting buffer */
       ret = reporting_create_record(answer_list, "new_job", 
@@ -1505,6 +1521,262 @@ static bool reporting_flush(const char *acct_file, const char *reporting_file, l
       ret = false;
    }
      
+   DRETURN(ret);
+}
+
+/****** qmaster/reporting_create_new_ar_record() ******************************
+*  NAME
+*     reporting_create_new_ar_record() -- new ar record will be written
+*
+*  SYNOPSIS
+*     bool
+*     reporting_create_new_ar_record(lList **answer_list, 
+*                                    const lListElem *ar,
+*                                    u_long32 report_time) 
+*
+*  FUNCTION
+*     Flushs the information that into the accounting file that a new
+*     advance reservation has been created.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const lListElem *ar  - the ar object which has been created
+*     u_long32 report_time - the corresponding timestamp 
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
+*     MT-NOTE: reporting_flush() is MT-safe
+*******************************************************************************/
+bool
+reporting_create_new_ar_record(lList **answer_list, 
+                               const lListElem *ar,
+                               u_long32 report_time) 
+{
+   bool ret = true;
+   rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
+   const char *owner = lGetString(ar, AR_owner);
+
+   DENTER(TOP_LAYER, "reporting_create_new_ar_record");
+
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_sprintf_append(&(buf->buffer), 
+                              sge_U32CFormat"%c"
+                              SFN"%c"
+                              sge_U32CFormat"%c"
+                              sge_U32CFormat"%c"
+                              "%s\n",
+                              report_time, REPORTING_DELIMITER,
+                              "new_ar", REPORTING_DELIMITER,
+                              report_time, REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_id), REPORTING_DELIMITER,
+                              (owner != NULL) ? owner : "");
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+
+   DRETURN(ret);
+}
+
+/****** qmaster/reporting_create_ar_attribute_record() ************************
+*  NAME
+*     reporting_create_ar_attribute_record() -- writes ar attributes  
+*
+*  SYNOPSIS
+*     bool
+*     reporting_create_ar_attribute_record(lList **answer_list,
+*                                          const lListElem *ar,
+*                                          u_long32 report_time)
+*
+*  FUNCTION
+*     Writes advance reservation attributes into the reporting file.
+*     This will be done whenever the ar settings change and when a new
+*     ar object is created.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const lListElem *ar  - the ar object which has been created
+*     u_long32 report_time - the corresponding timestamp 
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
+*     MT-NOTE: reporting_flush() is MT-safe
+*******************************************************************************/
+bool
+reporting_create_ar_attribute_record(lList **answer_list,
+                                     const lListElem *ar,
+                                     u_long32 report_time)
+{
+   bool ret = true;
+   rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
+   const char *pe_name = NULL;
+   const char *ar_name = NULL;
+   const char *ar_account = NULL;
+   const char *ar_granted_resources = NULL;
+
+   DENTER(TOP_LAYER, "reporting_create_ar_attribute_record");
+
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   pe_name = lGetString(ar, AR_pe);
+   ar_name = lGetString(ar, AR_name);
+   ar_account = lGetString(ar, AR_account);
+/* EB: TODO: add granted resources for this ar */
+   ar_granted_resources = "";
+   sge_dstring_sprintf_append(&(buf->buffer), 
+                              sge_U32CFormat"%c"
+                              SFN"%c"
+                              sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR_id */
+                              "%s%c"               /* AR_name */
+                              "%s%c"               /* AR_account */
+                              sge_U32CFormat"%c"   /* AR_start_time */
+                              sge_U32CFormat"%c"   /* AR_end_time */
+                              "%s%c"               /* AR_pe */
+                              "%s\n",              /* granted resources */
+                              report_time, REPORTING_DELIMITER,
+                              "ar_attr", REPORTING_DELIMITER,
+                              report_time, REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_id), REPORTING_DELIMITER,
+                              (ar_name != NULL) ? ar_name : "", REPORTING_DELIMITER,
+                              (ar_account != NULL) ? ar_account : "", REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_start_time), REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_end_time), REPORTING_DELIMITER,
+                              (pe_name != NULL) ? pe_name : "", REPORTING_DELIMITER,
+                              ar_granted_resources);
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+
+   DRETURN(ret);
+}
+
+/****** qmaster/reporting_create_ar_log_record() ******************************
+*  NAME
+*     reporting_create_ar_log_record() -- writes status change info  
+*
+*  SYNOPSIS
+*     bool
+*     reporting_create_ar_log_record(lList **answer_list,
+*                                    const lListElem *ar,
+*                                    ar_state_event_t event,
+*                                    const char *ar_description,
+*                                    u_long32 report_time)
+*
+*  FUNCTION
+*     Writes logging information into the reporting file whenever a status
+*     change of an advance reservation occures
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const lListElem *ar  - the ar object which has been created
+*     ar_state_event_t event  - the event if which caused the state change 
+*     const char *ar_description  - a human readable description 
+*     u_long32 report_time - the corresponding timestamp 
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
+*     MT-NOTE: reporting_flush() is MT-safe
+*******************************************************************************/
+bool
+reporting_create_ar_log_record(lList **answer_list,
+                               const lListElem *ar,
+                               ar_state_event_t event,
+                               const char *ar_description,
+                               u_long32 report_time)
+{
+   bool ret = true;
+   rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
+
+   DENTER(TOP_LAYER, "reporting_create_ar_log_record");
+
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_sprintf_append(&(buf->buffer), 
+                              sge_U32CFormat"%c"
+                              SFN"%c"
+                              sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR_id */
+                              sge_U32CFormat"%c"   /* AR_state */
+                              sge_U32CFormat"%c"   /* event */
+                              "%s\n",              /* message */
+                              report_time, REPORTING_DELIMITER,
+                              "ar_log", REPORTING_DELIMITER,
+                              report_time, REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_id), REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_state), REPORTING_DELIMITER,
+                              (u_long32)event, REPORTING_DELIMITER,
+                              (ar_description != NULL) ? ar_description : "");
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+
+   DRETURN(ret);
+}
+
+/****** qmaster/reporting_create_ar_acct_record() *****************************
+*  NAME
+*     reporting_create_ar_log_record() -- ar accounting record will be written 
+*
+*  SYNOPSIS
+*     bool
+*     reporting_create_ar_acct_record(lList **answer_list,
+*                                     const lListElem *ar,
+*                                     const char *cqueue_name,
+*                                     const char *hostname,
+*                                     u_long32 slots,
+*                                     u_long32 report_time)
+*
+*  FUNCTION
+*     This record will be written for every qinstance whenever an
+*     advance reservation terminates.
+*
+*  INPUTS
+*     lList **answer_list     - answer list
+*     const lListElem *ar     - the ar object which has been created
+*     const char *cqueue_name - cluster queue name
+*     const char *hostname    - hostname of the qinstance
+*     u_long32 slots          - number of reserved slots 
+*     u_long32 report_time    - the corresponding timestamp 
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
+*     MT-NOTE: reporting_flush() is MT-safe
+*******************************************************************************/
+bool
+reporting_create_ar_acct_record(lList **answer_list,
+                                const lListElem *ar,
+                                const char *cqueue_name,
+                                const char *hostname,
+                                u_long32 slots,
+                                u_long32 report_time)
+{
+   bool ret = true;
+   rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
+
+   DENTER(TOP_LAYER, "reporting_create_ar_acct_record");
+
+   sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+   sge_dstring_sprintf_append(&(buf->buffer), 
+                              sge_U32CFormat"%c"
+                              SFN"%c"
+                              sge_U32CFormat"%c"   /* report_time */
+                              sge_U32CFormat"%c"   /* AR_id */
+                              "%s%c"               /* cqueue */
+                              "%s%c"               /* execution hostname */
+                              sge_U32CFormat"\n",  /* number of slots */
+                              report_time, REPORTING_DELIMITER,
+                              "ar_acct", REPORTING_DELIMITER,
+                              report_time, REPORTING_DELIMITER,
+                              lGetUlong(ar, AR_id), REPORTING_DELIMITER,
+                              cqueue_name, REPORTING_DELIMITER,
+                              hostname, REPORTING_DELIMITER,
+                              slots);
+   sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
+
    DRETURN(ret);
 }
 

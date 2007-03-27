@@ -38,4 +38,8 @@ lListElem *ar_list_locate(lList *ar_list, u_long32 job_id);
 
 bool ar_validate(lListElem *ar, lList **alpp, bool in_master);
 
+ar_state_event_t ar_get_event_from_string(const char *string);
+
+const char *ar_get_string_from_event(ar_state_event_t event);
+
 #endif /* __SGE_ADVANCE_RESERVATION_H */

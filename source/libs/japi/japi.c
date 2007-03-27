@@ -1757,7 +1757,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                      sge_dstring_init(&job_task_specifier, buffer, sizeof(buffer));
                      sge_dstring_sprintf(&job_task_specifier, sge_u32".", jobid);
                      range_get_all_ids(range, &start, &end, &step);
-                     range_to_dstring(start, end, step, &job_task_specifier, false);
+                     range_to_dstring(start, end, step, &job_task_specifier, false, false);
                      lAddElemStr(&ref_list, ST_name,
                                  sge_dstring_get_string(&job_task_specifier),
                                  ST_Type);

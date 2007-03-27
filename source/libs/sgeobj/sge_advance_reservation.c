@@ -248,4 +248,105 @@ ERROR:
    DRETURN(false);
 }
 
+/****** libs/sge_obj/ar_get_event_from_string() ******************************
+*  NAME
+*     ar_get_event_from_string() -- converts a string to a event id 
+*
+*  SYNOPSIS
+*     ar_state_event_t ar_get_event_from_string(const char *string) 
+*
+*  FUNCTION
+*     Converts a human readable event string to the corresponding
+*     event if. 
+*
+*  INPUTS
+*     const char *string - string 
+*
+*  RESULT
+*     ar_state_event_t - the event id 
+*
+*  NOTES
+*     MT-NOTE: ar_get_event_from_string() is not MT safe 
+*******************************************************************************/
+ar_state_event_t
+ar_get_event_from_string(const char *string)
+{
+   ar_state_event_t ret = ARL_UNKNOWN;
+
+   DENTER(TOP_LAYER, "ar_get_event_from_string");
+   if (string != NULL) {
+      if (!strcmp(MSG_AR_EVENT_STATE_UNKNOWN, string)) {
+         ret = ARL_UNKNOWN;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_CREATION, string)) {
+         ret = ARL_CREATION;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_STARTIME_REACHED, string)) {
+         ret = ARL_STARTTIME_REACHED;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_ENDTIME_REACHED, string)) {
+         ret = ARL_ENDTIME_REACHED;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_SOFT_ERROR, string)) {
+         ret = ARL_SOFT_ERROR;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_HARD_ERROR, string)) {
+         ret = ARL_HARD_ERROR;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_TERMINATED, string)) {
+         ret = ARL_TERMINATED;
+      } 
+   } 
+   DRETURN(ret);
+}
+
+/****** libs/sgeobj/ar_get_string_from_event() ********************************
+*  NAME
+*     ar_get_string_from_event() -- converts a state event to a string 
+*
+*  SYNOPSIS
+*     const char * ar_get_string_from_event(ar_state_event_t event) 
+*
+*  FUNCTION
+*     Converts a state event id to a human readable string. 
+*
+*  INPUTS
+*     ar_state_event_t event - state event id 
+*
+*  RESULT
+*     const char * - string
+*
+*  NOTES
+*     MT-NOTE: ar_get_string_from_event() is not MT safe 
+*******************************************************************************/
+const char *
+ar_get_string_from_event(ar_state_event_t event)
+{
+   const char *ret = MSG_AR_EVENT_STATE_UNKNOWN;
+   DENTER(TOP_LAYER, "ar_get_string_from_event");
+   switch(event) {
+      case ARL_UNKNOWN:
+         ret = MSG_AR_EVENT_STATE_UNKNOWN;
+         break;
+      case ARL_CREATION:
+         ret = MSG_AR_EVENT_STATE_CREATION;
+         break;
+      case ARL_STARTTIME_REACHED:
+         ret = MSG_AR_EVENT_STATE_STARTIME_REACHED;
+         break;
+      case ARL_ENDTIME_REACHED:
+         ret = MSG_AR_EVENT_STATE_ENDTIME_REACHED;
+         break;
+      case ARL_SOFT_ERROR:
+         ret = MSG_AR_EVENT_STATE_SOFT_ERROR;
+         break;
+      case ARL_HARD_ERROR:
+         ret = MSG_AR_EVENT_STATE_HARD_ERROR;
+         break;
+      case ARL_TERMINATED:
+         ret = MSG_AR_EVENT_STATE_TERMINATED;
+         break;
+      default:
+         /* should never happen */
+         DTRACE;
+         break;
+   }
+   DRETURN(ret);
+}
+
+
 

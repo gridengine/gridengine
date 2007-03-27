@@ -58,6 +58,7 @@
 #include "sge_complex_schedd.h"  /* JG: TODO: dito */
 #include "sge_select_queue.h"    /* JG: TODO: dito */
 
+#include "sge_advance_reservation.h"
 #include "sge_answer.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -76,6 +77,7 @@
 
 #include "sge_queue_event_master.h"
 
+#include "read_write_advance_reservation.h"
 #include "read_write_cal.h"
 #include "read_write_ckpt.h"
 #include "read_write_complex.h"
@@ -374,6 +376,62 @@ int sge_read_submithost_list_from_disk(lList **list, const char *directory, lLis
    }
 
    DRETURN(0);
+}
+
+int 
+sge_read_ar_list_from_disk(lList **list, const char *directory, lList **alpp)
+{
+   lList *direntries;
+   lListElem *ep, *direntry;
+   int ret = 0;
+   const char *ar;
+
+   DENTER(TOP_LAYER, "sge_read_ar_list_from_disk");
+   
+   if (*list == NULL) {
+      *list = lCreateList("", AR_Type);
+   }
+
+   direntries = sge_get_dirents(directory);
+   if(direntries) {
+      if (!sge_silent_get()) {
+         printf(MSG_CONFIG_READINGIN_S, AR_DIR);
+         printf("\n");
+      }
+      for_each(direntry, direntries) {
+         ar = lGetString(direntry, ST_name);
+         if (ar[0] != '.') {
+            if (!sge_silent_get()) {
+               printf("\t");
+               printf(MSG_SETUP_OBJ_SS, SGE_OBJ_AR, ar);
+               printf("\n");
+            }
+            if (verify_str_key(NULL, ar, MAX_VERIFY_STRING,
+                               "ar", KEY_TABLE) != STATUS_OK) {
+               DRETURN(-1);
+            }       
+            ep = cull_read_in_ar(directory, ar, 1, 0, NULL, NULL);
+            if (!ep) {
+               ret = -1;
+               break;
+            }
+
+/* EB: TODO AR: enable validation after classic spooling is finished */
+#if 0
+            if (pe_validate(ep, NULL, 1)!=STATUS_OK) {
+               ret = -1;
+               break;
+            }
+#endif
+            lAppendElem(*list, ep);
+         } else {
+            sge_unlink(directory, ar);
+         }
+      }
+      lFreeList(&direntries);
+   }
+
+   DRETURN(ret);
 }
 
 int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp)

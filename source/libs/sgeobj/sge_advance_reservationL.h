@@ -48,13 +48,36 @@ enum {
 };
 
 /* AR states for AR_state */
-enum {
-   AR_WAITING = 0,  /* w 	waiting - granted but start time not reached */
+typedef enum {
+   AR_UNKNOWN = 0,  /* should never be seen. only used for variable initialisation */
+
+   AR_WAITING,      /* w 	waiting - granted but start time not reached */
    AR_RUNNING,      /* r 	running - start time reached */
    AR_EXITED,       /* x 	exited - end time reached and doing cleanup */
    AR_DELETED,      /* d 	deleted - manual deletion */
    AR_ERROR         /* e 	error - AR became invalid */
-};
+
+   /* append new states below! otherwise update procedures for reporting an accounting 
+    * have to be written*/
+
+} ar_state_t;
+
+/* AR event types which trigger state changes */
+
+typedef enum {
+   ARL_UNKNOWN = 0, /* should never be seen. only used for variable initialisation */
+
+   ARL_CREATION,           /* incoming request to create a new ar object */
+   ARL_STARTTIME_REACHED,  /* start time reached */
+   ARL_ENDTIME_REACHED,    /* end time reached */
+   ARL_SOFT_ERROR,         /* error occured but jobs part of an ar can still be scheduled */
+   ARL_HARD_ERROR,         /* error occured and no new jobs for that ar are scheduled */
+   ARL_TERMINATED          /* ar object deleted */
+
+   /* append new events below! otherwise update procedures for reporting an accounting 
+    * have to be written*/
+
+} ar_state_event_t;
 
 /* Advance Reservation Object */
 enum {
@@ -115,6 +138,7 @@ LISTDEF(AR_Type)
    SGE_LIST(AR_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(AR_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)
 
+   /* TODO: add to classic spooling? */
    SGE_MAP_D(AR_granted_slots, AULNG_Type, CULL_SPOOL, "@/", 0, "qinstance", "granted_slots")
 
    SGE_ULONG(AR_mail_options, CULL_DEFAULT | CULL_SPOOL) 

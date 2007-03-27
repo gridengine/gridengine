@@ -57,6 +57,7 @@
 #include "sge_range.h"
 
 #include "sge_utility_qmaster.h"
+#include "sge_reporting_qmaster.h"
 
 typedef struct {
    u_long32 ar_id;
@@ -239,7 +240,7 @@ int ar_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_t
                               ANSWER_QUALITY_ERROR, 
                               MSG_PERSISTENCE_WRITE_FAILED_S,
                               sge_dstring_get_string(&buffer));
-   }
+   } 
    sge_dstring_free(&buffer);
 
    DRETURN(dbret ? 0 : 1);
@@ -280,12 +281,22 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
                gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    te_event_t ev;
+   u_long32 timestamp = 0; 
 
    DENTER(TOP_LAYER, "ar_success");
 
    ev = te_new_event((time_t)lGetUlong(ep, AR_start_time), TYPE_AR_EVENT, ONE_TIME_EVENT, lGetUlong(ep, AR_id), AR_RUNNING, NULL);
    te_add_event(ev);
    te_free_event(&ev);
+
+   /* with old_ep it is possible to identify if it is an add or modify request */
+   timestamp = sge_get_gmt();
+   if (old_ep == NULL) {
+      reporting_create_new_ar_record(NULL, ep, timestamp);
+      reporting_create_ar_attribute_record(NULL, ep, timestamp);
+   } else {
+      reporting_create_ar_attribute_record(NULL, ep, timestamp);
+   }
 
    /*
    ** return element with correct id
@@ -668,6 +679,13 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       dstring buffer = DSTRING_INIT;
       sge_dstring_sprintf(&buffer, "%d", ar_id);
 
+      reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
+                                     ar_get_string_from_event(ARL_TERMINATED),
+                                     sge_get_gmt());  
+      /* EB: TODO AR: I think also the ar accounting records should be written 
+       *              here with reporting_create_ar_acct_record()
+       */
+
       /* AR TBD CLEANUP 
        * for now we only remove the AR object 
        */
@@ -678,6 +696,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
                       NULL, NULL, NULL, true, true);
 
       sge_dstring_free(&buffer);
+
    } else {
       /* AR_RUNNING */
       DPRINTF(("AR: started, changing state of AR "sge_u32"\n", ar_id));
@@ -686,6 +705,10 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT, ONE_TIME_EVENT, ar_id, AR_EXITED, NULL);
       te_add_event(ev);
       te_free_event(&ev);
+
+      reporting_create_ar_log_record(NULL, ar, ARL_STARTTIME_REACHED, 
+                                     ar_get_string_from_event(ARL_STARTTIME_REACHED),
+                                     sge_get_gmt());  
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);

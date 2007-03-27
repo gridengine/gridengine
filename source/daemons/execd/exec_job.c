@@ -1119,7 +1119,7 @@ int err_length) {
    {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(processor_set, &range_string, true);
+      range_list_print_to_string(processor_set, &range_string, true, false);
       fprintf(fp, "processors=%s", sge_dstring_get_string(&range_string)); 
       sge_dstring_free(&range_string);
    }

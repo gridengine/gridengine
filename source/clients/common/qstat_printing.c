@@ -777,7 +777,7 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
       }
       if (range_list[i] != NULL && show) { 
          if ((group_opt & GROUP_NO_TASK_GROUPS) == 0) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string, false);
+            range_list_print_to_string(range_list[i], &ja_task_id_string, false, false);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
                lListElem *ja_task = job_get_ja_task_template_hold(job, 
@@ -961,7 +961,7 @@ int longest_queue_length
                            (QSTAT_DISPLAY_ZOMBIES | QSTAT_DISPLAY_FULL), 
                            sge_ext);
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str, false);
+         range_list_print_to_string(z_ids, &dyn_task_str, false, false);
          sge_print_job(jep, ja_task, NULL, 1, NULL, &dyn_task_str, 
                        full_listing, 0, 0, ehl, centry_list, pe_list, "", group_opt, 0, longest_queue_length);
          sge_dstring_free(&dyn_task_str);
@@ -1463,7 +1463,7 @@ int queue_name_length
             dstring range_string = DSTRING_INIT;
 
             range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                       &range_string, true);
+                                       &range_string, true, false);
             printf(QSTAT_INDENT "Requested PE:     %s %s\n", 
                    lGetString(job, JB_pe), sge_dstring_get_string(&range_string)); 
             sge_dstring_free(&range_string);

@@ -1,3 +1,5 @@
+AA-2007-03-28-2: Bugfix:    reverted jgdi_qhost to previous version
+
 DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the main page.
 
 AA-2007-03-28-1: Bugfix:    - template file comments break build on Aix

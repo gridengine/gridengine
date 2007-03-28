@@ -1352,55 +1352,6 @@ int main(int argc, char *argv[], char *envp[])
 }
 #endif
 
-
-int attr_mod_threshold(
-lList **alpp,
-lListElem *qep,
-lListElem *new_ep,
-int nm,
-int primary_key,
-int sub_command,
-char *attr_name,
-char *object_name 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "attr_mod_threshold");
-
-   /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
-      lListElem *tmp_elem = NULL;
-
-      DPRINTF(("got new %s\n", attr_name));
-
-      if (ensure_attrib_available(alpp, qep, nm)) {
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      tmp_elem = lCopyElem(new_ep); 
-
-      ret = attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-                              sub_command, attr_name, object_name, 0);
-      if (!ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
-                                     *centry_list_get_master_list(), true, false, false);
-      if (ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
-      lFreeElem(&tmp_elem);
-   }
-
-   DRETURN(0);
-}
-
-
 /****** sge_complex_schedd/request_cq_rejected() *******************************
 *  NAME
 *     request_cq_rejected() -- Check, if -l request forecloses cluster queue

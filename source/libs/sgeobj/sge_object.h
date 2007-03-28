@@ -48,8 +48,6 @@
 *     setting field contents from string representation etc.
 *
 *  NOTES
-*     Functions like attr_mod_double from gdi_utility should also 
-*     be moved here.
 *
 *  SEE ALSO
 *     sgeobj/Object/object_has_type()
@@ -323,12 +321,6 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem);
 
 void
 object_get_any_type(lListElem *this_elem, int name, void *value);
-
-bool 
-attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
-                  int this_elem_primary_key, lListElem *delta_elem, 
-                  int sub_command, const char *sub_list_name, 
-                  const char *object_name, int no_info); 
 
 bool  
 object_has_differences(const lListElem *this_elem, lList **answer_list,

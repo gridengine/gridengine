@@ -102,15 +102,6 @@ lListElem *
 cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname);
 
 bool
-
-cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
-                   lListElem *reduced_elem, int sub_command,
-                   int attribute_name, int sublist_host_name,
-                   int sublist_value_name, int subsub_key,
-                   const char *attribute_name_str,
-                   const char *object_name_str);
-
-bool
 cqueue_list_find_all_matching_references(const lList *this_list,
                                          lList **answer_list,
                                          const char *cqueue_pattern,

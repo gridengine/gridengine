@@ -48,6 +48,7 @@
 #include "sge_string.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
+#include "sge_utility_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cqueue.h"

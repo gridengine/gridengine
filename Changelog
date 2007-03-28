@@ -1,3 +1,6 @@
+PJ-2007-03-28-0: Cleanup:   all attr_mod functions are now located in sge_utility_qmaster.h
+                 Review:    AH
+
 EB-2007-03-26-0: Enhacem:   - added reporting funtionality for AR.
                             - added first implementation of classic spooling 
                               for AR.

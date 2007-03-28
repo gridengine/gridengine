@@ -58,6 +58,7 @@
 #include "sge_event_master.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_host_qmaster.h"
+#include "sge_utility_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"

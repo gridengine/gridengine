@@ -1,3 +1,5 @@
+AA-2007-03-28-1: Bugfix:    - template file comments break build on Aix
+               
 AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
                             - CULL_CONFIGURE adjustments in testvalues/*/*.xml
                             - fix of jgdi tests

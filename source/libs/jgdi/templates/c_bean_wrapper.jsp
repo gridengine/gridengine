@@ -354,7 +354,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
       DEXIT;
       return JGDI_NULL_POINTER;
    }
-   // We set the result always to the default value,
+   /* We set the result always to the default value */
 <%   
    if(method.getReturnType().isArray()) { %>
    *result = NULL;    
@@ -405,7 +405,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
   <%
   }
 %> (*env)-><%=ch.getStaticCallMethod(method.getReturnType())%>(env, clazz, mid <%
-      // Add all parameter to the method call 
+      /* Add all parameter to the method call */
       for(int i = 0; i < parameters.length; i++) {  
          if( String.class.equals(parameters[i])) {
             // For all string parameter we pass the jstring object
@@ -601,7 +601,7 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
       DEXIT;
       return JGDI_NULL_POINTER;
    }
-   // We set the result always to the default value,
+   /* We set the result always to the default value */
 <%   
    if(method.getReturnType().isArray()) { %>
    *result = NULL;    

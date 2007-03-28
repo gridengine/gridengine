@@ -19,6 +19,13 @@ RD-2007-03-22-0: Bugfix:    Corrected and validated qquota schema file
 JG-2007-03-20-0: Cleanup:   Fixed message macros.
                  Review:    CR
 
+LP-2007-03-19-1: Bugfix:    Fixed incorrect use of DEXIT in jgdi_common.c
+                 Review:    PJ
+
+LP-2007-03-19-0: Bugfix:    JGDI does not accept null values in certain cases anymore
+                 Bugtraq:   6535877
+                 Review:    AA
+
 AH-2007-03-16-0: Enhanc:    Added tracing of job script spooling operations 
                             to Dtrace master monitor.
                  Changed:   qmaster
@@ -98,6 +105,10 @@ MP-2007-02-23-0: Bugfix:    on Windows, execd doesn't provide useful
                  Changed:   utilbin/sge_passwd.c
                             utilbin/msg_utilbin.h
                  Review:    HP
+
+LP-2007-02-20-0: Bugfix:    JGDI crashes JVM when null is passed to JNI GetStringUTFChars function
+                 Bugtraq:   6525497
+                 Review:    RH
 
 RD-2007-02-15-0: CVS        Created V61beta_TAG
 -----------------------------------------------

@@ -34,7 +34,6 @@ package com.sun.grid.jgdi.filter;
 /**
  * Simple filter that can be expressed by a 
  * CULL what and where clause.
- * @author  richard.hierlmeier@sun.com
  */
 public interface SimpleFilter extends JGDIFilter {
    

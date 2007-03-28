@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -43,9 +44,8 @@ import java.util.Set;
  * The class JobSummary extends the class JobInfo and adds addtional
  * information about the job.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class JobSummaryImpl extends JobInfoImpl implements JobSummary {
+public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializable {
 
    private double nurg;
    private double urg;

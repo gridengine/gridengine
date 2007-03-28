@@ -39,7 +39,6 @@ import java.util.Properties;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class ClusterConfig {
     private String sgeRoot;

@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.configuration;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public interface GEObject {
  

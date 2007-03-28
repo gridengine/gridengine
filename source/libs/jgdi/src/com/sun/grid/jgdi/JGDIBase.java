@@ -42,7 +42,6 @@ import java.util.List;
 
 /**
  * Base class for the <code>JGDI</code> object.
- * @author richard.hierlmeier@sun.com
  */
 public interface JGDIBase {
     

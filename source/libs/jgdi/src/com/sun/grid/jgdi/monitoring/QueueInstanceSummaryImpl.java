@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,9 +44,8 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class QueueInstanceSummaryImpl implements QueueInstanceSummary {
+public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializable {
    
    private static Logger logger = Logger.getLogger(QueueInstanceSummaryImpl.class.getName());
    

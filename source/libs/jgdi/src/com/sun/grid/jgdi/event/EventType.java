@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
-public class EventType {
+public class EventType implements java.io.Serializable {
    
    private int type;
    

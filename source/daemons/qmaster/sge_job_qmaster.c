@@ -891,8 +891,8 @@ int sub_command, monitoring_t *monitor
    u_long32 deleted_tasks = 0;
    u_long32 time;
    u_long32 start_time;
-   lList *user_list = lGetList(idep, ID_user_list);
    u_long32 max_job_deletion_time = mconf_get_max_job_deletion_time();
+   lList *user_list = NULL;
    lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
    bool job_spooling = ctx->get_job_spooling(ctx);
 
@@ -908,6 +908,15 @@ int sub_command, monitoring_t *monitor
    all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) != 0);
 
    all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) != 0);
+
+   /* Did we get a user list or something else ? */
+   if (lGetPosViaElem(idep, ID_user_list, SGE_NO_ABORT) >= 0) {
+      user_list = lGetList(idep, ID_user_list);
+   } else {
+      CRITICAL((SGE_EVENT, MSG_NMNOTINELEMENT_S, "ID_user_list"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DRETURN(STATUS_EUNKNOWN);
+   }
 
    /* Did we get a user list? */
    if (user_list && lGetNumberOfElem(user_list) > 0) {

@@ -36,7 +36,6 @@ import com.sun.grid.jgdi.monitoring.HostInfo;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class HostInfoDescriptor extends AbstractClassDescriptor {
    

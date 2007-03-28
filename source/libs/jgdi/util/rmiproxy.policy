@@ -1,6 +1,6 @@
 
 grant {
-   permission java.net.SocketPermission   "*:1024-", "accept";
+   permission java.net.SocketPermission   "*:1024-", "accept,connect";
    permission java.lang.RuntimePermission "loadLibrary.jgdi";
    permission java.lang.RuntimePermission "shutdownHooks";
    permission java.io.FilePermission      "classes/*", "read";

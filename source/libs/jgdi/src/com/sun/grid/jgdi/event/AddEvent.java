@@ -34,9 +34,8 @@ package com.sun.grid.jgdi.event;
 /**
  * Base class for all add events.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public abstract class AddEvent extends ChangedObjectEvent {
+public abstract class AddEvent extends ChangedObjectEvent implements java.io.Serializable {
    
    /**
     * Creates a new instance of AddEvent

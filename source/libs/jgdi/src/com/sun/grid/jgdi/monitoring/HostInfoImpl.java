@@ -42,7 +42,6 @@ import java.util.Set;
  * Objects of this class holds the monitoring information about
  * a cluster host.
  *
- * @author richard.hierlmeier@sun.com
  */
 public class HostInfoImpl implements HostInfo, Serializable {
 
@@ -80,12 +79,20 @@ public class HostInfoImpl implements HostInfo, Serializable {
     *  @return the architecture of the host
     */
    public String getArch() {
-      return (String)getHostValue("arch");
+      return (String)getHostValue("arch_string");
    }
+
+   /**
+    *  Get the number of processors of the host
+    *  @return number of processors of the host
+    */
+   public String getNumberOfProcessors() {
+      return (String)getHostValue("num_proc");
+   }
+   
    
    /**
     *  Get the load average of the host
-    *
     *  @return the load average of the host
     */
    public String getLoadAvg() {
@@ -94,7 +101,6 @@ public class HostInfoImpl implements HostInfo, Serializable {
    
    /**
     *  Get the total memory of the host
-    *
     *  @return total memory of the host
     */
    public String getMemTotal() {
@@ -103,7 +109,6 @@ public class HostInfoImpl implements HostInfo, Serializable {
 
    /**
     *  Get the used memory of the host
-    *
     *  @return the used memory
     */
    public String getMemUsed() {
@@ -112,7 +117,6 @@ public class HostInfoImpl implements HostInfo, Serializable {
    
    /**
     *  Get the size of the swap of the host
-    *
     *  @return size of the swap of the host
     */
    public String getSwapTotal() {
@@ -121,8 +125,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
    
    /**
     *  Get the size of used swap space
-    *
-    *  @return siez of the used swap space
+    *  @return size of the used swap space
     */
    public String getSwapUsed() {
       return (String)getHostValue("swap_used");
@@ -130,7 +133,6 @@ public class HostInfoImpl implements HostInfo, Serializable {
    
    /**
     *  Get the number of host values
-    *
     *  @return number of host values
     */
    public int getHostValueCount() {

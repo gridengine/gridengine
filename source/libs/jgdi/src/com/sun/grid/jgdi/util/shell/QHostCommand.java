@@ -46,7 +46,6 @@ import java.util.LinkedList;
 
 /**
  *
- * @author rh150277
  */
 public class QHostCommand extends AbstractCommand {
    

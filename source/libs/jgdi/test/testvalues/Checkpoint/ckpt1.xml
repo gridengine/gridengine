@@ -5,9 +5,8 @@
    <ckptCommand>NONE</ckptCommand>
    <migrCommand>NONE</migrCommand>
    <restCommand>NONE</restCommand>
+   <cleanCommand>NONE</cleanCommand>
    <ckptDir>/tmp</ckptDir>
    <when>xs</when>
    <signal>NONE</signal>
-   <jobPid>0</jobPid>
-   <cleanCommand>NONE</cleanCommand>
 </CK_Type>

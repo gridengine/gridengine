@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.monitoring;
 
 /**
  * Instances of this class hold the information for a task of a job.
- * @author  richard.hierlmeier@sun.com
  */
 public interface TaskSummary {
 

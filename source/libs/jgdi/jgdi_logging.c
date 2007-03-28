@@ -102,7 +102,7 @@ jobject jgdi_get_logger(JNIEnv *env , const char* name) {
    name_obj = (*env)->NewStringUTF(env, name ); 
 
    temp = (*env)->CallStaticObjectMethod(env, clazz, mid , name_obj );  
-   if( (*env)->ExceptionOccurred(env)) {
+   if ((*env)->ExceptionOccurred(env)) {
       (*env)->ExceptionDescribe(env);
       (*env)->ExceptionClear(env);
       return NULL;
@@ -207,6 +207,10 @@ jboolean jgdi_is_loggable(JNIEnv *env, jobject logger, log_level_t level) {
       return false;
    }
    
+   if (logger == NULL) {
+      return false;
+   }
+
    level_obj = get_level(env, level);
    
    if (level_obj == NULL) {

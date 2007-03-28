@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <jni.h>
-
 #include <stdio.h>
 #include <jni.h>
 #include <string.h>

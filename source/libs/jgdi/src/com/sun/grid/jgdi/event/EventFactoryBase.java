@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class EventFactoryBase {
    

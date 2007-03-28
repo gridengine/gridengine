@@ -46,7 +46,7 @@ package <%=jh.getPackageName()%>;
 
 import com.sun.grid.jgdi.configuration.GEObject;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +54,7 @@ import java.util.Iterator;
 import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+
 
 /**
  *  Java representation of the cull object <%=cullObj.getName()%>
@@ -105,8 +106,8 @@ public class <%=classname%> extends <%
        }
        
        if( attr.getDefault() != null ) {
-          
-          String defaultValue = attr.getDefault();
+          String defaultValue = null;
+          String attrValue = attr.getDefault();
           String attrName = jh.getAttrName(attr);
           String attrType = jh.getFullClassName(attr.getType());
 
@@ -125,16 +126,30 @@ public class <%=classname%> extends <%
              
              com.sun.grid.cull.CullAttr valueAttr = mapAttr.getValueAttr();
              
-             defaultValue = jh.getInitializer(valueAttr, defaultValue);
-
+             if (attrValue.equalsIgnoreCase("NONE")) {
+                defaultValue = null;
+             } else {
+               defaultValue = jh.getInitializer(valueAttr, attrValue);
+             }
+             
              String defaultKey = ((com.sun.grid.cull.CullMapAttr )attr).getDefaultKey();
              if(defaultKey != null) {
               if(attr instanceof com.sun.grid.cull.CullMapListAttr ) {
+                if (gsname.equals("LoadThresholds") && attrValue.indexOf('=') > 0) {
+                  String elems[] = attrValue.split("=");
+                  String cls = jh.getInitializer(valueAttr, elems[0]);
 %>
-       addDefault<%=gsname%>(<%=defaultValue%>);
+                     ComplexEntryImpl c = <%=cls%>;
+                     c.setStringval("<%=elems[1]%>");
+                     addDefault<%=gsname%>(c);
 <%
+                } else {
+%>
+                     addDefault<%=gsname%>(<%=defaultValue%>);
+<%
+               }
               } else {
-%>              
+%>
        put<%=gsname%>("<%=defaultKey%>", <%=defaultValue%>);
 <%
               }              
@@ -142,7 +157,12 @@ public class <%=classname%> extends <%
              
           } else {
        
-          defaultValue = jh.getInitializer(attr, defaultValue);
+          if (attrValue.equalsIgnoreCase("NONE")) {
+             defaultValue = null;
+          } else {
+             defaultValue = jh.getInitializer(attr, attrValue);
+          }
+          
           String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                              attrName.substring(1);
       %>
@@ -249,13 +269,10 @@ public class <%=classname%> extends <%
    public <%=valueClassName%> get<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, int index) {
       init<%=gsname%>();
       List list = (List)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
-      <%=fullValueClassName%> ret = null;
-      if( list != null) {
-         ret = (<%=fullValueClassName%>)list.get(index);
+      if (list == null || index < 0 || index >= list.size()) {
+          throw new IllegalArgumentException("No <%=attrName%> for " + <%=mapAttr.getKeyName()%> + "[" + index + "] set");
       }
-      if( ret == null ) {
-         throw new IllegalArgumentException("No <%=attrName%> for " + <%=mapAttr.getKeyName()%> + "[" + index + "] set");
-      }      
+      <%=fullValueClassName%> ret = (<%=fullValueClassName%>)list.get(index);
       <% if( jh.isPrimitiv(valueAttr) ) { %>
          return ret.<%=valueClassName%>Value();
       <% } else { %>
@@ -287,7 +304,7 @@ public class <%=classname%> extends <%
       init<%=gsname%>();
       List list = (List)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
       if( list == null ) {
-         list = new ArrayList();
+         list = new LinkedList();
          m_<%=attrName%>.put(<%=mapAttr.getKeyName()%>, list);
       }
       <% if( jh.isPrimitiv(valueAttr) ) { %>
@@ -295,6 +312,21 @@ public class <%=classname%> extends <%
       <% } else { %>
       list.add(<%=mapAttr.getValueName()%>);      
       <% } %>   
+   }
+
+   /**
+    *  Initialize <code><%=mapAttr.getValueName()%></code> attribute for a <code><%=mapAttr.getKeyName()%></code> 
+    *  with an empty list.
+    *
+    *  @param <%=mapAttr.getKeyName()%>  the <%=mapAttr.getKeyName()%>
+    */
+   public void addEmpty<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>) {
+      init<%=gsname%>();
+      List list = (List)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
+      if( list == null ) {
+         list = new LinkedList();
+         m_<%=attrName%>.put(<%=mapAttr.getKeyName()%>, list);
+      }
    }
    
    /**
@@ -308,7 +340,7 @@ public class <%=classname%> extends <%
       init<%=gsname%>();
       List list = (List)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
       if( list == null ) {
-         list = new ArrayList();
+         list = new LinkedList();
          m_<%=attrName%>.put(<%=mapAttr.getKeyName()%>, list);
       }
       <% if( jh.isPrimitiv(valueAttr) ) { %>
@@ -390,6 +422,14 @@ public class <%=classname%> extends <%
       } else {
          return Collections.EMPTY_SET;
       }      
+   }
+   
+   /**
+    *  Determine if the <%=attrName%> is set
+    */
+   public boolean isSet<%=gsname%>() {
+      return m_<%=attrName%> != null &&
+             !m_<%=attrName%>.isEmpty();
    }
    
    /**
@@ -566,13 +606,17 @@ public class <%=classname%> extends <%
     */
    public <%=valueClassName%> get<%=gsname%>(String <%=mapAttr.getKeyName()%>) {
       init<%=gsname%>();
-      <%=fullValueClassName%> ret = (<%=fullValueClassName%>)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
-      if( ret != null ) {
-          <% if( jh.isPrimitiv(valueAttr) ) { %>
-          return ret.<%=valueClassName%>Value();
-          <% } else { %>
-          return ret;
-          <% } %>
+      if (m_<%=attrName%>.containsKey(<%=mapAttr.getKeyName()%>)) {      
+         <%=fullValueClassName%> ret = (<%=fullValueClassName%>)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
+         if( ret != null ) {
+             <% if( jh.isPrimitiv(valueAttr) ) { %>
+             return ret.<%=valueClassName%>Value();
+             <% } else { %>
+             return ret;
+             <% } %>
+         } else {
+             return <%=jh.getNullValue(valueAttr)%>;
+         }
       } else {
         return getDefault<%=gsname%>();
       }
@@ -628,7 +672,8 @@ public class <%=classname%> extends <%
     *  @return <code>true</code> if the <%=attrName%> attribute is set
     */
    public boolean isSet<%=gsname%> () {
-      return m_<%=attrName%> != null;
+      return m_<%=attrName%> != null &&
+             !m_<%=attrName%>.isEmpty();
    }
    
    /**
@@ -660,7 +705,7 @@ public class <%=classname%> extends <%
    
    private void init<%=gsname%>() {
       if (m_<%=attrName%>List == null) {
-         m_<%=attrName%>List = new ArrayList();
+         m_<%=attrName%>List = new LinkedList();
       }
    }
 
@@ -754,8 +799,9 @@ public class <%=classname%> extends <%
     *  Determine if the <%=attrName%> attribute is set
     *  @return <code>true</code> if the <%=attrName%> attribute is set
     */
-   public boolean isSet<%=gsname%>List () {
-      return m_<%=attrName%>List != null;
+   public boolean isSet<%=gsname%> () {
+      return m_<%=attrName%>List != null &&
+             !m_<%=attrName%>List.isEmpty();
    }
    
 <% // end of List Attribute
@@ -765,25 +811,6 @@ public class <%=classname%> extends <%
     * ------------------------------------------------------------------------
     */
    %>
-   
-   private <%=attrType%> m_<%=attrName%>;
-
-   /**
-    *   Set the <%=attrName%> attribute.
-    *
-    *   @param a<%=gsname%>  the new value for the  <%=attrName%> attribute
-    */
-   public void set<%=gsname%>(<%=attrType%> a<%=gsname%>) {   
-      m_<%=attrName%> = a<%=gsname%>;
-   }
-
-   /**
-    *  Get the value of the <%=attrName%> attribute.
-    *  @return the value of the <%=attrName%> attribute
-    */
-   public <%=attrType%> <%=attrType.endsWith("oolean")?"is":"get"%><%=gsname%>() {
-      return m_<%=attrName%>;
-   }
 <%if( jh.isPrimitiv(attr) ) { %>
    private boolean is<%=gsname%>Set;
 <% } %>   
@@ -797,6 +824,28 @@ public class <%=classname%> extends <%
 <% } else {%>   
        return  m_<%=attrName%> != null;
 <% } %>
+   }
+   
+   private <%=attrType%> m_<%=attrName%>;
+
+   /**
+    *   Set the <%=attrName%> attribute.
+    *
+    *   @param a<%=gsname%>  the new value for the  <%=attrName%> attribute
+    */
+   public void set<%=gsname%>(<%=attrType%> a<%=gsname%>) {   
+      m_<%=attrName%> = a<%=gsname%>;
+      <%if( jh.isPrimitiv(attr) ) { %>
+      is<%=gsname%>Set = true;
+      <% } %>   
+   }
+
+   /**
+    *  Get the value of the <%=attrName%> attribute.
+    *  @return the value of the <%=attrName%> attribute
+    */
+   public <%=attrType%> <%=attrType.endsWith("oolean")?"is":"get"%><%=gsname%>() {
+      return m_<%=attrName%>;
    }
 
 <% } // end of else normal attributes

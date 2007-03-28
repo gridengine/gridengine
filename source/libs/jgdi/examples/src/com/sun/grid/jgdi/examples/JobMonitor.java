@@ -76,7 +76,6 @@ import javax.swing.table.AbstractTableModel;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JobMonitor extends JFrame {
    

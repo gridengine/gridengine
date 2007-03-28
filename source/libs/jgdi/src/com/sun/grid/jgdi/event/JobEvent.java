@@ -34,9 +34,8 @@ package com.sun.grid.jgdi.event;
 /**
  * Abstract base class for all job events
  *
- * @author  richard.hierlmeier@sun.com
  */
-public abstract class JobEvent extends Event {
+public abstract class JobEvent extends Event implements java.io.Serializable {
     
     private int jobId;
     private int taskId;

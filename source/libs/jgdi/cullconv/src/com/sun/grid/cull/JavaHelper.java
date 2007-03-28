@@ -54,16 +54,15 @@ public class JavaHelper {
     *  @@see #isPrimitiv
     */
    private String [][] PRIMITIVES = {
-      { "int", "Integer" },
-      { "boolean", "Boolean" },
-      { "double", "Double" },
-      { "float", "Float" },
-      { "long", "Long" },
-      { "char", "Character" },
-      { "byte", "Byte" }     
+      { "int", "Integer", "0" },
+      { "boolean", "Boolean", "false" },
+      { "double", "Double", "0.0" },
+      { "float", "Float", "0.0f" },
+      { "long", "Long", "0" },
+      { "char", "Character", "'n'" },
+      { "byte", "Byte", "0" }     
    };
-   
-   
+
    
    private static Map builtinTypeMap;
    
@@ -519,18 +518,39 @@ public class JavaHelper {
     */
    public boolean isPrimitiv(CullAttr attr) {
       
+      return getPrimitivIndex(attr) >= 0;
+   }  
+
+   private int getPrimitivIndex(CullAttr attr) {
+      
       String type = attr.getType();
       String javaType = (String)builtinTypeMap.get(type);
       if( javaType == null ) {
-         return false;
+         return -1;
       }
       for(int i = 0; i < PRIMITIVES.length; i++) {
          if( PRIMITIVES[i][0].equals(javaType)) {
-            return true;
+            return i;
          }
       }
-      return false;
+      return -1;
    }  
+   
+   /**
+    * get the default null value for cull attribute
+    * @param attr   the cull attribute
+    * @return  default null value
+    */
+   public String getNullValue(CullAttr attr) {
+      
+      int index = getPrimitivIndex(attr);
+      
+      if (index >= 0) {
+         return PRIMITIVES[index][2];
+      }
+      return "null";
+   }  
+   
    
    public String getInitializer(CullAttr attr, String value) {
 

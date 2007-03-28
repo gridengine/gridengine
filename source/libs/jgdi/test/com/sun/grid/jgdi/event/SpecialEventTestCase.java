@@ -42,12 +42,10 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class SpecialEventTestCase extends BaseTestCase {
    
    private JGDI jgdi;
-   private JGDI jgdi_evc;
    private EventClient evc;
    
    /** Creates a new instance of SpecialEventTestCase */
@@ -58,8 +56,7 @@ public class SpecialEventTestCase extends BaseTestCase {
    protected void setUp() throws Exception {
       
       jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+      evc = createEventClient(0);
       super.setUp();
       logger.fine("SetUp done");
    }
@@ -69,7 +66,6 @@ public class SpecialEventTestCase extends BaseTestCase {
         evc.close();
       } finally {
          jgdi.close();
-         jgdi_evc.close();
       }
    }
    
@@ -78,6 +74,4 @@ public class SpecialEventTestCase extends BaseTestCase {
       TestSuite suite = new TestSuite( SpecialEventTestCase.class);
       return suite;
    }
- 
-   
 }

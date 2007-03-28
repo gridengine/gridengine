@@ -31,14 +31,14 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
-public class QueueInstanceSummaryResultImpl implements QueueInstanceSummaryResult {
+public class QueueInstanceSummaryResultImpl implements QueueInstanceSummaryResult, Serializable {
 
    private List queueInstanceSummaryList = new ArrayList();
    private List unassignedJobSummaryList = new ArrayList();

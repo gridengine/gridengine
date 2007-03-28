@@ -50,16 +50,15 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemoteBase {
     
     protected JGDI jgdi;
     protected Logger logger = Logger.getLogger("com.sun.grid.jgdi.rmi");
     
-    protected JGDIRemoteBaseImpl(String url)
-    throws RemoteException, JGDIException {
-        jgdi = JGDIFactory.newSynchronizedInstance(url);
+    protected JGDIRemoteBaseImpl(String url) throws RemoteException, JGDIException {
+//        jgdi = JGDIFactory.newSynchronizedInstance(url);
+        jgdi = JGDIFactory.newInstance(url);
     }
     
     public void close() throws RemoteException {

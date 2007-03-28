@@ -35,13 +35,13 @@ import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.JobStateFilter;
 import com.sun.grid.jgdi.monitoring.filter.ParallelEnvironmentFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
+import java.io.Serializable;
 
 /**
  * Options for the QueueInstanceSummary algorithm
- * @author  richard.hierlmeier@sun.com
  * @see com.sun.grid.jgdi.JGDI#getQueueInstanceSummary
  */
-public class QueueInstanceSummaryOptions extends BasicQueueOptions {
+public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Serializable {
    
    /* qstat -F */
    private ResourceAttributeFilter resourceAttributeFilter;

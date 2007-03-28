@@ -213,8 +213,6 @@ import java.util.logging.*;
  * The end user should not use this class directory. Instead the factory 
  * method @link{JGDIFactory#newSynchronizedInstance} should be used.
  *
- * @author andre.alefeld@sun.com
- * @author  richard.hierlmeier@sun.com
  * @since  0.91
  * @see com.sun.grid.jgdi.JGDI
  * @see com.sun.grid.jgdi.JGDIFactory#newSynchronizedInstance

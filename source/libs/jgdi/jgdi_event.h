@@ -33,6 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "evc/sge_event_client.h"
 
 jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList **alpp);
 jgdi_result_t process_generic_event(JNIEnv *env,  jobject *event, lListElem *ev, lList** alpp);

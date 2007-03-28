@@ -41,7 +41,6 @@ import java.util.Set;
 /**
  * Default Implemenation of the {@link QHostResult} interface.
  *
- * @author richard.hierlmeier@sun.com
  */
 public class QHostResultImpl implements QHostResult, Serializable {
    

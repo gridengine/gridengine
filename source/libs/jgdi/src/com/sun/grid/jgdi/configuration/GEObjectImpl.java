@@ -35,7 +35,6 @@ import com.sun.grid.jgdi.configuration.*;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public abstract class GEObjectImpl implements java.io.Serializable, GEObject,
       Cloneable {

@@ -35,7 +35,6 @@ import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.reflect.*;
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public class GEObjectDescriptor extends AbstractClassDescriptor {
    

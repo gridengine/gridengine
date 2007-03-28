@@ -41,15 +41,12 @@ import com.sun.grid.jgdi.configuration.ConfigurationFactory;
  * Simple example which demonstrates how to add/update/delete configuration
  * objects of the N1&trade; Grid Engine
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class ConfigExample {
    
    public static void main(String [] args)  {
       
       try {
-         System.loadLibrary("jgdi");
-         
          String url = "bootstrap:///opt/sge@default:1026";
          
          if(args.length == 1) {

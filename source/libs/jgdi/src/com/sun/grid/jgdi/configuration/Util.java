@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.configuration;
@@ -41,7 +41,6 @@ import java.util.*;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class Util {
    
@@ -68,30 +67,30 @@ public class Util {
       classDescriptorMap.put(aClass, cd);
    }
    
-   public static ClassDescriptor getDescriptor( Class aClass ) {
-      //System.out.println("getDescriptor: " + aClass.getName() );
+   public static ClassDescriptor getDescriptor(Class aClass) {
+      //System.out.println("getDescriptor: " + aClass.getName());
       ClassDescriptor ret = null;
       ret = (ClassDescriptor)classDescriptorMap.get(aClass);
-      if( ret == null ) {
-         ret = createDescriptor( aClass );
-         classDescriptorMap.put( aClass, ret );
+      if (ret == null) {
+         ret = createDescriptor(aClass);
+         classDescriptorMap.put(aClass, ret);
       }
       return ret;
    }
    
-   public static Object clone( Object obj ) {
+   public static Object clone(Object obj) {
       
-      ClassDescriptor cd = getDescriptor( obj.getClass() );
-      return cd.clone( obj );
+      ClassDescriptor cd = getDescriptor(obj.getClass());
+      return cd.clone(obj);
    }
    
    private static int objectId;
    
    public static int nextObjectId() {
-      synchronized( Util.class) {
+      synchronized(Util.class) {
          int ret = objectId;
          objectId++;
-         return ret;  
+         return ret;
       }
    }
    
@@ -101,197 +100,194 @@ public class Util {
    // private ------------------------------------------------------------------
    
    
-   private static ClassDescriptor createDescriptor( Class aClass ) {
+   private static ClassDescriptor createDescriptor(Class aClass) {
       ClassDescriptor ret = null;
       
       String name = aClass.getName();
       int index = name.lastIndexOf('.');
-      if( index > 0 ) {
+      if (index > 0) {
          String packagename = name.substring(0, index);
          name = packagename + ".reflect." + name.substring(index+1, name.length());
       } else {
          throw new IllegalArgumentException("class " + aClass.getName() + " has no package");
       }
       
-      if(name.endsWith("Impl")) {
+      if (name.endsWith("Impl")) {
          name = name.substring(0,name.length() - 4);
       }
       name +="Descriptor";
       
       try {
-         Class descr = Class.forName( name );
+         Class descr = Class.forName(name);
          return (ClassDescriptor) descr.newInstance();
-      } catch( ClassNotFoundException cnfe ) {
+      } catch(ClassNotFoundException cnfe) {
          IllegalArgumentException ille = new IllegalArgumentException("descriptor for class " + aClass.getName() + " not found");
          ille.initCause(cnfe);
          throw ille;
-      } catch( InstantiationException ise ) {
-         IllegalStateException ilse = new IllegalStateException( "Error in constructor of " + name );
+      } catch(InstantiationException ise) {
+         IllegalStateException ilse = new IllegalStateException("Error in constructor of " + name);
          ise.printStackTrace();
-         ilse.initCause( ise );
+         ilse.initCause(ise);
          throw ilse;
-      } catch( IllegalAccessException iae ) {
-         IllegalStateException ilse = new IllegalStateException( "Constructor of " + name + " is not accessible" );
+      } catch(IllegalAccessException iae) {
+         IllegalStateException ilse = new IllegalStateException("Constructor of " + name + " is not accessible");
          iae.printStackTrace();
-         ilse.initCause( iae );
+         ilse.initCause(iae);
          throw ilse;
-      }      
+      }
    }
 
-   public static GEObject findObject( String path, GEObject root ) {
-      int dotIndex = path.indexOf( "." );
+   public static GEObject findObject(String path, GEObject root) {
+      int dotIndex = path.indexOf(".");
       
       String name = path;
       String rest  = null;
       
-      if( dotIndex > 0 ) {         
+      if (dotIndex > 0) {
          name = path.substring(0, dotIndex);
-         rest = path.substring( dotIndex + 1 );
+         rest = path.substring(dotIndex + 1);
       }
       
-      int bracketIndex = name.indexOf( '[' );      
+      int bracketIndex = name.indexOf('[');
       String propertyName = null;
       
-      if( bracketIndex > 0 ) {
-         int bracketCloseIndex = name.indexOf( ']', bracketIndex );
+      if (bracketIndex > 0) {
+         int bracketCloseIndex = name.indexOf(']', bracketIndex);
          
-         if( bracketCloseIndex < 0 ) {
-            throw new IllegalArgumentException("Invalid path: " + path );
+         if (bracketCloseIndex < 0) {
+            throw new IllegalArgumentException("Invalid path: " + path);
          }
-         propertyName = name.substring( 0 , bracketIndex );
-         name = name.substring( bracketIndex + 1, bracketCloseIndex );
+         propertyName = name.substring(0 , bracketIndex);
+         name = name.substring(bracketIndex + 1, bracketCloseIndex);
       }
       
-      if( propertyName != null ) {
+      if (propertyName != null) {
          
-         ClassDescriptor descr = getDescriptor( root.getClass() );
+         ClassDescriptor descr = getDescriptor(root.getClass());
          
-         PropertyDescriptor propDescr = descr.getProperty( propertyName );
-         if( propDescr == null ) {
-            throw new IllegalArgumentException("Invalid Path: property " 
-                 + propertyName + " in object " + root.getName() 
-                 + " not found");
-         } else  if( !GEObject.class.isAssignableFrom( propDescr.getBeanClass() ) ) {
-            throw new IllegalArgumentException("Invalid Path: property " 
-                 + propertyName + " in object " + root.getName() 
-                 + " is not a GEObject");
-         } else {            
+         PropertyDescriptor propDescr = descr.getProperty(propertyName);
+         if (propDescr == null) {
+            throw new IllegalArgumentException("Invalid Path: property "
+               + propertyName + " in object " + root.getName()
+               + " not found");
+         } else  if (!GEObject.class.isAssignableFrom(propDescr.getBeanClass())) {
+            throw new IllegalArgumentException("Invalid Path: property "
+               + propertyName + " in object " + root.getName()
+               + " is not a GEObject");
+         } else {
             GEObject child = null;
-            if( propDescr instanceof SimplePropertyDescriptor ) {
-               SimplePropertyDescriptor spd = (SimplePropertyDescriptor)propDescr;            
-               child = (GEObject)spd.getValue( root );
-            } else if ( propDescr instanceof ListPropertyDescriptor ) {
+            if (propDescr instanceof SimplePropertyDescriptor) {
+               SimplePropertyDescriptor spd = (SimplePropertyDescriptor)propDescr;
+               child = (GEObject)spd.getValue(root);
+            } else if (propDescr instanceof ListPropertyDescriptor) {
                ListPropertyDescriptor lpd = (ListPropertyDescriptor)propDescr;
-               int propCount = lpd.getCount( root );
+               int propCount = lpd.getCount(root);
                GEObject tmpChild = null;
-               for(int i = 0; i < propCount; i++ ) {
-                  tmpChild = (GEObject)lpd.get( root, i );
-                  if( tmpChild.getName().equals( name ) ) {
+               for (int i = 0; i < propCount; i++) {
+                  tmpChild = (GEObject)lpd.get(root, i);
+                  if (tmpChild.getName().equals(name)) {
                      child = tmpChild;
                      break;
                   }
-               }               
+               }
             } else {
                throw new IllegalStateException("Unkonwn property descriptor "
-                  + propDescr.getClass().getName() );
+                  + propDescr.getClass().getName());
             }
-            if( child == null ) {
+            if (child == null) {
                return null;
-            } else if( rest != null ) {
+            } else if (rest != null) {
                return findObject(rest,child);
             } else {
                return child;
-            }            
+            }
          }
       } else {
-         if( root.getName().equals( name ) ) {
-            if( rest == null ) {
+         if (root.getName().equals(name)) {
+            if (rest == null) {
                return root;
             } else {
-               return findObject( rest, root );
+               return findObject(rest, root);
             }
          } else {
             return null;
-         }         
+         }
       }
    }
    
 
-   public static void getDifferences(GEObject obj1, GEObject obj2, List differences ) {
-      getDifferences(obj1, obj2, "", differences );
+   public static void getDifferences(GEObject obj1, GEObject obj2, List differences) {
+      getDifferences(obj1, obj2, "", differences);
    }
    
-   public static void getDifferences(GEObject obj1, GEObject obj2, String path, List differences ) {
+   public static void getDifferences(GEObject obj1, GEObject obj2, String path, List differences) {
       
-      if(!obj1.getClass().equals(obj2.getClass())) {
+      if (!obj1.getClass().equals(obj2.getClass())) {
          differences.add(new Difference(path, "obj1 and obj2 have not the same class"));
       } else {
          
          ClassDescriptor cd = getDescriptor(obj1.getClass());
          
          
-         for(int i = 0; i < cd.getPropertyCount(); i++) {
+         for (int i = 0; i < cd.getPropertyCount(); i++) {
             
             PropertyDescriptor pd = cd.getProperty(i);
 
             String propPath = path + pd.getPropertyName();
             
-            if(pd instanceof SimplePropertyDescriptor) {
+            if (pd instanceof SimplePropertyDescriptor) {
                
                SimplePropertyDescriptor spd = (SimplePropertyDescriptor)pd;
+               
                Object v1 = spd.getValue(obj1);
                Object v2 = spd.getValue(obj2);
                
-               if(v1 == null) {
-                  if(v2 != null) {
-                     differences.add(new Difference(propPath, "missing in obj1 ( " + v2 + ")"));
-                  }
-               } else if (v2 == null ) {
-                  differences.add(new Difference(propPath, "missing in obj2 (" + v1 + ")"));
+               if (v1 == null && v2 == null) {
+                  // no difference
+               } else if (v1 == null && v2 != null) {
+                  differences.add(new Difference(propPath, "SPD: missing in obj1 (" + v2 + ")"));
+               } else if (v1 != null && v2 == null) {
+                  differences.add(new Difference(propPath, "SPD: missing in obj2 (" + v1 + ")"));
                } else {
-                  
-                  if(GEObject.class.isAssignableFrom(spd.getPropertyType())) {                     
+                  if (GEObject.class.isAssignableFrom(spd.getPropertyType())) {
                      getDifferences((GEObject)v1, (GEObject)v2, propPath + ".", differences);
                   } else {
-                     if(!v1.equals(v2)) {
+                     if (!v1.equals(v2)) {
                         differences.add(new Difference(propPath, v1 + " != " + v2));
                      }
                   }
                }
-               
-            } else if(pd instanceof ListPropertyDescriptor) {
+            } else if (pd instanceof ListPropertyDescriptor) {
                
                ListPropertyDescriptor lpd = (ListPropertyDescriptor)pd;
                
                int count1 = lpd.getCount(obj1);
                int count2 = lpd.getCount(obj2);
                
-               if(count1 != count2) {
-                  differences.add(new Difference(propPath, "different length (" + count1 + " != " + count2 + ")"));
+               if (count1 != count2) {
+                  differences.add(new Difference(propPath, "LPD: different length (" + count1 + " != " + count2 + ")"));
                } else {
-                  
-                  for(int valueIndex = 0; valueIndex < count1; valueIndex++) {
+                  for (int valueIndex = 0; valueIndex < count1; valueIndex++) {
                      Object v1 = lpd.get(obj1, valueIndex);
                      Object v2 = lpd.get(obj2, valueIndex);
 
                      String myPath = propPath + "[" + valueIndex + "]";
-                     if(v1 == null) {
-                        if(v2 != null) {
-                           differences.add(new Difference(myPath, "missing in obj1 ( " + v2 + ")"));
-                        }
-                     } else if (v2 == null ) {
-                        differences.add(new Difference(myPath, "missing in obj2 (" + v1 + ")"));
+                     if (v1 == null && v2 == null) {
+                        // do nothing
+                     } else if (v1 == null && v2 != null) {
+                        differences.add(new Difference(myPath, "LPD: missing in obj1 (" + v2 + ")"));
+                     } else if (v1 != null && v2 == null) {
+                        differences.add(new Difference(myPath, "LPD: missing in obj2 (" + v1 + ")"));
                      } else {
-
-                        if(GEObject.class.isAssignableFrom(lpd.getPropertyType())) {                     
+                        if (GEObject.class.isAssignableFrom(lpd.getPropertyType())) {
                            getDifferences((GEObject)v1, (GEObject)v2, myPath + ".", differences);
                         } else {
-                           if(!v1.equals(v2)) {
+                           if (!v1.equals(v2)) {
                               differences.add(new Difference(myPath, v1 + " != " + v2));
                            }
                         }
                      }
-                  }                  
+                  }
                }
             } else if (pd instanceof MapListPropertyDescriptor) {
                
@@ -300,12 +296,11 @@ public class Util {
                Set keys1 = lpd.getKeys(obj1);
                Set keys2 = lpd.getKeys(obj2);
                
-               if(keys1.size() != keys2.size()) {
-                  differences.add(new Difference(propPath, "different key count (" + keys1.size() + " != " + keys2.size() + ")"));
+               if (keys1.size() != keys2.size()) {
+                  differences.add(new Difference(propPath, "MLPD: different key count (" + keys1.size() + " != " + keys2.size() + ")"));
                } else {
-                  
                   Iterator iter = keys1.iterator();
-                  while(iter.hasNext()) {
+                  while (iter.hasNext()) {
                      Object key = iter.next();
                      
                      String keyPath = propPath + "[" + key + "]";
@@ -313,32 +308,30 @@ public class Util {
                      int count2 = lpd.getCount(obj2, key);
                      
                      
-                     if(count1 != count2) {
-                        differences.add(new Difference(keyPath, "different length (" + count1 + " != " + count2 + ")"));
+                     if (count1 != count2) {
+                        differences.add(new Difference(keyPath, "MLPD: different length (" + count1 + " != " + count2 + ")"));
                      } else {
-
-                        for(int valueIndex = 0; valueIndex < count1; valueIndex++) {
+                        for (int valueIndex = 0; valueIndex < count1; valueIndex++) {
                            Object v1 = lpd.get(obj1, key, valueIndex);
                            Object v2 = lpd.get(obj2, key, valueIndex);
 
                            String myPath = keyPath + "[" + valueIndex + "]";
-                           if(v1 == null) {
-                              if(v2 != null) {
-                                 differences.add(new Difference(myPath, "missing in obj1 ( " + v2 + ")"));
-                              }
-                           } else if (v2 == null ) {
-                              differences.add(new Difference(myPath, "missing in obj2 (" + v1 + ")"));
+                           if (v1 == null && v2 == null) {
+                              // do nothing
+                           } else if (v1 == null && v2 != null) {
+                              differences.add(new Difference(myPath, "MLPD: missing in obj1 (" + v2 + ")"));
+                           } else if (v1 != null && v2 == null) {
+                              differences.add(new Difference(myPath, "MLPD: missing in obj2 (" + v1 + ")"));
                            } else {
-
-                              if(GEObject.class.isAssignableFrom(lpd.getPropertyType())) {                     
+                              if (GEObject.class.isAssignableFrom(lpd.getPropertyType())) {
                                  getDifferences((GEObject)v1, (GEObject)v2, myPath + ".", differences);
                               } else {
-                                 if(!v1.equals(v2)) {
+                                 if (!v1.equals(v2)) {
                                     differences.add(new Difference(myPath, v1 + " != " + v2));
                                  }
                               }
                            }
-                        }                  
+                        }
                      }
                   }
                }
@@ -349,36 +342,34 @@ public class Util {
                Set keys1 = lpd.getKeys(obj1);
                Set keys2 = lpd.getKeys(obj2);
                
-               if(keys1.size() != keys2.size()) {
-                  differences.add(new Difference(propPath, "different key count (" + keys1.size() + " != " + keys2.size() + ")"));
+               if (keys1.size() != keys2.size()) {
+                  differences.add(new Difference(propPath, "MPD: different key count (" + keys1.size() + " != " + keys2.size() + ")"));
                } else {
                   Iterator iter = keys1.iterator();
-                  while(iter.hasNext()) {
+                  while (iter.hasNext()) {
                      Object key = iter.next();
                      
                      String keyPath = propPath + "[" + key + "]";
                      Object v1 = lpd.get(obj1, key);
                      Object v2 = lpd.get(obj2, key);
 
-                     if(v1 == null) {
-                        if(v2 != null) {
-                           differences.add(new Difference(keyPath, "missing in obj1 ( " + v2 + ")"));
-                        }
-                     } else if (v2 != null ) {
-                        differences.add(new Difference(keyPath, "missing in obj1 (" + v1 + ")"));
+                     if (v1 == null && v2 == null) {
+                        // do nothing
+                     } else if (v1 == null && v2 != null) {
+                        differences.add(new Difference(keyPath, "MPD: missing in obj1 (" + v2 + ")"));
+                     } else if (v1 != null && v2 == null) {
+                        differences.add(new Difference(keyPath, "MPD: missing in obj2 (" + v1 + ")"));
                      } else {
-
-                        if(GEObject.class.isAssignableFrom(lpd.getPropertyType())) {                     
+                        if (GEObject.class.isAssignableFrom(lpd.getPropertyType())) {
                            getDifferences((GEObject)v1, (GEObject)v2, keyPath + ".", differences);
                         } else {
-                           if(!v1.equals(v2)) {
+                           if (!v1.equals(v2)) {
                               differences.add(new Difference(keyPath, v1 + " != " + v2));
                            }
                         }
                      }
-                     
-                  }               
-               }               
+                  }
+               }
             }
          }
       }

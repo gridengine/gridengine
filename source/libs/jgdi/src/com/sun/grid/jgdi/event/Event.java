@@ -34,10 +34,9 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /**
- *
- * @author  richard.hierlmeier@sun.com
+ *  Base class for all events
  */
-public class Event {
+public class Event implements java.io.Serializable {
    
    
    /** event type (SGE_EMA_LIST, SGE_EMA_ADD, SGE_EMA_MOD,

@@ -40,7 +40,6 @@ import java.util.Set;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class InvalidObjectException extends java.lang.Exception {
    

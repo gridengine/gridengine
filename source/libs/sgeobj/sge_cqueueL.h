@@ -160,7 +160,7 @@ LISTDEF(CQ_Type)
    SGE_MAPLIST_D(CQ_ckpt_list, ASTRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "checkpoint")
 
    SGE_MAPLIST_D(CQ_owner_list, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "owner")
-   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")   
+   SGE_MAPLIST_D(CQ_acl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")
    SGE_MAPLIST_D(CQ_xacl, AUSRLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "acl")
 
    SGE_MAPLIST_D(CQ_projects, APRJLIST_Type, CULL_SPOOL | CULL_CONFIGURE, "@/", "NONE", "hostname", "project")       

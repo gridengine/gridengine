@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -40,11 +41,10 @@ import java.util.StringTokenizer;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  * @todo    beta 3MT
  *          <p>ProjectFilter not yet implemented</p>
  */
-public class ProjectFilter {
+public class ProjectFilter implements Serializable {
    
    private List prjList = new ArrayList();
    

@@ -205,8 +205,6 @@ import com.sun.grid.jgdi.monitoring.QHostResult;
  *
  *  <strong>Warning:</strong>  The JGDI interface will not be compatible with future N1&trade; Grid Engine releases. 
  *
- *  @author andre.alefeld@sun.com
- *  @author richard.hierlmeier@sun.com
  *  @version 6.5
  *
  */

@@ -61,10 +61,6 @@ import com.sun.grid.jgdi.TestValueFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author richard.hierlmeier@sun.com
- */
 public class <%=classname%>TestCase extends BaseTestCase {
    
    public  <%=classname%>TestCase(java.lang.String testName) {
@@ -72,7 +68,7 @@ public class <%=classname%>TestCase extends BaseTestCase {
    }
    
    public static Test suite() {
-      TestSuite suite = new TestSuite( <%=classname%>TestCase.class);
+      TestSuite suite = new TestSuite(<%=classname%>TestCase.class);
       return suite;
    }
    
@@ -96,34 +92,32 @@ public class <%=classname%>TestCase extends BaseTestCase {
       try {
          List differences = new ArrayList();
          
-         for(int i = 0; i < testValues.length; i++) {
+         for (int i = 0; i < testValues.length; i++) {
             <%=classname%> testObj = (<%=classname%>)testValues[i];
             
             jgdi.add<%=classname%>(testObj);
             
             try {
-            
+
               <%=classname%> retObj = jgdi.get<%=classname%>(<%
-                                                                                
-              for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {                 
+              for (int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
                  com.sun.grid.cull.CullAttr attr = cullObj.getPrimaryKeyAttr(i);          
                  String attrName = jh.getAttrName(attr);                     
                  String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                                   attrName.substring(1);                     
-
                  if(i>0) {                                                   
                   %>,<%                                                      
                  }                                                           
-                  %> testObj.get<%=gsname%>()<%                              
+                 %>testObj.get<%=gsname%>()<%                              
               }                                                                 
                 
               %>);
               
               Util.getDifferences(testObj, retObj, differences);
               
-              if(!differences.isEmpty()) {
+              if (!differences.isEmpty()) {
 
-                 logger.warning("org <%=classname%> is not equal to stored stored <%=classname%> ------------------------"); 
+                 logger.warning("org <%=classname%> is not equal to stored <%=classname%> ------------------------"); 
                  Iterator iter = differences.iterator();
                  while(iter.hasNext()) {
                     
@@ -141,19 +135,20 @@ public class <%=classname%>TestCase extends BaseTestCase {
               
               <%=classname%> retObj = jgdi.get<%=classname%>(<%
                                                                                 
-              for(int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {                 
+              for (int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {                 
                  com.sun.grid.cull.CullAttr attr = cullObj.getPrimaryKeyAttr(i);          
                  String attrName = jh.getAttrName(attr);                     
                  String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
                                   attrName.substring(1);                     
 
-                 if(i>0) {                                                   
+                 if (i>0) {                                                   
                   %>,<%                                                      
                  }                                                           
-                  %> testObj.get<%=gsname%>()<%                              
+                  %>testObj.get<%=gsname%>()<%                              
               }                                                                 
                 
               %>);
+              
               assertNull(testObj + " has not been deleted", retObj);
             }
          
@@ -161,7 +156,6 @@ public class <%=classname%>TestCase extends BaseTestCase {
       } finally {
         jgdi.close();
       }
-   
    }
    
 <%
@@ -177,14 +171,29 @@ public class <%=classname%>TestCase extends BaseTestCase {
       try {
          <%=classname%> obj = null;
          Iterator iter = jgdi.get<%=classname%>List().iterator();
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             obj = (<%=classname%>)iter.next();
 
             File file = File.createTempFile("<%=classname%>", ".xml");
             try {
                XMLUtil.write(obj, file);
                <%=classname%> obj1 = (<%=classname%>)XMLUtil.read(file);
-               assertTrue("serialialized xml object of class <%=classname%> is invalid", 
+               
+               // begin debug: check differences
+//               List differences = new ArrayList();
+//               Util.getDifferences(obj, obj1, differences);
+//               if (!differences.isEmpty()) {
+//                  logger.warning("org <%=classname%> is not equal to filed/reread obj1 <%=classname%> ------------------------"); 
+//                  Iterator it = differences.iterator();
+//                  while(it.hasNext()) {
+//                     Util.Difference diff = (Util.Difference)it.next();
+//                     logger.warning(diff.toString());
+//                  }
+//               }
+//               differences.clear();
+               // end debug: check differences
+               
+               assertTrue("serialized xml object of class <%=classname%> is invalid", 
                           obj.equalsCompletely(obj1) );
             } finally {
               file.delete();
@@ -218,14 +227,9 @@ public class <%=classname%>TestCase extends BaseTestCase {
       } finally {
          jgdi.close();
       }
-   
    }
 
 <%
    } 
 %>
-   protected void setUp() throws Exception {
-      System.loadLibrary( "jgdi" );
-      super.setUp();
-   }
 }

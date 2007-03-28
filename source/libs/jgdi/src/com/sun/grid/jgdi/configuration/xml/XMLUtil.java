@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.configuration.xml;
@@ -64,7 +64,6 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * This class implements the serialisation/deserialion of cull object
  * int xml.
- * @author richard.hierlmeier@sun.com
  * @todo   alpha ??
  *         <p>Implement missing primitive handlers</p>
  */
@@ -74,12 +73,13 @@ public class XMLUtil {
    
    public static final String HEADER = "<?xml version='1.0' encoding='UTF-8'?>";
    
+   private static final String NONE = "NONE";
    
    public static boolean write(GEObject obj, Writer wr) throws IOException {
       
       IndentedPrintWriter p = new IndentedPrintWriter(wr);
       p.println(HEADER);
-      write(obj, p);
+      write(obj, obj.getClass(), p);
       p.flush();
       return p.checkError();
    }
@@ -88,7 +88,7 @@ public class XMLUtil {
       
       IndentedPrintWriter p = new IndentedPrintWriter(out);
       p.println(HEADER);
-      write(obj, p);
+      write(obj, obj.getClass(), p);
       p.flush();
       return p.checkError();
    }
@@ -97,53 +97,64 @@ public class XMLUtil {
       
       IndentedPrintWriter p = new IndentedPrintWriter(file);
       p.println(HEADER);
-      write(obj, p);
+      write(obj, obj.getClass(), p);
       p.flush();
       p.close();
       return p.checkError();
    }
    
-   private static void write(GEObject obj, IndentedPrintWriter p) {
+   private static void write(GEObject obj, Class clazz, IndentedPrintWriter p) {
       
-      ClassDescriptor cd = Util.getDescriptor(obj.getClass());
+      ClassDescriptor cd = Util.getDescriptor(clazz);
       
       p.print('<');
-      p.print( cd.getCullName() );
-      p.println('>');
-      
-      p.indent();
-      for(int i = 0; i < cd.getPropertyCount(); i++ ) {
-         PropertyDescriptor pd = cd.getProperty(i);
-         
-         if(pd instanceof SimplePropertyDescriptor) {
-            write(obj, (SimplePropertyDescriptor)pd, p);
-         } else if (pd instanceof ListPropertyDescriptor ) {
-            write(obj, (ListPropertyDescriptor)pd, p);
-         } else if (pd instanceof MapPropertyDescriptor) {
-            write(obj, (MapPropertyDescriptor)pd, p);
-         } else if (pd instanceof MapListPropertyDescriptor) {
-            write(obj, (MapListPropertyDescriptor)pd, p);
-         } else {
-            throw new IllegalStateException("Unknown proprty type " + pd.getClass());
+      p.print(cd.getCullName());
+      p.print('>');
+      if (obj == null) {
+         p.print(NONE);
+      } else {
+         p.println();
+         p.indent();
+         for(int i = 0; i < cd.getPropertyCount(); i++) {
+            PropertyDescriptor pd = cd.getProperty(i);
+            
+            if (pd.isReadOnly()) {
+               continue;
+            }
+            if (pd instanceof SimplePropertyDescriptor) {
+               write(obj, (SimplePropertyDescriptor)pd, p);
+            } else if (pd instanceof ListPropertyDescriptor) {
+               write(obj, (ListPropertyDescriptor)pd, p);
+            } else if (pd instanceof MapPropertyDescriptor) {
+               write(obj, (MapPropertyDescriptor)pd, p);
+            } else if (pd instanceof MapListPropertyDescriptor) {
+               write(obj, (MapListPropertyDescriptor)pd, p);
+            } else {
+               throw new IllegalStateException("Unknown proprty type " + pd.getClass());
+            }
+            
          }
-         
+         p.deindent();
       }
-      p.deindent();
       p.print("</");
-      p.print( cd.getCullName() );
+      p.print(cd.getCullName());
       p.println('>');
       
    }
    
-   private static void write(GEObject obj, SimplePropertyDescriptor pd, IndentedPrintWriter p ) {
+   private static void write(GEObject obj, SimplePropertyDescriptor pd, IndentedPrintWriter p) {
       
       Object value = pd.getValue(obj);
-      if(value != null) {
+      if (value != null) {
          p.print('<');
          p.print(pd.getPropertyName());
          p.print('>');
-         if(value instanceof GEObject) {
-            write((GEObject)value, p);
+         if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
+            if (value == null) {
+               write((GEObject)value, pd.getPropertyType(), p);
+            } else {
+               write((GEObject)value, value.getClass(), p);
+            }
          } else {
             p.print(quoteCharacters(value.toString()));
          }
@@ -153,34 +164,38 @@ public class XMLUtil {
       }
    }
    
-   private static void write(GEObject obj, ListPropertyDescriptor pd, IndentedPrintWriter p ) {
+   private static void write(GEObject obj, ListPropertyDescriptor pd, IndentedPrintWriter p) {
       
       int count = pd.getCount(obj);
 
-      if(count > 0) {
-         p.print('<');
-         p.print(pd.getPropertyName());
-         p.println('>');
+      p.print('<');
+      p.print(pd.getPropertyName());
+      p.print('>');
+      if (count == 0) {
+         p.print(NONE);
+      } else {
+         p.println();
          p.indent();
-         for(int i = 0; i < count; i++ ) {
+         for(int i = 0; i < count; i++) {
             Object value = pd.get(obj,i);
-            if(value != null ) {
-               if(value instanceof GEObject) {
-                  write((GEObject)value, p);
+            if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
+               if (value == null) {
+                  write((GEObject)value, pd.getPropertyType(), p);
                } else {
-                  writePrimitive(value, pd.getPropertyType(), p);
+                  write((GEObject)value, value.getClass(), p);
                }
-               p.println();
+            } else {
+               writePrimitive(value, pd.getPropertyType(), p);
             }
          }
          p.deindent();
-         p.print("</");
-         p.print(pd.getPropertyName());
-         p.println('>');
       }
+      p.print("</");
+      p.print(pd.getPropertyName());
+      p.println('>');
    }
    
-   private static void write(GEObject obj, MapPropertyDescriptor pd, IndentedPrintWriter p ) {
+   private static void write(GEObject obj, MapPropertyDescriptor pd, IndentedPrintWriter p) {
       
       Set keys = pd.getKeys(obj);
       
@@ -193,13 +208,21 @@ public class XMLUtil {
          p.print(" key='");
          p.print(quoteCharacters(key.toString()));
          p.print("'>");
-         if(value instanceof GEObject) {
+         if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
             p.println();
             p.indent();
-            write((GEObject)value, p);
+            if (value == null) {
+               write((GEObject)value, pd.getPropertyType(), p);
+            } else {
+               write((GEObject)value, value.getClass(), p);
+            }
             p.deindent();
-         } else {   
-            p.print(quoteCharacters(value.toString()));
+         } else {
+            if (value == null) {
+               p.print(NONE);
+            } else {
+               p.print(quoteCharacters(value.toString()));
+            }
          }
          p.print("</");
          p.print(pd.getPropertyName());
@@ -218,36 +241,48 @@ public class XMLUtil {
    private static void writePrimitive(Object value, Class clazz, IndentedPrintWriter p) {
       
       String tag = null;
-      if(String.class.isAssignableFrom(clazz)) {
-        tag = STRING_TAG;
+      if (String.class.isAssignableFrom(clazz)) {
+         tag = STRING_TAG;
       } else if (Boolean.TYPE.isAssignableFrom(clazz) ||
-                 Boolean.class.isAssignableFrom(clazz)) {
-        tag = BOOLEAN_TAG;
+         Boolean.class.isAssignableFrom(clazz)) {
+         tag = BOOLEAN_TAG;
       } else if (Integer.TYPE.isAssignableFrom(clazz) ||
-                 Integer.class.isAssignableFrom(clazz)) {
-        tag = INT_TAG;
+         Integer.class.isAssignableFrom(clazz)) {
+         tag = INT_TAG;
       } else if (Short.TYPE.isAssignableFrom(clazz) ||
-                 Short.class.isAssignableFrom(clazz)) {
-        tag = SHORT_TAG;
+         Short.class.isAssignableFrom(clazz)) {
+         tag = SHORT_TAG;
       } else if (Long.TYPE.isAssignableFrom(clazz) ||
-                 Long.class.isAssignableFrom(clazz)) {
-        tag = LONG_TAG;
+         Long.class.isAssignableFrom(clazz)) {
+         tag = LONG_TAG;
       } else if (Double.TYPE.isAssignableFrom(clazz) ||
-                 Double.class.isAssignableFrom(clazz)) {
-        tag = DOUBLE_TAG;
+         Double.class.isAssignableFrom(clazz)) {
+         tag = DOUBLE_TAG;
       } else if (Float.TYPE.isAssignableFrom(clazz) ||
-                 Float.class.isAssignableFrom(clazz)) {
-        tag = FLOAT_TAG;
+         Float.class.isAssignableFrom(clazz)) {
+         tag = FLOAT_TAG;
       } else {
          throw new IllegalArgumentException("Unknown primitive type " + clazz.getName());
       }
-      p.print("<"); p.print(tag); p.print('>');
-      p.print(quoteCharacters(value.toString()));
-      p.print("</"); p.print(tag); p.print('>');
+      p.print("<");
+      p.print(tag);
+      p.print('>');
+      if (value == null) {
+         if (String.class.isAssignableFrom(clazz)) {
+            p.print(NONE);
+         } else {
+            throw new IllegalArgumentException("Don't know howto handle null value for type " + clazz.getName());
+         }
+      } else {
+         p.print(quoteCharacters(value.toString()));
+      }
+      p.print("</");
+      p.print(tag);
+      p.println('>');
       
    }
    
-   private static void write(GEObject obj, MapListPropertyDescriptor pd, IndentedPrintWriter p ) {
+   private static void write(GEObject obj, MapListPropertyDescriptor pd, IndentedPrintWriter p) {
       
       Set keys = pd.getKeys(obj);
       
@@ -260,16 +295,31 @@ public class XMLUtil {
          p.print(quoteCharacters(key.toString()));
          p.print("'>");
          int count = pd.getCount(obj, key);
-         for(int i = 0; i < count; i++) {
-            Object value = pd.get(obj, key, i);
-            if(value instanceof GEObject) {
-               p.println();
-               p.indent();
-               write((GEObject)value, p);
-               p.deindent();
+         if (count == 0) {
+            p.println();
+            p.indent();
+            if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
+               write((GEObject)null, pd.getPropertyType(), p);
             } else {
-               writePrimitive(value, pd.getPropertyType(),p);
+               writePrimitive(null, pd.getPropertyType(),p);
             }
+            p.deindent();
+         } else {
+            p.println();
+            p.indent();
+            for(int i = 0; i < count; i++) {
+               Object value = pd.get(obj, key, i);
+               if (GEObject.class.isAssignableFrom(pd.getPropertyType())) {
+                  if (value == null) {
+                     write((GEObject)value, pd.getPropertyType(), p);
+                  } else {
+                     write((GEObject)value, value.getClass(), p);
+                  }
+               } else {
+                  writePrimitive(value, pd.getPropertyType(),p);
+               }
+            }
+            p.deindent();
          }
          p.print("</");
          p.print(pd.getPropertyName());
@@ -318,7 +368,7 @@ public class XMLUtil {
     * @param in   the InputStream
     * @param properties All ${key} expressions in the xml file will be replaced be
     *                   the corresponding value from the properties
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
@@ -342,7 +392,7 @@ public class XMLUtil {
     * Read a XML definition of a gridengine object from an <code>InputStream</code>.
     *
     * @param in   the InputStream
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
@@ -357,7 +407,7 @@ public class XMLUtil {
     * @param file   the file
     * @param properties All ${key} expressions in the xml file will be replaced be
     *                   the corresponding value from the properties
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
@@ -381,20 +431,20 @@ public class XMLUtil {
     * Read a XML definition of a gridengine object from a <code>File</code>.
     *
     * @param file   the file
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
     */
    public static Object read(File file) throws IOException, ParserConfigurationException, SAXException {
       return read(file, null);
-   }    
+   }
    
    /**
     * Read a XML definition of a gridengine object from a <code>Reader</code>.
     *
     * @param  rd  the reader
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
@@ -410,7 +460,7 @@ public class XMLUtil {
       // Parse the input
       SAXParser saxParser = factory.newSAXParser();
       InputSource source = new InputSource(rd);
-      saxParser.parse( source, handler);
+      saxParser.parse(source, handler);
       
       return handler.getObject();
    }
@@ -419,7 +469,7 @@ public class XMLUtil {
     * Read a XML definition of a gridengine object from a <code>Reader</code>.
     *
     * @param  rd  the reader
-    * @throws java.io.IOException   on any I/O Error 
+    * @throws java.io.IOException   on any I/O Error
     * @throws javax.xml.parsers.ParserConfigurationException if a SAX parser has an invalid configuration
     * @throws org.xml.sax.SAXException on any parse error
     * @return the gridengine object
@@ -427,6 +477,8 @@ public class XMLUtil {
    public static Object read(Reader rd) throws IOException, ParserConfigurationException, SAXException {
       return read(rd, null);
    }
+   
+   
    static class RootHandler extends DefaultHandler {
       
       private Map properties;
@@ -445,7 +497,6 @@ public class XMLUtil {
          this.properties = properties;
       }
       
-      
       public Object getObject() {
          return rootObject;
       }
@@ -456,11 +507,11 @@ public class XMLUtil {
       
       public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) throws org.xml.sax.SAXException {
          
-         if(logger.isLoggable(Level.FINEST)) {
+         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("startElement: uri = " + uri + ", localName = " + localName +
-               " qName = " + qName );
+               " qName = " + qName);
          }
-         if(stack.isEmpty()) {
+         if (stack.isEmpty()) {
             GEObjectHandler handler = new GEObjectHandler(qName);
             rootObject = handler.getObject();
             stack.push(handler);
@@ -472,12 +523,11 @@ public class XMLUtil {
          }
       }
       
-      
       public void endElement(String uri, String localName, String qName) throws SAXException {
          
-         if(logger.isLoggable(Level.FINEST)) {
+         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("endElement: uri = " + uri + ", localName = " + localName +
-               " qName = " + qName );
+               " qName = " + qName);
          }
          CullHandler handler = (CullHandler)stack.pop();
          handler.endElement(uri, localName, qName);
@@ -485,11 +535,11 @@ public class XMLUtil {
       
       public void characters(char[] ch, int start, int length) throws org.xml.sax.SAXException {
          
-         if(logger.isLoggable(Level.FINEST)) {
+         if (logger.isLoggable(Level.FINEST)) {
             logger.finest("characters: '" + new String(ch, start, length) + "'");
          }
          
-         if(properties != null) {
+         if (properties != null) {
             ch = resolveResources(ch, start, length);
             start = 0;
             length = ch.length;
@@ -498,34 +548,34 @@ public class XMLUtil {
          handler.characters(ch, start, length);
       }
       
-      char [] resolveResources(char [] ch, int start, int length) throws SAXException {
+      char[] resolveResources(char[] ch, int start, int length) throws SAXException {
          int end = start + length;
          int i = start;
          StringBuffer ret = new StringBuffer();
          
          while(i < end) {
-            if(ch[i] == '$') {
+            if (ch[i] == '$') {
                i++;
-               if(i>=end) {
+               if (i>=end) {
                   ret.append('$');
                   break;
                }
-               if(ch[i] == '{') {
+               if (ch[i] == '{') {
                   // we found the beginning of a property
                   i++;
-                  if(i>=end) {
+                  if (i>=end) {
                      throw new SAXException("Unclosed property in " + new String(ch, start, length));
                   }
                   int startIndex = i;
                   int endIndex = -1;
                   while(i< end) {
-                     if( ch[i] == '}') {
+                     if (ch[i] == '}') {
                         endIndex = i;
                         break;
                      }
                      i++;
                   }
-                  if(endIndex < 0) {
+                  if (endIndex < 0) {
                      throw new SAXException("Unclosed property in " + new String(ch, start, length));
                   }
                   String property = new String(ch, startIndex, endIndex - startIndex);
@@ -533,9 +583,9 @@ public class XMLUtil {
                   Object value = properties.get(property);
                   
                   logger.fine("Replace property " + property + " with value " + value);
-                  if(value != null) {
+                  if (value != null) {
                      ret.append(value);
-                  }                
+                  }
                } else {
                   // A single $ sign
                   ret.append('$');
@@ -551,37 +601,42 @@ public class XMLUtil {
       
       abstract class CullHandler extends DefaultHandler {
          
+         protected CullHandler parent;
+         
+         public CullHandler(CullHandler parent) {
+            this.parent = parent;
+         }
+         
+         public CullHandler getParent() {
+            return parent;
+         }
+         
          public abstract CullHandler getHandler(String name, org.xml.sax.Attributes attributes) throws SAXException;
       }
       
-      
       abstract class AbstractObjectHandler extends CullHandler {
          
-            private CullPropertyHandler parent;
-            private String name;
-            
-            public AbstractObjectHandler(CullPropertyHandler parent, String name) {
-               this.parent = parent;
-               this.name = name;
+         private String name;
+         
+         public AbstractObjectHandler(CullPropertyHandler parent, String name) {
+            super(parent);
+            this.name = name;
+         }
+         
+         public String getName() {
+            return name;
+         }
+         
+         public abstract Object getObject();
+         
+         public void endElement(String uri, String localName, String qName) throws SAXException {
+            if (parent != null) {
+               ((CullPropertyHandler)parent).addObject(getObject());
             }
-            
-            public String getName() {
-               return name;
-            }
-            
-            public CullPropertyHandler getParent() {
-               return parent;
-            }
-            
-            public abstract Object getObject();
-
-            public void endElement(String uri, String localName, String qName) throws SAXException {
-               if(parent != null) {
-                  parent.addObject(getObject());
-               }
-            }
-            
+         }
+         
       }
+      
       class GEObjectHandler extends AbstractObjectHandler {
          
          private ClassDescriptor cd;
@@ -599,7 +654,7 @@ public class XMLUtil {
             super(parent, name);
             try {
                cd = Util.getDescriptorForCullType(name);
-            } catch( IllegalArgumentException ilae ) {
+            } catch(IllegalArgumentException ilae) {
                throw new SAXParseException("No descriptor for cull type " + name + " found", locator, ilae);
             }
             obj = cd.newInstance();
@@ -607,27 +662,57 @@ public class XMLUtil {
          
          public CullHandler getHandler(String name, org.xml.sax.Attributes attributes) throws SAXException {
             PropertyDescriptor pd = cd.getProperty(name);
-            if(pd == null) {
+            if (pd == null) {
                throw new SAXParseException("cull type " + cd.getCullName() + " has no property " + name, locator);
-            } if(pd instanceof SimplePropertyDescriptor ) {
-               if(pd.getPropertyType().isPrimitive() || pd.getPropertyType().equals(String.class)) {
+            } if (pd instanceof SimplePropertyDescriptor) {
+               if (pd.getPropertyType().isPrimitive() || pd.getPropertyType().equals(String.class)) {
                   return new SimplePropertyHandler(this, (SimplePropertyDescriptor)pd);
                } else {
                   return new ObjectPropertyHandler(this, (SimplePropertyDescriptor)pd);
                }
-            } else if (pd instanceof ListPropertyDescriptor ) {
+            } else if (pd instanceof ListPropertyDescriptor) {
                return new ListPropertyHandler(this, (ListPropertyDescriptor)pd);
-            } else if ( pd instanceof MapPropertyDescriptor ) {
+            } else if (pd instanceof MapPropertyDescriptor) {
                return new MapPropertyHandler(this, (MapPropertyDescriptor)pd, attributes);
-            } else if ( pd instanceof MapListPropertyDescriptor ) {
+            } else if (pd instanceof MapListPropertyDescriptor) {
                return new MapListPropertyHandler(this, (MapListPropertyDescriptor)pd, attributes);
             } else {
                throw new SAXParseException("Unknown property type " + pd.getClass(), locator);
             }
          }
          
+         private StringBuffer value;
+         
+         public void characters(char[] ch, int start, int length) throws SAXException {
+            if (length > 0) {
+               if (value == null) {
+                  value = new StringBuffer();
+               }
+               value.append(ch,start,length);
+            }
+         }
+         
+         public void endElement(String uri, String localName, String qName) throws SAXException {
+            if (value != null) {
+               String str = value.toString().trim();
+               if (str.length()>0) {
+                  if (NONE.equalsIgnoreCase(str)) {
+                     if (parent instanceof MapListPropertyHandler) {
+                        ((MapListPropertyHandler)parent).addEmptyObject();
+                     } else if (parent instanceof ListPropertyHandler) {
+                        // empty list and null has the same meaning
+                     } else {
+                        throw new SAXException("object can only have content if parent is a map list or a list (2)");
+                     }
+                  } else {
+                     super.endElement(uri, localName, qName);
+                  }
+               } else {
+                  super.endElement(uri, localName, qName);
+               }
+            }
+         }
       }
-      
       
       class StringHandler extends AbstractObjectHandler {
 
@@ -642,17 +727,25 @@ public class XMLUtil {
          }
          
          public void characters(char[] ch, int start, int length) throws SAXException {
-            if(buffer == null) {
+            if (buffer == null) {
                buffer = new StringBuffer();
             }
             buffer.append(ch,start, length);
          }
          
+         public void endElement(String uri, String localName, String qName) throws SAXException {
+            if (buffer == null) {
+               throw new SAXException("A string tag must not be empty");
+            } else {
+               super.endElement(uri, localName, qName);
+            }
+         }
+         
          public Object getObject() {
-            if(buffer != null ) {
+            if (buffer != null) {
                return buffer.toString();
             } else {
-               return null;
+               throw new IllegalStateException("A string tag must not be empty");
             }
          }
       }
@@ -662,7 +755,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Integer((String)super.getObject());
          }
       }
@@ -672,7 +765,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Long((String)super.getObject());
          }
       }
@@ -682,7 +775,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Short((String)super.getObject());
          }
       }
@@ -692,7 +785,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Double((String)super.getObject());
          }
       }
@@ -702,7 +795,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Float((String)super.getObject());
          }
       }
@@ -712,7 +805,7 @@ public class XMLUtil {
             super(parent, name);
          }
          
-         public Object getObject() {            
+         public Object getObject() {
             return new Boolean((String)super.getObject());
          }
       }
@@ -720,19 +813,18 @@ public class XMLUtil {
       
       abstract class CullPropertyHandler extends CullHandler {
          
-         protected GEObjectHandler parent;
          
          public CullPropertyHandler(GEObjectHandler parent) {
-            if(parent == null ) {
+            super(parent);
+            if (parent == null) {
                throw new NullPointerException("parent is null");
             }
-            this.parent = parent;
          }
          
          public abstract void addObject(Object obj) throws SAXException;
          
          public CullHandler getHandler(String name, org.xml.sax.Attributes attributes) throws SAXException {
-            if(STRING_TAG.equals(name)) {
+            if (STRING_TAG.equals(name)) {
                return new StringHandler(this, name);
             } else if (DOUBLE_TAG.equals(name)) {
                return new DoubleHandler(this, name);
@@ -758,18 +850,18 @@ public class XMLUtil {
          
          public SimplePropertyHandler(GEObjectHandler parent, SimplePropertyDescriptor pd) {
             super(parent);
-            if(pd == null) {
+            if (pd == null) {
                throw new NullPointerException("pd is null");
             }
             this.pd = pd;
          }
          
          public void addObject(Object obj) throws SAXException {
-            if(!pd.isReadOnly()) {
-               if(parent.getObject() == null) {
-                  throw new SAXException("parent " + parent.getName() + " has no value");
+            if (!pd.isReadOnly()) {
+               if (((GEObjectHandler)parent).getObject() == null) {
+                  throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has no value");
                }
-               pd.setValue(parent.getObject(), obj);
+               pd.setValue(((GEObjectHandler)parent).getObject(), obj);
             }
          }
          
@@ -782,9 +874,10 @@ public class XMLUtil {
          
          public void endElement(String uri, String localName, String qName) throws SAXException {
             
-            if(value != null ) {
+            if (value != null) {
                // We have a simple element
-               addObject(parse(value.toString(), pd));
+               String str = value.toString();
+               addObject(parse(str, pd));
             }
          }
       }
@@ -798,13 +891,12 @@ public class XMLUtil {
          }
          
          public void addObject(Object obj) throws SAXException {
-            if(parent.getObject() == null) {
-               throw new SAXException("parent " + parent.getName() + " has not object");
+            if (((GEObjectHandler)parent).getObject() == null) {
+               throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has not object");
             }
-            pd.setValue(parent.getObject(), obj);
+            pd.setValue(((GEObjectHandler)parent).getObject(), obj);
          }
       }
-      
       
       class ListPropertyHandler extends CullPropertyHandler {
          private ListPropertyDescriptor pd;
@@ -815,10 +907,10 @@ public class XMLUtil {
          }
          
          public void addObject(Object obj) throws SAXException {
-            if(parent.getObject() == null) {
-               throw new SAXException("parent " + parent.getName() + " has not object");
+            if (((GEObjectHandler)parent).getObject() == null) {
+               throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has not object");
             }
-            pd.add(parent.getObject(), obj);
+            pd.add(((GEObjectHandler)parent).getObject(), obj);
          }
       }
       
@@ -832,29 +924,37 @@ public class XMLUtil {
             this.pd = pd;
             this.key = attributes.getValue("key");
          }
+         
          public CullHandler getHandler(String name, org.xml.sax.Attributes attributes)  throws SAXException {
-            if(!pd.getCullType().equals(name)) {
-               throw new SAXParseException("This handler can only handle object of type " + pd.getCullType(), locator );
+            if (!pd.getCullType().equals(name)) {
+               throw new SAXParseException("This handler can only handle object of type " + pd.getCullType(), locator);
             }
             return super.getHandler(name, attributes);
          }
+         
          public void addObject(Object obj) throws SAXException {
-            if(parent.getObject() == null) {
-               throw new SAXException("parent " + parent.getName() + " has no object");
+            if (((GEObjectHandler)parent).getObject() == null) {
+               throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has no object");
             }
-            pd.put(parent.getObject(), key, obj);
+            pd.put(((GEObjectHandler)parent).getObject(), key, obj);
          }
+         
          public void characters(char[] ch, int start, int length) throws SAXException {
             if (value == null) {
                value = new StringBuffer();
             }
             value.append(ch,start,length);
          }
+         
          public void endElement(String uri, String localName, String qName) throws SAXException {
-            
-            if(value != null ) {
+            if (value != null) {
                // We have a simple element
-               addObject(parse(value.toString(), pd));
+               String str = value.toString();
+               if (NONE.equalsIgnoreCase(str)) {
+                  addObject(null);
+               } else {
+                  addObject(parse(value.toString(), pd));
+               }
             }
          }
       }
@@ -862,27 +962,49 @@ public class XMLUtil {
       class MapListPropertyHandler extends CullPropertyHandler {
          private MapListPropertyDescriptor pd;
          private String key;
+         private StringBuffer value;
          
          public MapListPropertyHandler(GEObjectHandler parent, MapListPropertyDescriptor pd, org.xml.sax.Attributes attributes) {
             super(parent);
             this.pd = pd;
             this.key = attributes.getValue("key");
          }
+         
          public CullHandler getHandler(String name, org.xml.sax.Attributes attributes)  throws SAXException {
             return super.getHandler(name, attributes);
          }
+         
          public void addObject(Object obj) throws SAXException {
-            if( pd == null ) {
+            if (pd == null) {
                throw new NullPointerException("pd is null");
             }
-            if( parent == null ) {
+            if (parent == null) {
                throw new NullPointerException("parent is null");
             }
-            if(parent.getObject() == null) {
-               throw new SAXException("parent " + parent.getName() + " has not object");
+            if (((GEObjectHandler)parent).getObject() == null) {
+               throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has not object");
             }
-            pd.add(parent.getObject(), key, obj);
+            if (obj != null) {
+               pd.add(((GEObjectHandler)parent).getObject(), key, obj);
+            } else {
+               addEmptyObject();
+            }
+            
          }
+         
+         public void addEmptyObject() throws SAXException {
+            if (pd == null) {
+               throw new NullPointerException("pd is null");
+            }
+            if (parent == null) {
+               throw new NullPointerException("parent is null");
+            }
+            if (((GEObjectHandler)parent).getObject() == null) {
+               throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has no object");
+            }
+            pd.addEmpty(((GEObjectHandler)parent).getObject(), key);
+         }
+         
       }
       
       
@@ -895,7 +1017,7 @@ public class XMLUtil {
        */
       private Object parse(String value, PropertyDescriptor pd) throws SAXException {
          Class clazz = pd.getPropertyType();
-         if(pd.hasCullWrapper()) {
+         if (pd.hasCullWrapper()) {
             
             ClassDescriptor realClassDescriptor = Util.getDescriptor(pd.getPropertyType());
             
@@ -903,39 +1025,39 @@ public class XMLUtil {
             
             PropertyDescriptor rpd = realClassDescriptor.getPropertyByCullFieldName(pd.getCullContentField());
             
-            if(rpd instanceof SimplePropertyDescriptor) {
+            if (rpd instanceof SimplePropertyDescriptor) {
                ((SimplePropertyDescriptor)rpd).setValue(obj, parse(value, rpd));
                return obj;
             } else {
                throw new SAXParseException("Can only handle simple wrapped properties", locator);
             }
-         } else if( Boolean.TYPE.isAssignableFrom(clazz) ) {
+         } else if (Boolean.TYPE.isAssignableFrom(clazz)) {
             return new Boolean(value);
-         } else if ( Integer.TYPE.isAssignableFrom(clazz) ) {
+         } else if (Integer.TYPE.isAssignableFrom(clazz)) {
             try {
                return new Integer(value);
             } catch(NumberFormatException nfe) {
                throw new SAXParseException("'" + value + "' is not a valid int value", locator, nfe);
             }
-         } else if ( Long.TYPE.isAssignableFrom(clazz) ) {
+         } else if (Long.TYPE.isAssignableFrom(clazz)) {
             try {
                return new Long(value);
             } catch(NumberFormatException nfe) {
                throw new SAXParseException("'" + value + "' is not a valid long value", locator, nfe);
             }
-         } else if ( Float.TYPE.isAssignableFrom(clazz) ) {
+         } else if (Float.TYPE.isAssignableFrom(clazz)) {
             try {
                return new Float(value);
             } catch(NumberFormatException nfe) {
                throw new SAXParseException("'" + value + "' is not a valid float value", locator, nfe);
             }
-         } else if ( Double.TYPE.isAssignableFrom(clazz) ) {
+         } else if (Double.TYPE.isAssignableFrom(clazz)) {
             try {
                return new Double(value);
             } catch(NumberFormatException nfe) {
                throw new SAXParseException("'" + value + "' is not a valid double value", locator, nfe);
             }
-         } else if ( String.class.isAssignableFrom(clazz) ) {
+         } else if (String.class.isAssignableFrom(clazz)) {
             return value;
          } else {
             throw new SAXParseException("Can not parse object of type " + clazz, locator);

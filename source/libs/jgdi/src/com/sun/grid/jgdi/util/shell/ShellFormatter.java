@@ -39,7 +39,6 @@ import java.util.logging.LogRecord;
 
 /**
  *
- * @author rh150277
  */
 public class ShellFormatter extends Formatter {
    

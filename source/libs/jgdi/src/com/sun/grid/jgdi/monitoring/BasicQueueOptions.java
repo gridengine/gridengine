@@ -32,14 +32,13 @@
 package com.sun.grid.jgdi.monitoring;
 
 import com.sun.grid.jgdi.monitoring.filter.*;
+import java.io.Serializable;
 
 /**
  * Base class for all classes which implements options for the qstat
- * algorithm
- *
- * @author  richard.hierlmeier@sun.com
+ * algorithm.
  */
-public abstract class BasicQueueOptions {
+public abstract class BasicQueueOptions implements Serializable {
    
    /* qstat -ext */
    private boolean showAdditionalAttributes;   

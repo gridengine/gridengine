@@ -36,9 +36,8 @@ package com.sun.grid.jgdi.monitoring;
  * Instances of this class hold the cluster queue summary information
  * of one queue.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class ClusterQueueSummary {
+public class ClusterQueueSummary implements java.io.Serializable {
    
    private String name;
    private double load;

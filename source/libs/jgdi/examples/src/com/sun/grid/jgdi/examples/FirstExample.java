@@ -42,7 +42,6 @@ import java.util.List;
  * This simple example connects to the qmaster of a N1&trade; Grid Engine and
  * queries the list of availalbe <code>ClusterQueue</code>s
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class FirstExample {
    

@@ -38,7 +38,6 @@ import java.io.StringWriter;
 
 /**
  *
- * @author rh150277
  */
 public class QDelCommand extends AbstractCommand {
     

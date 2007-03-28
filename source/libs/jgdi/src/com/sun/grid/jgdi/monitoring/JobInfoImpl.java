@@ -31,13 +31,13 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Default implemenation of {@link JobInfo}
- * @author  richard.hierlmeier@sun.com
  */
-public class JobInfoImpl implements JobInfo {
+public class JobInfoImpl implements JobInfo, Serializable {
 
    private int id;
    private String taskId;

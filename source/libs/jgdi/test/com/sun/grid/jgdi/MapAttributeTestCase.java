@@ -43,7 +43,6 @@ import org.xml.sax.SAXParseException;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class MapAttributeTestCase extends BaseTestCase {
    

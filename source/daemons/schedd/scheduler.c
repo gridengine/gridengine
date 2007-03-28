@@ -819,7 +819,11 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                DPRINTF(("Found NOW assignment\n"));
 
                schedd_mes_rollback();
-               is_pjob_resort = job_move_first_pending_to_running(&orig_job, splitted_job_lists);
+               if (job_count_pending_tasks(orig_job, true) < 2)
+                  is_pjob_resort = false;
+               else
+                  is_pjob_resort = true;
+               job_move_first_pending_to_running(&orig_job, splitted_job_lists);
 
                /* 
                 * after sge_move_to_running() orig_job can be removed and job 
@@ -929,14 +933,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
           * list in case another job is higher priority (i.e. has more tickets)
           *------------------------------------------------------------------*/
 
-         if (is_pjob_resort) {
-            sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
-         }
-
          /* no more free queues - then exit */
          if (lGetNumberOfElem(lists->queue_list)==0) {
             break;
          }   
+
+         if (is_pjob_resort) {
+            sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING]);
+         }
 
       } /* end of while */
    }

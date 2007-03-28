@@ -1,3 +1,7 @@
+AH-2007-03-28-0: Bugfix:    Resource quotas broken after qmaster restart
+                 Bugster:   6538293
+                 Review:    TBD
+
 AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
                             - CULL_CONFIGURE adjustments in testvalues/*/*.xml
                             - fix of jgdi tests

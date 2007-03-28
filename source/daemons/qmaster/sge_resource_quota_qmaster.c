@@ -487,10 +487,11 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
            scope++; /* sge intern usergroups don't have the preleading @ sign */
          }
       }
+   
       if (strcmp("*", scope) == 0) {
          lEnumeration *what = lWhat("%T(%I)", dp, nm);
 
-         lFreeList(scope_ref);
+         lFreeList(scope_ref); /* that look strange: list is simply free()'d */
          *scope_ref = lSelect("", master_list, NULL, what);
          lFreeWhat(&what);
          ret = false;               
@@ -547,25 +548,29 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
 *******************************************************************************/
 static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_nm, lList **scope_l, int nm, const lDescr *dp, lList* master_list)
 {
-   lListElem *filter = NULL;
+   lListElem *filter;
    bool ret = true;
 
    DENTER(TOP_LAYER, "filter_diff_usersets_or_projects");
 
-   if (rule == NULL || filter == NULL || master_list == NULL) {
+   if (filter_nm != RQR_filter_users && filter_nm != RQR_filter_projects) {
+      DRETURN(ret);
+   }
+
+   if (rule == NULL || master_list == NULL) {
       DRETURN(ret);
    }
 
    filter = lGetObject(rule, filter_nm);
-
-   if (filter_nm != RQR_filter_users && filter_nm != RQR_filter_projects) {
+   if (!filter) {
       DRETURN(ret);
    }
+
    if ((ret = filter_diff_usersets_or_projects_scope(lGetList(filter, RQRF_scope),
                                     filter_nm, scope_l, nm, dp, master_list))) {
       ret = filter_diff_usersets_or_projects_scope(lGetList(filter, RQRF_xscope),
                                     filter_nm, scope_l, nm, dp, master_list); 
-   } 
+   }
 
    DRETURN(ret);
 }
@@ -594,7 +599,7 @@ static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_n
 *            false if all userset are referenced in new_list
 *
 *  NOTES
-*     MT-NOTE: rqs_diff_projects() is MT safe 
+*     MT-NOTE: rqs_diff_usersets() is MT safe 
 *
 *  SEE ALSO
 *     sge_resource_quota_qmaster/rqs_diff_projects()
@@ -636,7 +641,7 @@ bool rqs_diff_usersets(const lListElem *new_rqs, const lListElem *old_rqs, lList
 *
 *  SYNOPSIS
 *     bool rqs_diff_projects(const lListElem *new_rqs, const lListElem 
-*     *old_rqs, lList **new_list, lList **old_list) 
+*     *old_rqs, lList **new_list, lList **old_list, lList *master_project_list) 
 *
 *  FUNCTION
 *     This function generates a list of all projects referenced in a resource quota set.
@@ -686,6 +691,7 @@ bool rqs_diff_projects(const lListElem *new_rqs, const lListElem *old_rqs, lList
          } 
       }
    }
+
    lDiffListStr(UP_name, new_list, old_list);
 
    DRETURN(ret);

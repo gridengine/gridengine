@@ -55,6 +55,22 @@ PJ-2007-03-21-0: Enhancm:   added job -ar related checks
 JG-2007-03-21-0: Cleanup:   Fixed message macros.
                  Review:    CR
 
+LP-2007-03-20-0: Bugfix:    Removed unused import in EditorParser.java that prevents compilation on Java 1.6
+                 Review:    PJ
+
+LP-2007-03-19-2: Enhanc:    Introducing GEObjectEditor class for simple GEObject manipulation based on text
+                 Qconf options implemented for User, Project, PE, ClusterQueue, Calendar, Checkpoint, Exec host, Host group and RQS (some issues exist).
+                 Minor improvements/fixed to JGDI code.
+                 Changed:   JGDI
+                 Review:    AA
+
+LP-2007-03-19-1: Bugfix:    Fixed incorrect use of DEXIT in jgdi_common.c
+                 Review:    PJ
+
+LP-2007-03-19-0: Bugfix:    JGDI does not accept null values in certain cases anymore
+                 Bugtraq:   6535877
+                 Review:    AA
+
 AH-2007-03-19-0: Cleanup:   Removed unused variables and parameters from ticket
                             scheduler code.
                  Review:    AA
@@ -160,6 +176,10 @@ MP-2007-02-22-0: Bugfix:    on Windows, execd doesn't provide useful
                  Changed:   utilbin/sge_passwd.c
                             utilbin/msg_utilbin.h
                  Review:    HP
+
+LP-2007-02-20-0: Bugfix:    JGDI crashes JVM when null is passed to JNI GetStringUTFChars function
+                 Bugtraq:   6525497
+                 Review:    RH
 
 JG-2007-02-16-0: Bugfix:    Fixed non initialized pointer access in qacct.
                             Merge of V61_BRANCH, JG-2007-02-15-0.

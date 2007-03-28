@@ -1,3 +1,9 @@
+JG-2007-03-28-0: Bugfix:    Hybrid user/project sharetree was broken with array 
+                            jobs.
+                 Bugster:   6538293
+                 Issue:     2222
+                 Review:    AH
+
 JG-2007-03-26-0: Bugfix:    Fixed message macros.
                  Bugster:   6537633
 

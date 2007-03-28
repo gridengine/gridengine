@@ -210,7 +210,7 @@ int attr_mod_str(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, char *
       switch (dataType) {
          case lStringT:
             if (!(s = lGetString(qep, nm))) {
-               ERROR((SGE_EVENT, MSG_GDI_VALUE_S, attr_name));
+               ERROR((SGE_EVENT, MSG_GDI_VALUE_S, lNm2Str(nm)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EUNKNOWN;

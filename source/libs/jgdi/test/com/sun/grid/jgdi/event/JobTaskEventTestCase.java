@@ -103,7 +103,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
        jgdi.enableQueues(new String [] { "*" }, false);
 
        
-       lis.waitForJobFinish(60);
+       lis.waitForJobFinish(300);
        
        assertEquals("too few job task add events", numberOfTasks, lis.getAddEventCount());
        assertEquals("too few job task del events", numberOfTasks - 1 , lis.getDelEventCount());

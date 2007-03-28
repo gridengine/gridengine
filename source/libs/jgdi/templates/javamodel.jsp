@@ -168,6 +168,15 @@ public interface <%=classname%> extends <%
     *  @param <%=mapAttr.getValueName()%> the <%=mapAttr.getValueName()%> attribute
     */
    public void add<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, <%=valueClassName%> <%=mapAttr.getValueName()%>);
+
+   /**
+    *  Initialize <code><%=mapAttr.getValueName()%></code> attribute for a <code><%=mapAttr.getKeyName()%></code> 
+    *  with an empty list.
+    *
+    *  @param <%=mapAttr.getKeyName()%>  the <%=mapAttr.getKeyName()%>
+    */
+   public void addEmpty<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>);
+   
    
    /**
     *  Set <code><%=mapAttr.getValueName()%></code> attribute for <code><%=mapAttr.getKeyName()%></code>.
@@ -320,12 +329,6 @@ public interface <%=classname%> extends <%
    public int get<%=gsname%>Count();
    
    /**
-    *  Determine if any <%=attrName%> attribute is set
-    *  @return <code>true</code> if the <%=attrName%> attribute is set
-    */
-   public boolean isSet<%=gsname%> ();
-   
-   /**
     *  Determine if any <%=attrName%> attribute is for <code><%=mapAttr.getKeyName()%></code> is set
     *  @param  <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
     *  @return <code>true</code> if the <%=attrName%> attribute is set
@@ -399,12 +402,6 @@ public interface <%=classname%> extends <%
     */
    public <%=attrType%> get<%=gsname%>(int index);
    
-   /**
-    *  Determine if the <%=attrName%> attribute is set
-    *  @return <code>true</code> if the <%=attrName%> attribute is set
-    */
-   public boolean isSet<%=gsname%>List ();
-
 <% 
     if (!attr.isReadOnly()) {
 %>       
@@ -474,13 +471,17 @@ public interface <%=classname%> extends <%
     */
    public <%=attrType%> <%=attrType.endsWith("oolean")?"is":"get"%><%=gsname%>();
    
+
+<% } // end of else normal attributes
+   
+   // Methods which are common to all attribute types
+%>   
    /**
-    *  Determine if the <%=attrName%> attribute is set
+    *  Determine if any <%=attrName%> attribute is set
     *  @return <code>true</code> if the <%=attrName%> attribute is set
     */
    public boolean isSet<%=gsname%>();
 
-<% } // end of else normal attributes
-  } // end of for of attribute %>
+<%  } // end of for of attribute %>
 
 }

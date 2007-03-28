@@ -104,9 +104,8 @@
          Thread.yield();
 
          jgdi.add<%=name%>(testObj);
-
          logger.fine(testObj.toString() + " added");
-         assertTrue("<%=name%>: Did not get the add event", waitThread.waitForAddEvent(timeout) );
+         assertTrue("<%=name%>: Did not get the add event", waitThread.waitForAddEvent(timeout));
 
 <% 
    if (cullObj.hasModifyOperation()) {
@@ -129,7 +128,7 @@
 %>
          jgdi.update<%=name%>(testObj);
          logger.fine(testObj.toString() + " modified");
-         assertTrue("<%=name%>: Did not get the mod event", waitThread.waitForModEvent(timeout) );
+         assertTrue("<%=name%>: Did not get the mod event", waitThread.waitForModEvent(timeout));
 <%
    } // end of cullObj.hasModifyOperation()
 %>         
@@ -138,7 +137,7 @@
          logger.fine(testObj.toString() + " deleted");
          testObj = null;
 
-         assertTrue("<%=name%>: Did not get the del event", waitThread.waitForDelEvent(timeout) );
+         assertTrue("<%=name%>: Did not get the del event", waitThread.waitForDelEvent(timeout));
 
       } finally {
          waitThread.interrupt();
@@ -207,7 +206,7 @@
 
          jgdi.update<%=name%>(testObj);
          
-         assertTrue("<%=name%>: Did not get the mod event", waitThread.waitForModEvent(timeout) );
+         assertTrue("<%=name%>: Did not get the mod event", waitThread.waitForModEvent(timeout));
          
       } finally {
          waitThread.interrupt();
@@ -265,9 +264,7 @@ public class <%=cullObj.getIdlName()%>EventTestCase extends BaseTestCase {
    }
    
    protected void setUp() throws Exception {
-      logger.fine("Loading jgdi");
-      // System.loadLibrary( "jgdi" );
-      
+
       jgdi = createJGDI();
       evc = createEventClient(0);
       evc.start();

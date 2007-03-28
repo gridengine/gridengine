@@ -43,10 +43,6 @@ import java.util.List;
  */
 public class XMLDump {
    
-   static {
-      System.loadLibrary("jgdi");
-   }
-   
    private static void usage(String message, int exitCode) {
       if(message != null) {
          System.err.println(message);
@@ -75,8 +71,8 @@ public class XMLDump {
             
             Iterator iter = list.iterator();
             while(iter.hasNext()) {
-               Object obj = iter.next();
-               XMLUtil.write((GEObject)obj,System.out);
+               GEObject obj = (GEObject)iter.next();
+               XMLUtil.write(obj, System.out);
                System.out.flush();
             }
          } else {

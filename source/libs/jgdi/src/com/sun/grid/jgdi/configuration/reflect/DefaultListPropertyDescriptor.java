@@ -39,13 +39,13 @@ import java.lang.reflect.*;
  */
 public class DefaultListPropertyDescriptor extends ListPropertyDescriptor {
    
-   Method addMethod;
-   Method countMethod;
-   Method getMethod;
-   Method setMethod;
-   Method removeMethod;
-   Method removeValueMethod;
-   Method removeAllMethod;   
+   private Method addMethod;
+   private Method countMethod;
+   private Method getMethod;
+   private Method setMethod;
+   private Method removeMethod;
+   private Method removeValueMethod;
+   private Method removeAllMethod;   
    
    /** Creates a new instance of DefaultListPropertyDescriptor */
    public DefaultListPropertyDescriptor(Class beanClass, String propertyName, 

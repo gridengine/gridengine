@@ -57,6 +57,7 @@
 #include "sge_range.h"
 
 #include "sge_utility_qmaster.h"
+#include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 
 typedef struct {
@@ -131,6 +132,11 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
          ar_id = sge_get_ar_id(ctx, monitor);
       } while (ar_list_locate(*object_base[SGE_TYPE_AR].list, ar_id));
       lSetUlong(new_ar, AR_id, ar_id);
+      /*
+      ** set the owner of new_ar, don't overwrite it with
+      ** attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name);
+      */
+      lSetString(new_ar, AR_owner, ruser);
    } else {
       ERROR((SGE_EVENT, MSG_NOTYETIMPLEMENTED_S, "advance reservation modification"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -149,7 +155,7 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    /*   AR_account, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_account, object->object_name);
    /*   AR_owner, SGE_STRING */
-   attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name);
+/*    attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name); */
    /*   AR_start_time, SGE_ULONG          required */
    attr_mod_ulong(ar, new_ar, AR_start_time, object->object_name);
    /*   AR_end_time, SGE_ULONG            required */
@@ -281,6 +287,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
                gdi_object_t *object, lList **ppList, monitoring_t *monitor)
 {
    te_event_t ev;
+   dstring buffer = DSTRING_INIT;
    u_long32 timestamp = 0; 
 
    DENTER(TOP_LAYER, "ar_success");
@@ -308,6 +315,14 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
       lAppendElem(*ppList, lCopyElem(ep)); 
    }
 
+   /*
+   ** send sgeE_AR_MOD/sgeE_AR_ADD event
+   */
+   sge_dstring_sprintf(&buffer, sge_u32, lGetUlong(ep, AR_id));
+   sge_add_event(0, old_ep?sgeE_AR_MOD:sgeE_AR_ADD, lGetUlong(ep, AR_id), 0, 
+                 sge_dstring_get_string(&buffer), NULL, NULL, ep);
+/*    lListElem_clear_changed_info(ep); */
+   sge_dstring_free(&buffer);
 
    DRETURN(0);
 }
@@ -402,7 +417,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
       found = lDechainElem(*ar_list, found);
 
       sge_event_spool(ctx, alpp, 0, sgeE_AR_DEL, 
-                      0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                      ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
 
       INFO((SGE_EVENT, "%s@%s deleted advance reservation %s",

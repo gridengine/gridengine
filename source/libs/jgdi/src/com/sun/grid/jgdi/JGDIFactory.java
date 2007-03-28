@@ -96,7 +96,6 @@ public class JGDIFactory {
     */
    public static EventClient createEventClient(String url, int evcId) throws JGDIException {
       return new com.sun.grid.jgdi.jni.EventClientImpl(url, evcId);
-      
    }
    
    public static String getJGDIVersion() throws JGDIException {

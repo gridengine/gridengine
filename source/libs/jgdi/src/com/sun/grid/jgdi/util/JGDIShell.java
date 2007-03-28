@@ -93,6 +93,8 @@ public class JGDIShell implements Runnable, Shell {
    private TreeSet cmdSet = null;
    private ReadlineHandler readlineHandler;
    
+   private String PS1 = "jsh> ";
+   
    public JGDIShell() {
       cmdMap.put("connect", new ConnectCommand() );
       cmdMap.put("exit", new ExitCommand() );
@@ -131,7 +133,7 @@ public class JGDIShell implements Runnable, Shell {
          
          
          while( true) {
-            String line = readlineHandler.readline("jgdi => ");
+            String line = readlineHandler.readline(PS1);
             
             if(line == null) {
                break;
@@ -658,7 +660,7 @@ public class JGDIShell implements Runnable, Shell {
          try {
             return (String)readlineMethod.invoke(readlineClass, new Object[] { prompt });
          } catch (IllegalAccessException ex) {
-            IllegalStateException ilse = new IllegalStateException("Unkown error");
+            IllegalStateException ilse = new IllegalStateException("Unknown error");
             ilse.initCause(ex);
             throw ilse;
          } catch (InvocationTargetException ex) {
@@ -667,7 +669,7 @@ public class JGDIShell implements Runnable, Shell {
             } else if (ex.getTargetException() instanceof RuntimeException) {
                throw (RuntimeException)ex.getTargetException();
             } else {
-               IllegalStateException ilse = new IllegalStateException("Unkown error");
+               IllegalStateException ilse = new IllegalStateException("Unknown error");
                ilse.initCause(ex.getTargetException());
                throw ilse;
             }

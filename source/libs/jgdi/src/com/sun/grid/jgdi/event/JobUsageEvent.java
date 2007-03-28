@@ -38,7 +38,6 @@ import java.util.Set;
 
 /**
  * Java Wrapper class for the JOB_USAGE event.
- *
  */
 public class JobUsageEvent extends JobEvent implements java.io.Serializable {
     

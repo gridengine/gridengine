@@ -47,8 +47,6 @@ public class ConfigExample {
    public static void main(String [] args)  {
       
       try {
-         System.loadLibrary("jgdi");
-         
          String url = "bootstrap:///opt/sge@default:1026";
          
          if(args.length == 1) {

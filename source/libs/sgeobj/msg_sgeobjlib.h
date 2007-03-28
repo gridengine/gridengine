@@ -256,7 +256,7 @@
 #define MSG_EVENT_INVALIDID _MESSAGE(64347, _("invalid event client id"))
 #define MSG_EVENT_INVALIDUPDATEFUNCTION _MESSAGE(64348, _("invalid event client update function"))
 
-#define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script lenght does not match declared length"))
+#define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script length does not match declared length"))
 #define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64352, _("invalid "SFQ" value in job request"))
 
 #define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
@@ -282,8 +282,8 @@
 #define MSG_CQUEUE_UNUSEDATTRSETTING_SS          _MESSAGE(64381, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
 
 #define MSG_EVAL_EXPRESSION_PARSE_ERROR          _MESSAGE(64382, _("Parse error on position %d of the expression "SFQ"."))
-#define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid lenght of value exeed the limit %d characters."))
-#define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid lenght of expression exeed the limit %d characters."))
+#define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid length of value exeed the limit %d characters."))
+#define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid length of expression exeed the limit %d characters."))
 
 #define MSG_AR_MISSING_VALUE_S                   _MESSAGE(64390, _("missing value for "SFQ" in advance reservation request"))
 #define MSG_AR_START_END_DURATION_INVALID        _MESSAGE(64391, _("difference between end and start time does not correspond to duration"))

@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.configuration.reflect;
@@ -42,6 +42,7 @@ import java.util.Set;
 public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor {
    
    private Method addMethod;
+   private Method addEmptyMethod;
    private Method getMethod;
    private Method getCountMethod;
    private Method getValuesMethod;
@@ -53,12 +54,12 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
    private Method keysMethod;
    
    /** Creates a new instance of DefaultMapListPropertyDescriptor */
-   public DefaultMapListPropertyDescriptor(Class beanClass, String propertyName, 
-                             Class propertyType, String cullType, Class keyType, String cullListType,
-                             int cullFieldName, int keyCullFieldName, int valueCullFieldName, 
-                             Object defaultKey, boolean readOnly, boolean configurable ) {
-      super(beanClass, propertyName, propertyType, cullType, keyType, cullListType, 
-            cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
+   public DefaultMapListPropertyDescriptor(Class beanClass, String propertyName,
+           Class propertyType, String cullType, Class keyType, String cullListType,
+           int cullFieldName, int keyCullFieldName, int valueCullFieldName,
+           Object defaultKey, boolean readOnly, boolean configurable ) {
+      super(beanClass, propertyName, propertyType, cullType, keyType, cullListType,
+              cullFieldName, keyCullFieldName, valueCullFieldName, defaultKey, readOnly, configurable);
       
       getMethod = findMethod("get", new Class [] { keyType, Integer.TYPE });
       getCountMethod = findMethod("get", "Count", new Class[] { keyType } );
@@ -67,6 +68,7 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
       
       if (!readOnly) {
          addMethod = findMethod("add", new Class [] { keyType, propertyType } );
+         addEmptyMethod = findMethod("addEmpty", new Class [] { keyType } );
          setMethod = findMethod("set", new Class [] { keyType, Integer.TYPE, propertyType });
          removeIndexMethod = findMethod("remove", "At", new Class [] { keyType, Integer.TYPE });
          removeMethod = findMethod("remove", new Class [] { keyType, propertyType });
@@ -79,6 +81,10 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
       invoke(addMethod, bean, new Object [] { key, value } );
    }
 
+   public void addEmpty(Object bean, Object key) {
+      invoke(addEmptyMethod, bean, new Object [] { key } );
+   }
+   
    public void clone(Object srcBean, Object targetBean) {
       throw new IllegalStateException("Yet not implemented");
    }
@@ -97,7 +103,7 @@ public class DefaultMapListPropertyDescriptor extends MapListPropertyDescriptor 
    }
    
    
-   public Set getKeys(Object bean) {      
+   public Set getKeys(Object bean) {
       return (Set)invoke(keysMethod, bean, null);
    }
    

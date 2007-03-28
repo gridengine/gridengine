@@ -1,3 +1,12 @@
+AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
+                            - CULL_CONFIGURE adjustments in testvalues/*/*.xml
+                            - fix of jgdi tests
+                            - jgdi event fixes
+                            - sge_gdi_del_job() master fix for invalid idep
+                            - cleanup: author tags
+                            - jgdi advance reservation test fixes
+                 Review:    RH 
+
 PJ-2007-03-28-0: Cleanup:   all attr_mod functions are now located in sge_utility_qmaster.h
                  Review:    AH
 

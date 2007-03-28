@@ -57,8 +57,7 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
     
     protected JGDI jgdi;
     
-    protected SynchronizedJGDIBase(JGDI jgdi)
-    throws JGDIException {
+    protected SynchronizedJGDIBase(JGDI jgdi) throws JGDIException {
         jgdi = jgdi;
     }
     

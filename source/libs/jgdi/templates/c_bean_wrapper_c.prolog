@@ -32,7 +32,8 @@
 
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
+#include <stdio.h>
+#include <jni.h>
 #include "jgdi.h"
 #include "basis_types.h"
 #include "cull.h"

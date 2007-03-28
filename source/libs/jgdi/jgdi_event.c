@@ -140,6 +140,12 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       DEXIT;
       return -1;
    }
+#if 1   
+   /*
+   ** set the timeout to 1 sec
+   */
+   evc->ec_set_edtime(evc, 1);
+#endif
 
    pthread_mutex_lock(&sge_evc_mutex);
    for (i=0; i<MAX_EVC_ARRAY_SIZE; i++) {
@@ -207,7 +213,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -265,7 +271,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    
    id = sge_evc->ec_get_id(sge_evc);
 
-   if( !sge_evc->ec_deregister(sge_evc) ) {
+   if (!sge_evc->ec_deregister(sge_evc)) {
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
@@ -409,19 +415,39 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
       return;
    }
 
+   logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
+#if 0 
+   /*
+   ** -> RH: we return in jgdi_is_loggable() false
+   */
+   if (logger == NULL) {
+      THROW_ERROR((env, JGDI_ILLEGAL_STATE, "logger is NULL"));
+   }
+#endif   
+
+   if (jgdi_is_loggable(env, logger, FINE) ) {
+      jgdi_log(env, logger, FINE, "before ec_get");
+   }
    sge_evc->ec_get(sge_evc, &elist, true);
 
-
+   if (jgdi_is_loggable(env, logger, FINE) ) {
+      jgdi_log(env, logger, FINE, "after ec_get");
+   }
    for_each(ev, elist) {
       
+      if (jgdi_is_loggable(env, logger, FINE) ) {
+         jgdi_log(env, logger, FINE, "before process_event");
+      }
+
       ret = process_event(env, eventList, ev, &alp);
+      
+      if (jgdi_is_loggable(env, logger, FINE) ) {
+         jgdi_log(env, logger, FINE, "after process_event");
+      }
       
       if(ret != JGDI_SUCCESS) {
          
-         if (logger == NULL) {
-            logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
-         }
-         if (logger != NULL && jgdi_is_loggable(env, logger, WARNING) ) {
+         if (jgdi_is_loggable(env, logger, WARNING) ) {
             
             dstring ds = DSTRING_INIT;
             

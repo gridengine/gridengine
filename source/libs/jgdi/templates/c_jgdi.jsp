@@ -161,7 +161,7 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 %>
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
+#include <jni.h>
 #include "basis_types.h"
 #include "cull.h"
 #include "commlib.h"

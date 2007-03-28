@@ -80,7 +80,25 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
       
    protected <%=jh.getClassName(cullObj)%>Descriptor(Class type, String name) {
       super(type, name);
-      
+<%
+  if(jh.getClassName(cullObj).equals("User")) {
+%>
+      // exclude some configurable attributes for User
+      PropertyDescriptor pd = this.getPropertyByCullFieldName(CullConstants.UP_acl);
+      pd.setConfigurable(false);
+      pd = this.getPropertyByCullFieldName(CullConstants.UP_xacl);
+      pd.setConfigurable(false);
+<%
+  } else if (jh.getClassName(cullObj).equals("Project")) {
+%>
+      // exclude some configurable attributes for Project
+      PropertyDescriptor pd = this.getPropertyByCullFieldName(CullConstants.UP_delete_time);
+      pd.setConfigurable(false);
+      pd = this.getPropertyByCullFieldName(CullConstants.UP_default_project);
+      pd.setConfigurable(false);
+<%
+  }
+%>      
 <% 
   if(cullObj.getOwnAttrCount() > 0 ) {
 %>     
@@ -94,6 +112,7 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
    if(attr.isHidden() ) {
       continue;
    }
+      
    String attrType = jh.getFullClassName(attr.getType());
    String attrName = jh.getAttrName(attr);
 
@@ -184,8 +203,8 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
          <%
       }
    }
-     
-   } // end of for
+
+  } // end of for
 %>
    }
    

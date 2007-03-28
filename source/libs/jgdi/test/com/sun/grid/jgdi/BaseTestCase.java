@@ -101,7 +101,7 @@ public class BaseTestCase extends TestCase {
     private EventClient createEventClient(ClusterConfig cluster, int evcId) throws Exception {
         String url = getConnectURL(cluster);
         if(logger.isLoggable(Level.FINE)) {
-            logger.fine("create jgdi ctx for cluster " + url );
+            logger.fine("create event client ctx for cluster " + url );
         }
         return JGDIFactory.createEventClient(url, evcId);
     }

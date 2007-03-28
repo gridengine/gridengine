@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.event;
 
 /**
  * Java Wrapper task for the JOB_FINISH event.
- *
  */
 public class JobFinishEvent extends JobEvent implements java.io.Serializable {
     

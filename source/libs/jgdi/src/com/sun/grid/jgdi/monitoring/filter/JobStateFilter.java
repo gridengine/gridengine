@@ -35,7 +35,7 @@ import java.io.Serializable;
 
 /**
  * This class build a job state filter.
- * 
+ *
  */
 public class JobStateFilter implements Serializable {
     

@@ -74,6 +74,4 @@ public class SpecialEventTestCase extends BaseTestCase {
       TestSuite suite = new TestSuite( SpecialEventTestCase.class);
       return suite;
    }
- 
-   
 }

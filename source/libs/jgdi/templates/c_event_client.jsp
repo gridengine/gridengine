@@ -166,7 +166,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeGet<
 %>
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
+#include <jni.h>
 #include "jgdi.h"
 #include "basis_types.h"
 #include "cull.h"

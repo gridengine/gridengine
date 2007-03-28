@@ -137,8 +137,12 @@ int main(int argc, char **argv) {
       
       ar_lp = lCreateList(NULL, AR_Type);
       lAppendElem(ar_lp, ar);
-      alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_ADD, &ar_lp, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &ar_lp, NULL, NULL);
 
+      if (ar_lp != NULL) {
+         /* check if the correct ar_id is returned */
+         printf("returned ar_id: "sge_u32, lGetUlong(lFirst(ar_lp), AR_id));
+      }
       lFreeList(&ar_lp);
       lWriteListTo(alp, stdout);
       answer_list_on_error_print_or_exit(&alp, stdout);

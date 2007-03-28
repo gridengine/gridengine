@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.jni;
@@ -45,7 +45,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Abstract base clase for the event client 
+ * Abstract base clase for the event client
  *
  */
 public abstract class AbstractEventClient implements Runnable {
@@ -61,9 +61,9 @@ public abstract class AbstractEventClient implements Runnable {
     * Creates a new instance of EventClient
     * @param url  JGDI connection url in the form
     *             <code>bootstrap://&lt;SGE_ROOT&gt;@&lt;SGE_CELL&gt;:&lt;SGE_QMASTER_PORT&gt;</code>
-    * @param regId  Registration id for the event client (0 => qmaster assignes a 
+    * @param regId  Registration id for the event client (0 => qmaster assignes a
     *               event client id dynamically)
-    * @throws com.sun.grid.jgdi.JGDIException 
+    * @throws com.sun.grid.jgdi.JGDIException
     */
    public AbstractEventClient(String url, int regId) throws JGDIException {
       JGDI jgdi = JGDIFactory.newInstance(url);
@@ -91,7 +91,7 @@ public abstract class AbstractEventClient implements Runnable {
     * to set a dynamic event client id into the java object.</p>
     *
     * @param id the event client id
-    *         
+    *
     */
    public void setId(int id) {
       this.id = id;
@@ -104,7 +104,7 @@ public abstract class AbstractEventClient implements Runnable {
     */
    public int getEVCIndex() {
       synchronized(syncObject) {
-        return evc_index;
+         return evc_index;
       }
    }
    
@@ -113,40 +113,40 @@ public abstract class AbstractEventClient implements Runnable {
     */
    public void close() throws JGDIException, InterruptedException {
       
-       logger.log(Level.FINE, "close event client");
-       Thread aThread = null;
-       int index = 0;
-       JGDI aJgdi = null;
-       synchronized(syncObject) {
-           aThread = thread;
-           index = evc_index;
-           evc_index = -1;
-           thread = null;
-           aJgdi = this.jgdi;
-           syncObject.notifyAll();
-       }
-       try {
-           if( aThread != null ) {
-               while(aThread.isAlive()) {
-                   logger.log(Level.FINE, "interrupting working thread");
-                   aThread.interrupt();
-                   aThread.join();
-               }
-               logger.log(Level.FINE, "working thread died");
-           }
-       } finally {
-           try {
-               if(index >= 0) {
-                   logger.log(Level.FINE, "closing native event client");
-                   closeNative(index);
-               }
-           } finally {
-               if(aJgdi != null) {
-                   logger.log(Level.FINE, "closing jgdi connection for event client");
-                   aJgdi.close();
-               }
-           }
-       }
+      logger.log(Level.FINE, "close event client");
+      Thread aThread = null;
+      int index = 0;
+      JGDI aJgdi = null;
+      synchronized(syncObject) {
+         aThread = thread;
+         index = evc_index;
+         evc_index = -1;
+         thread = null;
+         aJgdi = this.jgdi;
+         syncObject.notifyAll();
+      }
+      try {
+         if (aThread != null ) {
+            while (aThread.isAlive()) {
+               logger.log(Level.FINE, "interrupting working thread " + aThread.getName());
+               aThread.interrupt();
+               aThread.join();
+            }
+            logger.log(Level.FINE, "working thread died");
+         }
+      } finally {
+         try {
+            if (index >= 0) {
+               logger.log(Level.FINE, "closing native event client");
+               closeNative(index);
+            }
+         } finally {
+            if (aJgdi != null) {
+               logger.log(Level.FINE, "closing jgdi connection for event client");
+               aJgdi.close();
+            }
+         }
+      }
    }
    
    /**
@@ -154,12 +154,13 @@ public abstract class AbstractEventClient implements Runnable {
     */
    public void start() throws InterruptedException {
       synchronized(syncObject) {
-         if( thread == null ) {
+         if (thread == null ) {
             thread = new Thread(this);
+            thread.setPriority(Thread.NORM_PRIORITY - 1);
             thread.start();
             syncObject.wait();
          } else {
-             throw new IllegalStateException("event client is already running");
+            throw new IllegalStateException("event client is already running");
          }
       }
    }
@@ -181,45 +182,50 @@ public abstract class AbstractEventClient implements Runnable {
          
          ArrayList eventList = new ArrayList();
          logger.fine("event client registered at qmaster (id = " + getId() + ")");
-         while( !Thread.currentThread().isInterrupted() ) {
-             boolean gotShutdownEvent = false;
-             try {
-                 synchronized(syncObject) {
-                     if(thread == null) {
-                         break;
+         
+         while (!Thread.currentThread().isInterrupted()) {
+            boolean gotShutdownEvent = false;
+            try {
+               synchronized(syncObject) {
+                  if (thread == null) {
+                     break;
+                  }
+                  if (evc_index < 0) {
+                     break;
+                  }
+                  logger.log(Level.FINE, "calling native method fillEvents");
+                  fillEvents(eventList);
+               }
+               if (logger.isLoggable(Level.FINE)) {
+                  logger.log(Level.FINE, "got {0} events from qmaster", new Integer(eventList.size()));
+               }
+               Iterator iter = eventList.iterator();
+               while (iter.hasNext()) {
+                  try {
+                     Event event = (Event)iter.next();
+                     fireEventOccured(event);
+                     if (event instanceof QmasterGoesDownEvent) {
+                        gotShutdownEvent = true;
                      }
-                     if(evc_index < 0) {
-                         break;
-                     }
-                     logger.log(Level.FINE,"calling native method fillEvents");
-                     fillEvents(eventList);
-                 }
-                 if(logger.isLoggable(Level.FINE)) {
-                     logger.log(Level.FINE, "got {0} events from qmaster", new Integer(eventList.size()));
-                 }
-                 Iterator iter = eventList.iterator();
-                 while( iter.hasNext() ) {
-                     try {
-                         Event event = (Event)iter.next();
-                         fireEventOccured(event);
-                         if(event instanceof QmasterGoesDownEvent) {
-                             gotShutdownEvent = true;
-                         }
-                     } catch(Exception e) {
-                         e.printStackTrace();
-                     }
-                 }
-             } catch( Exception e ) {
-                 e.printStackTrace();
-             }
-             eventList.clear();
-             if(gotShutdownEvent) {
-                 logger.log(Level.FINE,"got shutdown event from master, exiting event thread");
-                 break;
-             }
+                  } catch(Exception e) {
+                     e.printStackTrace();
+                  }
+               }
+//give threads a different priority or use Thread.sleep() or queue events ?????
+//               Thread.sleep(1);
+               Thread.yield();
+            } catch( Exception e ) {
+               e.printStackTrace();
+            }
+            eventList.clear();
+            if (gotShutdownEvent) {
+               logger.log(Level.FINE, "got shutdown event from master, exiting event thread");
+               break;
+            }
          }
          // Deregister the event clients, no new message will be accepted
          deregister();
+         
          
       } catch( JGDIException jgdie ) {
          // TODO
@@ -236,15 +242,15 @@ public abstract class AbstractEventClient implements Runnable {
     *  @return <code>true</code> if the event client is running
     */
    public boolean isRunning() {
-       synchronized(syncObject) {
-           return thread != null && thread.isAlive();
-       }
+      synchronized(syncObject) {
+         return thread != null && thread.isAlive();
+      }
    }
    
    protected void testConnected() throws JGDIException {
-       if(jgdi == null) {
-           throw new JGDIException("Not connected");
-       }
+      if (jgdi == null) {
+         throw new JGDIException("Not connected");
+      }
    }
    
    /**
@@ -252,9 +258,9 @@ public abstract class AbstractEventClient implements Runnable {
     *  @throws JGDIException if the subscribtion is failed
     */
    public void subscribeAll() throws JGDIException {
-       synchronized(syncObject) {
-           subscribeAllNative();
-       }
+      synchronized(syncObject) {
+         subscribeAllNative();
+      }
    }
    
    
@@ -264,12 +270,12 @@ public abstract class AbstractEventClient implements Runnable {
     */
    public void unsubscribeAll() {
       synchronized(syncObject) {
-          try {
-             unsubscribeAllNative();
-          } catch (JGDIException jgdie) {
-             // TODO
-             jgdie.printStackTrace();
-          }
+         try {
+            unsubscribeAllNative();
+         } catch (JGDIException jgdie) {
+            // TODO
+            jgdie.printStackTrace();
+         }
       }
       
    }
@@ -313,27 +319,32 @@ public abstract class AbstractEventClient implements Runnable {
    
    public void commit() throws JGDIException {
       synchronized(syncObject) {
-          testConnected();
-          nativeCommit();
+         logger.log(Level.FINE, "commit");
+         testConnected();
+         nativeCommit();
       }
    }
    
    private void register() throws JGDIException {
-       synchronized(syncObject) {
-          testConnected();
-          registerNative();
-       }
+      synchronized(syncObject) {
+         logger.log(Level.FINE, "register");
+         testConnected();
+         registerNative();
+      }
    }
    
    private void deregister() throws JGDIException {
-       synchronized(syncObject) {
-          testConnected();
-          registerNative();
-       }
+      synchronized(syncObject) {
+         if (evc_index >= 0) {
+            logger.log(Level.FINE, "deregistered");
+            deregisterNative();
+         } else {
+            logger.log(Level.FINE, "can't deregister, already closed");
+         }
+      }
    }
    
    private native void nativeCommit() throws JGDIException;
-   
    private native void subscribeNative(int type) throws JGDIException;
    private native void unsubscribeNative(int type) throws JGDIException;
    private native void subscribeAllNative() throws JGDIException;
@@ -341,9 +352,7 @@ public abstract class AbstractEventClient implements Runnable {
    private native void closeNative(int evcIndex) throws JGDIException;
    private native int initNative(JGDI jgdi, int regId) throws JGDIException;
    private native void registerNative() throws JGDIException;
-   
    private native void deregisterNative() throws JGDIException;
-   
    private native void fillEvents(List eventList) throws JGDIException;
    
 }

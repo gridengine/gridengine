@@ -90,10 +90,12 @@ public class <%=name%>DelEvent extends DelEvent implements java.io.Serializable 
          String gsmName = Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
 
          if(jh.getFullClassName(attr.getType()).equals(String.class.getName())) {
-%>          if (!m_<%=attrName%>.equals(obj1.get<%=gsmName%>())) {
+%>         // Attention: strkey must be set for cull event elem
+         if (!m_<%=attrName%>.equals(obj1.get<%=gsmName%>())) {
 <%
          } else if (jh.getClassName(attr.getType()).equals("int")) {
-%>          if (m_<%=attrName%> != obj1.get<%=gsmName%>()) {
+%>         // Attention: intkey must be set for cull event elem   
+         if (m_<%=attrName%> != obj1.get<%=gsmName%>()) {
 <%
          } else {
 

@@ -153,7 +153,7 @@ public class PETaskEventTestCase extends BaseTestCase {
         jgdi.enableQueues(new String [] { queue.getName() }, false);
 
         
-        assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 4));
+        assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 10));
         assertEquals("Too few pe task add events", numberOfTasks, lis.getAddEventCount() );
         assertEquals("Too few pe task del events", numberOfTasks - 1 , lis.getDelEventCount());
         

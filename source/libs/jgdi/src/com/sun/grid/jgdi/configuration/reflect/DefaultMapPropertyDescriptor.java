@@ -94,6 +94,4 @@ public class DefaultMapPropertyDescriptor extends MapPropertyDescriptor {
    public void put(Object bean, Object key, Object value) {
       invoke(putMethod, bean, new Object[] { key, value } );
    }
-   
-   
 }

@@ -4,99 +4,10 @@
    <hostlist>
       <string>@allhosts</string>
    </hostlist>
-   <qinstances>
-      <QU_Type>
-         <qhostname>${host}</qhostname>
-         <qname>all.q</qname>
-         <fullName>${name}@${host}</fullName>
-         <seqNo>0</seqNo>
-         <nsuspend>1</nsuspend>
-         <qtype>3</qtype>
-         <jobSlots>1</jobSlots>
-         <tmpdir>/tmp</tmpdir>
-         <shell>/bin/csh</shell>
-         <calendar>NONE</calendar>
-         <priority>0</priority>
-         <processors>UNDEFINED</processors>
-         <prolog>NONE</prolog>
-         <epilog>NONE</epilog>
-         <shellStartMode>posix_compliant</shellStartMode>
-         <starterMethod>NONE</starterMethod>
-         <suspendMethod>NONE</suspendMethod>
-         <resumeMethod>NONE</resumeMethod>
-         <terminateMethod>NONE</terminateMethod>
-         <initialState>default</initialState>
-         <rerun>false</rerun>
-         <sRt>INFINITY</sRt>
-         <hRt>INFINITY</hRt>
-         <sCpu>INFINITY</sCpu>
-         <hCpu>INFINITY</hCpu>
-         <sFsize>INFINITY</sFsize>
-         <hFsize>INFINITY</hFsize>
-         <sData>INFINITY</sData>
-         <hData>INFINITY</hData>
-         <sStack>INFINITY</sStack>
-         <hStack>INFINITY</hStack>
-         <sCore>INFINITY</sCore>
-         <hCore>INFINITY</hCore>
-         <sRss>INFINITY</sRss>
-         <hRss>INFINITY</hRss>
-         <sVmem>INFINITY</sVmem>
-         <hVmem>INFINITY</hVmem>
-         <suspendInterval>00:05:00</suspendInterval>
-         <minCpuInterval>00:05:00</minCpuInterval>
-         <notify>00:00:60</notify>
-         <pe>
-            <string>make</string>
-         </pe>
-         <consumableConfig>
-            <CE_Type>
-               <name>slots</name>
-               <valtype>0</valtype>
-               <stringval>1</stringval>
-               <relop>0</relop>
-               <consumable>false</consumable>
-               <requestable>0</requestable>
-            </CE_Type>
-
-         </consumableConfig>
-         <loadThresholds>
-            <CE_Type>
-               <name>np_load_avg</name>
-               <valtype>0</valtype>
-               <stringval>1.75</stringval>
-               <relop>0</relop>
-               <consumable>false</consumable>
-               <requestable>0</requestable>
-            </CE_Type>
-
-         </loadThresholds>
-         <queueNumber>1</queueNumber>
-         <state>0</state>
-         <version>0</version>
-         <suspendedOnSubordinate>0</suspendedOnSubordinate>
-         <lastSuspendThresholdCkeck>0</lastSuspendThresholdCkeck>
-         <jobCnt>0</jobCnt>
-         <pendingJobCnt>0</pendingJobCnt>
-         <softViolation>0</softViolation>
-         <hostSeqNo>0</hostSeqNo>
-         <resourceUtilization>
-            <RUE_Type>
-               <name>slots</name>
-               <utilizedNow>0.0</utilizedNow>
-            </RUE_Type>
-
-         </resourceUtilization>
-         <gdiDoLater>0</gdiDoLater>
-      </QU_Type>
-
-   </qinstances>
    <seqNo key='@/'>0</seqNo>
-   <nsuspend key='@/'>1</nsuspend>
-   <jobSlots key='hermes'>1</jobSlots>
-   <jobSlots key='vdr'>1</jobSlots>
-   <jobSlots key='@/'>1</jobSlots>
-   <rerun key='@/'>false</rerun>
+   <nsuspend key='@/'>2</nsuspend>
+   <jobSlots key='@/'>30</jobSlots>
+   <rerun key='@/'>true</rerun>
    <sFsize key='@/'>INFINITY</sFsize>
    <hFsize key='@/'>INFINITY</hFsize>
    <sData key='@/'>INFINITY</sData>
@@ -129,9 +40,16 @@
    <resumeMethod key='@/'>NONE</resumeMethod>
    <terminateMethod key='@/'>NONE</terminateMethod>
    <initialState key='@/'>default</initialState>
-   <pe key='@/'><string>make</string></pe>
+   <pe key='@allhosts'><string>make</string></pe>
+   <pe key='@/'><string>NONE</string></pe>
+   <ckpt key='@/'><string>NONE</string></ckpt>
+   <owner key='@/'><US_Type>NONE</US_Type></owner>
+   <acl key='@/'><US_Type>NONE</US_Type></acl>
+   <xacl key='@/'><US_Type>NONE</US_Type></xacl>
+   <projects key='@/'><UP_Type>NONE</UP_Type></projects>
+   <xprojects key='@/'><UP_Type>NONE</UP_Type></xprojects>
    <loadThresholds key='@/'>
-      <CE_Type>
+     <CE_Type>
          <name>np_load_avg</name>
          <valtype>0</valtype>
          <stringval>1.75</stringval>
@@ -140,5 +58,24 @@
          <requestable>0</requestable>
       </CE_Type>
    </loadThresholds>
+   <suspendThresholds key='flip'>
+     <CE_Type>NONE</CE_Type>
+   </suspendThresholds>
+   <suspendThresholds key='@/'>
+      <CE_Type>
+         <name>arch</name>
+         <valtype>0</valtype>
+         <stringval>lx26-x86</stringval>
+         <relop>0</relop>
+         <consumable>false</consumable>
+         <requestable>0</requestable>
+      </CE_Type>
+   </suspendThresholds>
+   <consumableConfig key='@/'>
+      <CE_Type>NONE</CE_Type>
+   </consumableConfig>
+   <subordinate key='@/'>
+      <SO_Type>NONE</SO_Type>
+   </subordinate>
    <qtype key='@/'>3</qtype>
 </CQ_Type>

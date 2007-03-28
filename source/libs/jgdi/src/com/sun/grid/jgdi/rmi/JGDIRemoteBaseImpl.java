@@ -56,9 +56,10 @@ public class JGDIRemoteBaseImpl extends UnicastRemoteObject implements JGDIRemot
     protected JGDI jgdi;
     protected Logger logger = Logger.getLogger("com.sun.grid.jgdi.rmi");
     
-    protected JGDIRemoteBaseImpl(String url)
-    throws RemoteException, JGDIException {
-        jgdi = JGDIFactory.newSynchronizedInstance(url);
+    protected JGDIRemoteBaseImpl(String url) throws RemoteException, JGDIException {
+// synchronized version does not work with RMI - why ?
+//        jgdi = JGDIFactory.newSynchronizedInstance(url);
+        jgdi = JGDIFactory.newInstance(url);
     }
     
     public void close() throws RemoteException {

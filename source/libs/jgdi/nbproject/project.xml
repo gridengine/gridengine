@@ -49,65 +49,65 @@
                     <target>test</target>
                 </action>
                 <action name="test.single">
-                   <target>test.selected.files</target>
-                   <context>
-                       <property>selected.test.class</property>
-                       <folder>test</folder>
-                       <pattern>\.java$</pattern>
-                       <format>relative-path</format>
-                       <arity>
-                           <separated-files>,</separated-files>
-                       </arity>
-                       </context>                
+                    <target>test.selected.files</target>
+                    <context>
+                        <property>selected.test.class</property>
+                        <folder>test</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
                 </action>
                 <action name="test.single">
-                   <target>test.selected.genfiles</target>
-                   <context>
-                       <property>selected.test.class</property>
-                       <folder>build/gensrc</folder>
-                       <pattern>\.java$</pattern>
-                       <format>relative-path</format>
-                       <arity>
-                           <separated-files>,</separated-files>
-                       </arity>
-                       </context>                
+                    <target>test.selected.genfiles</target>
+                    <context>
+                        <property>selected.test.class</property>
+                        <folder>build/gensrc</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
                 </action>
-
                 <action name="debug.test.single">
-                   <target>test.selected.files.debug</target>
-                   <context>
-                       <property>selected.test.class</property>
-                       <folder>test</folder>
-                       <pattern>\.java$</pattern>
-                       <format>relative-path</format>
-                       <arity>
-                           <separated-files>,</separated-files>
-                       </arity>
-                       </context>                
+                    <target>test.selected.files.debug</target>
+                    <context>
+                        <property>selected.test.class</property>
+                        <folder>test</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
                 </action>
-                
                 <action name="debug.test.single">
-                   <target>test.selected.genfiles.debug</target>
-                   <context>
-                       <property>selected.test.class</property>
-                       <folder>build/gensrc</folder>
-                       <pattern>\.java$</pattern>
-                       <format>relative-path</format>
-                       <arity>
-                           <separated-files>,</separated-files>
-                       </arity>
-                       </context>                
+                    <target>test.selected.genfiles.debug</target>
+                    <context>
+                        <property>selected.test.class</property>
+                        <folder>build/gensrc</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
                 </action>
-                
-                
             </ide-actions>
             <export>
                 <type>jar</type>
-                <location>jgdi.jar</location>
-                <build-target>jar</build-target>
+                <location>build/jgdi.jar</location>
+                <build-target>all</build-target>
             </export>
             <view>
                 <items>
+                    <source-folder style="dir">
+                        <label>templates</label>
+                        <location>templates</location>
+                    </source-folder>
                     <source-folder style="packages">
                         <label>build/gensrc</label>
                         <location>build/gensrc</location>
@@ -117,16 +117,12 @@
                         <location>src</location>
                     </source-folder>
                     <source-folder style="packages">
-                        <label>test</label>
-                        <location>test</location>
-                    </source-folder>
-                    <source-folder style="packages">
                         <label>examples</label>
                         <location>examples/src</location>
                     </source-folder>
-                    <source-folder style="dir">
-                        <label>templates</label>
-                        <location>templates</location>
+                    <source-folder style="packages">
+                        <label>test</label>
+                        <location>test</location>
                     </source-folder>
                     <source-file>
                         <location>build.xml</location>
@@ -160,7 +156,7 @@
                 <package-root>test</package-root>
                 <package-root>examples/src</package-root>
                 <classpath mode="compile">${libs.junit.classpath}</classpath>
-                <built-to>jgdi.jar</built-to>
+                <built-to>build/jgdi.jar</built-to>
                 <source-level>1.4</source-level>
             </compilation-unit>
         </java-data>

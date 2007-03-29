@@ -1,3 +1,8 @@
+AH-2007-03-29-0: Bugfix:    Resource quotas broken after qmaster restart
+                 Bugster:   6539792
+                 Issue:     2224
+                 Review:    RD
+
 AA-2007-03-28-2: Bugfix:    reverted jgdi_qhost to previous version
 
 DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the main page.

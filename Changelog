@@ -1,8 +1,9 @@
 AA-2007-03-29-0: Bugfix:    broken build for AIX due to wrong comments in template file
 
 AH-2007-03-28-0: Bugfix:    Resource quotas broken after qmaster restart
-                 Bugster:   6538293
-                 Review:    TBD
+                 Bugster:   6539792
+                 Issue:     2224
+                 Review:    RD
 
 AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
                             - CULL_CONFIGURE adjustments in testvalues/*/*.xml

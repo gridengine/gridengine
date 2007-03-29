@@ -491,7 +491,12 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
       if (strcmp("*", scope) == 0) {
          lEnumeration *what = lWhat("%T(%I)", dp, nm);
 
-         lFreeList(scope_ref); /* that look strange: list is simply free()'d */
+         lFreeList(scope_ref); 
+         /* 
+          * that looks strange: list is simply free()'d 
+          * however this is no bug since any entry contained 
+          * in the old scope_ref list will be also in the new one 
+          */
          *scope_ref = lSelect("", master_list, NULL, what);
          lFreeWhat(&what);
          ret = false;               
@@ -561,8 +566,7 @@ static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_n
       DRETURN(ret);
    }
 
-   filter = lGetObject(rule, filter_nm);
-   if (!filter) {
+   if ((filter = lGetObject(rule, filter_nm))==NULL) {
       DRETURN(ret);
    }
 

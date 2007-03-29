@@ -38,11 +38,11 @@
 
    <target name="aimk" depends="aimk.init, gensrc.native, javah">
       <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
-      <aimk_call args="${aimk.targetbits} -only-core jgdi_all"/>
+      <aimk_call args="${aimk.targetbits} ${aimk.insure} -only-core jgdi_all"/>
    </target>
 
    <target name="aimk.clean" depends="aimk.init">
-      <aimk_call args="${aimk.targetbits} -only-core jgdi_clean"/>
+      <aimk_call args="${aimk.targetbits} ${aimk.insure} -only-core jgdi_clean"/>
    </target>
 
    <target name="aimk.template.required" depends="aimk.init, init">
@@ -60,12 +60,6 @@
        </dependset>
       <aimk_call args="${aimk.targetbits} -only-core jgdi_template"/>
    </target>
-   
-   <target name="aimk.drmaa" depends="aimk.init">
-      <aimk_call args="${aimk.targetbits} -only-core drmaalib"/>
-   </target>
-   
-   
 
    <target name="init">
        
@@ -734,11 +728,12 @@
       <property name="sge.src.arch" value="${sge.compile.arch}"/>
       
       <property name="sge.src.targetbits" value="${env.AIMK_TARGET_BITS}"/>
-
+		<property name="aimk.insure" value="${env.AIMK_INSURE}"/>
+		
       <echo message="sge.arch=${sge.arch}"/>
       <echo message="sge.src.arch=${sge.src.arch}"/> 
       <echo message="sge.src.targetbits=${sge.src.targetbits}"/> 
-     
+      <echo message="aimk.insure=${aimk.insure}"/> 
 
       <condition property="aimk.targetbits" value="-64">
           <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>

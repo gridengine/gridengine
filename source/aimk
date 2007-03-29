@@ -42,7 +42,7 @@
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB
-unsetenv AIMK_TARGET_BITS aimk_buildarch
+unsetenv AIMK_INSURE AIMK_TARGET_BITS aimk_buildarch
 
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
@@ -2264,6 +2264,11 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
+   if ( "$INSURE_FLAG" != "" ) then
+      setenv AIMK_INSURE -insure
+   else
+      setenv AIMK_INSURE ""
+   endif   
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
    # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
@@ -2568,7 +2573,11 @@ echo done.
 if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
       echo ""
       echo "Executing aimk again to build 32 bit shared libraries."
-      ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      if ( "$JAVA" > 0 ) then
+         ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+      else 
+         ./aimk -32 -only-core libdrmaa.so libjuti.so
+      endif
       exit $status
    endif
 endif

@@ -728,8 +728,13 @@
       <property name="sge.src.arch" value="${sge.compile.arch}"/>
       
       <property name="sge.src.targetbits" value="${env.AIMK_TARGET_BITS}"/>
-		<property name="aimk.insure" value="${env.AIMK_INSURE}"/>
-		
+
+      <condition property="aimk.insure" value="${env.AIMK_INSURE}">
+         <isset property="env.AIMK_INSURE"/>
+      </condition>
+      <!-- else -->
+      <property name="aimk.insure" value="" />
+
       <echo message="sge.arch=${sge.arch}"/>
       <echo message="sge.src.arch=${sge.src.arch}"/> 
       <echo message="sge.src.targetbits=${sge.src.targetbits}"/> 
@@ -830,6 +835,7 @@
    <target name="test.selected.files" depends="test.selected.init, jni.init">
       <test.selected dir="test"/>
    </target>
+
    <target name="test.selected.files.debug" depends="test.selected.init">
       <test.selected.debug dir="test"/>
    </target>
@@ -841,7 +847,7 @@
    <target name="test.selected.genfiles.debug" depends="test.selected.init, jni.init">
       <test.selected.debug dir="${gensrc.dir}"/>
    </target>
-        
+
    <target name="test" depends="jni.init, jar, aimk" description="Run junit tests">
       <junit printsummary="withOutAndErr" haltonfailure="no" fork="yes" dir="${basedir}"> 
          <jvmarg line="${sge.jvmargs}"/>

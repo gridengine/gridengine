@@ -104,7 +104,7 @@ typedef struct {
    lList      *centry_list;       /* the complex entries (CE_Type)                  */
    lList      *acl_list;          /* the user sets (US_Type)                        */
    lList      *hgrp_list;         /* the host group list (HGRP_Type)                */
-   lList      *rqs_list;         /* the resource quota set list (RQS_Type)       */ 
+   lList      *rqs_list;          /* the resource quota set list (RQS_Type)         */ 
    bool       is_reservation;     /* true, if a reservation for this job should be done */
    /* ------ this section is the resulting assignment ----------------------------- */
    lListElem  *pe;                /* the parallel environment (PE_Type)             */

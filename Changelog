@@ -1,3 +1,6 @@
+DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the howtos
+                              page.
+
 AH-2007-03-29-2: Bugfix:    Quota verification time of scheduler may not grow with
                             the number of queues if all jobs go in single queue
                  Bugster:   6539215

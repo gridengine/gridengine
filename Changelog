@@ -1,3 +1,7 @@
+AA-2007-03-29-1: Enhancem.: insure support for jgdi
+                            Job testvalues
+                 Review:    LP
+
 AH-2007-03-29-0: Bugfix:    Resource quotas broken after qmaster restart
                  Bugster:   6539792
                  Issue:     2224

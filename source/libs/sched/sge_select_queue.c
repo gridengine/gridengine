@@ -3197,6 +3197,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
    lListElem *queue_instance = NULL;
    lListElem *rqs = NULL;
    bool no_check = false;
+   bool suited = true;
    dstring rule_name = DSTRING_INIT;
 
    dispatch_t result = DISPATCH_NEVER_CAT;
@@ -3211,26 +3212,20 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
       u_long32 tt_rqs_all = 0;
 
       if (no_check == false) {
+         const char *user = lGetString(a->job, JB_owner);
+         const char *group = lGetString(a->job, JB_group);
+         const char *project = lGetString(a->job, JB_project);
+         const char *host_name = lGetHost(queue_instance, QU_qhostname);
+         const char *queue_name = lGetString(queue_instance, QU_qname);
          dispatch_t rqs_result = DISPATCH_OK;
 
          for_each(rqs, a->rqs_list) {
-            const char *user = NULL;
-            const char *group = NULL;
-            const char *project = NULL;
-            const char *host_name = NULL;
-            const char *queue_name = NULL;
-            const lListElem *rule = NULL;
             u_long32 tt_rqs = a->start;
+            const lListElem *rule = NULL;
 
             if (!lGetBool(rqs, RQS_enabled)) {
                continue;
             }
-
-            user = lGetString(a->job, JB_owner);
-            group = lGetString(a->job, JB_group);
-            project = lGetString(a->job, JB_project);
-            host_name = lGetHost(queue_instance, QU_qhostname);
-            queue_name = lGetString(queue_instance, QU_qname);
 
             sge_dstring_clear(&rule_name);
             rule = rqs_get_matching_rule(rqs, user, group, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
@@ -3244,8 +3239,15 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                }
                
                if (rqs_result != DISPATCH_OK) {
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
-                  DPRINTF(("resource quota set %s deny job execution\n on %s@%s\n", sge_dstring_get_string(&rule_name), queue_name, host_name));
+                  if (!a->is_reservation && !lGetObject(rule, RQR_filter_hosts) && !lGetObject(rule, RQR_filter_queues)) {
+                     no_check = true; /* no further checks needed as it is globally rejected */
+                     suited = false;
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_S, sge_dstring_get_string(&rule_name));
+                     DPRINTF(("resource quota set %s deny job execution globally: %s\n", sge_dstring_get_string(&rule_name)));
+                  } else {
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
+                     DPRINTF(("resource quota set %s deny job execution on %s@%s\n", sge_dstring_get_string(&rule_name), queue_name, host_name));
+                  }
                   break;
                }
                tt_rqs_all = MAX(tt_rqs_all, tt_rqs);
@@ -3263,8 +3265,13 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
             lSetUlong(queue_instance, QU_tag, 0);
          }
       } else {
-         lSetUlong(queue_instance, QU_tag, 1);
-         result = DISPATCH_OK;
+         if (suited) {
+            lSetUlong(queue_instance, QU_tag, 1);
+            result = DISPATCH_OK;
+         } else {
+            lSetUlong(queue_instance, QU_tag, 0);
+            /* result is already set */
+         }
       }
    }
 

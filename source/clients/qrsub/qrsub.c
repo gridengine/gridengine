@@ -143,8 +143,9 @@ int main(int argc, char **argv) {
          /* check if the correct ar_id is returned */
          printf("returned ar_id: "sge_u32, lGetUlong(lFirst(ar_lp), AR_id));
       }
+      lWriteElemTo(lFirst(ar_lp), stdout);
       lFreeList(&ar_lp);
-      lWriteListTo(alp, stdout);
+/*       lWriteListTo(alp, stdout); */
       answer_list_on_error_print_or_exit(&alp, stdout);
    }
 
@@ -169,7 +170,6 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
    /*  -help 	 print this help */
    if ((ep = lGetElemStr(pcmdline, SPA_switch, "-help"))) {
       lRemoveElem(pcmdline, &ep);
-      /* -PJ- TDB: The qrsub -help output need to be enhanced */
       sge_usage(QRSUB, stdout);
       DEXIT;
       SGE_EXIT(NULL, 0);
@@ -221,12 +221,14 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
    /*  -q wc_queue_list 	 reserve in queue(s) SGE_LIST */
    parse_list_simple(pcmdline, "-q", *ar, AR_queue_list, 0, 0, FLG_LIST_APPEND);
 
-   /*    -pe pe_name slot_range reserve slot range for parallel jobs */
+  /*    -pe pe_name slot_range reserve slot range for parallel jobs */
    while ((ep = lGetElemStr(pcmdline, SPA_switch, "-pe"))) {
       lSetString(*ar, AR_pe, lGetString(ep, SPA_argval_lStringT)); /* SGE_STRING, */
       lSwapList(*ar, AR_pe_range, ep, SPA_argval_lListT);       /* SGE_LIST */
       lRemoveElem(pcmdline, &ep);
    }
+   /*   AR_master_queue_list  -masterq wc_queue_list, SGE_LIST bind master task to queue(s) */
+   parse_list_simple(pcmdline, "-masterq", *ar, AR_master_queue_list, 0, 0, FLG_LIST_APPEND);
 
    /*  -ckpt ckpt-name 	 reserve in queue with ckpt method SGE_STRING */
    while ((ep = lGetElemStr(pcmdline, SPA_switch, "-ckpt"))) {
@@ -254,7 +256,7 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 
    /*  -he yes/no 	 hard error handling SGE_ULONG */
    while ((ep = lGetElemStr(pcmdline, SPA_switch, "-he"))) {
-      lSetUlong(*ar, AR_error_handling, lGetUlong(ep, SPA_argval_lStringT));
+      lSetUlong(*ar, AR_error_handling, lGetUlong(ep, SPA_argval_lUlongT));
       lRemoveElem(pcmdline, &ep);
    }
 

@@ -49,6 +49,7 @@
 #include "sge_time.h"
 #include "sge_log.h"
 #include "sge.h"
+#include "sge_strL.h"
 #include "symbols.h"
 #include "sge_utility.h"
 #include "sge_object.h"
@@ -208,6 +209,11 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
       /*   AR_mail_list, SGE_LIST */
       /*   PJ TBD: check list */
       
+      /*   AR_master_queue_list  -masterq wc_queue_list, SGE_LIST bind master task to queue(s) */
+      if (!qref_list_is_valid(lGetList(ar, AR_master_queue_list), alpp)) {
+         goto ERROR;
+      }
+       
       
       /*   AR_pe, SGE_STRING,  AR_pe_range, SGE_LIST */
       {
@@ -230,12 +236,12 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
             }
          }
          /*   AR_acl_list, SGE_LIST */
-         if (userset_list_validate_acl_list(lGetList(ar, AR_acl_list), alpp) != STATUS_OK) {
+         if (userset_list_validate_access(lGetList(ar, AR_acl_list), ST_name, alpp) != STATUS_OK) {
             goto ERROR;
          }
          
          /*   AR_xacl_list, SGE_LIST */
-         if (userset_list_validate_acl_list(lGetList(ar, AR_xacl_list), alpp) != STATUS_OK) {
+         if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ST_name, alpp) != STATUS_OK) {
             goto ERROR;
          }
       }

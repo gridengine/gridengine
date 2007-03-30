@@ -108,6 +108,7 @@ enum {
 
    AR_pe,
    AR_pe_range,
+   AR_master_queue_list,
 
    AR_acl_list,
    AR_xacl_list,
@@ -144,6 +145,7 @@ LISTDEF(AR_Type)
 
    SGE_STRING(AR_pe, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)              
    SGE_LIST(AR_pe_range, RN_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)     
+   SGE_LIST(AR_master_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)
 
    SGE_LIST(AR_acl_list, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
    SGE_LIST(AR_xacl_list, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
@@ -178,6 +180,7 @@ NAMEDEF(ARN)
 
    NAME("AR_pe")
    NAME("AR_pe_range")
+   NAME("AR_master_queue_list")
 
    NAME("AR_acl_list")
    NAME("AR_xacl_list")

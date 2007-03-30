@@ -180,6 +180,8 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    attr_mod_sub_list(alpp, new_ar, AR_mail_list, AR_name, ar, sub_command, SGE_ATTR_MAIL_LIST, SGE_OBJ_AR, 0); 
    /*   AR_pe, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_pe, object->object_name);
+   /*   AR_master_queue_list, SGE_LIST */
+   attr_mod_sub_list(alpp, new_ar ,AR_master_queue_list, AR_name, ar, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_pe_range, SGE_LIST */
    attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_PE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_acl_list, SGE_LIST */

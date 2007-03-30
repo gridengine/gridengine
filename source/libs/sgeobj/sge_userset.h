@@ -47,8 +47,9 @@ userset_list_locate(lList *lp, const char *name);
 int 
 userset_validate_entries(lListElem *userset, lList **alpp, int start_up);
 
-int
-userset_list_validate_acl_list(lList *acl_list, lList **alpp);
+int userset_list_validate_acl_list(lList *acl_list, lList **alpp);
+
+int userset_list_validate_access(lList *acl_list, int nm, lList **alpp);
 
 const char *
 userset_get_type_string(const lListElem *userset, lList **answer_list,

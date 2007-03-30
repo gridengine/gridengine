@@ -846,8 +846,16 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
       } 
       else {
          bool is_scheduler_resync = false;
+         bool return_new_version = false;
          lList *ppList = NULL;
 
+         if (sub_command & SGE_GDI_RETURN_NEW_VERSION) {
+             if (request->target == SGE_AR_LIST) {
+                return_new_version = true;
+             }
+             sub_command = sub_command & (~SGE_GDI_RETURN_NEW_VERSION);
+         }
+         
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
          if (request->target == SGE_ORDER_LIST) {
@@ -900,8 +908,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                   
                   if (request->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], request->commproc)) {
                      sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target, monitor);
-                  } 
-                  else {
+                  } else {
                      sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
                   }
                   break;
@@ -924,7 +931,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
          /*
          ** ppList contains the changed AR element, set in ar_success
          */
-         if (request->target == SGE_AR_LIST && sub_command & SGE_GDI_RETURN_NEW_VERSION ) {
+         if (return_new_version) {
             lFreeList(&(answer->lp));
             answer->lp = ppList;
             ppList = NULL;
@@ -950,8 +957,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
       lFreeList(&ticket_orders);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*

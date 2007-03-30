@@ -43,6 +43,7 @@
 #include "sge_answer.h"
 #include "parse.h"
 #include "sge_utility.h"
+#include "sge_hgroup.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -194,6 +195,51 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
    DRETURN(STATUS_OK);
 }
 
+
+/****** sge_userset/userset_list_validate_access() *****************************
+*  NAME
+*     userset_list_validate_access() -- all user sets names in list must exist  
+*
+*  SYNOPSIS
+*     int userset_list_validate_access(lList *acl_list, int nm, lList **alpp) 
+*
+*  FUNCTION
+*     All the user set names in the acl_list must be defined in the qmaster
+*     user set lists. The user set is diferentiated from user names by @ sign
+*
+*  INPUTS
+*     lList *acl_list - the acl list to check
+*     int nm          - field name
+*     lList **alpp    - answer list pointer
+*
+*  RESULT
+*     int - STATUS_OK if no error,  STATUS_EUNKNOWN otherwise
+*
+*  NOTES
+*     MT-NOTE: userset_list_validate_access() is not MT safe 
+*
+*******************************************************************************/
+int userset_list_validate_access(lList *acl_list, int nm, lList **alpp)
+{
+   lListElem *usp;
+   char *user;
+
+   DENTER(TOP_LAYER, "userset_list_validate_access");
+
+   for_each (usp, acl_list) {
+      user = (char *) lGetString(usp, nm);
+      if (is_hgroup_name(user) == true){
+         user++;  /* jump ower the @ sign */
+         if (!lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, user)) {
+            ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, user ? user : "<NULL>"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EUNKNOWN);
+         }
+      }
+   }
+
+   DRETURN(STATUS_OK);
+}
 /****** sgeobj/userset/userset_validate_entries() *******************************
 *  NAME
 *     userset_validate_entries() -- verify entries of a user set

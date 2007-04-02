@@ -1,11 +1,19 @@
-PJ-2007-03-30-0: Enhancm:   added and tested qrsub all options as are defined in FSD 6.2 AR document  
+JG-2007-04-02-0: Bugfix:    Hybrid user/project sharetree was broken with array 
+                            jobs.
+                 Bugster:   6538293
+                 Issue:     2222
+                 Review:    AH
+
+PJ-2007-03-30-0: Enhancm:   added and tested qrsub all options as are defined 
+                            in FSD 6.2 AR document  
                  Review:    RD
 
 DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the howtos
                               page.
 
-AH-2007-03-29-2: Bugfix:    Quota verification time of scheduler may not grow with
-                            the number of queues if all jobs go in single queue
+AH-2007-03-29-2: Bugfix:    Quota verification time of scheduler may not grow 
+                            with the number of queues if all jobs go in single 
+                            queue
                  Bugster:   6539215
                  Review:    RD
 
@@ -33,7 +41,8 @@ AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
                             - jgdi advance reservation test fixes
                  Review:    RH 
 
-PJ-2007-03-28-0: Cleanup:   all attr_mod functions are now located in sge_utility_qmaster.h
+PJ-2007-03-28-0: Cleanup:   all attr_mod functions are now located in 
+                            sge_utility_qmaster.h
                  Review:    AH
 
 EB-2007-03-26-0: Enhacem:   - added reporting funtionality for AR.

@@ -2429,7 +2429,7 @@ if ( "$SGESSH" == 1) then
       env REMOTE=sge SGE_ARCH=$buildarch LD_LIBRARY_PATH=${OPENSSL_HOME}/lib\
       MAKE="${MAKE}" CFLAGS="${CFLAGS} ${NOERR_CFLAG}" CC="${CC}" AR="${AR}" \
       ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
-         --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO}" \
+         --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO} -DSGESSH_INTEGRATION" \
          --with-ldflags="${LFLAGS}" \
          --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -llck -lrmon ${LIBS} ${SLIBS}" \
          --with-ssl-dir=${OPENSSL_HOME}

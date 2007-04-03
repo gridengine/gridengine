@@ -1,3 +1,6 @@
+RC-2007-04-03-0: Enhancm:   A small tight SGE-SSH integration change
+                 Review:    pending
+
 JG-2007-04-02-0: Bugfix:    Hybrid user/project sharetree was broken with array 
                             jobs.
                  Bugster:   6538293

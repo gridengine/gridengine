@@ -1,3 +1,6 @@
+RC-2007-04-03-0: Enhancm:   A small tight SGE-SSH integration change
+                 Review:    pending
+
 AH-2007-03-29-0: Bugfix:    Quota verification time of scheduler may not grow with 
                             the number of queues if all jobs go in single queue
                  Bugster:   6539215

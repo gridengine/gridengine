@@ -1,3 +1,5 @@
+RD-2007-04-04-1: Bugfix:     fixed broken build on lx24-ia64
+
 RD-2007-04-04-0: Enhancm:   - Added Advance Reservation reserving code
                             - fixed consumable resources testsuite test
                             - enhanced test_resource_utilization

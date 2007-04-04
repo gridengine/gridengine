@@ -82,11 +82,11 @@ static int do_utilization_test(lListElem *cr, test_array_t *ta)
       uti = utilization_max(cr, ta[i].start_time, ta[i].duration);
       if (uti != ta[i].uti) {
          printf("failed: utilization(cr, "sge_U32CFormat", "sge_U32CFormat") returned %f, expected %f\n",
-                ta[i].start_time, ta[i].duration, uti, ta[i].uti);
+                sge_u32c(ta[i].start_time), sge_u32c(ta[i].duration), uti, ta[i].uti);
          ret++;
       } else {
          printf("success: utilization(cr, "sge_U32CFormat", "sge_U32CFormat") returned %f\n",
-                ta[i].start_time, ta[i].duration, uti);
+                sge_u32c(ta[i].start_time), sge_u32c(ta[i].duration), uti);
       }
    }
 
@@ -109,13 +109,13 @@ static int do_qeti_test(lListElem *cr, u_long32 *qeti_expected_result)
    /* sge_qeti_first() */
    for (pe_time = sge_qeti_first(iter), i=0; pe_time; pe_time = sge_qeti_next(iter), i++) {
       if (qeti_expected_result == NULL) {
-         printf("failed: qeti returned "sge_U32CFormat", expected no iteration\n", pe_time);
+         printf("failed: qeti returned "sge_U32CFormat", expected no iteration\n", sge_u32c(pe_time));
          ret++;
       } else if (qeti_expected_result[i] != pe_time) {
-         printf("failed: qeti returned "sge_U32CFormat", expected "sge_U32CFormat"\n", pe_time, qeti_expected_result[i]);
+         printf("failed: qeti returned "sge_U32CFormat", expected "sge_U32CFormat"\n", sge_u32c(pe_time), sge_u32c(qeti_expected_result[i]));
          ret++;
       } else {
-         printf("success: QETI returned "sge_U32CFormat"\n", pe_time);
+         printf("success: QETI returned "sge_U32CFormat"\n", sge_u32c(pe_time));
       }
    }
 

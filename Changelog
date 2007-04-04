@@ -1,4 +1,9 @@
-RD-2007-04-04-1: Bugfix:     fixed broken build on lx24-ia64
+RD-2007-04-04-2: Bugfix:    - fixed qsub -ar check if no hr_t was selected
+                            - added ckpt_name for AR reserving decision
+                            - added AR TODO list
+                 Review:    HP
+
+RD-2007-04-04-1: Bugfix:    fixed broken build on lx24-ia64
 
 RD-2007-04-04-0: Enhancm:   - Added Advance Reservation reserving code
                             - fixed consumable resources testsuite test

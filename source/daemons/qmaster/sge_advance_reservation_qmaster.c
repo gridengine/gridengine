@@ -839,9 +839,6 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
 
    DENTER(TOP_LAYER, "ar_reserve_queues");
 
-   lSetUlong(dummy_job, JB_execution_time, lGetUlong(ar, AR_start_time));
-   lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
-
    assignment_init(&a, dummy_job, NULL, false);
    a.host_list        = master_exechost_list;
    a.centry_list      = master_centry_list;
@@ -1004,9 +1001,12 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                               NULL, a.centry_list, a.acl_list,
                               a.hgrp_list, false);
 
+   lSetUlong(dummy_job, JB_execution_time, lGetUlong(ar, AR_start_time));
+   lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
    lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ar, AR_resource_list)));
    lSetList(dummy_job, JB_hard_queue_list, lCopyList("", lGetList(ar, AR_queue_list)));
    lSetUlong(dummy_job, JB_type, lGetUlong(ar, AR_type));
+   lSetString(dummy_job, JB_checkpoint_name, lGetString(ar, AR_checkpoint_name));
 
     /* imagine qs is empty */
     sconf_set_qs_state(QS_STATE_EMPTY);

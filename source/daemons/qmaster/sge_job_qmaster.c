@@ -745,30 +745,25 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          }
          
          /* hard_resources h_rt limit */
-         if (job_get_duration(&job_duration, jep) == false) {
-            ERROR((SGE_EVENT, MSG_JOB_WITHARANDNODEFAULTHRT));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            DRETURN(STATUS_DENIED);
-         }
-         
-         DPRINTF(("job -ar "sge_u32", ar_start_time "sge_u32", ar_end_time "sge_u32
-                  ", job_execution_time "sge_u32", job duration "sge_u32" \n", 
-                  sge_u32c(ar_id),sge_u32c( ar_start_time),sge_u32c(ar_end_time),
-                  sge_u32c(job_execution_time),sge_u32c(job_duration)));
+         if (job_get_wallclock_limit(&job_duration, jep) == true) {
+            DPRINTF(("job -ar "sge_u32", ar_start_time "sge_u32", ar_end_time "sge_u32
+                     ", job_execution_time "sge_u32", job duration "sge_u32" \n", 
+                     sge_u32c(ar_id),sge_u32c( ar_start_time),sge_u32c(ar_end_time),
+                     sge_u32c(job_execution_time),sge_u32c(job_duration)));
 
-         /* fit the timeframe */
-         if (job_duration > (ar_end_time - ar_start_time)) {
-            ERROR((SGE_EVENT, MSG_JOB_HRTLIMITTOOLONG_U, sge_u32c(ar_id)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            DRETURN(STATUS_DENIED);
-         }
-         if ((job_execution_time + job_duration) > ar_end_time) {
-            ERROR((SGE_EVENT, MSG_JOB_HRTLIMITOVEREND_U, sge_u32c(ar_id)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            DRETURN(STATUS_DENIED);
+            /* fit the timeframe */
+            if (job_duration > (ar_end_time - ar_start_time)) {
+               ERROR((SGE_EVENT, MSG_JOB_HRTLIMITTOOLONG_U, sge_u32c(ar_id)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+               DRETURN(STATUS_DENIED);
+            }
+            if ((job_execution_time + job_duration) > ar_end_time) {
+               ERROR((SGE_EVENT, MSG_JOB_HRTLIMITOVEREND_U, sge_u32c(ar_id)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+               DRETURN(STATUS_DENIED);
+            }
          }
       }
 

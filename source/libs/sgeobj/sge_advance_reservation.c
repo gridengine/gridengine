@@ -63,6 +63,17 @@
 #include "sgeobj/sge_hgroup.h"
 
 
+/*
+ * TODO List. Following features need to be implemented:
+ * - removing a checkpoint from a reserved queue that was requested by the AR
+ * - lowering or removing a reserved consumable complex on global/host/queue level
+ *   need to be rejected
+ * - configuring a queue calender that disables a queue in a reserved time frame
+ *   need to be rejected
+ * - changing global/queue/host access lists on reserved hosts that endanger a AR
+ *   need to be rejected
+ */
+
 /****** sge_advance_reservation/ar_list_locate() *******************************
 *  NAME
 *     ar_list_locate() -- locate a advance reservation by id

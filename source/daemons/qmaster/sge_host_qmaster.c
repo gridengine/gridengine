@@ -86,6 +86,8 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_bootstrap.h"
 #include "spool/sge_spooling.h"
+#include "sched/sge_resource_utilization.h"
+#include "sched/sge_serf.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -519,20 +521,13 @@ int sub_command, monitoring_t *monitor
       }
    }
 
-   DEXIT;
-   return 0;
-
+   DRETURN(0);
 ERROR:
-   DEXIT;
-   return STATUS_EUNKNOWN;
+   DRETURN(STATUS_EUNKNOWN);
 }
 
-int host_spool(
-sge_gdi_ctx_class_t *ctx,
-lList **alpp,
-lListElem *ep,
-gdi_object_t *object 
-) {
+int host_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_t *object)
+{
    int pos;
    int dataType;
    const char *key;
@@ -587,6 +582,7 @@ int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
       case EH_name:
       {
          lListElem *jep = NULL;
+         lListElem *ar_ep = NULL;
          const char *host = lGetHost(ep, EH_name);
          int slots; 
          int global_host = !strcmp(SGE_GLOBAL_NAME, host);
@@ -602,6 +598,23 @@ int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
             }
             if (slots)
                debit_host_consumable(jep, ep, master_centry_list, slots);
+         }
+
+         for_each(ar_ep, *object_type_get_master_list(SGE_TYPE_AR)) {
+            lListElem *gdil_ep = lGetSubHost(ar_ep, JG_qhostname, host, AR_granted_slots);
+
+            if (gdil_ep != NULL) {
+               lListElem *dummy_job = lCreateElem(JB_Type);
+
+               lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ar_ep, AR_resource_list)));
+
+               rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                                      ep, master_centry_list, lGetUlong(gdil_ep, JG_slots),
+                                      EH_consumable_config_list, EH_resource_utilization, host,
+                                      lGetUlong(ar_ep, AR_start_time), lGetUlong(ar_ep, AR_duration),
+                                      HOST_TAG, false);
+               lFreeElem(&dummy_job);
+            }
          }
 
          sge_change_queue_version_exechost(ctx, host);
@@ -636,8 +649,7 @@ int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
       break;
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* ------------------------------------------------------------ */

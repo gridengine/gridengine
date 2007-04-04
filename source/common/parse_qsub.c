@@ -1544,21 +1544,40 @@ DTRACE;
 
          if (!strcmp("e", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
+            if (prog_number == QRSUB) {
+               lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
+            } else {
+               lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
+            }
          }
          else if (!strcmp("w", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            if (prog_number == QRSUB) {
+               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
+               DRETURN(answer);
+            } else {
+               ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            }
             lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
          }
          else if (!strcmp("n", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, SKIP_VERIFY);
+            if (prog_number == QRSUB) {
+               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
+               DRETURN(answer);
+            } else {
+               lSetInt(ep_opt, SPA_argval_lIntT, SKIP_VERIFY);
+            }
          }
          else if (!strcmp("v", *sp)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
-            lSetInt(ep_opt, SPA_argval_lIntT, JUST_VERIFY);
-         }
-         else {
+            if (prog_number == QRSUB) {
+               lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
+            } else {
+               lSetInt(ep_opt, SPA_argval_lIntT, JUST_VERIFY);
+            }
+         } else {
              answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                      MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
              DRETURN(answer);

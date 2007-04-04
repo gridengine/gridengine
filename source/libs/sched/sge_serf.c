@@ -102,15 +102,15 @@ void serf_record_entry(u_long32 job_id, u_long32 ja_taskid,
    DENTER(TOP_LAYER, "serf_record_entry");
 
    /* human readable format */
-   DPRINTF(("J="sge_U32CFormat"."sge_U32CFormat" T=%s S="sge_U32CFormat" D=%d L=%c O=%s R=%s U=%f\n",
-      job_id, ja_taskid, type, start_time, (int)(end_time-start_time), 
+   DPRINTF(("J="sge_U32CFormat"."sge_U32CFormat" T=%s S="sge_U32CFormat" E="sge_U32CFormat" L=%c O=%s R=%s U=%f\n",
+      job_id, ja_taskid, type, start_time, end_time, 
             level_char, object_name, name, utilization));
 
    if (current_serf.record_schedule_entry && serf_get_active()) {
       (current_serf.record_schedule_entry)(job_id, ja_taskid, type, start_time, end_time, 
             level_char, object_name, name, utilization);
    }
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -137,7 +137,7 @@ void serf_record_entry(u_long32 job_id, u_long32 ja_taskid,
 *******************************************************************************/
 void serf_new_interval(u_long32 time)
 {
-   DENTER(TOP_LAYER, "serf_record_entry");
+   DENTER(TOP_LAYER, "serf_new_interval");
 
    DPRINTF(("================[SCHEDULING-EPOCH]==================\n"));
 

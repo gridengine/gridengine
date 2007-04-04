@@ -1374,8 +1374,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_cqueue/cqueue_find_used_href() *************************************

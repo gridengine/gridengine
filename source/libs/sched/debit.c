@@ -118,20 +118,22 @@ order_t *orders,          - needed to warn on jobs that were dispatched into
                             queues and get suspended on subordinate in the very
                             same interval 
 bool now,                 - if true this is or will be a running job
-                            false for all jobs that must only be put into the schedule 
+                            false for all jobs that must only be put into the
+                            resource schedule 
 const char *type          - a string as forseen with serf_record_entry() 
                             'type' parameter (may be NULL) 
+bool for_job_scheduling   - true if debiting job, false if advance_reservation
       
 */
 int 
 debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,   
-                    order_t *orders, bool now, const char *type) 
+                    order_t *orders, bool now, const char *type,
+                    bool for_job_scheduling) 
 {
    DENTER(TOP_LAYER, "debit_scheduled_job");
 
    if (!a) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (now) {
@@ -143,10 +145,9 @@ debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,
       debit_job_from_rqs(a->job, a->gdil, a->rqs_list, a->pe, a->centry_list, a->acl_list, a->hgrp_list);
    }
 
-   add_job_utilization(a, type);
+   add_job_utilization(a, type, for_job_scheduling);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /*
@@ -178,13 +179,15 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
    DENTER(TOP_LAYER, "debit_job_from_queues");
 
    /* use each entry in sel_q_list as reference into the global_queue_list */
-   for_each(gel, granted ) {
+   for_each(gel, granted) {
 
       tagged = lGetUlong(gel, JG_slots);
       if (tagged) {
          /* find queue */
          qname = lGetString(gel, JG_qname);
-         qep = lGetElemStr(global_queue_list, QU_full_name, qname);
+         if ((qep = lGetElemStr(global_queue_list, QU_full_name, qname)) == NULL) {
+            continue;
+         }
 
          /* increase used slots */
          qslots = qinstance_slots_used(qep);

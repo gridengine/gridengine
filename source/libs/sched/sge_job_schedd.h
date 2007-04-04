@@ -36,6 +36,8 @@
 #define finished_status(x) ((x)==JFINISHED)
 
 bool job_get_duration(u_long32 *duration, const lListElem *jep);
+bool task_get_duration(u_long32 *duration, const lListElem *ja_task);
+
 /* 
  * get order used for job sorting
  */

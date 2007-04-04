@@ -308,7 +308,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
          lListElem *href = lGetElemHost(del_hosts, HR_name, hostname);
 
          if (href != NULL) {
-            if (qinstance_slots_used(qinstance) > 0) {
+            if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
                /*
                 * Jobs are currently running in this queue. Therefore
                 * it is not possible to delete the queue but we
@@ -324,8 +324,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -356,8 +355,7 @@ cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
          index++;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -621,8 +619,7 @@ cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,
    if (ret) {
       ret &= cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int cqueue_mod(sge_gdi_ctx_class_t *ctx,
@@ -723,11 +720,10 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
    lFreeList(&add_hosts);
    lFreeList(&rem_hosts);
 
-   DEXIT;
    if (ret) {
-      return 0;
+      DRETURN(0);
    } else {
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 }
 
@@ -949,9 +945,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
              * test if the CQ can be removed
              */
             for_each(qinstance, qinstances) {
-               int slots = qinstance_slots_used(qinstance);
-   
-               if (slots > 0) {
+               if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
                   ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
@@ -1072,7 +1066,7 @@ cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **
          next_qinstance = lNext(qinstance);
          
          if (qinstance_state_is_orphaned(qinstance) &&
-             qinstance_slots_used(qinstance) == 0) {
+             qinstance_slots_used(qinstance) == 0 && qinstance_slots_reserved(qinstance) == 0) {
             const char *qi_name = lGetHost(qinstance, QU_qhostname);
       
             /*

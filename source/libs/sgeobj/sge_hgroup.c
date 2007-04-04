@@ -290,8 +290,7 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_all_references() ****************************
@@ -345,8 +344,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
       }
       lFreeList(&href_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_references() ********************************
@@ -399,8 +397,7 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
       }
       lFreeList(&href_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_all_referencees() ***************************

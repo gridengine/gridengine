@@ -106,13 +106,13 @@ static int scan(const char *s, token_set_t token_set[]);
 static void join_wday_range(lList *week_day); 
 static void extend_wday_range(lList *week_day);
 
-static char * get_string(void);
+static char *get_string(void);
 
 static int get_number(void); 
 
 static void eat_token(void);
 
-static char * save_error(void);
+static char *save_error(void);
 
 static int cheap_scan(char *s, token_set_t tokenv[], int n, char *name);
 
@@ -180,6 +180,8 @@ static int week_day_range(lListElem **tmr);
 static void split_wday_range(lList *wdrl, lListElem *tmr);
 
 static int week_day(lListElem **tm);
+
+static u_long32 calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then, time_t *now);
 
 lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name) 
 {
@@ -340,8 +342,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
             }   
             
             if (limit == 0) { 
-            }
-            else if (state == next_state && temp_next_event >= limit) {
+            } else if (state == next_state && temp_next_event >= limit) {
                if (!visited[counter]) {
                   isOverlapping = true;
                   visited[counter] = true;
@@ -353,8 +354,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                   if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state, 0))) {
                      state |= w_is_active;
                   }                 
-               }
-               else {
+               } else {
                   temp_next_event = 0;
                   isOverlapping = false;
                   break;
@@ -392,13 +392,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
 
    DRETURN(QI_DO_ENABLE);
 }
-
-/* returns state and time when state changes acording this entry */
-/*
-lListElem *tm,          TM_Type 
-lListElem *week_entry,  CA_Type 
-*/
-
 
 /****** sge_calendar/is_week_entry_active() ************************************
 *  NAME
@@ -606,7 +599,8 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
 *     const lListElem *cep       - (in) calendar (CAL_Type)
 *     lList **state_changes_list - (out) a pointer to a list pointer (CQU_Type)
 *     time_t *when               - (out) when will the next change be, or 0
-*     time_t *now                - (in) should be NULL, or the current time (only for the test programm)
+*     time_t *now                - (in) should be NULL, or the current time
+*                                  (only for the test programm)
 *
 *  RESULT
 *     u_long32 - new state (QI_DO_NOTHING, QI_DO_DISABLE, QI_DO_SUSPEND)
@@ -739,7 +733,7 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
 *     lListElem *now, bool *is_end_of_day_reached) 
 *
 *  FUNCTION
-*     This function computes the next state change based on the tree booleans:
+*     This function computes the next state change based on the three booleans:
 *     today, active, and is_full_day. 
 *
 *     There are some special calendar states, which result in special code to 
@@ -1405,7 +1399,7 @@ static int year_day_range(lListElem **tmr) {
          DRETURN(-1);
       }   
       if (tm_yday_cmp(t1, t2)>0) {
-         sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY );
+         sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY);
          lFreeElem(&t1);
          DRETURN(-1);   
       }
@@ -1535,7 +1529,9 @@ static int month(int *mp) {
    DRETURN(0);
 }
 
-static int day(int *dp) { return range_number(1, 31, dp, "day");
+static int day(int *dp)
+{
+   return range_number(1, 31, dp, "day");
 }
 
 static int year(int *yp) { 
@@ -2486,7 +2482,7 @@ bool calendar_parse_week(lListElem *cal, lList **answer_list) {
 *     MT-NOTE: calendar_get_current_state_and_end() is MT safe 
 *
 *******************************************************************************/
-u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, time_t *now) {
+static u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, time_t *now) {
    u_long32 new_state;
    lList *year_list = NULL;
    lList *week_list = NULL;

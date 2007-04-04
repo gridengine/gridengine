@@ -1,3 +1,8 @@
+RD-2007-04-04-0: Enhancm:   - Added Advance Reservation reserving code
+                            - fixed consumable resources testsuite test
+                            - enhanced test_resource_utilization
+                 Review:    EB
+
 RC-2007-04-03-0: Enhancm:   A small tight SGE-SSH integration change
                  Review:    pending
 

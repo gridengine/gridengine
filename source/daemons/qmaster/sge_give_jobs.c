@@ -270,7 +270,6 @@ int sge_give_job(sge_gdi_ctx_class_t *ctx,
 *******************************************************************************/
 static int 
 send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, monitoring_t *monitor)
-                
 {
    lListElem *tmpjep, *qep, *tmpjatep;
    lList *qlp;
@@ -292,16 +291,14 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
       }
    }
    if (!is_pe_jobs) { /* we do not have slaves... nothing to do */
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
 /* prepare the data to be send.... */
 
    /* create a copy of the job */
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    else {
       tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
@@ -313,8 +310,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
    */
    if (setCheckpointObj(tmpjep) != 0) {
       lFreeElem(&tmpjep);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    qlp = lCreateList("qlist", QU_Type);
@@ -325,7 +321,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, const char *target, lListElem *jep, lL
     * copy all JG_processors from all queues to the JG_processors in tmpgdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
-   tmpjatep = lFirst( lGetList( tmpjep, JB_ja_tasks ));   
+   tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));   
    
    for_each (gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
@@ -1030,6 +1026,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
+   u_long32 task_wallclock = U_LONG32_MAX;
+   bool compute_qwallclock = false;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -1044,6 +1042,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
 
+      if (!job_get_wallclock_limit(&task_wallclock, jep)) {
+         compute_qwallclock = true;
+      }
+
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
       global_host_ep = host_list_locate(master_exechost_list, "global");
@@ -1054,8 +1056,29 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
          if (queue) {
             const char *queue_hostname = lGetHost(queue, QU_qhostname);
+            const char *limit = NULL;
             int tmp_slot = lGetUlong(ep, JG_slots);
             lListElem *host;
+
+            if (compute_qwallclock) {
+               limit = lGetString(queue, QU_h_rt);
+               if (strcasecmp(limit, "infinity") != 0) {
+                  u_long32 clock_val;
+                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
+                  task_wallclock = MIN(task_wallclock, clock_val);
+               } else {
+                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
+               }
+
+               limit = lGetString(queue, QU_s_rt);
+               if (strcasecmp(limit, "infinity") != 0) {
+                  u_long32 clock_val;
+                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
+                  task_wallclock = MIN(task_wallclock, clock_val);
+               } else {
+                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
+               }
+            }
 
             /* debit consumable resources */ 
             if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot) > 0) {
@@ -1095,6 +1118,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, queue_name));
          }
       }
+
+      lSetUlong(jatep, JAT_wallclock_limit, task_wallclock);
 
       /* 
        * Would be nice if we could use a more accurate start time that could be reported 
@@ -1505,7 +1530,6 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
    u_long32 now;
    object_description *object_base = object_type_get_object_description();
    lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
-   lList *master_list = *object_base[SGE_TYPE_CQUEUE].list;
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
    lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
@@ -1525,7 +1549,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
    now = sge_get_gmt();
 
    /* unsuspend queues on subordinate */
-   cqueue_list_x_on_subordinate_gdil(ctx, master_list, false, gdi_list, monitor);
+   cqueue_list_x_on_subordinate_gdil(ctx, master_cqueue_list, false, gdi_list, monitor);
 
    global_host_ep = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);
 
@@ -1547,8 +1571,8 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             /* undebit consumable resources */ 
             if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
-                             "global", NULL, NULL, global_host_ep);
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
+                             SGE_GLOBAL_NAME, NULL, NULL, global_host_ep);
                reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(global_host_ep);
@@ -1556,7 +1580,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             host = host_list_locate(master_exechost_list, queue_hostname);
             if (debit_host_consumable(job, host, master_centry_list, -tmp_slot) > 0) {
                /* this info is not spooled */
-               sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
                reporting_create_host_consumable_record(&answer_list, host, now);
                answer_list_output(&answer_list);
@@ -1616,8 +1640,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
    lSetList(ja_task, JAT_granted_destin_identifier_list, NULL);
    lSetString(ja_task, JAT_master_queue, NULL);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* what we do is:
@@ -1640,8 +1663,7 @@ static void reduce_queue_limit(const lList* master_centry_list, lListElem *qep,
    if ((res != NULL) && (s = lGetString(res, CE_stringval))) {
       DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", rlimit_name, s, lGetString(qep, nm)));
       lSetString(qep, nm, s);
-   }     
-   else {              /* enforce default request if set, but only if the consumable is */
+   } else { /* enforce default request if set, but only if the consumable is */
       lListElem *dcep; /*really used to manage resources of this queue, host or globally */
       if ((dcep=centry_list_locate(master_centry_list, rlimit_name))
                && lGetBool(dcep, CE_consumable))
@@ -1655,8 +1677,7 @@ static void reduce_queue_limit(const lList* master_centry_list, lListElem *qep,
             lSetString(qep, nm, lGetString(dcep, CE_default));
    }
    
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 

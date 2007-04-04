@@ -34,5 +34,5 @@
 
 /* responsible for all debitations that have to be done */
 int debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist, order_t *orders, 
-    bool now, const char *type);
+    bool now, const char *type, bool for_job_scheduling);
 #endif /* __DEBIT_H */

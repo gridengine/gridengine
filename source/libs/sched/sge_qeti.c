@@ -124,27 +124,23 @@ static int sge_qeti_list_add(lList **lpp, const char *name, lList* rue_lp, doubl
    DENTER(TOP_LAYER, "sge_qeti_list_add");
 
    if (!(tmp_cr_ref = lGetElemStr(rue_lp, RUE_name, name))) {
-      DEXIT;
-      return must_exist?-1:0;
+      DRETURN(must_exist?-1:0);
    }
 
    if (!*lpp && !(*lpp = lCreateList("pe_qeti", QETI_Type))) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (!(ep = lCreateElem(QETI_Type))) {
       lFreeList(lpp);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    lSetRef(ep, QETI_resource_instance, tmp_cr_ref);
    lSetDouble(ep, QETI_total, total);
    lAppendElem(*lpp, ep);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int sge_add_qeti_resource_container(lList **qeti_to_add, lList* rue_list, 

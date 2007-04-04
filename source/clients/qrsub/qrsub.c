@@ -133,8 +133,6 @@ int main(int argc, char **argv) {
    {
       lList *ar_lp = NULL;
 
-      lSetString(ar, AR_name, "test_ar");
-      
       ar_lp = lCreateList(NULL, AR_Type);
       lAppendElem(ar_lp, ar);
       alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &ar_lp, NULL, NULL);
@@ -143,7 +141,9 @@ int main(int argc, char **argv) {
          /* check if the correct ar_id is returned */
          printf("returned ar_id: "sge_u32, lGetUlong(lFirst(ar_lp), AR_id));
       }
-      lWriteElemTo(lFirst(ar_lp), stdout);
+      if (lFirst(ar_lp) != NULL) {
+         lWriteElemTo(lFirst(ar_lp), stdout);
+      }
       lFreeList(&ar_lp);
 /*       lWriteListTo(alp, stdout); */
       answer_list_on_error_print_or_exit(&alp, stdout);

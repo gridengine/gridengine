@@ -39,7 +39,6 @@
 #endif
 
 #define MAX_SEQNUM        9999999
-#define MAX_ULONG32     2147483647
 
 /* template/global/default/queue names */
 #define SGE_TEMPLATE_NAME        "template"
@@ -65,7 +64,7 @@
 #define SGE_OBJ_USERSET                "userset"
 #define SGE_OBJ_COMPLEXATTR            "complex_attribute"
 #define SGE_OBJ_JOB                    "job"
-#define SGE_OBJ_AR                     "ar"
+#define SGE_OBJ_AR                     "advance_reservation"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_FORMULA          "load_formula"

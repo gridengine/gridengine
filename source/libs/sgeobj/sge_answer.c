@@ -470,8 +470,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
       sge_dstring_free(&buffer);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/answer/answer_list_has_quality() *******************************
@@ -764,8 +763,7 @@ answer_list_add(lList **answer_list, const char *text,
          lFreeElem(&answer);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool answer_list_add_elem(lList **answer_list, lListElem *answer)

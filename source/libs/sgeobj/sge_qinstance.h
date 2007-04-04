@@ -55,10 +55,6 @@ qinstance_list_locate2(const lList *qinstance_list, const char *full_name);
 const char *
 qinstance_get_name(const lListElem *this_elem, dstring *string_buffer);
 
-bool
-qinstance_reinit_consumable_actual_list(lListElem *this_elem,
-                                        lList **answer_list);
-
 void
 qinstance_list_set_tag(lList *this_list, u_long32 tag_value);
 
@@ -95,6 +91,9 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots);
 
 int
 qinstance_slots_used(const lListElem *this_elem);
+
+int
+qinstance_slots_reserved(const lListElem *this_elem);
 
 void
 qinstance_set_conf_slots_used(lListElem *this_elem);

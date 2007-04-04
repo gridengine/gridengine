@@ -85,6 +85,7 @@ enum {
    AR_name,
    AR_account,
    AR_owner,
+   AR_group,
 
    AR_submission_time,
    AR_start_time,               /* required */
@@ -122,6 +123,7 @@ LISTDEF(AR_Type)
    SGE_STRING(AR_name, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
    SGE_STRING(AR_account, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
    SGE_STRING(AR_owner, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+   SGE_STRING(AR_group, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
 
    SGE_ULONG(AR_submission_time, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(AR_start_time, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
@@ -157,6 +159,7 @@ NAMEDEF(ARN)
    NAME("AR_name")
    NAME("AR_account")
    NAME("AR_owner")
+   NAME("AR_group")
 
    NAME("AR_submission_time")
    NAME("AR_start_time")

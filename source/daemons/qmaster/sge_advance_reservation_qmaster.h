@@ -57,6 +57,8 @@ void sge_store_ar_id(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t 
 
 void sge_init_ar_id(void);
 
+int ar_do_reservation(lListElem *ar, bool incslots);
+
 void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
                           monitoring_t *monitor);
 

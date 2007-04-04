@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <pwd.h>
 
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
@@ -47,16 +48,40 @@
 #include "sgeobj/sge_conf.h"
 
 #include "msg_common.h"
-#include "sgeobj/msg_sgeobjlib.h"
 #include "msg_qmaster.h"
+#include "sgeobj/msg_sgeobjlib.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userset.h"
+#include "sched/sge_resource_utilization.h"
 
 #include "sge_lock.h"
 #include "sge_mtutil.h"
 #include "uti/sge_time.h"
+#include "uti/sge_uidgid.h"
 #include "sge_utility.h"
 #include "sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_str.h"
+
+#include "sched/sge_select_queue.h"
+#include "sched/schedd_monitor.h"
+#include "sched/sge_job_schedd.h"
+#include "sched/sge_serf.h"
+#include "sched/valid_queue_user.h"
+
+#include "evm/sge_event_master.h"
+#include "evm/sge_queue_event_master.h"
 
 #include "sge_utility_qmaster.h"
+#include "sge_cqueue_qmaster.h"
+
 #include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 
@@ -68,6 +93,7 @@ typedef struct {
 
 ar_id_t ar_id_control = {0, false, PTHREAD_MUTEX_INITIALIZER};
 
+static bool ar_reserve_queues(lList **alpp, lListElem *ar);
 static u_long32 sge_get_ar_id(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor);
 static u_long32 guess_highest_ar_id(void);
 
@@ -137,6 +163,7 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
       ** attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name);
       */
       lSetString(new_ar, AR_owner, ruser);
+      lSetString(new_ar, AR_group, ctx->get_groupname(ctx));
    } else {
       ERROR((SGE_EVENT, MSG_NOTYETIMPLEMENTED_S, "advance reservation modification"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -149,13 +176,13 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       goto ERROR; 
    }
-   
+
    /*    AR_name, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_name, object->object_name);
    /*   AR_account, SGE_STRING */
    attr_mod_zerostr(ar, new_ar, AR_account, object->object_name);
-   /*   AR_owner, SGE_STRING */
-/*    attr_mod_str(alpp, ar, new_ar, AR_owner, object->object_name); */
+   /*   AR_submission_time, SGE_ULONG */
+   lSetUlong(new_ar, AR_submission_time, sge_get_gmt());   
    /*   AR_start_time, SGE_ULONG          required */
    attr_mod_ulong(ar, new_ar, AR_start_time, object->object_name);
    /*   AR_end_time, SGE_ULONG            required */
@@ -171,9 +198,9 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
    attr_mod_zerostr(ar, new_ar, AR_checkpoint_name, object->object_name);
    /*   AR_resource_list, SGE_LIST */
-   attr_mod_sub_list(alpp, new_ar , AR_resource_list, AR_name, ar, sub_command, SGE_ATTR_COMPLEX_VALUES, SGE_OBJ_AR, 0); 
+   attr_mod_sub_list(alpp, new_ar, AR_resource_list, AR_name, ar, sub_command, SGE_ATTR_COMPLEX_VALUES, SGE_OBJ_AR, 0); 
    /*   AR_queue_list, SGE_LIST */
-   attr_mod_sub_list(alpp, new_ar , AR_queue_list, AR_name, ar, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_AR, 0); 
+   attr_mod_sub_list(alpp, new_ar, AR_queue_list, AR_name, ar, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_mail_options, SGE_ULONG   */
    attr_mod_ulong(ar, new_ar, AR_mail_options, object->object_name);
    /*   AR_mail_list, SGE_LIST */
@@ -183,7 +210,7 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    /*   AR_master_queue_list, SGE_LIST */
    attr_mod_sub_list(alpp, new_ar ,AR_master_queue_list, AR_name, ar, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_AR, 0); 
    /*   AR_pe_range, SGE_LIST */
-   attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_PE_LIST, SGE_OBJ_AR, 0); 
+   attr_mod_sub_list(alpp, new_ar, AR_pe_range, AR_name, ar, sub_command, SGE_ATTR_PE_LIST, SGE_OBJ_AR, 0);
    /*   AR_acl_list, SGE_LIST */
    attr_mod_sub_list(alpp, new_ar, AR_acl_list, AR_name, ar, sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_AR, 0);
    /*   AR_xacl_list, SGE_LIST */
@@ -191,9 +218,14 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    /*   AR_type, SGE_ULONG     */
    attr_mod_ulong(ar, new_ar, AR_type, object->object_name);
 
+
+   /* try to reserve the queues */
+   if (!ar_reserve_queues(alpp, new_ar)) {
+      goto ERROR;
+   }
+
    INFO((SGE_EVENT, MSG_AR_GRANTED_U, sge_u32c(ar_id)));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
    DRETURN(0);
 
 ERROR:
@@ -406,15 +438,17 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
    }
 
    while (found) {
-
       removed_one = true;
 
       ar_id = lGetUlong(found, AR_id);
-      sge_dstring_sprintf(&buffer, sge_u32, ar_id);
+      sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
 
       /* remove timer for this advance reservation */
       te_delete_one_time_event(TYPE_CALENDAR_EVENT, ar_id, AR_RUNNING, NULL);
       te_delete_one_time_event(TYPE_CALENDAR_EVENT, ar_id, AR_EXITED, NULL);
+
+      /* unblock reserved queues */
+      ar_do_reservation(found, false);
 
       found = lDechainElem(*ar_list, found);
 
@@ -444,6 +478,9 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
       sge_dstring_free(&buffer);
       DRETURN(STATUS_EEXIST);
    }
+
+   /* remove all orphaned queue intances, which are empty. */
+   cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
 
    sge_dstring_free(&buffer);
    DRETURN(0);
@@ -694,7 +731,11 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    
    if (state == AR_EXITED) {
       dstring buffer = DSTRING_INIT;
-      sge_dstring_sprintf(&buffer, "%d", ar_id);
+
+      sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
+
+      /* unblock reserved queues */
+      ar_do_reservation(ar, false);
 
       reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
                                      ar_get_string_from_event(ARL_TERMINATED),
@@ -711,6 +752,9 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
                       0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
+
+      /* remove all orphaned queue intances, which are empty. */
+      cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), NULL);
 
       sge_dstring_free(&buffer);
 
@@ -731,4 +775,426 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DRETURN_VOID;
+}
+
+/****** sge_advance_reservation_qmaster/ar_reserve_queues() ********************
+*  NAME
+*     ar_reserve_queues() -- selects the queues for reserving 
+*
+*  SYNOPSIS
+*     static bool ar_reserve_queues(lList **alpp, lListElem *ar) 
+*
+*  FUNCTION
+*     The function executes the scheduler code to select queues matching the
+*     advance reservation request for reserving. The function works on temporary
+*     lists and creates the AR_granted_slots list
+*
+*  INPUTS
+*     lList **alpp  - answer list pointer pointer
+*     lListElem *ar - ar object
+*
+*  RESULT
+*     static bool - true on success, enough resources reservable
+*                   false in verify mode or not enough resources available
+*
+*  NOTES
+*     MT-NOTE: ar_reserve_queues() is not MT safe, needs GLOBAL_LOCK
+*******************************************************************************/
+static bool ar_reserve_queues(lList **alpp, lListElem *ar)
+{
+   lList **splitted_job_lists[SPLIT_LAST];
+   lList *waiting_due_to_pedecessor_list = NULL;   /* JB_Type */
+   lList *waiting_due_to_time_list = NULL;         /* JB_Type */
+   lList *pending_excluded_list = NULL;            /* JB_Type */
+   lList *suspended_list = NULL;                   /* JB_Type */
+   lList *finished_list = NULL;                    /* JB_Type */
+   lList *pending_list = NULL;                     /* JB_Type */
+   lList *pending_excludedlist = NULL;             /* JB_Type */
+   lList *running_list = NULL;                     /* JB_Type */
+   lList *error_list = NULL;                       /* JB_Type */
+   lList *hold_list = NULL;                        /* JB_Type */
+   lList *not_started_list = NULL;                 /* JB_Type */
+
+   int verify_mode = lGetUlong(ar, AR_verify);
+   lList *talp = NULL;
+
+   lListElem *cqueue = NULL;
+   bool ret = true;
+   int i = 0;
+   lListElem *dummy_job = lCreateElem(JB_Type);
+   sge_assignment_t a = SGE_ASSIGNMENT_INIT;
+   object_description *object_base = object_type_get_object_description();
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
+   lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
+   lList *master_job_list = *object_base[SGE_TYPE_JOB].list;
+   lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
+
+   /* These lists must be copied */
+   lList *master_pe_list = lCopyList("", *object_base[SGE_TYPE_PE].list);
+   lList *master_exechost_list = lCopyList("", *object_base[SGE_TYPE_EXECHOST].list);
+
+   lList *all_queue_list = NULL;
+   dispatch_t result = DISPATCH_NEVER_CAT;
+
+   DENTER(TOP_LAYER, "ar_reserve_queues");
+
+   lSetUlong(dummy_job, JB_execution_time, lGetUlong(ar, AR_start_time));
+   lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
+
+   assignment_init(&a, dummy_job, NULL, false);
+   a.host_list        = master_exechost_list;
+   a.centry_list      = master_centry_list;
+   a.acl_list         = master_userset_list;
+   a.hgrp_list        = master_hgroup_list;
+   a.gep              = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);
+   a.start            = lGetUlong(ar, AR_start_time);
+   a.duration         = lGetUlong(ar, AR_duration);
+   a.is_reservation   = true;
+   a.is_advance_reservation = true;
+
+   /* 
+    * Current scheduler code expects all queue instances in a plain list. We use 
+    * a copy of all queue instances that needs to be free'd explicitely after 
+    * deciding about assignment. This is because assignment_release() sees 
+    * queue_list only as a list pointer.
+    */
+   for_each(cqueue, master_cqueue_list) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+
+      qinstance_list = lCopyList(NULL, qinstance_list);
+      if (!all_queue_list) {
+         all_queue_list = qinstance_list;
+      } else {
+         lAddList(all_queue_list, &qinstance_list);
+      }   
+   }
+
+   /*
+    * split jobs
+    */
+   {
+      lList *job_list_copy = lCopyList("", master_job_list);
+
+      for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+         splitted_job_lists[i] = NULL;
+      }
+
+      splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = &waiting_due_to_pedecessor_list;
+      splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
+      splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
+      splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;
+      splitted_job_lists[SPLIT_FINISHED] = &finished_list;
+      splitted_job_lists[SPLIT_PENDING] = &pending_list;
+      splitted_job_lists[SPLIT_PENDING_EXCLUDED_INSTANCES] = &pending_excludedlist;
+      splitted_job_lists[SPLIT_RUNNING] = &running_list;
+      splitted_job_lists[SPLIT_ERROR] = &error_list;
+      splitted_job_lists[SPLIT_HOLD] = &hold_list;
+      splitted_job_lists[SPLIT_NOT_STARTED] = &not_started_list;
+
+      /* TODO: splitted job lists must be freed */
+
+      split_jobs(&job_list_copy, NULL, all_queue_list, 
+                 mconf_get_max_aj_instances(), splitted_job_lists);
+
+      lFreeList(&job_list_copy);                  
+   }
+
+   /*
+    * Queue filtering
+    *
+    * TBD sort our queues where no user of AR acl have access
+    * for new we just copy the all_queue_list
+    */
+   {
+      lCondition *where;
+      lEnumeration *what;
+      const lDescr *dp = lGetListDescr(all_queue_list);
+
+      /*
+       * sort out queues in orphaned state
+       */
+
+      what = lWhat("%T(ALL)", dp); 
+      where = lWhere("%T("
+         "!(%I m= %u))",
+         dp,
+         QU_state, QI_ORPHANED
+         );
+
+      if (!what || !where) {
+         DPRINTF(("failed creating where or what describing non available queues\n")); 
+      }
+
+      a.queue_list = lSelect("", all_queue_list, where, what);
+
+      if (lGetList(ar, AR_acl_list) != NULL) {
+         /*
+          * sort out queues where AR acl have no permissions
+          */
+         lListElem *ep, *next_ep;
+         const char *user= NULL;
+
+         next_ep = lFirst(a.queue_list);
+         while ((ep = next_ep)) {
+            lListElem *acl_entry;
+            
+            next_ep = lNext(ep);
+
+            for_each(acl_entry, lGetList(ar, AR_acl_list)) {
+               
+               user = lGetString(acl_entry, ST_name);
+               if (!is_hgroup_name(user)) {
+                  struct passwd *pw;
+                  struct passwd pw_struct;
+                  char buffer[2048];
+                  stringT group;
+
+                  pw = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
+                  sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
+
+                  DPRINTF(("user: %s\n", user));
+                  DPRINTF(("group: %s\n", group));
+                  
+                  if (sge_has_access(user, group, ep, master_userset_list) == 0) {
+                      lRemoveElem(a.queue_list, &ep);
+                      break;
+                  }
+               } else {
+                  bool skip_queue = false;
+                  lList *qacl = lGetList(ep, QU_xacl);
+                  /* skip preattached \@ sign */
+                  const char *acl_name = ++user;
+
+                  DPRINTF(("acl :%s", acl_name));
+
+                  /* at first xacl */
+                  if (qacl && lGetElemStr(qacl, US_name, acl_name) != NULL) {
+                     skip_queue = true;
+                  }
+
+                  /* at second acl */
+                  qacl = lGetList(ep, QU_acl);
+                  if (!skip_queue && qacl && lGetElemStr(qacl, US_name, acl_name) == NULL) {
+                     skip_queue = true;
+                  }
+
+                  if (skip_queue) {
+                     lRemoveElem(a.queue_list, &ep);
+                     break;
+                  }
+               }
+            }
+         }
+      } else {
+         lSetString(dummy_job, JB_owner, lGetString(ar, AR_owner));
+         lSetString(dummy_job, JB_group, lGetString(ar, AR_group));
+      }
+
+      lFreeWhere(&where);
+      lFreeWhat(&what);
+   }
+
+   /*
+    * prepare resource schedule
+    */
+   prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
+                              *(splitted_job_lists[SPLIT_SUSPENDED]),
+                              master_pe_list, a.host_list, a.queue_list, 
+                              NULL, a.centry_list, a.acl_list,
+                              a.hgrp_list, false);
+
+   lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ar, AR_resource_list)));
+   lSetList(dummy_job, JB_hard_queue_list, lCopyList("", lGetList(ar, AR_queue_list)));
+   lSetUlong(dummy_job, JB_type, lGetUlong(ar, AR_type));
+
+    /* imagine qs is empty */
+    sconf_set_qs_state(QS_STATE_EMPTY);
+
+   /* redirect scheduler monitoring into answer list */
+   if (verify_mode == AR_JUST_VERIFY) {
+      DPRINTF(("AR Verify Mode\n"));
+      set_monitor_alpp(&talp);
+   }   
+
+   if (lGetString(ar, AR_pe)) {
+      lSetString(dummy_job, JB_pe, lGetString(ar, AR_pe));
+      lSetList(dummy_job, JB_pe_range, lCopyList("", lGetList(ar, AR_pe_range)));
+
+      result = sge_select_parallel_environment(&a, master_pe_list);
+   } else {
+      result = sge_sequential_assignment(&a);
+   }
+
+   /* stop redirection of scheduler monitoring messages */
+   if (verify_mode == AR_JUST_VERIFY) {
+      /* copy error msgs from talp into alpp */
+      answer_list_append_list(alpp, &talp);
+
+      set_monitor_alpp(NULL);
+
+      if (result == DISPATCH_OK) {
+         if (!a.pe) {
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDQ); 
+         } else {
+            int ngranted = nslots_granted(a.gdil, NULL);
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
+         }
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_INFO, MSG_JOB_NOSUITABLEQ_S, MSG_JOB_VERIFYVERIFY);
+      }
+      /* ret has to be false in verify mode, otherwise the framework adds the object to the master list */
+      ret = false;
+   } else {
+      if (result != DISPATCH_OK) {
+         answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_JOB_NOSUITABLEQ_S, SGE_OBJ_AR);
+         ret = false;
+      } else {
+         lSetList(ar, AR_granted_slots, a.gdil);
+         a.gdil = NULL;
+
+         ar_do_reservation(ar, true);
+      }
+   }
+
+   /* stop dreaming */
+   sconf_set_qs_state(QS_STATE_FULL);
+
+   /* free all job lists */
+   for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+      if (splitted_job_lists[i]) {
+         lFreeList(splitted_job_lists[i]);
+         splitted_job_lists[i] = NULL;
+      }
+   }
+
+   lFreeList(&(a.queue_list));
+   lFreeList(&all_queue_list);
+   lFreeList(&master_pe_list);
+   lFreeList(&master_exechost_list);
+   lFreeElem(&dummy_job);
+
+   assignment_release(&a);
+
+   DRETURN(ret);
+}
+
+/****** sge_advance_reservation_qmaster/ar_do_reservation() ********************
+*  NAME
+*     ar_do_reservation() -- do the reservation in the selected queue instances
+*
+*  SYNOPSIS
+*     int ar_do_reservation(lListElem *ar, bool incslots) 
+*
+*  FUNCTION
+*     This function does the (un)reserveration in the selected parallel environment
+*     and the selected queue instances
+*
+*  INPUTS
+*     lListElem *ar - ar object (AR_Type)
+*     bool incslots - increase or decrease usage
+*
+*  RESULT
+*     int - 0
+*
+*  NOTES
+*     MT-NOTE: ar_do_reservation() is not MT safe 
+*
+*  SEE ALSO
+*     sge_resource_utilization/rqs_add_job_utilization()
+*******************************************************************************/
+int ar_do_reservation(lListElem *ar, bool incslots)
+{
+   lListElem *dummy_job = lCreateElem(JB_Type);
+   lListElem *qep;
+   lListElem *global_host_ep = NULL;
+   int pe_slots = 0;
+   int tmp_slots;
+   const char *granted_pe = lGetString(ar, AR_pe);
+   u_long32 start_time = lGetUlong(ar, AR_start_time);
+   u_long32 duration = lGetUlong(ar, AR_duration);
+   object_description *object_base = object_type_get_object_description();
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
+   lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_exechost_list = *object_base[SGE_TYPE_EXECHOST].list;
+   lList *master_pe_list = *object_base[SGE_TYPE_PE].list;
+
+   DENTER(TOP_LAYER, "ar_do_reservation");
+
+   lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ar, AR_resource_list)));
+   lSetList(dummy_job, JB_hard_queue_list, lCopyList("", lGetList(ar, AR_queue_list)));
+
+   global_host_ep = host_list_locate(master_exechost_list, SGE_GLOBAL_NAME);
+
+   for_each(qep, lGetList(ar, AR_granted_slots)) {
+      lListElem *host_ep = NULL;
+      const char *queue_hostname = NULL;
+      const char *queue_name = lGetString(qep, JG_qname);
+      lListElem *queue = cqueue_list_locate_qinstance(master_cqueue_list, queue_name);
+
+      if (!queue) {
+         continue;
+      }
+
+      queue_hostname = lGetHost(queue, QU_qhostname);
+      
+      if (!incslots) {
+         tmp_slots = -lGetUlong(qep, JG_slots);
+      } else {
+         tmp_slots = lGetUlong(qep, JG_slots);
+      }
+
+      pe_slots += tmp_slots;
+
+      /* reserve global host */
+      if (rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                                 global_host_ep, master_centry_list, tmp_slots,
+                                 EH_consumable_config_list, EH_resource_utilization,
+                                 SGE_GLOBAL_NAME, start_time, duration, GLOBAL_TAG,
+                                 false) != 0) {
+         /* this info is not spooled */
+         sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
+                       SGE_GLOBAL_NAME, NULL, NULL, global_host_ep);
+         lListElem_clear_changed_info(global_host_ep);
+      }
+
+      /* reserve exec host */
+      host_ep = host_list_locate(master_exechost_list, queue_hostname);
+      if (rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                                 host_ep, master_centry_list, tmp_slots, EH_consumable_config_list,
+                                 EH_resource_utilization, queue_hostname, start_time,
+                                 duration, HOST_TAG, false) != 0) {
+         /* this info is not spooled */
+         sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
+                       queue_hostname, NULL, NULL, host_ep);
+         lListElem_clear_changed_info(host_ep);
+      }
+
+      /* reserve queue instance */
+      rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                             queue, master_centry_list, tmp_slots, QU_consumable_config_list,
+                             QU_resource_utilization, queue_name, start_time, duration,
+                             QUEUE_TAG, false);
+
+      /* this info is not spooled */
+      qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
+   }
+
+   if (granted_pe != NULL) {
+      lListElem *pe = pe_list_locate(master_pe_list, granted_pe);
+
+      if (!pe) {
+         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, granted_pe));
+      } else {
+         utilization_add(lFirst(lGetList(pe, PE_resource_utilization)), start_time,
+                                duration, pe_slots, 0, 0, PE_TAG, granted_pe,
+                                SCHEDULING_RECORD_ENTRY_TYPE_RESERVING, false);
+         sge_add_event(0, sgeE_PE_MOD, 0, 0, granted_pe, NULL, NULL, pe);
+         lListElem_clear_changed_info(pe);
+      }
+   }
+
+   lFreeElem(&dummy_job);
+
+   DRETURN(0);
 }

@@ -48,7 +48,7 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe.h"
-#include "sched/sge_resource_utilizationL.h"
+#include "sched/sge_resource_utilization.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_hrefL.h"

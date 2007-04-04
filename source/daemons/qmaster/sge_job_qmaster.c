@@ -52,9 +52,7 @@
 #include "mail.h"
 #include "sge_ja_task.h"
 #include "sge_pe.h"
-#include "sge_job_refL.h"
 #include "sge_host.h"
-#include "sge_hostL.h"
 #include "sge_job_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
@@ -3672,11 +3670,8 @@ static u_long32 guess_highest_job_number()
 }   
       
 /* all modifications are done now verify schedulability */
-static int verify_suitable_queues(
-lList **alpp,
-lListElem *jep,
-int *trigger 
-) {
+static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
+{
    int verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
    DENTER(TOP_LAYER, "verify_suitable_queues");
@@ -3734,7 +3729,7 @@ int *trigger
             a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
             a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
             a.start            = DISPATCH_TIME_NOW;
-            a.duration         = 0;
+            a.duration         = 0; /* indicator for schedule based mode */
 
             /* imagine qs is empty */
             sconf_set_qs_state(QS_STATE_EMPTY);
@@ -3787,12 +3782,14 @@ int *trigger
          }
 
          if (verify_mode==JUST_VERIFY) {
-            if (trigger)
+            if (trigger) {
                *trigger |= VERIFY_EVENT;
-            if (!a.pe)
+            }
+            if (!a.pe) {
                sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
-            else 
+            } else {
                sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, ngranted);
+            }
             answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
             DRETURN(0);
          }

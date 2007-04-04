@@ -598,7 +598,7 @@ size_t sge_dstring_remaining(const dstring *sb)
       if (sb->is_static) {
          ret = sb->size - sb->length;
       } else {
-         ret = MAX_ULONG32;
+         ret = U_LONG32_MAX;
       }
    }
 

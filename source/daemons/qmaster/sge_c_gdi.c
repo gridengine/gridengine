@@ -850,12 +850,12 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
          lList *ppList = NULL;
 
          if (sub_command & SGE_GDI_RETURN_NEW_VERSION) {
-             if (request->target == SGE_AR_LIST) {
-                return_new_version = true;
-             }
-             sub_command = sub_command & (~SGE_GDI_RETURN_NEW_VERSION);
+            if (request->target == SGE_AR_LIST) {
+               return_new_version = true;
+            }
+            sub_command = sub_command & (~SGE_GDI_RETURN_NEW_VERSION);
          }
-         
+
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
          if (request->target == SGE_ORDER_LIST) {
@@ -914,6 +914,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                   break;
             }
          } /* for_each request */
+
          if (request->target == SGE_ORDER_LIST) {
             sge_commit();
             sge_set_next_spooling_time();
@@ -2150,15 +2151,22 @@ monitoring_t *monitor
          /* failure: just append last elem in tmp_alp
             elements before may contain invalid success messages */
          if (tmp_alp) {
-            lListElem *failure;
-            failure = lLast(tmp_alp);
-            lDechainElem(tmp_alp, failure);
-            if (!*alpp)
+
+            if (!*alpp) {
                *alpp = lCreateList("answer", AN_Type);
-            lAppendElem(*alpp, failure);
+            }
+
+            if (object->type == AR_Type) {
+               lAppendList(*alpp, tmp_alp);
+            } else {
+               lListElem *failure = lLast(tmp_alp);
+
+               lDechainElem(tmp_alp, failure);
+               lAppendElem(*alpp, failure);
+               lFreeList(&tmp_alp);
+            }
          }
       }
-      lFreeList(&tmp_alp);
       lFreeElem(&new_obj);
       sge_dstring_free(&buffer);
       DRETURN(STATUS_EUNKNOWN);

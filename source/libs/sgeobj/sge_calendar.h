@@ -42,8 +42,6 @@ calendar_parse_year(lListElem *this_elem, lList **answer_list);
 bool 
 calendar_parse_week(lListElem *this_elem, lList **answer_list);
 
-u_long32 
-calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then, time_t *now);
 
 u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list, time_t *when, time_t *now); 
 

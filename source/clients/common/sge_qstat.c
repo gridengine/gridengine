@@ -306,6 +306,8 @@ int qstat_no_group(qstat_env_t* qstat_env, qstat_handler_t* handler, lList **alp
    }
    
    calc_longest_queue_length(qstat_env);
+
+   correct_capacities(qstat_env->exechost_list, qstat_env->centry_list);
    
    handler->qstat_env = qstat_env;
    handler->job_handler.qstat_env = qstat_env;

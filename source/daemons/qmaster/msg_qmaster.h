@@ -125,7 +125,6 @@
 ** gdi_utility_qmaster.c 
 */
 #define MSG_GDI_SIG_DIGIT_SS         _MESSAGE(33071, _("denied: attribute "SFQ" contains invalid value "SFQ))
-#define MSG_GDI_METHOD_VARS_SS       _MESSAGE(33072, _("parameter "SFQ" of queue: "SFN))
 #define MSG_GDI_APATH_S              _MESSAGE(33073, _("denied: path given for "SFQ" must start with an \"/\""))
 #define MSG_GDI_VARS_SS              _MESSAGE(33074, _("parameter "SFQ": "SFN))
 #define MSG_GDI_VALUE_S              _MESSAGE(33075, _("denied: attribute "SFQ" contains invalid value (null)"))
@@ -678,6 +677,7 @@
 #define MSG_QINSTANCE_CHANGEDST_SSSS    _MESSAGE(33724, _(SFN"@"SFN" changed state of "SFQ" ("SFN")"))
 #define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here"))
 #define MSG_QINSTANCE_NQIFOUND_SS       _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ))
+#define MSG_QINSTANCE_SLOTSRESERVED_USS  _MESSAGE(33727, _("denied: "sge_U32CFormat" slots are already reserved in "SFN"@"SFN" by an advance reservation"))
 
 #define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("warning: "SFQ" has ambiguous value ("SFQ", "SFQ")"))
 #define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN))

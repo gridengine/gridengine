@@ -710,6 +710,7 @@ DTRACE;
          JAT_share,
          JAT_prio,
          JAT_ntix,
+         JAT_wallclock_limit,
          NoName
       };
  

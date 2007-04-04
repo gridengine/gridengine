@@ -60,6 +60,7 @@
 #include "sge_range.h"
 #include "sge_rangeL.h"
 #include "sge_userset.h"
+#include "sgeobj/sge_hgroup.h"
 
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
@@ -127,23 +128,30 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
 
    /*   AR_start_time, SGE_ULONG        */
    if ((start_time = lGetUlong(ar, AR_start_time)) == 0) {
+#if 1
+      start_time = now;
+      lSetUlong(ar, AR_start_time, now);
+#else
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR ,
                               MSG_AR_MISSING_VALUE_S, "start time");
       goto ERROR;
+#endif
    }
 
    /*   AR_end_time, SGE_ULONG        */
-   if ((end_time = lGetUlong(ar, AR_end_time)) == 0) {
+   end_time = lGetUlong(ar, AR_end_time);
+   duration = lGetUlong(ar, AR_duration);
+   
+   if (end_time == 0 && duration == 0) {
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                              MSG_AR_MISSING_VALUE_S, "end time");
+                              MSG_AR_MISSING_VALUE_S, "end time or duration");
       goto ERROR;
-   }
-
-   /*   AR_duration, SGE_ULONG */
-   if ((duration =  lGetUlong(ar, AR_duration)) == 0) {
-      answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                              MSG_AR_MISSING_VALUE_S, "duration");
-      goto ERROR;
+   } else if (end_time == 0) {
+      end_time = start_time + duration;
+      lSetUlong(ar, AR_end_time, end_time);
+   } else if (duration == 0) {
+      duration = end_time - start_time;
+      lSetUlong(ar, AR_duration, duration);
    }
 
    if ((end_time - start_time) != duration) {
@@ -245,7 +253,6 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
             goto ERROR;
          }
       }
-      
    /*   AR_type, SGE_ULONG     */
    }
    DRETURN(true);

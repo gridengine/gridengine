@@ -299,4 +299,6 @@ bool job_verify(const lListElem *job, lList **answer_list);
 bool job_verify_submitted_job(const lListElem *job, lList **answer_list);
 bool job_verify_execd_job(const lListElem *job, lList **answer_list);
 
+bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep);
+
 #endif /* __SGE_JOB_H */    

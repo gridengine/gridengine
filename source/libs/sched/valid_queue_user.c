@@ -73,30 +73,25 @@ int sge_has_access_(const char *user, const char *group, lList *q_acl,
    DENTER(TOP_LAYER, "sge_has_access_");
 
    ret = sge_contained_in_access_list_(user, group, q_xacl, acl_list);
-   if (ret<0 || ret == 1) { /* also deny when an xacl entry was not found in acl_list */
-      DEXIT;
-      return 0;
+   if (ret < 0 || ret == 1) { /* also deny when an xacl entry was not found in acl_list */
+      DRETURN(0);
    }
 
    if (!q_acl) {  /* no entry in allowance list - ok everyone */
-       DEXIT;
-       return 1;
+       DRETURN(1);
    }
 
    ret = sge_contained_in_access_list_(user, group, q_acl, acl_list);
-   if (ret<0) {
-      DEXIT;
-      return 0;
+   if (ret < 0) {
+      DRETURN(0);
    }
    if (ret) {
       /* we're explicitly allowed to access */
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    /* there is an allowance list but the owner isn't there -> denied */
-   DEXIT;
-   return 0;
+   DRETURN(0);
 } 
 
 
@@ -119,16 +114,13 @@ static int sge_contained_in_access_list_(const char *user, const char *group,
             lGetString(acl_search,US_name)))) {
          /* ok - there is such an access list */
          if (sge_contained_in_access_list(user, group, acl_found, NULL)) {
-            DEXIT;
-            return 1;
+            DRETURN(1);
          } 
       } else {
       	DPRINTF(("cannot find userset list entry \"%s\"\n", 
 		         lGetString(acl_search,US_name)));
       }
    }
-
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

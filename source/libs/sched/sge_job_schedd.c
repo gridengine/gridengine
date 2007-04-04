@@ -70,19 +70,15 @@
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
 
-
-
-
-
-/****** scheduler/job_get_duration() *******************************************
+/****** sched/sge_job_schedd/job_get_duration() *******************************************
 *  NAME
 *     job_get_duration() -- Determine a jobs runtime duration
 *
 *  SYNOPSIS
-*     static bool job_get_duration(u_long32 *duration, const lListElem *jep) 
+*     bool job_get_duration(u_long32 *duration, const lListElem *jep) 
 *
 *  FUNCTION
-*     The maximum of the time values the user specified with -l h_rt=<time> 
+*     The minimum of the time values the user specified with -l h_rt=<time> 
 *     and -l s_rt=<time> is returned in 'duration'. If neither of these 
 *     time values were specified the default duration is used.
 *
@@ -91,55 +87,50 @@
 *     const lListElem *jep - The job (JB_Type)
 *
 *  RESULT
-*     static bool - true on success
+*     bool - true on success
 *
 *  NOTES
 *     MT-NOTE: job_get_duration() is MT safe 
 *******************************************************************************/
 bool job_get_duration(u_long32 *duration, const lListElem *jep)
 {
-   lListElem *ep;
-   double d_ret = 0, d_tmp;
-   bool got_duration = false;
-   char error_str[1024];
-   const char *s;
-
    DENTER(TOP_LAYER, "job_get_duration");
 
-   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_H_RT))) {
-      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
-               error_str, sizeof(error_str)-1)==0) {
-         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DRETURN(false);
-      }
-      d_ret = d_tmp;
-      got_duration = true;
-   }
-   
-   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_S_RT))) {
-      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
-               error_str, sizeof(error_str)-1)==0) {
-         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-         DRETURN(false);
-      }
-
-      if (got_duration) {
-         d_ret = MAX(d_ret, d_tmp);
-      } else {
-         d_ret = d_tmp;
-         got_duration = true;
-      }
+   if (!job_get_wallclock_limit(duration, jep)) {
+      *duration = sconf_get_default_duration();
    }
 
-   if (got_duration) {
-      if (d_ret > (double)U_LONG32_MAX) {
-         *duration = U_LONG32_MAX;
-      }   
-      else {
-         *duration = d_ret;
-      }   
-   } 
-   else {
+   DRETURN(true);
+}
+
+/****** sge_job_schedd/task_get_duration() *************************************
+*  NAME
+*     task_get_duration() -- Determin tasks effective runtime limit
+*
+*  SYNOPSIS
+*     bool task_get_duration(u_long32 *duration, const lListElem *ja_task) 
+*
+*  FUNCTION
+*     Determines the effictive runtime limit got by requested h_rt/s_rt or
+*     by the resulting queues h_rt/s_rt
+*
+*  INPUTS
+*     u_long32 *duration       - tasks duration in seconds
+*     const lListElem *ja_task - task element
+*
+*  RESULT
+*     bool - true
+*
+*  NOTES
+*     MT-NOTE: task_get_duration() is MT safe 
+*******************************************************************************/
+bool task_get_duration(u_long32 *duration, const lListElem *ja_task) {
+
+   DENTER(TOP_LAYER, "task_get_duration");
+
+   if (ja_task != NULL) {
+      *duration = lGetUlong(ja_task, JAT_wallclock_limit);
+   } else {
       *duration = sconf_get_default_duration();
    }
 
@@ -557,7 +548,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *        - loop over all jobs only once
 *        - minimize copy operations where possible
 *
-*     Unfortunately this function id heavy to understand now. Sorry! 
+*     Unfortunately this function is heavy to understand now. Sorry! 
 *
 *  SEE ALSO
 *     sched/sge_job_schedd/SPLIT_-Constants 
@@ -1187,14 +1178,11 @@ lSortOrder *so
 
 
 /*---------------------------------------------------------*/
-int nslots_granted(
-lList *granted,
-const char *qhostname 
-) {
+int nslots_granted(lList *granted, const char *qhostname)
+{
    lListElem *gdil_ep;
    int nslots = 0;
    const void *iterator = NULL;
-
 
    if (qhostname == NULL) {
       for_each (gdil_ep, granted) {   
@@ -1296,5 +1284,3 @@ lList *gdil
 
    return slots;
 }
-
-

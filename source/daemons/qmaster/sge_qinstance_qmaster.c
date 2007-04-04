@@ -65,6 +65,9 @@
 #include "sge_parse_num_par.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_calendar_qmaster.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sched/sge_resource_utilization.h"
+#include "sched/sge_serf.h"
 
 #include "msg_qmaster.h"
 
@@ -82,6 +85,10 @@ static bool
 qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                     lListElem *qi_elem, u_long32 cal_order, 
                                     lList **state_change_list, monitoring_t *monitor);
+
+static bool
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list);
 
 bool
 qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
@@ -333,6 +340,35 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                }
             }
             break;
+         case CQ_job_slots:
+            {
+               u_long32 old_value = lGetUlong(this_elem, attribute_name);
+               u_long32 new_value;
+
+               ulng_attr_list_find_value(attr_list, answer_list, hostname, 
+                                         &new_value, 
+                                         matching_host_or_group,
+                                         matching_group, is_ambiguous);
+               if (old_value != new_value) {
+                  DPRINTF(("reserved slots %d\n", qinstance_slots_reserved(this_elem)));
+                  if (new_value < qinstance_slots_reserved(this_elem)) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                             MSG_QINSTANCE_SLOTSRESERVED_USS, qinstance_slots_reserved(this_elem),
+                                             lGetString(this_elem, QU_qname), hostname);
+                     ret &= false;
+                  } else {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                     DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
+                              lNm2Str(attribute_name),
+                              old_value, new_value));
+#endif
+                     lSetUlong(this_elem, attribute_name, new_value);
+                     *has_changed_conf_attr = true;
+                     qinstance_reinit_consumable_actual_list(this_elem, answer_list);
+                  }
+               }
+            }
+            break;
          case CQ_consumable_config_list:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
@@ -345,8 +381,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
 
-               if( centry_list_fill_request(new_value, answer_list, master_centry_list, 
-                                        true, true, false) == 0 ) {
+               if (centry_list_fill_request(new_value, answer_list, master_centry_list, 
+                                        true, true, false) == 0) {
 
                    /* We make a copy of new_value here because it will ultimately
                     * end up in the qinstance.  If we didn't copy it, we would end
@@ -540,10 +576,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
                      lSetUlong(this_elem, attribute_name, new_value);
                      *has_changed_conf_attr = true;
-                     if (attribute_name == QU_job_slots) {
-                        qinstance_reinit_consumable_actual_list(this_elem,
-                                                                answer_list);
-                     } else if (attribute_name == QU_nsuspend &&
+                     if (attribute_name == QU_nsuspend &&
                                 new_value == 0) {
                         /*
                          * Suspend Threshold state will be reset later 
@@ -581,8 +614,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -902,3 +934,83 @@ static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
 
 }
 
+/****** daemons/qmaster/qinstance_reinit_consumable_actual_list() ************
+*  NAME
+*     qinstance_reinit_consumable_actual_list() -- as it says 
+*
+*  SYNOPSIS
+*     static bool 
+*     qinstance_reinit_consumable_actual_list(lListElem *this_elem, 
+*                                             lList **answer_list) 
+*
+*  FUNCTION
+*     Reinitialize the consumable actual values. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type element 
+*     lList **answer_list  - AN_Type element 
+*
+*  RESULT
+*     static bool - error result
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: qinstance_reinit_consumable_actual_list() is MT safe 
+*******************************************************************************/
+static bool
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_reinit_consumable_actual_list");
+
+   if (this_elem != NULL) {
+      const char *name = lGetString(this_elem, QU_full_name);
+      lList *job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
+      lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
+      lList *ar_list = *(object_type_get_master_list(SGE_TYPE_AR));
+      lListElem *ep = NULL;
+
+      lSetList(this_elem, QU_resource_utilization, NULL);
+      qinstance_set_conf_slots_used(this_elem);
+      qinstance_debit_consumable(this_elem, NULL, centry_list, 0);
+
+      for_each(ep, job_list) {
+         lList *ja_task_list = lGetList(ep, JB_ja_tasks);
+         lListElem *ja_task = NULL;
+         int slots = 0;
+
+         for_each(ja_task, ja_task_list) {
+            lListElem *gdil_ep = lGetSubStr(ja_task, JG_qname, name,
+                                            JAT_granted_destin_identifier_list);
+            if (gdil_ep != NULL) {
+               slots += lGetUlong(gdil_ep, JG_slots);
+            }
+         }
+         if (slots > 0) {
+            qinstance_debit_consumable(this_elem, ep, centry_list, slots);
+         }
+      }
+      for_each(ep, ar_list) {
+         lListElem *gdil_ep = lGetSubStr(ep, JG_qname, name, AR_granted_slots);
+
+
+         if (gdil_ep != NULL) {
+            lListElem *dummy_job = lCreateElem(JB_Type);
+         
+            lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ep, AR_resource_list)));
+
+            rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                                   this_elem, centry_list, lGetUlong(gdil_ep, JG_slots),
+                                   QU_consumable_config_list, QU_resource_utilization, name,
+                                   lGetUlong(ep, AR_start_time), lGetUlong(ep, AR_duration),
+                                   QUEUE_TAG, false);
+            lFreeElem(&dummy_job);
+         }
+      }
+   }
+
+   DRETURN(ret);
+}

@@ -816,7 +816,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
       es->uid = pwd->pw_uid;
       if (groupname != NULL) {
          gid_t gid;
-         if (sge_group2gid(groupname, &gid, MAX_NIS_RETRIES) == 1) {;
+         if (sge_group2gid(groupname, &gid, MAX_NIS_RETRIES) == 1) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_group2gid failed for groupname %s", groupname);
             DRETURN(false);
          }

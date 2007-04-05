@@ -104,6 +104,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST; 
      case OA_MAIL_OPTIONS:
          return MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS; 
+     case OA_MAIL_OPTIONS_AR:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS_AR; 
      case OA_NODE_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_NODE_LIST; 
      case OA_NODE_PATH:
@@ -676,7 +678,11 @@ FILE *fp
    if (VALID_OPT(m_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_m_OPT_MAIL_OPTIONS, 
          MSG_GDI_UTEXT_m_OPT_MAIL_OPTIONS);
-      MARK(OA_MAIL_OPTIONS);
+      if ( prog_number == QRSUB ) {
+        MARK(OA_MAIL_OPTIONS_AR);
+      } else {
+        MARK(OA_MAIL_OPTIONS);
+      }  
    }
 
    if (VALID_OPT(masterq_OPT, prog_number)) {
@@ -1205,7 +1211,11 @@ FILE *fp
    }
 
    if (VALID_OPT(w_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_w_OPT_EWNV, MSG_GDI_UTEXT_w_OPT_EWNV );
+      if ( prog_number == QRSUB ) {
+        PRINTITD(MSG_GDI_USAGE_w_OPT_EV, MSG_GDI_UTEXT_w_OPT_EV );
+      } else {
+        PRINTITD(MSG_GDI_USAGE_w_OPT_EWNV, MSG_GDI_UTEXT_w_OPT_EWNV );
+      }
    }
 
    if (VALID_OPT(wd_OPT, prog_number)) {

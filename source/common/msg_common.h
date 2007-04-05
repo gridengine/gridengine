@@ -313,6 +313,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST            "mail_list               mail_address[,mail_address,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS         "mail_options            `e' `b' `a' `n' `s'"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS_AR      "mail_options            `e' `b' `a' `n' (begin, end, error, no)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_LIST            "node_list               node_path[,node_path,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
@@ -1090,6 +1091,9 @@
 #define MSG_GDI_UTEXT_ar_OPT              _MESSAGE(60704, _("bind job to advance reservation"))
 #define MSG_GDI_USAGE_he_OPT              "[-he  y[es]|n[o]]"
 #define MSG_GDI_UTEXT_he_OPT              _MESSAGE(60705, _("enable/disable hard error handling"))
+#define MSG_GDI_USAGE_w_OPT_EV          "[-w e|v]"
+#define MSG_GDI_UTEXT_w_OPT_EV          _MESSAGE(60706, _("validate availability of AR request (error|verify) for jobs"))
+
 
 /* =================================================
  * please do not enter new messages after this point,

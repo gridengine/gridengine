@@ -1,3 +1,7 @@
+PJ-2007-04-05-0: Enhancm:   - Disabled some options according the specification
+                            - Updated ussage of the qrsub -help  
+                 Review:    RD
+
 MP-2007-04-05-0  Bugfix:    Root user on unix unable to submit job to
                             windows execution daemon.
                  Bugster:   6513597

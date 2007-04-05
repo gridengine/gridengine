@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
       lFreeList(&pcmdline);
       goto error_exit;
    }
-
+  
    /*
    ** stage 2 of command line parsing
    */
@@ -126,8 +126,6 @@ int main(int argc, char **argv) {
       lFreeList(&pcmdline);
       goto error_exit;
    }
-
-   lWriteElemTo(ar, stdout);
 
    /* test code */
    {

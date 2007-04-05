@@ -57,13 +57,14 @@
 #include "sge_centry.h"
 #include "sge_job.h"
 #include "sge_var.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 
 static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);
 static int var_list_parse_from_environment(lList **lpp, char **envp);
 static int sge_parse_hold_list(char *hold_str, u_long32 prog_number);
-static int sge_parse_mail_options(char *mail_str); 
+static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number); 
 static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
 static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
@@ -282,7 +283,7 @@ u_long32 flags
 
          DPRINTF(("\"-b %s\"\n", *sp));
 
-         if (set_yn_option(pcmdline, b_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, b_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -694,7 +695,7 @@ u_long32 flags
          
          DPRINTF(("\"-he %s\"\n", *sp));
          
-         if (set_yn_option(pcmdline, he_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, he_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -762,7 +763,7 @@ u_long32 flags
 
          DPRINTF(("\"-j %s\"\n", *sp));
 
-         if (set_yn_option(pcmdline, j_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, j_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -855,7 +856,7 @@ u_long32 flags
          }
 
          DPRINTF(("\"-m %s\"\n", *sp));
-         mail_options = sge_parse_mail_options(*sp);
+         mail_options = sge_parse_mail_options(&answer, *sp, prog_number);
          if (!mail_options) {
              answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                     MSG_PARSE_WRONGMAILOPTIONSLISTFORMATXSPECTOMOPTION_S, *sp);
@@ -995,7 +996,7 @@ u_long32 flags
          
          DPRINTF(("\"-now %s\"\n", *sp));
          
-         if (set_yn_option(pcmdline, now_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, now_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -1254,7 +1255,7 @@ DTRACE;
 
          DPRINTF(("\"-R %s\"\n", *sp));
 
-         if (set_yn_option(pcmdline, R_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option(pcmdline, R_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -1327,7 +1328,7 @@ DTRACE;
 
          DPRINTF(("\"-shell %s\"\n", *sp));
 
-         if (set_yn_option (pcmdline, shell_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option (pcmdline, shell_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -1354,7 +1355,7 @@ DTRACE;
          
          DPRINTF(("\"-sync %s\"\n", *sp));
          
-         if (set_yn_option (pcmdline, sync_OPT, *(sp - 1), *sp, &answer) == 0) {
+         if (set_yn_option (pcmdline, sync_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 
@@ -1934,11 +1935,8 @@ u_long32 prog_number
 
 /***********************************************************************/
 /* MT-NOTE: sge_parse_mail_options() is MT safe */
-static int sge_parse_mail_options(
-char *mail_str 
-
-) {
-
+static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number) 
+{
    int i, j;
    int mail_opt = 0;
 
@@ -1947,23 +1945,27 @@ char *mail_str
    i = strlen(mail_str);
 
    for (j = 0; j < i; j++) {
-      if ((char) mail_str[j] == 'a')
+      if ((char) mail_str[j] == 'a') {
          mail_opt = mail_opt | MAIL_AT_ABORT;
-      else if ((char) mail_str[j] == 'b')
+      } else if ((char) mail_str[j] == 'b') {
          mail_opt = mail_opt | MAIL_AT_BEGINNING;
-      else if ((char) mail_str[j] == 'e')
+      } else if ((char) mail_str[j] == 'e') {
          mail_opt = mail_opt | MAIL_AT_EXIT;
-      else if ((char) mail_str[j] == 'n')
+      } else if ((char) mail_str[j] == 'n') {
          mail_opt = mail_opt | NO_MAIL;
-      else if ((char) mail_str[j] == 's')
+      } else if ((char) mail_str[j] == 's') {
+         if ( prog_number == QRSUB ) {
+            answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                   MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-m");
+            DRETURN(0);
+         }
          mail_opt = mail_opt | MAIL_AT_SUSPENSION;
-      else {
-         return 0;
+      } else {
+         DRETURN(0);
       }
    }
 
-   DEXIT;
-   return (mail_opt);
+   DRETURN(mail_opt);
 
 }
 
@@ -2433,6 +2435,9 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
 *     char *value  - The option value
 *     lList **alpp - The answer list
 *
+*  RESULT
+*     int - STATUS_OK if success, STATUS_ERROR1 otherwise
+*
 *  NOTES
 *     MT-NOTES: set_yn_option() is MT safe
 *******************************************************************************/
@@ -2444,19 +2449,21 @@ static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
    if ((strcasecmp("y", value) == 0) || (strcasecmp("yes", value) == 0)) {
       ep_opt = sge_add_arg(opts, opt, lIntT, arg, value);
       lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
+      lSetUlong(ep_opt,SPA_argval_lUlongT, TRUE);
    }
    else if ((strcasecmp ("n", value) == 0) || (strcasecmp ("no", value) == 0)) {
       ep_opt = sge_add_arg(opts, opt, lIntT, arg, value);
       lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
-   }
+      lSetUlong(ep_opt,SPA_argval_lUlongT, FALSE);
+    }
    else {
        sprintf(SGE_EVENT, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, arg, value);
        answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
        
-       return 0;
+       return STATUS_ERROR1;
    }
    
-   return 1;
+   return STATUS_OK;
 }
 
 /* This method is not thread safe.  Fortunately, it is only used by the

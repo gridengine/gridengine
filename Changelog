@@ -1,3 +1,9 @@
+EB-2007-04-05-0: Enhancm:   - removed ar_id from new_job entry in reporting file
+                            - now ar_acct entries are created on termination 
+                              of an ar in reporting file
+                            - ar related reporting was only written when it is enabled
+                 Review:    RD 
+
 PJ-2007-04-05-0: Enhancm:   - Disabled some options according the specification
                             - Updated ussage of the qrsub -help  
                  Review:    RD

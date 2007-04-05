@@ -730,7 +730,9 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    }
    
    if (state == AR_EXITED) {
+      lListElem *elem = NULL;
       dstring buffer = DSTRING_INIT;
+      time_t timestamp = sge_get_gmt();
 
       sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
 
@@ -739,10 +741,27 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 
       reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
                                      ar_get_string_from_event(ARL_TERMINATED),
-                                     sge_get_gmt());  
-      /* EB: TODO AR: I think also the ar accounting records should be written 
-       *              here with reporting_create_ar_acct_record()
-       */
+                                     timestamp);  
+
+      for_each(elem, lGetList(ar, AR_granted_slots)) {
+         const char *queue_name = lGetString(elem, JG_qname);
+         u_long32 slots = lGetUlong(elem, JG_slots);
+         dstring cqueue_name = DSTRING_INIT;
+         dstring host_or_hgroup = DSTRING_INIT;
+         bool has_hostname;
+         bool has_domain;
+   
+         cqueue_name_split(queue_name, &cqueue_name, &host_or_hgroup,
+                           &has_hostname, &has_domain);
+        
+         reporting_create_ar_acct_record(NULL, ar,
+                                         sge_dstring_get_string(&cqueue_name),
+                                         sge_dstring_get_string(&host_or_hgroup),
+                                         slots, timestamp); 
+
+         sge_dstring_free(&cqueue_name);
+         sge_dstring_free(&host_or_hgroup);
+      } 
 
       /* AR TBD CLEANUP 
        * for now we only remove the AR object 

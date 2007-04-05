@@ -393,13 +393,12 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
    if (mconf_get_do_reporting() && mconf_get_do_joblog() && job != NULL) {
       dstring job_dstring = DSTRING_INIT;
 
-      u_long32 job_number, priority, submission_time, arid;
+      u_long32 job_number, priority, submission_time;
       const char *job_name, *owner, *group, *project, *department, *account;
 
       job_number        = lGetUlong(job, JB_job_number);
       priority          = lGetUlong(job, JB_priority);
       submission_time   = lGetUlong(job, JB_submission_time);
-      arid              = lGetUlong(job, JB_ar);
       job_name          = lGetStringNotNull(job, JB_job_name);
       owner             = lGetStringNotNull(job, JB_owner);
       group             = lGetStringNotNull(job, JB_group);
@@ -431,8 +430,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
                           project, REPORTING_DELIMITER,
                           department, REPORTING_DELIMITER,
                           account, REPORTING_DELIMITER,
-                          priority, REPORTING_DELIMITER,
-                          arid);
+                          priority);
 
       /* write record to reporting buffer */
       ret = reporting_create_record(answer_list, "new_job", 
@@ -1561,6 +1559,11 @@ reporting_create_new_ar_record(lList **answer_list,
 
    DENTER(TOP_LAYER, "reporting_create_new_ar_record");
 
+   /* if reporting isn't active, we needn't write intermediate usage */
+   if (!mconf_get_do_reporting()) {
+      DRETURN(false);
+   }
+
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), 
                               sge_U32CFormat"%c"
@@ -1615,16 +1618,20 @@ reporting_create_ar_attribute_record(lList **answer_list,
    const char *pe_name = NULL;
    const char *ar_name = NULL;
    const char *ar_account = NULL;
-   const char *ar_granted_resources = NULL;
+   dstring ar_granted_resources = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "reporting_create_ar_attribute_record");
+
+   /* if reporting isn't active, we needn't write intermediate usage */
+   if (!mconf_get_do_reporting()) {
+      DRETURN(false);
+   }
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    pe_name = lGetString(ar, AR_pe);
    ar_name = lGetString(ar, AR_name);
    ar_account = lGetString(ar, AR_account);
-/* EB: TODO: add granted resources for this ar */
-   ar_granted_resources = "";
+   centry_list_append_to_dstring(lGetList(ar, AR_resource_list), &ar_granted_resources);
    sge_dstring_sprintf_append(&(buf->buffer), 
                               sge_U32CFormat"%c"
                               SFN"%c"
@@ -1645,7 +1652,8 @@ reporting_create_ar_attribute_record(lList **answer_list,
                               lGetUlong(ar, AR_start_time), REPORTING_DELIMITER,
                               lGetUlong(ar, AR_end_time), REPORTING_DELIMITER,
                               (pe_name != NULL) ? pe_name : "", REPORTING_DELIMITER,
-                              ar_granted_resources);
+                              sge_dstring_get_string(&ar_granted_resources));
+   sge_dstring_free(&ar_granted_resources);
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
 
    DRETURN(ret);
@@ -1692,6 +1700,11 @@ reporting_create_ar_log_record(lList **answer_list,
    rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
 
    DENTER(TOP_LAYER, "reporting_create_ar_log_record");
+
+   /* if reporting isn't active, we needn't write intermediate usage */
+   if (!mconf_get_do_reporting()) {
+      DRETURN(false);
+   }
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), 
@@ -1758,6 +1771,11 @@ reporting_create_ar_acct_record(lList **answer_list,
    rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
 
    DENTER(TOP_LAYER, "reporting_create_ar_acct_record");
+
+   /* if reporting isn't active, we needn't write intermediate usage */
+   if (!mconf_get_do_reporting()) {
+      DRETURN(false);
+   }
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), 

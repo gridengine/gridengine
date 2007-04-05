@@ -157,11 +157,11 @@ How to Set Up ARCo database:
 
 mysql> GRANT ALL on *.* to 'arco_write'@'<hostname>' identified by '<password>' with GRANT OPTION;
 mysql> GRANT ALL on *.* to 'arco_write'@'localhost' identified by '<password>' with GRANT OPTION;
-mysql> GRANT ALL on *.* to 'arco_write'@'*' identified by '<password>' with GRANT OPTION;
+mysql> GRANT ALL on *.* to 'arco_write'@'%' identified by '<password>' with GRANT OPTION;
 
 mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'<hostname>' identified by '<password>';
 mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'localhost' identified by '<password>';
-mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'*' identified by '<password>';
+mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'%' identified by '<password>';
 
 3. step: Log in to the database as a arco_write user:
 # mysql -u arco_write -p<password>

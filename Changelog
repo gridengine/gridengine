@@ -1,3 +1,8 @@
+MP-2007-04-05-0  Bugfix:    Root user on unix unable to submit job to
+                            windows execution daemon.
+                 Bugster:   6513597
+                 Review:    JG
+
 RD-2007-04-04-2: Bugfix:    - fixed qsub -ar check if no hr_t was selected
                             - added ckpt_name for AR reserving decision
                             - added AR TODO list

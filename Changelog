@@ -1,3 +1,8 @@
+MP-2007-04-05-0  Bugfix:    Root user on unix unable to submit job to
+                            windows execution daemon.
+                 Bugster:   6513597
+                 Review:    JG
+
 RC-2007-04-03-0: Enhancm:   A small tight SGE-SSH integration change
                  Review:    pending
 

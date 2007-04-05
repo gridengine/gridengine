@@ -71,6 +71,9 @@
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_gdilib.h"
+#if defined(INTERIX)
+   #include "../../libs/wingrid/misc.h"
+#endif
 
 
 extern volatile int jobs_to_start;
@@ -151,6 +154,14 @@ int execd_job_exec(sge_gdi_ctx_class_t *ctx,
          DRETURN(0);
       }
 
+      #if defined(INTERIX) 
+         if (strcmp(lGetString(job, JB_owner), "root") == 0) {
+            char buffer[1000];
+            wl_get_superuser_name(buffer, 1000);
+            lSetString(job, JB_owner, buffer);            
+         }
+      #endif
+      
       /* we expect one jatask to start per request */
       ja_task = lFirst(lGetList(job, JB_ja_tasks));
       if(ja_task != NULL) {

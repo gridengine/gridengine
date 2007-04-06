@@ -1,3 +1,5 @@
+PJ-2007-04-05-0: Bugfix:    - fixed bug qrsub -M list
+
 EB-2007-04-05-0: Enhancm:   - removed ar_id from new_job entry in reporting file
                             - now ar_acct entries are created on termination 
                               of an ar in reporting file

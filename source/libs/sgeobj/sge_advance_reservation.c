@@ -226,9 +226,6 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
       }
       /*   AR_mail_options, SGE_ULONG   */
       /*   AR_mail_list, SGE_LIST */
-      if (!str_list_is_valid(lGetList(ar, AR_mail_list), alpp)) {
-         goto ERROR;
-      }
       
       /*   AR_master_queue_list  -masterq wc_queue_list, SGE_LIST bind master task to queue(s) */
       if (!qref_list_is_valid(lGetList(ar, AR_master_queue_list), alpp)) {

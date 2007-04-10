@@ -417,7 +417,6 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
                           "%s%c"
                           "%s%c"
                           "%s%c"
-                          sge_U32CFormat"%c"
                           sge_U32CFormat
                           "\n", 
                           submission_time, REPORTING_DELIMITER,

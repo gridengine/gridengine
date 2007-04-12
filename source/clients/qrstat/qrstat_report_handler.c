@@ -114,7 +114,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
             if (lGetString(ar, AR_pe) != NULL) {
                dstring pe_range_string = DSTRING_INIT;
 
-               range_list_print_to_string(lGetList(ar, AR_pe_range), &pe_range_string, true, false);
+               range_list_print_to_string(lGetList(ar, AR_pe_range), &pe_range_string, true, false, false);
                handler->report_start_granted_parallel_environment(handler, answer_list);
                handler->report_granted_parallel_environment_node(handler, answer_list,
                                                                  lGetString(ar, AR_pe),

@@ -1026,7 +1026,7 @@ tARSMEntry *data
    if ((pe = (StringConst)lGetString(jep, AR_pe))) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(lGetList(jep, AR_pe_range), &range_string, true, false);
+      range_list_print_to_string(lGetList(jep, AR_pe_range), &range_string, true, false, false);
       sprintf(pe_tasks, "%s %s", pe, sge_dstring_get_string(&range_string));  
       sge_dstring_free(&range_string);
       data->pe = XtNewString(pe_tasks);

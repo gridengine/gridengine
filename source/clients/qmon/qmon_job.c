@@ -1602,7 +1602,7 @@ lListElem *jep
    if (lGetString(jep, JB_pe)) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, true, false);
+      range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, true, false, false);
       sge_dstring_sprintf_append(info, "%-30.30s%s %s\n", "Requested PE:", 
               lGetString(jep, JB_pe), sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);

@@ -427,10 +427,11 @@ u_long32 range_get_number_of_ids(const lListElem *this_elem)
 *     ranges will be suppressed.
 *
 *  INPUTS
-*     const lList *this_list  - RN_Type 
-*     dstring *string         - dynamic string 
-*     bool ignore_step        - ignore step for printing
-*     boll comma_as_separator - use the format 1,2,3 instead of 1-2:3
+*     const lList *this_list     - RN_Type 
+*     dstring *string            - dynamic string 
+*     bool ignore_step           - ignore step for printing
+*     bool comma_as_separator    - use the format 1,2,3 instead of 1-2:
+*     bool print_always_as_range - even if the range has only one id
 *
 *  RESULT
 *     string will be modified
@@ -441,7 +442,7 @@ u_long32 range_get_number_of_ids(const lListElem *this_elem)
 void
 range_list_print_to_string(const lList *this_list,
                            dstring * string, bool ignore_step,
-                           bool comma_as_separator)
+                           bool comma_as_separator, bool print_always_as_range)
 {
    DENTER(RANGE_LAYER, "range_list_print_to_string");
    if (string != NULL) {
@@ -452,7 +453,8 @@ range_list_print_to_string(const lList *this_list,
             u_long32 start, end, step;
 
             range_get_all_ids(range, &start, &end, &step);
-            range_to_dstring(start, end, step, string, ignore_step, comma_as_separator);
+            range_to_dstring(start, end, step, string, ignore_step, 
+                             comma_as_separator, print_always_as_range);
          }
       } else {
          sge_dstring_append(string, "UNDEFINED");
@@ -1510,13 +1512,14 @@ void range_list_calculate_intersection_set(lList **range_list,
 *     dstring *dyn_taskrange_str  - dynamic string 
 *     int ignore_step             - ignore step for output
 *     bool use_comma_as_separator - use a comma instead of '-' and ':' for separation
+*     bool print_always_as_range - even if the range has only one id
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 ******************************************************************************/
 void range_to_dstring(u_long32 start, u_long32 end, int step,
                       dstring * dyn_taskrange_str, int ignore_step,
-                      bool use_comma_as_separator)
+                      bool use_comma_as_separator, bool print_always_as_range)
 {
    char tail[256] = "";
    char to_char = '-'; 
@@ -1530,8 +1533,10 @@ void range_to_dstring(u_long32 start, u_long32 end, int step,
       sge_dstring_append(dyn_taskrange_str, ",");
    }
 
-   if (start == end) {
+   if (start == end && !print_always_as_range) {
       sprintf(tail, sge_u32, start);
+   } else if (start == end && print_always_as_range) {
+      sprintf(tail, sge_u32 "%c" sge_u32, start, to_char, end);
    } else if (start + step == end) {
       sprintf(tail, sge_u32 "," sge_u32, start, end);
    } else {

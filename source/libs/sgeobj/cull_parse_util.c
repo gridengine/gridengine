@@ -1133,7 +1133,7 @@ fprint_range_list(FILE *fp, char *name, lList *range_list)
 {
    dstring range_string = DSTRING_INIT; 
 
-   range_list_print_to_string(range_list, &range_string, false, true);
+   range_list_print_to_string(range_list, &range_string, false, true, true);
    FPRINTF((fp, "%s%s\n", name, sge_dstring_get_string(&range_string)));
    sge_dstring_free(&range_string); 
    return 0;

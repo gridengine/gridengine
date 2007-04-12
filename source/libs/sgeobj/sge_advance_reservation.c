@@ -391,7 +391,6 @@ ar_get_string_from_event(ar_state_event_t event)
    DRETURN(ret);
 }
 
-
 void 
 ar_state2dstring(ar_state_t state, dstring *state_as_string)
 {

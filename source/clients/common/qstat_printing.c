@@ -885,7 +885,7 @@ int queue_name_length
             dstring range_string = DSTRING_INIT;
 
             range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                       &range_string, true, false);
+                                       &range_string, true, false, false);
             printf(QSTAT_INDENT "Requested PE:     %s %s\n", 
                    lGetString(job, JB_pe), sge_dstring_get_string(&range_string)); 
             sge_dstring_free(&range_string);

@@ -1697,6 +1697,7 @@ reporting_create_ar_log_record(lList **answer_list,
 {
    bool ret = true;
    rep_buf_t *buf = &reporting_buffer[REPORTING_BUFFER];
+   dstring state_string = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "reporting_create_ar_log_record");
 
@@ -1705,24 +1706,25 @@ reporting_create_ar_log_record(lList **answer_list,
       DRETURN(false);
    }
 
+   ar_state2dstring(lGetUlong(ar, AR_state), &state_string);
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), 
                               sge_U32CFormat"%c"
                               SFN"%c"
                               sge_U32CFormat"%c"   /* report_time */
                               sge_U32CFormat"%c"   /* AR_id */
-                              sge_U32CFormat"%c"   /* AR_state */
-                              sge_U32CFormat"%c"   /* event */
+                              "%s%c"               /* AR_state as string*/
+                              "%s%c"               /* event as string*/
                               "%s\n",              /* message */
                               report_time, REPORTING_DELIMITER,
                               "ar_log", REPORTING_DELIMITER,
                               report_time, REPORTING_DELIMITER,
                               lGetUlong(ar, AR_id), REPORTING_DELIMITER,
-                              lGetUlong(ar, AR_state), REPORTING_DELIMITER,
-                              (u_long32)event, REPORTING_DELIMITER,
+                              sge_dstring_get_string(&state_string), REPORTING_DELIMITER,
+                              ar_get_string_from_event(event), REPORTING_DELIMITER,
                               (ar_description != NULL) ? ar_description : "");
    sge_mutex_unlock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
-
+   sge_dstring_free(&state_string);
    DRETURN(ret);
 }
 

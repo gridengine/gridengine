@@ -543,7 +543,7 @@ int nm
 
    DENTER(GUI_LAYER, "PrintPERange");
 
-   range_list_print_to_string(lGetList(ep, nm), &range_string, true, false);
+   range_list_print_to_string(lGetList(ep, nm), &range_string, true, false, false);
    str = XtNewString(sge_dstring_get_string(&range_string));
    sge_dstring_free(&range_string);
 
@@ -1001,7 +1001,7 @@ int nm
          if (object_has_type(first_elem, JAT_Type)) {
             ja_task_list_print_to_string(eleml, &dyn_buf2);
          } else if (object_has_type(first_elem, RN_Type)) {
-            range_list_print_to_string(eleml, &dyn_buf2, false, false);
+            range_list_print_to_string(eleml, &dyn_buf2, false, false, false);
          }
       }
       tmp_string = sge_dstring_get_string(&dyn_buf2);

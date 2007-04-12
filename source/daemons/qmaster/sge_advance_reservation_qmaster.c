@@ -740,7 +740,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       ar_do_reservation(ar, false);
 
       reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
-                                     ar_get_string_from_event(ARL_TERMINATED),
+                                     "end time of AR reached",
                                      timestamp);  
 
       for_each(elem, lGetList(ar, AR_granted_slots)) {
@@ -787,7 +787,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       te_free_event(&ev);
 
       reporting_create_ar_log_record(NULL, ar, ARL_STARTTIME_REACHED, 
-                                     ar_get_string_from_event(ARL_STARTTIME_REACHED),
+                                     "start time of AR reached",
                                      sge_get_gmt());  
    }
 

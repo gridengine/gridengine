@@ -1779,7 +1779,7 @@ static int handle_zombie_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler, 
          sge_dstring_clear(&dyn_task_str);
 
          ja_task = job_get_ja_task_template_pending(jep, first_task_id);
-         range_list_print_to_string(z_ids, &dyn_task_str, false, false);
+         range_list_print_to_string(z_ids, &dyn_task_str, false, false, false);
          
          if (count == 0 && handler->report_zombie_jobs_started && (ret=handler->report_zombie_jobs_started(handler, alpp))) {
             DPRINTF(("report_zombie_jobs_started failed\n"));
@@ -1833,7 +1833,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
       }
       if (range_list[i] != NULL && show) { 
          if ((qstat_env->group_opt & GROUP_NO_TASK_GROUPS) == 0) {
-            range_list_print_to_string(range_list[i], &ja_task_id_string, false, false);
+            range_list_print_to_string(range_list[i], &ja_task_id_string, false, false, false);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
                lListElem *ja_task = job_get_ja_task_template_hold(job, 
@@ -2194,7 +2194,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
          dstring range_string = DSTRING_INIT;
 
          range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                    &range_string, true, false);
+                                    &range_string, true, false, false);
                                     
          ret = handler->report_requested_pe(handler, lGetString(job, JB_pe), sge_dstring_get_string(&range_string), alpp);
                                     

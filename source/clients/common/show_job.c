@@ -417,7 +417,7 @@ void cull_show_job(lListElem *job, int flags)
          dstring range_string = DSTRING_INIT;
 
          range_list_print_to_string(lGetList(job, JB_pe_range), 
-                                    &range_string, true, false);
+                                    &range_string, true, false, false);
          printf("parallel environment:  %s range: %s\n",
                 lGetString(job, JB_pe), sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);

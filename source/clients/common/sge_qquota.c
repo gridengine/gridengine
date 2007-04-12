@@ -47,7 +47,6 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "cull_xml.h"
 #include "sig_handlers.h"
 #include "sge_prog.h"
 #include "sgermon.h"

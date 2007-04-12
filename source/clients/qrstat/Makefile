@@ -36,7 +36,11 @@ QRSTAT_DIR = $(SDIR)/clients/qrstat
 
 QRSTAT_TARGETS = qrstat
 
-QRSTAT_SRC = qrstat.c 
+QRSTAT_SRC = qrstat.c \
+             qrstat_filter.c \
+             qrstat_report_handler.c \
+             qrstat_report_handler_xml.c \
+             qrstat_report_handler_stdout.c
 
 QRSTAT_ADD_SRC = usage.c \
                 sge_options.c \
@@ -85,3 +89,15 @@ include $(QRSTAT_DIR)/qrstat_dependencies
 ###############################################################################
 qrstat.o: 	$(QRSTAT_DIR)/qrstat.c
 		$(CC) $(CFLAGS) -c $(QRSTAT_DIR)/qrstat.c
+
+qrstat_report_handler.o: 	$(QRSTAT_DIR)/qrstat_report_handler.c
+		$(CC) $(CFLAGS) -c $(QRSTAT_DIR)/qrstat_report_handler.c
+
+qrstat_report_handler_xml.o: 	$(QRSTAT_DIR)/qrstat_report_handler_xml.c
+		$(CC) $(CFLAGS) -c $(QRSTAT_DIR)/qrstat_report_handler_xml.c
+
+qrstat_report_handler_stdout.o: 	$(QRSTAT_DIR)/qrstat_report_handler_stdout.c
+		$(CC) $(CFLAGS) -c $(QRSTAT_DIR)/qrstat_report_handler_stdout.c
+
+qrstat_filter.o: 	$(QRSTAT_DIR)/qrstat_filter.c
+		$(CC) $(CFLAGS) -c $(QRSTAT_DIR)/qrstat_filter.c

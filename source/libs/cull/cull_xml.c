@@ -52,7 +52,6 @@
 #include "cull_state.h"
 #include "pack.h"
 #include "cull_xmlL.h"
-#include "cull_xml.h"
 
 static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp); 
 static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp); 

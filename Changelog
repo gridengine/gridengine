@@ -1,3 +1,7 @@
+EB-2007-04-12-0: Enhancem.: - implemented qrstat
+                            - added man pages
+                 Review:    RD
+
 EB-2007-04-10-0: Bugfix:    - fixed bug in new_job reporting (incorrect format string)
 
 PJ-2007-04-05-0: Bugfix:    - fixed bug qrsub -M list

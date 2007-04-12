@@ -81,8 +81,6 @@
 #include "sge_cqueue_qstat.h"
 #include "sge_qref.h"
 
-#include "cull/cull_xml.h"
-
 #include "sge_mt_init.h"
 #include "read_defaults.h"
 #include "setup_path.h"

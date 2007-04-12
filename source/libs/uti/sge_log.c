@@ -653,7 +653,7 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
          
          sge_dstring_init(&msg, msg2log, sizeof(msg2log));
 
-         append_time((time_t)sge_get_gmt(), &msg); 
+         append_time((time_t)sge_get_gmt(), &msg, false); 
 
          sge_dstring_sprintf_append(&msg, "|%s|%s|%c|%s\n",
                  progname,

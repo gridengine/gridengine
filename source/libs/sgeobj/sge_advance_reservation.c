@@ -63,16 +63,36 @@
 #include "sge_str.h"
 #include "sgeobj/sge_hgroup.h"
 
-
 /*
- * TODO List. Following features need to be implemented:
- * - removing a checkpoint from a reserved queue that was requested by the AR
- * - lowering or removing a reserved consumable complex on global/host/queue level
- *   need to be rejected
- * - configuring a queue calender that disables a queue in a reserved time frame
- *   need to be rejected
- * - changing global/queue/host access lists on reserved hosts that endanger a AR
- *   need to be rejected
+ * TODO List. Following features/bugs need to be addressed:
+ * (Append new TODOs at the end of the list or remove items which are done)
+ *
+ * DONE
+ *
+ *    1) qrstat implementation
+ *   
+ *    9) -M of qrsub causes core of master
+ *
+ * OPEN
+ *
+ *    2) removing a checkpoint from a reserved queue that was requested by the AR
+ *
+ *    3) lowering or removing a reserved consumable complex on global/host/queue level
+ *       need to be rejected
+ *
+ *    4) configuring a queue calender that disables a queue in a reserved time frame
+ *       need to be rejected
+ *
+ *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
+ *       need to be rejected
+ *
+ *    6) -u qrsub cause core of master
+ *
+ *    7) qrstat -explain does not show correct messages
+ * 
+ *    8) qrstat testsuite test has to be written
+ *
+ *   10) ...
  */
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
@@ -372,4 +392,28 @@ ar_get_string_from_event(ar_state_event_t event)
 }
 
 
-
+void 
+ar_state2dstring(ar_state_t state, dstring *state_as_string)
+{
+   const char *letter = "u";
+   switch (state) {
+      case AR_WAITING:
+         letter = "w";
+         break;
+      case AR_RUNNING:
+         letter = "r";
+         break;
+      case AR_EXITED:
+         letter = "x";
+         break;
+      case AR_DELETED:
+         letter = "d";
+         break;
+      case AR_ERROR:
+         letter = "e";
+         break;
+      default:
+         break;
+   }
+   sge_dstring_append(state_as_string, letter);
+}

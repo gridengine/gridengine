@@ -77,12 +77,14 @@ typedef enum {
 
 #if defined(FREEBSD) || defined(NETBSD) || defined(LINUXAMD64)
 #  define sge_U32CFormat "%u"  
+#  define sge_U32CLetter "u"
 #  define sge_u32c(x)  (unsigned int)(x)
 
 #  define sge_X32CFormat "%x"
 #  define sge_x32c(x)  (unsigned int)(x)
 #else
 #  define sge_U32CFormat "%ld"
+#  define sge_U32CLetter "ld"
 #  define sge_u32c(x)  (unsigned long)(x)
 
 #  define sge_X32CFormat "%lx"

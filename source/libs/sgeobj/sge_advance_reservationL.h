@@ -58,7 +58,7 @@ typedef enum {
    AR_ERROR         /* e 	error - AR became invalid */
 
    /* append new states below! otherwise update procedures for reporting an accounting 
-    * have to be written*/
+    * have to be written. change ar_state2dstring if you change something here */
 
 } ar_state_t;
 

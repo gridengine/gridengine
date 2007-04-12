@@ -90,6 +90,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST;
      case OA_JOB_ID_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST; 
+     case OA_AR_ID:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID; 
      case OA_JOB_IDENTIFIER_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST; 
      case OA_JOB_QUEUE_DEST:
@@ -311,7 +313,12 @@ FILE *fp
    }
 
    if (VALID_OPT(ar_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+      if (prog_number == QRSTAT) {
+         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
+      } else {
+         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+      }
+      MARK(OA_AR_ID);
    }
 
    if (VALID_OPT(arqs_OPT, prog_number)) {
@@ -1184,6 +1191,9 @@ FILE *fp
       if (prog_number == QDEL) {
          PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
          MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL);
+      } else if  (prog_number == QRSTAT) {
+         PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
+         MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT);
       } else {
          PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
          MSG_GDI_UTEXT_u_OPT_USERLISTORUALL);
@@ -1221,6 +1231,14 @@ FILE *fp
    if (VALID_OPT(wd_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_wd_OPT, MSG_GDI_UTEXT_wd_OPT);
       MARK(OA_PATH);
+   }
+
+   if (VALID_OPT(xml_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_xml_OPT , MSG_GDI_UTEXT_xml_OPT );
+   }
+
+   if (VALID_OPT(explain_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_explain_OPT , MSG_GDI_UTEXT_explain_OPT );
    }
 
    if (VALID_OPT(AT_OPT, prog_number)) {

@@ -87,9 +87,6 @@
 
 
 #include "sge_qstat.h"
-
-#include "cull/cull_xml.h"
-
 #include "sge_mt_init.h"
 #include "setup_path.h"
 

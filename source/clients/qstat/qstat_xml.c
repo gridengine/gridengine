@@ -81,7 +81,6 @@
 #include "sge_qref.h"
 #include "sge_ja_task.h"
 
-#include "cull/cull_xml.h"
 #include "sge_job.h"
 #include "sge_urgency.h"
 #include "sge_ulong.h"

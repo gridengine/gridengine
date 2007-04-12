@@ -32,12 +32,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_dstring.h"
 #include "sge_varargs.h"
+#include "symbols.h"
 
 #define REALLOC_CHUNK   1024
 #define BUFFER_SIZE 20000
@@ -241,6 +243,57 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
 
    DEXIT;
    return sb->s;
+}
+
+const char* sge_dstring_append_time(dstring *buffer, time_t time, bool as_xml)
+{
+   struct tm *tm;
+#ifdef HAS_LOCALTIME_R
+   struct tm tm_buffer;
+#endif
+          
+   DENTER(DSTRING_LAYER, "sge_dstring_append_time");
+
+#ifdef HAS_LOCALTIME_R
+   tm = (struct tm *)localtime_r(&time, &tm_buffer);
+#else   
+   tm = localtime(&i);
+#endif       
+
+   if (as_xml) {
+      sge_dstring_sprintf_append(buffer, "%04d-%02d-%02dT%02d:%02d:%02d",
+              1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday,
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   } else {
+      sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
+              tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   }
+
+   DRETURN(buffer->s);
+}
+
+const char* sge_dstring_append_mailopt(dstring *sb, u_long32 mailopt)
+{
+   DENTER(DSTRING_LAYER, "sge_dstring_append_time");
+
+   if ((MAIL_AT_ABORT | mailopt) == mailopt) {
+      sge_dstring_append_char(sb, MAIL_AT_ABORT_SYM);
+   }
+   if ((MAIL_AT_BEGINNING | mailopt) == mailopt) {
+      sge_dstring_append_char(sb, MAIL_AT_BEGINNING_SYM);
+   }
+   if ((MAIL_AT_EXIT | mailopt) == mailopt) {
+      sge_dstring_append_char(sb, MAIL_AT_EXIT_SYM);
+   }
+   if ((NO_MAIL | mailopt) == mailopt) {
+      sge_dstring_append_char(sb, NO_MAIL_SYM);
+   }
+   if ((MAIL_AT_SUSPENSION | mailopt) == mailopt) {
+      sge_dstring_append_char(sb, MAIL_AT_SUSPENSION_SYM);
+   }
+
+   DRETURN(sb->s);
 }
 
 /****** uti/dstring/sge_dstring_append_dstring() ******************************

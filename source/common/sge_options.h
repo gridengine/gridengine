@@ -276,7 +276,9 @@ enum {
    Mrqs_OPT,     /* modify resource quota set from file */
    drqs_OPT,     /* delete resource quota set */
    ar_OPT,       /* advanced resservation option */
-   he_OPT        /* error handling for qrsub */ 
+   he_OPT,       /* error handling for qrsub */ 
+   explain_OPT,  /* explain error in qrstat */
+   xml_OPT       /* generate xml outout */
 };
 
 /* macros used in parsing */

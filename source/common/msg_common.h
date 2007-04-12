@@ -333,6 +333,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB      "job_tasks               [job_id['.'task_id_range]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID                "ar_id                   positiv number identifying an advance reservation"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\""
@@ -1069,6 +1070,7 @@
 #define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
 
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
+#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT _MESSAGE(60626, _("show all advance reservations of users specified in list"))
 
 #define MSG_OBJ_AR                         _MESSAGE(60630, _("advance reservation"))
 
@@ -1089,11 +1091,15 @@
 #define MSG_PARSE_INVALID_AR_MUSTBEUINT   _MESSAGE(60703, _("ERROR! invalid advance reservation id, must be an unsigned integer"))
 #define MSG_GDI_USAGE_ar_OPT              "[-ar ar_id]"
 #define MSG_GDI_UTEXT_ar_OPT              _MESSAGE(60704, _("bind job to advance reservation"))
+#define MSG_GDI_UTEXT_ar_QRSTAT_OPT       _MESSAGE(60705, _("show advance reservation information"))
 #define MSG_GDI_USAGE_he_OPT              "[-he  y[es]|n[o]]"
-#define MSG_GDI_UTEXT_he_OPT              _MESSAGE(60705, _("enable/disable hard error handling"))
-#define MSG_GDI_USAGE_w_OPT_EV          "[-w e|v]"
-#define MSG_GDI_UTEXT_w_OPT_EV          _MESSAGE(60706, _("validate availability of AR request (error|verify) for jobs"))
-
+#define MSG_GDI_UTEXT_he_OPT              _MESSAGE(60706, _("enable/disable hard error handling"))
+#define MSG_GDI_USAGE_xml_OPT             "[-xml]"
+#define MSG_GDI_UTEXT_xml_OPT             _MESSAGE(60707, _("display the information in XML-Format"))
+#define MSG_GDI_USAGE_explain_OPT         "[-explain]"
+#define MSG_GDI_UTEXT_explain_OPT         _MESSAGE(60708, _("show reason for error state"))
+#define MSG_GDI_USAGE_w_OPT_EV            "[-w e|v]"
+#define MSG_GDI_UTEXT_w_OPT_EV            _MESSAGE(60709, _("validate availability of AR request (error|verify) for jobs"))
 
 /* =================================================
  * please do not enter new messages after this point,

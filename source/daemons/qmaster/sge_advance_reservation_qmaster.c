@@ -732,7 +732,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    if (state == AR_EXITED) {
       lListElem *elem = NULL;
       dstring buffer = DSTRING_INIT;
-      time_t timestamp = sge_get_gmt();
+      time_t timestamp = (time_t) sge_get_gmt();
 
       sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
 

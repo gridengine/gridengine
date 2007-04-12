@@ -56,9 +56,10 @@
 #include "sge_gdi.h"
 #include "sge_answer.h"
 
+#include "sgeobj/sge_mailrec.h"
+
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
-static void sge_show_mail_options(int op, int how);
 static void show_ce_type_list(lList *cel, const char *indent, const char *separator, 
    bool display_resource_contribution, lList *centry_list, int slots);
 
@@ -664,59 +665,6 @@ static void sge_show_y_n(int op, int how)
    return;
 }         
 
-static void sge_show_mail_options(int op, int how) 
-{
-   int i = 0;
-   int count = 0;
-   stringT tmp_str;
- 
-   DENTER(TOP_LAYER, "sge_show_mail_list");
- 
-   if (VALID(MAIL_AT_ABORT, op)) {
-      tmp_str[count] = MAIL_AT_ABORT_SYM;
-      count++;
-   }
- 
-   if (VALID(MAIL_AT_BEGINNING, op)) {
-      tmp_str[count] = MAIL_AT_BEGINNING_SYM;
-      count++;
-   }
- 
-   if (VALID(MAIL_AT_EXIT, op)) {
-      tmp_str[count] = MAIL_AT_EXIT_SYM;
-      count++;
-   }
- 
-   if (VALID(NO_MAIL, op)) {
-      tmp_str[count] = NO_MAIL_SYM;
-      count++;
-   }
- 
-   if (VALID(MAIL_AT_SUSPENSION, op)) {
-      tmp_str[count] = MAIL_AT_SUSPENSION_SYM;
-      count++;
-   }
- 
-   tmp_str[count] = '\0';       /* ensure string terminator */
- 
-   if (VALID(SGE_STDOUT, how)) {
-      printf("%s", tmp_str);
-      for (i = count; i < 4; i++)
-         printf(" ");
- 
-   }
- 
-   if (VALID(SGE_STDERR, how)) {
-      fprintf(stderr, "%s", tmp_str);
-      for (i = count; i < 4; i++)
-         fprintf(stderr, " ");
- 
-   }
- 
-   DEXIT;
-   return;
-} 
-
 void sge_show_ce_type_list(lList *rel)
 {
    DENTER(TOP_LAYER, "sge_show_ce_type_list");
@@ -729,6 +677,8 @@ void sge_show_ce_type_list(lList *rel)
 
 /*************************************************************/
 /* cel CE_Type List */
+
+/* TODO: EB: this function should be replaced by centry_list_append_to_dstring() */
 static void show_ce_type_list(lList *cel, const char *indent,
                       const char *separator, 
                       bool display_resource_contribution, lList *centry_list, int slots)

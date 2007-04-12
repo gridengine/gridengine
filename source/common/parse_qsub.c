@@ -196,41 +196,73 @@ u_long32 flags
       }
 
 /*----------------------------------------------------------------------------*/
-      /* "-ar  advance_reservation */
+      /* either
+       *    -ar ar_id
+       * or
+       *    -ar ar_id_list
+       */
+      if (prog_number == QRSTAT) {
+         /* "-ar  advance_reservation */
 
-      if (!strcmp("-ar", *sp)) {
-         u_long32 ar_id;
-         double ar_id_d;
+         if (!strcmp("-ar", *sp)) {
+            lList *ar_id_list = NULL;
 
-         sp++;
-         if (!*sp) {
-            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
-                                    "-ar");                
-            DRETURN(answer);
-         }
+            sp++;
+            if (!*sp) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                       "-ar");                
+               DRETURN(answer);
+            }
 
-         if (!parse_ulong_val(&ar_id_d, NULL, TYPE_INT, *sp, NULL, 0)) {
-            answer_list_add(&answer, MSG_PARSE_INVALID_AR_MUSTBEUINT,
-                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DRETURN(answer);
-         }
+            DPRINTF(("\"-ar %s\"\n", *sp));
+
+            ulong_list_parse_from_string(&ar_id_list, &answer, *sp, ",");
+
+            ep_opt = sge_add_arg(pcmdline, ar_OPT, lListT, *(sp - 1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, ar_id_list);
+
+            sp++;
+            continue;
+         }  
+      } else {
+         /* "-ar  advance_reservation */
+
+         if (!strcmp("-ar", *sp)) {
+            u_long32 ar_id;
+            double ar_id_d;
+
+            sp++;
+            if (!*sp) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                       "-ar");                
+               DRETURN(answer);
+            }
+
+            if (!parse_ulong_val(&ar_id_d, NULL, TYPE_INT, *sp, NULL, 0)) {
+               answer_list_add(&answer, MSG_PARSE_INVALID_AR_MUSTBEUINT,
+                                STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+               DRETURN(answer);
+            }
 
 
-         if (ar_id_d < 0) {
-            answer_list_add(&answer, MSG_PARSE_INVALID_AR_MUSTBEUINT,
-                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DRETURN(answer);
-         }
+            if (ar_id_d < 0) {
+               answer_list_add(&answer, MSG_PARSE_INVALID_AR_MUSTBEUINT,
+                                STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+               DRETURN(answer);
+            }
 
-         ar_id = ar_id_d;
-         
-         ep_opt = sge_add_arg(pcmdline, ar_OPT, lUlongT, *(sp - 1), *sp);
-         lSetUlong(ep_opt, SPA_argval_lUlongT, ar_id);
+            ar_id = ar_id_d;
+            
+            ep_opt = sge_add_arg(pcmdline, ar_OPT, lUlongT, *(sp - 1), *sp);
+            lSetUlong(ep_opt, SPA_argval_lUlongT, ar_id);
 
-         sp++;
-         continue;
+            sp++;
+            continue;
+         }  
       }
 /*----------------------------------------------------------------------------*/
       /* "-ac context_list */
@@ -368,6 +400,30 @@ u_long32 flags
 
          DPRINTF(("\"%s\"\n", *sp));
          ep_opt = sge_add_noarg(pcmdline, clear_OPT, *sp, NULL);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
+      /* "-explain" */
+
+      if (!strcmp("-explain", *sp)) {
+
+         DPRINTF(("\"%s\"\n", *sp));
+         ep_opt = sge_add_noarg(pcmdline, explain_OPT, *sp, NULL);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
+      /* "-xml" */
+
+      if (!strcmp("-xml", *sp)) {
+
+         DPRINTF(("\"%s\"\n", *sp));
+         ep_opt = sge_add_noarg(pcmdline, xml_OPT, *sp, NULL);
 
          sp++;
          continue;
@@ -1802,7 +1858,6 @@ DTRACE;
    }
    DEXIT;
    return answer;
-
 }
 
 

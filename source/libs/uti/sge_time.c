@@ -159,6 +159,8 @@ u_long32 sge_get_gmt()
 *
 *  INPUTS
 *     time_t i - time value 
+*     dstring *buffer - dstring
+*     bool is_xml - write in XML dateTime format?
 *
 *  RESULT
 *     const char* - time string (current time if 'i' was 0) 
@@ -167,8 +169,10 @@ u_long32 sge_get_gmt()
 *  NOTES
 *     MT-NOTE: append_time() is MT safe if localtime_r() can be used
 *
+*     SHOULD BE REPLACED BY: sge_dstring_append_time()
+*
 ******************************************************************************/
-void append_time(time_t i, dstring *buffer) 
+void append_time(time_t i, dstring *buffer, bool is_xml) 
 {
    struct tm *tm;
 
@@ -180,9 +184,15 @@ void append_time(time_t i, dstring *buffer)
    tm = localtime(&i);
 #endif
 
-   sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
-           tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
-           tm->tm_hour, tm->tm_min, tm->tm_sec);
+   if (is_xml) {
+      sge_dstring_sprintf_append(buffer, "%04d-%02d-%02dT%02d:%02d:%02d", 
+              1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, 
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   } else {
+      sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
+              tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   }
 }
 
 /****** uti/time/sge_ctime() **************************************************
@@ -229,6 +239,7 @@ const char *sge_ctime(time_t i, dstring *buffer)
    return sge_dstring_get_string(buffer);
 }
 
+/* TODO: should be replaced by sge_dstring_append_time() */
 const char *sge_ctimeXML(time_t i, dstring *buffer) 
 {
 #ifdef HAS_LOCALTIME_R

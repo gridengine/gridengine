@@ -38,5 +38,7 @@ int mailrec_parse(lList **lpp, const char *mail_str);
 
 int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len);
 
+void sge_show_mail_options(int op, int how);
+
 #endif /* __SGE_MAILREC_H */
 

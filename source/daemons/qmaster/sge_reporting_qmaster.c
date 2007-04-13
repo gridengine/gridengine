@@ -1706,7 +1706,7 @@ reporting_create_ar_log_record(lList **answer_list,
       DRETURN(false);
    }
 
-   ar_state2dstring(lGetUlong(ar, AR_state), &state_string);
+   ar_state2dstring((ar_state_t)lGetUlong(ar, AR_state), &state_string);
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), 
                               sge_U32CFormat"%c"

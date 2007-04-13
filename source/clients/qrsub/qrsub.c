@@ -109,13 +109,14 @@ int main(int argc, char **argv) {
          goto error_exit;
       }
    }
+   
    alp = cull_parse_cmdline(QRSUB, argv+1, environ, &pcmdline, FLG_USE_PSEUDOS);
 
    if (answer_list_print_err_warn(&alp, NULL, "qrsub: ", MSG_WARNING) > 0) {
       lFreeList(&pcmdline);
       goto error_exit;
    }
-  
+
    /*
    ** stage 2 of command line parsing
    */
@@ -143,7 +144,7 @@ int main(int argc, char **argv) {
          lWriteElemTo(lFirst(ar_lp), stdout);
       }
       lFreeList(&ar_lp);
-/*       lWriteListTo(alp, stdout); */
+/*        */
       answer_list_on_error_print_or_exit(&alp, stdout);
    }
 
@@ -272,7 +273,18 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
       lRemoveElem(pcmdline, &ep);
    }
 
+  /* Remove the script elements. They are not stored in the ar structure */
+  if ((ep = lGetElemStr(pcmdline, SPA_switch, STR_PSEUDO_SCRIPT))) {
+      lRemoveElem(pcmdline, &ep);
+   }
 
+   if ((ep = lGetElemStr(pcmdline, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
+      lRemoveElem(pcmdline, &ep);
+   }
+
+   if ((ep = lGetElemStr(pcmdline, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
+      lRemoveElem(pcmdline, &ep);
+   }
 
    
    for_each(ep, pcmdline) {

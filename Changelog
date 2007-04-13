@@ -1,3 +1,9 @@
+PJ-2007-04-13-0: Bugfix:    Classic spooling for AR 
+                            Minor bugfix and changes  
+                 Enhancm:   qalter -ar option
+                 Bugfix:    ~/.sge_ar_request was in error 
+                 Review:    RD
+
 EB-2007-04-12-1: Bugfix.:   - fixed code for classic spooling (pe_range)
                             - instead of event/state numbers stere are letters/strings
                               written

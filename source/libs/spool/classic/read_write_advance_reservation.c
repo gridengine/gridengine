@@ -54,6 +54,7 @@
 #include "sge_resource_utilization.h"
 #include "sge_qinstance.h"
 #include "sge_qref.h"
+#include "sge_strL.h"
 
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_range.h"
@@ -61,7 +62,7 @@
 
 static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
 static int intprt_as_mail_recipiants[] = { MR_user, MR_host, 0 };
-static int intprt_as_range_list[] = { RN_min, RN_max, RN_step, 0 };
+static int intprt_as_range_list[] = { RN_min, RN_max, 0 };
 
 lListElem *
 cull_read_in_ar(const char *dirname, const char *filename, int spool,
@@ -93,82 +94,118 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
              int spool, int flag, int *tag, int parsing_type) 
 {
    int opt[10];
+   const char *s = NULL;
+
    DENTER(TOP_LAYER, "read_ar_work");
 
    opt[0] = NoName;
 
    /* --------- AR_id */
    if (!set_conf_ulong(alpp, clpp, fields, "id", ep, AR_id)) {
+      DPRINTF(("Read AR, error read AR_id\n"));
       DRETURN(-1);
    }
+   DPRINTF(("Read AR, id:                  "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_id))));
 
    /* --------- AR_name */
    if (!set_conf_string(alpp, clpp, fields, "name", ep, AR_name)) {
+      DPRINTF(("Read AR, error read AR_name\n"));
       DRETURN(-1);
    }
+   NULL_OUT_NONE(ep, AR_name);
+   s = lGetString(ep, AR_name);
+   DPRINTF(("Read AR, name:                %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_account */
    if (!set_conf_string(alpp, clpp, fields, "account", ep, AR_account)) {
+      DPRINTF(("Read AR, error read AR_account\n"));
       DRETURN(-1);
    }
    NULL_OUT_NONE(ep, AR_account);
+   s = lGetString(ep, AR_account);
+   DPRINTF((    "Read AR, account:             %s\n", (s != NULL) ? s : "NONE"));
+
 
    /* --------- AR_owner */
    if (!set_conf_string(alpp, clpp, fields, "owner", ep, AR_owner)) {
+      DPRINTF(("Read AR, error read AR_owner\n"));
       DRETURN(-1);
    }
    NULL_OUT_NONE(ep, AR_owner);
+   s = lGetString(ep, AR_owner);
+   DPRINTF((    "Read AR, owner:               %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_submission_time */
    if (!set_conf_ulong(alpp, clpp, fields, "submission_time", ep, AR_submission_time)) {
+      DPRINTF(("Read AR, error read AR_submission_time\n"));
       DRETURN(-1);
    }
+   DPRINTF(("Read AR, submission_time:     "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_submission_time))));
+
 
    /* --------- AR_start_time */
    if (!set_conf_ulong(alpp, clpp, fields, "start_time", ep, AR_start_time)) {
+      DPRINTF(("Read AR, error read AR_start_time\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, start_time:          "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_start_time))));
 
    /* --------- AR_end_time */
    if (!set_conf_ulong(alpp, clpp, fields, "end_time", ep, AR_end_time)) {
+      DPRINTF(("Read AR, error read AR_end_time\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, end_time:            "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_end_time))));
 
    /* --------- AR_duration */
    if (!set_conf_ulong(alpp, clpp, fields, "duration", ep, AR_duration)) {
+      DPRINTF(("Read AR, error read AR_duration\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, duration:            "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_duration))));
+
 
    /* --------- AR_verify */
    if (!set_conf_ulong(alpp, clpp, fields, "verify", ep, AR_verify)) {
+      DPRINTF(("Read AR, error read AR_verify\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, verify:              "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_verify))));
 
    /* --------- AR_error_handling */
    if (!set_conf_ulong(alpp, clpp, fields, "error_handling", ep, AR_error_handling)) {
+      DPRINTF(("Read AR, error read AR_error_handling\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
    /* --------- AR_state */
    if (!set_conf_ulong(alpp, clpp, fields, "state", ep, AR_state)) {
+      DPRINTF(("Read AR, error read AR_state\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, state:               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
 
    /* --------- AR_checkpoint_name */
    if (!set_conf_string(alpp, clpp, fields, "ckpt_name", ep, AR_checkpoint_name)) {
+      DPRINTF(("Read AR, error read AR_checkpoint_name\n"));
       DRETURN(-1);
    }
    NULL_OUT_NONE(ep, AR_checkpoint_name);
+   s = lGetString(ep, AR_checkpoint_name);
+   DPRINTF((    "Read AR, ckpt_name:           %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_resource_list */
    if (parsing_type == 0) {
       if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "resource_list",
                             ep, AR_resource_list, CE_Type, intprt_as_load_thresholds)) {
+         DPRINTF(("Read AR, error read default AR_resource_list\n"));
          DRETURN(-1);
       }
    } else {
       if (!set_conf_list(alpp, clpp, fields?fields:opt, "resource_list",
                          ep, AR_resource_list, CE_Type, CE_name)) {
+         DPRINTF(("Read AR, error read AR_resource_list\n"));
          DRETURN(-1);
       }
    }
@@ -176,69 +213,89 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    /* --------- AR_queue_list */
    if (!set_conf_list(alpp, clpp, fields, "queue_list", ep, AR_queue_list,
                       QR_Type, QR_name)) {
+      DPRINTF(("Read AR, error read AR_queue_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_mail_options */
    if (!set_conf_ulong(alpp, clpp, fields, "mail_options", ep, AR_mail_options)) {
+      DPRINTF(("Read AR, error read AR_mail_options\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_mail_list */
    if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "mail_list",
                          ep, AR_resource_list, MR_Type, intprt_as_mail_recipiants)) {
+      DPRINTF(("Read AR, error read AR_mail_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_pe */
-   if (!set_conf_string(alpp, clpp, fields, "pe", ep, AR_checkpoint_name)) {
+   if (!set_conf_string(alpp, clpp, fields, "pe", ep, AR_pe)) {
+      DPRINTF(("Read AR, error read AR_pe\n"));
       DRETURN(-1);
    }
-   NULL_OUT_NONE(ep, AR_checkpoint_name);
+   NULL_OUT_NONE(ep, AR_pe);
+   s = lGetString(ep, AR_pe);
+   DPRINTF((    "Read AR, pe                   %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_pe_range */
    if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "pe_range",
-                         ep, AR_pe_range, RN_Type, intprt_as_range_list)) {
+                      ep, AR_pe_range, RN_Type, intprt_as_range_list)) {
+      DPRINTF(("Read AR, error default read AR_pe_range\n"));
       DRETURN(-1);
-   }
-
+   } 
+   
    /* --------- AR_acl_list  */
    if (!set_conf_list(alpp, clpp, fields?fields:opt, "user_lists", ep,
                       AR_acl_list, US_Type, US_name)) {
+      DPRINTF(("Read AR, error read AR_acl_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_xacl_list  */
    if (!set_conf_list(alpp, clpp, fields?fields:opt, "xuser_lists", ep,
                       AR_xacl_list, US_Type, US_name)) {
+      DPRINTF(("Read AR, error read AR_xacl_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_type */
    if (!set_conf_ulong(alpp, clpp, fields, "type", ep, AR_type)) {
+      DPRINTF(("Read AR, error read AR_type\n"));
       DRETURN(-1);
    }
+   DPRINTF((    "Read AR, type                 "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_type))));
 
    DRETURN(0);
 }
 
-/* ------------------------------------------------------------
-
-   returns tmpfile name in case of creating a tempfile
-
-   spool:
-      1 write for spooling
-      0 write only user controlled fields
-
-   how:
-      0 use stdout
-      1 write into tmpfile
-      2 write into spoolfile
-
-*/         
-
-char *
-write_ar(int spool, int how, const lListElem *ep)
+/****** read_write_advance_reservation/write_ar() ******************************
+*  NAME
+*     write_ar() --  write an advance reservation
+*
+* SYNOPSIS
+*     char * write_ar(int spool, int how, const lListElem *ep) 
+*
+*  FUNCTION
+*     write an advance reservation
+*
+*  INPUTS
+*     int spool           -  1 write for spooling
+*                            0 write only user controlled fields
+*     int how             -  0 use stdout
+*                            1 write into tmpfile
+*                            2 write into spoolfile
+*     const lListElem *ep -  object pointer of the AR 
+*
+*  RESULT
+*     char * a character stream on success, NULL otherwise 
+*
+*  NOTES
+*     MT-NOTE: write_ar() is not MT safe 
+*
+*******************************************************************************/
+char * write_ar(int spool, int how, const lListElem *ep)
 {
    FILE *fp;
    const char *s = NULL;
@@ -279,123 +336,145 @@ write_ar(int spool, int how, const lListElem *ep)
    default:
       DRETURN(NULL);
    }
-
+   
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR, 
          feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    }
 
    /* --------- AR_id */
-   FPRINTF((fp, "id                   "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_id))));
+   DPRINTF((    "id:                  "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_id))));
+   FPRINTF((fp, "id                   "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_id))));
 
    /* --------- AR_name */
-   FPRINTF((fp, "name                 %s\n", lGetString(ep, AR_name)));
+   s = lGetString(ep, AR_name);
+   DPRINTF((    "name:                %s\n", (s != NULL) ? s : "NONE"));
+   FPRINTF((fp, "name                 %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_account */
    s = lGetString(ep, AR_account);
+   DPRINTF((    "account:             %s\n", (s != NULL) ? s : "NONE"));
    FPRINTF((fp, "account              %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_owner */
    s = lGetString(ep, AR_owner);
+   DPRINTF((    "owner:               %s\n", (s != NULL) ? s : "NONE"));
    FPRINTF((fp, "owner                %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_submission_time */
-   FPRINTF((fp, "submission_time      "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_submission_time))));
+   DPRINTF((    "submission_time:     "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_submission_time))));
+   FPRINTF((fp, "submission_time      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_submission_time))));
 
    /* --------- AR_start_time */
-   FPRINTF((fp, "start_time           "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_start_time))));
+   DPRINTF((    "start_time:          "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_start_time))));
+   FPRINTF((fp, "start_time           "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_start_time))));
 
    /* --------- AR_end_time */
-   FPRINTF((fp, "end_time             "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_end_time))));
+   DPRINTF((    "end_time:            "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_end_time))));
+   FPRINTF((fp, "end_time             "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_end_time))));
 
    /* --------- AR_duration */
-   FPRINTF((fp, "duration             "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_duration))));
+   DPRINTF((    "duration:            "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_duration))));
+   FPRINTF((fp, "duration             "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_duration))));
 
    /* --------- AR_verify */
-   FPRINTF((fp, "verify               "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_verify))));
+   DPRINTF((    "verify:              "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_verify))));
+   FPRINTF((fp, "verify               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_verify))));
 
    /* --------- AR_error_handling */
-   FPRINTF((fp, "error_handling       "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_error_handling))));
+   DPRINTF((    "error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
+   FPRINTF((fp, "error_handling       "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
    /* --------- AR_state */
-   FPRINTF((fp, "state                "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_state))));
+   DPRINTF((    "state:               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
+   FPRINTF((fp, "state                "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
 
    /* --------- AR_checkpoint_name */
    s = lGetString(ep, AR_checkpoint_name);
+   DPRINTF((    "ckpt_name:           %s\n", (s != NULL) ? s : "NONE"));
    FPRINTF((fp, "ckpt_name            %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_resource_list */
-   fprint_thresholds(fp, "resource_list        ", 
-                     lGetList(ep, AR_resource_list), 1);
+   DPRINTF((             "resource_list:      \n"));
+   fprint_thresholds(fp, "resource_list        ", lGetList(ep, AR_resource_list), 1);
    
    /* --------- AR_queue_list */
+   DPRINTF((    "queue_list:        \n"));
    FPRINTF((fp, "queue_list           "));
    sep = lFirst(lGetList(ep, AR_queue_list));
    if (sep) {
       do {
+         DPRINTF((    "%s", lGetString(sep, QR_name)));
          FPRINTF((fp, "%s", lGetString(sep, QR_name)));
          sep = lNext(sep);
          if (sep) { 
+            DPRINTF((    " "));
             FPRINTF((fp, " "));
          }
       } while (sep);
+      DPRINTF((    "\n"));
       FPRINTF((fp, "\n"));
    } else {
+      DPRINTF((    "NONE\n"));
       FPRINTF((fp, "NONE\n"));
    }  
 
    /* --------- AR_mail_options */
-   FPRINTF((fp, "mail_options         "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_mail_options))));
+   DPRINTF((    "mail_options:        "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_mail_options))));
+   FPRINTF((fp, "mail_options         "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_mail_options))));
 
    /* --------- AR_mail_list */
+   DPRINTF((    "mail_list:         \n"));
    FPRINTF((fp, "mail_list            "));
    sep = lFirst(lGetList(ep, AR_mail_list));
    if (sep) {
       do {
-         FPRINTF((fp, "%s %s", lGetString(sep, MR_user), lGetString(sep, MR_host)));
+         const char *user = NULL;
+         const char *host = NULL;
+
+         user=lGetString(sep, MR_user);
+         host=lGetHost(sep, MR_host); 
+         DPRINTF((    "%s %s", user, (host != NULL) ? host : "NONE"));
+         FPRINTF((fp, "%s %s", user, (host != NULL) ? host : "NONE"));
          sep = lNext(sep);
          if (sep) { 
+            DPRINTF((    ",\n"));
             FPRINTF((fp, ","));
          }
       } while (sep);
+      DPRINTF((    "\n"));
       FPRINTF((fp, "\n"));
    } else {
+      DPRINTF((    "NONE\n"));
       FPRINTF((fp, "NONE\n"));
    }  
 
    /* --------- AR_pe */
    s = lGetString(ep, AR_pe);
+   DPRINTF((    "pe                   %s\n", (s != NULL) ? s : "NONE"));
    FPRINTF((fp, "pe                   %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_pe_range */
+   DPRINTF((    "pe_range \n"));
    fprint_range_list(fp, "pe_range             ", lGetList(ep, AR_pe_range));
 
    /* --------- AR_acl_list */
-   lret = fprint_cull_list(fp,  "user_lists           ",
-                           lGetList(ep, AR_acl_list), US_name);
+   DPRINTF((    "user_list , changed to ST_name \n"));
+   lret = fprint_cull_list(fp,  "user_lists           ", lGetList(ep, AR_acl_list), ST_name);
    if (lret == -1) {
       goto FPRINTF_ERROR;
    }
 
    /* --------- AR_xacl_list */
-   lret = fprint_cull_list(fp,  "xuser_lists          ",
-                           lGetList(ep, AR_xacl_list), US_name);
+   DPRINTF((    "xuser_list \n"));
+   lret = fprint_cull_list(fp,  "xuser_lists          ", lGetList(ep, AR_xacl_list), ST_name);
    if (lret == -1) {
       goto FPRINTF_ERROR;
    }
 
    /* --------- AR_type */
-   FPRINTF((fp, "type                 "sge_U32CFormat"\n", 
-            sge_u32c(lGetUlong(ep, AR_type))));
+   DPRINTF((    "type                 "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_type))));
+   FPRINTF((fp, "type                 "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_type))));
 
    if (how!=0) {
       FCLOSE(fp);

@@ -994,19 +994,33 @@ FPRINTF_ERROR:
    return -7;
 }
 
-/****
- **** fprint_cull_list
- ****
- **** Prints str and field 'fi' (must be string) of
- **** every element of lList lp to file fp separated
- **** by blanks. If fp is NULL, "NONE" will be printed.
- ****/
-int fprint_cull_list(
-FILE *fp,
-char *str,
-lList *lp,
-int fi 
-) {
+/****** cull_parse_util/fprint_cull_list() *************************************
+*  NAME
+*     fprint_cull_list() --  Prints str and field 
+*
+*  SYNOPSIS
+*     int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi) 
+*
+*  FUNCTION
+*     Prints str and field 'fi' (must be string) of
+*     every element of lList lp to file fp separated
+*     by blanks. If fp is NULL, "NONE" will be printed. 
+*
+*  INPUTS
+*     FILE *fp  - a file
+*     char *str - a string name of list 
+*     lList *lp - a list
+*     int fi    - an element from the list to be printed 
+*
+*  RESULT
+*     int - 0 on success, -1 otherwise
+*
+*  NOTES
+*     MT-NOTE: fprint_cull_list() is MT safe 
+*
+*******************************************************************************/
+int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi)
+{
    lListElem *ep;
 
    DENTER(TOP_LAYER, "fprint_cull_list");

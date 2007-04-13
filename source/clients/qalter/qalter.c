@@ -307,9 +307,13 @@ int *all_users
          lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_account);
       }
- 
-
-
+      
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-ar"))) {
+         lSetUlong(job, JB_ar, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_ar);
+      }
+  
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
          char tmp_str[SGE_PATH_MAX + 1];
          char tmp_str2[SGE_PATH_MAX + 1];

@@ -38,4 +38,13 @@ bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem
 
 int debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem *pe, lList *centry_list, lList *acl_list, lList *hgrp_list);
 
+void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list);
+void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, const lList *host_list, lList *hgrp_list);
+
+bool is_cqueue_global(const lListElem *rule);
+bool is_host_global(const lListElem *rule);
+
+bool is_cqueue_expand(const lListElem *rule);
+bool is_host_expand(const lListElem *rule);
+
 #endif /* __SGE_RESOURCE_QUOTA_SCHEDD_H*/

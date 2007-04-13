@@ -62,4 +62,6 @@ bool rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, 
 bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list);
 bool sge_centry_referenced_in_rqs(const lListElem *rqs, const lListElem *centry);
 
+bool rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
+
 #endif /* __SGE_RESOURCE_QUOTA_H */

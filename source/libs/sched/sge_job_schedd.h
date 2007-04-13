@@ -39,15 +39,9 @@
 /* 
  * get order used for job sorting
  */
-lSortOrder *sge_job_sort_order(const lDescr *dp);
-
-int up_resort(lList **ulpp, lListElem *job, lList *job_list, lSortOrder *so);
-
 void sge_inc_jc(lList** jcpp, const char *name, int slots);
 
 void sge_dec_jc(lList** jcpp, const char *name, int slots);
-
-int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
 
 int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret);
 
@@ -100,13 +94,9 @@ int sge_split_job_wait_predecessor(lList **jobs, lList **waiting, const char *wa
  */
 int sge_split_job_ckpt_restricted(lList **jobs, lList **restricted, const char *restricted_name, lList *ckpt_list);
 
-void print_job_list(lList *job_list);
-
 lList *filter_max_running_1step(lList *pending_jobs, lList *running_jobs, lList **jct_list, int max_jobs, int elem);
 
 lList *filter_max_running(lList *pending_jobs, lList *jct_list, int max_jobs, int elem);
-
-void trace_job_sort(lList *job_list);
 
 int nslots_granted(lList *granted, const char *qhostname);
 

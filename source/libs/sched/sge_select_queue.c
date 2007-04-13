@@ -3199,6 +3199,8 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
    bool no_check = false;
    bool suited = true;
    dstring rule_name = DSTRING_INIT;
+   lList *skip_cqueue_list = NULL;
+   lList *skip_host_list = NULL;
 
    dispatch_t result = DISPATCH_NEVER_CAT;
 
@@ -3218,6 +3220,12 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
          const char *host_name = lGetHost(queue_instance, QU_qhostname);
          const char *queue_name = lGetString(queue_instance, QU_qname);
          dispatch_t rqs_result = DISPATCH_OK;
+
+         if (lGetElemStr(skip_cqueue_list, CTI_name, queue_name) ||
+              lGetElemStr(skip_host_list, CTI_name, host_name)) {
+            lSetUlong(queue_instance, QU_tag, 0);
+            continue;
+         }
 
          for_each(rqs, a->rqs_list) {
             const lListElem *rule = NULL;
@@ -3239,14 +3247,45 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                }
                
                if (rqs_result != DISPATCH_OK) {
-                  if (!a->is_reservation && !lGetObject(rule, RQR_filter_hosts) && !lGetObject(rule, RQR_filter_queues)) {
+                  bool cq_global = is_cqueue_global(rule);
+                  bool eh_global = is_host_global(rule);
+                  if (a->is_reservation || rule != lFirst(lGetList(rqs, RQS_rule)) || (!cq_global && !eh_global) 
+                  || (cq_global && eh_global && (is_cqueue_expand(rule) || is_host_expand(rule)))) { 
+                     /* failure at queue instance limit */
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
+                     DPRINTF(("QUEUE INSTANCE: resource quota set %s deny job execution on %s@%s\n", 
+                              sge_dstring_get_string(&rule_name), queue_name, host_name));
+
+                  } else if (cq_global && eh_global) { 
+                     /* failure at a global limit */
                      no_check = true; /* no further checks needed as it is globally rejected */
                      suited = false;
                      schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_S, sge_dstring_get_string(&rule_name));
-                     DPRINTF(("resource quota set %s deny job execution globally: %s\n", sge_dstring_get_string(&rule_name)));
-                  } else {
-                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, host_name, sge_dstring_get_string(&rule_name));
-                     DPRINTF(("resource quota set %s deny job execution on %s@%s\n", sge_dstring_get_string(&rule_name), queue_name, host_name));
+                     DPRINTF(("GLOBAL: resource quota set %s deny job execution globally\n", sge_dstring_get_string(&rule_name)));
+
+                  } else if (!cq_global) { 
+                     /* failure at a cluster queue limit */
+                     if (is_cqueue_expand(rule)) {
+                        lAddElemStr(&skip_cqueue_list, CTI_name, queue_name, CTI_Type);
+                        schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, queue_name, "*", sge_dstring_get_string(&rule_name));
+                        DPRINTF(("QUEUE: resource quota set %s deny job execution in queue %s\n", sge_dstring_get_string(&rule_name), queue_name));
+                     } else {
+                        rqs_expand_cqueues(rule, &skip_cqueue_list);
+                        schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, "all", "*", sge_dstring_get_string(&rule_name));
+                        DPRINTF(("QUEUE: resource quota set %s deny job execution in all its queues\n", sge_dstring_get_string(&rule_name)));
+                     }
+
+                  } else { /* (!eh_global) */
+                     /* failure at a host limit */
+                     if (is_host_expand(rule)) {
+                        lAddElemStr(&skip_host_list, CTI_name, host_name, CTI_Type);
+                        schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, "*", host_name, sge_dstring_get_string(&rule_name));
+                        DPRINTF(("HOST: resource quota set %s deny job execution at host %s\n", sge_dstring_get_string(&rule_name), host_name));
+                     } else {
+                        rqs_expand_hosts(rule, &skip_host_list, a->host_list, a->hgrp_list);
+                        schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQS_SSS, "*", "all", sge_dstring_get_string(&rule_name));
+                        DPRINTF(("HOST: resource quota set %s deny job execution at all its hosts\n", sge_dstring_get_string(&rule_name)));
+                     }
                   }
                   break;
                }
@@ -3274,6 +3313,9 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
          }
       }
    }
+
+   lFreeList(&skip_cqueue_list);
+   lFreeList(&skip_host_list);
 
    sge_dstring_free(&rule_name);
    DRETURN(result);
@@ -4510,8 +4552,8 @@ sge_sequential_assignment(sge_assignment_t *a)
             const char *qname = lGetString(best_queue, QU_full_name);
             const char *eh_name = lGetHost(best_queue, QU_qhostname);
 
-            DPRINTF((sge_u32": 1 slot in queue %s@%s user %s %s for "sge_u32"\n",
-               a->job_id, qname, eh_name, lGetString(job, JB_owner), 
+            DPRINTF((sge_u32": 1 slot in queue %s user %s %s for "sge_u32"\n",
+               a->job_id, qname, lGetString(job, JB_owner), 
                      !a->is_reservation?"scheduled":"reserved", job_start_time));
 
             gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
@@ -4885,7 +4927,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                continue;
             }
 
-
             qname = lGetString(qep, QU_full_name);
 
             /* how many slots ? */
@@ -4983,7 +5024,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                      }
                   }
                }
-
 
                /* second step - higher the granted slots for every matching rule set */
                if (slots != 0) {

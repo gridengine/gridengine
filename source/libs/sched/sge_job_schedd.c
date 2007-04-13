@@ -957,23 +957,6 @@ void job_lists_print(lList **job_list[])
    return;
 } 
 
-lSortOrder *sge_job_sort_order(
-const lDescr *dp 
-) {
-   lSortOrder *so;
-
-   DENTER(TOP_LAYER, "sge_job_sort_order");
-
-   so = lParseSortOrderVarArg(dp, "%I-%I+%I+",
-      JB_priority,       /* higher priority is better   */
-      JB_submission_time,/* first come first serve      */
-      JB_job_number      /* prevent job 13 being scheduled before 12 in case sumission times are equal */
-   );
-
-   DEXIT;
-   return so;
-}
-
 
 /* jcpp: JC_Type */
 void sge_dec_jc(lList **jcpp, const char *name, int slots) 
@@ -1017,96 +1000,6 @@ void sge_inc_jc(lList **jcpp, const char *name, int slots)
    DEXIT;
    return;
 }
-
-/* 
-   This func has to be called each time the number of 
-   running jobs has changed 
-   It also has to be called in our event layer when 
-   new jobs have arrived or the priority of a job 
-   has changed.
-
-   jc       - job counter list - JC_Type
-   job_list - job list to be sorted - JB_Type
-   owner    - name of owner whose number of running jobs has changed
-
-*/
-int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so) 
-{
-   DENTER(TOP_LAYER, "resort_jobs");
-
-   lSortList(job_list, so);
-#if 0
-   trace_job_sort(job_list);
-#endif
-
-   DEXIT;
-   return 0;
-
-}
-
-void print_job_list(
-lList *job_list /* JB_Type */
-) {
-   lListElem *job, *task;
-   int jobs = 0;
-
-   DENTER(TOP_LAYER, "print_job_list");
-    
-   if (job_list && (jobs = lGetNumberOfElem(job_list)) > 0) {
-      DPRINTF(("Jobs in list: %ld\n", jobs));
-      for_each(job, job_list) {
-         DPRINTF(("Job: %ld\n", lGetUlong(job, JB_job_number)));
-         for_each(task, lGetList(job, JB_ja_tasks)) {
-            DPRINTF(("Task: %ld Status: %ld State: %ld\n",
-               lGetUlong(task, JAT_task_number), lGetUlong(task, JAT_status), lGetUlong(task, JAT_state)));
-         }
-      }
-   } else {
-      DPRINTF(("NO JOBS IN LIST\n"));
-   }
-   DEXIT;
-}
-
-void trace_job_sort(
-lList *job_list 
-) {
-   lListElem *job;
-
-   DENTER(TOP_LAYER, "trace_job_sort");
-
-   for_each (job, job_list) {
-      DPRINTF(("JOB "sge_u32" %d %s "sge_u32"\n",
-         lGetUlong(job, JB_job_number),
-         (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
-         lGetString(job, JB_owner),
-         lGetUlong(job, JB_submission_time)));
-   }
-
-   DEXIT;
-   return;
-}
-
-
-/*---------------------------------------------------------*
- *
- *  job has transited from non RUNNING to RUNNING
- *  we debit this job to users 'running job account' in 
- *  user list 'ulpp' and use the given sort order 'so'
- *  to resort complete job list 
- *---------------------------------------------------------*/
-int up_resort(
-lList **ulpp,    /* JC_Type */
-lListElem *job,  /* JB_Type */
-lList *job_list, /* JB_Type */
-lSortOrder *so 
-) {
-   sge_inc_jc(ulpp, lGetString(job, JB_owner), 1);
-   resort_jobs(*ulpp, job_list, lGetString(job, JB_owner), so);
-   return 0;
-}
-
-
-
 
 
 /*---------------------------------------------------------*/

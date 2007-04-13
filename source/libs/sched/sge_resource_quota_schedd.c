@@ -33,11 +33,15 @@
 #include <string.h>
 
 #include "sched/sge_resource_quota_schedd.h"
+
 #include "sched/sge_resource_utilizationL.h"
 #include "sched/sge_select_queue.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_strL.h"
 #include "sgeobj/sge_jobL.h"
+#include "sgeobj/sge_ctL.h"
+#include "sgeobj/sge_cqueueL.h"
+
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_object.h"
 #include "uti/sge_hostname.h"
@@ -138,3 +142,156 @@ rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exe
 
    DRETURN(true);
 }
+
+/****** sge_resource_quota_schedd/rqs_expand_cqueues() *************************
+*  NAME
+*     rqs_expand_cqueues() -- Add all matching cqueues to the list
+*
+*  SYNOPSIS
+*     void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list) 
+*
+*  FUNCTION
+*     The names of all cluster queues that match the rule are added to 
+*     the skip list without duplicates.
+*
+*  INPUTS
+*     const lListElem *rule    - RQR_Type
+*     lList **skip_cqueue_list - CTI_Type
+*
+*  NOTES
+*     MT-NOTE: rqs_expand_cqueues() is not MT safe 
+*******************************************************************************/
+void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list)
+{
+   const lListElem *cq;
+   const char *cqname;
+   lListElem *qfilter = lGetObject(rule, RQR_filter_queues);
+
+   DENTER(TOP_LAYER, "rqs_expand_cqueues");
+
+   for_each (cq, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      cqname = lGetString(cq, CQ_name);
+      if (lGetElemStr(*skip_cqueue_list, CTI_name, cqname))
+         continue;
+      if (rqs_filter_match(qfilter, FILTER_QUEUES, cqname, NULL, NULL, NULL))
+         lAddElemStr(skip_cqueue_list, CTI_name, cqname, CTI_Type); 
+   }
+
+   DEXIT;
+   return; 
+}
+
+/****** sge_resource_quota_schedd/rqs_expand_hosts() ***************************
+*  NAME
+*     rqs_expand_hosts() -- Add all matching cqueues to the list
+*
+*  SYNOPSIS
+*     void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, 
+*     const lList *host_list, lList *hgrp_list) 
+*
+*  FUNCTION
+*     The names of all hosts that match the rule are added to 
+*     the skip list without duplicates.
+*
+*  INPUTS
+*     const lListElem *rule  - RQR_Type
+*     lList **skip_host_list - CTI_Type
+*     const lList *host_list - EH_Type
+*     lList *hgrp_list       - HGRP_Type
+*
+*  NOTES
+*     MT-NOTE: rqs_expand_hosts() is MT safe 
+*******************************************************************************/
+void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, const lList *host_list, lList *hgrp_list)
+{
+   const lListElem *eh;
+   const char *hname;
+   lListElem *hfilter = lGetObject(rule, RQR_filter_hosts);
+
+   for_each (eh, host_list) {
+      hname = lGetHost(eh, EH_name);
+      if (lGetElemStr(*skip_host_list, CTI_name, hname))
+         continue;
+      if (rqs_filter_match(hfilter, FILTER_HOSTS, hname, NULL, hgrp_list, NULL))
+         lAddElemStr(skip_host_list, CTI_name, hname, CTI_Type); 
+   }
+
+   return;
+}
+
+static bool is_global(const lListElem *rule, int nm)
+{
+   lListElem *filter = lGetObject(rule, nm);
+   if (!filter)
+      return true;
+   if (lGetSubStr(filter, ST_name, "*", RQRF_scope) && lGetNumberOfElem(lGetList(filter, RQRF_xscope))==0)
+      return true;
+   return false;
+}
+
+/****** sge_resource_quota/is_cqueue_global() **********************************
+*  NAME
+*     is_cqueue_global() -- Global rule with regards to cluster queues?
+*
+*  SYNOPSIS
+*     bool is_cqueue_global(const lListElem *rule) 
+*
+*  FUNCTION
+*     Return true if cluster queues play no role with the rule
+*
+*  INPUTS
+*     const lListElem *rule - RQR_Type
+*
+*  RESULT
+*     bool - True if cluster queues play no role with the rule
+*
+*  NOTES
+*     MT-NOTE: is_cqueue_global() is MT safe 
+*******************************************************************************/
+bool is_cqueue_global(const lListElem *rule)
+{
+   return is_global(rule, RQR_filter_queues);
+}
+
+/****** sge_resource_quota/is_host_global() ************************************
+*  NAME
+*     is_host_global() -- Global rule with regards to hosts?
+*
+*  SYNOPSIS
+*     bool is_host_global(const lListElem *rule) 
+*
+*  FUNCTION
+*     Return true if hosts play no role with the rule
+*
+*  INPUTS
+*     const lListElem *rule - RQR_Type
+*
+*  RESULT
+*     bool - True if hosts play no role with the rule
+*
+*  NOTES
+*     MT-NOTE: is_host_global() is MT safe 
+*******************************************************************************/
+bool is_host_global(const lListElem *rule)
+{
+   return is_global(rule, RQR_filter_hosts);
+}
+
+static bool is_expand(const lListElem *rule, int nm)
+{
+   lListElem *filter = lGetObject(rule, nm);
+   if (filter && lGetBool(filter, RQRF_expand) == true)
+      return true;
+   else
+      return false;
+}
+
+bool is_host_expand(const lListElem *rule)
+{
+   return is_expand(rule, RQR_filter_hosts);
+}
+bool is_cqueue_expand(const lListElem *rule)
+{
+   return is_expand(rule, RQR_filter_queues);
+}
+

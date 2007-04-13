@@ -175,7 +175,7 @@
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS          _MESSAGE(47142, _("Job dropped because of invalid dynamical limit "SFN" in rule "SFN)) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT             _MESSAGE(47143, _("Jobs dropped because of invalid dynamical limit")) 
 #define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_S          _MESSAGE(47144, _("Job cannot run because exceeds limit in rule "SFN)) 
-#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL            _MESSAGE(47145, _("Jobs dropped because exceeds limit in rule "SFN)) 
+#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL            _MESSAGE(47145, _("Jobs dropped because exceeds limit in rule")) 
 
 
 /* 

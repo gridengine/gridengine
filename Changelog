@@ -1,3 +1,13 @@
+AH-2007-04-10-0: Bugfix:    Fix AH-2007-03-29-0 plus further optimizations with 
+                            schedulers quota verification time: Detect global,
+                            cluster queue, or host related quota saturation and 
+                            exploit such cases unblushingly. Optimization can be 
+                            applied only if the first quota rule in a rule set
+                            is satured. 
+                            Removed unused code.
+                 Bugster:   6539215
+                 Review:    RD
+
 MP-2007-04-05-0  Bugfix:    Root user on unix unable to submit job to
                             windows execution daemon.
                  Bugster:   6513597

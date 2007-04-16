@@ -606,15 +606,10 @@ UpdateHints()
    $INFOTEXT -u "Congratulation, your upgrade was successful!"
    $INFOTEXT -n "\nPlease check your setup, to make sure that everything is\n" \
                 "configured well!\n" \
-                "Due to new features of our product we added some new configuration\n" \
-                "options and we were forced to change some values of complexes.\n" \
-                "So, please check your complexes. You will find a updatelog file\n" \
-                "within the qmaster spool directory. This file shows you the name and\n" \
-                "of cemplexes and the values which have been concerned of the upgrade.\n" \
-                "Please log in to your executions hosts now and install the execution daemon\n" \
-                "with inst_sge -x -upd. If you're using loadsensor scripts for your execution hosts,\n" \
-                "please copy these scripts to the new location and adapt the path \nto the new location!\n" \
-                "Thank you very much for using SGE 6.0 and have fun!\n\n" 
+                "If you have installed rc-files, please log in to each host and copy the new\n" \
+                "rc-startup scripts to the right location. In case of using Berkeley DB Server\n" \
+                "host, please also care about it, and don't forget to copy the rc-file, too\n" \
+                "Thank you very much for using SGE 6.1 and have fun!\n\n" 
 }
 
 

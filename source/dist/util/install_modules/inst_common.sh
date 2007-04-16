@@ -614,11 +614,10 @@ WelcomeTheUserUpgrade()
              "   - The INTR character is often bound to the key Ctrl-C.\n" \
              "     The term >Ctrl-C< is used during the upgrade if you\n" \
              "     have the possibility to abort the upgrade\n\n" \
-             "The upgrade procedure will take approximately 5-10 minutes.\n" \
-             "After this upgrade you will get a running qmaster and schedd with\n" \
-             "the configuration of your old installation. If the upgrade was\n" \
-             "successfully completed it is necessary to install your execution hosts\n" \
-             "with the install_execd script."
+             "The upgrade procedure will take approximately 1-2 minutes.\n" \
+             "After this upgrade you will get a new set of settings and\n" \
+             "rc-startup script files. The old files will be stored in:\n" \
+             "$SGE_ROOT/$SGE_CELL/common directory"
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
@@ -644,6 +643,7 @@ WelcomeTheUserWinUpdate()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
+
 
 #--------------------------------------------------------------------------
 #

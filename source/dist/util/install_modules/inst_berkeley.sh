@@ -196,6 +196,7 @@ CreateRPCServerScript()
    ExecuteAsAdmin cp $TMP_RC $RPCSCRIPT
    ExecuteAsAdmin rm -fR $TMP_DIR 
    ExecuteAsAdmin $CHMOD a+x $RPCSCRIPT
+   $INFOTEXT "Creating >%s< script" $RPCSCRIPT
 }
 
 

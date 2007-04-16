@@ -1,3 +1,13 @@
+AH-2007-04-16-0: Bugfix:    Fix AH-2007-03-29-2 plus further optimizations with
+                            schedulers quota verification time: Detect global,
+                            cluster queue, or host related quota saturation and
+                            exploit such cases unblushingly. Optimization can be
+                            applied only if the first quota rule in a rule set
+                            is satured.
+                            Removed unused code.
+                 Bugster:   6539215
+                 Review:    RD
+
 PJ-2007-04-13-0: Bugfix:    Classic spooling for AR 
                             Minor bugfix and changes  
                  Enhancm:   qalter -ar option

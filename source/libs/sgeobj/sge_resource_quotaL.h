@@ -89,7 +89,8 @@ LISTDEF(RQR_Type)
  SGE_OBJECT(RQR_filter_queues, RQRF_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
  SGE_OBJECT(RQR_filter_hosts, RQRF_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
  SGE_LIST(RQR_limit, RQRL_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
- SGE_ULONG(RQR_level, CULL_DEFAULT | CULL_JGDI_RO)
+ SGE_ULONG(RQR_level, CULL_DEFAULT | CULL_JGDI_RO) /* maintained by qmaster needed only in parallel 
+                                                      scheduling for accumulating slots after queues were tagged */
 LISTEND
 
 NAMEDEF(RQRN)
@@ -113,6 +114,7 @@ enum {
    FILTER_HOSTS
 };
 
+/* values found in RQR_level */
 enum {
    RQR_ALL = 0,
    RQR_GLOBAL,

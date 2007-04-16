@@ -320,6 +320,9 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 *     bool - error state
 *        true  - Success
 *        false - Error
+*
+* BUGS
+*     Extremely poor performance. Try not to use this function.
 ******************************************************************************/
 bool 
 hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,

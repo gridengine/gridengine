@@ -56,7 +56,6 @@
 #include "uti/sge_string.h"
 
 static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
-static bool rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
 
 /****** sge_resource_quota/rqs_parse_filter_from_string() *************************
 *  NAME
@@ -1193,7 +1192,7 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 *     MT-NOTE: rqs_filter_match() is MT safe 
 *
 *******************************************************************************/
-static bool 
+bool 
 rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group) {
    bool ret = true;
    lListElem* ep; 

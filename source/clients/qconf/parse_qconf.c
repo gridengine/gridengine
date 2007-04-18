@@ -2288,6 +2288,9 @@ char *argv[]
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
          rqs_modify(ctx, &alp, name);
+         if (answer_list_has_error(&alp)) {
+            sge_parse_return = 1;
+         }
          answer_list_on_error_print_or_exit(&alp, stderr);
          lFreeList(&alp);
 
@@ -2315,6 +2318,9 @@ char *argv[]
          }
 
          rqs_modify_from_file(ctx, &alp, file, name);
+         if (answer_list_has_error(&alp)) {
+            sge_parse_return = 1;
+         }
          answer_list_on_error_print_or_exit(&alp, stderr);
 
          spp++;

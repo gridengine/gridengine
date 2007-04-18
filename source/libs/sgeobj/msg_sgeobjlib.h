@@ -285,6 +285,7 @@
 #define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid length of value exeed the limit %d characters."))
 #define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid length of expression exeed the limit %d characters."))
 
+#define MSG_RQS_REQUEST_DUPLICATE_NAME_S         _MESSAGE(64386, _("Resource quota replacement request contains rqs name "SFQ" multiple times"))
 #define MSG_AR_MISSING_VALUE_S                   _MESSAGE(64390, _("missing value for "SFQ" in advance reservation request"))
 #define MSG_AR_START_END_DURATION_INVALID        _MESSAGE(64391, _("difference between end and start time does not correspond to duration"))
 #define MSG_AR_START_LATER_THAN_END              _MESSAGE(64392, _("start time is later than end time"))

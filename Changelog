@@ -1,3 +1,8 @@
+GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using
+                            classic spooling
+                 Bugtraq:   6461308
+                 Review:    AH
+
 MD-2007-04-18-0: Enhancem.: o Added upgrade procedure for 6.0u2 or higher
                               to 6.1
                             o Removed old upgrades

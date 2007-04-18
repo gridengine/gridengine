@@ -1374,3 +1374,49 @@ bool sge_centry_referenced_in_rqs(const lListElem *rqs, const lListElem *centry)
    DRETURN(ret);
 }
 
+/****** sge_resource_quota/rqs_replace_request_verify() ************************
+*  NAME
+*     rqs_replace_request_verify() -- verify a rqs replace request
+*
+*  SYNOPSIS
+*     bool rqs_replace_request_verify(lList **answer_list, const lList 
+*     *request) 
+*
+*  FUNCTION
+*     Verify a rqs replace request (e.g. coming from a qconf -mrqs).
+*     We make sure, that no duplicate names appear in the request.
+*
+*  INPUTS
+*     lList **answer_list  - answer list to report errors
+*     const lList *request - the request to check
+*
+*  RESULT
+*     bool - true, if it is ok, false on error
+*
+*  NOTES
+*     MT-NOTE: rqs_replace_request_verify() is MT safe 
+*******************************************************************************/
+bool rqs_replace_request_verify(lList **answer_list, const lList *request)
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "rqs_replace_request_verify");
+
+   /* search for duplicate rqs names in the request */
+   for_each(ep, request) {
+      const char *name = lGetString(ep, RQS_name);
+
+      lListElem *second = lNext(ep);
+      while (second != NULL) {
+         const char *second_name = lGetString(second, RQS_name);
+         if (strcmp(name, second_name) == 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                    MSG_RQS_REQUEST_DUPLICATE_NAME_S, name);
+            DRETURN(false);
+         }
+         second = lNext(second);
+      }
+   }
+
+   DRETURN(true);
+}

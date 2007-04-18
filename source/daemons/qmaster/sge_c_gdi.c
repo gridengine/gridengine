@@ -1277,6 +1277,10 @@ static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *
    {
       case SGE_RQS_LIST:
          {
+            if (rqs_replace_request_verify(&(answer->alp), request->lp) != true) {
+               DEXIT;
+               return;
+            }
             MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
             /* delete all currently defined rule sets */
             ep = lFirst(*object_base[SGE_TYPE_RQS].list);

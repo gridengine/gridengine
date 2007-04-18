@@ -360,5 +360,6 @@
 #define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid lenght of value exeed the limit %d characters."))
 #define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid lenght of expression exeed the limit %d characters."))
 
+#define MSG_RQS_REQUEST_DUPLICATE_NAME_S         _MESSAGE(64386, _("Resource quota replacement request contains rqs name "SFQ" multiple times"))
 
 #endif /* __MSG_SGEOBJLIB_H */

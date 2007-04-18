@@ -424,9 +424,8 @@ ErrUsage()
              "   -rst       restore configuration from backup\n" \
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
-             "   -upd       upgrade cluster from 5.x to 6.1\n" \
+             "   -upd       upgrade cluster from 6.0u2 or higher to 6.1\n" \
              "   -rccreate  create startup scripts from templates\n" \
-             "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
              "   -resport   the install script does not allow SGE_QMASTER_PORT numbers \n" \
@@ -452,9 +451,6 @@ ErrUsage()
              "   inst_sge -ux all  Uninstalls all registered execution hosts\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
              "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
-             "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
-             "   <sge-root> = SGE_ROOT directory of old 5.x installation.\n" \
-             "   <sge-cell> = SGE_CELL name of old 5.x installation.\n" \
              "   inst_sge -copycerts host or inst_sge -copycerts \"host1 host2\"\n" $myname
 
    if [ "$option" != "" ]; then 

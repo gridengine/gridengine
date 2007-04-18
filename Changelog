@@ -1,3 +1,9 @@
+MD-2007-04-18-0: Enhancem.: o Added upgrade procedure for 6.0u2 or higher
+                              to 6.1
+                            o Removed old upgrades
+                            o updated usage text
+                 Review:    CR
+
 JG-2007-04-18-1: Enhancem.: Cleanup / higher precision for calculation of the
                             cpu load value on HPUX.
                  Review:    AH

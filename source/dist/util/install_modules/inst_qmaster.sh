@@ -1039,12 +1039,14 @@ CreateSettingsFile()
 {
    $INFOTEXT "Creating settings files for >.profile/.cshrc<"
 
-   if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.sh ]; then
-      ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.sh
-   fi
-
-   if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.csh ]; then
-      ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.csh
+   if [ $RECREATE_SETTINGS = "false" ]; then
+      if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+         ExecuteAsAdmin $RM $SGE_ROOT/$SGE_CELL/common/settings.sh
+      fi
+  
+      if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
+         ExecuteAsAdmin $RM $SGE_ROOT/$SGE_CELL/common/settings.csh
+      fi
    fi
 
    ExecuteAsAdmin util/create_settings.sh $SGE_ROOT_VAL/$COMMONDIR

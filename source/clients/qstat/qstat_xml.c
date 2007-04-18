@@ -951,6 +951,7 @@ static int qstat_xml_queue_finished(qstat_handler_t* handler, const char* qname,
       
       queue_list = lGetList(ctx->queue_list_elem, XMLE_List);
       if (queue_list == NULL) {
+         DPRINTF(("Had empty queue list, create new one\n"));
          queue_list = lCreateList("Queue-List", XMLE_Type);
          lSetList(ctx->queue_list_elem, XMLE_List, queue_list);
       }
@@ -973,7 +974,6 @@ static int qstat_xml_queue_started(qstat_handler_t* handler, const char* qname, 
    DENTER(TOP_LAYER, "qstat_xml_queue_started");
    
    if (qstat_env->full_listing & QSTAT_DISPLAY_FULL) {
-      DPRINTF(("Create ctx->queue_elem for queue %s\n", qname));
       
       if (ctx->queue_elem != NULL) {
          DPRINTF(("Ilegal state: ctx->queue_elem has to be NULL"));
@@ -1033,8 +1033,12 @@ static int qstat_xml_queue_summary(qstat_handler_t* handler, const char* qname, 
 static int qstat_xml_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
    qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
    int ret = 0;
-   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   lList *attribute_list = NULL;
+   lListElem *xml_elem = NULL;
    DENTER(TOP_LAYER,"qstat_xml_queue_load_alarm");
+   
+   xml_elem = lGetObject(ctx->queue_elem, XMLE_Element);
+   attribute_list = lGetList(xml_elem, XMLE_List);
    
    xml_append_Attr_S(attribute_list, "load-alarm-reason", reason);
    
@@ -1044,8 +1048,12 @@ static int qstat_xml_queue_load_alarm(qstat_handler_t* handler, const char* qnam
 
 static int qstat_xml_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
    qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
-   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   lList *attribute_list = NULL;
+   lListElem *xml_elem = NULL;
    DENTER(TOP_LAYER,"qstat_xml_queue_suspend_alarm");
+   
+   xml_elem = lGetObject(ctx->queue_elem, XMLE_Element);
+   attribute_list = lGetList(xml_elem, XMLE_List);
    
    xml_append_Attr_S(attribute_list, "suspend-alarm-reason", reason);
    
@@ -1055,8 +1063,12 @@ static int qstat_xml_queue_suspend_alarm(qstat_handler_t* handler, const char* q
 
 static int qstat_xml_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp) {
    qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
-   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   lList *attribute_list = NULL;
+   lListElem *xml_elem = NULL;
    DENTER(TOP_LAYER,"qstat_xml_queue_message");
+
+   xml_elem = lGetObject(ctx->queue_elem, XMLE_Element);
+   attribute_list = lGetList(xml_elem, XMLE_List);
    
    xml_append_Attr_S(attribute_list, "message", message);
    
@@ -1066,11 +1078,15 @@ static int qstat_xml_queue_message(qstat_handler_t* handler, const char* qname, 
 
 static int qstat_xml_queue_resource(qstat_handler_t* handler, const char* dom, const char* name, const char* value, lList **alpp) {
    qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
-   lList *attribute_list = lGetList(ctx->queue_elem, XMLE_Attribute);
+   lList *attribute_list = NULL;
    lListElem *xml_elem = NULL;
    
-   DENTER(TOP_LAYER,"qstat_xml_queue_message");
+   DENTER(TOP_LAYER,"qstat_xml_queue_resource");
    
+   xml_elem = lGetObject(ctx->queue_elem, XMLE_Element);
+   attribute_list = lGetList(xml_elem, XMLE_List);
+   
+   DPRINTF(("queue resource: %s, %s, %s\n", dom, name, value));
    xml_elem = xml_append_Attr_S(attribute_list, "resource", value);
    xml_addAttribute(xml_elem, "name", name);  
    xml_addAttribute(xml_elem, "type", dom);

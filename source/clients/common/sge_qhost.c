@@ -538,13 +538,18 @@ lList **alpp
             ** should be visible (necessary for the qstat printing functions)
             */
             if (show & QHOST_DISPLAY_JOBS) {
-               u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
-                                       QSTAT_DISPLAY_FULL : 0;
-               full_listing = full_listing | QSTAT_DISPLAY_ALL;
-               /* TODO: sge_print_jobs_queue needs a return value */
-               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                    full_listing, "   ", 
-                                    GROUP_NO_PETASK_GROUPS, 10);
+               /*
+                 Printing jobs with qhost -xml is currently not supported
+                */
+               if (report_handler == NULL) {
+                  u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
+                                          QSTAT_DISPLAY_FULL : 0;
+                  full_listing = full_listing | QSTAT_DISPLAY_ALL;
+                  /* TODO: sge_print_jobs_queue needs a return value */
+                  sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+                                       full_listing, "   ", 
+                                       GROUP_NO_PETASK_GROUPS, 10);
+               }
             }
          }
       }

@@ -673,7 +673,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       
        DPRINTF(("try to remove "SFN"\n", pe_task_spool_file));
        if (sge_is_file(pe_task_spool_file) &&
-           sge_unlink(NULL, pe_task_spool_file)) {
+           !sge_unlink(NULL, pe_task_spool_file)) {
          ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                 MSG_JOB_PE_TASK_SPOOL_FILE, pe_task_spool_file));
          DTRACE;

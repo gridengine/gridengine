@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef SGE_LOADCPU
-	double total;	
+	double total = 0.0;	
 #endif
 
    int i, pos = 0, print_as_int = 0, precision;
@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
    loads = sge_getcpuload(&total);
    sleep(1);
    loads = sge_getcpuload(&total);
+
    if (loads != -1) {
       print_mem_load("cpu", name,  1, total, "%");
    }

@@ -197,7 +197,7 @@ typedef int kernel_fd_type;
 #endif
 
 #ifdef SGE_LOADCPU
-static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
+static long percentages(int cnt, double *out, long *new, long *old, long *diffs);
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(HAS_AIX5_PERFLIB)
@@ -713,6 +713,66 @@ static double get_cpu_load()
 }    
 
 #elif defined(HP11) || defined(HP1164)
+static long percentages_new(int cnt, double *out, long *new, long *old, long *diffs, bool first)
+{
+   int i;
+   long total_change = 0;
+
+   DENTER(CULL_LAYER, "percentages_new");
+
+   /* 
+    * In the first call of this function, 
+    * we will just remember the values for use in the subsequent calls 
+    */
+   if (first) {
+      for (i = 0; i < cnt; i++) {
+         *old++ = *new++;
+         *out++ = 0.0;
+      }
+   } else {
+      long change;
+      long *dp;
+
+      /* initialization */
+      total_change = 0;
+      dp = diffs;
+
+      /* calculate changes for each state and the overall change */
+      for (i = 0; i < cnt; i++) {
+         change = *new - *old;
+
+         /* when the counter wraps, we get a negative value */
+         if (change < 0) {
+            change = (long)
+            ((unsigned long)*new-(unsigned long)*old);
+         }
+         *dp++ = change;
+         total_change += change;
+         *old++ = *new++;
+      }
+
+      /* 
+       * If total change is 0, then all the diffs are 0,
+       * then the result will be 0.
+       */
+      if (total_change == 0) {
+         for (i = 0; i < cnt; i++) {
+            *out++ = 0.0;
+         }
+      } else {
+         /* calculate percentages based on overall change */
+         for (i = 0; i < cnt; i++) {
+            *out = (*diffs++) * 100.0 / (double)total_change;
+            DPRINTF(("diffs: %lu total_change: %lu -> %f",
+                  *diffs, total_change, *out));
+            out++;
+         }
+      }
+   }
+
+   DRETURN(total_change);
+}       
+
 
 static double get_cpu_load()
 {  
@@ -724,6 +784,7 @@ static double get_cpu_load()
    static long cpu_diff[PST_MAX_CPUSTATES];
    double cpu_states[PST_MAX_CPUSTATES];
    double cpu_load;
+   static bool first = true;
 
    ret = pstat_getdynamic(&dynamic_buffer, sizeof(dynamic_buffer), 1, 0);
    if (ret != -1) {
@@ -731,11 +792,12 @@ static double get_cpu_load()
       for (i = 0; i < cpus; i++) {
          ret = pstat_getprocessor(&cpu_buffer, sizeof(cpu_buffer), 1, i);
          if (ret != -1) {
-            percentages(PST_MAX_CPUSTATES, cpu_states, 
-               (long *)cpu_buffer.psp_cpu_time, cpu_old, cpu_diff);
+            percentages_new(PST_MAX_CPUSTATES, cpu_states, 
+               (long *)cpu_buffer.psp_cpu_time, cpu_old, cpu_diff, first);
             cpu_load = cpu_states[0] + cpu_states[1] + cpu_states[2];
          }
-      } 
+      }
+      first = false;
       return cpu_load;
    } else {
       return -1.0;

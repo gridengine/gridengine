@@ -1,3 +1,10 @@
+RH-2006-04-18-0: Enhancem.: xml schema for qhost -xml output added
+                 Bugfix:    -xml switch in qhost man page documented
+                 Bugfix:    qstat -F -xml does not show resources
+                 Bugster:   6546802
+                 Issue:     2231
+                 Review:    RD
+
 MD-2007-04-16-0: Cleanup.:  upgrade text, script output, unsetting unused
                             variables 
 

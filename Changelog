@@ -28,7 +28,6 @@ JG-2007-04-18-0: Bugfix:    Modifying a rqs with invalid syntax resulted in its
 
 GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using 
                             classic spooling
->>>>>>> 1.3742
                  Bugtraq:   6461308
                  Review:    AH
 

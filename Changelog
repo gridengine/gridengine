@@ -1,3 +1,8 @@
+JG-2007-04-19-0: Enhancem.: New architecture strings ulx-* and usol-* for older,
+                            no longer officially supported OS versions.
+                            Some cleanup of distinst and sge_arch.c.
+                 Review:    RD
+
 RD-2007-04-19-0: Bugfix:    fixed consumable_resources testsuite test
                  Cleanup:   removed unused function (obsoleted by GDI2)
                             part from maintrunk RD-2007-04-04-0

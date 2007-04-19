@@ -171,69 +171,93 @@ HP-UX)
    esac
    ;;
 Linux)
+   unsupported=""
+
    case $osmachine in
    i*86)
-     lxmachine=x86
-     ;;
+      lxmachine=x86
+      ;;
    alpha)
-     lxmachine=alpha
-     ;;
+      lxmachine=alpha
+      ;;
    sparc)
-     lxmachine=sparc
-     ;;
+      lxmachine=sparc
+      ;;
    sparc64)
-     lxmachine=sparc
-     ;;
+      lxmachine=sparc
+      ;;
    x86_64)
-     lxmachine=amd64
-     ;;
+      lxmachine=amd64
+      ;;
    ia64)
-     lxmachine=ia64
-     ;;
+      lxmachine=ia64
+      ;;
    ppc*)
-     lxmachine=ppc
-     ;;
+      lxmachine=ppc
+      ;;
    *)
-     lxmachine=UNSUPPORTED-linux
+      unsupported="UNSUPPORTED-"
+      lxmachine=$osmachine
    esac
 
    case $osrelease in
    2.[46].*)
-      case $lxmachine in
-      amd64)
-        strings /lib64/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
-        ;;
-      ia64)
-        strings /lib/libc.so.6.1 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
-        ;;
-      *)
-        strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
+      # retrieve os release. We use 2.4 on kernel 2.6 machines, unless
+      # we have binaries installed that have been built for 2.6
+      case $osrelease in
+      2.4.*) 
+         lxrelease=24
+         ;;
+      2.6.*) 
+         ROOT_DIR=`dirname $0`/..
+         if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
+            lxrelease=26
+         elif [ "$SGE_ROOT" = "" -a -d "$ROOT_DIR/bin/lx26-${lxmachine}" ] ; then
+            lxrelease=26
+         else
+            lxrelease=24
+         fi
+         ;;
       esac
 
-      if [ $? -eq 0 ]; then
-         lxrelease=UNSUPPORTED-linux2.2-glibc2.0
+      # verify the GNU C lib version
+      # For an alternative means to determine GNU C lib version see
+      # http://www.gnu.org/software/libc/FAQ.html#s-4.9
+      case $lxmachine in
+      amd64)
+         libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
+         ;;
+      ia64)
+         libc_string=`strings /lib/libc.so.6.1 | grep "GNU C Library"`
+         ;;
+      *)
+         libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
+         ;;
+      esac
+
+      # retrieving libc version failed
+      if [ $? -ne 0 ]; then
+         unsupported="UNSUPPORTED-"
+         lxrelease="${lxrelease}-GLIBC"
       else
-         case $osrelease in
-         2.4.*) 
-            lxrelease=24
+         libc_version=`echo $libc_string | tr ' ' '\n' | grep "2\." | cut -f 2 -d "."`
+         case $libc_version in
+         2)
+            unsupported="u"
             ;;
-         2.6.*) 
-            ROOT_DIR=`dirname $0`/..
-            if [ "$SGE_ROOT" != "" -a -d "$SGE_ROOT/bin/lx26-${lxmachine}" ] ; then
-               lxrelease=26
-            elif [ "$SGE_ROOT" = "" -a -d "$ROOT_DIR/bin/lx26-${lxmachine}" ] ; then
-               lxrelease=26
-            else
-               lxrelease=24
-            fi
+         3|4|5)
             ;;
+         *)
+            unsupported="UNSUPPORTED-"
+            lxrelease=24-GLIBC-2.${libc_version}
          esac
       fi
       ;;
    *)
-      lxrelease=-UNSUPPORTED-$osrelease
+      unsupported="UNSUPPORTED-"
+      lxrelease=$osrelease
    esac
-   ARCH=lx${lxrelease}-${lxmachine}
+   ARCH=${unsupported}lx${lxrelease}-${lxmachine}
    ;;
 OSF1)
    case $osrelease in
@@ -256,28 +280,39 @@ SunOS)
    i86*)
       ARCH=sol-x86
       case $osrelease in
-      5.[7891]*)
+      5.[8]*)
+         ARCH=usol-x86
+         ;;
+      5.[91]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=sol-amd64
          else
             ARCH=sol-x86
          fi
+         ;;
+      *)
+         ARCH=UNSUPPORTED-SunOS-$osrelease
+         ;;
       esac
       ;;
    *)
       case $osrelease in
-      5.[7891]*)
+      5.[7]*)
+         if [ `isainfo -b` = 64 ]; then
+            ARCH=usol-sparc64
+         else
+            ARCH=usol-sparc
+         fi
+         ;;
+      5.[891]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=sol-sparc64
          else
             ARCH=sol-sparc
          fi
          ;;
-      5.6)
-         ARCH=sol-sparc
-         ;;
       *)
-         ARCH=UNSUPPORTED-sun4-$osrelease
+         ARCH=UNSUPPORTED-SunOS-$osrelease
          ;;
       esac
       ;;
@@ -332,6 +367,11 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    fbsd-*)
       PATH=$OLD_PATH
       DEFAULTMANPATH=`/usr/bin/manpath -q`
+      PATH=$SAFE_PATH
+      ;;
+   nbsd-*)
+      PATH=$OLD_PATH
+      DEFAULTMANPATH=/usr/pkg/man:/usr/local/man:/usr/X11R6/man:/usr/share/man
       PATH=$SAFE_PATH
       ;;
    hp*)

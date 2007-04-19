@@ -357,8 +357,8 @@
 #define MSG_CQUEUE_UNUSEDATTRSETTING_SS          _MESSAGE(64381, _("unused setting for attribute "SFQ" and host "SFQ" in queue "SFQ"."))
 
 #define MSG_EVAL_EXPRESSION_PARSE_ERROR          _MESSAGE(64382, _("Parse error on position %d of the expression "SFQ"."))
-#define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid lenght of value exeed the limit %d characters."))
-#define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid lenght of expression exeed the limit %d characters."))
+#define MSG_EVAL_EXPRESSION_LONG_VALUE           _MESSAGE(64384, _("Invalid length of value exeed the limit %d characters."))
+#define MSG_EVAL_EXPRESSION_LONG_EXPRESSION      _MESSAGE(64385, _("Invalid length of expression exeed the limit %d characters."))
 
 #define MSG_RQS_REQUEST_DUPLICATE_NAME_S         _MESSAGE(64386, _("Resource quota replacement request contains rqs name "SFQ" multiple times"))
 

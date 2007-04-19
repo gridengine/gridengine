@@ -1,3 +1,6 @@
+RD-2007-04-19-1: Bugfix:    Fixed DRMAA Javadoc Warnings
+                 Review:    RH
+
 JG-2007-04-19-0: Enhancem.: New architecture strings ulx-* and usol-* for older,
                             no longer officially supported OS versions.
                             Some cleanup of distinst and sge_arch.c.

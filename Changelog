@@ -1,3 +1,8 @@
+RD-2007-04-19-0: Bugfix:    fixed consumable_resources testsuite test
+                 Cleanup:   removed unused function (obsoleted by GDI2)
+                            part from maintrunk RD-2007-04-04-0
+                 Review:    EB
+
 GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using
                             classic spooling
                  Bugtraq:   6461308

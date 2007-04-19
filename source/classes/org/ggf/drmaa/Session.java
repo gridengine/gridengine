@@ -378,13 +378,13 @@ public abstract interface Session {
                                      int incr) throws DrmaaException;
     
     /**
-     * Hold, release, suspend, resume, or kill the job identified by
+     * <p>Hold, release, suspend, resume, or kill the job identified by
      * <i>jobId</i>.  If <i>jobId</i> is <code>JOB_IDS_SESSION_ALL</code>, then
      * this routine acts on all jobs <B>submitted</B> during this DRMAA session
      * up to the moment control() is called.  To avoid thread races conditions
      * in multithreaded applications, the DRMAA implementation user should
      * explicitly synchronize this call with any other job submission or control
-     * calls that may change the number of remote jobs.
+     * calls that may change the number of remote jobs.</p>
      *
      * <p>The legal values for <i>action</i> and their meanings are:</p>
      *

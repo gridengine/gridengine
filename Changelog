@@ -1,3 +1,6 @@
+RD-2007-04-19-1: Bugfix:    Fixed DRMAA Javadoc Warnings
+                 Review:    RH
+
 EB-2007-04-19-0: Enhancem.: - reject pe_list and ckpt_list changes of cqueues
                               if they invalidate advance reservations
                             - reject slots modification in pe if they invalidate
@@ -6,6 +9,7 @@ EB-2007-04-19-0: Enhancem.: - reject pe_list and ckpt_list changes of cqueues
 
 GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using classic 
                             spooling
+
 RD-2007-04-19-0: Enhancem.: - Added advance reseservation scheduling code
                             - added qmaster startup AR initialization code
                             - added removing of AR jobs at AR deletion

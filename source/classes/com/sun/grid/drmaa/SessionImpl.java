@@ -74,6 +74,8 @@ public class SessionImpl implements Session {
     }
     
     /**
+     * <p>Controls a jobs.</p>
+     *
      * {@inheritDoc}
      *
      * <p>The DRMAA suspend/resume operations are equivalent to the use of the
@@ -137,7 +139,7 @@ public class SessionImpl implements Session {
     /**
      * getContact() returns an opaque string containing contact information
      * related to the current DRMAA session to be used with the init() method.
-     * The contact string takes the form {@code [name=value[;name=value]*]},
+     * The contact string takes the form <code>[name=value[;name=value]*]</code>,
      * where <i>name</i> and <i>value</i> are both strings, and the supported
      * values of <i>name</i> are:
      *
@@ -197,6 +199,8 @@ public class SessionImpl implements Session {
     }
     
     /**
+     * <p>Get the job programm status.</p>
+     *
      * {@inheritDoc}
      *
      * <p>The control method can be used to control job submitted outside of the scope

@@ -61,21 +61,15 @@
 #include "sge_rangeL.h"
 #include "sge_userset.h"
 #include "sge_str.h"
+
 #include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_job.h"
 
 /*
  * TODO List. Following features/bugs need to be addressed:
  * (Append new TODOs at the end of the list or remove items which are done)
  *
- * DONE
- *
- *    1) qrstat implementation
- *   
- *    9) -M of qrsub causes core of master
- *
  * OPEN
- *
- *    2) removing a checkpoint from a reserved queue that was requested by the AR
  *
  *    3) lowering or removing a reserved consumable complex on global/host/queue level
  *       need to be rejected
@@ -99,11 +93,12 @@
  *
  *   12) implement mail sending
  *
- *   13) ...
+ *   14) ...
  *
  * TESTSUITE
+ *
  *    1) add qalter test for changing ar_id on running and pending jobs. For pending it
- *   should be permitted, for running not
+ *       should be permitted, for running not
  */
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
@@ -405,6 +400,27 @@ ar_get_string_from_event(ar_state_event_t event)
    DRETURN(ret);
 }
 
+/****** libs/sgeobj/ar_state2dstring() ***************************************
+*  NAME
+*     ar_state2dstring() -- writes the ar state as letter combination
+*
+*  SYNOPSIS
+*     void ar_state2dstring(ar_state_t state, dstring *state_as_string) 
+*
+*  FUNCTION
+*     This function writes the given state of a advance reservation as
+*     letter into the given dstring. The letter will be appended at the and.
+*
+*  INPUTS
+*     ar_state_t state         - ar state 
+*     dstring *state_as_string - dstring
+*
+*  RESULT
+*     void 
+*
+*  NOTES
+*     MT-NOTE: ar_get_string_from_event() is MT safe 
+*******************************************************************************/
 void 
 ar_state2dstring(ar_state_t state, dstring *state_as_string)
 {
@@ -430,3 +446,4 @@ ar_state2dstring(ar_state_t state, dstring *state_as_string)
    }
    sge_dstring_append(state_as_string, letter);
 }
+

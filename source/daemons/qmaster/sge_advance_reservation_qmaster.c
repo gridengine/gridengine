@@ -1222,6 +1222,214 @@ int ar_do_reservation(lListElem *ar, bool incslots)
    DRETURN(0);
 }
 
+/****** libs/sgeobj/ar_list_has_reservation_due_to_ckpt() **********************
+*  NAME
+*     ar_list_has_reservation_due_to_ckpt() -- does ckpt change breake an ar 
+*
+*  SYNOPSIS
+*     bool ar_list_has_reservation_due_to_ckpt(lList *ar_master_list, 
+*                                              lList **answer_list,
+*                                              const char *qinstance_name, 
+*                                              lList *ckpt_string_list) 
+*
+*  FUNCTION
+*     This function tests if a modification of a ckpt list in a qinstance is
+*     allowed according to the advance reservations. 
+*
+*     Input paramters are: the advance reservation master list, the name of the
+*     qinstance which sould be modified and the ST_Type string list of ckpt
+*     names which represents the new setting for the qinstance.
+*
+*     If there is no reservation for this qinstance-ckpt combination or if 
+*     the reservation would be still valid after the modification then 
+*     the function returnes 'false". Otherwise 'true' 
+*
+*  INPUTS
+*     lList *ar_master_list      - advance reservation master list
+*     lList **answer_list        - answer list which will contain the reason why a 
+*                                  modification is not valid
+*     const char *qinstance_name - name of a qinstance <cqname@hostname>
+*     lList *ckpt_string_list    - ST_Type list containing ckpt names 
+*
+*  RESULT
+*     boolean
+*        true - modification would breake at least one ar
+*        false - no ar will be broken if the ckpt list is modified 
+*
+*  NOTES
+*     MT-NOTE: ar_get_string_from_event() is MT safe 
+*******************************************************************************/
+bool 
+ar_list_has_reservation_due_to_ckpt(lList *ar_master_list, lList **answer_list, 
+                                    const char *qinstance_name, lList *ckpt_string_list) 
+{
+   lListElem *ar;
+   lListElem *gs;
+
+   DENTER(TOP_LAYER, "ar_has_reservation_due_to_ckpt");
+
+   for_each(ar, ar_master_list) {
+      const char *ckpt_string = lGetString(ar, AR_checkpoint_name);
+
+      for_each(gs, lGetList(ar, AR_granted_slots)) {
+         const char *gq = lGetString(gs, JG_qname);
+
+         if (strcmp(gq, qinstance_name) == 0 && ckpt_string != NULL) {
+            lListElem *ckpt_elem = lGetElemStr(ckpt_string_list, ST_name, ckpt_string);
+
+            if (ckpt_elem == NULL) {
+               ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, ckpt_string, 
+                      "ckpt_list", sge_u32c(lGetUlong(ar, AR_id))));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DRETURN(true);
+            }
+         } 
+      } 
+   }
+   DRETURN(false);
+}
+
+/****** libs/sgeobj/ar_list_has_reservation_due_to_pe() **********************
+*  NAME
+*     ar_list_has_reservation_due_to_pe() -- does pe change breake an ar 
+*
+*  SYNOPSIS
+*     bool ar_list_has_reservation_due_to_pe(lList *ar_master_list, 
+*                                            lList **answer_list,
+*                                            const char *qinstance_name, 
+*                                            lList *pe_string_list) 
+*
+*  FUNCTION
+*     This function tests if a modification of a pe list in a qinstance is
+*     allowed according to the advance reservations. 
+*
+*     Input paramters are: the advance reservation master list, the name of the
+*     qinstance which should be modified and the ST_Type string list of pe 
+*     names which represents the new setting for the qinstance.
+*
+*     If there is no reservation for this qinstance-ckpt combination or if 
+*     the reservation would be still valid after the modification then 
+*     the function returnes 'false". Otherwise 'true' 
+*
+*  INPUTS
+*     lList *ar_master_list      - advance reservation master list
+*     lList **answer_list        - answer list which will contain the reason why a 
+*                                  modification is not valid
+*     const char *qinstance_name - name of a qinstance <cqname@hostname>
+*     lList *pe_string_list    - ST_Type list containing pe names 
+*
+*  RESULT
+*     boolean
+*        true - modification would breake at least one ar
+*        false - no ar will be broken if the ckpt list is modified 
+*
+*  NOTES
+*     MT-NOTE: ar_get_string_from_event() is MT safe 
+*******************************************************************************/
+bool 
+ar_list_has_reservation_due_to_pe(lList *ar_master_list, lList **answer_list, 
+                                  const char *qinstance_name, lList *pe_string_list) 
+{
+   lListElem *ar;
+   lListElem *gs;
+
+   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_pe");
+
+   for_each(ar, ar_master_list) {
+      const char *pe_string = lGetString(ar, AR_pe);
+
+      for_each(gs, lGetList(ar, AR_granted_slots)) {
+         const char *gq = lGetString(gs, JG_qname);
+
+         if (strcmp(gq, qinstance_name) == 0 && pe_string != NULL) {
+            lListElem *pe = lGetElemStr(pe_string_list, ST_name, pe_string);
+
+            if (pe == NULL) {
+               ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, pe_string, 
+                      "pe_list", sge_u32c(lGetUlong(ar, AR_id))));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DRETURN(true);
+            }
+         } 
+      } 
+   }
+   DRETURN(false);
+}
+
+/****** sgeobj/ar_list_has_reservation_for_pe_with_slots() ********************
+*  NAME
+*     ar_list_has_reservation_for_pe_with_slots() -- Does PE change violate AR 
+*
+*  SYNOPSIS
+*     bool 
+*     ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list, 
+*                                               lList **answer_list, 
+*                                               const char *pe_name, 
+*                                               u_long32 new_slots) 
+*
+*  FUNCTION
+*     This function tests if a modification of slots entry in a pe is
+*     allowed according to the advance reservations. 
+*
+*     Input paramters are: the advance reservation master list, the name of the
+*     pe which should be modified and the new slots value which should
+*     be set in the pe which might vialote the advance reservations in
+*     the system
+*
+*     If there is no reservation for this pe or if the new slots setting
+*     does not violate the advance reservations in the system then this
+*     function returns 'false'. Otherwise 'true'
+*
+*  INPUTS
+*     lList *ar_master_list - master advance reservation list 
+*     lList **answer_list   - answer list 
+*     const char *pe_name   - pe name 
+*     u_long32 new_slots    - new slots setting for pe with 'pe_name' 
+*
+*  RESULT
+*     bool 
+*        true - modification would break the ar's currently known
+*        false - modification is valid
+*
+*  NOTES
+*     MT-NOTE: ar_list_has_reservation_for_pe_with_slots() is MT safe 
+*******************************************************************************/
+bool
+ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list, 
+                                          lList **answer_list,
+                                          const char *pe_name, 
+                                          u_long32 new_slots) 
+{
+   bool ret = false;
+   lListElem *ar;
+   lListElem *gs;
+   u_long32 max_res_slots = 0;
+
+   DENTER(TOP_LAYER, "ar_list_has_reservation_for_pe_with_slots");
+
+   for_each(ar, ar_master_list) {
+      const char *pe_string = lGetString(ar, AR_pe);
+
+      if (pe_name != NULL && strcmp(pe_string, pe_name) == 0) {
+         for_each(gs, lGetList(ar, AR_granted_slots)) {
+            u_long32 slots = lGetUlong(gs, JG_slots);
+         
+            max_res_slots += slots;
+         }
+      }
+   }
+   if (max_res_slots > new_slots) {
+      ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_PE_SLOTS_U,
+             sge_u32c(max_res_slots)));
+      answer_list_add(answer_list, SGE_EVENT,
+                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = true;
+   }
+   DRETURN(ret);
+}
+
 /****** sge_advance_reservation_qmaster/ar_initialize_reserved_queue_list() ******
 *  NAME
 *     ar_initialize_reserved_queue_list() -- initialize reserved queue structure

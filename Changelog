@@ -1,3 +1,11 @@
+EB-2007-04-19-0: Enhancem.: - reject pe_list and ckpt_list changes of cqueues
+                              if they invalidate advance reservations
+                            - reject slots modification in pe if they invalidate
+                            - advance reservations
+                 Review:    AH
+
+GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using classic 
+                            spooling
 RD-2007-04-19-0: Enhancem.: - Added advance reseservation scheduling code
                             - added qmaster startup AR initialization code
                             - added removing of AR jobs at AR deletion
@@ -16,10 +24,11 @@ JG-2007-04-18-0: Bugfix:    Modifying a rqs with invalid syntax resulted in its
 
 GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using 
                             classic spooling
+>>>>>>> 1.3742
                  Bugtraq:   6461308
                  Review:    AH
 
-RH-2006-04-18-0: Enhancem.: xml schema for qhost -xml output added
+RH-2007-04-18-0: Enhancem.: xml schema for qhost -xml output added
                  Bugfix:    -xml switch in qhost man page documented
                  Bugfix:    qstat -F -xml does not show resources
                  Bugster:   6546802

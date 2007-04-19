@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
          answer_list_output(&answer_list);
          goto error_exit;
       }
-   } 
+   }
 
    /*
     * stage 4: create output in correct format

@@ -64,6 +64,18 @@ void ar_initialize_reserved_queue_list(lListElem *ar);
 void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
                           monitoring_t *monitor);
 
+bool
+ar_list_has_reservation_due_to_ckpt(lList *ar_master_list, lList **answer_list,
+                                    const char *qinstance_name, lList *ckpt_string_list);
+
+bool
+ar_list_has_reservation_due_to_pe(lList *ar_master_list, lList **answer_list,
+                                  const char *qinstance_name, lList *pe_string_list);
+
+bool
+ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list, lList **answer_list,
+                                          const char *pe_name, u_long32 new_slots);
+
 void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring_t *monitor);
 
 #endif

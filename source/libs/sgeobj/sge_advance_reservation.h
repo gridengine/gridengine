@@ -34,15 +34,19 @@
 
 #include "sgeobj/sge_advance_reservationL.h"
 
-lListElem *ar_list_locate(lList *ar_list, u_long32 job_id);
+lListElem *
+ar_list_locate(lList *ar_list, u_long32 job_id);
 
-bool ar_validate(lListElem *ar, lList **alpp, bool in_master);
+bool 
+ar_validate(lListElem *ar, lList **alpp, bool in_master);
 
-ar_state_event_t ar_get_event_from_string(const char *string);
+ar_state_event_t 
+ar_get_event_from_string(const char *string);
 
-const char *ar_get_string_from_event(ar_state_event_t event);
+const char *
+ar_get_string_from_event(ar_state_event_t event);
 
-void ar_state2dstring(ar_state_t state, dstring *state_as_string);
-
+void 
+ar_state2dstring(ar_state_t state, dstring *state_as_string);
 
 #endif /* __SGE_ADVANCE_RESERVATION_H */

@@ -297,6 +297,8 @@
 #define MSG_OBJECT_WILD_RANGE_AMBIGUOUS_S        _MESSAGE(64397, _(SFQ" rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount"))
 #define MSG_OBJECT_NODIRECTSLOTS_S               _MESSAGE(64398, _(SFQ" denied: use parallel environments instead of requesting slots explicitly"))
 #define MSG_PARSE_INVALID_ID_MUSTBEUINT          _MESSAGE(60399, _("ERROR! invalid id, must be an unsigned integer"))
+#define MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU     _MESSAGE(60400, _("denied: removing "SFQ" from "SFN" would break advance reservation "sge_U32CFormat))
+#define MSG_PARSE_MOD_REJECTED_DUE_TO_AR_PE_SLOTS_U _MESSAGE(60401, _("denied: lowering slots amount below "sge_U32CFormat" would break advance reservations"))
 
 #define MSG_AR_EVENT_STATE_CREATION              _MESSAGE(64500, _("CREATED"))
 #define MSG_AR_EVENT_STATE_STARTIME_REACHED      _MESSAGE(64501, _("START TIME REACHED"))

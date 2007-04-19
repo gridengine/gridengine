@@ -54,7 +54,7 @@
 #include "sge_qmod_qmaster.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-
+#include "sge_advance_reservation_qmaster.h"
 #include "sge_attr.h"
 #include "sge_calendar.h"
 #include "sge_centry.h"
@@ -68,6 +68,8 @@
 #include "sgeobj/sge_advance_reservation.h"
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_serf.h"
+
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "msg_qmaster.h"
 
@@ -294,6 +296,24 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
+                  /*
+                   * check if the mofification is possible or if 
+                   * an existing AR vialates that modification
+                   */
+                  if (cqueue_attibute_name == CQ_ckpt_list &&
+                      ar_list_has_reservation_due_to_ckpt(
+                           *object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                           lGetString(this_elem, QU_full_name), new_value)) {
+                     ret = false;
+                     break;
+                  } else if (cqueue_attibute_name == CQ_pe_list &&
+                             ar_list_has_reservation_due_to_pe(
+                                 *object_type_get_master_list(SGE_TYPE_AR), answer_list,
+                                 lGetString(this_elem, QU_full_name), new_value)) {
+                     ret = false;
+                     break;
+                  }
+
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
                }

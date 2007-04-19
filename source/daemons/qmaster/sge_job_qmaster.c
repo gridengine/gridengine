@@ -189,10 +189,12 @@ static bool is_changes_consumables(lList **alpp, lList* new, lList* old);
 
 static int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_centry_list);
 
-static void job_list_filter( lList *user_list, const char* jobid, lCondition **job_filter, 
-                             lCondition **user_filter);
+static void job_list_filter(lList *user_list, const char* jobid, lCondition **job_filter);
 
 static int spool_write_script(lListElem *jep, u_long32 jobid);
+
+static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced);
+
 #ifdef SOLARIS
 #pragma no_inline(spool_write_script)
 #endif
@@ -904,45 +906,30 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    DRETURN(STATUS_OK);
 }
 
+
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_delete_job                                                    */
 /*    called in sge_c_gdi_del                                              */
 /*-------------------------------------------------------------------------*/
-
-int sge_gdi_del_job(
-sge_gdi_ctx_class_t *ctx,
-lListElem *idep,
-lList **alpp,
-char *ruser,
-char *rhost,
-int sub_command, monitoring_t *monitor 
-) {
-   lListElem *nxt, *job = NULL, *rn;
-   u_long32 enrolled_start = 0;
-   u_long32 enrolled_end = 0;
-   u_long32 unenrolled_start = 0;
-   u_long32 unenrolled_end = 0;
-   u_long32 r_start = 0; 
-   u_long32 r_end = 0;
-   u_long32 step = 0;
-   u_long32 job_number = 0;
-   int alltasks = 1;
-   int showmessage = 0;
+int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, char *ruser,
+                    char *rhost, int sub_command, monitoring_t *monitor)
+{
    int all_jobs_flag;
    int all_users_flag;
    int jid_flag;
    int user_list_flag = false;
    const char *jid_str;
    lCondition *job_where = NULL; 
-   lCondition *user_where = NULL;
-   int ret, njobs = 0;
-   u_long32 deleted_tasks = 0;
-   u_long32 time;
-   u_long32 start_time;
-   u_long32 max_job_deletion_time = mconf_get_max_job_deletion_time();
    lList *user_list = NULL;
+   int njobs = 0;
+   u_long32 deleted_tasks = 0;
    lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
-   bool job_spooling = ctx->get_job_spooling(ctx);
+   u_long32 r_start = 0; 
+   u_long32 r_end = 0;
+   u_long32 step = 0;
+   int alltasks = 1;
+   lListElem *nxt, *job = NULL;
+   u_long32 start_time;
 
    DENTER(TOP_LAYER, "sge_gdi_del_job");
 
@@ -952,9 +939,19 @@ int sub_command, monitoring_t *monitor
       DRETURN(STATUS_EUNKNOWN);
    }
 
+   /* first lets make sure they have permission if a force is involved */
+   if (!mconf_get_enable_forced_qdel()) {/* Flag ENABLE_FORCED_QDEL in qmaster_params */
+      if (lGetUlong(idep, ID_force) == 1) {
+         if (!manop_is_manager(ruser)) {
+            ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EUNKNOWN);  
+         }
+      }
+   }
+
    /* sub-commands */
    all_jobs_flag = ((sub_command & SGE_GDI_ALL_JOBS) != 0);
-
    all_users_flag = ((sub_command & SGE_GDI_ALL_USERS) != 0);
 
    /* Did we get a user list or something else ? */
@@ -984,8 +981,7 @@ int sub_command, monitoring_t *monitor
    /* Did we get a valid jobid? */
    if (!all_jobs_flag && (jid_str != NULL) && (strcmp(jid_str, "0") != 0)) {
       jid_flag = 1;
-   }   
-   else {
+   } else {
       jid_flag = 0;
    }
 
@@ -1004,335 +1000,41 @@ int sub_command, monitoring_t *monitor
       user_list_flag = true;
    }
 
-   if ((ret=verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
-         jid_flag, user_list_flag, ruser))) { 
-      DRETURN(ret);
+   if (verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
+         jid_flag, user_list_flag, ruser)) { 
+      DRETURN(STATUS_EUNKNOWN);
    }
 
-   job_list_filter( user_list_flag? lGetList(idep, ID_user_list):NULL, 
-                    jid_flag?jid_str:NULL, &job_where, &user_where);
-
-   /* first lets make sure they have permission if a force is involved */
-   if (mconf_get_enable_forced_qdel() != 1) {/* Flag ENABLE_FORCED_QDEL in qmaster_params */
-      if (lGetUlong(idep, ID_force)) {
-         if (!manop_is_manager(ruser)) {
-            ERROR((SGE_EVENT, MSG_JOB_FORCEDDELETEPERMS_S, ruser));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            lFreeWhere(&job_where);
-            lFreeWhere(&user_where);
-            DRETURN(STATUS_EUNKNOWN);  
-         }
-      }
-   }
+   job_list_filter(user_list_flag? lGetList(idep, ID_user_list):NULL, 
+                    jid_flag?jid_str:NULL, &job_where);
 
    start_time = sge_get_gmt();
    nxt = lFirst(master_job_list);
    while ((job=nxt)) {
-      lList *range_list = NULL;        /* RN_Type */
-      u_long32 task_number;
-      u_long32 existing_tasks;
-      int deleted_unenrolled_tasks;
-      char *dupped_session = NULL;
+      u_long32 job_number = 0;
 
       nxt = lNext(job);   
 
       if ((job_where != NULL) && !lCompare(job, job_where)) {
          continue;
       } 
-      if ((user_where != NULL) && !lCompare(job, user_where)) {
-         continue;
-      }
       job_number = lGetUlong(job, JB_job_number);
 
       /* Does user have privileges to delete the job/task? */
-      if (job_check_owner(ruser, lGetUlong(job, JB_job_number), master_job_list) && 
-          !manop_is_manager(ruser)) {
+      if (job_check_owner(ruser, job_number, master_job_list)) {
          ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
-                sge_u32c(lGetUlong(job, JB_job_number))));
+                sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          njobs++;
          /* continue with next job */ 
          continue; 
       }
 
-      /* In certain cases sge_commit_job() free's the job structure passed.
-       * The session information is needed after sge_commit_job() so we make 
-       * a copy of the job session before calling sge_commit_job(). This copy
-       * must be free'd!
-       */
-      if (lGetString(job, JB_session)) {
-         dupped_session = strdup(lGetString(job, JB_session));
-      }
-
-      /*
-       * Repeat until all requested taskid ranges are handled
-       */
-      rn = lFirst(lGetList(idep, ID_ja_structure));
-      do {
-
-         /*
-          * delete tasks or the whole job?
-          * if ID_ja_structure not empty delete specified tasks
-          * otherwise delete whole job
-          */
-         unenrolled_start = job_get_smallest_unenrolled_task_id(job);
-         unenrolled_end = job_get_biggest_unenrolled_task_id(job);
-         enrolled_start = job_get_smallest_enrolled_task_id(job);
-         enrolled_end = job_get_biggest_enrolled_task_id(job);
-         
-         if (rn) {
-            r_start = lGetUlong(rn, RN_min);
-            r_end = lGetUlong(rn, RN_max);
-          
-            step = lGetUlong(rn, RN_step);
-            if (!step) {
-               step = 1;
-            }
-           
-            if (r_start > unenrolled_start) {
-               unenrolled_start = r_start;
-            }
-            else {
-               u_long32 temp_start;
-               
-               /* we have to figure out the first task we can delete and we do want     */
-               /* to start with the first existing task. For that, we compute:          */
-               /*                                                                       */
-               /* - the delta between the requested task id and the first existing one  */
-               /* - we devide the delta by the step size, to get the number of steps we */ 
-               /*   need ot get there.                                                  */
-               /* - the number of steps multiplied by the step size + the start value   */
-               /*   will get us the first task, or a very close. If we just right befor */
-               /*   it, we add another step to get there.                               */
-               temp_start = ((unenrolled_start - r_start) / step) * step + r_start;
-               
-               if (temp_start < unenrolled_start) {
-                  unenrolled_start = temp_start + step;
-               }
-               else {
-                  unenrolled_start = temp_start;
-               }
-            }
-           
-            unenrolled_end = MIN(r_end, unenrolled_end);
-
-  
-            if (r_start > enrolled_start) {
-               enrolled_start = r_start;
-            }
-            else {
-               u_long32 temp_start;
-
-               temp_start = ((enrolled_start - r_start) / step) * step + r_start;
-               
-               if (temp_start < enrolled_start) {
-                  enrolled_start = temp_start + step;
-               }
-               else {
-                  enrolled_start = temp_start;
-               }
-            }
-  
-            enrolled_end = MIN(r_end, enrolled_end);
-            
-            alltasks = 0;
-         } else {
-            step = 1;
-            alltasks = 1;
-         }
-         
-         DPRINTF(("Request: alltasks = %d, start = %d, end = %d, step = %d\n", 
-                  alltasks, r_start, r_end, step));
-         DPRINTF(("unenrolled ----> start = %d, end = %d, step = %d\n", 
-                  unenrolled_start, unenrolled_end, step));
-         DPRINTF(("enrolled   ----> start = %d, end = %d, step = %d\n", 
-                  enrolled_start, enrolled_end, step));
-
-         showmessage = 0;
-
-         /*
-          * Delete all unenrolled pending tasks
-          */
-         deleted_unenrolled_tasks = 0;
-         deleted_tasks = 0;
-         existing_tasks = job_get_ja_tasks(job);
-         for (task_number = unenrolled_start; 
-              task_number <= unenrolled_end; 
-              task_number += step) {
-            bool is_defined;
-            
-            is_defined = job_is_ja_task_defined(job, task_number); 
-
-            if (is_defined) {
-               int is_enrolled;
-    
-               is_enrolled = job_is_enrolled(job, task_number);
-               if (!is_enrolled) {
-                  lListElem *tmp_task = NULL;
-
-                  tmp_task = job_get_ja_task_template_pending(job, task_number);
-                  deleted_tasks++;
-
-                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
-                                           ruser, rhost, NULL, job, tmp_task, 
-                                           NULL, MSG_LOG_DELETED);
-                  sge_add_event(start_time, sgeE_JATASK_DEL, 
-                                job_number, task_number,
-                                NULL, NULL, dupped_session, NULL);
-        
-                  sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
-                                 COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
-                                 COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
-                  deleted_unenrolled_tasks = 1;
-                  showmessage = 1;
-                  if (!alltasks) {
-                     range_list_insert_id(&range_list, NULL, task_number);
-                  }         
-               }
-            }
-         }
-         
-         if (deleted_unenrolled_tasks) {
-
-            if (existing_tasks > deleted_tasks) {
-               dstring buffer = DSTRING_INIT;
-               /* write only the common part - pass only the jobid, no jatask or petask id */
-               lList *answer_list = NULL;
-               spool_write_object(&answer_list, spool_get_default_context(), 
-                                  job, job_get_job_key(job_number, &buffer), 
-                                  SGE_TYPE_JOB,
-                                  job_spooling);
-               answer_list_output(&answer_list);
-               lListElem_clear_changed_info(job);
-               sge_dstring_free(&buffer);
-            } else {
-               /* JG: TODO: this joblog seems to have an invalid job object! */
-/*                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED); */
-               sge_add_event( start_time, sgeE_JOB_DEL, job_number, 0, 
-                             NULL, NULL, dupped_session, NULL);
-            }
-         }
-
-         /*
-          * Delete enrolled ja tasks
-          */
-         if (existing_tasks > deleted_tasks) { 
-            for (task_number = enrolled_start; 
-                 task_number <= enrolled_end; 
-                 task_number += step) {
-               int spool_job = 1;
-               int is_defined = job_is_ja_task_defined(job, task_number);
-              
-               if (is_defined) {
-                  lListElem *tmp_task = NULL;
-
-                  tmp_task = lGetElemUlong(lGetList(job, JB_ja_tasks), 
-                                           JAT_task_number, task_number);
-                  if (tmp_task == NULL) {
-                     /* ja task does not exist anymore - ignore silently */
-                     continue;
-                  }
-
-                  njobs++; 
-
-                  /* 
-                   * if task is already in status deleted and was signaled
-                   * only recently and deletion is not forced, do nothing
-                   */
-                  if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
-                     (lGetUlong(tmp_task, JAT_state) & JDELETED &&
-                      lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
-                      !lGetUlong(idep, ID_force)
-                     )
-                    ) {
-                     continue;
-                  }
- 
-                  /*If job has large array of tasks, and time to delete the array
-                   * of jobs is greater than MAX_JOB_DELETION_TIME, break out of
-                   * qdel and delete remaining jobs later
-                   */
-                  time = sge_get_gmt();
-                  if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > max_job_deletion_time)) {
-                     INFO((SGE_EVENT, MSG_JOB_DISCONTTASKTRANS_SUU, ruser,
-                           sge_u32c(job_number), sge_u32c(task_number)));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
-                     lFreeWhere(&job_where);
-                     lFreeWhere(&user_where);
-                     FREE(dupped_session);
-                     lFreeList(&range_list);
-                     DRETURN(STATUS_OK);
-                  }
-
-                  reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
-
-                  if (lGetString(tmp_task, JAT_master_queue) && is_pe_master_task_send(tmp_task)) {
-                     job_ja_task_send_abort_mail(job, tmp_task, ruser,
-                                                 rhost, NULL);
-                     get_rid_of_job_due_to_qdel(ctx,
-                                                job, tmp_task,
-                                                alpp, ruser,
-                                                lGetUlong(idep, ID_force), monitor);
-                  } else {
-                     sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN, monitor);
-                     showmessage = 1;
-                     if (!alltasks) {
-                        range_list_insert_id(&range_list, NULL, task_number);
-                     }
-                  }
-               } else {
-                  ; /* Task did never exist! - Ignore silently */
-               }
-            }
-         }
-
-         if (range_list && showmessage) {
-            if (range_list_get_number_of_ids(range_list) > 1) {
-               dstring tid_string = DSTRING_INIT;
-
-               range_list_sort_uniq_compress(range_list, NULL);
-               range_list_print_to_string(range_list, &tid_string, false, false, false);
-               INFO((SGE_EVENT, MSG_JOB_DELETETASKS_SSU,
-                     ruser, sge_dstring_get_string(&tid_string), 
-                     sge_u32c(job_number))); 
-               sge_dstring_free(&tid_string);
-            } else { 
-               u_long32 task_id = range_list_get_first_id(range_list, NULL);
-
-               INFO((SGE_EVENT, MSG_JOB_DELETETASK_SUU,
-                     ruser, sge_u32c(job_number), sge_u32c(task_id)));
-            } 
-            answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-         }
-
-         if (alltasks && showmessage) {
-            get_rid_of_schedd_job_messages(job_number);
-            INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, sge_u32c(job_number)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-         }
-      
-         time = sge_get_gmt();
-         if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > max_job_deletion_time)) {
-            INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
-                  sge_u32c(job_number)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
-            lFreeWhere(&job_where);
-            lFreeWhere(&user_where);
-            FREE(dupped_session);
-            lFreeList(&range_list);
-            DRETURN(STATUS_OK);
-         }
-
-         rn = lNext(rn);
-      } while (rn != NULL);
-
-      /* free task id range list of this iteration */
-      lFreeList(&range_list);
-      FREE(dupped_session);
+      njobs += sge_delete_all_tasks_of_job(ctx, alpp, ruser, rhost, job, &r_start, &r_end, &step, lGetList(idep, ID_ja_structure),
+               &alltasks, &deleted_tasks, start_time, monitor, lGetUlong(idep, ID_force));
    }
 
    lFreeWhere(&job_where);
-   lFreeWhere(&user_where);
 
    if (!njobs && !deleted_tasks) {
       empty_job_list_filter(alpp, 0, user_list_flag,
@@ -1490,8 +1192,6 @@ u_long32 step
 *     const char* jobid        - a job id or a job name or a pattern
 *     lCondition **job_filter  - pointer to the target filter. If a where
 *                                does exist, it will be extended by the new ones
-*     lCondition **user_filter - pointer to the target filter.  If a where
-*                                does exist, it will be extended by the new ones
 *
 *  RESULT
 *     static void - 
@@ -1501,52 +1201,42 @@ u_long32 step
 *
 *******************************************************************************/
 static void job_list_filter( lList *user_list, const char* jobid, 
-                              lCondition **job_filter, lCondition **user_filter) {
+                              lCondition **job_filter) {
    lCondition *new_where = NULL;
 
    DENTER(TOP_LAYER, "job_list_filter");
 
-   if ((job_filter == NULL || user_filter == NULL)) {
+   if (job_filter == NULL) {
       ERROR((SGE_EVENT, "job_list_filter() got no filters"));
       DRETURN_VOID;
    }
 
    if (user_list != NULL) {
       lListElem *user;
-      lCondition *or_where = NULL;
 
       DPRINTF(("Add all users given in userlist to filter\n"));
       for_each(user, user_list) {
 
          new_where = lWhere("%T(%I p= %s)", JB_Type, JB_owner, 
                lGetString(user, ST_name));
-         if (!or_where) {
-            or_where = new_where;
-            }   
-         else {
-            or_where = lOrWhere(or_where, new_where);
+         if (!*job_filter) {
+            *job_filter = new_where;
+         } else {
+            *job_filter = lOrWhere(*job_filter, new_where);
          }   
       }
-      if (!*user_filter) {
-         *user_filter = or_where;
-      }   
-      else {
-         *user_filter = lAndWhere(*user_filter, or_where);
-      }   
    }
  
    if (jobid != NULL) {
       DPRINTF(("Add jid %s to filter\n", jobid));
       if (isdigit(jobid[0])) {
          new_where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, atol(jobid));
-      }   
-      else {
+      } else {
          new_where = lWhere("%T(%I p= %s)", JB_Type, JB_job_name, jobid);
       }   
       if (!*job_filter) {
          *job_filter = new_where;
-      }   
-      else {
+      } else {
          *job_filter = lAndWhere(*job_filter, new_where);
       }   
    }
@@ -1619,7 +1309,7 @@ char *ruser
    DRETURN(0);
 }
 
-static void get_rid_of_schedd_job_messages( u_long32 job_number ) 
+static void get_rid_of_schedd_job_messages(u_long32 job_number) 
 {
    lListElem *sme = NULL;
    lListElem *mes = NULL;
@@ -1862,7 +1552,6 @@ int sub_command
    int user_list_pos;
    int job_name_pos;
    lCondition *job_where = NULL;
-   lCondition *user_where = NULL;
    int user_list_flag;
    int njobs = 0, ret, jid_flag;
    int all_jobs_flag;
@@ -1939,7 +1628,7 @@ int sub_command
       }
 
       job_list_filter(user_list_flag?lGetPosList(jep, user_list_pos):NULL,  
-                      jid_flag?job_id_str:NULL, &job_where, &user_where); 
+                      jid_flag?job_id_str:NULL, &job_where); 
    }
    
    nxt = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
@@ -1951,11 +1640,7 @@ int sub_command
       int trigger = 0;
       nxt = lNext(jobep);
 
-      
       if ((job_where != NULL ) && !lCompare(jobep, job_where)) {
-         continue;
-      }
-      if ((user_where != NULL) && !lCompare(jobep, user_where)) {
          continue;
       }
 
@@ -1967,7 +1652,6 @@ int sub_command
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, sge_u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          lFreeWhere(&job_where);
-         lFreeWhere(&user_where);
          FREE(job_mod_name);
          DRETURN(STATUS_ENOTOWNER);   
       }
@@ -1989,7 +1673,6 @@ int sub_command
          lFreeElem(&new_job);
 
          DPRINTF(("---------- removed messages\n"));
-         lFreeWhere(&user_where);
          lFreeWhere(&job_where);
          FREE(job_mod_name); 
          DRETURN(STATUS_EUNKNOWN);
@@ -2017,7 +1700,6 @@ int sub_command
             lFreeList(&tmp_alp);
             lFreeElem(&new_job);
             lFreeWhere(&job_where);
-            lFreeWhere(&user_where);
             FREE(job_mod_name);
             DRETURN(STATUS_EDISK);
          }
@@ -2081,7 +1763,6 @@ int sub_command
       }
    }
    lFreeWhere(&job_where);
-   lFreeWhere(&user_where);
 
    if (!njobs) {
       const char *job_id_str = NULL;
@@ -4020,4 +3701,293 @@ static int spool_write_script(lListElem *jep, u_long32 jobid)
                              lGetString(jep, JB_exec_file));
    PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
    return ret;
+}
+
+static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced)
+{
+   int njobs = 0;
+   lListElem *rn;
+   char *dupped_session = NULL;
+   int deleted_unenrolled_tasks;
+   u_long32 task_number;
+   u_long32 existing_tasks;
+   lList *range_list = NULL;        /* RN_Type */
+   u_long32 job_number = lGetUlong(job, JB_job_number);
+   
+   DENTER(TOP_LAYER, "sge_delete_jobs");
+
+   /* In certain cases sge_commit_job() free's the job structure passed.
+    * The session information is needed after sge_commit_job() so we make 
+    * a copy of the job session before calling sge_commit_job(). This copy
+    * must be free'd!
+    */
+   if (lGetString(job, JB_session)) {
+      dupped_session = strdup(lGetString(job, JB_session));
+   }
+
+   /*
+    * Repeat until all requested taskid ranges are handled
+    */
+   rn = lFirst(ja_structure);
+   do {
+      u_long32 max_job_deletion_time = mconf_get_max_job_deletion_time();
+      int showmessage = 0;
+      u_long32 enrolled_start = 0;
+      u_long32 enrolled_end = 0;
+      u_long32 unenrolled_start = 0;
+      u_long32 unenrolled_end = 0;
+
+      /*
+       * delete tasks or the whole job?
+       * if ja_structure not empty delete specified tasks
+       * otherwise delete whole job
+       */
+      unenrolled_start = job_get_smallest_unenrolled_task_id(job);
+      unenrolled_end = job_get_biggest_unenrolled_task_id(job);
+      enrolled_start = job_get_smallest_enrolled_task_id(job);
+      enrolled_end = job_get_biggest_enrolled_task_id(job);
+      
+      if (rn) {
+         *r_start = lGetUlong(rn, RN_min);
+         *r_end = lGetUlong(rn, RN_max);
+       
+         *step = lGetUlong(rn, RN_step);
+         if (!(*step)) {
+            *step = 1;
+         }
+        
+         if (*r_start > unenrolled_start) {
+            unenrolled_start = (*r_start);
+         } else {
+            u_long32 temp_start;
+            
+            /* we have to figure out the first task we can delete and we do want     */
+            /* to start with the first existing task. For that, we compute:          */
+            /*                                                                       */
+            /* - the delta between the requested task id and the first existing one  */
+            /* - we devide the delta by the step size, to get the number of steps we */ 
+            /*   need ot get there.                                                  */
+            /* - the number of steps multiplied by the step size + the start value   */
+            /*   will get us the first task, or a very close. If we just right befor */
+            /*   it, we add another step to get there.                               */
+            temp_start = ((unenrolled_start - (*r_start)) / (*step)) * (*step) + (*r_start);
+            
+            if (temp_start < unenrolled_start) {
+               unenrolled_start = temp_start + (*step);
+            }
+            else {
+               unenrolled_start = temp_start;
+            }
+         }
+        
+         unenrolled_end = MIN(*r_end, unenrolled_end);
+
+
+         if ((*r_start) > enrolled_start) {
+            enrolled_start = *r_start;
+         } else {
+            u_long32 temp_start;
+
+            temp_start = ((enrolled_start - *r_start) / (*step)) * (*step) + (*r_start);
+            
+            if (temp_start < enrolled_start) {
+               enrolled_start = temp_start + (*step);
+            }
+            else {
+               enrolled_start = temp_start;
+            }
+         }
+
+         enrolled_end = MIN(*r_end, enrolled_end);
+         
+         *alltasks = 0;
+      } else {
+         *step = 1;
+         *alltasks = 1;
+      }
+      
+      DPRINTF(("Request: alltasks = %d, start = %d, end = %d, step = %d\n", 
+               *alltasks, *r_start, *r_end, *step));
+      DPRINTF(("unenrolled ----> start = %d, end = %d, step = %d\n", 
+               unenrolled_start, unenrolled_end, *step));
+      DPRINTF(("enrolled   ----> start = %d, end = %d, step = %d\n", 
+               enrolled_start, enrolled_end, *step));
+
+      showmessage = 0;
+
+      /*
+       * Delete all unenrolled pending tasks
+       */
+      deleted_unenrolled_tasks = 0;
+      *deleted_tasks = 0;
+      existing_tasks = job_get_ja_tasks(job);
+      for (task_number = unenrolled_start; 
+           task_number <= unenrolled_end; 
+           task_number += *step) {
+         bool is_defined;
+         
+         is_defined = job_is_ja_task_defined(job, task_number); 
+
+         if (is_defined) {
+            int is_enrolled;
+ 
+            is_enrolled = job_is_enrolled(job, task_number);
+            if (!is_enrolled) {
+               lListElem *tmp_task = NULL;
+
+               tmp_task = job_get_ja_task_template_pending(job, task_number);
+               (*deleted_tasks)++;
+
+               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
+                                        ruser, rhost, NULL, job, tmp_task, 
+                                        NULL, MSG_LOG_DELETED);
+               sge_add_event(start_time, sgeE_JATASK_DEL, 
+                             job_number, task_number,
+                             NULL, NULL, dupped_session, NULL);
+     
+               sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                              COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
+                              COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
+               deleted_unenrolled_tasks = 1;
+               showmessage = 1;
+               if (!*alltasks && showmessage) {
+                  range_list_insert_id(&range_list, NULL, task_number);
+               }         
+            }
+         }
+      }
+      
+      if (deleted_unenrolled_tasks) {
+
+         if (existing_tasks > *deleted_tasks) {
+            dstring buffer = DSTRING_INIT;
+            /* write only the common part - pass only the jobid, no jatask or petask id */
+            lList *answer_list = NULL;
+            spool_write_object(&answer_list, spool_get_default_context(), 
+                               job, job_get_job_key(job_number, &buffer), 
+                               SGE_TYPE_JOB,
+                               ctx->get_job_spooling(ctx));
+            answer_list_output(&answer_list);
+            lListElem_clear_changed_info(job);
+            sge_dstring_free(&buffer);
+         } else {
+            /* JG: TODO: this joblog seems to have an invalid job object! */
+/*                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED); */
+            sge_add_event(start_time, sgeE_JOB_DEL, job_number, 0, 
+                          NULL, NULL, dupped_session, NULL);
+         }
+      }
+
+      /*
+       * Delete enrolled ja tasks
+       */
+      if (existing_tasks > *deleted_tasks) { 
+         for (task_number = enrolled_start; 
+              task_number <= enrolled_end; 
+              task_number += *step) {
+            int spool_job = 1;
+            int is_defined = job_is_ja_task_defined(job, task_number);
+           
+            if (is_defined) {
+               lListElem *tmp_task = NULL;
+
+               tmp_task = lGetElemUlong(lGetList(job, JB_ja_tasks), 
+                                        JAT_task_number, task_number);
+               if (tmp_task == NULL) {
+                  /* ja task does not exist anymore - ignore silently */
+                  continue;
+               }
+
+               njobs++; 
+
+               /* 
+                * if task is already in status deleted and was signaled
+                * only recently and deletion is not forced, do nothing
+                */
+               if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
+                  (lGetUlong(tmp_task, JAT_state) & JDELETED &&
+                   lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
+                   !forced
+                  )
+                 ) {
+                  continue;
+               }
+
+               /*If job has large array of tasks, and time to delete the array
+                * of jobs is greater than MAX_JOB_DELETION_TIME, break out of
+                * qdel and delete remaining jobs later
+                */
+               if ((njobs > 0 || (*deleted_tasks) > 0) && ((sge_get_gmt() - start_time) > max_job_deletion_time)) {
+                  INFO((SGE_EVENT, MSG_JOB_DISCONTTASKTRANS_SUU, ruser,
+                        sge_u32c(job_number), sge_u32c(task_number)));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
+                  FREE(dupped_session);
+                  lFreeList(&range_list);
+                  DRETURN(njobs);
+               }
+
+               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, tmp_task, NULL, MSG_LOG_DELETED);
+
+               if (lGetString(tmp_task, JAT_master_queue) && is_pe_master_task_send(tmp_task)) {
+                  job_ja_task_send_abort_mail(job, tmp_task, ruser,
+                                              rhost, NULL);
+                  get_rid_of_job_due_to_qdel(ctx,
+                                             job, tmp_task,
+                                             alpp, ruser,
+                                             forced, monitor);
+               } else {
+                  sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE, spool_job | COMMIT_NEVER_RAN, monitor);
+                  showmessage = 1;
+                  if (!*alltasks && showmessage) {
+                     range_list_insert_id(&range_list, NULL, task_number);
+                  }
+               }
+            } else {
+               ; /* Task did never exist! - Ignore silently */
+            }
+         }
+      }
+
+      if (range_list && showmessage) {
+         if (range_list_get_number_of_ids(range_list) > 1) {
+            dstring tid_string = DSTRING_INIT;
+
+            range_list_sort_uniq_compress(range_list, NULL);
+            range_list_print_to_string(range_list, &tid_string, false, false, false);
+            INFO((SGE_EVENT, MSG_JOB_DELETETASKS_SSU,
+                  ruser, sge_dstring_get_string(&tid_string), 
+                  sge_u32c(job_number))); 
+            sge_dstring_free(&tid_string);
+         } else { 
+            u_long32 task_id = range_list_get_first_id(range_list, NULL);
+
+            INFO((SGE_EVENT, MSG_JOB_DELETETASK_SUU,
+                  ruser, sge_u32c(job_number), sge_u32c(task_id)));
+         } 
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      }
+
+      if ((*alltasks) && showmessage) {
+         get_rid_of_schedd_job_messages(job_number);
+         INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, sge_u32c(job_number)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      }
+   
+      if ((njobs > 0 || (*deleted_tasks) > 0) && (( sge_get_gmt() - start_time) > max_job_deletion_time)) {
+         INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
+               sge_u32c(job_number)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
+         FREE(dupped_session);
+         lFreeList(&range_list);
+         DRETURN(njobs);
+      }
+
+      rn = lNext(rn);
+   } while (rn != NULL);
+
+   /* free task id range list of this iteration */
+   lFreeList(&range_list);
+   FREE(dupped_session);
+
+   DRETURN(njobs);
 }

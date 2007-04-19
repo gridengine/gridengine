@@ -69,7 +69,7 @@
 #include "spool/flatfile/msg_spoollib_flatfile.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_advance_reservation.h"
-
+#include "sched/debit.h"
 
 const spool_instr spool_config_subinstr = {
    CULL_SUBLIST,

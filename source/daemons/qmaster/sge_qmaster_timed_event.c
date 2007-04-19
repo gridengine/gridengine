@@ -327,8 +327,7 @@ void te_free_event(te_event_t *anEvent)
    sge_free((char*)(*anEvent)->str_key);
    FREE(*anEvent);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* te_free_event() */
 
 /****** qmaster/sge_qmaster_timed_event/te_add_event() *************************

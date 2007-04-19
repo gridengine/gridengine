@@ -85,7 +85,6 @@
 #define MSG_ANSWER_ARGUMENTMISSINGFORX_S    _MESSAGE(23047, _("argument missing for "SFQ))
 #define MSG_USER_INVALIDNAMEX_S             _MESSAGE(23048, _("invalid user name "SFQ))
 #define MSG_USER_NOHOMEDIRFORUSERX_S        _MESSAGE(23049, _("missing home directory for user "SFQ))
-#define MSG_QUEUE_UNABLE2FINDQ_S            _MESSAGE(23051, _("unable to find queue "SFQ))
 #define MSG_OBJ_USER                        _MESSAGE(23052, _("user"))
 #define MSG_OBJ_GROUP                       _MESSAGE(23053, _("group"))
 #define MSG_OBJ_USERPRJ                     _MESSAGE(23054, _("user/project"))

@@ -2798,20 +2798,22 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
 *     lListElem *job_elem, int nm, char *option) 
 *
 *  FUNCTION
-*     ??? 
+*     Copies a string into a dstring. Used for category string building
 *
 *  INPUTS
 *     dstring *category_str     - target string
 *     const lListElem *job_elem - a job structure
 *     int nm                    - position of the string attribute in the job
-*     char *option              - string option to put in infront of the generated string
+*     char *option              - string option to put in in front of the generated string
 *
 *  RESULT
-*     bool - true, if everything was fine
+*     bool - always true
 *
 *  NOTES
 *     MT-NOTE: sge_unparse_string_option_dstring() is MT safe 
 *
+*  SEE ALSO
+*     sge_job/sge_unparse_ulong_option_dstring()
 *******************************************************************************/
 bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
                                int nm, char *option)
@@ -2827,6 +2829,53 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
       sge_dstring_append(category_str, option);
       sge_dstring_append(category_str, " ");
       sge_dstring_append(category_str, string);
+   }
+   DRETURN(true);
+}
+
+/****** sge_job/sge_unparse_ulong_option_dstring() *****************************
+*  NAME
+*     sge_unparse_ulong_option_dstring() -- copies a string into a dstring
+*
+*  SYNOPSIS
+*     bool sge_unparse_ulong_option_dstring(dstring *category_str, const 
+*     lListElem *job_elem, int nm, char *option) 
+*
+*  FUNCTION
+*     Copies a string into a dstring. Used for category string building
+*
+*  INPUTS
+*     dstring *category_str     - target string
+*     const lListElem *job_elem - a job structure
+*     int nm                    - position of the string attribute in the job
+*     char *option              - string option to put in front of the generated string
+*
+*  RESULT
+*     bool - always true
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_ulong_option_dstring() is MT safe 
+*
+*  SEE ALSO
+*     sge_job/sge_unparse_string_option_dstring()
+*******************************************************************************/
+bool sge_unparse_ulong_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option)
+{
+   u_long32 ul = 0;
+
+   DENTER(TOP_LAYER, "sge_unparse_ulong_option_dstring");
+   
+   if ((ul = lGetPosUlong(job_elem, nm)) != 0) {            
+      if (sge_dstring_strlen(category_str) > 0) {
+         sge_dstring_append(category_str, " ");
+      }
+      sge_dstring_append(category_str, option);
+      sge_dstring_append(category_str, " ");
+      sge_dstring_sprintf_append(category_str, sge_U32CFormat, ul);
    }
    DRETURN(true);
 }

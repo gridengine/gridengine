@@ -786,7 +786,7 @@ bool qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "qinstance_signal_on_calendar");
+   DENTER(TOP_LAYER, "qinstance_change_state_on_calendar");
 
    if (this_elem != NULL && calendar != NULL) {
       lList *state_changes_list = NULL;
@@ -798,8 +798,7 @@ bool qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
       ret = qinstance_change_state_on_calender_(ctx, this_elem, state, &state_changes_list, monitor);
 
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_qinstance_qmaster/qinstance_change_state_on_calendar_all() *********

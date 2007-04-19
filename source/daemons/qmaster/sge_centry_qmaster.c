@@ -62,6 +62,7 @@
 
 #include "uti/sge_string.h"
 #include "sgeobj/sge_str.h"
+#include "sched/debit.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"

@@ -282,6 +282,9 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op);
 /* unparse functions */
 bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
                                int nm, char *option);
+
+bool sge_unparse_ulong_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option);
                                
 bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, int pe_pos, int range_pos,
                             const char *option); 

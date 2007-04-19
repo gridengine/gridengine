@@ -4940,8 +4940,7 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm)
 
    ret = lGetElemHost(ep->cont[sublist_pos].glp, nm, str);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lDelElemHost() ****************************************

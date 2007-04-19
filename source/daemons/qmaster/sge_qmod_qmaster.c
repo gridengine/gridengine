@@ -618,7 +618,7 @@ int isoperator,
 int isowner,
 monitoring_t *monitor
 ) {
-   lListElem *gdil_ep, *nextjep, *nexttep, *jep;
+   lListElem *gdil_ep, *nextjep, *jep;
    const char *qname = NULL;
    DENTER(TOP_LAYER, "qmod_queue_clean");
 
@@ -637,7 +637,7 @@ monitoring_t *monitor
       could get modified so we have to be careful when iterating through the job list */
    nextjep = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
    while ((jep=nextjep)) {
-      lListElem* jatep;
+      lListElem *jatep, *nexttep;
       nextjep = lNext(jep);
 
       nexttep = lFirst(lGetList(jep, JB_ja_tasks));
@@ -656,8 +656,7 @@ monitoring_t *monitor
    INFO((SGE_EVENT, MSG_QUEUE_PURGEQ_SSS, user, host, qname ));
    answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****

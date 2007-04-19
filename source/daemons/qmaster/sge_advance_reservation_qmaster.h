@@ -51,7 +51,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 
 /* funtions called via gdi and inside the qmaster */
 int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_list, 
-           char *ruser, char *rhost);
+           char *ruser, char *rhost, monitoring_t *monitor);
 
 void sge_store_ar_id(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
@@ -59,7 +59,11 @@ void sge_init_ar_id(void);
 
 int ar_do_reservation(lListElem *ar, bool incslots);
 
+void ar_initialize_reserved_queue_list(lListElem *ar);
+
 void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
                           monitoring_t *monitor);
+
+void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring_t *monitor);
 
 #endif

@@ -92,7 +92,18 @@
  * 
  *    8) qrstat testsuite test has to be written
  *
- *   10) ...
+ *   10) job verification is not properly implemented. For example it's possible to submit
+ *       AR job that requests non reserved consumable.
+ *
+ *   11) recognize when reserved host goes into error state and set/unset error flag
+ *
+ *   12) implement mail sending
+ *
+ *   13) ...
+ *
+ * TESTSUITE
+ *    1) add qalter test for changing ar_id on running and pending jobs. For pending it
+ *   should be permitted, for running not
  */
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
@@ -382,6 +393,9 @@ ar_get_string_from_event(ar_state_event_t event)
          break;
       case ARL_TERMINATED:
          ret = MSG_AR_EVENT_STATE_TERMINATED;
+         break;
+      case ARL_DELETED:
+         ret = MSG_AR_EVENT_STATE_DELETED;
          break;
       default:
          /* should never happen */

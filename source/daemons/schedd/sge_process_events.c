@@ -394,8 +394,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
       schedd_log("--------------STOP-SCHEDULER-RUN-------------");
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -545,11 +544,10 @@ DTRACE;
          CRITICAL((SGE_EVENT, "partial queue descriptor failed\n")); 
       }
       else {
-         what_queue2 = lWhat("%T(ALL)", queue_des );
+         what_queue2 = lWhat("%T(ALL)", queue_des);
 
          where_queue = lWhere("%T("
             " !(%I m= %u) &&" 
-            " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
@@ -561,15 +559,13 @@ DTRACE;
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
-            QU_state, QI_AMBIGUOUS,
-            QU_state, QI_ORPHANED
+            QU_state, QI_AMBIGUOUS
             );         /* only known queues              */
            
          where_queue2 = lWhere("%T("
             "  (%I m= %u) &&" 
             " !(%I m= %u) &&" 
             " !(%I m= %u) &&" 
-            " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
@@ -584,8 +580,7 @@ DTRACE;
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
             QU_state, QI_DISABLED,
-            QU_state, QI_AMBIGUOUS,
-            QU_state, QI_ORPHANED
+            QU_state, QI_AMBIGUOUS
             );         /* only known queues              */
 
          if (where_queue == NULL) {
@@ -670,6 +665,7 @@ DTRACE;
             JB_hard_wallclock_gmt,
             JB_reserve,
             JB_ja_tasks,
+            JB_ar,
             NoName
          };
   

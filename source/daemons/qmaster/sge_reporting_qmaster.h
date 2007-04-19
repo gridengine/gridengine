@@ -135,11 +135,8 @@ reporting_create_ar_log_record(lList **answer_list,
                                u_long32 report_time);
 
 bool
-reporting_create_ar_acct_record(lList **answer_list,
+reporting_create_ar_acct_records(lList **answer_list,
                                 const lListElem *ar,
-                                const char *cqueue_name,
-                                const char *hostname,
-                                u_long32 slots,
                                 u_long32 report_time);
 
 #endif /* _SGE_REPORTING_QMASTER_H_ */

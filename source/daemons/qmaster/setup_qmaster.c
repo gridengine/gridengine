@@ -107,6 +107,7 @@
 #include "sgeobj/sge_resource_quota.h"
 #include "sge_resource_quota_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
+#include "uti/sge_time.h"
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -936,6 +937,15 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_AR].list, SGE_TYPE_AR);
    answer_list_output(&answer_list);
 
+   /* initialize cached advance reservations structures */
+   {
+      lListElem *ar;
+      for_each(ar, *object_base[SGE_TYPE_AR].list) {
+         ar_initialize_reserved_queue_list(ar);
+      }
+   }
+
+
    DPRINTF(("job_list-----------------------------------\n"));
    /* measure time needed to read job database */
    time_start = time(0);
@@ -1034,15 +1044,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, &monitor);
    }
 
-   /* Initialize
-    *    - reflect advance reservations in queue instances */
-   {
-      lListElem *ar;
-      for_each(ar, *object_base[SGE_TYPE_AR].list) {
-         ar_do_reservation(ar, true);
-      }
-   }
-        
    /* 
     * initialize QU_queue_number if the value is 0 
     *
@@ -1064,6 +1065,69 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
                qinstance_number = sge_get_qinstance_number();
                lSetUlong(qinstance, QU_queue_number, qinstance_number);
             }
+         }
+      }
+   }
+
+   /* Initialize
+    *    - reflect advance reservations in queue instances
+    *    - setup timers
+    */
+   {
+      lListElem *ar, *next_ar;
+      u_long32 now = sge_get_gmt();
+      lList *ar_master_list = *object_base[SGE_TYPE_AR].list;
+
+      next_ar = lFirst(ar_master_list);
+      while((ar = next_ar)) {
+         te_event_t ev = NULL;
+
+         next_ar = lNext(ar);
+
+         if (now < lGetUlong(ar, AR_start_time)) {
+            ar_do_reservation(ar, true);
+
+            lSetUlong(ar, AR_state, AR_WAITING);
+
+            ev = te_new_event((time_t)lGetUlong(ar, AR_start_time), TYPE_AR_EVENT,
+                        ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_RUNNING, NULL);
+            te_add_event(ev);
+            te_add_event(ev);
+            te_free_event(&ev);
+
+         } else if (now < lGetUlong(ar, AR_end_time)) {
+            ar_do_reservation(ar, true);
+
+            lSetUlong(ar, AR_state, AR_RUNNING);
+
+            ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT,
+                        ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_EXITED, NULL);
+            te_add_event(ev);
+            te_free_event(&ev);
+         } else {
+            dstring buffer = DSTRING_INIT;
+            u_long32 ar_id = lGetUlong(ar, AR_id);
+
+            lSetUlong(ar, AR_state, AR_RUNNING);
+
+            sge_ar_remove_all_jobs(ctx, ar_id, &monitor);
+
+            reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
+                                     "end time of AR reached",
+                                     now);  
+            reporting_create_ar_acct_records(NULL, ar, now);                        
+            ar = lDechainElem(ar_master_list, ar);
+
+            sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
+
+            spool_delete_object(&answer_list, spool_get_default_context(), 
+                                SGE_TYPE_AR, 
+                                sge_dstring_get_string(&buffer),
+                                ctx->get_job_spooling(ctx));                     
+
+            lFreeElem(&ar);
+            sge_dstring_free(&buffer);
+
          }
       }
    }
@@ -1219,6 +1283,8 @@ static int debit_all_jobs_from_qs()
    int ret = 0;
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
+   lList *master_ar_list = *object_base[SGE_TYPE_AR].list;
    lList *master_rqs_list = *object_base[SGE_TYPE_RQS].list;
 
    DENTER(TOP_LAYER, "debit_all_jobs_from_qs");
@@ -1237,13 +1303,19 @@ static int debit_all_jobs_from_qs()
             "granted destin. ident. list" */
 
          for_each (gdi, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+            u_long32 ar_id = lGetUlong(jep, JB_ar);
+            lListElem *ar   = NULL;
 
             queue_name = lGetString(gdi, JG_qname);
             slots = lGetUlong(gdi, JG_slots);
             
-            if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue_name))) {
+            if (!(qep = cqueue_list_locate_qinstance(master_cqueue_list, queue_name))) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                       queue_name, sge_u32c(lGetUlong(jep, JB_job_number))));
+               lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
+            } else if (ar_id != 0 && (ar = lGetElemUlong(master_ar_list, AR_id, ar_id)) == NULL) {
+               ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,  
+                      sge_u32c(ar_id), sge_u32c(lGetUlong(jep, JB_job_number))));
                lRemoveElem(lGetList(jep, JB_ja_tasks), &jatep);
             } else {
                /* debit in all layers */
@@ -1258,7 +1330,15 @@ static int debit_all_jobs_from_qs()
                   rqs_debit_consumable(rqs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
                                         *object_base[SGE_TYPE_USERSET].list, *object_base[SGE_TYPE_HGROUP].list, slots);
                }
-
+               if (ar != NULL) {
+                  lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gdi, JG_qname), AR_reserved_queues);
+                  if (queue != NULL) {
+                     qinstance_debit_consumable(queue, jep, master_centry_list, slots);
+                  } else {
+                     ERROR((SGE_EVENT, "job "sge_U32CFormat" runs in queue "SFQ" not reserved by AR "sge_U32CFormat,  
+                            sge_u32c(lGetUlong(jep, JB_job_number)), lGetString(gdi, JG_qname), sge_u32c(ar_id)));
+                  }
+               }
             }
          }
       }

@@ -530,7 +530,7 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event( timestamp, event, 
+         sge_add_event(timestamp, event, 
                        intkey1, intkey2, strkey, strkey2,
                        session, element);
       }

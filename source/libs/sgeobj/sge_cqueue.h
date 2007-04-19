@@ -80,6 +80,8 @@ bool
 cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
                   bool *has_hostname, bool *has_domain);
 
+char* cqueue_get_name_from_qinstance(const char *queue_instance);
+
 lListElem *
 cqueue_create(lList **answer_list, const char *name);
 

@@ -136,6 +136,14 @@ generic_update_master_list(sge_evc_class_t *evc,
                            lListElem *event, 
                            void *clientdata);
 
+static sge_callback_result
+ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
+                       sge_event_action action, lListElem *event, void *clientdata);
+
+static sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
+                                                        int key_nm, const char *key, 
+                                                        sge_event_action action, lListElem *event);
+
 static sge_mirror_error sge_mirror_process_event_list(sge_evc_class_t *evc, lList *event_list);
 
 /* One entry per event type, this is the basic definition. Each thread
@@ -171,6 +179,7 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL }, /*zombie*/
    { NULL, generic_update_master_list,             NULL, NULL }, /*suser*/
    { NULL, generic_update_master_list,             NULL, NULL }, /*rqs*/
+   { NULL, ar_update_master_list,                  NULL, NULL }, /*advance reservation*/
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
@@ -1725,17 +1734,14 @@ generic_update_master_list(sge_evc_class_t *evc, object_description *object_base
    key = lGetString(event, ET_strkey);
 
    if (sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
-      DEXIT;
-      return SGE_EMA_FAILURE;
+      DRETURN(SGE_EMA_FAILURE);
    }
 
    if (!object_type_commit_master_list(type, NULL)){
-      DEXIT;
-      return SGE_EMA_FAILURE;
+      DRETURN(SGE_EMA_FAILURE);
    }
 
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
 
@@ -1793,8 +1799,7 @@ sge_mirror_update_master_list_str_key(lList **list, const lDescr *list_descr,
    }
 #endif   
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventmirror/sge_mirror_update_master_list_host_key() *********************
@@ -1839,8 +1844,7 @@ sge_mirror_error sge_mirror_update_master_list_host_key(lList **list, const lDes
    ep = lGetElemHost(*list, key_nm, key);
    ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** Eventmirror/sge_mirror_update_master_list() *****************************
@@ -1897,8 +1901,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          /* check for duplicate */
          if(ep != NULL) {
             ERROR((SGE_EVENT, "duplicate list element "SFQ"\n", (key != NULL) ?key:"NULL"));
-            DEXIT;
-            return SGE_EM_DUPLICATE_KEY;
+            DRETURN(SGE_EM_DUPLICATE_KEY);
          }
    
          /* if neccessary, create list */
@@ -1915,8 +1918,7 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          /* check for existence */
          if(ep == NULL) {
             ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
-            DEXIT;
-            return SGE_EM_KEY_NOT_FOUND;
+            DRETURN(SGE_EM_KEY_NOT_FOUND);
          }
          
          /* remove element */
@@ -1927,18 +1929,117 @@ sge_mirror_update_master_list(lList **list, const lDescr *list_descr,
          /* check for existence */
          if(ep == NULL) {
             ERROR((SGE_EVENT, "element "SFQ" does not exist\n", (key != NULL) ?key:"NULL"));
-            DEXIT;
-            return SGE_EM_KEY_NOT_FOUND;
+            DRETURN(SGE_EM_KEY_NOT_FOUND);
          }
          lRemoveElem(*list, &ep);
          data_list = lGetList(event, ET_new_version);
          lAppendElem(*list, lDechainElem(data_list, lFirst(data_list)));
          break;
       default:
-         return SGE_EM_BAD_ARG;
+         DRETURN(SGE_EM_BAD_ARG);
    }      
    
-   DEXIT;
-   return SGE_EM_OK;
+   DRETURN(SGE_EM_OK);
 }
 
+static sge_callback_result
+/****** sge_mirror/ar_update_master_list() *************************************
+*  NAME
+*     ar_update_master_list() -- update the master advance reservation list
+*
+*  SYNOPSIS
+*     static sge_callback_result ar_update_master_list(sge_evc_class_t *evc, 
+*     object_description *object_base, sge_object_type type, sge_event_action 
+*     action, lListElem *event, void *clientdata) 
+*
+*  FUNCTION
+*     Updates the global master list of advance reservations based on an event.
+*     The function is called from the event mirroring interface.
+*
+*  INPUTS
+*     sge_evc_class_t *evc            - event client class
+*     object_description *object_base - object base of master lists
+*     sge_object_type type            - event type
+*     sge_event_action action         - action to perform
+*     lListElem *event                - the raw event
+*     void *clientdata                - client data
+*
+*  RESULT
+*     static sge_callback_result - true, if update is successfull
+*                                  false if an error occured
+*
+*  NOTES
+*     MT-NOTE: ar_update_master_list() is not MT safe
+*******************************************************************************/
+ar_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
+                        sge_event_action action, lListElem *event, void *clientdata)
+{
+   lList **list = NULL;
+   const lDescr *list_descr;
+   int key_nm;
+   const char *key;
+
+   DENTER(TOP_LAYER, "ar_update_master_list");
+
+   list = sge_master_list(object_base, type);
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
+   key_nm = object_type_get_key_nm(type); 
+
+   key = lGetString(event, ET_strkey);
+
+   if (sge_mirror_update_master_list_ar_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+
+      DRETURN(SGE_EMA_FAILURE);
+   }
+
+   DRETURN(SGE_EMA_OK);
+}
+
+/****** sge_mirror/sge_mirror_update_master_list_ar_key() **********************
+*  NAME
+*     sge_mirror_update_master_list_ar_key() -- updates the advance reservation
+*                                               master list
+*
+*  SYNOPSIS
+*     static sge_mirror_error sge_mirror_update_master_list_ar_key(lList 
+*     **list, const lDescr *list_descr, int key_nm, const char *key, 
+*     sge_event_action action, lListElem *event) 
+*
+*  FUNCTION
+*     Updates a certain element in the advance reservation mirrored list. Which
+*     element to update is specified by the given AR_id as string value
+*
+*  INPUTS
+*     lList **list             - the master list to update
+*     const lDescr *list_descr - descriptor of the master list (AR_Type)
+*     int key_nm               - field identifies of the key (AR_name)
+*     const char *key          - AR_id as string value
+*     sge_event_action action  - action to perform on this list
+*     lListElem *event         - raw event element
+*
+*  RESULT
+*     static sge_mirror_error - SGE_EM_OK or an error code
+*
+*  NOTES
+*     MT-NOTE: sge_mirror_update_master_list_ar_key() is MT safe, needs GLOBAL_LOCK 
+*******************************************************************************/
+static sge_mirror_error sge_mirror_update_master_list_ar_key(lList **list, const lDescr *list_descr, 
+                                                        int key_nm, const char *key, 
+                                                        sge_event_action action, lListElem *event)
+{
+   lListElem *ep = NULL;
+   sge_mirror_error ret;
+
+   DENTER(TOP_LAYER, "sge_mirror_update_master_list_ar_key");
+
+   if (list != NULL) {
+      if (key != NULL) {
+         ep = lGetElemUlong(*list, key_nm, atoi(key));
+      }
+      ret = sge_mirror_update_master_list(list, list_descr, ep, key, action, event);
+   } else {
+      ret = SGE_EM_NOT_INITIALIZED;
+   }
+
+   DRETURN(ret);
+}

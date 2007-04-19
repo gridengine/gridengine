@@ -88,6 +88,7 @@
 #include "spool/sge_spooling.h"
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_serf.h"
+#include "sched/debit.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

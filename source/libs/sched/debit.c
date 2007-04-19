@@ -41,7 +41,6 @@
 #include "sgermon.h"
 #include "sge_resource_utilization.h"
 
-#include "sge_qinstanceL.h"
 #include "sge_qinstance.h"
 #include "subordinate_schedd.h"
 #include "sge_subordinate.h"
@@ -49,10 +48,24 @@
 #include "sge_log.h"
 #include "msg_schedd.h"
 #include "sched/sge_resource_quota_schedd.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 static int 
 debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
                       lList *complex_list, order_t *orders);
+
+static int
+debit_job_from_hosts(lListElem *job, lList *granted, lList *host_list, lList *complex_list, 
+                     int *sort_hostlist);
+
+static int
+debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem *pe,
+                   lList *centry_list, lList *acl_list, lList *hgrp_list);
+
+static int
+debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_list);
 
 /* -------------------------------------------------------------
 
@@ -143,6 +156,7 @@ debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
       debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
       debit_job_from_rqs(a->job, a->gdil, a->rqs_list, a->pe, a->centry_list, a->acl_list, a->hgrp_list);
+      debit_job_from_ar(a->job, a->gdil, a->ar_list, a->centry_list);
    }
 
    add_job_utilization(a, type, for_job_scheduling);
@@ -236,5 +250,173 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
    sge_dstring_free(&queue_name);
 
    DEXIT;
-   return ret;
+   DRETURN(ret);
 }
+
+static int debit_job_from_hosts(
+lListElem *job,     /* JB_Type */
+lList *granted,     /* JG_Type */
+lList *host_list,   /* EH_Type */
+lList *centry_list, /* CE_Type */
+int *sort_hostlist
+) {
+   lSortOrder *so = NULL;
+   lListElem *gel, *hep;
+   lListElem *global;
+   const char *hnm = NULL;
+   const char *load_formula = NULL;
+   lList *job_load_adjustments = sconf_get_job_load_adjustments();
+   u_long32 load_adjustment_decay_time = sconf_get_load_adjustment_decay_time();
+
+   double old_sort_value, new_sort_value;
+
+   DENTER(TOP_LAYER, "debit_job_from_hosts");
+
+   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
+
+   global = host_list_locate(host_list, "global");
+
+   load_formula = sconf_get_load_formula(); 
+
+   /* debit from hosts */
+   for_each(gel, granted) {  
+      u_long32 ulc_factor;
+      int slots = lGetUlong(gel, JG_slots);
+
+      hnm = lGetHost(gel, JG_qhostname);
+      hep = host_list_locate(host_list, hnm); 
+
+      if (load_adjustment_decay_time && lGetNumberOfElem(job_load_adjustments)) {
+         /* increase host load for each scheduled job slot */
+         ulc_factor = lGetUlong(hep, EH_load_correction_factor);
+         ulc_factor += 100*slots;
+         lSetUlong(hep, EH_load_correction_factor, ulc_factor);
+      }   
+
+      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots);
+      debit_host_consumable(job, hep, centry_list, slots);
+
+      /* compute new combined load for this host and put it into the host */
+      old_sort_value = lGetDouble(hep, EH_sort_value); 
+
+      new_sort_value = scaled_mixed_load(load_formula, global, hep, centry_list);
+
+      if(new_sort_value != old_sort_value) {
+         lSetDouble(hep, EH_sort_value, new_sort_value);
+         if (sort_hostlist)
+            *sort_hostlist = 1;
+         DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
+            hnm, old_sort_value, new_sort_value));
+      }
+
+      lResortElem(so, hep, host_list);
+   }
+   FREE(load_formula);
+
+   lFreeSortOrder(&so);
+   lFreeList(&job_load_adjustments);
+
+   DRETURN(0);
+}
+
+/*
+ * jep: JB_Type
+ * hep: EH_Type
+ * centry_list: CE_Type
+ */
+int 
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots) 
+{
+   return rc_debit_consumable(jep, hep, centry_list, slots, 
+                           EH_consumable_config_list, 
+                           EH_resource_utilization, 
+                           lGetHost(hep, EH_name));
+}
+
+/****** sge_resource_quota_schedd/debit_job_from_rqs() **********************************
+*  NAME
+*     debit_job_from_rqs() -- debits job in all relevant resource quotas
+*
+*  SYNOPSIS
+*     int debit_job_from_rqs(lListElem *job, lList *granted, lListElem* pe, 
+*     lList *centry_list) 
+*
+*  FUNCTION
+*     The function debits in all relevant rule the requested amout of resources.
+*
+*  INPUTS
+*     lListElem *job     - job request (JB_Type)
+*     lList *granted     - granted list (JG_Type)
+*     lListElem* pe      - granted pe (PE_Type)
+*     lList *centry_list - consumable resouces list (CE_Type)
+*
+*  RESULT
+*     int - always 0
+*
+*  NOTES
+*     MT-NOTE: debit_job_from_rqs() is not MT safe 
+*
+*******************************************************************************/
+static int
+debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem* pe,
+                   lList *centry_list, lList *acl_list, lList *hgrp_list) 
+{
+   lListElem *gel = NULL;
+
+   DENTER(TOP_LAYER, "debit_job_from_rqs");
+
+   if (lGetUlong(job, JB_ar) != 0) {
+      /* don't debit for AR jobs in resource quotas */
+      DRETURN(0);
+   }
+  
+   /* debit for all hosts */
+   for_each(gel, granted) {
+      const char* pe_name = NULL;
+      lListElem *rqs = NULL;
+      int slots = lGetUlong(gel, JG_slots);
+
+      if (pe != NULL) {
+         pe_name =  lGetString(pe, PE_name);
+      }
+
+      for_each (rqs, rqs_list) {
+         rqs_debit_consumable(rqs, job, gel, pe_name, centry_list, acl_list, hgrp_list, slots);
+      }
+   }
+
+   DRETURN(0);
+}
+
+static int
+debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_list)
+{
+   lListElem *gel = NULL;
+
+   DENTER(TOP_LAYER, "debit_job_from_ar");
+
+   for_each(gel, granted) {
+      lListElem *ar = NULL;
+      int slots = lGetUlong(gel, JG_slots);
+      
+      if ((ar = lGetElemUlong(ar_list, AR_id, lGetUlong(job, JB_ar))) != NULL) {
+         lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gel, JG_qname), AR_reserved_queues);
+         qinstance_debit_consumable(queue, job, centry_list, slots);
+         lWriteElemTo(ar, stdout);
+         fflush(stdout);
+      }
+   }
+
+   DRETURN(0);
+   
+}
+
+#if 0
+int debit_ar_consumable(lListElem *jep, lListElem *ar, lList *centry_list, int slots)
+{
+   return rc_debit_consumable(jep, ar, centry_list, slots,
+                              AR_resource_list, 
+                              AR_resource_utilization,
+                              "advance_reservation");
+}
+#endif

@@ -1091,7 +1091,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                hgroup_del(ctx, ep, &(answer->alp), user, host);
                break;
             case SGE_AR_LIST:
-               ar_del(ctx, ep, &(answer->alp), object_base[SGE_TYPE_AR].list, user, host);
+               ar_del(ctx, ep, &(answer->alp), object_base[SGE_TYPE_AR].list, user, host, monitor);
                break;
             default:
                SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));

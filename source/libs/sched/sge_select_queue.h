@@ -146,7 +146,8 @@ bool is_requested(lList *req, const char *attr);
 
 dispatch_t 
 sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
-                       const lListElem *ckpt, lList *centry_list, lList *acl_list, lList *hgrp_list);
+                       const lListElem *ckpt, lList *centry_list, lList *acl_list,
+                       lList *hgrp_list, lList *ar_list);
 
 dispatch_t
 sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, lList *centry_list, 

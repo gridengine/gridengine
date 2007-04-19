@@ -1,3 +1,9 @@
+RD-2007-04-19-0: Enhancem.: - Added advance reseservation scheduling code
+                            - added qmaster startup AR initialization code
+                            - added removing of AR jobs at AR deletion
+                            - added reporting entry at qrdel AR deletion
+                 Review:    EB
+
 JG-2007-04-18-1: Enhancem.: Cleanup / higher precision for calculation of the
                             cpu load value on HPUX.
                  Review:    AH

@@ -51,8 +51,9 @@
 #include "sched/sge_resource_utilization.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_hrefL.h"
+#include "sgeobj/sge_href.h"
 #include "sgeobj/sge_host.h"
+#include "sgeobj/sge_cqueue.h"
 #include "uti/sge_string.h"
 
 static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
@@ -720,7 +721,6 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
    char *qname = NULL;
    const char *queue_instance = lGetString(granted, JG_qname);
    const char* project = lGetString(job, JB_project);
-   char *at_sign = NULL; 
 
    DENTER(TOP_LAYER, "rqs_debit_consumable");
 
@@ -729,15 +729,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
    }
 
    /* remove the host name part of the queue instance name */
-   at_sign = strchr(queue_instance, '@');
-   if (at_sign != NULL) {
-      int size = at_sign - queue_instance;
-      qname = malloc(sizeof(char) * (size + 1));
-      qname = strncpy(qname, queue_instance, size);
-      qname[size] = '\0';
-   } else {
-      qname = strdup(queue_instance);
-   }
+   qname = cqueue_get_name_from_qinstance(queue_instance);
 
    rule = rqs_get_matching_rule(rqs, username, groupname, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
 

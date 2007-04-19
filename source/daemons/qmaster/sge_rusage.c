@@ -43,6 +43,7 @@
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_cqueue.h"
 
 #include "sched/sge_job_schedd.h"
 
@@ -248,14 +249,9 @@ sge_write_rusage(dstring *buffer,
    }
 #endif 
    {
-      char *pos = NULL;
       const char *qi_name = NULL;
       qi_name = lGetString(jr, JR_queue_name);
-      qname = malloc(strlen(qi_name)+1);
-      strcpy(qname, qi_name);
-      if ( (pos = strchr(qname, '@'))){
-         pos[0] = '\0';
-      }
+      qname = cqueue_get_name_from_qinstance(qi_name);
    }
 
    if (intermediate) {
@@ -332,8 +328,7 @@ sge_write_rusage(dstring *buffer,
              );
      
    FREE(qname);
-   DEXIT;   
-   return ret;
+   DRETURN(ret);
 }
 
 /*

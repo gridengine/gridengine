@@ -72,7 +72,8 @@ typedef enum {
    ARL_ENDTIME_REACHED,    /* end time reached */
    ARL_SOFT_ERROR,         /* error occured but jobs part of an ar can still be scheduled */
    ARL_HARD_ERROR,         /* error occured and no new jobs for that ar are scheduled */
-   ARL_TERMINATED          /* ar object deleted */
+   ARL_TERMINATED,         /* ar object deleted */
+   ARL_DELETED
 
    /* append new events below! otherwise update procedures for reporting an accounting 
     * have to be written*/
@@ -92,7 +93,7 @@ enum {
    AR_end_time,                 /* required */
    AR_duration,
    AR_verify,                   /* just verify the reservation or final case */
-   AR_error_handling,           /* how to deal with soft and hadr exceptions */
+   AR_error_handling,           /* how to deal with soft and hard exceptions */
 
    AR_state,                    /* state of the AR */
 
@@ -102,13 +103,15 @@ enum {
    AR_resource_utilization,
    AR_queue_list,
 
-   AR_granted_slots,            /* runtime value */
+   AR_granted_slots,            /* spooled value */
+   AR_reserved_queues,          /* runtime value */
 
    AR_mail_options,     
    AR_mail_list,
 
    AR_pe,
    AR_pe_range,
+   AR_granted_pe,
    AR_master_queue_list,
 
    AR_acl_list,
@@ -141,12 +144,14 @@ LISTDEF(AR_Type)
    SGE_LIST(AR_resource_utilization, RUE_Type, CULL_DEFAULT | CULL_JGDI_RO)
    SGE_LIST(AR_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
 
-   SGE_MAP_D(AR_granted_slots, AULNG_Type, CULL_SPOOL | CULL_JGDI_RO, "@/", 0, "qinstance", "granted_slots")
+   SGE_LIST(AR_granted_slots, JG_Type, CULL_SPOOL | CULL_JGDI_RO)
+   SGE_LIST(AR_reserved_queues, QU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
    SGE_ULONG(AR_mail_options, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE) 
    SGE_LIST(AR_mail_list, MR_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)  
 
    SGE_STRING(AR_pe, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)              
    SGE_LIST(AR_pe_range, RN_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)     
+   SGE_STRING(AR_granted_pe, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)              
    SGE_LIST(AR_master_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)
 
    SGE_LIST(AR_acl_list, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
@@ -177,12 +182,14 @@ NAMEDEF(ARN)
    NAME("AR_queue_list")
 
    NAME("AR_granted_slots")
+   NAME("AR_reserved_queues")
 
    NAME("AR_mail_options")
    NAME("AR_mail_list")
 
    NAME("AR_pe")
    NAME("AR_pe_range")
+   NAME("AR_granted_pe")
    NAME("AR_master_queue_list")
 
    NAME("AR_acl_list")

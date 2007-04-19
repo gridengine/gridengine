@@ -36,8 +36,6 @@
 
 bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 
-int debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem *pe, lList *centry_list, lList *acl_list, lList *hgrp_list);
-
 void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list);
 void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, const lList *host_list, lList *hgrp_list);
  

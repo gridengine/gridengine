@@ -210,8 +210,7 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
 *
 *  RESULT
 *     bool - error state
-*        true  - success
-*        false - error
+*     always true  - success
 *******************************************************************************/
 bool
 cqueue_name_split(const char *name, 
@@ -221,40 +220,79 @@ cqueue_name_split(const char *name,
    bool ret = true;
 
    DENTER(CQUEUE_LAYER, "cqueue_name_split");
+
+   *has_hostname = false;
+   *has_domain = false;
+
    if (name != NULL && cqueue_name != NULL && 
        host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
-      int part = 0;
-      const char *tmp_string;
+      bool at_skiped = false;
 
       sge_dstring_clear(cqueue_name);
       sge_dstring_clear(host_domain);
 
       while (*name != '\0') {
-         if (part == 1) {
-            part = 2;
-         } else if (part == 0 && *name == '@') {
-            part = 1;
+         if (!at_skiped && *name == '@') {
+            at_skiped = true;
+            name++;
+            if (*name == '@') {
+               *has_domain = true;
+               *has_hostname = false;
+            } else {
+               *has_domain = false;
+               *has_hostname = true;
+            }
+            continue; 
          }
-         if (part == 0) {
-            sge_dstring_sprintf_append(cqueue_name, "%c", name[0]);
-         } else if (part == 2) {
-            sge_dstring_sprintf_append(host_domain, "%c", name[0]);
+         if (!at_skiped) {
+            sge_dstring_append_char(cqueue_name, name[0]);
+         } else {
+            sge_dstring_append_char(host_domain, name[0]);
          }
          name++;
-      } 
-      tmp_string = sge_dstring_get_string(host_domain);
-      *has_hostname = false;
-      *has_domain = false;
-      if (tmp_string != NULL) {
-         if (tmp_string[0] == '@') {
-            *has_domain = true;
-         } else {
-            *has_hostname = true;
-         }
-      } 
+      }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
+}
+
+/****** sge_cqueue/cqueue_get_name_from_qinstance() ****************************
+*  NAME
+*     cqueue_get_name_from_qinstance() -- returns the cluster queue part of a queue
+*
+*  SYNOPSIS
+*     char* cqueue_get_name_from_qinstance(const char *queue_instance) 
+*
+*  FUNCTION
+*     Returns a character pointer to a newly malloced string containing the cluster
+*     queue part of a queue instance name.
+*
+*     The memory needs to be free'd by the caller
+*
+*  INPUTS
+*     const char *queue_instance - queue instance or cluster queue
+*
+*  RESULT
+*     char* - cluster queue name
+*
+*  NOTES
+*     MT-NOTE: cqueue_get_name_from_qinstance() is MT safe 
+*
+*******************************************************************************/
+char* cqueue_get_name_from_qinstance(const char *queue_instance)
+{
+   char *at_sign = NULL;
+   char *cqueue = NULL; 
+
+   if ((at_sign = strchr(queue_instance, '@'))) {
+      int size = at_sign - queue_instance;
+      cqueue = malloc(sizeof(char) * (size + 1));
+      cqueue = strncpy(cqueue, queue_instance, size);
+      cqueue[size] = '\0';
+   } else {
+      cqueue = strdup(queue_instance);
+   }
+
+   return cqueue;
 }
 
 /****** sgeobj/cqueue/cqueue_create() *****************************************

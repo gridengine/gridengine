@@ -213,7 +213,7 @@ sge_qeti_t *sge_qeti_allocate2(lList *cr_list)
 }
 
 sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, 
-      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, lList *hgrp_list)
+      lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, lList *hgrp_list, lList *ar_list)
 {
    sge_qeti_t *iter = NULL;
    lListElem *next_queue, *qep, *hep;
@@ -274,7 +274,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
          }
 
          /* consider only those queues that match this job (statically) */
-         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list, hgrp_list) != DISPATCH_OK) { 
+         if (sge_queue_match_static(qep, job, pe, ckpt, centry_list, acl_list, hgrp_list, ar_list) != DISPATCH_OK) { 
             continue;
          }   
 
@@ -282,8 +282,7 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
                   lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
                         centry_list, requests, false)!=0) {
             sge_qeti_release(&iter);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          
          is_relevant = true; 

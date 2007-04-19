@@ -95,6 +95,7 @@
 #include "read_write_host_group.h"
 #include "read_write_qinstance.h"
 #include "read_write_resource_quota.h"
+#include "sched/debit.h"
 
 #include "setup_path.h"
 #include "sge_uidgid.h"

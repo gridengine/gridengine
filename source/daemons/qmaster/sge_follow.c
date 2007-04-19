@@ -327,7 +327,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, q_name);
          if (!qep) {
-            ERROR((SGE_EVENT, MSG_QUEUE_UNABLE2FINDQ_S, q_name));
+            ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
+                   q_name, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);

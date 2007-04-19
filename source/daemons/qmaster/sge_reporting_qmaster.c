@@ -75,6 +75,7 @@
 #include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_cqueue.h"
 
 /* sched */
 #include "sched/sge_resource_utilization.h"
@@ -148,6 +149,13 @@ static bool
 intermediate_usage_written(const lListElem *job_report, 
                            const lListElem *ja_task);
 
+static bool
+reporting_create_ar_acct_record(lList **answer_list,
+                                const lListElem *ar,
+                                const char *cqueue_name,
+                                const char *hostname,
+                                u_long32 slots,
+                                u_long32 report_time);
 
 /****** qmaster/reporting/--Introduction ***************************
 *  NAME
@@ -1728,6 +1736,61 @@ reporting_create_ar_log_record(lList **answer_list,
    DRETURN(ret);
 }
 
+/****** sge_reporting_qmaster/reporting_create_ar_acct_records() ***************
+*  NAME
+*     reporting_create_ar_acct_records() -- ar accounting records will be written
+*
+*  SYNOPSIS
+*     bool reporting_create_ar_acct_records(lList **answer_list, const 
+*     lListElem *ar, u_long32 report_time) 
+*
+*  FUNCTION
+*     This records will be written for all reserved qinstance whenever an
+*     advance reservation terminates.
+*
+*  INPUTS
+*     lList **answer_list  - answer list
+*     const lListElem *ar  - the ar object which has been created
+*     u_long32 report_time - the corresponding timestamp
+*
+*  RESULT
+*     int - true  success
+*           false failure
+*
+*  NOTES
+*     MT-NOTE: reporting_create_ar_acct_records() is MT safe 
+*
+*  SEE ALSO
+*     qmaster/reporting_create_ar_acct_record()
+*******************************************************************************/
+bool reporting_create_ar_acct_records(lList **answer_list, const lListElem *ar, u_long32 report_time)
+{
+   lListElem *elem;
+   bool ret = true;
+
+   for_each(elem, lGetList(ar, AR_granted_slots)) {
+      const char *queue_name = lGetString(elem, JG_qname);
+      u_long32 slots = lGetUlong(elem, JG_slots);
+      dstring cqueue_name = DSTRING_INIT;
+      dstring host_or_hgroup = DSTRING_INIT;
+      bool has_hostname;
+      bool has_domain;
+
+      cqueue_name_split(queue_name, &cqueue_name, &host_or_hgroup,
+                        &has_hostname, &has_domain);
+     
+      ret |= reporting_create_ar_acct_record(NULL, ar,
+                                      sge_dstring_get_string(&cqueue_name),
+                                      sge_dstring_get_string(&host_or_hgroup),
+                                      slots, report_time); 
+
+      sge_dstring_free(&cqueue_name);
+      sge_dstring_free(&host_or_hgroup);
+   } 
+
+   return ret;
+}
+
 /****** qmaster/reporting_create_ar_acct_record() *****************************
 *  NAME
 *     reporting_create_ar_log_record() -- ar accounting record will be written 
@@ -1760,7 +1823,7 @@ reporting_create_ar_log_record(lList **answer_list,
 *  NOTES
 *     MT-NOTE: reporting_flush() is MT-safe
 *******************************************************************************/
-bool
+static bool
 reporting_create_ar_acct_record(lList **answer_list,
                                 const lListElem *ar,
                                 const char *cqueue_name,

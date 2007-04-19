@@ -56,6 +56,11 @@
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_object.h"
+
+#include "uti/sge_time.h"
 
 #include "msg_qmaster.h"
 #include "msg_schedd.h"
@@ -115,7 +120,7 @@ bool utilization_print_to_dstring(const lListElem *this_elem, dstring *string)
 }
 
 
-void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list)
+void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list)
 {
    lListElem *ep, *cr;
    const char *name;
@@ -161,6 +166,24 @@ void utilization_print_all(const lList* pe_list, lList *host_list, const lList *
          DPRINTF(("QUEUE \"%s\"\n", name));
          for_each (cr, lGetList(ep, QU_resource_utilization)) {
             utilization_print(cr, name);
+         }
+      }
+   }
+   DPRINTF(("-------------------------------------------\n"));
+
+   /* advance reservations */
+   for_each (ep, ar_list) {
+      u_long32 ar_id = lGetUlong(ep, AR_id);
+      lListElem *queue;
+
+      for_each(queue, lGetList(ep, AR_reserved_queues)) {
+         name = lGetString(queue, QU_full_name);
+         if (strcmp(name, SGE_TEMPLATE_NAME)) {
+            DPRINTF(("-------------------------------------------\n"));
+            DPRINTF(("AR "sge_U32CFormat" QUEUE \"%s\"\n", ar_id, name));
+            for_each (cr, lGetList(queue, QU_resource_utilization)) {
+               utilization_print(cr, name);
+            }
          }
       }
    }
@@ -235,7 +258,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
                      u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name,
                      const char *type, bool for_job) 
 {
-   lList *resource_diagram;
+   lList *resource_diagram=lGetList(cr, RUE_utilized);
    lListElem *this, *prev, *start, *end;
    const char *name = lGetString(cr, RUE_name);
    char level_char = CENTRY_LEVEL_TO_CHAR(level);
@@ -244,19 +267,26 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    
    DENTER(TOP_LAYER, "utilization_add");
 
-   end_time = utilization_endtime(start_time, duration);
-
-   serf_record_entry(job_id, ja_taskid, (type!=NULL)?type:"<unknown>", start_time, end_time, 
-         level_char, object_name, name, utilization);
-
-   if (for_job && (sconf_get_max_reservations()==0 || duration==0)) {
+   /* A reservation is only neccessary in one of the following cases:
+      - for_job is true (this means no advance reservation request) 
+      - reservation is enabled and job duration not zero 
+      - queue is already reserved by an advance reservation (resource_diagram != NULL)
+   */
+   if (for_job && (sconf_get_max_reservations()==0 || duration==0)
+      && resource_diagram == NULL) /* AR queues have a resource diagram and we must reflect changes for this queues */
+   { 
       DPRINTF(("max reservations reached or duration is 0\n"));
 
       DRETURN(0);
    }
 
+   end_time = utilization_endtime(start_time, duration);
+
+   serf_record_entry(job_id, ja_taskid, (type!=NULL)?type:"<unknown>", start_time, end_time, 
+         level_char, object_name, name, utilization);
+
    /* ensure resource diagram is initialized */
-   if (!(resource_diagram=lGetList(cr, RUE_utilized))) {
+   if (resource_diagram == NULL) {
       resource_diagram = lCreateList(name, RDE_Type);
       lSetList(cr, RUE_utilized, resource_diagram);
    }
@@ -308,7 +338,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
 
 #if 0
    utilization_print(cr, "pe_slots");
-   printf("this was before normalize\n");
+   printf("this was before utilization_normalize()\n");
 #endif
 
    utilization_normalize(resource_diagram);
@@ -570,6 +600,11 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
 
    DENTER(TOP_LAYER, "add_job_utilization");
 
+   if (lGetUlong(a->job, JB_ar) != 0) {
+      /* ar jobs are already utilized! Ü*/
+      DRETURN(0);
+   }
+
    /* parallel environment  */
    if (a->pe) {
       utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
@@ -646,17 +681,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
       char *queue = NULL;
       const char *queue_instance = lGetString(gel, JG_qname);
 
-      char *at_sign = NULL;
       lListElem *rqs = NULL;
 
-      if ((at_sign = strchr(queue_instance, '@'))) {
-         int size = at_sign - queue_instance;
-         queue = malloc(sizeof(char) * (size + 1));
-         queue = strncpy(queue, queue_instance, size);
-         queue[size] = '\0';
-      } else {
-         queue = strdup(queue_instance);
-      }
+      queue = cqueue_get_name_from_qinstance(queue_instance);
       
       for_each(rqs, a->rqs_list) {
          lListElem *rule = NULL;
@@ -870,12 +897,21 @@ void prepare_resource_schedules(const lList *running_jobs, const lList *suspende
 {
    DENTER(TOP_LAYER, "prepare_resource_schedules");
 
-   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list, rqs_list, centry_list, acl_list, hgroup_list, for_job_scheduling);
-   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list, rqs_list, centry_list, acl_list, hgroup_list, for_job_scheduling);
+   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            for_job_scheduling);
+   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            for_job_scheduling);
    add_calendar_to_schedule(queue_list); 
 
 #ifdef SGE_LOCK_DEBUG /* just for information purposes... */
-   utilization_print_all(pe_list, host_list, queue_list); 
+   {
+      object_description *object_base = object_type_get_object_description();
+      lList *ar_list = *object_base[SGE_TYPE_AR].list;
+      
+      utilization_print_all(pe_list, host_list, queue_list, ar_list); 
+   }
 #endif   
 
    DRETURN_VOID;

@@ -194,14 +194,12 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
          "|| %I m= %u "
          "|| %I m= %u "
          "|| %I m= %u "
-         "|| %I m= %u "
          "|| %I m= %u)",
          dp,
          QU_state, QI_SUSPENDED,        /* only not suspended queues      */
          QU_state, QI_SUSPENDED_ON_SUBORDINATE,
          QU_state, QI_ERROR,            /* no queues in error state       */
          QU_state, QI_AMBIGUOUS,
-         QU_state, QI_ORPHANED,
          QU_state, QI_UNKNOWN);         /* only known queues              */
 
       if (!what || !where) {
@@ -461,7 +459,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
    /* we will assume this time as start time for now assignments */
    sconf_set_now(sge_get_gmt());
 
-   if (max_reserve != 0) {
+   if (max_reserve != 0 || lGetNumberOfElem(lists->ar_list) > 0) {
       lListElem *dis_queue_elem = lFirst(lists->dis_queue_list);
       /*----------------------------------------------------------------------
        * ENSURE RUNNING JOBS ARE REFLECTED IN PER RESOURCE SCHEDULE
@@ -480,7 +478,6 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
       if (dis_queue_elem != NULL) {
          lDechainList(lists->queue_list, &(lists->dis_queue_list), dis_queue_elem);
       }
-      
    }
    /*---------------------------------------------------------------------
     * CAPACITY CORRECTION
@@ -592,7 +589,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
       }
 
-      if( ret != 0){
+      if (ret != 0) {
          lFreeList(&user_list);
          lFreeList(&group_list);
          lFreeList(&job_load_adjustments);
@@ -1174,7 +1171,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
     * one order per scheduling epoch.
     *------------------------------------------------------------------*/
 
-   /* when a job is started *now* the RUE_used_now must always change */
+   /* when a job is started *now* the RUE_utilized_now must always change */
    /* if jobs with reservations are ahead then we also must change the RUE_utilized */ 
    if (result == DISPATCH_OK) {
       if (a.start == DISPATCH_TIME_NOW) {
@@ -1182,8 +1179,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       }   
       debit_scheduled_job(&a, sort_hostlist, orders, true, 
                SCHEDULING_RECORD_ENTRY_TYPE_STARTING, true);
-   } 
-   else {
+   } else {
       debit_scheduled_job(&a, sort_hostlist, orders, false,  
             SCHEDULING_RECORD_ENTRY_TYPE_RESERVING, true);
    }   

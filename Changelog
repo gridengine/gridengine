@@ -1,3 +1,6 @@
+AH-2007-04-20-0: Cleanup:   Removed unused ticket scheduler code and data fields
+                 Review:    JG
+
 RD-2007-04-19-1: Bugfix:    Fixed DRMAA Javadoc Warnings
                  Review:    RH
 

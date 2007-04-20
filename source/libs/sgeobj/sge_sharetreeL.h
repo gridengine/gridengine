@@ -74,18 +74,8 @@ enum {
                               * stored to qmaster */
    STN_adjusted_proportion,  /* share adjusted proportion used in schedd,
                               * not stored to qmaster */
-   STN_target_proportion,    /* targetted proportion used in schedd, not
-                              * stored to qmaster */
-   STN_current_proportion,   /* current proportion used in schedd, not
-                              * stored to qmaster */
-   STN_adjusted_usage,       /* adjusted usage used in schedd, not stored
-                              * to qmaster */
    STN_combined_usage,       /* combined usage used in schedd, not stored
                               * to qmaster */
-   STN_pass0_seqno,          /* seqno for pass 0 used in schedd, not
-                              * stored to qmaster */
-   STN_pass1_seqno,          /* seqno for pass 1 used in schedd, not
-                              * stored to qmaster */
    STN_pass2_seqno,          /* seqno for pass 2 used in schedd, not
                               * stored to qmaster */
    STN_sum_priority,         /* sum of job priorities used in schedd, not
@@ -167,12 +157,7 @@ enum {
    STN_project_POS,            
    STN_proportion_POS,        
    STN_adjusted_proportion_POS,
-   STN_target_proportion_POS,
-   STN_current_proportion_POS,
-   STN_adjusted_usage_POS,   
    STN_combined_usage_POS,  
-   STN_pass0_seqno_POS,    
-   STN_pass1_seqno_POS,   
    STN_pass2_seqno_POS,  
    STN_sum_priority_POS, 
    STN_actual_proportion_POS,
@@ -208,12 +193,7 @@ LISTDEF(STN_Type)
    SGE_ULONG(STN_project, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_DOUBLE(STN_proportion, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_DOUBLE(STN_adjusted_proportion, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_DOUBLE(STN_target_proportion, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_DOUBLE(STN_current_proportion, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_DOUBLE(STN_adjusted_usage, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_DOUBLE(STN_combined_usage, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_ULONG(STN_pass0_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
-   SGE_ULONG(STN_pass1_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_ULONG(STN_pass2_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_ULONG(STN_sum_priority, CULL_DEFAULT | CULL_JGDI_HIDDEN)
    SGE_DOUBLE(STN_actual_proportion, CULL_DEFAULT | CULL_JGDI_RO)
@@ -246,12 +226,7 @@ NAMEDEF(STNN)
    NAME("STN_project")
    NAME("STN_proportion")
    NAME("STN_adjusted_proportion")
-   NAME("STN_target_proportion")
-   NAME("STN_current_proportion")
-   NAME("STN_adjusted_usage")
    NAME("STN_combined_usage")
-   NAME("STN_pass0_seqno")
-   NAME("STN_pass1_seqno")
    NAME("STN_pass2_seqno")
    NAME("STN_sum_priority")
    NAME("STN_actual_proportion")

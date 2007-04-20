@@ -914,149 +914,6 @@ calculate_m_shares( lListElem *parent_node )
 }
 
 
-#ifdef notdef
-
-/*--------------------------------------------------------------------
- * adjust_m_shares - adjust m_share for all ancestor nodes with
- * reference count less than or equal to count parameter.
- *--------------------------------------------------------------------*/
-
-static void
-adjust_m_shares( lListElem *root,
-                 lListElem *job,
-                 u_long count )
-{
-   lListElem *node;
-   char *name;
-   ancestors_t ancestors = {0, NULL};
-   int depth;
-
-   if (root == NULL) {
-      return;
-   }   
-
-   /*-------------------------------------------------------------
-    * Look up share tree node
-    *-------------------------------------------------------------*/
-
-   name = lGetString(job, lGetUlong(root, STN_type) == STT_PROJECT ?
-                          JB_project : JB_owner);
-
-   if (name == NULL) {
-      return;
-   }   
-
-   node = search_ancestor_list(root, name, &ancestors);
-   depth = ancestors.depth;
-
-   /*-------------------------------------------------------------
-    * Search ancestor nodes until a previously active node is found
-    *-------------------------------------------------------------*/
-
-   while (depth-- && node && node != root &&
-          lGetUlong(node, STN_job_ref_count)<=count) {
-      node = ancestors.nodes[depth-1];
-   }
-
-   if (ancestors.nodes) {
-      FREE(ancestors.nodes);
-   }
-
-   /*-------------------------------------------------------------
-    * Calculate m_shares for every descendant of the active node
-    *-------------------------------------------------------------*/
-
-   if (node) {
-      calculate_m_shares(node);
-   }   
-
-}
-
-/*
-
-   To know if a node is active, we maintain a reference count in each
-   node and do the following to keep it up-to-date.
-
-   o call setup_share_tree when scheduler is initialized or
-     if the share tree structure or shares are modified
-   o call increment_job_ref_count when a new job is added (i.e. submitted)
-   o call decrement_job_ref_count when a job is deleted (i.e. ended, aborted)
-
-*/
-
-/*--------------------------------------------------------------------
- * adjust_job_ref_count - adjusts all of the corresponding share
- * tree nodes' job reference counts
- *--------------------------------------------------------------------*/
-
-static void
-adjust_job_ref_count( lListElem *root,
-                      lListElem *job,
-                      long adjustment )
-{
-   lListElem *node=NULL;
-   char *name;
-   ancestors_t ancestors = {0, NULL};
-   int depth;
-
-   /*-------------------------------------------------------------
-    * Adjust job reference count for share tree node and
-    *     ancestor nodes
-    *-------------------------------------------------------------*/
-
-   name = lGetString(job, lGetUlong(root, STN_type) == STT_PROJECT ?
-                          JB_project : JB_owner);
-
-   if (name == NULL) {
-      return;
-   }   
-
-   node = search_ancestor_list(root, name, &ancestors);
-   depth = ancestors.depth;
-
-   while (depth--) {
-      node = ancestors.nodes[depth];
-      lSetUlong(node, STN_job_ref_count,
-                lGetUlong(node, STN_job_ref_count)+adjustment);
-   }
-
-   FREE(ancestors.nodes);
-
-   return;
-}
-
-
-/*--------------------------------------------------------------------
- * increment_job_ref_count - increments all of the corresponding share
- * tree nodes' job reference counts and the job's share tree node
- * reference
- *--------------------------------------------------------------------*/
-
-void
-increment_job_ref_count( lListElem *root,
-                         lListElem *job )
-{
-   adjust_job_ref_count(root, job, 1);
-}
-
-
-/*--------------------------------------------------------------------
- * decrement_job_ref_count - decrements all of the corresponding share
- * tree nodes' job reference counts and the job's share tree node
- * reference
- *--------------------------------------------------------------------*/
-
-static void
-decrement_job_ref_count( lListElem *root,
-                         lListElem *job )
-{
-   adjust_job_ref_count(root, job, -1);
-}
-
-
-#endif /* notdef */
-
-
 /*--------------------------------------------------------------------
  * update_job_ref_count - update job_ref_count for node and descendants
  *--------------------------------------------------------------------*/
@@ -1117,8 +974,6 @@ sge_init_share_tree_node_fields( lListElem *node,
               sn_job_ref_count_pos, sn_active_job_ref_count_pos,
               sn_usage_list_pos, sn_stt_pos, sn_ostt_pos,
               sn_ltt_pos, sn_oltt_pos, sn_shr_pos, sn_ref_pos,
-              sn_proportion_pos, sn_adjusted_proportion_pos, sn_target_proportion_pos,
-              sn_current_proportion_pos, sn_adjusted_usage_pos, sn_combined_usage_pos,
               sn_actual_proportion_pos;
 
 
@@ -1132,37 +987,23 @@ sge_init_share_tree_node_fields( lListElem *node,
       sn_active_job_ref_count_pos = lGetPosViaElem(node, STN_active_job_ref_count, SGE_NO_ABORT);
       sn_usage_list_pos = lGetPosViaElem(node, STN_usage_list, SGE_NO_ABORT);
       sn_sum_priority_pos = lGetPosViaElem(node, STN_sum_priority, SGE_NO_ABORT);
-      /* sn_temp_pos = lGetPosViaElem(node, STN_temp, SGE_NO_ABORT); */
       sn_stt_pos = lGetPosViaElem(node, STN_stt, SGE_NO_ABORT);
       sn_ostt_pos = lGetPosViaElem(node, STN_ostt, SGE_NO_ABORT);
       sn_ltt_pos = lGetPosViaElem(node, STN_ltt, SGE_NO_ABORT);
       sn_oltt_pos = lGetPosViaElem(node, STN_oltt, SGE_NO_ABORT);
       sn_shr_pos = lGetPosViaElem(node, STN_shr, SGE_NO_ABORT);
       sn_ref_pos = lGetPosViaElem(node, STN_ref, SGE_NO_ABORT);
-      sn_proportion_pos = lGetPosViaElem(node, STN_proportion, SGE_NO_ABORT);
-      sn_adjusted_proportion_pos = lGetPosViaElem(node, STN_adjusted_proportion, SGE_NO_ABORT);
-      sn_target_proportion_pos = lGetPosViaElem(node, STN_target_proportion, SGE_NO_ABORT);
-      sn_current_proportion_pos = lGetPosViaElem(node, STN_current_proportion, SGE_NO_ABORT);
-      sn_adjusted_usage_pos = lGetPosViaElem(node, STN_adjusted_usage, SGE_NO_ABORT);
-      sn_combined_usage_pos = lGetPosViaElem(node, STN_combined_usage, SGE_NO_ABORT);
       sn_actual_proportion_pos = lGetPosViaElem(node, STN_actual_proportion, SGE_NO_ABORT);
    }
 
    lSetPosDouble(node, sn_m_share_pos, 0);
    lSetPosDouble(node, sn_last_actual_proportion_pos, 0);
    lSetPosDouble(node, sn_adjusted_current_proportion_pos, 0);
-   lSetPosDouble(node, sn_proportion_pos, 0);
-   lSetPosDouble(node, sn_adjusted_proportion_pos, 0);
-   lSetPosDouble(node, sn_target_proportion_pos, 0);
-   lSetPosDouble(node, sn_current_proportion_pos, 0);
-   lSetPosDouble(node, sn_adjusted_usage_pos, 0);
-   lSetPosDouble(node, sn_combined_usage_pos, 0);
    lSetPosDouble(node, sn_actual_proportion_pos, 0);
    lSetPosUlong(node, sn_job_ref_count_pos, 0);
    lSetPosUlong(node, sn_active_job_ref_count_pos, 0);
    lSetPosList(node, sn_usage_list_pos, NULL);
    lSetPosUlong(node, sn_sum_priority_pos, 0);
-   /* lSetPosUlong(node, sn_temp_pos, 0); */
    lSetPosDouble(node, sn_stt_pos, 0);
    lSetPosDouble(node, sn_ostt_pos, 0);
    lSetPosDouble(node, sn_ltt_pos, 0);
@@ -3873,12 +3714,7 @@ get_mod_share_tree( lListElem *node,
       }
 
       if (child_list) {
-#ifdef lmodifywhat_shortcut
-         new_node = lCreateElem(STN_Type);
-         lModifyWhat(new_node, node, what);
-#else
          new_node = lCopyElem(node);
-#endif
          lSetList(new_node, STN_children, child_list);
       }
       
@@ -3886,12 +3722,7 @@ get_mod_share_tree( lListElem *node,
 
       if (lGetUlong(node, STN_pass2_seqno) > (u_long32)seqno &&
           lGetUlong(node, STN_temp) == 0) {
-#ifdef lmodifywhat_shortcut
-         new_node = lCreateElem(STN_Type);
-         lModifyWhat(new_node, node, what);
-#else
          new_node = lCopyElem(node);
-#endif
       }
 
    }
@@ -4468,52 +4299,6 @@ static void sgeee_priority(lListElem *task, u_long32 jobid, double nsu,
 
    DEXIT;
 }
-
-/****** sgeee/get_max_ptix() ***************************************************
-*  NAME
-*     get_max_ptix() -- Get maximum ticket amount
-*
-*  SYNOPSIS
-*     static void get_max_ptix(double *max, lList *job_list) 
-*
-*  FUNCTION
-*     Determines maximum ticket amount in the job list. The fuction
-*     runnes over all jobs and locates the min and the max value. The
-*     min value is 1 ticket smaler than the actual minimum. This ensures
-*     that the priority later is always > 0.
-*
-*  INPUTS
-*     double *min     - IN/OUT parameter for minimum
-*     double *max     - IN/OUT parameter for maximum
-*     lList *job_list - a job list
-*
-*  NOTES
-*
-*******************************************************************************/
-#if 0
-static void get_max_ptix(double *min, double *max, lList *job_list)
-{
-   lListElem *job, *task;
-
-   for_each (job, job_list) {
-      /* template task contains max amount of tickets for
-         unenrolled job arrays */
-      if ((task = lFirst(lGetList(job, JB_ja_template)))) {
-         *max = MAX(*max,  lGetDouble(task, JAT_tix));
-         *min = MIN(*min,  lGetDouble(task, JAT_tix));
-      }
-
-      for_each (task, lGetList(job, JB_ja_tasks)) {
-         *max = MAX(*max,  lGetDouble(task, JAT_tix));
-         *min = MIN(*min,  lGetDouble(task, JAT_tix));
-      }
-   }
-
-   *min = *min -1;
-   
-   return;
-}
-#endif
 
 
 /****** sgeee/calculate_pending_shared_override_tickets() **********************

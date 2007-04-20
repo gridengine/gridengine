@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-set -x
 #  distinst
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -114,6 +113,8 @@ SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
 SECURITYBINARIES="get_cred put_cred delete_cred renew_cred \
                   starter_cred get_cred.sh put_cred.sh k5dcelogin"
 
+GE_SOURCEDIR=`pwd`
+
 #-------------------------------------------------------------------------
 # help output, exits after printing help
 #
@@ -167,16 +168,16 @@ ErrUsage()
 #
 SetArchBin()
 {
-   BUILDARCH=`scripts/compilearch -b $1`
+   BUILDARCH=`$GE_SOURCEDIR/scripts/compilearch -b $1`
    if [ $? -ne 0 ]; then
-      echo "No ARCHBIN name for \"$i\""
+      echo "No ARCHBIN name for \"$1\""
       if [ $exit_on_error = true ]; then
          exit 1
       else
          ARCHBIN="undefined"
       fi
    else
-      ARCHBIN=`scripts/compilearch -c $1`
+      ARCHBIN=`$GE_SOURCEDIR/scripts/compilearch -c $1`
       if [ "$ARCHBIN" = "" ]; then
          ARCHBIN=$BUILDARCH
       fi

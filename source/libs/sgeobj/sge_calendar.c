@@ -99,7 +99,7 @@ disabled_year_list(lList **alpp, const char *s,
 static int disabled_week_list(lList **alpp, const char *s, lList **cal, const char *cal_name); 
 
 static int 
-state_at(time_t now, const lList *ycal, lList *wcal, time_t *then);
+state_at(time_t now, const lList *ycal, const lList *wcal, time_t *then);
 
 static int scan(const char *s, token_set_t token_set[]);
 
@@ -274,7 +274,7 @@ lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name)
 ycal,  CA_Type 
 wcal,  CA_Type
 */
-static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_event) {
+static int state_at(time_t now, const lList *ycal, const lList *wcal, time_t *next_event) {
    struct tm *tm_now;
    int state = 0, w_is_active = -1, y_is_active;
    lListElem *yc, *wc, *tm;
@@ -328,7 +328,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
      
       memset(visited, false, max * sizeof(bool));
 
-      
       /* Week calendar */
       /* we can have overlapping ranges, which will not result in state changes. This code tries
          to figure out, when a range overlaps and we face no state change. */
@@ -341,8 +340,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                state |= w_is_active;
             }   
             
-            if (limit == 0) { 
-            } else if (state == next_state && temp_next_event >= limit) {
+            if (limit != 0 && state == next_state && temp_next_event >= limit) {
                if (!visited[counter]) {
                   isOverlapping = true;
                   visited[counter] = true;
@@ -546,7 +544,7 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
       state = in_daytime_range?QI_DO_ENABLE:0;
    }
 
-   if (limit) {  
+   if (limit) {
       bool is_end_of_the_day_reached = false;
 
       *limit = compute_limit(in_yday_range, in_daytime_range, lGetList(year_entry, CA_yday_range_list), NULL,
@@ -2498,8 +2496,7 @@ static u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t 
    
    if (now == NULL) {
       new_state = state_at((time_t)sge_get_gmt(), year_list, week_list, then);
-   }
-   else {
+   } else {
       new_state = state_at(*now, year_list, week_list, then);
    }
    
@@ -2564,4 +2561,59 @@ lListElem* sge_generic_cal(char *cal_name) {
    lSetString(calp, CAL_name, cal_name?cal_name:"template");
 
    DRETURN(calp);
+}
+
+/****** sge_calendar/calendar_open_in_time_frame() *****************************
+*  NAME
+*     calendar_open_in_time_frame() -- check if calender is open in given time
+*     frame
+*
+*  SYNOPSIS
+*     bool calendar_open_in_time_frame(const lListElem *cep, u_long32 
+*     start_time, u_long32 duration) 
+*
+*  FUNCTION
+*     Returns the state (only open or closed) of a calendar in a given time
+*     frame
+*
+*  INPUTS
+*     const lListElem *cep - calendar object (CAL_Type)
+*     u_long32 start_time  - time frame start
+*     u_long32 duration    - time frame duration
+*
+*  RESULT
+*     bool - true if open
+*            false if closed
+*
+*  NOTES
+*     MT-NOTE: calendar_open_in_time_frame() is MT safe 
+*******************************************************************************/
+bool calendar_open_in_time_frame(const lListElem *cep, u_long32 start_time, u_long32 duration)
+{
+   bool ret = true;
+   u_long32 state;
+   lList *year_list = NULL;
+   lList *week_list = NULL;
+   time_t next_change;
+   time_t start = (time_t)start_time;
+   time_t end = (time_t)duration_add_offset(start_time, duration);
+
+   DENTER(TOP_LAYER, "calendar_open_in_time_frame");
+
+   if (cep != NULL) {
+      year_list = lGetList(cep, CAL_parsed_year_calendar);
+      week_list = lGetList(cep, CAL_parsed_week_calendar);
+   }
+
+   state = state_at(start, year_list, week_list, &next_change);
+   while (state == QI_DO_ENABLE && next_change != 0 && next_change <= end) {
+      start = next_change;
+      state = state_at(start, year_list, week_list, &next_change);
+   }
+
+   if (state != QI_DO_ENABLE) {
+      ret = false;
+   }
+  
+   DRETURN(ret);
 }

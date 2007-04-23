@@ -74,9 +74,6 @@
  *    3) lowering or removing a reserved consumable complex on global/host/queue level
  *       need to be rejected
  *
- *    4) configuring a queue calender that disables a queue in a reserved time frame
- *       need to be rejected
- *
  *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
  *       need to be rejected
  *

@@ -78,4 +78,8 @@ ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list, lList **answer_
 
 void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring_t *monitor);
 
+bool
+sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_name, lListElem *cal_ep,
+                                lList *master_ar_list);
+
 #endif

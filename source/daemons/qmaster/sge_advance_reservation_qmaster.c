@@ -70,6 +70,7 @@
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_str.h"
+#include "sgeobj/sge_calendar.h"
 
 #include "sched/sge_select_queue.h"
 #include "sched/schedd_monitor.h"
@@ -847,6 +848,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lList *master_job_list = *object_base[SGE_TYPE_JOB].list;
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
+   lList *master_cal_list = *object_base[SGE_TYPE_CALENDAR].list;
 
    /* These lists must be copied */
    lList *master_pe_list = lCopyList("", *object_base[SGE_TYPE_PE].list);
@@ -922,6 +924,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
     * for new we just copy the all_queue_list
     */
    {
+      lListElem *ep, *next_ep;
       lCondition *where;
       lEnumeration *what;
       const lDescr *dp = lGetListDescr(all_queue_list);
@@ -931,22 +934,50 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
        */
 
       what = lWhat("%T(ALL)", dp); 
-      where = lWhere("%T("
-         "!(%I m= %u))",
-         dp,
-         QU_state, QI_ORPHANED
-         );
+      where = lWhere("%T(!(%I m= %u))", dp, QU_state, QI_ORPHANED);
 
       if (!what || !where) {
-         DPRINTF(("failed creating where or what describing non available queues\n")); 
-      }
+         answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_FAILEDTOBUILDWHEREANDWHAT);
+
+         /* free all job lists */
+         for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
+            if (splitted_job_lists[i]) {
+               lFreeList(splitted_job_lists[i]);
+               splitted_job_lists[i] = NULL;
+            }
+         }
+         lFreeList(&(a.queue_list));
+         lFreeList(&all_queue_list);
+         lFreeList(&master_pe_list);
+         lFreeList(&master_exechost_list);
+         lFreeElem(&dummy_job);
+         assignment_release(&a);
+         DRETURN(false); 
+      } 
 
       a.queue_list = lSelect("", all_queue_list, where, what);
 
+      /* sort out queue that are calendar disabled in requested time frame */
+      next_ep = lFirst(a.queue_list);
+      while ((ep = next_ep)) {
+         const char *cal_name;
+         next_ep = lNext(ep);
+         
+         if ((cal_name = lGetString(ep, QU_calendar)) != NULL) {
+            lListElem *cal_ep = calendar_list_locate(master_cal_list, cal_name); 
+
+            if (!calendar_open_in_time_frame(cal_ep, lGetUlong(ar, AR_start_time), lGetUlong(ar, AR_duration))) {
+               /* skip queue */
+               answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDISABLEDINTIMEFRAME,
+                                       lGetString(ep, QU_full_name)); 
+               lRemoveElem(a.queue_list, &ep);
+               continue;
+            }
+         } 
+      }
+
       if (lGetList(ar, AR_acl_list) != NULL) {
-         /*
-          * sort out queues where AR acl have no permissions
-          */
+         /* sort out queue that are calendar disabled in requested time frame */
          lListElem *ep, *next_ep;
          const char *user= NULL;
 
@@ -991,6 +1022,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                   /* at second acl */
                   qacl = lGetList(ep, QU_acl);
                   if (!skip_queue && qacl && lGetElemStr(qacl, US_name, acl_name) == NULL) {
+                     answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDNOPERMISSIONS, lGetString(ep, QU_full_name)); 
                      skip_queue = true;
                   }
 
@@ -1279,7 +1311,7 @@ ar_list_has_reservation_due_to_ckpt(lList *ar_master_list, lList **answer_list,
 
             if (ckpt_elem == NULL) {
                ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, ckpt_string, 
-                      "ckpt_list", sge_u32c(lGetUlong(ar, AR_id))));
+                      SGE_ATTR_CKPT_LIST, sge_u32c(lGetUlong(ar, AR_id))));
                answer_list_add(answer_list, SGE_EVENT, 
                                STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DRETURN(true);
@@ -1347,7 +1379,7 @@ ar_list_has_reservation_due_to_pe(lList *ar_master_list, lList **answer_list,
 
             if (pe == NULL) {
                ERROR((SGE_EVENT, MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU, pe_string, 
-                      "pe_list", sge_u32c(lGetUlong(ar, AR_id))));
+                      SGE_ATTR_PE_LIST, sge_u32c(lGetUlong(ar, AR_id))));
                answer_list_add(answer_list, SGE_EVENT, 
                                STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                DRETURN(true);
@@ -1594,3 +1626,58 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
    DRETURN_VOID;
 }
 
+/****** sge_advance_reservation_qmaster/sge_ar_list_conflicts_with_calendar() ******
+*  NAME
+*     sge_ar_list_conflicts_with_calendar() -- checks if the given calendar
+*                                              conflicts with AR open time frame
+*
+*  SYNOPSIS
+*     bool sge_ar_list_conflicts_with_calendar(lList **answer_list, const char 
+*     *qinstance_name, lListElem *cal_ep, lList *master_ar_list) 
+*
+*  FUNCTION
+*     Iteraters over all existing Advance Reservations reserved queues and verifies
+*     that the new calender does not invalidate the AR if the queue was reserved
+*
+*  INPUTS
+*     lList **answer_list        - answer list
+*     const char *qinstance_name - qinstance name the calendar was configured
+*     lListElem *cal_ep          - the calendar object (CAL_Type)
+*     lList *master_ar_list      - master AR list
+*
+*  RESULT
+*     bool - true if conflicts
+*            false if OK
+*
+*  NOTES
+*     MT-NOTE: sge_ar_list_conflicts_with_calendar() is MT safe 
+*******************************************************************************/
+bool
+sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_name, lListElem *cal_ep,
+                                lList *master_ar_list)
+{
+   lListElem *ar;
+   lListElem *ar_queue;
+
+   DENTER(TOP_LAYER, "ar_list_conflicts_with_calendar");
+
+   for_each(ar, master_ar_list) {
+
+      for_each(ar_queue, lGetList(ar, AR_granted_slots)) {
+         const char *ar_queue_name = lGetString(ar_queue, JG_qname);
+         if (strcmp(ar_queue_name, qinstance_name) == 0) {
+            u_long32 start_time = lGetUlong(ar, AR_start_time);
+            u_long32 duration = lGetUlong(ar, AR_duration);
+
+            if (!calendar_open_in_time_frame(cal_ep, start_time, duration)) {
+               ERROR((SGE_EVENT, MSG_PARSE_MOD2_REJECTED_DUE_TO_AR_SSU, lGetString(cal_ep, CAL_name), 
+                      SGE_ATTR_CALENDAR, sge_u32c(lGetUlong(ar, AR_id))));
+               answer_list_add(answer_list, SGE_EVENT, 
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               DRETURN(true);
+            }
+         }
+      }
+   }
+   DRETURN(false);
+}

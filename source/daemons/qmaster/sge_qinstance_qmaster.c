@@ -151,6 +151,15 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            old_value ? old_value : "<null>",
                            new_value ? new_value : "<null>"));
 #endif
+                  /* check if the modification is possible or if
+                   * an existing AR would be violated by the modification
+                   */
+                  if (sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
+                                                      calendar, *object_type_get_master_list(SGE_TYPE_AR))) {
+                     ret = false;
+                     break;
+                  }
+
                   if (calendar != NULL) { 
                      qinstance_change_state_on_calendar(ctx, this_elem, calendar, monitor);
                   } else {
@@ -297,8 +306,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
                   /*
-                   * check if the mofification is possible or if 
-                   * an existing AR vialates that modification
+                   * check if the modification is possible or if 
+                   * an existing AR violates that modification
                    */
                   if (cqueue_attibute_name == CQ_ckpt_list &&
                       ar_list_has_reservation_due_to_ckpt(

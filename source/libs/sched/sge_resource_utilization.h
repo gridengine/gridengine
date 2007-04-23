@@ -56,7 +56,5 @@ void prepare_resource_schedules(const lList *running_jobs,
       lList *queue_list, lList *rqs_list, lList *centry_list, lList *acl_list,
       lList *hgroup_list, bool for_job_scheduling);
 
-u_long32 duration_add_offset(u_long32 duration, u_long32 offset);
-
 #endif /* __SGE_RESOURCE_UTILIZATION_H */
 

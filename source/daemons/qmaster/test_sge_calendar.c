@@ -70,18 +70,23 @@ typedef struct {
    char *year_cal; /* year calendar definition */ 
    char *week_cal; /* week calendar definition */
    char *description; /* a calendar description for the test output */
-}cal_entry_t;
+} cal_entry_t;
 
 typedef struct {
-   int         cal_nr; /* The calendar to test */
+   int         cal_nr; /* the calendar to test */
    struct tm   now;    /* the current date */
    struct tm   result1;  /* the expected state change date */
-   int         state1;   /* the expected curret state */
+   int         state1;   /* the expected current state */
    struct tm   result2;  /* the expected state change date */
-   int         state2;   /* the expected curret stat   */
+   int         state2;   /* the expected state change state */
 } date_entry_t;
 
-
+typedef struct {
+   int         cal_nr;     /* the calendar to test */
+   struct tm   start_time; /* start of time frame */
+   u_long32    duration;   /* duration of time frame */
+   bool        open;       /* calendar open or closed */
+} time_frame_entry_t;
 
 /* global test variables */
 
@@ -266,13 +271,35 @@ static date_entry_t tests[] = { {0, {0,0,0, 1,0,104, 0,0,0}, {0,0,0, 1,1,104, 0,
                                 {-1, {0,0,0, 0,0,104, 0,0,0}, {0,0,0, 0,0,104, 0,0,0}, -1, {0,0,0, 0,0,104, 0,0,0}, -1}
                                   };
 
-
+static time_frame_entry_t time_frame_tests[] = {
+/*year calendar*/               {0, {0,0,0, 1,0,104, 0,0,0}, 3600, true},
+                                {0, {0,30,23, 31,0,104, 0,0,0}, 3600, false},
+                                {0, {0,0,12, 31,0,105, 0,0,0}, 3600, true},
+                                {1, {0,0,0, 1,0,104, 0,0,0}, 3600, true},
+                                {1, {0,30,23, 31,0,104, 0,0,0}, 3600, false},
+                                {1, {0,0,12, 31,0,105, 0,0,0}, 3600, true},
+                                {2, {0,0,0, 1,0,104, 0,0,0}, 3600, true},
+                                {2, {0,30,23, 31,0,104, 0,0,0}, 3600, false},
+                                {2, {0,0,12, 31,0,104, 0,0,0}, 6048000, false}, /* 70 days */
+/* no calendar */               {7, {0,30,23, 31,0,104, 0,0,0}, 3600, true},
+/* week calendar*/              {8, {0,0,0, 1,0,104, 0,0,0}, 3600, false},
+                                {8, {0,30,23, 31,0,104, 0,0,0}, 3600, false},
+                                {8, {0,0,12, 31,0,105, 0,0,0}, 3600, false},
+                                {9, {1,0,18, 12,5,105, 0,0,1}, 53999, false}, /* 15 hours minus one second */
+                                {9, {1,0,18, 12,5,105, 0,0,1}, 53998, true}, /* 15 hours minus two seconds */
+                                {9, {0,0,18, 12,5,105, 0,0,1}, 53999, false}, /* 15 hours minus one seconds */
+/*mixed calendars */            {13, {1,0,18, 2,2,104, 0,0,0}, 3600, true},
+                                {13, {1,0,18, 15,1,104, 0,0,0}, 3600, false},
+                                {-1, {0,0,0, 0,0,104, 0,0,0}, 0, false}
+                              };
 
 
 /* test functions */
 static int test(void *context, date_entry_t *test, cal_entry_t *calendar, int test_nr); 
 static int test_state_change_list(date_entry_t *test, lList *state_changes);
 static int test_state_change(lListElem *stateObject, u_long32 state, struct tm *time, int elemNr);
+
+static int test_time_frame(void *context, time_frame_entry_t *test, cal_entry_t *calendar, int test_nr); 
 
 /* setup functions */
 static lListElem *createCalObject(void *context, cal_entry_t *calendar);
@@ -541,12 +568,10 @@ static int test(void *context, date_entry_t *test, cal_entry_t *calendar, int te
             if ((ret = test_state_change_list(test, state_changes_list)) == 0) {
                printf("==> Test is okay\n");
             }
-         }
-         else {
+         } else {
             printDateError(&when, &(test->result1));
          }
-      }
-      else {
+      } else {
          printf("wrong state: expected %d, got %d\n", test->state1, (int) current_state);
       }
       lFreeList(&state_changes_list);
@@ -580,22 +605,37 @@ static int test(void *context, date_entry_t *test, cal_entry_t *calendar, int te
 int main(int argc, char* argv[])
 {
    int test_counter = 0;
+   int i = 0;
    int failed = 0;
    void *context = NULL;
+   int cal_index = 0;
 
    lInit(nmv);
+   obj_mt_init();
    
    printf("==> Calendar test <==\n");
    printf("---------------------\n");
 
-   while (tests[test_counter].cal_nr != -1) {
-      if (test(context, &(tests[test_counter]), 
-               &(calendars[tests[test_counter].cal_nr]), 
-               test_counter) != 0) {
+   while ((cal_index = tests[i].cal_nr) != -1) {
+      if (test(context, &(tests[i]), 
+               &(calendars[cal_index]), 
+               i) != 0) {
          failed++; 
       }   
-      test_counter++;
+      i++;
    }
+   test_counter+=i;
+
+   i=0;
+   while ((cal_index = time_frame_tests[i].cal_nr) != -1) {
+      if (test_time_frame(context, &(time_frame_tests[i]),
+                          &(calendars[cal_index]),
+                          i) != 0) {
+         failed++;
+      }
+      i++;
+   }
+   test_counter+=i;
    
    if (failed == 0) {
       printf("\n==> All tests are okay <==\n");
@@ -605,4 +645,61 @@ int main(int argc, char* argv[])
    }
    
    return failed;
+}
+
+static int test_time_frame(void *context, time_frame_entry_t *test, cal_entry_t *calendar, int test_nr)
+{
+   int ret = 0;
+   lListElem *destCal = NULL;
+   struct tm *end_tm;
+   struct tm res;
+   u_long32 start_time = (u_long32)mktime(&test->start_time);
+   time_t end_time = (time_t)duration_add_offset(start_time, test->duration);
+
+   end_tm = localtime_r(&end_time, &res);
+
+    /* test output*/
+   printf("\n==> Test Nr:     %d(%d)\n", test_nr, test->cal_nr);
+   printf("==> Description: %s\n", calendar->description);
+   printf("==> Start Time:        %d/%d/%d %d:%d:%d  (wday:%d yday:%d Summer time: %s)\n",
+      (test->start_time.tm_mon + 1),      
+      test->start_time.tm_mday,
+      (test->start_time.tm_year + 1900),
+   
+      test->start_time.tm_hour,
+      test->start_time.tm_min,
+      test->start_time.tm_sec,
+      
+      test->start_time.tm_wday,
+      test->start_time.tm_yday,
+      (test->start_time.tm_isdst?"true":"false"));
+   printf("==> End Time:          %d/%d/%d %d:%d:%d  (wday:%d yday:%d Summer time: %s)\n",
+      (end_tm->tm_mon + 1),      
+      end_tm->tm_mday,
+      (end_tm->tm_year + 1900),
+   
+      end_tm->tm_hour,
+      end_tm->tm_min,
+      end_tm->tm_sec,
+      
+      end_tm->tm_wday,
+      end_tm->tm_yday,
+      (end_tm->tm_isdst?"true":"false"));
+   printf("==> year cal: \"%s\" week cal: \"%s\"\n", calendar->year_cal, calendar->week_cal);  
+
+   if ((destCal = createCalObject(context, calendar)) != NULL) {
+      bool result = calendar_open_in_time_frame(destCal, start_time, test->duration);
+      if (test->open != result) {
+         printf("wrong state for time frame: expected %d, got %d\n", test->open, result);
+         ret++;
+      } else {
+         printf("==> Test is okay\n");
+      }
+   }
+
+   /* test cleanup */
+   printf("----------------\n");
+   lFreeElem(&destCal);
+
+   return ret;
 }

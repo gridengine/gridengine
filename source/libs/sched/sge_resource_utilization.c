@@ -1206,38 +1206,3 @@ static lListElem *newResourceElem(u_long32 time, double amount)
 
    return elem;
 }
-
-/****** sge_resource_utilization/duration_add_offset() ****************************************
-*  NAME
-*     duration_add_offset() -- add function for time add
-*
-*  SYNOPSIS
-*     u_long32 duration_add_offset(u_long32 duration, u_long32 offset) 
-*
-*  FUNCTION
-*     add function to catch ulong overflow. Returns max ulong value if necessary
-*
-*  INPUTS
-*     u_long32 duration - duration in seconds
-*     u_long32 offset   - offset in seconds
-*
-*  RESULT
-*     u_long32 - value < U_LONG32_MAX
-*
-*  NOTES
-*     MT-NOTE: duration_add_offset() is not MT safe 
-*******************************************************************************/
-u_long32 duration_add_offset(u_long32 duration, u_long32 offset)
-{
-   if (duration == U_LONG32_MAX || offset == U_LONG32_MAX) {
-      return U_LONG32_MAX;
-   }
-
-   if ((U_LONG32_MAX-offset) < duration) {
-      duration = U_LONG32_MAX;
-   } else {
-      duration += offset;
-   }
-
-   return duration;
-}

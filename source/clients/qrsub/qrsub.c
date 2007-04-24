@@ -216,6 +216,8 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 
    /*  -u wc_user 	       access list SGE_LIST */
    parse_list_simple(pcmdline, "-u", *ar, AR_acl_list, 0, 0, FLG_LIST_APPEND);
+   /*  -u ! wc_user TBD: Think about eval_expression support in compare allowed and excluded lists */
+   
 
    /*  -q wc_queue_list 	 reserve in queue(s) SGE_LIST */
    parse_list_simple(pcmdline, "-q", *ar, AR_queue_list, 0, 0, FLG_LIST_APPEND);

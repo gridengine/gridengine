@@ -86,11 +86,12 @@ bool
 is_hgroup_name(const char *name)
 {
    bool ret = false;
+   DENTER(TOP_LAYER, "is_hgroup_name");
 
    if (name != NULL) {
       ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
    }
-   return ret;
+   DRETURN(ret);
 }
 
 

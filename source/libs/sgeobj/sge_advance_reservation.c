@@ -224,7 +224,6 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
       }
       /*   AR_verify, SGE_ULONG              just verify the reservation or final case */
       /*   AR_error_handling, SGE_ULONG      how to deal with soft and hard exceptions */
-      /*   AR_state, SGE_ULONG               state of the AR */
       /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
       /*   AR_resource_list, SGE_LIST */
       {
@@ -286,7 +285,11 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
             goto ERROR;
          }
       }
-   /*   AR_type, SGE_ULONG     */
+      /*   AR_type,  SGE_ULONG     */
+      /*   AR_state, SGE_ULONG               state of the AR */
+      if(lGetUlong(ar, AR_state) == ARL_UNKNOWN){
+         lSetUlong(ar, AR_state, ARL_CREATION);  
+      }
    }
    DRETURN(true);
 

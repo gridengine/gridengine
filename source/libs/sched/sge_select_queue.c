@@ -5030,9 +5030,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                continue;
             }
 
-
             qname = lGetString(qep, QU_full_name);
-
             /* how many slots ? */
             qtagged = lGetUlong(qep, QU_tag);
             slots = MIN(a->slots-accu_host_slots, MIN(host_slots, qtagged));
@@ -5129,7 +5127,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                   }
                }
 
-
                /* second step - higher the granted slots for every matching rule set */
                if (slots != 0) {
                   for_each(rqs, a->rqs_list) {
@@ -5174,14 +5171,15 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             }
 
             if (slots != 0) {
+               const char *owner=NULL; 
                accu_host_slots += slots;
                host_slots -= slots;
                total_soft_violations += slots * lGetUlong(qep, QU_soft_violation);
 
                /* build gdil for that queue */
+               owner=lGetString(a->job, JB_owner);
                DPRINTF((sge_u32": %d slots in queue %s user %s (host_slots = %d)\n", 
-                  a->job_id, slots, qname, lGetString(a->job, JB_owner), host_slots));
-
+                  a->job_id, slots, qname, owner?owner:"NULL", host_slots));
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
@@ -5191,7 +5189,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                else {
                   lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
                }   
-
                /* untag */
                lSetUlong(qep, QU_tag, qtagged - slots);
             }
@@ -5201,7 +5198,6 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             }   
          }
       }
-
       DPRINTF(("- - - accu_host_slots %d total_slots %d\n", accu_host_slots, a->slots));
       if (last_accu_host_slots == accu_host_slots) {
          DPRINTF(("!!! NO MORE SLOTS !!!\n"));

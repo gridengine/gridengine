@@ -988,7 +988,6 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
             next_ep = lNext(ep);
 
             for_each(acl_entry, lGetList(ar, AR_acl_list)) {
-               
                user = lGetString(acl_entry, ST_name);
                if (!is_hgroup_name(user)) {
                   struct passwd *pw;
@@ -997,14 +996,19 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                   stringT group;
 
                   pw = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
+                  
+                  if( pw == NULL ) {
+                    answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_USER_XISNOKNOWNUSER_S, user);
+                    DRETURN(false);
+                  }
                   sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
 
                   DPRINTF(("user: %s\n", user));
                   DPRINTF(("group: %s\n", group));
                   
                   if (sge_has_access(user, group, ep, master_userset_list) == 0) {
-                      lRemoveElem(a.queue_list, &ep);
-                      break;
+                     lRemoveElem(a.queue_list, &ep);
+                     break;
                   }
                } else {
                   bool skip_queue = false;
@@ -1037,7 +1041,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
          lSetString(dummy_job, JB_owner, lGetString(ar, AR_owner));
          lSetString(dummy_job, JB_group, lGetString(ar, AR_group));
       }
-
+      
       lFreeWhere(&where);
       lFreeWhat(&what);
    }

@@ -1,3 +1,7 @@
+PJ-2007-04-24-0: Bugfix:    Classic spooling for AR, added spooling for granted slots 
+                            Minor bugfix and changes  
+                 Bugfix:    qrsub -u 
+
 RD-2007-04-23-0: Enhancem:  Added consistency checks for calendar and advance
                             reservations
                  Review:    EB

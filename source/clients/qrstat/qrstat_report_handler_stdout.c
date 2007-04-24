@@ -551,7 +551,7 @@ qrstat_report_mail_list_node(qrstat_report_handler_t* handler,
 
    DENTER(TOP_LAYER, "qrstat_report_mail_list_node");
    if (!handler->show_summary) {
-      fprintf(out, SFN SFN"@"SFN, (handler->first_mail ? "" : ","), name, host);
+      fprintf(out, SFN SFN"@"SFN, (handler->first_mail ? "" : ","), name?name:"", host?host:"");
       if (handler->first_mail) {
          handler->first_mail = false;
       } 

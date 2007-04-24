@@ -35,6 +35,7 @@
 #include "basis_types.h"
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_strL.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -59,6 +60,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
 
       handler->report_start(handler, answer_list);
       for_each(ar, qrstat_env->ar_list) {
+
          handler->report_start_ar(handler, answer_list);
          handler->report_ar_node_ulong(handler, answer_list, "id", lGetUlong(ar, AR_id));
          handler->report_ar_node_string(handler, answer_list, "name", lGetString(ar, AR_name));
@@ -143,7 +145,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                for_each(mail, lGetList(ar, AR_mail_list)) {
                   handler->report_mail_list_node(handler, answer_list,
                                                  lGetString(mail, MR_user),
-                                                 lGetString(mail, MR_host));
+                                                 lGetHost(mail, MR_host));
                }
                handler->report_finish_mail_list(handler, answer_list);
             }
@@ -153,7 +155,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                handler->report_start_acl_list(handler, answer_list);
                for_each(acl, lGetList(ar, AR_acl_list)) {
                   handler->report_acl_list_node(handler, answer_list,
-                                                 lGetString(acl, US_name));
+                                                 lGetString(acl, ST_name));
                }
                handler->report_finish_acl_list(handler, answer_list);
             }

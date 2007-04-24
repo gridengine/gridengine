@@ -1176,8 +1176,7 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
       res = NULL;
    }
  
-   DEXIT;
-   return res;
+   DRETURN(res);
 } /* sge_getpwnam_r() */
 
 

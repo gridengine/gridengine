@@ -58,7 +58,7 @@ extern char **environ;
 
 /************************************************************************/
 int main(int argc, char **argv) {
-   lList *pcmdline = NULL, *ref_list = NULL, *ar_list;
+   lList *pcmdline = NULL, *ref_list = NULL, *ar_list = NULL;
    lListElem *ep;
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;

@@ -40,6 +40,7 @@
 #include "sge_answer.h"
 #include "read_write_advance_reservation.h"
 #include "sge_string.h"
+#include "sge_cqueue.h"
 #include "sge_log.h"
 #include "config.h"
 #include "read_object.h"
@@ -55,15 +56,16 @@
 #include "sge_qinstance.h"
 #include "sge_qref.h"
 #include "sge_strL.h"
+#include "sge_jobL.h"
 
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_mailrec.h"
 
-static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
-static int intprt_as_mail_recipiants[] = { MR_user, MR_host, 0 };
-static int intprt_as_range_list[] = { RN_min, RN_max, 0 };
-
+static int intprt_resourcelist[] = { CE_name, CE_stringval, 0 };
+static int intprt_mail_recipiants[] = { MR_user, MR_host, 0 };
+static int intprt_range_list[] = { RN_min, RN_max, 0 };
+static int intprt_queue[] = { JG_qname, JG_slots, 0 }; 
 lListElem *
 cull_read_in_ar(const char *dirname, const char *filename, int spool,
                 int type, int *tag, int fields[])
@@ -125,7 +127,6 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    s = lGetString(ep, AR_account);
    DPRINTF((    "Read AR, account:             %s\n", (s != NULL) ? s : "NONE"));
 
-
    /* --------- AR_owner */
    if (!set_conf_string(alpp, clpp, fields, "owner", ep, AR_owner)) {
       DPRINTF(("Read AR, error read AR_owner\n"));
@@ -134,6 +135,16 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    NULL_OUT_NONE(ep, AR_owner);
    s = lGetString(ep, AR_owner);
    DPRINTF((    "Read AR, owner:               %s\n", (s != NULL) ? s : "NONE"));
+
+
+   /* --------- AR_group */
+   if (!set_conf_string(alpp, clpp, fields, "group", ep, AR_group)) {
+      DPRINTF(("Read AR, error read AR_group\n"));
+      DRETURN(-1);
+   }
+   NULL_OUT_NONE(ep, AR_group);
+   s = lGetString(ep, AR_group);
+   DPRINTF((    "Read AR, group:               %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_submission_time */
    if (!set_conf_ulong(alpp, clpp, fields, "submission_time", ep, AR_submission_time)) {
@@ -179,26 +190,21 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    }
    DPRINTF((    "Read AR, error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
-   /* --------- AR_state */
-   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, AR_state)) {
-      DPRINTF(("Read AR, error read AR_state\n"));
-      DRETURN(-1);
-   }
-   DPRINTF((    "Read AR, state:               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
+   /* --------- AR_state NO SPOOL */ 
 
    /* --------- AR_checkpoint_name */
-   if (!set_conf_string(alpp, clpp, fields, "ckpt_name", ep, AR_checkpoint_name)) {
+   if (!set_conf_string(alpp, clpp, fields, "checkpoint_name", ep, AR_checkpoint_name)) {
       DPRINTF(("Read AR, error read AR_checkpoint_name\n"));
       DRETURN(-1);
    }
    NULL_OUT_NONE(ep, AR_checkpoint_name);
    s = lGetString(ep, AR_checkpoint_name);
-   DPRINTF((    "Read AR, ckpt_name:           %s\n", (s != NULL) ? s : "NONE"));
+   DPRINTF((    "Read AR, checkpoint_name:           %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_resource_list */
    if (parsing_type == 0) {
       if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "resource_list",
-                            ep, AR_resource_list, CE_Type, intprt_as_load_thresholds)) {
+                            ep, AR_resource_list, CE_Type, intprt_resourcelist)) {
          DPRINTF(("Read AR, error read default AR_resource_list\n"));
          DRETURN(-1);
       }
@@ -209,6 +215,18 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
          DRETURN(-1);
       }
    }
+   { /* restore double value and complex tzype */
+      object_description *object_base = object_type_get_object_description();
+      lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+
+      
+      if (centry_list_fill_request(lGetList(ep, AR_resource_list), alpp, 
+          master_centry_list, false, true, false)) {
+          DRETURN(-1);
+      }
+   }
+ 
+   /* --------- AR_resource_utilization NOSPOOL */
 
    /* --------- AR_queue_list */
    if (!set_conf_list(alpp, clpp, fields, "queue_list", ep, AR_queue_list,
@@ -216,7 +234,35 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
       DPRINTF(("Read AR, error read AR_queue_list\n"));
       DRETURN(-1);
    }
+   
+   /* --------- AR_granted_slots */
+   if (!set_conf_deflist(alpp, clpp, fields, "granted_slots",
+                  ep,  AR_granted_slots, JG_Type, intprt_queue)){
+      DPRINTF(("Read AR, error read AR_granted_slots\n"));
+      DRETURN(-1);
+                   
+   }
+   DPRINTF((    "granted_slots:\n"));
+   {  /* extract the host name from qname */
+      lListElem *jg;
+      dstring cqueue_buffer = DSTRING_INIT;
+      dstring hostname_buffer = DSTRING_INIT;
+      for_each(jg, lGetList(ep, AR_granted_slots)){
+         const char *hostname = NULL;
+         bool has_hostname = false;
+         bool has_domain = false;
 
+         s =  lGetString(jg, JG_qname);
+         cqueue_name_split(s, &cqueue_buffer, &hostname_buffer,
+                           &has_hostname, &has_domain);
+         hostname = sge_dstring_get_string(&hostname_buffer);
+         lSetHost(jg, JG_qhostname, hostname);
+      }
+      sge_dstring_free(&cqueue_buffer);
+      sge_dstring_free(&hostname_buffer);
+         
+   } /* end of granted_slots */
+   
    /* --------- AR_mail_options */
    if (!set_conf_ulong(alpp, clpp, fields, "mail_options", ep, AR_mail_options)) {
       DPRINTF(("Read AR, error read AR_mail_options\n"));
@@ -225,11 +271,22 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
 
    /* --------- AR_mail_list */
    if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "mail_list",
-                         ep, AR_resource_list, MR_Type, intprt_as_mail_recipiants)) {
+                         ep, AR_mail_list, MR_Type, intprt_mail_recipiants)) {
       DPRINTF(("Read AR, error read AR_mail_list\n"));
       DRETURN(-1);
    }
-
+   {
+      lListElem *mail;
+      const char * s;
+      DPRINTF(("Read AR, mail_list\n"));                      
+      for_each(mail, lGetList(ep, AR_mail_list)) {
+         NULL_OUT_NONE(mail, MR_user);
+         s = lGetHost(mail, MR_host);
+         if ((s != NULL) && (strcasecmp(s, "none") == 0)) { 
+            lSetHost(mail, MR_host, NULL); 
+         }
+      }
+   }
    /* --------- AR_pe */
    if (!set_conf_string(alpp, clpp, fields, "pe", ep, AR_pe)) {
       DPRINTF(("Read AR, error read AR_pe\n"));
@@ -241,21 +298,39 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
 
    /* --------- AR_pe_range */
    if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "pe_range",
-                      ep, AR_pe_range, RN_Type, intprt_as_range_list)) {
+                      ep, AR_pe_range, RN_Type, intprt_range_list)) {
       DPRINTF(("Read AR, error default read AR_pe_range\n"));
       DRETURN(-1);
    } 
    
+   /* --------- AR_granted_pe */
+   if (!set_conf_string(alpp, clpp, fields, "granted_pe", ep, AR_granted_pe)) {
+      DPRINTF(("Read AR, error read AR_granted_pe\n"));
+      DRETURN(-1);
+   }
+   NULL_OUT_NONE(ep, AR_granted_pe);
+   s = lGetString(ep, AR_granted_pe);
+   DPRINTF((    "Read AR, granted_pe                   %s\n", (s != NULL) ? s : "NONE"));
+
+   
+   /* --------- AR_master_queue_list  */
+   if (!set_conf_list(alpp, clpp, fields?fields:opt, "master_queue_list", ep,
+                      AR_master_queue_list, QR_Type, QR_name)) {
+      DPRINTF(("Read AR, error read AR_master_queue_list\n"));
+      DRETURN(-1);
+   }
+
+     
    /* --------- AR_acl_list  */
-   if (!set_conf_list(alpp, clpp, fields?fields:opt, "user_lists", ep,
-                      AR_acl_list, US_Type, US_name)) {
+   if (!set_conf_list(alpp, clpp, fields?fields:opt, "acl_list", ep,
+                      AR_acl_list, ST_Type, ST_name)) {
       DPRINTF(("Read AR, error read AR_acl_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_xacl_list  */
-   if (!set_conf_list(alpp, clpp, fields?fields:opt, "xuser_lists", ep,
-                      AR_xacl_list, US_Type, US_name)) {
+   if (!set_conf_list(alpp, clpp, fields?fields:opt, "xacl_list", ep,
+                      AR_xacl_list, ST_Type, ST_name)) {
       DPRINTF(("Read AR, error read AR_xacl_list\n"));
       DRETURN(-1);
    }
@@ -360,6 +435,11 @@ char * write_ar(int spool, int how, const lListElem *ep)
    s = lGetString(ep, AR_owner);
    DPRINTF((    "owner:               %s\n", (s != NULL) ? s : "NONE"));
    FPRINTF((fp, "owner                %s\n", (s != NULL) ? s : "NONE"));
+   
+   /* --------- AR_group */
+   s = lGetString(ep, AR_group);
+   DPRINTF((    "group:               %s\n", (s != NULL) ? s : "NONE"));
+   FPRINTF((fp, "group                %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_submission_time */
    DPRINTF((    "submission_time:     "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_submission_time))));
@@ -385,18 +465,18 @@ char * write_ar(int spool, int how, const lListElem *ep)
    DPRINTF((    "error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
    FPRINTF((fp, "error_handling       "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
-   /* --------- AR_state */
-   DPRINTF((    "state:               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
-   FPRINTF((fp, "state                "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
-
+   /* --------- AR_state  NO SPOOL */
+   
    /* --------- AR_checkpoint_name */
    s = lGetString(ep, AR_checkpoint_name);
-   DPRINTF((    "ckpt_name:           %s\n", (s != NULL) ? s : "NONE"));
-   FPRINTF((fp, "ckpt_name            %s\n", (s != NULL) ? s : "NONE"));
+   DPRINTF((    "checkpoint_name:     %s\n", (s != NULL) ? s : "NONE"));
+   FPRINTF((fp, "checkpoint_name      %s\n", (s != NULL) ? s : "NONE"));
 
    /* --------- AR_resource_list */
    DPRINTF((             "resource_list:      \n"));
    fprint_thresholds(fp, "resource_list        ", lGetList(ep, AR_resource_list), 1);
+   
+   /* --------- AR_resource_utilization NOSPOOL */
    
    /* --------- AR_queue_list */
    DPRINTF((    "queue_list:        \n"));
@@ -410,6 +490,35 @@ char * write_ar(int spool, int how, const lListElem *ep)
          if (sep) { 
             DPRINTF((    " "));
             FPRINTF((fp, " "));
+         }
+      } while (sep);
+      DPRINTF((    "\n"));
+      FPRINTF((fp, "\n"));
+   } else {
+      DPRINTF((    "NONE\n"));
+      FPRINTF((fp, "NONE\n"));
+   }  
+
+   /* --------- AR_granted_slots */
+   DPRINTF((    "granted_slots:     \n"));
+   FPRINTF((fp, "granted_slots        ")); 
+   sep = lFirst(lGetList(ep, AR_granted_slots));
+   if (sep) {
+      do {
+         const char *qname;
+         lUlong slots;
+        
+         qname = lGetString(sep, JG_qname);
+         slots = lGetUlong(sep, JG_slots);
+      
+         /* --------------- slots ------------------ */
+         DPRINTF((    "%s="sge_U32CFormat, qname, slots));
+         FPRINTF((fp, "%s="sge_U32CFormat, qname, slots));
+
+         sep = lNext(sep);
+         if (sep) { 
+            DPRINTF((    ","));
+            FPRINTF((fp, ","));
          }
       } while (sep);
       DPRINTF((    "\n"));
@@ -458,16 +567,28 @@ char * write_ar(int spool, int how, const lListElem *ep)
    DPRINTF((    "pe_range \n"));
    fprint_range_list(fp, "pe_range             ", lGetList(ep, AR_pe_range));
 
+   /* --------- AR_granted_pe */
+   s = lGetString(ep, AR_granted_pe);
+   DPRINTF((    "granted_pe           %s\n", (s != NULL) ? s : "NONE"));
+   FPRINTF((fp, "granted_pe           %s\n", (s != NULL) ? s : "NONE"));
+
+   /* --------- AR_master_queue_list */
+   DPRINTF((    "master_queue_list \n"));
+   lret = fprint_cull_list(fp,  "master_queue_list    ", lGetList(ep, AR_master_queue_list), QR_name);
+   if (lret == -1) {
+      goto FPRINTF_ERROR;
+   }
+
    /* --------- AR_acl_list */
-   DPRINTF((    "user_list , changed to ST_name \n"));
-   lret = fprint_cull_list(fp,  "user_lists           ", lGetList(ep, AR_acl_list), ST_name);
+   DPRINTF((    "acl_list \n"));
+   lret = fprint_cull_list(fp,  "acl_list             ", lGetList(ep, AR_acl_list), ST_name);
    if (lret == -1) {
       goto FPRINTF_ERROR;
    }
 
    /* --------- AR_xacl_list */
    DPRINTF((    "xuser_list \n"));
-   lret = fprint_cull_list(fp,  "xuser_lists          ", lGetList(ep, AR_xacl_list), ST_name);
+   lret = fprint_cull_list(fp,  "xacl_list            ", lGetList(ep, AR_xacl_list), ST_name);
    if (lret == -1) {
       goto FPRINTF_ERROR;
    }

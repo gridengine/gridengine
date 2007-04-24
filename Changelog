@@ -1,3 +1,5 @@
+PJ-2007-04-24-1: Bugfix:    qrsub xacl_list fix 
+
 PJ-2007-04-24-0: Bugfix:    Classic spooling for AR, added spooling for granted slots 
                             Minor bugfix and changes  
                  Bugfix:    qrsub -u 

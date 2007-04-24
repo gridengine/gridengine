@@ -163,6 +163,7 @@ error_exit:
 static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 {
    lListElem *ep = NULL;
+   const char *s = NULL;
 
    DENTER(TOP_LAYER, "sge_parse_qrsub");
 
@@ -215,9 +216,33 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
    centry_list_remove_duplicates(lGetList(*ar, AR_resource_list));
 
    /*  -u wc_user 	       access list SGE_LIST */
-   parse_list_simple(pcmdline, "-u", *ar, AR_acl_list, 0, 0, FLG_LIST_APPEND);
    /*  -u ! wc_user TBD: Think about eval_expression support in compare allowed and excluded lists */
-   
+   parse_list_simple(pcmdline, "-u", *ar, AR_acl_list, 0, 0, FLG_LIST_APPEND);
+   /*  -u ! list separation */
+   ep = lFirst(lGetList(*ar,  AR_acl_list));
+   if (ep) {
+      lList *xacl=NULL; 
+      do  {
+         s = lGetString(ep, ST_name);
+         if (s[0] == '!') { /* move this element to xacl_list */
+            lListElem *new=NULL;
+            if(xacl == NULL) { /* the xacl_list does not exist */
+               xacl = lCreateList("xacl_list", ST_Type );
+            }  
+            new = lCreateElem(ST_Type);
+            s++;
+            lSetString(new, ST_name, s);
+            lAppendElem(xacl, new);
+            lRemoveElem(lGetList(*ar,  AR_acl_list), &ep);
+            ep = lFirst(lGetList(*ar,  AR_acl_list));
+         } else {
+           ep = lNext(ep);
+         }  
+      } while (ep);   
+      if(xacl != NULL) {
+         lSetList(*ar, AR_xacl_list, xacl);
+      }
+   }
 
    /*  -q wc_queue_list 	 reserve in queue(s) SGE_LIST */
    parse_list_simple(pcmdline, "-q", *ar, AR_queue_list, 0, 0, FLG_LIST_APPEND);
@@ -288,8 +313,8 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
       lRemoveElem(pcmdline, &ep);
    }
 
-   
-   for_each(ep, pcmdline) {
+   ep = lFirst(pcmdline);   
+   if(ep) {
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                               MSG_PARSE_INVALIDOPTIONARGUMENTX_S,
                               lGetString(ep,SPA_switch)); 

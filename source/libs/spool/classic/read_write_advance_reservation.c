@@ -512,8 +512,8 @@ char * write_ar(int spool, int how, const lListElem *ep)
          slots = lGetUlong(sep, JG_slots);
       
          /* --------------- slots ------------------ */
-         DPRINTF((    "%s="sge_U32CFormat, qname, slots));
-         FPRINTF((fp, "%s="sge_U32CFormat, qname, slots));
+         DPRINTF((    "%s="sge_U32CFormat, qname, sge_u32c(slots)));
+         FPRINTF((fp, "%s="sge_U32CFormat, qname, sge_u32c(slots)));
 
          sep = lNext(sep);
          if (sep) { 

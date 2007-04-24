@@ -163,8 +163,6 @@ error_exit:
 static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 {
    lListElem *ep = NULL;
-   const char *s = NULL;
-
    DENTER(TOP_LAYER, "sge_parse_qrsub");
 
    /*  -help 	 print this help */
@@ -223,6 +221,7 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
    if (ep) {
       lList *xacl=NULL; 
       do  {
+         const char *s = NULL;
          s = lGetString(ep, ST_name);
          if (s[0] == '!') { /* move this element to xacl_list */
             lListElem *new=NULL;

@@ -77,12 +77,8 @@
  *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
  *       need to be rejected
  *
- *    6) -u qrsub cause core of master
- *
  *    7) qrstat -explain does not show correct messages
  * 
- *    8) qrstat testsuite test has to be written
- *
  *   10) job verification is not properly implemented. For example it's possible to submit
  *       AR job that requests non reserved consumable.
  *
@@ -90,12 +86,27 @@
  *
  *   12) implement mail sending
  *
- *   14) ...
+ *   15) ....
+ *
+ *  IN PROGRESS 
+ *
+ *  -PJ-
+ *   10) job verification is not properly implemented. For example it's possible to submit
+ *       AR job that requests non reserved consumable.
+ *
+ *   14) qrsub -d INFINITY
+ *   
  *
  * TESTSUITE
  *
  *    1) add qalter test for changing ar_id on running and pending jobs. For pending it
  *       should be permitted, for running not
+ *
+ *   IN PROGRESS 
+ * 
+ *   -PJ-
+ *    2) qrstat testsuite test has to be written
+ *
  */
 
 /****** sge_advance_reservation/ar_list_locate() *******************************

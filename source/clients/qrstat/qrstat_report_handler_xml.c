@@ -525,7 +525,7 @@ qrstat_report_mail_list_node(qrstat_report_handler_t* handler,
    DENTER(TOP_LAYER, "qrstat_report_mail_list_node");
   
    sge_dstring_sprintf_append(buffer, "         <mail  user="SFQ
-                              " host="SFQ"/>\n", name, host);
+                              " host="SFQ"/>\n", name, host?host:"NULL");
 
    DRETURN(ret); 
 }

@@ -1,3 +1,11 @@
+JG-2007-04-26-0: Enhancem.: New architecture strings ulx-* and usol-* for older,
+                            no longer officially supported OS versions.
+                            Some cleanup of distinst and sge_arch.c.
+                            qmake and qtcsh for lx26-amd64.
+                            Merged JG-2007-04-19-0 and JG-2007-04-24-0 
+                            from V61_BRANCH.
+                 Review:    RD
+
 PJ-2007-04-25-0: Bugfix:    qrstat_report_handler_xml 
                             Update the AR TODO LIST
                  Review:    RD

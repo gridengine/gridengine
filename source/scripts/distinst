@@ -113,6 +113,8 @@ SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
 SECURITYBINARIES="get_cred put_cred delete_cred renew_cred \
                   starter_cred get_cred.sh put_cred.sh k5dcelogin"
 
+GE_SOURCEDIR=`pwd`
+
 #-------------------------------------------------------------------------
 # help output, exits after printing help
 #
@@ -166,103 +168,18 @@ ErrUsage()
 #
 SetArchBin()
 {
-   i=$1
-   if [ $i = aix51 ]; then
-      ARCHBIN=AIX51
-   elif [ $i = aix43 ]; then
-      ARCHBIN=AIX43
-   elif [ $i = hp10 ]; then
-      ARCHBIN=HP10
-   elif [ $i = hp11 ]; then
-      ARCHBIN=HP11 
-   elif [ $i = hp11-64 ]; then
-      ARCHBIN=HP1164 
-   elif [ $i = irix65 ]; then
-      ARCHBIN=IRIX65
-   elif  [ $i = lx24-alpha ]; then 
-      ARCHBIN=ALINUX_24
-   elif  [ $i = lx26-alpha ]; then 
-      ARCHBIN=ALINUX_26
-   elif  [ $i = lx24-amd64 ]; then 
-      ARCHBIN=LINUXAMD64_24
-   elif  [ $i = lx26-amd64 ]; then 
-      ARCHBIN=LINUXAMD64_26
-   elif  [ $i = lx24-ia64 ]; then 
-      ARCHBIN=LINUXIA64_24
-   elif  [ $i = lx26-ia64 ]; then 
-      ARCHBIN=LINUXIA64_26
-   elif  [ $i = lx26-ppc ]; then
-      ARCHBIN=LINUXPPC_26
-   elif  [ $i = lx24-sparc ]; then 
-      ARCHBIN=LINUXSPARC_24
-   elif  [ $i = lx26-sparc ]; then 
-      ARCHBIN=LINUXSPARC_26
-   elif  [ $i = lx24-sparc64 ]; then 
-      ARCHBIN=LINUXSPARC64_24
-   elif  [ $i = lx26-sparc64 ]; then 
-      ARCHBIN=LINUXSPARC64_26
-   elif  [ $i = lx24-x86 ]; then 
-      ARCHBIN=LINUX86_24
-   elif  [ $i = lx26-x86 ]; then
-      ARCHBIN=LINUX86_26
-   elif [ $i = osf4 ]; then
-      ARCHBIN=ALPHA4
-   elif [ $i = tru64 ]; then
-      ARCHBIN=ALPHA5
-   elif [ $i = sol-x86 ]; then
-      ARCHBIN=SOLARIS86
-   elif [ $i = sol-amd64 ]; then
-      ARCHBIN=SOLARISAMD64
-   elif [ $i = sol-sparc64 ]; then
-      ARCHBIN=SOLARIS64
-   elif [ $i = sol-sparc ]; then
-      ARCHBIN=SOLARIS
-   elif [ $i = cray ]; then
-      ARCHBIN=UNICOS
-   elif [ $i = crayts ]; then
-      ARCHBIN=UNICOS_TS
-   elif [ $i = craytsieee ]; then
-      ARCHBIN=UNICOS_TS_IEEE
-   elif [ $i = necsx4 ]; then
-      ARCHBIN=NECSX4
-   elif [ $i = necsx5 ]; then
-      ARCHBIN=NECSX5
-   elif [ $i = necsx6 ]; then
-      ARCHBIN=NECSX5
-   elif [ $i = sx ]; then
-      ARCHBIN=NECSX5
-   elif [ $i = darwin-ppc ]; then
-      ARCHBIN=DARWIN_PPC
-   elif [ $i = darwin-x86 ]; then
-      ARCHBIN=DARWIN_X86
-   elif [ $i = fbsd-alpha ]; then
-      ARCHBIN=FREEBSD_ALPHA
-   elif [ $i = fbsd-amd64 ]; then
-      ARCHBIN=FREEBSD_AMD64
-   elif [ $i = fbsd-i386 ]; then
-      ARCHBIN=FREEBSD_I386
-   elif [ $i = fbsd-ia64 ]; then
-      ARCHBIN=FREEBSD_IA64
-   elif [ $i = fbsd-ppc ]; then
-      ARCHBIN=FREEBSD_PPC
-   elif [ $i = fbsd-sparc64 ]; then
-      ARCHBIN=FREEBSD_SPARC64
-   elif [ $i = nbsd-alpha ]; then
-      ARCHBIN=NETBSD_ALPHA
-   elif [ $i = nbsd-i386 ]; then
-      ARCHBIN=NETBSD_I386
-   elif [ $i = nbsd-powerpc ]; then
-      ARCHBIN=NETBSD_POWERPC
-   elif [ $i = nbsd-x86_64 ]; then
-      ARCHBIN=NETBSD_X86_64
-   elif [ $i = win32-x86 ]; then
-      ARCHBIN=WIN32_X86
-   else
-      echo No ARCHBIN name for \"$i\"
+   BUILDARCH=`$GE_SOURCEDIR/scripts/compilearch -b $1`
+   if [ $? -ne 0 ]; then
+      echo "No ARCHBIN name for \"$1\""
       if [ $exit_on_error = true ]; then
          exit 1
       else
-         ARCHBIN=undefined
+         ARCHBIN="undefined"
+      fi
+   else
+      ARCHBIN=`$GE_SOURCEDIR/scripts/compilearch -c $1`
+      if [ "$ARCHBIN" = "" ]; then
+         ARCHBIN=$BUILDARCH
       fi
    fi
 }
@@ -292,12 +209,17 @@ ArchTable()
    echo "lx26-sparc64          SPARC 64bit Linux v2.6 kernel"
    echo "lx24-x86              x86 Linux v2.4 kernel"
    echo "lx26-x86              x86 Linux v2.6 kernel"
+   echo "ulx24-x86             x86 Linux v2.4 kernel, libc < 2.3"
+   echo "ulx24-amd64           AMD Linux v2.4 kernel, libc < 2.3"
    echo "osf4                  OSF 4.x"
    echo "tru64                 TRU64 UNIX"
    echo "sol-x86               Solaris x86"
    echo "sol-amd64             Solaris 10 AMD64"
    echo "sol-sparc             Solaris SPARC"
    echo "sol-sparc64           Solaris SPARC 64bit"
+   echo "usol-x86              Solaris 8, x86"
+   echo "usol-sparc            Solaris 7, SPARC"
+   echo "usol-sparc64          Solaris 7, SPARC 64bit"
    echo "cray                  UNICOS"
    echo "crayts                UNICOS TS"
    echo "craytsieee            UNICOS TS IEEE"
@@ -913,7 +835,9 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/schemas \
                         $DEST_SGE_ROOT/util/resources/schemas/qhost \
                         $DEST_SGE_ROOT/util/resources/schemas/qquota \
+                        $DEST_SGE_ROOT/util/resources/schemas/qrdel \
                         $DEST_SGE_ROOT/util/resources/schemas/qrstat \
+                        $DEST_SGE_ROOT/util/resources/schemas/qrsub \
                         $DEST_SGE_ROOT/util/resources/schemas/qstat \
                         $DEST_SGE_ROOT/util/resources/starter_methods \
                         $DEST_SGE_ROOT/util/resources/usersets

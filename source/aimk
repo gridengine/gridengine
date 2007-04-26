@@ -239,7 +239,7 @@ set MAKEWINGRIDAPP   = 0
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 set SGESSH           = 0
 
-# Default Flags and Libraries 
+# Default Flags and Libraries
 set OPTIMIZATION     = 1
 set GPROFFED         = 0
 set COVED            = 0
@@ -247,7 +247,7 @@ set DEBUGGED         = 0
 set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
-set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS"
+set CFLAGS           = "-DSGE_ARCH_STRING=$buildarch -D$TARGET_BITS $INP_CFLAGS"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
@@ -1317,7 +1317,7 @@ case LINUXSPARC64:
       endif
    endif
 
-   if ($buildarch == "lx24-x86" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
+   if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
@@ -1714,12 +1714,15 @@ if ( $JNI == 1 ) then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
       switch ($buildarch)
          case lx24-x86:
+         case ulx24-x86:
          case lx26-x86:
          case nbsd-i386:
          case sol-x86:
+         case usol-x86:
              set JAVA_LIB_ARCH = i386
              breaksw
          case sol-sparc64:
+         case usol-sparc64:
              set JAVA_LIB_ARCH = sparcv9
              breaksw
          case lx26-sparc:
@@ -1727,6 +1730,7 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = sparc
              breaksw
          case lx24-amd64:
+         case ulx24-amd64:
          case lx26-amd64:
          case sol-amd64:
              set JAVA_LIB_ARCH = amd64

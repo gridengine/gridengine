@@ -1,3 +1,6 @@
+PJ-2007-04-27-0: Bugfix:    qrsub -d INFINITY 
+                 Review:    RD
+
 JG-2007-04-26-0: Enhancem.: New architecture strings ulx-* and usol-* for older,
                             no longer officially supported OS versions.
                             Some cleanup of distinst and sge_arch.c.

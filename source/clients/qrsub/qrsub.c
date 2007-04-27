@@ -39,6 +39,7 @@
 #include "cull_parse_util.h"
 #include "sge_job.h"
 #include "sge_gdi.h"
+#include "sge_time.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "sge_all_listsL.h"
 
@@ -323,7 +324,8 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
    if (lGetUlong(*ar, AR_start_time) == 0 && lGetUlong(*ar, AR_end_time) != 0 && lGetUlong(*ar, AR_duration) != 0) {
       lSetUlong(*ar, AR_start_time, lGetUlong(*ar, AR_end_time) - lGetUlong(*ar, AR_duration));
    } else if (lGetUlong(*ar, AR_start_time) != 0 && lGetUlong(*ar, AR_end_time) == 0 && lGetUlong(*ar, AR_duration) != 0) {
-      lSetUlong(*ar, AR_end_time, lGetUlong(*ar, AR_start_time) + lGetUlong(*ar, AR_duration));
+      lSetUlong(*ar, AR_end_time, duration_add_offset(lGetUlong(*ar, AR_start_time), lGetUlong(*ar, AR_duration)));
+      lSetUlong(*ar, AR_duration, lGetUlong(*ar, AR_end_time) - lGetUlong(*ar, AR_start_time));
    } else if (lGetUlong(*ar, AR_start_time) != 0 && lGetUlong(*ar, AR_end_time) != 0 && lGetUlong(*ar, AR_duration) == 0) {
       lSetUlong(*ar, AR_duration, lGetUlong(*ar, AR_end_time) - lGetUlong(*ar, AR_start_time));
    }

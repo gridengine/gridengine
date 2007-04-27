@@ -94,9 +94,6 @@
  *   10) job verification is not properly implemented. For example it's possible to submit
  *       AR job that requests non reserved consumable.
  *
- *   14) qrsub -d INFINITY
- *   
- *
  * TESTSUITE
  *
  *    1) add qalter test for changing ar_id on running and pending jobs. For pending it
@@ -177,11 +174,14 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
 #if 1
       start_time = now;
       lSetUlong(ar, AR_start_time, now);
+      lSetUlong(ar, AR_end_time, duration_add_offset(now, lGetUlong(ar, AR_duration)));
+      lSetUlong(ar, AR_duration, lGetUlong(ar, AR_end_time) - now);
 #else
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR ,
                               MSG_AR_MISSING_VALUE_S, "start time");
       goto ERROR;
 #endif
+
    }
 
    /*   AR_end_time, SGE_ULONG        */

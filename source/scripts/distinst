@@ -835,9 +835,7 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/schemas \
                         $DEST_SGE_ROOT/util/resources/schemas/qhost \
                         $DEST_SGE_ROOT/util/resources/schemas/qquota \
-                        $DEST_SGE_ROOT/util/resources/schemas/qrdel \
                         $DEST_SGE_ROOT/util/resources/schemas/qrstat \
-                        $DEST_SGE_ROOT/util/resources/schemas/qrsub \
                         $DEST_SGE_ROOT/util/resources/schemas/qstat \
                         $DEST_SGE_ROOT/util/resources/starter_methods \
                         $DEST_SGE_ROOT/util/resources/usersets

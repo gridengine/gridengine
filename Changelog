@@ -1,3 +1,6 @@
+RD-2007-04-27-0: Bugfix:    fixed broken distinst
+                 Review:    JG
+
 PJ-2007-04-27-0: Bugfix:    qrsub -d INFINITY 
                  Review:    RD
 

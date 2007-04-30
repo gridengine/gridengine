@@ -592,6 +592,7 @@ CR-2007-01-22-0: Cleanup:   removed unreferenced message macro definitions
 DT-2007-01-19-1: Enhancem.: o Set target source levels for DRMAA Java language
                               binding.
                  Changed:   classes/build.xml
+                 Issue:     6403810
 
 DT-2007-01-19-0: Enhancem.: o Upgraded DRMAA Java language binding to 1.0
                             o Made the DRMAA C binding 1.0 the default

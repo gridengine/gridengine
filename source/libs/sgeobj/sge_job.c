@@ -109,14 +109,13 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    lListElem *template_task = NULL;    /* JAT_Type */
 
    DENTER(BASIS_LAYER, "job_get_ja_task_template");
+
    template_task = lFirst(lGetList(job, JB_ja_template));
+
    if (!template_task) {
       ERROR((SGE_EVENT, "unable to retrieve template task\n"));
-   } 
-   if (template_task) {
+   } else { 
       lSetUlong(template_task, JAT_state, JQUEUED | JWAITING);
-   }
-   if (template_task) {
       lSetUlong(template_task, JAT_task_number, ja_task_id);  
    }
    DRETURN(template_task);

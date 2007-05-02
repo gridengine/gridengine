@@ -744,55 +744,6 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
    DRETURN_VOID;
 }
 
-/****** sgeobj/qinstance/qinstance_check_unknown_state() **********************
-*  NAME
-*     qinstance_check_unknown_state() -- Modifies the number of used slots 
-*
-*  SYNOPSIS
-*     void
-*     qinstance_check_unknown_state(lListElem *this_elem)
-*
-*  FUNCTION
-*     Checks if there are nonstatic load values avaialable for the
-*     qinstance. If this is the case, then then the "unknown" state 
-*     of that machine will be released. 
-*
-*  INPUTS
-*     lListElem *this_elem - QU_Type 
-*
-*  RESULT
-*     void - NONE 
-*
-*  NOTES
-*     MT-NOTE: qinstance_check_unknown_state() is MT safe 
-*******************************************************************************/
-void
-qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
-{
-   const char *hostname = NULL;
-   lList *load_list = NULL;
-   lListElem *host = NULL;
-   lListElem *load = NULL;
-
-   DENTER(QINSTANCE_LAYER, "qinstance_check_unknown_state");
-   hostname = lGetHost(this_elem, QU_qhostname);
-   host = host_list_locate(master_exechost_list, hostname);
-   if (host != NULL) {
-      load_list = lGetList(host, EH_load_list);
-
-      for_each(load, load_list) {
-         const char *load_name = lGetString(load, HL_name);
-
-         if (!sge_is_static_load_value(load_name)) {
-            qinstance_state_set_unknown(this_elem, false);
-            DTRACE;
-            break;
-         }
-      } 
-   }
-   DRETURN_VOID;
-}
-
 /****** sgeobj/qinstance/qinstance_debit_consumable() *************************
 *  NAME
 *     qinstance_debit_consumable() -- Debits/Undebits consumables
@@ -1442,4 +1393,35 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
    sge_dstring_free(&host_domain);
 
    return ret;
+}
+
+/****** sge_qinstance/qinstance_set_error() ************************************
+*  NAME
+*     qinstance_set_error() -- set/unset qinstance into state
+*
+*  SYNOPSIS
+*     void qinstance_set_error(lListElem *qinstance, u_long32 type, const char 
+*     *message, bool set_error) 
+*
+*  FUNCTION
+*     Sets or Unsets a qinstance into error state and adds or removes the given
+*     error message
+*
+*  INPUTS
+*     lListElem *qinstance - qinstance object (QU_Type)
+*     u_long32 type        - new state
+*     const char *message  - error message to set
+*     bool set_error       - set or unset
+*
+*  NOTES
+*     MT-NOTE: qinstance_set_error() is MT safe 
+*******************************************************************************/
+void qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error)
+{
+   qinstance_set_state(qinstance, set_error, type);
+   if (set_error) {
+      qinstance_message_add(qinstance, type, message);
+   } else {
+      qinstance_message_trash_all_of_type_X(qinstance, type);
+   }
 }

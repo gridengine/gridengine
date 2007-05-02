@@ -237,9 +237,12 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_mail_options, SGE_NO_ABORT)>=0)
       if (lGetUlong(job, JB_mail_options)) {
-         printf("mail_options:               ");
-         sge_show_mail_options(lGetUlong(job, JB_mail_options), SGE_STDOUT);
-         printf("\n");
+         dstring mailopt = DSTRING_INIT;
+
+         printf("mail_options:               %s\n",
+                 sge_dstring_append_mailopt(&mailopt, lGetUlong(job, JB_mail_options)));
+
+         sge_dstring_free(&mailopt);
       }
 
    if (lGetPosViaElem(job, JB_mail_list, SGE_NO_ABORT)>=0)

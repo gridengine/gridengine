@@ -55,7 +55,8 @@ typedef enum {
    AR_RUNNING,      /* r 	running - start time reached */
    AR_EXITED,       /* x 	exited - end time reached and doing cleanup */
    AR_DELETED,      /* d 	deleted - manual deletion */
-   AR_ERROR         /* e 	error - AR became invalid */
+   AR_ERROR,        /* E 	error - AR became invalid and start time is reached */
+   AR_WARNING       /* W 	error - AR became invalid but start time not reached */
 
    /* append new states below! otherwise update procedures for reporting an accounting 
     * have to be written. change ar_state2dstring if you change something here */
@@ -70,8 +71,8 @@ typedef enum {
    ARL_CREATION,           /* incoming request to create a new ar object */
    ARL_STARTTIME_REACHED,  /* start time reached */
    ARL_ENDTIME_REACHED,    /* end time reached */
-   ARL_SOFT_ERROR,         /* error occured but jobs part of an ar can still be scheduled */
-   ARL_HARD_ERROR,         /* error occured and no new jobs for that ar are scheduled */
+   ARL_UNSATISFIED,        /* resources are unsatisfied */
+   ARL_OK,                 /* resources are OK after they were unsatisfied */
    ARL_TERMINATED,         /* ar object deleted */
    ARL_DELETED
 

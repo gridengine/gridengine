@@ -44,6 +44,8 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_mailrec.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_mesobj.h"
 
 #include "qrstat_report_handler.h"
 
@@ -73,7 +75,14 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
          handler->report_ar_node_duration(handler, answer_list, "duration", lGetUlong(ar, AR_duration));
 
          if (qrstat_env->is_explain || handler->show_summary == false) {
-            handler->report_ar_node_string(handler, answer_list, "message", "TODO");
+            lListElem *qinstance;
+            for_each(qinstance, lGetList(ar, AR_reserved_queues)) {
+               lListElem *qim = NULL;
+               for_each(qim, lGetList(qinstance, QU_message_list)) {
+                  const char *message = lGetString(qim, QIM_message);
+                  handler->report_ar_node_string(handler, answer_list, "message", message);
+               }
+            }
          }
          if (handler->show_summary == false) {
             handler->report_ar_node_time(handler, answer_list, "submission_time",

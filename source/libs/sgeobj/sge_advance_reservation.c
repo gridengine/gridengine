@@ -36,7 +36,6 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-
 #include "sge_advance_reservation.h"
 
 #include "uti/sge_stdlib.h"
@@ -64,6 +63,8 @@
 
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance.h"
 
 /*
  * TODO List. Following features/bugs need to be addressed:
@@ -77,14 +78,8 @@
  *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
  *       need to be rejected
  *
- *    7) qrstat -explain does not show correct messages
- * 
  *   10) job verification is not properly implemented. For example it's possible to submit
  *       AR job that requests non reserved consumable.
- *
- *   11) recognize when reserved host goes into error state and set/unset error flag
- *
- *   12) implement mail sending
  *
  *   15) ....
  *
@@ -343,10 +338,10 @@ ar_get_event_from_string(const char *string)
          ret = ARL_STARTTIME_REACHED;
       } else if (!strcmp(MSG_AR_EVENT_STATE_ENDTIME_REACHED, string)) {
          ret = ARL_ENDTIME_REACHED;
-      } else if (!strcmp(MSG_AR_EVENT_STATE_SOFT_ERROR, string)) {
-         ret = ARL_SOFT_ERROR;
-      } else if (!strcmp(MSG_AR_EVENT_STATE_HARD_ERROR, string)) {
-         ret = ARL_HARD_ERROR;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_UNSATISFIED, string)) {
+         ret = ARL_UNSATISFIED;
+      } else if (!strcmp(MSG_AR_EVENT_STATE_OK, string)) {
+         ret = ARL_OK;
       } else if (!strcmp(MSG_AR_EVENT_STATE_TERMINATED, string)) {
          ret = ARL_TERMINATED;
       } 
@@ -391,11 +386,11 @@ ar_get_string_from_event(ar_state_event_t event)
       case ARL_ENDTIME_REACHED:
          ret = MSG_AR_EVENT_STATE_ENDTIME_REACHED;
          break;
-      case ARL_SOFT_ERROR:
-         ret = MSG_AR_EVENT_STATE_SOFT_ERROR;
+      case ARL_UNSATISFIED:
+         ret = MSG_AR_EVENT_STATE_UNSATISFIED;
          break;
-      case ARL_HARD_ERROR:
-         ret = MSG_AR_EVENT_STATE_HARD_ERROR;
+      case ARL_OK:
+         ret = MSG_AR_EVENT_STATE_OK;
          break;
       case ARL_TERMINATED:
          ret = MSG_AR_EVENT_STATE_TERMINATED;
@@ -450,7 +445,10 @@ ar_state2dstring(ar_state_t state, dstring *state_as_string)
          letter = "d";
          break;
       case AR_ERROR:
-         letter = "e";
+         letter = "E";
+         break;
+      case AR_WARNING:
+         letter = "W";
          break;
       default:
          break;
@@ -458,3 +456,44 @@ ar_state2dstring(ar_state_t state, dstring *state_as_string)
    sge_dstring_append(state_as_string, letter);
 }
 
+/****** sge_advance_reservation/sge_ar_has_errors() ****************************
+*  NAME
+*     sge_ar_has_errors() -- Has AR errors?
+*
+*  SYNOPSIS
+*     bool sge_ar_has_errors(lListElem *ar) 
+*
+*  FUNCTION
+*     Check if one of the reserved queues is in state where jobs can not be
+*     running
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*
+*  RESULT
+*     bool - true if has errors
+*            false if has no errors
+*
+*  NOTES
+*     MT-NOTE: sge_ar_has_errors() is MT safe 
+*******************************************************************************/
+bool sge_ar_has_errors(lListElem *ar) {
+   bool ret = false;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "sge_ar_list_set_error_state");
+
+   for_each(qinstance, lGetList(ar, AR_reserved_queues)) {
+      if (qinstance_state_is_manual_disabled(qinstance) ||
+          qinstance_state_is_manual_suspended(qinstance) ||
+          qinstance_state_is_unknown(qinstance) ||
+          qinstance_state_is_error(qinstance) ||
+          qinstance_state_is_alarm(qinstance) ||
+          qinstance_state_is_ambiguous(qinstance)) {
+         ret = true;
+         break;
+      }
+   }
+
+   DRETURN(ret);
+}

@@ -1781,7 +1781,7 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
       int is_enrolled = job_is_enrolled(job, ja_task_id);
 
       if (!no_events) {
-         sge_add_event( 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
+         sge_add_event(0, sgeE_JATASK_DEL, job_id, ja_task_id, 
                        NULL, NULL, lGetString(job, JB_session), NULL);
       }
 

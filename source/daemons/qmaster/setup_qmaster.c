@@ -107,6 +107,7 @@
 #include "sgeobj/sge_resource_quota.h"
 #include "sge_resource_quota_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 #include "uti/sge_time.h"
 
 static void   process_cmdline(char**);
@@ -945,7 +946,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       }
    }
 
-
    DPRINTF(("job_list-----------------------------------\n"));
    /* measure time needed to read job database */
    time_start = time(0);
@@ -1031,7 +1031,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       for_each(qinstance, qinstance_list) {
          qinstance_set_full_name(qinstance);
-         qinstance_state_set_susp_on_sub(qinstance, false);
+         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
 
@@ -1087,7 +1087,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
          if (now < lGetUlong(ar, AR_start_time)) {
             ar_do_reservation(ar, true);
 
-            lSetUlong(ar, AR_state, AR_WAITING);
+            sge_ar_state_set_waiting(ar);
 
             ev = te_new_event((time_t)lGetUlong(ar, AR_start_time), TYPE_AR_EVENT,
                         ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_RUNNING, NULL);
@@ -1098,7 +1098,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
          } else if (now < lGetUlong(ar, AR_end_time)) {
             ar_do_reservation(ar, true);
 
-            lSetUlong(ar, AR_state, AR_RUNNING);
+            sge_ar_state_set_running(ar);
 
             ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT,
                         ONE_TIME_EVENT, lGetUlong(ar, AR_id), AR_EXITED, NULL);
@@ -1108,7 +1108,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
             dstring buffer = DSTRING_INIT;
             u_long32 ar_id = lGetUlong(ar, AR_id);
 
-            lSetUlong(ar, AR_state, AR_RUNNING);
+            sge_ar_state_set_running(ar);
 
             sge_ar_remove_all_jobs(ctx, ar_id, &monitor);
 

@@ -3772,8 +3772,7 @@ lListElem *lGetElemStr(const lList *lp, int nm, const char *str)
    DENTER(CULL_LAYER, "lGetElemStr");
    
    ret = lGetElemStrFirst(lp, nm, str, &iterator);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lGetElemStrFirst() *************************************
@@ -3819,8 +3818,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 
    /* empty list ? */
    if (!lp) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    listDescriptor = lGetListDescr(lp);
@@ -3831,16 +3829,14 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
    /* run time type checking */
    if (pos < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    dataType = lGetPosType(listDescriptor,pos);
    if (dataType != lStringT) {
       DPRINTF(("error: lGetElemStrFirst called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    *iterator = NULL;

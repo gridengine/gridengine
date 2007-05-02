@@ -402,8 +402,6 @@ debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_
       if ((ar = lGetElemUlong(ar_list, AR_id, lGetUlong(job, JB_ar))) != NULL) {
          lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gel, JG_qname), AR_reserved_queues);
          qinstance_debit_consumable(queue, job, centry_list, slots);
-         lWriteElemTo(ar, stdout);
-         fflush(stdout);
       }
    }
 

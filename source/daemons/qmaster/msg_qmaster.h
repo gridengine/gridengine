@@ -263,6 +263,7 @@
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN))
 #define MSG_COM_NONOTIFICATION_SSS    _MESSAGE(33182, _("failed sending "SFN" notification to "SFN" execd host "SFN))
 #define MSG_COM_NOTIFICATION_SSS      _MESSAGE(33184, _("sent "SFN" notification to "SFN" execd host "SFN))
+#define MSG_MAIL_AROKBODY_USSS        _MESSAGE(33185, _("Advance Reservation "sge_U32CFormat" ("SFN") Error resolved\n User       = "SFN"\n Error resolved Time = "SFN)) 
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33186, _("unknown"))
 #define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33187, _("shutdown and kill"))
 #define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33188, _("shutdown"))
@@ -271,21 +272,29 @@
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
 #define MSG_MAIL_JOBKILLEDSUBJ_US     "Job " sge_U32CFormat " ("SFN") Killed"
+#define MSG_MAIL_ARSTARTEDSUBJ_US     "Advance Reservation " sge_U32CFormat " ("SFN") Started"
+#define MSG_MAIL_AREXITEDSUBJ_US      "Advance Reservation " sge_U32CFormat " ("SFN") Finished"
+#define MSG_MAIL_ARDELETEDSUBJ_US     "Advance Reservation " sge_U32CFormat " ("SFN") Deleted"
+#define MSG_MAIL_ARERRORSUBJ_US       "Advance Reservation " sge_U32CFormat " ("SFN") Error"
+#define MSG_MAIL_AROKSUBJ_US          "Advance Reservation " sge_U32CFormat " ("SFN") Error resolved"
 
 #define MSG_MAIL_JOBKILLEDBODY_USS    _MESSAGE(33189, _("Job " sge_U32CFormat " ("SFN") was killed due to a kill execd on host "SFN))
 #define MSG_OBJ_INVALIDHOST_S         _MESSAGE(33190, _("invalid hostname "SFQ))
 #define MSG_OBJ_NOADDHOST_S           _MESSAGE(33191, _("adding host "SFQ" failed"))
 #define MSG_LOG_REGISTER_SS           _MESSAGE(33192, _(SFN" on "SFN" registered"))
 #define MSG_OBJ_NOSCALING4HOST_SS     _MESSAGE(33193, _("denied: scaling attribute "SFQ" is not configured for host "SFQ))  
-#define MSG_SGETEXT_ISNOEXECHOST_S              _MESSAGE(33194, _(SFQ" is not an execution host"))
-#define MSG_SGETEXT_NOEXECHOSTS                 _MESSAGE(33195, _("there are no execution hosts to kill"))
-#define MSG_SGETEXT_CANTDELADMINQMASTER_S       _MESSAGE(33197, _("denied: can't delete master host "SFQ" from admin host list") )   
-#define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33200, _("got load report from host "SFQ" - reports load value for host "SFQ))
+#define MSG_SGETEXT_ISNOEXECHOST_S    _MESSAGE(33194, _(SFQ" is not an execution host"))
+#define MSG_SGETEXT_NOEXECHOSTS       _MESSAGE(33195, _("there are no execution hosts to kill"))
+#define MSG_SGETEXT_CANTDELADMINQMASTER_S _MESSAGE(33196, _("denied: can't delete master host "SFQ" from admin host list") )
+#define MSG_MAIL_ARSTARTBODY_USSS     _MESSAGE(33197, _("Advance Reservation "sge_U32CFormat" ("SFN") Started\n User       = "SFN"\n Start Time = "SFN)) 
+#define MSG_MAIL_AREXITBODY_USSS      _MESSAGE(33198, _("Advance Reservation "sge_U32CFormat" ("SFN") Finished\n User       = "SFN"\n End Time = "SFN)) 
+#define MSG_MAIL_ARDELETETBODY_USSS   _MESSAGE(33199, _("Advance Reservation "sge_U32CFormat" ("SFN") Deleted\n User       = "SFN"\n Delete Time = "SFN)) 
+#define MSG_MAIL_ARERRORBODY_USSS     _MESSAGE(33200, _("Advance Reservation "sge_U32CFormat" ("SFN") Error\n User       = "SFN"\n Error Time = "SFN)) 
+#define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33201, _("got load report from host "SFQ" - reports load value for host "SFQ))
 
 /*
 ** sge_job.c
 */
-/* #define MSG_JOB_SENDKILLTOXFORJOBYZ_SUU _message(33201, _("send kill to "SFQ" for job "sge_U32CFormat"."sge_U32CFormat)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NORESUBPERMS_SSS      _MESSAGE(33202, _("job rejected: "SFN"@"SFN" is not allowed to resubmit jobs of user "SFN))
 #define MSG_JOB_NOPERMS_SS            _MESSAGE(33203, _("job rejected: "SFN"@"SFN" is not allowed to submit jobs"))
 #define MSG_JOB_MORETASKSTHAN_U       _MESSAGE(33204, _("job rejected: You try to submit a job with more than "sge_U32CFormat" tasks"))
@@ -324,6 +333,7 @@
 #define MSG_JOB_DISCONTINUEDTRANS_SU  _MESSAGE(33245, _("Discontinued delete transaction of user "SFQ" after job "sge_U32CFormat))
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _MESSAGE(33246, _("can't locate the queue "SFQ" associated with this job"))
 #define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33865, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
+#define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33866, _("job "sge_U32CFormat" is already in deletion"))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -768,7 +778,8 @@
 #define MSG_JOB_CHANGEJOBAR                         _MESSAGE(33935, _("changed job advance reservation"))
 #define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("the advance reservation id "sge_U32CFormat" is invalid"))
 #define MSG_JOB_WITHARANDNODEFAULTHRT               _MESSAGE(33937, _("the default job duration limit for jobs with advance reservations should be configured"))
-#define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat"."))
-#define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat"."))
+#define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat))
+#define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat))
+#define MSG_AR_RESERVEDQUEUEHASERROR_SS             _MESSAGE(33940, _("reserved queue "SFN" is "SFN))
 
 #endif

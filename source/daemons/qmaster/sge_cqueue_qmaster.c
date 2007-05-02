@@ -73,6 +73,7 @@
 #include "sge_queue_event_master.h"
 #include "sge_signal.h"
 #include "sge_mtutil.h"
+#include "sgeobj/sge_load.h"
 
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -120,6 +121,9 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
 
 static void
 cqueue_update_categories(const lListElem *new_cq, const lListElem *old_cq);
+
+static void
+qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list);
 
 u_long32
 sge_get_qinstance_number(void)
@@ -220,7 +224,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    /*
     * Change qinstance state
     */
-   qinstance_state_set_ambiguous(ret, *is_ambiguous);
+   sge_qmaster_qinstance_state_set_ambiguous(ret, *is_ambiguous);
    if (*is_ambiguous) {
       DPRINTF(("Qinstance "SFN"@"SFN" has ambiguous configuration\n",
                cqueue_name, hostname));
@@ -235,13 +239,12 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
     *    - state (modification according to initial state)
     *    - qversion
     */
-   qinstance_state_set_unknown(ret, true);
+   sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
-   qinstance_set_initial_state(ret);
+   sge_qmaster_qinstance_set_initial_state(ret);
    qinstance_increase_qversion(ret);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -260,7 +263,7 @@ cqueue_add_qinstances(sge_gdi_ctx_class_t *ctx, lListElem *cqueue, lList **answe
 
          if (qinstance != NULL) {
             if (qinstance_state_is_orphaned(qinstance)) {
-               qinstance_state_set_orphaned(qinstance, false);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, false);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                /*
@@ -314,7 +317,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
                 * it is not possible to delete the queue but we
                 * will set it into the "orphaned" state 
                 */
-               qinstance_state_set_orphaned(qinstance, true);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, true);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_DEL);
@@ -556,7 +559,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
          /*
           * Change qinstance state
           */
-         qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
+         sge_qmaster_qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
          if (will_be_ambiguous && !is_ambiguous) {
             state_changed = true;
             DPRINTF(("Qinstance "SFQ" has ambiguous configuration\n",
@@ -1131,8 +1134,8 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
          } else {
             next_qinstance = lNext(qinstance);
          }
-         if ((qinstance_state_is_unknown(qinstance)) != is_unknown) {
-            qinstance_state_set_unknown(qinstance, is_unknown);
+         if (qinstance_state_is_unknown(qinstance) != is_unknown) {
+            sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
             if (send_events) {
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
             }
@@ -1311,3 +1314,51 @@ static void cqueue_update_categories(const lListElem *new_cq, const lListElem *o
    lFreeList(&new);
 }
 
+/****** sgeobj/qinstance/qinstance_check_unknown_state() **********************
+*  NAME
+*     qinstance_check_unknown_state() -- Modifies the number of used slots 
+*
+*  SYNOPSIS
+*     void
+*     qinstance_check_unknown_state(lListElem *this_elem)
+*
+*  FUNCTION
+*     Checks if there are nonstatic load values available for the
+*     qinstance. If this is the case, then then the "unknown" state 
+*     of that machine will be released. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*
+*  RESULT
+*     void - NONE 
+*
+*  NOTES
+*     MT-NOTE: qinstance_check_unknown_state() is MT safe 
+*******************************************************************************/
+static void
+qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
+{
+   const char *hostname = NULL;
+   lList *load_list = NULL;
+   lListElem *host = NULL;
+   lListElem *load = NULL;
+
+   DENTER(TOP_LAYER, "qinstance_check_unknown_state");
+   hostname = lGetHost(this_elem, QU_qhostname);
+   host = host_list_locate(master_exechost_list, hostname);
+   if (host != NULL) {
+      load_list = lGetList(host, EH_load_list);
+
+      for_each(load, load_list) {
+         const char *load_name = lGetString(load, HL_name);
+
+         if (!sge_is_static_load_value(load_name)) {
+            sge_qmaster_qinstance_state_set_unknown(this_elem, false);
+            DTRACE;
+            break;
+         }
+      } 
+   }
+   DRETURN_VOID;
+}

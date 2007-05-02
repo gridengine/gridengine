@@ -172,10 +172,7 @@ static const char letters[] = {
       '\0'
    };
 
-static void 
-qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit);
-
-static void 
+void 
 qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit)
 {
    u_long32 state = lGetUlong(this_elem, QU_state);
@@ -442,17 +439,15 @@ qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string)
    int i = 0;
 
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_state_append_to_dstring");
+   sge_dstring_sprintf(string, "");
    while (states[i] != 0) {
       if (qinstance_has_state(this_elem, states[i])) {
-         sge_dstring_sprintf_append(string, "%c", letters[i]);
+         sge_dstring_append_char(string, letters[i]);
       }
       i++;
    }
-   sge_dstring_sprintf_append(string, "%c", '\0');
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
-
 void 
 qinstance_state_set_orphaned(lListElem *this_elem, bool set_state)
 {
@@ -541,11 +536,13 @@ void
 qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
 {
    DENTER(QINSTANCE_STATE_LAYER, "qinstance_state_set_unknown");
-   if (mconf_get_simulate_execds())
+
+   if (mconf_get_simulate_execds()) {
       qinstance_set_state(this_elem, false, QI_UNKNOWN);
-   else
+   } else {
       qinstance_set_state(this_elem, set_state, QI_UNKNOWN);
-   DEXIT;
+   }
+   DRETURN_VOID;
 }
 
 bool 
@@ -610,27 +607,6 @@ qinstance_state_is_cal_suspended(const lListElem *this_elem)
    return qinstance_has_state(this_elem, QI_CAL_SUSPENDED);
 }
 
-/* ret: did the state change */
-bool
-qinstance_set_initial_state(lListElem *this_elem)
-{
-   bool ret = false;
-   const char *state_string = lGetString(this_elem, QU_initial_state);
-
-   DENTER(QINSTANCE_STATE_LAYER, "qinstance_set_initial_state");
-   if (state_string != NULL && strcmp(state_string, "default")) {
-      bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
-      bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
-
-      if ((do_disable && !is_disabled) || (!do_disable && is_disabled)) {
-         ret = true;
-         qinstance_state_set_manual_disabled(this_elem, do_disable);
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
 void 
 qinstance_state_set_full(lListElem *this_elem, bool set_state)
 {
@@ -642,4 +618,3 @@ qinstance_state_is_full(const lListElem *this_elem)
 {
    return qinstance_has_state(this_elem, QI_FULL);
 }
-

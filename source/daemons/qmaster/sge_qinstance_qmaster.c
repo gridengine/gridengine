@@ -163,8 +163,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   if (calendar != NULL) { 
                      qinstance_change_state_on_calendar(ctx, this_elem, calendar, monitor);
                   } else {
-                     qinstance_state_set_cal_disabled(this_elem, false);
-                     qinstance_state_set_cal_suspended(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_disabled(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_suspended(this_elem, false);
                      lSetList(this_elem, QU_state_changes, NULL);
                   }
                   lSetString(this_elem, attribute_name, new_value);
@@ -657,19 +657,19 @@ qinstance_change_state_on_command(sge_gdi_ctx_class_t *ctx,
    dstring buffer = DSTRING_INIT;
    const char *qinstance_name = qinstance_get_name(this_elem, &buffer);
    change_state_t transitions[] = {
-      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  qinstance_state_set_error,            false},
-      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  qinstance_state_set_manual_disabled,  false},
-      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, qinstance_state_set_manual_disabled,  true },
-      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, qinstance_state_set_manual_suspended, true },
-      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  qinstance_state_set_manual_suspended, false},
+      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  sge_qmaster_qinstance_state_set_error,            false},
+      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  sge_qmaster_qinstance_state_set_manual_disabled,  false},
+      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, sge_qmaster_qinstance_state_set_manual_disabled,  true },
+      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, sge_qmaster_qinstance_state_set_manual_suspended, true },
+      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  sge_qmaster_qinstance_state_set_manual_suspended, false},
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
-      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, qinstance_state_set_error,            true},
-      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, qinstance_state_set_orphaned,         true},
-      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  qinstance_state_set_orphaned,         false},
-      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, qinstance_state_set_unknown,          true},
-      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  qinstance_state_set_unknown,          false},
-      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, qinstance_state_set_ambiguous,        true},
-      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  qinstance_state_set_ambiguous,        false},
+      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, sge_qmaster_qinstance_state_set_error,            true},
+      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, sge_qmaster_qinstance_state_set_orphaned,         true},
+      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  sge_qmaster_qinstance_state_set_orphaned,         false},
+      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, sge_qmaster_qinstance_state_set_unknown,          true},
+      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  sge_qmaster_qinstance_state_set_unknown,          false},
+      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, sge_qmaster_qinstance_state_set_ambiguous,        true},
+      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  sge_qmaster_qinstance_state_set_ambiguous,        false},
 #endif
       { QI_DO_NOTHING,        0,             NULL,                                true,  NULL,                                 true }
    };
@@ -930,7 +930,7 @@ static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
    if (old_cal_suspended != new_cal_suspended) {
       const char *name = lGetString(this_elem, QU_full_name);
 
-      qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
+      sge_qmaster_qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
       if (new_cal_suspended) {
          if (qinstance_state_is_susp_on_sub(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
@@ -1040,5 +1040,144 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
       }
    }
 
+   DRETURN(ret);
+}
+
+void 
+sge_qmaster_qinstance_state_set_alarm(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_alarm(this_elem, set_state);
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_SUSPEND_ALARM,
+                               true,
+                               set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_suspend_alarm(this_elem, set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_manual_disabled(this_elem, set_state);
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_DISABLED,
+                               true,
+                               set_state);
+
+}
+
+void 
+sge_qmaster_qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_manual_suspended(this_elem, set_state);
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_SUSPENDED,
+                               true,
+                               set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_unknown(this_elem, set_state);
+   if (mconf_get_simulate_execds()) {
+      sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                                     lGetString(this_elem, QU_full_name), 
+                                     QI_UNKNOWN,
+                                     false,
+                                     set_state);
+   } else {
+      sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                                     lGetString(this_elem, QU_full_name), 
+                                     QI_UNKNOWN,
+                                     true,
+                                     set_state);
+   }
+
+}
+
+void 
+sge_qmaster_qinstance_state_set_error(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_error(this_elem, set_state);
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_ERROR,
+                               true,
+                               set_state);
+
+}
+
+void 
+sge_qmaster_qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_susp_on_sub(this_elem, set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_cal_disabled(this_elem, set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_cal_suspended(this_elem, set_state);
+}
+
+void 
+sge_qmaster_qinstance_state_set_full(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_full(this_elem, set_state);
+}
+
+void
+sge_qmaster_qinstance_state_set_orphaned(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_orphaned(this_elem, set_state);
+}
+
+void
+sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state)
+{
+   qinstance_state_set_ambiguous(this_elem, set_state);
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_AMBIGUOUS,
+                               true,
+                               set_state);
+
+}
+
+/* ret: did the state change */
+bool
+sge_qmaster_qinstance_set_initial_state(lListElem *this_elem)
+{
+   bool ret = false;
+   const char *state_string = lGetString(this_elem, QU_initial_state);
+
+#ifdef QINSTANCE_MODIFY_DEBUG
+   DENTER(TOP_LAYER, "sge_qmaster_qinstance_set_initial_state");
+#else 
+   DENTER(BASIS_LAYER, "sge_qmaster_qinstance_set_initial_state");
+#endif
+
+   if (state_string != NULL && strcmp(state_string, "default")) {
+      bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
+      bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
+
+      if ((do_disable && !is_disabled) || (!do_disable && is_disabled)) {
+         ret = true;
+         sge_qmaster_qinstance_state_set_manual_disabled(this_elem, do_disable);
+      }
+   }
    DRETURN(ret);
 }

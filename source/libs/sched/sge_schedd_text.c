@@ -229,6 +229,9 @@ const char* sge_get_schedd_text( int nr )
       case SCHEDD_INFO_QNOTARRESERVED_SI:
          return MSG_SCHEDD_INFO_QNOTARRESERVED_SI; 
 
+      case SCHEDD_INFO_ARISINERROR_I:
+         return MSG_SCHEDD_INFO_ARISINERROR_I; 
+
 /* */
 
       case SCHEDD_INFO_CANNOTRUNATHOST          :
@@ -389,6 +392,9 @@ const char* sge_get_schedd_text( int nr )
 
       case SCHEDD_INFO_QNOTARRESERVED:
          return MSG_SCHEDD_INFO_QNOTARRESERVED; 
+
+      case SCHEDD_INFO_ARISINERROR:
+         return MSG_SCHEDD_INFO_ARISINERROR; 
 
       default:
          return "";

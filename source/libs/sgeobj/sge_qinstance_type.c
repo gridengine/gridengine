@@ -159,8 +159,7 @@ qinstance_print_qtype_to_dstring(const lListElem *this_elem,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool

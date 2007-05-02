@@ -64,6 +64,7 @@
 #include "sge_hostname.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
+#include "sge_qinstance_qmaster.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_report_execd.h"
@@ -300,7 +301,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                                                     QU_qhostname,
                                                     host, 
                                                     &iterator);
-                  qinstance_state_set_error(qinstance, true);
+                  sge_qmaster_qinstance_state_set_error(qinstance, true);
                   reporting_create_queue_record(NULL, qinstance, timestamp);
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
@@ -329,7 +330,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                              hostname);
          
          /* general error -> this queue cant run any job */
-         qinstance_state_set_error(queueep, true);
+         sge_qmaster_qinstance_state_set_error(queueep, true);
          reporting_create_queue_record(NULL, queueep, timestamp);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
          spool_queueep = true;

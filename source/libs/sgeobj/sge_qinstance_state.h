@@ -152,9 +152,6 @@ qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
 void
 qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
 
-bool
-qinstance_set_initial_state(lListElem *this_elem);
-
 bool 
 qinstance_state_is_alarm(const lListElem *this_elem);
 
@@ -193,5 +190,8 @@ qinstance_state_is_full(const lListElem *this_elem);
 
 bool 
 qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string);
+
+void 
+qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit);
 
 #endif /* __SGE_QINSTANCE_STATE_H */

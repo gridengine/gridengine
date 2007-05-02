@@ -229,12 +229,7 @@ lListElem *petep,
 char *err_str,
 int err_length) {
    int i;
-   char sge_mail_subj[1024];
-   char sge_mail_body[2048];
-   char sge_mail_start[128];
    char ps_name[128];
-   lList *mail_users;
-   int mail_options;
    FILE *fp;
    u_long32 interval;
    struct passwd *pw;
@@ -1521,36 +1516,39 @@ int err_length) {
 
    /* send mail to users if requested */
    if(petep == NULL) {
-      dstring ds;
-      char buffer[128];
-      sge_dstring_init(&ds, buffer, sizeof(buffer));
+      if (VALID(MAIL_AT_BEGINNING, lGetUlong(jep, JB_mail_options))) {
+         dstring subject = DSTRING_INIT;
+         dstring body = DSTRING_INIT;
+         dstring ds = DSTRING_INIT;
+   
+         sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds);
 
-      mail_users = lGetList(jep, JB_mail_list);
-      mail_options = lGetUlong(jep, JB_mail_options);
-      strcpy(sge_mail_start, sge_ctime((time_t)lGetUlong(jatep, JAT_start_time), &ds));
-      if (VALID(MAIL_AT_BEGINNING, mail_options)) {
          if (job_is_array(jep)) {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_UUS, sge_u32c(job_id),
+            sge_dstring_sprintf(&subject, MSG_MAIL_STARTSUBJECT_UUS, sge_u32c(job_id),
                     sge_u32c(ja_task_id), lGetString(jep, JB_job_name));
-            sprintf(sge_mail_body, MSG_MAIL_STARTBODY_UUSSSSS,
+            sge_dstring_sprintf(&body, MSG_MAIL_STARTBODY_UUSSSSS,
                 sge_u32c(job_id),
                 sge_u32c(ja_task_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner), 
                 lGetString(master_q, QU_qname),
-                lGetHost(master_q, QU_qhostname), sge_mail_start);
-         } 
-         else {
-            sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, sge_u32c(job_id),
+                lGetHost(master_q, QU_qhostname), sge_dstring_get_string(&ds));
+         } else {
+            sge_dstring_sprintf(&subject, MSG_MAIL_STARTSUBJECT_US, sge_u32c(job_id),
                lGetString(jep, JB_job_name));
-            sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,
+            sge_dstring_sprintf(&body, MSG_MAIL_STARTBODY_USSSSS,
                 sge_u32c(job_id),
                 lGetString(jep, JB_job_name),
                 lGetString(jep, JB_owner),
                 lGetString(master_q, QU_qname),
-                lGetHost(master_q, QU_qhostname), sge_mail_start);
+                lGetHost(master_q, QU_qhostname), sge_dstring_get_string(&ds));
          }
-         cull_mail(EXECD, mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_START);
+
+         cull_mail(EXECD, lGetList(jep, JB_mail_list), sge_dstring_get_string(&subject),
+                   sge_dstring_get_string(&body), MSG_MAIL_TYPE_START);
+         sge_dstring_free(&ds);
+         sge_dstring_free(&subject);
+         sge_dstring_free(&body);
       }
    }
 

@@ -382,7 +382,7 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
                }
             }
 
-            for ( i=0; i< max_host_resources; i++){
+            for ( i=0; i < max_host_resources; i++){
                if (strcmp(host_resource[i].name, name) == 0 ){
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                           MSG_INVALID_CENTRY_DEL_S, name);

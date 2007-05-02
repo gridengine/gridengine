@@ -106,9 +106,6 @@ int
 qinstance_debit_consumable(lListElem *this_elem, lListElem *job, 
                            lList *centry_list, int slots);
 
-void
-qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list);
-
 bool
 qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message);
 
@@ -146,4 +143,7 @@ qinstance_verify(const lListElem *qep, lList **answer_list);
 
 bool
 qinstance_verify_full_name(lList **answer_list, const char *full_name);
+
+void
+qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error);
 #endif /* __SGE_QINSTANCE_H */

@@ -216,7 +216,6 @@ qrstat_destroy_report_handler_xml(qrstat_report_handler_t** handler, lList **ans
       sge_dstring_free((dstring*)(*handler)->ctx);
       FREE((*handler)->ctx);
       FREE(*handler);
-      *handler = NULL;
    }
 
    DRETURN(ret);

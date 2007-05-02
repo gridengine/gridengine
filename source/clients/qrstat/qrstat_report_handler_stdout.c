@@ -208,7 +208,7 @@ qrstat_destroy_report_handler_stdout(qrstat_report_handler_t** handler, lList **
    DENTER(TOP_LAYER, "qrstat_destroy_report_handler");
 
    if (handler != NULL && *handler != NULL ) {
-      (*handler)->ctx = NULL;
+      FREE(*handler);
    }
 
    DRETURN(ret);
@@ -351,11 +351,10 @@ qrstat_report_ar_node_time(qrstat_report_handler_t* handler, lList **alpp,
  
    sge_dstring_append_time(&time_string, value, false); 
    if (handler->show_summary) {
-      if (strcmp("start_time", name) == 0 || strcmp("end_time", name)) {
+      if (strcmp("start_time", name) == 0 || strcmp("end_time", name) == 0) {
          fprintf(out, "%-20.20s ", sge_dstring_get_string(&time_string));
       }
    } else {
-
       fprintf(out, SFN_FIRST_COLUMN" "SFN"\n", name, sge_dstring_get_string(&time_string));  
    }
    sge_dstring_free(&time_string);

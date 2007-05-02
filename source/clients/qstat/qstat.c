@@ -1562,8 +1562,7 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
 
    printf("\n");
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int qstat_stdout_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) 

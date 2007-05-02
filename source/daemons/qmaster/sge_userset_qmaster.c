@@ -88,8 +88,7 @@ char *rhost
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* ep is no acl element, if ep has no US_name */
@@ -97,24 +96,21 @@ char *rhost
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    userset_name = lGetPosString(ep, pos);
    if (!userset_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* Name has to be a valid filename without pathchanges, because we use it
       for storing user/project to disk */
    if (verify_str_key(
          alpp, userset_name, MAX_VERIFY_STRING, MSG_OBJ_USERSET,KEY_TABLE) != STATUS_OK) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* search for userset with this name */
@@ -124,8 +120,7 @@ char *rhost
    if (found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, MSG_OBJ_USERSET, userset_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    /* ensure userset is at least an ACL (qconf -au ) */
@@ -135,8 +130,7 @@ char *rhost
    /* interpret user/group names */
    ret=userset_validate_entries(ep, alpp, 0);
    if ( ret != STATUS_OK ) {
-      DEXIT;
-      return ret;
+      DRETURN(ret);
    }
 
    /*
@@ -145,8 +139,7 @@ char *rhost
    */
    ret = sge_verify_department_entries(*userset_list, ep, alpp);
    if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
+      DRETURN(ret);
    }
 
    {
@@ -167,20 +160,19 @@ char *rhost
    if (!sge_event_spool(ctx, alpp, 0, sgeE_USERSET_ADD,
                         0, 0, userset_name, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* update in interal lists */
-   if (!*userset_list)
+   if (!*userset_list) {
       *userset_list = lCreateList("global userset list", US_Type);
+   }
    lAppendElem(*userset_list, lCopyElem(ep));
 
    INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /******************************************************************
@@ -336,21 +328,6 @@ char *rhost
 
    /* insert modified userset */
    lAppendElem(*userset_list, lCopyElem(ep));
-
-   {
-      dstring ds = DSTRING_INIT;
-      lListElem *rqs;
-
-      sge_dstring_sprintf(&ds, "@%s", userset_name);
-
-      for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
-         if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
-            lSetBool(ep, US_consider_with_categories, true);
-            break;
-         }
-      }
-      sge_dstring_free(&ds);
-   }
 
    /* update on file */
    if (!sge_event_spool(ctx, alpp, 0, sgeE_USERSET_MOD,

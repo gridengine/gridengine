@@ -66,8 +66,9 @@
 #include "sge_security.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sge_qinstance_qmaster.h"
 #include "sge_job.h"
 #include "sge_report.h"
 #include "sge_userprj.h"
@@ -84,6 +85,7 @@
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
 #include "sge_bootstrap.h"
 #include "spool/sge_spooling.h"
 #include "sched/sge_resource_utilization.h"
@@ -666,11 +668,11 @@ const char *target    /* prognames[QSTD|EXECD] */
    host = lGetHost(hep, EH_name);
 
    if (target) {
-      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
+      if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
          DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, target, 1 ));
       }
    } else {
-      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[EXECD],1) == CL_RETVAL_OK) {
+      if (cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[EXECD],1) == CL_RETVAL_OK) {
          DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host,(char*)prognames[EXECD], 1 ));
       }
    }
@@ -680,8 +682,7 @@ const char *target    /* prognames[QSTD|EXECD] */
          *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
          host, true, true);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /* ----------------------------------------
@@ -923,7 +924,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
             qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
                                           host, &iterator);
             while (qinstance != NULL) {
-               qinstance_state_set_unknown(qinstance, true);
+               sge_qmaster_qinstance_state_set_unknown(qinstance, true);
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
 
                DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 
@@ -943,8 +944,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 u_long32 load_report_interval(lListElem *hep)
@@ -1332,7 +1332,7 @@ u_long32 target, monitoring_t *monitor) {
       qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
                                     rhost, &iterator);
       while (qinstance != NULL) {
-         bool state_changed = qinstance_set_initial_state(qinstance);
+         bool state_changed = sge_qmaster_qinstance_set_initial_state(qinstance);
 
          if (state_changed) {
             lList *answer_list = NULL;

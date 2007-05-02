@@ -1,3 +1,10 @@
+RD-2007-05-02-0: Bugfix:    - implemented AR error state handling
+                            - implemented AR mail sending
+                            - fixed qdel on job in deletion state
+                 Issue:     1860
+                 Bugster:   6345522
+                 Review:    EB
+
 EB-2007-05-02-0: Enhancem.: changes for qstat and advance reservation
                  Review:    RD
 

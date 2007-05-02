@@ -71,6 +71,7 @@ qrstat_filter_add_core_attributes(qrstat_env_t *qrstat_env)
       AR_end_time,
       AR_duration,
       AR_state,
+      AR_reserved_queues,
       NoName
    };
 
@@ -101,6 +102,7 @@ qrstat_filter_add_ar_attributes(qrstat_env_t *qrstat_env)
       AR_acl_list,
       AR_xacl_list,
       AR_type,
+      AR_reserved_queues,
       NoName
    };
 

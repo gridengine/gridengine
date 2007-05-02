@@ -201,7 +201,7 @@ qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
          ret = (sge_signal_queue(ctx, signal, this_elem, NULL, NULL, monitor) == 0) ? true : false;
       }
 
-      qinstance_state_set_susp_on_sub(this_elem, suspend);
+      sge_qmaster_qinstance_state_set_susp_on_sub(this_elem, suspend);
 
       sge_add_event(0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
       reporting_create_queue_record(NULL, this_elem, sge_get_gmt());

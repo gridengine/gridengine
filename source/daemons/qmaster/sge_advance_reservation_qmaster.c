@@ -38,6 +38,7 @@
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 
+#include "sgeobj/sge_advance_reservation.h"
 #include "sge_advance_reservation_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
@@ -49,6 +50,7 @@
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_hgroup.h"
@@ -87,6 +89,8 @@
 #include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_give_jobs.h"
+#include "mail.h"
+#include "symbols.h"
 
 typedef struct {
    u_long32 ar_id;
@@ -99,6 +103,8 @@ ar_id_t ar_id_control = {0, false, PTHREAD_MUTEX_INITIALIZER};
 static bool ar_reserve_queues(lList **alpp, lListElem *ar);
 static u_long32 sge_get_ar_id(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor);
 static u_long32 guess_highest_ar_id(void);
+
+static void sge_ar_send_mail(lListElem *ar, int type);
 
 /****** sge_advance_reservation_qmaster/ar_mod() *******************************
 *  NAME
@@ -197,7 +203,7 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    /*   AR_error_handling, SGE_ULONG      how to deal with soft and hard exceptions */
    attr_mod_ulong(ar, new_ar, AR_error_handling, object->object_name);
    /*   AR_state, SGE_ULONG               state of the AR */
-   attr_mod_ulong(ar, new_ar, AR_state, object->object_name);
+   lSetUlong(new_ar, AR_state, AR_WAITING);
    /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
    attr_mod_zerostr(ar, new_ar, AR_checkpoint_name, object->object_name);
    /*   AR_resource_list, SGE_LIST */
@@ -220,7 +226,6 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    attr_mod_sub_list(alpp, new_ar, AR_xacl_list, AR_name, ar, sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_AR, 0); 
    /*   AR_type, SGE_ULONG     */
    attr_mod_ulong(ar, new_ar, AR_type, object->object_name);
-
 
    /* try to reserve the queues */
    if (!ar_reserve_queues(alpp, new_ar)) {
@@ -352,6 +357,8 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
       lAppendElem(*ppList, lCopyElem(ep)); 
    }
 
+   sge_ar_state_set_waiting(ep);
+
    /*
    ** send sgeE_AR_MOD/sgeE_AR_ADD event
    */
@@ -445,7 +452,9 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
       removed_one = true;
 
       ar_id = lGetUlong(found, AR_id);
-      sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
+      sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
+
+      sge_ar_state_set_deleted(found);
 
       /* remove timer for this advance reservation */
       te_delete_one_time_event(TYPE_AR_EVENT, ar_id, AR_RUNNING, NULL);
@@ -461,6 +470,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
                                      "AR deleted",
                                      now);  
       reporting_create_ar_acct_records(NULL, found, now); 
+
+      sge_ar_send_mail(found, MAIL_AT_EXIT);
 
       found = lDechainElem(*ar_list, found);
 
@@ -480,7 +491,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
 
    if (!removed_one) {
       if (!ar_name) {
-         sge_dstring_sprintf(&buffer, sge_u32, ar_id);
+         sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
       } else {
          sge_dstring_sprintf(&buffer, "%s", ar_name);
       }
@@ -747,7 +758,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
    if (state == AR_EXITED) {
       time_t timestamp = (time_t) sge_get_gmt();
 
-      lSetUlong(ar, AR_state, state);
+      sge_ar_state_set_exited(ar);
 
       /* remove all jobs running in this AR */
       sge_ar_remove_all_jobs(ctx, ar_id, monitor);
@@ -759,6 +770,8 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
                                      "end time of AR reached",
                                      timestamp);  
       reporting_create_ar_acct_records(NULL, ar, timestamp); 
+
+      sge_ar_send_mail(ar, MAIL_AT_EXIT);
 
       /* remove the AR itself */
       DPRINTF(("AR: exited, removing AR %s\n", sge_dstring_get_string(&buffer)));
@@ -775,7 +788,8 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       /* AR_RUNNING */
       DPRINTF(("AR: started, changing state of AR "sge_u32"\n", ar_id));
 
-      lSetUlong(ar, AR_state, state);
+      sge_ar_state_set_running(ar);
+
       ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT, ONE_TIME_EVENT, ar_id, AR_EXITED, NULL);
       te_add_event(ev);
       te_free_event(&ev);
@@ -787,7 +801,9 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
 
       reporting_create_ar_log_record(NULL, ar, ARL_STARTTIME_REACHED, 
                                      "start time of AR reached",
-                                     sge_get_gmt());  
+                                     sge_get_gmt());
+
+      sge_ar_send_mail(ar, MAIL_AT_BEGINNING);
    }
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -1448,7 +1464,7 @@ ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list,
    for_each(ar, ar_master_list) {
       const char *pe_string = lGetString(ar, AR_pe);
 
-      if (pe_name != NULL && strcmp(pe_string, pe_name) == 0) {
+      if (pe_name != NULL && pe_string != NULL && strcmp(pe_string, pe_name) == 0) {
          for_each(gs, lGetList(ar, AR_granted_slots)) {
             u_long32 slots = lGetUlong(gs, JG_slots);
          
@@ -1490,6 +1506,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
    lList *gdil = lGetList(ar, AR_granted_slots);
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
    dstring buf = DSTRING_INIT;
 
    static int queue_field[] = { QU_qhostname,
@@ -1498,13 +1515,15 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                                 QU_job_slots,
                                 QU_consumable_config_list,
                                 QU_resource_utilization,
+                                QU_message_list,
+                                QU_state,
                                 NoName };
 
    lDescr *rdp = NULL;
    lEnumeration *what; 
    lList *queue_list;
 
-   DENTER(TOP_LAYER, "ar_created_reserved_queue_list");
+   DENTER(TOP_LAYER, "ar_initialize_reserved_queue_list");
 
    what = lIntVector2What(QU_Type, queue_field);
    lReduceDescr(&rdp, QU_Type, what);
@@ -1516,10 +1535,13 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       u_long32 slots = lGetUlong(gep, JG_slots);
       lListElem *queue = lCreateElem(rdp);
       lList *crl = NULL;
+      
+      const char *queue_name = lGetString(gep, JG_qname);
+      char *cqueue_name = cqueue_get_name_from_qinstance(queue_name);
        
       lSetHost(queue, QU_qhostname, lGetHost(gep, JG_qhostname));
-      lSetString(queue, QU_full_name, lGetString(gep, JG_qname));
-      lSetString(queue, QU_qname, cqueue_get_name_from_qinstance(lGetString(gep, JG_qname)));
+      lSetString(queue, QU_full_name, queue_name);
+      lSetString(queue, QU_qname, cqueue_name);
 
       lSetUlong(queue, QU_job_slots, slots);
 
@@ -1551,9 +1573,64 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
 
       /* initialize QU_resource_utilization */
       qinstance_debit_consumable(queue, NULL, master_centry_list, 0);
+
+      /* initialize QU_state */
+      {
+         lListElem *master_cqueue;
+         lListElem *master_queue;
+         dstring buffer = DSTRING_INIT;
+
+         for_each(master_cqueue, master_cqueue_list) {
+            if ((master_queue = lGetSubStr(master_cqueue, QU_full_name,
+                  queue_name, CQ_qinstances)) != NULL){
+               DPRINTF(("RD: found queue %s\n", queue_name));
+               if (qinstance_state_is_ambiguous(master_queue)) {
+                  DPRINTF(("RD: setting ambigous state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_AMBIGUOUS));
+                  qinstance_set_error(queue, QI_AMBIGUOUS, sge_dstring_get_string(&buffer), true);
+               }
+               if (qinstance_state_is_alarm(master_queue)) {
+                  DPRINTF(("RD: setting alarm state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_ALARM));
+                  qinstance_set_error(queue, QI_ALARM, sge_dstring_get_string(&buffer), true);
+               }
+               if (qinstance_state_is_suspend_alarm(master_queue)) {
+                  DPRINTF(("RD: setting suspend alarm state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_SUSPEND_ALARM));
+                  qinstance_set_error(queue, QI_SUSPEND_ALARM, sge_dstring_get_string(&buffer), true);
+               }
+               if (qinstance_state_is_manual_disabled(master_queue)) {
+                  DPRINTF(("RD: setting disabled state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_DISABLED));
+                  qinstance_set_error(queue, QI_DISABLED, sge_dstring_get_string(&buffer), true);
+               }
+               if (qinstance_state_is_unknown(master_queue)) {
+                  DPRINTF(("RD: setting unknown state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_UNKNOWN));
+                  qinstance_set_error(queue,QI_UNKNOWN, sge_dstring_get_string(&buffer), true);
+               }
+               if (qinstance_state_is_error(master_queue)) {
+                  DPRINTF(("RD: setting error state\n"));
+                  sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
+                                qinstance_state_as_string(QI_ERROR));
+                  qinstance_set_error(queue, QI_ERROR, sge_dstring_get_string(&buffer), true);
+               }
+               break;
+            }
+         }
+         sge_dstring_free(&buffer);
+      }
+
+      FREE(cqueue_name);
    }
    lSetList(ar, AR_reserved_queues, queue_list);
 
+   FREE(rdp);
    sge_dstring_free(&buf);
 
    DRETURN_VOID; 
@@ -1608,10 +1685,12 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
            task_number++) {
 
          if (job_is_ja_task_defined(jep, task_number)) {
+
             if (job_is_enrolled(jep, task_number)) {
                /* delete all enrolled pending tasks */
                DPRINTF(("removing enrolled task %d.%d\n", lGetUlong(jep, JB_job_number), task_number));
                tmp_task = lGetSubUlong(jep, JAT_task_number, task_number, JB_ja_tasks); 
+
                sge_commit_job(ctx, jep, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE,
                               COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
             } else {
@@ -1620,8 +1699,8 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
                tmp_task = job_get_ja_task_template_pending(jep, task_number);
 
                sge_commit_job(ctx, jep, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
-                              COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
-                              COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
+                              COMMIT_NO_SPOOLING | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN,
+                              monitor);
             }
          }
       }
@@ -1657,8 +1736,8 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
 *     MT-NOTE: sge_ar_list_conflicts_with_calendar() is MT safe 
 *******************************************************************************/
 bool
-sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_name, lListElem *cal_ep,
-                                lList *master_ar_list)
+sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_name,
+                                    lListElem *cal_ep, lList *master_ar_list)
 {
    lListElem *ar;
    lListElem *ar_queue;
@@ -1684,4 +1763,307 @@ sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_n
       }
    }
    DRETURN(false);
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_state_set_running() *************
+*  NAME
+*     sge_ar_state_set_running() -- set ar in running state
+*
+*  SYNOPSIS
+*     void sge_ar_state_set_running(lListElem *ar) 
+*
+*  FUNCTION
+*     Sets the AR state to running. A running state can result in error state
+*     if one of the reserved queues is unable to run a job. This is covered by the
+*     function
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*
+*  NOTES
+*     MT-NOTE: sge_ar_state_set_running() is MT safe 
+*
+*  SEE ALSO
+*     sge_advance_reservation_qmaster/sge_ar_state_set_exited()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_deleted()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_waiting()
+*******************************************************************************/
+void sge_ar_state_set_running(lListElem *ar)
+{
+   u_long32 old_state = lGetUlong(ar, AR_state);
+
+   if (sge_ar_has_errors(ar)) {
+      lSetUlong(ar, AR_state, AR_ERROR);
+      if (old_state != AR_WARNING && old_state != lGetUlong(ar, AR_state)) {
+         /* state change from "running" to "error" */
+         reporting_create_ar_log_record(NULL, ar, ARL_UNSATISFIED, "AR resources unsatisfied", sge_get_gmt());
+         sge_ar_send_mail(ar, MAIL_AT_ABORT);
+      } else if (old_state != lGetUlong(ar, AR_state)) {
+         /* state change from "warning" to "error" */
+         sge_ar_send_mail(ar, MAIL_AT_ABORT);
+      }
+   } else {
+      lSetUlong(ar, AR_state, AR_RUNNING);
+      if (old_state != AR_WAITING && old_state != lGetUlong(ar, AR_state)) {
+         /* state change from "error" to "running" */
+         reporting_create_ar_log_record(NULL, ar, ARL_OK, "AR resources satisfied", sge_get_gmt());
+         sge_ar_send_mail(ar, MAIL_AT_ABORT);
+      }
+   }
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_state_set_waiting() *************
+*  NAME
+*     sge_ar_state_set_waiting() -- set ar in running state
+*
+*  SYNOPSIS
+*     void sge_ar_state_set_waiting(lListElem *ar) 
+*
+*  FUNCTION
+*     Sets the AR state to waiting. A waiting state can result in warning state
+*     if one of the reserved queues is unable to run a job. This is covered by the
+*     function
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*
+*  NOTES
+*     MT-NOTE: sge_ar_state_set_waiting() is MT safe 
+*
+*  SEE ALSO
+*     sge_advance_reservation_qmaster/sge_ar_state_set_exited()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_deleted()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_running()
+*******************************************************************************/
+void sge_ar_state_set_waiting(lListElem *ar)
+{
+   u_long32 old_state = lGetUlong(ar, AR_state);
+
+   if (sge_ar_has_errors(ar)) {
+      lSetUlong(ar, AR_state, AR_WARNING);
+      if (old_state != lGetUlong(ar, AR_state)) {
+         reporting_create_ar_log_record(NULL, ar, ARL_UNSATISFIED, "AR resources unsatisfied", sge_get_gmt());
+      }
+   } else {
+      lSetUlong(ar, AR_state, AR_WAITING);
+      if (old_state != lGetUlong(ar, AR_state)) {
+         reporting_create_ar_log_record(NULL, ar, ARL_OK, "AR resources satisfied", sge_get_gmt());
+      }
+   }
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_state_set_deleted() *************
+*  NAME
+*     sge_ar_state_set_deleted() -- sets AR into deleted state
+*
+*  SYNOPSIS
+*     void sge_ar_state_set_deleted(lListElem *ar) 
+*
+*  FUNCTION
+*     Sets the AR state to deleted
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*
+*  NOTES
+*     MT-NOTE: sge_ar_state_set_deleted() is MT safe 
+*
+*  SEE ALSO
+*     sge_advance_reservation_qmaster/sge_ar_state_set_exited()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_waiting()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_running()
+*******************************************************************************/
+void sge_ar_state_set_deleted(lListElem *ar) {
+   lSetUlong(ar, AR_state, AR_DELETED);
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_state_set_exited() **************
+*  NAME
+*     sge_ar_state_set_exited() -- sets AR into exited state
+*
+*  SYNOPSIS
+*     void sge_ar_state_set_exited(lListElem *ar) 
+*
+*  FUNCTION
+*     Sets the AR state to deleted
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*
+*  NOTES
+*     MT-NOTE: sge_ar_state_set_exited() is MT safe 
+*
+*  SEE ALSO
+*     sge_advance_reservation_qmaster/sge_ar_state_set_deleted()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_waiting()
+*     sge_advance_reservation_qmaster/sge_ar_state_set_running()
+*******************************************************************************/
+void sge_ar_state_set_exited(lListElem *ar) {
+   lSetUlong(ar, AR_state, AR_EXITED);
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_list_set_error_state() **********
+*  NAME
+*     sge_ar_list_set_error_state() -- Set/unset all ARs reserved in a specific queue
+*                                      into error state
+*
+*  SYNOPSIS
+*     void sge_ar_list_set_error_state(lList *ar_list, const char *qname, 
+*     u_long32 error_type, bool send_events, bool set_error) 
+*
+*  FUNCTION
+*     The function sets/unsets all ARs that reserved in a queue in the error state and
+*     generates the error messages for qrstat -explain
+*     
+*
+*  INPUTS
+*     lList *ar_list      - master advance reservation list
+*     const char *qname   - queue name
+*     u_long32 error_type - error type
+*     bool send_events    - send events?
+*     bool set_error      - set or unset
+*
+*  NOTES
+*     MT-NOTE: sge_ar_list_set_error_state() is MT safe 
+*******************************************************************************/
+void sge_ar_list_set_error_state(lList *ar_list, const char *qname, u_long32 error_type, 
+                              bool send_events, bool set_error)
+{
+   lListElem *ar;
+   bool start_time_reached;
+   dstring buffer = DSTRING_INIT;
+
+   DENTER(TOP_LAYER, "sge_ar_list_set_error_state");
+
+   for_each(ar, ar_list) {
+      lListElem *qinstance;
+      lList *granted_slots = lGetList(ar, AR_reserved_queues);
+      
+      if (lGetUlong(ar, AR_state) == AR_RUNNING || lGetUlong(ar, AR_state) == AR_ERROR) {
+         start_time_reached= true;
+      } else {
+         start_time_reached= false;
+      }
+
+      if ((qinstance =lGetElemStr(granted_slots, QU_full_name, qname)) != NULL) {
+            sge_dstring_sprintf(&buffer, MSG_AR_RESERVEDQUEUEHASERROR_SS, qname,
+                                qinstance_state_as_string(error_type));
+         qinstance_set_error(qinstance, error_type, sge_dstring_get_string(&buffer), set_error);
+
+         /* update states */
+         if (start_time_reached) {
+            sge_ar_state_set_running(ar);
+         } else {
+            sge_ar_state_set_waiting(ar);
+         }
+
+         if (send_events) {
+               /* this info is not spooled */
+               sge_dstring_sprintf(&buffer, sge_U32CFormat, lGetUlong(ar, AR_id));
+               sge_add_event(0, sgeE_AR_MOD, 0, 0, 
+                             sge_dstring_get_string(&buffer), NULL, NULL, ar);
+               lListElem_clear_changed_info(ar);
+         }
+      }
+   }
+
+   sge_dstring_free(&buffer);
+   DRETURN_VOID;
+}
+
+/****** sge_advance_reservation_qmaster/sge_ar_send_mail() *********************
+*  NAME
+*     sge_ar_send_mail() -- send mail for advance reservation state change
+*
+*  SYNOPSIS
+*     static void sge_ar_send_mail(lListElem *ar, int type) 
+*
+*  FUNCTION
+*     Create and send mail for a specific event
+*
+*  INPUTS
+*     lListElem *ar - advance reservation object (AR_Type)
+*     int type      - event type
+*
+*  NOTES
+*     MT-NOTE: sge_ar_send_mail() is MT safe 
+*******************************************************************************/
+static void sge_ar_send_mail(lListElem *ar, int type)
+{
+   dstring buffer = DSTRING_INIT;
+   dstring subject = DSTRING_INIT;
+   dstring body = DSTRING_INIT;
+   u_long32 ar_id;
+   const char *ar_name;
+   const char *mail_type = NULL;
+
+   DENTER(TOP_LAYER, "sge_ar_send_mail");
+
+   if (!VALID(type, lGetUlong(ar, AR_mail_options))) {
+      sge_dstring_append_mailopt(&buffer, type);
+      DPRINTF(("mailopt %s was not requested\n", sge_dstring_get_string(&buffer)));
+      sge_dstring_free(&subject);
+      sge_dstring_free(&body);
+      sge_dstring_free(&buffer);
+      DRETURN_VOID;
+   } 
+
+   ar_id = lGetUlong(ar, AR_id);
+   ar_name = lGetString(ar, AR_name);
+
+   switch(type) {
+      case MAIL_AT_BEGINNING:
+         sge_ctime((time_t)lGetUlong(ar, AR_start_time), &buffer);
+         sge_dstring_sprintf(&subject, MSG_MAIL_ARSTARTEDSUBJ_US,
+                 sge_u32c(ar_id), ar_name?ar_name:"none");
+         sge_dstring_sprintf(&body, MSG_MAIL_ARSTARTBODY_USSS,
+                 sge_u32c(ar_id), ar_name?ar_name:"none", lGetString(ar, AR_owner), sge_dstring_get_string(&buffer));
+         mail_type = MSG_MAIL_TYPE_ARSTART;
+         break;
+      case MAIL_AT_EXIT:
+         if (lGetUlong(ar, AR_state) == AR_DELETED) {
+            sge_ctime((time_t)sge_get_gmt(), &buffer);
+            sge_dstring_sprintf(&subject, MSG_MAIL_ARDELETEDSUBJ_US,
+                    sge_u32c(ar_id), ar_name?ar_name:"none");
+            sge_dstring_sprintf(&body, MSG_MAIL_ARDELETETBODY_USSS,
+                    sge_u32c(ar_id), ar_name?ar_name:"none", lGetString(ar, AR_owner), sge_dstring_get_string(&buffer));
+            mail_type = MSG_MAIL_TYPE_ARDELETE;
+         } else {
+            sge_ctime((time_t)lGetUlong(ar, AR_end_time), &buffer);
+            sge_dstring_sprintf(&subject, MSG_MAIL_AREXITEDSUBJ_US,
+                    sge_u32c(ar_id), ar_name?ar_name:"none");
+            sge_dstring_sprintf(&body, MSG_MAIL_AREXITBODY_USSS,
+                    sge_u32c(ar_id), ar_name?ar_name:"none", lGetString(ar, AR_owner), sge_dstring_get_string(&buffer));
+            mail_type = MSG_MAIL_TYPE_AREND;
+         }
+         break;
+      case MAIL_AT_ABORT:
+         if (lGetUlong(ar, AR_state) == AR_ERROR) {
+            sge_ctime((time_t)sge_get_gmt(), &buffer);
+            sge_dstring_sprintf(&subject, MSG_MAIL_ARERRORSUBJ_US,
+                    sge_u32c(ar_id), ar_name?ar_name:"none");
+            sge_dstring_sprintf(&body, MSG_MAIL_ARERRORBODY_USSS,
+                    sge_u32c(ar_id), ar_name?ar_name:"none", lGetString(ar, AR_owner), sge_dstring_get_string(&buffer));
+            mail_type = MSG_MAIL_TYPE_ARERROR;
+         } else {
+            sge_ctime((time_t)sge_get_gmt(), &buffer);
+            sge_dstring_sprintf(&subject, MSG_MAIL_AROKSUBJ_US,
+                    sge_u32c(ar_id), ar_name?ar_name:"none");
+            sge_dstring_sprintf(&body, MSG_MAIL_AROKBODY_USSS,
+                    sge_u32c(ar_id), ar_name?ar_name:"none", lGetString(ar, AR_owner), sge_dstring_get_string(&buffer));
+            mail_type = MSG_MAIL_TYPE_AROK;
+         }
+         break;
+      default:
+         /* should never happen */
+         break;
+   }
+
+   cull_mail(QMASTER, lGetList(ar, AR_mail_list), sge_dstring_get_string(&subject), sge_dstring_get_string(&body), mail_type);
+
+   sge_dstring_free(&buffer);
+   sge_dstring_free(&subject);
+   sge_dstring_free(&body);
+
+   DRETURN_VOID;
 }

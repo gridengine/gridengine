@@ -77,7 +77,7 @@ static void sge_send_mail(u_long32 progid,
 ** DESCRIPTION
 **   sends a mail to each of the recipients in the list
 */
-void cull_mail(u_long32 progid, lList *user_list, char *subj, char *buf, const char *mail_type) {
+void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *buf, const char *mail_type) {
    char *mailer;
    int mailer_has_subj_line;
    lListElem *ep;
@@ -99,8 +99,7 @@ void cull_mail(u_long32 progid, lList *user_list, char *subj, char *buf, const c
          if (!user && !host) {
             ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
             FREE(mailer);
-            DEXIT;
-            return;
+            DRETURN_VOID;
          } else if (!host) {
             INFO((SGE_EVENT, MSG_MAIL_MAILUSER_SSSS, 
                   mail_type, user, mailer, subj ? subj : MSG_MAIL_NOSUBJ));
@@ -114,8 +113,7 @@ void cull_mail(u_long32 progid, lList *user_list, char *subj, char *buf, const c
    } 
 
    FREE(mailer);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /************************************************************/

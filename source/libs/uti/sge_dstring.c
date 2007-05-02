@@ -216,13 +216,11 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
    DENTER(DSTRING_LAYER, "sge_dstring_append_char");
 
    if (sb == NULL) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (a == '\0') {
-      DEXIT;
-      return sb->s;
+      DRETURN(NULL);
    }
   
    if (sb->is_static) {
@@ -241,8 +239,7 @@ const char* sge_dstring_append_char(dstring *sb, const char a)
       sb->s[sb->length] = '\0';
    }
 
-   DEXIT;
-   return sb->s;
+   DRETURN(sb->s);
 }
 
 const char* sge_dstring_append_time(dstring *buffer, time_t time, bool as_xml)

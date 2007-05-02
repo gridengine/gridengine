@@ -405,9 +405,21 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
       department        = lGetStringNotNull(job, JB_department);
       account           = lGetStringNotNull(job, JB_account);
 
-      sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c%s%c%s%c%s%c"sge_U32CFormat"\n", 
-                          submission_time, REPORTING_DELIMITER,
-                          job_number, REPORTING_DELIMITER,
+      sge_dstring_sprintf(&job_dstring, 
+                          sge_U32CFormat"%c"
+                          sge_U32CFormat"%c"
+                          "%d%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          "%s%c"
+                          sge_U32CFormat
+                          "\n", 
+                          sge_u32c(submission_time), REPORTING_DELIMITER,
+                          sge_u32c(job_number), REPORTING_DELIMITER,
                           -1, REPORTING_DELIMITER, /* means: no ja_task yet */
                           NONE_STR, REPORTING_DELIMITER,
                           job_name, REPORTING_DELIMITER,
@@ -416,7 +428,7 @@ reporting_create_new_job_record(lList **answer_list, const lListElem *job)
                           project, REPORTING_DELIMITER,
                           department, REPORTING_DELIMITER,
                           account, REPORTING_DELIMITER,
-                          priority);
+                          sge_u32c(priority));
 
       /* write record to reporting buffer */
       ret = reporting_create_record(answer_list, "new_job", 
@@ -499,17 +511,17 @@ reporting_create_job_log(lList **answer_list,
       account           = lGetStringNotNull(job, JB_account);
 
       sge_dstring_sprintf(&job_dstring, sge_U32CFormat"%c%s%c"sge_U32CFormat"%c%d%c%s%c%s%c%s%c%s%c"sge_U32CFormat"%c"sge_U32CFormat"%c"sge_U32CFormat"%c%s%c%s%c%s%c%s%c%s%c%s%c%s\n", 
-                          event_time, REPORTING_DELIMITER,
+                          sge_u32c(event_time), REPORTING_DELIMITER,
                           event, REPORTING_DELIMITER,
-                          job_id, REPORTING_DELIMITER,
+                          sge_u32c(job_id), REPORTING_DELIMITER,
                           ja_task_id, REPORTING_DELIMITER,
                           pe_task_id, REPORTING_DELIMITER,
                           state, REPORTING_DELIMITER,
                           user, REPORTING_DELIMITER,
                           host, REPORTING_DELIMITER,
-                          state_time, REPORTING_DELIMITER,
-                          priority, REPORTING_DELIMITER,
-                          submission_time, REPORTING_DELIMITER,
+                          sge_u32c(state_time), REPORTING_DELIMITER,
+                          sge_u32c(priority), REPORTING_DELIMITER,
+                          sge_u32c(submission_time), REPORTING_DELIMITER,
                           job_name, REPORTING_DELIMITER,
                           owner, REPORTING_DELIMITER,
                           group, REPORTING_DELIMITER,
@@ -746,7 +758,7 @@ reporting_create_queue_record(lList **answer_list,
                           REPORTING_DELIMITER,
                           lGetHost(queue, QU_qhostname),
                           REPORTING_DELIMITER,
-                          report_time,
+                          sge_u32c(report_time),
                           REPORTING_DELIMITER,
                           state_buffer);
 
@@ -813,7 +825,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
                              REPORTING_DELIMITER,
                              lGetHost(queue, QU_qhostname),
                              REPORTING_DELIMITER,
-                             report_time,
+                             sge_u32c(report_time),
                              REPORTING_DELIMITER,
                              state_buffer, 
                              REPORTING_DELIMITER,
@@ -881,7 +893,7 @@ reporting_create_host_record(lList **answer_list,
          sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
-                             report_time,
+                             sge_u32c(report_time),
                              REPORTING_DELIMITER,
                              "X",
                              REPORTING_DELIMITER,
@@ -946,7 +958,7 @@ reporting_create_host_consumable_record(lList **answer_list,
          sge_dstring_sprintf(&host_dstring, "%s%c"sge_U32CFormat"%c%s%c%s\n", 
                              lGetHost(host, EH_name),
                              REPORTING_DELIMITER,
-                             report_time,
+                             sge_u32c(report_time),
                              REPORTING_DELIMITER,
                              "X",
                              REPORTING_DELIMITER,
@@ -1009,7 +1021,7 @@ reporting_create_sharelog_record(lList **answer_list, monitoring_t *monitor)
 
          /* we need a prefix containing the reporting file std fields */
          sge_dstring_sprintf(&prefix_dstring, sge_U32CFormat"%csharelog%c",
-                             sge_get_gmt(),
+                             sge_u32c(sge_get_gmt()),
                              REPORTING_DELIMITER, REPORTING_DELIMITER);
 
          /* define output format */
@@ -1246,7 +1258,7 @@ reporting_create_record(lList **answer_list,
 
    sge_mutex_lock(buf->mtx_name, SGE_FUNC, __LINE__, &(buf->mtx));
    sge_dstring_sprintf_append(&(buf->buffer), sge_U32CFormat"%c%s%c%s",
-                              sge_get_gmt(),
+                              sge_u32c(sge_get_gmt()),
                               REPORTING_DELIMITER,
                               type,
                               REPORTING_DELIMITER,

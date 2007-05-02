@@ -325,6 +325,7 @@
 #define MSG_JOB_DISCONTINUEDTRANS_SU  _MESSAGE(33245, _("Discontinued delete transaction of user "SFQ" after job "sge_U32CFormat))
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _MESSAGE(33246, _("can't locate the queue "SFQ" associated with this job"))
 #define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33865, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
+#define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33866, _("job "sge_U32CFormat" is already in deletion"))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     

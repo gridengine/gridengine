@@ -483,6 +483,12 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetString(job, JB_project))
          printf("project:                    %s\n", lGetString(job, JB_project));
 
+   if (lGetPosViaElem(job, JB_ar, SGE_NO_ABORT)>=0) {
+      if (lGetUlong(job, JB_ar)) {
+         printf("ar_id:                      %d\n", (int) lGetUlong(job, JB_ar));
+      }
+   }
+
    if (lGetPosViaElem(job, JB_ja_structure, SGE_NO_ABORT)>=0) {
       u_long32 start, end, step;
 
@@ -592,6 +598,7 @@ void cull_show_job(lListElem *job, int flags)
          }
       }
    }
+
 
    DEXIT;
    return;

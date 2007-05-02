@@ -56,6 +56,7 @@ ___INFO__MARK_END__-->
 			<xs:element name="name" type="xs:string"/>
         	<xs:element name="load" type="xs:float" minOccurs="0"/>
 			<xs:element name="used" type="xs:unsignedInt"/>
+			<xs:element name="resv" type="xs:unsignedInt"/>
 			<xs:element name="available" type="xs:unsignedInt"/>
 			<xs:element name="total" type="xs:unsignedInt"/>
 			<xs:element name="temp_disabled" type="xs:unsignedInt"/>
@@ -85,6 +86,7 @@ ___INFO__MARK_END__-->
 		<xs:sequence minOccurs="0">
 			<xs:element name="name" type="xs:string" minOccurs="0"/>
 			<xs:element name="qtype" type="xs:string" minOccurs="0"/>
+			<xs:element name="slots_resv" type="xs:unsignedInt" minOccurs="0"/>
 			<xs:element name="slots_used" type="xs:unsignedInt" minOccurs="0"/>
 			<xs:element name="slots_total" type="xs:unsignedInt" minOccurs="0"/>
 			<xs:element name="load_avg" type="xs:float" minOccurs="0"/>

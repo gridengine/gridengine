@@ -1929,7 +1929,7 @@ static void qmonCQUpdateCQMatrix(void)
 /*    correct_capacities(ehl, cl); */
    for_each (cq, fql) {
       double load = 0.0;
-      u_long32 used, total;
+      u_long32 used, resv, total;
       u_long32 temp_disabled, available, manual_intervention;
       u_long32 suspend_manual, suspend_threshold, suspend_on_subordinate;
       u_long32 suspend_calendar, unknown, load_alarm;
@@ -1938,7 +1938,7 @@ static void qmonCQUpdateCQMatrix(void)
       bool is_load_available;
 
       cqueue_calculate_summary(cq, ehl, cl, 
-                            &load, &is_load_available, &used, &total,
+                            &load, &is_load_available, &used, &resv, &total,
                             &suspend_manual, &suspend_threshold,
                             &suspend_on_subordinate, &suspend_calendar,
                             &unknown, &load_alarm, &disabled_manual,

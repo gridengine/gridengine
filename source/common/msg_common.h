@@ -332,7 +332,8 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB      "job_tasks               [job_id['.'task_id_range]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID                "ar_id                   positiv number identifying an advance reservation"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID                "ar_id                   advance reservation id" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID_LIST           "ar_id_list              ar_id[,ar_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\""
@@ -1099,6 +1100,8 @@
 #define MSG_GDI_UTEXT_explain_OPT         _MESSAGE(60708, _("show reason for error state"))
 #define MSG_GDI_USAGE_w_OPT_EV            "[-w e|v]"
 #define MSG_GDI_UTEXT_w_OPT_EV            _MESSAGE(60709, _("validate availability of AR request (error|verify) for jobs"))
+#define MSG_GDI_USAGE_ar_list_OPT         "[-ar ar_id_list]"
+#define MSG_GDI_UTEXT_ar_list_OPT         _MESSAGE(60710, _("show information for given advance reservations"))
 
 /* =================================================
  * please do not enter new messages after this point,

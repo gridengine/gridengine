@@ -180,6 +180,7 @@ static int cqueue_summary_xml_report_cqueue(cqueue_summary_handler_t *handler, c
       xml_append_Attr_D(attributeList, "load", summary->load);
    }
    xml_append_Attr_I(attributeList, "used", (int)summary->used);
+   xml_append_Attr_I(attributeList, "resv", (int)summary->resv);
    xml_append_Attr_I(attributeList, "available", (int)summary->available);
    xml_append_Attr_I(attributeList, "total", (int)summary->total);
    xml_append_Attr_I(attributeList, "temp_disabled", (int)summary->temp_disabled);
@@ -1012,6 +1013,7 @@ static int qstat_xml_queue_summary(qstat_handler_t* handler, const char* qname, 
 
    /* number of used/free slots */
    xml_append_Attr_I(attribute_list, "slots_used", summary->used_slots); 
+   xml_append_Attr_I(attribute_list, "slots_resv", summary->resv_slots); 
    xml_append_Attr_I(attribute_list, "slots_total", summary->used_slots + summary->free_slots);
 
    /* load avg */

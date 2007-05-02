@@ -1509,15 +1509,15 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
 
       printf(temp,MSG_QSTAT_PRT_QUEUENAME); 
       
-      printf(" %-5.5s %-9.9s %-8.8s %-13.13s %s\n", 
+      printf(" %-5.5s %-14.14s %-8.8s %-13.13s %s\n", 
             MSG_QSTAT_PRT_QTYPE, 
-            MSG_QSTAT_PRT_USEDTOT,
+            MSG_QSTAT_PRT_RESVUSEDTOT,
             summary->load_avg_str,
             LOAD_ATTR_ARCH,
             MSG_QSTAT_PRT_STATES);
    }
    
-   printf("----------------------------------------------------------------------------%s", 
+   printf("---------------------------------------------------------------------------------%s", 
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
    {
       int i;
@@ -1535,8 +1535,8 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
    printf("%-5.5s ", summary->queue_type); 
 
    /* number of used/free slots */
-   sprintf(to_print, "%d/%d ", (int)summary->used_slots, (int)summary->free_slots); 
-   printf("%-9.9s ", to_print);   
+   sprintf(to_print, "%d/%d/%d ", (int)summary->reserved_slots, (int)summary->used_slots, (int)summary->free_slots); 
+   printf("%-14.14s ", to_print);   
 
    /* load avg */
    if (!summary->has_load_value) {
@@ -1686,14 +1686,14 @@ static int cqueue_summary_stdout_report_started(cqueue_summary_handler_t *handle
    bool show_states = (qstat_env->full_listing & QSTAT_DISPLAY_EXTENDED) ? true : false;
    
    char queue_def[50];
-   char fields[] = "%7s %6s %6s %6s %6s %6s ";
+   char fields[] = "%7s %6s %6s %6s %6s %6s %6s ";
 
    DENTER(TOP_LAYER, "cqueue_summary_stdout_report_started");
 
    sprintf(queue_def, "%%-%d.%ds %s ", qstat_env->longest_queue_length, qstat_env->longest_queue_length, fields);                         
    printf( queue_def,
           "CLUSTER QUEUE", "CQLOAD", 
-          "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
+          "USED", "RES", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
    if (show_states) {
       printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 
              "s", "A", "S", "C", "u", "a", "d", "D", "c", "o", "E");
@@ -1703,7 +1703,7 @@ static int cqueue_summary_stdout_report_started(cqueue_summary_handler_t *handle
    printf("--------------------");
    printf("--------------------");
    printf("--------------------");
-   printf("-------------------");
+   printf("--------------------");
    if (show_states) {
       printf("--------------------");
       printf("--------------------");
@@ -1741,6 +1741,7 @@ static int cqueue_summary_stdout_report_cqueue(cqueue_summary_handler_t *handler
    }
    
    printf("%6d ", (int)summary->used);
+   printf("%6d ", (int)summary->resv);
    printf("%6d ", (int)summary->available);
    printf("%6d ", (int)summary->total);
    printf("%6d ", (int)summary->temp_disabled);

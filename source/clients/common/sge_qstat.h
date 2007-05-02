@@ -113,6 +113,7 @@ struct cqueue_summary_str {
    double load;
    bool   is_load_available;
    u_long32 used;
+   u_long32 resv;
    u_long32 total;
    u_long32 temp_disabled; 
    u_long32 available; 
@@ -153,7 +154,9 @@ struct queue_summary_str {
    const char* queue_type;
    
    u_long32    used_slots;
+   u_long32    resv_slots;
    u_long32    free_slots;
+   u_long32    reserved_slots;
    
    const char* arch;
    const char* state;

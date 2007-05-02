@@ -92,6 +92,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST; 
      case OA_AR_ID:
          return MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID; 
+     case OA_AR_ID_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID_LIST; 
      case OA_JOB_IDENTIFIER_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST; 
      case OA_JOB_QUEUE_DEST:
@@ -314,11 +316,13 @@ FILE *fp
 
    if (VALID_OPT(ar_OPT, prog_number)) {
       if (prog_number == QRSTAT) {
-         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
+         PRINTITD(MSG_GDI_USAGE_ar_list_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
+         MARK(OA_AR_ID_LIST);
+         MARK(OA_AR_ID);
       } else {
          PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+         MARK(OA_AR_ID);
       }
-      MARK(OA_AR_ID);
    }
 
    if (VALID_OPT(arqs_OPT, prog_number)) {

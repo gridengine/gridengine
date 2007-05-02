@@ -97,6 +97,7 @@ enum {
    OA_OBJECT_NAME3,
    OA_TIME,
    OA_AR_ID,
+   OA_AR_ID_LIST,
 
    OA__END
 };

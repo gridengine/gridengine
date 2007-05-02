@@ -1218,6 +1218,8 @@ int sub_command, monitoring_t *monitor
                       !lGetUlong(idep, ID_force)
                      )
                     ) {
+                     INFO((SGE_EVENT, MSG_JOB_ALREADYDELETED_U, sge_u32c(job_number)));
+                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                      continue;
                   }
 

@@ -2527,24 +2527,48 @@ CheckServiceAndPorts()
 CopyCA()
 {
    if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
-      return
+      $INFOTEXT -log "No CSP system installed!"
+      return 1
    fi
 
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
-      return
+      $INFOTEXT "No CSP system installed!"
+      return 1
    fi
-
+   
+   hosttype="undef"
+   if [ "$1" = "execd" ]; then
+      hosttype="execd"
+      out_text="execution"
+   elif [ "$1" = "submit" ]; then
+      hosttype="submit"
+      out_text="submit"
+   elif [ "$1" = "copyonly" ]; then
+      hosttype="copyonly"
+      out_text="remote"
+   else
+      hosttype="remote"
+      out_text="remote"
+   fi
+       
    $INFOTEXT -u "Installing SGE in CSP mode"
-   $INFOTEXT "\nInstalling SGE in CSP mode needs to move the cert\n" \
-             "files to each execution host. This can be done by script!\n"
-   $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
-             "may do rsh/ssh to the executions host, without being asked for a password!\n"
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
-   "execution host? (y/n) [y] >>"
+   if [ "$hosttype" = "copyonly" ]; then
+      $INFOTEXT "\nThe script copies the cert files to each %s host. \n" $out_text
+      $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
+             "may do rsh/ssh to the %s host, without being asked for a password!\n" $out_text
+      `true`
+   else 
+      $INFOTEXT "\nInstalling SGE in CSP mode needs to copy the cert\n" \
+                "files to each %s host. This can be done by script!\n" $out_text
+      $INFOTEXT "To use this functionality, it is recommended, that user root\n" \
+                "may do rsh/ssh to the %s host, without being asked for a password!\n" $out_text
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
+      "<%s> host? (y/n) [y] >>" $out_text
+   fi
 
    if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
-                "execution host (default: ssh)"
+                "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
       if [ "$?" = 0 ]; then
          SHELL_NAME="rsh"
@@ -2560,8 +2584,13 @@ CopyCA()
       return
    fi
 
-   #ToDo: What about the submit hosts? RFE: -instsubmit + copycert functionality
-   CopyCaToHostType admin 
+   if [ "$hosttype" = "execd" ]; then
+      CopyCaToHostType admin 
+   elif [ "$hosttype" = "submit" ]; then
+      CopyCaToHostType submit
+   elif [ "$hosttype" = "copyonly" -o "$hosttype" = "remote" ]; then
+      CopyCaToHostType remote
+   fi
 
 }
 
@@ -2569,18 +2598,20 @@ CopyCA()
 CopyCaToHostType()
 {
    if [ "$1" = "admin" ]; then
-      cmd="$SGE_BIN/qconf -sh"
+      cmd=`$SGE_BIN/qconf -sh`
    elif [ "$1" = "submit" ]; then
-      cmd="$SGE_BIN/qconf -ss"
+      cmd=`$SGE_BIN/qconf -ss`
+   elif [ "$1" = "remote" ]; then
+      cmd=$CERT_COPY_HOST_LIST
    fi
 
-   for RHOST in `$cmd`; do
+   for RHOST in $cmd; do
          if [ "$RHOST" != "$HOST" ]; then
             CheckRSHConnection $RHOST
             if [ "$?" = 0 ]; then
                $INFOTEXT "Copying certificates to host %s" $RHOST
                $INFOTEXT -log "Copying certificates to host %s" $RHOST
-               echo "mkdir /var/sgeCA" | $SHELL_NAME $RHOST /bin/sh &
+               echo "mkdir /var/sgeCA > /dev/null 2>&1" | $SHELL_NAME $RHOST /bin/sh &
                if [ "$SGE_QMASTER_PORT" = "" ]; then 
                   $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
                else
@@ -2610,6 +2641,12 @@ CopyCaToHostType()
                $INFOTEXT -log "Certificates couldn't be copied!"
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
             fi
+         else
+            $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT "Certificates couldn't be copied!"
+            $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT -log "Certificates couldn't be copied!"
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
       done
 }

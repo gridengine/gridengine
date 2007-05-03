@@ -113,6 +113,7 @@ CSP_LOCATION="undef"
 CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
 CSP_MAIL_ADDRESS="undef"
+CERT_COPY_HOST_LIST="undef"
 
 BasicSettings
 SetUpInfoText
@@ -423,7 +424,8 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- CopyCA
+ CopyCA execd
+ CopyCA submit 
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster

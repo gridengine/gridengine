@@ -1,3 +1,11 @@
+AH-2007-05-03-0: Bugfix:    - Need faster resource quota matchmaking and more 
+                              concise job info messages
+                            - qstat -j lacks resource quota info messages in case 
+                              of "incomplete" resource quotas
+                 Bugster:   6551568, 6550718
+                 Issue:     2238 
+                 Review:    TBD
+
 RD-2007-05-02-0: Bugfix:    - implemented AR error state handling
                             - implemented AR mail sending
                             - fixed qdel on job in deletion state

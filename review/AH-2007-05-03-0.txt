@@ -1,0 +1,170 @@
+Source Code Review Form 
+=======================
+(version 1.3)
+
+Date:
+
+1 Identification
+
+
+2 Conforms to specification
+
+2 [x] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide OK, or doc CR filed?
+3.1 [x] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view) correct?
+3.2 [x] yes
+3.2 [ ] no - comment:
+
+3.3 -help output correct and complete?
+3.3 [x] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format) correct, updated?
+3.4 [x] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats and defines OK?
+3.5 [x] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR complete and correct?
+3.6 [x] yes
+3.6 [ ] no - comment:
+
+3.7 Issuezilla entry (if exists) complete and correct?
+3.7 [x] yes
+3.7 [ ] no - comment:
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [x] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [x] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [x] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 Used memory leak debugger
+5.1 [ ] yes
+5.1 [x] no - comment:
+
+5.2 Manual tests
+Description:
+Extensive manual tests were done with serie of RQS setups:
+
+global false
+   limit        projects {*} to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qincomplete false
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qcomplete false
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+qcomplete true
+   limit        queues !Q001 to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+hincomplete false
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+hcomplete false
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+hcomplete true
+   limit        hosts !@two_hosts to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qhincomplete false
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qhcomplete false
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+qhcomplete true
+   limit        queues !Q001 to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        queues Q001 hosts !@two_hosts to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+numbers were measured with 1000 jobs (= Project[1-5] X F0[01-10] X 20 jobs) 
+in a 100 queues X 100 hosts setup. The first table contains numbers as they are in 6.1, the second table
+shows numbers after the fix was made. With each setup three runs were made. Numbers stem from "job dispatching 
+took" message of the scheduler profiling. The DT-number always shows the dispatching time from the scheduler run 
+where jobs were dispatched, the ST-number shows dispatching time once the RQS limit was satured.
+
+
+| *Scenario*  | *Negative Rule Set*  | *DT1*  | *ST1*  | *DT2*  | *ST2*  | *DT3*  | *ST3*  | *DTavg*  | *STavg*  |
+| global  | false  | 1.510  | 0.023  | 1.520  | 0.023  | 1.540  | 0.030  | 1.523  | 0.026  |
+| qincomplete  | false  | 0.550  | 0.090  | 0.560  | 0.087  | 0.570  | 0.097  | 0.560  | 0.091  |
+| qcomplete  | false  | 3.700  | 1.720  | 3.590  | 1.747  | 3.630  | 1.773  | 3.640  | 1.747  |
+| qcomplete  | true  | 1.100  | 0.563  | 1.120  | 0.573  | 1.110  | 0.573  | 1.110  | 0.570  |
+| hincomplete  | false  | 11.720  | 5.330  | 11.790  | 5.413  | 11.880  | 5.440  | 11.797  | 5.394  |
+| hcomplete  | false  | 13.230  | 5.617  | 13.250  | 5.647  | 13.290  | 5.633  | 13.257  | 5.632  |
+| hcomplete  | true  | 16.240  | 8.040  | 16.210  | 8.023  | 16.320  | 8.020  | 16.257  | 8.028  |
+| qhincomplete  | false  | 3.720  | 1.900  | 3.720  | 1.897  | 3.730  | 1.897  | 3.723  | 1.898  |
+| qhcomplete  | false  | 7.110  | 3.623  | 7.130  | 3.640  | 7.200  | 3.647  | 7.147  | 3.637  |
+| qhcomplete  | true  | 5.400  | 2.567  | 5.370  | 2.570  | 5.440  | 2.583  | 5.403  | 2.573  |
+| **  | **  | **  | **  | **  | **  | **  | **  | 6.442  | 2.960  |
+
+| *Scenario*  | *Negative Rule Set*  | *DT1*  | *ST1*  | *DT2*  | *ST2*  | *DT3*  | *ST3*  | *DTavg*  | *STavg*  |
+| global  | false  | 0.200  | 0.023  | 0.200  | 0.023  | 0.200  | 0.030  | 0.200  | 0.026  |
+| qincomplete  | false  | 0.230  | 0.083  | 0.230  | 0.087  | 0.250  | 0.087  | 0.237  | 0.086  |
+| qcomplete  | false  | 0.180  | 0.040  | 0.170  | 0.043  | 0.180  | 0.043  | 0.177  | 0.042  |
+| qcomplete  | true  | 0.190  | 0.043  | 0.180  | 0.040  | 0.180  | 0.043  | 0.183  | 0.042  |
+| hincomplete  | false  | 10.930  | 5.247  | 10.910  | 5.290  | 10.920  | 5.327  | 10.920  | 5.288  |
+| hcomplete  | false  | 6.590  | 2.203  | 6.550  | 2.210  | 6.570  | 2.213  | 6.570  | 2.209  |
+| hcomplete  | true  | 9.980  | 2.910  | 10.010  | 2.907  | 10.030  | 2.940  | 10.007  | 2.919  |
+| qhincomplete  | false  | 3.200  | 1.613  | 3.200  | 1.627  | 3.210  | 1.620  | 3.203  | 1.620  |
+| qhcomplete  | false  | 3.110  | 1.397  | 3.080  | 1.397  | 3.100  | 1.400  | 3.097  | 1.398  |
+| qhcomplete  | true  | 4.380  | 2.037  | 4.370  | 2.047  | 4.380  | 2.047  | 4.377  | 2.043  |
+| **  | **  | **  | **  | **  | **  | **  | **  | 3.897  | 1.567  |
+
+Successfull execution
+5.2 [x] yes
+5.2 [ ] no - comment:
+
+5.3 Testsuite covers issue
+5.3 [ ] yes
+5.3 [ ] no - comment: 
+
+5.4 If 5.3 = no: New testsuite test or module test created?
+5.4 [ ] yes, path: 
+5.4 [ ] no - justification:
+
+5.5 If 5.4 = no: Testsuite issue created?
+5.5 [ ] yes, id: 
+5.5 [ ] no - justification:
+
+5.6 Testsuite run successfull
+5.6 [ ] yes
+5.6 [ ] no - comment:
+
+
+6 Comments
+
+
+7 Accepted
+7 [ ] yes
+7 [ ] no - comment:
+
+

@@ -36,13 +36,8 @@
 
 bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 
-void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list);
-void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, const lList *host_list, lList *hgrp_list);
- 
-bool is_cqueue_global(const lListElem *rule);
-bool is_host_global(const lListElem *rule);
-
-bool is_cqueue_expand(const lListElem *rule);
-bool is_host_expand(const lListElem *rule);
+bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+   const char* queue_name, const char* host_name,
+   lList **skip_cqueue_list, lList **skip_host_list);
 
 #endif /* __SGE_RESOURCE_QUOTA_SCHEDD_H*/

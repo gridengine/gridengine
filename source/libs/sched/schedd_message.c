@@ -686,29 +686,24 @@ lList *schedd_mes_get_tmp_list(){
 *     u_long32 job_number - job number 
 *
 *******************************************************************************/
-void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number){
+void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
+{
    lList *tmp_list = NULL;
-   lListElem *tmp_elem = NULL;
-   lList *job_id_list = NULL;
-   lListElem *job_id = NULL;
+   lListElem *tmp_elem;
 
    DENTER(TOP_LAYER, "schedd_mes_set_tmp_list");
 
    lXchgList(category, name, &tmp_list);
 
-   for_each(tmp_elem, tmp_list){
-      job_id_list =  lCreateList("job ids", ULNG_Type);
-      lSetList(tmp_elem, MES_job_number_list, job_id_list);
+   for_each(tmp_elem, tmp_list)
+      lAddSubUlong(tmp_elem, ULNG, job_number, MES_job_number_list, ULNG_Type);
 
-      job_id =  lCreateElem(ULNG_Type);
-      lSetUlong(job_id, ULNG, job_number);
-      lAppendElem(job_id_list, job_id);
-   }
-
-   if (tmp_sme && tmp_list){
-      lSetList(tmp_sme, SME_message_list, tmp_list); 
+   if (tmp_sme && tmp_list) {
+      lList *prev = NULL;
+      lXchgList(tmp_sme, SME_message_list, &prev);
+      lAddList(tmp_list, &prev);
+      lSetList(tmp_sme, SME_message_list, tmp_list);
    }
 
    DEXIT;
 }
-

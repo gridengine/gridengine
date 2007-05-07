@@ -1262,7 +1262,13 @@ for i in $ARCH; do
                   echo \"openssl\" binary not found
                fi
             elif [ $prog = testsuidroot ]; then
-               InstallProgSUID $prog
+                  InstallProgSUID $prog
+            elif [ $prog = loadcheck ]; then
+               if [ "$DSTARCH" != "win32-x86" ]; then
+                  InstallProg $prog
+               else
+                  InstallProg $prog.exe
+               fi
             elif [ $prog = berkeley_db_svc -o $prog = db_archive \
                    -o $prog = db_checkpoint -o $prog = db_deadlock \
                    -o $prog = db_dump -o $prog = db_load \

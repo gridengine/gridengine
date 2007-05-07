@@ -39,14 +39,15 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit \
-                 tst_pthread_signals fstype qping sgepasswd
+                 tst_pthread_signals fstype qping sgepasswd \
+                 $(LOADCHECK_ALL)
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spooledit.c spoolinit.c \
-               tst_pthread_signals.c fstype.c qping.c
+               tst_pthread_signals.c fstype.c qping.c 
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -175,6 +176,14 @@ loadcheck:	loadcheck.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB
 
 loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
+
+LOADCHECK_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
+
+loadcheck.exe: loadcheck.obj
+	$(WINCC) loadcheck.obj /link /OUT:loadcheck.exe $(LOADCHECK_WINLFLAGS) $(WINLIBS)
+
+loadcheck.obj: $(UTILBIN_DIR)/loadcheck.c
+	$(WINCC) $(WINCFLAGS) /c $(UTILBIN_DIR)/loadcheck.c
 
 #---------------------------------------------------------------------
 languagetest:   languagetest.o version.o  $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(LCKLIB)

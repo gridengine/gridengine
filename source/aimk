@@ -347,6 +347,8 @@ set CFLAGS            = "-I$BERKELEYDB_HOME/include/${BDB_INCLUDE_SUBDIR} $CFLAG
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR} $LFLAGS"
 set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
 
+set LOADCHECK_ALL = loadcheck
+
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
    case LINUX86:
@@ -1269,6 +1271,7 @@ case LINUXSPARC64:
 
 case WIN32_X86:
    set CC = gcc
+   set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
    set MAKE = gmake
 
@@ -1278,6 +1281,7 @@ case WIN32_X86:
    set MAKEFNMATCH      = 0
    set WITH_USERMAPPING = 0 # Compile without usermapping feature
    set COMPILE_DC       = 1
+   set LOADCHECK_ALL    = loadcheck.exe
 
 
    # generate all not compilable targets using touch
@@ -1814,8 +1818,6 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    endif
    cd "${COMPILE_ARCH}"
 
-   set WINCC = "env TMP=$WINTEMPDIR cl.exe"
-
    if ( $DEBUGGED == 1 ) then
       set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"
    else
@@ -2049,6 +2051,8 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "JNI_TARGET=$JNI_TARGET" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
+         "LOADCHECK_ALL=$LOADCHECK_ALL" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done

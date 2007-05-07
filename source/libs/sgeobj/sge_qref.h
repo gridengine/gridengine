@@ -63,6 +63,10 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
 bool
 qref_list_cq_rejected(const lList *qref_list, const char *cqname, const char *hostname, const lList *hgroup_list);
 
+bool
+qref_list_host_rejected(const char *href, const char *hostname, 
+                                 const lList *hgroup_list);
+
 #endif /* __SGE_QREF_H__ */
 
 

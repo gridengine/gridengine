@@ -1,0 +1,141 @@
+Source Code Review Form 
+=======================
+(version 1.3)
+
+Date:
+
+1 Identification
+AH-2007-05-07-0: Bugfix:    Use of hostgroups in resource quotas is less
+                            performant than the full list of hosts
+                 Bugster:   6542137
+                 Issue:     2239
+                 Review:    OJ
+
+2 Conforms to specification
+
+2 [x] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide OK, or doc CR filed?
+3.1 [x] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view) correct?
+3.2 [x] yes
+3.2 [ ] no - comment:
+
+3.3 -help output correct and complete?
+3.3 [x] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format) correct, updated?
+3.4 [x] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats and defines OK?
+3.5 [x] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR complete and correct?
+3.6 [x] yes
+3.6 [ ] no - comment:
+
+3.7 Issuezilla entry (if exists) complete and correct?
+3.7 [x] yes
+3.7 [ ] no - comment:
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [x] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [x] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [x] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 Used memory leak debugger
+5.1 [ ] yes
+5.1 [x] no - comment:
+
+5.2 Manual tests
+Description:
+Extensive manual tests were done with serie of RQS setups:
+
+global false
+   limit        projects {*} to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qincomplete false
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   
+qcomplete false
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+qcomplete true
+   limit        queues !Q001 to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} queues Q001 to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+hincomplete false
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+hcomplete false
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+hcomplete true
+   limit        hosts !@two_hosts to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qhincomplete false
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+
+qhcomplete false
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+qhcomplete true
+   limit        queues !Q001 to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+   limit        projects {*} queues Q001 hosts @two_hosts to F001=1,F002=1,F003=1,F004=1,F005=1,F006=1,F007=1,F008=1,F009=1,F010=1
+   limit        queues Q001 hosts !@two_hosts to F001=0,F002=0,F003=0,F004=0,F005=0,F006=0,F007=0,F008=0,F009=0,F010=0
+
+Successfull execution
+5.2 [x] yes
+5.2 [ ] no - comment:
+
+5.3 Testsuite covers issue
+5.3 [ ] yes
+5.3 [x] no - comment:
+
+5.4 If 5.3 = no: New testsuite test or module test created?
+5.4 [ ] yes, path: 
+5.4 [x] no - justification:
+
+5.5 If 5.4 = no: Testsuite issue created?
+5.5 [ ] yes, id: 
+5.5 [x] no - justification:
+
+5.6 Testsuite run successfull
+5.6 [ ] yes
+5.6 [x] no - comment:
+
+
+6 Comments
+
+
+7 Accepted
+7 [x] yes
+7 [ ] no - comment:
+
+

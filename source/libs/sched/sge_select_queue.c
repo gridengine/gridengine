@@ -3253,7 +3253,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             lAddElemStr(&skip_queue_list, CTI_name, qname, CTI_Type);
          }
       }
-   }  
+   }
 
    lFreeList(&skip_cqueue_list);
    lFreeList(&unclear_cqueue_list);
@@ -3329,7 +3329,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
 
    DENTER(TOP_LAYER, "sequential_tag_queues_suitable4job_by_rqs");
 
-   if (a->rqs_list == NULL || lGetNumberOfElem(a->rqs_list) == 0 || lGetUlong(a->job, JB_ar) != 0) {
+   if (lGetNumberOfElem(a->rqs_list) == 0 || lGetUlong(a->job, JB_ar) != 0) {
       no_check = true;
    }
 
@@ -5166,7 +5166,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                total_soft_violations += slots * lGetUlong(qep, QU_soft_violation);
 
                /* build gdil for that queue */
-               owner=lGetString(a->job, JB_owner);
+               owner = a->user;
                DPRINTF((sge_u32": %d slots in queue %s user %s (host_slots = %d)\n", 
                   a->job_id, slots, qname, owner?owner:"NULL", host_slots));
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {

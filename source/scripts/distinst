@@ -841,7 +841,6 @@ if [ $instcommon = true ]; then
       
       Execute chmod 755 $DEST_SGE_ROOT/util/arch \
                         $DEST_SGE_ROOT/util/*.sh \
-                        $DEST_SGE_ROOT/util/sge_log_tee \
                         $DEST_SGE_ROOT/util/sgeremoterun \
                         $DEST_SGE_ROOT/util/sgeCA/sge_ca \
                         $DEST_SGE_ROOT/util/resources/loadsensors/* \

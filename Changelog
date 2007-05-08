@@ -1,6 +1,9 @@
+PJ-2007-05-08-1: Bugfix:    Forgotten message breaks the readability
+
 PJ-2007-05-08-0: Enhancem.: qrdel -u 
                             Support for testsuite test  
                  Review:    RD
+
 
 JG-2007-05-08-0: Bugfix:    inst_sge -m failed, when called as non root user and
                             the USER environment variable was not set.

@@ -97,7 +97,7 @@ typedef enum {
 #if defined(HP11) || defined(HP1164)
 #  include <limits.h>
 #else
-#  ifndef WIN32NATIVE
+#  if !(defined(WIN32NATIVE) || defined(WINDOWS))
 #     include <sys/param.h>
 #  endif
 #endif
@@ -238,7 +238,7 @@ typedef char stringT[MAX_STRING_SIZE];
          fprintf(stderr, "pthread_setspecific(%s) failed: %s\n", func_name, strerror(ret)); \
          abort(); \
       } \
-   } \
+   }
 
 #define COMMLIB_GET_SPECIFIC(type, variable, init_func, key, func_name) \
    type * variable; \

@@ -45,6 +45,10 @@ unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
+set WINCC        = ""
+set WINCFLAGS    = ""
+set WINLIBS      = ""
+set AIMK_TARGETOPT   = 0
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -1823,10 +1827,14 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    else
       set WINCFLAGS = "/MT"
    endif
-   set WINCFLAGS = "${WINCFLAGS} /D "_CONSOLE" /W3 /WX /nologo /c /Wp64 /EHsc"
+   set WINCFLAGS = "${WINCFLAGS} /D "WINDOWS" /D "_CONSOLE" /W3 /WX"
+   set WINCFLAGS = "${WINCFLAGS} /nologo /c /Wp64 /EHsc"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\common'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\utilbin'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\libs\\juti'"
 
    if ( $DEBUGGED == 1 ) then
       set WINLFLAGS = "/DEBUG"

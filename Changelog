@@ -1,3 +1,7 @@
+JG-2007-05-08-1: Bugfix:    Remove util/sge_log_tee (moved it to source/scripts)
+                 Bugster:   6426331
+                 Review:    RD
+
 PJ-2007-05-08-1: Bugfix:    Forgotten message breaks the readability
 
 PJ-2007-05-08-0: Enhancem.: qrdel -u 

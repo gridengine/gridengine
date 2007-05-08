@@ -78,9 +78,6 @@
  *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
  *       need to be rejected
  *
- *   10) job verification is not properly implemented. For example it's possible to submit
- *       AR job that requests non reserved consumable.
- *
  *   15) ....
  *
  *  IN PROGRESS 
@@ -168,9 +165,7 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
    if ((start_time = lGetUlong(ar, AR_start_time)) == 0) {
 #if 1
       start_time = now;
-      lSetUlong(ar, AR_start_time, now);
-      lSetUlong(ar, AR_end_time, duration_add_offset(now, lGetUlong(ar, AR_duration)));
-      lSetUlong(ar, AR_duration, lGetUlong(ar, AR_end_time) - now);
+      lSetUlong(ar, AR_start_time, start_time);
 #else
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR ,
                               MSG_AR_MISSING_VALUE_S, "start time");
@@ -188,8 +183,10 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
                               MSG_AR_MISSING_VALUE_S, "end time or duration");
       goto ERROR;
    } else if (end_time == 0) {
-      end_time = start_time + duration;
+      end_time = duration_add_offset(start_time, duration);
+      duration = end_time  - start_time;
       lSetUlong(ar, AR_end_time, end_time);
+      lSetUlong(ar, AR_duration, duration);
    } else if (duration == 0) {
       duration = end_time - start_time;
       lSetUlong(ar, AR_duration, duration);

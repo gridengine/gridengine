@@ -113,6 +113,11 @@ int main(int argc, char **argv) {
    
    alp = cull_parse_cmdline(QRSUB, argv+1, environ, &pcmdline, FLG_USE_PSEUDOS);
 
+   if (!pcmdline) {
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      goto error_exit;
+   }
+
    if (answer_list_print_err_warn(&alp, NULL, "qrsub: ", MSG_WARNING) > 0) {
       lFreeList(&pcmdline);
       goto error_exit;
@@ -141,11 +146,8 @@ int main(int argc, char **argv) {
          /* check if the correct ar_id is returned */
          printf("returned ar_id: "sge_u32, lGetUlong(lFirst(ar_lp), AR_id));
       }
-      if (lFirst(ar_lp) != NULL) {
-         lWriteElemTo(lFirst(ar_lp), stdout);
-      }
+
       lFreeList(&ar_lp);
-/*        */
       answer_list_on_error_print_or_exit(&alp, stdout);
    }
 

@@ -1070,7 +1070,7 @@
 #define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
 
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
-#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT _MESSAGE(60626, _("show all advance reservations of users specified in list"))
+#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT _MESSAGE(60626, _("all advance reservations of users specified in list"))
 
 #define MSG_OBJ_AR                         _MESSAGE(60630, _("advance reservation"))
 

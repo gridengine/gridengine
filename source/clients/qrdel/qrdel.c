@@ -52,14 +52,13 @@
 #include "sig_handlers.h"
 
 static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
-static bool sge_parse_qrdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, lList **alpp);
+static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pforce, lList **alpp);
 
 extern char **environ;
 
 /************************************************************************/
 int main(int argc, char **argv) {
-   lList *pcmdline = NULL, *ref_list = NULL, *ar_list = NULL;
-   lListElem *ep;
+   lList *pcmdline = NULL, *ar_list = NULL;
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    u_long32 force = 0;
@@ -93,26 +92,16 @@ int main(int argc, char **argv) {
    /*
    ** stage 2 of command line parsing
    */
-   if (!sge_parse_qrdel(&pcmdline, &ref_list, &force, &alp)) {
+   if (!sge_parse_qrdel(&pcmdline, &ar_list, &force, &alp)) {
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       goto error_exit;
    }
 
-   if (!ref_list) {
+   if (!ar_list) {
       sge_usage(QRDEL, stderr);
       fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       goto error_exit;
-   }
-
-   for_each(ep, ref_list) {
-      const char *id = lGetString(ep, ST_name);
-
-      if (isdigit(id[0])) {
-         lAddElemUlong(&ar_list, AR_id, atoi(id), AR_Type);
-      } else {
-         lAddElemStr(&ar_list, AR_name, id, AR_Type);
-      }
    }
 
    alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_DEL, &ar_list, NULL, NULL);
@@ -146,11 +135,14 @@ static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline,
       if ((rp = parse_noopt(sp, "-f", "--force", ppcmdline, alpp)) != sp)
          continue;
 
+      /* -u option */
+      if ((rp = parse_until_next_opt(sp, "-u", NULL,  ppcmdline, alpp)) != sp) {
+         continue;
+      }
       /* job id's */
       if ((rp = parse_param(sp, "ars", ppcmdline, alpp)) != sp) {
          continue;
       }
-
       /* oops */
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                               MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
@@ -162,10 +154,11 @@ static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline,
 }
 
 
-static bool sge_parse_qrdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce,
+static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pforce,
                            lList **alpp)
 {
    u_long32 helpflag;
+   lList *plist=NULL;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_parse_qdel");
@@ -173,6 +166,9 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppreflist, u_long32 *pfor
    while(lGetNumberOfElem(*ppcmdline))
    {
       lListElem *ep = NULL;
+      
+      /* To be sure, all parsed options are cleared in next switch */
+      lFreeList(&plist); 
 
       if(parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
          sge_usage(QRDEL, stdout);
@@ -183,7 +179,25 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppreflist, u_long32 *pfor
       if(parse_flag(ppcmdline, "-f", alpp, pforce)) 
          continue;
 
-      if(parse_multi_stringlist(ppcmdline, "ars", alpp, ppreflist, ST_Type, ST_name)) {
+      if(parse_multi_stringlist(ppcmdline, "-u", alpp, &plist, ST_Type, ST_name)) {
+         for_each(ep, plist) {
+            const char *owner = lGetString(ep, ST_name);
+
+            lAddElemStr(ppar_list, AR_owner, owner, AR_Type);
+         }
+         continue;
+      }
+     
+      if(parse_multi_stringlist(ppcmdline, "ars", alpp, &plist, ST_Type, ST_name)) {
+         for_each(ep, plist) {
+            const char *id = lGetString(ep, ST_name);
+
+            if (isdigit(id[0])) {
+               lAddElemUlong(ppar_list, AR_id, atoi(id), AR_Type);
+            } else {
+               lAddElemStr(ppar_list, AR_name, id, AR_Type);
+            }
+         }
          continue;
       }
     
@@ -195,6 +209,7 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppreflist, u_long32 *pfor
       }
       break;
    }
+   lFreeList(&plist); 
 
    if (answer_list_has_error(alpp)) {
       ret = false;

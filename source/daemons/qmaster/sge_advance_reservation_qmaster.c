@@ -403,6 +403,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
            char *ruser, char *rhost, monitoring_t *monitor)
 {
    const char *ar_name;
+   const char *ar_owner;
    u_long32 ar_id = 0;
    lListElem *found;
    bool removed_one = false;
@@ -432,8 +433,9 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
    }
 
    ar_name = lGetString(ep, AR_name);
+   ar_owner= lGetString(ep, AR_owner);
    ar_id = lGetUlong(ep, AR_id);
-   if (!ar_name && ar_id == 0) {
+   if (!ar_name && !ar_owner && ar_id == 0) {
       CRITICAL((SGE_EVENT, MSG_AR_XISINVALIDARID_U, sge_u32c(ar_id)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);
@@ -443,6 +445,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
    /* search for ar with this name and remove it from the list */
    if (ar_name) {
       found = lGetElemStr(*ar_list, AR_name, ar_name);
+   } else if (ar_owner) {
+      found = lGetElemStrLike(*ar_list, AR_owner, ar_owner);
    } else {
       found = ar_list_locate(*ar_list, ar_id);
    }
@@ -487,15 +491,20 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
       if (ar_name) {
          found = lGetElemStr(*ar_list, AR_name, ar_name);
       }
-   }
+      if (ar_owner) {
+         found = lGetElemStrLike(*ar_list, AR_owner, ar_owner);
+      }
+    }
 
    if (!removed_one) {
-      if (!ar_name) {
-         sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
+      if (ar_name) {
+         sge_dstring_sprintf(&buffer, "for name %s", ar_name);
+      } else if (ar_owner) {
+         sge_dstring_sprintf(&buffer, "for user %s", ar_owner);
       } else {
-         sge_dstring_sprintf(&buffer, "%s", ar_name);
+         sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
       }
-
+  
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_AR, sge_dstring_get_string(&buffer)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);

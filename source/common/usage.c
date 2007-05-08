@@ -1195,13 +1195,14 @@ FILE *fp
       if (prog_number == QDEL) {
          PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
          MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL);
-      } else if  (prog_number == QRSTAT) {
+      } else if  ((prog_number == QRSTAT) || (prog_number == QRDEL)) {
          PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
          MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT);
       } else {
          PRINTITD(MSG_GDI_USAGE_u_OPT_USERLISTORUALL, 
          MSG_GDI_UTEXT_u_OPT_USERLISTORUALL);
          PRINTITD("", MSG_GDI_UTEXT_ATTACH__u_OPT_USERLISTORUALL );
+         
       }
       MARK(OA_USER_LIST);
    }

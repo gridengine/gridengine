@@ -685,6 +685,12 @@ WelcomeTheUserWinSvc()
 #
 CheckWhoInstallsSGE()
 {
+   # make sure the USER env variable is set
+   if [ "$USER" = "" ]; then
+      USER=`whoami`
+      export USER
+   fi
+
    euid=`$SGE_UTILBIN/uidgid -euid`
    if [ $euid != 0 ]; then
       $CLEAR

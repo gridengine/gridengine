@@ -1,3 +1,9 @@
+JG-2007-05-08-0: Bugfix:    inst_sge -m failed, when called as non root user and
+                            the USER environment variable was not set.
+                 Bugster:   6536426
+                 Issue:     2219
+                 Review:    MD
+
 AH-2007-05-07-0: Bugfix:    Use of hostgroups in resource quotas is less 
                             performant than the full list of hosts
                  Bugster:   6542137

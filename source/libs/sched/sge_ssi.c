@@ -133,8 +133,6 @@ bool sge_ssi_job_cancel(const char *job_identifier, bool reschedule)
    lSetUlong(ref_ep, RN_max, ja_task_id);
    lSetUlong(ref_ep, RN_step, 1);
 
-   DPRINTF(("deleting job "SFN"\n", job_get_id_string(job_id, ja_task_id, NULL)));
-
    /* send delete request */
    alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &ref_list, NULL, NULL);
 

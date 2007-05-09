@@ -799,8 +799,10 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(Master_Job_List, job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return false;
       }   
@@ -852,8 +854,10 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(Master_Job_List, job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return false;
       }   
@@ -981,8 +985,10 @@ bool sge_process_ja_task_event_after(sge_object_type type,
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(Master_Job_List, job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return false;
       }   

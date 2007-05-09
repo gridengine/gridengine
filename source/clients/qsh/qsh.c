@@ -1674,6 +1674,7 @@ int main(int argc, char **argv)
 #endif
    } else {
       int polling_interval;
+      dstring id_dstring = DSTRING_INIT;
       
       srand(getpid());
 
@@ -1778,7 +1779,7 @@ int main(int argc, char **argv)
                }
                VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
-                            job_get_id_string(job_id, 0, NULL)));
+                            job_get_id_string(job_id, 0, NULL, &id_dstring)));
                VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, client_name, host));
                VERBOSE_LOG((stderr, "\n")); 
@@ -1861,7 +1862,7 @@ int main(int argc, char **argv)
             case JTRANSFERING:
                VERBOSE_LOG((stderr, "\n")); 
                VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
-                            job_get_id_string(job_id, 0, NULL)));
+                            job_get_id_string(job_id, 0, NULL, &id_dstring)));
                VERBOSE_LOG((stderr, "\n")); 
    
                /* in case of qlogin: has been scheduled / is transitting just after */
@@ -1895,6 +1896,7 @@ int main(int argc, char **argv)
       } /* end of while (1) polling */
    
       lFreeList(&lp_jobs);
+      sge_dstring_free(&id_dstring);
    }
 
    FREE(client_name);

@@ -82,24 +82,30 @@ pe_task_update_master_list_usage(lListElem *event)
    
    job = job_list_locate(Master_Job_List, job_id);
    if (job == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
-             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
+             job_get_id_string(job_id, 0, NULL, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return false;
    }
    
    ja_task = job_search_task(job, NULL, ja_task_id);
    if (ja_task == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return false;
    }
 
    pe_task = ja_task_search_pe_task(ja_task, pe_task_id);
    if (pe_task == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return false;
    }
@@ -160,7 +166,12 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
 
    lList *usage = NULL;
 
+   char id_buffer[MAX_STRING_SIZE];
+   dstring id_dstring;
+
    DENTER(TOP_LAYER, "pe_task_update_master_list");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    job_id = lGetUlong(event, ET_intkey);
    ja_task_id = lGetUlong(event, ET_intkey2);
@@ -169,7 +180,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
    job = job_list_locate(Master_Job_List, job_id);
    if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
-             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
+             job_get_id_string(job_id, 0, NULL, &id_dstring), SGE_FUNC));
       DEXIT;
       return false;
    }
@@ -177,7 +188,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
    ja_task = job_search_task(job, NULL, ja_task_id);
    if (ja_task == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), SGE_FUNC));
       DEXIT;
       return false;
    }
@@ -194,7 +205,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
        */
       if (pe_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-                job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
          DEXIT;
          return false;
       }
@@ -203,7 +214,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
  
    if (sge_mirror_update_master_list(&list, list_descr, pe_task, 
                                      job_get_id_string(job_id, ja_task_id, 
-                                                       pe_task_id), 
+                                                       pe_task_id, &id_dstring), 
                                      action, event) != SGE_EM_OK) {
       lFreeList(&usage);
       DEXIT;
@@ -215,7 +226,7 @@ pe_task_update_master_list(sge_object_type type, sge_event_action action,
       pe_task = ja_task_search_pe_task(ja_task, pe_task_id);
       if (pe_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-                job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
          lFreeList(&usage);       
          DEXIT;
          return false;

@@ -1123,8 +1123,10 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    if (check && *job_list &&
        job_list_locate(*job_list, lGetUlong(job, JB_job_number))) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_S, 
-             job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+             job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return -1;
    }
@@ -1923,36 +1925,38 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *     u_long32 ja_task_id    - the ja task id or 0 to output only 
 *                              job_id
 *     const char *pe_task_id - optionally the pe task id
+*     dstring *buffer        - a buffer to be used for printing the id string
 *
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the 
 *                   next call of the function.
+*
+*  NOTES
+*     MT-NOTE: job_get_id_string() is MT safe
 ******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
-                              const char *pe_task_id)
+                              const char *pe_task_id, dstring *buffer)
 {
-   static dstring id = DSTRING_INIT;
-
    DENTER(TOP_LAYER, "job_get_id_string");
 
    if(job_id == 0) {
-      sge_dstring_sprintf(&id, "");
+      sge_dstring_sprintf(buffer, "");
    } else {
       if(ja_task_id == 0) {
-         sge_dstring_sprintf(&id, MSG_JOB_JOB_ID_U, job_id);
+         sge_dstring_sprintf(buffer, MSG_JOB_JOB_ID_U, job_id);
       } else {
          if(pe_task_id == NULL) {
-            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
+            sge_dstring_sprintf(buffer, MSG_JOB_JOB_JATASK_ID_UU,
                                 job_id, ja_task_id);
          } else {
-            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
+            sge_dstring_sprintf(buffer, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
                                job_id, ja_task_id, pe_task_id);
          }
       }
    }   
    
    DEXIT;
-   return sge_dstring_get_string(&id);
+   return sge_dstring_get_string(buffer);
 }
 
 /****** sgeobj/job/job_is_pe_referenced() *************************************
@@ -2149,12 +2153,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
    /* check for existence of DISPLAY */
    display_ep = lGetElemStr(lGetList(job, JB_env_list), VA_variable, "DISPLAY");
    if(display_ep == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -2164,12 +2170,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
     */
    display = lGetString(display_ep, VA_value);
    if(display == NULL || strlen(display) == 0) {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
@@ -2178,12 +2186,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
     * it is useless in a grid environment.
     */
    if(*display == ':') {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return STATUS_EUNKNOWN;
    }

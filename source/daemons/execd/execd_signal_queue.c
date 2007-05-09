@@ -466,8 +466,12 @@ const char *pe_task_id
 ) {
    int sig;
    int direct_signal;   /* deliver per signal or per file */
+   char id_buffer[MAX_STRING_SIZE];
+   dstring id_dstring;
 
    DENTER(TOP_LAYER, "sge_kill");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    if (!pid) {
       DPRINTF(("sge_kill won't kill pid 0!\n"));
@@ -514,7 +518,7 @@ const char *pe_task_id
    }
 
    DPRINTF(("signalling job/task "SFN", pid "pid_t_fmt" with %d\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id), pid, sig));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), pid, sig));
    if (!direct_signal) {
       dstring fname = DSTRING_INIT;
       FILE *fp;
@@ -572,7 +576,7 @@ CheckShepherdStillRunning:
          return 0;
       } else {
          WARNING((SGE_EVENT, MSG_JOB_DELIVERSIGNAL_ISSIS, sig, 
-         job_get_id_string(job_id, ja_task_id, pe_task_id), 
+         job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
          sge_sig2str(sge_signal), pid, strerror(errno)));
          sge_dstring_free(&path);
          DEXIT;

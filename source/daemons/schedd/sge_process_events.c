@@ -854,8 +854,10 @@ sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_ba
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return SGE_EMA_FAILURE;
       }   
@@ -908,8 +910,10 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return SGE_EMA_FAILURE;
       }   
@@ -1042,8 +1046,10 @@ sge_process_ja_task_event_after(sge_evc_class_t *evc, object_description *object
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
       if (job == NULL) {
+         dstring id_dstring = DSTRING_INIT;
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, 
-                job_get_id_string(job_id, 0, NULL)));
+                job_get_id_string(job_id, 0, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
          DEXIT;
          return SGE_EMA_FAILURE;
       }   

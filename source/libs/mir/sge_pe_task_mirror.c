@@ -83,24 +83,30 @@ pe_task_update_master_list_usage(lList *job_list, lListElem *event)
    
    job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
    if (job == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
-             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
+             job_get_id_string(job_id, 0, NULL, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return SGE_EMA_FAILURE;
    }
    
    ja_task = job_search_task(job, NULL, ja_task_id);
    if (ja_task == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return SGE_EMA_FAILURE;
    }
 
    pe_task = ja_task_search_pe_task(ja_task, pe_task_id);
    if (pe_task == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
+      sge_dstring_free(&id_dstring);
       DEXIT;
       return SGE_EMA_FAILURE;
    }
@@ -164,7 +170,12 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
 
    lList *usage = NULL;
 
+   char id_buffer[MAX_STRING_SIZE];
+   dstring id_dstring;
+
    DENTER(TOP_LAYER, "pe_task_update_master_list");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    job_id = lGetUlong(event, ET_intkey);
    ja_task_id = lGetUlong(event, ET_intkey2);
@@ -173,7 +184,7 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
    job = job_list_locate(*sge_master_list(object_base, SGE_TYPE_JOB), job_id);
    if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
-             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
+             job_get_id_string(job_id, 0, NULL, &id_dstring), SGE_FUNC));
       DEXIT;
       return SGE_EMA_FAILURE;
    }
@@ -181,7 +192,7 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
    ja_task = job_search_task(job, NULL, ja_task_id);
    if (ja_task == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS, 
-             job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
+             job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), SGE_FUNC));
       DEXIT;
       return SGE_EMA_FAILURE;
    }
@@ -198,7 +209,7 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
        */
       if (pe_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-                job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
          DEXIT;
          return SGE_EMA_FAILURE;
       }
@@ -207,7 +218,7 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
  
    if (sge_mirror_update_master_list(&pe_task_list, pe_task_descr, pe_task, 
                                      job_get_id_string(job_id, ja_task_id, 
-                                                       pe_task_id), 
+                                                       pe_task_id, &id_dstring),
                                      action, event) != SGE_EM_OK) {
       lFreeList(&usage);
       DEXIT;
@@ -219,7 +230,7 @@ pe_task_update_master_list(sge_evc_class_t *evc, object_description *object_base
       pe_task = ja_task_search_pe_task(ja_task, pe_task_id);
       if (pe_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
-                job_get_id_string(job_id, ja_task_id, pe_task_id), SGE_FUNC));
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), SGE_FUNC));
          lFreeList(&usage);       
          DEXIT;
          return SGE_EMA_FAILURE;

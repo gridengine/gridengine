@@ -703,7 +703,7 @@ AddBootstrap()
 #
 PrintBootstrap()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: 6.0u11"
    $ECHO "#"
    if [ $ADMINUSER != default ]; then
       $ECHO "admin_user             $ADMINUSER"
@@ -763,7 +763,7 @@ AddConfiguration()
 #
 PrintConf()
 {
-   $ECHO "# Version: 6.0u8_1"
+   $ECHO "# Version: 6.0u11"
    $ECHO "#"
    $ECHO "# DO NOT MODIFY THIS FILE MANUALLY!"
    $ECHO "#"

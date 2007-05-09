@@ -264,21 +264,20 @@ load_np_value_adjustment(const char* name, lListElem *hep, double *load_correcti
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj)
 {
-   a->job         = job;
-   a->ja_task     = ja_task;
-   a->user        = lGetString(job, JB_owner);
-   a->group       = lGetString(job, JB_group);
-   a->project     = lGetString(job, JB_project);
+   if (job != NULL) {
+      a->job         = job;
+      a->user        = lGetString(job, JB_owner);
+      a->group       = lGetString(job, JB_group);
+      a->project     = lGetString(job, JB_project);
+      a->job_id      = lGetUlong(job, JB_job_number);
+   }
 
    if (is_load_adj) {
       a->load_adjustments = sconf_get_job_load_adjustments();
    }
    
-   if (job != NULL) {
-      a->job_id      = lGetUlong(job, JB_job_number);
-   }
-   
    if (ja_task != NULL) {
+      a->ja_task     = ja_task;
       a->ja_task_id  = lGetUlong(ja_task, JAT_task_number);
    }   
 }

@@ -1,3 +1,7 @@
+RD-2007-05-09-0: Bugfix:    Fixed abort in several clients due to
+                            AH-2007-05-03-0
+                 Review:    AA
+
 JG-2007-05-08-1: Bugfix:    Remove util/sge_log_tee (moved it to source/scripts)
                  Bugster:   6426331
                  Review:    RD

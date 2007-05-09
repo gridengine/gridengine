@@ -562,8 +562,7 @@ static void qmaster_init(sge_gdi_ctx_class_t *ctx, char **anArgv)
 
    starting_up(); /* write startup info message to message file */
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* qmaster_init() */
 
 /****** qmaster/setup_qmaster/communication_setup() ****************************
@@ -1070,7 +1069,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    }
 
    /* Initialize
-    *    - reflect advance reservations in queue instances
     *    - setup timers
     */
    {
@@ -1085,8 +1083,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
          next_ar = lNext(ar);
 
          if (now < lGetUlong(ar, AR_start_time)) {
-            ar_do_reservation(ar, true);
-
             sge_ar_state_set_waiting(ar);
 
             ev = te_new_event((time_t)lGetUlong(ar, AR_start_time), TYPE_AR_EVENT,
@@ -1096,8 +1092,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
             te_free_event(&ev);
 
          } else if (now < lGetUlong(ar, AR_end_time)) {
-            ar_do_reservation(ar, true);
-
             sge_ar_state_set_running(ar);
 
             ev = te_new_event((time_t)lGetUlong(ar, AR_end_time), TYPE_AR_EVENT,

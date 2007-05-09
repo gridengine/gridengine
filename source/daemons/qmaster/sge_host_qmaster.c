@@ -91,9 +91,11 @@
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_serf.h"
 #include "sched/debit.h"
+#include "sched/valid_queue_user.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 
 static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_request *request, sge_gdi_request *answer);
@@ -430,6 +432,8 @@ int sub_command, monitoring_t *monitor
       host = lGetString(new_host, nm);
    }
    if (nm == EH_name) {
+      bool acl_changed = false;
+
       /* ---- EH_scaling_list */
       if (lGetPosViaElem(ep, EH_scaling_list, SGE_NO_ABORT)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_scaling_list, HS_name, ep,
@@ -449,8 +453,9 @@ int sub_command, monitoring_t *monitor
       /* ---- EH_acl */
       if (lGetPosViaElem(ep, EH_acl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_acl\n"));
+         acl_changed = true;
          /* check acl list */
-         if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp)!=STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp) != STATUS_OK) {
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
@@ -460,8 +465,9 @@ int sub_command, monitoring_t *monitor
       /* ---- EH_xacl */
       if (lGetPosViaElem(ep, EH_xacl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xacl\n"));
+         acl_changed = true;
          /* check xacl list */
-         if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp)!=STATUS_OK) {
+         if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp) != STATUS_OK) {
             goto ERROR;
          }   
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
@@ -516,12 +522,30 @@ int sub_command, monitoring_t *monitor
             const char *name = lGetString(var, STU_name);
             if (centry_list_locate(*object_base[SGE_TYPE_CENTRY].list, name) == NULL) {
                ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
-                               ANSWER_QUALITY_ERROR);
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                goto ERROR;
             }
          }
       }
+
+      if (acl_changed == true) {
+         lListElem *ar;
+         lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
+
+         for_each(ar, *(object_type_get_master_list(SGE_TYPE_AR))) {
+            if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qhostname, host)) {
+               if (!sge_ar_have_users_access(NULL, ar, host, lGetList(ep, EH_acl),
+                                             lGetList(ep, EH_xacl),
+                                             master_userset_list)) {
+                  ERROR((SGE_EVENT, MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU, 
+                         SGE_ATTR_USER_LISTS, sge_u32c(lGetUlong(ar, AR_id))));
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  goto ERROR;
+               }
+            }
+         }
+      }
+      
    }
 
    DRETURN(0);

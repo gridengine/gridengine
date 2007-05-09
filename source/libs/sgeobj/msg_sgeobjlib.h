@@ -299,7 +299,8 @@
 #define MSG_PARSE_INVALID_ID_MUSTBEUINT          _MESSAGE(60395, _("ERROR! invalid id, must be an unsigned integer"))
 #define MSG_PARSE_MOD_REJECTED_DUE_TO_AR_SSU     _MESSAGE(60396, _("denied: removing "SFQ" from "SFN" would break advance reservation "sge_U32CFormat))
 #define MSG_PARSE_MOD_REJECTED_DUE_TO_AR_PE_SLOTS_U _MESSAGE(60397, _("denied: lowering slots amount below "sge_U32CFormat" would break advance reservations"))
-#define MSG_PARSE_MOD2_REJECTED_DUE_TO_AR_SSU     _MESSAGE(60398, _("denied: changing "SFQ" to "SFN" would break advance reservation "sge_U32CFormat))
+#define MSG_PARSE_MOD2_REJECTED_DUE_TO_AR_SSU    _MESSAGE(60398, _("denied: changing "SFQ" to "SFN" would break advance reservation "sge_U32CFormat))
+#define MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU     _MESSAGE(60399, _("denied: the change in "SFQ" would break advance reservation "sge_U32CFormat))
 
 #define MSG_AR_EVENT_STATE_CREATION              _MESSAGE(64500, _("CREATED"))
 #define MSG_AR_EVENT_STATE_STARTIME_REACHED      _MESSAGE(64501, _("START TIME REACHED"))

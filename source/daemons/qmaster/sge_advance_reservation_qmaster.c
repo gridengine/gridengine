@@ -1002,66 +1002,22 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
       }
 
       if (lGetList(ar, AR_acl_list) != NULL) {
-         /* sort out queue that are calendar disabled in requested time frame */
+         /* sort out queues where not all users have access */
          lListElem *ep, *next_ep;
-         const char *user= NULL;
 
          next_ep = lFirst(a.queue_list);
          while ((ep = next_ep)) {
-            lListElem *acl_entry;
-            
             next_ep = lNext(ep);
 
-            for_each(acl_entry, lGetList(ar, AR_acl_list)) {
-               user = lGetString(acl_entry, ST_name);
-               if (!is_hgroup_name(user)) {
-                  struct passwd *pw;
-                  struct passwd pw_struct;
-                  char buffer[2048];
-                  stringT group;
-
-                  pw = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
-                  
-                  if( pw == NULL ) {
-                    answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_USER_XISNOKNOWNUSER_S, user);
-                    DRETURN(false);
-                  }
-                  sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
-
-                  DPRINTF(("user: %s\n", user));
-                  DPRINTF(("group: %s\n", group));
-                  
-                  if (sge_has_access(user, group, ep, master_userset_list) == 0) {
-                     lRemoveElem(a.queue_list, &ep);
-                     break;
-                  }
-               } else {
-                  bool skip_queue = false;
-                  lList *qacl = lGetList(ep, QU_xacl);
-                  /* skip preattached \@ sign */
-                  const char *acl_name = ++user;
-
-                  DPRINTF(("acl :%s", acl_name));
-
-                  /* at first xacl */
-                  if (qacl && lGetElemStr(qacl, US_name, acl_name) != NULL) {
-                     skip_queue = true;
-                  }
-
-                  /* at second acl */
-                  qacl = lGetList(ep, QU_acl);
-                  if (!skip_queue && qacl && lGetElemStr(qacl, US_name, acl_name) == NULL) {
-                     answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDNOPERMISSIONS, lGetString(ep, QU_full_name)); 
-                     skip_queue = true;
-                  }
-
-                  if (skip_queue) {
-                     lRemoveElem(a.queue_list, &ep);
-                     break;
-                  }
-               }
+            if (!sge_ar_have_users_access(alpp, ar, lGetString(ep, QU_full_name), 
+                                                lGetList(ep, QU_acl),
+                                                lGetList(ep, QU_xacl),
+                                                master_userset_list)) {
+               lRemoveElem(a.queue_list, &ep);
             }
          }
+         lSetString(dummy_job, JB_owner, "*");
+         lSetString(dummy_job, JB_group, "*");
       } else {
          lSetString(dummy_job, JB_owner, lGetString(ar, AR_owner));
          lSetString(dummy_job, JB_group, lGetString(ar, AR_group));
@@ -1749,25 +1705,20 @@ sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_n
                                     lListElem *cal_ep, lList *master_ar_list)
 {
    lListElem *ar;
-   lListElem *ar_queue;
 
    DENTER(TOP_LAYER, "ar_list_conflicts_with_calendar");
 
    for_each(ar, master_ar_list) {
+      if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name)) {
+         u_long32 start_time = lGetUlong(ar, AR_start_time);
+         u_long32 duration = lGetUlong(ar, AR_duration);
 
-      for_each(ar_queue, lGetList(ar, AR_granted_slots)) {
-         const char *ar_queue_name = lGetString(ar_queue, JG_qname);
-         if (strcmp(ar_queue_name, qinstance_name) == 0) {
-            u_long32 start_time = lGetUlong(ar, AR_start_time);
-            u_long32 duration = lGetUlong(ar, AR_duration);
-
-            if (!calendar_open_in_time_frame(cal_ep, start_time, duration)) {
-               ERROR((SGE_EVENT, MSG_PARSE_MOD2_REJECTED_DUE_TO_AR_SSU, lGetString(cal_ep, CAL_name), 
-                      SGE_ATTR_CALENDAR, sge_u32c(lGetUlong(ar, AR_id))));
-               answer_list_add(answer_list, SGE_EVENT, 
-                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-               DRETURN(true);
-            }
+         if (!calendar_open_in_time_frame(cal_ep, start_time, duration)) {
+            ERROR((SGE_EVENT, MSG_PARSE_MOD2_REJECTED_DUE_TO_AR_SSU, lGetString(cal_ep, CAL_name), 
+                   SGE_ATTR_CALENDAR, sge_u32c(lGetUlong(ar, AR_id))));
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            DRETURN(true);
          }
       }
    }

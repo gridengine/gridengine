@@ -1499,7 +1499,20 @@ DTRACE;
  
          DPRINTF(("\"-u %s\"\n", *sp));
 
-         str_list_parse_from_string(&user_list, *sp, ",");
+         if (prog_number == QRSUB) {
+            int rule[] = {ARA_name, 0};
+            char **dest = NULL;
+            char *tmp;
+
+            tmp = sge_strdup(NULL, *sp);
+            dest = string_list(tmp, ",", NULL);
+            cull_parse_string_list(dest, "user_list", ARA_Type, rule, &user_list);
+            FREE(tmp);
+            FREE(dest);
+         } else {
+            str_list_parse_from_string(&user_list, *sp, ",");
+         }
+
 
          ep_opt = sge_add_arg(pcmdline, u_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, user_list);  
@@ -2009,7 +2022,7 @@ static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_nu
       } else if ((char) mail_str[j] == 'n') {
          mail_opt = mail_opt | NO_MAIL;
       } else if ((char) mail_str[j] == 's') {
-         if ( prog_number == QRSUB ) {
+         if (prog_number == QRSUB) {
             answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                    MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-m");
             DRETURN(0);

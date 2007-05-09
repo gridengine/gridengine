@@ -272,6 +272,7 @@ extern "C" {
       {RQRL_LOWERBOUND, RQRLS, RQRLN},          /* resource quota rule limit */
      
       {AR_LOWERBOUND, ARS, ARN},                /* advance reservation */ 
+      {ARA_LOWERBOUND, ARAS, ARAN},             /* advance reservation acl*/ 
       
       {0, 0, NULL}
    };

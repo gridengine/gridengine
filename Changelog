@@ -1,3 +1,7 @@
+RD-2007-05-09-1: Enhancem.: Added check if userset mod invalidates AR
+                 Cleanup:   moved userset code into generic gdi framework   
+                 Review:    AA
+
 JG-2007-05-09-0: Bugfix:    job_get_id_string was not MT save
                  Bugster:   6476263
                  Review:    RD

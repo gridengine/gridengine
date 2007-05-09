@@ -1727,9 +1727,7 @@ lDechainList(lList *source, lList **target, lListElem *ep)
   
    if (*target == NULL) {
       *target = lCreateList(lGetListName(source), source->descr);
-   }
-   else {
-      
+   } else {
       if (lCompListDescr(source->descr, (*target)->descr) != 0) {
          CRITICAL((SGE_EVENT,"Dechaining element into a different list !!!\n"));
          DEXIT;

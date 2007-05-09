@@ -244,43 +244,40 @@ hgroup_mod(sge_gdi_ctx_class_t *ctx,
 
    DENTER(TOP_LAYER, "hgroup_mod");
 
-   if (ret) {
-      /* Did we get a hostgroupname?  */
-      pos = lGetPosViaElem(reduced_elem, HGRP_name, SGE_NO_ABORT);
-      if (pos >= 0) {
-         const char *name = lGetPosHost(reduced_elem, pos);
+   /* Did we get a hostgroupname?  */
+   pos = lGetPosViaElem(reduced_elem, HGRP_name, SGE_NO_ABORT);
+   if (pos >= 0) {
+      const char *name = lGetPosHost(reduced_elem, pos);
 
-         if (add) {
-            /* Check groupname for new hostgroups */
-            if (hgroup_check_name(answer_list, name)) {
-               lSetHost(hgroup, HGRP_name, name); 
-            }
-            else {
-               lListElem *aep;
-               for_each(aep, *answer_list) {
-                  ERROR((SGE_EVENT, lGetString(aep, AN_text)));
-               }
-               ret = false;
-            }
-
+      if (add) {
+         /* Check groupname for new hostgroups */
+         if (hgroup_check_name(answer_list, name)) {
+            lSetHost(hgroup, HGRP_name, name); 
          } else {
-            const char *old_name = lGetHost(hgroup, HGRP_name);
-
-            /* Reject modify requests which try to change the groupname */
-            if (sge_hostcmp(old_name, name)) {
-               ERROR((SGE_EVENT, MSG_HGRP_NONAMECHANGE));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                               ANSWER_QUALITY_ERROR);
-               ret = false;
+            lListElem *aep;
+            for_each(aep, *answer_list) {
+               ERROR((SGE_EVENT, lGetString(aep, AN_text)));
             }
+            ret = false;
          }
+
       } else {
-         ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, 
-                lNm2Str(HGRP_name), SGE_FUNC));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 
-                         ANSWER_QUALITY_ERROR);
-         ret = false;
+         const char *old_name = lGetHost(hgroup, HGRP_name);
+
+         /* Reject modify requests which try to change the groupname */
+         if (sge_hostcmp(old_name, name)) {
+            ERROR((SGE_EVENT, MSG_HGRP_NONAMECHANGE));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                            ANSWER_QUALITY_ERROR);
+            ret = false;
+         }
       }
+   } else {
+      ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, 
+             lNm2Str(HGRP_name), SGE_FUNC));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 
+                      ANSWER_QUALITY_ERROR);
+      ret = false;
    }
 
    /*

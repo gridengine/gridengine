@@ -610,11 +610,9 @@ int *interpretation_rule
       DRETURN((fields?true:false));
    }
 
-   {
-      if (cull_parse_definition_list(str, &tmplp, key, descr, 
-            interpretation_rule) != 0) {
-         DRETURN(false);
-      }
+   if (cull_parse_definition_list(str, &tmplp, key, descr, 
+         interpretation_rule) != 0) {
+      DRETURN(false);
    }
 
    lSetList(ep, name_nm, tmplp);

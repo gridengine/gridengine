@@ -66,6 +66,7 @@ static int intprt_resourcelist[] = { CE_name, CE_stringval, 0 };
 static int intprt_mail_recipiants[] = { MR_user, MR_host, 0 };
 static int intprt_range_list[] = { RN_min, RN_max, 0 };
 static int intprt_queue[] = { JG_qname, JG_slots, 0 }; 
+static int intprt_acl[] = { ARA_name, ARA_group, 0 }; 
 lListElem *
 cull_read_in_ar(const char *dirname, const char *filename, int spool,
                 int type, int *tag, int fields[])
@@ -313,7 +314,7 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    DPRINTF((    "Read AR, granted_pe                   %s\n", (s != NULL) ? s : "NONE"));
 
    
-   /* --------- AR_master_queue_list  */
+   /* --------- AR_master_queue_list */
    if (!set_conf_list(alpp, clpp, fields?fields:opt, "master_queue_list", ep,
                       AR_master_queue_list, QR_Type, QR_name)) {
       DPRINTF(("Read AR, error read AR_master_queue_list\n"));
@@ -321,16 +322,16 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    }
 
      
-   /* --------- AR_acl_list  */
-   if (!set_conf_list(alpp, clpp, fields?fields:opt, "acl_list", ep,
-                      AR_acl_list, ST_Type, ST_name)) {
+   /* --------- AR_acl_list */
+   if (!set_conf_deflist(alpp, clpp, fields, "acl_list",
+                         ep, AR_acl_list, ARA_Type, intprt_acl)) {
       DPRINTF(("Read AR, error read AR_acl_list\n"));
       DRETURN(-1);
    }
 
    /* --------- AR_xacl_list  */
-   if (!set_conf_list(alpp, clpp, fields?fields:opt, "xacl_list", ep,
-                      AR_xacl_list, ST_Type, ST_name)) {
+   if (!set_conf_deflist(alpp, clpp, fields, "xacl_list",
+                         ep, AR_xacl_list, ARA_Type, intprt_acl)) {
       DPRINTF(("Read AR, error read AR_xacl_list\n"));
       DRETURN(-1);
    }
@@ -370,10 +371,11 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
 *     MT-NOTE: write_ar() is not MT safe 
 *
 *******************************************************************************/
-char * write_ar(int spool, int how, const lListElem *ep)
+char *write_ar(int spool, int how, const lListElem *ep)
 {
    FILE *fp;
    const char *s = NULL;
+   const char *delis[] = {"=", ",", NULL};
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
@@ -500,7 +502,7 @@ char * write_ar(int spool, int how, const lListElem *ep)
    }  
 
    /* --------- AR_granted_slots */
-   DPRINTF((    "granted_slots:     \n"));
+   DPRINTF((    "granted_slots:       "));
    FPRINTF((fp, "granted_slots        ")); 
    sep = lFirst(lGetList(ep, AR_granted_slots));
    if (sep) {
@@ -533,7 +535,7 @@ char * write_ar(int spool, int how, const lListElem *ep)
    FPRINTF((fp, "mail_options         "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_mail_options))));
 
    /* --------- AR_mail_list */
-   DPRINTF((    "mail_list:         \n"));
+   DPRINTF((    "mail_list:           "));
    FPRINTF((fp, "mail_list            "));
    sep = lFirst(lGetList(ep, AR_mail_list));
    if (sep) {
@@ -581,17 +583,19 @@ char * write_ar(int spool, int how, const lListElem *ep)
 
    /* --------- AR_acl_list */
    DPRINTF((    "acl_list \n"));
-   lret = fprint_cull_list(fp,  "acl_list             ", lGetList(ep, AR_acl_list), ST_name);
-   if (lret == -1) {
+   FPRINTF((fp, "acl_list             "));
+   if (uni_print_list(fp, NULL, 0, lGetList(ep, AR_acl_list), intprt_acl, delis, 0) < 0) {
       goto FPRINTF_ERROR;
    }
+   FPRINTF((fp, "\n"));
 
    /* --------- AR_xacl_list */
-   DPRINTF((    "xuser_list \n"));
-   lret = fprint_cull_list(fp,  "xacl_list            ", lGetList(ep, AR_xacl_list), ST_name);
-   if (lret == -1) {
+   DPRINTF((    "xacl_list \n"));
+   FPRINTF((fp, "xacl_list            "));
+   if (uni_print_list(fp, NULL, 0, lGetList(ep, AR_xacl_list), intprt_acl, delis, 0) < 0) {
       goto FPRINTF_ERROR;
    }
+   FPRINTF((fp, "\n"));
 
    /* --------- AR_type */
    DPRINTF((    "type                 "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_type))));

@@ -69,7 +69,8 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_select_queue.h"
+#include "sched/sge_select_queue.h"
+#include "sched/valid_queue_user.h"
 #include "sge_queue_event_master.h"
 #include "sge_signal.h"
 #include "sge_mtutil.h"
@@ -85,6 +86,7 @@
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_sgeobjlib.h"
 
 
 /* EB: ADOC: add commets */
@@ -586,6 +588,26 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                      qinstance_name));
             lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD_ONLY_CONFIG);
             qinstance_increase_qversion(qinstance);
+         }
+
+         if (ret) {
+            lListElem *ar;
+            lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
+
+            for_each(ar, *(object_type_get_master_list(SGE_TYPE_AR))) {
+               if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name)) {
+                  if (!sge_ar_have_users_access(NULL, ar, lGetString(qinstance, QU_full_name), 
+                                                lGetList(qinstance, QU_acl),
+                                                lGetList(qinstance, QU_xacl),
+                                                master_userset_list)) {
+                     ERROR((SGE_EVENT, MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU, 
+                            SGE_ATTR_USER_LISTS, sge_u32c(lGetUlong(ar, AR_id))));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  }
+               }
+            }
          }
 
          if (!ret) {

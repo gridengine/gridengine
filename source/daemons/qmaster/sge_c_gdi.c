@@ -184,7 +184,7 @@ static gdi_object_t gdi_object[] = {
    { SGE_CONFIG_LIST,       0,         NULL,      "configuration",           SGE_TYPE_NONE,            NULL,         NULL,           NULL },
    { SGE_SC_LIST,           0,         NULL,      "scheduler configuration", SGE_TYPE_NONE,            schedd_mod,   NULL,           NULL },
    { SGE_USER_LIST,         UP_name,   UP_Type,   "user",                    SGE_TYPE_USER,            userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_USERSET_LIST,      0,         NULL,      "userset",                 SGE_TYPE_USERSET,         NULL,         NULL,           NULL },
+   { SGE_USERSET_LIST,      US_name,   US_Type,   "userset",                 SGE_TYPE_USERSET,         userset_mod,  userset_spool,  userset_success },
    { SGE_PROJECT_LIST,      UP_name,   UP_Type,   "project",                 SGE_TYPE_PROJECT,         userprj_mod,  userprj_spool,  userprj_success },
    { SGE_SHARETREE_LIST,    0,         NULL,      "sharetree",               SGE_TYPE_SHARETREE,       NULL,         NULL,           NULL },
    { SGE_CKPT_LIST,         CK_name,   CK_Type,   "checkpoint interface",    SGE_TYPE_CKPT,            ckpt_mod,     ckpt_spool,     ckpt_success },
@@ -889,10 +889,6 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                case SGE_MANAGER_LIST:
                case SGE_OPERATOR_LIST:
                   sge_add_manop(ctx, ep, &(answer->alp), user, host, request->target);
-                  break;
-
-               case SGE_USERSET_LIST:
-                  sge_add_userset(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list, user, host);
                   break;
 
                case SGE_SHARETREE_LIST:
@@ -1652,11 +1648,6 @@ static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host
          {
             case SGE_JOB_LIST:
                sge_gdi_mod_job(ctx, ep, &(answer->alp), user, host, sub_command);
-               break;
-
-            case SGE_USERSET_LIST:
-               sge_mod_userset(ctx, ep, &(answer->alp), object_base[SGE_TYPE_USERSET].list,
-                               user, host);
                break;
 
             case SGE_SHARETREE_LIST:

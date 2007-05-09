@@ -75,9 +75,6 @@
  *    3) lowering or removing a reserved consumable complex on global/host/queue level
  *       need to be rejected
  *
- *    5) changing global/queue/host access lists on reserved hosts that endanger a AR
- *       need to be rejected
- *
  *   15) ....
  *
  *  IN PROGRESS 
@@ -209,7 +206,6 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
       goto ERROR;
    }
    /*   AR_owner, SGE_STRING */
- 
    
    if (in_master) {
       /*    AR_name, SGE_STRING */
@@ -279,12 +275,12 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
             }
          }
          /*   AR_acl_list, SGE_LIST */
-         if (userset_list_validate_access(lGetList(ar, AR_acl_list), ST_name, alpp) != STATUS_OK) {
+         if (userset_list_validate_access(lGetList(ar, AR_acl_list), ARA_name, alpp) != STATUS_OK) {
             goto ERROR;
          }
          
          /*   AR_xacl_list, SGE_LIST */
-         if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ST_name, alpp) != STATUS_OK) {
+         if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ARA_name, alpp) != STATUS_OK) {
             goto ERROR;
          }
       }

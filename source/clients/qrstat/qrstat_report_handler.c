@@ -164,7 +164,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                handler->report_start_acl_list(handler, answer_list);
                for_each(acl, lGetList(ar, AR_acl_list)) {
                   handler->report_acl_list_node(handler, answer_list,
-                                                 lGetString(acl, ST_name));
+                                                 lGetString(acl, ARA_name));
                }
                handler->report_finish_acl_list(handler, answer_list);
             }

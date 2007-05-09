@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <pwd.h>
+
 #include "basis_types.h"
 #include "sge.h"
 
@@ -55,7 +57,10 @@
 #include "msg_clients_common.h"
 #include "sig_handlers.h"
 
-#include "sge_advance_reservation.h"
+#include "uti/sge_uidgid.h"
+
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_hgroup.h"
 
 extern char **environ;
 
@@ -160,7 +165,8 @@ error_exit:
 
 static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 {
-   lListElem *ep = NULL;
+   lListElem *ep = NULL, *next_ep = NULL;
+   lList *lp = NULL;
    DENTER(TOP_LAYER, "sge_parse_qrsub");
 
    /*  -help 	 print this help */
@@ -206,39 +212,49 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
       lSetString(*ar, AR_account, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(pcmdline, &ep);
    }
-      
+     
    /*  -l resource_list 	 request the given resources  SGE_LIST */
    parse_list_simple(pcmdline, "-l", *ar, AR_resource_list, 0, 0, FLG_LIST_APPEND);
    centry_list_remove_duplicates(lGetList(*ar, AR_resource_list));
 
    /*  -u wc_user 	       access list SGE_LIST */
    /*  -u ! wc_user TBD: Think about eval_expression support in compare allowed and excluded lists */
-   parse_list_simple(pcmdline, "-u", *ar, AR_acl_list, 0, 0, FLG_LIST_APPEND);
+   parse_list_simple(pcmdline, "-u", *ar, AR_acl_list, ARA_name, 0, FLG_LIST_MERGE);
    /*  -u ! list separation */
-   ep = lFirst(lGetList(*ar,  AR_acl_list));
-   if (ep) {
-      lList *xacl=NULL; 
-      do  {
-         const char *s = NULL;
-         s = lGetString(ep, ST_name);
-         if (s[0] == '!') { /* move this element to xacl_list */
-            lListElem *new=NULL;
-            if(xacl == NULL) { /* the xacl_list does not exist */
-               xacl = lCreateList("xacl_list", ST_Type );
-            }  
-            new = lCreateElem(ST_Type);
-            s++;
-            lSetString(new, ST_name, s);
-            lAppendElem(xacl, new);
-            lRemoveElem(lGetList(*ar,  AR_acl_list), &ep);
-            ep = lFirst(lGetList(*ar,  AR_acl_list));
-         } else {
-           ep = lNext(ep);
-         }  
-      } while (ep);   
-      if(xacl != NULL) {
-         lSetList(*ar, AR_xacl_list, xacl);
+   lp = lGetList(*ar,  AR_acl_list);
+   next_ep = lFirst(lp);
+   while ((ep = next_ep)) {
+      bool is_xacl = false;
+      const char *name = lGetString(ep, ARA_name);
+
+      next_ep = lNext(ep);
+      if (name[0] == '!') { /* move this element to xacl_list */
+         is_xacl = true;
+         name++;
       }
+
+      if (!is_hgroup_name(name)) {
+         struct passwd *pw;
+         struct passwd pw_struct;
+         char buffer[2048];
+         stringT group;
+
+         pw = sge_getpwnam_r(name, &pw_struct, buffer, sizeof(buffer));
+         
+         if (pw == NULL) {
+           answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_USER_XISNOKNOWNUSER_S, name);
+           DRETURN(false);
+         }
+         sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
+         lSetString(ep, ARA_group, group);
+      }
+
+      if (is_xacl) {
+         lListElem *new_ep = lAddSubStr(*ar, ARA_name, name, AR_xacl_list, ARA_Type);
+         lSetString(new_ep, ARA_group, lGetString(ep, ARA_group));
+         lRemoveElem(lp, &ep);
+      }
+
    }
 
    /*  -q wc_queue_list 	 reserve in queue(s) SGE_LIST */

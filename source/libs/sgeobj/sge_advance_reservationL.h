@@ -155,8 +155,8 @@ LISTDEF(AR_Type)
    SGE_STRING(AR_granted_pe, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)              
    SGE_LIST(AR_master_queue_list, QR_Type, CULL_DEFAULT | CULL_SPOOL)
 
-   SGE_LIST(AR_acl_list, ST_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
-   SGE_LIST(AR_xacl_list, ST_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(AR_acl_list, ARA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_LIST(AR_xacl_list, ARA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
    SGE_ULONG(AR_type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)
 LISTEND
 
@@ -193,12 +193,30 @@ NAMEDEF(ARN)
    NAME("AR_granted_pe")
    NAME("AR_master_queue_list")
 
-   NAME("AR_acl_list")
+   NAME("AR_acl_list")  /* user + group or userset */
    NAME("AR_xacl_list")
    NAME("AR_type")
 NAMEEND
 
 #define ARS sizeof(ARN)/sizeof(char*)
+
+/* Advance Reservation ACL Entry Object */
+enum {
+   ARA_name = ARA_LOWERBOUND,   /* user or userset */
+   ARA_group                    /* group name for user */
+};
+
+LISTDEF(ARA_Type)
+   SGE_STRING(ARA_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_STRING(ARA_group, CULL_DEFAULT | CULL_SPOOL)
+LISTEND
+
+NAMEDEF(ARAN)
+   NAME("ARA_name")
+   NAME("ARA_group")
+NAMEEND
+
+#define ARAS sizeof(ARAN)/sizeof(char*)
 
 /* *INDENT-ON* */ 
 

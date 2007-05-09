@@ -32,17 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_c_gdi.h"
+#include "uti/sge_monitor.h"
 #include "gdi/sge_gdi_ctx.h"
-
-int sge_add_userset(sge_gdi_ctx_class_t *ctx,
-                    lListElem *ep, lList **alpp, lList **userset_list, 
-                    char *ruser, char *rhost);
 
 int sge_del_userset(sge_gdi_ctx_class_t *ctx,
                     lListElem *ep, lList **alpp, lList **userset_list, 
-                    char *ruser, char *rhost);
-
-int sge_mod_userset(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **userset_list, 
                     char *ruser, char *rhost);
 
 int sge_verify_department_entries(lList *userset_list, lListElem *new_userset, 
@@ -51,5 +46,13 @@ int sge_verify_department_entries(lList *userset_list, lListElem *new_userset,
 int set_department(lList **alpp, lListElem *job, lList *userset_list);
 
 void userset_update_categories(const lList *added, const lList *removed);
+
+int userset_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_userset,
+           lListElem *userset, int add, const char *ruser, 
+           const char *rhost, gdi_object_t *object, int sub_command,
+           monitoring_t *monitor);
+
+int userset_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *userset, gdi_object_t *object);
+int userset_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor); 
 
 #endif

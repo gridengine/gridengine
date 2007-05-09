@@ -227,11 +227,15 @@ lList **pplist
             break;
 
          case lStringT:
-            lSetString(ep, *rule, *pstrlist);
+            if (strcasecmp("NONE", *pstrlist) != 0){
+               lSetString(ep, *rule, *pstrlist);
+            }
             break;
      
          case lHostT:
-            lSetHost(ep, *rule, *pstrlist);
+            if (strcasecmp("NONE", *pstrlist) != 0){
+               lSetHost(ep, *rule, *pstrlist);
+            }
             break;
 
          case lListT:
@@ -793,8 +797,7 @@ unsigned long flags
          }
          if (fp) {
             cb = fprintf(fp, "%s", pdelis[2]);
-         }
-         else {
+         } else {
             cb = strlen(pdelis[2]);
             sprintf(buff, "%s", pdelis[2]);
          }
@@ -879,14 +882,14 @@ unsigned long flags
          case lStringT:
             cp = lGetString(ep, *rule);
             if (!cp) {
-               cp = "";
+               cp = "NONE";
             }
             break;
 
          case lHostT:
             cp = lGetHost(ep, *rule);
             if (!cp) {
-               cp = "";
+               cp = "NONE";
             }
             break;
 

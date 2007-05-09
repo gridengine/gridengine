@@ -354,6 +354,10 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 {
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
+
+   char id_buffer[MAX_STRING_SIZE];
+   dstring id_dstring;
+
    SGE_STRUCT_STAT statbuf;
    char error[10000];
    FILE *fp;
@@ -363,6 +367,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    int usage_mul_factor;
 
    DENTER(TOP_LAYER, "clean_up_job");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    if (!jr) {
       CRITICAL((SGE_EVENT, MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS));
@@ -375,7 +381,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    pe_task_id = lGetString(jr, JR_pe_task_id_str);
 
    DPRINTF(("cleanup for job %s\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
 
 #ifdef COMPILE_DC
    unregister_from_ptf(job_id, ja_task_id, pe_task_id, jr);
@@ -401,7 +407,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          startup we report the job finish immediately */
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDDIRXFORREAPINGJOBYZ_SS, 
              sge_dstring_get_string(&jobdir), 
-             job_get_id_string(job_id, ja_task_id, pe_task_id)));
+             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
       sge_dstring_free(&jobdir);       
       return -1;        /* nothing can be done without information */
    }
@@ -416,7 +422,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          The pain with this case is, that we have not much information
          to report this job to qmaster. */
       ERROR((SGE_EVENT, MSG_JOB_CANTREADCONFIGFILEFORJOBXY_S, 
-         job_get_id_string(job_id, ja_task_id, pe_task_id)));
+         job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
       lSetUlong(jr, JR_failed, ESSTATE_NO_CONFIG);
       lSetString(jr, JR_err_str, (char *) MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART);
 
@@ -449,7 +455,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          failed = SSTATE_BEFORE_PROLOG;
      
       sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_S,
-              job_get_id_string(job_id, ja_task_id, pe_task_id));
+              job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
       ERROR((SGE_EVENT, error));    
  
       /* 
@@ -463,7 +469,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       FCLOSE_IGNORE_ERROR(fp);
       if (fscanf_count != 1) {
          sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S,
-                 job_get_id_string(job_id, ja_task_id, pe_task_id));
+                 job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
          ERROR((SGE_EVENT, error));
          /* 
           * If shepherd died through signal assume job was started, else
@@ -519,7 +525,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          DPRINTF(("empty error file\n"));
       } else {
          ERROR((SGE_EVENT, MSG_JOB_CANTREADERRORFILEFORJOBXY_S, 
-            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
       }      
       FCLOSE_IGNORE_ERROR(fp);
    }
@@ -554,7 +560,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
       if (error[0] == '\0') {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
-            job_get_id_string(job_id, ja_task_id, pe_task_id));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
       }
       
       ERROR((SGE_EVENT, error));
@@ -578,7 +584,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
          /* Job died through a signal */
          sprintf(error, MSG_JOB_WXDIEDTHROUGHSIGNALYZ_SSI, 
-                 job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                 job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
                  sge_sys_sig2str(signo), signo);
 
          DPRINTF(("%s\n", error));
@@ -632,7 +638,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          else {
             job_pid = 0;
             ERROR((SGE_EVENT, MSG_JOB_CANTOPENJOBPIDFILEFORJOBXY_S, 
-                   job_get_id_string(job_id, ja_task_id, pe_task_id)));
+                   job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
          }
       }
    }
@@ -654,13 +660,13 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    /* failed */
    lSetUlong(jr, JR_failed, failed);
    DPRINTF(("job report for job "SFN": failed = %ld\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id), 
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
             failed));
    /* err_str */
    if (*error) {
       lSetString(jr, JR_err_str, error);
       DPRINTF(("job report for job "SFN": err_str = %s\n", 
-               job_get_id_string(job_id, ja_task_id, pe_task_id),
+               job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring),
                error));
    }
 
@@ -796,7 +802,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    
    lSetUlong(jr, JR_general_failure, general_failure);
    DPRINTF(("job report for job "SFN": general_failure = %ld\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id),
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring),
             general_failure));
 
    sge_dstring_free(&fname);

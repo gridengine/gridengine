@@ -55,6 +55,7 @@ const char *event_text(const lListElem *event, dstring *buffer)
    int n=0;
    const char *strkey, *strkey2;
    lList *lp;
+   dstring id_dstring = DSTRING_INIT;
 
    number = lGetUlong(event, ET_number);
    type = lGetUlong(event, ET_type);
@@ -145,26 +146,26 @@ const char *event_text(const lListElem *event, dstring *buffer)
 
    /* -------------------- */
    case sgeE_JATASK_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JATASK_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JATASK_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JATASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 
    /* -------------------- */
    case sgeE_PETASK_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_PETASK_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 #if 0      
    /* JG: we'll have it soon ;-) */
    case sgeE_PETASK_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "PETASK", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 #endif
 
@@ -173,32 +174,32 @@ const char *event_text(const lListElem *event, dstring *buffer)
       sge_dstring_sprintf(buffer, MSG_EVENT_OBJECTLISTXELEMENTS_USI, sge_u32c(number), "JOB", n);
       break;
    case sgeE_JOB_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JOB", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_MOD_SCHED_PRIORITY:
       sge_dstring_sprintf(buffer, MSG_EVENT_MODSCHEDDPRIOOFJOBXTOY_USI, 
             sge_u32c(number), 
-            job_get_id_string(intkey, intkey2, strkey),
+            job_get_id_string(intkey, intkey2, strkey, &id_dstring),
             ((int)lGetUlong(lFirst(lp), JB_priority))-BASE_PRIORITY);
       break;
    case sgeE_JOB_USAGE:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXUSAGE_US, 
-         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_FINAL_USAGE:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXFINALUSAGE_US, 
-         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 
    case sgeE_JOB_FINISH:
       sge_dstring_sprintf(buffer, MSG_EVENT_JOBXFINISH_US, 
-         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey));
+         sge_u32c(number), job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 
    /* -------------------- */
@@ -206,13 +207,13 @@ const char *event_text(const lListElem *event, dstring *buffer)
       sge_dstring_sprintf(buffer, MSG_EVENT_OBJECTLISTXELEMENTS_USI, sge_u32c(number), "JOB_SCHEDD_INFO", n);
       break;
    case sgeE_JOB_SCHEDD_INFO_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_SCHEDD_INFO_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
    case sgeE_JOB_SCHEDD_INFO_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey));
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODOBJECTX_USS, sge_u32c(number), "JOB_SCHEDD_INFO", job_get_id_string(intkey, intkey2, strkey, &id_dstring));
       break;
 
    /* -------------------- */
@@ -432,6 +433,8 @@ const char *event_text(const lListElem *event, dstring *buffer)
       sge_dstring_sprintf(buffer, MSG_EVENT_MESSAGE_US, sge_u32c(number), "????????");
       break;
    }
+
+   sge_dstring_free(&id_dstring);
 
    return sge_dstring_get_string(buffer);
 }

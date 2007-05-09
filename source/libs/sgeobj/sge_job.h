@@ -241,7 +241,7 @@ void job_set_env_string(lListElem *job, const char *variable,
 void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
 
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
-                              const char *pe_task_id);
+                              const char *pe_task_id, dstring *buffer);
 
 const char *job_get_job_key(u_long32 job_id, dstring *buffer);
 

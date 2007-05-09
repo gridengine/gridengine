@@ -130,8 +130,6 @@ bool sge_ssi_job_cancel(sge_evc_class_t *evc, const char *job_identifier, bool r
    lSetUlong(ref_ep, RN_max, ja_task_id);
    lSetUlong(ref_ep, RN_step, 1);
 
-   DPRINTF(("deleting job "SFN"\n", job_get_id_string(job_id, ja_task_id, NULL)));
-
    /* send delete request */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &ref_list, NULL, NULL);
 

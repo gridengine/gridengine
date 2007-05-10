@@ -1,3 +1,8 @@
+MP-2007-05-10-2  Bugfix:    Queue request -q from sge_request can't
+                            be overridden through command line, fixed code.
+                 Bugster:   6328064
+                 Review:    JG
+
 MP-2007-05-10-1  Bugfix:    Rollback of MP-2007-05-10-0. Wrong code checked in.
 
 MP-2007-05-10-0  Bugfix:    Queue request -q from sge_request can't

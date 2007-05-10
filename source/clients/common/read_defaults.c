@@ -649,8 +649,7 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_scriptfile;
       } else {
-         /* Override the values from defaults */
-         lOverrideStrList(*opts_all, *opts_scriptfile, SPA_switch);
+          lAddList(*opts_all, opts_cmdline);
       }
       *opts_scriptfile = NULL;
    }
@@ -658,8 +657,7 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_cmdline;
       } else {
-         /* Override values from both defaults and scriptfile */
-         lOverrideStrList(*opts_all, *opts_cmdline, SPA_switch);
+          lAddList(*opts_all, opts_cmdline);
       }
       *opts_cmdline = NULL;
    }

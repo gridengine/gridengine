@@ -1,3 +1,8 @@
+AA-2007-05-10-0: Bugfix:    qmon crashes when displaying about dialog
+                 Bugster:   6555744
+                 Issue:     2243
+                 Review:    RD
+
 MP-2007-05-10-2  Bugfix:    Queue request -q from sge_request can't
                             be overridden through command line, fixed code.
                  Bugster:   6328064

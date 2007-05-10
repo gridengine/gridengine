@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: MsgDialogs.c,v 1.1 2001/07/18 11:06:02 root Exp $
+ * $Id: MsgDialogs.c,v 1.1.1.1.28.1 2007/05/10 11:06:45 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,8 +9,14 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: MsgDialogs.c,v $
- * Revision 1.1  2001/07/18 11:06:02  root
- * Initial revision
+ * Revision 1.1.1.1.28.1  2007/05/10 11:06:45  andre
+ * AA-2007-05-10-0: Bugfix:    qmon crashes when displaying about dialog
+ *                  Bugster:   6555744
+ *                  Issue:     2243
+ *                  Review:    RD
+ *
+ * Revision 1.1.1.1  2001/07/18 11:06:02  root
+ * Initial checkin.
  *
  * Revision 1.2  2001/06/12 16:25:28  andre
  * *** empty log message ***
@@ -352,7 +358,7 @@ int style;
     MessageDialogData data;
     XmString msg, title;
     Arg args[5];
-    char buffer[2000];
+    char buffer[20000];
     MsgDialogCache *cache;
     int i;
     static String message_title_default;
@@ -452,7 +458,7 @@ int style;
 		data.message = msg_default;
 	    }
 	}
-	vsprintf(buffer, data.message, *msg_args);
+	vsnprintf(buffer, sizeof(buffer), data.message, *msg_args);
 	data.message = buffer;
     }
     

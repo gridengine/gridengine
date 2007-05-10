@@ -1,3 +1,6 @@
+EB-2007-05-10-1: Bugfix:    xacl output was missing in qrstat output
+                 Review:    TBD
+
 AA-2007-05-10-0: Bugfix:    qmon crashes when displaying about dialog
                  Bugster:   6555744
                  Issue:     2243

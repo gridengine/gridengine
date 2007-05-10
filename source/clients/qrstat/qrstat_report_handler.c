@@ -164,9 +164,19 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                handler->report_start_acl_list(handler, answer_list);
                for_each(acl, lGetList(ar, AR_acl_list)) {
                   handler->report_acl_list_node(handler, answer_list,
-                                                 lGetString(acl, ARA_name));
+                                                 lGetString(acl, ST_name));
                }
                handler->report_finish_acl_list(handler, answer_list);
+            }
+            if (lGetList(ar, AR_xacl_list) != NULL) {
+               lListElem *xacl = NULL;
+
+               handler->report_start_xacl_list(handler, answer_list);
+               for_each(xacl, lGetList(ar, AR_xacl_list)) {
+                  handler->report_xacl_list_node(handler, answer_list,
+                                                 lGetString(xacl, ST_name));
+               }
+               handler->report_finish_xacl_list(handler, answer_list);
             }
          }
          handler->report_finish_ar(handler, answer_list);

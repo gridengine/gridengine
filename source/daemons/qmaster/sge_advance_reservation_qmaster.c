@@ -2128,7 +2128,7 @@ lWriteListTo(ar_master_list, stderr);
                         double configured = lGetDouble(cv, CE_doubleval);
 
                         if (amount > configured) {
-                           ERROR((MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                           ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
                                   SGE_ATTR_COMPLEX_VALUES));
                            answer_list_add(answer_list, SGE_EVENT, 
                                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

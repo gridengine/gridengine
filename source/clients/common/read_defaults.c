@@ -50,7 +50,6 @@
 #include "parse_qsub.h"
 #include "read_defaults.h"
 
-
 static char *get_root_defaults_file_path (void);
 static char *get_user_home_defaults_file_path (lList **answer_list);
 static char *get_cwd_defaults_file_path (lList **answer_list);
@@ -650,7 +649,8 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_scriptfile;
       } else {
-         lAddList(*opts_all, opts_scriptfile);
+         /* Override the values from defaults */
+         lOverrideStrList(*opts_all, *opts_scriptfile, SPA_switch);
       }
       *opts_scriptfile = NULL;
    }
@@ -658,7 +658,8 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_cmdline;
       } else {
-         lAddList(*opts_all, opts_cmdline);
+         /* Override values from both defaults and scriptfile */
+         lOverrideStrList(*opts_all, *opts_cmdline, SPA_switch);
       }
       *opts_cmdline = NULL;
    }

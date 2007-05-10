@@ -1,3 +1,8 @@
+MP-2007-05-10-0  Bugfix:    Queue request -q from sge_request can't
+                            be overridden through command line
+                 Bugster:   6328064
+                 Review:    JG
+
 MD-2007-05-09-0: Bugfix:    changed versionstring for inst_sge to 6.0u11
                  Changed:   install_common.sh, install_qmaster.sh
 

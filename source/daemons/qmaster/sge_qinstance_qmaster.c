@@ -428,7 +428,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    
                    lXchgList(tmp_elem, attribute_name, &new_value);
                    lFreeElem(&tmp_elem);
-                   
+
                    if (object_list_has_differences(old_value, answer_list,
                                                    new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
@@ -441,6 +441,12 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                          qinstance_reinit_consumable_actual_list(this_elem, 
                                                                  answer_list);
                       }
+
+                      if (ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                                                                                this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
+                         ret = false;
+                         break;
+                      }
                    } else {
                       /* Either new_value is a copy we made, or it was created by
                        * qinstance_reinit_consumable_actual_list().  Either way, it
@@ -448,6 +454,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                        */
                       lFreeList(&new_value);
                    }
+
                } else {
                    ret &= false;
                }

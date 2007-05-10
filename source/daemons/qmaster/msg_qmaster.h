@@ -781,5 +781,11 @@
 #define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat))
 #define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat))
 #define MSG_AR_RESERVEDQUEUEHASERROR_SS             _MESSAGE(33940, _("reserved queue "SFN" is "SFN))
+#define MSG_OBJECT_VALUEMISSING                     _MESSAGE(33941, _("Value missing"))
+#define MSG_OBJECT_ALREADYEXIN_SSS                  _MESSAGE(33942, _("No modification because "SFQ" already exists in "SFQ" of "SFQ))
+#define MSG_QUEUE_MODCMPLXDENYDUETOAR_SS             _MESSAGE(33943, _("denied: changing "SFQ" in "SFN" would break advance reservation"))
+#define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS           _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
+
+
 
 #endif

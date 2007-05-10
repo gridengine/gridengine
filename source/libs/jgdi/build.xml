@@ -79,6 +79,10 @@
        <condition property="isJavaBuildHost" >
            <equals arg1="${java.buildhost}" arg2="${hostname}" trim="true"/>
        </condition>
+
+      <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
+      <echo>java.buildhost=${java.buildhost}</echo>
+      <echo>hostname=${hostname}</echo>
        
       <property name="build.dir"  location="build"/>
       <property name="classes.dir"  location="${build.dir}/classes"/>

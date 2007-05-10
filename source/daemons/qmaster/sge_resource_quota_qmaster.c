@@ -55,6 +55,7 @@
 #include "evm/sge_event_master.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
+#include "sge_host_qmaster.h"
 #include "uti/sge_string.h"
 
 static bool

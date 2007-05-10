@@ -87,8 +87,21 @@ void sge_ar_state_set_waiting(lListElem *ar);
 void sge_ar_state_set_deleted(lListElem *ar);
 void sge_ar_state_set_exited(lListElem *ar);
 
-void sge_ar_list_set_error_state(lList *ar_list, const char *name, u_long32 error_type, 
-                              bool send_events, bool set_error);
+void sge_ar_list_set_error_state(lList *ar_list, const char *name, 
+                                 u_long32 error_type, 
+                                 bool send_events, bool set_error);
+
+bool 
+ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list, 
+                                                      lList **answer_list,
+                                                      lListElem *qinstance, 
+                                                      lList *ce_master_list);
+
+bool 
+ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list,
+                                                 lList **answer_list,
+                                                 lListElem *host, 
+                                                 lList *ce_master_list);
 
 
 #endif

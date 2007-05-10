@@ -205,8 +205,6 @@
 #define MSG_QSTATE_UNKNOWNCHAR_CS      _MESSAGE(64275, _("unknown queue state: %c found in string: %s"))
 #define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option"))
 #define MSG_CQUEUE_UNKNOWNCENTRY_S     _MESSAGE(64277, _("Complex attribute "SFQ" does not exist"))
-#define MSG_OBJECT_ALREADYEXIN_SSS     _MESSAGE(64278, _("No modification because "SFQ" already exists in "SFQ" of "SFQ))
-#define MSG_OBJECT_VALUEMISSING        _MESSAGE(64279, _("Value missing"))
 #define MSG_CONF_USING_SS              _MESSAGE(64300, _("using "SFQ" for "SFN))
 #define MSG_CONF_NOCONFIGFROMMASTER    _MESSAGE(64301, _("could not get configuration from qmaster - using defaults"))
 #define MSG_CONF_INVALIDPARAM_SSI      _MESSAGE(64302, _("invalid setting for "SFQ", attribute "SFQ" - using default %d"))

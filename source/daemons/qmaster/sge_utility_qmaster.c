@@ -52,6 +52,7 @@
 #include "sge_object.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_host_qmaster.h"
 
 #define CQUEUE_LAYER TOP_LAYER
 
@@ -683,76 +684,6 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    DRETURN(ret);
 }
 
-/****** sge_utility_qmaster/attr_mod_threshold() *******************************
-*  NAME
-*     attr_mod_threshold() -- modify the threshold configuration sublist 
-*
-*  SYNOPSIS
-*     int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, 
-*     int nm, int primary_key, int sub_command, char *attr_name, char 
-*     *object_name) 
-*
-*  FUNCTION
-*   Validation tries to find each element of the qep element in the threshold identified by nm.
-*   Elements which already existst here are copied into sublist of new_ep.   
-*
-*  INPUTS
-*     lList **alpp              - The answer list 
-*     lListElem *qep            - The source object element 
-*     lListElem *new_ep         - The target object element 
-*     int nm                    - The attribute name (it is defined as a threshold) 
-*     int primary_key           - The primary key of the element, most common is XY_name.
-*     int sub_command           - The add, modify, remove command 
-*     const char *attr_name     - The attribute name 
-*     const char *object_name   - The target object name
-*
-*  RESULT
-*     int - 0 if success
-*
-*  NOTES
-*     MT-NOTE: attr_mod_threshold() is MT safe 
-*
-*******************************************************************************/
-int attr_mod_threshold(lList **alpp,lListElem *qep,lListElem *new_ep,int nm,
-                       int primary_key,int sub_command,char *attr_name,char *object_name ) {
-   int ret;
-
-   DENTER(TOP_LAYER, "attr_mod_threshold");
-
-   /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
-      lListElem *tmp_elem = NULL;
-
-      DPRINTF(("got new %s\n", attr_name));
-
-      if (ensure_attrib_available(alpp, qep, nm)) {
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      tmp_elem = lCopyElem(new_ep); 
-
-      /* the attr_mod_sub_list return boolean and there is stored in the int value, attention true=1 */
-      ret = attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-                              sub_command, attr_name, object_name, 0);
-      if (!ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      /* the centry_list_fill_request returns 0 if success */
-      ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
-                                     *centry_list_get_master_list(), true, false, false);
-      if (ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
-      lFreeElem(&tmp_elem);
-   }
-
-   DRETURN(0);
-}
 
 /****** sgeobj/cqueue/cqueue_mod_sublist() ***********************************
 *  NAME

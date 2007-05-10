@@ -1,3 +1,7 @@
+EB-2007-05-10-0: Enhancem.: Handle complex value modifications in queue and host correctly
+                            when AR are present
+                 Review:    RD
+
 RD-2007-05-09-1: Enhancem.: Added check if userset mod invalidates AR
                  Cleanup:   moved userset code into generic gdi framework   
                  Review:    AA

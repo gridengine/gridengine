@@ -161,7 +161,7 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pfor
    lList *plist=NULL;
    bool ret = true;
 
-   DENTER(TOP_LAYER, "sge_parse_qdel");
+   DENTER(TOP_LAYER, "sge_parse_qrdel");
 
    while(lGetNumberOfElem(*ppcmdline))
    {

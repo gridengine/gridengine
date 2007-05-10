@@ -84,6 +84,7 @@
 #include "evm/sge_queue_event_master.h"
 
 #include "sge_utility_qmaster.h"
+#include "sge_host_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 
 #include "evm/sge_event_master.h"
@@ -91,6 +92,8 @@
 #include "sge_give_jobs.h"
 #include "mail.h"
 #include "symbols.h"
+
+#include "sge_complex_schedd.h"
 
 typedef struct {
    u_long32 ar_id;
@@ -2027,3 +2030,225 @@ static void sge_ar_send_mail(lListElem *ar, int type)
 
    DRETURN_VOID;
 }
+
+/****** sge_advance_reservation_qmaster/ar_list_has_reservation_due_to_qinstance_complex_attr() ******
+*  NAME
+*     ar_list_has_reservation_due_to_qinstance_complex_attr() -- check
+*        if change of complex values is valid concerning ar 
+*
+*  SYNOPSIS
+*     bool ar_list_has_reservation_due_to_qinstance_complex_attr(
+*        lList *ar_master_list, 
+*        lList **answer_list, 
+*        lListElem *qinstance, 
+*        lList *ce_master_list) 
+*
+*  FUNCTION
+*     Check if the modification of the complex_values of a qinstance
+*     whould break existing advance reservations 
+*
+*  INPUTS
+*     lList *ar_master_list - master AR list 
+*     lList **answer_list   - answer list 
+*     lListElem *qinstance  - qinstance 
+*     lList *ce_master_list - master centry list 
+*
+*  RESULT
+*     bool 
+*        true - modification is not allowed
+*        false - modification is allowed
+*
+*  NOTES
+*     MT-NOTE: ar_list_has_reservation_due_to_qinstance_complex_attr() is  
+*     MT safe 
+*******************************************************************************/
+bool 
+ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list, 
+                                                      lList **answer_list,
+                                                      lListElem *qinstance, 
+                                                      lList *ce_master_list)
+{  
+   lListElem *ar = NULL;
+
+   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_complex_attr");
+
+lWriteElemTo(qinstance, stderr);
+lWriteListTo(ar_master_list, stderr);
+   for_each(ar, ar_master_list) {
+      lListElem *gs = NULL;
+      const char *qinstance_name = lGetString(qinstance, QU_full_name);
+
+      for_each(gs, lGetList(ar, AR_granted_slots)) {
+         const char *gq = lGetString(gs, JG_qname);
+
+         if (!strcmp(gq, qinstance_name)) {
+            lListElem *rue = NULL;
+            lListElem *request = NULL;
+            lList *rue_list = lGetList(qinstance, QU_resource_utilization);
+
+            for_each(request, lGetList(ar, AR_resource_list)) {
+               const char *ce_name = lGetString(request, CE_name);
+               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+  
+               if (!is_consumable) {
+                  char text[2048];
+                  u_long32 slots = lGetUlong(gs, JG_slots);
+                  lListElem *current = lGetSubStr(qinstance, CE_name, 
+                                                  ce_name, QU_consumable_config_list);
+                  if (current == NULL ||
+                      compare_complexes(slots, request, current, text, false, true) == 0) {
+                     ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                            SGE_ATTR_COMPLEX_VALUES));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     DRETURN(true);
+                  }
+               }
+            }
+            for_each(rue, rue_list) {
+               const char *ce_name = lGetString(rue, RUE_name);
+               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+
+               if (is_consumable) {
+                  lListElem *rde = NULL;
+                  lList * rde_list = lGetList(rue, RUE_utilized);
+                  lListElem *cv = lGetSubStr(qinstance, CE_name, ce_name, QU_consumable_config_list);
+
+                  if (cv == NULL) {
+                     ERROR((SGE_EVENT, MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS, 
+                            ce_name, SGE_ATTR_COMPLEX_VALUES));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     DRETURN(true);
+                  } else {
+                     for_each(rde, rde_list) {
+                        double amount = lGetDouble(rde, RDE_amount);
+                        double configured = lGetDouble(cv, CE_doubleval);
+
+                        if (amount > configured) {
+                           ERROR((MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                                  SGE_ATTR_COMPLEX_VALUES));
+                           answer_list_add(answer_list, SGE_EVENT, 
+                                           STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                           DRETURN(true);
+                        }
+                     }
+                  }
+               } 
+            } 
+         } 
+      } 
+   }
+   DRETURN(false);
+}  
+
+/****** sge_advance_reservation_qmaster/ar_list_has_reservation_due_to_host_complex_attr() ******
+*  NAME
+*     ar_list_has_reservation_due_to_host_complex_attr() -- check
+*        if change of complex values is valid concerning ar 
+*
+*  SYNOPSIS
+*     bool ar_list_has_reservation_due_to_host_complex_attr(
+*        lList  *ar_master_list, 
+*        lList **answer_list, 
+*        lListElem *host, 
+*        lList *ce_master_list) 
+*
+*  FUNCTION
+*      Check if the modification of the complex_values of a host
+*      whould break existing advance reservations.
+*
+*  INPUTS
+*     lList *ar_master_list - master AR list 
+*     lList **answer_list   - AN_Type list 
+*     lListElem *host       - host 
+*     lList *ce_master_list - master centry list 
+*
+*  RESULT
+*     bool 
+*        true - modification is not allowed
+*        false - modification is allowed
+*
+*  NOTES
+*     MT-NOTE: ar_list_has_reservation_due_to_host_complex_attr() is MT 
+*     safe 
+*******************************************************************************/
+bool 
+ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **answer_list,
+                                                 lListElem *host, lList *ce_master_list)
+{  
+   lListElem *ar = NULL;
+
+   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_complex_attr");
+
+   for_each(ar, ar_master_list) {
+      lListElem *gs = NULL;
+      const char *hostname = lGetHost(host, EH_name);
+
+      for_each(gs, lGetList(ar, AR_granted_slots)) {
+         const char *gh = lGetHost(gs, JG_qhostname);
+
+         if (!sge_hostcmp(gh, hostname)) {
+            lListElem *rue = NULL;
+            lListElem *request = NULL;
+            lList *rue_list = lGetList(host, EH_resource_utilization);
+
+            for_each(request, lGetList(ar, AR_resource_list)) {
+               const char *ce_name = lGetString(request, CE_name);
+               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+  
+               if (!is_consumable) {
+                  char text[2048];
+                  u_long32 slots = lGetUlong(gs, JG_slots);
+                  lListElem *current = lGetSubStr(host, CE_name, 
+                                                  ce_name, EH_consumable_config_list);
+                  if (current == NULL ||
+                      compare_complexes(slots, request, current, text, false, true) == 0) {
+                     ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                            SGE_ATTR_COMPLEX_VALUES));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     DRETURN(true);
+                  }
+               }
+            }
+            for_each(rue, rue_list) {
+               const char *ce_name = lGetString(rue, RUE_name);
+               lListElem *ce = lGetElemStr(ce_master_list, CE_name, ce_name);
+               bool is_consumable = (lGetBool(ce, CE_consumable) > 0) ? true : false;
+
+               if (is_consumable) {
+                  lListElem *rde = NULL;
+                  lList * rde_list = lGetList(rue, RUE_utilized);
+                  lListElem *cv = lGetSubStr(host, CE_name, ce_name, EH_consumable_config_list);
+
+                  if (cv == NULL) {
+                     ERROR((SGE_EVENT, MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS, 
+                            ce_name, SGE_ATTR_COMPLEX_VALUES));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     DRETURN(true);
+                  } else {
+                     for_each(rde, rde_list) {
+                        double amount = lGetDouble(rde, RDE_amount);
+                        double configured = lGetDouble(cv, CE_doubleval);
+
+                        if (amount > configured) {
+                           ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, 
+                                  ce_name, SGE_ATTR_COMPLEX_VALUES));
+                           answer_list_add(answer_list, SGE_EVENT, 
+                                           STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                           DRETURN(true);
+                        }
+                     }
+                  }
+               } 
+            } 
+         } 
+      } 
+   }
+   DRETURN(false);
+}  

@@ -1322,6 +1322,69 @@ int lAppendList(lList *lp0, lList *lp1)
    DRETURN(0);
 }
 
+/****** cull/list/lOverrideStrList() ************************************************
+*  NAME
+*     lOverrideStrList() -- Merge two lists 
+*
+*  SYNOPSIS
+*     int lOverrideStrList(lList *lp0, lList *lp1, int nm) 
+*
+*  FUNCTION
+*     Merge two lists of equal type, and replace values in the first list
+*     with values from the second list.
+*
+*  INPUTS
+*     lList *lp0 - first list 
+*     lList *lp1 - second list 
+*     int nm - field name used for merging
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lOverrideStrList() is MT safe
+******************************************************************************/
+int lOverrideStrList(lList *lp0, lList *lp1, int nm)
+{
+   lListElem *ep;
+   const lDescr *dp0, *dp1;
+
+   DENTER(CULL_LAYER, "lOverrideStrList");
+
+   if (!lp1 || !lp0) {
+      LERROR(LELISTNULL);
+      DEXIT;
+      return -1;
+   }
+
+   /* Check if the two lists are equal */
+   dp0 = lGetListDescr(lp0);
+   dp1 = lGetListDescr(lp1);
+   if (lCompListDescr(dp0, dp1)) {
+      LERROR(LEDIFFDESCR);
+      DEXIT;
+      return -1;
+   }
+
+   while (lp1->first) {
+      if (!(ep = lDechainElem(lp1, lp1->first))) {
+         LERROR(LEDECHAINELEM);
+         DEXIT;
+         return -1;
+      }
+      if (lOverrideElem(lp0, ep, nm) == -1) {
+         LERROR(LEAPPENDELEM);
+         DEXIT;
+         return -1;
+      }
+   }
+
+   lFreeList(&lp1);
+   DEXIT;
+   return 0;
+}
 /****** cull/list/lCompListDescr() ********************************************
 *  NAME
 *     lCompListDescr() -- Compare two descriptors 
@@ -1617,6 +1680,78 @@ int lAppendElem(lList *lp, lListElem *ep)
    lp->changed = true;
 
    DRETURN(0);
+}
+
+/****** cull/list/lOverrideElem() ***********************************************
+*  NAME
+*     lOverrideElem() -- Merge element into a list 
+*
+*  SYNOPSIS
+*     int lOverrideElem(lList *lp, lListElem *ep) 
+*
+*  FUNCTION
+*     Merge element 'ep' in the list 'lp'. First remove all other existing
+*     elements in lp with the same name and therefore overriding list with
+*     the new value of 'ep'
+*
+*  INPUTS
+*     lList *lp     - list 
+*     lListElem *ep - element 
+*     int nm - field name used for merging
+*
+*  RESULT
+*     int - error state 
+*         0 - OK
+*        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lOverrideElem() is MT safe
+******************************************************************************/
+
+int lOverrideElem(lList *lp, lListElem *ep, int nm) 
+{
+   lListElem *tmp;
+   const char *comp;
+   
+   DENTER(CULL_LAYER, "lOverrideElem");
+
+   if (!lp) {
+      LERROR(LELISTNULL);
+      DEXIT;
+      return -1;
+   }
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   /* is the element ep still chained in an other list, this is not allowed ? */
+   if (ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM) {
+      DPRINTF(("WARNING: tried to append chained element\n"));
+      DEXIT;
+      abort();
+   }
+
+   /* get the value of the switch used */
+   comp = lGetString(ep, nm);
+   
+   /* if the value exists in the first list remove it so that the new value
+    * from the second list will be the only existing value
+    */
+   while((tmp = lGetElemStr(lp, nm, comp))) {
+      lRemoveElem(lp, &tmp);
+   }
+   
+   /* append the element */
+   if (lAppendElem(lp, ep) == -1) {
+      LERROR(LEAPPENDELEM);
+      DEXIT;
+      return -1;
+   }   
+
+   DEXIT;
+   return 0;
 }
 
 /****** cull/list/lRemoveElem() ***********************************************

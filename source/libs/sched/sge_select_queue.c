@@ -3287,11 +3287,10 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
 *     The function iteratates over all limitation rules sets for every
 *     cluster queue. The queue is tagged if no limit is reached.
 *
-*     To speed-up processing already checked resource quotas limits are 
-*     cached through a list of exceeded and succeeded resource quota names. 
-*     In addition a resouce quota analysis is performed to rule out entire
-*     cluster segments and thus reduce the number of required matching
-*     operations.
+*     To speed-up processing results of already checked resource quotas
+*     are cached. In addition a resouce quota analysis is performed to 
+*     rule out entire cluster segments and thus reduce the number of 
+*     required matching operations.
 *
 *  INPUTS
 *     sge_assignment_t *a - job info structure
@@ -3310,19 +3309,19 @@ static dispatch_t
 sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
 {
    lListElem *queue_instance = NULL;
-   lListElem *rqs = NULL;
+   lListElem *rql, *rqs = NULL;
    bool no_check = false;
    bool suited = true;
    dstring rule_name = DSTRING_INIT;
    lList *skip_cqueue_list = NULL;
    lList *skip_host_list = NULL;
-   lList *exceeded_limit_list = NULL;
-   lList *succeeded_limit_list = NULL;
+   lList *limit_list = NULL;
    dstring rue_string = DSTRING_INIT;
    dstring limit_name = DSTRING_INIT;
    const char* user = a->user;
    const char* group = a->group;
    const char* project = a->project;
+   bool is_reservation = a->is_reservation;
 
    dispatch_t result = DISPATCH_NEVER_CAT;
 
@@ -3357,35 +3356,41 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
             sge_dstring_clear(&rule_name);
             rule = rqs_get_matching_rule(rqs, user, group, project, NULL, host_name, queue_name, a->acl_list, a->hgrp_list, &rule_name);
             if (rule != NULL) {
+               const char *limit;
+               /* need unique identifier for cache */
                rqs_get_rue_string(&rue_string, rule, user, project, host_name, queue_name, NULL);
                sge_dstring_sprintf(&limit_name, "%s=%s", sge_dstring_get_string(&rule_name), sge_dstring_get_string(&rue_string));
-               if (lGetElemStr(succeeded_limit_list, CTI_name, sge_dstring_get_string(&limit_name)))
-                  continue; /* checked before successfully */
-               if (lGetElemStr(exceeded_limit_list, CTI_name, sge_dstring_get_string(&limit_name)))
-                  break; /* already checked in vain */
+               limit = sge_dstring_get_string(&limit_name);
 
-               /* Check booked usage */
-               rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
+               /* check limit or reuse earlier results */
+               if ((rql=lGetElemStr(limit_list, RQL_name, limit))) {
+                  tt_rqs = lGetUlong(rql, RQL_time);
+                  rqs_result = lGetUlong(rql, RQL_result);
+               } else {
+                  /* Check booked usage */
+                  rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
 
-               if (rqs_result == DISPATCH_MISSING_ATTR || rqs_result == DISPATCH_OK)
-                  lAddElemStr(&succeeded_limit_list, CTI_name, sge_dstring_get_string(&limit_name), CTI_Type);
+                  rql = lAddElemStr(&limit_list, RQL_name, limit, RQL_Type);
+                  lSetUlong(rql, RQL_result, rqs_result);
+                  lSetUlong(rql, RQL_time, tt_rqs);
+
+                  if (rqs_result != DISPATCH_OK) {
+                     schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
+                           sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
+                     if (rqs_exceeded_sort_out(a, rule, &rule_name, queue_name, host_name, &skip_cqueue_list, &skip_host_list)) {
+                        no_check = true; /* no further checks needed as it is globally rejected */
+                        suited = false;
+                     }
+                  }
+               }
 
                if (rqs_result == DISPATCH_MISSING_ATTR) {
                   rqs_result = DISPATCH_OK;
                   continue;
                }
-
-               if (rqs_result != DISPATCH_OK) {
-                  lAddElemStr(&exceeded_limit_list, CTI_name, sge_dstring_get_string(&limit_name), CTI_Type);
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
-                        sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
-
-                  if (rqs_exceeded_sort_out(a, rule, &rule_name, queue_name, host_name, &skip_cqueue_list, &skip_host_list)) {
-                     no_check = true; /* no further checks needed as it is globally rejected */
-                     suited = false;
-                  }
+               if (rqs_result != DISPATCH_OK)
                   break;
-               }
+
                tt_rqs_all = MAX(tt_rqs_all, tt_rqs);
             }
          }
@@ -3394,7 +3399,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
 
          if (rqs == NULL) { /* all rule sets checked successfully */
             lSetUlong(queue_instance, QU_tag, 1);
-            if (a->is_reservation && (tt_rqs_all != 0)) {
+            if (is_reservation && (tt_rqs_all != 0)) {
                lSetUlong(queue_instance, QU_available_at, tt_rqs_all);
             }
          } else {
@@ -3413,8 +3418,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
 
    lFreeList(&skip_cqueue_list);
    lFreeList(&skip_host_list);
-   lFreeList(&exceeded_limit_list);
-   lFreeList(&succeeded_limit_list);
+   lFreeList(&limit_list);
    sge_dstring_free(&rue_string);
    sge_dstring_free(&limit_name);
    sge_dstring_free(&rule_name);
@@ -4810,12 +4814,14 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
       DRETURN((a->slots > pslots_qend)? DISPATCH_NEVER_CAT : DISPATCH_NOT_AT_TIME);
    }
 
+
    /* depends on a correct host order */
    ret = parallel_tag_queues_suitable4job(a, use_category, available_slots);
    
    if (ret != DISPATCH_OK) {
       DRETURN(ret);
    }
+
 
    /* must be understood in the context of changing queue sort orders */
    sconf_set_last_dispatch_type(DISPATCH_TYPE_COMPREHENSIVE);
@@ -4834,6 +4840,7 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
    if (parallel_sort_suitable_queues(a->queue_list)) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
+
 
    if (parallel_make_granted_destination_id_list(a) != DISPATCH_OK) {
       DRETURN(DISPATCH_NEVER_CAT);

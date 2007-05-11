@@ -176,6 +176,28 @@ NAMEEND
 
 #define RQRLS sizeof(RQRLN)/sizeof(char*)
 
+
+/* Resource Quota Limit - used only for caching scheduler-internally */
+enum {
+   RQL_name = RQL_LOWERBOUND,
+   RQL_result,
+   RQL_time
+};
+
+LISTDEF(RQL_Type)
+ SGE_STRING(RQL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE )
+ SGE_ULONG(RQL_result, CULL_DEFAULT )
+ SGE_ULONG(RQL_time, CULL_DEFAULT )
+LISTEND
+ 
+NAMEDEF(RQLN)
+   NAME("RQL_name")
+   NAME("RQL_result")
+   NAME("RQL_time")
+NAMEEND
+
+#define RQLS sizeof(RQLN)/sizeof(char*)
+
 /* *INDENT-ON* */ 
 
 #ifdef  __cplusplus

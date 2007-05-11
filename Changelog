@@ -1,3 +1,5 @@
+AH-2007-05-11-1: Bugfix:    Fixed resource reservation broken by AH-2007-05-03-0
+
 AH-2007-05-11-0: Bugfix:    Add -u <user> to scheduler category only if there is 
                             a resource quota for the user
                  Bugster:   6554313

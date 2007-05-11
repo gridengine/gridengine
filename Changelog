@@ -1,6 +1,7 @@
 AH-2007-05-11-0: Bugfix:    Add -u <user> to scheduler category only if there is 
                             a resource quota for the user
                  Bugster:   6554313
+                 Issue:     2248
                  Review:    TBD
 
 MP-2007-05-11-0  Bugfix:    Queue request -q from sge_request can't

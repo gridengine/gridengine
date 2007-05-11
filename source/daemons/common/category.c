@@ -58,7 +58,8 @@
 #include "sge_job.h"
 #include "lck/sge_mtutil.h"
 #include "sge_userprjL.h"
-#include "sge_resource_quota.h"
+#include "sge_select_queue.h"
+#include "sge_resource_quota_schedd.h"
 
 #include "msg_daemons_common.h"
 

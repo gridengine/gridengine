@@ -568,8 +568,8 @@ qref_list_host_rejected(const char *href, const char *hostname, const lList *hgr
          }
       }
    } else { /* wc_host */
-      /* use hostgroup expression */
-      if( sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
+      /* use host expression */
+      if (sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
             DEXIT;
             return false;
       }

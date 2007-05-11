@@ -311,6 +311,7 @@ static void rqs_can_optimize(const lListElem *rule, bool *host, bool *queue, sge
 
    return;
 }
+
 /****** sge_resource_quota_schedd/rqs_excluded_cqueues() ***********************
 *  NAME
 *     rqs_excluded_cqueues() -- Find excluded queues
@@ -753,5 +754,54 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
 
       DRETURN(false);
    }
+}
+
+/****** sge_resource_quota/sge_user_is_referenced_in_rqs() ************************
+*  NAME
+*     sge_user_is_referenced_in_rqs() -- search for user reference in rqs 
+*
+*  SYNOPSIS
+*     bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, 
+*     lList *acl_list) 
+*
+*  FUNCTION
+*     Search for a user reference in the resource quota sets
+*
+*  INPUTS
+*     const lList *rqs - resource quota set list
+*     const char *user  - user to search
+*     const char *group - user's group
+*     lList *acl_list   - acl list for user resolving
+*
+*  RESULT
+*     bool - true if user was found
+*            false if user was not found
+*
+*  NOTES
+*     MT-NOTE: sge_user_is_referenced_in_rqs() is MT safe 
+*
+*******************************************************************************/
+bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list)
+{
+   bool ret = false;
+   lListElem *ep;
+
+   for_each(ep, rqs) {
+      lList *rule_list = lGetList(ep, RQS_rule);
+      lListElem *rule;
+      for_each(rule, rule_list) {
+         /* there may be no per-user limitation and also not limitation that is special for this user */
+         if ((is_expand(rule, RQR_filter_users) || !is_global(rule, RQR_filter_users)) &&
+             rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user,
+             acl_list, NULL, group)) {
+            ret = true;
+            break;
+         }
+      }
+      if (ret == true) {
+         break;
+      }
+   }
+   return ret;
 }
 

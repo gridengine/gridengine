@@ -3365,13 +3365,13 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                /* check limit or reuse earlier results */
                if ((rql=lGetElemStr(limit_list, RQL_name, limit))) {
                   tt_rqs = lGetUlong(rql, RQL_time);
-                  rqs_result = lGetUlong(rql, RQL_result);
+                  rqs_result = (dispatch_t)lGetInt(rql, RQL_result);
                } else {
                   /* Check booked usage */
                   rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
 
                   rql = lAddElemStr(&limit_list, RQL_name, limit, RQL_Type);
-                  lSetUlong(rql, RQL_result, rqs_result);
+                  lSetInt(rql, RQL_result, rqs_result);
                   lSetUlong(rql, RQL_time, tt_rqs);
 
                   if (rqs_result != DISPATCH_OK) {

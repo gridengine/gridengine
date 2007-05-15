@@ -475,6 +475,7 @@ DT-2007-01-19-0: Enhancem.: o Upgraded DRMAA Java language binding to 1.0
                             o Made the DRMAA C binding 1.0 the default
                             - 0.5 Java binding moved to s2 branch
                  Changed:   classes, man pages, JAPI, tests, distinst
+                 Issue:     6525484
                  Review:    AH + pending
 
 HP-2007-01-19-0: Bugfix:    loadcheck reports on a hyperthreaded CPU only

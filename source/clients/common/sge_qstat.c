@@ -106,22 +106,31 @@ static int qstat_handle_running_jobs(qstat_env_t *qstat_env, qstat_handler_t *ha
 
 
 void qstat_env_destroy(qstat_env_t* qstat_env) {
-   FREE(qstat_env->resource_list); qstat_env->resource_list = NULL;
-   FREE(qstat_env->qresource_list); qstat_env->qresource_list = NULL;
-   FREE(qstat_env->queueref_list); qstat_env->queueref_list = NULL;
-   FREE(qstat_env->peref_list); qstat_env->peref_list = NULL;
-   FREE(qstat_env->user_list); qstat_env->user_list = NULL;
-   FREE(qstat_env->queue_user_list); qstat_env->queue_user_list = NULL;
-   FREE(qstat_env->queue_list); qstat_env->queue_list = NULL;
-   FREE(qstat_env->centry_list); qstat_env->centry_list = NULL;
-   FREE(qstat_env->exechost_list); qstat_env->exechost_list = NULL;
-   FREE(qstat_env->schedd_config); qstat_env->schedd_config = NULL;
-   FREE(qstat_env->pe_list); qstat_env->pe_list = NULL;
-   FREE(qstat_env->ckpt_list); qstat_env->ckpt_list = NULL;
-   FREE(qstat_env->acl_list); qstat_env->acl_list = NULL;
-   FREE(qstat_env->zombie_list); qstat_env->zombie_list = NULL;
-   FREE(qstat_env->hgrp_list); qstat_env->hgrp_list = NULL;
-   FREE(qstat_env->project_list); qstat_env->project_list = NULL;
+   /* Free the lLists */ 
+   lFreeList(&qstat_env->resource_list);
+   lFreeList(&qstat_env->qresource_list);
+   lFreeList(&qstat_env->queueref_list);
+   lFreeList(&qstat_env->peref_list);
+   lFreeList(&qstat_env->user_list);
+   lFreeList(&qstat_env->queue_user_list);
+   lFreeList(&qstat_env->queue_list);
+   lFreeList(&qstat_env->centry_list);
+   lFreeList(&qstat_env->exechost_list);
+   lFreeList(&qstat_env->schedd_config);
+   lFreeList(&qstat_env->pe_list);
+   lFreeList(&qstat_env->ckpt_list);
+   lFreeList(&qstat_env->acl_list);
+   lFreeList(&qstat_env->zombie_list);
+   lFreeList(&qstat_env->job_list);
+   lFreeList(&qstat_env->hgrp_list);
+   lFreeList(&qstat_env->project_list);
+   /* Free the lEnumerations */
+   lFreeWhat(&qstat_env->what_JB_Type);
+   lFreeWhat(&qstat_env->what_JAT_Type_list);
+   lFreeWhat(&qstat_env->what_JAT_Type_template);
+   /* Do not free the context - it's a reference */
+   qstat_env->ctx = NULL;
+   FREE(qstat_env);
 }
 
 static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp);

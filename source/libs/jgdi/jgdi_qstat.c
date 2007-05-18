@@ -1411,8 +1411,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    }
    sge_gdi_set_thread_local_ctx(ctx);
    
-   
-   
    memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
    
    memset(&qstat_env, 0, sizeof(qstat_env));
@@ -1599,6 +1597,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    }
       
 error:
+   qstat_env_destroy(&qstat_env);
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -1678,7 +1677,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
    }
    
 error:
-
+   qstat_env_destroy(&qstat_env);
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
    }

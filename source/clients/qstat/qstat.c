@@ -693,8 +693,7 @@ static int qstat_stdout_init(qstat_handler_t *handler, lList **alpp)
    /* interal context  initializing */
    ctx->header_printed = false;
    ctx->job_header_printed = false;
-   /* TODO we need a destroy method to free the dstring */
-   
+
 error:
    if (ret != 0 ) {
       if(ctx != NULL) {
@@ -706,13 +705,12 @@ error:
 }
 
 static int qstat_stdout_destroy(qstat_handler_t *handler) 
-{
-   qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
-   
+{  
    DENTER(TOP_LAYER, "qstat_stdout_destroy");
 
-   if (ctx != NULL) {
-      sge_dstring_free(&(ctx->last_queue_name));
+   if (handler->ctx) {
+      sge_dstring_free(&(((qstat_stdout_ctx_t*)(handler->ctx))->last_queue_name));
+      FREE(handler->ctx);
    }   
 
    DEXIT;

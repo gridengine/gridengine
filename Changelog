@@ -1,3 +1,7 @@
+LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a memory leak
+                 Bugtraq:   6559385
+                 Review:    AA
+
 AH-2007-05-14-0: Bugfix:    Memory leak in libdrmaa.so
                  Bugster:   6551121
                  Review:    LP

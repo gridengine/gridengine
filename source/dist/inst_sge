@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.1beta"
+SGE_VERSION="6.1"
 
 #Reset PATH to a safe value
 #
@@ -430,6 +430,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddWindowsAdmin
  AddHosts
  CopyCA execd
+ CopyCA submit 
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster

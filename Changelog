@@ -1,3 +1,6 @@
+MD-2007-05-19-0: Cleanup:   Changed Versionstring in inst_sge	
+                 Enhancem:  added upgrade doc 
+ 
 LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a memory leak
                  Bugtraq:   6559385
                  Review:    AA

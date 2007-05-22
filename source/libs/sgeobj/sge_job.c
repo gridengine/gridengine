@@ -2043,7 +2043,62 @@ bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 /* JG: TODO: use dstring! */
 void job_get_state_string(char *str, u_long32 op)
 {
-   queue_or_job_get_states(JB_job_number, str, op);
+   int count = 0;
+
+   DENTER(TOP_LAYER, "job_get_state_string");
+
+   if (VALID(JDELETED, op)) {
+      str[count++] = DISABLED_SYM;
+   }
+
+   if (VALID(JERROR, op)) {
+      str[count++] = ERROR_SYM;
+   }
+
+   if (VALID(JSUSPENDED_ON_SUBORDINATE, op)) {
+      str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
+   }
+   
+   if (VALID(JSUSPENDED_ON_THRESHOLD, op)) {
+      str[count++] = SUSPENDED_ON_THRESHOLD_SYM;
+   }
+
+   if (VALID(JHELD, op)) {
+      str[count++] = HELD_SYM;
+   }
+
+   if (VALID(JMIGRATING, op)) {
+      str[count++] = RESTARTING_SYM;
+   }
+
+   if (VALID(JQUEUED, op)) {
+      str[count++] = QUEUED_SYM;
+   }
+
+   if (VALID(JRUNNING, op)) {
+      str[count++] = RUNNING_SYM;
+   }
+
+   if (VALID(JSUSPENDED, op)) {
+      str[count++] = SUSPENDED_SYM;
+   }
+
+   if (VALID(JTRANSFERING, op)) {
+      str[count++] = TRANSISTING_SYM;
+   }
+
+   if (VALID(JWAITING, op)) {
+      str[count++] = WAITING_SYM;
+   }
+
+   if (VALID(JEXITING, op)) { 
+      str[count++] = EXITING_SYM;
+   }
+
+   str[count++] = '\0';
+
+   DEXIT;
+   return;
 }
 
 /****** sgeobj/job/job_list_locate() ******************************************
@@ -2550,65 +2605,6 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    DEXIT;
    return ret;
 }
-
-/* JG: TODO: use dstring! */
-void queue_or_job_get_states(int nm, char *str, u_long32 op)
-{
-   int count = 0;
-
-   DENTER(TOP_LAYER, "queue_or_job_get_states");
-
-   if (nm==JB_job_number) {
-      if (VALID(JDELETED, op))
-         str[count++] = DISABLED_SYM;
-      if (VALID(JERROR, op))
-         str[count++] = ERROR_SYM;
-      if (VALID(JSUSPENDED_ON_SUBORDINATE, op))
-         str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
-   }
-   
-   if (VALID(JSUSPENDED_ON_THRESHOLD, op)) {
-      str[count++] = SUSPENDED_ON_THRESHOLD_SYM;
-   }
-
-   if (VALID(JHELD, op)) {
-      str[count++] = HELD_SYM;
-   }
-
-   if (VALID(JMIGRATING, op)) {
-      str[count++] = RESTARTING_SYM;
-   }
-
-   if (VALID(JQUEUED, op)) {
-      str[count++] = QUEUED_SYM;
-   }
-
-   if (VALID(JRUNNING, op)) {
-      str[count++] = RUNNING_SYM;
-   }
-
-   if (VALID(JSUSPENDED, op)) {
-      str[count++] = SUSPENDED_SYM;
-   }
-
-   if (VALID(JTRANSFERING, op)) {
-      str[count++] = TRANSISTING_SYM;
-   }
-
-   if (VALID(JWAITING, op)) {
-      str[count++] = WAITING_SYM;
-   }
-
-   if (VALID(JEXITING, op)) { 
-      str[count++] = EXITING_SYM;
-   }
-
-   str[count++] = '\0';
-
-   DEXIT;
-   return;
-}
-
 
 /****** sge_job/sge_unparse_acl_dstring() **************************************
 *  NAME

@@ -51,5 +51,10 @@
 #define MSG_QCONF_CANT_MODIFY_NONE    _MESSAGE(5015, _("\"NONE\" is not a valid list attribute value for -mattr.  Try using -rattr instead."))
 #define MSG_PARSE_ATTR_ARGS_NOT_FOUND    _MESSAGE(5016, _("Attribute name ("SFQ") and/or value ("SFQ") not found"))
 
+#define MSG_QCONF_MODIFICATIONOFOBJECTNOTSUPPORTED_S _MESSAGE(5017, _("Modification of object "SFQ" not supported"))
+#define MSG_QCONF_NOATTRIBUTEGIVEN                   _MESSAGE(5018, _("No attribute given"))
+#define MSG_QCONF_GIVENOBJECTINSTANCEINCOMPLETE_S    _MESSAGE(5019, _("Given object_instance "SFQ" is incomplete"))
+#define MSG_QCONF_MODIFICATIONOFHOSTNOTSUPPORTED_S   _MESSAGE(5020, _("Modification of host "SFQ" not supported"))
+
 #endif /* __MSG_QCONF_H */
 

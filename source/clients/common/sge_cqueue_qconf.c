@@ -663,7 +663,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                             * in the complex values list, we have to insert a
                             * custom writer for the complex_values field.  We do
                             * that with this function. */
-                           insert_custom_complex_values_writer (fields);
+                           insert_custom_complex_values_writer(fields);
 
                            if (is_first) {
                               is_first = false; 
@@ -678,8 +678,8 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
-                           FREE (fields);
-                           FREE (filename_stdout);
+                           FREE(fields);
+                           FREE(filename_stdout);
                            
                            if (answer_list_output(answer_list)) {
                               lFreeList(&href_list);

@@ -92,6 +92,7 @@
 #include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 #include "parse.h"
 #include "usage.h"
 #include "qmaster_to_execd.h"
@@ -958,7 +959,7 @@ static int setup_qmaster(void)
 
       for_each(qinstance, qinstance_list) {
          qinstance_set_full_name(qinstance);
-         qinstance_state_set_susp_on_sub(qinstance, false);
+         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
 

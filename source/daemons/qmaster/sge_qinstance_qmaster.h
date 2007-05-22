@@ -67,4 +67,37 @@ qinstance_change_state_on_calendar_all(const char* cal_name,
                                        const lList *state_change_list, 
                                        monitoring_t *monitor);
 
+bool
+sge_qmaster_qinstance_state_set_alarm(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_error(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
+
 #endif /* _SGE_QINSTANCE_QMASTER_H_ */

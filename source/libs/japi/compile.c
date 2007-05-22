@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
    FILE *fp;
 
    if (!getcwd(jobwd, sizeof(jobwd))) {
-      fprintf(stderr, "getwd() failed: %s\n", strerror(errno));
+      fprintf(stderr, "getcwd() failed: %s\n", strerror(errno));
       ret = 2;
       goto Finish;
    }

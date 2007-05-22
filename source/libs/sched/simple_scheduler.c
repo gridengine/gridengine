@@ -177,7 +177,7 @@ static void get_workload_info()
       job_id = lGetUlong(job, JB_job_number);
       user   = lGetString(job, JB_owner);
       group  = lGetString(job, JB_group);
-      ep     = queue_or_job_get_states(job, "h_rt");
+/*       ep     = queue_or_job_get_states(job, "h_rt"); */
       if(ep != NULL) {
          wclock = lGetDouble(ep, CE_doubleval);
       }

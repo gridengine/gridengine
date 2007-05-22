@@ -85,6 +85,7 @@
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
@@ -902,7 +903,7 @@ void sge_load_value_cleanup_handler(te_event_t anEvent, monitoring_t *monitor)
             qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
                                           host, &iterator);
             while (qinstance != NULL) {
-               qinstance_state_set_unknown(qinstance, true);
+               sge_qmaster_qinstance_state_set_unknown(qinstance, true);
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
 
                DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 

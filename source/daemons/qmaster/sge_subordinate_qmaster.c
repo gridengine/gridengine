@@ -53,8 +53,6 @@
 #include "sge_subordinate.h"
 #include "sge_qref.h"
 
-#include "sge_reporting_qmaster.h"
-
 /*
    (un)suspend on subordinate using granted_destination_identifier_list
 
@@ -199,10 +197,9 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
          ret = (sge_signal_queue(signal, this_elem, NULL, NULL, monitor) == 0) ? true : false;
       }
 
-      qinstance_state_set_susp_on_sub(this_elem, suspend);
+      sge_qmaster_qinstance_state_set_susp_on_sub(this_elem, suspend);
 
       sge_add_event(0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
-      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
       lListElem_clear_changed_info(this_elem);
    }
 

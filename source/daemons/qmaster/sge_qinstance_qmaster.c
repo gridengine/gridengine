@@ -73,7 +73,7 @@ typedef struct {
    long state_mask;
    bool (*has_state)(const lListElem *this_elem);
    bool is;
-   void (*set_state)(lListElem *this_elem, bool set); 
+   bool (*set_state)(lListElem *this_elem, bool set); 
    bool set;
    const char *success_msg;
 } change_state_t;
@@ -143,8 +143,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   if (calendar != NULL) { 
                      qinstance_change_state_on_calendar(this_elem, calendar, monitor);
                   } else {
-                     qinstance_state_set_cal_disabled(this_elem, false);
-                     qinstance_state_set_cal_suspended(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_disabled(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_suspended(this_elem, false);
                      lSetList(this_elem, QU_state_changes, NULL);
                   }
                   lSetString(this_elem, attribute_name, new_value);
@@ -592,19 +592,19 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
    dstring buffer = DSTRING_INIT;
    const char *qinstance_name = qinstance_get_name(this_elem, &buffer);
    change_state_t transitions[] = {
-      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  qinstance_state_set_error,            false},
-      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  qinstance_state_set_manual_disabled,  false},
-      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, qinstance_state_set_manual_disabled,  true },
-      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, qinstance_state_set_manual_suspended, true },
-      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  qinstance_state_set_manual_suspended, false},
+      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  sge_qmaster_qinstance_state_set_error,            false},
+      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  sge_qmaster_qinstance_state_set_manual_disabled,  false},
+      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, sge_qmaster_qinstance_state_set_manual_disabled,  true },
+      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, sge_qmaster_qinstance_state_set_manual_suspended, true },
+      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  sge_qmaster_qinstance_state_set_manual_suspended, false},
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
-      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, qinstance_state_set_error,            true},
-      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, qinstance_state_set_orphaned,         true},
-      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  qinstance_state_set_orphaned,         false},
-      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, qinstance_state_set_unknown,          true},
-      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  qinstance_state_set_unknown,          false},
-      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, qinstance_state_set_ambiguous,        true},
-      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  qinstance_state_set_ambiguous,        false},
+      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, sge_qmaster_qinstance_state_set_error,            true},
+      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, sge_qmaster_qinstance_state_set_orphaned,         true},
+      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  sge_qmaster_qinstance_state_set_orphaned,         false},
+      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, sge_qmaster_qinstance_state_set_unknown,          true},
+      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  sge_qmaster_qinstance_state_set_unknown,          false},
+      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, sge_qmaster_qinstance_state_set_ambiguous,        true},
+      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  sge_qmaster_qinstance_state_set_ambiguous,        false},
 #endif
       { QI_DO_NOTHING,        0,             NULL,                                true,  NULL,                                 true }
    };
@@ -674,7 +674,6 @@ qinstance_change_state_on_command(lListElem *this_elem, lList**answer_list,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
-            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
                                    lGetHost(this_elem, QU_qhostname), NULL,
@@ -848,7 +847,6 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem, u_long32 c
    bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
    bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE) ? true : false;
    bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND) ? true : false;
-   bool state_changed = false;
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_");
 
@@ -856,14 +854,13 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem, u_long32 c
    *state_change_list = NULL;
 
    if (old_cal_disabled != new_cal_disabled) {
-      qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
-      state_changed = true;
+      sge_qmaster_qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
    }
    
    if (old_cal_suspended != new_cal_suspended) {
       const char *name = lGetString(this_elem, QU_full_name);
 
-      qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
+      sge_qmaster_qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
       if (new_cal_suspended) {
          if (qinstance_state_is_susp_on_sub(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
@@ -881,17 +878,143 @@ static bool qinstance_change_state_on_calender_(lListElem *this_elem, u_long32 c
             sge_signal_queue(SGE_SIGCONT, this_elem, NULL, NULL, monitor);
          }
       }
-      state_changed = true;
    }
 
-   if (state_changed) {
-      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
-   }
    qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
-   
 
    DEXIT;
    return ret;
+}
 
+bool
+sge_qmaster_qinstance_state_set_alarm(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_alarm(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_suspend_alarm(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_manual_disabled(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_manual_suspended(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_unknown(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_error(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_error(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_susp_on_sub(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_cal_disabled(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_cal_suspended(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_orphaned(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_orphaned(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_ambiguous(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
 }
 

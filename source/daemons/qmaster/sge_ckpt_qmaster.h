@@ -54,8 +54,6 @@ void sge_change_queue_version_qr_list(lList *nq, lList *oq,
                                       const char *obj_name, 
                                       const char *ckpt_name);
 
-int check_ckpt_lic(int licensed_ckpts, int verbose);     
-
 const char *get_checkpoint_when(int bitmask);
 
 int is_checkpoint_when_valid(int bitmask);

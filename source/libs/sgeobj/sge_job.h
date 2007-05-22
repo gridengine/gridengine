@@ -276,9 +276,6 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
                      const char *name, double *value,
                      const lListElem *implicit_centry);
 
-void queue_or_job_get_states(int nm, char *str, u_long32 op);
-
-
 /* unparse functions */
 bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
                                int nm, char *option);

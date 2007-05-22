@@ -1117,7 +1117,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          const char *name = lGetHost(mod_elem, sublist_host_name);
          char resolved_name[CL_MAXHOSTLEN+1];
          lListElem *org_elem = NULL;
-         
+
          if (name == NULL) {
             ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, ""));
             answer_list_add(answer_list, SGE_EVENT,
@@ -1129,9 +1129,10 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          if (name[0] != '@') {
             int back = getuniquehostname(name, resolved_name, 0);
 
+
             if (back == CL_RETVAL_OK) {
                /* 
-                * This assignment is ok because preious name contained a const
+                * This assignment is ok because previous name contained a const
                 * string from the mod_elem that we didn't need to free.  
                 * Now it will contain a string that's on the stack, 
                 * so we still don't have to free it. 
@@ -1143,7 +1144,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                 */
             }
          }
-         
+
          org_elem = lGetElemHost(org_list, sublist_host_name, name);
 
          /*

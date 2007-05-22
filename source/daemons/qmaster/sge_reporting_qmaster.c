@@ -68,6 +68,7 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_sharetree.h"
@@ -748,19 +749,16 @@ reporting_create_queue_record(lList **answer_list,
 
    if (mconf_get_do_reporting() && queue != NULL) {
       dstring queue_dstring = DSTRING_INIT;
-      char state_buffer[20];
-      *state_buffer = '\0';
-      queue_or_job_get_states(QU_state, state_buffer, 
-                              lGetUlong(queue, QU_state));
 
-      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s\n", 
+      sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c", 
                           lGetString(queue, QU_qname),
                           REPORTING_DELIMITER,
                           lGetHost(queue, QU_qhostname),
                           REPORTING_DELIMITER,
                           sge_u32c(report_time),
-                          REPORTING_DELIMITER,
-                          state_buffer);
+                          REPORTING_DELIMITER);
+      qinstance_state_append_to_dstring(queue, &queue_dstring);
+      sge_dstring_append_char(&queue_dstring, '\n');
 
       /* write record to reporting buffer */
       ret = reporting_create_record(answer_list, "queue", 
@@ -815,22 +813,17 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
          dstring queue_dstring = DSTRING_INIT;
-         char state_buffer[20];
-         *state_buffer = '\0';
-         queue_or_job_get_states(QU_state, state_buffer, 
-                                 lGetUlong(queue, QU_state));
-
-         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c%s%c%s\n", 
+         sge_dstring_sprintf(&queue_dstring, "%s%c%s%c"sge_U32CFormat"%c", 
                              lGetString(queue, QU_qname),
                              REPORTING_DELIMITER,
                              lGetHost(queue, QU_qhostname),
                              REPORTING_DELIMITER,
                              sge_u32c(report_time),
-                             REPORTING_DELIMITER,
-                             state_buffer, 
-                             REPORTING_DELIMITER,
-                             sge_dstring_get_string(&consumable_dstring));
-
+                             REPORTING_DELIMITER);
+         qinstance_state_append_to_dstring(queue, &queue_dstring);
+         sge_dstring_sprintf_append(&queue_dstring, "%c%s\n",
+                                REPORTING_DELIMITER,
+                                sge_dstring_get_string(&consumable_dstring));
 
          /* write record to reporting buffer */
          ret = reporting_create_record(answer_list, "queue_consumable", 

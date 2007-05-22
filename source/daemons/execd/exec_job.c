@@ -1243,7 +1243,7 @@ int err_length) {
              */
             const char *error_string = lGetString(lFirst(answer_list), AN_text);
             if(error_string != NULL) {
-               snprintf(err_str,err_length, error_string);
+               snprintf(err_str, err_length, error_string);
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);
@@ -1539,8 +1539,7 @@ int err_length) {
                 lGetString(jep, JB_owner), 
                 lGetString(master_q, QU_qname),
                 lGetHost(master_q, QU_qhostname), sge_mail_start);
-         } 
-         else {
+         } else {
             sprintf(sge_mail_subj, MSG_MAIL_STARTSUBJECT_US, sge_u32c(job_id),
                lGetString(jep, JB_job_name));
             sprintf(sge_mail_body, MSG_MAIL_STARTBODY_USSSSS,

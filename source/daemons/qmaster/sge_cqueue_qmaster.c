@@ -79,8 +79,6 @@
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
-#include "sge_reporting_qmaster.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -219,7 +217,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    /*
     * Change qinstance state
     */
-   qinstance_state_set_ambiguous(ret, *is_ambiguous);
+   sge_qmaster_qinstance_state_set_ambiguous(ret, *is_ambiguous);
    if (*is_ambiguous) {
       DPRINTF(("Qinstance "SFN"@"SFN" has ambiguous configuration\n",
                cqueue_name, hostname));
@@ -234,7 +232,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
     *    - state (modification according to initial state)
     *    - qversion
     */
-   qinstance_state_set_unknown(ret, true);
+   sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
    qinstance_set_initial_state(ret);
    qinstance_increase_qversion(ret);
@@ -259,7 +257,7 @@ cqueue_add_qinstances(sge_gdi_ctx_class_t *ctx, lListElem *cqueue, lList **answe
 
          if (qinstance != NULL) {
             if (qinstance_state_is_orphaned(qinstance)) {
-               qinstance_state_set_orphaned(qinstance, false);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, false);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                /*
@@ -313,7 +311,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
                 * it is not possible to delete the queue but we
                 * will set it into the "orphaned" state 
                 */
-               qinstance_state_set_orphaned(qinstance, true);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, true);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_DEL);
@@ -557,7 +555,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
          /*
           * Change qinstance state
           */
-         qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
+         sge_qmaster_qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
          if (will_be_ambiguous && !is_ambiguous) {
             state_changed = true;
             DPRINTF(("Qinstance "SFQ" has ambiguous configuration\n",
@@ -872,7 +870,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
    dstring key_dstring = DSTRING_INIT;
-   u_long32 now = sge_get_gmt();
    bool dbret;
    lList *spool_answer_list = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
@@ -911,8 +908,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
                                     key);
             ret = 1;
          }
-
-         reporting_create_queue_record(NULL, qinstance, now);
       }
    }
 
@@ -1137,7 +1132,7 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
             next_qinstance = lNext(qinstance);
          }
          if ((qinstance_state_is_unknown(qinstance)) != is_unknown) {
-            qinstance_state_set_unknown(qinstance, is_unknown);
+            sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
             if (send_events) {
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
             }
@@ -1146,7 +1141,7 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
    }
 }
 
-                        
+
 /****** sge_cqueue_qmaster/cqueue_diff_sublist() *******************************
 *  NAME
 *     cqueue_diff_sublist() -- Diff cluster queue sublists

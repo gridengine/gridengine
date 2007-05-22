@@ -72,6 +72,7 @@
 #include "sge_answer.h"
 
 #include "sge_reporting_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -300,8 +301,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                                                     QU_qhostname,
                                                     host, 
                                                     &iterator);
-                  qinstance_state_set_error(qinstance, true);
-                  reporting_create_queue_record(NULL, qinstance, timestamp);
+                  sge_qmaster_qinstance_state_set_error(qinstance, true);
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
@@ -329,8 +329,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                              hostname);
          
          /* general error -> this queue cant run any job */
-         qinstance_state_set_error(queueep, true);
-         reporting_create_queue_record(NULL, queueep, timestamp);
+         sge_qmaster_qinstance_state_set_error(queueep, true);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
          spool_queueep = true;
          ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      

@@ -417,7 +417,7 @@ gdi2_send_multi_sync(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *st
                                       mastername?mastername:"<NULL>"));
             } else { /* For unusual errors, give more detail */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                      MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
+                                      MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER],
                                       sge_u32c(sge_qmaster_port),
                                       mastername?mastername:"<NULL>",
@@ -1059,7 +1059,7 @@ gdi2_receive_multi_async(sge_gdi_ctx_class_t* ctx, sge_gdi_request **answer, lLi
                                    ctx->get_master(ctx, false)));
             } else { /* For unusual errors, give more detail */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                      MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
+                                      MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
                                       ctx->get_progname(ctx),
                                       sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
                                       ctx->get_master(ctx, false),
@@ -1177,7 +1177,7 @@ gdi2_send_multi_async(sge_gdi_ctx_class_t *ctx, lList **alpp, state_gdi_multi *s
                                    ctx->get_master(ctx, false)));
          } else { /* For unusual errors, give more detail */
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                   MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
+                                   MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
                                    ctx->get_progname(ctx),
                                    sge_u32c(ctx->get_sge_qmaster_port(ctx)), 
                                    ctx->get_master(ctx, false),

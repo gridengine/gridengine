@@ -1238,7 +1238,7 @@ int err_length) {
              */
             const char *error_string = lGetString(lFirst(answer_list), AN_text);
             if(error_string != NULL) {
-               snprintf(err_str,err_length, error_string);
+               snprintf(err_str, err_length, error_string);
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);

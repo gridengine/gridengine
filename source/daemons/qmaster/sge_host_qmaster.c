@@ -545,7 +545,6 @@ int sub_command, monitoring_t *monitor
             }
          }
       }
-      
    }
 
    DRETURN(0);

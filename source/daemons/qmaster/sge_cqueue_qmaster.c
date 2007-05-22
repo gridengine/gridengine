@@ -75,14 +75,13 @@
 #include "sge_signal.h"
 #include "sge_mtutil.h"
 #include "sgeobj/sge_load.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
-
-#include "sge_reporting_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -894,7 +893,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
    dstring key_dstring = DSTRING_INIT;
-   u_long32 now = sge_get_gmt();
    bool dbret;
    lList *spool_answer_list = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
@@ -933,8 +931,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
                                     key);
             ret = 1;
          }
-
-         reporting_create_queue_record(NULL, qinstance, now);
       }
    }
 
@@ -1166,7 +1162,7 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
    }
 }
 
-                        
+
 /****** sge_cqueue_qmaster/cqueue_diff_sublist() *******************************
 *  NAME
 *     cqueue_diff_sublist() -- Diff cluster queue sublists

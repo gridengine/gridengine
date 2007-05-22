@@ -2974,14 +2974,14 @@ char *argv[]
    }
 
    if (!info_entry[index].object_name) {
-      fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
+      ERROR((SGE_EVENT, MSG_QCONF_MODIFICATIONOFOBJECTNOTSUPPORTED_S, *spp));
       DRETURN(1);
    } 
 
    /* parse command line arguments */
    attr = sge_strdup(NULL, *spp);
    if (attr == NULL) {
-      fprintf(stderr, "No attribute given\n");
+      ERROR((SGE_EVENT, MSG_QCONF_NOATTRIBUTEGIVEN));
       DRETURN(1);
    }
    spp = sge_parser_get_next(spp);
@@ -2993,8 +2993,8 @@ char *argv[]
        hgroup_or_hostname = sge_strdup(NULL, sge_strtok(NULL, NULL));
    }
    
-   if ( (object == NULL) || (hgroup_or_hostname == NULL) ) {
-      fprintf(stderr, "Given object_instance "SFQ" is incomplete\n", object_instance);
+   if (object == NULL || hgroup_or_hostname == NULL) {
+      ERROR((SGE_EVENT, MSG_QCONF_GIVENOBJECTINSTANCEINCOMPLETE_S, object_instance));
       FREE(attr);
       FREE(object_instance);
       FREE(object);
@@ -3005,7 +3005,7 @@ char *argv[]
    FREE(object_instance);
 
    if (strcmp("@/", hgroup_or_hostname) == 0) {
-      fprintf(stderr, "Modification of host "SFQ" not supported\n", hgroup_or_hostname);
+      ERROR((SGE_EVENT, MSG_QCONF_MODIFICATIONOFHOSTNOTSUPPORTED_S, hgroup_or_hostname));
       FREE(attr);
       FREE(object);
       FREE(hgroup_or_hostname);

@@ -110,7 +110,7 @@
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN))
+#define MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS       _MESSAGE(43121, _("unable to send message to "SFN" using port "sge_U32CFormat" on host "SFQ": "SFN))
 #define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "sge_U32CFormat" on host "SFQ))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_U                  _MESSAGE(43124, _("unable to resolve group name for group ID, "sge_U32CFormat))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request"))

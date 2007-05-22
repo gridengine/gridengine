@@ -149,11 +149,15 @@ int main(int argc, char **argv) {
 
       lFreeList(&ar_lp);
       answer_list_on_error_print_or_exit(&alp, stdout);
+      if (answer_list_has_error(&alp)) {
+         sge_prof_cleanup();
+         sge_gdi2_shutdown((void**)&ctx);
+         DRETURN(1);
+      }
    }
 
    sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
-   DEXIT;
    DRETURN(0);
 
 error_exit:

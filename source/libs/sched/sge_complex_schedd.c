@@ -920,22 +920,22 @@ double src_dl
 
    switch(relop) {
    case CMPLXEQ_OP :
-      match = ( req==src_dl);
+      match = (req==src_dl);
       break;
    case CMPLXLE_OP :
-      match = ( req<=src_dl);
+      match = (req<=src_dl);
       break;
    case CMPLXLT_OP :
-      match = ( req<src_dl);
+      match = (req<src_dl);
       break;
    case CMPLXGT_OP :
-      match = ( req>src_dl);
+      match = (req>src_dl);
       break;
    case CMPLXGE_OP :
-      match = ( req>=src_dl);
+      match = (req>=src_dl);
       break;
    case CMPLXNE_OP :
-      match = ( req!=src_dl);
+      match = (req!=src_dl);
       break;
    default:
       match = 0; /* default -> no match */
@@ -1038,10 +1038,12 @@ int force_existence
          req_dl = 0;
       }   
 
-      if (is_threshold)
+      if (is_threshold) {
          m1 = m2 = 0; /* nothing exceeded per default */
-      else
+      } else {
          m1 = m2 = 1; /* matched per default */
+      }
+
       /* is there a per job limit */
       if (!(lGetUlong(src_cplx, CE_pj_dominant) & (DOMINANT_TYPE_VALUE))) {
          /* Actually request matching for utilization attributes 
@@ -1114,7 +1116,7 @@ int force_existence
       if (!(lGetUlong(src_cplx, CE_dominant) & (DOMINANT_TYPE_VALUE)) ||     /* per slot set || */
               ((lGetUlong(src_cplx, CE_dominant) & (DOMINANT_TYPE_VALUE)) && /* (per slot not set && */
            (lGetUlong(src_cplx, CE_pj_dominant) & (DOMINANT_TYPE_VALUE)) &&  /* and per job not set) */
-            force_existence)) {  
+            force_existence)) {
 
          src_dl = lGetDouble(src_cplx, CE_doubleval);
          req_all_slots = req_dl;
@@ -1124,7 +1126,7 @@ int force_existence
 
          switch (type) {
          case TYPE_BOO:
-            sge_dstring_copy_string( &resource_string, src_dl?"true":"false");
+            sge_dstring_copy_string(&resource_string, src_dl?"true":"false");
 #if 0
             DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
                      name, req_dl?"true":"false", dom_str, name, 
@@ -1171,9 +1173,9 @@ int force_existence
          snprintf(availability_text2, STR_LEN_AVAIL_TEXT, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
       }
       sge_dstring_free(&resource_string);
-      if (is_threshold)
+      if (is_threshold) {
          match = m1 || m2;
-      else {
+      } else {
          match = m1 && m2;
          if (!m1) {
             sge_strlcpy(availability_text, availability_text1, STR_LEN_AVAIL_TEXT);

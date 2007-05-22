@@ -1551,39 +1551,32 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
          for_each(master_cqueue, master_cqueue_list) {
             if ((master_queue = lGetSubStr(master_cqueue, QU_full_name,
                   queue_name, CQ_qinstances)) != NULL){
-               DPRINTF(("RD: found queue %s\n", queue_name));
                if (qinstance_state_is_ambiguous(master_queue)) {
-                  DPRINTF(("RD: setting ambigous state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_AMBIGUOUS));
                   qinstance_set_error(queue, QI_AMBIGUOUS, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_alarm(master_queue)) {
-                  DPRINTF(("RD: setting alarm state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_ALARM));
                   qinstance_set_error(queue, QI_ALARM, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_suspend_alarm(master_queue)) {
-                  DPRINTF(("RD: setting suspend alarm state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_SUSPEND_ALARM));
                   qinstance_set_error(queue, QI_SUSPEND_ALARM, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_manual_disabled(master_queue)) {
-                  DPRINTF(("RD: setting disabled state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_DISABLED));
                   qinstance_set_error(queue, QI_DISABLED, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_unknown(master_queue)) {
-                  DPRINTF(("RD: setting unknown state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_UNKNOWN));
                   qinstance_set_error(queue,QI_UNKNOWN, sge_dstring_get_string(&buffer), true);
                }
                if (qinstance_state_is_error(master_queue)) {
-                  DPRINTF(("RD: setting error state\n"));
                   sge_dstring_sprintf(&buffer, "reserved queue %s is %s", queue_name,
                                 qinstance_state_as_string(QI_ERROR));
                   qinstance_set_error(queue, QI_ERROR, sge_dstring_get_string(&buffer), true);
@@ -2070,10 +2063,8 @@ ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list,
 {  
    lListElem *ar = NULL;
 
-   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_complex_attr");
+   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_qinstance_complex_attr");
 
-lWriteElemTo(qinstance, stderr);
-lWriteListTo(ar_master_list, stderr);
    for_each(ar, ar_master_list) {
       lListElem *gs = NULL;
       const char *qinstance_name = lGetString(qinstance, QU_full_name);
@@ -2096,6 +2087,12 @@ lWriteListTo(ar_master_list, stderr);
                   u_long32 slots = lGetUlong(gs, JG_slots);
                   lListElem *current = lGetSubStr(qinstance, CE_name, 
                                                   ce_name, QU_consumable_config_list);
+                  if (current != NULL) {                                  
+                     lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
+                     lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
+                     lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
+                  }
+
                   if (current == NULL ||
                       compare_complexes(slots, request, current, text, false, true) == 0) {
                      ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
@@ -2180,12 +2177,12 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
                                                  lListElem *host, lList *ce_master_list)
 {  
    lListElem *ar = NULL;
+   const char *hostname = lGetHost(host, EH_name);
 
-   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_complex_attr");
+   DENTER(TOP_LAYER, "ar_list_has_reservation_due_to_host_complex_attr");
 
    for_each(ar, ar_master_list) {
       lListElem *gs = NULL;
-      const char *hostname = lGetHost(host, EH_name);
 
       for_each(gs, lGetList(ar, AR_granted_slots)) {
          const char *gh = lGetHost(gs, JG_qhostname);
@@ -2205,6 +2202,12 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
                   u_long32 slots = lGetUlong(gs, JG_slots);
                   lListElem *current = lGetSubStr(host, CE_name, 
                                                   ce_name, EH_consumable_config_list);
+                  if (current != NULL) {
+                     lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
+                     lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
+                     lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
+                  }
+                  
                   if (current == NULL ||
                       compare_complexes(slots, request, current, text, false, true) == 0) {
                      ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
@@ -2222,7 +2225,7 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
 
                if (is_consumable) {
                   lListElem *rde = NULL;
-                  lList * rde_list = lGetList(rue, RUE_utilized);
+                  lList *rde_list = lGetList(rue, RUE_utilized);
                   lListElem *cv = lGetSubStr(host, CE_name, ce_name, EH_consumable_config_list);
 
                   if (cv == NULL) {

@@ -1,3 +1,9 @@
+RD-2007-05-21-0: Bugfix:    - Fixed return value for qselect and some qconf
+                               switches
+                            - fixed bug with host complexes consistency check
+                 Cleanup:   Code uses now GDI request bitmask
+                 Review:    AA
+
 LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a memory leak
                  Bugtraq:   6559385
                  Review:    AA

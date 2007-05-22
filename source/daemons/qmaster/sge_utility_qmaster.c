@@ -509,9 +509,9 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
    DENTER(TOP_LAYER, "attr_mod_sub_list");
    if (lGetPosViaElem(delta_elem, this_elem_name, SGE_NO_ABORT) >= 0) {
-      if (sub_command == SGE_GDI_CHANGE ||
-          sub_command == SGE_GDI_APPEND ||
-          sub_command == SGE_GDI_REMOVE) {
+      if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) ||
+          SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND) ||
+          SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
          lList *reduced_sublist;
          lList *full_sublist;
          lListElem *reduced_element, *next_reduced_element;
@@ -563,10 +563,10 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   new_sub_elem =
                      lDechainElem(reduced_sublist, reduced_element);
                   old_sub_elem = lDechainElem(full_sublist, full_element);
-                  if (sub_command == SGE_GDI_CHANGE ||
-                      sub_command == SGE_GDI_APPEND) {
+                  if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) ||
+                      SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND)) {
 
-                     if (!no_info && sub_command == SGE_GDI_APPEND) {
+                     if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND)) {
                         INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS,
                               rstring, sub_list_name, object_name));
                         answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
@@ -580,7 +580,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                      restart_loop = 1;
                      break;
-                  } else if (sub_command == SGE_GDI_REMOVE) {
+                  } else if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
 
                      lFreeElem(&old_sub_elem);
                      lFreeElem(&new_sub_elem);
@@ -597,9 +597,9 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                next_reduced_element = lFirst(reduced_sublist);
             }
          }
-         if (ret && (sub_command == SGE_GDI_CHANGE ||
-             sub_command == SGE_GDI_APPEND ||
-             sub_command == SGE_GDI_REMOVE)) {
+         if (ret && (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) ||
+             SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND) ||
+             SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE))) {
              next_reduced_element = lFirst(reduced_sublist);
 
             while ((reduced_element = next_reduced_element)) {
@@ -625,13 +625,13 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
 
                if (ret) {
-                  if (!no_info && sub_command == SGE_GDI_REMOVE) {
+                  if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
                      INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
                            rstring, sub_list_name, object_name));
                      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                   } else {
                      if (!full_sublist) {
-                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                        if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
                            INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
                               "Adding new element(s).\n",
                               sub_list_name, object_name));
@@ -643,7 +643,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                         full_sublist = lGetList(this_elem, this_elem_name);
                         break;
                      } else {
-                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
+                        if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
                            INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
                               " - Adding new element.\n", rstring,
                               sub_list_name, object_name));
@@ -658,9 +658,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
             }
          }
-      } else if (ret && 
-                 (sub_command == SGE_GDI_SET || 
-                  sub_command == SGE_GDI_SET_ALL)) {
+      } else {
          /*
          ** Overwrite the complete list
          */
@@ -757,7 +755,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
        * Delete all configuration lists except the default-configuration
        * if sub_command is SGE_GDI_SET_ALL
        */
-      if (sub_command == SGE_GDI_SET_ALL) {
+      if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_SET_ALL)) {
          lListElem *elem, *next_elem;
 
          next_elem = lFirst(org_list);
@@ -813,7 +811,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          /*
           * Create element if it does not exist
           */
-         if (org_elem == NULL && sub_command != SGE_GDI_REMOVE) {
+         if (org_elem == NULL && !SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
             if (org_list == NULL) {
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);

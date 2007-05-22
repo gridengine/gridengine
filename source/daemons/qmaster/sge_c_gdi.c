@@ -521,7 +521,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
                                                request->cp, request->enp);
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
          answer_list_add(&(answer->alp), SGE_EVENT, 
-                         STATUS_OK, ANSWER_QUALITY_INFO);
+                         STATUS_OK, ANSWER_QUALITY_END);
          gdi_request_pack_result(answer, &local_answer_list, pb);
          DEXIT;
          return;
@@ -539,7 +539,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
                                       request->enp, false, NULL);
 
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          lFreeList(&conf);
       }
       gdi_request_pack_result(answer, &local_answer_list, pb);
@@ -557,7 +557,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
          answer->lp = lSelectHashPack("qmaster_response", conf, request->cp, 
                                       request->enp, false, NULL);
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          lFreeList(&conf);
       }
       gdi_request_pack_result(answer, &local_answer_list, pb);
@@ -631,9 +631,12 @@ fprintf(stderr, "\n");
                                          request->enp, false, NULL);
 #endif
 
+            /* DIRTY HACK: The "ok" message should be removed from the answer list
+               05/21/2007 qualitiy was ANSWER_QUALITY_INFO but this results in "ok"
+               messages on qconf side */
             sprintf(SGE_EVENT, MSG_GDI_OKNL);
             answer_list_add(&(answer->alp), SGE_EVENT, 
-                            STATUS_OK, ANSWER_QUALITY_INFO);
+                            STATUS_OK, ANSWER_QUALITY_END);
 
 #if !USE_OLD_IMPL
             /*
@@ -655,8 +658,7 @@ fprintf(stderr, "\n");
 
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
@@ -686,7 +688,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
 
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    DEXIT;
    return 0;
@@ -720,7 +722,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
 
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    DEXIT;
    return 0;
@@ -740,7 +742,7 @@ static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRe
    *anAfterCnt = lGetNumberOfElem(aRes->lp);
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    lFreeList(&conf);
    
@@ -846,15 +848,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
       } 
       else {
          bool is_scheduler_resync = false;
-         bool return_new_version = false;
          lList *ppList = NULL;
-
-         if (sub_command & SGE_GDI_RETURN_NEW_VERSION) {
-            if (request->target == SGE_AR_LIST) {
-               return_new_version = true;
-            }
-            sub_command = sub_command & (~SGE_GDI_RETURN_NEW_VERSION);
-         }
 
          MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor); 
 
@@ -928,7 +922,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
          /*
          ** ppList contains the changed AR element, set in ar_success
          */
-         if (return_new_version) {
+         if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_RETURN_NEW_VERSION)) {
             lFreeList(&(answer->lp));
             answer->lp = ppList;
             ppList = NULL;
@@ -1236,7 +1230,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
    }
 
   sprintf(SGE_EVENT, MSG_GDI_OKNL);
-  answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO); 
+  answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END); 
   DEXIT;
   return;
 }
@@ -2217,12 +2211,14 @@ monitoring_t *monitor
    }
 
    lFreeElem(&old_obj);
+   
+   if (!SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_RETURN_NEW_VERSION)) {
+      INFO((SGE_EVENT, 
+         add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
+             MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, name, object->object_name));
 
-   INFO((SGE_EVENT, 
-      add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
-          MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, name, object->object_name));
-
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
     
    sge_dstring_free(&buffer);
    DRETURN(STATUS_OK);
@@ -2237,14 +2233,13 @@ gdi_object_t *get_gdi_object(u_long32 target)
 
    DENTER(TOP_LAYER, "get_gdi_object");
 
-   for (i=0; gdi_object[i].target; i++)
+   for (i=0; gdi_object[i].target; i++) {
       if (target == gdi_object[i].target) {
-         DEXIT;
-         return &gdi_object[i];
+         DRETURN(&gdi_object[i]);
       }
+   }
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 static int schedd_mod(

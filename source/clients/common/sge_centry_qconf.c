@@ -676,7 +676,7 @@ centry_list_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, cons
                                              NULL, true, &qconf_ce_list_sfi,
                                              SP_FORM_ASCII, NULL, filename);
             
-      if (answer_list_output (answer_list)) {
+      if (answer_list_output(answer_list)) {
          lFreeList(&centry_list);
       }
 

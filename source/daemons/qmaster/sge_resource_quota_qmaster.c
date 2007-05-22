@@ -148,7 +148,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
    /* ---- RQS_rule */
    if (lGetPosViaElem(rqs, RQS_rule, SGE_NO_ABORT)>=0) {
       rules_changed = true;
-      if (sub_command == SGE_GDI_SET_ALL) {
+      if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_SET_ALL)) {
          normalize_sublist(rqs, RQS_rule);
          attr_mod_sub_list(alpp, new_rqs, RQS_rule,
             RQS_name, rqs, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);    

@@ -172,7 +172,6 @@
 #define MSG_CALENDAR_XISNOTACALENDAR_S         _MESSAGE(23135, _(SFN" is not a calendar"))
 #define MSG_CKPT_XISNOTCHKPINTERFACEDEF_S      _MESSAGE(23136, _(SFN" is not a checkpointing interface definition"))
 #define MSG_EXEC_XISNOTANEXECUTIONHOST_S       _MESSAGE(23137, _(SFN" is not an execution host"))
-#define MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S     _MESSAGE(23138, _("changed entry of host "SFN" in execution host list"))
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23139, _(SFN" is not a parallel environment"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument"))
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN))

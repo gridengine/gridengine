@@ -46,6 +46,8 @@
 
 #define ANSWER_LAYER CULL_LAYER
 
+static bool answer_is_recoverable(const lListElem *answer);
+
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
 *     AnswerList - Object used to return errors/warning/infos
@@ -152,7 +154,7 @@ bool answer_has_quality(const lListElem *answer, answer_quality_t quality)
 *  NOTES
 *     MT-NOTE: answer_is_recoverable() is MT safe
 ******************************************************************************/
-bool answer_is_recoverable(const lListElem *answer)
+static bool answer_is_recoverable(const lListElem *answer)
 {
    bool ret = true;
 

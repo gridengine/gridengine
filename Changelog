@@ -1,3 +1,10 @@
+OJ-2007-05-23-4: Bugfix:    Fixed man page error:  man page sgepasswd(5) should be removed 
+		 	    Added explanations in sge_shepherd(8), sge_execd(8) regarding
+		 	    sgepasswd usage.
+                 Bugster:   6446203
+                 Review:    MP
+
+
 OJ-2007-05-23-3: Bugfix:    Fixed man page error: reserved usage not explained in sge_conf.5
                  Bugster:   6447133
                  Review:    MP

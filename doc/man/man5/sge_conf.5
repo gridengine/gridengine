@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/03/23 09:50:46 $     Revision: $Revision: 1.57 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/05/23 19:51:14 $     Revision: $Revision: 1.58 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/03/23 09:50:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/05/23 19:51:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1038,7 +1038,7 @@ This is foreseen for passing additional parameters
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"
-If this parameter is set to true, for reserved usage is used for the
+If this parameter is set to true, the  usage of reserved resources is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
 .PP
@@ -1099,8 +1099,8 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-If this parameter is set to true, reserved usage is taken for the xxQS_NAMExx share
-tree consumption instead of measured usage.
+If this parameter is set to true, the usage of reserved resources is taken for the 
+xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
 Changing \fBexecd_params\fP will take immediate effect.
 The default for \fBexecd_params\fP is none.

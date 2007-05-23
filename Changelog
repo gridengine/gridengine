@@ -1,3 +1,7 @@
+OJ-2007-05-23-3: Bugfix:    Fixed man page error: reserved usage not explained in sge_conf.5
+                 Bugster:   6447133
+                 Review:    MP
+
 OJ-2007-05-23-2: Bugfix:    Fixed man page error: shell_start_mode should be documentated to be 
                             only used for batch jobs
                  Bugster:   6428495

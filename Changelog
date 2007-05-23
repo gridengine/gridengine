@@ -1,3 +1,7 @@
+OJ-2007-05-23-1: Bugfix:    Fixed man page error: reporting lacks information about sharelog records
+                 Bugster:   6317563
+                 Review:    MP
+
 OJ-2007-05-23-0: Bugfix:    Fixed man page error: qrsh man page doesn't explain which options 
                             don't work with interactive job 
                  Bugster:   6364661

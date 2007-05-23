@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/05/23 19:49:03 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/05/23 19:49:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -368,6 +368,8 @@ shell. The shell will only forward them to the job if they are not
 recognized as valid shell options.
 .PP
 The default for \fBshell_start_mode\fP is \fIposix_compliant\fP.
+Note, though, that the \fBshell_start_mode\fB can only used for batch jobs submitted by qsub 
+and can not used for interactive jobs submitted by \fBqrsh\fB, \fBqsh\fB, \fBqlogin\fB.
 .SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the

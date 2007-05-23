@@ -1,3 +1,8 @@
+OJ-2007-05-23-2: Bugfix:    Fixed man page error: shell_start_mode should be documentated to be 
+                            only used for batch jobs
+                 Bugster:   6428495
+                 Review:    MP
+
 OJ-2007-05-23-1: Bugfix:    Fixed man page error: reporting lacks information about sharelog records
                  Bugster:   6317563
                  Review:    MP

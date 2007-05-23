@@ -1,3 +1,8 @@
+RN-2007-05-23-0: Enhancem.: qsub -terse to just output job id.
+                 Bugster:   6355875
+                 Issue:     916
+                 Review:    JG
+
 JG-2007-05-22-0: Bugfix:    Queue status in reporting file is missing.
                  Bugster:   5081743
                  Issue:     2258

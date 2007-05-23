@@ -267,7 +267,8 @@ enum {
    kec_OPT,       /* kill event client */
 
    cu_OPT,        /* SGEEE sharetree - clear all user/project usage */
-   R_OPT         /* SGEEE sharetree - clear all user/project usage */
+   R_OPT,        /* SGEEE sharetree - clear all user/project usage */
+   terse_OPT /* tersed output, RFE 6355875 */
 };
 
 /* macros used in parsing */

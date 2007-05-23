@@ -464,7 +464,10 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* cu_OPT - SGEEE sharetree - clear all user/project usage */ 
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* R_OPT - reservation desired */ 
- {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1}
+ {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1},
+/* terse_OPT - show only the job id, terse output */
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}
+
 /*                  
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  c  q  n  A
   o  a  c  d  h  i  m  m  m  m  r  r  s  s  r  l  s  s  s  o  e  o  L

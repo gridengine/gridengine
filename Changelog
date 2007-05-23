@@ -1,3 +1,8 @@
+OJ-2007-05-23-0: Bugfix:    Fixed man page error: qrsh man page doesn't explain which options 
+                            don't work with interactive job 
+                 Bugster:   6364661
+                 Review:    MP
+
 JG-2007-05-23-0: Bugfix:    Fixed resource debitation when modifying exec hosts.
                             Fixed a memory leak in scheduler.
                  Review:    AH

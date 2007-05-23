@@ -6023,6 +6023,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    /* If the job requests an advance reservation we don't have it verify if it fits
       into the resource schedule. For AR jobs this is already ensured */
    if (lGetUlong(a->job, JB_ar) != 0) {
+      lFreeElem(&cplx_el);
       DRETURN(ret);
    }
 

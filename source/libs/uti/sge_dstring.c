@@ -192,7 +192,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
 
       /* only allow to append a string with length 0
          for memory allocation */
-      if (len == 0 && sb->s != NULL ) {
+      if (len == 0 && sb->s != NULL) {
          DEXIT;
          return sb->s;
       }

@@ -102,8 +102,8 @@ static void host_trash_nonstatic_load_values(lListElem *host);
 static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_request *answer, int kill_jobs, int force);
 static int verify_scaling_list(lList **alpp, lListElem *host); 
 static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep);
-static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp,lListElem *qep,lListElem *new_ep,int nm,
-                       int primary_key,int sub_command,char *attr_name,char *object_name);
+static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *qep, lListElem *new_ep,
+                              int sub_command, char *attr_name, char *object_name);
 
 /****** qmaster/host/host_trash_nonstatic_load_values() ***********************
 *  NAME
@@ -444,8 +444,8 @@ int sub_command, monitoring_t *monitor
       }
 
       /* ---- EH_consumable_config_list */
-      if (attr_mod_threshold(ctx, alpp, ep, new_host, EH_consumable_config_list, 
-                             CE_name, sub_command, SGE_ATTR_COMPLEX_VALUES, 
+      if (attr_mod_threshold(ctx, alpp, ep, new_host,
+                             sub_command, SGE_ATTR_COMPLEX_VALUES, 
                              SGE_OBJ_EXECHOST)) { 
          goto ERROR;
       }
@@ -1547,7 +1547,7 @@ static void host_update_categories(const lListElem *new_hep, const lListElem *ol
 *
 *  SYNOPSIS
 *     int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, 
-*     int nm, int primary_key, int sub_command, char *attr_name, char 
+*     int sub_command, char *attr_name, char 
 *     *object_name) 
 *
 *  FUNCTION
@@ -1559,8 +1559,6 @@ static void host_update_categories(const lListElem *new_hep, const lListElem *ol
 *     lList **alpp              - The answer list 
 *     lListElem *qep            - The source object element 
 *     lListElem *new_ep         - The target object element 
-*     int nm                    - The attribute name (it is defined as a threshold) 
-*     int primary_key           - The primary key of the element, most common is XY_name.
 *     int sub_command           - The add, modify, remove command 
 *     const char *attr_name     - The attribute name 
 *     const char *object_name   - The target object name
@@ -1572,26 +1570,26 @@ static void host_update_categories(const lListElem *new_hep, const lListElem *ol
 *     MT-NOTE: attr_mod_threshold() is MT safe 
 *
 *******************************************************************************/
-static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp,lListElem *qep,lListElem *new_ep,int nm,
-                       int primary_key,int sub_command,char *attr_name,char *object_name ) {
+static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *qep, lListElem *new_ep,
+                              int sub_command, char *attr_name, char *object_name) {
    int ret;
 
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
-   /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
+   /* ---- attribute EH_consumable_config_list */
+   if (lGetPosViaElem(qep, EH_consumable_config_list, SGE_NO_ABORT)>=0) {
       lListElem *tmp_elem = NULL;
 
       DPRINTF(("got new %s\n", attr_name));
 
-      if (ensure_attrib_available(alpp, qep, nm)) {
+      if (ensure_attrib_available(alpp, qep, EH_consumable_config_list)) {
          DRETURN(STATUS_EUNKNOWN);
       }
 
       tmp_elem = lCopyElem(new_ep);
 
       /* the attr_mod_sub_list return boolean and there is stored in the int value, attention true=1 */
-      ret = attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
+      ret = attr_mod_sub_list(alpp, tmp_elem, EH_consumable_config_list, CE_name, qep,
                               sub_command, attr_name, object_name, 0);
       if (!ret) {
          lFreeElem(&tmp_elem);
@@ -1599,7 +1597,7 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp,lListElem *
       }
 
       /* the centry_list_fill_request returns 0 if success */
-      ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
+      ret = centry_list_fill_request(lGetList(tmp_elem, EH_consumable_config_list), alpp,
                                      *centry_list_get_master_list(), true, false, false);
       if (ret) {
          lFreeElem(&tmp_elem);
@@ -1651,7 +1649,19 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp,lListElem *
          DRETURN(STATUS_EUNKNOWN);
       }
 
-      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
+      /* copy back the consumable config and resource utilization lists to new exec host object */
+      {
+         lList *t = NULL;
+         lXchgList(tmp_elem, EH_consumable_config_list, &t);
+         lXchgList(new_ep, EH_consumable_config_list, &t);
+         lXchgList(tmp_elem, EH_consumable_config_list, &t);
+
+         t = NULL;
+         lXchgList(tmp_elem, EH_resource_utilization, &t);
+         lXchgList(new_ep, EH_resource_utilization, &t);
+         lXchgList(tmp_elem, EH_resource_utilization, &t);
+      }
+
       lFreeElem(&tmp_elem);
    }
 

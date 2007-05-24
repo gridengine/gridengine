@@ -1,3 +1,8 @@
+RN-2007-05-24-0: Enhancem.: Numbers in error mail too large.
+                 Bugster:   6367642
+                 Issue:     804
+                 Review:    JG
+
 RN-2007-05-23-0: Enhancem.: qsub -terse to just output job id.
                  Bugster:   6355875
                  Issue:     916

@@ -700,7 +700,7 @@ const char *userset_name
       for_each (cl, lGetList(cqueue, CQ_xacl)) {
          if (lGetSubStr(cl, US_name, userset_name, AUSRLIST_value))  {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
-                   userset_name, MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, 
+                   userset_name, MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, 
                    lGetString(cqueue, CQ_name)));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

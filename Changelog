@@ -1,3 +1,8 @@
+AH-2007-05-25-1: Bugfix:    Memory leak in sge_schedd
+                 Bugtraq:   6562190
+                 Issue:     2187
+                 Review:    JG
+
 RN-2007-05-25-0: Bugfix   : Wrong exit code with qconf -sds.
                  Bugster:   6522273
                  Review:    JG

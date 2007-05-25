@@ -102,9 +102,8 @@ public class JobTaskEventTestCase extends BaseTestCase {
        
        jgdi.enableQueues(new String [] { "*" }, false);
 
-       
-       lis.waitForJobFinish(300);
-       
+       int timeout = 300;
+       assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(timeout));
        assertEquals("too few job task add events", numberOfTasks, lis.getAddEventCount());
        assertEquals("too few job task del events", numberOfTasks - 1 , lis.getDelEventCount());
    }

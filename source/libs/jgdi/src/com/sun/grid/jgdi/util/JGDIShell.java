@@ -48,6 +48,7 @@ import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -82,6 +83,7 @@ import javax.security.auth.login.LoginException;
 public class JGDIShell implements Runnable, Shell {
    
    private static Logger logger = Logger.getLogger(JGDIShell.class.getName());
+   private static String PROMPT = "jgdi> ";
    
    private LinkedList historyList = new LinkedList();
    private int historyIndex = 0;
@@ -92,8 +94,6 @@ public class JGDIShell implements Runnable, Shell {
    private Map cmdMap = new HashMap();
    private TreeSet cmdSet = null;
    private ReadlineHandler readlineHandler;
-   
-   private String PS1 = "jsh> ";
    
    public JGDIShell() {
       cmdMap.put("connect", new ConnectCommand() );
@@ -129,11 +129,10 @@ public class JGDIShell implements Runnable, Shell {
    public void run() {
       
       try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));
-         
+         BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));  
          
          while( true) {
-            String line = readlineHandler.readline(PS1);
+            String line = readlineHandler.readline(PROMPT);
             
             if(line == null) {
                break;
@@ -156,9 +155,7 @@ public class JGDIShell implements Runnable, Shell {
          logger.severe(ioe.getMessage());
       }
       readlineHandler.cleanup();
-      
-      System.exit(0);
-      
+      System.exit(0);      
    }
    
    
@@ -182,27 +179,25 @@ public class JGDIShell implements Runnable, Shell {
                throw new IllegalArgumentException("command with id " + id + " not found in history" );
             }
          } catch(NumberFormatException nfe) {
-            
-            line = null;
-            
-            Iterator iter = historyList.iterator();
-            while(iter.hasNext()) {
-               HistoryElement elem = (HistoryElement)iter.next();
-               if(elem.getLine().startsWith(name)) {
-                  line = elem.getLine();
-                  break;
-               }
-            }
-            if(line == null) {
-               throw new IllegalArgumentException("command " + name + " not found in history" );
-            }
+            throw new IllegalArgumentException("Expected !<num>, but got: "+line);
          }
       }
       ParsedLine parsedLine = new ParsedLine(line);
       
       Command cmd = getCommand(parsedLine.cmd);
       if(cmd == null) {
-         throw new IllegalArgumentException("Unknown command " + parsedLine.cmd);
+         String [] cmds = {
+            "/bin/sh", "-c", line
+         };
+         Process p = Runtime.getRuntime().exec(cmds);
+         GetResponse to = new GetResponse(p.getInputStream());
+         GetResponse te = new GetResponse(p.getErrorStream());
+         to.start();
+         te.start();
+         p.waitFor();
+         to.join();
+         te.join();
+         return;
       }
       
       if(cmd instanceof HistoryCommand) {
@@ -215,11 +210,9 @@ public class JGDIShell implements Runnable, Shell {
    }
    
    public static void main(String[] args) {
-      
-      System.loadLibrary("jgdi");
-      
       String url = null;
       boolean useCsp = false;
+      String cmdParams = "";
       
       for(int i = 0; i < args.length; i++) {
          if(args[i].equals("-c")) {
@@ -232,8 +225,7 @@ public class JGDIShell implements Runnable, Shell {
          } else if (args[i].equals("-csp")) {
             useCsp = true;
          } else {
-            logger.severe("Unknown options " + args[i]);
-            System.exit(1);
+            cmdParams += args[i] + " ";
          }
       }
       
@@ -264,7 +256,12 @@ public class JGDIShell implements Runnable, Shell {
             ex.printStackTrace();
          }
       } else {
-         shell.exec(url);
+         if (cmdParams.length()>0) {
+            shell.exec(url, cmdParams);
+         }
+         else {
+            shell.exec(url);
+         }
       }
    }
    
@@ -277,7 +274,20 @@ public class JGDIShell implements Runnable, Shell {
             System.exit(1);
          }
       }
-      run();
+      run(); //We didn't get any other params, so we actually run the JGDIShell
+   }
+   
+   private void exec(final String url,final String cmdParams) {
+      if(url != null) {
+         try {
+            runCommand("connect " + url);
+            //We just want to execute a single command passed as param and exit.
+            runCommand(cmdParams);
+         } catch(Exception ex) {
+            logger.severe(ex.getMessage());
+            System.exit(1);
+         }
+      }
    }
    
    class ParsedLine {
@@ -360,8 +370,6 @@ public class JGDIShell implements Runnable, Shell {
          argList.toArray(args);
       }
       
-      
-      
    }
    
    class ExitCommand implements HistoryCommand {
@@ -377,10 +385,10 @@ public class JGDIShell implements Runnable, Shell {
                logger.warning("close failed: " + ex1.getMessage());
             }
          }
+         readlineHandler.cleanup();
          System.exit(0);
       }
-      
-      
+  
    }
    
    class HelpCommand implements Command {
@@ -412,8 +420,6 @@ public class JGDIShell implements Runnable, Shell {
                throw new IllegalArgumentException("Invalid number of arguments");
          }
       }
-      
-      
       
    }
    
@@ -546,8 +552,7 @@ public class JGDIShell implements Runnable, Shell {
                XMLUtil.write((GEObject)obj,System.out);
                System.out.flush();
             }
-         } else {
-            
+         } else {      
             Method method = JGDI.class.getMethod("get" + args[0] , new Class[] { String.class } );
             
             Object obj = method.invoke(jgdi, new Object[] { args[1] } );
@@ -555,9 +560,6 @@ public class JGDIShell implements Runnable, Shell {
             System.out.flush();
          }
       }
-      
-      
-      
    }
    
    static class HistoryElement {
@@ -580,18 +582,14 @@ public class JGDIShell implements Runnable, Shell {
    }
    
    private ReadlineHandler createReadlineHandler() {
-      
       try {
-         Class readlineClass = Class.forName("org.gnu.readline.Readline");
-         
+         Class readlineClass = Class.forName("org.gnu.readline.Readline");         
          Class readlineLibClass = Class.forName("org.gnu.readline.ReadlineLibrary");
-         
          
          Method byNameMethod = readlineLibClass.getMethod("byName", new Class[] { String.class } );
          Method loadMethod = readlineClass.getMethod("load", new Class[] { readlineLibClass } );
          
          String [] libs = { "GnuReadline", "Editline", "Getline", "PureJava" };
-         
          
          for(int i = 0; i < libs.length; i++) {
             try {
@@ -603,13 +601,10 @@ public class JGDIShell implements Runnable, Shell {
                }
                
                loadMethod.invoke(readlineClass, new Object[] { readlineLib } );
-               logger.fine("use Readline." + libs[i]);
                
-               Method initReadlineMethod = readlineClass.getMethod("initReadline", new Class [] { String.class });
-               
+               Method initReadlineMethod = readlineClass.getMethod("initReadline", new Class [] { String.class });               
                initReadlineMethod.invoke(readlineClass, new Object [] { "JGDIShell" } );
-               
-               
+ 
                NativeReadlineHandler ret = new NativeReadlineHandler(readlineClass);
                logger.info("use Readline." + libs[i] );
                return ret;
@@ -652,8 +647,7 @@ public class JGDIShell implements Runnable, Shell {
          Object completer = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { completerClass }, handler );
          
          // Setup a completer proxy
-         setCompleterMethod.invoke(readlineClass, new Object[] { completer } );
-         
+         setCompleterMethod.invoke(readlineClass, new Object[] { completer } );  
       }
       
       public String readline(String prompt)  throws IOException {
@@ -686,9 +680,7 @@ public class JGDIShell implements Runnable, Shell {
    }
    
    class NativeCompletionHandler implements InvocationHandler {
-      
-      Iterator possibleValues;
-      
+      Iterator possibleValues;   
       
       public java.lang.String complete(java.lang.String text, int state) {
          //System.out.println("complete " + text + ", " + state);
@@ -706,13 +698,10 @@ public class JGDIShell implements Runnable, Shell {
       
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
          return complete((String)args[0], ((Integer)args[1]).intValue());
-      }
-      
+      } 
    }
    
    class DefaultReadlineHandler implements ReadlineHandler {
-      
-      
       private BufferedReader in;
       
       public DefaultReadlineHandler() {
@@ -731,9 +720,6 @@ public class JGDIShell implements Runnable, Shell {
             logger.log(Level.WARNING, "cleanup failed", ioe);
          }
       }
-      
-      
-      
    }
    
    private static class MyCallbackHandler implements CallbackHandler {
@@ -774,5 +760,25 @@ public class JGDIShell implements Runnable, Shell {
       }
    }
    
-   
+   class GetResponse extends Thread {
+      private InputStream stream;
+      
+      public GetResponse(InputStream is) {
+         stream = is;
+      }
+      
+      public void run() {
+         while (true) {
+            try {
+               int c = stream.read();
+               if (c == -1) {
+                  break;
+               }
+               System.out.print((char)c);
+            } catch (IOException ex) {
+               ex.printStackTrace();
+            }
+         }
+      }
+   }
 }

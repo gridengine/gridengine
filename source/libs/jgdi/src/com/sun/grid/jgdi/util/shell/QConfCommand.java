@@ -583,7 +583,7 @@ public class QConfCommand extends AbstractCommand {
                           Format.left(map_op2str(complex.getRelop()), relopLen+4) +
                           Format.left(map_req2str(complex.getRequestable()), requestableLen+9) +  //1 is NO
                           Format.left((complex.isConsumable()) ? "YES" : "NO", consumableLen+8) +
-                          Format.left(complex.getDefault(), defaultLen+4) + Format.left(complex.getUrgencyWeight(), urgencyLen+4);
+                          Format.left(complex.getDefault(), defaultLen+4) + complex.getUrgencyWeight();
                     pw.println(val);
                 }
                 pw.println("# >#< starts a comment but comments are not saved across edits --------");

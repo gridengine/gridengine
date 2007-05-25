@@ -37,9 +37,12 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
+import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.ParallelEnvironment;
 import com.sun.grid.jgdi.configuration.ParallelEnvironmentImpl;
+import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.jni.JGDIImpl;
+import java.util.List;
 
 /**
  *
@@ -53,17 +56,8 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
    }
    
    protected synchronized void setUp() throws Exception {
-      System.loadLibrary("jgdi");
-      
-      String root = System.getenv("SGE_ROOT");
-      String cell = System.getenv("SGE_CELL");
-      String port = System.getenv("SGE_QMASTER_PORT");
-      if (root == null || cell == null || port == null) {
-         throw new Exception("SGE_ROOT, SGE_CELL or SGE_QMASTER_PORT environment variables not set!");
-      }
-      
-      String url = "bootstrap:///"+root+"@"+cell+":"+port;
-      jgdi = JGDIFactory.newInstance(url);
+      super.setUp();
+      jgdi = createJGDI();     
       
       cq = new ClusterQueueImpl(true);
       cq.setName("crashQueue");
@@ -72,23 +66,65 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
          jgdi.deleteClusterQueue(oldQueue);
       }
       jgdi.addClusterQueue(cq);
+      
+      ParallelEnvironment pe1 = new ParallelEnvironmentImpl(true);
+      pe1.setName("one");
+      ParallelEnvironment pe2 = new ParallelEnvironmentImpl(true);
+      pe2.setName("two");
+      ParallelEnvironment pe3 = new ParallelEnvironmentImpl(true);
+      pe3.setName("three");
+      ParallelEnvironment pe;
+      if ((pe=jgdi.getParallelEnvironment("one")) != null) {
+         jgdi.deleteParallelEnvironment(pe);
+      }
+      jgdi.addParallelEnvironment(pe1);
+      if ((pe=jgdi.getParallelEnvironment("two")) != null) {
+         jgdi.deleteParallelEnvironment(pe);
+      }
+      jgdi.addParallelEnvironment(pe2);
+      if ((pe=jgdi.getParallelEnvironment("three")) != null) {
+         jgdi.deleteParallelEnvironment(pe);
+      }
+      jgdi.addParallelEnvironment(pe3);
+      List pes = jgdi.getParallelEnvironmentList();
    }
    
    protected void tearDown() throws Exception {
       jgdi.close();
    }
-   
+      
    public void testCrashQmaster() throws Exception {
       System.out.print("testCrashQmaster - ");
       cq.removeAllPe();
-      cq.addPe("unknown","one");
       cq.addPe("unknown","two");
+      cq.addPe("unknown","three");
+      try {         
+         jgdi.updateClusterQueue(cq);
+         System.out.println("FAILED");
+         fail("Should not have succeeded");
+      } catch (Exception ex) {
+         String msg = ex.getMessage();
+         if (msg.equals("\"pe_list\" has no default value"+System.getProperty("line.separator"))) {
+            System.out.println("OK");
+            return;
+         }
+         System.out.println("Qmaster might have crashed. Message was: "+ex.getMessage());
+         fail("Qmaster might have crashed. Message was: "+ex.getMessage());  
+      }
+   }
+   
+   public void testCrashQmaster2() throws Exception {
+      System.out.print("testCrashQmaster2 - ");
+      cq.removeAllPe();
+      cq.addPe("@/","one");
+      cq.addPe("unknown","two");
+      cq.addPe("unknown","three");
       try {         
          jgdi.updateClusterQueue(cq);
          System.out.println("OK");
       } catch (Exception ex) {
-         System.out.println("FAILED >> QMASTER CRASHED got: "+ex.getMessage());
-         fail("Qmaster crashed (core dumped)");
+         System.out.println("FAILED: "+ex.getMessage());
+         fail("Message was: "+ex.getMessage());
       }
    }
 }

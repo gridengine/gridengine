@@ -35,30 +35,10 @@ package com.sun.grid.jgdi.util.shell.editor;
 import com.sun.grid.jgdi.BaseTestCase;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.configuration.UserSetImpl;
 import java.util.Arrays;
-import junit.framework.*;
 import com.sun.grid.jgdi.configuration.*;
-import com.sun.grid.jgdi.configuration.reflect.ClassDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
-import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
-import com.sun.grid.jgdi.configuration.xml.XMLUtil;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -76,21 +56,12 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       super(testName);
    }
    
-   protected synchronized void setUp() throws Exception {
-      System.loadLibrary("jgdi");
-      
-      String root = System.getenv("SGE_ROOT");
-      String cell = System.getenv("SGE_CELL");
-      String port = System.getenv("SGE_QMASTER_PORT");
-      if (root == null || cell == null || port == null) {
-         throw new Exception("SGE_ROOT, SGE_CELL or SGE_QMASTER_PORT environment variables not set!");
-      }
-      
-      String url = "bootstrap:///"+root+"@"+cell+":"+port;
-      jgdi = JGDIFactory.newInstance(url);
-      
+   protected synchronized void setUp() throws Exception {      
+      super.setUp();
+      jgdi = createJGDI();      
       init();
    }
+   
    private void init() throws JGDIException {
       ClusterQueue cq;
       cq1 = new ClusterQueueImpl(true);
@@ -106,6 +77,9 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       prj2 = new ProjectImpl("project2");
       prj3 = new ProjectImpl("project3");
       prj4 = new ProjectImpl("project4");
+      if ((prj = jgdi.getProject("ProjectName")) != null) {
+         jgdi.deleteProject(prj);
+      }
       if ((prj = jgdi.getProject(prj1.getName())) != null) {
          jgdi.deleteProject(prj);
       }
@@ -118,17 +92,12 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       if ((prj = jgdi.getProject(prj4.getName())) != null) {
          jgdi.deleteProject(prj);
       }
-      jgdi.addProject(prj1);
-      jgdi.addProject(prj2);
-      jgdi.addProject(prj3);
-      jgdi.addProject(prj4);
       
       Hostgroup hg;
       hg1 = new HostgroupImpl("@hgroup1");
       if ((hg = jgdi.getHostgroup(hg1.getName())) != null) {
          jgdi.deleteHostgroup(hg);
       }
-      jgdi.addHostgroup(hg1);
       
       UserSet us;
       us1 = new UserSetImpl("user1");
@@ -143,9 +112,6 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       if ((us = jgdi.getUserSet("user3")) != null) {
          jgdi.deleteUserSet(us);
       }
-      jgdi.addUserSet(us1);
-      jgdi.addUserSet(us2);
-      jgdi.addUserSet(us3);
       
       ParallelEnvironment pe;
       pe1 = new ParallelEnvironmentImpl(true);
@@ -158,6 +124,15 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       if ((pe = jgdi.getParallelEnvironment(pe2.getName())) != null) {
          jgdi.deleteParallelEnvironment(pe);
       }
+      
+      jgdi.addProject(prj1);
+      jgdi.addProject(prj2);
+      jgdi.addProject(prj3);
+      jgdi.addProject(prj4);
+      jgdi.addHostgroup(hg1);
+      jgdi.addUserSet(us1);
+      jgdi.addUserSet(us2);
+      jgdi.addUserSet(us3);
       jgdi.addParallelEnvironment(pe1);
       jgdi.addParallelEnvironment(pe2);
    }
@@ -176,12 +151,11 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
    public void testUpdateObjectWithText_SetProjectAll1() throws Exception {
       Project newProject = new ProjectImpl(true);
       System.out.println("testUpdateObjectWithText_SetProjectAll1");
-      String text = "name ProjectName\n oticket 1566\n delete_time 55 \n fshare 666 \n acl user1 user2 \n xacl user3";
+      String text = "name ProjectName\n oticket 1566\n fshare 666 \n acl user1 user2 \n xacl user3";
       GEObjectEditor.updateObjectWithText(jgdi, newProject, text);
       jgdi.addProject(newProject);
       assertEquals("ProjectName", jgdi.getProject(newProject.getName()).getName());
       assertEquals(1566 ,jgdi.getProject(newProject.getName()).getOticket());
-      assertEquals(55, jgdi.getProject(newProject.getName()).getDeleteTime());
       assertEquals(666 ,jgdi.getProject(newProject.getName()).getFshare());
       assertEquals(2, jgdi.getProject(newProject.getName()).getAclCount());
       assertTrue(jgdi.getProject(newProject.getName()).getAcl(0).equalsCompletely(new UserImpl("user1")));
@@ -207,11 +181,10 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
    //MapList with NONE
    public void testUpdateObjectWithText_SetClusterQueuePeWithNone() throws Exception {
       System.out.println("testUpdateObjectWithText_SetClusterQueuePeWithNone");
-      GEObjectEditor.updateObjectWithText(jgdi, cq1, "pe  NONE,[@hgroup1=oldPe myPe]");
+      GEObjectEditor.updateObjectWithText(jgdi, cq1, "pe_list  NONE,[@hgroup1=oldPe myPe]");
       jgdi.updateClusterQueue(cq1);
       
-      assertEquals(1, jgdi.getClusterQueue(cq1.getName()).getPeCount("@/"));
-      assertEquals(null, jgdi.getClusterQueue(cq1.getName()).getPe("@/",0));
+      assertEquals(0, jgdi.getClusterQueue(cq1.getName()).getPeCount("@/"));
       
       assertEquals(2, jgdi.getClusterQueue(cq1.getName()).getPeCount("@hgroup1"));
       assertEquals("oldPe", jgdi.getClusterQueue(cq1.getName()).getPe("@hgroup1",0));
@@ -270,8 +243,7 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       assertEquals(pe2.getName(), jgdi.getClusterQueue(cq1.getName()).getPe(hg1.getName(),1));
       
       //Load thresholds
-      //4 because h_rss should not be added since it has NONE value
-      assertEquals(4, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount("@/")); 
+      assertEquals(5, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount("@/")); 
       assertEquals("np_load_avg",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",0).getName());
       assertEquals("1.75",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",0).getStringval());
       
@@ -283,6 +255,9 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       
       assertEquals("s_rss",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",3).getName());
       assertEquals("3k",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",3).getStringval());
+      
+      assertEquals("h_rss",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",4).getName());
+      assertEquals("NONE",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",4).getStringval());
       
       assertEquals(2, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount(hg1.getName())); 
       assertEquals("qname",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds(hg1.getName(),0).getName());

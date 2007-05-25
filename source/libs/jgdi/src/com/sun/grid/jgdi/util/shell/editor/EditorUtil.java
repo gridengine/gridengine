@@ -49,6 +49,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -310,6 +311,12 @@ public class EditorUtil {
     * are also displayed by JGDIShell (Used in qconf -a*,-m*) */ 
    static boolean doNotDisplayConfigurableAttr(GEObject obj, PropertyDescriptor pd) {
       String name = java2cName(obj, pd.getPropertyName());
+      //ABSTRACT USER
+      if (obj instanceof AbstractUser) {
+         if (name.equals("project")) {
+            return true;
+         }
+      }
       //USER
       if (obj instanceof User) {
          if (name.equals("acl") || name.equals("xacl")) {
@@ -415,14 +422,21 @@ public class EditorUtil {
    static Object translateObjectToStringValue(String key, Object o) {
       if (o == null) {
          return VALUE_NONE;
-      } else if (o instanceof String) {
+      }
+      if (o instanceof List && ((List)o).size()==0) {
+         return VALUE_NONE;
+      }
+      if (o instanceof String) {
          String str = (String) o;
          if (str.trim().length()==0) {
             return null;
          }
-      //CLUSTERQUEUE - QTYPE
-      } else if (key.equalsIgnoreCase("qtype")) {
-         return getQtypeString(((Integer)o).intValue());
+      }
+      //CLUSTERQUEUE - QTYPE 
+      if (key.equalsIgnoreCase("qtype")) {
+         if (o instanceof Integer) {
+            return getQtypeString(((Integer)o).intValue());
+         }
       }
       return o;
    }

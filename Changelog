@@ -1,3 +1,9 @@
+LP-2007-05-25-0: Enhancem.: Using aimk debug flag when building libjgdi if set.
+                 Enhancem.: Improved and modified GEObjectEditor code for new JGDI functions
+                 Enhancem.: JGDIShell improved
+                 Enhancem.: Introduced cluster.config.file.location property to override cluster config
+                 Review:    AA
+
 JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
                             can't be overridden through command line"
                  Review:    RD

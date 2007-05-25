@@ -239,7 +239,11 @@ public class GEObjectEditor {
                }
             }
          }
-         pd.add(obj, key, val);
+         if (val == null) {
+            pd.addEmpty(obj, key);
+         } else {
+            pd.add(obj, key, val);
+         }
       }
    }
    

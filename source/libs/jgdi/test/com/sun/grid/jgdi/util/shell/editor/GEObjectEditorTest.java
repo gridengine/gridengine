@@ -297,7 +297,7 @@ public class GEObjectEditorTest extends TestCase {
    private void updateSimpleValue(String testName, String[] values, String propertyName, boolean shouldFail) {
       for (int i=0; i< values.length; i++) {
          String str = values[i];
-         System.out.println(testName+"(\""+str+"\")");
+         System.out.print(testName+"(\""+str+"\")");
          try {
             GEObjectEditor.updateObjectWithText(geObj,propertyName+" "+str);
             if (shouldFail) {
@@ -517,7 +517,7 @@ public class GEObjectEditorTest extends TestCase {
    public void testPassStringMapList() {
       for (Iterator iter = passStringMapListValues.keySet().iterator(); iter.hasNext();) {
          String str = (String)iter.next();
-         System.out.println("testPassStringMap(\""+str+"\")");
+         System.out.print("testPassStringMap(\""+str+"\")");
          GEObjectEditor.updateObjectWithText(geObj,"string_map_list "+str);
          Map valMap = (HashMap)passStringMapListValues.get(str);
          assertEquals(valMap.keySet().size(), geObj.getStringMapListKeys().size());

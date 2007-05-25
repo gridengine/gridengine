@@ -196,8 +196,6 @@ static int spool_write_script(lListElem *jep, u_long32 jobid);
 
 static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced);
 
-static int check_requested_resource_exceed_reserved(lListElem *jep, lListElem *ar, lList **alpp); 
-
 #ifdef SOLARIS
 #pragma no_inline(spool_write_script)
 #endif
@@ -747,11 +745,6 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          /* to be sure the execution time is NOT before AR start time */
          if (job_execution_time < ar_start_time) {
             job_execution_time = ar_start_time;
-         }
-         /* to be sure the requested hard consumables do not exceed the reserved consumables */
-         if (check_requested_resource_exceed_reserved(jep, ar, alpp) != STATUS_OK) {
-            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-            DRETURN(STATUS_DENIED);           
          }
          
          /* hard_resources h_rt limit */
@@ -3413,7 +3406,11 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
             a.centry_list      = *object_base[SGE_TYPE_CENTRY].list;
             a.acl_list         = *object_base[SGE_TYPE_USERSET].list;
             a.hgrp_list        = *object_base[SGE_TYPE_HGROUP].list;
-            a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
+            if (lGetUlong(jep, JB_ar) == 0) {
+               a.rqs_list         = *object_base[SGE_TYPE_RQS].list;
+            } else {
+               a.ar_list         = *object_base[SGE_TYPE_AR].list;
+            }
             a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
             a.start            = DISPATCH_TIME_NOW;
             a.duration         = 0; /* indicator for schedule based mode */
@@ -3998,94 +3995,3 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
    DRETURN(njobs);
 }
 
-/****** sge_job_qmaster/check_requested_resource_exceed_reserved() ***********
-*  NAME
-*     check_requested_resource_exceed_reserved() -- check the requested consumable is reservable 
-*
-*  SYNOPSIS
-*     int check_requested_resource_exceed_reserved(lListElem *jep, 
-*     lListElem *ar, lList **alpp) 
-*
-*  FUNCTION
-*     check the requested consumable is reserved by provided AR 
-*
-*  INPUTS
-*     lListElem *jep      - job (with requested resource list) 
-*     lListElem *ar       - advance reservation (with reserved resource list) 
-*     lList    **alpp     - answer list 
-*
-*  RESULT
-*     int - STATUS_OK       if it is ok
-*           STATUS_DENIED   request more than reserved 
-*
-*  NOTES
-*     MT-NOTE: check_requested_resource_exceed_reserved() is MT safe 
-*
-*******************************************************************************/
-static int check_requested_resource_exceed_reserved(lListElem *jep, lListElem *ar, lList **alpp) 
-{
-   lList *reqlistp = lGetList(jep, JB_hard_resource_list);
-   lList *reslistp = lGetList(ar, AR_resource_list);
-   lList *requested_pe_range = lGetList(jep, JB_pe_range);
-   u_long32 requested_slots = 1;
-   lList *ce_master_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
-
-   DENTER(TOP_LAYER, "check_requested_resource_exceed_reserved");
-
-   if (requested_pe_range != NULL) {
-      requested_slots = lGetUlong(lFirst(requested_pe_range), RN_min);
-   }
-
-   if ((lGetString(jep, JB_pe) != NULL) && (requested_pe_range != NULL)) {
-      lListElem *ar_cqueue;
-      u_long32 pe_slots = 0;
- 
-      /* we only have to check the pe slots if a pe was requested */
-      for_each(ar_cqueue, lGetList(ar, AR_reserved_queues)) {
-         pe_slots += lGetUlong(ar_cqueue, QU_job_slots);
-      }
-
-      if (pe_slots < requested_slots) {
-         ERROR((SGE_EVENT, MSG_JOB_REQRESEXCEEDRESERVED_USU, 
-                sge_u32c(requested_slots), "pe_range", sge_u32c(lGetUlong(ar, AR_id))));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      }
-   }
-  
-   if (reqlistp != NULL) {
-      lListElem *requested_cplx;
-      for_each(requested_cplx, reqlistp) {
-         /* The resource is requested on job submission */
-         const char *requested_cplx_name = lGetString(requested_cplx, CE_name); 
-         int error = true;
-         lListElem *ce = lGetElemStr(ce_master_list, CE_name, requested_cplx_name);
-
-         if (reslistp != NULL && ce != NULL) {
-            lListElem *reserved_cplx = NULL;
-            reserved_cplx = lGetElemStr(reslistp, CE_name, requested_cplx_name);
-            if (reserved_cplx != NULL) { /* The consumable is found on AR */
-               char availability_text[2048];
-               reserved_cplx = lCopyElem(reserved_cplx);
-               
-               /* This needed setups are candidate for move to compare_complexes function */
-               lSetUlong(reserved_cplx, CE_relop, lGetUlong(ce, CE_relop));
-               lSetDouble(reserved_cplx, CE_pj_doubleval, lGetDouble(reserved_cplx, CE_doubleval));
-               lSetString(reserved_cplx, CE_pj_stringval, lGetString(reserved_cplx, CE_stringval));
-                
-               error = (compare_complexes(requested_slots, requested_cplx, reserved_cplx, 
-                                          availability_text, false, true)==0) ? true : false;
-               lFreeElem(&reserved_cplx);
-           }
-         } 
-          
-         if (error) {
-            ERROR((SGE_EVENT, MSG_JOB_REQRESEXCEEDRESERVED_USU, 
-                              sge_u32c(lGetDouble(requested_cplx, CE_doubleval)), 
-                              requested_cplx_name, sge_u32c(lGetUlong(ar, AR_id))));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DRETURN(STATUS_DENIED);                      
-         }                  
-      }
-   }
-   DRETURN(STATUS_OK);
-}   

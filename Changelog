@@ -1,3 +1,7 @@
+JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
+                            can't be overridden through command line"
+                 Review:    RD
+
 AH-2007-05-25-0: Bugfix:    - PE scope of resource quotas is not considered 
                               when -pe wildcard requests are used
                             - memory leak in sge_schedd
@@ -5,7 +9,8 @@ AH-2007-05-25-0: Bugfix:    - PE scope of resource quotas is not considered
                  Issue:     2254, 2187
                  Review:    JG
 
-RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used in RQS
+RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used 
+                            in RQS
                  Bugster:   6558006
                  Issue:     2250
                  Review:    JG
@@ -18,7 +23,8 @@ JG-2007-05-22-0: Bugfix:    Queue status in reporting file is missing.
 MD-2007-05-19-0: Cleanup:   Changed Versionstring in inst_sge	
                  Enhancem:  added upgrade doc 
 
-LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a memory leak
+LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a 
+                            memory leak
                  Bugtraq:   6559385
                  Review:    AA
 

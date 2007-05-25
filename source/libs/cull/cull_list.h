@@ -297,7 +297,7 @@ void lFreeList(lList **ilp);
 
 int lAddList(lList *lp0, lList **lp1);
 int lAppendList(lList *lp0, lList *lp1);
-int lOverrideStrList(lList *lp0, lList *lp1, int nm);
+int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str);
 lList *lAddSubList(lListElem *ep, int nm, lList *to_add);
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1);
 lList *lCopyList(const char *name, const lList *src);
@@ -316,7 +316,6 @@ lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx,
                 bool isHash, lEnumeration *ep, sge_pack_buffer *pb);
 
 int lAppendElem(lList *lp, lListElem *ep);
-int lOverrideElem(lList *lp, lListElem *ep, int nm);
 lListElem *lDechainElem(lList *lp, lListElem *ep);
 void lDechainList(lList *source, lList **target, lListElem *ep);
 lListElem *lDechainObject(lListElem *parent, int name);

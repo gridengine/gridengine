@@ -76,6 +76,10 @@ qrstat_xml_report_ar_node_state(qrstat_report_handler_t* handler, lList **alpp,
                                 const char *name, u_long32 value);
 
 bool
+qrstat_xml_report_ar_node_boolean(qrstat_report_handler_t* handler, lList **alpp,
+                                const char *name, bool value);
+
+bool
 qrstat_xml_report_start_resource_list(qrstat_report_handler_t* handler, lList **alpp);
 
 bool

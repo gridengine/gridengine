@@ -1101,6 +1101,8 @@
 #define MSG_GDI_UTEXT_w_OPT_EV            _MESSAGE(60709, _("validate availability of AR request (error|verify) for jobs"))
 #define MSG_GDI_USAGE_ar_list_OPT         "[-ar ar_id_list]"
 #define MSG_GDI_UTEXT_ar_list_OPT         _MESSAGE(60710, _("show information for given advance reservations"))
+#define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60711, _("ERROR! invalid option argument!"))
+
 
 /* =================================================
  * please do not enter new messages after this point,

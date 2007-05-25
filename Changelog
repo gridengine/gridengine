@@ -1,3 +1,7 @@
+PJ-2007-05-25-0: Bugfix:    Added check for AR jobs that requests more than reserved resources
+                            Added field error_handling to qrstat -ar (-xml)
+                 Review:    RD
+
 RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used
                             in RQS
                  Bugster:   6558006

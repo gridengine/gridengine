@@ -85,7 +85,9 @@ qrstat_report_finish_resource_list(qrstat_report_handler_t* handler, lList **alp
 static bool
 qrstat_report_resource_list_node(qrstat_report_handler_t* handler, lList **alpp,
                                      const char *name, const char *value);
-
+static bool
+qrstat_report_ar_node_boolean(qrstat_report_handler_t* handler, lList **alpp,
+                                     const char *name, bool value);
 static bool
 qrstat_report_start_granted_slots_list(qrstat_report_handler_t* handler, lList **alpp);
 
@@ -179,6 +181,8 @@ qrstat_create_report_handler_xml(qrstat_env_t *qrstat_env, lList **answer_list)
          ret->report_start_resource_list = qrstat_report_start_resource_list;
          ret->report_finish_resource_list = qrstat_report_finish_resource_list;
          ret->report_resource_list_node = qrstat_report_resource_list_node;
+
+         ret->report_ar_node_boolean = qrstat_report_ar_node_boolean;
 
          ret->report_start_granted_slots_list = qrstat_report_start_granted_slots_list;
          ret->report_finish_granted_slots_list = qrstat_report_finish_granted_slots_list;
@@ -399,6 +403,21 @@ qrstat_report_resource_list_node(qrstat_report_handler_t* handler, lList **alpp,
   
    sge_dstring_sprintf_append(buffer, "         <resource name="SFQ" type="SFQ"/>\n",
                               name, value);
+
+   DRETURN(ret); 
+}
+
+
+static bool
+qrstat_report_ar_node_boolean(qrstat_report_handler_t* handler, lList **alpp, const char *name, bool value)
+{
+   bool ret = true;
+   dstring *buffer = (dstring*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_ar_node_boolean");
+  
+   sge_dstring_sprintf_append(buffer,"      <"SFN">"SFN"</"SFN">\n", 
+                              name, value ? "true":"false", name);
 
    DRETURN(ret); 
 }

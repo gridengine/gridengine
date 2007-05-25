@@ -70,28 +70,10 @@
  * TODO List. Following features/bugs need to be addressed:
  * (Append new TODOs at the end of the list or remove items which are done)
  *
- * OPEN
- *
  *    3) lowering or removing a reserved consumable complex on global/host/queue level
  *       need to be rejected
  *
  *   15) ....
- *
- *  IN PROGRESS 
- *
- *  -PJ-
- *   10) job verification is not properly implemented. For example it's possible to submit
- *       AR job that requests non reserved consumable.
- *
- * TESTSUITE
- *
- *    1) add qalter test for changing ar_id on running and pending jobs. For pending it
- *       should be permitted, for running not
- *
- *   IN PROGRESS 
- * 
- *   -PJ-
- *    2) qrstat testsuite test has to be written
  *
  */
 

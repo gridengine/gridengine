@@ -62,7 +62,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
 
       handler->report_start(handler, answer_list);
       for_each(ar, qrstat_env->ar_list) {
-
+         
          handler->report_start_ar(handler, answer_list);
          handler->report_ar_node_ulong(handler, answer_list, "id", lGetUlong(ar, AR_id));
          handler->report_ar_node_string(handler, answer_list, "name", lGetString(ar, AR_name));
@@ -110,7 +110,11 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                }
                handler->report_finish_resource_list(handler, answer_list);
             }
-
+            
+            if (lGetUlong(ar, AR_error_handling) != 0) {
+               handler->report_ar_node_boolean(handler, answer_list, "error_handling", true);
+            }
+            
             if (lGetList(ar, AR_granted_slots) != NULL) {
                lListElem *resource = NULL;
 
@@ -152,9 +156,11 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
 
                handler->report_start_mail_list(handler, answer_list);
                for_each(mail, lGetList(ar, AR_mail_list)) {
+                  const char *host=NULL;
+                  host=lGetHost(mail, MR_host);
                   handler->report_mail_list_node(handler, answer_list,
                                                  lGetString(mail, MR_user),
-                                                 lGetHost(mail, MR_host));
+                                                 host?host:"NONE");
                }
                handler->report_finish_mail_list(handler, answer_list);
             }
@@ -164,7 +170,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                handler->report_start_acl_list(handler, answer_list);
                for_each(acl, lGetList(ar, AR_acl_list)) {
                   handler->report_acl_list_node(handler, answer_list,
-                                                 lGetString(acl, ST_name));
+                                                 lGetString(acl, ARA_name));
                }
                handler->report_finish_acl_list(handler, answer_list);
             }
@@ -174,7 +180,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                handler->report_start_xacl_list(handler, answer_list);
                for_each(xacl, lGetList(ar, AR_xacl_list)) {
                   handler->report_xacl_list_node(handler, answer_list,
-                                                 lGetString(xacl, ST_name));
+                                                 lGetString(xacl, ARA_name));
                }
                handler->report_finish_xacl_list(handler, answer_list);
             }

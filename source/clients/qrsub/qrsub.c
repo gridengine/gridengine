@@ -34,6 +34,7 @@
 
 #include "basis_types.h"
 #include "sge.h"
+#include "sge_string.h"
 
 #include "symbols.h"
 #include "sge_bootstrap.h"
@@ -118,13 +119,13 @@ int main(int argc, char **argv) {
    
    alp = cull_parse_cmdline(QRSUB, argv+1, environ, &pcmdline, FLG_USE_PSEUDOS);
 
-   if (!pcmdline) {
-      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
-      goto error_exit;
-   }
-
    if (answer_list_print_err_warn(&alp, NULL, "qrsub: ", MSG_WARNING) > 0) {
       lFreeList(&pcmdline);
+      goto error_exit;
+   }
+   
+   if (!pcmdline) {
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       goto error_exit;
    }
 
@@ -332,9 +333,16 @@ static bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
 
    ep = lFirst(pcmdline);   
    if(ep) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+      const char *option = lGetString(ep,SPA_switch);
+      /* as jobarg are stored no switch values, need to be filtered */ 
+      if(sge_strnullcmp(option, "jobarg") != 0) {
+         answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                               MSG_PARSE_INVALIDOPTIONARGUMENTX_S,
                               lGetString(ep,SPA_switch)); 
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                              MSG_PARSE_INVALIDOPTIONARGUMENT);
+       }
       DRETURN(false);
    }
 

@@ -67,6 +67,9 @@ struct qrstat_report_handler_str {
    bool (*report_resource_list_node)(qrstat_report_handler_t* handler, lList **alpp,
                                     const char *name, const char* value);
 
+   bool (*report_ar_node_boolean)(qrstat_report_handler_t* handler, lList **alpp, 
+                                  const char *name, bool value);
+
    bool first_granted_slot; 
    bool (*report_start_granted_slots_list)(qrstat_report_handler_t* handler, lList **alpp);
    bool (*report_finish_granted_slots_list)(qrstat_report_handler_t* handler, lList **alpp);

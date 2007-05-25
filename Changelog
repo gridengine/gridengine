@@ -1,3 +1,8 @@
+RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used in RQS
+                 Bugster:   6558006
+                 Issue:     2250
+                 Review:    JG
+
 JG-2007-05-22-0: Bugfix:    Queue status in reporting file is missing.
                  Bugster:   5081743
                  Issue:     2258

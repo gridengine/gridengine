@@ -507,11 +507,15 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
             for_each(ep, master_list) {
                const char* ep_entry = lGetString(ep, nm);
                if (fnmatch(scope, ep_entry, 0) == 0) {
-                  lAddElemStr(scope_ref, nm, ep_entry, dp);
+                  if (lGetElemStr(*scope_ref, nm, scope) == NULL) {
+                     lAddElemStr(scope_ref, nm, ep_entry, dp);
+                  }
                }
             }
          } else {
-            lAddElemStr(scope_ref, nm, scope, dp);
+            if (lGetElemStr(*scope_ref, nm, scope) == NULL) {
+               lAddElemStr(scope_ref, nm, scope, dp);
+            }
          }
       }
    }

@@ -1,3 +1,10 @@
+AH-2007-05-25-2: Bugfix:     - PE scope of resource quotas is not considered
+                               when -pe wildcard requests are used
+                             - memory leak in sge_schedd
+                  Bugtraq:   6559409, 6562190
+                  Issue:     2254, 2187
+                  Review:    JG
+
 PJ-2007-05-25-0: Bugfix:    Added check for AR jobs that requests more than reserved resources
                             Added field error_handling to qrstat -ar (-xml)
                  Review:    RD

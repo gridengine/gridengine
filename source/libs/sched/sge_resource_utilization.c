@@ -676,7 +676,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
       const char* user = lGetString(a->job, JB_owner);
       const char* group = lGetString(a->job, JB_group);
       const char* project = lGetString(a->job, JB_project);
-      const char* pe = lGetString(a->job, JB_pe);
+      const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
       const char* host = lGetHost(gel, JG_qhostname);
       char *queue = NULL;
       const char *queue_instance = lGetString(gel, JG_qname);

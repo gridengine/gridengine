@@ -1,3 +1,7 @@
+PJ-2007-05-25-1: Bugfix:    Joined check for AR jobs that requests more than
+                             reserved resources with -w e switch 
+                  Review:    RD
+
 LP-2007-05-25-0: Enhancem.: Using aimk debug flag when building libjgdi if set.
                  Enhancem.: Improved and modified GEObjectEditor code for new JGDI functions
                  Enhancem.: JGDIShell improved

@@ -673,6 +673,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
          if (best->gdil) {
             DPRINTF(("SELECT PE TIME: earlier assignment at "sge_u32"\n", pe_time));
          }
+         assignment_release(&tmp_assignment);
          assignment_copy(best, &tmp_assignment, true);
       } 
       else {
@@ -683,6 +684,7 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    schedd_mes_set_logging(old_logging); /* restore logging mode */
 
    sge_qeti_release(&qeti);
+   assignment_release(&tmp_assignment);
 
    if (best->gdil) {
       result = DISPATCH_OK;
@@ -4251,7 +4253,7 @@ parallel_rqs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qen
       const char* user = lGetString(a->job, JB_owner);
       const char* group = lGetString(a->job, JB_group);
       const char* project = lGetString(a->job, JB_project);
-      const char* pe = lGetString(a->job, JB_pe);
+      const char* pe = lGetString(a->pe, PE_name);
       lListElem *rqs = NULL;
       bool first = true;
       dstring rule_name = DSTRING_INIT;
@@ -4952,7 +4954,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
                const char* user = lGetString(a->job, JB_owner);
                const char* group = lGetString(a->job, JB_group);
                const char* project = lGetString(a->job, JB_project);
-               const char *pe = lGetString(a->job, JB_pe);
+               const char *pe = lGetString(a->pe, PE_name);
                const char *queue = lGetString(qep, QU_qname); 
                const char *host = lGetHost(qep, QU_qhostname);
 

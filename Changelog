@@ -1,3 +1,10 @@
+AH-2007-05-25-0: Bugfix:    - PE scope of resource quotas is not considered 
+                              when -pe wildcard requests are used
+                            - memory leak in sge_schedd
+                 Bugtraq:   6559409, 6562190
+                 Issue:     2254, 2187
+                 Review:    JG
+
 RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used in RQS
                  Bugster:   6558006
                  Issue:     2250

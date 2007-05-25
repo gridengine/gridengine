@@ -1,3 +1,7 @@
+JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
+                            can't be overridden through command line"
+                 Review:    RD
+
 AH-2007-05-25-1: Bugfix:    Memory leak in sge_schedd
                  Bugtraq:   6562190
                  Issue:     2187

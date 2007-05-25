@@ -45,6 +45,7 @@
 #include "msg_cull.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_string.h"
 #include "cull_db.h"
 #include "cull_sortP.h"
 #include "cull_where.h"
@@ -1369,16 +1370,20 @@ int lAppendList(lList *lp0, lList *lp1)
 *     lOverrideStrList() -- Merge two lists 
 *
 *  SYNOPSIS
-*     int lOverrideStrList(lList *lp0, lList *lp1, int nm) 
+*     int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
 *
 *  FUNCTION
 *     Merge two lists of equal type, and replace values in the first list
 *     with values from the second list.
 *
+*     This only applies to values equal str.
+*
 *  INPUTS
-*     lList *lp0 - first list 
-*     lList *lp1 - second list 
-*     int nm - field name used for merging
+*     lList *lp0      - first list 
+*     lList *lp1      - second list 
+*     int nm          - field name used for merging
+*     const char *str - override criteria, e.g. "-q" for "override all -q switches,
+*                       all others are simply merged"
 *
 *  RESULT
 *     int - error state
@@ -1388,10 +1393,11 @@ int lAppendList(lList *lp0, lList *lp1)
 *  NOTES
 *     MT-NOTE: lOverrideStrList() is MT safe
 ******************************************************************************/
-int lOverrideStrList(lList *lp0, lList *lp1, int nm)
+int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
 {
    lListElem *ep;
    const lDescr *dp0, *dp1;
+   bool overridden = false;
 
    DENTER(CULL_LAYER, "lOverrideStrList");
 
@@ -1416,11 +1422,22 @@ int lOverrideStrList(lList *lp0, lList *lp1, int nm)
          DEXIT;
          return -1;
       }
-      if (lOverrideElem(lp0, ep, nm) == -1) {
-         LERROR(LEAPPENDELEM);
-         DEXIT;
-         return -1;
+
+      /* 
+       * if we find elements to override, override them
+       * override means:
+       * remove all occurencies of the str in lp0
+       */
+      if (sge_strnullcmp(lGetString(ep, nm), str) == 0 && !overridden) {
+         lListElem *tmp;
+         while ((tmp = lGetElemStr(lp0, nm, str)) != NULL) {
+            lRemoveElem(lp0, &tmp);
+         }
+         overridden = true;
       }
+
+      /* now copy the elem */
+      lAppendElem(lp0, ep);
    }
 
    lFreeList(&lp1);
@@ -1731,78 +1748,6 @@ int lAppendElem(lList *lp, lListElem *ep)
    cull_hash_elem(ep);
    lp->nelem++;
    lp->changed = true;
-
-   DEXIT;
-   return 0;
-}
-
-/****** cull/list/lOverrideElem() ***********************************************
-*  NAME
-*     lOverrideElem() -- Merge element into a list 
-*
-*  SYNOPSIS
-*     int lOverrideElem(lList *lp, lListElem *ep) 
-*
-*  FUNCTION
-*     Merge element 'ep' in the list 'lp'. First remove all other existing
-*     elements in lp with the same name and therefore overriding list with
-*     the new value of 'ep'
-*
-*  INPUTS
-*     lList *lp     - list 
-*     lListElem *ep - element 
-*     int nm - field name used for merging
-*
-*  RESULT
-*     int - error state 
-*         0 - OK
-*        -1 - Error
-*
-*  NOTES
-*     MT-NOTE: lOverrideElem() is MT safe
-******************************************************************************/
-
-int lOverrideElem(lList *lp, lListElem *ep, int nm) 
-{
-   lListElem *tmp;
-   const char *comp;
-   
-   DENTER(CULL_LAYER, "lOverrideElem");
-
-   if (!lp) {
-      LERROR(LELISTNULL);
-      DEXIT;
-      return -1;
-   }
-   if (!ep) {
-      LERROR(LEELEMNULL);
-      DEXIT;
-      return -1;
-   }
-
-   /* is the element ep still chained in an other list, this is not allowed ? */
-   if (ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM) {
-      DPRINTF(("WARNING: tried to append chained element\n"));
-      DEXIT;
-      abort();
-   }
-
-   /* get the value of the switch used */
-   comp = lGetString(ep, nm);
-   
-   /* if the value exists in the first list remove it so that the new value
-    * from the second list will be the only existing value
-    */
-   while ((tmp = lGetElemStr(lp, nm, comp))) {   
-      lRemoveElem(lp, &tmp);
-   }
-   
-   /* append the element */   
-   if (lAppendElem(lp, ep) == -1) {
-      LERROR(LEAPPENDELEM);
-      DEXIT;
-      return -1;
-   } 
 
    DEXIT;
    return 0;

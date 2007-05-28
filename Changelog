@@ -1,3 +1,8 @@
+RN-2007-05-28-2: Enhancem .: Numbers in error mail too large
+                 Bugtraq:   6367642
+                 Issue:     804
+                 Review:    JG
+
 RN-2007-05-28-1: Enhancem .: qsub -terse to just output job id
                  Bugtraq:   6355875
                  Issue:     916

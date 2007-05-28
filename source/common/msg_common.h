@@ -975,6 +975,10 @@
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))
 
 #define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23507, _("usage:"))
+
+#define MSG_GDI_USAGE_terse_OPT                            "[-terse]"
+#define MSG_GDI_UTEXT_terse_OPT                            _MESSAGE(23508, _("tersed output, print only the job-id"))
+
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules

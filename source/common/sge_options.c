@@ -481,7 +481,10 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* explain_OPT - explain error in qrstat */ 
  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
 /* xml_OPT - generate xml output */ 
- {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1}
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+/* terse_OPT - show only the job id, terse output */
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1}
+
 /*               
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  e  q  q  q  q  n  A
   o  a  c  d  h  m  m  r  r  s  s  r  l  s  s  x  e  r  r  r  o  L

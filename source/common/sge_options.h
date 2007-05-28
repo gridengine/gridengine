@@ -278,7 +278,8 @@ enum {
    ar_OPT,       /* advanced resservation option */
    he_OPT,       /* error handling for qrsub */ 
    explain_OPT,  /* explain error in qrstat */
-   xml_OPT       /* generate xml outout */
+   xml_OPT,      /* generate xml outout */
+   terse_OPT /* tersed output, RFE 6355875 */
 };
 
 /* macros used in parsing */

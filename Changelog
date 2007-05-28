@@ -1,3 +1,9 @@
+RN-2007-05-28-0: Bugfix:    Still used usersets can be removed under certain
+                             conditions
+                  Bugtraq:   6422335
+                  Issue:     2050
+                  Review:    JG
+
 PJ-2007-05-25-1: Bugfix:    Joined check for AR jobs that requests more than
                              reserved resources with -w e switch 
                   Review:    RD

@@ -43,6 +43,7 @@
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_cqueue.h"
+#include "sge_attrL.h"
 #include "sge_qinstance.h"
 #include "sge_utility.h"
 #include "sge_ckpt.h"
@@ -100,21 +101,20 @@ bool ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
       } 
    }
    if (!ret) {
-      lListElem *queue = NULL;
+      lListElem *queue = NULL, *ckl = NULL;
+ 
+      /* fix for bug 6422335
+       * check the cq configuration for ckpt references instead of qinstances
+       */
+      const char *ckpt_name = lGetString(ckpt, CK_name);
 
       for_each(queue, master_cqueue_list) {
-         lList *qinstance_list = lGetList(queue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            if (qinstance_is_ckpt_referenced(qinstance, ckpt)) {
-               const char *ckpt_name = lGetString(ckpt, CK_name);
-               const char *name = lGetString(qinstance, QU_full_name);
-
+         for_each(ckl, lGetList(queue, CQ_ckpt_list)){
+            if (lGetSubStr(ckl, ST_name, ckpt_name, ASTRLIST_value))  {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_INFO, 
                                        MSG_CKPTREFINQUEUE_SS,
-                                       ckpt_name, name);
+                                       ckpt_name, lGetString(queue, CQ_name));
                ret = true;
                break;
             }

@@ -452,27 +452,31 @@ const char *userset_name
    lListElem *ep = NULL;
    lListElem *cqueue = NULL;
    lList* user_lists = NULL;
+   const lListElem *cl;
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
+   /*
+    * fix for bug 6422335
+    * check the cq configuration for userset references instead of qinstances
+    */
    for_each (cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance;
-
-      for_each(qinstance, qinstance_list) {
-         if (lGetElemStr(lGetList(qinstance, QU_acl), US_name, userset_name)) {
+      for_each (cl, lGetList(cqueue, CQ_acl)) {
+         if (lGetSubStr(cl, US_name, userset_name, AUSRLIST_value))  {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
                    userset_name, MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
+                   lGetString(cqueue, CQ_name)));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
-         if (lGetElemStr(lGetList(qinstance, QU_xacl), US_name, userset_name)) {
+      }
+      for_each (cl, lGetList(cqueue, CQ_xacl)) {
+         if (lGetSubStr(cl, US_name, userset_name, AUSRLIST_value))  {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
                    userset_name, MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
+                   lGetString(cqueue, CQ_name)));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;

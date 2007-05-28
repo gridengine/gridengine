@@ -1,3 +1,7 @@
+RN-2007-05-28-3: Bugfix:    Wrong exit code with qconf -sds.
+                  Bugtraq:   6522273
+                  Review:    JG
+
 RN-2007-05-28-2: Enhancem .: Numbers in error mail too large
                  Bugtraq:   6367642
                  Issue:     804

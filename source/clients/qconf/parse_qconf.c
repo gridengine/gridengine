@@ -5128,8 +5128,9 @@ char *argv[]
       if (strcmp("-sds", *spp) == 0) {
          lList *answer_list = NULL;
 
-         cqueue_list_sick(ctx, &answer_list);
-         sge_parse_return |= show_gdi_request_answer(answer_list);
+         /* Use cqueue_list_sick()'s return value to set the exit code */
+         sge_parse_return |= (cqueue_list_sick(ctx, &answer_list)?0:1);
+         show_gdi_request_answer(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;

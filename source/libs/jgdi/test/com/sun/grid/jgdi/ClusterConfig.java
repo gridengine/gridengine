@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -86,11 +87,19 @@ public class ClusterConfig {
         Properties props = new Properties();
         
         ClassLoader cl = ClusterConfig.class.getClassLoader();
-        InputStream in = cl.getResourceAsStream("ClusterConfig_private.properties");
-        if(in == null) {
-            in = cl.getResourceAsStream("ClusterConfig.properties");
+        String file = System.getProperty("cluster.config.file.location");
+        InputStream in = null;
+        if (file != null && !file.equals("${cluster.config.file.location}")) {
+           in = new FileInputStream(file);
+        } else {
+           in = cl.getResourceAsStream("ClusterConfig_private.properties");
         }
-        
+        if (in == null) {
+           in = cl.getResourceAsStream("ClusterConfig.properties");
+        }
+        if (in == null) {
+           throw new IOException("Could not find ClusterConfig.properties file.");
+        }
         props.load(in);
         
         int i = 0;

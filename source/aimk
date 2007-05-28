@@ -2273,7 +2273,12 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_INSURE -insure
    else
       setenv AIMK_INSURE ""
-   endif   
+   endif
+   if ( $DEBUGGED == 1 ) then
+      setenv AIMK_DEBUG true
+   else
+      setenv AIMK_DEBUG ""
+   endif  
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
    # ant -Dsge.ant.args='-DA="a" -DB="b" -DC="c"' -f build.xml $argv
@@ -2575,7 +2580,7 @@ echo done.
 # On SOLARIS64, if there was no special target (i.e. $argv = "") 
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
-if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 ) then
+if ( $BUILDARCH == SOLARIS64 && "$argv" == "" && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
       echo ""
       echo "Executing aimk again to build 32 bit shared libraries."
       if ( "$JAVA" > 0 ) then

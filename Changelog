@@ -1,3 +1,8 @@
+JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+
 JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
                             can't be overridden through command line"
                  Review:    RD

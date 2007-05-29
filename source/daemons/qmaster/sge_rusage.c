@@ -191,8 +191,14 @@ sge_write_rusage(dstring *buffer,
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
    SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
-   SET_STR_DEFAULT(jr, JR_group,      "UNKNOWN");
    SET_STR_DEFAULT(jr, JR_owner,      "UNKNOWN");
+   if (lGetString(jr, JR_group) == NULL) {
+      if (lGetString(job, JB_group) == NULL) {
+         lSetString(jr, JR_group, "UNKNOWN");
+      } else {
+         lSetString(jr, JR_group, lGetString(job, JB_group));
+      }
+   }
    
    /* job name and account get taken 
       from local job structure */

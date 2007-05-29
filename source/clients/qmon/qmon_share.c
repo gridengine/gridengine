@@ -2081,7 +2081,7 @@ Cardinal *share
    /*
    ** preset with default values
    */
-   sprintf(buf, sge_u32, (u_long32) *share);
+   sprintf(buf, sge_u32, (Cardinal) *share);
    XmtInputFieldSetString(node_name, name);
    XmtInputFieldSetString(node_share, buf);
 

@@ -89,6 +89,8 @@ static void set_Spinbox(Widget w, XtPointer address, XrmQuark type, Cardinal siz
 static void get_Spinbox(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_StrListField(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_StrListField(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void set_Ulong32Field(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void get_Ulong32Field(Widget w, XtPointer address, XrmQuark type, Cardinal size);
                            
 static void set_label(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_LayoutString(Widget w, XtPointer address, XrmQuark type, Cardinal size);
@@ -135,6 +137,14 @@ static XmtWidgetType widgets[] = {
       (XmtWidgetConstructor) CreateInputField,
       set_StrListField,
       get_StrListField,
+      False
+   },
+   {
+      "Ulong32Field",
+      NULL,
+      (XmtWidgetConstructor) CreateInputField,
+      set_Ulong32Field,
+      get_Ulong32Field,
       False
    },
    {
@@ -572,6 +582,65 @@ Cardinal size
 }
 
 /*-------------------------------------------------------------------------*/
+static void get_Ulong32Field(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   static u_long32 uv = 0;
+   unsigned long lv = 0;
+   String s = NULL;
+    
+   if (type != QmonQUlong32) {
+      XmtWarningMsg("XmtDialogGetDialogValues", "Ulong32Field",
+         "Type Mismatch: Widget '%s':\n\tCan't get widget values"
+         " from a resource of type '%s'.",
+          XtName(w), XrmQuarkToString(type));
+
+   }
+
+   s = XmtInputFieldGetString(w);
+
+   if (s && s[0] != '\0') {
+      lv = strtoul(s, NULL, 10);
+   } else {
+     lv = 0;
+   }  
+
+   if (lv > U_LONG32_MAX) {
+      uv = U_LONG32_MAX;
+   } else {
+      uv = (u_long32)lv;
+   }   
+
+   if (type == QmonQUlong32) {
+      *(u_long32 *)address = uv;
+   }
+}
+
+/*-------------------------------------------------------------------------*/
+static void set_Ulong32Field(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   static char buf[BUFSIZ];
+
+   if (type != QmonQUlong32) {
+      XmtWarningMsg("XmtDialogSetDialogValues", "Ulong32Field",
+         "Type Mismatch: Widget '%s':\n\tCan't set widget values"
+         " from a resource of type '%s'.",
+          XtName(w), XrmQuarkToString(type));
+
+   }
+
+	(void)sprintf(buf, "%u", *(unsigned int *)address);
+	XmtInputFieldSetString(w, buf);
+}
+
+/*-------------------------------------------------------------------------*/
 static void set_StrListField(
 Widget w,
 XtPointer address,
@@ -903,7 +972,7 @@ Cardinal size
 
    if (type != XmtQString && type != XmtQBuffer && type != XmtQShort && 
        type != XmtQInt && type != XmtQCardinal && type != XmtQFloat && 
-       type != XmtQDouble) {
+       type != XmtQDouble && type != QmonQUlong32) {
       XmtWarningMsg("XmtDialogSetDialogValues", "Label",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -925,7 +994,7 @@ Cardinal size
       sprintf(buf, "%d", *(int *)address);
       str = XmtCreateXmString(buf);
    }
-   if (type == XmtQCardinal) {
+   if (type == XmtQCardinal || type == QmonQUlong32) {
       sprintf(buf, "%u", *(unsigned int *)address);
       str = XmtCreateXmString(buf);
    }

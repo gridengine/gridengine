@@ -60,6 +60,7 @@
 #define QmonRJRE_Type    "JRE_Type"
 #define QmonRPE_Type     "PE_Type"
 #define QmonRHR_Type     "HR_Type"
+#define QmonRUlong32     "Ulong32"
 
 externalref XrmQuark QmonQVA_Type;
 externalref XrmQuark QmonQHS_Type;
@@ -88,6 +89,7 @@ externalref XrmQuark QmonQLT_Type;
 externalref XrmQuark QmonQJRE_Type;
 externalref XrmQuark QmonQPE_Type;
 externalref XrmQuark QmonQHR_Type;
+externalref XrmQuark QmonQUlong32;
 
 
 void QmonInitQuarks(void);

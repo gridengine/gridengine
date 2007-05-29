@@ -659,19 +659,18 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    /* assemble job category information */
    fill_category_use_t(best, &use_category, lGetString(best->pe, PE_name));  
 
-   assignment_copy(&tmp_assignment, best, false);
-   if (best->slots == 0) {
-      tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);
-   }   
-
    qeti = sge_qeti_allocate(best->job, best->pe, best->ckpt, 
          best->host_list, best->queue_list, best->centry_list, best->acl_list, best->hgrp_list, best->ar_list); 
-  
    if (qeti == NULL) {
       ERROR((SGE_EVENT, "could not allocate qeti object needed reservation "
             "scheduling of parallel job "sge_U32CFormat, sge_u32c(best->job_id)));
       DRETURN(DISPATCH_NEVER_CAT);
    }
+
+   assignment_copy(&tmp_assignment, best, false);
+   if (best->slots == 0) {
+      tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);
+   }   
 
    if (best->start == DISPATCH_TIME_QUEUE_END) {
       first_time = sge_qeti_first(qeti);

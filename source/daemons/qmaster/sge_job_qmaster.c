@@ -3119,7 +3119,6 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
          lListElem *next_user_job = NULL;    /* JB_Type */
          const void *user_iterator = NULL;
          const char *owner = lGetString(job, JB_owner);
-/*         int predecessor_count = lGetNumberOfElem(predecessors_id);*/
          
          next_user_job = lGetElemStrFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_owner, owner, &user_iterator);
          

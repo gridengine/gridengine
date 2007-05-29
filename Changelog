@@ -1,3 +1,11 @@
+AH-2007-05-29-0: Bugfix:    - forgot error exit with AH-2007-05-25-2 memory
+                              leak fix
+                            - forgot to consider PE resource quota scopes with 
+                              sequential job optimization AH-2007-05-03-0
+                 Bugtraq:   6562190, 6551568
+                 Issue:     2187, 2238
+                 Review:    RH
+
 JG-2007-05-29-1: Bugfix:    Fixed messages macros.
                  Review:    RD
 

@@ -114,10 +114,37 @@ rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exe
    DRETURN(true);
 }
 
+/****** sge_resource_quota_schedd/rqs_match_assignment() ***********************
+*  NAME
+*     rqs_match_assignment() -- match resource quota rule any queue instance
+*
+*  SYNOPSIS
+*     static bool rqs_match_assignment(const lListElem *rule, sge_assignment_t 
+*     *a) 
+*
+*  FUNCTION
+*     Check whether a resource quota rule can match any queue instance. If
+*     if does not match due to users/projects/pes scope one can rule this
+*     out.
+*    
+*     Note: As long as rqs_match_assignment() is not used for parallel jobs
+*           passing NULL as PE request is perfectly fine.
+*
+*  INPUTS
+*     const lListElem *rule - Resource quota rule
+*     sge_assignment_t *a   - Scheduler assignment 
+*
+*  RESULT
+*     static bool - True if it matches 
+*
+*  NOTES
+*     MT-NOTE: rqs_match_assignment() is MT safe 
+*******************************************************************************/
 static bool rqs_match_assignment(const lListElem *rule, sge_assignment_t *a)
 {
    return (rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, a->project, NULL, NULL, NULL) &&
-          rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, a->user, a->acl_list, NULL, a->group))?true:false;
+           rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, a->user, a->acl_list, NULL, a->group) &&
+           rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, NULL, NULL, NULL, NULL))?true:false;
 }
 
 

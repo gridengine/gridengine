@@ -1,43 +1,50 @@
-RN-2007-05-28-3: Bugfix:    Wrong exit code with qconf -sds.
-                  Bugtraq:   6522273
-                  Review:    JG
+JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
 
-RN-2007-05-28-2: Enhancem .: Numbers in error mail too large
+RN-2007-05-28-3: Bugfix:    Wrong exit code with qconf -sds.
+                  Bugtraq:  6522273
+                  Review:   JG
+
+RN-2007-05-28-2: Enhancem.: Numbers in error mail too large
                  Bugtraq:   6367642
                  Issue:     804
                  Review:    JG
 
-RN-2007-05-28-1: Enhancem .: qsub -terse to just output job id
+RN-2007-05-28-1: Enhancem.: qsub -terse to just output job id
                  Bugtraq:   6355875
                  Issue:     916
                  Review:    JG
 
 RN-2007-05-28-0: Bugfix:    Still used usersets can be removed under certain
-                             conditions
-                  Bugtraq:   6422335
-                  Issue:     2050
-                  Review:    JG
+                            conditions
+                  Bugtraq:  6422335
+                  Issue:    2050
+                  Review:   JG
 
 PJ-2007-05-25-1: Bugfix:    Joined check for AR jobs that requests more than
-                             reserved resources with -w e switch 
-                  Review:    RD
+                            reserved resources with -w e switch 
+                  Review:   RD
 
 LP-2007-05-25-0: Enhancem.: Using aimk debug flag when building libjgdi if set.
-                 Enhancem.: Improved and modified GEObjectEditor code for new JGDI functions
+                 Enhancem.: Improved and modified GEObjectEditor code for new 
+                            JGDI functions
                  Enhancem.: JGDIShell improved
-                 Enhancem.: Introduced cluster.config.file.location property to override cluster config
+                 Enhancem.: Introduced cluster.config.file.location property to 
+                            override cluster config
                  Review:    AA
 
 JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
                             can't be overridden through command line"
                  Review:    RD
 
-AH-2007-05-25-2: Bugfix:     - PE scope of resource quotas is not considered
-                               when -pe wildcard requests are used
-                             - memory leak in sge_schedd
-                  Bugtraq:   6559409, 6562190
-                  Issue:     2254, 2187
-                  Review:    JG
+AH-2007-05-25-2: Bugfix:    - PE scope of resource quotas is not considered
+                              when -pe wildcard requests are used
+                            - memory leak in sge_schedd
+                  Bugtraq:  6559409, 6562190
+                  Issue:    2254, 2187
+                  Review:   JG
 
 PJ-2007-05-25-0: Bugfix:    Added check for AR jobs that requests more than 
                             reserved resources
@@ -52,12 +59,13 @@ RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used
 
 OJ-2007-05-23-4: Bugfix:    Fixed man page error:  man page sgepasswd(5) should
                             be removed 
-                            Added explanations in sge_shepherd(8), sge_execd(8) regarding
-                            sgepasswd usage.
+                            Added explanations in sge_shepherd(8), sge_execd(8)
+                            regarding sgepasswd usage.
                  Bugster:   6446203
                  Review:    MP
 
-OJ-2007-05-23-3: Bugfix:    Fixed man page error: reserved usage not explained in sge_conf.5
+OJ-2007-05-23-3: Bugfix:    Fixed man page error: reserved usage not explained 
+                            in sge_conf.5
                  Bugster:   6447133
                  Review:    MP
 

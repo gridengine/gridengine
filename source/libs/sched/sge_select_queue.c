@@ -673,8 +673,8 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
          if (best->gdil) {
             DPRINTF(("SELECT PE TIME: earlier assignment at "sge_u32"\n", pe_time));
          }
-         assignment_release(&tmp_assignment);
          assignment_copy(best, &tmp_assignment, true);
+         assignment_release(&tmp_assignment);
       } 
       else {
          DPRINTF(("SELECT PE TIME: no earlier assignment at "sge_u32"\n", pe_time));

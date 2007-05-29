@@ -162,11 +162,12 @@ int ckpt_mod(sge_gdi_ctx_class_t *ctx,
       new_flags = sge_parse_checkpoint_attr(lGetString(new_ckpt, CK_when));
       flags = sge_parse_checkpoint_attr(lGetString(ckpt, CK_when));
 
-      if (sub_command == SGE_GDI_APPEND || sub_command == SGE_GDI_CHANGE) {
+      if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND) 
+          || SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
          new_flags |= flags;
-      } else if (sub_command == SGE_GDI_REMOVE) {
+      } else if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
          new_flags &= (~flags);
-      } else if (sub_command == SGE_GDI_SET) {
+      } else {
          new_flags = flags;
       }
       if (is_checkpoint_when_valid(new_flags)) { 

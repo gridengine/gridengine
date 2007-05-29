@@ -53,8 +53,6 @@ int compare_complexes(int slots, lListElem *complex1,
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
 
-int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, int primary_key, int sub_command, char *attr_name, char *object_name);
-
 bool is_attr_prior(lListElem *upper_el, lListElem *lower_el);
 
 bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const char *attrname);

@@ -100,7 +100,7 @@
 #define MSG_SCHEDD_INFO_JOBLIST_                      _MESSAGE(47071, _("(Scheduler job information not available for every job)" ) )  
 #define MSG_SCHEDD_INFO_EXECTIME_                     _MESSAGE(47072, _("execution time not reached") ) 
 #define MSG_SCHEDD_INFO_JOBINERROR_                   _MESSAGE(47073, _("job is in error state") )  
-#define MSG_SCHEDD_INFO_JOBHOLD_                     _MESSAGE(47074, _("job dropped because of hold") )  
+#define MSG_SCHEDD_INFO_JOBHOLD_                      _MESSAGE(47074, _("job dropped because of hold") )  
 #define MSG_SCHEDD_INFO_USRGRPLIMIT_                  _MESSAGE(47075, _("job dropped because of user limitations"))
 #define MSG_SCHEDD_INFO_JOBDEPEND_                    _MESSAGE(47076, _("job dropped because of job dependencies") )     
 #define MSG_SCHEDD_INFO_NOMESSAGE_                    _MESSAGE(47077, _("there are no messages available") ) 
@@ -170,10 +170,19 @@
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL_SU        _MESSAGE(47137, _("cannot run in queue instance "SFQ" because the job runtime of "sge_U32CFormat" sec. is too long") ) 
 #define MSG_SCHEDD_INFO_JOB_CATEGORY_FILTER           _MESSAGE(47138, _("Job Filter: Jobs can not run because the resource requirements cannot be satisfied."))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUECAL           _MESSAGE(47139, _("Jobs cannot run because a calendar will disable a queue soon")) 
-#define MSG_SCHEDD_INFO_CANNOTRUNRQS_SSS             _MESSAGE(47140, _("Job cannot run in queue instance \""SFN"@"SFN"\" because exceeds limit in rule "SFN)) 
-#define MSG_SCHEDD_INFO_CANNOTRUNRQS                 _MESSAGE(47141, _("Jobs cannot run because exceeds limit in resource quota sets")) 
+#define MSG_SCHEDD_INFO_CANNOTRUNRQS_SSS              _MESSAGE(47140, _("Job cannot run in queue instance \""SFN"@"SFN"\" because exceeds limit in rule "SFN)) 
+#define MSG_SCHEDD_INFO_CANNOTRUNRQS                  _MESSAGE(47141, _("Jobs cannot run because they exceeds limit in resource quota sets")) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS          _MESSAGE(47142, _("Job dropped because of invalid dynamical limit "SFN" in rule "SFN)) 
 #define MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT             _MESSAGE(47143, _("Jobs dropped because of invalid dynamical limit")) 
+#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS         _MESSAGE(47144, _("Job cannot run because it exceeds limit "SFQ" in rule "SFQ))
+#define MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL            _MESSAGE(47145, _("Jobs dropped because exceeds limit in rule")) 
+#define MSG_SCHEDD_INFO_QINOTARRESERVED_SI            _MESSAGE(47146, _("cannot run in queue instance "SFQ" because it was not reserved by advance reservation "sge_U32CFormat))
+#define MSG_SCHEDD_INFO_QINOTARRESERVED               _MESSAGE(47147, _("Jobs can not run because queue instance was not reserved by advance reservation"))  
+#define MSG_SCHEDD_INFO_QNOTARRESERVED_SI             _MESSAGE(47148, _("cannot run in queue "SFQ" because it was not reserved by advance reservation "sge_U32CFormat))
+#define MSG_SCHEDD_INFO_QNOTARRESERVED                _MESSAGE(47149, _("Jobs can not run because queue was not reserved by advance reservation"))  
+#define MSG_SCHEDD_INFO_ARISINERROR_I                 _MESSAGE(47150, _("cannot run because requested advance reservation "sge_U32CFormat" is in error state"))  
+#define MSG_SCHEDD_INFO_ARISINERROR                   _MESSAGE(47151, _("Jobs can not run because requested advance reservation is in error state"))  
+
 
 
 /* 
@@ -214,7 +223,7 @@
 #define MSG_SCHEDD_UNKNOWN_HOST_SS                          _MESSAGE(47218, _("queue "SFQ" is referencing unknown host "SFQ))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("error: no complex attribute for threshold "SFN))
 #define MSG_SCHEDD_DUETORR                                  _MESSAGE(47220, _(" due to a reservation"))
-#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_u32))
+#define MSG_SCHEDD_NOMASTERHOST_U                           _MESSAGE(47226, _("no master host for job "sge_U32CFormat))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "sge_U32CFormat" & "sge_U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 #define MSG_JOBMATCHINGUNEXPECTEDRESULT                     _MESSAGE(47290, _("job matching returned an unexpected result!"))
 

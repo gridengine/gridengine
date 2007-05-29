@@ -42,12 +42,10 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author rh150277
  */
 public class JobTaskEventTestCase extends BaseTestCase {
    
    private JGDI jgdi;
-   private JGDI jgdi_evc;
    private EventClient evc;
    
    /** Creates a new instance of SpecialEventTestCase */
@@ -58,8 +56,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
    protected void setUp() throws Exception {
       
       jgdi = createJGDI();
-      jgdi_evc = createJGDI();
-      evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+      evc = createEventClient(0);
       super.setUp();
       logger.fine("SetUp done");
    }
@@ -69,7 +66,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
         evc.close();
       } finally {
          jgdi.close();
-         jgdi_evc.close();
+         evc.close();
       }
    }
    
@@ -105,9 +102,8 @@ public class JobTaskEventTestCase extends BaseTestCase {
        
        jgdi.enableQueues(new String [] { "*" }, false);
 
-       
-       lis.waitForJobFinish(60);
-       
+       int timeout = 300;
+       assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(timeout));
        assertEquals("too few job task add events", numberOfTasks, lis.getAddEventCount());
        assertEquals("too few job task del events", numberOfTasks - 1 , lis.getDelEventCount());
    }

@@ -44,7 +44,6 @@ import com.sun.grid.jgdi.event.EventListener;
  * Simple example which demonstrates how to receive events from the
  * N1 Grid Engine
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class EventExample {
    
@@ -64,7 +63,7 @@ public class EventExample {
          try {
             System.out.println("Successfully connected to " + url);         
 
-            EventClient evc = JGDIFactory.createEventClient(jgdi,0);
+            EventClient evc = JGDIFactory.createEventClient(url,0);
             
             evc.start();
             

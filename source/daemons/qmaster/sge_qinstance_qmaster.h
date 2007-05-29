@@ -65,11 +65,47 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            const bool initial_modify,
                            monitoring_t *monitor);
 
-bool 
+bool
 qinstance_change_state_on_calendar_all(sge_gdi_ctx_class_t *ctx,
                                        const char* cal_name,  
                                        u_long32 cal_order, 
                                        const lList *state_change_list, 
                                        monitoring_t *monitor);
+
+bool
+sge_qmaster_qinstance_state_set_alarm(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_error(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
+
+bool
+sge_qmaster_qinstance_set_initial_state(lListElem *this_elem);
 
 #endif /* _SGE_QINSTANCE_QMASTER_H_ */

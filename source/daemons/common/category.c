@@ -58,7 +58,8 @@
 #include "sge_job.h"
 #include "lck/sge_mtutil.h"
 #include "sge_userprjL.h"
-#include "sge_resource_quota.h"
+#include "sge_select_queue.h"
+#include "sge_resource_quota_schedd.h"
 
 #include "msg_daemons_common.h"
 
@@ -76,6 +77,7 @@ typedef struct {
    int JB_project_pos;
    int JB_pe_pos;
    int JB_range_pos;
+   int JB_ar_pos;
 } order_pos_t;
 
 typedef struct {
@@ -83,7 +85,7 @@ typedef struct {
    order_pos_t cull_order_pos;        /* stores cull positions in the job, ja-task, and order structure */
 } sge_category_t;
 
-static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+static sge_category_t Category_Control = {PTHREAD_MUTEX_INITIALIZER, {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
 /*-------------------------------------------------------------------------*/
 /* build the category string                                               */
@@ -151,6 +153,7 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
       Category_Control.cull_order_pos.JB_project_pos = lGetPosViaElem(job, JB_project, SGE_NO_ABORT);
       Category_Control.cull_order_pos.JB_pe_pos = lGetPosViaElem(job, JB_pe, SGE_NO_ABORT);
       Category_Control.cull_order_pos.JB_range_pos = lGetPosViaElem(job, JB_pe_range, SGE_NO_ABORT);
+      Category_Control.cull_order_pos.JB_ar_pos = lGetPosViaElem(job, JB_ar, SGE_NO_ABORT);
    }
    sge_mutex_unlock("cull_order_mutex", SGE_FUNC, __LINE__, &Category_Control.cull_order_mutex);
 
@@ -234,6 +237,11 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
          if (did_project)
             *did_project = false;
    }
+
+   /*
+   ** -ar ar_id
+   */
+   sge_unparse_ulong_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_ar_pos, "-ar");  
 
    DRETURN_VOID;
 }

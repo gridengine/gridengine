@@ -43,7 +43,6 @@ import java.util.Set;
  * The class JobSummary extends the class JobInfo and adds addtional
  * information about the job.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public interface JobSummary extends JobInfo {
 

@@ -442,6 +442,14 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          element = object;
          object_type = SGE_TYPE_HGROUP;
          break;
+      case sgeE_AR_LIST:
+      case sgeE_AR_ADD:
+      case sgeE_AR_DEL:
+      case sgeE_AR_MOD:
+         key = strkey;
+         element = object;
+         object_type = SGE_TYPE_AR;
+         break;
 
       default:
          /* nothing to spool */
@@ -477,6 +485,7 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          case sgeE_CUSER_DEL:
 #endif
          case sgeE_HGROUP_DEL:
+         case sgeE_AR_DEL:
             delete = true;
             break;
          case sgeE_NEW_SHARETREE:
@@ -521,7 +530,7 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event( timestamp, event, 
+         sge_add_event(timestamp, event, 
                        intkey1, intkey2, strkey, strkey2,
                        session, element);
       }

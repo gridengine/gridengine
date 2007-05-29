@@ -45,7 +45,6 @@ import java.util.List;
  *  information from the Grid Engine like it obtained by the qstat -q c 
  *  command.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class ClusterQueueSummaryExample {
   

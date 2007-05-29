@@ -45,7 +45,8 @@ CLIENTS_COMMON_SRC = qstat_printing.c \
                      sge_centry_qconf.c \
                      sge_qhost.c \
                      sge_qstat.c \
-                     sge_qquota.c
+                     sge_qquota.c \
+                     sge_qrsub.c
 
 
 CLIENTS_COMMON_OBJS = $(CLIENTS_COMMON_SRC:.c=.o)
@@ -111,4 +112,7 @@ sge_qstat.o: $(CLIENTS_COMMON_DIR)/sge_qstat.c
 
 sge_qquota.o: $(CLIENTS_COMMON_DIR)/sge_qquota.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qquota.c
+
+sge_qrsub.o: $(CLIENTS_COMMON_DIR)/sge_qrsub.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_qrsub.c
 

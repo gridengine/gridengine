@@ -374,6 +374,11 @@ typedef enum {
    sgeE_RQS_DEL,
    sgeE_RQS_MOD,
 
+   sgeE_AR_LIST,
+   sgeE_AR_ADD,
+   sgeE_AR_DEL,
+   sgeE_AR_MOD,
+
    sgeE_EVENTSIZE 
 } ev_event;
 

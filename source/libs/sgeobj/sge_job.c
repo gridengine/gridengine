@@ -35,6 +35,8 @@
 
 #include <fnmatch.h>
 
+#include "sge.h"
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "commlib.h"
@@ -107,14 +109,13 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    lListElem *template_task = NULL;    /* JAT_Type */
 
    DENTER(BASIS_LAYER, "job_get_ja_task_template");
+
    template_task = lFirst(lGetList(job, JB_ja_template));
+
    if (!template_task) {
       ERROR((SGE_EVENT, "unable to retrieve template task\n"));
-   } 
-   if (template_task) {
+   } else { 
       lSetUlong(template_task, JAT_state, JQUEUED | JWAITING);
-   }
-   if (template_task) {
       lSetUlong(template_task, JAT_task_number, ja_task_id);  
    }
    DRETURN(template_task);
@@ -1102,8 +1103,10 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    if (check && *job_list &&
        job_list_locate(*job_list, lGetUlong(job, JB_job_number))) {
+      dstring id_dstring = DSTRING_INIT;
       ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_S, 
-             job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+             job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
+      sge_dstring_free(&id_dstring);
       DRETURN(-1);
    }
 
@@ -1652,7 +1655,7 @@ int job_initialize_id_lists(lListElem *job, lList **answer_list)
 *     const lList* path_alias_list - PA_Type list 
 ******************************************************************************/
 void job_initialize_env(lListElem *job, lList **answer_list, 
-                        const lList* path_alias_list, 
+                        const lList* path_alias_list,
                         const char *unqualified_hostname,
                         const char *qualified_hostname)
 {
@@ -1890,38 +1893,37 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
 *     u_long32 ja_task_id    - the ja task id or 0 to output only 
 *                              job_id
 *     const char *pe_task_id - optionally the pe task id
+*     dstring *buffer        - a buffer to be used for printing the id string
 *
 *  RESULT
 *     const char* - pointer to a static buffer. It is valid until the 
 *                   next call of the function.
 *
-*  MT-NOTE
-*     This function is NOT mt-save because it uses a static dstring
+*  NOTES
+*     MT-NOTE: job_get_id_string() is MT safe
 ******************************************************************************/
 const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
-                              const char *pe_task_id)
+                              const char *pe_task_id, dstring *buffer)
 {
-   static dstring id = DSTRING_INIT;
-
    DENTER(TOP_LAYER, "job_get_id_string");
 
    if(job_id == 0) {
-      sge_dstring_sprintf(&id, "");
+      sge_dstring_sprintf(buffer, "");
    } else {
       if(ja_task_id == 0) {
-         sge_dstring_sprintf(&id, MSG_JOB_JOB_ID_U, job_id);
+         sge_dstring_sprintf(buffer, MSG_JOB_JOB_ID_U, job_id);
       } else {
          if(pe_task_id == NULL) {
-            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_ID_UU,
+            sge_dstring_sprintf(buffer, MSG_JOB_JOB_JATASK_ID_UU,
                                 job_id, ja_task_id);
          } else {
-            sge_dstring_sprintf(&id, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
+            sge_dstring_sprintf(buffer, MSG_JOB_JOB_JATASK_PETASK_ID_UUS,
                                job_id, ja_task_id, pe_task_id);
          }
       }
    }   
    
-   DRETURN(sge_dstring_get_string(&id));
+   DRETURN(sge_dstring_get_string(buffer));
 }
 
 /****** sgeobj/job/job_is_pe_referenced() *************************************
@@ -2008,7 +2010,62 @@ bool job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 /* JG: TODO: use dstring! */
 void job_get_state_string(char *str, u_long32 op)
 {
-   queue_or_job_get_states(JB_job_number, str, op);
+   int count = 0;
+
+   DENTER(TOP_LAYER, "job_get_state_string");
+
+   if (VALID(JDELETED, op)) {
+      str[count++] = DISABLED_SYM;
+   }
+
+   if (VALID(JERROR, op)) {
+      str[count++] = ERROR_SYM;
+   }
+
+   if (VALID(JSUSPENDED_ON_SUBORDINATE, op)) {
+      str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
+   }
+   
+   if (VALID(JSUSPENDED_ON_THRESHOLD, op)) {
+      str[count++] = SUSPENDED_ON_THRESHOLD_SYM;
+   }
+
+   if (VALID(JHELD, op)) {
+      str[count++] = HELD_SYM;
+   }
+
+   if (VALID(JMIGRATING, op)) {
+      str[count++] = RESTARTING_SYM;
+   }
+
+   if (VALID(JQUEUED, op)) {
+      str[count++] = QUEUED_SYM;
+   }
+
+   if (VALID(JRUNNING, op)) {
+      str[count++] = RUNNING_SYM;
+   }
+
+   if (VALID(JSUSPENDED, op)) {
+      str[count++] = SUSPENDED_SYM;
+   }
+
+   if (VALID(JTRANSFERING, op)) {
+      str[count++] = TRANSISTING_SYM;
+   }
+
+   if (VALID(JWAITING, op)) {
+      str[count++] = WAITING_SYM;
+   }
+
+   if (VALID(JEXITING, op)) { 
+      str[count++] = EXITING_SYM;
+   }
+
+   str[count++] = '\0';
+
+   DEXIT;
+   return;
 }
 
 /****** sgeobj/job/job_list_locate() ******************************************
@@ -2117,12 +2174,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
    /* check for existence of DISPLAY */
    display_ep = lGetElemStr(lGetList(job, JB_env_list), VA_variable, "DISPLAY");
    if(display_ep == NULL) {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_NODISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -2131,12 +2190,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
     */
    display = lGetString(display_ep, VA_value);
    if(display == NULL || strlen(display) == 0) {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_EMPTYDISPLAY_S, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -2144,12 +2205,14 @@ int job_check_qsh_display(const lListElem *job, lList **answer_list,
     * it is useless in a grid environment.
     */
    if(*display == ':') {
+      dstring id_dstring = DSTRING_INIT;
       if(output_warning) {
-         WARNING((SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL)));
+         WARNING((SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring)));
       } else {
-         sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL));
+         sprintf(SGE_EVENT, MSG_JOB_LOCALDISPLAY_SS, display, job_get_id_string(lGetUlong(job, JB_job_number), 0, NULL, &id_dstring));
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&id_dstring);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -2375,7 +2438,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
 
    DENTER(TOP_LAYER, "job_resolve_host_for_path_list");
 
-   for_each( ep, lGetList(job, name) ){
+   for_each(ep, lGetList(job, name)){
       int res = sge_resolve_host(ep, PN_host);
       DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
       if (res != CL_RETVAL_OK) { 
@@ -2499,64 +2562,6 @@ job_get_contribution(const lListElem *this_elem, lList **answer_list,
    DRETURN(ret);
 }
 
-/* JG: TODO: use dstring! */
-void queue_or_job_get_states(int nm, char *str, u_long32 op)
-{
-   int count = 0;
-
-   DENTER(TOP_LAYER, "queue_or_job_get_states");
-
-   if (nm==JB_job_number) {
-      if (VALID(JDELETED, op))
-         str[count++] = DISABLED_SYM;
-      if (VALID(JERROR, op))
-         str[count++] = ERROR_SYM;
-      if (VALID(JSUSPENDED_ON_SUBORDINATE, op))
-         str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
-   }
-   
-   if (VALID(JSUSPENDED_ON_THRESHOLD, op)) {
-      str[count++] = SUSPENDED_ON_THRESHOLD_SYM;
-   }
-
-   if (VALID(JHELD, op)) {
-      str[count++] = HELD_SYM;
-   }
-
-   if (VALID(JMIGRATING, op)) {
-      str[count++] = RESTARTING_SYM;
-   }
-
-   if (VALID(JQUEUED, op)) {
-      str[count++] = QUEUED_SYM;
-   }
-
-   if (VALID(JRUNNING, op)) {
-      str[count++] = RUNNING_SYM;
-   }
-
-   if (VALID(JSUSPENDED, op)) {
-      str[count++] = SUSPENDED_SYM;
-   }
-
-   if (VALID(JTRANSFERING, op)) {
-      str[count++] = TRANSISTING_SYM;
-   }
-
-   if (VALID(JWAITING, op)) {
-      str[count++] = WAITING_SYM;
-   }
-
-   if (VALID(JEXITING, op)) { 
-      str[count++] = EXITING_SYM;
-   }
-
-   str[count++] = '\0';
-
-   DRETURN_VOID;
-}
-
-
 /****** sge_job/sge_unparse_acl_dstring() **************************************
 *  NAME
 *     sge_unparse_acl_dstring() -- creates a string from teh access lists and user
@@ -2591,8 +2596,8 @@ bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const cha
    DENTER(TOP_LAYER, "sge_unparse_acl_dstring");  
 
    for_each (elem, acl_list) {
-      if (lGetBool(elem, US_consider_with_categories) && 
-               sge_contained_in_access_list(owner, group, elem, NULL)) {
+      if (lGetBool(elem, US_consider_with_categories) &&
+          sge_contained_in_access_list(owner, group, elem, NULL)) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
                sge_dstring_append(category_str, " ");
@@ -2769,7 +2774,7 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
       else {
          dstring range_string = DSTRING_INIT;
 
-         range_list_print_to_string(range_list, &range_string, true);
+         range_list_print_to_string(range_list, &range_string, true, false, false);
          if (sge_dstring_strlen(category_str) > 0) {
             sge_dstring_append(category_str, " ");
          }
@@ -2796,20 +2801,22 @@ bool sge_unparse_pe_dstring(dstring *category_str, const lListElem *job_elem, in
 *     lListElem *job_elem, int nm, char *option) 
 *
 *  FUNCTION
-*     ??? 
+*     Copies a string into a dstring. Used for category string building
 *
 *  INPUTS
 *     dstring *category_str     - target string
 *     const lListElem *job_elem - a job structure
 *     int nm                    - position of the string attribute in the job
-*     char *option              - string option to put in infront of the generated string
+*     char *option              - string option to put in in front of the generated string
 *
 *  RESULT
-*     bool - true, if everything was fine
+*     bool - always true
 *
 *  NOTES
 *     MT-NOTE: sge_unparse_string_option_dstring() is MT safe 
 *
+*  SEE ALSO
+*     sge_job/sge_unparse_ulong_option_dstring()
 *******************************************************************************/
 bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *job_elem, 
                                int nm, char *option)
@@ -2825,6 +2832,53 @@ bool sge_unparse_string_option_dstring(dstring *category_str, const lListElem *j
       sge_dstring_append(category_str, option);
       sge_dstring_append(category_str, " ");
       sge_dstring_append(category_str, string);
+   }
+   DRETURN(true);
+}
+
+/****** sge_job/sge_unparse_ulong_option_dstring() *****************************
+*  NAME
+*     sge_unparse_ulong_option_dstring() -- copies a string into a dstring
+*
+*  SYNOPSIS
+*     bool sge_unparse_ulong_option_dstring(dstring *category_str, const 
+*     lListElem *job_elem, int nm, char *option) 
+*
+*  FUNCTION
+*     Copies a string into a dstring. Used for category string building
+*
+*  INPUTS
+*     dstring *category_str     - target string
+*     const lListElem *job_elem - a job structure
+*     int nm                    - position of the string attribute in the job
+*     char *option              - string option to put in front of the generated string
+*
+*  RESULT
+*     bool - always true
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: sge_unparse_ulong_option_dstring() is MT safe 
+*
+*  SEE ALSO
+*     sge_job/sge_unparse_string_option_dstring()
+*******************************************************************************/
+bool sge_unparse_ulong_option_dstring(dstring *category_str, const lListElem *job_elem, 
+                               int nm, char *option)
+{
+   u_long32 ul = 0;
+
+   DENTER(TOP_LAYER, "sge_unparse_ulong_option_dstring");
+   
+   if ((ul = lGetPosUlong(job_elem, nm)) != 0) {            
+      if (sge_dstring_strlen(category_str) > 0) {
+         sge_dstring_append(category_str, " ");
+      }
+      sge_dstring_append(category_str, option);
+      sge_dstring_append(category_str, " ");
+      sge_dstring_sprintf_append(category_str, sge_U32CFormat, ul);
    }
    DRETURN(true);
 }
@@ -3216,7 +3270,14 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    /* TODO: JB_user_list */
    /* TODO: JB_job_identifier_list */
 
-   /* JB_verify_suitable_q any ulong value */
+   /* JB_verify_suitable_queues must be in range of OPTION_VERIFY_STR */
+   if (ret) {
+      if (lGetUlong(job, JB_verify_suitable_queues) >= (sizeof(OPTION_VERIFY_STR)/sizeof(char)-1)) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                              MSG_INVALIDJOB_REQUEST_S, "verify");
+            ret = false;
+      }
+   }
 
    /* JB_soft_wallclock_gm must be 0 */
    if (ret) {
@@ -3362,3 +3423,72 @@ job_verify_execd_job(const lListElem *job, lList **answer_list)
    DRETURN(ret);
 }
 
+/****** sge_job/job_get_wallclock_limit() **************************************
+*  NAME
+*     job_get_wallclock_limit() -- Computes jobs wallclock limit
+*
+*  SYNOPSIS
+*     bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep) 
+*
+*  FUNCTION
+*     Compute the jobs wallclock limit depending on requested h_rt, s_rt.
+*     If no limit was requested the maximal ulong32 value is returned
+*
+*  INPUTS
+*     u_long32 *limit      - store for the value
+*     const lListElem *jep - jobs ep
+*
+*  RESULT
+*     bool - true on success
+*            false if no value was requested
+*
+*  NOTES
+*     MT-NOTE: job_get_wallclock_limit() is not MT safe 
+*
+*******************************************************************************/
+bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep) {
+   lListElem *ep;
+   double d_ret = 0, d_tmp;
+   const char *s;
+   bool got_duration = false;
+   char error_str[1024];
+
+   DENTER(TOP_LAYER, "job_get_wallclock_limit");
+
+   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_H_RT))) {
+      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
+               error_str, sizeof(error_str)-1)==0) {
+         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
+         DRETURN(false);
+      }
+      d_ret = d_tmp;
+      got_duration = true;
+   }
+   
+   if ((ep=lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, SGE_ATTR_S_RT))) {
+      if (parse_ulong_val(&d_tmp, NULL, TYPE_TIM, (s=lGetString(ep, CE_stringval)),
+               error_str, sizeof(error_str)-1)==0) {
+         ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
+         DRETURN(false);
+      }
+
+      if (got_duration) {
+         d_ret = MIN(d_ret, d_tmp);
+      } else {
+         d_ret = d_tmp;
+         got_duration = true;
+      }
+   }
+
+   if (got_duration) {
+      if (d_ret > (double)U_LONG32_MAX) {
+         *limit = U_LONG32_MAX;
+      } else {
+         *limit = d_ret;
+      }
+   } else {
+      *limit = U_LONG32_MAX;
+   }
+
+   DRETURN(got_duration);
+}

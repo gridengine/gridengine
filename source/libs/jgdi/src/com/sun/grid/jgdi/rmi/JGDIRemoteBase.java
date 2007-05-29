@@ -47,8 +47,6 @@ import java.util.List;
 /**
  * Base interface for the JGDIRemote.
  *
- * @author richard.hierlmeier@sun.com
- *
  * @todo   optional ??
  *         <p>add qquota functions</p>
  *

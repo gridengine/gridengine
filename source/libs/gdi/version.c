@@ -36,7 +36,7 @@
 
 const char GDI_VERSION[] = "maintrunk";
 
-const gdi_ulong32 GRM_GDI_VERSION = 0x10002000;
+const gdi_ulong32 GRM_GDI_VERSION = 0x100020F0;
 
 vdict_t GRM_GDI_VERSION_ARRAY[] = 
 {

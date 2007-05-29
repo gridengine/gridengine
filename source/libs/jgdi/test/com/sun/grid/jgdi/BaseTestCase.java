@@ -49,7 +49,6 @@ import junit.framework.TestResult;
 
 /**
  *
- * @author aa114085
  */
 public class BaseTestCase extends TestCase {
     
@@ -79,17 +78,32 @@ public class BaseTestCase extends TestCase {
         return createJGDI(currentCluster);
     }
     
-    private JGDI createJGDI(ClusterConfig cluster) throws Exception {
+    private String getConnectURL(ClusterConfig cluster) {
         initConfig();
         String url = "bootstrap://" + cluster.getSgeRoot()
         + "@" + cluster.getSgeCell()
         + ":" + cluster.getQmasterPort();
-        
+        return url;
+    }
+    
+    private JGDI createJGDI(ClusterConfig cluster) throws Exception {
+        String url = getConnectURL(cluster);
         if(logger.isLoggable(Level.FINE)) {
             logger.fine("create jgdi ctx for cluster " + url );
         }
         return JGDIFactory.newInstance(url);
-        
+    }
+    
+    protected EventClient createEventClient(int evcId) throws Exception {
+        return createEventClient(currentCluster, evcId);
+    }
+    
+    private EventClient createEventClient(ClusterConfig cluster, int evcId) throws Exception {
+        String url = getConnectURL(cluster);
+        if(logger.isLoggable(Level.FINE)) {
+            logger.fine("create event client ctx for cluster " + url );
+        }
+        return JGDIFactory.createEventClient(url, evcId);
     }
     
     protected String[] getClusterNames() throws Exception {

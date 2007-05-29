@@ -40,19 +40,12 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "cull.h"
 #include "sge_all_listsL.h"
 #include "sge_parse_num_par.h"
 #include "sort_hosts.h"
-#include "sge_complex_schedd.h"
 #include "sge_sched.h"
-#include "sge_schedd_conf.h"
-#include "sge_feature.h"
 #include "sge_string.h"
-#include "sge_log.h"
 #include "sge_host.h"
-#include "sge_qinstance.h"
-#include "msg_schedd.h"
 
 static const char load_ops[]={
         '+',
@@ -330,85 +323,4 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, con
     */
 
    DRETURN(0);
-}
-
-
-int debit_job_from_hosts(
-lListElem *job,     /* JB_Type */
-lList *granted,     /* JG_Type */
-lList *host_list,   /* EH_Type */
-lList *centry_list, /* CE_Type */
-int *sort_hostlist
-) {
-   lSortOrder *so = NULL;
-   lListElem *gel, *hep;
-   lListElem *global;
-   const char *hnm = NULL;
-   const char *load_formula = NULL;
-   lList *job_load_adjustments = sconf_get_job_load_adjustments();
-   u_long32 load_adjustment_decay_time = sconf_get_load_adjustment_decay_time();
-
-   double old_sort_value, new_sort_value;
-
-   DENTER(TOP_LAYER, "debit_job_from_hosts");
-
-   so = lParseSortOrderVarArg(lGetListDescr(host_list), "%I+", EH_sort_value);
-
-   global = host_list_locate(host_list, "global");
-
-   load_formula = sconf_get_load_formula(); 
-
-   /* debit from hosts */
-   for_each(gel, granted) {  
-      u_long32 ulc_factor;
-      int slots = lGetUlong(gel, JG_slots);
-
-      hnm = lGetHost(gel, JG_qhostname);
-      hep = host_list_locate(host_list, hnm); 
-
-      if (load_adjustment_decay_time && lGetNumberOfElem(job_load_adjustments)) {
-         /* increase host load for each scheduled job slot */
-         ulc_factor = lGetUlong(hep, EH_load_correction_factor);
-         ulc_factor += 100*slots;
-         lSetUlong(hep, EH_load_correction_factor, ulc_factor);
-      }   
-
-      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots);
-      debit_host_consumable(job, hep, centry_list, slots);
-
-      /* compute new combined load for this host and put it into the host */
-      old_sort_value = lGetDouble(hep, EH_sort_value); 
-
-      new_sort_value = scaled_mixed_load(load_formula, global, hep, centry_list);
-
-      if(new_sort_value != old_sort_value) {
-         lSetDouble(hep, EH_sort_value, new_sort_value);
-         if (sort_hostlist)
-            *sort_hostlist = 1;
-         DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
-            hnm, old_sort_value, new_sort_value));
-      }
-
-      lResortElem(so, hep, host_list);
-   }
-   FREE(load_formula);
-
-   lFreeSortOrder(&so);
-   lFreeList(&job_load_adjustments);
-
-   DRETURN(0);
-}
-
-/*
- * jep: JB_Type
- * hep: EH_Type
- * centry_list: CE_Type
- */
-int 
-debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots) 
-{
-   return rc_debit_consumable(jep, hep, centry_list, slots, 
-                           EH_consumable_config_list, 
-                           EH_resource_utilization, 
-                           lGetHost(hep, EH_name));
 }

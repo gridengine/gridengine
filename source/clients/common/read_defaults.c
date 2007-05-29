@@ -49,6 +49,9 @@
 #include "parse_qsubL.h"
 #include "parse_qsub.h"
 #include "read_defaults.h"
+#include "sgeobj/parse.h"
+#include "sge_options.h"
+#include "sgeobj/sge_job.h"
 
 static char *get_cwd_defaults_file_path (lList **answer_list);
 static void append_opts_from_default_files (u_long32 prog_number,
@@ -610,7 +613,8 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_scriptfile;
       } else {
-         lAddList(*opts_all, opts_scriptfile);
+         /* Override the queue (-q) values from defaults */
+         lOverrideStrList(*opts_all, *opts_scriptfile, SPA_switch, "-q");
       }
       *opts_scriptfile = NULL;
    }
@@ -618,10 +622,21 @@ void opt_list_merge_command_lines(lList **opts_all,
       if (*opts_all == NULL) {
          *opts_all = *opts_cmdline;
       } else {
-         lAddList(*opts_all, opts_cmdline);
+         /* Override queue (-q) values from both defaults and scriptfile */
+         lOverrideStrList(*opts_all, *opts_cmdline, SPA_switch, "-q");
       }
       *opts_cmdline = NULL;
    }
+
+#if 0
+   /* If -ar was requested add -w if it was not explicit set */
+   if (lGetElemStr(*opts_all, SPA_switch, "-ar") != NULL) {
+      if (lGetElemStr(*opts_all, SPA_switch, "-w") == NULL) {
+         lListElem *ep_opt = sge_add_arg(opts_all, r_OPT, lIntT, "-w", "e");
+         lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
+      }
+   }
+#endif
 }
 
 /****** sge/opt/opt_list_has_X() **********************************************

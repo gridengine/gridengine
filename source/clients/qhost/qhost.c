@@ -44,7 +44,6 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "cull_xml.h"
 #include "sig_handlers.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -106,7 +105,7 @@ static int xml_report_started(report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "xml_report_started");
 
    printf("<?xml version='1.0'?>\n");
-   printf("<qhost xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n");
+   printf("<qhost xmlns=\"http://gridengine.sunsource.net/61/qhost\"\n");
    
    DRETURN(QHOST_SUCCESS);
 }

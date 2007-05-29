@@ -273,7 +273,7 @@ void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage)
          }
          /* For unusual errors, give more detail */
          else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
                                    prognames[QMASTER], 
                                    sge_qmaster_port, 
                                    mastername, 

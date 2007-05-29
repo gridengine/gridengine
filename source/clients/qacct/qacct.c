@@ -171,8 +171,12 @@ char **argv
    sge_rusage_type totals;
    int ii, i_ret;
    lList *complex_options = NULL;
-   lList *centry_list, *queue_list, *exechost_list;
-   lList *hgrp_list, *queueref_list = NULL, *queue_name_list = NULL;
+   lList *centry_list = NULL;
+   lList *queue_list = NULL;
+   lList *exechost_list = NULL;
+   lList *hgrp_list = NULL;
+   lList *queueref_list = NULL;
+   lList *queue_name_list = NULL;
    lList *sorted_list = NULL;
    int is_path_setup = 0;   
    u_long32 line = 0;
@@ -795,7 +799,7 @@ char **argv
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
-         selected = sge_select_queue(complex_options,queue, NULL, exechost_list,
+         selected = sge_select_queue(complex_options, queue, NULL, exechost_list,
                     centry_list, true, 1, NULL, NULL, NULL);
   
          if (!selected) {
@@ -1536,6 +1540,11 @@ sge_rusage_type *dusage
 #else
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MAXVMEM,      dusage->maxvmem);
 #endif
+   if (dusage->ar != 0) {
+      printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_ARID, dusage->ar);              /* job-array task number */
+   } else {
+      printf("%-13.12s%s\n",MSG_HISTORY_SHOWJOB_ARID, "undefined");             
+   }
    sge_dstring_free(&string);
 }
 
@@ -2046,6 +2055,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    pc=strtok(NULL, ":");
 
    d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
+   d->ar = ((pc=strtok(NULL, ":")))?atol(pc):0;
 
    /* ... */ 
 

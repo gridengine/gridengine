@@ -74,8 +74,7 @@ order_remove_order_and_immediate(lListElem *job, lListElem *ja_task,
 *     MT-NOTE: remove_immediate_jobs() is MT safe
 *
 *******************************************************************************/
-int 
-remove_immediate_jobs( lList *pending_job_list, lList *running_job_list, order_t *orders) 
+int remove_immediate_jobs(lList *pending_job_list, lList *running_job_list, order_t *orders) 
 {
    lListElem *next_job, *job, *ep; 
    lList* lp;

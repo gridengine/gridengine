@@ -46,6 +46,7 @@
 #include "sge_pe_task.h"
 #include "cull_lerrnoP.h"
 #include "msg_schedd.h"
+#include "msg_common.h"
 #include "sge_schedd_text.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
@@ -68,6 +69,73 @@
 #	define strcasecmp( a, b) stricmp( a, b)
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
+
+/****** sched/sge_job_schedd/job_get_duration() *******************************************
+*  NAME
+*     job_get_duration() -- Determine a jobs runtime duration
+*
+*  SYNOPSIS
+*     bool job_get_duration(u_long32 *duration, const lListElem *jep) 
+*
+*  FUNCTION
+*     The minimum of the time values the user specified with -l h_rt=<time> 
+*     and -l s_rt=<time> is returned in 'duration'. If neither of these 
+*     time values were specified the default duration is used.
+*
+*  INPUTS
+*     u_long32 *duration   - Returns duration on success
+*     const lListElem *jep - The job (JB_Type)
+*
+*  RESULT
+*     bool - true on success
+*
+*  NOTES
+*     MT-NOTE: job_get_duration() is MT safe 
+*******************************************************************************/
+bool job_get_duration(u_long32 *duration, const lListElem *jep)
+{
+   DENTER(TOP_LAYER, "job_get_duration");
+
+   if (!job_get_wallclock_limit(duration, jep)) {
+      *duration = sconf_get_default_duration();
+   }
+
+   DRETURN(true);
+}
+
+/****** sge_job_schedd/task_get_duration() *************************************
+*  NAME
+*     task_get_duration() -- Determin tasks effective runtime limit
+*
+*  SYNOPSIS
+*     bool task_get_duration(u_long32 *duration, const lListElem *ja_task) 
+*
+*  FUNCTION
+*     Determines the effictive runtime limit got by requested h_rt/s_rt or
+*     by the resulting queues h_rt/s_rt
+*
+*  INPUTS
+*     u_long32 *duration       - tasks duration in seconds
+*     const lListElem *ja_task - task element
+*
+*  RESULT
+*     bool - true
+*
+*  NOTES
+*     MT-NOTE: task_get_duration() is MT safe 
+*******************************************************************************/
+bool task_get_duration(u_long32 *duration, const lListElem *ja_task) {
+
+   DENTER(TOP_LAYER, "task_get_duration");
+
+   if (ja_task != NULL) {
+      *duration = lGetUlong(ja_task, JAT_wallclock_limit);
+   } else {
+      *duration = sconf_get_default_duration();
+   }
+
+   DRETURN(true);
+}
 
 /****** sched/sge_job_schedd/get_name_of_split_value() ************************
 *  NAME
@@ -480,7 +548,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 *        - loop over all jobs only once
 *        - minimize copy operations where possible
 *
-*     Unfortunately this function id heavy to understand now. Sorry! 
+*     Unfortunately this function is heavy to understand now. Sorry! 
 *
 *  SEE ALSO
 *     sched/sge_job_schedd/SPLIT_-Constants 
@@ -957,24 +1025,6 @@ void job_lists_print(lList **job_list[])
    return;
 } 
 
-lSortOrder *sge_job_sort_order(
-const lDescr *dp 
-) {
-   lSortOrder *so;
-
-   DENTER(TOP_LAYER, "sge_job_sort_order");
-
-   so = lParseSortOrderVarArg(dp, "%I-%I+%I+",
-      JB_priority,       /* higher priority is better   */
-      JB_submission_time,/* first come first serve      */
-      JB_job_number      /* prevent job 13 being scheduled before 12 in case sumission times are equal */
-   );
-
-   DEXIT;
-   return so;
-}
-
-
 /* jcpp: JC_Type */
 void sge_dec_jc(lList **jcpp, const char *name, int slots) 
 {
@@ -1018,106 +1068,13 @@ void sge_inc_jc(lList **jcpp, const char *name, int slots)
    return;
 }
 
-/* 
-   This func has to be called each time the number of 
-   running jobs has changed 
-   It also has to be called in our event layer when 
-   new jobs have arrived or the priority of a job 
-   has changed.
-
-   jc       - job counter list - JC_Type
-   job_list - job list to be sorted - JB_Type
-   owner    - name of owner whose number of running jobs has changed
-
-*/
-int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so) 
-{
-   DENTER(TOP_LAYER, "resort_jobs");
-
-   lSortList(job_list, so);
-#if 0
-   trace_job_sort(job_list);
-#endif
-
-   DEXIT;
-   return 0;
-
-}
-
-void print_job_list(
-lList *job_list /* JB_Type */
-) {
-   lListElem *job, *task;
-   int jobs = 0;
-
-   DENTER(TOP_LAYER, "print_job_list");
-    
-   if (job_list && (jobs = lGetNumberOfElem(job_list)) > 0) {
-      DPRINTF(("Jobs in list: %ld\n", jobs));
-      for_each(job, job_list) {
-         DPRINTF(("Job: %ld\n", lGetUlong(job, JB_job_number)));
-         for_each(task, lGetList(job, JB_ja_tasks)) {
-            DPRINTF(("Task: %ld Status: %ld State: %ld\n",
-               lGetUlong(task, JAT_task_number), lGetUlong(task, JAT_status), lGetUlong(task, JAT_state)));
-         }
-      }
-   } else {
-      DPRINTF(("NO JOBS IN LIST\n"));
-   }
-   DEXIT;
-}
-
-void trace_job_sort(
-lList *job_list 
-) {
-   lListElem *job;
-
-   DENTER(TOP_LAYER, "trace_job_sort");
-
-   for_each (job, job_list) {
-      DPRINTF(("JOB "sge_u32" %d %s "sge_u32"\n",
-         lGetUlong(job, JB_job_number),
-         (int)lGetUlong(job, JB_priority) - BASE_PRIORITY,
-         lGetString(job, JB_owner),
-         lGetUlong(job, JB_submission_time)));
-   }
-
-   DEXIT;
-   return;
-}
-
-
-/*---------------------------------------------------------*
- *
- *  job has transited from non RUNNING to RUNNING
- *  we debit this job to users 'running job account' in 
- *  user list 'ulpp' and use the given sort order 'so'
- *  to resort complete job list 
- *---------------------------------------------------------*/
-int up_resort(
-lList **ulpp,    /* JC_Type */
-lListElem *job,  /* JB_Type */
-lList *job_list, /* JB_Type */
-lSortOrder *so 
-) {
-   sge_inc_jc(ulpp, lGetString(job, JB_owner), 1);
-   resort_jobs(*ulpp, job_list, lGetString(job, JB_owner), so);
-   return 0;
-}
-
-
-
-
 
 /*---------------------------------------------------------*/
-int nslots_granted(
-lList *granted,
-const char *qhostname 
-) {
+int nslots_granted(lList *granted, const char *qhostname)
+{
    lListElem *gdil_ep;
    int nslots = 0;
    const void *iterator = NULL;
-
 
    if (qhostname == NULL) {
       for_each (gdil_ep, granted) {   
@@ -1219,5 +1176,3 @@ lList *gdil
 
    return slots;
 }
-
-

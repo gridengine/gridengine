@@ -56,6 +56,7 @@
 #include "sge_qinstance.h"
 #include "sge_str.h"
 #include "sge_string.h"
+#include "sge_parse_num_par.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -65,6 +66,7 @@
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "uti/sge_string.h"
+#include "cull_parse_util.h"
 
 #if 0
 #include "Outline.h"
@@ -81,6 +83,8 @@ static void qmonHideCursor(Widget w, XtPointer cld, XtPointer cad);
 static Widget CreateListTree(Widget parent, String name, ArgList arglist, Cardinal argcount);
 
 
+static void set_DurationInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void get_DurationInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_TimeInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_TimeInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_StringList(Widget w, XtPointer address, XrmQuark type, Cardinal size);
@@ -89,6 +93,8 @@ static void set_Spinbox(Widget w, XtPointer address, XrmQuark type, Cardinal siz
 static void get_Spinbox(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_StrListField(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_StrListField(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void set_Ulong32Field(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void get_Ulong32Field(Widget w, XtPointer address, XrmQuark type, Cardinal size);
                            
 static void set_label(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_LayoutString(Widget w, XtPointer address, XrmQuark type, Cardinal size);
@@ -138,6 +144,14 @@ static XmtWidgetType widgets[] = {
       False
    },
    {
+      "Ulong32Field",
+      NULL,
+      (XmtWidgetConstructor) CreateInputField,
+      set_Ulong32Field,
+      get_Ulong32Field,
+      False
+   },
+   {
       "Iconlist",
       NULL,
       (XmtWidgetConstructor) XmCreateScrolledIconList,
@@ -183,6 +197,14 @@ static XmtWidgetType widgets[] = {
       (XmtWidgetConstructor) CreateInputField,
       set_TimeInput,
       get_TimeInput,
+      False
+   },
+   {
+      "DurationInput",
+      NULL,
+      (XmtWidgetConstructor) CreateInputField,
+      set_DurationInput,
+      get_DurationInput,
       False
    }
 };
@@ -296,6 +318,79 @@ Cardinal argcount
    lw = XmCreateScrolledListTree(parent, name, arg_list, argcount);
 
    return lw;
+}
+
+/*-------------------------------------------------------------------------*/
+static void set_DurationInput(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   Cardinal time_val = 0;
+/*    Cardinal day_val = 0; */
+   Cardinal hour_val = 0;
+   Cardinal minute_val = 0;
+   Cardinal second_val = 0;
+   char buffer[256];
+
+   if (type != QmonQCardinal )  {
+      XmtWarningMsg("XmtDialogSetDialogValues", "DurationInput",
+         "Type Mismatch: Widget '%s':\n\tCan't set widget values"
+         " from a resource of type '%s'",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+
+   if (size == sizeof(Cardinal))
+       time_val = *(Cardinal*) address;
+   else
+      return;
+
+   if (time_val == 0) {
+      sprintf(buffer, "%02d:%02d:%02d", 0, 0, 0);
+   } else {
+/*       day_val = time_val/(24*3600); */
+/*       time_val %= 24*3600; */
+      hour_val = time_val/3600;
+      time_val %= 3600;
+      minute_val = time_val/60;
+      second_val = time_val % 60;
+      sprintf(buffer, "%02d:%02d:%02d", hour_val, minute_val, second_val);
+   }
+   
+   XmtInputFieldSetString(w, buffer);
+}
+
+/*-------------------------------------------------------------------------*/
+static void get_DurationInput(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   Cardinal value = 0;
+   String str = NULL;
+   
+   if (type != QmonQCardinal ) { 
+      XmtWarningMsg("XmtDialogGetDialogValues", "DurationInput",
+         "Type Mismatch: Widget '%s':\n\tCan't get widget values"
+         " from a resource of type '%s'",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+   str = XmtInputFieldGetString(w);
+
+   if (str && str[0] != '\0') {
+      u_long32 tmp_date_time;
+
+      parse_ulong_val(NULL, &tmp_date_time, TYPE_TIM, str, NULL, 0);
+      value = (Cardinal)tmp_date_time;
+   }
+
+   *(Cardinal*)address = value;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -572,6 +667,65 @@ Cardinal size
 }
 
 /*-------------------------------------------------------------------------*/
+static void get_Ulong32Field(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   static u_long32 uv = 0;
+   unsigned long lv = 0;
+   String s = NULL;
+    
+   if (type != QmonQUlong32) {
+      XmtWarningMsg("XmtDialogGetDialogValues", "Ulong32Field",
+         "Type Mismatch: Widget '%s':\n\tCan't get widget values"
+         " from a resource of type '%s'.",
+          XtName(w), XrmQuarkToString(type));
+
+   }
+
+   s = XmtInputFieldGetString(w);
+
+   if (s && s[0] != '\0') {
+      lv = strtoul(s, NULL, 10);
+   } else {
+     lv = 0;
+   }  
+
+   if (lv > U_LONG32_MAX) {
+      uv = U_LONG32_MAX;
+   } else {
+      uv = (u_long32)lv;
+   }   
+
+   if (type == QmonQUlong32) {
+      *(u_long32 *)address = uv;
+   }
+}
+
+/*-------------------------------------------------------------------------*/
+static void set_Ulong32Field(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   static char buf[BUFSIZ];
+
+   if (type != QmonQUlong32) {
+      XmtWarningMsg("XmtDialogSetDialogValues", "Ulong32Field",
+         "Type Mismatch: Widget '%s':\n\tCan't set widget values"
+         " from a resource of type '%s'.",
+          XtName(w), XrmQuarkToString(type));
+
+   }
+
+	(void)sprintf(buf, "%u", *(unsigned int *)address);
+	XmtInputFieldSetString(w, buf);
+}
+
+/*-------------------------------------------------------------------------*/
 static void set_StrListField(
 Widget w,
 XtPointer address,
@@ -580,9 +734,8 @@ Cardinal size
 ) {
    lList *list = NULL;
    String str = NULL;
-   static char buf[ 10 * BUFSIZ];
+   static char buf[100 * BUFSIZ];
    lListElem *ep = NULL;
-   int first_time;
 
    /*
     * Here special Qmon Quarks are used. Does it work ?
@@ -592,8 +745,8 @@ Cardinal size
        type != QmonQRN_Type && type != QmonQTRN_Type && type != QmonQPN_Type &&
        type != QmonQMR_Type && type != QmonQQR_Type &&
        type != QmonQJRE_Type && type != QmonQCTX_Type &&
-       type != QmonQPE_Type) {
-      XmtWarningMsg("XmtDialogSetDialogValues", "Spinbox",
+       type != QmonQPE_Type && type != QmonQARA_Type) {
+      XmtWarningMsg("XmtDialogSetDialogValues", "StrListField",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'.",
           XtName(w), XrmQuarkToString(type));
@@ -616,7 +769,7 @@ Cardinal size
       str = write_pair_list(list, VARIABLE_TYPE);
    } 
    if (type == QmonQST_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
@@ -631,7 +784,7 @@ Cardinal size
    if (type == QmonQRN_Type) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(list, &range_string, 1);
+      range_list_print_to_string(list, &range_string, true, false, false);
       strcpy(buf, sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       str = buf;
@@ -639,7 +792,7 @@ Cardinal size
    if (type == QmonQTRN_Type) {
       dstring range_string = DSTRING_INIT;
 
-      range_list_print_to_string(list, &range_string, 0);
+      range_list_print_to_string(list, &range_string, false, false, false);
       strcpy(buf, sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       str = buf;
@@ -651,7 +804,7 @@ Cardinal size
       str = write_pair_list(list, MAIL_TYPE);
    }
    if (type == QmonQQR_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
@@ -664,24 +817,36 @@ Cardinal size
       str = buf;
    }
    if (type == QmonQJRE_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
-      if (list) {
-         for_each(ep, list) {
-            if (first_time) {
-               first_time = 0;
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s", lGetString(ep, JRE_job_name));
-               else
-                  sprintf(buf, sge_u32, lGetUlong(ep, JRE_job_number));
-            }
-            else {
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
-               else  
-                  sprintf(buf, "%s "sge_u32, buf, lGetUlong(ep, JRE_job_number)); 
-            }   
+      for_each(ep, list) {
+         if (first_time) {
+            first_time = 0;
+            if (lGetString(ep, JRE_job_name))
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
+            else
+               sprintf(buf, sge_u32, lGetUlong(ep, JRE_job_number));
          }
+         else {
+            if (lGetString(ep, JRE_job_name))
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
+            else  
+               sprintf(buf, "%s "sge_u32, buf, lGetUlong(ep, JRE_job_number)); 
+         }   
+      }
+      str = buf;
+   }
+   if (type == QmonQARA_Type) {
+      int first_time = 1;
+      strcpy(buf, "");
+      for_each(ep, list) {
+         if (first_time) {
+            first_time = 0;
+            sprintf(buf, "%s", lGetString(ep, ARA_name));
+         }
+         else {
+            sprintf(buf, "%s %s", buf, lGetString(ep, ARA_name));
+         }   
       }
       str = buf;
    }
@@ -705,7 +870,7 @@ Cardinal size
        type != QmonQRN_Type && type != QmonQTRN_Type && type != QmonQPN_Type &&
        type != QmonQMR_Type && type != QmonQQR_Type &&
        type != QmonQJRE_Type && type != QmonQCTX_Type &&
-       type != QmonQPE_Type) {
+       type != QmonQPE_Type && type != QmonQARA_Type) {
       XmtWarningMsg("XmtDialogSetDialogValues", "StrListField",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'.", XtName(w), XrmQuarkToString(type));
@@ -715,10 +880,11 @@ Cardinal size
    str = XmtInputFieldGetString(w);
 
    if (str && str[0] != '\0') {
-      if ( type == QmonQENV_Type || type == QmonQCTX_Type )
+      if (type == QmonQENV_Type || type == QmonQCTX_Type) {
          var_list_parse_from_string(&ret_list, str, 0); 
+      }
       if (type == QmonQST_Type) {
-            str_list_parse_from_string(&ret_list, str, " ");
+         str_list_parse_from_string(&ret_list, str, " ");
       }
       if (type == QmonQRN_Type) {
          range_list_parse_from_string(&ret_list, &alp, str,
@@ -754,12 +920,16 @@ Cardinal size
          }
          lFreeList(&sl);
       }
+      if (type == QmonQARA_Type) {
+         get_ara_list(str, &ret_list);
+      }   
    }
    
-   if (type == QmonQPE_Type)
+   if (type == QmonQPE_Type) {
       *(String*)address = str;
-   else
+   } else {
       *(lList**)address = ret_list;
+   }   
 }
 
 /*-------------------------------------------------------------------------*/
@@ -903,7 +1073,7 @@ Cardinal size
 
    if (type != XmtQString && type != XmtQBuffer && type != XmtQShort && 
        type != XmtQInt && type != XmtQCardinal && type != XmtQFloat && 
-       type != XmtQDouble) {
+       type != XmtQDouble && type != QmonQUlong32) {
       XmtWarningMsg("XmtDialogSetDialogValues", "Label",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -925,7 +1095,7 @@ Cardinal size
       sprintf(buf, "%d", *(int *)address);
       str = XmtCreateXmString(buf);
    }
-   if (type == XmtQCardinal) {
+   if (type == XmtQCardinal || type == QmonQUlong32) {
       sprintf(buf, "%u", *(unsigned int *)address);
       str = XmtCreateXmString(buf);
    }
@@ -944,3 +1114,16 @@ Cardinal size
    DEXIT;
 }
 
+void get_ara_list(const char *str, lList **ret_list) {
+   if (str == NULL || str[0] == '\0') {
+      lFreeList(ret_list);
+   } else {   
+      int rule[] = {ARA_name, 0};
+      char *tmp = sge_strdup(NULL, str);
+      char **dest = string_list(tmp, ",", NULL);
+      lFreeList(ret_list);
+      cull_parse_string_list(dest, "user_list", ARA_Type, rule, ret_list); 
+      FREE(tmp);
+      FREE(dest);
+   }
+}

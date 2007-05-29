@@ -64,4 +64,12 @@ bool
 ulong_parse_centry_relop_from_string(u_long32 *this_ulong,
                                      lList **answer_list, const char *string);
 
+bool 
+ulong_parse_from_string(u_long32 *this_ulong,
+                        lList **answer_list, const char *string);
+
+bool
+ulong_list_parse_from_string(lList **this_list, lList **answer_list,
+                             const char *string, const char *delimitor);
+
 #endif /* __SGE_ULONG_H */

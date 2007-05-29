@@ -662,9 +662,11 @@ monitoring_t *monitor
                            !lGetString(jep, JB_checkpoint_name)) {
                         u_long32 state  = lGetUlong(jatep, JAT_state);
                         if (!(state & JDELETED)) {
+                           dstring id_dstring = DSTRING_INIT;
                            job_mark_job_as_deleted(ctx, jep, jatep);
                            ERROR((SGE_EVENT, MSG_JOB_MASTERTASKFAILED_S, 
-                                  job_get_id_string(jobid, jataskid, NULL)));
+                                  job_get_id_string(jobid, jataskid, NULL, &id_dstring)));
+                           sge_dstring_free(&id_dstring);
                         }
                      }
                   }
@@ -680,7 +682,7 @@ monitoring_t *monitor
                }
             } else {
                lListElem *pe;
-               if ( lGetString(jatep, JAT_granted_pe)
+               if (lGetString(jatep, JAT_granted_pe)
                   && (pe=pe_list_locate(*object_base[SGE_TYPE_PE].list, lGetString(jatep, JAT_granted_pe)))
                   && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
@@ -745,7 +747,7 @@ monitoring_t *monitor
 
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
-                              sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                              sge_add_list_event(0, sgeE_JOB_USAGE, 
                                                  jobid, jataskid, 
                                                  PE_TASK_PAST_USAGE_CONTAINER, 
                                                  NULL,
@@ -815,9 +817,11 @@ monitoring_t *monitor
                                                        lGetString(jr, JR_err_str)); 
 #endif
                            if (!(state & JDELETED)) {
+                              dstring id_dstring = DSTRING_INIT;
                               job_mark_job_as_deleted(ctx, jep, jatep);
                               ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_S, 
-                                     job_get_id_string(jobid, jataskid, pe_task_id_str)));
+                                     job_get_id_string(jobid, jataskid, pe_task_id_str, &id_dstring)));
+                              sge_dstring_free(&id_dstring);
                            }
                         }
                      }

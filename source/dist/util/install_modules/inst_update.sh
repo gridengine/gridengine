@@ -86,6 +86,7 @@ GetOldConfiguration()
    echo "enforce_user              auto" >> /tmp/configuration.$pid
    echo "reporting_params          accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00" >> /tmp/configuration.$pid
    echo "max_jobs                  0" >> /tmp/configuration.$pid
+   echo "max_advance_reservations  0" >> /tmp/configuration.$pid
    echo "auto_user_oticket         0" >> /tmp/configuration.$pid
    echo "auto_user_fshare          0" >> /tmp/configuration.$pid
    echo "auto_user_default_project none" >> /tmp/configuration.$pid
@@ -132,7 +133,7 @@ GetOldScheddConfig()
    echo "weight_urgency                   0.1" >> /tmp/schedd_conf.$pid
    echo "weight_priority                  1" >> /tmp/schedd_conf.$pid
    echo "max_reservation                  0" >> /tmp/schedd_conf.$pid
-   echo "default_duration                 0:10:0" >> /tmp/schedd_conf.$pid
+   echo "default_duration                 INFINITY" >> /tmp/schedd_conf.$pid
 
    $SGE_BIN/qconf -Msconf /tmp/schedd_conf.$pid 
    rm  /tmp/schedd_conf.$pid

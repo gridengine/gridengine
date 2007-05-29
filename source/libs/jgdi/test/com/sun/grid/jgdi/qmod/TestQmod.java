@@ -43,7 +43,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author andre.alefeld@sun.com
  */
 public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
    

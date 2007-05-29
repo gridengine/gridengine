@@ -37,7 +37,6 @@ import java.io.StringWriter;
 
 /**
  *
- * @author rh150277
  */
 public class QModCommand extends AbstractCommand {
    

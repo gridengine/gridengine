@@ -95,7 +95,8 @@ static tQmonMirrorList QmonMirrorList[] = {
    { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL },
    { 0, SGE_USER_MAPPING_LIST, USER_MAPPING_T, NULL, 0, NULL, NULL },
    { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL },
-   { 0, SGE_RQS_LIST, RQS_T, NULL, 0, NULL, NULL }
+   { 0, SGE_RQS_LIST, RQS_T, NULL, 0, NULL, NULL },
+   { 0, SGE_AR_LIST, AR_T, NULL, 0, NULL, NULL },
 };
    
 static char *sge_gdi_list_types[] = {
@@ -124,7 +125,8 @@ static char *sge_gdi_list_types[] = {
    "ZOMBIE_JOBS",
    "USER_MAPPING",
    "HGROUP",
-   "RQS"
+   "RQS",
+   "AR"
 };
 
 
@@ -160,6 +162,7 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
    QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
    QmonMirrorList[SGE_RQS_LIST].what = lWhat("%T(ALL)", RQS_Type);
+   QmonMirrorList[SGE_AR_LIST].what = lWhat("%T(ALL)", AR_Type);
 
    DEXIT;
 }
@@ -406,7 +409,7 @@ lEnumeration *what
    
    sge_stopwatch_start(0);
    
-   if (type == SGE_JOB_LIST) {
+   if (type == SGE_JOB_LIST || type == SGE_AR_LIST) {
       alp = ctx->gdi(ctx, type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
                         lpp, where, what);
    } else {

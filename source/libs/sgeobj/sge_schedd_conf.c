@@ -117,7 +117,7 @@
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
-#define DEFAULT_DURATION                    "0:10:00" /* the default_duration and default_duration_I have to be */
+#define DEFAULT_DURATION                    "INFINITY" /* the default_duration and default_duration_I have to be */
 #define DEFAULT_DURATION_I                  600       /* in sync. On is the strin version of the other (based on seconds)*/
 #define DEFAULT_DURATION_OFFSET             60
 
@@ -322,7 +322,7 @@ static config_pos_type pos = {PTHREAD_MUTEX_INITIALIZER, true,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, 
-                       SCHEDD_JOB_INFO_UNDEF, 0, NULL, NULL, NULL, MAX_ULONG32, 
+                       SCHEDD_JOB_INFO_UNDEF, 0, NULL, NULL, NULL, U_LONG32_MAX, 
 
                        false};
 
@@ -2993,7 +2993,7 @@ bool sconf_validate_config_(lList **answer_list)
       const char *s = get_default_duration_str();
 
       if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, 
-                                                 sizeof(tmp_error),0) ) {
+                                                 sizeof(tmp_error), 1) ) {
          if (s == NULL) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", 
                                    "not defined"));   
@@ -3007,7 +3007,7 @@ bool sconf_validate_config_(lList **answer_list)
       } 
       else {
          /* ensure we get a non-zero/non-infinity duration default in reservation scheduling mode */
-         if (max_reservation != 0 && (uval == 0 || uval == MAX_ULONG32)) {
+         if (max_reservation != 0 && uval == 0) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RR_REQUIRES_DEFAULT_DURATION));    
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
             ret = false; 

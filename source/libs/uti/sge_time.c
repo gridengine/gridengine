@@ -159,6 +159,8 @@ u_long32 sge_get_gmt()
 *
 *  INPUTS
 *     time_t i - time value 
+*     dstring *buffer - dstring
+*     bool is_xml - write in XML dateTime format?
 *
 *  RESULT
 *     const char* - time string (current time if 'i' was 0) 
@@ -167,8 +169,10 @@ u_long32 sge_get_gmt()
 *  NOTES
 *     MT-NOTE: append_time() is MT safe if localtime_r() can be used
 *
+*     SHOULD BE REPLACED BY: sge_dstring_append_time()
+*
 ******************************************************************************/
-void append_time(time_t i, dstring *buffer) 
+void append_time(time_t i, dstring *buffer, bool is_xml) 
 {
    struct tm *tm;
 
@@ -180,9 +184,15 @@ void append_time(time_t i, dstring *buffer)
    tm = localtime(&i);
 #endif
 
-   sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
-           tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
-           tm->tm_hour, tm->tm_min, tm->tm_sec);
+   if (is_xml) {
+      sge_dstring_sprintf_append(buffer, "%04d-%02d-%02dT%02d:%02d:%02d", 
+              1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday, 
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   } else {
+      sge_dstring_sprintf_append(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
+              tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
+              tm->tm_hour, tm->tm_min, tm->tm_sec);
+   }
 }
 
 /****** uti/time/sge_ctime() **************************************************
@@ -229,6 +239,7 @@ const char *sge_ctime(time_t i, dstring *buffer)
    return sge_dstring_get_string(buffer);
 }
 
+/* TODO: should be replaced by sge_dstring_append_time() */
 const char *sge_ctimeXML(time_t i, dstring *buffer) 
 {
 #ifdef HAS_LOCALTIME_R
@@ -438,4 +449,38 @@ void sge_stopwatch_start(int i)
  
    wprev[i]  = wbegin[i];
 }                                                                              
- 
+
+/****** uti/time/duration_add_offset() ****************************************
+*  NAME
+*     duration_add_offset() -- add function for time add
+*
+*  SYNOPSIS
+*     u_long32 duration_add_offset(u_long32 duration, u_long32 offset) 
+*
+*  FUNCTION
+*     add function to catch ulong overflow. Returns max ulong value if necessary
+*
+*  INPUTS
+*     u_long32 duration - duration in seconds
+*     u_long32 offset   - offset in seconds
+*
+*  RESULT
+*     u_long32 - value < U_LONG32_MAX
+*
+*  NOTES
+*     MT-NOTE: duration_add_offset() is not MT safe 
+*******************************************************************************/
+u_long32 duration_add_offset(u_long32 duration, u_long32 offset)
+{
+   if (duration == U_LONG32_MAX || offset == U_LONG32_MAX) {
+      return U_LONG32_MAX;
+   }
+
+   if ((U_LONG32_MAX-offset) < duration) {
+      duration = U_LONG32_MAX;
+   } else {
+      duration += offset;
+   }
+
+   return duration;
+}

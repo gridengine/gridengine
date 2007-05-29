@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/01/23 10:05:22 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/05/23 19:45:49 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2007/01/23 10:05:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2007/05/23 19:45:49 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -255,6 +255,7 @@ future use. Always contains the value X.
 .IP "\fBload values\fP"
 Description of load values. Information about multiple load values is separated by space.
 A load value description has the format <name>=<actual_value>.
+.\"
 .SS host_consumable
 A host_consumable record contains information about hosts and host consumables.
 Host consumables can for example be licenses.
@@ -270,6 +271,111 @@ future use. Always contains the value X.
 .IP "\fBconsumables\fP"
 Description of consumable values. Information about multiple consumables is separated by space.
 A consumable description has the format <name>=<actual_value>=<configured value>.
+.SS sharelog 
+The xxQS_NAMExx qmaster can dump information about sharetree configuration and use to the reporting file.
+The parameter \fIsharelog\fP sets an interval in which sharetree information will be dumped.
+It is set in the format HH:MM:SS. A value of 00:00:00 configures qmaster not to
+dump sharetree information. Intervals of several minutes up to hours are sensible values for this parameter.
+The record contains the following fields
+.IP "\fBcurrent time\fP"
+The present time
+.IP "\fBusage time\fP"
+The  time used so far
+.IP "\fBnode name\fP"
+The node name
+.IP "\fBuser name\fP"
+The user name
+.IP "\fBproject name\fP"
+The project name
+.IP "\fBshares \fP"
+The total shares
+.IP "\fBjob count \fP"
+The job  count
+.IP "\fBlevel \fP"
+The percentage of shares used
+.IP "\fBtotal \fP"
+The adjusted percentage of shares used
+.IP "\fBlong target share \fP"
+The long target percentage of resource shares used
+.IP "\fBshort target share \fP"
+The short target percentage of resource shares used
+.IP "\fBactual share \fP"
+The actual percentage of resource shares used
+.IP "\fBusage \fP"
+The combined shares used
+.IP "\fBcpu \fP"
+The cpu used
+.IP "\fBmem \fP"
+The memory used
+.IP "\fBio \fP"
+The IO used
+.IP "\fBlong target cpu \fP"
+The long target cpu used
+.IP "\fBlong target mem \fP"
+The long target memory used
+.IP "\fBlong target io \fP"
+The long target IO used
+.\"
+.SS new_ar
+A new_ar record contains information about advance reservation objects. Entries of this
+type will be added if an advance reservation is created.
+It contains the following information:
+.IP "\fBsubmission_time\fP"
+The time (GMT unix time stamp) when the advance reservation was created.
+.IP "\fBar_number\fP"
+The advance reservation number identifying the reservation.
+.IP "\fBar_owner\fP"
+The owner of the advance reservation.
+.\"
+.SS ar_attribute
+The ar_attribute record is written whenever a new advance reservation was added or the
+attribute of an existing advance reservation has changed. It has following fields.
+.IP "\fBevent_time\fP"
+The time (GMT unix time stamp) when the event was generated.
+.IP "\fBar_number\fP"
+The advance reservation number identifying the reservation.
+.IP "\fBar_name\fP"
+Name of the advance reservation.
+.IP "\fBar_account\fP"
+An account string which was specified during the creation of the advance reservation.
+.IP "\fBar_start_time\fP"
+Start time.
+.IP "\fBar_end_time\fP"
+End time.
+.IP "\fBar_granted_pe\fP"
+The parallel environment which was selected for an advance reservation.
+.IP "\fBar_granted_resources\fP"
+The granted resources which were selected for an advance reservation.
+.\"
+.SS ar_log
+The ar_log record is written whenever a advance reservation is changing status. A status
+change can be from pending to active, but can also be triggered by system events like host
+outage. It has following fields.
+.IP "\fBar_state_change_time\fP"
+The time (GMT unix time stamp) when the event occured which caused a state change.
+.IP "\fBar_number\fP"
+The advance reservation number identifying the reservation.
+.IP "\fBar_state\fP"
+The new state.
+.IP "\fBar_event\fP"
+An event id identifying the event which caused the state change.
+.IP "\fBar_message\fP"
+A message describing the event which caused the state change.
+.\"
+.SS ar_acct
+The ar_acct records are accounting records which are written for every queue instance
+whenever a advance reservation terminates. Advance reservation accounting resords comprise
+following fields.
+.IP "\fBar_termination_time\fP"
+The time (GMT unix time stamp) when the advance reservation terminated.
+.IP "\fBar_number\fP"
+The advance reservation number identifying the reservation.
+.IP "\fBar_qname\fP"
+Cluster queue name which the advance reservation reserved.
+.IP "\fBar_hostname\fP"
+The name of the execution host.
+.IP "\fBar_slots\fP"
+The number of slots which were reserved.
 .\"
 .\"
 .SH "SEE ALSO"

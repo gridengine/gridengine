@@ -80,6 +80,7 @@
 #include "uti/sge_monitor.h"
 #include "sge_conf.h"
 #include "sge_security.h"
+#include "sge_advance_reservation_qmaster.h"
 
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
@@ -369,6 +370,7 @@ int main(int argc, char* argv[])
    sge_start_periodic_tasks();
 
    sge_init_job_number();
+   sge_init_ar_id();
 
    sge_setup_job_resend();
 
@@ -387,6 +389,7 @@ int main(int argc, char* argv[])
    if (do_final_spool == true) {
       monitoring_t monitor;
       sge_store_job_number(ctx, NULL, &monitor);
+      sge_store_ar_id(ctx, NULL, &monitor);
    }
 
    sge_qmaster_shutdown(ctx, do_final_spool);

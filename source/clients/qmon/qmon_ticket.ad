@@ -43,14 +43,14 @@ Qmon*tov_layout.dialogTitle:    @{QMON +++ Policy Configuration}
 
 Qmon*tov_layout.xmtChildren: \
    XmPushButton      tov_main_link; \
-   InputField        share_tree_tickets_field = total_share_tree_tickets, \
-                     functional_tickets_field = total_functional_tickets, \
-                     weight_deadline=weight_deadline, \
+   InputField        weight_deadline=weight_deadline, \
                      weight_urgency=weight_urgency, \
                      weight_priority=weight_priority, \
                      weight_ticket=weight_ticket, \
                      weight_waiting_time=weight_waiting_time, \
                      policy_hierarchy = policy_hierarchy; \
+   Ulong32Field      share_tree_tickets_field = total_share_tree_tickets, \
+                     functional_tickets_field = total_functional_tickets; \
    Label             share_tree_tickets_label = label_share_tree_tickets, \
                      functional_tickets_label = label_functional_tickets, \
                      override_tickets_label = override_tickets; \

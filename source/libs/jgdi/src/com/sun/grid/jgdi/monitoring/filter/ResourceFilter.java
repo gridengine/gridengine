@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,9 +41,8 @@ import java.util.StringTokenizer;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
-public class ResourceFilter {
+public class ResourceFilter implements Serializable {
     
     private Map resourceMap = new HashMap();
     

@@ -50,7 +50,6 @@ import java.util.LinkedList;
 
 /**
  *
- * @author rh150277
  */
 public class QQuotaCommand extends AbstractCommand {
    

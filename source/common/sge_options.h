@@ -274,7 +274,12 @@ enum {
    Arqs_OPT,     /* add resource quota set from file */
    mrqs_OPT,     /* modfiy resource quota set */
    Mrqs_OPT,     /* modify resource quota set from file */
-   drqs_OPT      /* delete resource quota set */
+   drqs_OPT,     /* delete resource quota set */
+   ar_OPT,       /* advanced resservation option */
+   he_OPT,       /* error handling for qrsub */ 
+   explain_OPT,  /* explain error in qrstat */
+   xml_OPT,      /* generate xml outout */
+   terse_OPT /* tersed output, RFE 6355875 */
 };
 
 /* macros used in parsing */

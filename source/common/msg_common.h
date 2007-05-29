@@ -85,7 +85,6 @@
 #define MSG_ANSWER_ARGUMENTMISSINGFORX_S    _MESSAGE(23047, _("argument missing for "SFQ))
 #define MSG_USER_INVALIDNAMEX_S             _MESSAGE(23048, _("invalid user name "SFQ))
 #define MSG_USER_NOHOMEDIRFORUSERX_S        _MESSAGE(23049, _("missing home directory for user "SFQ))
-#define MSG_QUEUE_UNABLE2FINDQ_S            _MESSAGE(23051, _("unable to find queue "SFQ))
 #define MSG_OBJ_USER                        _MESSAGE(23052, _("user"))
 #define MSG_OBJ_GROUP                       _MESSAGE(23053, _("group"))
 #define MSG_OBJ_USERPRJ                     _MESSAGE(23054, _("user/project"))
@@ -97,12 +96,14 @@
 #define MSG_SGETEXT_MUSTBEOPERATOR_S        _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation"))
 #define MSG_OPTIONWORKSONLYONJOB            _MESSAGE(23061, _("denied: the selected option works only on jobs and not on tasks"))
 #define MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S _MESSAGE(23062, _("ERROR! "SFN" option must have argument"))
-#define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S        _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
-#define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23064, _("error closeing "SFN": "SFN))
+#define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
+#define MSG_SGETEXT_MUSTBEMANAGERORUSER_SS  _MESSAGE(23065, _("denied: "SFQ" must be manager or in userset "SFQ))
+#define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23066, _("error closeing "SFN": "SFN))
 
 /*
 ** parse_qsub.c
 */
+#define MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTODOPTION_S  _MESSAGE(23067, _("ERROR! Wrong time format "SFQ" specified to -d option"))
 #define MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S  _MESSAGE(23068, _("ERROR! Wrong date/time format "SFQ" specified to -a option"))
 #define MSG_PARSE_ACOPTIONMUSTHAVECONTEXTLISTLISTARGUMENT _MESSAGE(23069, _("ERROR! -ac option must have a context_list list argument"))
 #define MSG_ANSWER_WRONGCONTEXTLISTFORMATAC_S              _MESSAGE(23070, _("ERROR! Wrong context list format -ac "SFQ))
@@ -171,7 +172,6 @@
 #define MSG_CALENDAR_XISNOTACALENDAR_S         _MESSAGE(23135, _(SFN" is not a calendar"))
 #define MSG_CKPT_XISNOTCHKPINTERFACEDEF_S      _MESSAGE(23136, _(SFN" is not a checkpointing interface definition"))
 #define MSG_EXEC_XISNOTANEXECUTIONHOST_S       _MESSAGE(23137, _(SFN" is not an execution host"))
-#define MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S     _MESSAGE(23138, _("changed entry of host "SFN" in execution host list"))
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23139, _(SFN" is not a parallel environment"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument"))
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN))
@@ -311,6 +311,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_LIST            "mail_list               mail_address[,mail_address,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS         "mail_options            `e' `b' `a' `n' `s'"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_OPTIONS_AR      "mail_options            `e' `b' `a' `n' (end, begin, error, no)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_LIST            "node_list               node_path[,node_path,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
@@ -330,6 +331,8 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB      "job_tasks               [job_id['.'task_id_range]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID                "ar_id                   advance reservation id" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_AR_ID_LIST           "ar_id_list              ar_id[,ar_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\""
@@ -346,11 +349,12 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN           "wc_qdomain              wc_cqueue@wc_hostgroup"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_TIME                 "time                    hours:minutes:seconds | seconds"
 
 
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
-#define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a job start time"))
+#define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a start time"))
 
 #define MSG_GDI_USAGE_ac_OPT_CONTEXT_LIST                "[-ac context_list]"
 #define MSG_GDI_UTEXT_ac_OPT_CONTEXT_LIST                _MESSAGE(23292, _("add context variable(s)"))
@@ -971,6 +975,10 @@
 #define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job"))
 
 #define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23507, _("usage:"))
+
+#define MSG_GDI_USAGE_terse_OPT                            "[-terse]"
+#define MSG_GDI_UTEXT_terse_OPT                            _MESSAGE(23508, _("tersed output, print only the job-id"))
+
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules
@@ -1065,13 +1073,38 @@
 #define MSG_GDI_UTEXT_wd_OPT               _MESSAGE(60624, _("use working_directory"))
 
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
+#define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT _MESSAGE(60626, _("all advance reservations of users specified in list"))
+
+#define MSG_GDI_UTEXT_e_OPT_END_TIME       _MESSAGE(60631, _("request an end time"))
+#define MSG_GDI_USAGE_e_OPT_END_TIME       "[-e date_time]"
+
+#define MSG_GDI_USAGE_d_OPT_TIME           "[-d time]"
+#define MSG_GDI_UTEXT_d_OPT_TIME           _MESSAGE(60632, _("duration of time window"))
 
 /*
  * Objects and components
  */
-#define MSG_QMASTER     _MESSAGE(60700, _("master"))
-#define MSG_EXECD       _MESSAGE(60701, _("execution daemon"))
-#define MSG_SCHEDD      _MESSAGE(60702, _("scheduler"))
+#define MSG_QMASTER                       _MESSAGE(60700, _("master"))
+#define MSG_EXECD                         _MESSAGE(60701, _("execution daemon"))
+#define MSG_SCHEDD                        _MESSAGE(60702, _("scheduler"))
+
+/* Ar messages */
+#define MSG_PARSE_INVALID_AR_MUSTBEUINT   _MESSAGE(60703, _("ERROR! invalid advance reservation id, must be an unsigned integer"))
+#define MSG_GDI_USAGE_ar_OPT              "[-ar ar_id]"
+#define MSG_GDI_UTEXT_ar_OPT              _MESSAGE(60704, _("bind job to advance reservation"))
+#define MSG_GDI_UTEXT_ar_QRSTAT_OPT       _MESSAGE(60705, _("show advance reservation information"))
+#define MSG_GDI_USAGE_he_OPT              "[-he  y[es]|n[o]]"
+#define MSG_GDI_UTEXT_he_OPT              _MESSAGE(60706, _("enable/disable hard error handling"))
+#define MSG_GDI_USAGE_xml_OPT             "[-xml]"
+#define MSG_GDI_UTEXT_xml_OPT             _MESSAGE(60707, _("display the information in XML-Format"))
+#define MSG_GDI_USAGE_explain_OPT         "[-explain]"
+#define MSG_GDI_UTEXT_explain_OPT         _MESSAGE(60708, _("show reason for error state"))
+#define MSG_GDI_USAGE_w_OPT_EV            "[-w e|v]"
+#define MSG_GDI_UTEXT_w_OPT_EV            _MESSAGE(60709, _("validate availability of AR request (error|verify) for jobs"))
+#define MSG_GDI_USAGE_ar_list_OPT         "[-ar ar_id_list]"
+#define MSG_GDI_UTEXT_ar_list_OPT         _MESSAGE(60710, _("show information for given advance reservations"))
+#define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60711, _("ERROR! invalid option argument!"))
+
 
 /* =================================================
  * please do not enter new messages after this point,

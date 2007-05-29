@@ -84,7 +84,9 @@ static bool job_update_master_list_usage(lList *job_list, lListElem *event)
    pe_task_id = lGetString(event, ET_strkey);
 
    if(ja_task_id == 0) {
-      ERROR((SGE_EVENT, MSG_JOB_RECEIVEDINVALIDUSAGEEVENTFORJOB_S, job_get_id_string(job_id, ja_task_id, pe_task_id)));
+      dstring id_dstring = DSTRING_INIT;
+      ERROR((SGE_EVENT, MSG_JOB_RECEIVEDINVALIDUSAGEEVENTFORJOB_S, job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
+      sge_dstring_free(&id_dstring);
       ret = false;
    }
 
@@ -144,7 +146,12 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
    lListElem *job = NULL;
    lList *ja_tasks = NULL;
 
+   char id_buffer[MAX_STRING_SIZE];
+   dstring id_dstring;
+
    DENTER(TOP_LAYER, "job_update_master_list");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    list = sge_master_list(object_base, SGE_TYPE_JOB);
    list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
@@ -156,9 +163,8 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
 
       if(job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
-                job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
-         DEXIT;
-         return SGE_EMA_FAILURE;
+                job_get_id_string(job_id, 0, NULL, &id_dstring), "job_update_master_list"));
+         DRETURN(SGE_EMA_FAILURE);
       }
 
       if (event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE ) {
@@ -169,8 +175,7 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
          * object types.
          */
          bool ret = job_update_master_list_usage(*list, event);
-         DEXIT;
-         return (ret?SGE_EMA_OK:SGE_EMA_FAILURE);
+         DRETURN(ret?SGE_EMA_OK:SGE_EMA_FAILURE);
       } else {
          /* this is the true modify event.
           * we may not update several fields:
@@ -185,7 +190,7 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
 
           modified_job = lFirst(lGetList(event, ET_new_version));
           if(job != NULL && modified_job != NULL) {
-            /* we want to preserve the old ja_tasks, sinece job update events to not contain them */
+            /* we want to preserve the old ja_tasks, since job update events to not contain them */
             lXchgList(job, JB_ja_tasks, &ja_tasks);
             lSetHost(modified_job, JB_host, lGetHost(job, JB_host));
             lSetRef(modified_job, JB_category, lGetRef(job, JB_category));
@@ -193,10 +198,9 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
       }
    }
 
-   if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL), action, event) != SGE_EM_OK) {
+   if(sge_mirror_update_master_list(list, list_descr, job, job_get_id_string(job_id, 0, NULL, &id_dstring), action, event) != SGE_EM_OK) {
       lFreeList(&ja_tasks);
-      DEXIT;
-      return SGE_EMA_FAILURE;
+      DRETURN(SGE_EMA_FAILURE);
    }
 
    /* restore ja_task list after modify event */
@@ -205,18 +209,16 @@ job_update_master_list(sge_evc_class_t *evc, object_description *object_base, sg
       job = job_list_locate(*list, job_id);
       if(job == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
-                job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
+                job_get_id_string(job_id, 0, NULL, &id_dstring), "job_update_master_list"));
          lFreeList(&ja_tasks);
-         DEXIT;
-         return SGE_EMA_FAILURE;
+         DRETURN(SGE_EMA_FAILURE);
       }
 
       lXchgList(job, JB_ja_tasks, &ja_tasks);
       lFreeList(&ja_tasks);
    }
 
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
 sge_callback_result

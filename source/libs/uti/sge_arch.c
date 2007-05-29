@@ -65,113 +65,14 @@
 ******************************************************************************/
 const char *sge_get_arch(void)
 {
-#if defined(AIX43)
-#   define ARCHBIN "aix43"
-#elif defined(AIX51)
-#   define ARCHBIN "aix51"
-#elif defined(ALPHA5)
-#   define ARCHBIN "tru64"
-#elif defined(IRIX65)
-#   define ARCHBIN "irix65"
-#elif defined(HPUX)
-#   if defined(HP10)
-#      define ARCHBIN "hp10"
-#   elif defined(HP11)  
-#      define ARCHBIN "hp11"
-#   elif defined(HP1164)
-#      define ARCHBIN "hp11-64"
-#   endif
-#elif defined(SOLARISAMD64)
-#   define ARCHBIN "sol-amd64"
-#elif defined(SOLARIS86)
-#   define ARCHBIN "sol-x86"
-#elif defined(SOLARIS64)
-#   define ARCHBIN "sol-sparc64"
-#elif defined(SOLARIS)
-#   define ARCHBIN "sol-sparc"
-#elif defined(LINUX)
-#   if defined(ALINUX_22)
-#      define ARCHBIN "lx22-alpha"
-#   elif defined(ALINUX_24)
-#      define ARCHBIN "lx24-alpha"
-#   elif defined(ALINUX_26)
-#      define ARCHBIN "lx26-alpha"
-#   elif defined(LINUXAMD64_24)
-#      define ARCHBIN "lx24-amd64"
-#   elif defined(LINUXAMD64_26)      
-#      define ARCHBIN "lx26-amd64"
-#   elif defined(LINUXIA64_24)   
-#      define ARCHBIN "lx24-ia64" 
-#   elif defined(LINUXIA64_26)   
-#      define ARCHBIN "lx26-ia64"
-#   elif defined(LINUXPPC_26)
-#      define ARCHBIN "lx26-ppc"
-#   elif defined(LINUXSPARC_26)   
-#      define ARCHBIN "lx26-sparc"
-#   elif defined(LINUXSPARC64_26)   
-#      define ARCHBIN "lx26-sparc64"
-#   elif defined(LINUX86_22)
-#      define ARCHBIN "lx22-x86"
-#   elif defined(LINUX86_24)
-#      define ARCHBIN "lx24-x86"
-#   elif defined(LINUX86_26)
-#      define ARCHBIN "lx26-x86"
-#   endif
-#elif defined(CRAY)
-#   if defined(CRAYTSIEEE)
-#      define ARCHBIN "craytsieee"
-#   elif defined(CRAYTS)
-#      define ARCHBIN "crayts"
-#   else
-#      define ARCHBIN "cray"
-#   endif
-#elif defined(NECSX4)
-#   define ARCHBIN "necsx4"
-#elif defined(NECSX5)
-#   define ARCHBIN "sx"   
-#elif defined(WIN32)
-#   define ARCHBIN "m$win"   
-#elif defined(FREEBSD)
-#   if defined(FREEBSD_ALPHA)
-#      define ARCHBIN "fbsd-alpha"
-#   elif defined(FREEBSD_AMD64)
-#      define ARCHBIN "fbsd-amd64"
-#   elif defined(FREEBSD_I386)
-#      define ARCHBIN "fbsd-i386"
-#   elif defined(FREEBSD_IA64)
-#      define ARCHBIN "fbsd-ia64"
-#   elif defined(FREEBSD_PPC)
-#      define ARCHBIN "fbsd-ppc"
-#   elif defined(FREEBSD_SPARC64)
-#      define ARCHBIN "fbsd-sparc64"
-#   endif
-#elif defined(NETBSD)
-# if defined(NETBSD_ALPHA)
-#    define ARCHBIN "nbsd-alpha"
-# elif defined(NETBSD_I386)
-#    define ARCHBIN "nbsd-i386"
-# elif defined(NETBSD_POWERPC)
-#    define ARCHBIN "nbsd-powerpc"
-# elif defined(NETBSD_SPARC64)
-#    define ARCHBIN  "nbsd-sparc64":
-# elif defined(NETBSD_X86_64)
-#    define ARCHBIN "nbsd-x86_64"
-# else
-#    pragma "Define a NetBSD architecture for SGE"
-# endif
-#elif defined(DARWIN)
-#   if defined(DARWIN_PPC) 
-#      define ARCHBIN "darwin-ppc"
-#   elif defined(DARWIN_X86)
-#      define ARCHBIN "darwin-x86"
-#   endif
-#elif defined(INTERIX)
-#   define ARCHBIN "win32-x86"
-#else
+#ifndef SGE_ARCH_STRING
 #   pragma "Define an architecture for SGE"
 #endif
 
-   return ARCHBIN;
+#define xstr(s) str(s)
+#define str(s) #s
+
+   return xstr(SGE_ARCH_STRING);
 }
 
 /****** uti/prog/sge_get_root_dir() *******************************************

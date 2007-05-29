@@ -1366,14 +1366,30 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          unknownType("lCompare");
          DRETURN(0);
       }
+
       if (mt_get_type(cp->operand.cmp.mt) == lStringT) {
-         result = !fnmatch(cp->operand.cmp.val.str, 
-                           lGetPosString(ep, cp->operand.cmp.pos), 0);
-      } 
-      if (mt_get_type(cp->operand.cmp.mt) == lHostT) {
-         result = !fnmatch(cp->operand.cmp.val.host, 
-                           lGetPosHost(ep, cp->operand.cmp.pos), 0);
+         if (!(str1 = lGetPosString(ep, cp->operand.cmp.pos))) {
+            str1 = "";
+         }
+
+         if (!(str2 = cp->operand.cmp.val.str)) {
+            DPRINTF(("cp->operand.cmp.val.str in lCompare\n"));
+            LERROR(LENULLSTRING);
+            DRETURN(0);
+         }
+      } else {
+         if (!(str1 = lGetPosHost(ep, cp->operand.cmp.pos))) {
+            str1 = "";
+         }
+
+         if (!(str2 = cp->operand.cmp.val.host)) {
+            DPRINTF(("cp->operand.cmp.val.host in lCompare\n"));
+            LERROR(LENULLSTRING);
+            DRETURN(0);
+         }
       }
+
+      result = !fnmatch(str2, str1, 0);
       break;
 
 

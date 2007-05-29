@@ -31,13 +31,13 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
 
+import java.io.Serializable;
+
 /**
  * This class build a job state filter.
  *
- * 
- * @author  richard.hierlmeier@sun.com
  */
-public class JobStateFilter {
+public class JobStateFilter implements Serializable {
     
     public static class State {
         private int mask;

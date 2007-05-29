@@ -87,6 +87,7 @@ u_long32 mconf_get_max_aj_instances(void);
 u_long32 mconf_get_max_aj_tasks(void);
 u_long32 mconf_get_max_u_jobs(void);
 u_long32 mconf_get_max_jobs(void);
+u_long32 mconf_get_max_advance_reservations(void);
 u_long32 mconf_get_reprioritize(void);
 u_long32 mconf_get_auto_user_fshare(void);
 u_long32 mconf_get_auto_user_oticket(void);
@@ -109,6 +110,7 @@ bool mconf_get_sharetree_reserved_usage(void);
 bool mconf_get_keep_active(void);
 bool mconf_get_enable_windomacc(void);
 bool mconf_get_simulate_hosts(void);
+bool mconf_get_simulate_execds(void);
 long mconf_get_ptf_max_priority(void);
 long mconf_get_ptf_min_priority(void);
 bool mconf_get_use_qsub_gid(void);
@@ -131,6 +133,7 @@ int mconf_get_reporting_flush_time(void);
 int mconf_get_accounting_flush_time(void);
 int mconf_get_sharelog_time(void);
 bool mconf_get_enable_forced_qdel(void);
+int mconf_get_max_job_deletion_time(void);
 bool mconf_get_enable_addgrp_kill(void);
 
 #endif /* __SGE_CONF_H */

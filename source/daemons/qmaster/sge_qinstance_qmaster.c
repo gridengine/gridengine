@@ -54,7 +54,7 @@
 #include "sge_qmod_qmaster.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
-
+#include "sge_advance_reservation_qmaster.h"
 #include "sge_attr.h"
 #include "sge_calendar.h"
 #include "sge_centry.h"
@@ -65,6 +65,11 @@
 #include "sge_parse_num_par.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_calendar_qmaster.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sched/sge_resource_utilization.h"
+#include "sched/sge_serf.h"
+
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "msg_qmaster.h"
 
@@ -73,7 +78,7 @@ typedef struct {
    long state_mask;
    bool (*has_state)(const lListElem *this_elem);
    bool is;
-   void (*set_state)(lListElem *this_elem, bool set); 
+   bool (*set_state)(lListElem *this_elem, bool set); 
    bool set;
    const char *success_msg;
 } change_state_t;
@@ -82,6 +87,10 @@ static bool
 qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
                                     lListElem *qi_elem, u_long32 cal_order, 
                                     lList **state_change_list, monitoring_t *monitor);
+
+static bool
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list);
 
 bool
 qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
@@ -142,11 +151,20 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                            old_value ? old_value : "<null>",
                            new_value ? new_value : "<null>"));
 #endif
+                  /* check if the modification is possible or if
+                   * an existing AR would be violated by the modification
+                   */
+                  if (sge_ar_list_conflicts_with_calendar(answer_list, lGetString(this_elem, QU_full_name),
+                                                      calendar, *object_type_get_master_list(SGE_TYPE_AR))) {
+                     ret = false;
+                     break;
+                  }
+
                   if (calendar != NULL) { 
                      qinstance_change_state_on_calendar(ctx, this_elem, calendar, monitor);
                   } else {
-                     qinstance_state_set_cal_disabled(this_elem, false);
-                     qinstance_state_set_cal_suspended(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_disabled(this_elem, false);
+                     sge_qmaster_qinstance_state_set_cal_suspended(this_elem, false);
                      lSetList(this_elem, QU_state_changes, NULL);
                   }
                   lSetString(this_elem, attribute_name, new_value);
@@ -287,6 +305,24 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
+                  /*
+                   * check if the modification is possible or if 
+                   * an existing AR violates that modification
+                   */
+                  if (cqueue_attibute_name == CQ_ckpt_list &&
+                      ar_list_has_reservation_due_to_ckpt(
+                           *object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                           lGetString(this_elem, QU_full_name), new_value)) {
+                     ret = false;
+                     break;
+                  } else if (cqueue_attibute_name == CQ_pe_list &&
+                             ar_list_has_reservation_due_to_pe(
+                                 *object_type_get_master_list(SGE_TYPE_AR), answer_list,
+                                 lGetString(this_elem, QU_full_name), new_value)) {
+                     ret = false;
+                     break;
+                  }
+
                   lSetList(this_elem, attribute_name, lCopyList("", new_value));
                   *has_changed_conf_attr = true;
                }
@@ -333,6 +369,35 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                }
             }
             break;
+         case CQ_job_slots:
+            {
+               u_long32 old_value = lGetUlong(this_elem, attribute_name);
+               u_long32 new_value;
+
+               ulng_attr_list_find_value(attr_list, answer_list, hostname, 
+                                         &new_value, 
+                                         matching_host_or_group,
+                                         matching_group, is_ambiguous);
+               if (old_value != new_value) {
+                  DPRINTF(("reserved slots %d\n", qinstance_slots_reserved(this_elem)));
+                  if (new_value < qinstance_slots_reserved(this_elem)) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                             MSG_QINSTANCE_SLOTSRESERVED_USS, qinstance_slots_reserved(this_elem),
+                                             lGetString(this_elem, QU_qname), hostname);
+                     ret &= false;
+                  } else {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                     DPRINTF(("Changed "SFQ" from "sge_u32" to "sge_u32"\n",
+                              lNm2Str(attribute_name),
+                              old_value, new_value));
+#endif
+                     lSetUlong(this_elem, attribute_name, new_value);
+                     *has_changed_conf_attr = true;
+                     qinstance_reinit_consumable_actual_list(this_elem, answer_list);
+                  }
+               }
+            }
+            break;
          case CQ_consumable_config_list:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
@@ -345,8 +410,8 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
 
-               if( centry_list_fill_request(new_value, answer_list, master_centry_list, 
-                                        true, true, false) == 0 ) {
+               if (centry_list_fill_request(new_value, answer_list, master_centry_list, 
+                                        true, true, false) == 0) {
 
                    /* We make a copy of new_value here because it will ultimately
                     * end up in the qinstance.  If we didn't copy it, we would end
@@ -363,7 +428,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    
                    lXchgList(tmp_elem, attribute_name, &new_value);
                    lFreeElem(&tmp_elem);
-                   
+
                    if (object_list_has_differences(old_value, answer_list,
                                                    new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
@@ -376,6 +441,12 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                          qinstance_reinit_consumable_actual_list(this_elem, 
                                                                  answer_list);
                       }
+
+                      if (ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                                                                                this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
+                         ret = false;
+                         break;
+                      }
                    } else {
                       /* Either new_value is a copy we made, or it was created by
                        * qinstance_reinit_consumable_actual_list().  Either way, it
@@ -383,6 +454,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                        */
                       lFreeList(&new_value);
                    }
+
                } else {
                    ret &= false;
                }
@@ -540,10 +612,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
                      lSetUlong(this_elem, attribute_name, new_value);
                      *has_changed_conf_attr = true;
-                     if (attribute_name == QU_job_slots) {
-                        qinstance_reinit_consumable_actual_list(this_elem,
-                                                                answer_list);
-                     } else if (attribute_name == QU_nsuspend &&
+                     if (attribute_name == QU_nsuspend &&
                                 new_value == 0) {
                         /*
                          * Suspend Threshold state will be reset later 
@@ -581,8 +650,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -596,19 +664,19 @@ qinstance_change_state_on_command(sge_gdi_ctx_class_t *ctx,
    dstring buffer = DSTRING_INIT;
    const char *qinstance_name = qinstance_get_name(this_elem, &buffer);
    change_state_t transitions[] = {
-      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  qinstance_state_set_error,            false},
-      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  qinstance_state_set_manual_disabled,  false},
-      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, qinstance_state_set_manual_disabled,  true },
-      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, qinstance_state_set_manual_suspended, true },
-      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  qinstance_state_set_manual_suspended, false},
+      { QI_DO_CLEARERROR,     ~QI_ERROR,     qinstance_state_is_error,            true,  sge_qmaster_qinstance_state_set_error,            false},
+      { QI_DO_ENABLE,         ~QI_DISABLED,  qinstance_state_is_manual_disabled,  true,  sge_qmaster_qinstance_state_set_manual_disabled,  false},
+      { QI_DO_DISABLE,        QI_DISABLED,   qinstance_state_is_manual_disabled,  false, sge_qmaster_qinstance_state_set_manual_disabled,  true },
+      { QI_DO_SUSPEND,        QI_SUSPENDED,  qinstance_state_is_manual_suspended, false, sge_qmaster_qinstance_state_set_manual_suspended, true },
+      { QI_DO_UNSUSPEND,      ~QI_SUSPENDED, qinstance_state_is_manual_suspended, true,  sge_qmaster_qinstance_state_set_manual_suspended, false},
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
-      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, qinstance_state_set_error,            true},
-      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, qinstance_state_set_orphaned,         true},
-      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  qinstance_state_set_orphaned,         false},
-      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, qinstance_state_set_unknown,          true},
-      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  qinstance_state_set_unknown,          false},
-      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, qinstance_state_set_ambiguous,        true},
-      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  qinstance_state_set_ambiguous,        false},
+      { QI_DO_SETERROR,       QI_ERROR,      qinstance_state_is_error,            false, sge_qmaster_qinstance_state_set_error,            true},
+      { QI_DO_SETORPHANED,    QI_ORPHANED,   qinstance_state_is_orphaned,         false, sge_qmaster_qinstance_state_set_orphaned,         true},
+      { QI_DO_CLEARORPHANED,  ~QI_ORPHANED,  qinstance_state_is_orphaned,         true,  sge_qmaster_qinstance_state_set_orphaned,         false},
+      { QI_DO_SETUNKNOWN,     QI_UNKNOWN,    qinstance_state_is_unknown,          false, sge_qmaster_qinstance_state_set_unknown,          true},
+      { QI_DO_CLEARUNKNOWN,   ~QI_UNKNOWN,   qinstance_state_is_unknown,          true,  sge_qmaster_qinstance_state_set_unknown,          false},
+      { QI_DO_SETAMBIGUOUS,   QI_AMBIGUOUS,  qinstance_state_is_ambiguous,        false, sge_qmaster_qinstance_state_set_ambiguous,        true},
+      { QI_DO_CLEARAMBIGUOUS, ~QI_AMBIGUOUS, qinstance_state_is_ambiguous,        true,  sge_qmaster_qinstance_state_set_ambiguous,        false},
 #endif
       { QI_DO_NOTHING,        0,             NULL,                                true,  NULL,                                 true }
    };
@@ -678,7 +746,6 @@ qinstance_change_state_on_command(sge_gdi_ctx_class_t *ctx,
           */
          if (did_something) {
             qinstance_increase_qversion(this_elem);
-            reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
             ret &= sge_event_spool(ctx,
                                    answer_list, 0, sgeE_QINSTANCE_MOD,
                                    0, 0, lGetString(this_elem, QU_qname),
@@ -754,7 +821,7 @@ bool qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "qinstance_signal_on_calendar");
+   DENTER(TOP_LAYER, "qinstance_change_state_on_calendar");
 
    if (this_elem != NULL && calendar != NULL) {
       lList *state_changes_list = NULL;
@@ -766,8 +833,7 @@ bool qinstance_change_state_on_calendar(sge_gdi_ctx_class_t *ctx,
       ret = qinstance_change_state_on_calender_(ctx, this_elem, state, &state_changes_list, monitor);
 
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_qinstance_qmaster/qinstance_change_state_on_calendar_all() *********
@@ -855,7 +921,6 @@ static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
    bool old_cal_suspended = qinstance_state_is_cal_suspended(this_elem);
    bool new_cal_disabled = (cal_order == QI_DO_CAL_DISABLE) ? true : false;
    bool new_cal_suspended = (cal_order == QI_DO_CAL_SUSPEND) ? true : false;
-   bool state_changed = false;
 
    DENTER(TOP_LAYER, "qinstance_signal_on_calendar_");
 
@@ -863,14 +928,13 @@ static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
    *state_change_list = NULL;
 
    if (old_cal_disabled != new_cal_disabled) {
-      qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
-      state_changed = true;
+      sge_qmaster_qinstance_state_set_cal_disabled(this_elem, new_cal_disabled);
    }
    
    if (old_cal_suspended != new_cal_suspended) {
       const char *name = lGetString(this_elem, QU_full_name);
 
-      qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
+      sge_qmaster_qinstance_state_set_cal_suspended(this_elem, new_cal_suspended);
       if (new_cal_suspended) {
          if (qinstance_state_is_susp_on_sub(this_elem)) {
             INFO((SGE_EVENT, MSG_QINSTANCE_NOUSSOS_S, name));
@@ -888,17 +952,286 @@ static bool qinstance_change_state_on_calender_(sge_gdi_ctx_class_t *ctx,
             sge_signal_queue(ctx, SGE_SIGCONT, this_elem, NULL, NULL, monitor);
          }
       }
-      state_changed = true;
    }
 
-   if (state_changed) {
-      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
-   }
    qinstance_add_event(this_elem, sgeE_QINSTANCE_MOD);
-   
 
-   DEXIT;
-   return ret;
-
+   DRETURN(ret);
 }
 
+
+bool
+sge_qmaster_qinstance_state_set_alarm(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_alarm(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_suspend_alarm(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_manual_disabled(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_DISABLED,
+                               true,
+                               set_state);
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_manual_suspended(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_SUSPENDED,
+                               true,
+                               set_state);
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_unknown(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_unknown(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   if (mconf_get_simulate_execds()) {
+      sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                                     lGetString(this_elem, QU_full_name), 
+                                     QI_UNKNOWN,
+                                     false,
+                                     set_state);
+   } else {
+      sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                                     lGetString(this_elem, QU_full_name), 
+                                     QI_UNKNOWN,
+                                     true,
+                                     set_state);
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_error(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_error(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_ERROR,
+                               true,
+                               set_state);
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_susp_on_sub(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_cal_disabled(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_cal_suspended(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_orphaned(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_orphaned(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   return changed;
+}
+
+bool
+sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state)
+{
+   bool changed;
+   changed = qinstance_state_set_ambiguous(this_elem, set_state);
+   if (changed) {
+      reporting_create_queue_record(NULL, this_elem, sge_get_gmt());
+   }
+
+   sge_ar_list_set_error_state(*object_type_get_master_list(SGE_TYPE_AR),
+                               lGetString(this_elem, QU_full_name), 
+                               QI_AMBIGUOUS,
+                               true,
+                               set_state);
+
+   return changed;
+}
+
+/* ret: did the state change */
+bool
+sge_qmaster_qinstance_set_initial_state(lListElem *this_elem)
+{
+   bool ret = false;
+   const char *state_string = lGetString(this_elem, QU_initial_state);
+
+#ifdef QINSTANCE_MODIFY_DEBUG
+   DENTER(TOP_LAYER, "sge_qmaster_qinstance_set_initial_state");
+#else 
+   DENTER(BASIS_LAYER, "sge_qmaster_qinstance_set_initial_state");
+#endif
+
+   if (state_string != NULL && strcmp(state_string, "default")) {
+      bool do_disable = strcmp(state_string, "disabled") == 0 ? true : false;
+      bool is_disabled = qinstance_state_is_manual_disabled(this_elem);
+
+      if ((do_disable && !is_disabled) || (!do_disable && is_disabled)) {
+         ret = true;
+         sge_qmaster_qinstance_state_set_manual_disabled(this_elem, do_disable);
+      }
+   }
+   DRETURN(ret);
+}
+
+/****** daemons/qmaster/qinstance_reinit_consumable_actual_list() ************
+*  NAME
+*     qinstance_reinit_consumable_actual_list() -- as it says 
+*
+*  SYNOPSIS
+*     static bool 
+*     qinstance_reinit_consumable_actual_list(lListElem *this_elem, 
+*                                             lList **answer_list) 
+*
+*  FUNCTION
+*     Reinitialize the consumable actual values. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type element 
+*     lList **answer_list  - AN_Type element 
+*
+*  RESULT
+*     static bool - error result
+*        true  - success
+*        false - error
+*
+*  NOTES
+*     MT-NOTE: qinstance_reinit_consumable_actual_list() is MT safe 
+*******************************************************************************/
+static bool
+qinstance_reinit_consumable_actual_list(lListElem *this_elem,
+                                        lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qinstance_reinit_consumable_actual_list");
+
+   if (this_elem != NULL) {
+      const char *name = lGetString(this_elem, QU_full_name);
+      lList *job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
+      lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
+      lList *ar_list = *(object_type_get_master_list(SGE_TYPE_AR));
+      lListElem *ep = NULL;
+
+      lSetList(this_elem, QU_resource_utilization, NULL);
+      qinstance_set_conf_slots_used(this_elem);
+      qinstance_debit_consumable(this_elem, NULL, centry_list, 0);
+
+      for_each(ep, job_list) {
+         lList *ja_task_list = lGetList(ep, JB_ja_tasks);
+         lListElem *ja_task = NULL;
+         int slots = 0;
+
+         for_each(ja_task, ja_task_list) {
+            lListElem *gdil_ep = lGetSubStr(ja_task, JG_qname, name,
+                                            JAT_granted_destin_identifier_list);
+            if (gdil_ep != NULL) {
+               slots += lGetUlong(gdil_ep, JG_slots);
+            }
+         }
+         if (slots > 0) {
+            qinstance_debit_consumable(this_elem, ep, centry_list, slots);
+         }
+      }
+      for_each(ep, ar_list) {
+         lListElem *gdil_ep = lGetSubStr(ep, JG_qname, name, AR_granted_slots);
+
+
+         if (gdil_ep != NULL) {
+            lListElem *dummy_job = lCreateElem(JB_Type);
+         
+            lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ep, AR_resource_list)));
+
+            rc_add_job_utilization(dummy_job, 0, SCHEDULING_RECORD_ENTRY_TYPE_RESERVING,
+                                   this_elem, centry_list, lGetUlong(gdil_ep, JG_slots),
+                                   QU_consumable_config_list, QU_resource_utilization, name,
+                                   lGetUlong(ep, AR_start_time), lGetUlong(ep, AR_duration),
+                                   QUEUE_TAG, false);
+            lFreeElem(&dummy_job);
+         }
+      }
+   }
+
+   DRETURN(ret);
+}

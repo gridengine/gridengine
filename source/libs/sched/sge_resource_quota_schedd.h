@@ -36,6 +36,10 @@
 
 bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 
-int debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem *pe, lList *centry_list, lList *acl_list, lList *hgrp_list);
+bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
+   const char* queue_name, const char* host_name,
+   lList **skip_cqueue_list, lList **skip_host_list);
+
+bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list);
 
 #endif /* __SGE_RESOURCE_QUOTA_SCHEDD_H*/

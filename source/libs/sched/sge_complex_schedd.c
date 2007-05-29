@@ -183,9 +183,9 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
       }
    }
 
-   if(cplx_el && lGetBool(cplx_el, CE_consumable)) {
-      lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE );
-      lSetUlong(cplx_el, CE_dominant,DOMINANT_TYPE_VALUE );
+   if (cplx_el && lGetBool(cplx_el, CE_consumable)) {
+      lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE);
+      lSetUlong(cplx_el, CE_dominant, DOMINANT_TYPE_VALUE);
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
       if (sconf_get_qs_state() == QS_STATE_FULL) {
          if (actual_attr && (actual_el = lGetElemStr(actual_attr, RUE_name, attrname))){
@@ -204,7 +204,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                case CMPLXLE_OP:
                case CMPLXNE_OP:
                default:
-                     lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el,CE_doubleval) - utilized); 
+                     lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el, CE_doubleval) - utilized); 
                   break;
             }
             sge_dstring_init(&ds, as_str, sizeof(as_str));
@@ -222,11 +222,11 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
    }
 
    /** check for a load value */
-   if ( load_attr && 
+   if (load_attr && 
         (sconf_get_qs_state()==QS_STATE_FULL || sge_is_static_load_value(attrname)) &&
         (load_el = lGetElemStr(load_attr, HL_name, attrname)) &&
-        (!is_attr_prior(cplx_el, cplx_el))
-      ) {
+        (!is_attr_prior(cplx_el, cplx_el))) /* ???? */
+   {
          lListElem *ep_nproc=NULL;
          int nproc=1;
 
@@ -257,8 +257,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
             if ( (type = lGetUlong(cplx_el, CE_valtype)) == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
                lSetString(cplx_el, CE_stringval, load_value);
                lSetUlong(cplx_el, CE_dominant, layer | DOMINANT_TYPE_LOAD);
-            }
-            else { /* working on numerical values */
+            } else { /* working on numerical values */
                lListElem *job_load;
                char err_str[256];
                char sval[100];
@@ -280,8 +279,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                   s = lGetString(job_load, CE_stringval);
                   if (!parse_ulong_val(&load_correction, NULL, type, s, err_str, 255)) {
                      ERROR((SGE_EVENT, MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S , attrname));
-                  }
-                  else if (lc_factor) {
+                  } else if (lc_factor) {
                      double old_dval;
                      u_long32 relop;
                      if (!strncmp(attrname, "np_", 3) && nproc != 1 ) {
@@ -310,7 +308,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                /* we can have a user, who wants to override the incomming load value. This is no
                   problem for consumables, but for fixed values. A custom fixed value is a per
                   slot value (stored in CE_doubleval) and a load value is a per job value (stored
-                  in CE_doubleval). 
+                  in CE_pj_doubleval). 
    
                   This code changes a fixed custom value from a per slot to a per job value!!
                */
@@ -463,11 +461,11 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
 *     if the first is NULL, it returns false
 *     if the second or the second and first is NULL, it returns true
 *     if the "==" or "!=" operators are used, it is true
-*     if both are the same, it returns false. 
+*     if both are the same, it may returns false. 
 *     otherwise it computes the minimum or maximum between the values. 
 *
 *  INPUTS
-*     lListElem *upper_el - attribut, which shouldb e overridden by the second one. 
+*     lListElem *upper_el - attribut, which should be overridden by the second one. 
 *     lListElem *lower_el - attribut, which want to override the first one. 
 *
 *  RESULT
@@ -728,7 +726,8 @@ static lList *get_attribute_list_by_names(lListElem *global, lListElem *host,
 *     static lList* - list of attributes or NULL, if no attributes exist.
 *
 *******************************************************************************/
-static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list){
+static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list)
+{
    int pos = 0;
    const char **filter=NULL; 
    lList *list=NULL;
@@ -921,22 +920,22 @@ double src_dl
 
    switch(relop) {
    case CMPLXEQ_OP :
-      match = ( req==src_dl);
+      match = (req==src_dl);
       break;
    case CMPLXLE_OP :
-      match = ( req<=src_dl);
+      match = (req<=src_dl);
       break;
    case CMPLXLT_OP :
-      match = ( req<src_dl);
+      match = (req<src_dl);
       break;
    case CMPLXGT_OP :
-      match = ( req>src_dl);
+      match = (req>src_dl);
       break;
    case CMPLXGE_OP :
-      match = ( req>=src_dl);
+      match = (req>=src_dl);
       break;
    case CMPLXNE_OP :
-      match = ( req!=src_dl);
+      match = (req!=src_dl);
       break;
    default:
       match = 0; /* default -> no match */
@@ -1039,10 +1038,12 @@ int force_existence
          req_dl = 0;
       }   
 
-      if (is_threshold)
+      if (is_threshold) {
          m1 = m2 = 0; /* nothing exceeded per default */
-      else
+      } else {
          m1 = m2 = 1; /* matched per default */
+      }
+
       /* is there a per job limit */
       if (!(lGetUlong(src_cplx, CE_pj_dominant) & (DOMINANT_TYPE_VALUE))) {
          /* Actually request matching for utilization attributes 
@@ -1115,7 +1116,7 @@ int force_existence
       if (!(lGetUlong(src_cplx, CE_dominant) & (DOMINANT_TYPE_VALUE)) ||     /* per slot set || */
               ((lGetUlong(src_cplx, CE_dominant) & (DOMINANT_TYPE_VALUE)) && /* (per slot not set && */
            (lGetUlong(src_cplx, CE_pj_dominant) & (DOMINANT_TYPE_VALUE)) &&  /* and per job not set) */
-            force_existence)) {  
+            force_existence)) {
 
          src_dl = lGetDouble(src_cplx, CE_doubleval);
          req_all_slots = req_dl;
@@ -1125,7 +1126,7 @@ int force_existence
 
          switch (type) {
          case TYPE_BOO:
-            sge_dstring_copy_string( &resource_string, src_dl?"true":"false");
+            sge_dstring_copy_string(&resource_string, src_dl?"true":"false");
 #if 0
             DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
                      name, req_dl?"true":"false", dom_str, name, 
@@ -1172,9 +1173,9 @@ int force_existence
          snprintf(availability_text2, STR_LEN_AVAIL_TEXT, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
       }
       sge_dstring_free(&resource_string);
-      if (is_threshold)
+      if (is_threshold) {
          match = m1 || m2;
-      else {
+      } else {
          match = m1 && m2;
          if (!m1) {
             sge_strlcpy(availability_text, availability_text1, STR_LEN_AVAIL_TEXT);
@@ -1221,7 +1222,8 @@ int force_existence
 *
 *******************************************************************************/
 lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
-    const char* attrname, const lList *centry_list, u_long32 start_time, u_long32 duration){
+    const char* attrname, const lList *centry_list, u_long32 start_time, u_long32 duration)
+{
    lListElem *global_el=NULL;
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
@@ -1244,8 +1246,6 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
             lc_factor = ((double)lc_factor)/100;
          }   
       }
-      /* SG: this should be an error case */
-      
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
                                 lc_factor, NULL, false, start_time, duration);
@@ -1264,17 +1264,14 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
             lc_factor = ((double)lc_factor)/100;
          }
       }
-      /* SG: this should be an error case */
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
                               lc_factor, NULL, false, start_time, duration);
       if (!global_el && host_el) {
          ret_el = host_el;
-      }   
-      else if (global_el && host_el) {
-         if(is_attr_prior(global_el, host_el)) {
+      } else if (global_el && host_el) {
+         if (is_attr_prior(global_el, host_el)) {
             lFreeElem(&host_el);
-         }
-         else{
+         } else{
             lFreeElem(&global_el);
             ret_el = host_el;
          }
@@ -1351,55 +1348,6 @@ int main(int argc, char *argv[], char *envp[])
    DRETURN(0);
 }
 #endif
-
-
-int attr_mod_threshold(
-lList **alpp,
-lListElem *qep,
-lListElem *new_ep,
-int nm,
-int primary_key,
-int sub_command,
-char *attr_name,
-char *object_name 
-) {
-   int ret;
-
-   DENTER(TOP_LAYER, "attr_mod_threshold");
-
-   /* ---- attribute nm */
-   if (lGetPosViaElem(qep, nm, SGE_NO_ABORT)>=0) {
-      lListElem *tmp_elem = NULL;
-
-      DPRINTF(("got new %s\n", attr_name));
-
-      if (ensure_attrib_available(alpp, qep, nm)) {
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      tmp_elem = lCopyElem(new_ep); 
-
-      ret = attr_mod_sub_list(alpp, tmp_elem, nm, primary_key, qep,
-                              sub_command, attr_name, object_name, 0);
-      if (!ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      ret = centry_list_fill_request(lGetList(tmp_elem, nm), alpp,
-                                     *centry_list_get_master_list(), true, false, false);
-      if (ret) {
-         lFreeElem(&tmp_elem);
-         DRETURN(STATUS_EUNKNOWN);
-      }
-
-      lSetList(new_ep, nm, lCopyList("", lGetList(tmp_elem, nm)));
-      lFreeElem(&tmp_elem);
-   }
-
-   DRETURN(0);
-}
-
 
 /****** sge_complex_schedd/request_cq_rejected() *******************************
 *  NAME

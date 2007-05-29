@@ -41,6 +41,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_qref.h"
 #include "msg_common.h"
 #include "uti/sge_log.h"
 #include "uti/sge_parse_num_par.h"
@@ -48,15 +49,15 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe.h"
-#include "sched/sge_resource_utilizationL.h"
+#include "sched/sge_resource_utilization.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_hrefL.h"
+#include "sgeobj/sge_href.h"
 #include "sgeobj/sge_host.h"
+#include "sgeobj/sge_cqueue.h"
 #include "uti/sge_string.h"
 
 static bool rqs_match_user_host_scope(lList *scope, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
-static bool rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group);
 
 /****** sge_resource_quota/rqs_parse_filter_from_string() *************************
 *  NAME
@@ -285,7 +286,7 @@ lListElem* rqs_set_defaults(lListElem* rqs)
 *            false on error
 *
 *  NOTES
-*     MT-NOTE: rqs_verify_attributes() is MT safe 
+*     MT-NOTE: rqs_verify_attributes() is not MT safe 
 *******************************************************************************/
 bool rqs_verify_attributes(lListElem *rqs, lList **answer_list, bool in_master)
 {
@@ -721,7 +722,6 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
    char *qname = NULL;
    const char *queue_instance = lGetString(granted, JG_qname);
    const char* project = lGetString(job, JB_project);
-   char *at_sign = NULL; 
 
    DENTER(TOP_LAYER, "rqs_debit_consumable");
 
@@ -730,15 +730,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
    }
 
    /* remove the host name part of the queue instance name */
-   at_sign = strchr(queue_instance, '@');
-   if (at_sign != NULL) {
-      int size = at_sign - queue_instance;
-      qname = malloc(sizeof(char) * (size + 1));
-      qname = strncpy(qname, queue_instance, size);
-      qname[size] = '\0';
-   } else {
-      qname = strdup(queue_instance);
-   }
+   qname = cqueue_get_name_from_qinstance(queue_instance);
 
    rule = rqs_get_matching_rule(rqs, username, groupname, project, pename, hostname, qname, acl_list, hgrp_list, NULL);
 
@@ -749,7 +741,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
       rqs_get_rue_string(&rue_name, rule, username, project,
                                 hostname, qname, pename);
 
-      mods = rqs_debit_rule_usage(job, rule, rue_name, slots, centry_list, lGetString(rqs, RQS_name));
+      mods = rqs_debit_rule_usage(job, rule, &rue_name, slots, centry_list, lGetString(rqs, RQS_name));
 
       sge_dstring_free(&rue_name);
    }
@@ -825,7 +817,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *
 *  SYNOPSIS
 *     int rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring 
-*     rue_name, int slots, lList *centry_list, const char *obj_name) 
+*     *rue_name, int slots, lList *centry_list, const char *obj_name) 
 *
 *  FUNCTION
 *     Debit an amount of slots in all limits of one resource quota rule
@@ -833,7 +825,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *  INPUTS
 *     lListElem *job       - job request (JG_Type)
 *     lListElem *rule      - resource quota rule (RQR_Type)
-*     dstring rue_name     - rue name that counts
+*     dstring *rue_name    - rue name that counts
 *     int slots            - amount of slots to debit
 *     lList *centry_list   - consumable resource list (CE_Type)
 *     const char *obj_name - name of the limit
@@ -845,7 +837,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
 *     MT-NOTE: rqs_debit_rule_usage() is MT safe 
 *******************************************************************************/
 int
-rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slots, lList *centry_list, const char *obj_name) 
+rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slots, lList *centry_list, const char *obj_name) 
 {
    lList *limit_list;
    lListElem *limit;
@@ -872,9 +864,9 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
          continue;
       }
 
-      rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage);
+      rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage);
       if(rue_elem == NULL) {
-         rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(&rue_name), RQRL_usage, RUE_Type);
+         rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage, RUE_Type);
          /* RUE_utilized_now is implicitly set to zero */
       }
 
@@ -882,7 +874,7 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring rue_name, int slot
          bool tmp_ret = job_get_contribution(job, NULL, centry_name, &dval, raw_centry);
          if (tmp_ret && dval != 0.0) {
             DPRINTF(("debiting %f of %s on rqs %s for %s %d slots\n", dval, centry_name,
-                     obj_name, sge_dstring_get_string(&rue_name), slots));
+                     obj_name, sge_dstring_get_string(rue_name), slots));
             lAddDouble(rue_elem, RUE_utilized_now, slots * dval);
             mods++;
          }
@@ -1140,29 +1132,80 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 {
       DENTER(TOP_LAYER, "rqs_is_matching_rule");
 
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, master_hgroup_list, group)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, NULL, group)) {
          DPRINTF(("user doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, NULL, NULL, NULL)) {
          DPRINTF(("project doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, NULL, NULL, NULL)) {
          DPRINTF(("pe doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, NULL, NULL, NULL)) {
          DPRINTF(("queue doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, NULL, master_hgroup_list, NULL)) {
          DPRINTF(("host doesn't match\n"));
          DRETURN(false);
       }
 
       DRETURN(true);
 }
+
+
+
+/****** sge_resource_quota/rqs_match_host_scope() ******************************
+*  NAME
+*     rqs_match_host_scope() -- Match name with host scope
+*
+*  SYNOPSIS
+*     static bool rqs_match_host_scope(lList *scope, const char *name, lList 
+*     *master_hgroup_list) 
+*
+*  FUNCTION
+*     The function matches the passed name with the host scope. Name
+*     may not only be a hostname, but also host group name or a wildcard
+*     expression. For performance reasons qref_list_host_rejected() is
+*     used for matching, if we got no pattern and no hostgroup.
+*
+*  INPUTS
+*     lList *scope              - A scope list (ST_Type)
+*     const char *name          - hostname/hostgroup name/wildcard expression
+*     lList *master_hgroup_list - the host group list (HGRP_Type)
+*
+*  RESULT
+*     bool - Returns true if 'name' matches
+*
+*  NOTES
+*     MT-NOTE: rqs_match_host_scope() is MT safe 
+*******************************************************************************/
+static bool rqs_match_host_scope(lList *scope, const char *name, lList *master_hgroup_list) 
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "rqs_match_host_scope");
+
+   if (lGetElemStr(scope, ST_name, "*")) {
+      DRETURN(true);
+   }
+   
+   if (sge_is_pattern(name) || is_hgroup_name(name)) {
+      DRETURN(rqs_match_user_host_scope(scope, FILTER_HOSTS, name, NULL, master_hgroup_list, NULL));
+   }
+
+   /* at this stage we know 'name' is a simple hostname */
+   for_each(ep, scope) {
+      if (!qref_list_host_rejected(lGetString(ep, ST_name), name, master_hgroup_list)) {
+         DRETURN(true);
+      }
+   }
+   DRETURN(false);
+}
+
 
 
 /****** sge_resource_quota/rqs_filter_match() *******************************
@@ -1193,7 +1236,7 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 *     MT-NOTE: rqs_filter_match() is MT safe 
 *
 *******************************************************************************/
-static bool 
+bool 
 rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *master_userset_list, lList *master_hgroup_list, const char *group) {
    bool ret = true;
    lListElem* ep; 
@@ -1205,15 +1248,25 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
       lList* xscope = lGetList(filter, RQRF_xscope);
 
       switch (filter_type) {
-         case FILTER_USERS:
          case FILTER_HOSTS:
+            DPRINTF(("matching hosts with %s\n", value));
+            /* inverse logic because of xscope */
+            ret = rqs_match_host_scope(xscope, value, master_hgroup_list) ? false: true;
+            if (ret == true) { 
+               bool found = rqs_match_host_scope(scope, value, master_hgroup_list);
+               if (scope != NULL && found == false) {
+                  ret = false;
+               }
+            }
+            break;
+
+         case FILTER_USERS:
          {  
             DPRINTF(("matching users or hosts with %s\n", value));
             /* inverse logic because of xscope */
-            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, master_hgroup_list, group) ? false: true;
+            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, NULL, group) ? false: true;
             if (ret == true) { 
-               bool found = false;
-               found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, master_hgroup_list, group);
+               bool found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, NULL, group);
                if (scope != NULL && found == false) {
                   ret = false;
                }
@@ -1268,52 +1321,6 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
    }
 
    DRETURN(ret);
-}
-
-/****** sge_resource_quota/sge_user_is_referenced_in_rqs() ************************
-*  NAME
-*     sge_user_is_referenced_in_rqs() -- search for user reference in rqs 
-*
-*  SYNOPSIS
-*     bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, 
-*     lList *acl_list) 
-*
-*  FUNCTION
-*     Search for a user reference in the resource quota sets
-*
-*  INPUTS
-*     const lList *rqs - resource quota set list
-*     const char *user  - user to search
-*     const char *group - user's group
-*     lList *acl_list   - acl list for user resolving
-*
-*  RESULT
-*     bool - true if user was found
-*            false if user was not found
-*
-*  NOTES
-*     MT-NOTE: sge_user_is_referenced_in_rqs() is MT safe 
-*
-*******************************************************************************/
-bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list)
-{
-   bool ret = false;
-   lListElem *ep;
-
-   for_each(ep, rqs) {
-      lList *rule_list = lGetList(ep, RQS_rule);
-      lListElem *rule;
-      for_each(rule, rule_list) {
-         if (rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, acl_list, NULL, group)) {
-            ret = true;
-            break;
-         }
-      }
-      if (ret == true) {
-         break;
-      }
-   }
-   return ret;
 }
 
 /****** sge_resource_quota/sge_centry_referenced_in_rqs() *************************
@@ -1373,4 +1380,51 @@ bool sge_centry_referenced_in_rqs(const lListElem *rqs, const lListElem *centry)
    }
 
    DRETURN(ret);
+}
+
+/****** sge_resource_quota/rqs_replace_request_verify() ************************
+*  NAME
+*     rqs_replace_request_verify() -- verify a rqs replace request
+*
+*  SYNOPSIS
+*     bool rqs_replace_request_verify(lList **answer_list, const lList 
+*     *request) 
+*
+*  FUNCTION
+*     Verify a rqs replace request (e.g. coming from a qconf -mrqs).
+*     We make sure, that no duplicate names appear in the request.
+*
+*  INPUTS
+*     lList **answer_list  - answer list to report errors
+*     const lList *request - the request to check
+*
+*  RESULT
+*     bool - true, if it is ok, false on error
+*
+*  NOTES
+*     MT-NOTE: rqs_replace_request_verify() is MT safe 
+*******************************************************************************/
+bool rqs_replace_request_verify(lList **answer_list, const lList *request)
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "rqs_replace_request_verify");
+
+   /* search for duplicate rqs names in the request */
+   for_each(ep, request) {
+      const char *name = lGetString(ep, RQS_name);
+
+      lListElem *second = lNext(ep);
+      while (second != NULL) {
+         const char *second_name = lGetString(second, RQS_name);
+         if (strcmp(name, second_name) == 0) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
+                                    MSG_RQS_REQUEST_DUPLICATE_NAME_S, name);
+            DRETURN(false);
+         }
+         second = lNext(second);
+      }
+   }
+
+   DRETURN(true);
 }

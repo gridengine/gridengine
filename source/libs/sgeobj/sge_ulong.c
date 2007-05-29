@@ -44,6 +44,7 @@
 #include "sge_dstring.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
+#include "sge_parse_num_par.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -529,4 +530,51 @@ ulong_parse_centry_relop_from_string(u_long32 *this_ulong,
    DEXIT;
    return ret;
 }
+
+bool
+ulong_parse_from_string(u_long32 *this_ulong,
+                        lList **answer_list, const char *string) 
+{
+   bool ret = true;
+      
+   DENTER(TOP_LAYER, "ulong_parse_from_string");
+   if (this_ulong != NULL && string != NULL) {
+      if (!parse_ulong_val(NULL, this_ulong, TYPE_INT, string, NULL, 0)) {
+         answer_list_add(answer_list, MSG_PARSE_INVALID_ID_MUSTBEUINT,
+                         STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         ret = false;
+      }
+   }
+   DRETURN(ret);
+}
+
+
+bool
+ulong_list_parse_from_string(lList **this_list, lList **answer_list,
+                             const char *string, const char *delimitor)
+{
+   bool ret = true;
+                                
+   DENTER(TOP_LAYER, "ulong_list_parse_from_string");
+   if (this_list != NULL && string != NULL && delimitor != NULL) {
+      struct saved_vars_s *context = NULL;
+      const char *token;
+            
+      token = sge_strtok_r(string, delimitor, &context);
+      while (token != NULL) {   
+         u_long32 value;
+
+         ret = ulong_parse_from_string(&value, answer_list, token);
+         if (ret) {
+            lAddElemUlong(this_list, ULNG, value, ULNG_Type);
+         } else {
+            break;
+         }
+         token = sge_strtok_r(NULL, delimitor, &context);
+      }
+      sge_free_saved_vars(context);
+   }        
+   DRETURN(ret);
+}
+
 

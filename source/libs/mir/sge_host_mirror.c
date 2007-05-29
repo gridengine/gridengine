@@ -94,11 +94,9 @@ host_update_master_list(sge_evc_class_t *evc, object_description *object_base, s
    if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
                                               action, event) != SGE_EM_OK) {
 
-      DEXIT;
-      return SGE_EMA_FAILURE;
+      DRETURN(SGE_EMA_FAILURE);
    }
 
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 

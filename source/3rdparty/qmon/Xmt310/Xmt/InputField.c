@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: InputField.c,v 1.2 2001/08/09 12:56:52 andre Exp $
+ * $Id: InputField.c,v 1.3 2007/05/29 11:52:34 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,18 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: InputField.c,v $
+ * Revision 1.3  2007/05/29 11:52:34  andre
+ * AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
+ *                             - various qmon bug fixes:
+ *                             - split of qrsub sge_parse_qrsub into clients/common/sge_qrsub.c
+ *                             - reserved_slots -> resv_slots for consistency
+ *                             - jgdi delete job crashes master
+ *                  Issue:     1729, 2262, 2263, 2260, 2261, 747,
+ *                             2264
+ *                  Bugster:   6327539, 6538740, 4818801, 4742097, 6553066, 6291044
+ *                             6555953
+ *                  Review:    RD
+ *
  * Revision 1.2  2001/08/09 12:56:52  andre
  * AA-2001-08-09-0: - IZ 33, fixed duplicate free for scheduler conf dialogue code
  *
@@ -303,8 +315,7 @@ static int isoctal(c)
 int c;
 #endif
 {
-
-    return (int)(strchr ("01234567", c));
+    return (strchr("01234567", c)) ? 1:0;
 }
 
 /* ARGSUSED */
@@ -315,7 +326,7 @@ static int ishex(c)
 int c;
 #endif
 {
-    return (int)(strchr ("0123456789abcdefABCDEF", c));
+    return (strchr("0123456789abcdefABCDEF", c)) ? 1:0;
 }
 
 /* ARGSUSED */

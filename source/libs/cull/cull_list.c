@@ -45,6 +45,7 @@
 #include "msg_cull.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_string.h"
 #include "cull_db.h"
 #include "cull_sortP.h"
 #include "cull_where.h"
@@ -625,10 +626,14 @@ const lDescr *lGetElemDescr(const lListElem *ep)
 void lWriteElem(const lListElem *ep) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
    lWriteElem_(ep, &buffer, 0);   
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer); 
    DRETURN_VOID;
 }
@@ -651,10 +656,14 @@ void lWriteElem(const lListElem *ep)
 void lWriteElemTo(const lListElem *ep, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElemTo");
    lWriteElem_(ep, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -696,7 +705,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
-         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_U32CFormat"\n", space, lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
@@ -764,10 +773,17 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 void lWriteList(const lList *lp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteList");
+   if (!lp) {
+      DRETURN_VOID;
+   }
    lWriteList_(lp, &buffer, 0);
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -789,10 +805,14 @@ void lWriteList(const lList *lp)
 void lWriteListTo(const lList *lp, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteListTo");
    lWriteList_(lp, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer) ?  sge_dstring_get_string(&buffer) : "");
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -1322,6 +1342,81 @@ int lAppendList(lList *lp0, lList *lp1)
    DRETURN(0);
 }
 
+/****** cull/list/lOverrideStrList() ************************************************
+*  NAME
+*     lOverrideStrList() -- Merge two lists 
+*
+*  SYNOPSIS
+*     int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
+*
+*  FUNCTION
+*     Merge two lists of equal type, and replace values in the first list
+*     with values from the second list.
+*
+*     This only applies to values equal str.
+*
+*  INPUTS
+*     lList *lp0      - first list 
+*     lList *lp1      - second list 
+*     int nm          - field name used for merging
+*     const char *str - override criteria, e.g. "-q" for "override all -q switches,
+*                       all others are simply merged"
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lOverrideStrList() is MT safe
+******************************************************************************/
+int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
+{
+   lListElem *ep;
+   const lDescr *dp0, *dp1;
+   bool overridden = false;
+
+   DENTER(CULL_LAYER, "lOverrideStrList");
+
+   if (!lp1 || !lp0) {
+      LERROR(LELISTNULL);
+      DRETURN(-1);
+   }
+
+   /* Check if the two lists are equal */
+   dp0 = lGetListDescr(lp0);
+   dp1 = lGetListDescr(lp1);
+   if (lCompListDescr(dp0, dp1)) {
+      LERROR(LEDIFFDESCR);
+      DRETURN(-1);
+   }
+
+   while (lp1->first) {
+      if (!(ep = lDechainElem(lp1, lp1->first))) {
+         LERROR(LEDECHAINELEM);
+         DRETURN(-1);
+      }
+
+      /* 
+       * if we find elements to override, override them
+       * override means:
+       * remove all occurencies of the str in lp0
+       */
+      if (sge_strnullcmp(lGetString(ep, nm), str) == 0 && !overridden) {
+         lListElem *tmp;
+         while ((tmp = lGetElemStr(lp0, nm, str)) != NULL) {
+            lRemoveElem(lp0, &tmp);
+         }
+         overridden = true;
+      }
+
+      /* now copy the elem */
+      lAppendElem(lp0, ep);
+   }
+
+   lFreeList(&lp1);
+   DRETURN(0);
+}
 /****** cull/list/lCompListDescr() ********************************************
 *  NAME
 *     lCompListDescr() -- Compare two descriptors 
@@ -1727,9 +1822,7 @@ lDechainList(lList *source, lList **target, lListElem *ep)
   
    if (*target == NULL) {
       *target = lCreateList(lGetListName(source), source->descr);
-   }
-   else {
-      
+   } else {
       if (lCompListDescr(source->descr, (*target)->descr) != 0) {
          CRITICAL((SGE_EVENT,"Dechaining element into a different list !!!\n"));
          DEXIT;

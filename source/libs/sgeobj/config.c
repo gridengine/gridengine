@@ -607,24 +607,19 @@ int *interpretation_rule
 
 
    if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
-      DEXIT;
-      return fields?true:false;
+      DRETURN((fields?true:false));
    }
 
-   {
-      if (cull_parse_definition_list(str, &tmplp, key, descr, 
-            interpretation_rule) != 0) {
-         DEXIT;
-         return false;
-      }
+   if (cull_parse_definition_list(str, &tmplp, key, descr, 
+         interpretation_rule) != 0) {
+      DRETURN(false);
    }
 
    lSetList(ep, name_nm, tmplp);
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
-   DEXIT;
-   return true;
+   DRETURN(true);
 }
 
 /****

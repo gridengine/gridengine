@@ -80,6 +80,8 @@ bool
 cqueue_name_split(const char *name, dstring *cqueue_name, dstring *host_domain,
                   bool *has_hostname, bool *has_domain);
 
+char* cqueue_get_name_from_qinstance(const char *queue_instance);
+
 lListElem *
 cqueue_create(lList **answer_list, const char *name);
 
@@ -100,15 +102,6 @@ cqueue_list_locate(const lList *this_list, const char *name);
 
 lListElem *
 cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname);
-
-bool
-
-cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
-                   lListElem *reduced_elem, int sub_command,
-                   int attribute_name, int sublist_host_name,
-                   int sublist_value_name, int subsub_key,
-                   const char *attribute_name_str,
-                   const char *object_name_str);
 
 bool
 cqueue_list_find_all_matching_references(const lList *this_list,

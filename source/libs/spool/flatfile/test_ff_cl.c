@@ -233,7 +233,7 @@ static int PE_test(void)
    lSetList(ep, PE_resource_utilization, lp);
    
    lp = lCreateList("User_List", US_Type);
-   
+
    ep2 = lCreateElem(US_Type);   
    lSetString(ep2, US_name, "First_User_List");
    lSetUlong(ep2, US_type, 101);

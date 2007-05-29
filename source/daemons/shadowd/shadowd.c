@@ -355,7 +355,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                      /* TODO: what do we when there is a timeout ??? */
                      DPRINTF(("old qmaster name in act_qmaster and old heartbeat\n"));
                      if (!compare_qmaster_names(ctx->get_act_qmaster_file(ctx), oldqmaster) &&
-                         !shadowd_is_old_master_enrolled(sge_test_heartbeat, sge_get_qmaster_port(), oldqmaster) && 
+                         !shadowd_is_old_master_enrolled(sge_test_heartbeat, sge_get_qmaster_port(NULL), oldqmaster) && 
                          (latest_heartbeat == heartbeat)) {
                         char qmaster_name[256];
                         char schedd_name[256];

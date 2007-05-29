@@ -49,6 +49,7 @@
 #include "cull_tree.h"
 #include "cull_hash.h"
 #include "cull_state.h"
+#include "cull_xml.h"
 #include "pack.h"
 
 #endif /* JGDI_GENERATE */

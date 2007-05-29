@@ -37,7 +37,6 @@ import java.util.List;
 
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public interface ClassDescriptor {
 

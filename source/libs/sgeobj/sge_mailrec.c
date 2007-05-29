@@ -39,6 +39,8 @@
 #include "sge_mailrec.h"
 #include "cull_parse_util.h"
 
+#include "get_path.h"
+#include "symbols.h"
 #include "msg_common.h"
 
 /****** sgeobj/mailrec/mailrec_parse() ****************************************
@@ -197,4 +199,3 @@ int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len)
    }
    return 0;
 }
-

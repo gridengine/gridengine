@@ -37,14 +37,14 @@ import com.sun.grid.jgdi.monitoring.filter.ProjectFilter;
 import com.sun.grid.jgdi.monitoring.filter.QueueFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
+import java.io.Serializable;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  * @todo    beta ??
  *          <p>Add javadoc comments</p>
  */
-public class QQuotaOptions {
+public class QQuotaOptions implements Serializable {
    
    
    /* -q option */

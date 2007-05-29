@@ -60,6 +60,7 @@
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
+#include "basis_types.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -96,6 +97,7 @@ char **argv
    dstring session_key_out = DSTRING_INIT;
    dstring diag = DSTRING_INIT;
    dstring jobid = DSTRING_INIT;
+   bool has_terse = false;
    u_long32 start, end, step;
    u_long32 num_tasks;
    int count, stat;
@@ -167,6 +169,13 @@ char **argv
       sge_usage(QSUB, stdout);
       DEXIT;
       SGE_EXIT(NULL, 0);
+   }
+
+   /*
+    * Check if -terse is requested
+    */
+   if (opt_list_has_X(opts_cmdline, "-terse")) {
+      has_terse = true;
    }
 
    /*
@@ -346,7 +355,11 @@ char **argv
    if (!just_verify) {
       const char *output = sge_dstring_get_string(&diag); 
 
-      if (output != NULL) {
+      /* print the tersed output */
+      if (has_terse) {
+        printf("%s", jobid_string);
+      }
+      else if (output != NULL) {
         printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));

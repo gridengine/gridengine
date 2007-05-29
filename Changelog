@@ -1,3 +1,640 @@
+RD-2007-05-29-1: Bugfix:    - reverted AR related job verification
+                            - fixed scheduler bug with pe reservation
+                 Review:    AA
+
+JG-2007-05-29-2: Bugfix:    Completed checkin JG-2007-05-29-0 (owner).
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+
+AA-2007-05-29-1: Bugfix:    compiler warnings
+
+AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
+                            - various qmon bug fixes:
+                            - split of qrsub sge_parse_qrsub into clients/common/sge_qrsub.c
+                            - reserved_slots -> resv_slots for consistency
+                            - jgdi delete job crashes master
+                 Issue:     1729, 2262, 2263, 2260, 2261, 747,
+                            2264
+                 Bugster:   6327539, 6538740, 4818801, 4742097, 6553066, 6291044
+                            6555953
+                 Review:    RD
+  
+AH-2007-05-29-0: Bugfix:    - forgot error exit with AH-2007-05-25-2 memory
+                              leak fix
+                            - forgot to consider PE resource quota scopes with 
+                              sequential job optimization AH-2007-05-03-0
+                 Bugtraq:   6562190, 6551568
+                 Issue:     2187, 2238
+                 Review:    RH
+
+JG-2007-05-29-1: Bugfix:    Fixed messages macros.
+                 Review:    RD
+
+RD-2007-05-29-0: Enhancem:  - added qrdel -f implementation
+                            - fixed some advance reservation issues
+                 Review:    JG 
+
+JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+
+RN-2007-05-28-3: Bugfix:    Wrong exit code with qconf -sds.
+                  Bugtraq:  6522273
+                  Review:   JG
+
+RN-2007-05-28-2: Enhancem.: Numbers in error mail too large
+                 Bugtraq:   6367642
+                 Issue:     804
+                 Review:    JG
+
+RN-2007-05-28-1: Enhancem.: qsub -terse to just output job id
+                 Bugtraq:   6355875
+                 Issue:     916
+                 Review:    JG
+
+RN-2007-05-28-0: Bugfix:    Still used usersets can be removed under certain
+                            conditions
+                  Bugtraq:  6422335
+                  Issue:    2050
+                  Review:   JG
+
+PJ-2007-05-25-1: Bugfix:    Joined check for AR jobs that requests more than
+                            reserved resources with -w e switch 
+                  Review:   RD
+
+LP-2007-05-25-0: Enhancem.: Using aimk debug flag when building libjgdi if set.
+                 Enhancem.: Improved and modified GEObjectEditor code for new 
+                            JGDI functions
+                 Enhancem.: JGDIShell improved
+                 Enhancem.: Introduced cluster.config.file.location property to 
+                            override cluster config
+                 Review:    AA
+
+JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 
+                            can't be overridden through command line"
+                 Review:    RD
+
+AH-2007-05-25-2: Bugfix:    - PE scope of resource quotas is not considered
+                              when -pe wildcard requests are used
+                            - memory leak in sge_schedd
+                  Bugtraq:  6559409, 6562190
+                  Issue:    2254, 2187
+                  Review:   JG
+
+PJ-2007-05-25-0: Bugfix:    Added check for AR jobs that requests more than 
+                            reserved resources
+                            Added field error_handling to qrstat -ar (-xml)
+                 Review:    RD
+
+RD-2007-05-25-0: Bugfix:    qmaster may crash with projects or usersets used
+                            in RQS
+                 Bugster:   6558006
+                 Issue:     2250
+                 Review:    JG
+
+OJ-2007-05-23-4: Bugfix:    Fixed man page error:  man page sgepasswd(5) should
+                            be removed 
+                            Added explanations in sge_shepherd(8), sge_execd(8)
+                            regarding sgepasswd usage.
+                 Bugster:   6446203
+                 Review:    MP
+
+OJ-2007-05-23-3: Bugfix:    Fixed man page error: reserved usage not explained 
+                            in sge_conf.5
+                 Bugster:   6447133
+                 Review:    MP
+
+OJ-2007-05-23-2: Bugfix:    Fixed man page error: shell_start_mode should be documentated to be 
+                            only used for batch jobs
+                 Bugster:   6428495
+                 Review:    MP
+
+OJ-2007-05-23-1: Bugfix:    Fixed man page error: reporting lacks information about sharelog records
+                 Bugster:   6317563
+                 Review:    MP
+
+OJ-2007-05-23-0: Bugfix:    Fixed man page error: qrsh man page doesn't explain which options 
+                            don't work with interactive job 
+                 Bugster:   6364661
+                 Review:    MP
+
+JG-2007-05-23-0: Bugfix:    Fixed resource debitation when modifying exec hosts.
+                            Fixed a memory leak in scheduler.
+                 Review:    AH
+                 Bugfix:    Fixed queue status string generation.
+                 Review:    RD
+
+JG-2007-05-22-0: Bugfix:    Queue status in reporting file is missing.
+                 Bugster:   5081743
+                 Issue:     2258
+                 Review:    JG
+
+RD-2007-05-21-0: Bugfix:    - Fixed return value for qselect and some qconf
+                               switches
+                            - fixed bug with host complexes consistency check
+                 Cleanup:   Code uses now GDI request bitmask
+                 Review:    AA
+
+LP-2007-05-18-0: Bugfix:    Calling JGDI getQueueInstanceSummary results in a memory leak
+                 Bugtraq:   6559385
+                 Review:    AA
+
+AH-2007-05-14-0: Bugfix:    Memory leak in libdrmaa.so
+                 Bugster:   6551121
+                 Review:    LP
+
+AH-2007-05-11-1: Bugfix:    Fixed resource reservation broken by AH-2007-05-03-0
+
+AH-2007-05-11-0: Bugfix:    Add -u <user> to scheduler category only if there is 
+                            a resource quota for the user
+                 Bugster:   6554313
+                 Issue:     2248
+                 Review:    TBD
+
+MP-2007-05-11-0  Bugfix:    Queue request -q from sge_request can't
+                            be overridden through command line
+                 Bugster:   6328064
+                 Review:    JG
+
+EB-2007-05-10-1: Bugfix:    xacl output was missing in qrstat output
+                 Review:    TBD
+
+AA-2007-05-10-0: Bugfix:    qmon crashes when displaying about dialog
+                 Bugster:   6555744
+                 Issue:     2243
+                 Review:    RD
+
+EB-2007-05-10-0: Enhancem.: Handle complex value modifications in queue and host correctly
+                            when AR are present
+                 Review:    RD
+
+RD-2007-05-09-1: Enhancem.: Added check if userset mod invalidates AR
+                 Cleanup:   moved userset code into generic gdi framework   
+                 Review:    AA
+
+JG-2007-05-09-0: Bugfix:    job_get_id_string was not MT save
+                 Bugster:   6476263
+                 Review:    RD
+
+RD-2007-05-09-0: Bugfix:    Fixed abort in several clients due to
+                            AH-2007-05-03-0
+                 Review:    AA
+
+JG-2007-05-08-1: Bugfix:    Remove util/sge_log_tee (moved it to source/scripts)
+                 Bugster:   6426331
+                 Review:    RD
+
+PJ-2007-05-08-1: Bugfix:    Forgotten message breaks the readability
+
+PJ-2007-05-08-0: Enhancem.: qrdel -u 
+                            Support for testsuite test  
+                 Review:    RD
+
+
+JG-2007-05-08-0: Bugfix:    inst_sge -m failed, when called as non root user and
+                            the USER environment variable was not set.
+                 Bugster:   6536426
+                 Issue:     2219
+                 Review:    MD
+
+AH-2007-05-07-0: Bugfix:    Use of hostgroups in resource quotas is less 
+                            performant than the full list of hosts
+                 Bugster:   6542137
+                 Issue:     2239
+                 Review:    TBD
+
+AH-2007-05-03-0: Bugfix:    - Need faster resource quota matchmaking and more 
+                              concise job info messages
+                            - qstat -j lacks resource quota info messages in case 
+                              of "incomplete" resource quotas
+                 Bugster:   6551568, 6550718
+                 Issue:     2238 
+                 Review:    OJ
+
+RD-2007-05-02-0: Bugfix:    - implemented AR error state handling
+                            - implemented AR mail sending
+                            - fixed qdel on job in deletion state
+                 Issue:     1860
+                 Bugster:   6345522
+                 Review:    EB
+
+EB-2007-05-02-0: Enhancem.: changes for qstat and advance reservation
+                 Review:    RD
+
+RD-2007-04-27-0: Bugfix:    fixed broken distinst
+                 Review:    JG
+
+PJ-2007-04-27-0: Bugfix:    qrsub -d INFINITY 
+                 Review:    RD
+
+JG-2007-04-26-0: Enhancem.: New architecture strings ulx-* and usol-* for older,
+                            no longer officially supported OS versions.
+                            Some cleanup of distinst and sge_arch.c.
+                            qmake and qtcsh for lx26-amd64.
+                            Merged JG-2007-04-19-0 and JG-2007-04-24-0 
+                            from V61_BRANCH.
+                 Review:    RD
+
+PJ-2007-04-25-0: Bugfix:    qrstat_report_handler_xml 
+                            Update the AR TODO LIST
+                 Review:    RD
+
+PJ-2007-04-24-2: Bugfix:    compile error, qrsub xacl_list fix
+
+PJ-2007-05-08-0: Enhancem.: qrdel -u 
+                            Support for testsuite test  
+                 Review:    RD
+
+PJ-2007-04-24-1: Bugfix:    qrsub xacl_list fix 
+
+PJ-2007-04-24-0: Bugfix:    Classic spooling for AR, added spooling for granted slots 
+                            Minor bugfix and changes  
+                 Bugfix:    qrsub -u 
+
+RD-2007-04-23-0: Enhancem:  Added consistency checks for calendar and advance
+                            reservations
+                 Review:    EB
+
+AH-2007-04-20-0: Cleanup:   Removed unused ticket scheduler code and data fields
+                 Review:    JG
+
+RD-2007-04-19-1: Bugfix:    Fixed DRMAA Javadoc Warnings
+                 Review:    RH
+
+EB-2007-04-19-0: Enhancem.: - reject pe_list and ckpt_list changes of cqueues
+                              if they invalidate advance reservations
+                            - reject slots modification in pe if they invalidate
+                            - advance reservations
+                 Review:    AH
+
+GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using classic 
+                            spooling
+
+RD-2007-04-19-0: Enhancem.: - Added advance reseservation scheduling code
+                            - added qmaster startup AR initialization code
+                            - added removing of AR jobs at AR deletion
+                            - added reporting entry at qrdel AR deletion
+                 Review:    EB
+
+JG-2007-04-18-1: Enhancem.: Cleanup / higher precision for calculation of the
+                            cpu load value on HPUX.
+                 Review:    AH
+
+JG-2007-04-18-0: Bugfix:    Modifying a rqs with invalid syntax resulted in its
+                            deletion.
+                 Bugster:   6528950
+                 Issue:     2233
+                 Review:    AP, MD, MP, OJ
+
+GH-2007-04-18-0: Bugfix:    Wrong path to spooled parallel jobs with using 
+                            classic spooling
+                 Bugtraq:   6461308
+                 Review:    AH
+
+RH-2007-04-18-0: Enhancem.: xml schema for qhost -xml output added
+                 Bugfix:    -xml switch in qhost man page documented
+                 Bugfix:    qstat -F -xml does not show resources
+                 Bugster:   6546802
+                 Issue:     2231
+                 Review:    RD
+
+DT-2007-04-16-0: WWW:       o New Howto link
+
+AH-2007-04-16-0: Bugfix:    Fix AH-2007-03-29-2 plus further optimizations with
+                            schedulers quota verification time: Detect global,
+                            cluster queue, or host related quota saturation and
+                            exploit such cases unblushingly. Optimization can be
+                            applied only if the first quota rule in a rule set
+                            is satured.
+                            Removed unused code.
+                 Bugster:   6539215
+                 Review:    RD
+
+PJ-2007-04-13-0: Bugfix:    Classic spooling for AR 
+                            Minor bugfix and changes  
+                 Enhancm:   qalter -ar option
+                 Bugfix:    ~/.sge_ar_request was in error 
+                 Review:    RD
+
+EB-2007-04-12-1: Bugfix.:   - fixed code for classic spooling (pe_range)
+                            - instead of event/state numbers stere are letters/strings
+                              written
+
+EB-2007-04-12-0: Enhancem.: - implemented qrstat
+                            - added man pages
+                 Review:    RD
+
+EB-2007-04-10-0: Bugfix:    - fixed bug in new_job reporting (incorrect format string)
+
+PJ-2007-04-05-0: Bugfix:    - fixed bug qrsub -M list
+
+EB-2007-04-05-0: Enhancm:   - removed ar_id from new_job entry in reporting file
+                            - now ar_acct entries are created on termination 
+                              of an ar in reporting file
+                            - ar related reporting was only written when it is enabled
+                 Review:    RD 
+
+PJ-2007-04-05-0: Enhancm:   - Disabled some options according the specification
+                            - Updated ussage of the qrsub -help  
+                 Review:    RD
+
+MP-2007-04-05-0  Bugfix:    Root user on unix unable to submit job to
+                            windows execution daemon.
+                 Bugster:   6513597
+                 Review:    JG
+
+RD-2007-04-04-2: Bugfix:    - fixed qsub -ar check if no hr_t was selected
+                            - added ckpt_name for AR reserving decision
+                            - added AR TODO list
+                 Review:    HP
+
+RD-2007-04-04-1: Bugfix:    fixed broken build on lx24-ia64
+
+RD-2007-04-04-0: Enhancm:   - Added Advance Reservation reserving code
+                            - fixed consumable resources testsuite test
+                            - enhanced test_resource_utilization
+                 Review:    EB
+
+RC-2007-04-03-0: Enhancm:   A small tight SGE-SSH integration change
+                 Review:    pending
+
+JG-2007-04-02-0: Bugfix:    Hybrid user/project sharetree was broken with array 
+                            jobs.
+                 Bugster:   6538293
+                 Issue:     2222
+                 Review:    AH
+
+PJ-2007-03-30-0: Enhancm:   added and tested qrsub all options as are defined 
+                            in FSD 6.2 AR document  
+                 Review:    RD
+
+DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the howtos
+                              page.
+
+AH-2007-03-29-2: Bugfix:    Quota verification time of scheduler may not grow 
+                            with the number of queues if all jobs go in single 
+                            queue
+                 Bugster:   6539215
+                 Review:    RD
+
+AA-2007-03-29-1: Enhancem.: insure support for jgdi
+                            Job testvalues
+                 Review:    LP
+
+AH-2007-03-29-0: Bugfix:    Resource quotas broken after qmaster restart
+                 Bugster:   6539792
+                 Issue:     2224
+                 Review:    RD
+
+AA-2007-03-28-2: Bugfix:    reverted jgdi_qhost to previous version
+
+DT-2007-03-28-0: WWW:       o Added link to the YouTube video to the main page.
+
+AA-2007-03-28-1: Bugfix:    - template file comments break build on Aix
+               
+AA-2007-03-28-0: Enhancem.: - jgdi maplist/map handling
+                            - CULL_CONFIGURE adjustments in testvalues/*/*.xml
+                            - fix of jgdi tests
+                            - jgdi event fixes
+                            - sge_gdi_del_job() master fix for invalid idep
+                            - cleanup: author tags
+                            - jgdi advance reservation test fixes
+                 Review:    RH 
+
+PJ-2007-03-28-0: Cleanup:   all attr_mod functions are now located in 
+                            sge_utility_qmaster.h
+                 Review:    AH
+
+EB-2007-03-26-0: Enhacem:   - added reporting funtionality for AR.
+                            - added first implementation of classic spooling 
+                              for AR.
+                            - changed accounting file format and qacct (added 
+                              arid).
+                            - changed "acct" entry in reporting file 
+                              (added arid)
+                            - changed man page
+                            - added comments
+                 Review:    RD
+
+                 PLEASE NOTE: Reporting and accounting file format changed.
+                              This might have influence on scripts/applications
+                              which reuse that information (e.g. dbwriter) 
+
+HP-2007-03-26-1: Bugfix:    Fixed broken build for sol-sparc64 and -no-java
+                 Changed:   aimk
+                 Review:    AA
+
+RH-2007-03-26-1: Cleanup:   jgdi: EventType has to be serializable
+                 Review:    AA
+
+RH-2007-03-26-0: Cleanup:   cleanup in jgdi code 
+                            - missing "implements Serializable" added
+                            - author tags deleted
+                 Review:    AA
+
+AH-2007-02-23-0: Enhancem.  Enhanced analyze.rb script
+                            - extended meaning of -t to all views
+                            - add maxvmem and maxrss to all views
+
+MP-2007-03-23-0: Bugfix:    Add installation of SGE_Helper_Service to
+                            auto installation.
+                 Bugster:   6440226
+                 Issue:     2220
+                 Bugfix:    Binary check in inst_sge is wrong. Windows
+                            does not require sgepasswd, but unix should.
+                 Bugster:   6521802
+                 Issue:     2221
+                 Docs:      Modified man page to reflected new qmaster
+                            parameter MAX_JOB_DELETION_TIME
+                 Review:    JG
+
+GH-2007-03-23-0  Bugfix:   problems with sge_qstat(5) file
+                 Bugtraq:  6452471
+                 Issue:    2088
+                 Review:   AH
+
+RD-2007-03-22-0: Bugfix:    Corrected and validated qquota schema file
+                 Review:    RH
+
+PJ-2007-03-21-0: Enhancm:   added job -ar related checks
+                 Review:    RD
+
+JG-2007-03-21-0: Cleanup:   Fixed message macros.
+                 Review:    CR
+
+LP-2007-03-20-0: Bugfix:    Removed unused import in EditorParser.java that prevents compilation on Java 1.6
+                 Review:    PJ
+
+LP-2007-03-19-2: Enhanc:    Introducing GEObjectEditor class for simple GEObject manipulation based on text
+                 Qconf options implemented for User, Project, PE, ClusterQueue, Calendar, Checkpoint, Exec host, Host group and RQS (some issues exist).
+                 Minor improvements/fixed to JGDI code.
+                 Changed:   JGDI
+                 Review:    AA
+
+LP-2007-03-19-1: Bugfix:    Fixed incorrect use of DEXIT in jgdi_common.c
+                 Review:    PJ
+
+LP-2007-03-19-0: Bugfix:    JGDI does not accept null values in certain cases anymore
+                 Bugtraq:   6535877
+                 Review:    AA
+
+AH-2007-03-19-0: Cleanup:   Removed unused variables and parameters from ticket
+                            scheduler code.
+                 Review:    AA
+
+AH-2007-03-16-1: Enhanc:    Added tracing of job script spooling operations
+                            to Dtrace master monitor.
+                 Changed:   qmaster
+                 Review:    JG
+
+RD-2007-03-16-0: Bugfix:    - added missing check for JB_verify_suitable_queues
+                            - fixed several compile errors
+                 Review:    AH
+
+PJ-2007-03-16-0: Enhancm:   - added qrsub command line options
+                            - added qmaster advance reservation verification
+                            - added qsub -ar option
+                 Review:    RD
+
+AA-2007-03-16-0: Bugfix:    o qmon advance reservation qrstat, qrsub dialogs
+                              prelim version available via task menu
+                            o sge_c_gdi.c return AR_id
+                            o resource quotas CULL_CONFIGURE flag
+                            o lMt2Str helper func
+                 Review:    RD
+
+RH-2007-03-15-0: Bugfix:    o jgdi: interface for creating an event client
+                              changed (was not threadsafe)
+                            o SEGV in sge_log.c
+                 Review:    AA
+
+AH-2007-03-15-0: Enhanc:    Added SIMULATE_EXECDS to qmaster_params to
+                            to bypass execd communication in qmaster for 
+                            throughput tests.
+                 Changed:   qmaster
+
+JG-2007-03-14-0: Bugfix:    Fixed utilbin/hp11-64/rshd.
+                 Review:    RD
+
+AH-2007-03-13-1: Docs:      Mention need to link sge_pe(5) with a queue
+                            with the 'pe_list.
+                 Changed:   sge_pe(5)
+
+JG-2007-03-13-0: Bugfix:    qconf -mqrs modified resource quota, even if the 
+                            editor was left without saving.
+                 Bugster:   6533754
+                 Issue:     2207
+                 Review:    AA
+
+MP-2007-03-13-0: Enhanc:    created new qmaster parameter for max job
+                            deletion time.
+                 Changed:   sge_conf
+                 Review:    JG
+
+JG-2007-03-07-1: Cleanup:   Fixed typos, added documentation, cleanup.
+                 Review:    AA
+
+AA-2007-03-07-0: Bugfix:    qstat -r -xml is not working
+                 Bugster:   6531921
+                 Issue:     2206
+                 Review:    JG
+                 Changed:   qstat
+
+JG-2007-03-07-0: Bugfix:    Modifying a resource quota set while there are jobs
+                            running could crash qmaster.
+                 Bugster:   6530335
+                 Issue:     2202
+                 Review:    AA
+
+MP-2007-03-07-0: Bugfix:    scalability issue with qdel and very large
+                            array jobs.
+                 Changed:   qmaster
+                 Bugster:   6288953
+                 Issue:     752
+                 Review:    JG
+
+AA-2007-03-06-0: Bugfix:    qstat -xml does not show pending/zombie jobs
+                 Bugtraq:   6531317
+                 Issue:     2204
+                 Review:    JG
+                 Changed:   qstat
+
+AH-2007-03-01-1: Docs:      Removed wrong and confusing example in host_conf(5).
+                 Issue:     2200
+                 Review:    Reuti
+                 Changed:   Man pages
+
+AA-2007-02-27-0: Bugfix:    sge_ca script on no root access fs
+                 Bugtraq:   6528808
+                 Issue:     2198
+                 Changed:   sge_ca
+                 Review:    CR
+
+MD-2007-02-26-0: Bugfix:    Auto installation option failed to save 
+                            the install log 
+                 Changed:   inst_sge, install_modules
+                 Bugtraq:   6472614 
+                 Issue:     2196
+                 Review:    HP
+
+MP-2007-02-22-0: Bugfix:    on Windows, execd doesn't provide useful
+                            error messages when SSL keys broken
+                 Bugtraq:   6395075
+                 Changed:   utilbin/sge_passwd.c
+                            utilbin/msg_utilbin.h
+                 Review:    HP
+
+LP-2007-02-20-0: Bugfix:    JGDI crashes JVM when null is passed to JNI GetStringUTFChars function
+                 Bugtraq:   6525497
+                 Review:    RH
+
+JG-2007-02-16-0: Bugfix:    Fixed non initialized pointer access in qacct.
+                            Merge of V61_BRANCH, JG-2007-02-15-0.
+                 Bugster:   6525917
+                 Issue:     2192
+                 Review:    RD
+
+MD-2007-02-14-0: Enhancem:  o CSP mode auto installation: certificates are not
+                            copied to submit hosts
+                 Bugfix:    o 64 bit solaris BDB rpc server broken
+                 Changed:   inst_sge, install_modules
+                 Bugtraq:   6421113, 6291021
+                 Issue:     2188, 1445
+                 Review:    JG
+
+AH-2007-02-14-2: Bugfix:    Added 'dtrace' directory to common list in
+                            scripts/mk_dist.
+                 Review:    RD
+
+RD-2007-02-14-1: Cleanup:   removed postgresql specific scripts from installation
+                 Review:    JG
+                 Issue:     1105
+
+AH-2007-02-14-0: Docs:      - Corrected queue_conf(5) where qconf(1) option
+                              "-sds" was wrongly refered "-sick".
+                            - need to define continuation character behaviour 
+                              with configuration files
+                            - describe useful characters for every parameter
+                              with qconf file formats 
+                 Bugtraq:   6520257, 6521285   
+                 Changed:   Man pages
+                 Review:    RD
+
+RD-2007-02-14-0: Bugfix:    fixed qmon lib error on darwin
+                 Review:    JG
+
+DT-2007-02-13-0: Docs:      o Corrected man pages from PJ-2007-02-09-0
+                 Changed:   man/man1/sge_types.1, man/man5/complexes.5
+
+RD-2007-02-12-0: Enhancem:  - Added advance reservation object to qmaster
+                            - added rudimental qrsub/qrdel/qrstat clients
+                 Review:    AA
+
+RD-2007-02-09-1: CVS        Created V61_BRANCH
+----------------------------------------------
+
 PJ-2007-02-09-0: Bugfix:    Manpage complex and sge_types correction.
                  Review:    DT
 
@@ -184,6 +821,7 @@ CR-2007-01-22-0: Cleanup:   removed unreferenced message macro definitions
 DT-2007-01-19-1: Enhancem.: o Set target source levels for DRMAA Java language
                               binding.
                  Changed:   classes/build.xml
+                 Issue:     6403810
 
 DT-2007-01-19-0: Enhancem.: o Upgraded DRMAA Java language binding to 1.0
                             o Made the DRMAA C binding 1.0 the default
@@ -700,6 +1338,7 @@ RH-2006-10-30-0: Bugfix:    o jgdi: QueueInstanceSummary did not work with a que
 AA-2006-10-27-0: Bugfix:    o changed sge_lock to use static initializers
                               and removed unused functions sge_setup_lock_service() etc.
                             o fix for subscribe/unsubscribe after being registered
+                 Bugster:   6453426           
                  Review:    RD
 
 AH-2006-10-26-2: Bugfix:    Fix an issue with cl_com_set_synchron_receive_timeout()

@@ -37,7 +37,6 @@ import java.lang.reflect.*;
 import com.sun.grid.jgdi.configuration.*;
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public class SimplePropertyDescriptor extends PropertyDescriptor {
    

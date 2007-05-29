@@ -190,7 +190,7 @@ import java.rmi.Remote;
  *   {@link java.rmi.RemoteException} which includes the
  *   {@link com.sun.grid.jgdi.JGDIException} as cause.
  */
-public interface JGDIRemote extends JGDIRemoteBase, Remote {
+public interface JGDIRemote extends JGDIRemoteBase {
 <% iter = generators.iterator();
    while( iter.hasNext() ) {
        JGDIRMIGenerator gen = (JGDIRMIGenerator)iter.next();

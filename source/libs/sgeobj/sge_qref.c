@@ -56,9 +56,6 @@
 
 #define QREF_LAYER TOP_LAYER
 
-static bool
-qref_list_host_rejected(const char *href, const char *hostname, 
-                                 const lList *hgroup_list);
 
 static bool
 qref_list_resolve_cqueue_names(const lList *cq_qref_list, 
@@ -529,7 +526,7 @@ qref_list_cq_rejected(const lList *qref_list, const char *cqname,
 *     qref_list_host_rejected() -- Check if -q ??@href rejects host
 *
 *  SYNOPSIS
-*     static bool qref_list_host_rejected(const char *href, const char
+*     bool qref_list_host_rejected(const char *href, const char
 *     *hostname, const lList *hgroup_list)
 *
 *  FUNCTION
@@ -542,12 +539,12 @@ qref_list_cq_rejected(const lList *qref_list, const char *cqname,
 *     const lList *hgroup_list - hostgroup list (HGRP_Type)
 *
 *  RESULT
-*     static bool - True if rejected.
+*     bool - True if rejected.
 *
 *  NOTES
 *     MT-NOTE: qref_list_host_rejected() is MT safe
 *******************************************************************************/
-static bool
+bool
 qref_list_host_rejected(const char *href, const char *hostname, const lList *hgroup_list)
 {
    DENTER(TOP_LAYER, "qref_list_host_rejected");
@@ -571,8 +568,8 @@ qref_list_host_rejected(const char *href, const char *hostname, const lList *hgr
          }
       }
    } else { /* wc_host */
-      /* use hostgroup expression */
-      if( sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
+      /* use host expression */
+      if (sge_eval_expression(TYPE_HOST, href, hostname, NULL)==0) {
             DEXIT;
             return false;
       }

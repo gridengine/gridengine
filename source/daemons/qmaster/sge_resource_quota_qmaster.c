@@ -55,6 +55,7 @@
 #include "evm/sge_event_master.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
+#include "sge_host_qmaster.h"
 #include "uti/sge_string.h"
 
 static bool
@@ -81,19 +82,19 @@ filter_diff_usersets_or_projects_scope(lList *filter_scope, int filter_nm,
 *     sub_command, monitoring_t *monitor) 
 *
 *  FUNCTION
-*     This function will be called from the framework which will
+*     This function is called from the framework that
 *     add/modify/delete generic gdi objects.
 *     The purpose of this function is it to add new rqs 
 *     objects or modify existing resource quota sets.
 *
 *  INPUTS
-*     lList **alpp          - referenct to an answer list
+*     lList **alpp          - reference to an answer list
 *     lListElem *new_rqs    - if a new rqs object will be created by this
 *                             function, then new_rqs is a newly initialized
 *                             CULL object.
 *                             if this function was called due to a modify request
 *                             than new_rqs will contain the old data
-*     lListElem *rqs        - a reduced rqs object which contails all
+*     lListElem *rqs        - a reduced rqs object which contains all
 *                             necessary information to create a new object
 *                             or modify parts of an existing one
 *     int add               - 1 if a new element should be added to the master list
@@ -147,7 +148,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
    /* ---- RQS_rule */
    if (lGetPosViaElem(rqs, RQS_rule, SGE_NO_ABORT)>=0) {
       rules_changed = true;
-      if (sub_command == SGE_GDI_SET_ALL) {
+      if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_SET_ALL)) {
          normalize_sublist(rqs, RQS_rule);
          attr_mod_sub_list(alpp, new_rqs, RQS_rule,
             RQS_name, rqs, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);    
@@ -202,7 +203,7 @@ ERROR:
 *
 *  INPUTS
 *     lList **alpp         - reference to an answer list.
-*     lListElem *ep       - rqs object which should be spooled
+*     lListElem *ep        - rqs object which should be spooled
 *     gdi_object_t *object - structure of the gdi framework which contains 
 *                            additional information to perform the request
 *                            (function pointers, names, CULL-types)
@@ -252,7 +253,7 @@ int rqs_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, gdi_object_
 *     After an object was modified/added and spooled successfully 
 *     it is possibly necessary to perform additional tasks.
 *     For example it is necessary to send some events to
-+     other deamon.
+*     other daemon.
 *
 *  INPUTS
 *     lListElem *ep         - new rqs object
@@ -303,7 +304,7 @@ int rqs_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_
 *  INPUTS
 *     lListElem *ep     - element which should be deleted
 *     lList **alpp      - reference to an answer list.
-*     lList **rqs_list - reference to the Master_RQS_LIST
+*     lList **rqs_list  - reference to the Master_RQS_LIST
 *     char *ruser       - username of person who invoked this gdi request
 *     char *rhost       - hostname of the host where someone initiated an gdi call
 *
@@ -410,7 +411,8 @@ rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list) {
       for_each(rule, lGetList(rqs, RQS_rule)) {
          lListElem *limit = NULL;
          for_each(limit, lGetList(rule, RQR_limit)) {
-            lList *usage = lGetList(limit, RQRL_usage);
+            lList *usage = NULL;
+            lXchgList(limit, RQRL_usage, &usage);
             lFreeList(&usage);
          }
       }
@@ -486,10 +488,16 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
            scope++; /* sge intern usergroups don't have the preleading @ sign */
          }
       }
+   
       if (strcmp("*", scope) == 0) {
          lEnumeration *what = lWhat("%T(%I)", dp, nm);
 
-         lFreeList(scope_ref);
+         lFreeList(scope_ref); 
+         /* 
+          * that looks strange: list is simply free()'d 
+          * however this is no bug since any entry contained 
+          * in the old scope_ref list will be also in the new one 
+          */
          *scope_ref = lSelect("", master_list, NULL, what);
          lFreeWhat(&what);
          ret = false;               
@@ -500,11 +508,15 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
             for_each(ep, master_list) {
                const char* ep_entry = lGetString(ep, nm);
                if (fnmatch(scope, ep_entry, 0) == 0) {
-                  lAddElemStr(scope_ref, nm, ep_entry, dp);
+                  if (lGetElemStr(*scope_ref, nm, scope) == NULL) {
+                     lAddElemStr(scope_ref, nm, ep_entry, dp);
+                  }
                }
             }
          } else {
-            lAddElemStr(scope_ref, nm, scope, dp);
+            if (lGetElemStr(*scope_ref, nm, scope) == NULL) {
+               lAddElemStr(scope_ref, nm, scope, dp);
+            }
          }
       }
    }
@@ -546,25 +558,28 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
 *******************************************************************************/
 static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_nm, lList **scope_l, int nm, const lDescr *dp, lList* master_list)
 {
-   lListElem *filter = NULL;
+   lListElem *filter;
    bool ret = true;
 
    DENTER(TOP_LAYER, "filter_diff_usersets_or_projects");
 
-   if (rule == NULL || filter == NULL || master_list == NULL) {
-      DRETURN(ret);
-   }
-
-   filter = lGetObject(rule, filter_nm);
-
    if (filter_nm != RQR_filter_users && filter_nm != RQR_filter_projects) {
       DRETURN(ret);
    }
+
+   if (rule == NULL || master_list == NULL) {
+      DRETURN(ret);
+   }
+
+   if ((filter = lGetObject(rule, filter_nm))==NULL) {
+      DRETURN(ret);
+   }
+
    if ((ret = filter_diff_usersets_or_projects_scope(lGetList(filter, RQRF_scope),
                                     filter_nm, scope_l, nm, dp, master_list))) {
       ret = filter_diff_usersets_or_projects_scope(lGetList(filter, RQRF_xscope),
                                     filter_nm, scope_l, nm, dp, master_list); 
-   } 
+   }
 
    DRETURN(ret);
 }
@@ -593,7 +608,7 @@ static bool filter_diff_usersets_or_projects(const lListElem *rule, int filter_n
 *            false if all userset are referenced in new_list
 *
 *  NOTES
-*     MT-NOTE: rqs_diff_projects() is MT safe 
+*     MT-NOTE: rqs_diff_usersets() is MT safe 
 *
 *  SEE ALSO
 *     sge_resource_quota_qmaster/rqs_diff_projects()
@@ -635,7 +650,7 @@ bool rqs_diff_usersets(const lListElem *new_rqs, const lListElem *old_rqs, lList
 *
 *  SYNOPSIS
 *     bool rqs_diff_projects(const lListElem *new_rqs, const lListElem 
-*     *old_rqs, lList **new_list, lList **old_list) 
+*     *old_rqs, lList **new_list, lList **old_list, lList *master_project_list) 
 *
 *  FUNCTION
 *     This function generates a list of all projects referenced in a resource quota set.
@@ -685,6 +700,7 @@ bool rqs_diff_projects(const lListElem *new_rqs, const lListElem *old_rqs, lList
          } 
       }
    }
+
    lDiffListStr(UP_name, new_list, old_list);
 
    DRETURN(ret);

@@ -50,8 +50,9 @@ extern "C" {
  */
 
 /* special list element */
-#define DEADLINE_USERS "deadlineusers"
+#define DEADLINE_USERS     "deadlineusers"
 #define DEFAULT_DEPARTMENT "defaultdepartment"
+#define AR_USERS           "arusers"
 
 /* *INDENT-OFF* */
 

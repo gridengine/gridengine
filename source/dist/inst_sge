@@ -37,7 +37,8 @@
 #
 # set -x
 
-SCRIPT_VERSION="5"
+SCRIPT_VERSION="6"
+SGE_VERSION="6.1beta"
 
 #Reset PATH to a safe value
 #
@@ -80,11 +81,13 @@ REMOVE_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
 WIN_UPDATE=false
+COPY_CA="false"
 
 QMASTER="undef"
 EXECD="undef"
 SHADOW="undef"
 BERKELEY="undef"
+SUBMIT="undef"
 TAR="undef"
 FILE="undef"
 HOST="undef"
@@ -113,6 +116,7 @@ CSP_LOCATION="undef"
 CSP_ORGA="undef"
 CSP_ORGA_UNIT="undef"
 CSP_MAIL_ADDRESS="undef"
+CERT_COPY_HOST_LIST="undef"
 
 BasicSettings
 SetUpInfoText
@@ -190,6 +194,12 @@ while [ $ARGC != 0 ]; do
      SPOOLING_SERVER=`hostname`
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
+     ;;
+   -s)
+     #add a subit host and copy ca certs if needed
+     SUBMIT="install"
+     . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_execd.sh
      ;;
    -host)
      if [ $AUTO = "false" -a $QMASTER = "install" ]; then
@@ -271,8 +281,22 @@ while [ $ARGC != 0 ]; do
    -csp)
      CSP=true
      ;;
+   -copycerts)
+     if [ "$2" = "" ]; then
+        ErrUsage
+     fi
+     #copy ca certs to the given hosts
+     COPY_CA="true"
+     shift
+     CERT_COPY_HOST_LIST=$*
+     ARGC=`expr $ARGC - 1`
+     ;;
    -afs)
      AFS=true
+     ;;
+   -v)
+     $ECHO "Software version: $SGE_VERSION"
+     exit 0
      ;;
    -help)
      ErrUsage
@@ -293,19 +317,19 @@ fi
 if [ $WIN_UPDATE = "true" ]; then
    WelcomeTheUserWinUpdate
    SetupWinSvc update #service install due to an update -> param: update
-   exit 0
+   # don't exit but continue with installation of execution daemon
 fi
 
 if [ $WIN_SVC = "install" ]; then
    WelcomeTheUserWinSvc install #install text param
    SetupWinSvc install #service install due to service install switch -> param install
-   exit 0
+   # don't exit but continue with installation of execution daemon
 fi
 
 if [ $WIN_SVC = "uninstall" ]; then
    WelcomeTheUserWinSvc uninstall #uninstall text param
    SetupWinSvc uninstall #service install due to service uninstall switch -> param uninstall
-   exit 0
+   # don't exit but continue with uninstallation of execution daemon
 fi
 
 
@@ -336,7 +360,7 @@ if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" -a "$EXE
    AddSGEStartUpScript $euid master
    StartQmaster
    AddDefaultQueue
-   CopyCA
+   CopyCA execd
    GetOldScheddConfig
    UpdateHints
 fi
@@ -384,6 +408,8 @@ fi
 
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
 
+ is_master="true"
+
  if [ "$AUTO" = "true" ]; then
     Stdout2Log
     $INFOTEXT -log "Starting qmaster installation!"
@@ -412,7 +438,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddActQmaster
  AddDefaultComplexes
  AddPEFiles
- AddDefaultDepartement
+ AddDefaultUsersets
  AddCommonFiles
  CreateSGEStartUpScripts $euid true master
  CreateSGEStartUpScripts $euid true execd 
@@ -422,7 +448,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- CopyCA
+ CopyCA execd
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -955,6 +981,54 @@ if [ $SHADOW = "uninstall" ]; then
       fi     
    fi
 
+fi
+
+if [ "$SUBMIT" = "install" ]; then
+   if [ "$AUTO" = "true" ]; then
+      Stdout2Log
+      $INFOTEXT -log "Starting Submithost installation!"
+   fi
+   WelcomeTheUserSubmitHost
+   ProcessSGERoot
+   CheckQmasterInstallation
+   CheckCellDirectory
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+   CheckHostNameResolving install
+   AddSubmitHosts
+   product_mode=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "security_mode" | awk '{ print $2 }'`
+   if [ "$product_mode" = "csp" ]; then
+      CSP="true"
+   fi 
+   CopyCA submit
+   MoveLog
+   $INFOTEXT "Submit host installation is complete!"
+   exit 0
+fi
+
+if [ "$COPY_CA" = "true" ]; then
+   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+      $INFOTEXT "SGE_ROOT or SGE_CELL is not set!"
+      exit 1
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      GetAdminUser
+   else
+      $INFOTEXT "\nObviously there was no qmaster installation for this cell yet. The file\n\n" \
+                "   %s\n\n" \
+                "does not exist. Exit." \$SGE_ROOT/$SGE_CELL/common/bootstrap
+      exit 1
+   fi
+
+   product_mode=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "security_mode" | awk '{ print $2 }'`
+   if [ "$product_mode" = "csp" ]; then
+      CSP="true"
+   fi
+   CopyCA copyonly
+   if [ "$?" != 1 ]; then
+      $INFOTEXT "Copying certificates is complete!"
+   fi
+   exit 0
 fi
 
 if [ $BACKUP = "true" ]; then

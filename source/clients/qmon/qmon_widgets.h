@@ -41,5 +41,6 @@ enum pair_type {
 void QmonRegisterWidgets(void);
 
 String write_pair_list(lList *lp, int type);
+void get_ara_list(const char *str, lList **ret_list);
 
 #endif /* _QMON_WIDGETS_H_ */

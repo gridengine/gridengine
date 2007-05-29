@@ -52,136 +52,23 @@
 #include "sge_cqueue.h"
 #include "sge_attrL.h"
 #include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_str.h"
 #include "sge_resource_quota_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_utility_qmaster.h"
 #include "spool/sge_spooling.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_sgeobjlib.h"
 
 static void sge_change_queue_version_acl(sge_gdi_ctx_class_t *ctx, const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
 static int verify_userset_deletion(lList **alpp, const char *userset_name);
 static int dept_is_valid_defaultdepartment(lListElem *dept, lList **answer_list);
 static int acl_is_valid_acl(lListElem *acl, lList **answer_list);
-
-/*********************************************************************
-   sge_add_userset() - Master code
-   
-   adds an userset list to the global userset_list
- *********************************************************************/
-int sge_add_userset(
-sge_gdi_ctx_class_t *ctx,
-lListElem *ep,
-lList **alpp,
-lList **userset_list,
-char *ruser,
-char *rhost 
-) {
-   const char *userset_name;
-   int pos, ret;
-   lListElem *found;
-
-   DENTER(TOP_LAYER, "sge_add_userset");
-
-   if ( !ep || !ruser || !rhost ) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* ep is no acl element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(US_name), SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   userset_name = lGetPosString(ep, pos);
-   if (!userset_name) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* Name has to be a valid filename without pathchanges, because we use it
-      for storing user/project to disk */
-   if (verify_str_key(
-         alpp, userset_name, MAX_VERIFY_STRING, MSG_OBJ_USERSET,KEY_TABLE) != STATUS_OK) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* search for userset with this name */
-   found = userset_list_locate(*userset_list, userset_name);
-
-   /* no double entries */
-   if (found) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, MSG_OBJ_USERSET, userset_name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* ensure userset is at least an ACL (qconf -au ) */
-   if (!lGetUlong(ep, US_type)) 
-      lSetUlong(ep, US_type, US_ACL);
-
-   /* interpret user/group names */
-   ret=userset_validate_entries(ep, alpp, 0);
-   if ( ret != STATUS_OK ) {
-      DEXIT;
-      return ret;
-   }
-
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   {
-      dstring ds = DSTRING_INIT;
-      lListElem *rqs;
-
-      sge_dstring_sprintf(&ds, "@%s", userset_name);
-
-      for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
-         if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
-            lSetBool(ep, US_consider_with_categories, true);
-            break;
-         }
-      }
-      sge_dstring_free(&ds);
-   }
-
-   if (!sge_event_spool(ctx, alpp, 0, sgeE_USERSET_ADD,
-                        0, 0, userset_name, NULL, NULL,
-                        ep, NULL, NULL, true, true)) {
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* update in interal lists */
-   if (!*userset_list)
-      *userset_list = lCreateList("global userset list", US_Type);
-   lAppendElem(*userset_list, lCopyElem(ep));
-
-   INFO((SGE_EVENT, MSG_SGETEXT_ADDEDTOLIST_SSSS,
-            ruser, rhost, userset_name, MSG_OBJ_USERSET));
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   DEXIT;
-   return STATUS_OK;
-}
 
 /******************************************************************
    sge_del_userset() - Qmaster code
@@ -205,8 +92,7 @@ char *rhost
    if ( !ep || !ruser || !rhost ) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* ep is no userset element, if ep has no US_name */
@@ -214,32 +100,28 @@ char *rhost
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
             lNm2Str(US_name), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    userset_name = lGetPosString(ep, pos);
    if (!userset_name) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* search for userset with this name and remove it from the list */
    if (!(found = userset_list_locate(*userset_list, userset_name))) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    /* ensure there are no (x)acl lists in 
       a queue/pe/project/.. refering to this userset */   
    if ((ret=verify_userset_deletion(alpp, userset_name))!=STATUS_OK) {
       /* answerlist gets filled by verify_userset_deletion() in case of errors */
-      DEXIT;
-      return ret;
+      DRETURN(ret);
    }
 
    lRemoveElem(*userset_list, &found);
@@ -251,124 +133,8 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
             ruser, rhost, userset_name, MSG_OBJ_USERSET));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
-
-/**************************************************************
-   sge_mod_userset() - Qmaster code
-
-   modifies an userset in the global list
- **************************************************************/
-int sge_mod_userset(
-sge_gdi_ctx_class_t *ctx,
-lListElem *ep,
-lList **alpp,
-lList **userset_list,
-char *ruser,
-char *rhost 
-) {
-   const char *userset_name;
-   int pos, ret;
-   lListElem *found;
-
-   DENTER(TOP_LAYER, "sge_mod_userset");
-
-   if ( !ep || !ruser || !rhost ) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* ep is no userset element, if ep has no US_name */
-   if ((pos = lGetPosViaElem(ep, US_name, SGE_NO_ABORT)) < 0) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(US_name), SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   userset_name = lGetPosString(ep, pos);
-   if (!userset_name) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
-   }
-
-   /* no double entries */
-   found = userset_list_locate(*userset_list, userset_name);
-   if (!found) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_USERSET, userset_name));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
-   }
-
-   /* interpret user/group names */
-   ret=userset_validate_entries(ep, alpp, 0);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   /* make sure acl is valid */
-   ret = acl_is_valid_acl(ep, alpp);
-   if (ret != STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   /*
-   ** check for users defined in more than one userset if they
-   ** are used as departments
-   */
-   ret = sge_verify_department_entries(*userset_list, ep, alpp);
-   if (ret!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
-
-   /* delete old userset */
-   lRemoveElem(*userset_list, &found);
-
-   /* insert modified userset */
-   lAppendElem(*userset_list, lCopyElem(ep));
-
-   {
-      dstring ds = DSTRING_INIT;
-      lListElem *rqs;
-
-      sge_dstring_sprintf(&ds, "@%s", userset_name);
-
-      for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
-         if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
-            lSetBool(ep, US_consider_with_categories, true);
-            break;
-         }
-      }
-      sge_dstring_free(&ds);
-   }
-
-   /* update on file */
-   if (!sge_event_spool(ctx, alpp, 0, sgeE_USERSET_MOD,
-                        0, 0, userset_name, NULL, NULL,
-                        ep, NULL, NULL, true, true)) {
-      DEXIT;
-      return STATUS_EDISK;
-   }
-   /* change queue versions */
-   sge_change_queue_version_acl(ctx, userset_name);
-
-   INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
-            ruser, rhost, userset_name, MSG_OBJ_USERSET));
-   answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   DEXIT;
-   return STATUS_OK;
-}
-
 
 /*********************************************************************
    Qmaster code
@@ -412,8 +178,7 @@ sge_change_queue_version_acl(sge_gdi_ctx_class_t *ctx, const char *acl_name)
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /******************************************************
@@ -451,14 +216,12 @@ lList **alpp
     */
    if (!strcmp(lGetString(new_userset, US_name), DEFAULT_DEPARTMENT)) {
       if (!dept_is_valid_defaultdepartment(new_userset, alpp)) {
-         DEXIT;
-         return STATUS_ESEMANTIC;
+         DRETURN(STATUS_ESEMANTIC);
       }
    }
 
    if (!(lGetUlong(new_userset, US_type) & US_DEPT)) {
-      DEXIT;
-      return STATUS_OK;
+      DRETURN(STATUS_OK);
    }
    
    /*
@@ -473,8 +236,7 @@ lList **alpp
    lFreeWhat(&what);
 
    if (!depts) {
-      DEXIT;
-      return STATUS_OK;
+      DRETURN(STATUS_OK);
    }
 
    /*
@@ -492,12 +254,10 @@ lList **alpp
    
    if (answers) {
       *alpp = answers;
-      DEXIT;
-      return STATUS_ESEMANTIC;
+      DRETURN(STATUS_ESEMANTIC);
    }
 
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /****** qmaster/dept/dept_is_valid_defaultdepartment() ************************
@@ -538,8 +298,7 @@ static int dept_is_valid_defaultdepartment(lListElem *dept,
          ret = 0;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** qmaster/acl/acl_is_valid_acl() ****************************************
@@ -579,14 +338,11 @@ static int acl_is_valid_acl(lListElem *acl,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-static lList* do_depts_conflict(
-lListElem *new,
-lListElem *old 
-) {
+static lList* do_depts_conflict(lListElem *new, lListElem *old)
+{
    lList *new_users = NULL;
    lList *old_users = NULL; 
    lListElem *np;
@@ -599,8 +355,7 @@ lListElem *old
    old_users = lGetList(old, US_entries);
 
    if (!old_users || !new_users) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
    /*
@@ -610,20 +365,16 @@ lListElem *old
       nname = lGetString(np, UE_name);
       if (nname && nname[0] == '@') { 
          if (sge_contained_in_access_list(NULL, &nname[1], old, &alp)) {
-            DEXIT;
-            return alp;
+            DRETURN(alp);
          }
-      }   
-      else {
+      } else {
          if (sge_contained_in_access_list(nname, NULL, old, &alp)) {
-            DEXIT;
-            return alp;
+            DRETURN(alp);
          }
       }   
    }      
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 /* 
@@ -655,8 +406,7 @@ lList *userset_list
          DPRINTF(("user %s got department "SFQ"\n", 
             owner, lGetString(dep, US_name)));
 
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
    }
 
@@ -672,8 +422,7 @@ lList *userset_list
          lSetString(job, JB_department, lGetString(dep, US_name));   
          DPRINTF(("user %s got department \"%s\"\n", owner, lGetString(dep, US_name)));
 
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
    }   
    
@@ -685,15 +434,13 @@ lList *userset_list
    if(lGetElemStr(userset_list, US_name, DEFAULT_DEPARTMENT)) {
       lSetString(job, JB_department, DEFAULT_DEPARTMENT);
       DPRINTF(("user %s got department "SFQ"\n", owner, DEFAULT_DEPARTMENT));
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
    
    ERROR((SGE_EVENT, MSG_SGETEXT_NO_DEPARTMENT4USER_SS, owner, group));
    answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -705,27 +452,31 @@ const char *userset_name
    lListElem *ep = NULL;
    lListElem *cqueue = NULL;
    lList* user_lists = NULL;
+   const lListElem *cl;
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "verify_userset_deletion");
 
+   /*
+    * fix for bug 6422335
+    * check the cq configuration for userset references instead of qinstances
+    */
    for_each (cqueue, *object_base[SGE_TYPE_CQUEUE].list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance;
-
-      for_each(qinstance, qinstance_list) {
-         if (lGetElemStr(lGetList(qinstance, QU_acl), US_name, userset_name)) {
+      for_each (cl, lGetList(cqueue, CQ_acl)) {
+         if (lGetSubStr(cl, US_name, userset_name, AUSRLIST_value))  {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
                    userset_name, MSG_OBJ_USERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
+                   lGetString(cqueue, CQ_name)));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
-         if (lGetElemStr(lGetList(qinstance, QU_xacl), US_name, userset_name)) {
+      }
+      for_each (cl, lGetList(cqueue, CQ_xacl)) {
+         if (lGetSubStr(cl, US_name, userset_name, AUSRLIST_value))  {
             ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, 
                    userset_name, MSG_OBJ_XUSERLIST, MSG_OBJ_QUEUE, 
-                   lGetString(qinstance, QU_qname)));
+                   lGetString(cqueue, CQ_name)));
             answer_list_add(alpp, SGE_EVENT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
@@ -769,15 +520,13 @@ const char *userset_name
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
                MSG_OBJ_USERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EEXIST;
+         DRETURN(STATUS_EEXIST);
       }
       if (lGetElemStr(lGetList(ep, EH_xacl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name,
                MSG_OBJ_XUSERLIST, MSG_OBJ_EH, lGetHost(ep, EH_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EEXIST;
+         DRETURN(STATUS_EEXIST);
       }
    }
 
@@ -800,8 +549,7 @@ const char *userset_name
    }
    lFreeList(&user_lists);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_userset_qmaster/userset_still_used() *******************************
@@ -915,7 +663,265 @@ void userset_update_categories(const lList *added, const lList *removed)
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
+/****** sge_userset_qmaster/userset_mod() **************************************
+*  NAME
+*     userset_mod() -- gdi callback function for adding/modifing a userset
+*
+*  SYNOPSIS
+*     int userset_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
+*     *new_userset, lListElem *userset, int add, const char *ruser, const char 
+*     *rhost, gdi_object_t *object, int sub_command, monitoring_t *monitor) 
+*
+*  FUNCTION
+*     This function is called from the generic gdi framework when a userset is
+*     added or modified.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - gdi context
+*     lList **alpp             - answer list
+*     lListElem *new_userset   - if add it's an empty userset that needs to
+*                                be filled
+*                                if mod it's the actual stored userset
+*     lListElem *userset       - reduced userset object with new/modified values
+*     int add                  - 1 for gdi add
+*                                0 for gdi mod
+*     const char *ruser        - user who invoked the gdi request
+*     const char *rhost        - host where the gid request was invoked
+*     gdi_object_t *object     - structure of the gdi framework
+*     int sub_command          - requested sub_commands
+*     monitoring_t *monitor    - monitoring structure
+*
+*  RESULT
+*     int - 0 on success
+*           STATUS_EUNKNOWN if an error occured
+*  NOTES
+*     MT-NOTE: userset_mod() is not MT safe, needs global lock 
+*******************************************************************************/
+int userset_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_userset,
+           lListElem *userset, int add, const char *ruser, 
+           const char *rhost, gdi_object_t *object, int sub_command,
+           monitoring_t *monitor)
+{
+   const char* userset_name;
+   lList *master_userset_list = *object_type_get_master_list(SGE_TYPE_USERSET);
+   
+   DENTER(TOP_LAYER, "userset_mod");
+
+   /* ---- US_name */
+   if (add) {
+      if (attr_mod_str(alpp, userset, new_userset, US_name, object->object_name)) {
+         goto ERROR;
+      }
+   }
+   userset_name = lGetString(new_userset, US_name);
+   if (add && verify_str_key(
+         alpp, userset_name, MAX_VERIFY_STRING, object->object_name, KEY_TABLE) != STATUS_OK) {
+      goto ERROR;  
+   }
+
+   /* ---- US_fshare */
+   attr_mod_ulong(userset, new_userset, US_fshare, object->object_name);
+
+   /* ---- US_oticket */
+   attr_mod_ulong(userset, new_userset, US_oticket, object->object_name);
+
+   /* ---- US_type */
+   attr_mod_ulong(userset, new_userset, US_type, object->object_name);
+
+   /* ensure userset is at least an ACL (qconf -au ) */
+   if (lGetUlong(new_userset, US_type) == 0) {
+      lSetUlong(new_userset, US_type, US_ACL);
+   }
+   /* make sure acl is valid */
+   if (!add) {
+      if (acl_is_valid_acl(new_userset, alpp) != STATUS_OK) {
+         goto ERROR;
+      }
+   }
+   /* ---- US_entries */
+   attr_mod_sub_list(alpp, new_userset, US_entries, 
+         UE_name, userset, sub_command, SGE_ATTR_USER_LISTS, object->object_name, 0);
+   /* interpret user/group names */
+   if (userset_validate_entries(new_userset, alpp, 0) != STATUS_OK) {
+      goto ERROR;
+   }
+
+   /*
+   ** check for users defined in more than one userset if they
+   ** are used as departments
+   */
+   if (sge_verify_department_entries(master_userset_list, new_userset, alpp) != STATUS_OK) {
+      goto ERROR;
+   }
+
+   /*
+   ** check advance reservations
+   */
+   if (!add) {
+      lListElem *cqueue;
+      lList *new_master_userset_list = NULL;
+
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
+
+         for_each(qinstance, qinstance_list) {
+            lListElem *ar;
+            const char *queue_name = lGetString(qinstance, QU_full_name);
+
+            if (qinstance_slots_reserved(qinstance) == 0) {
+               /* queue not reserved, can not conflict with AR */
+               continue;
+            }
+
+            if (lGetElemStr(lGetList(qinstance, QU_acl), US_name, userset_name) == NULL &&
+                lGetElemStr(lGetList(qinstance, QU_xacl), US_name, userset_name) == NULL) {
+               /* userset not referenced by queue instance */
+               continue;
+            }
+
+            for_each(ar, *(object_type_get_master_list(SGE_TYPE_AR))) {
+               if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, queue_name)) {
+                  if (new_master_userset_list == NULL) {
+                     lListElem *old_userset;
+                     new_master_userset_list = lCopyList("", *(object_type_get_master_list(SGE_TYPE_USERSET)));
+                     old_userset = lGetElemStr(new_master_userset_list, US_name, userset_name);
+                     lRemoveElem(new_master_userset_list, &old_userset);
+                     lAppendElem(new_master_userset_list, lCopyElem(new_userset));
+                  }
+
+                  if (!sge_ar_have_users_access(NULL, ar, lGetString(qinstance, QU_full_name),
+                                                lGetList(qinstance, QU_acl),
+                                                lGetList(qinstance, QU_xacl),
+                                                new_master_userset_list)) {
+                     answer_list_add_sprintf(alpp, STATUS_ESYNTAX,
+                                             ANSWER_QUALITY_ERROR,
+                                             MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU,
+                                             "entries", 
+                                             sge_u32c(lGetUlong(ar, AR_id)));
+                     lFreeList(&new_master_userset_list);
+                     goto ERROR;
+                  }
+               }
+            }
+         }
+      }
+      lFreeList(&new_master_userset_list);
+   }
+   
+   DRETURN(0);
+
+ERROR:
+   DRETURN(STATUS_EUNKNOWN);
+}
+
+/****** sge_userset_qmaster/userset_spool() ************************************
+*  NAME
+*     userset_spool() -- gdi callback funtion to spool a userset
+*
+*  SYNOPSIS
+*     int userset_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
+*     *userset, gdi_object_t *object) 
+*
+*  FUNCTION
+*     This function is called by the gdi framework after successfully adding or
+*     modifing a userset.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - gdi context
+*     lList **alpp             - answer list
+*     lListElem *userset       - userset object to spool
+*     gdi_object_t *object     - structure of the gdi framework
+*
+*  RESULT
+*     [alpp] - error messages will be added to this list
+*     0 - success
+*     STATUS_EEXIST - an error occured
+*
+*  NOTES
+*     MT-NOTE: userset_spool() is not MT safe 
+*******************************************************************************/
+int userset_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *userset, gdi_object_t *object)
+{
+   lList *answer_list = NULL;
+   bool dbret;
+   bool job_spooling = ctx->get_job_spooling(ctx);
+
+   DENTER(TOP_LAYER, "userset_spool");
+
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), userset, 
+                              lGetString(userset, US_name), SGE_TYPE_USERSET,
+                              job_spooling);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(userset, US_name));
+   }
+
+   DRETURN(dbret ? 0 : 1);
+
+}
+
+/****** sge_userset_qmaster/userset_success() **********************************
+*  NAME
+*     userset_success() -- do something after a successfull add/mod
+*
+*  SYNOPSIS
+*     int userset_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem 
+*     *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
+*
+*  FUNCTION
+*     This function is called from the framework after successfull add/mod and
+*     spool.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - gdi context
+*     lListElem *ep            - new added userset
+*     lListElem *old_ep        - for mod the old userset
+*     gdi_object_t *object     - structure of the gdi framework
+*     lList **ppList           - additional list that is returned to the client
+*     monitoring_t *monitor    - monitoring structure
+*
+*  RESULT
+*     int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: userset_success() is not MT safe 
+*******************************************************************************/
+int userset_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)
+{
+   const char *userset_name;
+   dstring ds = DSTRING_INIT;
+   lListElem *rqs;
+
+   DENTER(TOP_LAYER, "userset_success");
+
+   userset_name = lGetString(ep, US_name);
+
+   /* set consider with categories */
+   sge_dstring_sprintf(&ds, "@%s", userset_name);
+   for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
+      if (scope_is_referenced_rqs(rqs, RQR_filter_users, sge_dstring_get_string(&ds))) {
+         lSetBool(ep, US_consider_with_categories, true);
+         break;
+      }
+   }
+
+   if (old_ep != NULL) {
+      /* change queue versions if userset was modified */
+      sge_change_queue_version_acl(ctx, userset_name);
+   }
+
+   sge_add_event(0, old_ep?sgeE_USERSET_MOD:sgeE_USERSET_ADD, 0, 0, 
+                 userset_name, NULL, NULL, ep);
+   lListElem_clear_changed_info(ep);
+
+   sge_dstring_free(&ds);
+   DRETURN(0);
+}

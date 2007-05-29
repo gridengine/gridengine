@@ -47,7 +47,6 @@ import org.xml.sax.SAXException;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class TestValueFactory {
    

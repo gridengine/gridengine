@@ -34,8 +34,7 @@ package com.sun.grid.jgdi.monitoring;
 import java.util.Date;
 
 /**
- *
- * @author  richard.hierlmeier@sun.com
+ * Holds the information about a job
  */
 public interface JobInfo {
 

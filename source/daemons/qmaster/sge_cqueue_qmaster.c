@@ -48,6 +48,7 @@
 #include "sge_string.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
+#include "sge_utility_qmaster.h"
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cqueue.h"
@@ -68,10 +69,13 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_select_queue.h"
+#include "sched/sge_select_queue.h"
+#include "sched/valid_queue_user.h"
 #include "sge_queue_event_master.h"
 #include "sge_signal.h"
 #include "sge_mtutil.h"
+#include "sgeobj/sge_load.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -79,10 +83,9 @@
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
 
-#include "sge_reporting_qmaster.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "msg_sgeobjlib.h"
 
 
 /* EB: ADOC: add commets */
@@ -119,6 +122,9 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
 
 static void
 cqueue_update_categories(const lListElem *new_cq, const lListElem *old_cq);
+
+static void
+qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list);
 
 u_long32
 sge_get_qinstance_number(void)
@@ -219,7 +225,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    /*
     * Change qinstance state
     */
-   qinstance_state_set_ambiguous(ret, *is_ambiguous);
+   sge_qmaster_qinstance_state_set_ambiguous(ret, *is_ambiguous);
    if (*is_ambiguous) {
       DPRINTF(("Qinstance "SFN"@"SFN" has ambiguous configuration\n",
                cqueue_name, hostname));
@@ -234,13 +240,12 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
     *    - state (modification according to initial state)
     *    - qversion
     */
-   qinstance_state_set_unknown(ret, true);
+   sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
-   qinstance_set_initial_state(ret);
+   sge_qmaster_qinstance_set_initial_state(ret);
    qinstance_increase_qversion(ret);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -259,7 +264,7 @@ cqueue_add_qinstances(sge_gdi_ctx_class_t *ctx, lListElem *cqueue, lList **answe
 
          if (qinstance != NULL) {
             if (qinstance_state_is_orphaned(qinstance)) {
-               qinstance_state_set_orphaned(qinstance, false);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, false);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                /*
@@ -307,13 +312,13 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
          lListElem *href = lGetElemHost(del_hosts, HR_name, hostname);
 
          if (href != NULL) {
-            if (qinstance_slots_used(qinstance) > 0) {
+            if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
                /*
                 * Jobs are currently running in this queue. Therefore
                 * it is not possible to delete the queue but we
                 * will set it into the "orphaned" state 
                 */
-               qinstance_state_set_orphaned(qinstance, true);
+               sge_qmaster_qinstance_state_set_orphaned(qinstance, true);
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD);
             } else {
                lSetUlong(qinstance, QU_tag, SGE_QI_TAG_DEL);
@@ -323,8 +328,7 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -355,8 +359,7 @@ cqueue_mod_attributes(lListElem *cqueue, lList **answer_list,
          index++;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static bool
@@ -557,7 +560,7 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
          /*
           * Change qinstance state
           */
-         qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
+         sge_qmaster_qinstance_state_set_ambiguous(qinstance, will_be_ambiguous);
          if (will_be_ambiguous && !is_ambiguous) {
             state_changed = true;
             DPRINTF(("Qinstance "SFQ" has ambiguous configuration\n",
@@ -584,6 +587,26 @@ cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                      qinstance_name));
             lSetUlong(qinstance, QU_tag, SGE_QI_TAG_MOD_ONLY_CONFIG);
             qinstance_increase_qversion(qinstance);
+         }
+
+         if (ret) {
+            lListElem *ar;
+            lList *master_userset_list = *(object_type_get_master_list(SGE_TYPE_USERSET));
+
+            for_each(ar, *(object_type_get_master_list(SGE_TYPE_AR))) {
+               if (lGetElemStr(lGetList(ar, AR_granted_slots), JG_qname, qinstance_name)) {
+                  if (!sge_ar_have_users_access(NULL, ar, lGetString(qinstance, QU_full_name), 
+                                                lGetList(qinstance, QU_acl),
+                                                lGetList(qinstance, QU_xacl),
+                                                master_userset_list)) {
+                     ERROR((SGE_EVENT, MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU, 
+                            SGE_ATTR_USER_LISTS, sge_u32c(lGetUlong(ar, AR_id))));
+                     answer_list_add(answer_list, SGE_EVENT, 
+                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  }
+               }
+            }
          }
 
          if (!ret) {
@@ -620,8 +643,7 @@ cqueue_handle_qinstances(sge_gdi_ctx_class_t *ctx,
    if (ret) {
       ret &= cqueue_add_qinstances(ctx, cqueue, answer_list, add_hosts, monitor);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int cqueue_mod(sge_gdi_ctx_class_t *ctx,
@@ -722,11 +744,10 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
    lFreeList(&add_hosts);
    lFreeList(&rem_hosts);
 
-   DEXIT;
    if (ret) {
-      return 0;
+      DRETURN(0);
    } else {
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 }
 
@@ -872,7 +893,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
    const char *name = lGetString(cqueue, CQ_name);
    lListElem *qinstance;
    dstring key_dstring = DSTRING_INIT;
-   u_long32 now = sge_get_gmt();
    bool dbret;
    lList *spool_answer_list = NULL;
    bool job_spooling = ctx->get_job_spooling(ctx);
@@ -911,8 +931,6 @@ int cqueue_spool(sge_gdi_ctx_class_t *ctx, lList **answer_list, lListElem *cqueu
                                     key);
             ret = 1;
          }
-
-         reporting_create_queue_record(NULL, qinstance, now);
       }
    }
 
@@ -948,9 +966,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
              * test if the CQ can be removed
              */
             for_each(qinstance, qinstances) {
-               int slots = qinstance_slots_used(qinstance);
-   
-               if (slots > 0) {
+               if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
                   ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
@@ -1071,7 +1087,7 @@ cqueue_del_all_orphaned(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **
          next_qinstance = lNext(qinstance);
          
          if (qinstance_state_is_orphaned(qinstance) &&
-             qinstance_slots_used(qinstance) == 0) {
+             qinstance_slots_used(qinstance) == 0 && qinstance_slots_reserved(qinstance) == 0) {
             const char *qi_name = lGetHost(qinstance, QU_qhostname);
       
             /*
@@ -1136,8 +1152,8 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
          } else {
             next_qinstance = lNext(qinstance);
          }
-         if ((qinstance_state_is_unknown(qinstance)) != is_unknown) {
-            qinstance_state_set_unknown(qinstance, is_unknown);
+         if (qinstance_state_is_unknown(qinstance) != is_unknown) {
+            sge_qmaster_qinstance_state_set_unknown(qinstance, is_unknown);
             if (send_events) {
                qinstance_add_event(qinstance, sgeE_QINSTANCE_MOD);
             }
@@ -1146,7 +1162,7 @@ cqueue_list_set_unknown_state(lList *this_list, const char *hostname,
    }
 }
 
-                        
+
 /****** sge_cqueue_qmaster/cqueue_diff_sublist() *******************************
 *  NAME
 *     cqueue_diff_sublist() -- Diff cluster queue sublists
@@ -1316,3 +1332,51 @@ static void cqueue_update_categories(const lListElem *new_cq, const lListElem *o
    lFreeList(&new);
 }
 
+/****** sgeobj/qinstance/qinstance_check_unknown_state() **********************
+*  NAME
+*     qinstance_check_unknown_state() -- Modifies the number of used slots 
+*
+*  SYNOPSIS
+*     void
+*     qinstance_check_unknown_state(lListElem *this_elem)
+*
+*  FUNCTION
+*     Checks if there are nonstatic load values available for the
+*     qinstance. If this is the case, then then the "unknown" state 
+*     of that machine will be released. 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type 
+*
+*  RESULT
+*     void - NONE 
+*
+*  NOTES
+*     MT-NOTE: qinstance_check_unknown_state() is MT safe 
+*******************************************************************************/
+static void
+qinstance_check_unknown_state(lListElem *this_elem, lList *master_exechost_list)
+{
+   const char *hostname = NULL;
+   lList *load_list = NULL;
+   lListElem *host = NULL;
+   lListElem *load = NULL;
+
+   DENTER(TOP_LAYER, "qinstance_check_unknown_state");
+   hostname = lGetHost(this_elem, QU_qhostname);
+   host = host_list_locate(master_exechost_list, hostname);
+   if (host != NULL) {
+      load_list = lGetList(host, EH_load_list);
+
+      for_each(load, load_list) {
+         const char *load_name = lGetString(load, HL_name);
+
+         if (!sge_is_static_load_value(load_name)) {
+            sge_qmaster_qinstance_state_set_unknown(this_elem, false);
+            DTRACE;
+            break;
+         }
+      } 
+   }
+   DRETURN_VOID;
+}

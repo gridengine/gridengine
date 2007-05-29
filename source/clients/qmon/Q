@@ -72,6 +72,20 @@ Qmon*automaticUpdateHostTab: TRUE
 Qmon*job_form*columnWidths:      12,8,10,10,7,16
 Qmon*job_form*visibleColumns:    6
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! AR configuration settings
+!! Qmon*ar_form*columnWidths: nr of characters per column for 
+!!                                the first 4 cols
+!! Qmon*ar_form*visibleColumns: nr of visible columns (without scrollbar)
+!!                               if the column sizes shall be bigger this can
+!!                               be lowered to show only the first n cols and
+!!                               the rest can be reached with the horizontal
+!!                               scrollbar
+!!                               
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*ar_form*columnWidths:      12,20,10,10
+Qmon*ar_form*visibleColumns:    4
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! F O N T S 
@@ -406,3 +420,6 @@ Qmon*xmtMessageDialog*foreground:           $warning_color
 #include "../clients/qmon/qmon_calendar.ad"
 #include "../clients/qmon/qmon_loadmon.ad"
 #include "../clients/qmon/qmon_resource_quota.ad"
+#include "../clients/qmon/qmon_ar.ad"
+#include "../clients/qmon/qmon_arcustom.ad"
+#include "../clients/qmon/qmon_arsub.ad"

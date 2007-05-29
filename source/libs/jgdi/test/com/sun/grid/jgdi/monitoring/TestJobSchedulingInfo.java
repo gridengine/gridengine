@@ -43,7 +43,6 @@ import java.util.Iterator;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
    
@@ -77,7 +76,7 @@ public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
                pw.println("Job " + mes.getJobNumberList().get(i).toString());
             }
          }
-         if (schedInfo.isSetMessageList()) {
+         if (schedInfo.isSetMessage()) {
             pw.println("Message List");
             iter = schedInfo.getMessageList().iterator();
             while (iter.hasNext()) {

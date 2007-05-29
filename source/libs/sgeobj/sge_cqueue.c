@@ -53,6 +53,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_type.h"
+#include "sge_utility_qmaster.h"
 #include "sge_str.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -209,8 +210,7 @@ enumeration_create_reduced_cq(bool fetch_all_qi, bool fetch_all_nqi)
 *
 *  RESULT
 *     bool - error state
-*        true  - success
-*        false - error
+*     always true  - success
 *******************************************************************************/
 bool
 cqueue_name_split(const char *name, 
@@ -220,40 +220,79 @@ cqueue_name_split(const char *name,
    bool ret = true;
 
    DENTER(CQUEUE_LAYER, "cqueue_name_split");
+
+   *has_hostname = false;
+   *has_domain = false;
+
    if (name != NULL && cqueue_name != NULL && 
        host_domain != NULL && has_hostname != NULL && has_domain != NULL) {
-      int part = 0;
-      const char *tmp_string;
+      bool at_skiped = false;
 
       sge_dstring_clear(cqueue_name);
       sge_dstring_clear(host_domain);
 
       while (*name != '\0') {
-         if (part == 1) {
-            part = 2;
-         } else if (part == 0 && *name == '@') {
-            part = 1;
+         if (!at_skiped && *name == '@') {
+            at_skiped = true;
+            name++;
+            if (*name == '@') {
+               *has_domain = true;
+               *has_hostname = false;
+            } else {
+               *has_domain = false;
+               *has_hostname = true;
+            }
+            continue; 
          }
-         if (part == 0) {
-            sge_dstring_sprintf_append(cqueue_name, "%c", name[0]);
-         } else if (part == 2) {
-            sge_dstring_sprintf_append(host_domain, "%c", name[0]);
+         if (!at_skiped) {
+            sge_dstring_append_char(cqueue_name, name[0]);
+         } else {
+            sge_dstring_append_char(host_domain, name[0]);
          }
          name++;
-      } 
-      tmp_string = sge_dstring_get_string(host_domain);
-      *has_hostname = false;
-      *has_domain = false;
-      if (tmp_string != NULL) {
-         if (tmp_string[0] == '@') {
-            *has_domain = true;
-         } else {
-            *has_hostname = true;
-         }
-      } 
+      }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
+}
+
+/****** sge_cqueue/cqueue_get_name_from_qinstance() ****************************
+*  NAME
+*     cqueue_get_name_from_qinstance() -- returns the cluster queue part of a queue
+*
+*  SYNOPSIS
+*     char* cqueue_get_name_from_qinstance(const char *queue_instance) 
+*
+*  FUNCTION
+*     Returns a character pointer to a newly malloced string containing the cluster
+*     queue part of a queue instance name.
+*
+*     The memory needs to be free'd by the caller
+*
+*  INPUTS
+*     const char *queue_instance - queue instance or cluster queue
+*
+*  RESULT
+*     char* - cluster queue name
+*
+*  NOTES
+*     MT-NOTE: cqueue_get_name_from_qinstance() is MT safe 
+*
+*******************************************************************************/
+char* cqueue_get_name_from_qinstance(const char *queue_instance)
+{
+   char *at_sign = NULL;
+   char *cqueue = NULL; 
+
+   if ((at_sign = strchr(queue_instance, '@'))) {
+      int size = at_sign - queue_instance;
+      cqueue = malloc(sizeof(char) * (size + 1));
+      cqueue = strncpy(cqueue, queue_instance, size);
+      cqueue[size] = '\0';
+   } else {
+      cqueue = strdup(queue_instance);
+   }
+
+   return cqueue;
 }
 
 /****** sgeobj/cqueue/cqueue_create() *****************************************
@@ -1021,163 +1060,6 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/cqueue/cqueue_mod_sublist() ***********************************
-*  NAME
-*     cqueue_mod_sublist() -- modify cqueues configuration sublist 
-*
-*  SYNOPSIS
-*     bool 
-*     cqueue_mod_sublist(lListElem *this_elem, lList **answer_list, 
-*                        lListElem *reduced_elem, int sub_command, 
-*                        int attribute_name, int sublist_host_name, 
-*                        int sublist_value_name, int subsub_key, 
-*                        const char *attribute_name_str, 
-*                        const char *object_name_str) 
-*
-*  FUNCTION
-*     This function modifies a certain configuration sublist of "this_elem".
-*     Possible errors will be reported in "answer_list". "reduced_elem"
-*     will be used to identify the changes which have been done.
-*     "sub_command" defines how these changes should be applied to 
-*     "this_elem". "sublist_value_name" is the sublist of "this_elem" which
-*     should be modified whereas "subsub_key" defines the attribute
-*     which containes the primary key of that sublist. "attribute_name_str"
-*     is the name of the cqueue attribute which will be modified with
-*     this operation. It will be used for error output. "object_name_str"
-*     is the name of the cqueue which will be modified by this operation.
-*      
-*
-*  INPUTS
-*     lListElem *this_elem           - CQ_Type 
-*     lList **answer_list            - AN_Type 
-*     lListElem *reduced_elem        - reduced CQ_Type element 
-*     int sub_command                - GDI subcommand 
-*     int attribute_name             - CULL attribute name (CQ_Type)
-*     int sublist_host_name          - CULL sublist attribute name
-*                                      depend on sublist of CQ_Type 
-*     int sublist_value_name         - CULL sublist attribute name of that
-*                                      field which containes the value of
-*                                      the attribute to be modified.
-*     int subsub_key                 - CULL sublist attribute key
-*     const char *attribute_name_str - string used for user output 
-*     const char *object_name_str    - cqueue name 
-*
-*  RESULT
-*     bool - error state
-*        true  - success
-*        false - error
-*
-*  NOTES
-*     MT-NOTE: cqueue_mod_sublist() is MT safe 
-*******************************************************************************/
-bool
-cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
-                   lListElem *reduced_elem, int sub_command,
-                   int attribute_name, int sublist_host_name,
-                   int sublist_value_name, int subsub_key,
-                   const char *attribute_name_str, 
-                   const char *object_name_str) 
-{
-   bool ret = true;
-   int pos;
-
-   DENTER(CQUEUE_LAYER, "cqueue_mod_sublist");
- 
-   pos = lGetPosViaElem(reduced_elem, attribute_name, SGE_NO_ABORT);
-   if (pos >= 0) {
-      lList *mod_list = lGetPosList(reduced_elem, pos);
-      lList *org_list = lGetList(this_elem, attribute_name);
-      lListElem *mod_elem;
-
-      /* 
-       * Delete all configuration lists except the default-configuration
-       * if sub_command is SGE_GDI_SET_ALL
-       */
-      if (sub_command == SGE_GDI_SET_ALL) {
-         lListElem *elem, *next_elem;
-
-         next_elem = lFirst(org_list);
-         while ((elem = next_elem)) {
-            const char *name = lGetHost(elem, sublist_host_name);
-
-            next_elem = lNext(elem); 
-            mod_elem = lGetElemHost(mod_list, sublist_host_name, name);
-            if (mod_elem == NULL) {
-               DPRINTF(("Removing attribute list for "SFQ"\n", name));
-               lRemoveElem(org_list, &elem);
-            }
-         }
-      }
-
-      /*
-       * Do modifications for all given elements of 
-       * domain/host-configuration list
-       */
-      for_each(mod_elem, mod_list) {
-         const char *name = lGetHost(mod_elem, sublist_host_name);
-         char resolved_name[CL_MAXHOSTLEN+1];
-         lListElem *org_elem = NULL;
-         
-         if (name == NULL) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, ""));
-            answer_list_add(answer_list, SGE_EVENT,
-                            STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            ret = false;
-            break;
-         }
-         /* Don't try to resolve hostgroups */
-         if (name[0] != '@') {
-            int back = getuniquehostname(name, resolved_name, 0);
-
-            if (back == CL_RETVAL_OK) {
-               /* 
-                * This assignment is ok because preious name contained a const
-                * string from the mod_elem that we didn't need to free.  
-                * Now it will contain a string that's on the stack, 
-                * so we still don't have to free it. 
-                */
-               name = resolved_name;
-            } else {
-               /*
-                * Due to CR 6319231, IZ 1760 this is allowed
-                */
-            }
-         }
-         
-         org_elem = lGetElemHost(org_list, sublist_host_name, name);
-
-         /*
-          * Create element if it does not exist
-          */
-         if (org_elem == NULL && sub_command != SGE_GDI_REMOVE) {
-            if (org_list == NULL) {
-               org_list = lCreateList("", lGetElemDescr(mod_elem));
-               lSetList(this_elem, attribute_name, org_list);
-            } 
-            org_elem = lCreateElem(lGetElemDescr(mod_elem));
-            lSetHost(org_elem, sublist_host_name, name);
-            lAppendElem(org_list, org_elem);
-         }
-
-         /*
-          * Modify sublist according to subcommand
-          */
-         if (org_elem != NULL) {
-            if (subsub_key != NoName) {
-               attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
-                                 subsub_key, mod_elem, sub_command, 
-                                 attribute_name_str, object_name_str, 0);
-            } else {
-               object_replace_any_type(org_elem, sublist_value_name, mod_elem);
-            }
-         }
-      }
-   }
- 
-   DEXIT;
-   return ret;
-}
-
 /****** sgeobj/cqueue/cqueue_list_find_all_matching_references() **************
 *  NAME
 *     cqueue_list_find_all_matching_references() -- as it says 
@@ -1530,8 +1412,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
    } else {
       ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sge_cqueue/cqueue_find_used_href() *************************************

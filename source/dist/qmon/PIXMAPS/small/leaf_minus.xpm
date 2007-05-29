@@ -1,5 +1,5 @@
 /* XPM */
-static char * leaf[] = {
+static char * leaf_minus[] = {
 "16 16 2 1",
 " 	c white",
 ".	c blue",

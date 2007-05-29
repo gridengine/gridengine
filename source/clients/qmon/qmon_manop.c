@@ -257,7 +257,7 @@ XtPointer cld
                            "user_matrix", &user_matrix,
                            NULL);
 
-   XtAddCallback(user_name, XmtNinputCallback, 
+   XtAddCallback(user_name, XmNactivateCallback, 
                      qmonManopAdd, NULL);
    XtAddCallback(user_matrix, XmNlabelActivateCallback,
                   qmonUserAskForProject, NULL);

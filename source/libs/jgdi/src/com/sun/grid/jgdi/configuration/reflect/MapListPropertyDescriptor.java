@@ -37,7 +37,6 @@ import java.util.Set;
 
 /**
  *
- * @author rh150277
  */
 public abstract class MapListPropertyDescriptor extends PropertyDescriptor {
    
@@ -61,6 +60,7 @@ public abstract class MapListPropertyDescriptor extends PropertyDescriptor {
    
    public abstract Object get(Object bean, Object key, int index);
    public abstract void add(Object bean, Object key, Object value);
+   public abstract void addEmpty(Object bean, Object key);
    public abstract void set(Object bean, Object key, int index, Object value);
    
    public abstract Object remove(Object bean, Object key, int index);

@@ -37,7 +37,6 @@ import java.util.List;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class PrimaryKeyFilter implements JGDIFilter {
    

@@ -48,8 +48,6 @@
 *     setting field contents from string representation etc.
 *
 *  NOTES
-*     Functions like attr_mod_double from gdi_utility should also 
-*     be moved here.
 *
 *  SEE ALSO
 *     sgeobj/Object/object_has_type()
@@ -111,6 +109,7 @@
 *        SGE_TYPE_ZOMBIE
 *        SGE_TYPE_SUSER
 *        SGE_TYPE_RQS
+*        SGE_TYPE_AR
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -135,10 +134,10 @@ typedef enum {
    SGE_TYPE_PROJECT,          /*14*/
    SGE_TYPE_CQUEUE,           /*15*/
    SGE_TYPE_QINSTANCE,        /*16*/
-   SGE_TYPE_SCHEDD_CONF,       /*17*/
-   SGE_TYPE_SCHEDD_MONITOR,    /*18*/
-   SGE_TYPE_SHUTDOWN,          /*19*/
-   SGE_TYPE_QMASTER_GOES_DOWN, /*20*/
+   SGE_TYPE_SCHEDD_CONF,      /*17*/
+   SGE_TYPE_SCHEDD_MONITOR,   /*18*/
+   SGE_TYPE_SHUTDOWN,         /*19*/
+   SGE_TYPE_QMASTER_GOES_DOWN,/*20*/
    SGE_TYPE_SUBMITHOST,       /*21*/
    SGE_TYPE_USER,             /*22*/
    SGE_TYPE_USERSET,          /*23*/
@@ -147,6 +146,7 @@ typedef enum {
    SGE_TYPE_ZOMBIE,           /*26*/
    SGE_TYPE_SUSER,            /*27*/
    SGE_TYPE_RQS,              /*28*/
+   SGE_TYPE_AR,               /*29*/
 
 
    /*
@@ -322,12 +322,6 @@ object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem);
 void
 object_get_any_type(lListElem *this_elem, int name, void *value);
 
-bool 
-attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
-                  int this_elem_primary_key, lListElem *delta_elem, 
-                  int sub_command, const char *sub_list_name, 
-                  const char *object_name, int no_info); 
-
 bool  
 object_has_differences(const lListElem *this_elem, lList **answer_list,
                        const lListElem *old_elem, bool modify_changed_flag);
@@ -344,5 +338,9 @@ bool object_verify_ulong_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_double_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_string_not_null(const lListElem *ep, lList **answer_list, int nm);
 bool object_verify_expression_syntax(const lListElem *ep, lList **answer_list);
+
+int object_verify_name(const lListElem *object, lList **answer_list, int name, const char *object_descr);
+int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range, const char *object_descr);
+int compress_ressources(lList **alpp, lList *rl, const char *object_descr );
 
 #endif /* __SGE_OBJECT_H */

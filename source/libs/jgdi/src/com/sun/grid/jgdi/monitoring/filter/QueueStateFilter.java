@@ -31,11 +31,12 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring.filter;
 
+import java.io.Serializable;
+
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class QueueStateFilter {
+public class QueueStateFilter implements Serializable {
    
    private int options;
    

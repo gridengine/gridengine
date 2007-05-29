@@ -36,7 +36,6 @@ import com.sun.grid.jgdi.event.EventListener;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public interface EventClientBase {
     

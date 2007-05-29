@@ -35,7 +35,6 @@ import java.io.Serializable;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class HardRequestValue implements Serializable {
    

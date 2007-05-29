@@ -80,6 +80,7 @@
 #include "qm_name.h"
 #include "setup_path.h"
 #include "uti/sge_os.h"
+#include "sge_advance_reservation_qmaster.h"
 
 /*
  * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
@@ -616,6 +617,10 @@ void sge_start_periodic_tasks(void)
    te_add_event(ev);
    te_free_event(&ev);
 
+   ev = te_new_event(15, TYPE_AR_ID_EVENT, RECURRING_EVENT, 0, 0, "ar_id_changed");
+   te_add_event(ev);
+   te_free_event(&ev);
+
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
    te_add_event(ev);
    te_free_event(&ev);
@@ -659,6 +664,8 @@ void sge_register_event_handler(void)
    /* recurring events */
    te_register_event_handler(sge_store_job_number, TYPE_JOB_NUMBER_EVENT);
 
+   te_register_event_handler(sge_store_ar_id, TYPE_AR_ID_EVENT);
+
    te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT); 
 
    te_register_event_handler(sge_zombie_job_cleanup_handler, TYPE_ZOMBIE_JOB_CLEANUP_EVENT);
@@ -666,7 +673,6 @@ void sge_register_event_handler(void)
    te_register_event_handler(sge_automatic_user_cleanup_handler, TYPE_AUTOMATIC_USER_CLEANUP_EVENT);
 
    te_register_event_handler(sge_security_event_handler, TYPE_SECURITY_EVENT);
-  
   
    /* one time events*/
    te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
@@ -677,8 +683,9 @@ void sge_register_event_handler(void)
 
    te_register_event_handler(reschedule_unknown_event, TYPE_RESCHEDULE_UNKNOWN_EVENT);
 
-   DEXIT;
-   return;
+   te_register_event_handler(sge_ar_event_handler, TYPE_AR_EVENT);
+
+   DRETURN_VOID;
 }
 
 /****** qmaster/sge_qmaster_main/sge_exit_func() **********************************

@@ -5,13 +5,5 @@
    <allocationRule>$round_robin</allocationRule>
    <controlSlaves>true</controlSlaves>
    <jobIsFirstTask>false</jobIsFirstTask>
-   <freeSlots>0</freeSlots>
-   <resourceUtilization>
-      <RUE_Type>
-         <name>slots</name>
-         <utilizedNow>0.0</utilizedNow>
-      </RUE_Type>
-
-   </resourceUtilization>
    <urgencySlots>min</urgencySlots>
 </PE_Type>

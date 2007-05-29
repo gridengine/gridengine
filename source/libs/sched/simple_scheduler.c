@@ -96,12 +96,14 @@ static sge_callback_result remove_finished_job(sge_evc_class_t *evc, object_desc
          lList *order_list = NULL;
          lListElem *job, *ja_task;
          u_long32 job_id, ja_task_id;
+         dstring id_dstring = DSTRING_INIT;
 
          job_id = lGetUlong(event, ET_intkey);
          ja_task_id = lGetUlong(event, ET_intkey2);
 
          DPRINTF(("got final usage for job %s\n", 
-                  job_get_id_string(job_id, ja_task_id, NULL)));
+                  job_get_id_string(job_id, ja_task_id, NULL, &id_dstring)));
+         sge_dstring_free(&id_dstring);
 
          job = job_list_locate(*object_type_get_master_list(SGE_TYPE_JOB), job_id);
          ja_task = job_search_task(job, NULL, ja_task_id);
@@ -166,6 +168,7 @@ static void get_workload_info()
    lListElem *job;
    const char *hformat = "%10s %-10s %-10s %-10s %7s %7s %15s";
    const char *dformat = "%10s %-10s %-10s %-10s %7d %7.0f %15s";
+   dstring id_dstring = DSTRING_INIT;
 
    printf(hformat, "job id", "user", "group", "pe", "procs", "wclock", "start_time");
    printf("\n");
@@ -208,7 +211,7 @@ static void get_workload_info()
          ja_task_id = lGetUlong(ja_task, JAT_task_number);
          start_time = lGetUlong(ja_task, JAT_start_time);
          if(lGetUlong(ja_task, JAT_status) != JFINISHED) {
-            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
                    user, group, 
                    (pe == NULL ? "-" : pe), procs, wclock,
                    start_time > 0 ? ctime(&start_time) : "-\n");
@@ -227,7 +230,7 @@ static void get_workload_info()
          range_get_all_ids(range, &range_min, &range_max, &range_step);
          
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
-            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
                    user, group, 
                    (pe == NULL ? "-" : pe), procs, wclock,
                    start_time > 0 ? ctime(&start_time) : "-\n");
@@ -240,7 +243,7 @@ static void get_workload_info()
          range_get_all_ids(range, &range_min, &range_max, &range_step);
          
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
-            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
                    user, group, 
                    (pe == NULL ? "-" : pe), procs, wclock,
                    start_time > 0 ? ctime(&start_time) : "-\n");
@@ -253,7 +256,7 @@ static void get_workload_info()
          range_get_all_ids(range, &range_min, &range_max, &range_step);
          
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
-            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
                    user, group, 
                    (pe == NULL ? "-" : pe), procs, wclock,
                    start_time > 0 ? ctime(&start_time) : "-\n");
@@ -266,7 +269,7 @@ static void get_workload_info()
          range_get_all_ids(range, &range_min, &range_max, &range_step);
          
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
-            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL, &id_dstring), 
                    user, group, 
                    (pe == NULL ? "-" : pe), procs, wclock,
                    start_time > 0 ? ctime(&start_time) : "-\n");
@@ -275,6 +278,7 @@ static void get_workload_info()
    }
 
    printf("\n");
+   sge_dstring_free(&id_dstring);
 }
 
 static void get_policy_info()
@@ -440,10 +444,6 @@ static void simple_scheduler(sge_evc_class_t *evc)
    if(!find_pending_ja_task(&job, &ja_task)) {
       return;
    }
-
-   DPRINTF(("found pending job %s\n", job_get_id_string(lGetUlong(job, JB_job_number),
-                                                       lGetUlong(ja_task, JAT_task_number), 
-                                                       NULL)));
 
    /* parallel processing.
     * SGE supports (multiple) ranges, build maximum

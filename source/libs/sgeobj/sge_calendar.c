@@ -49,6 +49,7 @@
 #include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_cqueue.h"
+#include "sge_attrL.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_calendar.h"
@@ -99,20 +100,20 @@ disabled_year_list(lList **alpp, const char *s,
 static int disabled_week_list(lList **alpp, const char *s, lList **cal, const char *cal_name); 
 
 static int 
-state_at(time_t now, const lList *ycal, lList *wcal, time_t *then);
+state_at(time_t now, const lList *ycal, const lList *wcal, time_t *then);
 
 static int scan(const char *s, token_set_t token_set[]);
 
 static void join_wday_range(lList *week_day); 
 static void extend_wday_range(lList *week_day);
 
-static char * get_string(void);
+static char *get_string(void);
 
 static int get_number(void); 
 
 static void eat_token(void);
 
-static char * save_error(void);
+static char *save_error(void);
 
 static int cheap_scan(char *s, token_set_t tokenv[], int n, char *name);
 
@@ -180,6 +181,8 @@ static int week_day_range(lListElem **tmr);
 static void split_wday_range(lList *wdrl, lListElem *tmr);
 
 static int week_day(lListElem **tm);
+
+static u_long32 calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then, time_t *now);
 
 lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name) 
 {
@@ -272,7 +275,7 @@ lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name)
 ycal,  CA_Type 
 wcal,  CA_Type
 */
-static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_event) {
+static int state_at(time_t now, const lList *ycal, const lList *wcal, time_t *next_event) {
    struct tm *tm_now;
    int state = 0, w_is_active = -1, y_is_active;
    lListElem *yc, *wc, *tm;
@@ -326,7 +329,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
      
       memset(visited, false, max * sizeof(bool));
 
-      
       /* Week calendar */
       /* we can have overlapping ranges, which will not result in state changes. This code tries
          to figure out, when a range overlaps and we face no state change. */
@@ -339,9 +341,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                state |= w_is_active;
             }   
             
-            if (limit == 0) { 
-            }
-            else if (state == next_state && temp_next_event >= limit) {
+            if (limit != 0 && state == next_state && temp_next_event >= limit) {
                if (!visited[counter]) {
                   isOverlapping = true;
                   visited[counter] = true;
@@ -353,8 +353,7 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
                   if ((w_is_active = is_week_entry_active(tm, wc, &limit, &next_state, 0))) {
                      state |= w_is_active;
                   }                 
-               }
-               else {
+               } else {
                   temp_next_event = 0;
                   isOverlapping = false;
                   break;
@@ -392,13 +391,6 @@ static int state_at(time_t now, const lList *ycal, lList *wcal, time_t *next_eve
 
    DRETURN(QI_DO_ENABLE);
 }
-
-/* returns state and time when state changes acording this entry */
-/*
-lListElem *tm,          TM_Type 
-lListElem *week_entry,  CA_Type 
-*/
-
 
 /****** sge_calendar/is_week_entry_active() ************************************
 *  NAME
@@ -553,7 +545,7 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
       state = in_daytime_range?QI_DO_ENABLE:0;
    }
 
-   if (limit) {  
+   if (limit) {
       bool is_end_of_the_day_reached = false;
 
       *limit = compute_limit(in_yday_range, in_daytime_range, lGetList(year_entry, CA_yday_range_list), NULL,
@@ -606,7 +598,8 @@ static u_long32 is_year_entry_active(lListElem *tm, lListElem *year_entry, time_
 *     const lListElem *cep       - (in) calendar (CAL_Type)
 *     lList **state_changes_list - (out) a pointer to a list pointer (CQU_Type)
 *     time_t *when               - (out) when will the next change be, or 0
-*     time_t *now                - (in) should be NULL, or the current time (only for the test programm)
+*     time_t *now                - (in) should be NULL, or the current time
+*                                  (only for the test programm)
 *
 *  RESULT
 *     u_long32 - new state (QI_DO_NOTHING, QI_DO_DISABLE, QI_DO_SUSPEND)
@@ -739,7 +732,7 @@ u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list
 *     lListElem *now, bool *is_end_of_day_reached) 
 *
 *  FUNCTION
-*     This function computes the next state change based on the tree booleans:
+*     This function computes the next state change based on the three booleans:
 *     today, active, and is_full_day. 
 *
 *     There are some special calendar states, which result in special code to 
@@ -1405,7 +1398,7 @@ static int year_day_range(lListElem **tmr) {
          DRETURN(-1);
       }   
       if (tm_yday_cmp(t1, t2)>0) {
-         sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY );
+         sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY);
          lFreeElem(&t1);
          DRETURN(-1);   
       }
@@ -1535,7 +1528,9 @@ static int month(int *mp) {
    DRETURN(0);
 }
 
-static int day(int *dp) { return range_number(1, 31, dp, "day");
+static int day(int *dp)
+{
+   return range_number(1, 31, dp, "day");
 }
 
 static int year(int *yp) { 
@@ -2486,7 +2481,7 @@ bool calendar_parse_week(lListElem *cal, lList **answer_list) {
 *     MT-NOTE: calendar_get_current_state_and_end() is MT safe 
 *
 *******************************************************************************/
-u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, time_t *now) {
+static u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, time_t *now) {
    u_long32 new_state;
    lList *year_list = NULL;
    lList *week_list = NULL;
@@ -2502,8 +2497,7 @@ u_long32 calendar_get_current_state_and_end(const lListElem *cep, time_t *then, 
    
    if (now == NULL) {
       new_state = state_at((time_t)sge_get_gmt(), year_list, week_list, then);
-   }
-   else {
+   } else {
       new_state = state_at(*now, year_list, week_list, then);
    }
    
@@ -2527,21 +2521,21 @@ calendar_is_referenced(const lListElem *calendar, lList **answer_list,
                        const lList *master_cqueue_list)
 {
    bool ret = false;
-   lListElem *cqueue = NULL;
-
-   for_each(cqueue, master_cqueue_list) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-
-      for_each(qinstance, qinstance_list) {
-         if (qinstance_is_calendar_referenced(qinstance, calendar)) {
-            const char *calendar_name = lGetString(calendar, CAL_name);
-            const char *name = lGetString(qinstance, QU_full_name);
-
+   lListElem *cqueue = NULL, *cal = NULL;
+ 
+   /*
+    * fix for bug 6422335
+    * check the cq configuration for calendar references instead of qinstances
+    */
+   const char *calendar_name = lGetString(calendar, CAL_name);     
+   for_each (cqueue, master_cqueue_list){
+      for_each (cal, lGetList(cqueue, CQ_calendar)){
+         if(!strcmp(lGetString(cal, ASTR_value), calendar_name)){
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                     ANSWER_QUALITY_INFO, 
                                     MSG_CALENDAR_REFINQUEUE_SS, 
-                                    calendar_name, name);
+                                    calendar_name,
+                                    lGetString(cqueue, CQ_name));
             ret = true;
             break;
          }
@@ -2568,4 +2562,59 @@ lListElem* sge_generic_cal(char *cal_name) {
    lSetString(calp, CAL_name, cal_name?cal_name:"template");
 
    DRETURN(calp);
+}
+
+/****** sge_calendar/calendar_open_in_time_frame() *****************************
+*  NAME
+*     calendar_open_in_time_frame() -- check if calender is open in given time
+*     frame
+*
+*  SYNOPSIS
+*     bool calendar_open_in_time_frame(const lListElem *cep, u_long32 
+*     start_time, u_long32 duration) 
+*
+*  FUNCTION
+*     Returns the state (only open or closed) of a calendar in a given time
+*     frame
+*
+*  INPUTS
+*     const lListElem *cep - calendar object (CAL_Type)
+*     u_long32 start_time  - time frame start
+*     u_long32 duration    - time frame duration
+*
+*  RESULT
+*     bool - true if open
+*            false if closed
+*
+*  NOTES
+*     MT-NOTE: calendar_open_in_time_frame() is MT safe 
+*******************************************************************************/
+bool calendar_open_in_time_frame(const lListElem *cep, u_long32 start_time, u_long32 duration)
+{
+   bool ret = true;
+   u_long32 state;
+   lList *year_list = NULL;
+   lList *week_list = NULL;
+   time_t next_change;
+   time_t start = (time_t)start_time;
+   time_t end = (time_t)duration_add_offset(start_time, duration);
+
+   DENTER(TOP_LAYER, "calendar_open_in_time_frame");
+
+   if (cep != NULL) {
+      year_list = lGetList(cep, CAL_parsed_year_calendar);
+      week_list = lGetList(cep, CAL_parsed_week_calendar);
+   }
+
+   state = state_at(start, year_list, week_list, &next_change);
+   while (state == QI_DO_ENABLE && next_change != 0 && next_change <= end) {
+      start = next_change;
+      state = state_at(start, year_list, week_list, &next_change);
+   }
+
+   if (state != QI_DO_ENABLE) {
+      ret = false;
+   }
+  
+   DRETURN(ret);
 }

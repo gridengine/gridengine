@@ -88,9 +88,7 @@ void clean_monitor_alp()
    lFreeList(monitor_alpp);
 }
 
-void set_monitor_alpp(
-lList **alpp 
-) {
+void set_monitor_alpp(lList **alpp) {
    monitor_alpp = alpp;
    monitor_next_run = (alpp!=NULL)?true:false;
 }

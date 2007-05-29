@@ -111,6 +111,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_aj_tasks;         /* max. size of an array job */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
     u_long32    max_jobs;             /* max. number of jobs in the system */
+    u_long32    max_advance_reservations; /* max. number of advance reservations in the system */
     u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
     u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
     u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
@@ -125,7 +126,7 @@ static sge_conf_type Master_Config = { NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                        0, 0, 0, 0, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL,
                                        NULL, 0, NULL, NULL, NULL, NULL, NULL, 0, NULL,
                                        NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0,
-                                       0, NULL, 0, NULL };
+                                       0, 0, NULL, 0, NULL };
 static bool is_new_config = false;
 static bool forbid_reschedule = false;
 static bool forbid_apperror = false;
@@ -159,6 +160,9 @@ static int sharelog_time          = 0;
 
 /* allow the simulation of (non existent) hosts */
 static bool simulate_hosts = false;
+
+/* generally simulate all execd's */
+static bool simulate_execds = false;
 
 /*
  * This value overrides the default scheduler timeout (10 minutes)
@@ -229,6 +233,14 @@ static void setConfFromCull(lList *lpCfg);
 static tConfEntry *getConfEntry(char *name, tConfEntry conf_entries[]);
 static void clean_conf(void);
 
+/*
+ * This value is used to override the default value for time
+ * in which the qmaster tries deleting jobs, after which it
+ * stops deleting and deletes remaining jobs at a later time.
+ */
+
+static int max_job_deletion_time = 3;
+
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
 #define EPILOG                    "none"
@@ -248,6 +260,7 @@ static void clean_conf(void);
 #define MAX_AJ_TASKS              "75000"
 #define MAX_U_JOBS                "0"
 #define MAX_JOBS                  "0"
+#define MAX_ADVANCE_RESERVATIONS  "0"
 #define REPORTING_PARAMS          "accounting=true reporting=false flush_time=00:00:15 joblog=false sharelog=00:00:00"
 
 static tConfEntry conf_entries[] = {
@@ -291,6 +304,7 @@ static tConfEntry conf_entries[] = {
  { "max_aj_tasks",      0, MAX_AJ_TASKS,        1, NULL },
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
  { "max_jobs",          0, MAX_JOBS,            1, NULL },
+ { "max_advance_reservations", 0, MAX_ADVANCE_RESERVATIONS, 1, NULL },
  { REPRIORITIZE,        0, "1",                 1, NULL },
  { "auto_user_oticket", 0, "0",                 1, NULL },
  { "auto_user_fshare",  0, "0",                 1, NULL },
@@ -475,6 +489,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "max_aj_tasks", NULL, &Master_Config.max_aj_tasks, TYPE_INT);
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &Master_Config.max_u_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "max_jobs", NULL, &Master_Config.max_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, "max_advance_reservations", NULL, &Master_Config.max_advance_reservations, TYPE_INT);
    chg_conf_val(lpCfg, REPRIORITIZE, NULL, &Master_Config.reprioritize, TYPE_BOO );
    chg_conf_val(lpCfg, "auto_user_oticket", NULL, &Master_Config.auto_user_oticket, TYPE_INT);
    chg_conf_val(lpCfg, "auto_user_fshare", NULL, &Master_Config.auto_user_fshare, TYPE_INT);
@@ -592,6 +607,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       use_qidle = false;
       disable_reschedule = false;   
       simulate_hosts = false;
+      simulate_execds = false;
       prof_message_thrd = false;
       prof_signal_thrd = false;
       prof_deliver_thrd = false;
@@ -599,6 +615,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       monitor_time = 0;
       scheduler_timeout = 0;
       max_dynamic_event_clients = 99;
+      max_job_deletion_time = 3;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -657,9 +674,21 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
          if (parse_bool_param(s, "SIMULATE_HOSTS", &simulate_hosts)) {
             continue;
          }
+         if (parse_bool_param(s, "SIMULATE_EXECDS", &simulate_execds)) {
+            continue;
+         }
          if (!strncasecmp(s, "SCHEDULER_TIMEOUT",
                     sizeof("SCHEDULER_TIMEOUT")-1)) {
             scheduler_timeout=atoi(&s[sizeof("SCHEDULER_TIMEOUT=")-1]);
+            continue;
+         }
+         if (parse_int_param(s, "max_job_deletion_time", &max_job_deletion_time, TYPE_TIM)) {
+            if (max_job_deletion_time <= 0 || max_job_deletion_time > 5) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "max_job_deletion_time",
+                                       3);
+               max_job_deletion_time = 3;
+            }
             continue;
          }
       }
@@ -891,6 +920,7 @@ void sge_show_conf()
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) Master_Config.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) Master_Config.max_u_jobs));
    DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) Master_Config.max_jobs));
+   DPRINTF(("conf.max_advance_reservations >%u<\n", (unsigned) Master_Config.max_advance_reservations));
    DPRINTF(("conf.reprioritize           >%u<\n", Master_Config.reprioritize));
    DPRINTF(("conf.auto_user_oticket      >%u<\n", Master_Config.auto_user_oticket));
    DPRINTF(("conf.auto_user_fshare       >%u<\n", Master_Config.auto_user_fshare));
@@ -1555,6 +1585,18 @@ u_long32 mconf_get_max_jobs(void) {
    DRETURN(max_jobs);
 }
 
+u_long32 mconf_get_max_advance_reservations(void) {
+   u_long32 max_advance_reservations;
+
+   DENTER(TOP_LAYER, "mconf_get_max_advance_reservations");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   max_advance_reservations = Master_Config.max_advance_reservations;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(max_advance_reservations);
+}
+
 u_long32 mconf_get_reprioritize(void) {
    u_long32 reprioritize;
 
@@ -1769,6 +1811,18 @@ bool mconf_get_simulate_hosts(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = simulate_hosts;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_simulate_execds(void) {
+   bool ret;
+
+   DENTER(TOP_LAYER, "mconf_get_simulate_execds");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = simulate_execds;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
@@ -2055,4 +2109,16 @@ bool mconf_get_enable_forced_qdel(void) {
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 
+}
+
+int mconf_get_max_job_deletion_time(void) {
+   int deletion_time;
+
+   DENTER(TOP_LAYER, "mconf_get_max_job_deletion_time");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   deletion_time = max_job_deletion_time;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(deletion_time);
 }

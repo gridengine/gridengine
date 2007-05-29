@@ -42,8 +42,6 @@ calendar_parse_year(lListElem *this_elem, lList **answer_list);
 bool 
 calendar_parse_week(lListElem *this_elem, lList **answer_list);
 
-u_long32 
-calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then, time_t *now);
 
 u_long32 calender_state_changes(const lListElem *cep, lList **state_changes_list, time_t *when, time_t *now); 
 
@@ -60,5 +58,6 @@ lListElem* sge_generic_cal(char *cal_name);
 void cullify_tm(lListElem *tm_ep, struct tm *tm_now);
 void uncullify_tm(const lListElem *tm_ep, struct tm *tm_now);
 
+bool calendar_open_in_time_frame(const lListElem *cep, u_long32 start_time, u_long32 duration);
 
 #endif /* __SGE_CALENDAR_H */

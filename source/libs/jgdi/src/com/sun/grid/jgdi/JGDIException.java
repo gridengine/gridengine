@@ -36,7 +36,6 @@ import java.util.ResourceBundle;
 
 /**
  * Base exception class for all errors on the GDI layer.
- * @author richard.hierlmeier@sun.com
  */
 public class JGDIException extends java.rmi.RemoteException {
    

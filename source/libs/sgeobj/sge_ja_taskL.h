@@ -163,6 +163,9 @@ extern "C" {
 *        0.0 and 1.0.
 *        Not spooled.
 *
+*     SGE_ULONG(JAT_wallclock_limit)         
+*        Resulting wallclock_limit. If not requested the minimum by queue h_rt's.
+*
 *  FUNCTION
 *     JAT_Type elements make only sense in conjunction with JB_Type 
 *     elements.  One element of each type is necessary to hold all 
@@ -239,6 +242,8 @@ enum {
    JAT_prio,
    JAT_ntix,
 
+   JAT_wallclock_limit,
+
    JAT_message_list
 };
 
@@ -286,6 +291,8 @@ LISTDEF(JAT_Type)
    SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
 
+   SGE_ULONG(JAT_wallclock_limit, CULL_DEFAULT | CULL_SPOOL)
+
    SGE_LIST(JAT_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
@@ -327,6 +334,8 @@ NAMEDEF(JATN)
    NAME("JAT_stop_initiate_time")
    NAME("JAT_prio")
    NAME("JAT_ntix")
+
+   NAME("JAT_wallclock_limit")
 
    NAME("JAT_message_list")
 NAMEEND

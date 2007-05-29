@@ -66,7 +66,6 @@ import java.util.*;
 
 /**
  *  Factory class for all List/Del/Add/Mod Events of cull objects
- *  @author richard.hierlmeier@sun.com
  */
 public class EventFactory extends EventFactoryBase {
 

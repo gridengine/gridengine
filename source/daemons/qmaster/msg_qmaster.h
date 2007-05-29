@@ -125,7 +125,6 @@
 ** gdi_utility_qmaster.c 
 */
 #define MSG_GDI_SIG_DIGIT_SS         _MESSAGE(33071, _("denied: attribute "SFQ" contains invalid value "SFQ))
-#define MSG_GDI_METHOD_VARS_SS       _MESSAGE(33072, _("parameter "SFQ" of queue: "SFN))
 #define MSG_GDI_APATH_S              _MESSAGE(33073, _("denied: path given for "SFQ" must start with an \"/\""))
 #define MSG_GDI_VARS_SS              _MESSAGE(33074, _("parameter "SFQ": "SFN))
 #define MSG_GDI_VALUE_S              _MESSAGE(33075, _("denied: attribute "SFQ" contains invalid value (null)"))
@@ -204,6 +203,7 @@
 */
 #define MSG_OBJ_CALENDAR              _MESSAGE(33132, _("calendar"))
 #define MSG_EVE_TE4CAL_S              _MESSAGE(33133, _("got timer event for unknown calendar "SFQ))
+#define MSG_EVE_TE4AR_U               _MESSAGE(33134, _("got timer event for unknown AR "sge_U32CFormat))
 #define MSG_SGETEXT_REMOVEDFROMLIST_SSSS        _MESSAGE(33135, _(""SFN"@"SFN" removed "SFQ" from "SFN" list"))
 #define MSG_INVALID_CENTRY_DEL_S                _MESSAGE(33136, _("The built-in complex "SFQ" cannot be deleted"))
 
@@ -263,6 +263,7 @@
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN))
 #define MSG_COM_NONOTIFICATION_SSS    _MESSAGE(33182, _("failed sending "SFN" notification to "SFN" execd host "SFN))
 #define MSG_COM_NOTIFICATION_SSS      _MESSAGE(33184, _("sent "SFN" notification to "SFN" execd host "SFN))
+#define MSG_MAIL_AROKBODY_USSS        _MESSAGE(33185, _("Advance Reservation "sge_U32CFormat" ("SFN") Error resolved\n User       = "SFN"\n Error resolved Time = "SFN)) 
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33186, _("unknown"))
 #define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33187, _("shutdown and kill"))
 #define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33188, _("shutdown"))
@@ -271,21 +272,29 @@
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
 #define MSG_MAIL_JOBKILLEDSUBJ_US     "Job " sge_U32CFormat " ("SFN") Killed"
+#define MSG_MAIL_ARSTARTEDSUBJ_US     "Advance Reservation " sge_U32CFormat " ("SFN") Started"
+#define MSG_MAIL_AREXITEDSUBJ_US      "Advance Reservation " sge_U32CFormat " ("SFN") Finished"
+#define MSG_MAIL_ARDELETEDSUBJ_US     "Advance Reservation " sge_U32CFormat " ("SFN") Deleted"
+#define MSG_MAIL_ARERRORSUBJ_US       "Advance Reservation " sge_U32CFormat " ("SFN") Error"
+#define MSG_MAIL_AROKSUBJ_US          "Advance Reservation " sge_U32CFormat " ("SFN") Error resolved"
 
 #define MSG_MAIL_JOBKILLEDBODY_USS    _MESSAGE(33189, _("Job " sge_U32CFormat " ("SFN") was killed due to a kill execd on host "SFN))
 #define MSG_OBJ_INVALIDHOST_S         _MESSAGE(33190, _("invalid hostname "SFQ))
 #define MSG_OBJ_NOADDHOST_S           _MESSAGE(33191, _("adding host "SFQ" failed"))
 #define MSG_LOG_REGISTER_SS           _MESSAGE(33192, _(SFN" on "SFN" registered"))
 #define MSG_OBJ_NOSCALING4HOST_SS     _MESSAGE(33193, _("denied: scaling attribute "SFQ" is not configured for host "SFQ))  
-#define MSG_SGETEXT_ISNOEXECHOST_S              _MESSAGE(33194, _(SFQ" is not an execution host"))
-#define MSG_SGETEXT_NOEXECHOSTS                 _MESSAGE(33195, _("there are no execution hosts to kill"))
-#define MSG_SGETEXT_CANTDELADMINQMASTER_S       _MESSAGE(33197, _("denied: can't delete master host "SFQ" from admin host list") )   
-#define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33200, _("got load report from host "SFQ" - reports load value for host "SFQ))
+#define MSG_SGETEXT_ISNOEXECHOST_S    _MESSAGE(33194, _(SFQ" is not an execution host"))
+#define MSG_SGETEXT_NOEXECHOSTS       _MESSAGE(33195, _("there are no execution hosts to kill"))
+#define MSG_SGETEXT_CANTDELADMINQMASTER_S _MESSAGE(33196, _("denied: can't delete master host "SFQ" from admin host list") )
+#define MSG_MAIL_ARSTARTBODY_USSS     _MESSAGE(33197, _("Advance Reservation "sge_U32CFormat" ("SFN") Started\n User       = "SFN"\n Start Time = "SFN)) 
+#define MSG_MAIL_AREXITBODY_USSS      _MESSAGE(33198, _("Advance Reservation "sge_U32CFormat" ("SFN") Finished\n User       = "SFN"\n End Time = "SFN)) 
+#define MSG_MAIL_ARDELETETBODY_USSS   _MESSAGE(33199, _("Advance Reservation "sge_U32CFormat" ("SFN") Deleted\n User       = "SFN"\n Delete Time = "SFN)) 
+#define MSG_MAIL_ARERRORBODY_USSS     _MESSAGE(33200, _("Advance Reservation "sge_U32CFormat" ("SFN") Error\n User       = "SFN"\n Error Time = "SFN)) 
+#define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33201, _("got load report from host "SFQ" - reports load value for host "SFQ))
 
 /*
 ** sge_job.c
 */
-/* #define MSG_JOB_SENDKILLTOXFORJOBYZ_SUU _message(33201, _("send kill to "SFQ" for job "sge_U32CFormat"."sge_U32CFormat)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_JOB_NORESUBPERMS_SSS      _MESSAGE(33202, _("job rejected: "SFN"@"SFN" is not allowed to resubmit jobs of user "SFN))
 #define MSG_JOB_NOPERMS_SS            _MESSAGE(33203, _("job rejected: "SFN"@"SFN" is not allowed to submit jobs"))
 #define MSG_JOB_MORETASKSTHAN_U       _MESSAGE(33204, _("job rejected: You try to submit a job with more than "sge_U32CFormat" tasks"))
@@ -296,7 +305,6 @@
 #define MSG_JOB_NOSCRIPT              _MESSAGE(33211, _("job rejected: no script in your request"))
 #define MSG_JOB_PEUNKNOWN_S           _MESSAGE(33212, _("job rejected: the requested parallel environment "SFQ" does not exist"))
 #define MSG_JOB_CKPTUNKNOWN_S         _MESSAGE(33213, _("job rejected: the requested checkpointing environment "SFQ" does not exist"))
-#define MSG_JOB_PERANGEMUSTBEGRZERO   _MESSAGE(33214, _("job rejected: pe range must be greater than zero"))
 #define MSG_JOB_CKPTMINUSC            _MESSAGE(33215, _("job rejected: checkpointing with \"-c n\" requested"))
 #define MSG_JOB_NOCKPTREQ             _MESSAGE(33216, _("job rejected: checkpointing without checkpointing environment requested"))
 #define MSG_JOB_CKPTDENIED            _MESSAGE(33217, _("checkpointing denied") )   
@@ -318,12 +326,14 @@
 #define MSG_JOB_DELETEJOB             _MESSAGE(33238, _("delete job"))
 #define MSG_JOB_JOB                   _MESSAGE(33239, _("Job"))
 #define MSG_JOB_FORCEDDELETEPERMS_S   _MESSAGE(33240, _(SFQ" - forcing a job deletion requires manager privileges"))
-#define MSG_JOB_DELETEPERMS_SU        _MESSAGE(33241, _(SFN" - you do not have the necessary privileges to delete the job \"" sge_U32CFormat "\""))
+#define MSG_DELETEPERMS_SSU           _MESSAGE(33241, _(SFN" - you do not have the necessary privileges to delete the "SFN" \"" sge_U32CFormat "\""))
 #define MSG_JOB_DELETETASK_SUU        _MESSAGE(33242, _(SFN" has deleted job-array task "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_DELETETASKS_SSU       _MESSAGE(33243, _(SFN" has deleted job-array tasks "SFN" of job "sge_U32CFormat))
 #define MSG_JOB_DELETEJOB_SU          _MESSAGE(33244, _(SFN" has deleted job "sge_U32CFormat))
 #define MSG_JOB_DISCONTINUEDTRANS_SU  _MESSAGE(33245, _("Discontinued delete transaction of user "SFQ" after job "sge_U32CFormat))
 #define MSG_JOB_UNABLE2FINDQOFJOB_S   _MESSAGE(33246, _("can't locate the queue "SFQ" associated with this job"))
+#define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33865, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
+#define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33866, _("job "sge_U32CFormat" is already in deletion"))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -338,7 +348,7 @@
 #define MSG_JOB_FORCEDDELJOB_SU       _MESSAGE(33251, _("warning: "SFN" forced the deletion of job "sge_U32CFormat))
 #define MSG_COM_NOSYNCEXECD_SU        _MESSAGE(33252, _(SFN" unable to sync state with remote execd for the deletion of job \"" sge_U32CFormat "\""))
 #define MSG_JOB_REGDELTASK_SUU        _MESSAGE(33253, _(SFN" has registered the job-array task "sge_U32CFormat"."sge_U32CFormat" for deletion"))
-#define MSG_JOB_REGDELJOB_SU          _MESSAGE(33254, _(SFN" has registered the job "sge_U32CFormat" for deletion"))
+#define MSG_JOB_REGDELX_SSU           _MESSAGE(33254, _(SFN" has registered the "SFN" "sge_U32CFormat" for deletion"))
 #define MSG_JOB_CHANGEATTR            _MESSAGE(33255, _("change job attributes"))
 #define MSG_JOB_NOALTERNOWRITE_U      _MESSAGE(33256, _("alternation of job "sge_U32CFormat" was rejected cause it couldn't be written"))
 #define MSG_JOB_CHANGESHAREFUNC       _MESSAGE(33257, _("change share of job functional tickets"))
@@ -379,24 +389,23 @@
 #define MSG_JOB_QSARGS                _MESSAGE(33292, _("qs args"))
 #define MSG_JOB_SCRIPTARGS            _MESSAGE(33293, _("script arguments"))
 #define MSG_JOB_CONTEXT               _MESSAGE(33294, _("context"))
-#define MSG_JOB_NODIRECTSLOTS         _MESSAGE(33295, _("denied: use parallel environments instead of requesting slots explicitly"))
-#define MSG_JOB_NOSEQNRREAD_SS        _MESSAGE(33296, _("can't read job sequence number in file "SFQ": "SFN))
-#define MSG_JOB_NOSEQFILEOPEN_SS      _MESSAGE(33297, _("can't open sequence number file "SFQ": for reading: "SFN" -- guessing next job number"))
-#define MSG_JOB_NOSEQFILECREATE_SS    _MESSAGE(33298, _("can't create job sequence number file "SFQ": "SFN" - delaying until next job"))
+
+#define MSG_NOSEQNRREAD_SSS           _MESSAGE(33296, _("can't read "SFN" sequence number in file "SFQ": "SFN))
+#define MSG_NOSEQFILEOPEN_SSS         _MESSAGE(33297, _("can't open "SFN" sequence number file "SFQ": for reading: "SFN" -- guessing next number"))
+#define MSG_NOSEQFILECREATE_SSS       _MESSAGE(33298, _("can't create "SFN" sequence number file "SFQ": "SFN" - delaying until next job"))
 #define MSG_JOB_NOSUITABLEQ_S         _MESSAGE(33299, _(SFN": no suitable queues"))
 #define MSG_JOB_VERIFYERROR           _MESSAGE(33300, _("error"))
 #define MSG_JOB_VERIFYWARN            _MESSAGE(33301, _("warning"))
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots"))
-#define MSG_JOB_NOSEQFILECLOSE_SS     _MESSAGE(33305, _("can't close sequence number file "SFQ": for reading: "SFN))
+#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33305, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request"))
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""sge_U32CFormat"\" may not be it's own jobnet predecessor"))
 #define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found"))
-#define MSG_JOB_MOD_NOJOBNAME_S                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name (job cannot start with a digit)"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "sge_U32CFormat" can't modify running jobs") ) 
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN))
@@ -411,8 +420,8 @@
 #define MSG_SGETEXT_NOJOBSDELETED                     _MESSAGE(33328, _("No jobs deleted"))
 #define MSG_SGETEXT_NOJOBSMODIFIED                    _MESSAGE(33329, _("No jobs modified"))
 #define MSG_SGETEXT_THEREARENOJOBS                    _MESSAGE(33330, _("There are no jobs registered"))
-#define MSG_SGETEXT_THEREARENOJOBSFORUSERS_S          _MESSAGE(33331, _("There are no jobs registered for following users: "SFN))
-#define MSG_SGETEXT_SPECIFYUSERORJID                  _MESSAGE(33332, _("You have to specify a username or job ids"))
+#define MSG_SGETEXT_THEREARENOXFORUSERS_SS            _MESSAGE(33331, _("There are no "SFN" registered for following users: "SFN))
+#define MSG_SGETEXT_SPECIFYUSERORID_S                 _MESSAGE(33332, _("You have to specify a username or "SFN" ids"))
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33334, _("job rejected: no access to project "SFQ" for user "SFQ) ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33335, _("it is not allowed to select users and job ids together"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33336, _(""SFN"@"SFN" modified \"" sge_U32CFormat "\" in "SFN" list"))
@@ -633,6 +642,7 @@
 #define MSG_CONFIG_NOLOCAL_S                          _MESSAGE(33623, _("local configuration "SFN" not defined - using global configuration"))
 #define MSG_CONFIG_NOGLOBAL                           _MESSAGE(33624, _("global configuration not defined"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU  _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "sge_U32CFormat))
+#define MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU     _MESSAGE(33647, _("can't find advance reservation "sge_U32CFormat" referenced in job "sge_U32CFormat))
 
 /*
 ** sge_qmaster_timed_event.c
@@ -678,7 +688,8 @@
 #define MSG_QINSTANCE_CHANGEDST_SSSS    _MESSAGE(33724, _(SFN"@"SFN" changed state of "SFQ" ("SFN")"))
 #define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here"))
 #define MSG_QINSTANCE_NQIFOUND_SS       _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ))
-#define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount"))
+#define MSG_QINSTANCE_SLOTSRESERVED_USS  _MESSAGE(33727, _("denied: "sge_U32CFormat" slots are already reserved in "SFN"@"SFN" by an advance reservation"))
+
 #define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("warning: "SFQ" has ambiguous value ("SFQ", "SFQ")"))
 #define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN))
 #define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
@@ -751,12 +762,29 @@
 
 #define MSG_QMASTER_READ_JDB_WITH_X_ENTR_IN_Y_SECS_UU _MESSAGE(33919, _("read job database with "sge_U32CFormat" entries in "sge_U32CFormat" seconds"))
 
-#define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS   _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
-#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS   _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDJOBSUBMISSION_SSS        _MESSAGE(33920, _("invalid job object in job submission from user "SFQ", commproc "SFQ" on host "SFQ))
+#define MSG_QMASTER_INVALIDEVENTCLIENT_SSS          _MESSAGE(33921, _("invalid event client request from user "SFQ", commproc "SFQ" on host "SFQ))
+
+#define MSG_FAILEDTOBUILDWHEREANDWHAT               _MESSAGE(33922, _("error: failed to build where or what condition"))
+#define MSG_AR_QUEUEDISABLEDINTIMEFRAME             _MESSAGE(33923, _("queue "SFQ" is calendar disabled in selected time frame"))
+#define MSG_AR_QUEUEDNOPERMISSIONS                  _MESSAGE(33924, _("queue "SFQ" has no permissions for selected users"))
 
 /* sge_qmaster_threads.c */
 #define MSG_QMASTER_THREADCOUNT_U                   _MESSAGE(33930, _(sge_U32CFormat" GDI threads are enabled"))
-   
 
+#define MSG_AR_GRANTED_U                            _MESSAGE(33931, _("Your advance reservation "sge_U32CFormat" has been granted"))
+#define MSG_AR_MAXARSPERCLUSTER_U                   _MESSAGE(33932, _("rejected: only "sge_U32CFormat" advance reservations are allowed per cluster"))
+#define MSG_JOB_JOBARSET_SSUU                       _MESSAGE(33934, _(SFN"@"SFN" sets job advance reservation of job "sge_U32CFormat" to "sge_U32CFormat))
+#define MSG_JOB_CHANGEJOBAR                         _MESSAGE(33935, _("changed job advance reservation"))
+#define MSG_JOB_NOAREXISTS_U                        _MESSAGE(33936, _("the advance reservation id "sge_U32CFormat" is invalid"))
+#define MSG_JOB_WITHARANDNODEFAULTHRT               _MESSAGE(33937, _("the default job duration limit for jobs with advance reservations should be configured"))
+#define MSG_JOB_HRTLIMITTOOLONG_U                   _MESSAGE(33938, _("the job duration is longer than duration of the advance reservation id "sge_U32CFormat))
+#define MSG_JOB_HRTLIMITOVEREND_U                   _MESSAGE(33939, _("the job duration exceeds the end time of the advance reservation id "sge_U32CFormat))
+#define MSG_AR_RESERVEDQUEUEHASERROR_SS             _MESSAGE(33940, _("reserved queue "SFN" is "SFN))
+#define MSG_OBJECT_VALUEMISSING                     _MESSAGE(33941, _("Value missing"))
+#define MSG_OBJECT_ALREADYEXIN_SSS                  _MESSAGE(33942, _("No modification because "SFQ" already exists in "SFQ" of "SFQ))
+#define MSG_QUEUE_MODCMPLXDENYDUETOAR_SS            _MESSAGE(33943, _("denied: changing "SFQ" in "SFN" would break advance reservation"))
+#define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
+#define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
+      
 #endif
-

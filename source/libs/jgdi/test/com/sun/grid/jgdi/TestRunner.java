@@ -44,7 +44,6 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class TestRunner implements PrivilegedExceptionAction {
     

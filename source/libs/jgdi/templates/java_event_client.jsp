@@ -79,7 +79,6 @@ import com.sun.grid.jgdi.event.EventListener;
  *  }
  *
  *  </pre>
- *  @author  richard.hierlmeier@sun.com 
  *
  *  @todo    beta ??
  *           Add support for trigger events (sgeE_JATASK_*, sgeE_PETASK_*,

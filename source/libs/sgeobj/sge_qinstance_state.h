@@ -116,44 +116,41 @@ const char * qinstance_state_as_string(u_long32 bit);
 u_long32 qinstance_state_from_string(const char* state, lList **answer_list, u_long32 filter);
 /* */
 
-void 
+bool
 qinstance_state_set_alarm(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_suspend_alarm(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_manual_disabled(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_manual_suspended(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_unknown(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_error(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_susp_on_sub(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state);
 
-void 
+bool
 qinstance_state_set_full(lListElem *this_elem, bool set_state);
 
-void
+bool
 qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
 
-void
-qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
-
 bool
-qinstance_set_initial_state(lListElem *this_elem);
+qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
 
 bool 
 qinstance_state_is_alarm(const lListElem *this_elem);
@@ -193,5 +190,8 @@ qinstance_state_is_full(const lListElem *this_elem);
 
 bool 
 qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string);
+
+bool
+qinstance_set_state(lListElem *this_elem, bool set_state, u_long32 bit);
 
 #endif /* __SGE_QINSTANCE_STATE_H */

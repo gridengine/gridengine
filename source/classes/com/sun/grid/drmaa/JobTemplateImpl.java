@@ -617,8 +617,7 @@ public class JobTemplateImpl implements JobTemplate {
      * explicitly set in the job template, the job is started with an empty
      * input stream.  If the standard input is set, it specifies the network
      * path of the job's input stream file in the form of
-     * {@code [hostname]:file_path}
-     *
+     * <code>[hostname]:file_path</code><br>
      * <p>When the transferFiles property is supported and the set
      * TranferFileMode instance's inputStream property is set to
      * <code>true</code>, the input file will be fetched by Grid Engine
@@ -681,7 +680,7 @@ public class JobTemplateImpl implements JobTemplate {
      * not explicitly set in the job template, the whereabouts of the job's
      * output stream is not defined.  If the standard output is set, it
      * specifies the network path of the job's output stream file in the form of
-     * {@code [hostname]:file_path}
+     * <code>[hostname]:file_path<code>
      *
      * <p>When the transferFiles property is supported and the set
      * TranferFileMode instance's outputStream property is set to
@@ -745,7 +744,7 @@ public class JobTemplateImpl implements JobTemplate {
      * not explicitly set in the job template, the whereabouts of the job's
      * error stream is not defined.  If the standard error is set, it
      * specifies the network path of the job's error stream file in the form of
-     * {@code [hostname]:file_path}
+     * <code>[hostname]:file_path</code><br>
      *
      * <p>When the transferFiles property is supported and the set
      * TranferFileMode instance's errorStream property is set to
@@ -839,6 +838,8 @@ public class JobTemplateImpl implements JobTemplate {
     }
     
     /**
+     * <p>Set Transfer Files</p>
+     *
      * {@inheritDoc}
      *
      * <p>The file transfer mechanism itself must be configured by the

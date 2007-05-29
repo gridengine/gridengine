@@ -49,23 +49,45 @@
 #include "sge_resource_utilization.h"
 #include "sge_schedd_conf.h"
 #include "sge_serf.h"
+#include "sched/debit.h"
+#include "sched/sge_job_schedd.h"
+
 #include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_object.h"
+
+#include "uti/sge_time.h"
+
+#include "msg_qmaster.h"
+#include "msg_schedd.h"
 
 static void utilization_normalize(lList *diagram);
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration);
-
-static int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
-      lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
-      const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag);
 
 static void utilization_find_time_or_prevstart_or_prev(lList *diagram, 
       u_long32 time, lListElem **hit, lListElem **before);
 
 static int 
 rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
-                         lListElem *rule, dstring rue_name, lList *centry_list,
-                         int slots, const char *obj_name, u_long32 start_time,
-                         u_long32 end_time);
+                        lListElem *rule, dstring rue_name, lList *centry_list,
+                        int slots, const char *obj_name, u_long32 start_time,
+                        u_long32 end_time);
+
+static int 
+add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
+                         lList *host_list, lList *queue_list, lList *rqs_list,
+                         lList *centry_list, lList *acl_list, lList *hgroup_list,
+                         bool for_job_scheduling);
+
+static void add_calendar_to_schedule(lList *queue_list);
+
+static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti);
+
+static lListElem *newResourceElem(u_long32 time, double amount);
 
 /****** sge_resource_utilization/utilization_print_to_dstring() ****************
 *  NAME
@@ -98,7 +120,7 @@ bool utilization_print_to_dstring(const lListElem *this_elem, dstring *string)
 }
 
 
-void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list)
+void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list)
 {
    lListElem *ep, *cr;
    const char *name;
@@ -106,7 +128,14 @@ void utilization_print_all(const lList* pe_list, lList *host_list, const lList *
    DENTER(TOP_LAYER, "utilization_print_all");
 
    /* pe_list */
-   /* ...     */
+   for_each (ep, pe_list) {
+      name = lGetString(ep, PE_name);
+      DPRINTF(("-------------------------------------------\n"));
+      DPRINTF(("PARALLEL ENVIRONMENT \"%s\"\n", name));
+      for_each (cr, lGetList(ep, PE_resource_utilization)) {
+         utilization_print(cr, name);
+      }
+   }
 
    /* global */
    if ((ep=host_list_locate(host_list, SGE_GLOBAL_NAME))) {
@@ -141,6 +170,24 @@ void utilization_print_all(const lList* pe_list, lList *host_list, const lList *
       }
    }
    DPRINTF(("-------------------------------------------\n"));
+
+   /* advance reservations */
+   for_each (ep, ar_list) {
+      u_long32 ar_id = lGetUlong(ep, AR_id);
+      lListElem *queue;
+
+      for_each(queue, lGetList(ep, AR_reserved_queues)) {
+         name = lGetString(queue, QU_full_name);
+         if (strcmp(name, SGE_TEMPLATE_NAME)) {
+            DPRINTF(("-------------------------------------------\n"));
+            DPRINTF(("AR "sge_U32CFormat" QUEUE \"%s\"\n", ar_id, name));
+            for_each (cr, lGetList(queue, QU_resource_utilization)) {
+               utilization_print(cr, name);
+            }
+         }
+      }
+   }
+   DPRINTF(("-------------------------------------------\n"));
    
    DRETURN_VOID;
 }
@@ -155,8 +202,8 @@ void utilization_print(const lListElem *cr, const char *object_name)
             lGetDouble(cr, RUE_utilized_now)));
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
-#ifdef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-      printf("\t"sge_u32"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
+#if 0
+      printf("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount)); 
 #endif
    }
 
@@ -166,10 +213,13 @@ void utilization_print(const lListElem *cr, const char *object_name)
 static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 {
    u_long32 end_time;
-   if (((double)start + (double)duration) < ((double)U_LONG32_MAX))
+
+   if (((double)start + (double)duration) < ((double)U_LONG32_MAX)) {
       end_time = start + duration;
-   else
+   } else {
       end_time = U_LONG32_MAX;
+   }
+
    return end_time;
 }
 
@@ -196,6 +246,7 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 *     u_long32 level          - *_TAG
 *     const char *object_name - The objects name
 *     const char *type        - String denoting type of utilization entry.
+*     bool is_job             - reserve for job or for advance reservation
 *
 *  RESULT
 *     int - 0 on success
@@ -204,9 +255,10 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 *     MT-NOTE: utilization_add() is not MT safe 
 *******************************************************************************/
 int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
-   u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name, const char *type) 
+                     u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name,
+                     const char *type, bool for_job) 
 {
-   lList *resource_diagram;
+   lList *resource_diagram=lGetList(cr, RUE_utilized);
    lListElem *this, *prev, *start, *end;
    const char *name = lGetString(cr, RUE_name);
    char level_char = CENTRY_LEVEL_TO_CHAR(level);
@@ -215,19 +267,26 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    
    DENTER(TOP_LAYER, "utilization_add");
 
+   /* A reservation is only neccessary in one of the following cases:
+      - for_job is true (this means no advance reservation request) 
+      - reservation is enabled and job duration not zero 
+      - queue is already reserved by an advance reservation (resource_diagram != NULL)
+   */
+   if (for_job && (sconf_get_max_reservations()==0 || duration==0)
+      && resource_diagram == NULL) /* AR queues have a resource diagram and we must reflect changes for this queues */
+   { 
+      DPRINTF(("max reservations reached or duration is 0\n"));
+
+      DRETURN(0);
+   }
+
    end_time = utilization_endtime(start_time, duration);
 
    serf_record_entry(job_id, ja_taskid, (type!=NULL)?type:"<unknown>", start_time, end_time, 
          level_char, object_name, name, utilization);
 
-#ifndef MODULE_TEST_SGE_RESOURCE_UTILIZATION
-   if (sconf_get_max_reservations()==0 || duration==0) {
-      DRETURN(0);
-   }
-#endif
-
    /* ensure resource diagram is initialized */
-   if (!(resource_diagram=lGetList(cr, RUE_utilized))) {
+   if (resource_diagram == NULL) {
       resource_diagram = lCreateList(name, RDE_Type);
       lSetList(cr, RUE_utilized, resource_diagram);
    }
@@ -279,7 +338,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
 
 #if 0
    utilization_print(cr, "pe_slots");
-   printf("this was before normalize\n");
+   printf("this was before utilization_normalize()\n");
 #endif
 
    utilization_normalize(resource_diagram);
@@ -328,7 +387,20 @@ static void utilization_normalize(lList *diagram)
    double util_prev;
 
    this = lFirst(diagram);
-   next = lNext(this);
+
+   while (this && lGetDouble(this, RDE_amount) == 0.0) {
+      lRemoveElem(diagram, &this);
+      this = lFirst(diagram);
+   }
+
+   if (this == NULL) {
+      return;
+   }
+   
+   if ((next = lNext(this)) == NULL) {
+      return;
+   }
+
    util_prev = lGetDouble(this, RDE_amount);
 
    while ((this=next)) {
@@ -338,6 +410,8 @@ static void utilization_normalize(lList *diagram)
       else
          util_prev = lGetDouble(this, RDE_amount);
    }
+
+   return;
 }
 
 /****** sge_resource_utilization/utilization_queue_end() ***********************
@@ -510,6 +584,7 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
 *     const sge_assignment_t *a - The assignement
 *     const char *type          - A string that is used to monitor assignment
 *                                 type
+*     bool for_job_scheduling   - utilize for job or for advance reservation
 *
 *  RESULT
 *     int - 
@@ -517,7 +592,7 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
 *  NOTES
 *     MT-NOTE: add_job_utilization() is MT safe 
 *******************************************************************************/
-int add_job_utilization(const sge_assignment_t *a, const char *type)
+int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_job_scheduling)
 {
    lListElem *gel, *qep, *hep; 
    int slots = 0;
@@ -525,17 +600,22 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
 
    DENTER(TOP_LAYER, "add_job_utilization");
 
+   if (lGetUlong(a->job, JB_ar) != 0) {
+      /* ar jobs are already utilized! Ü*/
+      DRETURN(0);
+   }
+
    /* parallel environment  */
    if (a->pe) {
       utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
-            a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type);
+            a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type, for_job_scheduling);
    }
 
    /* global */
    hep = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
    rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, a->slots, 
          EH_consumable_config_list, EH_resource_utilization, 
-         lGetHost(hep, EH_name), a->start, a->duration, GLOBAL_TAG);  
+         lGetHost(hep, EH_name), a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
 
    /* hosts */
    for_each(hep, a->host_list) {
@@ -557,7 +637,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       if (slots != 0) {
          rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, slots,
                   EH_consumable_config_list, EH_resource_utilization, eh_name, a->start, 
-                  a->duration, HOST_TAG);
+                  a->duration, HOST_TAG, for_job_scheduling);
       }
    }
 
@@ -565,7 +645,9 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
    for_each(gel, a->gdil) {  
       int slots = lGetUlong(gel, JG_slots); 
       const char *qname = lGetString(gel, JG_qname);
-      qep = qinstance_list_locate2(a->queue_list, qname);
+      if ((qep = qinstance_list_locate2(a->queue_list, qname)) == NULL) {
+         continue;
+      }
 
       if (!qep && (!strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_RUNNING) ||
          !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_SUSPENDED) ||
@@ -585,7 +667,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       }
       rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
                QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-               a->duration, QUEUE_TAG);
+               a->duration, QUEUE_TAG, for_job_scheduling);
    }
 
    /* resource quotas */
@@ -594,22 +676,14 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
       const char* user = lGetString(a->job, JB_owner);
       const char* group = lGetString(a->job, JB_group);
       const char* project = lGetString(a->job, JB_project);
-      const char* pe = lGetString(a->job, JB_pe);
+      const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
       const char* host = lGetHost(gel, JG_qhostname);
       char *queue = NULL;
       const char *queue_instance = lGetString(gel, JG_qname);
 
-      char *at_sign = NULL;
       lListElem *rqs = NULL;
 
-      if ((at_sign = strchr(queue_instance, '@'))) {
-         int size = at_sign - queue_instance;
-         queue = malloc(sizeof(char) * (size + 1));
-         queue = strncpy(queue, queue_instance, size);
-         queue[size] = '\0';
-      } else {
-         queue = strdup(queue_instance);
-      }
+      queue = cqueue_get_name_from_qinstance(queue_instance);
       
       for_each(rqs, a->rqs_list) {
          lListElem *rule = NULL;
@@ -638,10 +712,10 @@ int add_job_utilization(const sge_assignment_t *a, const char *type)
    DRETURN(0);
 }
 
-static int 
-rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
+int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
    lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
-   const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag) 
+   const char *obj_name, u_long32 start_time, u_long32 end_time, u_long32 tag,
+   bool for_job_scheduling) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -691,7 +765,7 @@ rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          if (tmp_ret && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
             utilization_add(cr, start_time, end_time, slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type);
+               lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling);
             mods++;
          }  
       }
@@ -777,11 +851,358 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          if (tmp_ret && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
             utilization_add(rue_elem, start_time, end_time, slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type);
+               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type, true);
             mods++;
          }
       }
    }
 
    DRETURN(mods);
+}
+
+/****** sge_resource_utilization/prepare_resource_schedules() *********************************
+*  NAME
+*     prepare_resource_schedules() -- Debit non-pending jobs in resource schedule
+*
+*  SYNOPSIS
+*     static void prepare_resource_schedules(const lList *running_jobs, const 
+*     lList *suspended_jobs, lList *pe_list, lList *host_list, lList 
+*     *queue_list, lList *centry_list, lList *rqs_list) 
+*
+*  FUNCTION
+*     In order to reflect current and future resource utilization of running 
+*     and suspended jobs in the schedule we iterate through all jobs and debit
+*     resources requested by those jobs.
+*
+*  INPUTS
+*     const lList *running_jobs   - The running ones (JB_Type)
+*     const lList *suspended_jobs - The susepnded ones (JB_Type)
+*     lList *pe_list              - ??? 
+*     lList *host_list            - ??? 
+*     lList *queue_list           - ??? 
+*     lList *rqs_list             - configured resource quota sets
+*     lList *centry_list          - ??? 
+*     lList *acl_list             - ??? 
+*     lList *hgroup_list          - ??? 
+*     lList *prepare_resource_schedules - create schedule for job or advance reservation
+*                                         scheduling
+*     bool for_job_scheduling     - prepare for job or for advance reservation
+*
+*  NOTES
+*     MT-NOTE: prepare_resource_schedules() is not MT safe 
+*******************************************************************************/
+void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
+   lList *pe_list, lList *host_list, lList *queue_list, lList *rqs_list, lList *centry_list,
+   lList *acl_list, lList *hgroup_list, bool for_job_scheduling)
+{
+   DENTER(TOP_LAYER, "prepare_resource_schedules");
+
+   add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            for_job_scheduling);
+   add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
+                            rqs_list, centry_list, acl_list, hgroup_list,
+                            for_job_scheduling);
+   add_calendar_to_schedule(queue_list); 
+
+#ifdef SGE_LOCK_DEBUG /* just for information purposes... */
+   {
+      object_description *object_base = object_type_get_object_description();
+      lList *ar_list = *object_base[SGE_TYPE_AR].list;
+      
+      utilization_print_all(pe_list, host_list, queue_list, ar_list); 
+   }
+#endif   
+
+   DRETURN_VOID;
+}
+
+static int 
+add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
+                         lList *host_list, lList *queue_list, lList *rqs_list,
+                         lList *centry_list, lList *acl_list, lList *hgroup_list,
+                         bool for_job_scheduling)
+{
+   lListElem *jep, *ja_task;
+   const char *pe_name;
+   const char *type;
+   u_long32 now = sconf_get_now();
+   u_long32 interval = sconf_get_schedule_interval();
+
+   DENTER(TOP_LAYER, "add_job_list_to_schedule");
+
+   if (suspended) {
+      type = SCHEDULING_RECORD_ENTRY_TYPE_SUSPENDED;
+   } else {
+      type = SCHEDULING_RECORD_ENTRY_TYPE_RUNNING;
+   }   
+
+   for_each (jep, job_list) {
+      for_each (ja_task, lGetList(jep, JB_ja_tasks)) {  
+         sge_assignment_t a = SGE_ASSIGNMENT_INIT;
+
+         assignment_init(&a, jep, ja_task, false);
+
+         a.start = lGetUlong(ja_task, JAT_start_time);
+
+         if (!task_get_duration(&a.duration, ja_task) || a.duration == 0) {
+            ERROR((SGE_EVENT, "got running job with invalid duration\n"));
+            continue; /* may never happen */
+         }
+         a.duration = duration_add_offset(a.duration, sconf_get_duration_offset());
+
+         /* Prevent jobs that exceed their prospective duration are not reflected 
+            in the resource schedules. Note duration enforcement is domain of 
+            sge_execd and default_duration is not enforced at all anyways.
+            All we can do here is hope the job will be finished in the next interval. */
+         if (duration_add_offset(a.start, a.duration) <= now) {
+            /* That logging is disabled as it can cause schedd messages file
+               be filled up with loggings. There are cases when it can't be 
+               considered a misconfiguration if jobs do not complete within the
+               time foreseen. If jobs are submitted without -l h_rt limit and 
+               aren't cancelled due to default_duration only be in effect */
+
+            if (for_job_scheduling && sconf_get_max_reservations() > 0) {
+               WARNING((SGE_EVENT, MSG_SCHEDD_SHOULDHAVEFINISHED_UUU, 
+                     sge_u32c(a.job_id), sge_u32c(a.ja_task_id), 
+                     sge_u32c(now - a.duration - a.start + 1)));
+            }
+            a.duration = (now - a.start) + interval;
+         }
+
+         a.gdil = lGetList(ja_task, JAT_granted_destin_identifier_list);
+         a.slots = nslots_granted(a.gdil, NULL);
+         if ((pe_name = lGetString(ja_task, JAT_granted_pe)) && 
+             !(a.pe = pe_list_locate(pe_list, pe_name))) {
+            ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, pe_name));
+            continue;
+         }
+         /* no need (so far) for passing ckpt information to debit_scheduled_job() */
+
+         a.host_list = host_list;
+         a.queue_list = queue_list;
+         a.centry_list = centry_list;
+         a.rqs_list = rqs_list;
+         a.acl_list = acl_list;
+         a.hgrp_list = hgroup_list;
+
+         DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
+                  sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 
+                  lGetUlong(ja_task, JAT_task_number), a.start, a.duration));
+
+         /* only update resource utilization schedule  
+            RUE_utililized_now is already set through events */
+         debit_scheduled_job(&a, NULL, NULL, false, type, for_job_scheduling);
+      }
+   }
+
+   DRETURN(0);
+}
+
+/****** sge_resource_utilization/add_calendar_to_schedule() ***********************************
+*  NAME
+*     add_calendar_to_schedule() -- addes the queue calendar to the resource
+*                                   schedule
+*
+*  SYNOPSIS
+*     static void add_calendar_to_schedule(lList *queue_list) 
+*
+*  FUNCTION
+*     Adds the queue calendars to the resource schedule. It is using
+*     the slot entry for simulating and enabled / disabled calendar.
+*
+*  INPUTS
+*     lList *queue_list - all queues, which can posibly run jobs
+*
+*  NOTES
+*     MT-NOTE: add_calendar_to_schedule() is MT safe 
+*
+*  SEE ALSO
+*     sge_resource_utilization/set_utilization
+*     scheduler/newResourceElem
+*     scheduler/prepare_resource_schedules
+*******************************************************************************/
+static void 
+add_calendar_to_schedule(lList *queue_list) 
+{
+   lListElem *queue;
+
+   DENTER(TOP_LAYER, "add_calendar_to_schedule");
+
+   for_each(queue, queue_list) {
+      lList *queue_states = lGetList(queue, QU_state_changes);
+      u_long32 from       = sconf_get_now();
+
+      if (queue_states != NULL) {
+      
+         lList *consumable_list = lGetList(queue, QU_consumable_config_list);
+         lListElem *slot_elem   = lGetElemStr(consumable_list, CE_name, "slots"); 
+         double slot_count      = lGetDouble(slot_elem, CE_doubleval); 
+
+         lList *queue_uti_list = lGetList(queue, QU_resource_utilization);
+         lListElem *slot_uti   = lGetElemStr(queue_uti_list, RUE_name, "slots");
+         lList *slot_uti_list  = lGetList(slot_uti, RUE_utilized);
+         
+         lListElem *queue_state = NULL;     
+
+         DPRINTF(("queue: %s time %d\n", lGetString(queue, QU_full_name), from));
+
+         if (slot_uti_list == NULL) {
+            slot_uti_list = lCreateList("slot_uti", RDE_Type);
+            lSetList(slot_uti, RUE_utilized, slot_uti_list);
+         }
+
+         for_each(queue_state, queue_states) {
+            bool is_full = (lGetUlong(queue_state, CQU_state) != QI_DO_NOTHING)?true:false;
+            u_long32 till = lGetUlong(queue_state, CQU_till);
+          
+            /* check for now, and set it if it is now */
+            if (is_full && (from == sconf_get_now())) {
+               lSetDouble(slot_uti, RUE_utilized_now, slot_count);
+            }
+          
+            set_utilization(slot_uti_list, from, till, is_full?slot_count:0);
+            
+            from = till;     
+         } /* end for_each */
+
+      }/* end if*/
+   }
+   
+   DRETURN_VOID;
+}
+
+/****** sge_resource_utilization/set_utilization() ********************************************
+*  NAME
+*     set_utilization() -- adds one specific calendar entry to the resource schedule
+*
+*  SYNOPSIS
+*     static void set_utilization(lList *uti_list, u_long32 from, u_long32 
+*     till, double uti) 
+*
+*  FUNCTION
+*     This set utilization function is unique for calendars. It removes all other
+*     uti settings in the given time interval and replaces it with the given one.
+*
+*  INPUTS
+*     lList *uti_list - the uti list for a specifiy resource and queue
+*     u_long32 from   - starting time for this uti
+*     u_long32 till   - endtime for this uti.
+*     double uti      - utilization (needs to bigger than 1 (schould be max)
+*
+*  NOTES
+*     MT-NOTE: set_utilization() is MT safe 
+*
+*  SEE ALSO
+*     sge_resource_utilization/add_calendar_to_schedule
+*     sge_resource_utilization/newResourceElem
+*     sge_resource_utilizationscheduler/prepare_resource_schedules
+*******************************************************************************/
+static void 
+set_utilization(lList *uti_list, u_long32 from, u_long32 till, double uti)
+{
+   DENTER(TOP_LAYER, "set_utilization");
+
+   if (uti > 0) {
+      bool is_from_added = false;
+      bool is_till_added = false;
+      double past_uti = 0;
+      lListElem *uti_elem_next = NULL;
+
+      if (till == 0) {
+         till = DISPATCH_TIME_QUEUE_END;
+      }
+
+      DPRINTF(("queue cal. schedule entry time %d till %d util: %f\n", from, till, uti));
+
+      uti_elem_next = lFirst(uti_list);
+     
+      /* search for the starting point */
+      while (uti_elem_next != NULL) {
+         if (lGetUlong(uti_elem_next, RDE_time) > from) { /*insert before this elem */
+            lInsertElem(uti_list, lPrev(uti_elem_next), newResourceElem(from, uti));
+            past_uti = lGetDouble(uti_elem_next, RDE_amount);
+            is_from_added = true; 
+            break;
+         }
+         else if (lGetUlong(uti_elem_next, RDE_time) == from) { /* modify found elem */
+            /* override utilization is maximun */
+            past_uti = lGetDouble(uti_elem_next, RDE_amount);
+            lSetDouble(uti_elem_next, RDE_amount, uti);
+            is_from_added = true;
+            break;
+         }
+         else { /* did not find it, continue */
+            uti_elem_next = lNext(uti_elem_next);
+         }
+      }
+
+      if (is_from_added) { /* searc for the endpoint */
+          while (uti_elem_next != NULL) {
+            if (lGetUlong(uti_elem_next, RDE_time) > till) { /*insert before this elem */
+               lInsertElem(uti_list, lPrev(uti_elem_next), newResourceElem(till, past_uti));
+               is_till_added = true; 
+               break;
+            }
+            else if (lGetUlong(uti_elem_next, RDE_time) == till) { /* do not override utilization is maximun */
+               is_till_added = true;
+               break;
+            }
+            else { /* did not find it, remove the current elem and continue*/
+               lListElem *next = lNext(uti_elem_next);
+               past_uti = lGetDouble(uti_elem_next, RDE_amount);
+               lRemoveElem(uti_list, &uti_elem_next);
+               uti_elem_next = next;
+            }
+         }
+      }
+      else {
+         lAppendElem(uti_list, newResourceElem(from, uti));
+      }
+
+      if (!is_till_added) {
+         lAppendElem(uti_list, newResourceElem(till, 0));
+      }   
+   }
+
+   DRETURN_VOID;
+}
+
+/****** sge_resource_utilization/newResourceElem() ********************************************
+*  NAME
+*     newResourceElem() -- creates new resource schedule entry
+*
+*  SYNOPSIS
+*     static lListElem* newResourceElem(u_long32 time, double amount) 
+*
+*  FUNCTION
+*     creates new resource schedule entry and returns it
+*
+*  INPUTS
+*     u_long32 time - specific time
+*     double amount - the utilized amount
+*
+*  RESULT
+*     static lListElem* - new resource schedule entry
+*
+*  NOTES
+*     MT-NOTE: newResourceElem() is MT safe 
+*
+*  SEE ALSO
+*     sge_resource_utilization/add_calendar_to_schedule
+*     sge_resource_utilization/set_utilization
+*     sge_resource_utilization/prepare_resource_schedules
+*******************************************************************************/
+
+static lListElem *newResourceElem(u_long32 time, double amount) 
+{
+   lListElem *elem = NULL;
+
+   elem = lCreateElem(RDE_Type);
+   if (elem != NULL) {
+      lSetUlong(elem, RDE_time, time);
+      lSetDouble(elem, RDE_amount, amount);    
+   }
+
+   return elem;
 }

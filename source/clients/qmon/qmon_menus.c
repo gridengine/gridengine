@@ -71,6 +71,8 @@
 #include "qmon_calendar.h"
 #include "sge_feature.h"
 #include "qmon_resource_quota.h"
+#include "qmon_ar.h"
+#include "qmon_arsub.h"
 
 /*-------------------------------------------------------------------------*/
 #ifdef QMON_DEBUG
@@ -132,6 +134,10 @@ static XmtMenuItem task_menu_items[] = {
          qmonBrowserOpen, NULL},
    {XmtMenuItemPushButton, "@{Resource Quota Configuration}", 'L', "Alt<Key>L", "Alt+L",
          qmonRQSPopup, NULL},
+   {XmtMenuItemPushButton, "@{Advance Reservation Configuration}", 'V', "Alt<Key>V", "Alt+V",
+         qmonARPopup, NULL},
+   {XmtMenuItemPushButton, "@{Advance Reservation Submission}", 'U', "Alt<Key>U", "Alt+U",
+         qmonARSubPopup, NULL},
    {XmtMenuItemEnd}
 };
 
@@ -215,6 +221,7 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
    { qmonRQSPopup, NULL, "@{@fBResource Quota Configuration}" },
+   { qmonARPopup, NULL, "@{@fBAdvance Reservation}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }
 };
@@ -266,6 +273,7 @@ Widget parent
       "TICKET_OVERVIEW",
       "PROJECT_CONFIG",
       "RQS_CONFIG",
+      "AR_CONFIG",
       "BROWSER",
       "EXIT" };
 #define AUTOMATIC_MAINBAR   

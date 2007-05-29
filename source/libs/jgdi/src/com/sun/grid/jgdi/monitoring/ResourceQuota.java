@@ -33,7 +33,6 @@ package com.sun.grid.jgdi.monitoring;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  * @todo   beta ??
  *         add javadoc comments
  */

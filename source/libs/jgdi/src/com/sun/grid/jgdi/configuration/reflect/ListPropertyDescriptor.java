@@ -37,7 +37,6 @@ import com.sun.grid.jgdi.configuration.reflect.*;
 
 /**
  *
- * @author  Sun Microsystems, Inc.
  */
 public abstract class ListPropertyDescriptor extends PropertyDescriptor {
    

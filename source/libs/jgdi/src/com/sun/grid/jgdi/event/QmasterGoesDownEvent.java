@@ -33,9 +33,8 @@ package com.sun.grid.jgdi.event;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
-public class QmasterGoesDownEvent extends Event {
+public class QmasterGoesDownEvent extends Event implements java.io.Serializable {
    
    /**
     * Creates a new instance of QmasterGoesDownEvent

@@ -35,7 +35,6 @@ import java.util.List;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  * @todo   beta ??
  *         add javadoc comments
  */

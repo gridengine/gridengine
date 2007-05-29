@@ -39,10 +39,14 @@
 #include "cull_parse_util.h"
 #include "sgermon.h"
 #include "sge_string.h"
-#include "sge_centry.h"
 #include "sge_resource_utilization.h"
 #include "parse_qsubL.h"
 #include "sge_stdio.h"
+
+#include "sge_stdio.h"
+
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_range.h"
 
 static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
      int nm_name, int nm_strval, int nm_doubleval);
@@ -223,11 +227,15 @@ lList **pplist
             break;
 
          case lStringT:
-            lSetString(ep, *rule, *pstrlist);
+            if (strcasecmp("NONE", *pstrlist) != 0){
+               lSetString(ep, *rule, *pstrlist);
+            }
             break;
      
          case lHostT:
-            lSetHost(ep, *rule, *pstrlist);
+            if (strcasecmp("NONE", *pstrlist) != 0){
+               lSetHost(ep, *rule, *pstrlist);
+            }
             break;
 
          case lListT:
@@ -298,7 +306,7 @@ int *interpretation_rule
       DEXIT;
       return -2;
    }
-   if (!strcasecmp("NONE", pstr[0])) {
+   if (!strcasecmp("NONE", pstr[0]) || !strcasecmp("UNDEFINED", pstr[0])) {
       *lpp = NULL;
       free(pstr);
       DEXIT;
@@ -789,8 +797,7 @@ unsigned long flags
          }
          if (fp) {
             cb = fprintf(fp, "%s", pdelis[2]);
-         }
-         else {
+         } else {
             cb = strlen(pdelis[2]);
             sprintf(buff, "%s", pdelis[2]);
          }
@@ -875,14 +882,14 @@ unsigned long flags
          case lStringT:
             cp = lGetString(ep, *rule);
             if (!cp) {
-               cp = "";
+               cp = "NONE";
             }
             break;
 
          case lHostT:
             cp = lGetHost(ep, *rule);
             if (!cp) {
-               cp = "";
+               cp = "NONE";
             }
             break;
 
@@ -990,19 +997,33 @@ FPRINTF_ERROR:
    return -7;
 }
 
-/****
- **** fprint_cull_list
- ****
- **** Prints str and field 'fi' (must be string) of
- **** every element of lList lp to file fp separated
- **** by blanks. If fp is NULL, "NONE" will be printed.
- ****/
-int fprint_cull_list(
-FILE *fp,
-char *str,
-lList *lp,
-int fi 
-) {
+/****** cull_parse_util/fprint_cull_list() *************************************
+*  NAME
+*     fprint_cull_list() --  Prints str and field 
+*
+*  SYNOPSIS
+*     int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi) 
+*
+*  FUNCTION
+*     Prints str and field 'fi' (must be string) of
+*     every element of lList lp to file fp separated
+*     by blanks. If fp is NULL, "NONE" will be printed. 
+*
+*  INPUTS
+*     FILE *fp  - a file
+*     char *str - a string name of list 
+*     lList *lp - a list
+*     int fi    - an element from the list to be printed 
+*
+*  RESULT
+*     int - 0 on success, -1 otherwise
+*
+*  NOTES
+*     MT-NOTE: fprint_cull_list() is MT safe 
+*
+*******************************************************************************/
+int fprint_cull_list(FILE *fp, char *str, lList *lp, int fi)
+{
    lListElem *ep;
 
    DENTER(TOP_LAYER, "fprint_cull_list");
@@ -1098,6 +1119,44 @@ lList *thresholds,
 int print_slots 
 ) {
    return fprint_name_value_list(fp, name, thresholds, print_slots, RUE_name, -1, RUE_utilized_now);
+}
+
+/****** cull_parse_util/fprint_range_list() *************************
+*  NAME
+*     fprint_resource_utilizations() -- Print a range list of type RN_Type
+*
+*  SYNOPSIS
+*     int 
+*     fprint_range_list(FILE *fp, char *name, lList *range_list) 
+*
+*  FUNCTION
+*     A RN_Type list is printed to 'fp' in 1,2,3,4,5,6 
+*     fashion. The 'name' is printed prior the actual list to 'fp'.
+*
+*  INPUTS
+*     FILE *fp          - The file pointer 
+*     char *name        - The name printed before the list
+*     lList *range_list - The RN_Type list.
+*
+*  RESULT
+*     int - 0 on success 
+*           -1 on fprintf() errors
+*
+*  NOTES
+*     MT-NOTE: fprint_resource_utilizations() is MT safe
+*******************************************************************************/
+int 
+fprint_range_list(FILE *fp, char *name, lList *range_list) 
+{
+   dstring range_string = DSTRING_INIT; 
+
+   range_list_print_to_string(range_list, &range_string, false, true, true);
+   FPRINTF((fp, "%s%s\n", name, sge_dstring_get_string(&range_string)));
+   sge_dstring_free(&range_string); 
+   return 0;
+FPRINTF_ERROR:
+   return -1;
+
 }
 
 /****** cull_parse_util/fprint_name_value_list() *******************************

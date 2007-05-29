@@ -55,7 +55,6 @@ int             log_state_get_log_gui(void);
 int             log_state_get_log_as_admin_user(void);
 
 void log_state_set_log_context(void *context);
-void* log_state_get_log_context(void);
 
 int sge_log(int log_level, const char *mesg, const char *file__, 
             const char *func__, int line__);

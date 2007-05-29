@@ -112,14 +112,12 @@ int main(int argc, char **argv) {
    if (user_list) {
       lListElem *id;
 
-
       if (lGetNumberOfElem(ref_list) == 0){
          id = lAddElemStr(&ref_list, ID_str, "0", ID_Type);
          lSetList(id, ID_user_list, user_list);
-      }
-      else{
+      } else {
          for_each(id, ref_list){
-         lSetList(id, ID_user_list, user_list);
+            lSetList(id, ID_user_list, user_list);
          }
       }
    }

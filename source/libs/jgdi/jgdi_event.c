@@ -91,6 +91,9 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
    sge_evc_array[evc_index] = NULL;
    pthread_mutex_unlock(&sge_evc_mutex);
    if (evc) {
+      /* shutdown the event client */
+      evc->ec_deregister(evc);
+      /* destroy the event client */
       sge_evc_class_destroy(&evc);
    } else {
       THROW_ERROR((env, JGDI_ILLEGAL_STATE, "evc is NULL"));
@@ -137,6 +140,12 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
       DEXIT;
       return -1;
    }
+#if 1   
+   /*
+   ** set the timeout to 1 sec
+   */
+   evc->ec_set_edtime(evc, 1);
+#endif
 
    pthread_mutex_lock(&sge_evc_mutex);
    for (i=0; i<MAX_EVC_ARRAY_SIZE; i++) {
@@ -179,7 +188,14 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
       DEXIT;
       return ret;
    }
-   *evc = sge_evc_array[index];
+   if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
+       pthread_mutex_lock(&sge_evc_mutex);
+       *evc = sge_evc_array[index];
+       pthread_mutex_unlock(&sge_evc_mutex);
+   } else {
+       answer_list_add(alpp, "event has not a valid evc index", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+       ret = JGDI_ILLEGAL_STATE;
+   }
    DEXIT;
    return ret;
 }
@@ -190,14 +206,14 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_register(JNIEnv *env, jobject evcobj)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative(JNIEnv *env, jobject evcobj)
 {
    lList *alp = NULL;
    sge_evc_class_t *sge_evc = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_register");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -234,7 +250,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_register(J
  * Method:    register
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister(JNIEnv *env, jobject evcobj)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative(JNIEnv *env, jobject evcobj)
 {
    lList *alp = NULL;
    sge_evc_class_t *sge_evc = NULL;
@@ -242,7 +258,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    ev_registration_id id = EV_ID_ANY;
    rmon_ctx_t rmon_ctx;
    
-   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister");
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregisterNative");
 
    jgdi_init_rmon_ctx(env, JGDI_EVENT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -255,7 +271,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    
    id = sge_evc->ec_get_id(sge_evc);
 
-   if( !sge_evc->ec_deregister(sge_evc) ) {
+   if (!sge_evc->ec_deregister(sge_evc)) {
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
@@ -399,19 +415,39 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
       return;
    }
 
-   sge_evc->ec_get(sge_evc, &elist, false);
+   logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
+#if 0 
+   /*
+   ** -> RH: we return in jgdi_is_loggable() false
+   */
+   if (logger == NULL) {
+      THROW_ERROR((env, JGDI_ILLEGAL_STATE, "logger is NULL"));
+   }
+#endif   
 
+   if (jgdi_is_loggable(env, logger, FINE) ) {
+      jgdi_log(env, logger, FINE, "before ec_get");
+   }
+   sge_evc->ec_get(sge_evc, &elist, true);
 
+   if (jgdi_is_loggable(env, logger, FINE) ) {
+      jgdi_log(env, logger, FINE, "after ec_get");
+   }
    for_each(ev, elist) {
       
+      if (jgdi_is_loggable(env, logger, FINE) ) {
+         jgdi_log(env, logger, FINE, "before process_event");
+      }
+
       ret = process_event(env, eventList, ev, &alp);
+      
+      if (jgdi_is_loggable(env, logger, FINE) ) {
+         jgdi_log(env, logger, FINE, "after process_event");
+      }
       
       if(ret != JGDI_SUCCESS) {
          
-         if (logger == NULL) {
-            logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
-         }
-         if (logger != NULL && jgdi_is_loggable(env, logger, WARNING) ) {
+         if (jgdi_is_loggable(env, logger, WARNING) ) {
             
             dstring ds = DSTRING_INIT;
             
@@ -715,13 +751,16 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
             DEXIT;
             return ret;
          }
-         
          evt_classname = (*env)->GetStringUTFChars(env, evt_classname_obj, 0);
+         if (evt_classname == NULL) {
+            answer_list_add(alpp, "fill_generic_event: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          jgdi_log_printf(env, JGDI_EVENT_LOGGER, WARNING,
                          "generic event did not contain a new version (%s)",
                          evt_classname);
-                         
-         (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);            
+         (*env)->ReleaseStringUTFChars(env, evt_classname_obj, evt_classname);
       }
    }
    

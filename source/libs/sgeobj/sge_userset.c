@@ -43,6 +43,7 @@
 #include "sge_answer.h"
 #include "parse.h"
 #include "sge_utility.h"
+#include "sge_hgroup.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -61,7 +62,7 @@ lList **userset_list_get_master_list(void)
 
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
-*     userset_is_deadline_user() -- may user sumbit deadline jobs. 
+*     userset_is_deadline_user() -- may user submit deadline jobs. 
 *
 *  SYNOPSIS
 *     bool userset_is_deadline_user(lList *lp, const char *username) 
@@ -87,6 +88,42 @@ bool userset_is_deadline_user(lList *lp, const char *username)
    if (deadline_users && lGetSubStr(deadline_users, UE_name, username, 
          US_entries)) {
       DRETURN(true); /* found user in deadline user list */
+   }
+
+   DRETURN(false);
+}
+
+/****** sge_userset/userset_is_ar_user() ***************************************
+*  NAME
+*     userset_is_ar_user() -- may user request advance reservations
+*
+*  SYNOPSIS
+*     bool userset_is_ar_user(lList *lp, const char *username) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList *lp            - US_Type
+*     const char *username - user name
+*
+*  RESULT
+*     bool - true if user has permission
+*            false if user has no permission
+*  NOTES
+*     MT-NOTE: userset_is_ar_user() is MT safe 
+*******************************************************************************/
+bool userset_is_ar_user(lList *lp, const char *username)
+{
+   lListElem *ar_users;
+
+   DENTER(TOP_LAYER, "userset_is_ar_user");
+
+   ar_users = lGetElemStr(lp, US_name, AR_USERS);
+
+   if (ar_users && lGetSubStr(ar_users, UE_name, username, 
+         US_entries)) {
+      DRETURN(true); /* found user in ar user list */
    }
 
    DRETURN(false);
@@ -158,6 +195,51 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
    DRETURN(STATUS_OK);
 }
 
+
+/****** sge_userset/userset_list_validate_access() *****************************
+*  NAME
+*     userset_list_validate_access() -- all user sets names in list must exist  
+*
+*  SYNOPSIS
+*     int userset_list_validate_access(lList *acl_list, int nm, lList **alpp) 
+*
+*  FUNCTION
+*     All the user set names in the acl_list must be defined in the qmaster
+*     user set lists. The user set is diferentiated from user names by @ sign
+*
+*  INPUTS
+*     lList *acl_list - the acl list to check
+*     int nm          - field name
+*     lList **alpp    - answer list pointer
+*
+*  RESULT
+*     int - STATUS_OK if no error,  STATUS_EUNKNOWN otherwise
+*
+*  NOTES
+*     MT-NOTE: userset_list_validate_access() is not MT safe 
+*
+*******************************************************************************/
+int userset_list_validate_access(lList *acl_list, int nm, lList **alpp)
+{
+   lListElem *usp;
+   char *user;
+
+   DENTER(TOP_LAYER, "userset_list_validate_access");
+
+   for_each (usp, acl_list) {
+      user = (char *) lGetString(usp, nm);
+      if (is_hgroup_name(user) == true){
+         user++;  /* jump ower the @ sign */
+         if (!lGetElemStr(*object_type_get_master_list(SGE_TYPE_USERSET), US_name, user)) {
+            ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, user ? user : "<NULL>"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EUNKNOWN);
+         }
+      }
+   }
+
+   DRETURN(STATUS_OK);
+}
 /****** sgeobj/userset/userset_validate_entries() *******************************
 *  NAME
 *     userset_validate_entries() -- verify entries of a user set

@@ -220,9 +220,12 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
          goto error;
       }
       job_state = (*env)->GetStringUTFChars(env, job_state_obj, 0);
-      
+      if (job_state == NULL) {
+         answer_list_add(alpp, "jgdi_qstat_env_init: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return JGDI_ERROR;
+      }
       filter_res = build_job_state_filter(qstat_env, job_state, alpp);
-      
       (*env)->ReleaseStringUTFChars(env, job_state_obj, job_state);
       
       if(filter_res != 0) {
@@ -251,9 +254,19 @@ static jgdi_result_t build_queue_state_filter(JNIEnv *env, jgdi_qstat_filter_t *
          DEXIT;
          return ret;
       } else {
-         const char* options = (*env)->GetStringUTFChars(env, options_obj, 0);
+         const char* options;
          u_long32 filter = 0xFFFFFFFF;
-         
+         if (options_obj == NULL) {     
+            answer_list_add(alpp, "build_queue_state_filter: options_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ILLEGAL_STATE;
+         }
+         options = (*env)->GetStringUTFChars(env, options_obj, 0);
+         if (options == NULL) {
+            answer_list_add(alpp, "build_queue_state_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return JGDI_ERROR;
+         }
          jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                              "queue state filter is '%s'", options);
          qstat_env->queue_state = qinstance_state_from_string(options, alpp, filter);
@@ -314,6 +327,11 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
       if ((ret = Iterator_next(env, iterator, &name_obj, alpp)) != JGDI_SUCCESS) {
          goto error;
       } 
+      if (name_obj == NULL) {
+         answer_list_add(alpp, "build_resource_attribute_filter: name_obj is NULL.", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = JGDI_ILLEGAL_STATE;
+         goto error;
+      }
       
       complex_attribute = lCreateElem(CE_Type);
       if (qstat_env->qresource_list == NULL) {
@@ -321,6 +339,11 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
       }
       lAppendElem(qstat_env->qresource_list, complex_attribute);
       name = (*env)->GetStringUTFChars(env, name_obj, 0);
+      if (name == NULL) {
+         answer_list_add(alpp, "build_resource_attribute_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         ret = JGDI_ERROR;
+         goto error;
+      }
       lSetString(complex_attribute, CE_name, name);
       (*env)->ReleaseStringUTFChars(env, name_obj, name);
       count++;
@@ -395,6 +418,7 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
       jobject  name_obj = NULL;
       jstring  value_obj = NULL;
       lListElem *complex_attribute = NULL;
+      const char *name = NULL;
       
       if ((ret = Iterator_hasNext(env, iterator, &has_next, alpp)) != JGDI_SUCCESS) {
          DPRINTF(("Iterator_hasNext failed\n"));
@@ -406,7 +430,12 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
       if ((ret = Iterator_next(env, iterator, &name_obj, alpp)) != JGDI_SUCCESS) {
          DPRINTF(("Iterator_next failed\n"));
          goto error;
-      } 
+      }
+      if (name_obj == NULL) {
+         answer_list_add(alpp, "build_resource_filter: name_obj is NULL.", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = JGDI_ILLEGAL_STATE;
+         goto error;
+      }
       
       complex_attribute = lCreateElem(CE_Type);
       if (qstat_env->resource_list == NULL) {
@@ -415,11 +444,15 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
       lAppendElem(qstat_env->resource_list, complex_attribute);
       count++;
       
-      {
-         const char *name = (*env)->GetStringUTFChars(env, name_obj, 0);
-         lSetString(complex_attribute, CE_name, name);
-         (*env)->ReleaseStringUTFChars(env, name_obj, name);
+      
+      name = (*env)->GetStringUTFChars(env, name_obj, 0);
+      if (name == NULL) {
+         answer_list_add(alpp, "build_resource_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+         ret = JGDI_ERROR;
+         goto error;
       }
+      lSetString(complex_attribute, CE_name, name);
+      (*env)->ReleaseStringUTFChars(env, name_obj, name);
       
       if ((ret = ResourceFilter_getResource(env, filter->resource_filter, lGetString(complex_attribute, CE_name), 
                                      &value_obj, alpp)) != JGDI_SUCCESS) {
@@ -428,7 +461,11 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
       } 
       if (value_obj != NULL) {
          const char *value = (*env)->GetStringUTFChars(env, value_obj, 0);
-         
+         if (value == NULL) {
+            answer_list_add(alpp, "build_resource_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+            ret = JGDI_ERROR;
+            goto error;
+         }
          lSetString(complex_attribute, CE_stringval, value);
          (*env)->ReleaseStringUTFChars(env, value_obj, value);
       } else {
@@ -1374,8 +1411,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    }
    sge_gdi_set_thread_local_ctx(ctx);
    
-   
-   
    memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
    
    memset(&qstat_env, 0, sizeof(qstat_env));
@@ -1562,6 +1597,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    }
       
 error:
+   qstat_env_destroy(&qstat_env);
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
    }
@@ -1641,7 +1677,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
    }
    
 error:
-
+   qstat_env_destroy(&qstat_env);
    if (ret != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
    }

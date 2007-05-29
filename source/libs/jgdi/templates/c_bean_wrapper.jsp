@@ -1,3 +1,4 @@
+<%
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -29,6 +30,8 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+%>
+
 <%
   java.beans.BeanInfo beanInfo = (java.beans.BeanInfo)params.get("beanInfo");
   Class beanClass = beanInfo.getBeanDescriptor().getBeanClass();
@@ -226,14 +229,16 @@ jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(f
    DENTER(BASIS_LAYER, "<%=classname%>_static_<%=fieldName%>");
 
    if (env == NULL) {
-      DPRINTF(("env is NULL\n"));
-      abort();
+      answer_list_add(alpp, "env is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
    }
    
    clazz = <%=classname%>_find_class(env, alpp);
    if (clazz == NULL) {
-      DPRINTF(("class <%=fullClassname%> not found\n"));
-      abort();
+      answer_list_add(alpp, "class <%=fullClassname%> not found", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
    }
    
    if (mid == NULL) {
@@ -340,17 +345,38 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
   } 
 %>
    DENTER(BASIS_LAYER, "<%=classname%>_static_<%=methodName%>");
+
+<%   
+  if (!Void.TYPE.equals(method.getReturnType())) {
+%>         
+   if (result == NULL ) {
+      answer_list_add(alpp, "result is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
+   }
+   /* We set the result always to the default value */
+<%   
+   if(method.getReturnType().isArray()) { %>
+   *result = NULL;    
+<%   } else {
+%>
+   *result = <%=ch.getInitializer(method.getReturnType())%>;
+<%
+    }
+  }  %>   
    
    /* Test preconditions */
    if (env == NULL) {
-      DPRINTF(("env is NULL\n"));
-      abort();
+      answer_list_add(alpp, "env is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
    }
    
    clazz = <%=classname%>_find_class(env, alpp);
    if (clazz == NULL) {
-      DPRINTF(("class <%=fullClassname%> not found\n"));
-      abort();
+      answer_list_add(alpp, "class <%=fullClassname%> not found", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
    }
    
    if (mid == NULL) {
@@ -379,7 +405,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
   <%
   }
 %> (*env)-><%=ch.getStaticCallMethod(method.getReturnType())%>(env, clazz, mid <%
-      // Add all parameter to the method call 
+      /* Add all parameter to the method call */
       for(int i = 0; i < parameters.length; i++) {  
          if( String.class.equals(parameters[i])) {
             // For all string parameter we pass the jstring object
@@ -392,6 +418,15 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
   %>);  
    if (test_jni_error(env, "<%=classname%>_<%=methodName%> failed", alpp)) {
       ret = JGDI_ILLEGAL_STATE;
+<%  if (!Void.TYPE.equals(method.getReturnType())) {
+       if (method.getReturnType().isArray()) {
+%>
+      temp = NULL;
+<%     } else { %>
+      temp = <%=ch.getInitializer(method.getReturnType())%>;        
+<%       }    
+    }
+%>      
    } <%
   if (!Void.TYPE.equals(method.getReturnType())) {
      // for non void method store the temporary result
@@ -557,26 +592,49 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
   } 
 %>
    DENTER(BASIS_LAYER, "<%=classname%>_<%=methodName%>");
-   
+
+<%   
+  if (!Void.TYPE.equals(method.getReturnType())) {
+%>         
+   if (result == NULL ) {
+      answer_list_add(alpp, "result is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
+   }
+   /* We set the result always to the default value */
+<%   
+   if(method.getReturnType().isArray()) { %>
+   *result = NULL;    
+<%   } else {
+%>
+   *result = <%=ch.getInitializer(method.getReturnType())%>;
+<%
+    }
+  }  %>   
+
    /* Test preconditions */
    if (env == NULL) {
-      DPRINTF(("env is NULL\n"));
-      abort();
+      answer_list_add(alpp, "env is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
    }
    if (obj == NULL) {
-      DPRINTF(("object is NULL\n"));
-      abort();
+      answer_list_add(alpp, "obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_NULL_POINTER;
    }
    
    clazz = <%=classname%>_find_class(env, alpp);
    if (clazz == NULL) {
-      DPRINTF(("class <%=fullClassname%> not found\n"));
-      abort();
+      answer_list_add(alpp, "class <%=fullClassname%> not found", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
    }
    
    if (!(*env)->IsInstanceOf(env, obj, clazz)) {
-      DPRINTF(("obj is not an instanceof <%=fullClassname%>\n"));
-      abort();
+      answer_list_add(alpp, "obj is not an instanceof <%=fullClassname%>", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return JGDI_ILLEGAL_STATE;
    }
 
    if (mid == NULL) {
@@ -618,6 +676,15 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
   %>);  
    if (test_jni_error(env, "<%=classname%>_<%=methodName%> failed", alpp)) {
       ret = JGDI_ILLEGAL_STATE;
+<%  if (!Void.TYPE.equals(method.getReturnType())) {
+       if (method.getReturnType().isArray()) {
+%>
+      temp = NULL;
+<%     } else { %>
+      temp = <%=ch.getInitializer(method.getReturnType())%>;        
+<%       }    
+    }
+%>      
    } <%
   if (!Void.TYPE.equals(method.getReturnType())) {
      // for non void method store the temporary result

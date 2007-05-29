@@ -79,7 +79,7 @@ enum {
 
 #define SGE_GDI_GET_OPERATION(x) ((x)&SGE_GDI_OPERATION)
 #define SGE_GDI_GET_SUBCOMMAND(x) ((x)&SGE_GDI_SUBCOMMAND)
-
+#define SGE_GDI_IS_SUBCOMMAND_SET(x,y) ((x)&(y))
 
 /* allowed values for target field of sge_gdi_request */
 enum {
@@ -108,6 +108,7 @@ enum {
    SGE_USER_MAPPING_LIST,
    SGE_HGROUP_LIST,
    SGE_RQS_LIST,
+   SGE_AR_LIST,
    SGE_DUMMY_LIST
 };
 

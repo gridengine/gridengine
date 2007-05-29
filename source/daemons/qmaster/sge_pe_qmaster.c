@@ -49,13 +49,15 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_qinstance.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
 #include "sge_utility_qmaster.h"
-
+#include "sge_advance_reservation_qmaster.h"
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
+
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_qinstance.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -96,7 +98,19 @@ int sub_command, monitoring_t *monitor
    }
 
    /* ---- PE_slots */
-   attr_mod_ulong(pe, new_pe, PE_slots, "slots");
+   if (lGetPosViaElem(pe, PE_slots, SGE_NO_ABORT)>=0) {
+      u_long32 pe_slots = lGetUlong(pe, PE_slots);
+
+      DPRINTF(("got new slots\n"));
+      if (ar_list_has_reservation_for_pe_with_slots(
+               *(object_type_get_master_list(SGE_TYPE_AR)),
+               alpp, pe_name, pe_slots)) {
+         goto ERROR;
+      } else {
+         lSetUlong(new_pe, PE_slots, pe_slots);
+      }
+   }
+   
 
    /* ---- PE_control_slaves */
    attr_mod_bool(pe, new_pe, PE_control_slaves, "control_slaves");

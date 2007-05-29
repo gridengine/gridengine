@@ -94,6 +94,7 @@ Qmon*BROWSER.labelType:            PIXMAP
 Qmon*TICKET_OVERVIEW.labelType:    PIXMAP
 Qmon*PROJECT_CONFIG.labelType:     PIXMAP
 Qmon*RQS_CONFIG.labelType:         PIXMAP
+Qmon*AR_CONFIG.labelType:          PIXMAP
 Qmon*EXIT.labelType:               PIXMAP
 !!
 !! Icons for the main toolbar
@@ -113,6 +114,7 @@ Qmon*TICKET_OVERVIEW.labelPixmap:  toolbar_ticket
 Qmon*PROJECT_CONFIG.labelPixmap:   toolbar_prj
 Qmon*BROWSER.labelPixmap:          toolbar_browser
 Qmon*RQS_CONFIG.labelPixmap:       toolbar_rqs
+Qmon*AR_CONFIG.labelPixmap:        toolbar_ar
 Qmon*EXIT.labelPixmap:             toolbar_exit
 
 

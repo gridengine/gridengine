@@ -43,6 +43,7 @@
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_cqueue.h"
 
 #include "sched/sge_job_schedd.h"
 
@@ -57,7 +58,7 @@
 #define ACTFILE_FPRINTF_FORMAT \
 "%s%c%s%c%s%c%s%c%s%c"sge_u32"%c%s%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c" \
 sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%f%c" \
-sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f" \
+sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c"sge_u32"%c%s%c%s%c%s%c%d%c"sge_u32"%c%f%c%f%c%f%c%s%c%f%c%s%c%f%c"sge_u32"" \
 ARCH_COLUMN \
 "\n"
 
@@ -191,8 +192,22 @@ sge_write_rusage(dstring *buffer,
 
    SET_STR_DEFAULT(jr, JR_queue_name, "UNKNOWN");
    SET_HOST_DEFAULT(jr, JR_host_name,  "UNKNOWN");
-   SET_STR_DEFAULT(jr, JR_group,      "UNKNOWN");
-   SET_STR_DEFAULT(jr, JR_owner,      "UNKNOWN");
+
+   if (lGetString(jr, JR_owner) == NULL) {
+      if (lGetString(job, JB_owner) == NULL) {
+         lSetString(jr, JR_owner, "UNKNOWN");
+      } else {
+         lSetString(jr, JR_owner, lGetString(job, JB_group));
+      }
+   }
+   
+   if (lGetString(jr, JR_group) == NULL) {
+      if (lGetString(job, JB_group) == NULL) {
+         lSetString(jr, JR_group, "UNKNOWN");
+      } else {
+         lSetString(jr, JR_group, lGetString(job, JB_group));
+      }
+   }
    
    /* job name and account get taken 
       from local job structure */
@@ -248,14 +263,9 @@ sge_write_rusage(dstring *buffer,
    }
 #endif 
    {
-      char *pos = NULL;
       const char *qi_name = NULL;
       qi_name = lGetString(jr, JR_queue_name);
-      qname = malloc(strlen(qi_name)+1);
-      strcpy(qname, qi_name);
-      if ( (pos = strchr(qname, '@'))){
-         pos[0] = '\0';
-      }
+      qname = cqueue_get_name_from_qinstance(qi_name);
    }
 
    if (intermediate) {
@@ -324,15 +334,15 @@ sge_write_rusage(dstring *buffer,
              USAGE_ATTR_IOW, 0), delimiter,
           none_string(pe_task_id), delimiter,
           usage_list_get_double_usage(usage_list,  
-             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0) 
+             intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, 0), delimiter, 
+          lGetUlong(job, JB_ar)
 #ifdef NEC_ACCOUNTING_ENTRIES
           , delimiter, arch_dep_usage_string
 #endif 
              );
      
    FREE(qname);
-   DEXIT;   
-   return ret;
+   DRETURN(ret);
 }
 
 /*

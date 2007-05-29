@@ -40,6 +40,9 @@
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_userset.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_hgroup.h"
+#include "msg_qmaster.h"
 
 #include "msg_schedd.h"
 
@@ -73,30 +76,25 @@ int sge_has_access_(const char *user, const char *group, lList *q_acl,
    DENTER(TOP_LAYER, "sge_has_access_");
 
    ret = sge_contained_in_access_list_(user, group, q_xacl, acl_list);
-   if (ret<0 || ret == 1) { /* also deny when an xacl entry was not found in acl_list */
-      DEXIT;
-      return 0;
+   if (ret < 0 || ret == 1) { /* also deny when an xacl entry was not found in acl_list */
+      DRETURN(0);
    }
 
    if (!q_acl) {  /* no entry in allowance list - ok everyone */
-       DEXIT;
-       return 1;
+       DRETURN(1);
    }
 
    ret = sge_contained_in_access_list_(user, group, q_acl, acl_list);
-   if (ret<0) {
-      DEXIT;
-      return 0;
+   if (ret < 0) {
+      DRETURN(0);
    }
    if (ret) {
       /* we're explicitly allowed to access */
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    /* there is an allowance list but the owner isn't there -> denied */
-   DEXIT;
-   return 0;
+   DRETURN(0);
 } 
 
 
@@ -116,19 +114,85 @@ static int sge_contained_in_access_list_(const char *user, const char *group,
 
    for_each (acl_search, acl) {
       if ((acl_found=lGetElemStr(acl_list, US_name,
-            lGetString(acl_search,US_name)))) {
+            lGetString(acl_search, US_name)))) {
          /* ok - there is such an access list */
          if (sge_contained_in_access_list(user, group, acl_found, NULL)) {
-            DEXIT;
-            return 1;
+            DRETURN(1);
          } 
       } else {
       	DPRINTF(("cannot find userset list entry \"%s\"\n", 
 		         lGetString(acl_search,US_name)));
       }
    }
-
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
+/****** valid_queue_user/sge_ar_queue_have_users_access() ***********************
+*  NAME
+*     sge_ar_queue_have_users_access() -- verify that all users of an AR have queue
+*                                        access
+*
+*  SYNOPSIS
+*     bool sge_ar_queue_have_users_access(lList **alpp, lListElem *ar, lListElem 
+*     *queue, lList *master_userset_list) 
+*
+*  FUNCTION
+*     Iterates over the AR_acl_list and proves that every entry has queue access.
+*     If only one has no access the function returns false
+*
+*  INPUTS
+*     lList **alpp               - answer list
+*     lListElem *ar              - advance reservation object (AR_Type)
+*     lListElem *queue           - queue instance object (QU_Type)
+*     lList *master_userset_list - master userset list
+*
+*  RESULT
+*     bool - true if all have access
+*            false if only one has no access
+*
+*  NOTES
+*     MT-NOTE: sge_ar_queue_have_users_access() is MT safe 
+*******************************************************************************/
+bool sge_ar_have_users_access(lList **alpp, lListElem *ar, const char *name, lList *acl_list,
+                                    lList *xacl_list, lList *master_userset_list)
+{
+   bool ret = true;
+   lListElem *acl_entry;
+   const char *user= NULL;
+
+   DENTER(TOP_LAYER, "sge_ar_have_users_access");
+
+   for_each(acl_entry, lGetList(ar, AR_acl_list)) {
+      user = lGetString(acl_entry, ARA_name);
+
+      DPRINTF(("check permissions for user %s\n", user));
+      if (!is_hgroup_name(user)) {
+         if (sge_has_access_(user, lGetString(acl_entry, ARA_group), acl_list, xacl_list,
+                             master_userset_list) == 0) {
+             answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDNOPERMISSIONS, name); 
+            ret = false;
+            break;
+         }
+      } else {
+         /* skip preattached \@ sign */
+         const char *acl_name = ++user;
+
+         DPRINTF(("acl :%s", acl_name));
+
+         /* at first xacl */
+         if (xacl_list && lGetElemStr(xacl_list, US_name, acl_name) != NULL) {
+            ret = false;
+            break;
+         }
+
+         /* at second acl */
+         if (acl_list && (lGetElemStr(acl_list, US_name, acl_name) == NULL)) {
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_AR_QUEUEDNOPERMISSIONS, name); 
+            ret = false;
+            break;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}

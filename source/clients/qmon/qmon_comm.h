@@ -60,7 +60,8 @@
 #define ZOMBIE_T              (1<<21)
 #define USER_MAPPING_T        (1<<22)
 #define HGROUP_T              (1<<23)
-#define RQS_T                (1<<24)
+#define RQS_T                 (1<<24)
+#define AR_T                  (1<<25)
 
 /*
  * The different list types defined in sge_gdi_request.h

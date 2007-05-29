@@ -53,7 +53,7 @@ fi
 ROOTGROUP=root
 
 case $ARCH in
- sol-*)
+ sol-*|usol-*)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=sysv_rc
@@ -68,7 +68,7 @@ case $ARCH in
    RSH_DAEMON=undef
    LOADSENSOR_COMMAND=undef
    ;;
- lx*)
+ lx*|ulx*)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
    if [ -x /usr/lib/lsb/install_initd ]; then

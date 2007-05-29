@@ -73,6 +73,8 @@ void sge_dstring_init(dstring *sb, char *buffer, size_t size);
 const char* sge_dstring_append(dstring *sb, const char *a);
 const char* sge_dstring_append_dstring(dstring *sb, const dstring *a);
 const char* sge_dstring_append_char(dstring *sb, const char a);
+const char* sge_dstring_append_time(dstring *sb, time_t time, bool as_xml);
+const char* sge_dstring_append_mailopt(dstring *sb, u_long32 mailopt);
 
 const char* sge_dstring_sprintf(dstring *sb, const char *fmt, ...);
 const char* sge_dstring_vsprintf(dstring *sb, const char *fmt, va_list ap);

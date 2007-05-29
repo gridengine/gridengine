@@ -44,7 +44,6 @@ import java.util.*;
 
 /**
  *  Factory class for all List/Del/Add/Mod Configuration objects
- *  @author richard.hierlmeier@sun.com
  */
 public class ConfigurationFactory {
 

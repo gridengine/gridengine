@@ -39,7 +39,6 @@
 #endif
 
 #define MAX_SEQNUM        9999999
-#define MAX_ULONG32     2147483647
 
 /* template/global/default/queue names */
 #define SGE_TEMPLATE_NAME        "template"
@@ -57,9 +56,15 @@
 #define SGE_OBJ_EXECHOST               "exechost"
 #define SGE_OBJ_PE                     "pe"
 #define SGE_OBJ_CKPT                   "ckpt"
-#define SGE_OBJ_CALENDAR               "cal"
+#define SGE_OBJ_CALENDAR               "calendar"
 #define SGE_OBJ_USER_MAPPING           "usermapping"
 #define SGE_OBJ_RQS                    "resource_quota"
+#define SGE_OBJ_PROJECT                "project"
+#define SGE_OBJ_USER                   "user"
+#define SGE_OBJ_USERSET                "userset"
+#define SGE_OBJ_COMPLEXATTR            "complex_attribute"
+#define SGE_OBJ_JOB                    "job"
+#define SGE_OBJ_AR                     "advance_reservation"
 
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_FORMULA          "load_formula"
@@ -99,7 +104,6 @@
 #define SGE_ATTR_TERMINATE_METHOD      "terminate_method"
 #define SGE_ATTR_NOTIFY                "notify"
 #define SGE_ATTR_OWNER_LIST            "owner_list"
-#define SGE_ATTR_SUBORDINATE_LIST      "subordinate_list"
 #define SGE_ATTR_CALENDAR              "calendar"
 #define SGE_ATTR_INITIAL_STATE         "initial_state"
 #define SGE_ATTR_FSHARE                "fshare"
@@ -107,13 +111,14 @@
 #define SGE_ATTR_QNAME                 "qname"
 #define SGE_ATTR_QTYPE                 "qtype"
 #define SGE_ATTR_SUBORDINATE_LIST      "subordinate_list"
+#define SGE_ATTR_MAIL_LIST             "mail_list"
 #define SGE_ATTR_QUEUE_LIST            "queue_list"
 #define SGE_ATTR_HOSTNAME              "hostname"
 #define SGE_ATTR_HOSTLIST              "hostlist"
 #define SGE_ATTR_PE_NAME               "pe_name"
 #define SGE_ATTR_CKPT_NAME             "ckpt_name"
 #define SGE_ATTR_HGRP_NAME             "group_name"
-#define SGE_ATTR_RQS_NAME             "name"
+#define SGE_ATTR_RQS_NAME              "name"
 #define SGE_ATTR_CALENDAR_NAME         "calendar_name"
 #define SGE_ATTR_YEAR                  "year"
 #define SGE_ATTR_WEEK                  "week"
@@ -194,10 +199,12 @@
 #define MAN_DIR                   "managers"
 #define OP_DIR                    "operators"
 #define RESOURCEQUOTAS_DIR        "resource_quotas"
+#define AR_DIR                    "advance_reservations"
 
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"
 #define SEQ_NUM_FILE              "jobseqnum"
+#define ARSEQ_NUM_FILE            "arseqnum"
 #define ALIAS_FILE                "host_aliases"
 #define ACT_QMASTER_FILE          "act_qmaster"
 

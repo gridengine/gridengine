@@ -96,6 +96,7 @@
 #include "cull_xmlL.h"
 #include "sched/sge_select_queueL.h"
 #include "sgeobj/sge_resource_quotaL.h"
+#include "sgeobj/sge_advance_reservationL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -269,6 +270,10 @@ extern "C" {
       {RQR_LOWERBOUND, RQRS, RQRN},             /* resource quota rule */
       {RQRF_LOWERBOUND, RQRFS, RQRFN},          /* resource quota rule filter */
       {RQRL_LOWERBOUND, RQRLS, RQRLN},          /* resource quota rule limit */
+      {RQL_LOWERBOUND, RQLS, RQLN},             /* resource quota limit (scheduler) */
+     
+      {AR_LOWERBOUND, ARS, ARN},                /* advance reservation */ 
+      {ARA_LOWERBOUND, ARAS, ARAN},             /* advance reservation acl*/ 
       
       {0, 0, NULL}
    };

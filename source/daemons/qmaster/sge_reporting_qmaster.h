@@ -38,10 +38,11 @@
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
 #include "gdi/sge_gdi_ctx.h"
-
+#include "sgeobj/sge_advance_reservation.h"
 
 typedef enum {
    JL_UNKNOWN = 0,   /* job is in unknown state - should never be seen */
+
    JL_PENDING,       /* job is pending */
    JL_SENT,          /* job has been sent to execd */
    JL_RESENT,        /* job has been resent to execd - sent hasn't been ack */
@@ -115,6 +116,28 @@ bool
 reporting_is_intermediate_acct_required(const lListElem *job, 
                                         const lListElem *ja_task, 
                                         const lListElem *pe_task);
+
+bool
+reporting_create_new_ar_record(lList **answer_list, 
+                               const lListElem *ar,
+                               u_long32 report_time);
+
+bool
+reporting_create_ar_attribute_record(lList **answer_list,
+                                     const lListElem *ar,
+                                     u_long32 report_time);
+
+bool
+reporting_create_ar_log_record(lList **answer_list,
+                               const lListElem *ar,
+                               ar_state_event_t state,
+                               const char *ar_description,
+                               u_long32 report_time);
+
+bool
+reporting_create_ar_acct_records(lList **answer_list,
+                                const lListElem *ar,
+                                u_long32 report_time);
 
 #endif /* _SGE_REPORTING_QMASTER_H_ */
 

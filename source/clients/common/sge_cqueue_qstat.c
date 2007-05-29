@@ -66,6 +66,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
                                      double *load, 
                                      bool *is_load_available, 
                                      u_long32 *used,
+                                     u_long32 *resv,
                                      u_long32 *total,
                                      u_long32 *suspend_manual, 
                                      u_long32 *suspend_threshold,
@@ -93,10 +94,11 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
       u_long32 load_slots = 0;
       u_long32 used_available = 0;
       u_long32 used_slots = 0;
+      u_long32 resv_slots = 0;
 
       *load = 0.0;
       *is_load_available = false;
-      *used = *total = 0;
+      *used = *total = *resv = 0;
       *available = *temp_disabled = *manual_intervention = 0;
       *suspend_manual = *suspend_threshold = *suspend_on_subordinate = 0;
       *suspend_calendar = *unknown = *load_alarm = 0;
@@ -107,7 +109,9 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
          bool has_value_from_object;
 
          used_slots = qinstance_slots_used(qinstance);
+         resv_slots = qinstance_slots_reserved(qinstance);
          (*used) += used_slots;
+         (*resv) += resv_slots;
          (*total) += slots;
 
          if (!sge_get_double_qattr(&host_load_avg, LOAD_ATTR_NP_LOAD_AVG, 

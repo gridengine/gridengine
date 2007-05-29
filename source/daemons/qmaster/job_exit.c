@@ -72,6 +72,8 @@
 #include "sge_answer.h"
 
 #include "sge_reporting_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -176,6 +178,42 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
       sge_commit_job(ctx, jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+
+      if (lGetUlong(jep, JB_ar) != 0 && (lGetUlong(jatep, JAT_state) & JDELETED) == JDELETED) {
+         /* get AR and remove it if no other jobs are debited */
+         lList *master_ar_list = *object_base[SGE_TYPE_AR].list;
+         lListElem *ar = ar_list_locate(master_ar_list, lGetUlong(jep, JB_ar));
+
+         if (ar != NULL && lGetUlong(ar, AR_state) == AR_DELETED) {
+            lListElem *ar_queue;
+            for_each(ar_queue, lGetList(ar, AR_reserved_queues)) {
+               if (qinstance_slots_used(ar_queue) != 0) {
+                  break;
+               }
+            }
+            if (ar_queue == NULL) {
+               /* no jobs registered in advance reservation */
+               dstring buffer = DSTRING_INIT;
+
+               sge_dstring_sprintf(&buffer, sge_U32CFormat,
+                                   sge_u32c(lGetUlong(ar, AR_id)));
+
+               ar_do_reservation(ar, false);
+
+               reporting_create_ar_log_record(NULL, ar, ARL_DELETED, 
+                                              "AR deleted",
+                                              timestamp);
+               reporting_create_ar_acct_records(NULL, ar, timestamp); 
+
+               lRemoveElem(master_ar_list, &ar);
+
+               sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
+                      0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                      NULL, NULL, NULL, true, true);
+               sge_dstring_free(&buffer);
+            }
+         }
+      }
    } 
      /*
       * case 2: set job in error state
@@ -300,8 +338,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                                                     QU_qhostname,
                                                     host, 
                                                     &iterator);
-                  qinstance_state_set_error(qinstance, true);
-                  reporting_create_queue_record(NULL, qinstance, timestamp);
+                  sge_qmaster_qinstance_state_set_error(qinstance, true);
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
@@ -329,8 +366,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                              hostname);
          
          /* general error -> this queue cant run any job */
-         qinstance_state_set_error(queueep, true);
-         reporting_create_queue_record(NULL, queueep, timestamp);
+         sge_qmaster_qinstance_state_set_error(queueep, true);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
          spool_queueep = true;
          ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      

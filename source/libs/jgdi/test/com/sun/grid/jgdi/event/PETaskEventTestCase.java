@@ -47,12 +47,10 @@ import junit.framework.TestSuite;
 
 /**
  *
- * @author rh150277
  */
 public class PETaskEventTestCase extends BaseTestCase {
     
     private JGDI jgdi;
-    private JGDI jgdi_evc;
     private EventClient evc;
     
     /** Creates a new instance of PETaskEventTestCase */
@@ -66,8 +64,7 @@ public class PETaskEventTestCase extends BaseTestCase {
     protected void setUp() throws Exception {
         
         jgdi = createJGDI();
-        jgdi_evc = createJGDI();
-        evc = JGDIFactory.createEventClient(jgdi_evc, 0);
+        evc = createEventClient(0);
         super.setUp();
         
         String peName = "pe" + System.currentTimeMillis();
@@ -114,7 +111,6 @@ public class PETaskEventTestCase extends BaseTestCase {
             evc.close();
         } finally {
             jgdi.close();
-            jgdi_evc.close();
         }
     }
     
@@ -157,7 +153,7 @@ public class PETaskEventTestCase extends BaseTestCase {
         jgdi.enableQueues(new String [] { queue.getName() }, false);
 
         
-        assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 4));
+        assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(taskRuntime * 10));
         assertEquals("Too few pe task add events", numberOfTasks, lis.getAddEventCount() );
         assertEquals("Too few pe task del events", numberOfTasks - 1 , lis.getDelEventCount());
         

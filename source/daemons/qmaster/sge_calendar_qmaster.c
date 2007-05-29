@@ -53,6 +53,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_lock.h"
 #include "sge_qinstance_state.h"
+#include "sge_advance_reservation_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -66,12 +67,16 @@ calendar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_cal, lListEl
              const char *ruser, const char *rhost, gdi_object_t *object, 
              int sub_command, monitoring_t *monitor) 
 {
+   object_description *object_base = object_type_get_object_description();
+   lList *master_ar_list = *object_base[SGE_TYPE_AR].list;
+   lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
+   lListElem *cqueue;
    const char *cal_name;
 
    DENTER(TOP_LAYER, "calendar_mod");
 
    /* ---- CAL_name cannot get changed - we just ignore it */
-   if (add) {
+   if (add == 1) {
       cal_name = lGetString(cep, CAL_name);
       if (verify_str_key(alpp, cal_name, MAX_VERIFY_STRING, "calendar", KEY_TABLE) != STATUS_OK)
          goto ERROR;
@@ -94,12 +99,24 @@ calendar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_cal, lListEl
          goto ERROR;
    }
 
-   DEXIT;
-   return 0;
+   if (add != 1) {
+      for_each(cqueue, master_cqueue_list) {
+         lListElem *queue;
+         for_each(queue, lGetList(cqueue, CQ_qinstances)) {
+            if (strcmp(cal_name, lGetString(queue, QU_calendar)) == 0) {
+               if (sge_ar_list_conflicts_with_calendar(alpp,
+                   lGetString(queue, QU_full_name), new_cal, master_ar_list)) {
+                  goto ERROR; 
+               }
+            }
+         }
+      }
+   }
+
+   DRETURN(0);
 
 ERROR:
-   DEXIT;
-   return STATUS_EUNKNOWN;
+   DRETURN(STATUS_EUNKNOWN);
 }
 
 int 
@@ -210,7 +227,7 @@ sge_del_calendar(sge_gdi_ctx_class_t *ctx, lListElem *cep, lList **alpp, char *r
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_calendar_event_handler() is not MT safe 
+*     MT-NOTE: sge_calendar_event_handler() is MT safe 
 *
 *******************************************************************************/
 void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor) 
@@ -227,19 +244,17 @@ void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, mo
    {
       ERROR((SGE_EVENT, MSG_EVE_TE4CAL_S, cal_name));   
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);      
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
       
    calendar_update_queue_states(ctx, cep, 0, NULL, &ppList, monitor);
    lFreeList(&ppList);
 
-   sge_free((char *)cal_name);
+   FREE(cal_name);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* sge_calendar_event_handler() */
 
 int calendar_update_queue_states(sge_gdi_ctx_class_t *ctx, lListElem *cep, lListElem *old_cep, gdi_object_t *object, lList **ppList, monitoring_t *monitor)

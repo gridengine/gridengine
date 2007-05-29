@@ -38,22 +38,18 @@ import com.sun.grid.jgdi.EventClient;
 import java.text.DateFormat;
 
 /**
+ *  Sample event client application.
  *
- * @author  richard.hierlmeier@sun.com
+ *  Prints all events from qmaster to <code>System.out</code>
  */
 public class QEvent implements EventListener {
    
-   private JGDI jgdi;
    private EventClient evc;
    
    public QEvent(String url) throws JGDIException {
-      
-      jgdi = JGDIFactory.newInstance(url);
-      
-      evc = JGDIFactory.createEventClient(jgdi, 0);
+      evc = JGDIFactory.createEventClient(url, 0);
       evc.addEventListener(this);
       evc.subscribeAll();
-      
    }
    
    public void start() throws InterruptedException {
@@ -62,12 +58,15 @@ public class QEvent implements EventListener {
    
    public static void main(String[] args) {
       
+      if (args.length != 1) {
+         usage();
+      }
       try {
          QEvent qevt = new QEvent(args[0]);
          
          qevt.start();
          
-         Runtime.getRuntime().addShutdownHook( qevt.new ShutdownHandler() );
+         Runtime.getRuntime().addShutdownHook(qevt.new ShutdownHandler());
          
          Thread.currentThread().sleep(Integer.MAX_VALUE);
       } catch( Exception e) {
@@ -83,31 +82,22 @@ public class QEvent implements EventListener {
          try {
             System.out.println("close event client");
             evc.close();
-            System.out.println("close jgdi");
-            jgdi.close();
-         } catch ( Exception e ) {
-            
+         } catch (Exception e) {
             e.printStackTrace();
          }
       }
    }
    
-   
-   
-   
-   
    private static void usage() {
-      
-      
+      System.out.println("QEvent <connect url>");
+      System.exit(1);
    }
    
    private static DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
    
    public void eventOccured(Event evt) {
-      
       System.out.println(evt);
       System.out.flush();
-      
    }
    
 }

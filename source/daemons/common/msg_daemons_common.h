@@ -144,31 +144,30 @@
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       _MESSAGE(27064, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Suspended")) */
 #define MSG_MAIL_SUBJECT_JA_TASK_SUSP_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Suspended"
-/* #define MSG_MAIL_SUBJECT_JOB_SUSP_US            _MESSAGE(27065, _("Job "sge_U32CFormat" ("SFN") Suspended")) */
 #define MSG_MAIL_SUBJECT_JOB_SUSP_US            "Job "sge_U32CFormat" ("SFN") Suspended"
-/* #define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       _MESSAGE(27066, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Continued")) */
 #define MSG_MAIL_SUBJECT_JA_TASK_CONT_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Continued"
-/* #define MSG_MAIL_SUBJECT_JOB_CONT_US            _MESSAGE(27067, _("Job "sge_U32CFormat" ("SFN") Continued")) */
 #define MSG_MAIL_SUBJECT_JOB_CONT_US            "Job "sge_U32CFormat" ("SFN") Continued"
 
 
 
-#define MSG_MAIL_BODY_SSSSS                     _MESSAGE(27068, _(SFN"\n Master queue    = "SFN"\n Owner           = "SFN"\n Submission time = "SFN"\n Start time      = "SFN))
-#define MSG_MAIL_TYPE_SUSP                      _MESSAGE(27069, _("job suspend"))
-#define MSG_MAIL_TYPE_CONT                      _MESSAGE(27070, _("job continue"))
-#define MSG_MAIL_UNKNOWN_REASON                 _MESSAGE(27071, _("<unknown reason>"))
-#define MSG_MAIL_TYPE_ADMIN                     _MESSAGE(27072, _("admin mail"))
-#define MSG_MAIL_TYPE_START                     _MESSAGE(27073, _("job start")) 
+#define MSG_MAIL_BODY_SSSSS                     _MESSAGE(27065, _(SFN"\n Master queue    = "SFN"\n Owner           = "SFN"\n Submission time = "SFN"\n Start time      = "SFN))
+#define MSG_MAIL_TYPE_SUSP                      _MESSAGE(27066, _("job suspend"))
+#define MSG_MAIL_TYPE_CONT                      _MESSAGE(27067, _("job continue"))
+#define MSG_MAIL_UNKNOWN_REASON                 _MESSAGE(27068, _("<unknown reason>"))
+#define MSG_MAIL_TYPE_ADMIN                     _MESSAGE(27069, _("admin mail"))
+#define MSG_MAIL_TYPE_START                     _MESSAGE(27070, _("job start")) 
+#define MSG_MAIL_TYPE_ARSTART                   _MESSAGE(27071, _("advance_reservation start")) 
+#define MSG_MAIL_TYPE_AREND                     _MESSAGE(27072, _("advance_reservation finish")) 
+#define MSG_MAIL_TYPE_ARDELETE                  _MESSAGE(27073, _("advance_reservation delete")) 
+#define MSG_MAIL_TYPE_ARERROR                   _MESSAGE(27074, _("advance_reservation error")) 
+#define MSG_MAIL_TYPE_AROK                      _MESSAGE(27075, _("advance_reservation error resolved")) 
 
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
  */
-/* #define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       _MESSAGE(27074, _("Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Complete")) */
 #define MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS       "Job-array task "sge_U32CFormat"."sge_U32CFormat" ("SFN") Complete"
-/* #define MSG_MAIL_SUBJECT_JOB_COMP_US            _MESSAGE(27075, _("Job "sge_U32CFormat" ("SFN") Complete")) */
 #define MSG_MAIL_SUBJECT_JOB_COMP_US            "Job "sge_U32CFormat" ("SFN") Complete"
 
 

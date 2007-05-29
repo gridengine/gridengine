@@ -42,7 +42,6 @@ import java.io.Writer;
 /**
  * This class implements a PrintWriter with
  * indentication
- * @author richard.hierlmeier@sun.com
  */
 public class IndentedPrintWriter extends PrintWriter {
    

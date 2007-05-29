@@ -45,7 +45,6 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "cull_xml.h"
 #include "sig_handlers.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -98,7 +97,7 @@ static int destroy_xml_report_handler(report_handler_t** handler, lList **alpp);
 
 static int xml_report_started(report_handler_t* handler, lList **alpp) {
    printf("<?xml version='1.0'?>\n");
-   printf("<qquota_result xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n");
+   printf("<qquota_result xmlns=\"http://gridengine.sunsource.net/61/qquota\">\n");
    return QQUOTA_SUCCESS;
 }
 

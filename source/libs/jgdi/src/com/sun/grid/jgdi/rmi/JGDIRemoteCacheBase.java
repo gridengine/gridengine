@@ -48,7 +48,6 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JGDIRemoteCacheBase implements JGDIRemoteBase {
     

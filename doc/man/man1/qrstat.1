@@ -1,0 +1,164 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004-2007 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/04/12 14:35:49 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH QSTAT 1 "$Date: 2007/04/12 14:35:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+qrstat \- show the status of xxQS_NAMExx advance reservations
+.\"
+.\"
+.SH SYNTAX
+.B qrstat
+[
+.B -ar ar_id
+] [
+.B -help
+] [ \fB\-u\fP \fBuser,...\fP
+] [
+.B -explain
+] 
+.\"
+.SH DESCRIPTION
+.I qrstat
+shows the current status of the available xxQS_NAMExx advance reservations.
+The selection option \fB\-ar\fP allows you to get information about 
+specific advance reservations. 
+.\"
+.SH OPTIONS
+.IP "\fB\-ar ar_id\fP"
+Prints various information about the advance reservation identified by ar_id.
+.\"
+.IP "\fB\-explain\fP"
+Displays the reason for an error state of an advance reservation. Possible reasons 
+are the unknown state of a host or queue instance.
+.sp
+The output format for the alarm reasons is one line per reason.
+.\"
+.IP "\fB\-help\fP"
+Prints a listing of all options.
+.\"
+.IP "\fB\-u user,...\fP"
+Display information only for those advance reservations 
+being associated with the users from the given user list.
+.sp
+The string
+\fB\ $user\fP
+is a placeholder for the current username. An asterisk "*" can be used 
+as username wildcard to request any users' jobs be displayed. 
+\"
+.IP "\fB\-xml\fP"
+This option can be used with all other options and changes the output to XML. The used
+schemas are referenced in the XML output. The output is printed to stdout.
+.br
+.\"
+.\"
+.SH "OUTPUT FORMATS"
+Depending on the presence or absence of the \fB-ar\fP option there are two 
+output formats need to be differentiated.
+.PP
+The \fB\-ext\fP and \fB\-urg\fP options may be used 
+to display additional information for each job.
+.\"
+.SS "\fBAdvance Reservation Summary (without \-ar)\fP"
+Following the header line a section for each advance reservation
+is provided. The columns contain information for
+.IP "\(bu" 3n
+the adavance reservation id.
+.IP "\(bu" 3n
+the name of the reservation.
+.IP "\(bu" 3n
+the current state of the reservation. One of folloging states 'wrxde".
+.IP "\(bu" 3n
+the start time.
+.IP "\(bu" 3n
+the end time.
+.IP "\(bu" 3n
+the duration of the advance reservation.
+.SS "\fBDetailed Format (with \-ar)\fP"
+The output containes two columns. The first one contains all advance reservation attributes.
+The second one the corresponding value.
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
+cell
+.I qstat
+uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment 
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_qmaster 8
+is expected to listen for communication requests.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
+.\"
+.\"
+.SH FILES
+.nf
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
+	xxQS_NAMExx master host file
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qstat\fP
+	cluster qstat default options
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M qrsub 1 ,
+.\"
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -171,6 +171,32 @@ int lGetPosViaElem(const lListElem *element, int name, int do_abort)
    return pos;
 }
 
+/****** cull/multitype/lMt2Str() **********************************************
+*  NAME
+*     lMt2Str() -- returns the string representation of a type id
+*
+*  SYNOPSIS
+*     char* lMt2Str(int mt) 
+*
+*  FUNCTION
+*     returns the string representation of a type id
+*
+*  INPUTS
+*     int mt - multitype id (e.g. lStringT)
+*
+*  RESULT
+*     char* - string representation of mt 
+*  
+******************************************************************************/
+const char *lMt2Str(int mt) 
+{
+   if (mt >= 0 && mt < sizeof(multitypes)/sizeof(char*)) {
+      return multitypes[mt];
+   } else {
+      return "unknown multitype";
+   }
+}
+
 /****** cull/multitype/lNm2Str() **********************************************
 *  NAME
 *     lNm2Str() -- returns the string representation of a name id
@@ -1006,8 +1032,7 @@ lListElem *lGetObject(const lListElem *ep, int name)
 *  RESULT
 *     lList* - CULL list pointer 
 ******************************************************************************/
-lList *
-lGetList(const lListElem *ep, int name) 
+lList* lGetList(const lListElem *ep, int name) 
 {
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetList");
@@ -3747,8 +3772,7 @@ lListElem *lGetElemStr(const lList *lp, int nm, const char *str)
    DENTER(CULL_LAYER, "lGetElemStr");
    
    ret = lGetElemStrFirst(lp, nm, str, &iterator);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lGetElemStrFirst() *************************************
@@ -3794,8 +3818,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 
    /* empty list ? */
    if (!lp) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    listDescriptor = lGetListDescr(lp);
@@ -3806,16 +3829,14 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
    /* run time type checking */
    if (pos < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    dataType = lGetPosType(listDescriptor,pos);
    if (dataType != lStringT) {
       DPRINTF(("error: lGetElemStrFirst called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    *iterator = NULL;
@@ -4915,8 +4936,7 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm)
 
    ret = lGetElemHost(ep->cont[sublist_pos].glp, nm, str);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** cull/multitype/lDelElemHost() ****************************************

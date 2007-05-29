@@ -925,6 +925,9 @@ lListElem *pe_task
    FILE *fp;
    SGE_STRUCT_STAT sb;
 
+   char id_buffer[MAX_STRING_SIZE]; /* static dstring for job id string */
+   dstring id_dstring;
+
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(HP1164) || defined(AIX) || defined(FREEBSD) || defined(DARWIN)
    gid_t addgrpid;
    dstring addgrpid_path = DSTRING_INIT;
@@ -933,6 +936,8 @@ lListElem *pe_task
    osjobid_t osjobid;   
 #endif   
    DENTER(TOP_LAYER, "register_at_ptf");
+
+   sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    job_id = lGetUlong(job, JB_job_number);
    ja_task_id = lGetUlong(ja_task, JAT_task_number);
@@ -953,20 +958,20 @@ lListElem *pe_task
    sge_get_active_job_file_path(&addgrpid_path,
                                 job_id, ja_task_id, pe_task_id, ADDGRPID);
    DPRINTF(("Registering job %s with PTF\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
 
    if (SGE_STAT(sge_dstring_get_string(&addgrpid_path), &sb) && errno == ENOENT) {
       DPRINTF(("still waiting for addgrpid of job %s\n", 
-         job_get_id_string(job_id, ja_task_id, pe_task_id)));
-      sge_dstring_free(&addgrpid_path);       
+         job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
+      sge_dstring_free(&addgrpid_path);
       DEXIT;
       return(1);
    }  
 
    if (!(fp = fopen(sge_dstring_get_string(&addgrpid_path), "r"))) {
       ERROR((SGE_EVENT, MSG_EXECD_NOADDGIDOPEN_SSS, sge_dstring_get_string(&addgrpid_path), 
-             job_get_id_string(job_id, ja_task_id, pe_task_id), strerror(errno)));
-      sge_dstring_free(&addgrpid_path);       
+             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), strerror(errno)));
+      sge_dstring_free(&addgrpid_path);
       DEXIT;
       return(-1);
    }
@@ -987,7 +992,7 @@ lListElem *pe_task
       DPRINTF(("Register job with AddGrpId at "pid_t_fmt" PTF\n", addgrpid));
       if ((ptf_error = ptf_job_started(addgrpid, pe_task_id, job, ja_task_id))) {
          ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS, 
-                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
                 ptf_errstr(ptf_error)));
          DEXIT;
          return (1);
@@ -1003,7 +1008,7 @@ lListElem *pe_task
       if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, addgrpid_str); 
       DPRINTF(("job %s: addgrpid = %s\n", 
-               job_get_id_string(job_id, ja_task_id, pe_task_id), addgrpid_str));
+               job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), addgrpid_str));
    }
 #else
    /* read osjobid if possible */
@@ -1011,11 +1016,11 @@ lListElem *pe_task
                                 job_id, ja_task_id, pe_task_id, OSJOBID);
    
    DPRINTF(("Registering job %s with PTF\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
 
    if (SGE_STAT(sge_dstring_get_string(&osjobid_path), &sb) && errno == ENOENT) {
       DPRINTF(("still waiting for osjobid of job %s\n", 
-            job_get_id_string(job_id, ja_task_id, pe_task_id)));
+            job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring)));
       sge_dstring_free(&osjobid_path);      
       DEXIT;
       return 1;
@@ -1023,7 +1028,7 @@ lListElem *pe_task
 
    if (!(fp=fopen(sge_dstring_get_string(&osjobid_path), "r"))) {
       ERROR((SGE_EVENT, MSG_EXECD_NOOSJOBIDOPEN_SSS, sge_dstring_get_string(&osjobid_path), 
-             job_get_id_string(job_id, ja_task_id, pe_task_id), 
+             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
              strerror(errno)));
       sge_dstring_free(&osjobid_path);      
       DEXIT;
@@ -1044,7 +1049,7 @@ lListElem *pe_task
       int ptf_error;
       if ((ptf_error = ptf_job_started(osjobid, pe_task_id, job, ja_task_id))) {
          ERROR((SGE_EVENT, MSG_JOB_NOREGISTERPTF_SS,  
-                job_get_id_string(job_id, ja_task_id, pe_task_id), 
+                job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring), 
                 ptf_errstr(ptf_error)));
          DEXIT;
          return -1;
@@ -1060,7 +1065,7 @@ lListElem *pe_task
       if ((jr=get_job_report(job_id, ja_task_id, pe_task_id)))
          lSetString(jr, JR_osjobid, osjobid_str); 
       DPRINTF(("job %s: osjobid = %s\n", 
-               job_get_id_string(job_id, ja_task_id, pe_task_id),
+               job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring),
                osjobid_str));
    }
 #endif

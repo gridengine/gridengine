@@ -39,7 +39,6 @@ import java.util.List;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    

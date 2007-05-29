@@ -383,7 +383,7 @@ u_long32 sge_monitor_status(char **info_message, u_long32 monitor_time)
       for (i = 0; i < MAX_OUTPUT_LINES; i++) {
          sge_mutex_lock("sge_monitor_status", SGE_FUNC, __LINE__, &(Output[i].Output_Mutex));
          if (Output[i].name != NULL) {
-            append_time(Output[i].update_time, &Info_Line);
+            append_time(Output[i].update_time, &Info_Line, false);
             sge_dstring_append(&Info_Line, " | ");
             sge_dstring_append_dstring(&Info_Line, Output[i].output);
             sge_dstring_append(&Info_Line,"\n");

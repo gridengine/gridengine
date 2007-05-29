@@ -44,6 +44,7 @@
 #define BROWSE_QUEUE             (1<<2)
 #define BROWSE_JOB               (1<<3)
 #define BROWSE_MSG               (1<<4)
+#define BROWSE_AR                (1<<5)
 
 
 

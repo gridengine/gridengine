@@ -37,6 +37,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.Unreferenced;
 
 /**
  *  Reference implementation of a JGDI Rmi proxy.
@@ -67,9 +68,8 @@ import java.rmi.RemoteException;
  *    
  *  <p>This class uses the logger <code>com.sun.grid.jgdi.rmi</code>.
  *
- * @author  richard.hierlmeier@sun.com
  */
-public class JGDIRmiProxy {
+public class JGDIRmiProxy implements Unreferenced {
    
    private static Logger logger = Logger.getLogger("com.sun.grid.jgdi.rmi");
    
@@ -145,13 +145,16 @@ public class JGDIRmiProxy {
          }
          JGDIRemoteFactoryImpl service = new JGDIRemoteFactoryImpl(sge_url);
          Thread.sleep(1000);
-         Remote stub = (Remote)UnicastRemoteObject.exportObject(service);
+         Remote stub = (Remote)UnicastRemoteObject.exportObject(service, 0);
          
          reg.bind(serviceName, stub);
          
          logger.info("JGDIRemoteFactory bound to name " + serviceName );
          
-         Runtime.getRuntime().addShutdownHook(new ShutdownHook(reg, serviceName));
+         ShutdownHook shutdownHook = new ShutdownHook(reg, serviceName);
+         Runtime.getRuntime().addShutdownHook(shutdownHook);
+         
+         shutdownHook.waitForShutdown();
          
       } catch( Exception e ) {
          e.printStackTrace();
@@ -173,7 +176,13 @@ public class JGDIRmiProxy {
             registry.unbind(serviceName);
          } catch(Exception re) {
             logger.throwing(getClass().getName(), "run", re);
+         } finally {
+            notifyAll();
          }
+      }
+      
+      public synchronized void waitForShutdown() throws InterruptedException {
+         wait();
       }
    }
    
@@ -195,4 +204,8 @@ public class JGDIRmiProxy {
       System.err.println("                          Port defaults to 1099 and host to localhost");
       System.exit(exitCode);
    }
+
+    public void unreferenced() {
+        System.out.println("unreferenced");
+    }
 }

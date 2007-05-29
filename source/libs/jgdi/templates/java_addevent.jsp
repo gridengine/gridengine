@@ -48,7 +48,7 @@ import <%=jh.getFullClassName(cullObj)%>;
 <% } %>
 /**
  */
-public class <%=name%>AddEvent extends AddEvent {
+public class <%=name%>AddEvent extends AddEvent implements java.io.Serializable {
 
 <% // Default constructor ----------------------------------------- %>
   public <%=name%>AddEvent(long timestamp, int eventID) {

@@ -86,11 +86,12 @@ bool
 is_hgroup_name(const char *name)
 {
    bool ret = false;
+   DENTER(TOP_LAYER, "is_hgroup_name");
 
    if (name != NULL) {
       ret = (name[0] == HOSTGROUP_INITIAL_CHAR) ? true : false;
    }
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -290,8 +291,7 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_all_references() ****************************
@@ -321,6 +321,9 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 *     bool - error state
 *        true  - Success
 *        false - Error
+*
+* BUGS
+*     Extremely poor performance. Try not to use this function.
 ******************************************************************************/
 bool 
 hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
@@ -345,8 +348,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
       }
       lFreeList(&href_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_references() ********************************
@@ -399,8 +401,7 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
       }
       lFreeList(&href_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/hgroup/hgroup_find_all_referencees() ***************************

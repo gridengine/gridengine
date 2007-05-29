@@ -743,7 +743,7 @@ lList **alpp
       {
          dstring range_string = DSTRING_INIT;
 
-         range_list_print_to_string(lp, &range_string, true);
+         range_list_print_to_string(lp, &range_string, true, false, false);
          sge_dstring_append(&string_buffer, 
                             sge_dstring_get_string(&range_string));
          sge_dstring_free(&range_string);

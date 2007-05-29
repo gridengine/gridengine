@@ -103,6 +103,7 @@ static lList *Master_Sharetree_List = NULL;
 static lList *Master_Pe_List = NULL;
 static lList *Master_SUser_List = NULL;
 static lList *Master_RQS_List = NULL;
+static lList *Master_AR_List = NULL;
 
 #ifndef __SGE_NO_USERMAPPING__
 static lList *Master_Cuser_List = NULL;
@@ -140,7 +141,8 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
    { &Master_Zombie_List,          NULL,                   "ZOMBIE_JOBS",       JB_Type,   JB_job_number     },
    { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       SU_Type,   SU_name           },
-   { &Master_RQS_List,             NULL,                   "RQS",              RQS_Type, RQS_name         },
+   { &Master_RQS_List,             NULL,                   "RQS",               RQS_Type,  RQS_name          },
+   { &Master_AR_List,              NULL,                   "AR",                AR_Type,   AR_id             },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif
@@ -2171,192 +2173,6 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
 }
 
 bool 
-attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
-                  int this_elem_primary_key, lListElem *delta_elem,
-                  int sub_command, const char *sub_list_name, 
-                  const char *object_name,
-                  int no_info) 
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "attr_mod_sub_list");
-   if (lGetPosViaElem(delta_elem, this_elem_name, SGE_NO_ABORT) >= 0) {
-      if (sub_command == SGE_GDI_CHANGE ||
-          sub_command == SGE_GDI_APPEND ||
-          sub_command == SGE_GDI_REMOVE) {
-         lList *reduced_sublist;
-         lList *full_sublist;
-         lListElem *reduced_element, *next_reduced_element;
-         lListElem *full_element, *next_full_element;
-
-         reduced_sublist = lGetList(delta_elem, this_elem_name);
-         full_sublist = lGetList(this_elem, this_elem_name);
-         next_reduced_element = lFirst(reduced_sublist);
-         /*
-         ** we try to find each element of the delta_elem
-         ** in the sublist if this_elem. Elements which can be found
-         ** will be moved into sublist of this_elem.
-         */
-         while ((reduced_element = next_reduced_element)) {
-            int restart_loop = 0;
-
-            next_reduced_element = lNext(reduced_element);
-            next_full_element = lFirst(full_sublist);
-            while ((full_element = next_full_element)) {
-               int pos, type;
-               const char *rstring = NULL, *fstring = NULL;
-
-               next_full_element = lNext(full_element);
-
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
-               type = lGetPosType(lGetElemDescr(reduced_element), pos);            
-               if (type == lStringT) {
-                  rstring = lGetString(reduced_element, this_elem_primary_key);
-                  fstring = lGetString(full_element, this_elem_primary_key);
-               } else if (type == lHostT) {
-                  rstring = lGetHost(reduced_element, this_elem_primary_key);
-                  fstring = lGetHost(full_element, this_elem_primary_key);
-               }
-
-               if (rstring == NULL || fstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
-                                  ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
-
-               if (ret && 
-                   (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
-                   ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
-                  lListElem *new_sub_elem;
-                  lListElem *old_sub_elem;
-
-                  next_reduced_element = lNext(reduced_element);
-                  new_sub_elem =
-                     lDechainElem(reduced_sublist, reduced_element);
-                  old_sub_elem = lDechainElem(full_sublist, full_element);
-                  if (sub_command == SGE_GDI_CHANGE ||
-                      sub_command == SGE_GDI_APPEND) {
-
-                     if (!no_info && sub_command == SGE_GDI_APPEND) {
-                        INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS,
-                              rstring, sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
-                        ret = false;
-                        /* break; No "break" here. It will follow below! */
-                     }
-
-                     lFreeElem(&old_sub_elem);
-                     lAppendElem(full_sublist, new_sub_elem);
-
-                     restart_loop = 1;
-                     break;
-                  } else if (sub_command == SGE_GDI_REMOVE) {
-
-                     lFreeElem(&old_sub_elem);
-                     lFreeElem(&new_sub_elem);
-
-                     restart_loop = 1;
-                     break;
-                  }
-               }
-            }
-            if (!ret) {
-               break;
-            }
-            if (restart_loop) {
-               next_reduced_element = lFirst(reduced_sublist);
-            }
-         }
-         if (ret && (sub_command == SGE_GDI_CHANGE ||
-             sub_command == SGE_GDI_APPEND ||
-             sub_command == SGE_GDI_REMOVE)) {
-             next_reduced_element = lFirst(reduced_sublist);
-
-            while ((reduced_element = next_reduced_element)) {
-               int pos, type;
-               const char *rstring = NULL;
-               lListElem *new_sub_elem;
-
-               next_reduced_element = lNext(reduced_element);
-
-               pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
-               type = lGetPosType(lGetElemDescr(reduced_element), pos);            
-               if (type == lStringT) {
-                  rstring = lGetString(reduced_element, this_elem_primary_key);
-               } else if (type == lHostT) {
-                  rstring = lGetHost(reduced_element, this_elem_primary_key);
-               }
-
-               if (rstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
-                                  ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
-
-               if (ret) {
-                  if (!no_info && sub_command == SGE_GDI_REMOVE) {
-                     INFO((SGE_EVENT, SFQ" does not exist in "SFQ" of "SFQ"\n",
-                           rstring, sub_list_name, object_name));
-                     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-                  } else {
-                     if (!full_sublist) {
-                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                           INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
-                              "Adding new element(s).\n",
-                              sub_list_name, object_name));
-                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                           ANSWER_QUALITY_INFO);
-                        }
-                        lSetList(this_elem, this_elem_name, lCopyList("",
-                           lGetList(delta_elem, this_elem_name)));
-                        full_sublist = lGetList(this_elem, this_elem_name);
-                        break;
-                     } else {
-                        if (!no_info && sub_command == SGE_GDI_CHANGE) {
-                           INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
-                              " - Adding new element.\n", rstring,
-                              sub_list_name, object_name));
-                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                           ANSWER_QUALITY_INFO);
-                        }
-                        new_sub_elem =
-                           lDechainElem(reduced_sublist, reduced_element);
-                        lAppendElem(full_sublist, new_sub_elem);
-                     }
-                  }
-               }
-            }
-         }
-      } else if (ret && 
-                 (sub_command == SGE_GDI_SET || 
-                  sub_command == SGE_GDI_SET_ALL)) {
-         /*
-         ** Overwrite the complete list
-         */
-         lSetList(this_elem, this_elem_name, lCopyList("",
-            lGetList(delta_elem, this_elem_name)));
-      }
-      /*
-      ** If the list does not contain any elements, we will delete
-      ** the list itself
-      */
-      if (ret) {
-         const lList *tmp_list = lGetList(this_elem, this_elem_name);
-
-         if (tmp_list != NULL && lGetNumberOfElem(tmp_list) == 0) {
-            lSetList(this_elem, this_elem_name, NULL);
-         }
-      }
-   } else {
-      ret = false;
-   }
-   DRETURN(ret);
-}
-
-bool 
 object_has_differences(const lListElem *this_elem, lList **answer_list,
                        const lListElem *old_elem, bool modify_changed_flag)
 {
@@ -2895,4 +2711,182 @@ object_verify_expression_syntax(const lListElem *elem, lList **answer_list)
          break;
    }    
    return ret;
+}
+
+
+/****** sge_object/object_verify_name() *****************************************
+*  NAME
+*     object_verify_name() - verifies object name
+*
+*  SYNOPSIS
+*     int object_verify_name(const lListElem *object, lList **alpp, int name, object_descr) 
+*
+*  FUNCTION
+*     These checks are done for the attribute JB_object_name of 'object':
+*     #1 reject object name if it starts with a digit
+*     A detailed problem description is added to the answer list.
+*
+*  INPUTS
+*     const lListElem *object  - JB_Type elemente
+*     lList **alpp             - the answer list
+*     int   name               - object name  
+*     char *object_descr       - used for the text in the answer list 
+*
+*  RESULT
+*     int - returns != 0 if there is a problem with the object name
+*
+*  MT-NOTE: sge_resolve_host() is MT safe
+*
+******************************************************************************/
+int object_verify_name(const lListElem *object, lList **answer_list, int name, 
+                           const char *object_descr)
+{
+   const char *object_name = lGetString(object, name);
+   int ret = 0;
+   
+   DENTER(TOP_LAYER, "object_verify_name");
+   if (object_name != NULL) {
+      if (isdigit(object_name[0])) {
+         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_NAME_S, object_name));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+      else {
+         if (verify_str_key(
+               answer_list, object_name, MAX_VERIFY_STRING,
+               lNm2Str(name), QSUB_TABLE) != STATUS_OK) {
+            ret = STATUS_EUNKNOWN;
+         }
+      }
+   }
+
+   DRETURN(ret);
+}
+
+
+/****** sge_object/object_verify_pe_range() **********************************
+ *  NAME
+ *     object_verify_pe_range() -- Verify validness of a jobs PE range request
+ *
+ *  SYNOPSIS
+ *     int object_verify_pe_range(lList **alpp, const char *pe_name,
+ *     lList *pe_range)
+ *
+ *  FUNCTION
+ *     Verifies a jobs PE range is valid. Currently the following is done
+ *     - make PE range list normalized and ascending
+ *     - ensure PE range min/max not 0
+ *     - in case multiple PEs match the PE request in GEEE ensure
+ *       the urgency slots setting is non-ambiguous
+ *
+ *  INPUTS
+ *     lList **alpp        - Returns answer list with error context.
+ *     const char *pe_name - PE request
+ *     lList *pe_range     - PE range to be verified
+ *     const char *object_descr - object description for user messages
+ *
+ *  RESULT
+ *     static int - STATUS_OK on success
+ *
+ *  NOTES
+ *
+ *******************************************************************************/
+int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
+                                  const char *object_descr)
+{
+   lListElem *relem = NULL;
+   unsigned long pe_range_max;
+   unsigned long pe_range_min;
+   
+   DENTER(TOP_LAYER, "object_verify_pe_range");
+   
+   /* ensure jobs PE range list request is normalized and ascending */
+   range_list_sort_uniq_compress(pe_range, NULL);
+   
+   for_each(relem, pe_range) {
+      pe_range_min = lGetUlong(relem, RN_min);
+      pe_range_max = lGetUlong(relem, RN_max);
+      DPRINTF(("pe max = %ld, pe min = %ld\n", pe_range_max, pe_range_min));
+      if ( pe_range_max == 0 || pe_range_min == 0  ) {
+         ERROR((SGE_EVENT, MSG_OBJECT_PERANGEMUSTBEGRZERO_S, object_descr ));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DRETURN(STATUS_EUNKNOWN);
+      }
+   }
+   
+   /* PE slot ranges used in conjunction with wildcards can cause number of slots
+    finally being used for urgency value computation be ambiguous. We reject such
+    jobs */
+   if (range_list_get_number_of_ids(pe_range)>1) {
+      lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
+      const lListElem *reference_pe = pe_list_find_matching(master_pe_list, pe_name);
+      lListElem *pe;
+      int nslots = pe_urgency_slots(reference_pe, lGetString(reference_pe, PE_urgency_slots), pe_range);
+      for_each(pe, master_pe_list) {
+         if (pe_is_matching(pe, pe_name) &&
+             nslots != pe_urgency_slots(pe, lGetString(pe, PE_urgency_slots), pe_range))
+         {
+            ERROR((SGE_EVENT, MSG_OBJECT_WILD_RANGE_AMBIGUOUS_S, object_descr));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EUNKNOWN);
+         }
+      }
+   }
+   
+   DRETURN(STATUS_OK);
+}
+
+/****** sge_objectcompress_ressources() **********************************
+ *  NAME
+ *     compress_ressources() --  remove multiple requests for one resource
+ *
+ *  SYNOPSIS
+ *     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
+ *
+ *  FUNCTION
+ *     remove multiple requests for one resource
+ *     this can't be done fully in clients without having complex definitions
+ *     -l arch=linux -l a=sun4
+ *
+ *  INPUTS
+ *     lList **alpp        - Returns answer list with error context.
+ *     lList *rl           - object description for user messages
+ *     const char *object_descr - object description 
+ *
+ *  RESULT
+ *     static int - 0 on success
+ *
+ *  NOTES
+ *
+ *******************************************************************************/
+int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
+   lListElem *ep, *prev, *rm_ep;
+   const char *attr_name;
+
+   DENTER(TOP_LAYER, "compress_ressources");
+
+   for_each_rev (ep, rl) { 
+      attr_name = lGetString(ep, CE_name);
+
+      /* ensure 'slots' is not requested explicitly */
+      if (!strcmp(attr_name, "slots")) {
+         ERROR((SGE_EVENT, MSG_OBJECT_NODIRECTSLOTS_S, object_descr)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+         DRETURN(-1);
+      }
+
+      /* remove all previous requests with the same name */
+      prev =  lPrev(ep);
+      while ((rm_ep=prev)) {
+         prev = lPrev(rm_ep);
+         if (!strcmp(lGetString(rm_ep, CE_name), attr_name)) {
+            DPRINTF(("resource request -l "SFN"="SFN" overrides previous -l "SFN"="SFN"\n",
+               attr_name, lGetString(ep, CE_stringval), 
+               attr_name, lGetString(rm_ep, CE_stringval)));
+            lRemoveElem(rl, &rm_ep);
+         }
+      }
+   }
+
+   DRETURN(0);
 }

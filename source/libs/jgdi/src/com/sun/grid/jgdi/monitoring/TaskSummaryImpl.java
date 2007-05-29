@@ -31,11 +31,12 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
+import java.io.Serializable;
+
 /**
  * Default implementation of the <code>TaskSummary</code> interface
- * @author  richard.hierlmeier@sun.com
  */
-public class TaskSummaryImpl implements TaskSummary {
+public class TaskSummaryImpl implements TaskSummary, Serializable {
 
    private String taskId;
    private String state;

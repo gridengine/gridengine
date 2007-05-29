@@ -42,6 +42,7 @@ SPOOLCLIB_SRC = \
          read_write_complex.c \
          read_list.c \
          read_object.c \
+         read_write_advance_reservation.c \
          read_write_cal.c \
          read_write_ckpt.c \
          read_write_cqueue.c \
@@ -111,6 +112,9 @@ read_object.o:   $(SPOOLCLIB_DIR)/read_object.c
 
 read_write_cal.o:	$(SPOOLCLIB_DIR)/read_write_cal.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_cal.c
+
+read_write_advance_reservation.o:	$(SPOOLCLIB_DIR)/read_write_advance_reservation.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_advance_reservation.c
 
 read_write_centry.o:	$(SPOOLCLIB_DIR)/read_write_centry.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_centry.c

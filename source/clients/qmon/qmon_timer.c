@@ -79,6 +79,7 @@ static char *sge_gdi_list_timers[] = {
    "USER_MAPPING",
    "HGROUP",
    "RQS",
+   "AR",
    "END"
 };
 
@@ -111,6 +112,7 @@ static tQmonPoll QmonListTimer[] = {
    { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
    { SGE_HGROUP_LIST, 0, 1, 0, NULL },
    { SGE_RQS_LIST, 0, 1, 0, NULL },
+   { SGE_AR_LIST, 0, 1, 0, NULL },
    { 0, 0, 0, 0, NULL}
 };
 

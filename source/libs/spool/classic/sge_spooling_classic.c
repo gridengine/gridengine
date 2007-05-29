@@ -79,6 +79,7 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "read_write_resource_quota.h"
+#include "read_write_advance_reservation.h"
 #include "sched_conf.h"
 #include "read_write_centry.h"
 
@@ -449,6 +450,7 @@ spool_classic_default_maintenance_func(lList **answer_list,
          sge_mkdir(USER_DIR, 0755, true, false);
          sge_mkdir(PROJECT_DIR, 0755, true, false);
          sge_mkdir(RESOURCEQUOTAS_DIR, 0755, true, false);
+         sge_mkdir(AR_DIR, 0755, true, false);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          break;
       default:
@@ -731,10 +733,15 @@ spool_classic_default_list_func(lList **answer_list,
             ret = false;
          }
          break;
+      case SGE_TYPE_AR:
+         if (sge_read_ar_list_from_disk(list, AR_DIR, answer_list) != 0) {
+            ret = false;
+         }
+         break;
       default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                 ANSWER_QUALITY_WARNING,
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S,
                                  object_type_get_name(object_type));
          ret = false;
          break;
@@ -891,6 +898,9 @@ spool_classic_default_read_func(lList **answer_list,
             ep = lCopyElem(lFirst(rqs_list));
             lFreeList(&rqs_list);
          }
+         break;
+      case SGE_TYPE_AR:
+         ep = cull_read_in_ar(AR_DIR, key, 1, 0, NULL, NULL);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1165,6 +1175,10 @@ spool_classic_default_write_func(lList **answer_list,
          if (!write_rqs(1, 2, object))
             ret = false;
          break;
+      case SGE_TYPE_AR:
+         if (!write_ar(1, 2, object))
+            ret = false;
+         break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
@@ -1319,6 +1333,9 @@ spool_classic_default_delete_func(lList **answer_list,
          break;
       case SGE_TYPE_RQS:
          ret = sge_unlink(RESOURCEQUOTAS_DIR, key);
+         break;
+      case SGE_TYPE_AR:
+         ret = sge_unlink(AR_DIR, key);
          break;
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

@@ -112,7 +112,6 @@ bool manop_is_operator(const char *user_name)
                           MO_name, user_name) != NULL) {
       ret = true;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 

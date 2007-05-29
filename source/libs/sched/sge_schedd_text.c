@@ -219,7 +219,19 @@ const char* sge_get_schedd_text( int nr )
 
       case SCHEDD_INFO_JOBDYNAMICALLIMIT_SS   :
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS      ;
-            
+
+      case SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS:
+         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS; 
+
+      case SCHEDD_INFO_QINOTARRESERVED_SI:
+         return MSG_SCHEDD_INFO_QINOTARRESERVED_SI; 
+
+      case SCHEDD_INFO_QNOTARRESERVED_SI:
+         return MSG_SCHEDD_INFO_QNOTARRESERVED_SI; 
+
+      case SCHEDD_INFO_ARISINERROR_I:
+         return MSG_SCHEDD_INFO_ARISINERROR_I; 
+
 /* */
 
       case SCHEDD_INFO_CANNOTRUNATHOST          :
@@ -371,6 +383,18 @@ const char* sge_get_schedd_text( int nr )
 
       case SCHEDD_INFO_JOBDYNAMICALLIMIT:
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT;
+
+      case SCHEDD_INFO_CANNOTRUNRQSGLOBAL:
+         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL; 
+
+      case SCHEDD_INFO_QINOTARRESERVED:
+         return MSG_SCHEDD_INFO_QINOTARRESERVED; 
+
+      case SCHEDD_INFO_QNOTARRESERVED:
+         return MSG_SCHEDD_INFO_QNOTARRESERVED; 
+
+      case SCHEDD_INFO_ARISINERROR:
+         return MSG_SCHEDD_INFO_ARISINERROR; 
 
       default:
          return "";

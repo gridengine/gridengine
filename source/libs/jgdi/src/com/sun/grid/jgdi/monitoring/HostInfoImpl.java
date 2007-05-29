@@ -42,7 +42,6 @@ import java.util.Set;
  * Objects of this class holds the monitoring information about
  * a cluster host.
  *
- * @author richard.hierlmeier@sun.com
  */
 public class HostInfoImpl implements HostInfo, Serializable {
 

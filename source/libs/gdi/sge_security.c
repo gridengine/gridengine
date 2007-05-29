@@ -91,12 +91,15 @@ static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
 #define SEC_UNLOCK_SSL_SETUP()    sge_mutex_unlock("ssl_setup_mutex", SGE_FUNC, __LINE__, &sec_ssl_setup_config_mutex)
 
 static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
-static bool is_daemon(const char* progname);
+
 static bool is_master(const char* progname);
 
-
-
 #endif
+
+static bool is_daemon(const char* progname);
+
+
+
 
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
@@ -164,6 +167,8 @@ static bool is_daemon(const char* progname) {
    return false;
 }
 
+#ifdef SECURE
+
 static bool is_master(const char* progname) {
    if (progname != NULL) {
       if ( !strcmp(prognames[QMASTER],progname)) {
@@ -173,7 +178,6 @@ static bool is_master(const char* progname) {
    return false;
 }
 
-#ifdef SECURE
 
 /* int 0 on success, -1 on failure */
 int sge_ssl_setup_security_path(const char *progname) {

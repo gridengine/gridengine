@@ -22,7 +22,7 @@
  *
  * MatrixWidget Author: Andrew Wason, Bellcore, aw@bae.bellcore.com
  *
- * $Id: MCreate.c,v 1.1 2001/07/18 11:05:59 root Exp $
+ * $Id: MCreate.c,v 1.1.1.1.28.1 2007/05/29 14:43:28 andre Exp $
  */
 
 /*
@@ -44,7 +44,7 @@
 static Pixmap createInsensitivePixmap P((XbaeMatrixWidget mw));
 
 #ifndef MAXSCREENS
-#define MAXSCREENS 1
+#define MAXSCREENS 20
 #endif
 
 void

@@ -209,6 +209,8 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.columns: 6
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.columnWidths: 20,5,10,10,10,10 
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.columnMaxLengths: 200,20,20,20,20,20
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.columnLabels: @{Queue},@{qtype},@{used/total},@{load_avg},@{arch},@{states}
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.boldLabels: True
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.buttonLabels: True
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.gridType:     GRID_CELL_SHADOW
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowType: SHADOW_IN
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowThickness: 1

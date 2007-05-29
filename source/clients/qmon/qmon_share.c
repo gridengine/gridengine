@@ -1020,6 +1020,7 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
       else   
          alp = alp2;
       if (!qmonMessageBox(w, alp, 0)) {
+         qmonShareTreeUpdate(w, st_tree, NULL);
          XmtMsgLinePrintf(st_message, "Success");
          XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
       } else {  

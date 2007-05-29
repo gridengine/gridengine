@@ -1294,7 +1294,7 @@ XtPointer cad
    
    if (jl)
       status_ask = XmtAskForInteger(w, NULL, 
-                        "@{Enter a new priority for the selected jobs}", 
+                        "@{Enter a new priority (-1023 to 1024) for the selected jobs}", 
                         &new_priority, -1023, 1024, NULL); 
    else
       qmonMessageShow(w, True, "@{There are no jobs selected !}");

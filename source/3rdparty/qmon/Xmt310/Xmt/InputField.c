@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: InputField.c,v 1.2 2001/08/09 12:56:52 andre Exp $
+ * $Id: InputField.c,v 1.2.26.1 2007/05/29 14:43:28 andre Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,22 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: InputField.c,v $
+ * Revision 1.2.26.1  2007/05/29 14:43:28  andre
+ * AA-2007-05-29-0: Bugfix:    several qmon fixes
+ *                             - GridEngine 5.3p2: qmon on secondary screen
+ *                               crashes when "Job Control" is pressed
+ *                             - qmon's Complex Configuration Load
+ *                               and Save buttons did not work
+ *                             - clear usage operation should implicitely
+ *                               trigger refresh in share-tree dialogue
+ *                             - Ticket number limitation
+ *                             - Ability to sort queue instances using
+ *                               each column of the queue instances table
+ *                             - "Modify"-Button is activated but should be grayed
+ *                  Issue:     1729, 2262, 2263, 2260, 2261, 747,
+ *                  Bugtraq:   6291044, 6327539, 4742097, 6538740, 6553066, 4818801
+ *                  Review:    RD, CR
+ *
  * Revision 1.2  2001/08/09 12:56:52  andre
  * AA-2001-08-09-0: - IZ 33, fixed duplicate free for scheduler conf dialogue code
  *
@@ -303,8 +319,7 @@ static int isoctal(c)
 int c;
 #endif
 {
-
-    return (int)(strchr ("01234567", c));
+    return (strchr("01234567", c)) ? 1:0;
 }
 
 /* ARGSUSED */
@@ -315,7 +330,7 @@ static int ishex(c)
 int c;
 #endif
 {
-    return (int)(strchr ("0123456789abcdefABCDEF", c));
+    return (strchr("0123456789abcdefABCDEF", c)) ? 1:0;
 }
 
 /* ARGSUSED */

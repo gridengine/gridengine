@@ -185,8 +185,8 @@ Widget parent
          {"ComplexAttributeDelete", (XmtProcedure) qmonCplxDelAttr, {XtRWidget}},
          {"ComplexAttributeAdd", (XmtProcedure) qmonCplxAddAttr, {XtRWidget, XtRBoolean}},
          {"ComplexAttributeModify", (XmtProcedure) qmonCplxAddAttr, {XtRWidget, XtRBoolean}},
-         {"ComplexAttributeLoad", (XmtProcedure) qmonCplxLoadAttr, {NULL}},
-         {"ComplexAttributesSave", (XmtProcedure) qmonCplxSaveAttr, {NULL}}
+         {"ComplexAttributeLoad", (XmtProcedure) qmonCplxLoadAttr, {XtRWidget}},
+         {"ComplexAttributesSave", (XmtProcedure) qmonCplxSaveAttr, {XtRWidget}}
    };
 
 

@@ -1,3 +1,18 @@
+AA-2007-05-29-0: Bugfix:    several qmon fixes
+                            - GridEngine 5.3p2: qmon on secondary screen
+                              crashes when "Job Control" is pressed
+                            - qmon's Complex Configuration Load
+                              and Save buttons did not work
+                            - clear usage operation should implicitely
+                              trigger refresh in share-tree dialogue
+                            - Ticket number limitation
+                            - Ability to sort queue instances using
+                              each column of the queue instances table
+                            - "Modify"-Button is activated but should be grayed
+                 Issue:     1729, 2262, 2263, 2260, 2261, 747,
+                 Bugtraq:   6291044, 6327539, 4742097, 6538740, 6553066, 4818801
+                 Review:    RD, CR
+
 JG-2007-05-29-1: Bugfix:    Fixed messages macros.
                  Review:    RD
 

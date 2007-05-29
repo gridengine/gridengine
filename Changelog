@@ -1,3 +1,9 @@
+AH-2007-05-29-1: Bugfix:    Forgot error exit with AH-2007-05-25-0 memory
+                            leak fix
+                 Bugtraq:   6562190
+                 Issue:     2187
+                 Review:    RH
+
 JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
                  Issue:     2229
                  Bugster:   6544869

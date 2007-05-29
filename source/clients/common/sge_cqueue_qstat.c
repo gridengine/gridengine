@@ -98,7 +98,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
 
       *load = 0.0;
       *is_load_available = false;
-      *used = *total = 0;
+      *used = *total = *resv = 0;
       *available = *temp_disabled = *manual_intervention = 0;
       *suspend_manual = *suspend_threshold = *suspend_on_subordinate = 0;
       *suspend_calendar = *unknown = *load_alarm = 0;

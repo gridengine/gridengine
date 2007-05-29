@@ -102,6 +102,7 @@ enum _enum_lMultiType {
 #define CULL_SPOOL_PROJECT 0x00020000
 #define CULL_SPOOL_USER    0x00040000
 #define CULL_JGDI_RO       0x00080000
+#define CULL_JGDI_CONF     0x00100000
 
 /*
 ** JGDI specific defines
@@ -109,7 +110,7 @@ enum _enum_lMultiType {
 #define JGDI_ROOT_OBJ( idlname, listname, operators )
 #define JGDI_EVENT_OBJ(eventtypes)
 #define JGDI_OBJ(idlname)
-#define JGDI_MAPPED_OBJ( impl_class_name )
+#define JGDI_MAPPED_OBJ(impl_class_name)
 #define JGDI_PRIMITIVE_OBJ(primitive_attribute)
 #define JGDI_PRIMITIVE_ROOT_OBJ(idlname, primitive_attribute, listname, operators)
 #define JGDI_INHERITED_ROOT_OBJ(idlname, listname, operators)

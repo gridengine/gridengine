@@ -626,10 +626,14 @@ const lDescr *lGetElemDescr(const lListElem *ep)
 void lWriteElem(const lListElem *ep) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
    lWriteElem_(ep, &buffer, 0);   
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer); 
    DRETURN_VOID;
 }
@@ -652,10 +656,14 @@ void lWriteElem(const lListElem *ep)
 void lWriteElemTo(const lListElem *ep, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElemTo");
    lWriteElem_(ep, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -765,10 +773,17 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 void lWriteList(const lList *lp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteList");
+   if (!lp) {
+      DRETURN_VOID;
+   }
    lWriteList_(lp, &buffer, 0);
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -790,10 +805,14 @@ void lWriteList(const lList *lp)
 void lWriteListTo(const lList *lp, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteListTo");
    lWriteList_(lp, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer) ?  sge_dstring_get_string(&buffer) : "");
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }

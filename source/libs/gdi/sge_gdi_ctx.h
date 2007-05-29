@@ -151,10 +151,11 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number,
                                               const char* component_name,
                                               const char* username, 
                                               const char* groupname, 
-                                              const char *sge_root, 
-                                              const char *sge_cell, 
+                                              const char* sge_root, 
+                                              const char* sge_cell, 
                                               int sge_qmaster_port, 
                                               int sge_execd_port,
+                                              bool from_services,
                                               lList **alpp);
 
 

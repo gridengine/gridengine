@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "cull.h"
+
 #define L_IS_NUM_TYPE(x) ((x == lFloatT) || (x == lDoubleT) || (x == lUlongT) || \
                           (x == lLongT)  || (x == lIntT))
 

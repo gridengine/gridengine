@@ -61,6 +61,7 @@
 #include "sge_all_listsL.h"
 #include "sge_userset.h"
 #include "AskForTime.h"
+#include "AskForItems.h"
 #include "Matrix.h"
 #include "IconList.h"
 #include "symbols.h"
@@ -103,6 +104,7 @@
 #include "uti/sge_string.h"
 #include "uti/setup_path.h"
 #include "sgeobj/sge_advance_reservation.h"
+#include "sge_qrsub.h"
 
 
 extern sge_gdi_ctx_class_t *ctx;
@@ -119,7 +121,10 @@ typedef struct _tARSMEntry {
    String   pe;
    lList    *mail_list;             /* MR_Type */
    lList    *resource_list;     
-   lList    *queue_list;       /* QR_Type */
+   lList    *queue_list;            /* QR_Type */
+   lList    *master_queue_list;     /* QR_Type */
+   lList    *acl_list;              /* ARA_Type */
+   lList    *xacl_list;             /* ARA_Type */
    int      mail_options;
    Cardinal start_time;
    Cardinal end_time;
@@ -175,16 +180,31 @@ XtResource arsm_resources[] = {
       sizeof(lList*), XtOffsetOf(tARSMEntry, queue_list),
       XtRImmediate, NULL },
 
+   { "master_queue_list", "master_queue_list", QmonRQR_Type,
+      sizeof(lList*), XtOffsetOf(tARSMEntry, master_queue_list),
+      XtRImmediate, NULL },
+
+   { "acl_list", "acl_list", QmonRARA_Type,
+      sizeof(lList*), XtOffsetOf(tARSMEntry, acl_list),
+      XtRImmediate, NULL },
+
+   { "xacl_list", "xacl_list", QmonRARA_Type,
+      sizeof(lList*), XtOffsetOf(tARSMEntry, xacl_list),
+      XtRImmediate, NULL },
+
    { "verify_mode", "verify_mode", XtRInt,
       sizeof(int), XtOffsetOf(tARSMEntry, verify_mode),
       XtRImmediate, NULL },
+
+   { "now", "now", XtRInt,
+      sizeof(int), XtOffsetOf(tARSMEntry, now),
+      XtRImmediate, (XtPointer) 0 },
 
    { "handle_hard_error", "handle_hard_error", XtRInt,
       sizeof(int), XtOffsetOf(tARSMEntry, handle_hard_error),
       XtRImmediate, NULL }
 
 };
-
 
 /*-------------------------------------------------------------------------*/
 static Widget qmonARSubCreate(Widget parent);
@@ -200,6 +220,7 @@ static void qmonARSubMailInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubCreateDialogs(Widget w);
 static void qmonARSubStartEndTime(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubDuration(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARSubAskForCQ(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubAskForPE(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubAskForCkpt(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARSubCheckARName(Widget w, XtPointer cld, XtPointer cad);
@@ -215,12 +236,22 @@ static void qmonARSubChangeResourcesPixmap(void);
 static void qmonARSubSetSensitive(int mode);
 static void qmonPopupARSubResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCreateARSubResource(Widget parent, XtPointer cld);
+static void qmonPopupARSubAccess(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCreateARSubAccess(Widget parent, XtPointer cld);
 static void qmonARResourceOK(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARResourceCancel(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARResourceEditResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARResourceClearResources(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARResourceRemoveResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARResourceSetResources(Widget w, XtPointer cld, XtPointer cad);
+static void qmonPopupARSubAccess(Widget w, XtPointer cld, XtPointer cad);
+static void qmonCreateARSubAccess(Widget parent, XtPointer cld);
+static void qmonARAccessOK(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARAccessCancel(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARAccessAddUser(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARAccessAddAccessList(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARAccessSetAsk(void);
+static void qmonARAccessGetAsk(void);
 /*-------------------------------------------------------------------------*/
 
 static Widget qmon_arsub = 0;
@@ -237,13 +268,22 @@ static Widget arsub_duration = 0;
 static Widget arsub_durationPB = 0;
 static Widget arsub_pe = 0;
 static Widget arsub_pePB = 0;
+static Widget arsub_queue_list = 0;
+static Widget arsub_queue_listPB = 0;
+static Widget arsub_master_queue_list = 0;
+static Widget arsub_master_queue_listPB = 0;
 static Widget arsub_resources = 0;
+static Widget arsub_access = 0;
+static Widget arsub_xaccess = 0;
+static Widget arsub_accessPB = 0;
+static Widget arsub_xaccessPB = 0;
 static Widget arsub_mail = 0;
 static Widget arsub_mail_user = 0;
 static Widget arsub_mail_userPB = 0;
 static Widget arsub_main_link = 0; 
 static Widget arsub_message = 0;
 static Widget arsub_duration_toggle = 0;
+static Widget arsub_now = 0;
 
 static Widget arsub_arsub = 0;
 static Widget arsub_done = 0;
@@ -251,6 +291,14 @@ static Widget arsub_clear = 0;
 static Widget arresource = 0;
 static Widget arresource_ar = 0;
 static Widget arresource_sr = 0;
+static Widget ar_acl_ask_layout = 0;
+static Widget ar_acl_access_list_w = 0;
+static Widget ar_acl_available_acl_list_w = 0;
+static Widget ar_acl_add_user_w = 0;
+static Widget ar_acl_add_acl_w = 0;
+static Widget ar_acl_del_entry_w = 0;
+static Widget ar_acl_user_w = 0;
+static Widget AccessAskInputField = 0;
 
 /* subdialogs */
 static Widget armail_list_w = 0;
@@ -274,13 +322,14 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
    XmString xtitle = NULL;
    char buf[128];
    lList *alp = NULL;
+   lListElem *ar_to_set = NULL;
 
    DENTER(GUI_LAYER, "qmonARSubPopup");
    
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMultiAnswer(AR_T | USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
+   qmonMirrorMultiAnswer(AR_T | USERSET_T | PROJECT_T | PE_T | CKPT_T | CQUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       lFreeList(&alp);
@@ -323,6 +372,53 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
       XmToggleButtonSetState(arsub_duration_toggle, True, True);
    }
 
+   /*
+   ** read global settings from SGE_COMMON_DEF_AR_REQ_FILE and SGE_HOME_DEF_AR_REQ_FILE
+   */
+   {
+      lList *pcmdline = NULL;
+      dstring file = DSTRING_INIT;
+      const char *user = ctx->get_username(ctx);
+      const char *cell_root = ctx->get_cell_root(ctx);
+
+      /* arguments from SGE_ROOT/common/sge_ar_request file */
+      get_root_file_path(&file, cell_root, SGE_COMMON_DEF_AR_REQ_FILE);
+      if ((alp = parse_script_file(QRSUB, sge_dstring_get_string(&file), "", &pcmdline, environ, 
+         FLG_HIGHER_PRIOR | FLG_IGN_NO_FILE)) == NULL) {
+         /* arguments from $HOME/.sge_ar_request file */
+         if (get_user_home_file_path(&file, SGE_HOME_DEF_AR_REQ_FILE, user, &alp)) {
+            lFreeList(&alp);
+            alp = parse_script_file(QRSUB, sge_dstring_get_string(&file), "", &pcmdline, environ, 
+            FLG_HIGHER_PRIOR | FLG_IGN_NO_FILE);
+         }
+      }
+      sge_dstring_free(&file); 
+
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         lFreeList(&alp);
+         lFreeList(&pcmdline);
+         /* set default cursor */
+         XmtDisplayDefaultCursor(w);
+         DEXIT;
+         return;
+      }
+      /*
+      ** stage 2 of command line parsing
+      */
+      ar_to_set = lCreateElem(AR_Type);
+
+      if (!sge_parse_qrsub(pcmdline, &alp, &ar_to_set)) {
+         qmonMessageBox(w, alp, 0);
+         lFreeList(&alp);
+         lFreeList(&pcmdline);
+         /* set default cursor */
+         XmtDisplayDefaultCursor(w);
+         DEXIT;
+         return;
+      }
+   }
+
    /* 
    ** start up AR timer  
    */
@@ -358,8 +454,6 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (arsub_mode_data.mode == ARSUB_QALTER_PENDING) {
-      lListElem *ar_to_set;
-
       qmonMirrorMultiAnswer(AR_T, &alp);
       if (alp) {
          qmonMessageBox(w, alp, 0);
@@ -371,24 +465,30 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
       }
       ar_to_set = ar_list_locate(qmonMirrorList(SGE_AR_LIST), 
                                    arsub_mode_data.ar_id);
+   }
 
-      /*
-      ** for debugging
-      */
-      if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
-         printf("___AR_BEFORE_ALTER_____________________\n");
-         lWriteElemTo(ar_to_set, stdout);
-         printf("________________________________________\n");
-      }
+   /*
+   ** for debugging
+   */
+   if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
+      printf("___AR_BEFORE_ALTER_____________________\n");
+      lWriteElemTo(ar_to_set, stdout);
+      printf("________________________________________\n");
+   }
 
+   if (ar_to_set != NULL) {
       qmonCullToSM(ar_to_set, &ARSMData);
       XmtDialogSetDialogValues(arsub_layout, &ARSMData);
+   }
 
+   /*
+   ** change the resources pixmap icon if necessary
+   */
+   qmonARSubChangeResourcesPixmap();
+
+
+   if (arsub_mode_data.mode == ARSUB_QALTER_PENDING) {
       setButtonLabel(arsub_arsub, "@{Qalter AR}");
-      /*
-      ** change the resources pixmap icon if necessary
-      */
-      qmonARSubChangeResourcesPixmap();
    }
    else {
       setButtonLabel(arsub_arsub, "@{Submit AR}");
@@ -458,12 +558,20 @@ Widget parent
                           arsm_resources, XtNumber(arsm_resources),
                           "arsub_mail_userPB", &arsub_mail_userPB,
                           "arsub_pePB", &arsub_pePB,
+                          "arsub_queue_listPB", &arsub_queue_listPB,
+                          "arsub_master_queue_listPB", &arsub_master_queue_listPB,
                           "arsub_arsub", &arsub_arsub,
                           "arsub_done", &arsub_done,
                           "arsub_resources", &arsub_resources,
+                          "arsub_access", &arsub_access,
+                          "arsub_xaccess", &arsub_xaccess,
+                          "arsub_accessPB", &arsub_accessPB,
+                          "arsub_xaccessPB", &arsub_xaccessPB,
                           "arsub_mail", &arsub_mail,
                           "arsub_mail_user", &arsub_mail_user,
                           "arsub_pe", &arsub_pe,
+                          "arsub_queue_list", &arsub_queue_list,
+                          "arsub_master_queue_list", &arsub_master_queue_list,
                           "arsub_start_time", &arsub_start_time,
                           "arsub_start_timePB", &arsub_start_timePB,
                           "arsub_end_time", &arsub_end_time,
@@ -473,6 +581,7 @@ Widget parent
                           "arsub_durationPB", &arsub_durationPB,
                           "arsub_duration_toggle", &arsub_duration_toggle,
                           "arsub_handle_hard_error", &arsub_handle_hard_error,
+                          "arsub_now", &arsub_now,
                           "arsub_ckpt_obj", &arsub_ckpt_obj,
                           "arsub_ckpt_objPB", &arsub_ckpt_objPB,
                           "arsub_clear", &arsub_clear,
@@ -498,6 +607,10 @@ Widget parent
                      qmonARSubARSub, NULL);
    XtAddCallback(arsub_resources, XmNactivateCallback, 
                      qmonPopupARSubResource, NULL);
+   XtAddCallback(arsub_accessPB, XmNactivateCallback, 
+                     qmonPopupARSubAccess, (XtPointer)arsub_access);
+   XtAddCallback(arsub_xaccessPB, XmNactivateCallback, 
+                     qmonPopupARSubAccess, (XtPointer)arsub_xaccess);
    XtAddCallback(arsub_done, XmNactivateCallback, 
                      qmonARSubPopdown, NULL);
    XtAddCallback(arsub_clear, XmNactivateCallback, 
@@ -508,6 +621,10 @@ Widget parent
                      qmonARSubAskForCkpt, NULL);
    XtAddCallback(arsub_pePB, XmNactivateCallback, 
                      qmonARSubAskForPE, NULL);
+   XtAddCallback(arsub_queue_listPB, XmNactivateCallback, 
+                     qmonARSubAskForCQ, (XtPointer)arsub_queue_list);
+   XtAddCallback(arsub_master_queue_listPB, XmNactivateCallback, 
+                     qmonARSubAskForCQ, (XtPointer)arsub_master_queue_list);
    XtAddCallback(arsub_start_timePB, XmNactivateCallback, 
                      qmonARSubStartEndTime, (XtPointer) arsub_start_time);
    XtAddCallback(arsub_end_timePB, XmNactivateCallback, 
@@ -559,7 +676,6 @@ static void qmonARSubSetSensitive(int mode)
    XtSetSensitive(arsub_start_timePB, sensitive);
    XmtChooserSetSensitive(arsub_mail, 0, sensitive);
    XmtChooserSetSensitive(arsub_mail, 1, sensitive);
-   XmtChooserSetSensitive(arsub_mail, 3, sensitive);
    XtSetSensitive(arsub_duration, sensitive);
    XtSetSensitive(arsub_durationPB, sensitive);
 
@@ -757,7 +873,7 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
       }
 
       just_verify = (lGetUlong(lFirst(lp), AR_verify) ==
-                           JUST_VERIFY);
+                           AR_JUST_VERIFY);
 
       what = lWhat("%T(ALL)", AR_Type);
       alp = qmonAddList(SGE_AR_LIST, qmonMirrorListRef(SGE_AR_LIST), 
@@ -921,7 +1037,7 @@ tARSMEntry *data
    DENTER(GUI_LAYER, "qmonInitARSMData");
    
    memset((void*)data, 0, sizeof(tARSMEntry));
-   data->verify_mode = SKIP_VERIFY;
+   data->verify_mode = AR_ERROR_VERIFY;
 
    DEXIT;
 }
@@ -958,6 +1074,10 @@ tARSMEntry *data
    lFreeList(&(data->resource_list));
 
    lFreeList(&(data->queue_list));
+   lFreeList(&(data->master_queue_list));
+
+   lFreeList(&(data->acl_list));
+   lFreeList(&(data->xacl_list));
 
    DEXIT;
 }
@@ -1020,8 +1140,17 @@ tARSMEntry *data
    data->duration = lGetUlong(jep, AR_duration);
 
    data->resource_list = lCopyList("AR_resource_list", lGetList(jep, AR_resource_list));
+
    data->queue_list = lCopyList("AR_queue_list", 
                                     lGetList(jep, AR_queue_list));;
+   data->master_queue_list = lCopyList("AR_master_queue_list", 
+                                    lGetList(jep, AR_master_queue_list));;
+
+   data->acl_list = lCopyList("AR_acl_list", 
+                                    lGetList(jep, AR_acl_list));;
+
+   data->xacl_list = lCopyList("AR_xacl_list", 
+                                    lGetList(jep, AR_xacl_list));;
 
    if ((pe = (StringConst)lGetString(jep, AR_pe))) {
       dstring range_string = DSTRING_INIT;
@@ -1051,13 +1180,10 @@ int save
    char *pe_range = NULL;
    lList *perl = NULL;
    lList *alp = NULL;
-   int reduced_ar;
    const char *username = ctx->get_username(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    
    DENTER(GUI_LAYER, "qmonSMToCull");
-
-   reduced_ar = !(arsub_mode_data.mode != ARSUB_QALTER_PENDING && arsub_mode_data.mode != ARSUB_QALTER_RUNNING ); 
 
    if (!data->ar_name || data->ar_name[0] == '\0') {
       lSetString(jep, AR_name, NULL);
@@ -1072,13 +1198,25 @@ int save
     */ 
    lSetUlong(jep, AR_start_time, data->start_time);
 
+#if 0
    if (XmToggleButtonGetState(arsub_duration_toggle)) {
       data->end_time = data->start_time + data->duration;
    } else {
       data->duration = data->end_time - data->start_time;
    }
+#endif   
+
    lSetUlong(jep, AR_end_time, data->end_time);
    lSetUlong(jep, AR_duration, data->duration);
+
+   if (lGetUlong(jep, AR_start_time) == 0 && lGetUlong(jep, AR_end_time) != 0 && lGetUlong(jep, AR_duration) != 0) {
+      lSetUlong(jep, AR_start_time, lGetUlong(jep, AR_end_time) - lGetUlong(jep, AR_duration));
+   } else if (lGetUlong(jep, AR_start_time) != 0 && lGetUlong(jep, AR_end_time) == 0 && lGetUlong(jep, AR_duration) != 0) {
+      lSetUlong(jep, AR_end_time, duration_add_offset(lGetUlong(jep, AR_start_time), lGetUlong(jep, AR_duration)));
+      lSetUlong(jep, AR_duration, lGetUlong(jep, AR_end_time) - lGetUlong(jep, AR_start_time));
+   } else if (lGetUlong(jep, AR_start_time) != 0 && lGetUlong(jep, AR_end_time) != 0 && lGetUlong(jep, AR_duration) == 0) {
+      lSetUlong(jep, AR_duration, lGetUlong(jep, AR_end_time) - lGetUlong(jep, AR_start_time));
+   }
 
    lSetString(jep, AR_account, data->account_string);
  
@@ -1096,6 +1234,8 @@ int save
    lSetUlong(jep, AR_mail_options, ConvertMailOptions(data->mail_options));
 
    lSetUlong(jep, AR_verify, data->verify_mode);
+   lSetUlong(jep, AR_error_handling, data->handle_hard_error);
+   lSetUlong(jep, AR_type, data->now);
 
    DPRINTF(("data->resource_list is %s\n", 
             data->resource_list ? "NOT NULL" : "NULL"));
@@ -1107,6 +1247,21 @@ int save
             data->queue_list ? "NOT NULL" : "NULL"));
    lSetList(jep, AR_queue_list, 
                lCopyList("queue_list", data->queue_list));
+   
+   DPRINTF(("data->master_queue_list is %s\n", 
+            data->master_queue_list ? "NOT NULL" : "NULL"));
+   lSetList(jep, AR_master_queue_list, 
+               lCopyList("master_queue_list", data->master_queue_list));
+   
+   DPRINTF(("data->acl_list is %s\n", 
+            data->acl_list ? "NOT NULL" : "NULL"));
+   lSetList(jep, AR_acl_list, 
+               lCopyList("acl_list", data->acl_list));
+   
+   DPRINTF(("data->xacl_list is %s\n", 
+            data->xacl_list ? "NOT NULL" : "NULL"));
+   lSetList(jep, AR_xacl_list, 
+               lCopyList("xacl_list", data->xacl_list));
    
    DPRINTF(("data->pe is %s\n", data->pe ? data->pe: "NULL"));
    if (data->pe && data->pe[0] != '\0') {
@@ -1240,6 +1395,55 @@ Widget w
 
    }
 
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARSubAskForCQ(Widget w, XtPointer cld, XtPointer cad)
+{
+   lList *ql_out = NULL;
+   lList *ql_in = NULL;
+   int status;
+   Widget inputfield = (Widget) cld;
+   lList *alp = NULL;
+   String str = NULL;
+   dstring ds = DSTRING_INIT;
+
+
+   DENTER(GUI_LAYER, "qmonARSubAskForCQ");
+   
+   qmonMirrorMultiAnswer(CQUEUE_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      lFreeList(&alp);
+      DEXIT;
+      return;
+   }
+   ql_in = qmonMirrorList(SGE_CQUEUE_LIST);
+   
+   str = XmtInputFieldGetString(inputfield);
+   lString2List(str, &ql_out, QR_Type, QR_name, ",");
+
+   status = XmtAskForItems(w, NULL, NULL, "@{Select Cluster Queue}", ql_in, CQ_name,
+                  "@{@fBAvailable Cluster Queues}", &ql_out, QR_Type, QR_name, 
+                  "@{@fBChosen Cluster Queues}", NULL);
+
+   if (status) {
+      lListElem *ep = NULL;
+      int first_time = 1;
+      for_each(ep, ql_out) {
+         if (first_time) {
+            first_time = 0;
+            sge_dstring_append(&ds, lGetString(ep, QR_name));
+         } else {
+            sge_dstring_append(&ds, ",");
+            sge_dstring_append(&ds, lGetString(ep, QR_name));
+         }   
+      }
+      XmtInputFieldSetString(inputfield, sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
+   }
+   lFreeList(&ql_out);
    DEXIT;
 }
 
@@ -1632,6 +1836,13 @@ static void qmonARResourceSetResources(Widget w, XtPointer cld, XtPointer cad)
    ** do the drawing
    */
    qmonRequestDraw(arresource_ar, arl, 0);
+
+#if 0
+printf("arresource_resources begin ---\n");
+lWriteListTo(arresource_resources, stdout);
+printf("arresource_resources end ---\n");
+#endif
+
    qmonRequestDraw(arresource_sr, arresource_resources, 1);
 
    lFreeList(&arl);
@@ -1776,3 +1987,266 @@ static void qmonARResourceCancel(Widget w, XtPointer cld, XtPointer cad)
    DEXIT;
 }
 
+
+
+
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+void qmonPopupARSubAccess(Widget w, XtPointer cld, XtPointer cad)
+{
+   Widget inputfield = (Widget) cld;
+
+   DENTER(TOP_LAYER, "qmonPopupARSubAccess");
+
+   if (!ar_acl_ask_layout) {
+      qmonCreateARSubAccess(w, NULL);
+   }   
+
+   AccessAskInputField = inputfield;
+
+   /*
+   ** preset the resources 
+   */
+   qmonARAccessSetAsk();
+
+   xmui_manage(ar_acl_ask_layout);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonCreateARSubAccess(Widget parent, XtPointer cld)
+{
+   Widget   ar_acl_ok, ar_acl_cancel;
+ 
+   DENTER(GUI_LAYER, "qmonCreateARSubAccess");
+
+   ar_acl_ask_layout = XmtBuildQueryDialog(parent, "ar_acl_ask_shell",
+                           NULL, 0,
+                           "ar_acl_ok", &ar_acl_ok,
+                           "ar_acl_cancel", &ar_acl_cancel,
+                           "ar_acl_add_acl", &ar_acl_add_acl_w,
+                           "ar_acl_user", &ar_acl_user_w,
+                           "ar_acl_add_user", &ar_acl_add_user_w,
+                           "ar_acl_del_entry", &ar_acl_del_entry_w,
+                           "ar_acl_available_acl_list", &ar_acl_available_acl_list_w,
+                           "ar_acl_access_list", &ar_acl_access_list_w,
+                           NULL);
+   XtAddCallback(ar_acl_ok, XmNactivateCallback,
+                        qmonARAccessOK, NULL);
+   XtAddCallback(ar_acl_cancel, XmNactivateCallback,
+                        qmonARAccessCancel, NULL);
+
+/*    XtAddCallback(ar_acl_user_w, XmtNverifyCallback, */
+/*                       qmonHostgroupCheckName, NULL); */
+   XtAddCallback(ar_acl_user_w, XmtNinputCallback, 
+                      qmonARAccessAddUser, NULL);
+   XtAddCallback(ar_acl_add_user_w, XmNactivateCallback, 
+                     qmonARAccessAddUser, NULL);
+   XtAddCallback(ar_acl_add_acl_w, XmNactivateCallback, 
+                     qmonARAccessAddAccessList, NULL);
+   XtAddCallback(ar_acl_del_entry_w, XmNactivateCallback, 
+                     DeleteItems, (XtPointer) ar_acl_access_list_w);
+
+   XtAddEventHandler(XtParent(ar_acl_ask_layout), StructureNotifyMask, False, 
+                        SetMinShellSize, NULL);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessOK(Widget w, XtPointer cld, XtPointer cad)
+{
+
+   DENTER(GUI_LAYER, "qmonARAccessOK");
+
+   /*
+   ** set the inputfield 
+   */
+   qmonARAccessGetAsk();
+   
+   xmui_unmanage(ar_acl_ask_layout);
+
+   DEXIT;
+}
+   
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessCancel(Widget w, XtPointer cld, XtPointer cad)
+{
+   DENTER(GUI_LAYER, "qmonARAccessCancel");
+   
+   xmui_unmanage(ar_acl_ask_layout);
+
+   DEXIT;
+}
+
+#if 0
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessCheckName(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
+   static char unique[CL_MAXHOSTLEN];
+   int ret;
+
+   DENTER(GUI_LAYER, "qmonARAccessCheckName");
+   
+   if (cbs->input && cbs->input[0] != '\0' && cbs->input[0] != ' ') { 
+       
+      DPRINTF(("cbs->input = %s\n", cbs->input));
+
+      strcpy(unique, "");
+
+      /* try to resolve hostname */
+      ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
+
+      switch ( ret ) {
+         case CL_RETVAL_GETHOSTNAME_ERROR:
+            qmonMessageShow(w, True, "Can't resolve host '%s'", cbs->input);
+            cbs->okay = False;
+            break;
+         case CL_RETVAL_OK:
+            cbs->input = unique;
+            break;
+         default:
+            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+            cbs->okay = False;
+      }
+   }
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessSelect(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
+   char *aclname = NULL;
+   lListElem *acl = NULL;
+   
+   DENTER(GUI_LAYER, "qmonARAccessSelect");
+
+   if (!XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &aclname)) {
+      fprintf(stderr, "XmStringGetLtoR failed\n");
+      DEXIT;
+      return;
+   }
+
+   acl = userset_list_locate(qmonMirrorList(SGE_USERSET_LIST), aclname);
+   XtFree((char*) aclname);
+
+   if (acl) {
+      UpdateXmListFromCull(hostgroup_memberlist, XmFONTLIST_DEFAULT_TAG, 
+                           lGetList(hgp, HGRP_host_list), HR_name);
+   }
+   DEXIT;
+}
+#endif
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessGetAsk(void) {
+   lList *chosen_acls = NULL;
+   
+   DENTER(GUI_LAYER, "qmonARAccessGetAsk");
+
+   /* get chosen acls */
+   chosen_acls = XmStringToCull(ar_acl_access_list_w, ARA_Type, ARA_name, ALL_ITEMS);
+
+   if (lGetNumberOfElem(chosen_acls) > 0) {
+      lListElem *ep = NULL;
+      int first_time = 1;
+      dstring ds = DSTRING_INIT;
+      for_each(ep, chosen_acls) {
+         if (first_time) {
+            first_time = 0;
+            sge_dstring_append(&ds, lGetString(ep, ARA_name));
+         } else {
+            sge_dstring_append(&ds, ",");
+            sge_dstring_append(&ds, lGetString(ep, ARA_name));
+         }   
+      }
+      XmtInputFieldSetString(AccessAskInputField, sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
+   } else {   
+      XmtInputFieldSetString(AccessAskInputField, NULL); 
+   }
+
+   DEXIT;
+}
+
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessSetAsk(void) {
+   lList *usl = NULL;
+   lList *chosen_acls = NULL;
+   const char *str = NULL;
+   lList *alp = NULL;
+   
+   DENTER(GUI_LAYER, "qmonARAccessSetAsk");
+
+   qmonMirrorMultiAnswer(USERSET_T,  &alp);
+   if (alp) {
+      qmonMessageBox(AppShell, alp, 0);
+      lFreeList(&alp);
+      DEXIT;
+      return;
+   }
+   usl = qmonMirrorList(SGE_USERSET_LIST);
+
+   /* preset acls */
+   UpdateXmListFromCull(ar_acl_available_acl_list_w, XmFONTLIST_DEFAULT_TAG,
+                        usl, US_name);
+
+   /* preset chosen acls */
+   str = XmtInputFieldGetString(AccessAskInputField); 
+   get_ara_list(str, &chosen_acls);
+   UpdateXmListFromCull(ar_acl_access_list_w, XmFONTLIST_DEFAULT_TAG, 
+                        chosen_acls, ARA_name);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessAddUser(Widget w, XtPointer cld, XtPointer cad)
+{
+   char *user = NULL;
+   
+   DENTER(GUI_LAYER, "qmonARAccessAddUser");
+
+   user = XmtInputFieldGetString(ar_acl_user_w);
+
+   if (user && user[0] != '\0') {
+      XmListAddItemUniqueSorted(ar_acl_access_list_w, user);
+   }
+
+   XmtInputFieldSetString(ar_acl_user_w, "");
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonARAccessAddAccessList(Widget w, XtPointer cld, XtPointer cad)
+{
+   int i;
+   Cardinal itemCount = 0;
+   XmString *items = NULL;
+   String *strtable = NULL;
+   char buf[10*BUFSIZ];
+
+   DENTER(GUI_LAYER, "qmonARAccessAddAccessList");
+
+   XtVaGetValues(ar_acl_available_acl_list_w,
+               XmNselectedItems, &items,
+               XmNselectedItemCount, &itemCount,
+               NULL);
+   strtable = XmStringTableToStringTable(items, itemCount, XmFONTLIST_DEFAULT_TAG); 
+
+   for (i=0; i<itemCount; i++) {
+      snprintf(buf, sizeof(buf), "@%s", strtable[i]);
+      XmListAddItemUniqueSorted(ar_acl_access_list_w, buf);
+   }
+
+   StringTableFree(strtable, itemCount);
+ 
+   DEXIT;
+}

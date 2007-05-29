@@ -57,11 +57,12 @@
 #include "qmon_message.h"
 #include "qmon_manop.h"
 #include "qmon_timer.h"
+#include "qmon_quarks.h"
 
 typedef struct _TOVEntry {
-   Cardinal total_share_tree_tickets;
-   Cardinal total_functional_tickets;
-   Cardinal override_tickets;
+   u_long32 total_share_tree_tickets;
+   u_long32 total_functional_tickets;
+   u_long32 override_tickets;
    Boolean  share_override_ticket;
    Boolean report_pjob_tickets;
    Boolean  share_functional_ticket;
@@ -83,28 +84,28 @@ static Widget tov_layout = 0;
 static Widget tov_message = 0;
 
 XtResource tov_resources[] = {
-   { "total_share_tree_tickets", "total_share_tree_tickets", XtRCardinal,
-      sizeof(Cardinal),
+   { "total_share_tree_tickets", "total_share_tree_tickets", QmonRUlong32,
+      sizeof(u_long32),
       XtOffsetOf(tTOVEntry, total_share_tree_tickets),
       XtRImmediate, (XtPointer) 0 },
 
-   { "label_share_tree_tickets", "label_share_tree_tickets", XtRCardinal,
-      sizeof(Cardinal),
+   { "label_share_tree_tickets", "label_share_tree_tickets", QmonRUlong32,
+      sizeof(u_long32),
       XtOffsetOf(tTOVEntry, total_share_tree_tickets),
       XtRImmediate, (XtPointer) 0 },
 
-   { "total_functional_tickets", "total_functional_tickets", XtRCardinal,
-      sizeof(Cardinal),
+   { "total_functional_tickets", "total_functional_tickets", QmonRUlong32,
+      sizeof(u_long32),
       XtOffsetOf(tTOVEntry, total_functional_tickets),
       XtRImmediate, (XtPointer) 0 },
 
-   { "label_functional_tickets", "label_functional_tickets", XtRCardinal,
-      sizeof(Cardinal),
+   { "label_functional_tickets", "label_functional_tickets", QmonRUlong32,
+      sizeof(u_long32),
       XtOffsetOf(tTOVEntry, total_functional_tickets),
       XtRImmediate, (XtPointer) 0 },
 
-   { "override_tickets", "override_tickets", XtRCardinal,
-      sizeof(Cardinal),
+   { "override_tickets", "override_tickets", QmonRUlong32,
+      sizeof(u_long32),
       XtOffsetOf(tTOVEntry, override_tickets),
       XtRImmediate, (XtPointer) 0 },
 
@@ -176,6 +177,9 @@ static Boolean qmonTOVEntryToCull(lListElem *scep, tTOVEntry *tov_data);
 static Boolean qmonCulltoTOVEntry(tTOVEntry *tov_data, lListElem *scep);
 static int qmonTOVUpdateFill(Widget w, lList **alpp);
 
+
+static Widget share_tree_tickets_field = 0;
+static Widget functional_tickets_field = 0;
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
 /*-------------------------------------------------------------------------*/
@@ -288,8 +292,7 @@ Widget parent
 ) {
    Widget shell, tov_done, tov_edit, tov_users_for_deadline, 
             tov_share_tree_policy, tov_functional_policy, 
-            tov_override_policy, share_tree_tickets_field,
-            functional_tickets_field,
+            tov_override_policy,
             tov_update, tov_apply, tov_main_link;
    
    DENTER(GUI_LAYER, "qmonCreateTicketOverview");
@@ -559,17 +562,14 @@ lListElem *scep
    
    qmonTOVEntryReset(tov_data);
 
-   tov_data->total_share_tree_tickets = (Cardinal)lGetUlong(scep, 
-                                               SC_weight_tickets_share);
-   tov_data->total_functional_tickets = (Cardinal)lGetUlong(scep, 
-                                               SC_weight_tickets_functional);
+   tov_data->total_share_tree_tickets = lGetUlong(scep, SC_weight_tickets_share);
+   tov_data->total_functional_tickets = lGetUlong(scep, SC_weight_tickets_functional);
 
    /*
    ** these values are no configuration values but calculated and
    ** made available for convenience
    */
-   tov_data->override_tickets = (Cardinal)lGetUlong(scep, 
-                                            SC_weight_tickets_override);
+   tov_data->override_tickets = lGetUlong(scep, SC_weight_tickets_override);
    tov_data->share_override_ticket = (Boolean)lGetBool(scep,
                                             SC_share_override_tickets);
    tov_data->report_pjob_tickets = (Boolean)lGetBool(scep,
@@ -605,10 +605,8 @@ tTOVEntry *tov_data
    }
 
 
-   lSetUlong(scep, SC_weight_tickets_share, 
-               (u_long32)tov_data->total_share_tree_tickets);
-   lSetUlong(scep, SC_weight_tickets_functional,
-               (u_long32)tov_data->total_functional_tickets);
+   lSetUlong(scep, SC_weight_tickets_share, tov_data->total_share_tree_tickets);
+   lSetUlong(scep, SC_weight_tickets_functional, tov_data->total_functional_tickets);
 
    lSetBool(scep, SC_share_override_tickets, tov_data->share_override_ticket);
    lSetBool(scep, SC_report_pjob_tickets, tov_data->report_pjob_tickets);

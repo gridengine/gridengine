@@ -1533,7 +1533,7 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
    printf("%-5.5s ", summary->queue_type); 
 
    /* number of used/free slots */
-   sprintf(to_print, "%d/%d/%d ", (int)summary->reserved_slots, (int)summary->used_slots, (int)summary->free_slots); 
+   sprintf(to_print, "%d/%d/%d ", (int)summary->resv_slots, (int)summary->used_slots, (int)summary->free_slots); 
    printf("%-14.14s ", to_print);   
 
    /* load avg */

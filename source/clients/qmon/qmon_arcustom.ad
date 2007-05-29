@@ -56,8 +56,7 @@ Qmon*arcu.arcu_cancel.labelString:          @{Cancel}
 Qmon*arcu.arcu_save.labelString:            @{Save}
 
 Qmon*arcu.arcu_folder.xmtChildren: \
-   XmtLayout   arfilter, \
-               arfield;
+   XmtLayout   arfield;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Two Scrolled Lists showing ar fields that can be enabled disabled
@@ -100,37 +99,37 @@ Qmon*arfield*visibleItemCount:         15
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Resource List Dialog to select ars with -l 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*arfilter.tabLabel:    @{@fBFilter ARs}
-Qmon*arfilter.deleteResponse:  XmUNMAP
-
-Qmon*arfilter.xmtChildren:  \
-   Iconlist          arfilter_ar, arfilter_sr; \
-   InputField        arfilter_owner; \
-   XmPushButton      arfilter_clear;\
-
-Qmon*arfilter.layout: \
-   Row { \
-      Col { \
-         Row { \
-            Col { \
-               Caption tl "@{@fBFilter Resources}" 20 em arfilter_sr \
-               Fixed Centered arfilter_clear \
-            } \
-            # \
-            Caption tl "@{@fBAvailable Resources}" 20 em arfilter_ar \
-         } \
-         Caption tl "@{@fBFilter by Owner}" arfilter_owner \
-      } \
-   }
-
-Qmon*arfilter_clear.labelString:            @{Clear}
-
-!Qmon*arfilter_help.activateCallback:   XmtHelpDisplayContextHelp(self);
-
-Qmon*arfilter_ar*iconWidth:         16
-Qmon*arfilter_ar*iconHeight:        16
-Qmon*arfilter_ar*highlightOnEnter:  False
-
-Qmon*arfilter_sr*iconWidth:         16
-Qmon*arfilter_sr*iconHeight:        16
-Qmon*arfilter_sr*highlightOnEnter:  False
+!! Qmon*arfilter.tabLabel:    @{@fBFilter ARs}
+!! Qmon*arfilter.deleteResponse:  XmUNMAP
+!! 
+!! Qmon*arfilter.xmtChildren:  \
+!!    Iconlist          arfilter_ar, arfilter_sr; \
+!!    InputField        arfilter_owner; \
+!!    XmPushButton      arfilter_clear;\
+!! 
+!! Qmon*arfilter.layout: \
+!!    Row { \
+!!       Col { \
+!!          Row { \
+!!             Col { \
+!!                Caption tl "@{@fBFilter Resources}" 20 em arfilter_sr \
+!!                Fixed Centered arfilter_clear \
+!!             } \
+!!             # \
+!!             Caption tl "@{@fBAvailable Resources}" 20 em arfilter_ar \
+!!          } \
+!!          Caption tl "@{@fBFilter by Owner}" arfilter_owner \
+!!       } \
+!!    }
+!! 
+!! Qmon*arfilter_clear.labelString:            @{Clear}
+!! 
+!! !Qmon*arfilter_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+!! 
+!! Qmon*arfilter_ar*iconWidth:         16
+!! Qmon*arfilter_ar*iconHeight:        16
+!! Qmon*arfilter_ar*highlightOnEnter:  False
+!! 
+!! Qmon*arfilter_sr*iconWidth:         16
+!! Qmon*arfilter_sr*iconHeight:        16
+!! Qmon*arfilter_sr*highlightOnEnter:  False

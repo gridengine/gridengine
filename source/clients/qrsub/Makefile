@@ -43,6 +43,7 @@ QRSUB_ADD_SRC = usage.c \
                 parse_job_cull.c \
                 parse_qsub.c \
                 read_defaults.c \
+                sge_qrsub.c \
                 sig_handlers.c
 
 QRSUB_OBJS = $(QRSUB_SRC:.c=.o)

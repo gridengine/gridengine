@@ -92,26 +92,29 @@ static void addToSelected(Widget w, XtPointer cld, XtPointer cad);
 static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad);
 
 static String PrintUlong(lListElem *ep, int nm);
-static String PrintDoubleOpti(lListElem *ep, int nm);
 static String PrintString(lListElem *ep, int nm);
 static String PrintTime(lListElem *ep, int nm);
-static String PrintBool(lListElem *ep, int nm);
-static String PrintGrantedQueue(lListElem *ep, int nm);
+static String PrintDuration(lListElem *ep, int nm);
+static String PrintQueues(lListElem *ep, int nm);
+static String PrintAcls(lListElem *ep, int nm);
 static String PrintState(lListElem *ep, int nm);
 static String PrintType(lListElem *ep, int nm);
 static String PrintNotImpl(lListElem *ep, int nm);
-static String PrintPathList(lListElem *ep, int nm);
 static String PrintMailList(lListElem *ep, int nm);
 static String PrintMailOptions(lListElem *ep, int nm);
 static String PrintPERange(lListElem *ep, int nm);
 static void SetARLabels(Widget w);
 static void qmonWhatSetItems(Widget list, int how);
-static void qmonARFilterSet(Widget w, XtPointer cld, XtPointer cad);
+
+#if 0
 static void qmonARFilterClear(Widget w, XtPointer cld, XtPointer cad);
+static void qmonARFilterSet(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARFilterEditResource(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARFilterRemoveResource(Widget w, XtPointer cld, XtPointer cad);
+#endif
 
 static int is_owner_ok(lListElem *ar, lList *owner_list);
+
 /*--------------------------------------------------------------------------------*/
 /* selectable items, the names must match the names in sge_advance_reservationL.h */
 /* there are fixed columns at the beginning of the natrix                         */
@@ -131,36 +134,38 @@ static tARField ar_items[] = {
    { 0, AR_submission_time, "@{SubmitTime}", 19, 30, PrintTime },
    { 0, AR_start_time, "@{StartTime}", 19, 30, PrintTime },
    { 0, AR_end_time, "@{EndTime}", 19, 30, PrintTime },
-   { 0, AR_duration, "@{Duration}", 19, 30, PrintTime },
+   { 0, AR_duration, "@{Duration}", 19, 30, PrintDuration },
    { 0, AR_account, "@{Account}", 15, 50, PrintString },
    { 0, AR_checkpoint_name, "@{Checkpoint Name}", 11, 30, PrintString },
    { 0, AR_resource_list, "@{ResourceList}", 11, 30, PrintNotImpl },
-   { 0, AR_resource_utilization, "@{ResourceUtilization}", 15, 30, PrintNotImpl },
-   { 0, AR_queue_list, "@{Queues}", 6, 30, PrintNotImpl },
+   { 0, AR_resource_utilization, "@{ResourceUtilization}", 15, 100, PrintNotImpl },
+   { 0, AR_queue_list, "@{Queues}", 6, 100, PrintQueues },
    { 0, AR_granted_slots, "@{GrantedSlots}", 15, 50, PrintNotImpl },
    { 0, AR_mail_options, "@{MailOptions}", 11, 30, PrintMailOptions },
    { 0, AR_mail_list, "@{MailTo}", 15, 30, PrintMailList },
    { 0, AR_pe, "@{PE}", 10, 30, PrintString },
    { 0, AR_pe_range, "@{PERange}", 15, 30, PrintPERange },
-   { 0, AR_acl_list, "@{ACL}", 12, 30, PrintNotImpl },
-   { 0, AR_xacl_list, "@{XACL}", 12, 30, PrintNotImpl }
+   { 0, AR_acl_list, "@{ACL}", 12, 30, PrintAcls },
+   { 0, AR_xacl_list, "@{XACL}", 12, 30, PrintAcls }
 };
 
 /*
 ** this list restricts the selected ars, queues displayed
 */
-static lList *arfilter_resources = NULL;
 static lList *arfilter_owners = NULL;
-static lList *arfilter_fields = NULL;
-
+static Widget arfield_available = 0;
+static Widget arfield_selected = 0;
 
 static Widget arcu = 0;
 static Widget arfield = 0;
+
+#if 0
+static lList *arfilter_resources = NULL;
 static Widget arfilter_ar = 0;
 static Widget arfilter_sr = 0;
+static lList *arfilter_fields = NULL;
 static Widget arfilter_owner = 0;
-static Widget arfield_available = 0;
-static Widget arfield_selected = 0;
+#endif
 
 /*-------------------------------------------------------------------------*/
 static void ar_get_type_string(char *buf, size_t buflen, u_long32 type)
@@ -198,49 +203,6 @@ static void ar_get_state_string(char *buf, size_t buflen, u_long32 state)
 }   
 
 /*-------------------------------------------------------------------------*/
-static String PrintDoubleOpti(
-lListElem *ep,
-int nm 
-) {
-   char buf[BUFSIZ];
-   String str;
-
-   DENTER(GUI_LAYER, "PrintDoubleOpti");
-
-#define OPTI_PRINT8(value) \
-   if (value > 99999999 ) \
-      sprintf(buf, "%8.3g ", value); \
-   else  \
-      sprintf(buf, "%8.0f ", value)
-
-   OPTI_PRINT8(lGetDouble(ep, nm));
-   str = XtNewString(buf);
-
-#undef OPTI_PRINT8
-
-   DEXIT;
-   return str;
-}
-
-/*-------------------------------------------------------------------------*/
-static String PrintBool(
-lListElem *ep,
-int nm 
-) {
-   String str;
-
-   DENTER(GUI_LAYER, "PrintBool");
-
-   if (lGetBool(ep, nm))
-      str = XtNewString("True");
-   else
-      str = XtNewString("False");
-
-   DEXIT;
-   return str;
-}
-
-/*-------------------------------------------------------------------------*/
 static String PrintPERange(
 lListElem *ep,
 int nm 
@@ -253,24 +215,6 @@ int nm
    range_list_print_to_string(lGetList(ep, nm), &range_string, true, false, false);
    str = XtNewString(sge_dstring_get_string(&range_string));
    sge_dstring_free(&range_string);
-
-   DEXIT;
-   return str;
-}
-
-/*-------------------------------------------------------------------------*/
-static String PrintPathList(
-lListElem *ep,
-int nm 
-) {
-   String str;
-   lList *path_list = NULL;
-
-   DENTER(GUI_LAYER, "PrintPathList");
-
-   path_list = lGetList(ep, nm); 
-
-   str = XtNewString(write_pair_list(path_list, PATH_TYPE));
 
    DEXIT;
    return str;
@@ -441,6 +385,100 @@ int nm
 }
 
 /*-------------------------------------------------------------------------*/
+static String PrintDuration(
+lListElem *ep,
+int nm 
+) {
+
+   String str;
+   char buffer[128];
+   u_long32 value = 0;
+   int seconds = 0;
+   int minutes = 0;
+   int hours = 0;
+
+   DENTER(GUI_LAYER, "PrintDuration");
+
+   value = lGetUlong(ep, nm);
+   seconds = value % 60;
+   minutes = ((value - seconds) / 60) % 60;
+   hours = ((value - seconds - minutes * 60) / 3600);
+   snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d", hours, minutes, seconds); 
+   str = XtNewString(buffer);
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
+static String PrintQueues(
+lListElem *ep,
+int nm 
+) {
+
+   String str;
+   dstring ds = DSTRING_INIT;
+   lListElem *qep = NULL;
+   lList *ql = NULL;
+
+   DENTER(GUI_LAYER, "PrintQueues");
+
+   ql = lGetList(ep, nm);
+   if (ql) {
+      bool first = true;
+      for_each(qep, ql) {
+         if (!first) {
+            sge_dstring_append(&ds, ",");
+         } else {
+            first = false;
+         }   
+         sge_dstring_append(&ds, lGetString(qep, QR_name));
+      }      
+      str = XtNewString(sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
+   } else {
+      str = XtNewString("");
+   }   
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
+static String PrintAcls(
+lListElem *ep,
+int nm 
+) {
+
+   String str;
+   dstring ds = DSTRING_INIT;
+   lListElem *qep = NULL;
+   lList *ql = NULL;
+
+   DENTER(GUI_LAYER, "PrintAcls");
+
+   ql = lGetList(ep, nm);
+   if (ql) {
+      bool first = true;
+      for_each(qep, ql) {
+         if (!first) {
+            sge_dstring_append(&ds, ",");
+         } else {
+            first = false;
+         }   
+         sge_dstring_append(&ds, lGetString(qep, ARA_name));
+      }      
+      str = XtNewString(sge_dstring_get_string(&ds));
+      sge_dstring_free(&ds);
+   } else {
+      str = XtNewString("");
+   }   
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
 String* PrintARField(
@@ -491,7 +529,7 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
    XmString *strlist;
    Widget run_m;
    Widget pen_m;
-   String owner_str = NULL;
+/*    String owner_str = NULL; */
    tARField *ar_item = NULL;
    
    DENTER(GUI_LAYER, "okCB");
@@ -531,12 +569,14 @@ static void okCB(Widget w, XtPointer cld, XtPointer cad)
    SetARLabels(run_m);
    SetARLabels(pen_m);
    
+#if 0   
    /*
    ** get the strings to do a wildmatch against
    */
    owner_str = XmtInputFieldGetString(arfilter_owner);
    lFreeList(&arfilter_owners);
    lString2List(owner_str, &arfilter_owners, ST_Type, ST_name, NULL); 
+#endif   
 
    updateARList();
 
@@ -818,7 +858,7 @@ Widget parent,
 XtPointer cld 
 ) {
    Widget   arcu_ok, arcu_cancel, arcu_save, arcu_folder,
-            arfield_add, arfield_remove, arfilter_clear;
+            arfield_add, arfield_remove;
    Widget run_m;
    Widget pen_m;
    int i;
@@ -841,10 +881,10 @@ XtPointer cld
                            "arcu_ok", &arcu_ok,
                            "arcu_cancel", &arcu_cancel,
                            "arcu_save", &arcu_save,
-                           "arfilter_ar", &arfilter_ar,
-                           "arfilter_sr", &arfilter_sr,
-                           "arfilter_owner", &arfilter_owner,
-                           "arfilter_clear", &arfilter_clear,
+/*                            "arfilter_ar", &arfilter_ar, */
+/*                            "arfilter_sr", &arfilter_sr, */
+/*                            "arfilter_owner", &arfilter_owner, */
+/*                            "arfilter_clear", &arfilter_clear, */
                            NULL);
    /*
    ** create ARColumnPrintHashTable
@@ -925,10 +965,13 @@ XtPointer cld
 
 #endif   
 
+
+#if 0
    /*
    ** preset the resources 
    */
    qmonARFilterSet(arcu, NULL, NULL);
+#endif   
 
    /*
    ** preset the fields
@@ -955,6 +998,7 @@ XtPointer cld
    XtAddCallback(arfield_remove, XmNactivateCallback,
                         rmFromSelected, (XtPointer) arfield);
 
+#if 0
    /*
    ** arfilter callbacks
    */
@@ -964,15 +1008,17 @@ XtPointer cld
                         qmonARFilterEditResource, (XtPointer)1);
    XtAddCallback(arfilter_sr, XmNremoveCallback, 
                      qmonARFilterRemoveResource, NULL);
-   XtAddCallback(arfilter_clear, XmNactivateCallback,
-                        qmonARFilterClear, NULL);
    XtAddCallback(arcu_folder, XmNvalueChangedCallback, 
                      qmonARFilterSet, NULL);
+   XtAddCallback(arfilter_clear, XmNactivateCallback,
+                        qmonARFilterClear, NULL);
+#endif
 
    DEXIT;
 }
 
 
+#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonARFilterClear(Widget w, XtPointer cld, XtPointer cad)
 {
@@ -1135,6 +1181,8 @@ lList* qmonARFilterResources(void)
 {
    return arfilter_resources;
 }
+
+#endif
 
 /*-------------------------------------------------------------------------*/
 lList* qmonARFilterOwners(void)

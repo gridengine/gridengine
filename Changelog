@@ -1,3 +1,14 @@
+AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
+                            - various qmon bug fixes:
+                            - split of qrsub sge_parse_qrsub into clients/common/sge_qrsub.c
+                            - reserved_slots -> resv_slots for consistency
+                            - jgdi delete job crashes master
+                 Issue:     1729, 2262, 2263, 2260, 2261, 747,
+                            2264
+                 Bugster:   6327539, 6538740, 4818801, 4742097, 6553066, 6291044
+                            6555953
+                 Review:    RD
+  
 AH-2007-05-29-0: Bugfix:    - forgot error exit with AH-2007-05-25-2 memory
                               leak fix
                             - forgot to consider PE resource quota scopes with 

@@ -134,9 +134,9 @@ static XmtMenuItem task_menu_items[] = {
          qmonBrowserOpen, NULL},
    {XmtMenuItemPushButton, "@{Resource Quota Configuration}", 'L', "Alt<Key>L", "Alt+L",
          qmonRQSPopup, NULL},
-   {XmtMenuItemPushButton, "@{Advanced Reservation Configuration}", 'V', "Alt<Key>V", "Alt+V",
+   {XmtMenuItemPushButton, "@{Advance Reservation Configuration}", 'V', "Alt<Key>V", "Alt+V",
          qmonARPopup, NULL},
-   {XmtMenuItemPushButton, "@{Advanced Reservation Submission}", 'U', "Alt<Key>U", "Alt+U",
+   {XmtMenuItemPushButton, "@{Advance Reservation Submission}", 'U', "Alt<Key>U", "Alt+U",
          qmonARSubPopup, NULL},
    {XmtMenuItemEnd}
 };
@@ -221,6 +221,7 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
    { qmonRQSPopup, NULL, "@{@fBResource Quota Configuration}" },
+   { qmonARPopup, NULL, "@{@fBAdvance Reservation}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }
 };
@@ -272,6 +273,7 @@ Widget parent
       "TICKET_OVERVIEW",
       "PROJECT_CONFIG",
       "RQS_CONFIG",
+      "AR_CONFIG",
       "BROWSER",
       "EXIT" };
 #define AUTOMATIC_MAINBAR   

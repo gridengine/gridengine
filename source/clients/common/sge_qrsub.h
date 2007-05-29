@@ -1,5 +1,5 @@
-#ifndef _QMON_WIDGETS_H_
-#define _QMON_WIDGETS_H_
+#ifndef __SGE_QRSUB_H
+#define __SGE_QRSUB_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -31,16 +31,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
- 
-enum pair_type {
-  MAIL_TYPE,
-  PATH_TYPE,
-  VARIABLE_TYPE
-};
 
-void QmonRegisterWidgets(void);
+#include "cull.h"
 
-String write_pair_list(lList *lp, int type);
-void get_ara_list(const char *str, lList **ret_list);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-#endif /* _QMON_WIDGETS_H_ */
+bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar);
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif
+
+

@@ -106,7 +106,6 @@ static Widget current_matrix = 0;
 static Widget ar_customize = 0;
 static Widget ar_delete = 0;
 static Widget ar_select_all = 0;
-static Widget ar_qalter = 0;
 static Widget force_toggle = 0;
 
 
@@ -122,7 +121,6 @@ static void qmonARStopUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARHandleEnterLeave(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
 static void qmonARShowBrowserInfo(dstring *info, lListElem *jep);
 /* static void qmonARChangeState(Widget w, XtPointer cld, XtPointer cad); */
-static void qmonARQalter(Widget w, XtPointer cld, XtPointer cad);
 static void qmonARNoEdit(Widget w, XtPointer cld, XtPointer cad);
 static Pixel qmonARStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteARForMatrix(Widget w, Widget matrix, lList **local);
@@ -279,7 +277,6 @@ Widget parent
                                      "ar_pending_ars", &ar_pending_ars,
                                      "ar_delete", &ar_delete,
                                      "ar_select_all", &ar_select_all,
-                                     "ar_qalter", &ar_qalter,
                                      "ar_update", &ar_update,
                                      "ar_customize", &ar_customize,
                                      "ar_submit", &ar_submit,
@@ -315,8 +312,6 @@ Widget parent
                      qmonPopupARCU, NULL); 
    XtAddCallback(ar_submit, XmNactivateCallback, 
                      qmonARSubPopup, NULL);
-/*    XtAddCallback(ar_qalter, XmNactivateCallback,  */
-/*                      qmonARQalter, NULL); */
    XtAddCallback(ar_done, XmNactivateCallback, 
                      qmonARPopdown, NULL);
    XtAddCallback(ar_main_link, XmNactivateCallback, 
@@ -696,11 +691,14 @@ lList **local
       XbaeMatrixDeselectAll(matrix);
 
       lFreeList(&ardl);
-   } else {
+   }
+#if 0   
+   else {
       qmonMessageShow(w, True, "@{There are no ARs selected !}");
       DEXIT;
       return False;
    }
+#endif
 
    DEXIT;
    return True;
@@ -747,6 +745,7 @@ XtPointer cad
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
+#if 0
    status = qmonDeleteARForMatrix(w, ar_running_ars, NULL);
    if (status)
       XbaeMatrixDeselectAll(ar_running_ars);
@@ -755,6 +754,12 @@ XtPointer cad
                            qmonMirrorListRef(SGE_AR_LIST));
    if (status)
       XbaeMatrixDeselectAll(ar_pending_ars);
+#else   
+   status = qmonDeleteARForMatrix(w, current_matrix, NULL);
+   if (status)
+      XbaeMatrixDeselectAll(current_matrix);
+
+#endif
 
    updateARListCB(w, NULL, NULL);
 
@@ -916,60 +921,6 @@ int nm;
    return jl;
 }
 
-
-/*-------------------------------------------------------------------------*/
-static void qmonARQalter(Widget w, XtPointer cld, XtPointer cad)
-{
-
-#if 0
-
-#ifdef QALTER_RUNNING
-   lList *rl = NULL;
-#endif
-   lList *pl = NULL;
-   tSubmitMode data;
-
-   DENTER(GUI_LAYER, "qmonARQalter");
-#ifdef QALTER_RUNNING
-   rl = qmonARBuildSelectedList(ar_running_ars, JB_Type, JB_ar_number);
-#endif
-   /*
-   ** qalter works for pending  & running ars
-   */
-   pl = qmonARBuildSelectedList(ar_pending_ars, JB_Type, JB_ar_number);
-
-#ifdef QALTER_RUNNING
-   if (!pl && rl) {
-      pl = rl;
-   } else if (rl) {
-      lAddList(pl, &rl);
-   }
-#endif
-   /*
-   ** call the submit dialog for pending ars
-   */
-   if (pl && lGetNumberOfElem(pl) == 1) {
-      data.mode = SUBMIT_QALTER_PENDING;
-      data.ar_id = lGetUlong(lFirst(pl), JB_ar_number);
-      qmonSubmitPopup(w, (XtPointer)&data, NULL);
-      lFreeList(&pl);
-      XbaeMatrixDeselectAll(ar_pending_ars);
-#ifdef QALTER_RUNNING
-      XbaeMatrixDeselectAll(ar_running_ars);
-#endif
-   } else {
-#ifndef QALTER_RUNNING
-      qmonMessageShow(w, True, "@{Select one pending ar for Qalter !}");
-#else
-      qmonMessageShow(w, True, "@{Select one ar for Qalter !}");
-#endif
-   }
-   
-   DEXIT;
-
-#endif   
-
-}
 
 
 

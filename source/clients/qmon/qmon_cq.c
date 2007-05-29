@@ -117,6 +117,38 @@ static Widget cq_explain = 0;
 static Boolean dirty = False;
 static Widget current_matrix = 0;
 
+#define QI_SORTING
+
+#ifdef QI_SORTING
+/*
+** use this descriptor only here
+*/
+enum {
+   QI_queue,
+   QI_qtype,
+   QI_used_total,
+   QI_load_avg,
+   QI_arch,
+   QI_states
+};
+
+static lDescr qi_descr[] = {
+   { QI_queue, lStringT, NULL },
+   { QI_qtype, lStringT, NULL },
+   { QI_used_total, lStringT, NULL },
+   { QI_load_avg, lStringT, NULL },
+   { QI_arch, lStringT, NULL },
+   { QI_states, lStringT, NULL },
+   { NoName, lEndT, NULL}};
+
+enum {
+   SORT_ASCENDING = 0,
+   SORT_DESCENDING = 1
+};   
+static int qi_field_sort_by = QI_queue;
+static int qi_field_sort_direction = SORT_ASCENDING;
+#endif
+
 
 /*-------------------------------------------------------------------------*/
 static Widget qhost_settings = 0;
@@ -138,6 +170,9 @@ static void qmonQinstanceSetLoad(Widget matrix, const char *qiname);
 static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad);
 static void qmonQinstanceExplain(Widget w, XtPointer cld, XtPointer cad);
+#ifdef QI_SORTING
+static void qmonQinstanceSort(Widget w, XtPointer cld, XtPointer cad);
+#endif
 
 static void qmonQinstanceShowBrowserExplain(
 dstring *info,
@@ -367,6 +402,10 @@ Widget parent
 
    XtAddCallback(qinstance_settings, XmNdefaultActionCallback, 
                      qmonQinstanceShowLoad, NULL);
+#ifdef QI_SORTING                     
+   XtAddCallback(qinstance_settings, XmNlabelActivateCallback, 
+                     qmonQinstanceSort, NULL);
+#endif
 
    XtAddCallback(cq_customize, XmNactivateCallback, 
                      qmonPopupQCU, NULL); 
@@ -1955,36 +1994,38 @@ static void qmonCQUpdateCQMatrix(void)
       XbaeMatrixSetCell(cluster_queue_settings, row, 1, buf);
       sprintf(buf, "%6d ", (int)used);
       XbaeMatrixSetCell(cluster_queue_settings, row, 2, buf);
-      sprintf(buf, "%6d ", (int)available);
+      sprintf(buf, "%6d ", (int)resv);
       XbaeMatrixSetCell(cluster_queue_settings, row, 3, buf);
-      sprintf(buf, "%6d ", (int)total);
+      sprintf(buf, "%6d ", (int)available);
       XbaeMatrixSetCell(cluster_queue_settings, row, 4, buf);
-      sprintf(buf, "%6d ", (int)temp_disabled);
+      sprintf(buf, "%6d ", (int)total);
       XbaeMatrixSetCell(cluster_queue_settings, row, 5, buf);
-      sprintf(buf, "%6d ", (int)manual_intervention);
+      sprintf(buf, "%6d ", (int)temp_disabled);
       XbaeMatrixSetCell(cluster_queue_settings, row, 6, buf);
-      sprintf(buf, "%5d ", (int)suspend_manual);
+      sprintf(buf, "%6d ", (int)manual_intervention);
       XbaeMatrixSetCell(cluster_queue_settings, row, 7, buf);
-      sprintf(buf, "%5d ", (int)suspend_threshold);
+      sprintf(buf, "%5d ", (int)suspend_manual);
       XbaeMatrixSetCell(cluster_queue_settings, row, 8, buf);
-      sprintf(buf, "%5d ", (int)suspend_on_subordinate);
+      sprintf(buf, "%5d ", (int)suspend_threshold);
       XbaeMatrixSetCell(cluster_queue_settings, row, 9, buf);
-      sprintf(buf, "%5d ", (int)suspend_calendar);
+      sprintf(buf, "%5d ", (int)suspend_on_subordinate);
       XbaeMatrixSetCell(cluster_queue_settings, row, 10, buf);
-      sprintf(buf, "%5d ", (int)unknown);
+      sprintf(buf, "%5d ", (int)suspend_calendar);
       XbaeMatrixSetCell(cluster_queue_settings, row, 11, buf);
-      sprintf(buf, "%5d ", (int)load_alarm);
+      sprintf(buf, "%5d ", (int)unknown);
       XbaeMatrixSetCell(cluster_queue_settings, row, 12, buf);
-      sprintf(buf, "%5d ", (int)disabled_manual);
+      sprintf(buf, "%5d ", (int)load_alarm);
       XbaeMatrixSetCell(cluster_queue_settings, row, 13, buf);
-      sprintf(buf, "%5d ", (int)disabled_calendar);
+      sprintf(buf, "%5d ", (int)disabled_manual);
       XbaeMatrixSetCell(cluster_queue_settings, row, 14, buf);
-      sprintf(buf, "%5d ", (int)ambiguous);
+      sprintf(buf, "%5d ", (int)disabled_calendar);
       XbaeMatrixSetCell(cluster_queue_settings, row, 15, buf);
-      sprintf(buf, "%5d ", (int)orphaned);
+      sprintf(buf, "%5d ", (int)ambiguous);
       XbaeMatrixSetCell(cluster_queue_settings, row, 16, buf);
-      sprintf(buf, "%5d ", (int)error);
+      sprintf(buf, "%5d ", (int)orphaned);
       XbaeMatrixSetCell(cluster_queue_settings, row, 17, buf);
+      sprintf(buf, "%5d ", (int)error);
+      XbaeMatrixSetCell(cluster_queue_settings, row, 18, buf);
    
       row++;
    }   
@@ -2013,6 +2054,12 @@ static void qmonCQUpdateQIMatrix(void)
    int num_rows;
    char buf[BUFSIZ];
    u_long32 qstate = U_LONG32_MAX; 
+
+#ifdef QI_SORTING
+   lListElem *qip = NULL;
+   lList *qil = NULL;
+   int qil_num = 0;
+#endif   
 
    DENTER(GUI_LAYER, "qmonCQUpdateQIMatrix");
 
@@ -2083,12 +2130,13 @@ static void qmonCQUpdateQIMatrix(void)
       lPSortList(ql, "%I+", QU_full_name);
       for_each(qp, ql) {
          if ((lGetUlong(qp, QU_tag) & TAG_SHOW_IT)!=0) {
+#ifndef QI_SORTING
             num_rows = XbaeMatrixNumRows(qinstance_settings);
             if (row >= num_rows) {
                XbaeMatrixAddRows(qinstance_settings, num_rows, 
                                     NULL, NULL, NULL, 1);
             }   
-
+#endif
             /* compute the load and check for alarm states */
             is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, qp, ehl, cl, 
                                                    &has_value_from_object);
@@ -2108,23 +2156,35 @@ static void qmonCQUpdateQIMatrix(void)
                                MAX_STRING_SIZE - 1, "suspend");
             }
 
+#ifndef QI_SORTING
             /* full qname */
             XbaeMatrixSetCell(qinstance_settings, row, 0, 
                               (char*)lGetString(qp, QU_full_name));
+#else
+            qip = lAddElemStr(&qil, QI_queue, lGetString(qp, QU_full_name), qi_descr);
+#endif
             /* qtype */
             {
                dstring type_string = DSTRING_INIT;
 
                qinstance_print_qtype_to_dstring(qp, &type_string, true);
+#ifndef QI_SORTING
                XbaeMatrixSetCell(qinstance_settings, row, 1, 
                                  (char*) sge_dstring_get_string(&type_string));
+#else
+               lSetString(qip, QI_qtype, sge_dstring_get_string(&type_string));
+#endif
                sge_dstring_free(&type_string);
             }
             /* number of used/free slots */
-            sprintf(to_print, "%d/%d ", qinstance_slots_used(qp),
+            sprintf(to_print, "%d/%d/%d ", qinstance_slots_reserved(qp), qinstance_slots_used(qp),
                      (int)lGetUlong(qp, QU_job_slots));
             sprintf(buf, "%-9.9s ", to_print);   
+#ifndef QI_SORTING
             XbaeMatrixSetCell(qinstance_settings, row, 2, buf);
+#else
+            lSetString(qip, QI_used_total, to_print);
+#endif
 
             /* load avg */
             if (!is_load_value) {
@@ -2136,30 +2196,84 @@ static void qmonCQUpdateQIMatrix(void)
             } else {
                sprintf(to_print, "-NA- ");
             }
+#ifndef QI_SORTING
             XbaeMatrixSetCell(qinstance_settings, row, 3, to_print);
+#else
+            lSetString(qip, QI_load_avg, to_print);
+#endif
       
             /* arch */
             if (!sge_get_string_qattr(arch_string, sizeof(arch_string)-1, 
                                       LOAD_ATTR_ARCH, qp, ehl, cl)) {
+#ifndef QI_SORTING
                XbaeMatrixSetCell(qinstance_settings, row, 4, arch_string);
+#else               
+               lSetString(qip, QI_arch, arch_string);
+#endif
             } else {
+#ifndef QI_SORTING
                XbaeMatrixSetCell(qinstance_settings, row, 4, "-NA-");
+#else
+               lSetString(qip, QI_arch, "-NA-");
+#endif
             }
             {
                dstring state_string = DSTRING_INIT;
 
                qinstance_state_append_to_dstring(qp, &state_string);
+#ifndef QI_SORTING
                XbaeMatrixSetCell(qinstance_settings, row, 5,
                                  (char *)sge_dstring_get_string(&state_string));
+#else
+               lSetString(qip, QI_states, sge_dstring_get_string(&state_string));
+#endif
                sge_dstring_free(&state_string);
             }
+#ifndef QI_SORTING
             row++;
+#endif            
          }
       }   
       lFreeList(&ql);
    }   
 
    lFreeList(&fql);
+
+#ifdef QI_SORTING
+   /*
+   ** sort qinstances according to the criteria in qi_field_sort_by
+   */
+   if (qi_field_sort_by == QI_queue && qi_field_sort_direction == SORT_ASCENDING) {
+      lPSortList(qil, "%I+", QI_queue);
+   } else if (qi_field_sort_by == QI_queue && qi_field_sort_direction == SORT_DESCENDING) {
+      lPSortList(qil, "%I-", QI_queue);
+   } else if (qi_field_sort_direction == SORT_ASCENDING) {
+      lPSortList(qil, "%I+ %I+", qi_field_sort_by, QI_queue);
+   } else {
+      lPSortList(qil, "%I- %I+", qi_field_sort_by, QI_queue);
+   }
+
+   if ((qil_num = lGetNumberOfElem(qil)) > 0) {
+      num_rows = XbaeMatrixNumRows(qinstance_settings);
+      if (qil_num >= num_rows) {
+         XbaeMatrixAddRows(qinstance_settings, num_rows, 
+                              NULL, NULL, NULL, qil_num - num_rows);
+      }   
+   }   
+
+   row = 0;
+   for_each(qip, qil) {
+      XbaeMatrixSetCell(qinstance_settings, row, 0, (char*)lGetString(qip, QI_queue));
+      XbaeMatrixSetCell(qinstance_settings, row, 1, (char*)lGetString(qip, QI_qtype));
+      XbaeMatrixSetCell(qinstance_settings, row, 2, (char*)lGetString(qip, QI_used_total));
+      XbaeMatrixSetCell(qinstance_settings, row, 3, (char*)lGetString(qip, QI_load_avg));
+      XbaeMatrixSetCell(qinstance_settings, row, 4, (char*)lGetString(qip, QI_arch));
+      XbaeMatrixSetCell(qinstance_settings, row, 5, (char*)lGetString(qip, QI_states));
+      row++;
+   }
+
+   lFreeList(&qil);
+#endif
 
    DEXIT;
 }
@@ -2550,5 +2664,61 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
 
    DEXIT;
 }
+
+
+#ifdef QI_SORTING
+/*-------------------------------------------------------------------------*/
+static void qmonQinstanceSort(
+Widget w,
+XtPointer cld,
+XtPointer cad  
+) {
+   XbaeMatrixLabelActivateCallbackStruct *cbs = 
+            (XbaeMatrixLabelActivateCallbackStruct *) cad;
+   int column_nm[] = {
+      QI_queue,
+      QI_qtype,
+      QI_used_total,
+      QI_load_avg,
+      QI_arch,
+      QI_states,
+   };
+
+   DENTER(GUI_LAYER, "qmonQinstanceSort");
+ 
+   DPRINTF(("QISort = cbs->column = %d\n", cbs->column));
+   
+   /* not coping beyond 6th column */
+   if (cbs->column > 5) {
+      DEXIT;
+      return;
+   }
+   /* 
+   ** Here is what we are going to do for sorting:
+   ** if the user clicks on a column, we'll sort ascending,
+   ** doing a 2nd time toggles to decending; except
+   ** we always toggle on the job number the first time
+   ** it is selected from a different column, since it is
+   ** always a secondary sort key and if it is selected
+   ** the user most likely wants a toggle.
+   */
+      
+   if (column_nm[cbs->column] == qi_field_sort_by) {
+      /* toggling sort order */
+      if (qi_field_sort_direction == SORT_ASCENDING) {
+         qi_field_sort_direction = SORT_DESCENDING;     
+      } else {
+         qi_field_sort_direction = SORT_ASCENDING;     
+      }
+   } else {
+      qi_field_sort_by = column_nm[cbs->column];
+      qi_field_sort_direction = SORT_ASCENDING;
+   }
+
+   qmonCQUpdateQIMatrix();
+    
+   DEXIT;
+}
+#endif
 
 

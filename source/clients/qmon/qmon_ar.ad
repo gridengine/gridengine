@@ -43,14 +43,13 @@ Qmon*ar_main_layout.xmtChildren: \
    XmForm         ar_form; \
    XmToggleButton ar_force; \
    XmPushButton   ar_delete, ar_submit, ar_update, \
-                  ar_qalter, \
                   ar_customize, ar_done, ar_help, \
                   ar_select_all;
 
 Qmon*ar_main_layout.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row arcontrol_title { \
       Fixed Centered ar_main_link \
-      Centered Color "$title_fg" "@{@fBAdvanced Reservation}" \
+      Centered Color "$title_fg" "@{@fBAdvance Reservation}" \
    } \
    # \
    Row { \
@@ -63,7 +62,6 @@ Qmon*ar_main_layout.layout: \
             ar_delete \
             ar_select_all \
          } \
-         ar_qalter \
          ar_customize \
          ar_done \
          ar_help \
@@ -87,7 +85,6 @@ Qmon*ar_main_layout*ar_update.labelString:    @{Refresh}
 Qmon*ar_main_layout*ar_delete.labelString:    @{Delete}
 Qmon*ar_main_layout*ar_select_all.labelString: @{Select All}
 Qmon*ar_main_layout*ar_customize.labelString: @{Customize}
-Qmon*ar_main_layout*ar_qalter.labelString:    @{Qalter}
 Qmon*ar_main_layout*ar_help.labelString:      @{Help}
 
 Qmon*ar_main_layout*ar_force.labelString:     @{Force}

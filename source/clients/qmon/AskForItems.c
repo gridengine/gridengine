@@ -211,7 +211,8 @@ XmtPerScreenInfo *info
    XtSetArg(args[i], XmtNitemStretch, 0); i++;
    XtSetArg(args[i], XmtNlayoutAllowResize, False); i++;
    XtSetArg(args[i], XmNselectionPolicy, XmEXTENDED_SELECT); i++;
-   XtSetArg(args[i], XmNvisibleItemCount, 15); i++;
+/*    XtSetArg(args[i], XmNvisibleItemCount, 15); i++; */
+   XtSetArg(args[i], XmtNlayoutHeight, 300); i++;
    avail_list = XmCreateScrolledList(ask_items, "ItemsAvailable", 
                            args, i);
 #if 0
@@ -285,7 +286,8 @@ XmtPerScreenInfo *info
    XtSetArg(args[i], XmtNitemStretch, 0); i++;
    XtSetArg(args[i], XmtNlayoutAllowResize, False); i++;
    XtSetArg(args[i], XmNselectionPolicy, XmEXTENDED_SELECT); i++;
-   XtSetArg(args[i], XmNvisibleItemCount, 15); i++;
+/*    XtSetArg(args[i], XmNvisibleItemCount, 15); i++; */
+   XtSetArg(args[i], XmtNlayoutHeight, 300); i++;
    chosen_list = XmCreateScrolledList(ask_items, "ItemsChosen", 
                            args, i);
 #if 0

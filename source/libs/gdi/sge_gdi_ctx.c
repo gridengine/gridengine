@@ -204,6 +204,14 @@ u_long32 gdi_state_get_next_request_id(void)
    return gdi_state->request_id;
 }
 
+#ifdef USE_GDI_STATE
+static void gdi_state_set_made_setup(int i)
+{
+   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
+   gdi_state->made_setup = i;
+}
+#endif
+
 
 int gdi_state_get_made_setup(void)
 {
@@ -431,7 +439,8 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz,
                               const char *sge_root, 
                               const char *sge_cell, 
                               int sge_qmaster_port, 
-                              int sge_execd_port);
+                              int sge_execd_port,
+                              bool from_services);
 static void sge_gdi_ctx_destroy(void *theState);
 
 static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup);
@@ -524,7 +533,8 @@ static int sge_gdi_ctx_class_gdi_multi_sync(sge_gdi_ctx_class_t* thiz,
 sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* component_name,
                                               const char* username, const char *groupname,
                                               const char *sge_root, const char *sge_cell, 
-                                              int sge_qmaster_port, int sge_execd_port, lList **alpp)
+                                              int sge_qmaster_port, int sge_execd_port, bool from_services,
+                                              lList **alpp)
 {
    sge_gdi_ctx_class_t *ret = (sge_gdi_ctx_class_t *)sge_malloc(sizeof(sge_gdi_ctx_class_t));
    sge_gdi_ctx_t *gdi_ctx = NULL;
@@ -617,7 +627,7 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    }
 
 
-   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, username, groupname, sge_root, sge_cell, sge_qmaster_port, sge_execd_port)) {
+   if (!sge_gdi_ctx_setup(ret, prog_number, component_name, username, groupname, sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services)) {
       sge_gdi_ctx_class_get_errors(ret, alpp, true);
       sge_gdi_ctx_class_destroy(&ret);
       DRETURN(NULL);
@@ -703,7 +713,7 @@ static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup)
 
 static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
 {
-   sge_gdi_ctx_t *gdi_ctx;
+   sge_gdi_ctx_t *gdi_ctx = NULL;
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_is_setup");
 
@@ -721,7 +731,8 @@ static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
 
 static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* component_name,
                               const char* username, const char *groupname,
-                              const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port)
+                              const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port,
+                              bool from_services)
 {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *)thiz->sge_gdi_ctx_handle;
    sge_error_class_t *eh = es->eh;
@@ -760,7 +771,7 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    /* TODO: shall we do that here ? */
    lInit(nmv);
 
-   es->sge_env_state_obj = sge_env_state_class_create(sge_root, sge_cell, sge_qmaster_port, sge_execd_port, eh);
+   es->sge_env_state_obj = sge_env_state_class_create(sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, eh);
    if (!es->sge_env_state_obj) {
       DRETURN(false);
    }   
@@ -948,10 +959,10 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create_from_bootstrap(int prog_number,
 
    sge_free_saved_vars(url_ctx);
    
-   /* TODO we need a way to define the execd port */
+   /* TODO we need a way to define the execd port, from_services is always false (certs from keystore) */
    
    ret = sge_gdi_ctx_class_create(prog_number, component_name, username, NULL,
-                                  sge_root, sge_cell, sge_qmaster_p, sge_execd_p, alpp);
+                                  sge_root, sge_cell, sge_qmaster_p, sge_execd_p, false, alpp);
    
    DRETURN(ret); 
 }
@@ -1988,6 +1999,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
    const char *sge_cell = NULL;
    u_long32 sge_qmaster_port = 0;
    u_long32 sge_execd_port = 0;
+   bool from_services = false;
 
    DENTER(TOP_LAYER, "sge_setup2");
 
@@ -2006,7 +2018,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
       DRETURN(AE_ERROR);
    }
    sge_cell = getenv("SGE_CELL")?getenv("SGE_CELL"):DEFAULT_CELL;
-   sge_qmaster_port = sge_get_qmaster_port();
+   sge_qmaster_port = sge_get_qmaster_port(&from_services);
    sge_execd_port = sge_get_execd_port();
 
 /* sge_mt_init { */
@@ -2032,7 +2044,7 @@ int sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, lList **alpp)
 
    /* a dynamic eh handler is created */
    *context = sge_gdi_ctx_class_create(progid, prognames[progid], user, group,
-                                       sge_root, sge_cell, sge_qmaster_port, sge_execd_port, alpp);
+                                       sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, alpp);
 
    if (*context == NULL) {
       DRETURN(AE_ERROR);
@@ -2065,7 +2077,15 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
 
    DENTER(TOP_LAYER, "sge_gdi2_setup");
 
-   if (sge_gdi_ctx_is_setup(*context_ref)) {
+#ifdef USE_GDI_STATE 
+   if (alpp != NULL && *alpp != NULL) {
+     alpp_was_null = false;
+   }
+
+   /* TODO: gdi_state_t should be part of context */
+   /* initialize libraries */
+   pthread_once(&gdi_once_control, gdi_once_init);
+   if (gdi_state_get_made_setup()) {
       if (alpp_was_null) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
       } else {
@@ -2074,7 +2094,17 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
       }
       DRETURN(AE_ALREADY_SETUP);
    }
-
+#else   
+   if (context_ref && sge_gdi_ctx_is_setup(*context_ref)) {
+      if (alpp_was_null) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                 MSG_GDI_GDI_ALREADY_SETUP);
+      }
+      DRETURN(AE_ALREADY_SETUP);
+   }
+#endif
    ret = sge_setup2(context_ref, progid, alpp); 
    if (ret != AE_OK) {
       DRETURN(ret);
@@ -2085,7 +2115,12 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
       DRETURN(AE_QMASTER_DOWN);
    }
 
+#ifdef USE_GDI_STATE
+   /* TODO: gdi_state should be part of context */
+   gdi_state_set_made_setup(1);
+#else   
    sge_gdi_ctx_set_is_setup(*context_ref, true);
+#endif
 
    DRETURN(AE_OK);
 }

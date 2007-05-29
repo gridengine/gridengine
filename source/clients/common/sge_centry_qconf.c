@@ -1,4 +1,4 @@
-
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/*___INFO__MARK_END__*/
 
 #include <string.h>
 

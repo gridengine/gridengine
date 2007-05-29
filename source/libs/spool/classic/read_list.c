@@ -417,13 +417,10 @@ sge_read_ar_list_from_disk(lList **list, const char *directory, lList **alpp)
                break;
             }
 
-/* EB: TODO AR: enable validation after classic spooling is finished */
-#if 0
-            if (pe_validate(ep, NULL, 1)!=STATUS_OK) {
+            if (ar_validate(ep, alpp, true, true) != true) {
                ret = -1;
                break;
             }
-#endif
             lAppendElem(*list, ep);
          } else {
             sge_unlink(directory, ar);

@@ -730,6 +730,12 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DRETURN(STATUS_EEXIST);
+         } else if ((lGetUlong(ar, AR_state) == AR_DELETED) ||
+                    (lGetUlong(ar, AR_state) == AR_EXITED)) {
+            ERROR((SGE_EVENT, MSG_JOB_ARNOLONGERAVAILABE_U, sge_u32c(ar_id)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+            DRETURN(STATUS_EEXIST);
          }
          /* fill the job and ar values */         
          ar_start_time = lGetUlong(ar, AR_start_time);
@@ -1023,7 +1029,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
       /* Does user have privileges to delete the job/task? */
       if (job_check_owner(ruser, job_number, master_job_list)) {
-         ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
+         ERROR((SGE_EVENT, MSG_DELETEPERMS_SSU, ruser, SGE_OBJ_JOB,
                 sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          njobs++;
@@ -1146,13 +1152,13 @@ u_long32 step
             ERROR((SGE_EVENT,MSG_SGETEXT_DEL_JOB_SS, jobid, sge_dstring_get_string(&user_list_string)));
          }    
       } else {
-         ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBSFORUSERS_S, sge_dstring_get_string(&user_list_string)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOXFORUSERS_SS, SGE_OBJ_JOB, sge_dstring_get_string(&user_list_string)));
       }
 
       sge_dstring_free(&user_list_string);
 
    } else if (all_jobs_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBSFORUSERS_S, ruser));
+      ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOXFORUSERS_SS, SGE_OBJ_JOB ,ruser));
    } else if (jid_flag) {
       /* should not be possible */
       if (is_array) {
@@ -1278,7 +1284,7 @@ char *ruser
 
    /* Reject incorrect requests */
    if (!all_users_flag && !all_jobs_flag && !jid_flag && !user_list_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_SPECIFYUSERORJID));
+      ERROR((SGE_EVENT, MSG_SGETEXT_SPECIFYUSERORID_S, SGE_OBJ_JOB));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -1478,8 +1484,8 @@ void get_rid_of_job_due_to_qdel(sge_gdi_ctx_class_t *ctx,
             INFO((SGE_EVENT, MSG_JOB_REGDELTASK_SUU,
                   ruser, sge_u32c(job_number), sge_u32c(task_number)));
          } else {
-            INFO((SGE_EVENT, MSG_JOB_REGDELJOB_SU,
-                  ruser, sge_u32c(job_number)));
+            INFO((SGE_EVENT, MSG_JOB_REGDELX_SSU,
+                  ruser, SGE_OBJ_JOB, sge_u32c(job_number)));
          }
       }
       answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 

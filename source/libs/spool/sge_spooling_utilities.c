@@ -515,7 +515,7 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_AR:
-         if (!ar_validate(object, answer_list, true)) {
+         if (!ar_validate(object, answer_list, true, true)) {
             ret = false;
          }
          break;
@@ -539,8 +539,7 @@ bool spool_default_validate_func(lList **answer_list,
          break;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -588,7 +587,6 @@ spool_default_validate_list_func(lList **answer_list,
          break;
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 

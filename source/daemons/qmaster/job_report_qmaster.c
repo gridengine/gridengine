@@ -682,7 +682,7 @@ monitoring_t *monitor
                }
             } else {
                lListElem *pe;
-               if ( lGetString(jatep, JAT_granted_pe)
+               if (lGetString(jatep, JAT_granted_pe)
                   && (pe=pe_list_locate(*object_base[SGE_TYPE_PE].list, lGetString(jatep, JAT_granted_pe)))
                   && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
@@ -747,7 +747,7 @@ monitoring_t *monitor
 
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
-                              sge_add_list_event( 0, sgeE_JOB_USAGE, 
+                              sge_add_list_event(0, sgeE_JOB_USAGE, 
                                                  jobid, jataskid, 
                                                  PE_TASK_PAST_USAGE_CONTAINER, 
                                                  NULL,

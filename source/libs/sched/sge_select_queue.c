@@ -7225,8 +7225,10 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
 
    DENTER(TOP_LAYER, "match_static_advance_reservation");
 
+
    if (lGetUlong(a->job, JB_ar) != 0) {
       if ((ar = lGetElemUlong(a->ar_list, AR_id, lGetUlong(a->job, JB_ar))) != NULL) {
+         bool schedule_based;
          /* is ar in error and error handling is not soft? */
          if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, lGetUlong(a->job, JB_ar)); 
@@ -7234,7 +7236,8 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
          }
          
          /* is ar running? */
-         if (lGetUlong(ar, AR_state) != AR_RUNNING) {
+         schedule_based = ((a->duration != 0 && sconf_get_max_reservations() > 0)) ? true : false;
+         if (schedule_based && lGetUlong(ar, AR_state) != AR_RUNNING) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
             DRETURN(DISPATCH_NEVER_CAT);
          }

@@ -51,7 +51,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 
 /* funtions called via gdi and inside the qmaster */
 int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_list, 
-           char *ruser, char *rhost, monitoring_t *monitor);
+           const char *ruser, const char *rhost, monitoring_t *monitor);
 
 void sge_store_ar_id(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 
@@ -76,7 +76,8 @@ bool
 ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list, lList **answer_list,
                                           const char *pe_name, u_long32 new_slots);
 
-void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring_t *monitor);
+bool
+sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, int forced, monitoring_t *monitor);
 
 bool
 sge_ar_list_conflicts_with_calendar(lList **answer_list, const char *qinstance_name, lListElem *cal_ep,

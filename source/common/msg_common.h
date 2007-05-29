@@ -1075,8 +1075,6 @@
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QDEL _MESSAGE(60625, _("delete all jobs of users specified in list"))
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL_QRSTAT _MESSAGE(60626, _("all advance reservations of users specified in list"))
 
-#define MSG_OBJ_AR                         _MESSAGE(60630, _("advance reservation"))
-
 #define MSG_GDI_UTEXT_e_OPT_END_TIME       _MESSAGE(60631, _("request an end time"))
 #define MSG_GDI_USAGE_e_OPT_END_TIME       "[-e date_time]"
 

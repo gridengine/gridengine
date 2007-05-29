@@ -326,7 +326,7 @@
 #define MSG_JOB_DELETEJOB             _MESSAGE(33238, _("delete job"))
 #define MSG_JOB_JOB                   _MESSAGE(33239, _("Job"))
 #define MSG_JOB_FORCEDDELETEPERMS_S   _MESSAGE(33240, _(SFQ" - forcing a job deletion requires manager privileges"))
-#define MSG_JOB_DELETEPERMS_SU        _MESSAGE(33241, _(SFN" - you do not have the necessary privileges to delete the job \"" sge_U32CFormat "\""))
+#define MSG_DELETEPERMS_SSU           _MESSAGE(33241, _(SFN" - you do not have the necessary privileges to delete the "SFN" \"" sge_U32CFormat "\""))
 #define MSG_JOB_DELETETASK_SUU        _MESSAGE(33242, _(SFN" has deleted job-array task "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_DELETETASKS_SSU       _MESSAGE(33243, _(SFN" has deleted job-array tasks "SFN" of job "sge_U32CFormat))
 #define MSG_JOB_DELETEJOB_SU          _MESSAGE(33244, _(SFN" has deleted job "sge_U32CFormat))
@@ -348,7 +348,7 @@
 #define MSG_JOB_FORCEDDELJOB_SU       _MESSAGE(33251, _("warning: "SFN" forced the deletion of job "sge_U32CFormat))
 #define MSG_COM_NOSYNCEXECD_SU        _MESSAGE(33252, _(SFN" unable to sync state with remote execd for the deletion of job \"" sge_U32CFormat "\""))
 #define MSG_JOB_REGDELTASK_SUU        _MESSAGE(33253, _(SFN" has registered the job-array task "sge_U32CFormat"."sge_U32CFormat" for deletion"))
-#define MSG_JOB_REGDELJOB_SU          _MESSAGE(33254, _(SFN" has registered the job "sge_U32CFormat" for deletion"))
+#define MSG_JOB_REGDELX_SSU           _MESSAGE(33254, _(SFN" has registered the "SFN" "sge_U32CFormat" for deletion"))
 #define MSG_JOB_CHANGEATTR            _MESSAGE(33255, _("change job attributes"))
 #define MSG_JOB_NOALTERNOWRITE_U      _MESSAGE(33256, _("alternation of job "sge_U32CFormat" was rejected cause it couldn't be written"))
 #define MSG_JOB_CHANGESHAREFUNC       _MESSAGE(33257, _("change share of job functional tickets"))
@@ -420,8 +420,8 @@
 #define MSG_SGETEXT_NOJOBSDELETED                     _MESSAGE(33328, _("No jobs deleted"))
 #define MSG_SGETEXT_NOJOBSMODIFIED                    _MESSAGE(33329, _("No jobs modified"))
 #define MSG_SGETEXT_THEREARENOJOBS                    _MESSAGE(33330, _("There are no jobs registered"))
-#define MSG_SGETEXT_THEREARENOJOBSFORUSERS_S          _MESSAGE(33331, _("There are no jobs registered for following users: "SFN))
-#define MSG_SGETEXT_SPECIFYUSERORJID                  _MESSAGE(33332, _("You have to specify a username or job ids"))
+#define MSG_SGETEXT_THEREARENOXFORUSERS_SS            _MESSAGE(33331, _("There are no "SFN" registered for following users: "SFN))
+#define MSG_SGETEXT_SPECIFYUSERORID_S                 _MESSAGE(33332, _("You have to specify a username or "SFN" ids"))
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33334, _("job rejected: no access to project "SFQ" for user "SFQ) ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33335, _("it is not allowed to select users and job ids together"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33336, _(""SFN"@"SFN" modified \"" sge_U32CFormat "\" in "SFN" list"))
@@ -785,7 +785,6 @@
 #define MSG_OBJECT_ALREADYEXIN_SSS                  _MESSAGE(33942, _("No modification because "SFQ" already exists in "SFQ" of "SFQ))
 #define MSG_QUEUE_MODCMPLXDENYDUETOAR_SS            _MESSAGE(33943, _("denied: changing "SFQ" in "SFN" would break advance reservation"))
 #define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
-
+#define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
       
-
 #endif

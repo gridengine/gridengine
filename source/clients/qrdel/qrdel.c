@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <string.h>
+
 #include "basis_types.h"
 #include "sge.h"
 
@@ -50,18 +52,18 @@
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "sig_handlers.h"
+#include "sgeobj/sge_str.h"
 
 static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
-static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pforce, lList **alpp);
+static bool sge_parse_qrdel(lList **ppcmdline, lList **ppid_list, lList **alpp);
 
 extern char **environ;
 
 /************************************************************************/
 int main(int argc, char **argv) {
-   lList *pcmdline = NULL, *ar_list = NULL;
+   lList *pcmdline = NULL, *id_list = NULL;
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
-   u_long32 force = 0;
 
    DENTER_MAIN(TOP_LAYER, "qrdel");
 
@@ -92,20 +94,20 @@ int main(int argc, char **argv) {
    /*
    ** stage 2 of command line parsing
    */
-   if (!sge_parse_qrdel(&pcmdline, &ar_list, &force, &alp)) {
+   if (!sge_parse_qrdel(&pcmdline, &id_list, &alp)) {
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       goto error_exit;
    }
 
-   if (!ar_list) {
+   if (!id_list) {
       sge_usage(QRDEL, stderr);
       fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       goto error_exit;
    }
 
-   alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_DEL, &ar_list, NULL, NULL);
-   lFreeList(&ar_list);
+   alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_DEL, &id_list, NULL, NULL);
+   lFreeList(&id_list);
    answer_list_on_error_print_or_exit(&alp, stdout);
 
    sge_prof_cleanup();
@@ -136,7 +138,19 @@ static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline,
          continue;
 
       /* -u option */
-      if ((rp = parse_until_next_opt(sp, "-u", NULL,  ppcmdline, alpp)) != sp) {
+      if (!strcmp("-u", *sp)) {
+         lList *user_list = NULL;
+         lListElem *ep_opt;
+
+         sp++;
+         if (*sp) {
+            str_list_parse_from_string(&user_list, *sp, ",");
+
+            ep_opt = sge_add_arg(ppcmdline, 0, lListT, *(sp - 1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, user_list);
+            sp++;
+         }
+         rp = sp;
          continue;
       }
       /* job id's */
@@ -154,50 +168,38 @@ static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline,
 }
 
 
-static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pforce,
-                           lList **alpp)
+static bool sge_parse_qrdel(lList **ppcmdline, lList **ppid_list, lList **alpp)
 {
+   u_long32 pforce = 0;
    u_long32 helpflag;
-   lList *plist=NULL;
+   lList *plist = NULL;
+   lList *user_list = NULL;
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_parse_qrdel");
 
-   while(lGetNumberOfElem(*ppcmdline))
-   {
+   while (lGetNumberOfElem(*ppcmdline)) {
       lListElem *ep = NULL;
       
-      /* To be sure, all parsed options are cleared in next switch */
-      lFreeList(&plist); 
-
-      if(parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
+      if (parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
          sge_usage(QRDEL, stdout);
          DEXIT;
          SGE_EXIT(NULL, 0);
          break;
       }
-      if(parse_flag(ppcmdline, "-f", alpp, pforce)) 
+      if (parse_flag(ppcmdline, "-f", alpp, &pforce)) 
          continue;
 
-      if(parse_multi_stringlist(ppcmdline, "-u", alpp, &plist, ST_Type, ST_name)) {
-         for_each(ep, plist) {
-            const char *owner = lGetString(ep, ST_name);
-
-            lAddElemStr(ppar_list, AR_owner, owner, AR_Type);
-         }
+      if (parse_multi_stringlist(ppcmdline, "-u", alpp, &user_list, ST_Type, ST_name)) {
          continue;
       }
      
-      if(parse_multi_stringlist(ppcmdline, "ars", alpp, &plist, ST_Type, ST_name)) {
+      if (parse_multi_stringlist(ppcmdline, "ars", alpp, &plist, ST_Type, ST_name)) {
          for_each(ep, plist) {
             const char *id = lGetString(ep, ST_name);
-
-            if (isdigit(id[0])) {
-               lAddElemUlong(ppar_list, AR_id, atoi(id), AR_Type);
-            } else {
-               lAddElemStr(ppar_list, AR_name, id, AR_Type);
-            }
+            lAddElemStr(ppid_list, ID_str, id, ID_Type);
          }
+         lFreeList(&plist);
          continue;
       }
     
@@ -209,10 +211,33 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppar_list, u_long32 *pfor
       }
       break;
    }
-   lFreeList(&plist); 
 
    if (answer_list_has_error(alpp)) {
       ret = false;
+      lFreeList(ppid_list);
+      lFreeList(&user_list);
+   } else {
+      /* fill up ID list */
+      if (user_list) {
+         lListElem *id;
+
+         if (lGetNumberOfElem(*ppid_list) == 0){
+            id = lAddElemStr(ppid_list, ID_str, "0", ID_Type);
+            lSetList(id, ID_user_list, user_list);
+         } else {
+            for_each(id, *ppid_list){
+               lSetList(id, ID_user_list, lCopyList("", user_list));
+            }
+         }
+         lFreeList(&user_list);
+      }
+
+      if (pforce != 0) {
+         lListElem *id;
+         for_each(id, *ppid_list){
+            lSetUlong(id, ID_force, pforce);
+         }
+      }
    }
 
    DRETURN(ret);

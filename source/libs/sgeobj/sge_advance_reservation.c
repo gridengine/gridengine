@@ -121,8 +121,9 @@ lListElem *ar_list_locate(lList *ar_list, u_long32 ar_id)
 *
 *  INPUTS
 *     lListElem *ar   - the ar to check
-*     lList **alpp - answer list pointer
-*     bool in_master      - are we in qmaster?
+*     lList **alpp    - answer list pointer
+*     bool in_master  - are we in qmaster?
+*     bool is_spool   - do we validate for spooling? 
 *
 *  RESULT
 *     bool - true if OK, else false
@@ -130,7 +131,7 @@ lListElem *ar_list_locate(lList *ar_list, u_long32 ar_id)
 *  NOTES
 *     MT-NOTE: ar_validate() is MT safe
 *******************************************************************************/
-bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
+bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
 {
    u_long32 start_time;
    u_long32 end_time;
@@ -182,10 +183,13 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master)
                               MSG_AR_START_LATER_THAN_END);
       goto ERROR;
    }
-   if (start_time < now) {
-      answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
-                              MSG_AR_START_IN_PAST);
-      goto ERROR;
+   
+   if (!is_spool) {
+      if (start_time < now) {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_ERROR,
+                                 MSG_AR_START_IN_PAST);
+         goto ERROR;
+      }
    }
    /*   AR_owner, SGE_STRING */
    

@@ -51,11 +51,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
-#include "sgeobj/msg_sgeobjlib.h"
-#include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_hgroup.h"
-#include "sgeobj/sge_userset.h"
-#include "sched/sge_resource_utilization.h"
 
 #include "sge_lock.h"
 #include "sge_mtutil.h"
@@ -63,6 +58,12 @@
 #include "uti/sge_uidgid.h"
 #include "sge_utility.h"
 #include "sge_range.h"
+#include "sgeobj/msg_sgeobjlib.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_cqueue.h"
@@ -73,7 +74,9 @@
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_ulong.h"
 
+#include "sched/sge_resource_utilization.h"
 #include "sched/sge_select_queue.h"
 #include "sched/schedd_monitor.h"
 #include "sched/sge_job_schedd.h"
@@ -86,6 +89,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_cqueue_qmaster.h"
+#include "sge_job_qmaster.h"
 
 #include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
@@ -160,7 +164,7 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
 
    DENTER(TOP_LAYER, "ar_mod");
 
-   if (!ar_validate(ar, alpp, true)) {
+   if (!ar_validate(ar, alpp, true, false)) {
       goto ERROR;
    }
 
@@ -376,7 +380,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 
 /****** sge_advance_reservation_qmaster/ar_del() *******************************
 *  NAME
-*     ar_del() -- removed advance reservation from master list
+*     ar_del() -- removes advance reservation from master list
 *
 *  SYNOPSIS
 *     int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList 
@@ -388,7 +392,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 *
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx - GDI context
-*     lListElem *ep            - element that should be removed
+*     lListElem *ep            - element that should be removed (ID_Type)
 *     lList **alpp             - answer list
 *     lList **ar_list          - list from where the element should be removed
 *                                (normally a reference to the master ar list)
@@ -402,23 +406,20 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
 *  NOTES
 *     MT-NOTE: ar_del() is not MT safe 
 *******************************************************************************/
-int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_list, 
-           char *ruser, char *rhost, monitoring_t *monitor)
+int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master_ar_list, 
+           const char *ruser, const char *rhost, monitoring_t *monitor)
 {
-   const char *ar_name;
-   const char *ar_owner;
-   u_long32 ar_id = 0;
-   lListElem *found;
+   const char *id_str = NULL;
+   lList *user_list = NULL;
+   lListElem *ar, *nxt;
    bool removed_one = false;
+   bool has_manager_privileges = false;
    dstring buffer = DSTRING_INIT;
+   lCondition *ar_where = NULL;
+   u_long32 now;
 
    DENTER(TOP_LAYER, "ar_del");
 
-   /*
-    When the AR end time is reached at first all jobs referring to the
-    AR will be deleted and at second the AR itself will be deleted.
-    No jobs can request the AR handle any longer.
-   */
    if (!ep || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -426,89 +427,143 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **ar_lis
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   /* ep is no ar element, if ep has no AR_id */
-   if (lGetPosViaElem(ep, AR_id, SGE_NO_ABORT) < 0) {
+   /* ep is no ar_del element, if ep has no ID_str */
+   if (lGetPosViaElem(ep, ID_str, SGE_NO_ABORT) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(AR_id), SGE_FUNC));
+            lNm2Str(ID_str), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   ar_name = lGetString(ep, AR_name);
-   ar_owner= lGetString(ep, AR_owner);
-   ar_id = lGetUlong(ep, AR_id);
-   if (!ar_name && !ar_owner && ar_id == 0) {
-      CRITICAL((SGE_EVENT, MSG_AR_XISINVALIDARID_U, sge_u32c(ar_id)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      sge_dstring_free(&buffer);
-      DRETURN(STATUS_EUNKNOWN);
+   if ((user_list = lGetList(ep, ID_user_list)) != NULL) {
+      lCondition *new_where = NULL;
+      lListElem *user;
+      for_each(user, user_list) {
+         new_where = lWhere("%T(%I p= %s)", AR_Type, AR_owner, lGetString(user, ST_name));
+         if (ar_where == NULL) {
+            ar_where = new_where;
+         } else {
+            ar_where = lOrWhere(ar_where, new_where);
+         }   
+      }
    }
 
-   /* search for ar with this name and remove it from the list */
-   if (ar_name) {
-      found = lGetElemStr(*ar_list, AR_name, ar_name);
-   } else if (ar_owner) {
-      found = lGetElemStrLike(*ar_list, AR_owner, ar_owner);
+   if (((id_str = lGetString(ep, ID_str)) != NULL) && (strcmp(id_str, "0") != 0)) {
+      lCondition *new_where = NULL;
+      if (isdigit(id_str[0])) {
+         new_where = lWhere("%T(%I==%u)", AR_Type, AR_id, atol(id_str)); 
+      } else {
+         new_where = lWhere("%T(%I p= %s)", AR_Type, AR_name, id_str);
+      }
+      if (!ar_where) {
+         ar_where = new_where;
+      } else {
+         ar_where = lAndWhere(ar_where, new_where);
+      }
    } else {
-      found = ar_list_locate(*ar_list, ar_id);
+      id_str = NULL;
    }
 
-   while (found) {
-      u_long32 now = sge_get_gmt();
-      removed_one = true;
+   if (id_str == NULL && user_list == NULL) {
+      CRITICAL((SGE_EVENT, MSG_SGETEXT_SPECIFYUSERORID_S, SGE_OBJ_AR));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      sge_dstring_free(&buffer);
+      DRETURN(STATUS_EUNKNOWN);
+   }
 
-      ar_id = lGetUlong(found, AR_id);
+   if (manop_is_manager(ruser)) {
+      has_manager_privileges = true;
+   }
+
+   now = sge_get_gmt();
+   nxt = lFirst(*master_ar_list);
+   while ((ar=nxt)) {
+      u_long32 ar_id = lGetUlong(ar, AR_id);
       sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
 
-      sge_ar_state_set_deleted(found);
+      nxt = lNext(ar);
+
+      if ((ar_where != NULL) && !lCompare(ar, ar_where)) {
+         continue;
+      }
+
+      removed_one = true;
+
+      if (strcmp(ruser, lGetString(ar, AR_owner)) && !has_manager_privileges) {
+         WARNING((SGE_EVENT, MSG_DELETEPERMS_SSU,
+                  ruser, SGE_OBJ_AR, sge_u32c(ar_id)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_WARNING);
+         continue;
+      }
+
+
+      sge_ar_state_set_deleted(ar);
 
       /* remove timer for this advance reservation */
       te_delete_one_time_event(TYPE_AR_EVENT, ar_id, AR_RUNNING, NULL);
       te_delete_one_time_event(TYPE_AR_EVENT, ar_id, AR_EXITED, NULL);
 
+      sge_ar_send_mail(ar, MAIL_AT_EXIT);
+
       /* remove all jobs refering to the AR */
-      sge_ar_remove_all_jobs(ctx, ar_id, monitor);
+      if (sge_ar_remove_all_jobs(ctx, ar_id, lGetUlong(ep, ID_force), monitor)) {
+         /* either all jobs were successfull removed or we had no jobs */
 
-      /* unblock reserved queues */
-      ar_do_reservation(found, false);
+         /* unblock reserved queues */
+         ar_do_reservation(ar, false);
 
-      reporting_create_ar_log_record(NULL, found, ARL_DELETED, 
-                                     "AR deleted",
-                                     now);  
-      reporting_create_ar_acct_records(NULL, found, now); 
+         reporting_create_ar_log_record(NULL, ar, ARL_DELETED, 
+                                        "AR deleted",
+                                        now);  
+         reporting_create_ar_acct_records(NULL, ar, now); 
 
-      sge_ar_send_mail(found, MAIL_AT_EXIT);
 
-      found = lDechainElem(*ar_list, found);
+         lRemoveElem(*master_ar_list, &ar);
 
-      sge_event_spool(ctx, alpp, 0, sgeE_AR_DEL, 
-                      0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
-                      NULL, NULL, NULL, true, true);
-
-      INFO((SGE_EVENT, "%s@%s deleted advance reservation %s",
-               ruser, rhost, sge_dstring_get_string(&buffer)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-      lFreeElem(&found);
-      if (ar_name) {
-         found = lGetElemStr(*ar_list, AR_name, ar_name);
+         INFO((SGE_EVENT, "%s@%s deleted advance reservation %s",
+                  ruser, rhost, sge_dstring_get_string(&buffer)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         
+         sge_event_spool(ctx, alpp, 0, sgeE_AR_DEL, 
+                         0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                         NULL, NULL, NULL, true, true);
+      } else {
+         INFO((SGE_EVENT, MSG_JOB_REGDELX_SSU,
+                  ruser, SGE_OBJ_AR, sge_u32c(ar_id)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         sge_event_spool(ctx, alpp, 0, sgeE_AR_MOD, 
+                         0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                         ar, NULL, NULL, true, true);
       }
-      if (ar_owner) {
-         found = lGetElemStrLike(*ar_list, AR_owner, ar_owner);
-      }
+
     }
 
    if (!removed_one) {
-      if (ar_name) {
-         sge_dstring_sprintf(&buffer, "for name %s", ar_name);
-      } else if (ar_owner) {
-         sge_dstring_sprintf(&buffer, "for user %s", ar_owner);
+      if (id_str != NULL) {
+         sge_dstring_sprintf(&buffer, "%s", id_str);
+         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)));
       } else {
-         sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
-      }
+         lListElem *user;
+         bool first = true;
+         int umax = 20;
+
+         sge_dstring_clear(&buffer);
+         for_each(user, user_list) {
+            if (!first) {
+               sge_dstring_append(&buffer, ",");
+            } else {
+               first = false;
+            }
+            if (umax == 0) {
+               sge_dstring_append(&buffer, "...");
+               break;
+            }   
+            umax--;
+         }
+         ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOXFORUSERS_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)));
+      } 
   
-      ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_AR, sge_dstring_get_string(&buffer)));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);
       DRETURN(STATUS_EEXIST);
@@ -773,7 +828,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       sge_ar_state_set_exited(ar);
 
       /* remove all jobs running in this AR */
-      sge_ar_remove_all_jobs(ctx, ar_id, monitor);
+      sge_ar_remove_all_jobs(ctx, ar_id, 1, monitor);
 
       /* unblock reserved queues */
       ar_do_reservation(ar, false);
@@ -1475,7 +1530,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
    object_description *object_base = object_type_get_object_description();
    lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
    lList *master_cqueue_list = *object_base[SGE_TYPE_CQUEUE].list;
-   dstring buf = DSTRING_INIT;
+   dstring buffer = DSTRING_INIT;
 
    static int queue_field[] = { QU_qhostname,
                                 QU_qname,
@@ -1485,6 +1540,22 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                                 QU_resource_utilization,
                                 QU_message_list,
                                 QU_state,
+                                QU_s_rt,
+                                QU_h_rt,
+                                QU_s_cpu,
+                                QU_h_cpu,
+                                QU_s_fsize,
+                                QU_h_fsize,
+                                QU_s_data,
+                                QU_h_data,
+                                QU_s_stack,
+                                QU_h_stack,
+                                QU_s_core,
+                                QU_h_core,
+                                QU_s_rss,
+                                QU_h_rss,
+                                QU_s_vmem,
+                                QU_h_vmem,
                                 NoName };
 
    lDescr *rdp = NULL;
@@ -1511,6 +1582,29 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       lSetString(queue, QU_full_name, queue_name);
       lSetString(queue, QU_qname, cqueue_name);
 
+      double_print_time_to_dstring(lGetUlong(ar, AR_duration), &buffer);
+      lSetString(queue, QU_h_rt, sge_dstring_get_string(&buffer));
+      lSetString(queue, QU_s_rt, sge_dstring_get_string(&buffer));
+
+      /*
+       * initialize values
+       */
+      {
+         const char *value = "INFINITY";
+         
+         const int attr[] = {
+            QU_s_cpu, QU_h_cpu, QU_s_fsize, QU_h_fsize, QU_s_data,
+            QU_h_data, QU_s_stack, QU_h_stack, QU_s_core, QU_h_core,
+            QU_s_rss, QU_h_rss, QU_s_vmem, QU_h_vmem, NoName
+         };
+         int index = 0;
+
+         while (attr[index] != NoName) {
+            lSetString(queue, attr[index], value);
+            index++;
+         }
+      }
+
       lSetUlong(queue, QU_job_slots, slots);
 
       if (slots > 1) {
@@ -1525,8 +1619,8 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                double newval = lGetDouble(cr, CE_doubleval) * slots;
 
                lSetDouble(cr, CE_doubleval, newval);
-               sge_dstring_sprintf(&buf, "%f", lGetDouble(cr, CE_doubleval));
-               lSetString(cr, CE_stringval, sge_dstring_get_string(&buf));
+               sge_dstring_sprintf(&buffer, "%f", lGetDouble(cr, CE_doubleval));
+               lSetString(cr, CE_stringval, sge_dstring_get_string(&buffer));
             }
             lAppendElem(crl, lCopyElem(cr));
          }
@@ -1546,7 +1640,6 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
       {
          lListElem *master_cqueue;
          lListElem *master_queue;
-         dstring buffer = DSTRING_INIT;
 
          for_each(master_cqueue, master_cqueue_list) {
             if ((master_queue = lGetSubStr(master_cqueue, QU_full_name,
@@ -1584,7 +1677,6 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
                break;
             }
          }
-         sge_dstring_free(&buffer);
       }
 
       FREE(cqueue_name);
@@ -1592,7 +1684,7 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
    lSetList(ar, AR_reserved_queues, queue_list);
 
    FREE(rdp);
-   sge_dstring_free(&buf);
+   sge_dstring_free(&buffer);
 
    DRETURN_VOID; 
 }
@@ -1617,10 +1709,11 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
 *  NOTES
 *     MT-NOTE: sge_ar_remove_all_jobs() is not MT safe 
 *******************************************************************************/
-void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring_t *monitor)
+bool sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, int forced, monitoring_t *monitor)
 {
    lListElem *nextjep, *jep;
    lListElem *tmp_task;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "sge_ar_remove_all_jobs");
 
@@ -1652,8 +1745,27 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
                DPRINTF(("removing enrolled task %d.%d\n", lGetUlong(jep, JB_job_number), task_number));
                tmp_task = lGetSubUlong(jep, JAT_task_number, task_number, JB_ja_tasks); 
 
-               sge_commit_job(ctx, jep, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE,
-                              COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+               /* 
+                * if task is already in status deleted and was signaled
+                * only recently and deletion is not forced, do nothing
+                */
+               if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
+                  (lGetUlong(tmp_task, JAT_state) & JDELETED &&
+                   lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
+                   !forced
+                  )
+                 ) {
+                  ret = false;
+                  continue;
+               }
+
+               if (forced) {
+                  sge_commit_job(ctx, jep, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE,
+                                 COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+               } else {
+                  job_mark_job_as_deleted(ctx, jep, tmp_task);
+                  ret = false;
+               }
             } else {
                /* delete all unenrolled running tasks */
                DPRINTF(("removing unenrolled task %d.%d\n", lGetUlong(jep, JB_job_number), task_number));
@@ -1667,7 +1779,7 @@ void sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, monitoring
       }
    }
 
-   DRETURN_VOID;
+   DRETURN(ret);
 }
 
 /****** sge_advance_reservation_qmaster/sge_ar_list_conflicts_with_calendar() ******
@@ -1748,6 +1860,10 @@ void sge_ar_state_set_running(lListElem *ar)
 {
    u_long32 old_state = lGetUlong(ar, AR_state);
 
+   if (old_state == AR_DELETED || old_state == AR_EXITED) {
+      return;
+   }
+
    if (sge_ar_has_errors(ar)) {
       lSetUlong(ar, AR_state, AR_ERROR);
       if (old_state != AR_WARNING && old_state != lGetUlong(ar, AR_state)) {
@@ -1794,6 +1910,10 @@ void sge_ar_state_set_running(lListElem *ar)
 void sge_ar_state_set_waiting(lListElem *ar)
 {
    u_long32 old_state = lGetUlong(ar, AR_state);
+
+   if (old_state == AR_DELETED || old_state == AR_EXITED) {
+      return;
+   }
 
    if (sge_ar_has_errors(ar)) {
       lSetUlong(ar, AR_state, AR_WARNING);
@@ -2088,18 +2208,20 @@ ar_list_has_reservation_due_to_qinstance_complex_attr(lList *ar_master_list,
                   lListElem *current = lGetSubStr(qinstance, CE_name, 
                                                   ce_name, QU_consumable_config_list);
                   if (current != NULL) {                                  
+                     current = lCopyElem(current);
                      lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
                      lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
                      lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
-                  }
 
-                  if (current == NULL ||
-                      compare_complexes(slots, request, current, text, false, true) == 0) {
-                     ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
-                            SGE_ATTR_COMPLEX_VALUES));
-                     answer_list_add(answer_list, SGE_EVENT, 
-                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                     DRETURN(true);
+                     if (compare_complexes(slots, request, current, text, false, true) == 0) {
+                        ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                               SGE_ATTR_COMPLEX_VALUES));
+                        answer_list_add(answer_list, SGE_EVENT, 
+                                        STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                        lFreeElem(&current);
+                        DRETURN(true);
+                     }
+                     lFreeElem(&current);
                   }
                }
             }
@@ -2203,18 +2325,20 @@ ar_list_has_reservation_due_to_host_complex_attr(lList *ar_master_list, lList **
                   lListElem *current = lGetSubStr(host, CE_name, 
                                                   ce_name, EH_consumable_config_list);
                   if (current != NULL) {
+                     current = lCopyElem(current);
                      lSetUlong(current, CE_relop, lGetUlong(ce, CE_relop));
                      lSetDouble(current, CE_pj_doubleval, lGetDouble(current, CE_doubleval));
                      lSetString(current, CE_pj_stringval, lGetString(current, CE_stringval));
-                  }
                   
-                  if (current == NULL ||
-                      compare_complexes(slots, request, current, text, false, true) == 0) {
-                     ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
-                            SGE_ATTR_COMPLEX_VALUES));
-                     answer_list_add(answer_list, SGE_EVENT, 
-                                     STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                     DRETURN(true);
+                     if (compare_complexes(slots, request, current, text, false, true) == 0) {
+                        ERROR((SGE_EVENT, MSG_QUEUE_MODCMPLXDENYDUETOAR_SS, ce_name,
+                               SGE_ATTR_COMPLEX_VALUES));
+                        answer_list_add(answer_list, SGE_EVENT, 
+                                        STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                        lFreeElem(&current);
+                        DRETURN(true);
+                     }
+                     lFreeElem(&current);
                   }
                }
             }

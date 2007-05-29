@@ -63,6 +63,9 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_str.h"
+
+#include "uti/sge_uidgid.h"
 
 #include "msg_common.h"
 
@@ -89,8 +92,6 @@ sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
       /* -u */
       while (parse_multi_stringlist(cmdline, "-u", answer_list, 
                                     &(qrstat_env->user_list), ST_Type, ST_name)) {
-         qrstat_filter_add_core_attributes(qrstat_env);
-         qrstat_filter_add_u_where(qrstat_env);
          continue;
       }
 
@@ -127,6 +128,19 @@ sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
          break;
       }
    } 
+
+   {
+      char  user[128] = "";
+      if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
+         answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEUSER);
+         ret = false;
+      } else {
+         str_list_transform_user_list(&(qrstat_env->user_list), answer_list, user);
+         qrstat_filter_add_core_attributes(qrstat_env);
+         qrstat_filter_add_u_where(qrstat_env);
+      }
+   }
+
    DRETURN(ret);
 }
 

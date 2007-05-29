@@ -191,7 +191,12 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
    }
    DPRINTF((    "Read AR, error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
-   /* --------- AR_state NO SPOOL */ 
+   /* --------- AR_state */ 
+   if (!set_conf_ulong(alpp, clpp, fields, "state", ep, AR_state)) {
+      DPRINTF(("Read AR, error read AR_state"));
+      DRETURN(-1);
+   }
+   DPRINTF((    "Read AR, state:          "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
 
    /* --------- AR_checkpoint_name */
    if (!set_conf_string(alpp, clpp, fields, "checkpoint_name", ep, AR_checkpoint_name)) {
@@ -467,7 +472,9 @@ char *write_ar(int spool, int how, const lListElem *ep)
    DPRINTF((    "error_handling:      "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
    FPRINTF((fp, "error_handling       "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_error_handling))));
 
-   /* --------- AR_state  NO SPOOL */
+   /* --------- AR_state */
+   DPRINTF((    "state:               "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
+   FPRINTF((fp, "state                "sge_U32CFormat"\n", sge_u32c(lGetUlong(ep, AR_state))));
    
    /* --------- AR_checkpoint_name */
    s = lGetString(ep, AR_checkpoint_name);

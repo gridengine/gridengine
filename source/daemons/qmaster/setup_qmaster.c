@@ -1104,7 +1104,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
             sge_ar_state_set_running(ar);
 
-            sge_ar_remove_all_jobs(ctx, ar_id, &monitor);
+            sge_ar_remove_all_jobs(ctx, ar_id, 1, &monitor);
 
             reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
                                      "end time of AR reached",

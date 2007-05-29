@@ -1522,7 +1522,6 @@ DTRACE;
             str_list_parse_from_string(&user_list, *sp, ",");
          }
 
-
          ep_opt = sge_add_arg(pcmdline, u_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, user_list);  
          sp++;

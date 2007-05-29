@@ -124,13 +124,13 @@ static void qmonARShowBrowserInfo(dstring *info, lListElem *jep);
 static void qmonARNoEdit(Widget w, XtPointer cld, XtPointer cad);
 static Pixel qmonARStateToColor(Widget w, lListElem *jep);
 static Boolean qmonDeleteARForMatrix(Widget w, Widget matrix, lList **local);
-static lList* qmonARBuildSelectedList(Widget matrix, lDescr *dp, int nm);
+/* static lList* qmonARBuildSelectedList(Widget matrix, lDescr *dp, int nm); */
 /* static void qmonResizeCB(Widget w, XtPointer cld, XtPointer cad); */
 /* static void qmonARSort(Widget w, XtPointer cld, XtPointer cad); */
 /*-------------------------------------------------------------------------*/
-static int field_sort_by;
-static int field_sort_direction;
-static int arnum_sort_direction;
+/* static int field_sort_by; */
+/* static int field_sort_direction; */
+/* static int arnum_sort_direction; */
 
 /*-------------------------------------------------------------------------*/
 /* P U B L I C                                                             */
@@ -827,7 +827,6 @@ XtPointer cad
    DEXIT;
 }
 
-#endif
 
 /*-------------------------------------------------------------------------*/
 /* descriptor must contain AR_id at least                                  */
@@ -922,6 +921,7 @@ int nm;
 }
 
 
+#endif
 
 
 /*-------------------------------------------------------------------------*/

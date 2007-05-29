@@ -1,3 +1,5 @@
+AA-2007-05-29-1: Bugfix:    compiler warnings
+
 AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
                             - various qmon bug fixes:
                             - split of qrsub sge_parse_qrsub into clients/common/sge_qrsub.c

@@ -1,8 +1,17 @@
+JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+
 LP-2007-05-28-0: Enhancem.: Using aimk debug flag when building libjgdi if set.
-                 Enhancem.: Introducing GEObjectEditor class for simple GEObject manipulation based on text
-                 Enhancem.: Qconf options implemented for User, Project, PE, ClusterQueue, Calendar, Checkpoint, Exec host, Host group and RQS (some issues exist).
+                 Enhancem.: Introducing GEObjectEditor class for simple GEObject
+                            manipulation based on text
+                 Enhancem.: Qconf options implemented for User, Project, PE, 
+                            ClusterQueue, Calendar, Checkpoint, Exec host, 
+                            Host group and RQS (some issues exist).
                  Enhancem.: JGDIShell improved
-                 Enhancem.: Introduced cluster.config.file.location property to override cluster config
+                 Enhancem.: Introduced cluster.config.file.location property to 
+                            override cluster config
                  Review:    AA
 
 JG-2007-05-25-0: Bugfix:    Fixed checkin "Queue request -q from sge_request 

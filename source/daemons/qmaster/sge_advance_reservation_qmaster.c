@@ -548,7 +548,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
          bool first = true;
          int umax = 20;
 
-         sge_dstring_clear(&buffer);
+         sge_dstring_sprintf(&buffer, "%s", "");
          for_each(user, user_list) {
             if (!first) {
                sge_dstring_append(&buffer, ",");

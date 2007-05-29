@@ -1,3 +1,7 @@
+RD-2007-05-29-1: Bugfix:    - reverted AR related job verification
+                            - fixed scheduler bug with pe reservation
+                 Review:    AA
+
 JG-2007-05-29-2: Bugfix:    Completed checkin JG-2007-05-29-0 (owner).
                  Issue:     2229
                  Bugster:   6544869

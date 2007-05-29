@@ -707,8 +707,8 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
          if (tmp_assignment.gdil) {
             DPRINTF(("SELECT PE TIME: earlier assignment at "sge_u32"\n", pe_time));
          }
-         assignment_release(&tmp_assignment);
          assignment_copy(best, &tmp_assignment, true);
+         assignment_release(&tmp_assignment);
       } else {
          DPRINTF(("SELECT PE TIME: no earlier assignment at "sge_u32"\n", pe_time));
          break;
@@ -7227,7 +7227,6 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
 
    if (lGetUlong(a->job, JB_ar) != 0) {
       if ((ar = lGetElemUlong(a->ar_list, AR_id, lGetUlong(a->job, JB_ar))) != NULL) {
-         bool schedule_based;
          /* is ar in error and error handling is not soft? */
          if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, lGetUlong(a->job, JB_ar)); 
@@ -7235,8 +7234,7 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
          }
          
          /* is ar running? */
-         schedule_based = ((a->duration != 0 && sconf_get_max_reservations() > 0)) ? true : false;
-         if (schedule_based && lGetUlong(ar, AR_state) != AR_RUNNING) {
+         if (lGetUlong(ar, AR_state) != AR_RUNNING) {
             schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
             DRETURN(DISPATCH_NEVER_CAT);
          }

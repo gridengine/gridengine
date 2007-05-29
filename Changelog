@@ -1,3 +1,8 @@
+JG-2007-05-29-2: Bugfix:    Completed checkin JG-2007-05-29-0 (owner).
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+
 AA-2007-05-29-1: Bugfix:    compiler warnings
 
 AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes

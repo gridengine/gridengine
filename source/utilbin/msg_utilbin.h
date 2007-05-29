@@ -45,10 +45,6 @@
 /* 
 ** utilbin/gdi_request.c
 */ 
-/* #define MSG_SYSTEM_QMASTERNOTALIVE           _message(57004, _("qmaster not alive")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_GDISETUPERROR             _message(57005, _("sge_gdi_setup error")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_MULTIREQUEST_I            _message(57006, _(sge_u32". ----- Multirequest")) __TS Removed automatically from testsuite!! TS__*/
-/* #define MSG_SYSTEM_6SINGLEREQUEST_I          _message(57007, _(sge_u32". ----- 6 single requests")) __TS Removed automatically from testsuite!! TS__*/
 
 
 /* 
@@ -196,19 +192,19 @@
 #define MSG_PWD_CHANGE_ABORT_S      _MESSAGE(57316,         _(SFN": password change aborted"))
 #define MSG_PWD_AUTH_FAILURE_S      _MESSAGE(57317,         _(SFN": Authentication failure"))
 #define MSG_PWD_CHANGE_FOR_S        _MESSAGE(57318,         _("Changing password for "SFN""))
-#define MSG_PWD_NO_USERNAME_SI      _MESSAGE(57319,         _(SFN": unable to get name for user with id "sge_u32" "))
+#define MSG_PWD_NO_USERNAME_SI      _MESSAGE(57319,         _(SFN": unable to get name for user with id "sge_U32CFormat" "))
 #define MSG_PWD_LOAD_PRIV_SSS       _MESSAGE(57320,         _(SFN": can't load private key "SFQ" to decrypt password. SSL error: "SFN))
 #define MSG_PWD_DECR_SS             _MESSAGE(57321,         _(SFN": error decrypting password - keylength mismatch. SSL error: "SFN))
 #define MSG_PWD_MALLOC_SS           _MESSAGE(57322,         _(SFN": malloc failed. SSL error: "SFN))
 #define MSG_PWD_LOAD_PUB_SS         _MESSAGE(57323,         _(SFN": can't load public key "SFQ" to ecrypt password"))
-#define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: "SFN" ("sge_u32")"))
-#define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: "SFN" ("sge_u32")"))
-#define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: "SFN" ("sge_u32")"))
+#define MSG_PWD_OPEN_SGEPASSWD_SSI  _MESSAGE(57325,         _(SFN": can't open sgepasswd file: "SFN" ("sge_U32CFormat")"))
+#define MSG_PWD_WRITE_SGEPASSWD_SSI _MESSAGE(57326,         _(SFN": can't write to sgepasswd file: "SFN" ("sge_U32CFormat")"))
+#define MSG_PWD_CLOSE_SGEPASSWD_SSI _MESSAGE(57327,         _(SFN": error closing sgepasswd file: "SFN" ("sge_U32CFormat")"))
 #define MSG_PWD_CANTLOADRANDFILE_SSS _MESSAGE(57328,         _(SFN": can't load rand file "SFN". SSL error: "SFN))
 #define MSG_PWD_FILE_CORRUPTED_S    _MESSAGE(57329,         _(SFN": sgepasswd file corrupted"))
-#define MSG_PWD_FILE_PATH_NULL_S    _MESSAGE(57329,         _(SFN": path to private key file is null"))
-#define MSG_PWD_SSL_ERR_MSG_SS      _MESSAGE(57330,         _(SFN": SSL error message: "SFN))
-#define MSG_PWD_NO_SSL_ERR          _MESSAGE(57331,         _("No SSL error."))
+#define MSG_PWD_FILE_PATH_NULL_S    _MESSAGE(57330,         _(SFN": path to private key file is null"))
+#define MSG_PWD_SSL_ERR_MSG_SS      _MESSAGE(57331,         _(SFN": SSL error message: "SFN))
+#define MSG_PWD_NO_SSL_ERR          _MESSAGE(57332,         _("No SSL error."))
 
 
 /*

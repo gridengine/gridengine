@@ -1,3 +1,6 @@
+JG-2007-05-29-1: Bugfix:    Fixed messages macros.
+                 Review:    RD
+
 JG-2007-05-29-0: Bugfix:    UNKNOWN group/owner in accounting.
                  Issue:     2229
                  Bugster:   6544869

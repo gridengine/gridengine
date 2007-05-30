@@ -155,14 +155,15 @@ How to Set Up ARCo database:
 # mysql -u root -p<password>
 2. step: Create user & grant privileges for arco_read, arco_write:
 
-mysql> GRANT ALL on *.* to 'arco_write'@'<hostname>' identified by '<password>' with GRANT OPTION;
-mysql> GRANT ALL on *.* to 'arco_write'@'localhost' identified by '<password>' with GRANT OPTION;
+mysql> GRANT ALL on *.* to 'arco_write'@'<database_host>' identified by '<password>' with GRANT OPTION;
 mysql> GRANT ALL on *.* to 'arco_write'@'%' identified by '<password>' with GRANT OPTION;
 
-mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'<hostname>' identified by '<password>';
-mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'localhost' identified by '<password>';
+mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'<database_host>' identified by '<password>';
 mysql> GRANT SELECT,SHOW VIEW on <db_name>.* to 'arco_read'@'%' identified by '<password>';
 
+Note: 'arco_read'@'%' have to be created. If the MySQL database host is the same as the host where 
+the Java Web Console with ARCo is running, you need to create also a user 'arco_read'@'<database_host>'.
+ 
 3. step: Log in to the database as a arco_write user:
 # mysql -u arco_write -p<password>
 

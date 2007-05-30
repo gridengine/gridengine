@@ -663,12 +663,6 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
    /* assemble job category information */
    fill_category_use_t(best, &use_category, lGetString(best->pe, PE_name));  
 
-   memset(&tmp_assignment, 0, sizeof(sge_assignment_t));
-   assignment_copy(&tmp_assignment, best, false);
-   if (best->slots == 0) {
-      tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);
-   }   
-
    qeti = sge_qeti_allocate(best->job, best->pe, best->ckpt, 
          best->host_list, best->queue_list, best->centry_list, best->acl_list); 
   
@@ -678,6 +672,12 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
       DEXIT;
       return DISPATCH_NEVER_CAT;
    }
+
+   memset(&tmp_assignment, 0, sizeof(sge_assignment_t));
+   assignment_copy(&tmp_assignment, best, false);
+   if (best->slots == 0) {
+      tmp_assignment.slots = range_list_get_first_id(lGetList(best->job, JB_pe_range), NULL);
+   }   
 
    if (best->start == DISPATCH_TIME_QUEUE_END) {
       first_time = sge_qeti_first(qeti);
@@ -716,8 +716,8 @@ parallel_reservation_max_time_slots(sge_assignment_t *best)
          if (best->gdil) {
             DPRINTF(("SELECT PE TIME: earlier assignment at "sge_u32"\n", pe_time));
          }
-         assignment_release(&tmp_assignment);
          assignment_copy(best, &tmp_assignment, true);
+         assignment_release(&tmp_assignment);
       } 
       else {
          DPRINTF(("SELECT PE TIME: no earlier assignment at "sge_u32"\n", pe_time));

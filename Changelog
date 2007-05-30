@@ -1,3 +1,9 @@
+JG-2007-05-29-2: Bugfix:    Completed checkin JG-2007-05-29-0 (owner).
+                 Issue:     2229
+                 Bugster:   6544869
+                 Review:    AH
+                 Bugfix:    Fixed message macros.
+
 AA-2007-05-29-0: Bugfix:    several qmon fixes
                             - GridEngine 5.3p2: qmon on secondary screen
                               crashes when "Job Control" is pressed

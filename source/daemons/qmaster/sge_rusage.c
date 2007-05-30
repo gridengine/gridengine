@@ -196,7 +196,7 @@ sge_write_rusage(dstring *buffer,
       if (lGetString(job, JB_owner) == NULL) {
          lSetString(jr, JR_owner, "UNKNOWN");
       } else {
-         lSetString(jr, JR_owner, lGetString(job, JB_group));
+         lSetString(jr, JR_owner, lGetString(job, JB_owner));
       }
    }
    

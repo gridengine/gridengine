@@ -1,3 +1,6 @@
+RD-2007-05-31-1: Enhancem:  added arusers userset  
+                 Review:    JG
+
 RD-2007-05-31-0: Bugfix:    - fixed core dump with calendar modification
                             - fixed spooling issue with ARs
                  Review:    JG

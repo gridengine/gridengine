@@ -304,8 +304,7 @@ void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdi
  
    if (!move_gdil) {
       dst->gdil = NULL; 
-   }   
-   else {
+   } else {
       src->gdil = NULL; 
    }
 }

@@ -1,3 +1,7 @@
+RD-2007-05-31-0: Bugfix:    - fixed core dump with calendar modification
+                            - fixed spooling issue with ARs
+                 Review:    JG
+
 JG-2007-05-30-0: Bugfix:    Fixed JG-2007-05-29-2.
                  Review:    AH
 

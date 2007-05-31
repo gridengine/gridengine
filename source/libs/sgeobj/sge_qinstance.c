@@ -594,7 +594,6 @@ qinstance_is_centry_a_complex_value(const lListElem *this_elem,
 *  RESULT
 *     bool - error result
 *        true  - success
-*        false - error
 *
 *  NOTES
 *     MT-NOTE: qinstance_list_find_matching() is MT safe 
@@ -606,6 +605,11 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
    bool ret = true;
 
    DENTER(QINSTANCE_LAYER, "qinstance_list_find_matching");
+
+   if (qref_list == NULL) {
+      DRETURN(true);
+   }
+
    if (this_list != NULL && hostname_pattern != NULL) {
       lListElem *qinstance;
       char host[CL_MAXHOSTLEN];
@@ -617,10 +621,8 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
       for_each(qinstance, this_list) {
          const char *hostname = lGetHost(qinstance, QU_qhostname);
          /* use qinstance expression */
-         if ( !sge_eval_expression(TYPE_HOST,hostname_pattern, hostname, answer_list)) { 
-            if (qref_list != NULL) {
-               lAddElemStr(qref_list, QR_name, lGetString(qinstance, QU_full_name), QR_Type);
-            }
+         if (!sge_eval_expression(TYPE_HOST, hostname_pattern, hostname, answer_list)) { 
+            lAddElemStr(qref_list, QR_name, lGetString(qinstance, QU_full_name), QR_Type);
          }
       }
    }

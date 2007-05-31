@@ -924,6 +924,18 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CQUEUE].list, SGE_TYPE_CQUEUE);
    answer_list_output(&answer_list);
    cqueue_list_set_unknown_state(*(object_base[SGE_TYPE_CQUEUE].list), NULL, false, true);
+   /*
+    * Initialize cached values for each qinstance:
+    *    - fullname
+    */
+   for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
+      lListElem *qinstance;
+
+      for_each(qinstance, qinstance_list) {
+         qinstance_set_full_name(qinstance);
+      }
+   }
    
    DPRINTF(("pe_list---------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_PE].list, SGE_TYPE_PE);
@@ -1021,7 +1033,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    /*
     * Initialize cached values for each qinstance:
-    *    - fullname
     *    - clear suspend on subordinate flag
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
@@ -1029,7 +1040,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       lListElem *qinstance;
 
       for_each(qinstance, qinstance_list) {
-         qinstance_set_full_name(qinstance);
          sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }

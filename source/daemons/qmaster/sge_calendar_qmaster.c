@@ -103,7 +103,8 @@ calendar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_cal, lListEl
       for_each(cqueue, master_cqueue_list) {
          lListElem *queue;
          for_each(queue, lGetList(cqueue, CQ_qinstances)) {
-            if (strcmp(cal_name, lGetString(queue, QU_calendar)) == 0) {
+            const char *q_cal = lGetString(queue, QU_calendar);
+            if ((q_cal != NULL) && (strcmp(cal_name, q_cal) == 0)) {
                if (sge_ar_list_conflicts_with_calendar(alpp,
                    lGetString(queue, QU_full_name), new_cal, master_ar_list)) {
                   goto ERROR; 

@@ -2391,22 +2391,21 @@ int *trigger
 
    }
    
-   /* ---- JB_ar */
+    /* ---- JB_ar */
    if ((pos=lGetPosViaElem(jep, JB_ar, SGE_NO_ABORT))>=0) {
-      u_long32 ar_id;
+      u_long32 ar_id=lGetUlong(new_job, JB_ar);
       uval=lGetPosUlong(jep, pos);
-      if (uval != (ar_id=lGetUlong(new_job, JB_ar))) { 
+      if (uval != ar_id) { 
          /* need to be owner or at least operator */
          if (strcmp(ruser, lGetString(new_job, JB_owner)) && !manop_is_operator(ruser)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, MSG_JOB_CHANGEJOBAR));
             answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_ENOOPR);   
          }
+         *trigger |= PRIO_EVENT;
+         may_not_be_running = 1;
       }
       /* ok, do it */
-      if (uval != ar_id) 
-        *trigger |= PRIO_EVENT;
-
       lSetUlong(new_job, JB_ar, uval);
 
       sprintf(SGE_EVENT, MSG_JOB_JOBARSET_SSUU,

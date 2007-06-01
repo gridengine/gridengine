@@ -335,15 +335,15 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
-               lListElem *tmp_elem = lCopyElem(this_elem);
 
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
 
-               if( centry_list_fill_request(new_value, answer_list, Master_CEntry_List, 
-                                        true, true, false) == 0 ) {
+               if (centry_list_fill_request(new_value, answer_list, Master_CEntry_List, 
+                                            true, true, false) == 0) {
+                   lListElem *tmp_elem = lCopyElem(this_elem);
 
                    /* We make a copy of new_value here because it will ultimately
                     * end up in the qinstance.  If we didn't copy it, we would end

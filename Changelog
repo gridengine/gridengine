@@ -1,3 +1,6 @@
+JG-2007-06-01-0: Bugfix:    Fixed memory leaks in qmaster and test_drmaa.
+                 Review:    CR
+
 AH-2007-05-30-0: Bugfix:    Fix wrong copy/release order and error
                             exit memory leak from AH-2007-05-25-1.
                  Review:    RD,RH

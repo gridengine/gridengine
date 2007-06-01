@@ -1,3 +1,9 @@
+AH-2007-06-01-0: Bugfix:    sge_schedd deadlock upon schedd_job_info 
+                            job_list being enabled
+                 Bugster:   6564503
+                 Issue:     2275
+                 Review:    CR
+
 RD-2007-05-31-1: Enhancem:  added arusers userset  
                  Review:    JG
 

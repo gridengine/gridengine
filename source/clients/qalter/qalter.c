@@ -816,6 +816,7 @@ int *all_users
             JB_override_tickets,
             JB_restart,
             JB_verify_suitable_queues,
+            JB_ar,
             NoName
          };
          static int bool_nm[] = {

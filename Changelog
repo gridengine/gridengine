@@ -1,3 +1,7 @@
+PJ-2007-06-01-1: Bugfix:    qalter -ar cause ar is deleted
+                            change ar id on runnig jobs 
+                 Review:    JG
+
 AH-2007-06-01-1: Bugfix:    sge_schedd deadlock upon schedd_job_info
                             job_list being enabled
                  Bugster:   6564503

@@ -1,3 +1,9 @@
+AH-2007-06-01-3: Bugfix:    sge_schedd deadlock upon schedd_job_info
+                            job_list being enabled
+                 Bugster:   6564503
+                 Issue:     2275
+                 Review:    CR
+
 JO-2007-06-01-0: Docs:      added README-ARCo.txt
 
 JG-2007-06-01-0: Bugfix:    Fixed memory leaks in qmaster and test_drmaa.

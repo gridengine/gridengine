@@ -1474,7 +1474,7 @@ lList *sconf_get_schedd_job_info_range(void) {
    
    range_copy = lCopyList("copy_range", pos.c_schedd_job_info_range);
    
-   sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);    
+   sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);    
    return range_copy;
 }
 
@@ -1505,7 +1505,7 @@ bool sconf_is_id_in_schedd_job_info_range(u_long32 job_number)
 
    is_in_range = range_list_is_id_within(pos.c_schedd_job_info_range, job_number);
 
-   sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);     
+   sge_mutex_unlock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);     
    return is_in_range;
 }
 

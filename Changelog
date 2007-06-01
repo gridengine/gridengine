@@ -1,3 +1,5 @@
+JO-2007-06-01-0: Docs:      added README-ARCo.txt
+
 JG-2007-06-01-0: Bugfix:    Fixed memory leaks in qmaster and test_drmaa.
                  Review:    CR
 

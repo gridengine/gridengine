@@ -5979,7 +5979,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    u_long32 ready_time;
    double util, total, request = 0;
    lListElem *capacitiy_el;
-   bool schedule_based = true;
+   bool schedule_based = (a->is_advance_reservation || a->is_schedule_based) ? true : false;
    u_long32 now = sconf_get_now();
    int utilized = 0;
 
@@ -5993,17 +5993,6 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
     * Consumables are treated futher below in schedule based mode 
     * thus we always assume zero consumable utilization here 
     */ 
-
-   /* We need to dispatch scheduled based, when we have the reservation enabled. Therefore the
-      duration will be always bigger than 0. But this code is also called from the qmaster to 
-      verify, if a job can run. In this case, reservation can be enabled, but the verifcation is
-      not scheduled based. For this case, we need this test.
-   */ 
-#if 0
-   schedule_based = (a->duration != 0 && sconf_get_max_reservations() > 0) ? true : false;
-#else
-   schedule_based = (a->is_advance_reservation || (a->duration != 0 && sconf_get_max_reservations() > 0)) ? true : false;
-#endif
 
    if (!(cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, a->centry_list, queue,layer, 
                         lc_factor, reason, schedule_based, DISPATCH_TIME_NOW, 0))) {
@@ -6191,7 +6180,7 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    const char *name;
    lListElem *cplx_el, *uep, *tep = NULL;
    u_long32 start = a->start;
-   bool schedule_based = true;
+   bool schedule_based = (a->is_advance_reservation || a->is_schedule_based) ? true : false;
    int utilized = 0;
 
    dispatch_t ret;
@@ -6200,17 +6189,6 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    DENTER(TOP_LAYER, "ri_slots_by_time");
    
    /* always assume zero consumable utilization in schedule based mode */
-
-   /* We need to desipatch scheduled based, when we have the reservation enabled. Therefore the
-      duration will be always bigger than 0. But this code is also called from the qmaster to 
-      verify, if a job can run. In this case, reservation can be enabled, but the verifcation is
-      not scheduled based. For this case, we need this test.
-   */ 
-#if 0
-   schedule_based = (a->duration != 0 && sconf_get_max_reservations()>0) ? true : false;
-#else
-   schedule_based = (a->is_advance_reservation || (a->duration != 0 && sconf_get_max_reservations() > 0)) ? true : false;
-#endif
 
    name = lGetString(request, CE_name);
    uep = lGetElemStr(rue_list, RUE_name, name);
@@ -7226,16 +7204,18 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
 
    if (lGetUlong(a->job, JB_ar) != 0) {
       if ((ar = lGetElemUlong(a->ar_list, AR_id, lGetUlong(a->job, JB_ar))) != NULL) {
-         /* is ar in error and error handling is not soft? */
-         if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
-            schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, lGetUlong(a->job, JB_ar)); 
-            DRETURN(DISPATCH_NEVER_CAT);
-         }
-         
-         /* is ar running? */
-         if (lGetUlong(ar, AR_state) != AR_RUNNING) {
-            schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
-            DRETURN(DISPATCH_NEVER_CAT);
+         if (!(a->is_job_verify)) {
+            /* is ar in error and error handling is not soft? */
+            if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
+               schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, lGetUlong(a->job, JB_ar)); 
+               DRETURN(DISPATCH_NEVER_CAT);
+            }
+            
+            /* is ar running? */
+            if (lGetUlong(ar, AR_state) != AR_RUNNING) {
+               schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
+               DRETURN(DISPATCH_NEVER_CAT);
+            }
          }
       } else {
          /* should never happen */

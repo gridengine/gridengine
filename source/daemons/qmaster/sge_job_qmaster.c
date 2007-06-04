@@ -3428,6 +3428,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger)
             a.gep              = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME);
             a.start            = DISPATCH_TIME_NOW;
             a.duration         = 0; /* indicator for schedule based mode */
+            a.is_job_verify    = true;
 
             /* imagine qs is empty */
             sconf_set_qs_state(QS_STATE_EMPTY);

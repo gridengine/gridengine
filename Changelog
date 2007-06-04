@@ -1,3 +1,7 @@
+RD-2007-06-04-0: Bugfix:    - reenabled AR related job verification
+                 Cleanup:   - moved schedule_based decision into
+                              sge_assignment structure
+
 PJ-2007-06-01-1: Bugfix:    qalter -ar cause ar is deleted
                             change ar id on runnig jobs 
                  Review:    JG

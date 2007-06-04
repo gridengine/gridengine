@@ -104,7 +104,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, 
                     lList *acl_list, lList **user_list, lList **group_list, order_t *orders, 
                     double *total_running_job_tickets, int *sort_hostlist, bool is_start, 
-                    bool is_reserve, lList **load_list, lList *hgrp_list, lList *rqs_list,
+                    bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list, lList *rqs_list,
                     lList *ar_list);
 
 /****** schedd/scheduler/scheduler() ******************************************
@@ -412,6 +412,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                                 /* e.g. if load correction was computed */
    int nr_pending_jobs=0;
    int max_reserve = sconf_get_max_reservations();
+   bool is_schedule_based = (max_reserve > 0) ? true: false;
 
    DENTER(TOP_LAYER, "dispatch_jobs");
 
@@ -725,7 +726,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
 
 
             /* sort the hostlist */
-            if(sort_hostlist) {
+            if (sort_hostlist) {
                lPSortList(lists->host_list, "%I+", EH_sort_value);
                sort_hostlist      = 0;
                sconf_set_host_order_changed(true);
@@ -745,8 +746,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
 
             if (job_get_next_task(job, &ja_task, &ja_task_id) != 0) {
                DPRINTF(("Found job "sge_u32" with no job array tasks\n", job_id));
-            } 
-            else { 
+            } else { 
                DPRINTF(("Found pending job "sge_u32"."sge_u32". Try %sto start and %sto reserve\n", 
                      job_id, ja_task_id, is_start?"":"not ", is_reserve?"":"not "));
                DPRINTF(("-----------------------------------------\n"));
@@ -767,6 +767,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                   &sort_hostlist, 
                   is_start,
                   is_reserve,
+                  is_schedule_based,
                   &consumable_load_list,
                   lists->hgrp_list,
                   lists->rqs_list,
@@ -974,7 +975,7 @@ static dispatch_t
 select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, lListElem *ja_task,
                     lList *pe_list, lList *ckpt_list, lList *centry_list, lList *host_list, lList *acl_list,
                     lList **user_list, lList **group_list, order_t *orders, double *total_running_job_tickets,
-                    int *sort_hostlist, bool is_start,  bool is_reserve, lList **load_list, lList *hgrp_list,
+                    int *sort_hostlist, bool is_start,  bool is_reserve, bool is_schedule_based, lList **load_list, lList *hgrp_list,
                     lList *rqs_list, lList *ar_list) 
 {
    lListElem *granted_el;     
@@ -1002,6 +1003,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    }
 
    a.duration = duration_add_offset(a.duration, sconf_get_duration_offset());
+   a.is_schedule_based = is_schedule_based;
 
    /*------------------------------------------------------------------ 
     * seek for ckpt interface definition requested by the job 
@@ -1195,8 +1197,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
       if (*load_list == NULL) {
          sge_split_suspended(queue_list, dis_queue_list);
          sge_split_queue_slots_free(queue_list, dis_queue_list);
-      }
-      else {
+      } else {
          sge_split_suspended(queue_list, &disabled_queues);
          sge_split_queue_slots_free(queue_list, &disabled_queues);
          
@@ -1239,8 +1240,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (*dis_queue_list == NULL) {
          *dis_queue_list = disabled_queues;
-      }
-      else {
+      } else {
          lAddList(*dis_queue_list, &disabled_queues);
       }        
       disabled_queues = NULL;

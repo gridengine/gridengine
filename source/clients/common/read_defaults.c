@@ -628,7 +628,6 @@ void opt_list_merge_command_lines(lList **opts_all,
       *opts_cmdline = NULL;
    }
 
-#if 0
    /* If -ar was requested add -w if it was not explicit set */
    if (lGetElemStr(*opts_all, SPA_switch, "-ar") != NULL) {
       if (lGetElemStr(*opts_all, SPA_switch, "-w") == NULL) {
@@ -636,7 +635,6 @@ void opt_list_merge_command_lines(lList **opts_all,
          lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
       }
    }
-#endif
 }
 
 /****** sge/opt/opt_list_has_X() **********************************************

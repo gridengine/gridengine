@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/05/23 13:47:49 $     Revision: $Revision: 1.56.2.5 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/05 16:50:23 $     Revision: $Revision: 1.56.2.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/05/23 13:47:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/06/05 16:50:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -239,6 +239,8 @@ will be executed to run
 commands instead of the users login shell or any shell specified in the
 .I qrsh
 command-line.
+The options \fB-cwd\fP,  \fB-v\fP,  \fB-V\fP,  and \fB-display\fP only 
+apply to batch jobs.
 .PP
 .I Qalter
 can be used to change the attributes of pending jobs. For array jobs
@@ -541,7 +543,7 @@ and from \fB\-v\fP command line options.
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-.sp1
+.sp 1
 Specifies the deadline initiation time in [[CC]YY]MMDDhhmm[.SS] format (see
 \fB\-a\fP option above). The deadline initiation time is the time at
 which a deadline job has to reach top priority to be able to complete
@@ -689,18 +691,20 @@ however.
 Prints  a listing of all options.
 .\"
 .IP "\fB\-hold_jid wc_job_list\fP"
-Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
+Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only. See 
+.M sge_types 1 . 
+for \fB\wc_job_list\fP deffinition.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
-reference by job name or regular expression is only accepted if the 
+reference by job name or pattern is only accepted if the 
 referenced job is owned by the same user as the referring job. The 
 submitted job is not eligible for execution unless all jobs 
 referenced in the comma-separated job id and/or job name list have 
 completed.  If any of the referenced jobs exits with exit code 100, the
 submitted job will remain ineligible for execution.
 .sp 1
-With the help of job names or regular expressions one can specify
-a job dependency on multiple jobs satisfying the regular expression
+With the help of job names or regular pattern one can specify
+a job dependency on multiple jobs satisfying the regular pattern
 or on all jobs with the requested name. The name dependencies are
 resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
@@ -980,7 +984,7 @@ assigned to the job.
 .br
 In the case of 
 .I qrsh
-with the \fB\-N\fP option is absent, the resulting job name is determined from 
+if the \fB\-N\fP option is absent, the resulting job name is determined from 
 the qrsh command line by using the argument string up to the first occurrence 
 of a semicolon or whitespace and removing the directory pathname.
 .br
@@ -1042,14 +1046,14 @@ however.
 .\"
 .IP "\fB\-ot override_tickets\fP"
 Available for \fIqalter\fP only.
-.sp1
+.sp 1
 Changes the number of override tickets for the specified job.
 Requires manager/operator privileges.
 .\"
 .IP "\fB\-P project_name\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-.sp1
+.sp 1
 Specifies the project to which this job is assigned. The administrator
 needs to give permission to individual users to submit jobs to a
 specific project. (see \fB\-aprj\fP option to
@@ -1351,16 +1355,6 @@ tasks into the same file, but the result of this is undefined.
 .\" Empty .SH required below to fix man indentation bug
 .SH
 .\"
-.IP "\fB\-terse\fP"
-Available for \fIqsub\fP only.
-.sp 1
--terse causes the \fIqsub\fP to display only the job-id of the job being
-submitted rather than the regular "Your job ..." string.
-In case of an error the error is reported on stderr as usual.
-.br
-This can be helpful for scripts which need to parse \fIqsub\fP output to get
-the job-id.
-.\"
 .IP "\fB\-u username,...\fP"
 Available for \fIqalter\fP only. Changes are only made on those
 jobs which were submitted by users specified in the list
@@ -1460,6 +1454,21 @@ the format as described for the
 \fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
 .M qstat 1
 manual page.
+.\"
+.IP "\fB\-wd working_dir\fP"
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP and
+\fIqalter\fP only.
+.sp 1
+Execute the job from the directory specified in working_dir.
+This switch will activate xxQS_NAMExx's path aliasing facility, if the
+corresponding
+configuration files are present (see
+.M xxqs_name_sxx_aliases 5 ).
+.sp 1
+.I Qalter
+allows changing this option even while the job executes. The modified
+parameter will only be in effect after a restart or migration of the job,
+however.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.

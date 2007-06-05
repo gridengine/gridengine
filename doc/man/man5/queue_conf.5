@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/02/07 11:04:24 $     Revision: $Revision: 1.21.10.3 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/06/05 16:55:36 $     Revision: $Revision: 1.21.10.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/02/07 11:04:24 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/06/05 16:55:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -89,7 +89,7 @@ Configurations without default setting are rejected.
 Ambiguous configurations with more than one attribute setting for
 a particular host are rejected.
 Configurations containing override values for hosts not enlisted
-under 'hostname' are accepted but are indicated by \fB\-sds\fP
+under 'hostname' are accepted but are indicated by \fB\-sick\fP
 of 
 .M qconf 1
 The cluster queue should contain an unambiguous specification
@@ -181,11 +181,12 @@ default is zero (which means no nice value is set explicitly). Negative
 values (up to -20) correspond to a higher scheduling priority, positive 
 values (up to +20) correspond to a lower scheduling priority.
 .PP
-The value of \fBpriority\fP has no effect because SGE
-adjusts priorities dynamically to implement the SGE entitlement policy
-goals. Dynamic priority adjustment can be switched off, by setting
-the reprioritize_interval to 00:00:00, which is the default value. 
-In this case, the setting of \fBpriority\fP also will haven't an effect.
+Note, the value of priority has no effect, if xxQS_NAMExx adjusts
+priorities dynamically to implement ticket-based entitlement 
+policy goals. Dynamic priority adjustment is switched  off by
+default due to 
+.M sge_conf 5
+\fBreprioritize\fP being set to false.
 .SS "\fBmin_cpu_interval\fP"
 The time between two automatic checkpoints in case of
 transparently checkpointing jobs. The maximum of the time requested by
@@ -363,6 +364,8 @@ shell. The shell will only forward them to the job if they are not
 recognized as valid shell options.
 .PP
 The default for \fBshell_start_mode\fP is \fIposix_compliant\fP.
+Note, though, that the \fBshell_start_mode\fB can only used for batch jobs submitted by qsub 
+and can not used for interactive jobs submitted by \fBqrsh\fB, \fBqsh\fB, \fBqlogin\fB.
 .SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the

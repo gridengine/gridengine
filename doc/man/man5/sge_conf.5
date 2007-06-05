@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/03/23 09:55:37 $     Revision: $Revision: 1.46.2.9 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/05 16:57:16 $     Revision: $Revision: 1.46.2.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/03/23 09:55:37 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/05 16:57:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -78,7 +78,7 @@ parameters that compose the global and local configurations for a
 xxQS_NAMExx cluster:
 .\"
 .\"
-.SH "\fBexecd_spool_dir\fP"
+.SS "\fBexecd_spool_dir\fP"
 The execution daemon spool directory path. Again, a feasible spool
 directory requires read/write access permission for root. The entry in
 the global configuration for this parameter can be overwritten by
@@ -109,7 +109,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmailer\fP"
+.SS "\fBmailer\fP"
 \fBmailer\fP is the absolute pathname to the electronic mail delivery
 agent on your system. It must accept the following syntax:
 .PP
@@ -130,7 +130,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBxterm\fP"
+.SS "\fBxterm\fP"
 .B xterm
 is the absolute pathname to the X Window System terminal emulator,
 .M xterm 1 .
@@ -146,7 +146,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBload_sensor\fP"
+.SS "\fBload_sensor\fP"
 A comma separated list of executable shell script paths or programs
 to be started by
 .M xxqs_name_sxx_execd 8
@@ -177,7 +177,7 @@ defined in \fBload_sensor\fP. This facility is intended for pre-installing
 a default load sensor.
 .\"
 .\"
-.SH "\fBprolog\fP"
+.SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
@@ -287,7 +287,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBepilog\fP"
+.SS "\fBepilog\fP"
 The executable path of a shell script that is started after execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
 xxQS_NAMExx
@@ -318,7 +318,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBshell_start_mode\fP"
+.SS "\fBshell_start_mode\fP"
 This parameter defines the mechanisms which are used to actually
 invoke the job scripts on the execution hosts. The following
 values are recognized:
@@ -386,7 +386,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBlogin_shells\fP"
+.SS "\fBlogin_shells\fP"
 UNIX command interpreters like the Bourne-Shell (see
 .M sh 1 )
 or the C-Shell (see
@@ -411,7 +411,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmin_uid\fP"
+.SS "\fBmin_uid\fP"
 \fBmin_uid\fP places a lower bound on user IDs that may use the cluster. Users
 whose user ID (as returned by
 .M getpwnam 3 )
@@ -424,7 +424,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmin_gid\fP"
+.SS "\fBmin_gid\fP"
 This parameter sets the lower bound on group IDs that may use the cluster.
 Users whose default group ID (as returned by
 .M getpwnam 3 )
@@ -437,7 +437,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBuser_lists \fP"
+.SS "\fBuser_lists \fP"
 The \fBuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
@@ -454,7 +454,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBxuser_lists \fP"
+.SS "\fBxuser_lists \fP"
 The \fBxuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
@@ -470,7 +470,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBadministrator_mail\fP"
+.SS "\fBadministrator_mail\fP"
 \fBadministrator_mail\fP specifies a comma separated list of the
 electronic mail address(es) of the cluster administrator(s) to whom
 internally-generated problem reports are sent. The mail address format
@@ -484,7 +484,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBprojects\fP"
+.SS "\fBprojects\fP"
 .PP
 The \fBprojects\fP list contains all projects which are granted access
 to xxQS_NAMExx. User belonging to none of these projects cannot use xxQS_NAMExx. If
@@ -498,7 +498,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBxprojects\fP"
+.SS "\fBxprojects\fP"
 The \fBxprojects\fP list contains all projects which are granted access
 to xxQS_NAMExx. User belonging to one of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list (see above) and the
@@ -511,7 +511,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBload_report_time\fP"
+.SS "\fBload_report_time\fP"
 System load is reported periodically by the execution daemons to
 .M xxqs_name_sxx_qmaster 8 .
 The parameter \fBload_report_time\fP defines the time interval between load
@@ -536,7 +536,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBreschedule_unknown\fP"
+.SS "\fBreschedule_unknown\fP"
 Determines whether jobs on hosts in unknown state
 are rescheduled and thus sent to other hosts. Hosts
 are registered as unknown if
@@ -588,7 +588,7 @@ The global configuration entry for this value may be over written by
 the execution host local configuration.
 .\"
 .\"  
-.SH "\fBmax_unheard\fP"
+.SS "\fBmax_unheard\fP"
 If
 .M xxqs_name_sxx_qmaster 8
 could not contact or was not contacted by the execution daemon of a host
@@ -607,7 +607,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBloglevel\fP"
+.SS "\fBloglevel\fP"
 This parameter specifies the level of detail that xxQS_NAMExx components such
 as
 .M xxqs_name_sxx_qmaster 8
@@ -639,7 +639,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmax_aj_instances\fP"
+.SS "\fBmax_aj_instances\fP"
 This parameter defines the maximum amount of array task to be scheduled to
 run simultaneously per array job.  An instance of an array task will be
 created within the master daemeon when it gets a start order from the
@@ -657,7 +657,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmax_aj_tasks\fP"
+.SS "\fBmax_aj_tasks\fP"
 This parameter defines the maximum number of array job tasks within an array
 job.
 .M xxqs_name_sxx_qmaster 8
@@ -673,7 +673,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmax_u_jobs\fP"
+.SS "\fBmax_u_jobs\fP"
 The number of active (not finished) jobs which each xxQS_NAMExx user can
 have in the system simultaneously is controlled by this parameter. A value
 greater than 0 defines the limit. The default value 0 means "unlimited". If
@@ -688,7 +688,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBmax_jobs\fP"
+.SS "\fBmax_jobs\fP"
 The number of active (not finished) jobs simultaneously allowed in xxQS_NAMExx
 is controlled by this parameter. A value greater than 0 defines the limit. 
 The default value 0 means "unlimited". If the
@@ -702,7 +702,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBenforce_project\fP"
+.SS "\fBenforce_project\fP"
 If set to \fItrue\fB, users are required to request a project whenever
 submitting a job. See the \fB\-P\fP option to
 .M qsub 1
@@ -716,7 +716,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBenforce_user\fP"
+.SS "\fBenforce_user\fP"
 If set to \fItrue\fB, a
 .M user 5
 must exist to allow for job submission. Jobs are rejected if no corresponding user 
@@ -740,7 +740,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBauto_user_oticket\fP"
+.SS "\fBauto_user_oticket\fP"
 The number of override tickets to assign to automatically created
 .M user 5
 objects. User objects are created automatically if the
@@ -757,7 +757,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBauto_user_fshare\fP"
+.SS "\fBauto_user_fshare\fP"
 The number of functional shares to assign to automatically created
 .M user 5
 objects. User objects are created automatically if the
@@ -774,7 +774,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBauto_user_default_project\fP"
+.SS "\fBauto_user_default_project\fP"
 The default project to assign to automatically created
 .M user 5
 objects. User objects are created automatically if the
@@ -791,7 +791,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBauto_user_delete_time\fP"
+.SS "\fBauto_user_delete_time\fP"
 The number of seconds of inactivity after which automatically created
 .M user 5
 objects will be deleted. User objects are created automatically if the
@@ -810,7 +810,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBset_token_cmd\fP"
+.SS "\fBset_token_cmd\fP"
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -861,7 +861,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBpag_cmd\fP"
+.SS "\fBpag_cmd\fP"
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -878,7 +878,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBtoken_extend_time\fP"
+.SS "\fBtoken_extend_time\fP"
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
@@ -893,7 +893,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBgid_range\fP"
+.SS "\fBgid_range\fP"
 The \fBgid_range\fP
 is a comma separated list of range expressions of the form n-m (n as
 well as m being integer numbers greater than 99), where m is an
@@ -917,7 +917,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBqmaster_params\fP"
+.SS "\fBqmaster_params\fP"
 A list of additional parameters can be passed to the 
 xxQS_NAMExx qmaster. The following values are recognized:
 .IP "\fIENABLE_FORCED_QDEL\fP"
@@ -1015,13 +1015,6 @@ string or seconds. There is no setting to turn the sharetree spooling
 off. 
 (e.g. STREE_SPOOL_INTERVAL=00:02:00)
 .PP
-.IP "\fIMAX_JOB_DELETION_TIME\fp
-Sets the value of how long the qmaster will spend deleting jobs. After this time,
-the qmaster will continue with other tasks and schedule the deletion of remaining
-jobs at a later time. The default value is 3 seconds, and will be used if no value
-is entered. The range of valid values is > 0 and <= 5.
-(e.g. MAX_JOB_DELETION_TIME=1)
-.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -1029,19 +1022,14 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBexecd_params\fP"
+.SS "\fBexecd_params\fP"
 This is foreseen for passing additional parameters 
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"
-If this parameter is set to true, for reserved usage is used for the
+If this parameter is set to true, the  usage of reserved resources is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
-.PP
-.IP "\fIENABLE_ADDGRP_KILL\fP"
-If this parameter is set then xxQS_NAMExx uses the supplementary group ids
-(see \fIgid_range\fP) to identify all processes which are to be terminated 
-when a job should be deleted.
 .PP
 .IP "\fIENABLE_WINDOMACC\fP"
 If this parameter is set to true, Windows Domain accounts (WinDomAcc)
@@ -1100,8 +1088,8 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-If this parameter is set to true, reserved usage is taken for the xxQS_NAMExx share
-tree consumption instead of measured usage.
+If this parameter is set to true, the usage of reserved resources is taken for the 
+xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
 Changing \fBexecd_params\fP will take immediate effect.
 The default for \fBexecd_params\fP is none.
@@ -1160,7 +1148,7 @@ has set the library path, it may be further altered by the shell in which the
 job is executed, or by the job script itself.  The default value for
 SET_LIB_PATH is false.
 .PP
-.SH "\fBreporting_params\fP"
+.SS "\fBreporting_params\fP"
 Used to define the behaviour of reporting modules in the xxQS_NAMExx 
 qmaster. Changes to the \fBreporting_params\fP takes immediate effect.
 The following values are recognized:
@@ -1218,7 +1206,7 @@ for further information about sharelog.
 .PP
 .\"
 .\"
-.SH "\fBfinished_jobs\fP"
+.SS "\fBfinished_jobs\fP"
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
 number of finished jobs being stored. If this maximum number is reached, the
@@ -1232,7 +1220,7 @@ This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBqlogin_daemon\fP"
+.SS "\fBqlogin_daemon\fP"
 This parameter specifies the executable that is to be started on the
 server side of a
 .M qlogin 1 
@@ -1247,7 +1235,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBqlogin_command\fP"
+.SS "\fBqlogin_command\fP"
 This is the command to be executed on the client side of a 
 .M qlogin 1
 request.
@@ -1263,7 +1251,7 @@ The global configuration entry for this value
 may be overwritten by the execution host local configuration.
 .\"
 .\"
-.SH "\fBrlogin_daemon\fP"
+.SS "\fBrlogin_daemon\fP"
 This parameter specifies the executable that is to be started on the server
 side of a
 .M qrsh 1
@@ -1284,7 +1272,7 @@ The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
 .\"
-.SH "\fBrlogin_command\fP"
+.SS "\fBrlogin_command\fP"
 This is the command to be executed on the client side of a
 .M qrsh 1
 request
@@ -1309,7 +1297,7 @@ The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
 .\"
-.SH "\fBrsh_daemon\fP"
+.SS "\fBrsh_daemon\fP"
 This parameter specifies the executable that is to be started on the server
 side of a
 .M qrsh 1
@@ -1329,7 +1317,7 @@ The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
 .\"
-.SH "\fBrsh_command\fP"
+.SS "\fBrsh_command\fP"
 This is the command to be executed on the client side of a
 .M qrsh 1
 request
@@ -1355,7 +1343,7 @@ The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
 .\"
-.SH "\fBdelegated_file_staging\fP"
+.SS "\fBdelegated_file_staging\fP"
 This flag must be set to "true" when the prolog and epilog are ready for
 delegated file staging, so that the DRMAA attribute 'drmaa_transfer_files'
 is supported. To establish delegated file staging, use the variables 
@@ -1369,12 +1357,13 @@ error code 100 so that the error handling mechanism can handle the error
 correctly. (See also FORBID_APPERROR).
 .\"
 .\"
-.SH "\fBreprioritize\fP"
+.SS "\fBreprioritize\fP"
 This flag enables or disables the reprioritization of jobs based on their
-ticket amount. The \fBreprioritize_interval\fP only takes
-effect if \fBreprioritize\fP is set to true. In case one wants
-to turn off the reprioritization of jobs, one should set the \fBreprioritize\fP flag
-to false and the \fBreprioritize_interval\fP to 0 (the default).
+ticket amount. The \fBreprioritize_interval\fP in 
+.M sched_conf 5
+takes effect only if \fBreprioritize\fP is set to true. To turn off 
+job reprioritization, the \fBreprioritize\fP flag must be set to false 
+and the \fBreprioritize_interval\fP to 0 which is the default.
 .sp 1
 This value is a global configuration parameter only. It cannot be
 overridden by the execution host local configuration.

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/01/23 10:05:22 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2007/06/05 16:39:59 $     Revision: $Revision: 1.7.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH REPORTING 5 "$Date: 2007/01/23 10:05:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH REPORTING 5 "$Date: 2007/06/05 16:39:59 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 reporting \- xxQS_NAMExx reporting file format
@@ -270,6 +270,50 @@ future use. Always contains the value X.
 .IP "\fBconsumables\fP"
 Description of consumable values. Information about multiple consumables is separated by space.
 A consumable description has the format <name>=<actual_value>=<configured value>.
+.SS sharelog 
+The xxQS_NAMExx qmaster can dump information about sharetree configuration and use to the reporting file.
+The parameter \fIsharelog\fP sets an interval in which sharetree information will be dumped.
+It is set in the format HH:MM:SS. A value of 00:00:00 configures qmaster not to
+dump sharetree information. Intervals of several minutes up to hours are sensible values for this parameter.
+The record contains the following fields
+.IP "\fBcurrent time\fP"
+The present time
+.IP "\fBusage time\fP"
+The  time used so far
+.IP "\fBnode name\fP"
+The node name
+.IP "\fBuser name\fP"
+The user name
+.IP "\fBproject name\fP"
+The project name
+.IP "\fBshares \fP"
+The total shares
+.IP "\fBjob count \fP"
+The job  count
+.IP "\fBlevel \fP"
+The percentage of shares used
+.IP "\fBtotal \fP"
+The adjusted percentage of shares used
+.IP "\fBlong target share \fP"
+The long target percentage of resource shares used
+.IP "\fBshort target share \fP"
+The short target percentage of resource shares used
+.IP "\fBactual share \fP"
+The actual percentage of resource shares used
+.IP "\fBusage \fP"
+The combined shares used
+.IP "\fBcpu \fP"
+The cpu used
+.IP "\fBmem \fP"
+The memory used
+.IP "\fBio \fP"
+The IO used
+.IP "\fBlong target cpu \fP"
+The long target cpu used
+.IP "\fBlong target mem \fP"
+The long target memory used
+.IP "\fBlong target io \fP"
+The long target IO used
 .\"
 .\"
 .SH "SEE ALSO"

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.24.2.1 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/06/05 16:37:08 $     Revision: $Revision: 1.24.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,81 +29,89 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/06/05 16:37:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
 .\"
 .\"
 .SH DESCRIPTION
-This manual page describes the format of the template file for the cluster queue configuration.
+.I Queue_conf
+reflects the format of the template file for the cluster queue configuration.
 Via the \fB\-aq\fP and \fB\-mq\fP options of the
 .M qconf 1
 command, you can add cluster queues and modify the configuration of
-any queue in the cluster. Any of these change operations can be rejected, 
-as a result of a failed integrity verification.
+any queue in the cluster.
 .PP
-The queue configuration parameters take as values strings, 
-integer decimal numbers or boolean, time and memory specifiers (see 
-\fItime_specifier\fP and \fImemory_specifier\fP in
-.M sge_types 5 )
-as well as comma
-separated lists. 
+The \fIqueue_conf\fP parameters take as values strings, integer decimal
+numbers or boolean, time and memory specifiers as well as comma
+separated lists. A time specifier either consists of a positive
+decimal, hexadecimal or octal integer constant, in which case the value
+is interpreted to be in seconds, or is built by 3 decimal integer
+numbers separated by colon signs where the first number counts the
+hours, the second the minutes and the third the seconds. If a number
+would be zero it can be left out but the separating colon must remain
+(e.g. 1:0:1 = 1::1 means 1 hours and 1 second).
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline 
-(\\newline) characters. The backslash and the newline are replaced with a 
-space (" ") character before any interpretation.
-.\"
-.\"
-.SH FORMAT
-The following list of parameters specifies the queue configuration 
-file content:
-.SS "\fBqname\fP"
-The name of the cluster queue as defined for \fIqueue_name\fP in
-.M sge_types 1 .
-As template default "template" is used.
-.SS "\fBhostlist\fP"
-A list of host identifiers as defined for \fIhost_identifier\fP in 
-.M sge_types 1 . 
-For each host xxQS_NAMExx maintains a queue instance for running jobs
-on that particular host. Large amounts of hosts can easily be managed 
-by using host groups rather than by single host names.
-As list separators white-spaces and "," can be used.
-(template default: NONE).
+Memory specifiers are positive decimal, hexadecimal or octal integer constants
+which may be followed by a multiplier letter. Valid multiplier letters are
+k, K, m, M, g and G, where k means multiply the value by 1000, K multiply by
+1024, m multiply by 1000*1000, M multiply by 1024*1024, g multiply by 
+1000*1000*1000 and G multiply by 1024*1024*1024. If no multiplier is present, 
+the value is just counted in bytes.
 .PP
-If more than one host is specified it can be desirable to specify
-divergences with the further below parameter settings for certain hosts. 
-These divergences can be expressed using the enhanced queue configuration 
-specifier syntax. This syntax builds upon the regular parameter specifier 
-syntax separately for each parameter:
+If more than one host is specified under 'hostlist' (by means of a
+list of hosts or with host groups) it can be desirable to specify
+divergences from the setting used for each host. These divergences
+can be expressed using the enhanced \fIqueue_conf\fP specifier syntax.
+This syntax builds upon the regular parameter specifier syntax as
+described below under 'FORMAT' separately for each parameter and
+in the paragraph above:
 .PP
-"["\fIhost_identifier\fP=<parameters_specifier_syntax>"]"
-[,"["\fIhost_identifier\fP=<parameters_specifier_syntax>"]" ]
+"["host_identifier=<parameters_specifier_syntax>"]"
+[,"["host_identifier=<parameters_specifier_syntax>"]" ]
 .PP
-note, even in the enhanced queue configuration specifier syntax an entry
+Even in the enhanced \fIqueue_conf\fP specifier syntax an entry
+.PP
+<current_attribute_syntax>
+.PP
 without brackets denoting the default setting is required and
 used for all queue instances where no divergences are specified.
-Tuples with a host group \fIhost_identifier\fP override the default
+Tuples with a host group host_identifier override the default
 setting. Tuples with a host name host_identifier override both
-the default and the host group setting. 
+the default and the host group setting. Note that also with the
+enhanced \fIqueue_conf\fP specifier syntax a default setting is always
+needed for all configuration attributes.
 .PP
-Note that also with the enhanced queue configuration specifier syntax 
-a default setting is always needed for each configuration attribute;
-otherwise the queue configuration gets rejected. Ambiguous queue configurations 
-with more than one attribute setting for a particular host are rejected.
+Integrity verifications will be applied on the configuration.
+.PP
+Configurations without default setting are rejected.
+Ambiguous configurations with more than one attribute setting for
+a particular host are rejected.
 Configurations containing override values for hosts not enlisted
-under 'hostname' are accepted but are indicated by \fB\-sds\fP
+under 'hostname' are accepted but are indicated by \fB\-sick\fP
 of 
-.M qconf 1 .
+.M qconf 1
 The cluster queue should contain an unambiguous specification
 for each configuration attribute of each queue instance specified
-under hostname in the queue configuration. Ambiguous configurations with more
+under hostname in \fIqueue_conf\fP. Ambiguous configurations with more
 than one attribute setting resulting from overlapping host groups
 are indicated by \fB\-explain c\fP of
 .M qstat 1
 and cause the queue instance
 with ambiguous configurations to enter the c(onfiguration ambiguous) state.
-.PP
+.\"
+.\"
+.SH FORMAT
+The following list of \fIqueue_conf\fP parameters specifies the
+\fIqueue_conf\fP content:
+.SS "\fBqname\fP"
+The name of the cluster queue(type string; template default: template).
+.SS "\fBhostlist\fP"
+A list of host names (fully-qualified) and host group names. Host group 
+names must begin with an "@" sign. If multiple hosts are specified 
+the \fIqueue_conf\fP constitutes multiple queue instances. Each host may be 
+specified only once in this list. (type string; template default: NONE).
 .SS "\fBseq_no\fP"
 In conjunction with the hosts load situation at a time this 
 parameter specifies this queue's position in the scheduling order 
@@ -128,11 +136,9 @@ values being defined in the "host" and "global" complexes (see
 for details) can be used.
 .PP
 The syntax is that of a comma separated list
-with each list element consisting of the \fIcomplex_name\fP (see 
-.M sge_types 5 )
-of a 
-load value, an equal sign and the threshold value being intended to 
-trigger the overload situation (e.g. load_avg=1.75,users_logged_in=5).
+with each list element consisting of the name of a load value, an
+equal sign and the threshold value being intended to trigger the
+overload situation (e.g. load_avg=1.75,users_logged_in=5).
 .PP
 .B Note:
 Load values as well as consumable resources may be scaled differently
@@ -165,9 +171,7 @@ in \fBsuspend_interval\fP below.
 The time interval in which further \fBnsuspend\fP jobs are suspended
 if one of the \fBsuspend_thresholds\fP (see above for both) is exceeded
 by the current load on the host on which the queue is located.
-The time interval is also used when enabling the jobs. 
-The syntax is that of a \fItime_specifier\fP in
-.M sge_types 5 .
+The time interval is also used when enabling the jobs.
 .\"
 .SS "\fBpriority\fP"
 The \fBpriority\fP parameter specifies the
@@ -194,8 +198,6 @@ and thus writing them to the file system may become expensive, users
 and administrators are advised to choose sufficiently large time
 intervals. \fBmin_cpu_interval\fP is of type time and the default is
 5 minutes (which usually is suitable for test purposes only).
-The syntax is that of a \fItime_specifier\fP in
-.M sge_types 5 .
 .SS "\fBprocessors\fP"
 A set of processors in case of a multiprocessor execution host can be defined
 to which the jobs executing in this queue are bound. The value type of this
@@ -246,17 +248,11 @@ pe_list pe_name
 .PP
 (type string; default: batch interactive).
 .SS "\fBpe_list\fP"
-The list of administrator-defined parallel environment 
-(see 
-.M sge_pe 5 )
-names 
-to be associated with
+The list of administrator-defined parallel environments to be associated with
 the queue. The default is
 .I NONE.
 .SS "\fBckpt_list\fP"
-The list of administrator-defined checkpointing interface names (see \fIckpt_name\fP in
-.M sge_types 1 )
-to be associated 
+The list of administrator-defined checkpointing interfaces to be associated 
 with the queue. The default is
 .I NONE.
 .SS "\fBrerun\fP"
@@ -368,6 +364,8 @@ shell. The shell will only forward them to the job if they are not
 recognized as valid shell options.
 .PP
 The default for \fBshell_start_mode\fP is \fIposix_compliant\fP.
+Note, though, that the \fBshell_start_mode\fB can only used for batch jobs submitted by qsub 
+and can not used for interactive jobs submitted by \fBqrsh\fB, \fBqsh\fB, \fBqlogin\fB.
 .SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
@@ -482,10 +480,7 @@ the
 .M qsub 1
 \fI\-notify\fP option.
 .SS "\fBowner_list\fP"
-The \fBowner_list\fP enlists comma separated the 
-.M login 1 
-user names (see \fIuser_name\fP in
-.M sge_types 1 )
+The \fBowner_list\fP names the login names (in a comma separated list)
 of those users who are
 authorized to disable and suspend this queue through 
 .M qmod 1
@@ -493,11 +488,11 @@ authorized to disable and suspend this queue through
 to set this field for queues on
 interactive workstations where the computing resources are shared between
 interactive sessions and xxQS_NAMExx jobs, allowing the workstation owner to have
-priority access.
-(default: NONE).
+priority access
+(type string; default: NONE).
 .SS "\fBuser_lists\fP"
-The \fBuser_lists\fP parameter contains a comma separated list of xxQS_NAMExx user
-access list names as described in
+The \fBuser_lists\fP parameter contains a comma separated list of so called
+user access lists as described in
 .M access_list 5 .
 Each user contained in at least one of the enlisted access lists has
 access to the queue. If the \fBuser_lists\fP parameter is set to
@@ -506,8 +501,8 @@ via the \fBxuser_lists\fP parameter described below.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the queue.
 .SS "\fBxuser_lists\fP"
-The \fBxuser_lists\fP parameter contains a comma separated list of xxQS_NAMExx user 
-access list names as described in
+The \fBxuser_lists\fP parameter contains a comma separated list of so called
+user access lists as described in
 .M access_list 5 .
 Each user contained in at least one of the enlisted access lists is not
 allowed to access the queue. If the \fBxuser_lists\fP parameter is set to
@@ -515,27 +510,21 @@ NONE (the default) any user has access.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the queue.
 .SS "\fBprojects\fP"
-The \fBprojects\fP parameter contains a comma separated list of 
-xxQS_NAMExx projects (see 
-.M project 5 )
-that have access to the queue. Any project not in this list are 
-denied access to the queue. If set to NONE (the default), any project
+The \fBprojects\fP parameter contains a comma separated list of projects
+that have access to the queue. Any projects not in this list are denied
+access to the queue. If set to NONE (the default), any project
 has access that is not specifically excluded via the \fBxprojects\fP
 parameter described below. If a project is in both the \fBprojects\fP and
 \fBxprojects\fP parameters, the project is denied access to the queue.
 .SS "\fBxprojects\fP"
-The \fBxprojects\fP parameter contains a comma separated list of 
-xxQS_NAMExx projects (see
-.M project 5 )
+The \fBxprojects\fP parameter contains a comma separated list of projects
 that are denied access to the queue. If set to NONE (the default), no
 projects are denied access other than those denied access based on the
 \fBprojects\fP parameter described above.  If a project is in both the 
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the queue.
 .SS "\fBsubordinate_list\fP"
-A list of xxQS_NAMExx queue names as defined for \fIqueue_name\fP in
-.M sge_types 1 . 
-Subordinate relationships are in effect
+A list of xxQS_NAMExx cluster queues. Subordinate relationships are in effect
 only between queue instances residing at the same host. If there is a 
 queue instance (be in the sub- or superordinated one) on only one
 particular host this relationship is ignored.
@@ -751,7 +740,6 @@ The total number of disk blocks that this job can create.
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
-.M sge_types 1 ,
 .M csh 1 ,
 .M qconf 1 ,
 .M qmon 1 ,

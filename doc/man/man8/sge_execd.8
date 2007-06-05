@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2007/01/05 19:56:13 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2007/06/05 16:25:15 $     Revision: $Revision: 1.8.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2007/01/05 19:56:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2007/06/05 16:25:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_execd \- xxQS_NAMExx job execution agent
 .\"
@@ -156,6 +156,11 @@ by that same user are handled correctly by the system.
 .\"
 .\"
 .SH FILES
+\fBsgepasswd\fB  contains  a  list  of  user  names   and   their
+corresponding encrypted Windows passwords. If available, the
+password  file  will  be   used   by  \fBsge_execd\fB. To change the contents 
+of this file please use the \fBsgepasswd\fB command. It is not advised to  change  
+that file manually.
 .nf
 .ta \w'<xxqs_name_sxx_root>/     'u
 \fI<xxqs_name_sxx_root>/<cell>/common/configuration\fP

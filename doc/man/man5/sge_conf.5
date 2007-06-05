@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/03/23 09:57:36 $     Revision: $Revision: 1.55.2.2 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/05 16:30:54 $     Revision: $Revision: 1.55.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/03/23 09:57:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/05 16:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -69,10 +69,6 @@ If a local configuration is available, its entries overwrite the
 corresponding entries of the global configuration. \fBNote:\fP The local
 configuration does not have to contain all valid configuration entries,
 but only those which need to be modified against the global entries.
-.PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
-(\\newline) characters. The backslash and the newline are replaced with a
-space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -1019,13 +1015,6 @@ string or seconds. There is no setting to turn the sharetree spooling
 off. 
 (e.g. STREE_SPOOL_INTERVAL=00:02:00)
 .PP
-.IP "\fIMAX_JOB_DELETION_TIME\fp
-Sets the value of how long the qmaster will spend deleting jobs. After this time,
-the qmaster will continue with other tasks and schedule the deletion of remaining
-jobs at a later time. The default value is 3 seconds, and will be used if no value
-is entered. The range of valid values is > 0 and <= 5.
-(e.g. MAX_JOB_DELETION_TIME=1)
-.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -1038,7 +1027,7 @@ This is foreseen for passing additional parameters
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"
-If this parameter is set to true, for reserved usage is used for the
+If this parameter is set to true, the  usage of reserved resources is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
 .PP
@@ -1099,8 +1088,8 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-If this parameter is set to true, reserved usage is taken for the xxQS_NAMExx share
-tree consumption instead of measured usage.
+If this parameter is set to true, the usage of reserved resources is taken for the 
+xxQS_NAMExx share tree consumption instead of measured usage.
 .PP
 Changing \fBexecd_params\fP will take immediate effect.
 The default for \fBexecd_params\fP is none.

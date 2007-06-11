@@ -48,9 +48,13 @@ struct qrstat_report_handler_str {
    bool show_summary;
    bool (*report_start)(qrstat_report_handler_t* handler, lList **alpp);
    bool (*report_finish)(qrstat_report_handler_t* handler, lList **alpp);
-   bool (*report_start_ar)(qrstat_report_handler_t* handler, lList **alpp);
+   bool (*report_start_ar)(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
+   bool (*report_start_unknown_ar)(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
    bool (*report_finish_ar)(qrstat_report_handler_t* handler, lList **alpp);
-   bool (*report_ar_node_ulong)(qrstat_report_handler_t* handler, lList **alpp,
+   bool (*report_finish_unknown_ar)(qrstat_report_handler_t* handler, lList **alpp);
+   bool (*report_ar_node_ulong)(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
+                                const char *name, u_long32 value);
+   bool (*report_ar_node_ulong_unknown)(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
                                 const char *name, u_long32 value);
    bool (*report_ar_node_duration)(qrstat_report_handler_t* handler, lList **alpp,
                                    const char *name, u_long32 value);
@@ -96,6 +100,7 @@ struct qrstat_report_handler_str {
    bool (*report_start_xacl_list)(qrstat_report_handler_t* handler, lList **alpp);
    bool (*report_finish_xacl_list)(qrstat_report_handler_t* handler, lList **alpp);
    bool (*report_xacl_list_node)(qrstat_report_handler_t* handler, lList **alpp, const char *name);
+   bool (*report_newline)(qrstat_report_handler_t* handler, lList **alpp);
 };
 
 bool

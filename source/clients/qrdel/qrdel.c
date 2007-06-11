@@ -108,6 +108,10 @@ int main(int argc, char **argv) {
 
    alp = ctx->gdi(ctx, SGE_AR_LIST, SGE_GDI_DEL, &id_list, NULL, NULL);
    lFreeList(&id_list);
+   if (answer_list_has_error(&alp)) {
+      answer_list_on_error_print_or_exit(&alp, stdout);
+      goto error_exit;
+   }
    answer_list_on_error_print_or_exit(&alp, stdout);
 
    sge_prof_cleanup();
@@ -218,12 +222,12 @@ static bool sge_parse_qrdel(lList **ppcmdline, lList **ppid_list, lList **alpp)
       lFreeList(&user_list);
    } else {
       /* fill up ID list */
-      if (user_list) {
+      if (user_list != NULL) {
          lListElem *id;
 
          if (lGetNumberOfElem(*ppid_list) == 0){
             id = lAddElemStr(ppid_list, ID_str, "0", ID_Type);
-            lSetList(id, ID_user_list, user_list);
+            lSetList(id, ID_user_list, lCopyList("", user_list));
          } else {
             for_each(id, *ppid_list){
                lSetList(id, ID_user_list, lCopyList("", user_list));

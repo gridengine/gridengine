@@ -54,7 +54,7 @@ bool
 qrstat_xml_report_finish(qrstat_report_handler_t* handler, lList **alpp);
 
 bool
-qrstat_xml_report_start_ar(qrstat_report_handler_t* handler, lList **alpp);
+qrstat_xml_report_start_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
 
 bool
 qrstat_xml_report_finish_ar(qrstat_report_handler_t* handler, lList **alpp);

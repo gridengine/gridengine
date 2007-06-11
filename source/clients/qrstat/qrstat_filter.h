@@ -50,6 +50,7 @@ struct qrstat_env_str {
    bool is_explain;   /* -explain */
    bool is_xml;       /* -xml */
    bool is_summary;   /* show summary of selected ar's or all details of one or multiple ar's */
+   bool header_printed;
 
    /* needed lists */
    lList *ar_list;

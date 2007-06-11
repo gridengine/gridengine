@@ -56,6 +56,7 @@
 #include "sge_mtutil.h"
 #include "uti/sge_time.h"
 #include "uti/sge_uidgid.h"
+#include "uti/sge_string.h"
 #include "sge_utility.h"
 #include "sge_range.h"
 #include "sgeobj/msg_sgeobjlib.h"
@@ -439,7 +440,17 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
    if ((user_list = lGetList(ep, ID_user_list)) != NULL) {
       lCondition *new_where = NULL;
       lListElem *user;
+
       for_each(user, user_list) {
+         if (sge_is_pattern(lGetString(user, ST_name)) && !manop_is_manager(ruser)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_MGR_TO_SS,
+                  ruser, "modify all advance reservations"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            sge_dstring_free(&buffer);
+            lFreeWhere(&ar_where);
+            DRETURN(STATUS_EUNKNOWN);
+         }
+
          new_where = lWhere("%T(%I p= %s)", AR_Type, AR_owner, lGetString(user, ST_name));
          if (ar_where == NULL) {
             ar_where = new_where;
@@ -447,6 +458,15 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
             ar_where = lOrWhere(ar_where, new_where);
          }   
       }
+   } else {
+      /* if no userlist was requested only delete the own ars */
+      lCondition *new_where = NULL;
+      new_where = lWhere("%T(%I p= %s)", AR_Type, AR_owner, ruser);
+      if (ar_where == NULL) {
+         ar_where = new_where;
+      } else {
+         ar_where = lOrWhere(ar_where, new_where);
+      }   
    }
 
    if (((id_str = lGetString(ep, ID_str)) != NULL) && (strcmp(id_str, "0") != 0)) {
@@ -469,6 +489,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SPECIFYUSERORID_S, SGE_OBJ_AR));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);
+      lFreeWhere(&ar_where);
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -521,8 +542,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
 
          lRemoveElem(*master_ar_list, &ar);
 
-         INFO((SGE_EVENT, "%s@%s deleted advance reservation %s",
-                  ruser, rhost, sge_dstring_get_string(&buffer)));
+         INFO((SGE_EVENT, MSG_JOB_DELETEX_SSU,
+                  ruser, SGE_OBJ_AR, sge_u32c(ar_id)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          
          sge_event_spool(ctx, alpp, 0, sgeE_AR_DEL, 
@@ -546,7 +567,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
       } else {
          lListElem *user;
          bool first = true;
-         int umax = 20;
+         int umax = 5;
 
          sge_dstring_sprintf(&buffer, "%s", "");
          for_each(user, user_list) {
@@ -558,7 +579,8 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
             if (umax == 0) {
                sge_dstring_append(&buffer, "...");
                break;
-            }   
+            }
+            sge_dstring_append(&buffer, lGetString(user, ST_name));
             umax--;
          }
          ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOXFORUSERS_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)));
@@ -566,6 +588,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
   
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&buffer);
+      lFreeWhere(&ar_where);
       DRETURN(STATUS_EEXIST);
    }
 
@@ -573,6 +596,7 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
    cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), alpp);
 
    sge_dstring_free(&buffer);
+   lFreeWhere(&ar_where);
    DRETURN(0);
 }
 

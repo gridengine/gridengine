@@ -51,13 +51,19 @@ static bool
 qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp);
 
 static bool
-qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp);
+qrstat_report_start_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
+
+static bool
+qrstat_report_start_unknown_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
 
 static bool
 qrstat_report_finish_ar(qrstat_report_handler_t* handler, lList **alpp);
 
 static bool
-qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, lList **alpp,
+qrstat_report_finish_unknown_ar(qrstat_report_handler_t* handler, lList **alpp);
+
+static bool
+qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
                                 const char *name, u_long32 value);
 
 static bool
@@ -140,6 +146,9 @@ static bool
 qrstat_report_xacl_list_node(qrstat_report_handler_t* handler,
                              lList **alpp, const char *name);
 
+static bool
+qrstat_report_newline(qrstat_report_handler_t* handler, lList **alpp);
+
 
 qrstat_report_handler_t *
 qrstat_create_report_handler_xml(qrstat_env_t *qrstat_env, lList **answer_list)
@@ -171,8 +180,11 @@ qrstat_create_report_handler_xml(qrstat_env_t *qrstat_env, lList **answer_list)
          ret->report_start = qrstat_report_start;
          ret->report_finish = qrstat_report_finish;
          ret->report_start_ar = qrstat_report_start_ar;
+         ret->report_start_unknown_ar = qrstat_report_start_unknown_ar;
          ret->report_finish_ar = qrstat_report_finish_ar;
+         ret->report_finish_unknown_ar = qrstat_report_finish_unknown_ar;
          ret->report_ar_node_ulong = qrstat_report_ar_node_ulong;
+         ret->report_ar_node_ulong_unknown = qrstat_report_ar_node_ulong;
          ret->report_ar_node_duration = qrstat_report_ar_node_duration;
          ret->report_ar_node_string = qrstat_report_ar_node_string;
          ret->report_ar_node_time = qrstat_report_ar_node_time;
@@ -203,6 +215,7 @@ qrstat_create_report_handler_xml(qrstat_env_t *qrstat_env, lList **answer_list)
          ret->report_start_xacl_list = qrstat_report_start_xacl_list;
          ret->report_finish_xacl_list = qrstat_report_finish_xacl_list;
          ret->report_xacl_list_node = qrstat_report_xacl_list_node;
+         ret->report_newline = qrstat_report_newline;
       }
    }
 
@@ -254,7 +267,7 @@ qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp)
 }
 
 static bool
-qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp) 
+qrstat_report_start_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp) 
 {
    bool ret = true;
    dstring *buffer = (dstring*)handler->ctx;
@@ -262,6 +275,19 @@ qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "qrstat_report_start_ar");
 
    sge_dstring_append(buffer, "   <ar_summary>\n");
+     
+   DRETURN(ret); 
+}
+
+static bool
+qrstat_report_start_unknown_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp) 
+{
+   bool ret = true;
+   dstring *buffer = (dstring*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_start_unknown_ar");
+
+   sge_dstring_append(buffer, "   <ar_unknown>\n");
      
    DRETURN(ret); 
 }
@@ -280,7 +306,20 @@ qrstat_report_finish_ar(qrstat_report_handler_t* handler, lList **alpp)
 }
 
 static bool
-qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, lList **alpp,
+qrstat_report_finish_unknown_ar(qrstat_report_handler_t* handler, lList **alpp)
+{
+   bool ret = true;
+   dstring *buffer = (dstring*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_finish_unknown_ar");
+  
+   sge_dstring_append(buffer, "   </ar_unknown>\n");
+
+   DRETURN(ret); 
+}
+
+static bool
+qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
                             const char *name, u_long32 value)
 {
    bool ret = true;
@@ -630,3 +669,8 @@ qrstat_report_xacl_list_node(qrstat_report_handler_t* handler,
    DRETURN(ret); 
 }
  
+static bool
+qrstat_report_newline(qrstat_report_handler_t* handler, lList **alpp)
+{
+   return true;
+}

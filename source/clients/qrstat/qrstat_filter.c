@@ -53,6 +53,7 @@ qrstat_filter_init(qrstat_env_t *qrstat_env)
    qrstat_env->is_explain = false;
    qrstat_env->is_xml = false;
    qrstat_env->is_summary = false;
+   qrstat_env->header_printed = false;
 
    qrstat_env->ar_list = NULL;
    qrstat_env->what_AR_Type = NULL;

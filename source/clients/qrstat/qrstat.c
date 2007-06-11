@@ -146,7 +146,7 @@ sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
 
 /************************************************************************/
 int main(int argc, char **argv) {
-   bool lret = true;
+   int ret = 0;
    lList *pcmdline = NULL;
    lList *answer_list = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -182,8 +182,7 @@ int main(int argc, char **argv) {
    /* 
     * stage 2: evalutate switches and modify qrstat_env
     */
-   lret = sge_parse_qrstat(&answer_list, &qrstat_env, &pcmdline);
-   if (!lret) {
+   if (!sge_parse_qrstat(&answer_list, &qrstat_env, &pcmdline)) {
       answer_list_output(&answer_list);
       lFreeList(&pcmdline);
       goto error_exit;
@@ -213,7 +212,9 @@ int main(int argc, char **argv) {
       } else {
          handler = qrstat_create_report_handler_stdout(&qrstat_env, &answer_list);
       }
-      qrstat_print(&answer_list, handler, &qrstat_env);
+      if (!qrstat_print(&answer_list, handler, &qrstat_env)) {
+         ret = 1;
+      }
       if (qrstat_env.is_xml) {
          qrstat_destroy_report_handler_xml(&handler, &answer_list); 
       } else {
@@ -223,7 +224,7 @@ int main(int argc, char **argv) {
 
    sge_prof_cleanup();
    sge_gdi2_shutdown((void**)&ctx);
-   DRETURN(0);
+   DRETURN(ret);
 
 error_exit:
    sge_prof_cleanup();

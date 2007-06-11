@@ -1145,6 +1145,7 @@ u_long32 step
                sge_dstring_append(&user_list_string, "...");
                break;
             }   
+            sge_dstring_append(&user_list_string, lGetString(user, ST_name));
             umax--;
          }
       }
@@ -3987,7 +3988,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
 
       if ((*alltasks) && showmessage) {
          get_rid_of_schedd_job_messages(job_number);
-         INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, sge_u32c(job_number)));
+         INFO((SGE_EVENT, MSG_JOB_DELETEX_SSU, ruser, SGE_OBJ_JOB, sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    

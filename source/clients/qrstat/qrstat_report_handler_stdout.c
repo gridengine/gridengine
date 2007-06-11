@@ -54,13 +54,23 @@ static bool
 qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp);
 
 static bool
-qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp);
+qrstat_report_start_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
+
+static bool
+qrstat_report_start_unknown_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp);
 
 static bool
 qrstat_report_finish_ar(qrstat_report_handler_t* handler, lList **alpp);
 
 static bool
-qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, lList **alpp,
+qrstat_report_finish_unknown_ar(qrstat_report_handler_t* handler, lList **alpp);
+
+static bool
+qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
+                                const char *name, u_long32 value);
+
+static bool
+qrstat_report_ar_node_ulong_unknown(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
                                 const char *name, u_long32 value);
 
 static bool
@@ -145,6 +155,9 @@ static bool
 qrstat_report_xacl_list_node(qrstat_report_handler_t* handler,
                              lList **alpp, const char *name);
 
+static bool
+qrstat_report_newline(qrstat_report_handler_t* handler, lList **alpp);
+
 
 qrstat_report_handler_t *
 qrstat_create_report_handler_stdout(qrstat_env_t *qrstat_env, 
@@ -169,8 +182,11 @@ qrstat_create_report_handler_stdout(qrstat_env_t *qrstat_env,
       ret->report_start = qrstat_report_start;
       ret->report_finish = qrstat_report_finish;
       ret->report_start_ar = qrstat_report_start_ar;
+      ret->report_start_unknown_ar = qrstat_report_start_unknown_ar;
       ret->report_finish_ar = qrstat_report_finish_ar;
+      ret->report_finish_unknown_ar = qrstat_report_finish_unknown_ar;
       ret->report_ar_node_ulong = qrstat_report_ar_node_ulong;
+      ret->report_ar_node_ulong_unknown = qrstat_report_ar_node_ulong_unknown;
       ret->report_ar_node_duration = qrstat_report_ar_node_duration;
       ret->report_ar_node_string = qrstat_report_ar_node_string;
       ret->report_ar_node_time = qrstat_report_ar_node_time;
@@ -201,6 +217,7 @@ qrstat_create_report_handler_stdout(qrstat_env_t *qrstat_env,
       ret->report_start_xacl_list = qrstat_report_start_xacl_list;
       ret->report_finish_xacl_list = qrstat_report_finish_xacl_list;
       ret->report_xacl_list_node = qrstat_report_xacl_list_node;
+      ret->report_newline = qrstat_report_newline;
    }
 
    DRETURN(ret);
@@ -224,18 +241,8 @@ static bool
 qrstat_report_start(qrstat_report_handler_t* handler, lList **alpp) 
 {
    bool ret = true;
-   FILE *out = (FILE*)handler->ctx;
 
    DENTER(TOP_LAYER, "qrstat_report_start");
-   if (handler->show_summary) {
-      const char *head_format = "%-7.7s %-10.10s %-12.12s %-5.5s %-20.20s %-20.20s %8s\n";
-
-      fprintf(out, head_format, "ar-id", "name", "owner", "state", "start at", 
-              "end at", "duration");
-      fprintf(out, "----------------------------------------"
-              "--------------------------------------------------\n");
-
-   }
    DRETURN(ret); 
 }
 
@@ -249,7 +256,7 @@ qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp)
 }
 
 static bool
-qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp) 
+qrstat_report_start_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp) 
 {
    bool ret = true;
    FILE *out = (FILE*)handler->ctx;
@@ -265,6 +272,29 @@ qrstat_report_start_ar(qrstat_report_handler_t* handler, lList **alpp)
       fprintf(out, "----------");
       fprintf(out, "----------");
       fprintf(out, "----------\n");
+   } else if (!qrstat_env->header_printed) {
+      const char *head_format = "%-7.7s %-10.10s %-12.12s %-5.5s %-20.20s %-20.20s %8s\n";
+
+      fprintf(out, head_format, "ar-id", "name", "owner", "state", "start at", 
+              "end at", "duration");
+      fprintf(out, "----------------------------------------"
+                 "--------------------------------------------------\n");
+      qrstat_env->header_printed = true;
+   }
+
+   DRETURN(ret); 
+}
+
+static bool
+qrstat_report_start_unknown_ar(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp) 
+{
+   bool ret = true;
+   FILE *out = (FILE*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_unknown_start");
+
+   if (!qrstat_env->header_printed) {
+      fprintf(out, "Following advance reservations do not exist:\n");
    }
 
    DRETURN(ret); 
@@ -284,7 +314,16 @@ qrstat_report_finish_ar(qrstat_report_handler_t* handler, lList **alpp)
 }
 
 static bool
-qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, lList **alpp,
+qrstat_report_finish_unknown_ar(qrstat_report_handler_t* handler, lList **alpp)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "qrstat_report_finish_unknown_ar");
+   DRETURN(ret); 
+}
+
+static bool
+qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
                             const char *name, u_long32 value)
 {
    bool ret = true;
@@ -296,6 +335,24 @@ qrstat_report_ar_node_ulong(qrstat_report_handler_t* handler, lList **alpp,
    } else {
       fprintf(out, SFN_FIRST_COLUMN" "sge_U32CFormat"\n", name, sge_u32c(value));  
    }
+   DRETURN(ret); 
+}
+
+static bool
+qrstat_report_ar_node_ulong_unknown(qrstat_report_handler_t* handler, qrstat_env_t *qrstat_env, lList **alpp,
+                            const char *name, u_long32 value)
+{
+   bool ret = true;
+   FILE *out = (FILE*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_ar_node_ulong_unknown");
+   if (qrstat_env->header_printed) {
+      fprintf(out, ", ");
+   } else {
+      qrstat_env->header_printed = true;
+   }
+   fprintf(out, sge_U32CFormat, sge_u32c(value));
+
    DRETURN(ret); 
 }
 
@@ -672,3 +729,13 @@ qrstat_report_xacl_list_node(qrstat_report_handler_t* handler,
    DRETURN(ret); 
 }
  
+static bool
+qrstat_report_newline(qrstat_report_handler_t* handler, lList **alpp)
+{
+   bool ret = true;
+   FILE *out = (FILE*)handler->ctx;
+
+   DENTER(TOP_LAYER, "qrstat_report_newline");
+   fprintf(out, "\n");
+   DRETURN(ret);
+}

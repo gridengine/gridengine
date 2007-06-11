@@ -718,7 +718,6 @@ static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
    DENTER(TOP_LAYER, "sge_gdi_ctx_is_setup");
 
    if (!thiz || !thiz->sge_gdi_ctx_handle) {
-      DPRINTF(("CTX: couldn't return true/false\n"));
       DRETURN(false);
    }   
    

@@ -1,3 +1,9 @@
+JG-2007-06-13-0: Bugfix:    util/arch had problem with libc version containing 
+                            comma (e.g. on RH5, Ubuntu 7.04).
+                 Bugster:   6568712
+                 Issue:     2241
+                 Review:    RD
+
 RD-2007-06-11-0: Bugfix:    fixed some qrdel and qrstat bugs
                  Review:    PJ
 

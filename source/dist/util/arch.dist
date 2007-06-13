@@ -240,7 +240,7 @@ Linux)
          unsupported="UNSUPPORTED-"
          lxrelease="${lxrelease}-GLIBC"
       else
-         libc_version=`echo $libc_string | tr ' ' '\n' | grep "2\." | cut -f 2 -d "."`
+         libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | cut -f 2 -d "."`
          case $libc_version in
          2)
             unsupported="u"

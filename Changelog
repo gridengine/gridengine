@@ -1,3 +1,9 @@
+JG-2007-06-13-0: Bugfix:    util/arch had problem with libc version containing 
+                            comma (e.g. on RH5, Ubuntu 7.04).
+                 Bugster:   6568712
+                 Issue:     2241
+                 Review:    RD
+
 AH-2007-06-01-2: Bugfix:    sge_schedd deadlock upon schedd_job_info
                             job_list being enabled
                  Bugster:   6564503

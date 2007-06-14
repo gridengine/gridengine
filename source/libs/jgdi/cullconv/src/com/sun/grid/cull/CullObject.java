@@ -71,7 +71,7 @@ public class CullObject {
     public static final int TYPE_MAP       = 3;
     public static final int TYPE_MAPPED    = 4;
     
-    private int type = TYPE_SIMPLE;
+	 private int type = TYPE_SIMPLE;
     
     private CullObject parentObject;
     private String     parentName;

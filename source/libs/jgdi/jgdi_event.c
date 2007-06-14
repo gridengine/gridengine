@@ -67,9 +67,6 @@ static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *e
 static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const char* beanClassName, 
                                         lDescr *descr, int event_action, lListElem *ev, lList **alpp);
 
-#define JGDI_LAYER      TOP_LAYER
-
-
 
 /*
  * Class:     com_sun_grid_jgdi_jni_AbstractEventClient
@@ -102,7 +99,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_closeNativ
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /*
@@ -137,8 +134,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_initNative
    evc = sge_evc_class_create(sge_gdi_ctx, (ev_registration_id)reg_id, &alp); 
    if (!evc) {
       throw_error_from_answer_list(env, JGDI_ERROR, alp);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 #if 1   
    /*
@@ -173,8 +169,7 @@ error:
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
-   return evc_index;
+   DRETURN(evc_index);
 }
 
 jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList **alpp) 
@@ -182,11 +177,10 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
    jint index = 0;
    jgdi_result_t ret = JGDI_SUCCESS;
    
-   DENTER( JGDI_LAYER, "getEVC" );
+   DENTER(JGDI_LAYER, "getEVC");
 
    if ((ret = AbstractEventClient_getEVCIndex(env, evcobj, &index, alpp)) != JGDI_SUCCESS) {
-      DEXIT;
-      return ret;
+      DRETURN(ret);
    }
    if (index >= 0 && index < MAX_EVC_ARRAY_SIZE) {
        pthread_mutex_lock(&sge_evc_mutex);
@@ -196,8 +190,7 @@ jgdi_result_t getEVC(JNIEnv *env, jobject evcobj, sge_evc_class_t **evc, lList *
        answer_list_add(alpp, "event has not a valid evc index", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
        ret = JGDI_ILLEGAL_STATE;
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -220,11 +213,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
    
    if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
-   if( !sge_evc->ec_register(sge_evc, false, &alp) ) {
+   if (!sge_evc->ec_register(sge_evc, false, &alp)) {
       if (answer_list_has_error(&alp)) {
          throw_error_from_answer_list(env, JGDI_ERROR, alp);
       } else {
@@ -233,7 +225,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
    } else {
       ev_registration_id id = sge_evc->ec_get_id(sge_evc);
       DPRINTF(("event client with id %d successfully registered\n", id));
-      if((ret = AbstractEventClient_setId(env, evcobj, (jint)id, &alp)) != JGDI_SUCCESS) {
+      if ((ret = AbstractEventClient_setId(env, evcobj, (jint)id, &alp)) != JGDI_SUCCESS) {
          throw_error_from_answer_list(env, ret, alp);
       }
    }
@@ -242,7 +234,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_registerNa
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 /*
@@ -265,8 +257,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    
    if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    id = sge_evc->ec_get_id(sge_evc);
@@ -283,7 +274,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_deregister
    lFreeList(&alp);
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -306,20 +297,18 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_subscribeA
    
    if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    if (!sge_evc->ec_subscribe_all(sge_evc)) {
       THROW_ERROR((env, JGDI_ERROR, "ec_subscribeAll failed"));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_nativeCommit(JNIEnv *env, jobject evcobj)
@@ -349,7 +338,7 @@ error:
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -372,19 +361,17 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_unsubscrib
    
    if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    if (!sge_evc->ec_unsubscribe_all(sge_evc)) {
       THROW_ERROR((env, JGDI_ERROR, "ec_unsubscribeAll failed"));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -411,43 +398,33 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    
    if ((ret = getEVC(env, evcobj, &sge_evc, &alp)) != JGDI_SUCCESS) {
       throw_error_from_answer_list(env, ret, alp);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    logger = jgdi_get_logger(env, JGDI_EVENT_LOGGER);
-#if 0 
-   /*
-   ** -> RH: we return in jgdi_is_loggable() false
-   */
-   if (logger == NULL) {
-      THROW_ERROR((env, JGDI_ILLEGAL_STATE, "logger is NULL"));
-   }
-#endif   
-
-   if (jgdi_is_loggable(env, logger, FINE) ) {
+   if (jgdi_is_loggable(env, logger, FINE)) {
       jgdi_log(env, logger, FINE, "before ec_get");
    }
    sge_evc->ec_get(sge_evc, &elist, true);
 
-   if (jgdi_is_loggable(env, logger, FINE) ) {
+   if (jgdi_is_loggable(env, logger, FINE)) {
       jgdi_log(env, logger, FINE, "after ec_get");
    }
    for_each(ev, elist) {
       
-      if (jgdi_is_loggable(env, logger, FINE) ) {
+      if (jgdi_is_loggable(env, logger, FINE)) {
          jgdi_log(env, logger, FINE, "before process_event");
       }
 
       ret = process_event(env, eventList, ev, &alp);
       
-      if (jgdi_is_loggable(env, logger, FINE) ) {
+      if (jgdi_is_loggable(env, logger, FINE)) {
          jgdi_log(env, logger, FINE, "after process_event");
       }
       
-      if(ret != JGDI_SUCCESS) {
+      if (ret != JGDI_SUCCESS) {
          
-         if (jgdi_is_loggable(env, logger, WARNING) ) {
+         if (jgdi_is_loggable(env, logger, WARNING)) {
             
             dstring ds = DSTRING_INIT;
             
@@ -461,11 +438,10 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    
    {
       jint size = 0;
-      if((ret = List_size(env, eventList, &size, &alp)) != JGDI_SUCCESS) {
+      if ((ret = List_size(env, eventList, &size, &alp)) != JGDI_SUCCESS) {
          throw_error_from_answer_list(env, JGDI_ILLEGAL_STATE, alp);
          lFreeList(&alp);
-         DEXIT;
-         return;
+         DRETURN_VOID;
       }
       DPRINTF(("Received %d events\n", size));
    }
@@ -473,7 +449,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_AbstractEventClient_fillEvents
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
       
-   DEXIT;
+   DRETURN_VOID;
 }
 
 static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *ev, lList** alpp) {
@@ -528,19 +504,19 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
          break;
       case sgeE_JOB_FINAL_USAGE:            /*37 + event job final usage report after job end */
            ret = EventFactoryBase_static_createJobFinalUsageEvent(env, timestamp, evtId, &event, alpp);
-           if(ret == JGDI_SUCCESS) {
+           if (ret == JGDI_SUCCESS) {
               ret = fill_job_usage_event(env, event, ev, alpp);
            }
            break;
       case sgeE_JOB_USAGE:                  /*36 + event job online usage */
            ret = EventFactoryBase_static_createJobUsageEvent(env, timestamp, evtId, &event, alpp);
-           if(ret == JGDI_SUCCESS) {
+           if (ret == JGDI_SUCCESS) {
               ret = fill_job_usage_event(env, event, ev, alpp);
            }
            break;
       case sgeE_JOB_FINISH:                 /*38 + job finally finished or aborted (user view) */
            ret = EventFactoryBase_static_createJobFinishEvent(env, timestamp, evtId, &event, alpp);
-           if(ret == JGDI_SUCCESS) {
+           if (ret == JGDI_SUCCESS) {
               ret = fill_job_event(env, event, ev, alpp);
            }
            break;
@@ -558,13 +534,12 @@ static jgdi_result_t process_event(JNIEnv *env,  jobject eventList, lListElem *e
 
    }
    
-   if(ret == JGDI_SUCCESS) {
+   if (ret == JGDI_SUCCESS) {
       jboolean addResult = false;
       ret = List_add(env, eventList, event, &addResult, alpp);
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
    
 }
 
@@ -587,8 +562,7 @@ static jgdi_result_t fill_job_usage_event(JNIEnv *env, jobject event_obj,
            break;
         }
      }
-     DEXIT;
-     return ret;
+     DRETURN(ret);
 }
 
 static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *ev, lList **alpp) {                                               
@@ -600,18 +574,15 @@ static jgdi_result_t fill_job_event(JNIEnv *env, jobject event_obj, lListElem *e
      DENTER(JGDI_LAYER, "fill_job_event");
      
      ret = JobEvent_setJobId(env, event_obj, (jint)job_id, alpp);
-     if(ret != JGDI_SUCCESS) {
-        DEXIT;
-        return ret;
+     if (ret != JGDI_SUCCESS) {
+        DRETURN(ret);
      }
      ret = JobEvent_setTaskId(env, event_obj, (jint)ja_task_id, alpp);
-     if(ret != JGDI_SUCCESS) {
-        DEXIT;
-        return ret;
+     if (ret != JGDI_SUCCESS) {
+        DRETURN(ret);
      }
      ret = JobEvent_setPeTaskId(env, event_obj, pe_task_id, alpp);
-     DEXIT;
-     return ret;
+     DRETURN(ret);
 }
    
 jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* beanClassName, 
@@ -629,8 +600,7 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
 
    if (!descr) {
       answer_list_add(alpp, "descr is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
-      DEXIT;
-      return JGDI_ILLEGAL_ARGUMENT;
+      DRETURN(JGDI_ILLEGAL_ARGUMENT);
    }   
 
    switch (event_action) {
@@ -654,22 +624,19 @@ jgdi_result_t create_generic_event(JNIEnv *env, jobject *event_obj, const char* 
          answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
                                  "Event action not yet handled %d", event_action);
                                  
-         return JGDI_ILLEGAL_STATE;
+         DRETURN(JGDI_ILLEGAL_STATE);
    }
 
-   if(ret != JGDI_SUCCESS) {
-      DEXIT;
-      return ret;
+   if (ret != JGDI_SUCCESS) {
+      DRETURN(ret);
    }
    
    ret = fill_generic_event(env, event, beanClassName, descr, event_action, ev, alpp);
-   if(ret != JGDI_SUCCESS) {
-      DEXIT;
-      return ret;
+   if (ret != JGDI_SUCCESS) {
+      DRETURN(ret);
    }
    *event_obj = event;
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const char* beanClassName, 
@@ -683,28 +650,24 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
                                            
    if (beanClassName == NULL) {
       answer_list_add(alpp, "beanClassName is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
-      DEXIT;
-      return JGDI_ILLEGAL_ARGUMENT;
+      DRETURN(JGDI_ILLEGAL_ARGUMENT);
    }
 
    beanClass = (*env)->FindClass(env, beanClassName);
    if (test_jni_error(env, "handleEvent: FindClass failed", alpp)) {
-      DEXIT;
-      return JGDI_ILLEGAL_ARGUMENT;
+      DRETURN(JGDI_ILLEGAL_ARGUMENT);
    }
    
-   if ( event_action == SGE_EMA_LIST ) {
+   if (event_action == SGE_EMA_LIST) {
       jobject  obj = NULL;
       
       for_each(ep, lGetList(ev, ET_new_version)) {
-         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp )) != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp)) != JGDI_SUCCESS) {
+            DRETURN(ret);
          }
          ret = ListEvent_add(env, event_obj, obj, alpp);
-         if(ret != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+         if (ret != JGDI_SUCCESS) {
+            DRETURN(ret);
          }
       }
    } else {
@@ -717,23 +680,20 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
                                         lGetString(ev,ET_strkey2),
                                         alpp);
                                         
-      if(ret != JGDI_SUCCESS) {
-         DEXIT;
-         return ret;
+      if (ret != JGDI_SUCCESS) {
+         DRETURN(ret);
       }
       
-      ep =lFirst(lGetList(ev, ET_new_version));
+      ep = lFirst(lGetList(ev, ET_new_version));
       
       /* DEL events do not have a new version */
       if (ep != NULL) {
-         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp )) != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+         if ((ret = listelem_to_obj(env, ep, &obj, descr, beanClass, alpp)) != JGDI_SUCCESS) {
+            DRETURN(ret);
          }
          ret = ChangedObjectEvent_setChangedObject(env, event_obj, obj, alpp);
-         if(ret != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+         if (ret != JGDI_SUCCESS) {
+            DRETURN(ret);
          }
       } else if (event_action != SGE_EMA_DEL) {
          jclass evt_class = NULL;
@@ -742,20 +702,17 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
          
          ret = Object_getClass(env, obj, &evt_class, alpp);
          if (ret != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+            DRETURN(ret);
          }
          
          ret = Class_getName(env, evt_class, &evt_classname_obj, alpp);
          if (ret != JGDI_SUCCESS) {
-            DEXIT;
-            return ret;
+            DRETURN(ret);
          }
          evt_classname = (*env)->GetStringUTFChars(env, evt_classname_obj, 0);
          if (evt_classname == NULL) {
             answer_list_add(alpp, "fill_generic_event: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return JGDI_ERROR;
+            DRETURN(JGDI_ERROR);
          }
          jgdi_log_printf(env, JGDI_EVENT_LOGGER, WARNING,
                          "generic event did not contain a new version (%s)",
@@ -764,8 +721,7 @@ static jgdi_result_t fill_generic_event(JNIEnv *env, jobject event_obj, const ch
       }
    }
    
-   DEXIT;
-   return JGDI_SUCCESS;
+   DRETURN(JGDI_SUCCESS);
 }
 
 

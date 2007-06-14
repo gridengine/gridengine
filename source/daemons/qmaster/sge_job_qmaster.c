@@ -59,7 +59,6 @@
 #include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_userset_qmaster.h"
-
 #include "sge_ckpt_qmaster.h"
 #include "job_report_qmaster.h"
 #include "sge_parse_num_par.h"

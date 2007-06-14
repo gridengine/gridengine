@@ -71,10 +71,16 @@
 
 void sge_printf_header(u_long32 full_listing, u_long32 sge_ext);
 
+/*
+** for qhost_report_handler_t
+*/
+#include "sge_qhost.h"
+
 void 
 sge_print_jobs_queue(lListElem *qep, lList *job_list, const lList *pe_list, 
                      lList *user_list, lList *ehl, lList *cl, 
                      int print_jobs_of_queue, u_long32 full_listing, 
-                     char *indent, u_long32 group_opt, int queue_name_length );
+                     char *indent, u_long32 group_opt, int queue_name_length,
+                     qhost_report_handler_t *report_handler, lList **alpp);
 
 #endif /* __QSTAT_PRINTING_H */

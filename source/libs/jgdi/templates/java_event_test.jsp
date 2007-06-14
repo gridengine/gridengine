@@ -104,7 +104,7 @@
          Thread.yield();
 
          jgdi.add<%=name%>(testObj);
-         logger.fine(testObj.toString() + " added");
+         logger.fine(testObj + " added");
          assertTrue("<%=name%>: Did not get the add event", waitThread.waitForAddEvent(timeout));
 
 <% 
@@ -127,14 +127,14 @@
      }
 %>
          jgdi.update<%=name%>(testObj);
-         logger.fine(testObj.toString() + " modified");
+         logger.fine(testObj + " modified");
          assertTrue("<%=name%>: Did not get the mod event", waitThread.waitForModEvent(timeout));
 <%
    } // end of cullObj.hasModifyOperation()
 %>         
 
          jgdi.delete<%=name%>(testObj);
-         logger.fine(testObj.toString() + " deleted");
+         logger.fine(testObj + " deleted");
          testObj = null;
 
          assertTrue("<%=name%>: Did not get the del event", waitThread.waitForDelEvent(timeout));
@@ -145,14 +145,14 @@
          evc.subscribeDel<%=name%>(false);
 <% 
    if (cullObj.hasModifyOperation()) {
-%>         
-         evc.subscribeMod<%=name%>(false);            
+%>         evc.subscribeMod<%=name%>(false);            
 <%
    }
 %>         
          evc.commit();
          
          if (testObj != null) {
+            logger.fine(testObj + " deleted again");
             try {
                jgdi.delete<%=name%>(testObj);
             } catch(Exception e) {

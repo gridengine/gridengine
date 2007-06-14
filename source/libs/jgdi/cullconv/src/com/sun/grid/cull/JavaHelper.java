@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  * @author  richard.hierlmeier@sun.com
  */
 public class JavaHelper {
-
+   
    /** The suffix string of the cull object ("_Type"). */
    public static final String TYPE_SUFFIX = "_Type";
    
@@ -60,9 +60,9 @@ public class JavaHelper {
       { "float", "Float", "0.0f" },
       { "long", "Long", "0" },
       { "char", "Character", "'n'" },
-      { "byte", "Byte", "0" }     
+      { "byte", "Byte", "0" }
    };
-
+   
    
    private static Map builtinTypeMap;
    
@@ -88,7 +88,7 @@ public class JavaHelper {
       builtinTypeMap.put( "SGE_DOUBLE_D", "double");
       builtinTypeMap.put( "SGE_FLOAT_D", "double");
       builtinTypeMap.put( "SGE_CHAR_D", "char");
-      builtinTypeMap.put( "CULL_ANY_SUBTYPE", "CULL_ANY_SUBTYPE");      
+      builtinTypeMap.put( "CULL_ANY_SUBTYPE", "CULL_ANY_SUBTYPE");
    }
    
    /** the cull definition object */
@@ -102,7 +102,7 @@ public class JavaHelper {
    public JavaHelper(CullDefinition cullDef) {
       this.cullDef = cullDef;
    }
-
+   
    /**
     *   <p>Get the package name of all cull model classes.
     *   This name is defined in the cullconv ant task.</p>
@@ -119,7 +119,7 @@ public class JavaHelper {
     *   &lt;cullconv&gt;
     *
     *   </pre>
-    *   
+    *
     *   @return the package name of the cull model classes
     */
    public String getCullDefPackageName() {
@@ -158,12 +158,12 @@ public class JavaHelper {
    
    /**
     * Set the package name for the generated classes
-    * @param packageName 
+    * @param packageName
     */
    public void setPackageName(String packageName) {
       this.packageName = packageName;
    }
-
+   
    
    /**
     * converts a cull name into a java name
@@ -174,7 +174,7 @@ public class JavaHelper {
       int index = cullName.indexOf(TYPE_SUFFIX);
       if( index > 0 ) {
          return cullName.substring(0,index);
-      } 
+      }
       return cullName;
    }
    
@@ -182,20 +182,20 @@ public class JavaHelper {
    
    /**
     * <p>Get the java classname of a cull object.</p>
-    * 
-    * <p>If a idl name is defined in the cull object, then the classname is 
-    * equal to the idl name. Otherwise the classname is name of the cull 
+    *
+    * <p>If a idl name is defined in the cull object, then the classname is
+    * equal to the idl name. Otherwise the classname is name of the cull
     * object without the type suffix.</p>
-    * 
+    *
     * <p>Examples:</p>
     *
     * <table border="1">
     *  <tr> <th>Cull definition</th> <th>classname</th> </tr>
-    *  <tr> 
+    *  <tr>
     *     <td><code>ILISTDEF(CQ_Type, ClusterQueue, SGE_CQUEUE_LIST )</code></td>
     *     <td><code>ClusterQueue</code></td>
     *  </tr>
-    *  <tr> 
+    *  <tr>
     *     <td><code>LISTDEF(CA_Type)</code></td>
     *     <td><code></code>CA</td>
     *  </tr>
@@ -204,12 +204,12 @@ public class JavaHelper {
     * @return the java classname of the cull object with the packagename
     * @see    #getFullClassName
     */
-   public String getClassName(CullObject obj) {      
+   public String getClassName(CullObject obj) {
       if(obj.getType() == CullObject.TYPE_PRIMITIVE ) {
          try {
-           CullAttr attr = obj.getContentAttr();
-           return getClassName(attr.getType());
-         } catch (IllegalArgumentException iae) {            
+            CullAttr attr = obj.getContentAttr();
+            return getClassName(attr.getType());
+         } catch (IllegalArgumentException iae) {
             logger.severe("Content attribute + '" + obj.getContentAttr().getName() + "' not found for primitive cull object " + obj.getName());
             for(int i = 0; i < obj.getAttrCount(); i++) {
                logger.severe("attr["+i+"] = '" + obj.getAttr(i).getName() + "'");
@@ -222,7 +222,7 @@ public class JavaHelper {
          return obj.getIdlName();
       } else {
          return cullNameToJava(obj.getName());
-      }      
+      }
    }
    
    public String getNonPrimitiveClassname(CullObject obj) {
@@ -231,7 +231,7 @@ public class JavaHelper {
          return obj.getIdlName();
       } else {
          return cullNameToJava(obj.getName());
-      }      
+      }
       
    }
    
@@ -253,7 +253,7 @@ public class JavaHelper {
     * @see #getClassName
     */
    public String getFullClassName(CullObject obj) {
-      if(obj.getType() == CullObject.TYPE_PRIMITIVE) {         
+      if(obj.getType() == CullObject.TYPE_PRIMITIVE) {
          CullAttr attr = obj.getContentAttr();
          return getFullClassName(attr.getType());
       } else if( obj.getType() == CullObject.TYPE_MAPPED ) {
@@ -266,34 +266,34 @@ public class JavaHelper {
    
    /**
     * <p>Get the full java class name of a cull type name.</p>
-    * 
+    *
     * <p>Valid culltype all name of the cull objects and the
-    * builtin types. If the builtin type is mapped the to a 
-    * primitive java type, then the name of the primitiv java 
+    * builtin types. If the builtin type is mapped the to a
+    * primitive java type, then the name of the primitiv java
     * type is returned:
     *
     * Examples:
     *
-    * 
+    *
     *
     * <table border="1">
     *   <tr>
     *     <th>Cull type</th>
     *     <th>Full class name</th>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>CA_Type</code></td>
     *     <td><code>com.sun.grid.jgdi.configuration.CA</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_BOOL</code></td>
     *     <td><code>boolean</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_INT</code></td>
     *     <td><code>int</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_STRING</code></td>
     *     <td><code>java.lang.String</code></td>
     *   </tr>
@@ -307,11 +307,11 @@ public class JavaHelper {
       if( className == null ) {
          CullObject cullObj = this.cullDef.getCullObject(cullType);
          if (cullObj == null ) {
-           throw new IllegalArgumentException("cullType " + cullType + " not found");
+            throw new IllegalArgumentException("cullType " + cullType + " not found");
          } else  {
             
             switch(cullObj.getType()) {
-               case CullObject.TYPE_PRIMITIVE: 
+               case CullObject.TYPE_PRIMITIVE:
                {
                   CullAttr attr = cullObj.getContentAttr();
                   className = getFullClassName(attr.getType());
@@ -328,7 +328,7 @@ public class JavaHelper {
             }
             
          }
-      } 
+      }
       
       if(className.equals("String")) {
          return "java.lang.String";
@@ -337,17 +337,17 @@ public class JavaHelper {
             if( PRIMITIVES[i][1].equals(className)) {
                return "java.lang." + PRIMITIVES[i][1];
             }
-         }      
+         }
       }
       
       return className;
    }
-
+   
    /**
     * <p>Get the full java class name of a cull type name or the
     * wrapper class name of the cull type is mapped to a primitv
     * datatype</p>
-    * 
+    *
     * <p>Examples:</p>
     *
     * <table border="1">
@@ -355,19 +355,19 @@ public class JavaHelper {
     *     <th>Cull type</th>
     *     <th>Full class name</th>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>CA_Type</code></td>
     *     <td><code>com.sun.grid.jgdi.configuration.CA</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_BOOL</code></td>
     *     <td><code>java.lang.Boolean</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_INT</code></td>
     *     <td><code>java.lang.Integer</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_STRING</code></td>
     *     <td><code>java.lang.String</code></td>
     *   </tr>
@@ -382,7 +382,7 @@ public class JavaHelper {
          if( PRIMITIVES[i][0].equals(className)) {
             return "java.lang." + PRIMITIVES[i][1];
          }
-      }      
+      }
       return className;
    }
    
@@ -395,24 +395,24 @@ public class JavaHelper {
     *     <th>Cull type</th>
     *     <th>class name</th>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>CA_Type</code></td>
     *     <td><code>CA</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_BOOL</code></td>
     *     <td><code>boolean</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_INT</code></td>
     *     <td><code>int</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_STRING</code></td>
     *     <td><code>String</code></td>
     *   </tr>
     * </table>
-    * 
+    *
     * @param cullType name of the cull type
     * @return the name of the java class or the java type
     */
@@ -430,6 +430,56 @@ public class JavaHelper {
       }
       return ret;
    }
+   /**
+    * <p>Get the java of the java impl class or java type
+    * which represents a cull type.</p>
+    *
+    * <table border="1">
+    *   <tr>
+    *     <th>Cull type</th>
+    *     <th>class name</th>
+    *   </tr>
+    *   <tr>
+    *     <td><code>CA_Type</code></td>
+    *     <td><code>CAImpl</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_BOOL</code></td>
+    *     <td><code>boolean</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_INT</code></td>
+    *     <td><code>int</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_STRING</code></td>
+    *     <td><code>String</code></td>
+    *   </tr>
+    * </table>
+    *
+    * @param cullType name of the cull type
+    * @return the name of the java class or the java type
+    */
+   public String getImplClassName(String cullType) {
+      String ret = (String)builtinTypeMap.get(cullType);
+      if( ret == null ) {
+         CullObject cullObj = cullDef.getCullObject(cullType);
+         if( cullObj == null ) {
+            return null;
+         }
+         ret = getClassName(cullObj);
+         if (ret.equals("String")) {
+            return ret;
+         } else {
+            return  ret + "Impl";
+         }
+      }
+      if( ret == null ) {
+         throw new IllegalArgumentException("cull type " + cullType + " not found");
+      }
+      return ret;
+   }
+   
    
    /**
     * <p>Get the java class or java type of a cull type
@@ -441,35 +491,77 @@ public class JavaHelper {
     *     <th>Cull type</th>
     *     <th>class name</th>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>CA_Type</code></td>
     *     <td><code>CA.class</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_BOOL</code></td>
     *     <td><code>Boolean.TYPE</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_INT</code></td>
     *     <td><code>Integer.TYPE</code></td>
     *   </tr>
-    *   <tr> 
+    *   <tr>
     *     <td><code>SGE_STRING</code></td>
     *     <td><code>String.class</code></td>
     *   </tr>
     * </table>
-    * 
+    *
     * @param cullType name of the cull type
     * @return the name of the java class or the java type with ".class" or
     *         ".TYPE" suffix
     */
    public String getClassNameWithSuffix(String cullType) {
-      String ret = getClassName(cullType);      
+      String ret = getClassName(cullType);
       for(int i = 0; i < PRIMITIVES.length; i++) {
          if( PRIMITIVES[i][0].equals(ret)) {
-            return PRIMITIVES[i][1] + ".TYPE"; 
+            return PRIMITIVES[i][1] + ".TYPE";
          }
-      }      
+      }
+      return ret + ".class";
+   }
+   
+   /**
+    * <p>Get the java class or java type of a cull type
+    * with the suffix ".class" or ".TYPE" if the cull type
+    * is mapped to a primitiv java type</p>
+    *
+    * <table border="1">
+    *   <tr>
+    *     <th>Cull type</th>
+    *     <th>class name</th>
+    *   </tr>
+    *   <tr>
+    *     <td><code>CA_Type</code></td>
+    *     <td><code>CAImpl.class</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_BOOL</code></td>
+    *     <td><code>Boolean.TYPE</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_INT</code></td>
+    *     <td><code>Integer.TYPE</code></td>
+    *   </tr>
+    *   <tr>
+    *     <td><code>SGE_STRING</code></td>
+    *     <td><code>String.class</code></td>
+    *   </tr>
+    * </table>
+    *
+    * @param cullType name of the cull type
+    * @return the name of the java class or the java type with ".class" or
+    *         ".TYPE" suffix
+    */
+   public String getImplClassNameWithSuffix(String cullType) {
+      String ret = getImplClassName(cullType);
+      for(int i = 0; i < PRIMITIVES.length; i++) {
+         if( PRIMITIVES[i][0].equals(ret)) {
+            return PRIMITIVES[i][1] + ".TYPE";
+         }
+      }
       return ret + ".class";
    }
    
@@ -486,7 +578,7 @@ public class JavaHelper {
     * @return  the java name of the attribute
     */
    public String getAttrName(CullAttr attr) {
-
+      
       String name = attr.getName();
       
       StringTokenizer st = new StringTokenizer( name, "_" );
@@ -499,18 +591,18 @@ public class JavaHelper {
          while( st.hasMoreTokens() ) {
             str = st.nextToken();
             buf.append( Character.toUpperCase(str.charAt(0)) );
-            buf.append( str.substring(1) );        
+            buf.append( str.substring(1) );
          }
          name = buf.toString();
       }
-      return name;      
+      return name;
       
    }
    
    
    
    /**
-    * Determine of a cull attribute is mapped to a primitiv 
+    * Determine of a cull attribute is mapped to a primitiv
     * java data type
     * @param attr   the cull attribute
     * @return  <code>true</code> if the cull attribute is mapped
@@ -519,8 +611,8 @@ public class JavaHelper {
    public boolean isPrimitiv(CullAttr attr) {
       
       return getPrimitivIndex(attr) >= 0;
-   }  
-
+   }
+   
    private int getPrimitivIndex(CullAttr attr) {
       
       String type = attr.getType();
@@ -534,7 +626,7 @@ public class JavaHelper {
          }
       }
       return -1;
-   }  
+   }
    
    /**
     * get the default null value for cull attribute
@@ -549,32 +641,32 @@ public class JavaHelper {
          return PRIMITIVES[index][2];
       }
       return "null";
-   }  
+   }
    
    
    public String getInitializer(CullAttr attr, String value) {
 
-       String ret = value;
-       String fullValueClassName = getFullClassNameOrWrapper(attr.getType());
-       CullObject obj = cullDef.getCullObject(attr.getType());
-       if( fullValueClassName.equals(String.class.getName()) ) {
-           ret = "\"" + value + "\"";
-       } else if (fullValueClassName.equals(Boolean.class.getName())) {
+      String ret = value;
+      String fullValueClassName = getFullClassNameOrWrapper(attr.getType());
+      CullObject obj = cullDef.getCullObject(attr.getType());
+      if( fullValueClassName.equals(String.class.getName()) ) {
+         ret = "\"" + value + "\"";
+      } else if (fullValueClassName.equals(Boolean.class.getName())) {
 
-           if (value.equals("TRUE") || value.equals("true") || value.equals("1") ) {
-               ret = "true";
-           } else {
-               ret = "false";
-           }
-       } else if(obj != null) {
-           if(obj.getPrimaryKeyCount() > 0) {
-               CullAttr pkAttr = obj.getPrimaryKeyAttr(0);
-               ret = "new " + fullValueClassName + "Impl(" + getInitializer(pkAttr, value) + ")";
-           } else {
-               ret = "new " + fullValueClassName + "Impl()";
-           }
-       }
-       return ret;
+         if (value.equals("TRUE") || value.equals("true") || value.equals("1") ) {
+            ret = "true";
+         } else {
+            ret = "false";
+         }
+      } else if(obj != null) {
+         if(obj.getPrimaryKeyCount() > 0) {
+            CullAttr pkAttr = obj.getPrimaryKeyAttr(0);
+            ret = "new " + fullValueClassName + "Impl(" + getInitializer(pkAttr, value) + ")";
+         } else {
+            ret = "new " + fullValueClassName + "Impl()";
+         }
+      }
+      return ret;
    }
    
 }

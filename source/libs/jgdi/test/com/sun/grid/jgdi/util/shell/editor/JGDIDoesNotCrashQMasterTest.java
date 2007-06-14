@@ -61,6 +61,7 @@ public class JGDIDoesNotCrashQMasterTest extends BaseTestCase {
       
       cq = new ClusterQueueImpl(true);
       cq.setName("crashQueue");
+      cq.addHostlist("@allhosts");
       ClusterQueue oldQueue;
       if ((oldQueue = jgdi.getClusterQueue(cq.getName()))!= null) {
          jgdi.deleteClusterQueue(oldQueue);

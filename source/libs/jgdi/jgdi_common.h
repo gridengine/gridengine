@@ -106,6 +106,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
 void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, int target_list, lDescr *descr);
 void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr);
 void jgdi_update(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, int target_list, lDescr *descr);
+jgdi_result_t build_resource_filter(JNIEnv *env, jobject resource_filter, lList** resource_list_ref, lList **alpp);
 
 
 #endif

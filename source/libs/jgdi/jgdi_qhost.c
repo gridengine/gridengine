@@ -32,7 +32,7 @@
 
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
+#include <jni.h>
 #include "basis_types.h"
 #include "cull.h"
 #include "commlib.h"
@@ -66,43 +66,54 @@ struct jgdi_report_handler_str {
    jgdi_result_t result;
    jobject qhost_result;
    jobject qhost_info;
+   jobject job_info;
+   jobject queue_info;
 };
 
-static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qhost_result, lList **alpp);
-static int jgdi_report_finished(report_handler_t* handler, lList **alpp);
-static int jgdi_report_started(report_handler_t* handler, lList **alpp);
-static int jgdi_report_host_begin(report_handler_t* handler, const char* host_name, lList **alpp);
-static int jgdi_report_host_string_value(report_handler_t* handler, const char* name, const char *value, lList **alpp);
-static int jgdi_report_host_ulong_value(report_handler_t* handler, const char* name, u_long32 value, lList **alpp);
-static int jgdi_report_host_finished(report_handler_t* handler, const char* host_name, lList **alpp);
-static int jgdi_report_resource_value(report_handler_t* handler, const char* dominance, const char* name, const char* value, lList **alpp);
-static int jgdi_report_queue_string_value(report_handler_t* handler, const char* qname, const char* name, const char *value, lList **alpp);
-static int jgdi_report_queue_ulong_value(report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList **alpp);
-static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp);
+static qhost_report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qhost_result, lList **alpp);
+static int jgdi_report_finished(qhost_report_handler_t* handler, lList **alpp);
+static int jgdi_report_started(qhost_report_handler_t* handler, lList **alpp);
+static int jgdi_report_host_begin(qhost_report_handler_t* handler, const char* host_name, lList **alpp);
+static int jgdi_report_host_string_value(qhost_report_handler_t* handler, const char* name, const char *value, lList **alpp);
+static int jgdi_report_host_ulong_value(qhost_report_handler_t* handler, const char* name, u_long32 value, lList **alpp);
+static int jgdi_report_host_finished(qhost_report_handler_t* handler, const char* host_name, lList **alpp);
+static int jgdi_report_resource_value(qhost_report_handler_t* handler, const char* dominance, const char* name, const char* value, lList **alpp);
+static int jgdi_report_queue_begin(qhost_report_handler_t* handler, const char* qname, lList **alpp);
+static int jgdi_report_queue_string_value(qhost_report_handler_t* handler, const char* qname, const char* name, const char *value, lList **alpp);
+static int jgdi_report_queue_ulong_value(qhost_report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList **alpp);
+static int jgdi_report_queue_finished(qhost_report_handler_t* handler, const char* qname, lList **alpp);
+static int jgdi_report_job_begin(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, lList **alpp); 
+static int jgdi_report_job_ulong_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, u_long32 value, lList **alpp); 
+static int jgdi_report_job_double_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, double value, lList **alpp); 
+static int jgdi_report_job_string_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, const char* value, lList **alpp); 
+static int jgdi_report_job_finished(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, lList **alpp); 
+static int jgdi_destroy_report_handler(qhost_report_handler_t** handler, lList **alpp);
 
-static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qhost_result, lList **alpp) {
+
+
+static qhost_report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qhost_result, lList **alpp)
+{
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)sge_malloc(sizeof(jgdi_report_handler_t));
-   report_handler_t *ret = NULL;
-   DENTER( JGDI_LAYER, "jgdi_report_handler_create" );
+   qhost_report_handler_t *ret = NULL;
+
+   DENTER(JGDI_LAYER, "jgdi_report_handler_create");
    
-   if (jgdi_handler == NULL ) {
+   if (jgdi_handler == NULL) {
       answer_list_add(alpp, "malloc of jgdi_report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
-   ret = (report_handler_t*)sge_malloc(sizeof(report_handler_t));
-   if (ret == NULL ) {
-      answer_list_add(alpp, "malloc of report_handler_t failed",
+   ret = (qhost_report_handler_t*)sge_malloc(sizeof(qhost_report_handler_t));
+   if (ret == NULL) {
+      answer_list_add(alpp, "malloc of qhost_report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       FREE(jgdi_handler);  
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
    memset(jgdi_handler, 0, sizeof(jgdi_report_handler_t));
-   memset(ret, 0, sizeof(report_handler_t));
+   memset(ret, 0, sizeof(qhost_report_handler_t));
    
    jgdi_handler->result = JGDI_SUCCESS;
    ret->ctx = jgdi_handler;
@@ -116,21 +127,31 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qhost_r
    ret->report_host_ulong_value = jgdi_report_host_ulong_value;
    
    ret->report_resource_value = jgdi_report_resource_value;
+
+   ret->report_queue_begin = jgdi_report_queue_begin;
    ret->report_queue_string_value = jgdi_report_queue_string_value;
    ret->report_queue_ulong_value = jgdi_report_queue_ulong_value;
+   ret->report_queue_finished = jgdi_report_queue_finished;
+   
+   ret->report_job_begin = jgdi_report_job_begin;
+   ret->report_job_ulong_value = jgdi_report_job_ulong_value;
+   ret->report_job_string_value = jgdi_report_job_string_value;
+   ret->report_job_double_value = jgdi_report_job_double_value;
+   ret->report_job_finished = jgdi_report_job_finished;
+   
    ret->destroy = jgdi_destroy_report_handler;
    
    jgdi_handler->qhost_result = qhost_result;
    jgdi_handler->env = env;
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp) {
-   DENTER( JGDI_LAYER, "jgdi_destroy_report_handler" );
-   if (*handler != NULL ) {
-      
+static int jgdi_destroy_report_handler(qhost_report_handler_t** handler, lList **alpp)
+{
+   DENTER(JGDI_LAYER, "jgdi_destroy_report_handler");
+
+   if (*handler != NULL) {
       /* We ensurce that the global ref on the qhost_info object is deleted */
       jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)(*handler)->ctx;
       if (jgdi_handler->qhost_info != NULL) {
@@ -141,36 +162,36 @@ static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp)
       /* Free the internal context */
       FREE((*handler)->ctx);
    }
-   DEXIT;
-   return QHOST_SUCCESS;
+
+   DRETURN(QHOST_SUCCESS);
 }
 
 
-static int jgdi_report_finished(report_handler_t* handler, lList **alpp) {
-   DENTER( JGDI_LAYER, "jgdi_report_finished" );
-   DEXIT;
-   return QHOST_SUCCESS;
+static int jgdi_report_finished(qhost_report_handler_t* handler, lList **alpp)
+{
+   DENTER(JGDI_LAYER, "jgdi_report_finished");
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_started(report_handler_t* handler, lList **alpp) {
-   DENTER( JGDI_LAYER, "jgdi_report_started" );
-   DEXIT;
-   return QHOST_SUCCESS;
+static int jgdi_report_started(qhost_report_handler_t* handler, lList **alpp)
+{
+   DENTER(JGDI_LAYER, "jgdi_report_started");
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_host_begin(report_handler_t* handler, const char* host_name, lList **alpp) {
+static int jgdi_report_host_begin(qhost_report_handler_t* handler, const char* host_name, lList **alpp)
+{
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
    jobject qhost_info = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_begin" );
+   DENTER(JGDI_LAYER, "jgdi_report_host_begin");
 
    DPRINTF(("Create new host info object for host %s\n", host_name));
   
    jgdi_handler->result = HostInfoImpl_init_0(env, &qhost_info, host_name, alpp);
    if (jgdi_handler->result != JGDI_SUCCESS) {
-      DEXIT;
-      return QHOST_ERROR;
+      DRETURN(QHOST_ERROR);
    }
    
    jgdi_handler->qhost_info = (*env)->NewGlobalRef(env, qhost_info);
@@ -179,70 +200,65 @@ static int jgdi_report_host_begin(report_handler_t* handler, const char* host_na
    
    if (jgdi_handler->qhost_info == NULL) {
       answer_list_add(alpp , "Can not create global reference for qhost info object", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QHOST_ERROR;
+      DRETURN(QHOST_ERROR);
    }
    
-   DEXIT;
-   return QHOST_SUCCESS;
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_host_string_value(report_handler_t* handler, const char* name, const char *value, lList** alpp) {
+static int jgdi_report_host_string_value(qhost_report_handler_t* handler, const char* name, const char *value, lList** alpp)
+{
    
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
    jstring value_obj = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_string_value" );
+   DENTER(JGDI_LAYER, "jgdi_report_host_string_value");
    
    DPRINTF(("add host value %s=%s\n", name, value));
    
    value_obj = (*env)->NewStringUTF(env, value);
    
    if (HostInfoImpl_addHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+     DRETURN(QHOST_ERROR);
    }
    
-   DEXIT;
-   return QHOST_SUCCESS;
+   DRETURN(QHOST_SUCCESS);
 }
 
 
-static int jgdi_report_host_ulong_value(report_handler_t* handler, const char* name, u_long32 value, lList** alpp) {
+static int jgdi_report_host_ulong_value(qhost_report_handler_t* handler, const char* name, u_long32 value, lList** alpp)
+{
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
    jobject value_obj = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_host_ulong_value" );
+   DENTER(JGDI_LAYER, "jgdi_report_host_ulong_value");
 
    DPRINTF(("add host value %s=%ld\n", name, value));
    
    jgdi_handler->result = Long_init_0(env, &value_obj, value, alpp);
    if (jgdi_handler->result != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+     DRETURN(QHOST_ERROR);
    }
    
    if (HostInfoImpl_addHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+     DRETURN(QHOST_ERROR);
    }
-   DEXIT;
-   return QHOST_SUCCESS;
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_host_finished(report_handler_t* handler, const char* host_name, lList** alpp) {
+static int jgdi_report_host_finished(qhost_report_handler_t* handler, const char* host_name, lList** alpp)
+{
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
 
-   DENTER( JGDI_LAYER, "jgdi_report_host_finished" );
+   DENTER(JGDI_LAYER, "jgdi_report_host_finished");
    
    if (jgdi_handler->qhost_info == NULL) {
       answer_list_add(alpp, "qhost_info object is not available in jgdi_handler",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QHOST_ERROR;
+      DRETURN(QHOST_ERROR);
    }
 
    if (jgdi_handler->qhost_result == NULL) {
@@ -251,82 +267,272 @@ static int jgdi_report_host_finished(report_handler_t* handler, const char* host
    }
    
    if (QHostResultImpl_addHostInfo(env, jgdi_handler->qhost_result, jgdi_handler->qhost_info, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+     DRETURN(QHOST_ERROR);
    }
    DPRINTF(("DeleteGlobalRef\n"));
    (*env)->DeleteGlobalRef(env, jgdi_handler->qhost_info);
    jgdi_handler->qhost_info = NULL;
    
-   DEXIT;
-   return QHOST_SUCCESS;
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_resource_value(report_handler_t* handler, const char* dominance, const char* name, const char* value, lList** alpp) {
+static int jgdi_report_resource_value(qhost_report_handler_t* handler, const char* dominance, const char* name, const char* value, lList** alpp)
+{
    jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
    JNIEnv *env = jgdi_handler->env;
    jstring value_obj = NULL;
    
-   DENTER( JGDI_LAYER, "jgdi_report_resource_value" );
+   DENTER(JGDI_LAYER, "jgdi_report_resource_value");
    
    if (jgdi_handler->qhost_info == NULL) {
       answer_list_add(alpp, "jgdi_report_resource_value: qhost_info object not set", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QHOST_ERROR;
+      DRETURN(QHOST_ERROR);
    }
    
    value_obj = (*env)->NewStringUTF(env, value);
 
    if (HostInfoImpl_addResourceValue(env, jgdi_handler->qhost_info, dominance, name, value_obj, alpp) != JGDI_SUCCESS) { 
-     DEXIT;
-     return QHOST_ERROR;
+     DRETURN(QHOST_ERROR);
    }
 
-   DEXIT;
-   return QHOST_SUCCESS;
+   DRETURN(QHOST_SUCCESS);
 }
 
-static int jgdi_report_queue_string_value(report_handler_t* handler, const char* qname, const char* name, const char *value, lList** alpp) {
-   jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
-   JNIEnv *env = jgdi_handler->env;
-   jstring value_obj = NULL;
-   char qname1[1024];
-   char name1[1024];
-   DENTER( JGDI_LAYER, "jgdi_report_queue_string_value" );
+static int jgdi_report_queue_begin(qhost_report_handler_t* handler, const char* qname, lList** alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)handler->ctx;
+   JNIEnv *env = ctx->env;
    
-   strcpy(qname1, qname);
-   strcpy(name1, name);
-   value_obj = (*env)->NewStringUTF(env, value);
-   
-   DPRINTF(("addQueueValue: %s, %s, %s\n", qname1, name1, value));   
-   if (HostInfoImpl_addQueueValue(env, jgdi_handler->qhost_info, qname1, name1, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+   DENTER(JGDI_LAYER, "jgdi_report_queue_begin");
+
+   DPRINTF(("jgdi_report_queue_begin: %s\n", qname));
+
+   if (QueueInfoImpl_init(env, &(ctx->queue_info), alpp) != JGDI_SUCCESS) {
+      goto error;
    }
-   DEXIT;
-   return QHOST_SUCCESS;
+
+   if (QueueInfoImpl_setQname(env, ctx->queue_info, qname, alpp) != JGDI_SUCCESS) {
+      goto error; 
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
 }
 
-static int jgdi_report_queue_ulong_value(report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList** alpp) {
-   jgdi_report_handler_t* jgdi_handler = (jgdi_report_handler_t*)handler->ctx;
-   JNIEnv *env = jgdi_handler->env;
-   jobject value_obj = NULL;
-   DENTER( JGDI_LAYER, "jgdi_report_queue_ulong_value" );
+static int jgdi_report_queue_string_value(qhost_report_handler_t* handler, const char* qname, const char* name, const char *value, lList** alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)handler->ctx;
+   JNIEnv *env = ctx->env;
    
-   DPRINTF(("addQueueValue: %s, %s, %ld\n", qname, name, value));   
+   DENTER(JGDI_LAYER, "jgdi_report_queue_string_value");
    
-   jgdi_handler->result = Long_init_0(env, &value_obj, value, alpp);
-   if (jgdi_handler->result != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+   DPRINTF(("jgdi_report_queue_string_value: %s, %s, %s\n", qname, name, value));   
+
+   if (!strcmp(name, "qtype_string")) {
+      if (QueueInfoImpl_setQtype(env, ctx->queue_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
    }
-   if (HostInfoImpl_addQueueValue(env, jgdi_handler->qhost_info, qname, name, value_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QHOST_ERROR;
+
+   if (!strcmp(name, "state_string")) {
+      if (QueueInfoImpl_setState(env, ctx->queue_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
    }
-   DEXIT;
-   return QHOST_SUCCESS;
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
 }
+
+static int jgdi_report_queue_ulong_value(qhost_report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList** alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)handler->ctx;
+   JNIEnv *env = ctx->env;
+   
+   DENTER(JGDI_LAYER, "jgdi_report_queue_ulong_value");
+   
+   DPRINTF(("jgdi_report_queue_ulong_value: %s, %s, "sge_u32"\n", qname, name, value));   
+   
+   if (!strcmp(name, "slots_used")) {
+      if (QueueInfoImpl_setUsedSlots(env, ctx->queue_info, (jint)value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(name, "slots")) {
+      if (QueueInfoImpl_setTotalSlots(env, ctx->queue_info, (jint)value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
+}
+
+static int jgdi_report_queue_finished(qhost_report_handler_t* handler, const char* qname, lList** alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)handler->ctx;
+   JNIEnv *env = ctx->env;
+   
+   DENTER(JGDI_LAYER, "jgdi_report_queue_finished");
+
+   DPRINTF(("jgdi_report_queue_finished: %s\n", qname));
+
+   if (HostInfoImpl_addQueue(env, ctx->qhost_info, ctx->queue_info, alpp) != JGDI_SUCCESS) {
+      DRETURN(QHOST_ERROR);
+   }
+
+   DRETURN(QHOST_SUCCESS);
+}
+
+
+static int jgdi_report_job_begin(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, lList **alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)report_handler->ctx;
+   JNIEnv *env = ctx->env;
+   u_long32 job_id = 0;
+
+   DENTER(JGDI_LAYER, "jgdi_report_job_begin");
+
+   DPRINTF(("jgdi_report_job_begin: job(%s)\n", job_name));
+
+   if (JobInfoImpl_init(env, &(ctx->job_info), alpp) != JGDI_SUCCESS) {
+      goto error;
+   }
+
+   job_id = atoi(job_name);
+   if (JobInfoImpl_setId(env, ctx->job_info, job_id, alpp) != JGDI_SUCCESS) {
+      goto error; 
+   }
+
+   if (JobInfoImpl_setQueue(env, ctx->job_info, qname, alpp) != JGDI_SUCCESS) {
+      goto error; 
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
+   
+}
+
+static int jgdi_report_job_ulong_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, u_long32 value, lList **alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)report_handler->ctx;
+   JNIEnv *env = ctx->env;
+
+   DENTER(JGDI_LAYER, "jgdi_report_job_ulong_value");
+
+   DPRINTF(("jgdi_report_job_ulong_value: queue(%s), job(%s), key(%s), value("sge_u32")\n", qname, job_name, key, value));
+
+   if (!strcmp(key, "taskid")) {
+      char taskstr[BUFSIZ];
+      snprintf(taskstr, sizeof(taskstr)-1, sge_u32, value);
+      if (JobInfoImpl_setTaskId(env, ctx->job_info, taskstr, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "start_time")) {
+      if (JobInfoImpl_setStartTime_0(env, ctx->job_info, ((jlong)value)*1000, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
+}
+
+static int jgdi_report_job_double_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, double value, lList **alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)report_handler->ctx;
+   JNIEnv *env = ctx->env;
+
+   DENTER(JGDI_LAYER, "jgdi_report_job_double_value");
+
+   DPRINTF(("jgdi_report_job_double_value: queue(%s), job(%s), key(%s), value(%f)\n", qname, job_name, key, value));
+
+   if (!strcmp(key, "priority")) {
+      if (JobInfoImpl_setPriority(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
+}
+
+static int jgdi_report_job_string_value(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, const char *key, const char* value, lList **alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)report_handler->ctx;
+   JNIEnv *env = ctx->env;
+
+   DENTER(JGDI_LAYER, "jgdi_report_job_string_value");
+
+   DPRINTF(("jgdi_report_job_string_value: queue(%s), job(%s), key(%s), value(%s)\n", qname, job_name, key, value));
+
+   if (!strcmp(key, "job_name")) {
+      if (JobInfoImpl_setName(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "qinstance_name")) {
+      if (JobInfoImpl_setQinstanceName(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "job_owner")) {
+      if (JobInfoImpl_setUser(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "job_state")) {
+      if (JobInfoImpl_setState(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "pe_master")) {
+      if (JobInfoImpl_setMasterQueue(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   DRETURN(QHOST_SUCCESS);
+
+error:
+   DRETURN(QHOST_ERROR);
+}
+
+static int jgdi_report_job_finished(qhost_report_handler_t *report_handler, const char *qname, const char *job_name, lList **alpp)
+{
+   jgdi_report_handler_t* ctx = (jgdi_report_handler_t*)report_handler->ctx;
+   JNIEnv *env = ctx->env;
+
+   DENTER(JGDI_LAYER, "jgdi_report_job_finished");
+
+   DPRINTF(("jgdi_report_job_finished: queue(%s), job(%s)\n", qname, job_name));
+
+   if (HostInfoImpl_addJob(env, ctx->qhost_info, ctx->job_info, alpp) != JGDI_SUCCESS) {
+      DRETURN(QHOST_ERROR);
+   }
+
+   DRETURN(QHOST_SUCCESS);
+}
+
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
@@ -334,7 +540,8 @@ static int jgdi_report_queue_ulong_value(report_handler_t* handler, const char* 
  * Signature: (Lcom/sun/grid/jgdi/monitoring/QHostOptions;Lcom/sun/grid/jgdi/monitoring/QHostResultImpl;)V
  */
 JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
-  (JNIEnv *env, jobject jgdi, jobject qhost_options, jobject qhost_result) {
+  (JNIEnv *env, jobject jgdi, jobject qhost_options, jobject qhost_result)
+{
    
    jclass    cls = NULL;
    jmethodID mid = NULL;
@@ -363,7 +570,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
    jgdi_result_t ret = JGDI_SUCCESS;
    rmon_ctx_t rmon_ctx;
    
-   DENTER( JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost" );
+   DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost");
    
    jgdi_init_rmon_ctx(env, JGDI_QHOST_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
@@ -390,21 +597,21 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       if ((ret=QHostOptions_includeQueue(env, qhost_options, &is_show_queue, &alp)) != JGDI_SUCCESS) {
          goto error;
       }
-      if((ret=QHostOptions_includeJobs(env, qhost_options, &is_show_jobs, &alp)) != JGDI_SUCCESS) {
+      if ((ret=QHostOptions_includeJobs(env, qhost_options, &is_show_jobs, &alp)) != JGDI_SUCCESS) {
          goto error;
       }
     
-      if( is_show_queue ) {
+      if (is_show_queue) {
          DPRINTF(("execQHost: show queues\n"));
          show |= QHOST_DISPLAY_QUEUES;
       }
-      if( is_show_jobs ) {
+      if (is_show_jobs) {
          DPRINTF(("execQHost: show jobs\n"));
-         show |= QHOST_DISPLAY_JOBS;
+         show |= QHOST_DISPLAY_JOBS | QHOST_DISPLAY_QUEUES;
       }
    }
    
-   for(i = 0; filters[i].getter != NULL; i++ ) {
+   for (i = 0; filters[i].getter != NULL; i++) {
       
       mid = get_methodid(env, cls, filters[i].getter, filters[i].signature, &alp);
       if (!mid) {
@@ -413,17 +620,19 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
       }
       sub_object = (*env)->CallObjectMethod(env, qhost_options, mid);
       
-      if (test_jni_error( env, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost: Unexpected error while getting sub_object", &alp)) {
+      if (test_jni_error(env, "Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost: Unexpected error while getting sub_object", &alp)) {
          ret = JGDI_ILLEGAL_STATE;
          break;
       }
       
       if (sub_object != NULL) {
-         if ((ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp)) != JGDI_SUCCESS) {
-            break;
-         }
-         if(strcmp(filters[i].getter, "getResourceAttributeFilter") == 0) {
+         if (strcmp(filters[i].getter, "getResourceAttributeFilter") == 0) {
             show |= QHOST_DISPLAY_RESOURCES;
+         } else if (strcmp(filters[i].getter, "getResourceFilter") == 0) {
+            ret = build_resource_filter(env, sub_object, &(filters[i].list), &alp);
+            if (ret != JGDI_SUCCESS) {
+               break;
+            }   
          } else if (strcmp(filters[i].getter, "getHostFilter") == 0) {
             lListElem *ep = NULL;
             /* 
@@ -432,11 +641,16 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
             for_each(ep, filters[i].list) {
                if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) {
                   answer_list_add_sprintf(&alp, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
+                                          MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name));
                   ret = JGDI_ERROR;
                   break;
                }
             }
+         } else {
+            ret=get_string_list(env, sub_object, filters[i].getListFunc, &(filters[i].list), ST_Type, ST_name, &alp);
+            if (ret != JGDI_SUCCESS) {
+               break;
+            }   
          }
       }
       /*
@@ -447,7 +661,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_execQHost
    
    /* send gdi request */
    if (ret == JGDI_SUCCESS) {
-      report_handler_t *report_handler = jgdi_report_handler_create(env, qhost_result, &alp);
+      qhost_report_handler_t *report_handler = jgdi_report_handler_create(env, qhost_result, &alp);
       
       if (report_handler != NULL) {
          do_qhost(ctx, 
@@ -481,7 +695,7 @@ error:
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
    
 }
 

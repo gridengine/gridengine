@@ -75,7 +75,7 @@ public abstract class ListPropertyDescriptor extends PropertyDescriptor {
             ClassDescriptor cd = Util.getDescriptor( propertyType );
             if( cd == null ) {
                throw new IllegalArgumentException( "Can't clone property of type " + propertyType.getName() );
-            }         
+            }
             add( targetBean, cd.clone( srcValue ) );
          }
          

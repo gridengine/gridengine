@@ -81,7 +81,8 @@ QMON_SRC =  qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             qmon_fticket.c qmon_project.c qmon_ckpt.c \
             qmon_sconf.c qmon_file.c qmon_qcustom.c qmon_preferences.c \
             qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
-            qmon_cq.c qmon_resource_quota.c qmon_ar.c qmon_arcustom.c \
+            qmon_cq.c qmon_resource_quota.c \
+            qmon_ar.c qmon_arcustom.c \
             qmon_arsub.c
 
 QMON_AD   = $(QMON_DIR)/qmon_main.ad \

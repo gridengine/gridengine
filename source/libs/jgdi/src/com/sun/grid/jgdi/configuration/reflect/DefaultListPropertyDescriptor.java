@@ -55,13 +55,13 @@ public class DefaultListPropertyDescriptor extends ListPropertyDescriptor {
       
       countMethod = findMethod( "get", "Count", null );
       getMethod = findMethod( "get", new Class[] { Integer.TYPE } );
-      if( !readOnly ) {
+//      if ( !readOnly ) {
          addMethod = findMethod( "add", new Class[] { propertyType } );
          setMethod = findMethod( "set", new Class[] { Integer.TYPE, propertyType } );
          removeMethod = findMethod( "remove", new Class[] { Integer.TYPE } );
          removeValueMethod = findMethod( "remove", new Class[] { propertyType } );
          removeAllMethod = findMethod( "removeAll", null );
-      }
+//      }
    }
    
    

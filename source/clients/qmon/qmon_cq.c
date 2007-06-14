@@ -2183,7 +2183,7 @@ static void qmonCQUpdateQIMatrix(void)
 #ifndef QI_SORTING
             XbaeMatrixSetCell(qinstance_settings, row, 2, buf);
 #else
-            lSetString(qip, QI_used_total, to_print);
+            lSetString(qip, QI_used_total, buf);
 #endif
 
             /* load avg */

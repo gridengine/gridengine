@@ -397,16 +397,16 @@ void answer_list_to_dstring(const lList *alp, dstring *diag)
       } else {
          lListElem *aep = NULL;
          
-         sge_dstring_clear (diag);
+         sge_dstring_clear(diag);
          
-         for_each (aep, alp) {
+         for_each(aep, alp) {
             const char *s;
 
             s = lGetString(aep, AN_text);
-            sge_dstring_append (diag, s);
+            sge_dstring_append(diag, s);
 
             if (strchr(s, '\n') == NULL) {
-               sge_dstring_append_char (diag, '\n');
+               sge_dstring_append_char(diag, '\n');
             }
          }
       }

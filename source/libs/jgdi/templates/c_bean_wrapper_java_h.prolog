@@ -29,20 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.jgdi.monitoring;
 
-import java.util.List;
+#ifndef JGDI_WRAPPER_EVENT_H
+#define JGDI_WRAPPER_EVENT_H
 
-/**
- *
- */
-public interface QueueInstanceSummaryResult {
-
-   public List getQueueInstanceSummary();
-   
-   public List getPendingJobs();
-   public List getErrorJobs();
-   public List getFinishedJobs();
-   public List getZombieJobs();
-
-}

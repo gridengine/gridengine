@@ -89,12 +89,12 @@ enum {
 
 LISTDEF(UP_Type)
    JGDI_OBJ(AbstractUser)
-   SGE_STRING_D(UP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_CONFIGURE, "template")       /* configured user/project name spooled */
-   SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)      /* configured override tickets (set by Qmon,
+   SGE_STRING_D(UP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF, "template")       /* configured user/project name spooled */
+   SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* configured override tickets (set by Qmon,
                                * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)       /* configured functional shares (set by Qmon, 
+   SGE_ULONG(UP_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)       /* configured functional shares (set by Qmon, 
                                * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_delete_time, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE) /* delete time for automatic users, (set by qmaster, 
+   SGE_ULONG(UP_delete_time, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF) /* delete time for automatic users, (set by qmaster, 
                                * used by SGEEE qmaster) spooled */
    SGE_ULONG(UP_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)     /* job count (set and used by SGEEE schedd, not 
                                * spooled) schedd local, not stored to 
@@ -114,19 +114,19 @@ LISTDEF(UP_Type)
    SGE_MAP(UP_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)       /* UA_Type; long term accumulated 
                                        * non-decayed i usage; set by SGEEE 
                                        * schedd stored to qmaster; spooled */
-   SGE_LIST(UP_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)       /* UPP_Type; usage on a project basis set and used 
+   SGE_LIST(UP_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)       /* UPP_Type; usage on a project basis set and used 
                                * by SGEEE schedd stored to qmaster; spooled
                                * Only used by projects */
-   SGE_LIST(UP_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_CONFIGURE) /* US_Type but only names are filled 
+   SGE_LIST(UP_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF) /* US_Type but only names are filled 
                                * configured excluded user access list used
                                * by SGEEE schedd; spooled */
-   SGE_LIST(UP_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_CONFIGURE)        /* US_Type but only names are filled configured 
+   SGE_LIST(UP_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)        /* US_Type but only names are filled configured 
                                        * excluded user access list used by SGEEE schedd; 
                                        * spooled */
    SGE_LIST(UP_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)     /* UPU_Type (see below) still *
                                        * debited usage per job (set and *
                                        * used by SGEEE schedd) */
-   SGE_STRING(UP_default_project, CULL_DEFAULT | CULL_SPOOL_USER | CULL_CONFIGURE)     /* default project for user */
+   SGE_STRING(UP_default_project, CULL_DEFAULT | CULL_SPOOL_USER | CULL_JGDI_CONF)     /* default project for user */
    SGE_ULONG(UP_version, CULL_DEFAULT | CULL_JGDI_RO)     /* user/project version, increments when usage
                                * is updated, stored to qmaster, not spooled */
    SGE_BOOL(UP_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* true, if project plays role with categories */

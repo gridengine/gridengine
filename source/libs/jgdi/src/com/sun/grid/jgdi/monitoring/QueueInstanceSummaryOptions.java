@@ -39,7 +39,6 @@ import java.io.Serializable;
 
 /**
  * Options for the QueueInstanceSummary algorithm
- *
  * @see com.sun.grid.jgdi.JGDI#getQueueInstanceSummary
  */
 public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Serializable {

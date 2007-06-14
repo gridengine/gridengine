@@ -371,7 +371,7 @@ int ar_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep,
    ** send sgeE_AR_MOD/sgeE_AR_ADD event
    */
    sge_dstring_sprintf(&buffer, sge_U32CFormat, lGetUlong(ep, AR_id));
-   sge_add_event(0, old_ep?sgeE_AR_MOD:sgeE_AR_ADD, 0, 0, 
+   sge_add_event(0, old_ep?sgeE_AR_MOD:sgeE_AR_ADD, lGetUlong(ep, AR_id), 0, 
                  sge_dstring_get_string(&buffer), NULL, NULL, ep);
    lListElem_clear_changed_info(ep);
    sge_dstring_free(&buffer);
@@ -547,14 +547,14 @@ int ar_del(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **master
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          
          sge_event_spool(ctx, alpp, 0, sgeE_AR_DEL, 
-                         0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                         ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                          NULL, NULL, NULL, true, true);
       } else {
          INFO((SGE_EVENT, MSG_JOB_REGDELX_SSU,
                   ruser, SGE_OBJ_AR, sge_u32c(ar_id)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          sge_event_spool(ctx, alpp, 0, sgeE_AR_MOD, 
-                         0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                         ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                          ar, NULL, NULL, true, true);
       }
 
@@ -868,7 +868,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       DPRINTF(("AR: exited, removing AR %s\n", sge_dstring_get_string(&buffer)));
       lRemoveElem(*(object_type_get_master_list(SGE_TYPE_AR)), &ar);
       sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
-                      0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                      ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
 
       /* remove all orphaned queue intances, which are empty. */
@@ -886,7 +886,7 @@ void sge_ar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitori
       te_free_event(&ev);
 
       /* this info is not spooled */
-      sge_add_event(0, sgeE_AR_MOD, 0, 0, 
+      sge_add_event(0, sgeE_AR_MOD, ar_id, 0, 
                     sge_dstring_get_string(&buffer), NULL, NULL, ar);
       lListElem_clear_changed_info(ar);
 

@@ -370,7 +370,7 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
    if (queue_calendar != NULL) {
       const char *calendar_name = lGetString(calendar, CAL_name);
 
-      if (!strcmp(queue_calendar, calendar_name)) {
+      if (calendar_name && !strcmp(queue_calendar, calendar_name)) {
          ret = true;
       }
    }
@@ -607,7 +607,7 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
    DENTER(QINSTANCE_LAYER, "qinstance_list_find_matching");
 
    if (qref_list == NULL) {
-      DRETURN(ret);
+      DRETURN(true);
    }
 
    if (this_list != NULL && hostname_pattern != NULL) {

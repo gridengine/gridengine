@@ -304,7 +304,6 @@ public class XMLUtil {
                writePrimitive(null, pd.getPropertyType(),p);
             }
             p.deindent();
-            //p.print(NONE);
          } else {
             p.println();
             p.indent();
@@ -883,18 +882,13 @@ public class XMLUtil {
             if (value != null) {
                // We have a simple element
                String str = value.toString();
-// AA               if (NONE.equalsIgnoreCase(str)) {
-//                  addObject(null);
-//               } else {
                addObject(parse(str, pd));
-//               }
             }
          }
       }
       
       class ObjectPropertyHandler extends CullPropertyHandler {
          private SimplePropertyDescriptor pd;
-         private StringBuffer value;
          
          public ObjectPropertyHandler(GEObjectHandler parent, SimplePropertyDescriptor pd) {
             super(parent);
@@ -947,7 +941,12 @@ public class XMLUtil {
             if (((GEObjectHandler)parent).getObject() == null) {
                throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has no object");
             }
-            pd.put(((GEObjectHandler)parent).getObject(), key, obj);
+            /* AA */
+            if (obj == null) {
+              pd.put(((GEObjectHandler)parent).getObject(), key, "NONE");   
+            } else {
+              pd.put(((GEObjectHandler)parent).getObject(), key, obj);
+            }  
          }
          
          public void characters(char[] ch, int start, int length) throws SAXException {

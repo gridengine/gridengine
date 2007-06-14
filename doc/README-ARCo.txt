@@ -22,7 +22,7 @@ from:
 
     http://sun.com/downloads
 	
-For information on installing, unistalling, administering and managing SWC see:
+For information on installing, uninstalling, administrating and managing SWC see:
 
     http://docs.sun.com/app/docs/doc/817-1985/6mhm8o5ke?a=view
     
@@ -32,9 +32,7 @@ Sun does no longer offer support via micro releases or patches. The only support
 path is to upgrade to a supported version or patch level.
 --------------------------------------------------------------------------------
 
-2. The DBWriter insert speed has been improved.
-
-3. During the installation of the reporting module, the user is prompted to 
+2. During the installation of the reporting module, the user is prompted to 
 either update (overwrite) or keep the predefined queries in the spool 
 directory. You will see following prompt:
 
@@ -60,6 +58,5 @@ See issues:
 
 None of your custom queries will be modified at any time. 
 
-4. The toc file is now created during installation.
 	
 	

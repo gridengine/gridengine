@@ -321,6 +321,7 @@ char **argv
       }
       lFreeList(&alp);
       lFreeList(&pcmdline);
+      qstat_env_destroy(&qstat_env);
       SGE_EXIT(NULL, 1);
    }
 
@@ -336,6 +337,8 @@ char **argv
       lFreeList(&alp);
       lFreeList(&pcmdline);
       lFreeList(&ref_list);
+      lFreeList(&jid_list);
+      qstat_env_destroy(&qstat_env);
       SGE_EXIT(NULL, 1);
    }
 
@@ -350,7 +353,7 @@ char **argv
          /* RH TODO: implement the qstat_show_job_info with and handler */
          ret = qstat_show_job_info(ctx, isXML);
       }
-      DEXIT;
+      qstat_env_destroy(&qstat_env);
       SGE_EXIT(NULL, ret);
    }
 
@@ -368,6 +371,7 @@ char **argv
                   fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                }
                lFreeList(&answer_list);
+               qstat_env_destroy(&qstat_env);
                SGE_EXIT(NULL, 1);
                return 1;
             }
@@ -414,6 +418,7 @@ char **argv
       answer_list_output(&answer_list);
 
       if (ret != 0) {
+         qstat_env_destroy(&qstat_env);
          SGE_EXIT(NULL, 1);
          return 1;
       }
@@ -690,7 +695,7 @@ static int qstat_stdout_init(qstat_handler_t *handler, lList **alpp)
    
    handler->job_handler.ctx = ctx;
    
-   /* interal context  initializing */
+   /* internal context initializing */
    ctx->header_printed = false;
    ctx->job_header_printed = false;
 
@@ -705,13 +710,13 @@ error:
 }
 
 static int qstat_stdout_destroy(qstat_handler_t *handler) 
-{  
+{
    DENTER(TOP_LAYER, "qstat_stdout_destroy");
 
    if (handler->ctx) {
       sge_dstring_free(&(((qstat_stdout_ctx_t*)(handler->ctx))->last_queue_name));
       FREE(handler->ctx);
-   }   
+   }
 
    DEXIT;
    return 0;
@@ -864,8 +869,8 @@ static int job_stdout_job(job_handler_t* handler, u_long32 jid, job_summary_t *s
             sge_ext?"project          department ":"",
                "state",
             sge_time?"submit/start at     ":"",
-            sge_urg ? " deadline           " : "",
-            sge_ext ? USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
+            sge_urg?" deadline           " : "",
+            sge_ext?USAGE_ATTR_CPU "        " USAGE_ATTR_MEM "     " USAGE_ATTR_IO "      " : "",
             sge_ext?"tckts ":"",
             sge_ext?"ovrts ":"",
             sge_ext?"otckt ":"",

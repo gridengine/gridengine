@@ -31,18 +31,40 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
-import java.util.List;
 
 /**
- *
+ * Holds the information about a queue for qhost
  */
-public interface QueueInstanceSummaryResult {
+public interface QueueInfo {
 
-   public List getQueueInstanceSummary();
+   /**
+    *   Get the qname
+    *   @return qname
+    */
+   public String getQname();
+
+   /**
+    *  Get the qtype string
+    *  @return qtype
+    */
+   public String getQtype();
+
+   /**
+    *  Get the state of the queue
+    *  @return state of the queue
+    */
+   public String getState();
+
+   /**
+    *  Get the number of total queue slots
+    *  @return number of total queue slots
+    */
+   public int getTotalSlots();
+
+   /**
+    *  Get the number of used queue slots
+    *  @return number of used queue slots
+    */
+   public int getUsedSlots();
    
-   public List getPendingJobs();
-   public List getErrorJobs();
-   public List getFinishedJobs();
-   public List getZombieJobs();
-
 }

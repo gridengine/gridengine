@@ -129,7 +129,7 @@ public class JGDIShell implements Runnable, Shell {
    public void run() {
       
       try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));  
+         BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));
          
          while( true) {
             String line = readlineHandler.readline(PROMPT);
@@ -155,7 +155,7 @@ public class JGDIShell implements Runnable, Shell {
          logger.severe(ioe.getMessage());
       }
       readlineHandler.cleanup();
-      System.exit(0);      
+      System.exit(0);
    }
    
    
@@ -258,8 +258,7 @@ public class JGDIShell implements Runnable, Shell {
       } else {
          if (cmdParams.length()>0) {
             shell.exec(url, cmdParams);
-         }
-         else {
+         } else {
             shell.exec(url);
          }
       }
@@ -388,7 +387,7 @@ public class JGDIShell implements Runnable, Shell {
          readlineHandler.cleanup();
          System.exit(0);
       }
-  
+
    }
    
    class HelpCommand implements Command {
@@ -399,25 +398,24 @@ public class JGDIShell implements Runnable, Shell {
       public void run(String[] args) throws Exception {
          
          switch(args.length) {
-            case 0: {
-               Iterator iter = cmdMap.keySet().iterator();
-               logger.info("Available commands: ");
-               while(iter.hasNext()) {
-                  logger.info((String)iter.next());
-               }
+         case 0: {
+            Iterator iter = cmdMap.keySet().iterator();
+            logger.info("Available commands: ");
+            while(iter.hasNext()) {
+               logger.info((String)iter.next());
             }
-            break;
-            case 1: {
-               
-               Command cmd = getCommand(args[0]);
-               if(cmd == null) {
-                  logger.severe("command " + args[0] + " not found");
-               }
-               logger.info(cmd.getUsage());
+         }
+         break;
+         case 1: {
+            Command cmd = getCommand(args[0]);
+            if (cmd == null) {
+               logger.severe("command " + args[0] + " not found");
             }
-            break;
-            default:
-               throw new IllegalArgumentException("Invalid number of arguments");
+            logger.info(cmd.getUsage());
+         }
+         break;
+         default:
+            throw new IllegalArgumentException("Invalid number of arguments");
          }
       }
       
@@ -459,26 +457,26 @@ public class JGDIShell implements Runnable, Shell {
          Level level = null;
          
          switch(args.length) {
-            case 0:
-               loggerName = null;
-               level = null;
-               break;
-            case 1:
-               loggerName = args[0];
-               break;
-            case 2:
-               loggerName = args[0];
-               level = Level.parse(args[1]);
-               break;
-            default:
-               throw new IllegalArgumentException("Invalid number of arguments");
+         case 0:
+            loggerName = null;
+            level = null;
+            break;
+         case 1:
+            loggerName = args[0];
+            break;
+         case 2:
+            loggerName = args[0];
+            level = Level.parse(args[1]);
+            break;
+         default:
+            throw new IllegalArgumentException("Invalid number of arguments");
          }
          
          Enumeration en = LogManager.getLogManager().getLoggerNames();
          while(en.hasMoreElements()) {
             Logger aLogger = LogManager.getLogManager().getLogger((String)en.nextElement());
             if(aLogger.equals(Logger.global) || aLogger.getName() == null ||
-                    aLogger.getName().length() == 0 ) {
+               aLogger.getName().length() == 0 ) {
                continue;
             }
             if(loggerName == null || aLogger.getName().startsWith(loggerName)) {
@@ -552,7 +550,7 @@ public class JGDIShell implements Runnable, Shell {
                XMLUtil.write((GEObject)obj,System.out);
                System.out.flush();
             }
-         } else {      
+         } else {
             Method method = JGDI.class.getMethod("get" + args[0] , new Class[] { String.class } );
             
             Object obj = method.invoke(jgdi, new Object[] { args[1] } );
@@ -583,7 +581,7 @@ public class JGDIShell implements Runnable, Shell {
    
    private ReadlineHandler createReadlineHandler() {
       try {
-         Class readlineClass = Class.forName("org.gnu.readline.Readline");         
+         Class readlineClass = Class.forName("org.gnu.readline.Readline");
          Class readlineLibClass = Class.forName("org.gnu.readline.ReadlineLibrary");
          
          Method byNameMethod = readlineLibClass.getMethod("byName", new Class[] { String.class } );
@@ -602,9 +600,9 @@ public class JGDIShell implements Runnable, Shell {
                
                loadMethod.invoke(readlineClass, new Object[] { readlineLib } );
                
-               Method initReadlineMethod = readlineClass.getMethod("initReadline", new Class [] { String.class });               
+               Method initReadlineMethod = readlineClass.getMethod("initReadline", new Class [] { String.class });
                initReadlineMethod.invoke(readlineClass, new Object [] { "JGDIShell" } );
- 
+
                NativeReadlineHandler ret = new NativeReadlineHandler(readlineClass);
                logger.info("use Readline." + libs[i] );
                return ret;
@@ -647,7 +645,7 @@ public class JGDIShell implements Runnable, Shell {
          Object completer = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { completerClass }, handler );
          
          // Setup a completer proxy
-         setCompleterMethod.invoke(readlineClass, new Object[] { completer } );  
+         setCompleterMethod.invoke(readlineClass, new Object[] { completer } );
       }
       
       public String readline(String prompt)  throws IOException {
@@ -680,7 +678,7 @@ public class JGDIShell implements Runnable, Shell {
    }
    
    class NativeCompletionHandler implements InvocationHandler {
-      Iterator possibleValues;   
+      Iterator possibleValues;
       
       public java.lang.String complete(java.lang.String text, int state) {
          //System.out.println("complete " + text + ", " + state);
@@ -698,7 +696,7 @@ public class JGDIShell implements Runnable, Shell {
       
       public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
          return complete((String)args[0], ((Integer)args[1]).intValue());
-      } 
+      }
    }
    
    class DefaultReadlineHandler implements ReadlineHandler {

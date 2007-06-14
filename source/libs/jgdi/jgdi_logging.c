@@ -42,15 +42,46 @@
 #include "jgdi_logging.h"
 #include "sge_answer.h"
 
+
+
+struct level_str {
+   const char* name;
+   jobject object;
+};
+
+static struct level_str LEVEL_CACHE [] = {
+   { "SEVERE", NULL  },
+   { "WARNING", NULL },
+   { "INFO", NULL    },
+   { "CONFIG", NULL  },
+   { "FINE", NULL    },
+   { "FINER", NULL   },
+   { "FINEST", NULL  }
+};
+
+typedef struct {
+   JNIEnv *env;
+   jobject logger;
+} jgdi_rmon_ctx_t;
+
 static jclass Level_find_class(JNIEnv *env);
 static jclass find_logger_class(JNIEnv *env);
 static jobject get_level(JNIEnv *env, log_level_t level);
 static jobject load_level(JNIEnv *env, const char* level);
 static void jgdi_log_entering(JNIEnv *env, jobject logger, const char* classname, const char *func);
 static void jgdi_log_exiting(JNIEnv *env, jobject logger, const char* classname, const char *func);
+static int  jgdi_rmon_is_loggable(rmon_ctx_t* ctx, int layer, int debug_class);
+static void jgdi_rmon_menter(rmon_ctx_t* ctx, const char* func);
+static void jgdi_rmon_mexit(rmon_ctx_t* ctx, const char* func, const char *file, int line);
+static void jgdi_rmon_mtrace(rmon_ctx_t* ctx, const char *func, const char *file, int line);
+static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt, va_list args);
 
-static jclass find_logger_class(JNIEnv *env) {
+
+
+static jclass find_logger_class(JNIEnv *env)
+{
    static jclass clazz = NULL;
+
    if( clazz == NULL) {
       jclass tmpclazz = (*env)->FindClass(env, "java/util/logging/Logger");
       if (tmpclazz == NULL) {
@@ -111,7 +142,8 @@ jobject jgdi_get_logger(JNIEnv *env , const char* name) {
    }
 }
 
-static jclass Level_find_class(JNIEnv *env) {
+static jclass Level_find_class(JNIEnv *env)
+{
    static jclass clazz = NULL;
    if (clazz == NULL) {
       clazz = (*env)->FindClass(env, "java/util/logging/Level");
@@ -123,22 +155,8 @@ static jclass Level_find_class(JNIEnv *env) {
    return clazz;
 }
 
-struct level_str {
-   const char* name;
-   jobject object;
-};
-
-static struct level_str LEVEL_CACHE [] = {
-   { "SEVERE", NULL  },
-   { "WARNING", NULL },
-   { "INFO", NULL    },
-   { "CONFIG", NULL  },
-   { "FINE", NULL    },
-   { "FINER", NULL   },
-   { "FINEST", NULL  }
-};
-
-static jobject load_level(JNIEnv *env, const char* level) {
+static jobject load_level(JNIEnv *env, const char* level)
+{
    jclass  clazz = Level_find_class(env);
    jobject ret = NULL;
    jfieldID mid = (*env)->GetStaticFieldID(env, clazz, level, "Ljava/util/logging/Level;");
@@ -169,8 +187,9 @@ static jobject load_level(JNIEnv *env, const char* level) {
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-static jobject get_level(JNIEnv *env, log_level_t level) {
-   if(LEVEL_CACHE[level].object == NULL) {
+static jobject get_level(JNIEnv *env, log_level_t level)
+{
+   if (LEVEL_CACHE[level].object == NULL) {
       jobject level_obj = load_level(env, LEVEL_CACHE[level].name);
       LEVEL_CACHE[level].object = (jclass)(*env)->NewGlobalRef(env, level_obj);
    }
@@ -196,8 +215,8 @@ static jobject get_level(JNIEnv *env, log_level_t level) {
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-jboolean jgdi_is_loggable(JNIEnv *env, jobject logger, log_level_t level) {
-   
+jboolean jgdi_is_loggable(JNIEnv *env, jobject logger, log_level_t level)
+{
    jobject level_obj = NULL;
    static jmethodID mid = NULL;
    jboolean ret = false;
@@ -233,8 +252,8 @@ jboolean jgdi_is_loggable(JNIEnv *env, jobject logger, log_level_t level) {
 }
 
 
-static void jgdi_log_entering(JNIEnv *env, jobject logger, const char* classname, const char *func) {
-
+static void jgdi_log_entering(JNIEnv *env, jobject logger, const char* classname, const char *func)
+{
    static jmethodID mid = NULL;
    jclass clazz = NULL;
    jobject classname_obj = NULL;
@@ -261,8 +280,8 @@ static void jgdi_log_entering(JNIEnv *env, jobject logger, const char* classname
 }
 
 
-static void jgdi_log_exiting(JNIEnv *env, jobject logger, const char* classname, const char *func) {
-
+static void jgdi_log_exiting(JNIEnv *env, jobject logger, const char* classname, const char *func)
+{
    static jmethodID mid = NULL;
    jclass clazz = NULL;
    jobject classname_obj = NULL;
@@ -292,6 +311,8 @@ static void jgdi_log_exiting(JNIEnv *env, jobject logger, const char* classname,
       (*env)->ExceptionClear(env);
    } 
 }
+
+
 /*-------------------------------------------------------------------------*
  * NAME
  *   jgdi_log - write a log message into a logger
@@ -305,11 +326,10 @@ static void jgdi_log_exiting(JNIEnv *env, jobject logger, const char* classname,
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-void jgdi_log(JNIEnv *env, jobject logger, log_level_t level, const char* msg) {
-
+void jgdi_log(JNIEnv *env, jobject logger, log_level_t level, const char* msg)
+{
    jmethodID mid = NULL;
    jclass clazz = NULL;
-
    jstring msg_obj = NULL;
 
    clazz = (*env)->GetObjectClass(env, logger);
@@ -405,8 +425,8 @@ void jgdi_log(JNIEnv *env, jobject logger, log_level_t level, const char* msg) {
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-void jgdi_log_printf(JNIEnv *env, const char* logger, log_level_t level, const char* fmt, ...) {
-   
+void jgdi_log_printf(JNIEnv *env, const char* logger, log_level_t level, const char* fmt, ...)
+{
    jobject logger_obj = NULL;
   
    logger_obj = jgdi_get_logger(env, logger);
@@ -419,9 +439,8 @@ void jgdi_log_printf(JNIEnv *env, const char* logger, log_level_t level, const c
       va_list ap;
 
       va_start(ap, fmt);
-      
+
       sge_dstring_vsprintf(&ds, fmt, ap);
-      
       jgdi_log(env, logger_obj, FINE, sge_dstring_get_string(&ds));
       sge_dstring_free(&ds);
    }
@@ -443,7 +462,8 @@ void jgdi_log_printf(JNIEnv *env, const char* logger, log_level_t level, const c
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-void jgdi_log_list(JNIEnv *env, const char* logger, log_level_t level, lList *list) {
+void jgdi_log_list(JNIEnv *env, const char* logger, log_level_t level, lList *list)
+{
    jobject logger_obj = NULL;
    
    logger_obj = jgdi_get_logger(env, logger);
@@ -463,7 +483,8 @@ void jgdi_log_list(JNIEnv *env, const char* logger, log_level_t level, lList *li
 }
 
 
-void jgdi_log_listelem(JNIEnv *env, const char* logger, log_level_t level, lListElem *elem) {
+void jgdi_log_listelem(JNIEnv *env, const char* logger, log_level_t level, lListElem *elem)
+{
    jobject logger_obj = NULL;
    
    logger_obj = jgdi_get_logger(env, logger);
@@ -505,8 +526,8 @@ void jgdi_log_listelem(JNIEnv *env, const char* logger, log_level_t level, lList
  *    ANSWER_QUALITY_INFO -> INFO
  *    
  *-------------------------------------------------------------------------*/
-void jgdi_log_answer_list(JNIEnv *env, const char* logger, lList *alp) {
-   
+void jgdi_log_answer_list(JNIEnv *env, const char* logger, lList *alp)
+{
    if (alp != NULL) {
       jobject logger_obj = NULL;
       lListElem *answer;   /* AN_Type */
@@ -532,16 +553,6 @@ void jgdi_log_answer_list(JNIEnv *env, const char* logger, lList *alp) {
    }
 }
 
-typedef struct {
-   JNIEnv *env;
-   jobject logger;
-} jgdi_rmon_ctx_t;
-
-static int  jgdi_rmon_is_loggable(rmon_ctx_t* ctx, int layer, int debug_class);
-static void jgdi_rmon_menter(rmon_ctx_t* ctx, const char* func);
-static void jgdi_rmon_mexit(rmon_ctx_t* ctx, const char* func, const char *file, int line);
-static void jgdi_rmon_mtrace(rmon_ctx_t* ctx, const char *func, const char *file, int line);
-static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt, va_list args);
 
 /*-------------------------------------------------------------------------*
  * NAME
@@ -560,8 +571,8 @@ static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt,
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-int jgdi_init_rmon_ctx(JNIEnv *env, const char* logger, rmon_ctx_t *ctx) {
-   
+int jgdi_init_rmon_ctx(JNIEnv *env, const char* logger, rmon_ctx_t *ctx)
+{
    jgdi_rmon_ctx_t *myctx = NULL;
    
    myctx = (jgdi_rmon_ctx_t*)sge_malloc(sizeof(jgdi_rmon_ctx_t));
@@ -580,31 +591,41 @@ int jgdi_init_rmon_ctx(JNIEnv *env, const char* logger, rmon_ctx_t *ctx) {
 }
 
 
-static log_level_t get_rmon_log_level(int layer, int debug_class) {
+static log_level_t get_rmon_log_level(int layer, int debug_class)
+{
    switch(layer) {
-      case TOP_LAYER: return FINE;
-      default: return FINER;
+      case TOP_LAYER:
+         return FINE;
+      default:
+         return FINER;
    }
 }
-static int  jgdi_rmon_is_loggable(rmon_ctx_t* ctx, int layer, int debug_class) {
+
+static int  jgdi_rmon_is_loggable(rmon_ctx_t* ctx, int layer, int debug_class)
+{
    jgdi_rmon_ctx_t *myctx = (jgdi_rmon_ctx_t*)ctx->ctx;
    return jgdi_is_loggable(myctx->env, myctx->logger, get_rmon_log_level(layer, debug_class));
 }
 
-static void jgdi_rmon_menter(rmon_ctx_t* ctx, const char* func) {
+static void jgdi_rmon_menter(rmon_ctx_t* ctx, const char* func)
+{
    jgdi_rmon_ctx_t *myctx = (jgdi_rmon_ctx_t*)ctx->ctx;
    jgdi_log_entering(myctx->env, myctx->logger, "native", func);
 }
 
-static void jgdi_rmon_mexit(rmon_ctx_t* ctx, const char* func, const char *file, int line) {
+static void jgdi_rmon_mexit(rmon_ctx_t* ctx, const char* func, const char *file, int line)
+{
    jgdi_rmon_ctx_t *myctx = (jgdi_rmon_ctx_t*)ctx->ctx;
    jgdi_log_exiting(myctx->env, myctx->logger, "native", func);
 }
 
-static void jgdi_rmon_mtrace(rmon_ctx_t* ctx, const char *func, const char *file, int line) {
+static void jgdi_rmon_mtrace(rmon_ctx_t* ctx, const char *func, const char *file, int line)
+{
+   /* dummy func */
 }
 
-static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt, va_list args) {
+static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt, va_list args)
+{
    jgdi_rmon_ctx_t *myctx = (jgdi_rmon_ctx_t*)ctx->ctx;
    log_level_t level = get_rmon_log_level(TOP_LAYER, debug_class);
    
@@ -632,7 +653,8 @@ static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt,
  *
  *   Destroy a rmon context which has been initialized with the method jgdi_init_rmon_ctx
  *-------------------------------------------------------------------------*/
-void jgdi_destroy_rmon_ctx(rmon_ctx_t *rmon_ctx) {
+void jgdi_destroy_rmon_ctx(rmon_ctx_t *rmon_ctx)
+{
    if (rmon_ctx->ctx) {
       FREE(rmon_ctx->ctx);
       rmon_ctx->ctx = NULL;

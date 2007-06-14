@@ -20,7 +20,7 @@ public class OutputTable {
    int rowWidth = -1;
    
    public static final DecimalFormat DEFAULT_NUMBER_FORMAT = new DecimalFormat("#####0");
-   public static final DecimalFormat POINT_SIX_FORMAT = new DecimalFormat("####0.000000");
+   public static final DecimalFormat POINT_FIVE_FORMAT = new DecimalFormat("####0.00000");
    
    
    public OutputTable(Class clazz) {
@@ -88,7 +88,11 @@ public class OutputTable {
          Iterator iter = columns.iterator();
          while (iter.hasNext()) {
             Column col = (Column)iter.next();
-            ret += col.getWidth() + 1;
+            ret += col.getWidth();
+            if (iter.hasNext()) {
+               // +1 for every space, not for last column
+               ret++;
+            }
          }
          rowWidth = ret;
       }
@@ -153,12 +157,9 @@ public class OutputTable {
          this.setFormat(format);
       }
       
-      
-      
       public String getName() {
          return name;
       }
-      
       
       public abstract Object getValue(Object obj);
       

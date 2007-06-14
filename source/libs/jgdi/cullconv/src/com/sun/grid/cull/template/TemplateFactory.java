@@ -151,7 +151,7 @@ public class TemplateFactory {
       try {
          logger.fine("load template class " + className  );
          
-         ClassLoader cl = new URLClassLoader( new URL [] { tmpClassesDir.toURL() }, getClass().getClassLoader() );
+         ClassLoader cl = new URLClassLoader( new URL [] { tmpClassesDir.toURI().toURL() }, getClass().getClassLoader() );
 
          Class cls = cl.loadClass( className );
 

@@ -51,6 +51,7 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
    
    private String name;   
    private String queueType;   
+   private int reservedSlots;
    private int usedSlots;
    private int freeSlots;
    
@@ -109,6 +110,26 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
    public void setQueueType(String queueType) {
       this.queueType = queueType;
    }
+
+   /**
+    *  Get the number of reserved slots.
+    *  @return number of reserved slots
+    */
+   public int getReservedSlots() {
+      return reservedSlots;
+   }
+
+   /**
+    *  Set the number of reserved slots
+    *  @param reservedSlots number of reserved slots
+    */
+   public void setReservedSlots(int reservedSlots) {
+      if(logger.isLoggable(Level.FINEST)) {
+         logger.finest("setReservedSlots: " + reservedSlots);
+      }
+      this.reservedSlots = reservedSlots;
+   }
+
 
    /**
     *  Get the number of used slots.

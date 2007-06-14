@@ -34,7 +34,7 @@ JGDI_SGEOBJ_DIR = $(SDIR)/libs/sgeobj
 JGDI_PKG    = com.sun.grid.jgdi
 JGDI_PKG_DIR = `echo $(JGDI_PKG)| tr "." "/"`
 JGDI_BUILD_DIR = $(JGDI_DIR)/build
-JGDI_INCLUDES = -I$(JGDI_DIR) -I$(JGDI_BUILD_DIR)
+JGDI_INCLUDES = -I$(JGDI_DIR) -I$(JGDI_BUILD_DIR) -I.
 JGDI_GENSRC_DIR = $(JGDI_BUILD_DIR)/gensrc
 JGDI_CLASSES_DIR = $(JGDI_BUILD_DIR)/classes
 JGDI_SRC   = jgdi.c \
@@ -46,6 +46,8 @@ JGDI_SRC   = jgdi.c \
              jgdi_qquota.c \
              jgdi_mapping.c \
              jgdi_wrapper.c \
+             jgdi_wrapper_java.c \
+             jgdi_wrapper_event.c \
              jgdi_logging.c
 
 JGDI_OBJS  = $(JGDI_SRC:.c=.o)
@@ -61,6 +63,9 @@ jgdi_all: $(JGDI_LIB) jgdi_test
 
 jgdi_clean:
 	rm -rf $(JGDI_LIB) $(JGDI_OBJS) jgdi_test*
+
+#jgdi_depend:
+#	$(DEPEND) -f $(JGDI_DIR)/jgdi_dependencies $(XCFLAGS) $(JGDI_DIR)/*.c $(JGDI_BUILD_DIR)/*.c
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
 	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
@@ -79,6 +84,12 @@ jgdi.o:  $(JGDI_BUILD_DIR)/jgdi.c
 
 jgdi_wrapper.o:  $(JGDI_BUILD_DIR)/jgdi_wrapper.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_BUILD_DIR)/jgdi_wrapper.c
+	
+jgdi_wrapper_java.o:  $(JGDI_BUILD_DIR)/jgdi_wrapper_java.c
+	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_BUILD_DIR)/jgdi_wrapper_java.c
+	
+jgdi_wrapper_event.o:  $(JGDI_BUILD_DIR)/jgdi_wrapper_event.c
+	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_BUILD_DIR)/jgdi_wrapper_event.c
 	
 jgdi_common.o:  $(JGDI_DIR)/jgdi_common.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_common.c

@@ -40,29 +40,41 @@ extern "C" {
 #define QHOST_DISPLAY_JOBS       (1<<1)
 #define QHOST_DISPLAY_RESOURCES  (1<<2)
 
-typedef struct report_handler_str report_handler_t;
+typedef struct qhost_report_handler_str qhost_report_handler_t;
 
 #define QHOST_SUCCESS 0
 #define QHOST_ERROR   -1
 
-struct report_handler_str {
+struct qhost_report_handler_str {
+
    void* ctx;
-   int (*report_started)(report_handler_t* handler, lList **alpp);
-   int (*report_finished)(report_handler_t* handler, lList **alpp);
-   int (*report_host_begin)(report_handler_t* handler, const char* host_name, lList **alpp);
-   int (*report_host_string_value)(report_handler_t* handler, const char*name, const char *value, lList **alpp);
-   int (*report_host_ulong_value)(report_handler_t* handler, const char* name, u_long32 value, lList **alpp);
-   int (*report_host_finished)(report_handler_t* handler, const char* host_name, lList **alpp);
    
-   int (*report_resource_value)(report_handler_t* handler, const char* dominance, const char* name, const char* value, lList **alpp);
+   int (*report_started)(qhost_report_handler_t* handler, lList **alpp);
+   int (*report_finished)(qhost_report_handler_t* handler, lList **alpp);
+
+   int (*report_host_begin)(qhost_report_handler_t* handler, const char* host_name, lList **alpp);
+   int (*report_host_string_value)(qhost_report_handler_t* handler, const char *name, const char *value, lList **alpp);
+   int (*report_host_ulong_value)(qhost_report_handler_t* handler, const char* name, u_long32 value, lList **alpp);
+   int (*report_host_finished)(qhost_report_handler_t* handler, const char* host_name, lList **alpp);
    
-   int (*report_queue_string_value)(report_handler_t* handler, const char* qname, const char* name, const char *value, lList **alpp);
-   int (*report_queue_ulong_value)(report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList **alpp);
-   int (*destroy)(report_handler_t** handler, lList **alpp);
+   int (*report_resource_value)(qhost_report_handler_t* handler, const char* dominance, const char* name, const char* value, lList **alpp);
+   
+   int (*report_queue_begin)(qhost_report_handler_t* handler, const char* qname, lList **alpp);
+   int (*report_queue_string_value)(qhost_report_handler_t* handler, const char* qname, const char* name, const char *value, lList **alpp);
+   int (*report_queue_ulong_value)(qhost_report_handler_t* handler, const char* qname, const char* name, u_long32 value, lList **alpp);
+   int (*report_queue_finished)(qhost_report_handler_t* handler, const char* qname, lList **alpp);
+   
+   int (*report_job_begin)(qhost_report_handler_t* handler, const char *qname, const char* jname, lList **alpp);
+   int (*report_job_string_value)(qhost_report_handler_t* handler, const char *qname, const char* jname, const char* name, const char *value, lList **alpp);
+   int (*report_job_ulong_value)(qhost_report_handler_t* handler, const char *qname, const char* jname, const char* name, u_long32 value, lList **alpp);
+   int (*report_job_double_value)(qhost_report_handler_t* handler, const char *qname, const char* jname, const char* name, double value, lList **alpp);
+   int (*report_job_finished)(qhost_report_handler_t* handler, const char *qname, const char* jname, lList **alpp);
+
+   int (*destroy)(qhost_report_handler_t** handler, lList **alpp);
 };
 
 int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_match_list, 
-              lList *resource_list, u_long32 show, lList **alp, report_handler_t* report_handler);
+              lList *resource_list, u_long32 show, lList **alp, qhost_report_handler_t* report_handler);
 
 #ifdef  __cplusplus
 }

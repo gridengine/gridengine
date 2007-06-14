@@ -1130,7 +1130,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   dstring buffer = DSTRING_INIT;
                   /* this info is not spooled */
                   sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
-                  sge_add_event(0, sgeE_AR_MOD, 0, 0, 
+                  sge_add_event(0, sgeE_AR_MOD, ar_id, 0, 
                                 sge_dstring_get_string(&buffer), NULL, NULL, ar);
                   lListElem_clear_changed_info(ar);
                   sge_dstring_free(&buffer);

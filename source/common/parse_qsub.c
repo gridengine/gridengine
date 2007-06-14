@@ -1607,7 +1607,8 @@ DTRACE;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer,STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                    MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp );
+                                    MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
+                                    *sp);
          }
 
          /* next field is "e|w|n|v" */

@@ -56,11 +56,11 @@ public class DefaultMapPropertyDescriptor extends MapPropertyDescriptor {
       countMethod = findMethod( "get", "Count", null );
       getMethod = findMethod( "get", new Class[] { keyType } );
       keysMethod = findMethod("get", "Keys", null);
-      if( !readOnly ) {
+//      if (!readOnly) {
          putMethod = findMethod( "put", new Class[] { keyType, propertyType } );
          removeMethod = findMethod( "remove", new Class[] { keyType } );
          removeAllMethod = findMethod( "removeAll", null );
-      }
+//      }
    }
 
    public void clone(Object srcBean, Object targetBean) {

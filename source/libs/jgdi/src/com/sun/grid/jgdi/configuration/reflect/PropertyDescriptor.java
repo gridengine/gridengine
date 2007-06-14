@@ -80,7 +80,11 @@ public abstract class PropertyDescriptor {
       this.configurable = configurable;
       this.hashCode = beanClass.hashCode() * 31 + propertyName.hashCode();
       
-      this.isSetMethod = findMethod("isSet", null);
+      try {
+         this.isSetMethod = findMethod("isSet", null);
+      } catch (IllegalArgumentException e) {
+         // ignore error if isSet* is not present for bean class -> webqmon
+      }   
    }
    
    public boolean equals(Object obj) {
@@ -94,46 +98,49 @@ public abstract class PropertyDescriptor {
       return hashCode;
    }
 
-   protected Method findMethod( String prefix, String suffix, Class [] argTypes ) {
+   protected Method findMethod(String prefix, String suffix, Class [] argTypes) {
       
       StringBuffer buf = new StringBuffer();
-      if( prefix != null ) {
-         buf.append( prefix );
+      if (prefix != null) {
+         buf.append(prefix);
       }
-      buf.append( Character.toUpperCase(propertyName.charAt(0)) );
-      buf.append( propertyName.substring(1) );
-      if( suffix != null ) {
-         buf.append( suffix );
+      buf.append(Character.toUpperCase(propertyName.charAt(0)));
+      buf.append(propertyName.substring(1));
+      if (suffix != null) {
+         buf.append(suffix);
       }
       String methodName = buf.toString();
       
       try {
-         return beanClass.getMethod( methodName, argTypes );
-      } catch( NoSuchMethodException nse ) {
+         return beanClass.getMethod(methodName, argTypes);
+      } catch (NoSuchMethodException nse) {
          StringBuffer buffer = new StringBuffer();
-         for (int i=0; i<argTypes.length;i++) {
-            if (i>0) {
-               buffer.append(", ");
+         if (argTypes != null) {
+            for (int i=0; i<argTypes.length; i++) {
+               if (i>0) {
+                  buffer.append(", ");
+               }
+               buffer.append(argTypes[i].getName());
             }
-            buffer.append(argTypes[i].getName());
+         } else {
+            buffer.append("");
          }
          IllegalArgumentException ilse = new IllegalArgumentException(
-                                         "Method " + methodName + "(" + buffer + ")"
-                                         + " not found in class " + beanClass );
-         ilse.initCause( nse );
+            "Method " + methodName + "(" + buffer + ")"
+            + " not found in class " + beanClass );
+         ilse.initCause(nse);
          throw ilse;
       }
-      
    }
    
-   protected Method findMethod( String prefix, Class [] argTypes ) {
-      return findMethod(prefix,null,argTypes);
+   protected Method findMethod(String prefix, Class [] argTypes) {
+      return findMethod(prefix, null, argTypes);
    }
    
-   protected Object invoke( Method method, Object bean, Object[] args ) {
+   protected Object invoke(Method method, Object bean, Object[] args) {
       try {
-         return method.invoke( bean, args );
-      } catch( IllegalAccessException iae ) {
+         return method.invoke(bean, args);
+      } catch (IllegalAccessException iae) {
          IllegalStateException ilse = new IllegalStateException( method.getName()  + " of "
             + getBeanClass().getName() + "." + getPropertyName()
             + " is not accessible");

@@ -37,12 +37,13 @@ package com.sun.grid.jgdi.monitoring;
  * of one queue.
  *
  */
-public class ClusterQueueSummary {
+public class ClusterQueueSummary implements java.io.Serializable {
    
    private String name;
    private double load;
    private boolean   isLoadSet = false;
    
+   private int reservedSlots;
    private int usedSlots;
    private int totalSlots;
    private int availableSlots;
@@ -114,11 +115,29 @@ public class ClusterQueueSummary {
    public boolean isLoadSet() {
       return isLoadSet;
    }
+   /**
+    *  Get the number of currently reserved slots
+    *
+    *  @return number of currently reserved slots
+    */
+   public int getReservedSlots() {
+      return reservedSlots;
+   }
+
+   /**
+    *  Set the number of currently reserved slots
+    *
+    *  @param reservedSlots  number of currently reserved slots
+    */
+   public void setReservedSlots(int reservedSlots) {
+      this.reservedSlots = reservedSlots;
+   }
+
 
    /**
     *  Get the number of currently used slots
     *
-    *  @return umber of currently used slots
+    *  @return number of currently used slots
     */
    public int getUsedSlots() {
       return usedSlots;

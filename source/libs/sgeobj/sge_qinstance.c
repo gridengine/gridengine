@@ -370,7 +370,7 @@ qinstance_is_calendar_referenced(const lListElem *this_elem,
    if (queue_calendar != NULL) {
       const char *calendar_name = lGetString(calendar, CAL_name);
 
-      if (!strcmp(queue_calendar, calendar_name)) {
+      if (calendar_name && !strcmp(queue_calendar, calendar_name)) {
          ret = true;
       }
    }

@@ -826,8 +826,7 @@ Cardinal size
                sprintf(buf, "%s", lGetString(ep, JRE_job_name));
             else
                sprintf(buf, sge_u32, lGetUlong(ep, JRE_job_number));
-         }
-         else {
+         } else {
             if (lGetString(ep, JRE_job_name))
                sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
             else  

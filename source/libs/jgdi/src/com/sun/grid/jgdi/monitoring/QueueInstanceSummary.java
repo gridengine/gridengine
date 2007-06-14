@@ -57,6 +57,13 @@ public interface QueueInstanceSummary {
    public String getQueueType();
 
    /**
+    *  Get the number of reserved slots.
+    *  @return number of reserved slots
+    */
+   public int getReservedSlots();
+
+
+   /**
     *  Get the number of used slots.
     *  @return number of used slots
     */

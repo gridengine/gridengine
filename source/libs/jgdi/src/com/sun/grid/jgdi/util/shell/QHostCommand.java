@@ -35,6 +35,7 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.monitoring.HostInfo;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
+import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryPrinter;
 import com.sun.grid.jgdi.monitoring.filter.HostFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
@@ -50,7 +51,7 @@ import java.util.LinkedList;
 public class QHostCommand extends AbstractCommand {
    
    /**
-    * Creates a new instance of QStatCommand
+    * Creates a new instance of QHostCommand
     */
    public QHostCommand(Shell shell, String name) {
       super(shell, name);
@@ -84,18 +85,7 @@ public class QHostCommand extends AbstractCommand {
       
       PrintWriter pw = new PrintWriter(System.out);
       QHostResult res = jgdi.execQHost(options);
-      // QHostPrinter.print(pw, res, options);
-      Iterator iter = res.getHostInfo().iterator();
-      while (iter.hasNext()) {
-         HostInfo hinfo = (HostInfo)iter.next();
-         pw.println("Host:      " + hinfo.getHostname());
-         pw.println("Arch:      " + hinfo.getArch());
-         pw.println("LoadAvg:   " + hinfo.getLoadAvg());
-         pw.println("MemTotal:  " + hinfo.getMemTotal());
-         pw.println("MemUsed:   " + hinfo.getMemUsed());
-         pw.println("SwapTotal: " + hinfo.getSwapTotal());
-         pw.println("SwapUsed:  " + hinfo.getSwapUsed());
-      }
+      QueueInstanceSummaryPrinter.print(pw, res, options);
       pw.flush();
    }
    
@@ -108,26 +98,28 @@ public class QHostCommand extends AbstractCommand {
       HostFilter hostFilter = null;
       
       LinkedList argList = new LinkedList();
-      for(int i = 0; i < args.length; i++) {
+      for (int i = 0; i < args.length; i++) {
          argList.add(args[i]);
       }
       
-      while(!argList.isEmpty()) {
+      while (!argList.isEmpty()) {
          String arg = (String)argList.removeFirst();
          
-         if(arg.equals("-help")) {
+         if (arg.equals("-help")) {
             System.out.print(getUsage());
          } else if (arg.equals("-h")) {
-            if(argList.isEmpty()) {
+            if (argList.isEmpty()) {
                throw new IllegalArgumentException("missing host_list");
             }
             arg = (String)argList.removeFirst();
             hostFilter = HostFilter.parse(arg);
          } else if (arg.equals("-F")) {
-            if(!argList.isEmpty()) {
+            if (!argList.isEmpty()) {
                arg = (String)argList.getFirst();
-               
-               if(!arg.startsWith("-")) {
+               // we allow only a comma separated arg string
+               // qhost CLI allows also whitespace separated arguments
+               if (!arg.startsWith("-")) {
+                  arg = (String)argList.removeFirst();
                   resourceAttributeFilter = ResourceAttributeFilter.parse(arg);
                } else {
                   resourceAttributeFilter = new ResourceAttributeFilter();
@@ -138,7 +130,7 @@ public class QHostCommand extends AbstractCommand {
          }  else if (arg.equals("-j")) {
             showJobs = true;
          } else if (arg.equals("-l")) {
-            if(argList.isEmpty()) {
+            if (argList.isEmpty()) {
                throw new IllegalArgumentException("missing resource_list");
             }
             resourceFilter = new ResourceFilter();
@@ -147,7 +139,7 @@ public class QHostCommand extends AbstractCommand {
          } else if (arg.equals("-q")) {
             showQueues = true;
          } else if (arg.equals("-u")) {
-            if(argList.isEmpty()) {
+            if (argList.isEmpty()) {
                throw new IllegalArgumentException("missing user_list");
             }
             arg = (String)argList.removeFirst();

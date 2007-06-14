@@ -694,12 +694,11 @@ static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, i
 
 static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup)
 {
-   sge_gdi_ctx_t *gdi_ctx;
+   sge_gdi_ctx_t *gdi_ctx = NULL;
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_set_is_setup");
 
    if (!thiz || !thiz->sge_gdi_ctx_handle) {
-      DPRINTF(("CTX: couldn't set %s\n", is_setup?"true":"false"));
       DRETURN_VOID;
    }   
    
@@ -722,7 +721,6 @@ static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
    }   
    
    gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
-   DPRINTF(("CTX: return %s\n", gdi_ctx->is_setup?"true":"false"));
 
    DRETURN(gdi_ctx->is_setup);
 }

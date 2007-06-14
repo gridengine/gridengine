@@ -41,6 +41,7 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -112,7 +113,7 @@ public class QueueInstanceSummaryPrinter {
          Calc timeCalc = new Calc() {
             public Object getValue(Object obj) {
                JobSummary js = (JobSummary)obj;
-               if(js.isRunning()) {
+               if (js.isRunning()) {
                   return js.getStartTime();
                } else {
                   return js.getSubmitTime();
@@ -121,10 +122,10 @@ public class QueueInstanceSummaryPrinter {
          };
          table.addCol("submitTime", "submit/start at     ", 19, DEFAULT_DATE_FORMAT, timeCalc);
       }
-      if(sge_urg) {
+      if (sge_urg) {
          table.addCol("deadline", "deadline", 15);
       }
-      if(sge_ext) {
+      if (sge_ext) {
          table.addCol("cpuUsage", "cpu", 8, new CpuUsageCalc());
          table.addCol("memUsage", "mem", 7, OutputTable.Column.RIGHT, new MemUsageCalc());
          table.addCol("ioUsage", "io", 7, OutputTable.Column.RIGHT, new IOUsageCalc());
@@ -157,10 +158,10 @@ public class QueueInstanceSummaryPrinter {
          table.addCol("share", "share", 8, new ShareCalc(sge_ext));
       }
       //table.addCol("queueAssigned", "qs", 5);
-      if(!options.showFullOutput()) {
+      if (!options.showFullOutput()) {
          table.addCol("queue", "queue", 30);
       }
-      // if(options.showPEJobs()) {
+      // if (options.showPEJobs()) {
       if (options.showExtendedSubTaskInfo()) {
          table.addCol("masterQueue", "master", 8, OutputTable.Column.LEFT);
       } else {
@@ -206,8 +207,8 @@ public class QueueInstanceSummaryPrinter {
    private static class CpuUsageCalc implements Calc {
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
-         if(!js.hasCpuUsage()) {
-            if(js.isRunning()) {
+         if (!js.hasCpuUsage()) {
+            if (js.isRunning()) {
                return "NA";
             } else {
                return "";
@@ -247,8 +248,8 @@ public class QueueInstanceSummaryPrinter {
       
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
-         if(!hasValue(js)) {
-            if(js.isRunning()) {
+         if (!hasValue(js)) {
+            if (js.isRunning()) {
                return "NA";
             } else {
                return "";
@@ -293,10 +294,10 @@ public class QueueInstanceSummaryPrinter {
       
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
-         if(js.isZombie()) {
+         if (js.isZombie()) {
             return "NA ";
          } else {
-            if(sge_ext || js.isQueueAssigned()) {
+            if (sge_ext || js.isQueueAssigned()) {
                return format.format(getValue(js));
             } else {
                return "";
@@ -317,10 +318,10 @@ public class QueueInstanceSummaryPrinter {
       
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
-         if(js.isZombie()) {
+         if (js.isZombie()) {
             return "NA ";
          } else {
-            if(sge_ext || js.isQueueAssigned()) {
+            if (sge_ext || js.isQueueAssigned()) {
                return format.format(js.getShare());
             } else {
                return "";
@@ -335,7 +336,7 @@ public class QueueInstanceSummaryPrinter {
       
       public Object getValue(Object obj) {
          JobSummary js = (JobSummary)obj;
-         if(js.isArray() && js.getTaskId() != null) {
+         if (js.isArray() && js.getTaskId() != null) {
             return js.getTaskId();
          } else {
             return "";
@@ -352,7 +353,6 @@ public class QueueInstanceSummaryPrinter {
       
       ret.addCol("name", "queuename", 30);
       ret.addCol("queueType", "qtype", 5);
-      ret.addCol("usedSlots", "used/tot.", 4);
       
       Calc slotCalc = new Calc() {
          
@@ -361,6 +361,8 @@ public class QueueInstanceSummaryPrinter {
             QueueInstanceSummary qi = (QueueInstanceSummary)obj;
             
             StringBuffer ret = new StringBuffer();
+            ret.append(qi.getReservedSlots());
+            ret.append('/');
             ret.append(qi.getUsedSlots());
             ret.append('/');
             ret.append(qi.getFreeSlots() + qi.getUsedSlots());
@@ -368,7 +370,7 @@ public class QueueInstanceSummaryPrinter {
          }
       };
       
-      ret.addCol("totalSlots", "used/tot.", 4, slotCalc);
+      ret.addCol("totalSlots", "resv/used/tot.", 14, slotCalc);
       
       Calc loadAvgCalc = new Calc() {
          
@@ -376,7 +378,7 @@ public class QueueInstanceSummaryPrinter {
             
             QueueInstanceSummary qi = (QueueInstanceSummary)obj;
             
-            if(qi.hasLoadValue()) {
+            if (qi.hasLoadValue()) {
                return new Double(qi.getLoadAvg());
             } else {
                return "-NA-";
@@ -390,6 +392,70 @@ public class QueueInstanceSummaryPrinter {
       
       return ret;
       
+   }
+   
+   private static OutputTable createHostTable() throws IntrospectionException {
+      
+      OutputTable ret = new OutputTable(HostInfo.class);
+      
+      ret.addCol("hostname", "HOSTNAME", 23);
+      ret.addCol("arch", "ARCH", 13);
+      ret.addCol("NumberOfProcessors", "NCPU", 4, OutputTable.Column.RIGHT);
+      ret.addCol("loadAvg", "LOAD", 5, OutputTable.Column.RIGHT);
+      ret.addCol("memTotal", "MEMTOT", 7, OutputTable.Column.RIGHT);
+      ret.addCol("memUsed", "MEMUSE", 7, OutputTable.Column.RIGHT);
+      ret.addCol("swapTotal", "SWAPTO", 7, OutputTable.Column.RIGHT);
+      ret.addCol("swapUsed", "SWAPUS", 7, OutputTable.Column.RIGHT);
+      
+      return ret;
+   }
+   
+   private static OutputTable createHostQueueTable() throws IntrospectionException {
+      OutputTable ret = new OutputTable(QueueInfo.class);
+      ret.addCol("qname", "qname", 20);
+      ret.addCol("qType", "qtype", 5);
+      
+      Calc slotCalc = new Calc() {
+         public Object getValue(Object obj) {
+            StringBuffer ret = new StringBuffer();
+            QueueInfo qi = (QueueInfo)obj;
+            // ret.append(qi.getReservedSlots());
+            // ret.append('/');
+            ret.append(qi.getUsedSlots());
+            ret.append('/');
+            ret.append(qi.getTotalSlots());
+            return ret.toString();
+         }
+      };
+      ret.addCol("usedSlots", "used/tot.", 9, slotCalc);
+      ret.addCol("state", "state", 5);
+      
+      return ret;
+   }
+   
+   private static OutputTable createHostJobTable(QHostOptions options) throws IntrospectionException {
+      
+      OutputTable ret = new OutputTable(JobInfo.class);
+      
+      ret.addCol("id", "job-ID", 7, OutputTable.Column.RIGHT);
+      ret.addCol("priority", "priority", 7, OutputTable.POINT_FIVE_FORMAT);
+      ret.addCol("name", "name", 10);
+      ret.addCol("user", "user", 13);
+      ret.addCol("state", "state", 5);
+      Calc timeCalc = new Calc() {
+         public Object getValue(Object obj) {
+            JobInfo ji = (JobInfo)obj;
+            return ji.getStartTime();
+         }
+      };
+      ret.addCol("startTime", "submit/start at     ", 19, DEFAULT_DATE_FORMAT, timeCalc);
+      if (!options.includeQueue()) {
+         ret.addCol("qinstanceName", "queue", 10);
+      }
+      ret.addCol("masterQueue", "masterQueue", 7);
+      ret.addCol("taskID", "ja-taskID", 7);
+      
+      return ret;
    }
    
    public static void print(PrintWriter pw, QueueInstanceSummaryResult result, QueueInstanceSummaryOptions options) {
@@ -407,39 +473,39 @@ public class QueueInstanceSummaryPrinter {
       Iterator iter = result.getQueueInstanceSummary().iterator();
       
       boolean hadJobs = false;
-      if(iter.hasNext()) {
-         if(options.showFullOutput()) {
+      if (iter.hasNext()) {
+         if (options.showFullOutput()) {
             qiTable.printHeader(pw);
          }
-         while(iter.hasNext()) {
-            if(options.showFullOutput()) {
+         while (iter.hasNext()) {
+            if (options.showFullOutput()) {
                qiTable.printDelimiter(pw, '-');
             }
             QueueInstanceSummary qi = (QueueInstanceSummary)iter.next();
-            if(options.showFullOutput()) {
+            if (options.showFullOutput()) {
                qiTable.printRow(pw, qi);
                
                Iterator domIter = qi.getResourceDominanceSet().iterator();
-               while(domIter.hasNext()) {
+               while (domIter.hasNext()) {
                   String dom = (String)domIter.next();
                   Iterator resIter = qi.getResourceNames(dom).iterator();
-                  while(resIter.hasNext()) {
+                  while (resIter.hasNext()) {
                      String name = (String)resIter.next();
-                     pw.print("    dom:name=");
+                     pw.print("    " + dom + ":" + name + "=");
                      pw.println(qi.getResourceValue(dom, name));
                   }
                }
             }
             Iterator jobIter = qi.getJobList().iterator();
-            if(jobIter.hasNext()) {
-               while(jobIter.hasNext()) {
-                  if(!hadJobs && !options.showFullOutput()) {
+            if (jobIter.hasNext()) {
+               while (jobIter.hasNext()) {
+                  if (!hadJobs && !options.showFullOutput()) {
                      jobSummaryTable.printHeader(pw);
                      jobSummaryTable.printDelimiter(pw, '-');
                   }
                   JobSummary js = (JobSummary)jobIter.next();
                   jobSummaryTable.printRow(pw, js);
-                  if(options.showRequestedResourcesForJobs()) {
+                  if (options.showRequestedResourcesForJobs()) {
                      printRequestedResources(pw, js);
                   }
                   hadJobs = true;
@@ -450,7 +516,7 @@ public class QueueInstanceSummaryPrinter {
       
       List jobList = result.getPendingJobs();
       if (!jobList.isEmpty()) {
-         if(options.showFullOutput()) {
+         if (options.showFullOutput()) {
             pw.println();
             qiTable.printDelimiter(pw, '#');
             pw.println(" - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS");
@@ -458,14 +524,14 @@ public class QueueInstanceSummaryPrinter {
          }
          
          iter = jobList.iterator();
-         if(!hadJobs && !options.showFullOutput()) {
+         if (!hadJobs && !options.showFullOutput()) {
             jobSummaryTable.printHeader(pw);
             jobSummaryTable.printDelimiter(pw, '-');
          }
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             JobSummary js = (JobSummary)iter.next();
             jobSummaryTable.printRow(pw, js);
-            if(options.showRequestedResourcesForJobs()) {
+            if (options.showRequestedResourcesForJobs()) {
                printRequestedResources(pw, js);
             }
             hadJobs = true;
@@ -474,21 +540,21 @@ public class QueueInstanceSummaryPrinter {
       
       jobList = result.getErrorJobs();
       if (!jobList.isEmpty()) {
-         if(options.showFullOutput()) {
+         if (options.showFullOutput()) {
             pw.println();
             qiTable.printDelimiter(pw, '#');
             pw.println("     - ERROR JOBS - ERROR JOBS - ERROR JOBS - ERROR JOBS - ERROR JOBS");
             qiTable.printDelimiter(pw, '#');
          }
-         if(!hadJobs && !options.showFullOutput()) {
+         if (!hadJobs && !options.showFullOutput()) {
             jobSummaryTable.printHeader(pw);
             jobSummaryTable.printDelimiter(pw, '-');
          }
          iter = jobList.iterator();
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             JobSummary js = (JobSummary)iter.next();
             jobSummaryTable.printRow(pw, js);
-            if(options.showRequestedResourcesForJobs()) {
+            if (options.showRequestedResourcesForJobs()) {
                printRequestedResources(pw, js);
             }
             hadJobs = true;
@@ -497,21 +563,21 @@ public class QueueInstanceSummaryPrinter {
       
       jobList = result.getFinishedJobs();
       if (!jobList.isEmpty()) {
-         if(options.showFullOutput()) {
+         if (options.showFullOutput()) {
             pw.println();
             qiTable.printDelimiter(pw, '#');
             pw.println("- FINISHED JOBS - FINISHED JOBS - FINISHED JOBS - FINISHED JOBS - FINISHED JOBS");
             qiTable.printDelimiter(pw, '#');
          }
          iter = jobList.iterator();
-         if(!hadJobs && !options.showFullOutput()) {
+         if (!hadJobs && !options.showFullOutput()) {
             jobSummaryTable.printHeader(pw);
             jobSummaryTable.printDelimiter(pw, '-');
          }
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             JobSummary js = (JobSummary)iter.next();
             jobSummaryTable.printRow(pw, js);
-            if(options.showRequestedResourcesForJobs()) {
+            if (options.showRequestedResourcesForJobs()) {
                printRequestedResources(pw, js);
             }
             hadJobs = true;
@@ -520,21 +586,21 @@ public class QueueInstanceSummaryPrinter {
       
       jobList = result.getZombieJobs();
       if (!jobList.isEmpty()) {
-         if(options.showFullOutput()) {
+         if (options.showFullOutput()) {
             pw.println();
             qiTable.printDelimiter(pw, '#');
             pw.println("   - ZOMBIE JOBS - ZOMBIE JOBS - ZOMBIE JOBS - ZOMBIE JOBS - ZOMBIE JOBS");
             qiTable.printDelimiter(pw, '#');
          }
          iter = jobList.iterator();
-         if(!hadJobs && !options.showFullOutput()) {
+         if (!hadJobs && !options.showFullOutput()) {
             jobSummaryTable.printHeader(pw);
             jobSummaryTable.printDelimiter(pw, '-');
          }
-         while(iter.hasNext()) {
+         while (iter.hasNext()) {
             JobSummary js = (JobSummary)iter.next();
             jobSummaryTable.printRow(pw, js);
-            if(options.showRequestedResourcesForJobs()) {
+            if (options.showRequestedResourcesForJobs()) {
                printRequestedResources(pw, js);
             }
             hadJobs = true;
@@ -543,15 +609,77 @@ public class QueueInstanceSummaryPrinter {
       
    }
    
+   public static void print(PrintWriter pw, QHostResult result, QHostOptions options) {
+      OutputTable hjTable = null;
+      OutputTable hqTable = null;
+      OutputTable hiTable = null;
+      
+      try {
+         hiTable = createHostTable();
+         hqTable = createHostQueueTable();
+         hjTable = createHostJobTable(options);
+      } catch (IntrospectionException ex) {
+         IllegalStateException ex1 = new IllegalStateException("introspection error");
+         ex1.initCause(ex);
+         throw ex1;
+      }
+      
+      Iterator iter = result.getHostInfo().iterator();
+      if (iter.hasNext()) {
+         hiTable.printHeader(pw);
+         hiTable.printDelimiter(pw, '-');
+      }
+      while (iter.hasNext()) {
+         HostInfo hi = (HostInfo)iter.next();
+         hiTable.printRow(pw, hi);
+         if (options.includeQueue() || options.includeJobs()) {
+            Iterator qiter = hi.getQueueList().iterator();
+            
+            while (qiter.hasNext()) {
+               QueueInfo qi = (QueueInfo)qiter.next();
+               if (options.includeQueue()) {
+                  pw.print("   ");
+                  hqTable.printRow(pw, qi);
+               }
+               if (options.includeJobs()) {
+                  if (!hi.getJobList().isEmpty()) {
+                     Iterator jiter = hi.getJobList().iterator();
+                     while (jiter.hasNext()) {
+                        JobInfo job = (JobInfo)jiter.next();
+                        if (job.getQueue().equals(qi.getQname())) {
+                           pw.print("   ");
+                           hjTable.printRow(pw, job);
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         if (options.getResourceAttributeFilter() != null) {
+            Iterator domIter = hi.getDominanceSet().iterator();
+            while (domIter.hasNext()) {
+               String dom = (String)domIter.next();
+               Iterator resIter = hi.getResourceValueNames(dom).iterator();
+               while (resIter.hasNext()) {
+                  String name = (String)resIter.next();
+                  pw.print("    " + dom + ":" + name + "=");
+                  pw.println(hi.getResourceValue(dom, name));
+               }
+            }
+            
+         }
+      }
+   }
+   
    private static void printRequestedResources(PrintWriter pw, JobSummary js) {
       pw.print("      Full jobname: ");
       pw.println(js.getName());
-      if(js.getMasterQueue() != null) {
+      if (js.getMasterQueue() != null) {
          pw.print("      Master Queue: ");
          pw.println(js.getMasterQueue());
       }
       
-      if(js.getGrantedPEName() != null) {
+      if (js.getGrantedPEName() != null) {
          pw.print("      Requested PE: ");
          pw.println(js.getParallelEnvironmentName() + " " + js.getParallelEnvironmentRange());
          pw.print("      Granted PE: ");
@@ -563,8 +691,8 @@ public class QueueInstanceSummaryPrinter {
       pw.print("      Hard Resources: ");
       Iterator iter = js.getHardRequestNames().iterator();
       boolean firstRes = true;
-      while(iter.hasNext()) {
-         if(firstRes) {
+      while (iter.hasNext()) {
+         if (firstRes) {
             firstRes = false;
          } else {
             pw.print(", ");
@@ -575,15 +703,15 @@ public class QueueInstanceSummaryPrinter {
          HardRequestValue value = js.getHardRequestValue(resName);
          pw.print(value.getValue());
          pw.print(" (");
-         pw.print(OutputTable.POINT_SIX_FORMAT.format(value.getContribution()));
+         pw.print(OutputTable.POINT_FIVE_FORMAT.format(value.getContribution()));
          pw.print(")");
       }
       pw.println();
       pw.print("      Soft Resources: ");
       iter = js.getSoftRequestNames().iterator();
       firstRes = true;
-      while(iter.hasNext()) {
-         if(firstRes) {
+      while (iter.hasNext()) {
+         if (firstRes) {
             firstRes = false;
          } else {
             pw.print(", ");

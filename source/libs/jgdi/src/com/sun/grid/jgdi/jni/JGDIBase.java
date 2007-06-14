@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.jni;
@@ -34,7 +34,7 @@ package com.sun.grid.jgdi.jni;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.monitoring.*;
 import java.io.File;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -71,13 +71,13 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    
    /**
     * Get the root directory of the grid engine installation
-    * @throws com.sun.grid.jgdi.JGDIException 
+    * @throws com.sun.grid.jgdi.JGDIException
     * @return root directory of the gridengine installation
     */
    public File getSGERoot() throws JGDIException {
       if(sgeRoot == null) {
          sgeRoot = new File(getNativeSGERoot());
-      } 
+      }
       return sgeRoot;
    }
    
@@ -86,7 +86,7 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    /**
     * Get the cell of the grid engine
     * @return the cell of the grid engine
-    * @throws com.sun.grid.jgdi.JGDIException 
+    * @throws com.sun.grid.jgdi.JGDIException
     */
    public native String getSGECell() throws JGDIException;
    
@@ -108,7 +108,7 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    
    
    public List getClusterQueueSummary(ClusterQueueSummaryOptions options) throws JGDIException {
-      List ret = new ArrayList();
+      List ret = new LinkedList();
       fillClusterQueueSummary(options, ret);
       return ret;
    }
@@ -127,7 +127,7 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     *  Get the limit information.
     *
     *  The CLI equivialent of this method is <code>qquota</code> (see man qquota(1)).
-    *  
+    *
     *  @param options the options for the qquota algorithm
     *  @return  the {@link com.sun.grid.jgdi.monitoring.QQuotaResult}
     */

@@ -41,14 +41,14 @@ import java.util.StringTokenizer;
 
 /**
  *
- * @todo    beta 3MT
- *          <p>ProjectFilter not yet implemented</p>
  */
 public class ProjectFilter implements Serializable {
    
    private List prjList = new ArrayList();
    
-   /** Creates a new instance of ParallelEnvironmentFilter */
+   /** 
+    * Creates a new instance of ProjectFilter 
+    */
    public ProjectFilter() {
    }
 

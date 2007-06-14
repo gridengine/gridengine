@@ -56,9 +56,9 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       super(testName);
    }
    
-   protected synchronized void setUp() throws Exception {      
+   protected synchronized void setUp() throws Exception {
       super.setUp();
-      jgdi = createJGDI();      
+      jgdi = createJGDI();
       init();
    }
    
@@ -66,10 +66,11 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       ClusterQueue cq;
       cq1 = new ClusterQueueImpl(true);
       cq1.setName("testQueue_1");
+      cq1.addHostlist("@allhosts");
       
       if ((cq = jgdi.getClusterQueue(cq1.getName())) != null) {
          jgdi.deleteClusterQueue(cq);
-      }   
+      }
       jgdi.addClusterQueue(cq1);
       
       Project prj;
@@ -197,19 +198,19 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       jgdi.updateClusterQueue(cq1);
       assertEquals("secret", jgdi.getClusterQueue(cq1.getName()).getProlog("@/"));
       assertEquals("/bin/sh", jgdi.getClusterQueue(cq1.getName()).getProlog("@hgroup1"));
-      assertEquals(null, jgdi.getClusterQueue(cq1.getName()).getProlog("host_to_be_added"));
+      assertEquals("NONE", jgdi.getClusterQueue(cq1.getName()).getProlog("host_to_be_added"));
       assertEquals("/bin/tcsh", jgdi.getClusterQueue(cq1.getName()).getProlog("unknown1"));
       assertEquals("unknown", jgdi.getClusterQueue(cq1.getName()).getProlog("new5"));
    }
-    
+
    public void testUpdateObjectWithText_SetClusterQueueAll_1() throws Exception {
       System.out.println("testUpdateObjectWithText_SetClusterQueueAll_1");
       GEObjectEditor.updateObjectWithText(jgdi, cq1, "name "+cq1.getName()+"\n"+
-            "projects "+prj1.getName()+" "+prj2.getName()+
-                     ",["+hg1.getName()+"="+prj1.getName()+" "+prj4.getName()+
-                     "],[host1="+prj3.getName()+" "+prj1.getName()+" "+prj4.getName()+"]\n" +
-            " pe   make,["+hg1.getName()+"="+pe1.getName()+" "+pe2.getName()+"]\n"+
-            " load_thresholds np_load_avg=1.75,qname="+cq1.getName()+",rerun=true,s_rss=3k,h_rss=NONE \\\n" +"["+hg1.getName()+"=qname="+cq1.getName()+",swap_free=1G]\n");
+         "projects "+prj1.getName()+" "+prj2.getName()+
+         ",["+hg1.getName()+"="+prj1.getName()+" "+prj4.getName()+
+         "],[host1="+prj3.getName()+" "+prj1.getName()+" "+prj4.getName()+"]\n" +
+         " pe   make,["+hg1.getName()+"="+pe1.getName()+" "+pe2.getName()+"]\n"+
+         " load_thresholds np_load_avg=1.75,qname="+cq1.getName()+",rerun=true,s_rss=3k,h_rss=NONE \\\n" +"["+hg1.getName()+"=qname="+cq1.getName()+",swap_free=1G]\n");
       jgdi.updateClusterQueue(cq1);
       
       assertEquals("testQueue_1", jgdi.getClusterQueue(cq1.getName()).getName());
@@ -243,7 +244,7 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       assertEquals(pe2.getName(), jgdi.getClusterQueue(cq1.getName()).getPe(hg1.getName(),1));
       
       //Load thresholds
-      assertEquals(5, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount("@/")); 
+      assertEquals(5, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount("@/"));
       assertEquals("np_load_avg",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",0).getName());
       assertEquals("1.75",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",0).getStringval());
       
@@ -259,7 +260,7 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
       assertEquals("h_rss",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",4).getName());
       assertEquals("NONE",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds("@/",4).getStringval());
       
-      assertEquals(2, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount(hg1.getName())); 
+      assertEquals(2, jgdi.getClusterQueue(cq1.getName()).getLoadThresholdsCount(hg1.getName()));
       assertEquals("qname",jgdi.getClusterQueue(cq1.getName()).getLoadThresholds(hg1.getName(),0).getName());
       assertEquals(cq1.getName(),jgdi.getClusterQueue(cq1.getName()).getLoadThresholds(hg1.getName(),0).getStringval());
       

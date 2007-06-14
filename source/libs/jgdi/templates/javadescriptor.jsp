@@ -66,8 +66,7 @@ public class <%=jh.getClassName(cullObj)%>Descriptor extends <%
 
 
    public <%=jh.getClassName(cullObj)%>Descriptor() {
-      this(<%=jh.getClassName(cullObj)%>.class, <% 
-      
+      this(<%=jh.getClassName(cullObj)%>Impl.class, <%
        if(parent != null ) {
           %>"<%=cullObj.getName()%>" <%
        } else {

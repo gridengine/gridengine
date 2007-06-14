@@ -82,15 +82,15 @@
 
 
 static int sge_print_queues(lList *ql, lListElem *hrl, lList *jl, lList *ul, lList *ehl, lList *cl, 
-                            lList *pel, u_long32 show, report_handler_t *report_handler, lList **alpp);
-static int sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show, report_handler_t *report_handler, lList **alpp);
-static int sge_print_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *centry_list, report_handler_t *report_handler, lList **alpp);
+                            lList *pel, u_long32 show, qhost_report_handler_t *report_handler, lList **alpp);
+static int sge_print_resources(lList *ehl, lList *cl, lList *resl, lListElem *host, u_long32 show, qhost_report_handler_t *report_handler, lList **alpp);
+static int sge_print_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *centry_list, qhost_report_handler_t *report_handler, lList **alpp);
 static int reformatDoubleValue(char *result, const char *format, const char *oldmem);
 static bool get_all_lists(sge_gdi_ctx_class_t *ctx, lList **answer_list, lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel, lList *hl, lList *ul, u_long32 show);
 static void free_all_lists(lList **ql, lList **jl, lList **cl, lList **ehl, lList **pel);
 
 int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_match_list, 
-              lList *resource_list, u_long32 show, lList **alpp, report_handler_t* report_handler) {
+              lList *resource_list, u_long32 show, lList **alpp, qhost_report_handler_t* report_handler) {
 
    lList *cl = NULL;
    lList *ehl = NULL;
@@ -248,7 +248,7 @@ static int sge_print_host(
 sge_gdi_ctx_class_t *gdi_ctx,
 lListElem *hep,
 lList *centry_list,
-report_handler_t *report_handler,
+qhost_report_handler_t *report_handler,
 lList **alpp
 ) {
    lListElem *lep;
@@ -412,7 +412,7 @@ lList *ehl,
 lList *cl,
 lList *pel,
 u_long32 show,
-report_handler_t *report_handler,
+qhost_report_handler_t *report_handler,
 lList **alpp
 ) {
    lList *load_thresholds, *suspend_thresholds;
@@ -429,6 +429,7 @@ lList **alpp
          if (!sge_eval_expression(TYPE_HOST, lGetHost(host, EH_name),
               lGetHost(qep, QU_qhostname), NULL)) {
             char buf[80];
+            const char *qname = lGetString(qep, QU_qname);
             
             if (show & QHOST_DISPLAY_QUEUES) {
                if (report_handler == NULL) {
@@ -439,7 +440,12 @@ lList **alpp
                   /*
                   ** qname
                   */
-                  printf("%-20s ", lGetString(qep, QU_qname));
+                  printf("%-20s ", qname);
+               } else {
+                  ret = report_handler->report_queue_begin(report_handler, qname, alpp);
+                  if (ret != QHOST_SUCCESS ) {
+                     DRETURN(ret);
+                  }
                }
                /*
                ** qtype
@@ -452,7 +458,7 @@ lList **alpp
                      printf("%-5.5s ", sge_dstring_get_string(&type_string));
                   } else {
                      ret = report_handler->report_queue_string_value(report_handler,
-                                           lGetString(qep, QU_qname), 
+                                           qname, 
                                            "qtype_string", 
                                            sge_dstring_get_string(&type_string),
                                            alpp);
@@ -474,16 +480,16 @@ lList **alpp
                   printf("%-9.9s", buf);
                } else {
                   ret = report_handler->report_queue_ulong_value(report_handler,
-                                          lGetString(qep, QU_qname),
-                                          "slots_used",qinstance_slots_used(qep),
+                                          qname, "slots_used",
+                                          qinstance_slots_used(qep),
                                           alpp);
                   if (ret != QHOST_SUCCESS ) {
                      DRETURN(ret);
                   }
                                           
                   ret = report_handler->report_queue_ulong_value(report_handler,
-                                            lGetString(qep, QU_qname),
-                                            "slots", lGetUlong(qep, QU_job_slots),
+                                            qname, "slots",
+                                            lGetUlong(qep, QU_job_slots),
                                             alpp);
                   
                   if (ret != QHOST_SUCCESS ) {
@@ -514,7 +520,7 @@ lList **alpp
                      printf("%s", sge_dstring_get_string(&state_string));
                   } else {
                      ret = report_handler->report_queue_string_value(report_handler,
-                                               lGetString(qep, QU_qname), 
+                                               qname, 
                                                "state_string", 
                                                sge_dstring_get_string(&state_string),
                                                alpp);
@@ -530,6 +536,11 @@ lList **alpp
                */
                if (report_handler == NULL) {
                   printf("\n");
+               } else {
+                  ret = report_handler->report_queue_finished(report_handler, qname, alpp);
+                  if (ret != QHOST_SUCCESS ) {
+                     DRETURN(ret);
+                  }
                }
             }
 
@@ -538,18 +549,14 @@ lList **alpp
             ** should be visible (necessary for the qstat printing functions)
             */
             if (show & QHOST_DISPLAY_JOBS) {
-               /*
-                 Printing jobs with qhost -xml is currently not supported
-                */
-               if (report_handler == NULL) {
-                  u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
-                                          QSTAT_DISPLAY_FULL : 0;
-                  full_listing = full_listing | QSTAT_DISPLAY_ALL;
-                  /* TODO: sge_print_jobs_queue needs a return value */
-                  sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
-                                       full_listing, "   ", 
-                                       GROUP_NO_PETASK_GROUPS, 10);
-               }
+               u_long32 full_listing = (show & QHOST_DISPLAY_QUEUES) ?  
+                                       QSTAT_DISPLAY_FULL : 0;
+               full_listing = full_listing | QSTAT_DISPLAY_ALL;
+               /* TODO: sge_print_jobs_queue needs a return value */
+               sge_print_jobs_queue(qep, jl, pel, ul, ehl, cl, 1,
+                                    full_listing, "   ", 
+                                    GROUP_NO_PETASK_GROUPS, 10,
+                                    report_handler, alpp);
             }
          }
       }
@@ -566,7 +573,7 @@ lList *cl,
 lList *resl,
 lListElem *host,
 u_long32 show,
-report_handler_t* report_handler,
+qhost_report_handler_t* report_handler,
 lList **alpp
 ) {
    lList *rlp = NULL;

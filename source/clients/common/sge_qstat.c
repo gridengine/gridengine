@@ -127,7 +127,6 @@ void qstat_env_destroy(qstat_env_t* qstat_env) {
    lFreeWhat(&qstat_env->what_JAT_Type_template);
    /* Do not free the context - it's a reference */
    qstat_env->ctx = NULL;
-   FREE(qstat_env);
 }
 
 static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp);
@@ -1547,7 +1546,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
 
-      while((jatep = nxt_jatep)) { 
+      while ((jatep = nxt_jatep)) { 
          if (qstat_env->shut_me_down && qstat_env->shut_me_down() ) {
             DPRINTF(("shut_me_down\n"));
             break;
@@ -1635,7 +1634,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
             count++;
          }
       }
-      if (jep != nxt && qstat_env->full_listing & QSTAT_DISPLAY_PENDING) {
+      if (jep != nxt && (qstat_env->full_listing & QSTAT_DISPLAY_PENDING)) {
          ret = handle_jobs_not_enrolled(jep, NULL, true, NULL,
                                         0, 0, &count, qstat_env, handler, alpp);
       }
@@ -2402,7 +2401,7 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
       }
    }
    
-   if(handler->report_job_finished && (ret=handler->report_job_finished(handler, lGetUlong(job, JB_job_number), alpp))) {
+   if (handler->report_job_finished && (ret=handler->report_job_finished(handler, lGetUlong(job, JB_job_number), alpp))) {
       DPRINTF(("handler->report_job_finished failed\n"));
       goto error;
    }

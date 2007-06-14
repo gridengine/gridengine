@@ -137,17 +137,17 @@ public class QStatCommand extends AbstractCommand {
         boolean showJobPriority = false;
         
         LinkedList argList = new LinkedList();
-        for(int i = 0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             argList.add(args[i]);
         }
         
-        while(!argList.isEmpty()) {
+        while (!argList.isEmpty()) {
             String arg = (String)argList.removeFirst();
             
-            if(arg.equals("-ext")) {
+            if (arg.equals("-ext")) {
                 ext = true;
             } else if (arg.equals("-explain")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("-explain requires explain char");
                 }
                 arg = (String)argList.removeFirst();
@@ -156,10 +156,12 @@ public class QStatCommand extends AbstractCommand {
             } else if (arg.equals("-f")) {
                 fullOutput = true;
             } else if (arg.equals("-F")) {
-                if(!argList.isEmpty()) {
+                if (!argList.isEmpty()) {
                     arg = (String)argList.getFirst();
-                    
-                    if(!arg.startsWith("-")) {
+                    // we allow only a comma separated arg string 
+                    // qhost CLI allows also whitespace separated arguments
+                    if (!arg.startsWith("-")) {
+                        arg = (String)argList.removeFirst();
                         resourceAttributeFilter = ResourceAttributeFilter.parse(arg);
                     } else {
                         resourceAttributeFilter = new ResourceAttributeFilter();
@@ -169,7 +171,7 @@ public class QStatCommand extends AbstractCommand {
                 }
                 fullOutput = true;
             } else if (arg.equals("-g")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("-g requires additional argument");
                 }
                 arg = (String)argList.removeFirst();
@@ -177,7 +179,7 @@ public class QStatCommand extends AbstractCommand {
             } else if (arg.equals("-j")) {
                 throw new IllegalStateException("-j switch not implemented");
             } else if (arg.equals("-l")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing resource_list");
                 }
                 resourceFilter = new ResourceFilter();
@@ -186,19 +188,19 @@ public class QStatCommand extends AbstractCommand {
             } else if (arg.equals("-ne")) {
                 showEmptyQueues = false;
             } else if (arg.equals("-pe")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing pe_list");
                 }
                 arg = (String)argList.removeFirst();
                 peFilter = ParallelEnvironmentFilter.parse(arg);
             } else if (arg.equals("-q")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing wc_queue_list");
                 }
                 arg = (String)argList.removeFirst();
                 queueFilter = QueueFilter.parse(arg);
             } else if (arg.equals("-qs")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing queue state definition");
                 }
                 arg = (String)argList.removeFirst();
@@ -206,7 +208,7 @@ public class QStatCommand extends AbstractCommand {
             } else if (arg.equals("-r")) {
                 showRequestJobResources = true;
             } else if (arg.equals("-s")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing job state definition");
                 }
                 arg = (String)argList.removeFirst();
@@ -215,13 +217,13 @@ public class QStatCommand extends AbstractCommand {
                 showTaskInfo = true;
                 groupOptions.append("t");
             } else if (arg.equals("-u")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing user_list");
                 }
                 arg = (String)argList.removeFirst();
                 jobUserFilter = UserFilter.parse(arg);
             } else if (arg.equals("-U")) {
-                if(argList.isEmpty()) {
+                if (argList.isEmpty()) {
                     throw new IllegalArgumentException("missing user_list");
                 }
                 arg = (String)argList.removeFirst();
@@ -237,26 +239,26 @@ public class QStatCommand extends AbstractCommand {
         
         BasicQueueOptions options = null;
         
-        if(groupOptions.indexOf("c") >= 0) {
+        if (groupOptions.indexOf("c") >= 0) {
             options = new ClusterQueueSummaryOptions();
         } else {
             options = new QueueInstanceSummaryOptions();
         }
         
-        if(ext) {
+        if (ext) {
             options.setShowAdditionalAttributes(true);
         }
         
-        if(resourceFilter != null) {
+        if (resourceFilter != null) {
             options.setResourceFilter(resourceFilter);
         }
-        if(queueFilter != null) {
+        if (queueFilter != null) {
             options.setQueueFilter(queueFilter);
         }
-        if(queueStateFilter != null) {
+        if (queueStateFilter != null) {
             options.setQueueStateFilter(queueStateFilter);
         }
-        if(queueUserFilter != null) {
+        if (queueUserFilter != null) {
             options.setQueueUserFilter(queueUserFilter);
         }
         
@@ -265,27 +267,27 @@ public class QStatCommand extends AbstractCommand {
         } else {
             QueueInstanceSummaryOptions ciOptions = (QueueInstanceSummaryOptions)options;
             
-            if(explain != null) {
+            if (explain != null) {
                 ciOptions.setExplain(explain.charValue());
             }
-            if(fullOutput) {
+            if (fullOutput) {
                 ciOptions.setShowFullOutput(true);
             }
-            if(resourceAttributeFilter != null) {
+            if (resourceAttributeFilter != null) {
                 ciOptions.setResourceAttributeFilter(resourceAttributeFilter);
             }
             ciOptions.setShowArrayJobs(groupOptions.indexOf("d") >= 0);
             ciOptions.setShowPEJobs(groupOptions.indexOf("t") >= 0);
             ciOptions.setShowEmptyQueues(showEmptyQueues);
-            if(peFilter != null) {
+            if (peFilter != null) {
                 ciOptions.setPeFilter(peFilter);
             }
-            if(jobStateFilter != null) {
+            if (jobStateFilter != null) {
                 ciOptions.setJobStateFilter(jobStateFilter);
             }
             ciOptions.setShowRequestedResourcesForJobs(showRequestJobResources);
             ciOptions.setShowExtendedSubTaskInfo(showTaskInfo);
-            if(jobUserFilter != null) {
+            if (jobUserFilter != null) {
                 ciOptions.setJobUserFilter(jobUserFilter);
             }
             ciOptions.setShowJobUrgency(showUrgency);

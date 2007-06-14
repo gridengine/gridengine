@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi.qmod;
 
 import com.sun.grid.jgdi.configuration.ClusterQueue;
+import com.sun.grid.jgdi.monitoring.ClusterQueueSummary;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import com.sun.grid.jgdi.JGDI;
@@ -52,10 +53,8 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
    }
    
    protected void setUp() throws Exception {
-      System.loadLibrary( "jgdi" );
       logger.fine("Version: " + JGDIFactory.getJGDIVersion());
       super.setUp();
-
    }
    
    public static Test suite() {
@@ -81,46 +80,46 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
       }
    }
    
-   public void testKillAllExecd() throws Exception {
-      JGDI jgdi = createJGDI();
-      try {
-         jgdi.killAllExecds(false);
-      } finally {
-         jgdi.close();
-      }
-   }
+//   public void testKillAllExecd() throws Exception {
+//      JGDI jgdi = createJGDI();
+//      try {
+//         jgdi.killAllExecds(false);
+//      } finally {
+//         jgdi.close();
+//      }
+//   }
    
-   public void testKillScheduler() throws Exception {
-      JGDI jgdi = createJGDI();
-      try {
-         jgdi.killScheduler();
-      } finally {
-         jgdi.close();
-      }
-   }
+//   public void testKillScheduler() throws Exception {
+//      JGDI jgdi = createJGDI();
+//      try {
+//         jgdi.killScheduler();
+//      } finally {
+//         jgdi.close();
+//      }
+//   }
    
-   public void testKillExecd() throws Exception {
-      logger.entering("TestQmod", "testKillExecd");
-      JGDI jgdi = createJGDI();
-      try {
-         List ehList = jgdi.getExecHostList();
-         Iterator iter = ehList.iterator();
-         String[] hosts = new String[ehList.size()];
-         int i=0;
-         while(iter.hasNext()) {
-            ExecHost eh = (ExecHost)iter.next();
-            if(eh.getName().equals("template") ||
-                    eh.getName().equals("global")) {
-               continue;
-            }
-            hosts[i] = eh.getName();
-            i++;
-         }
-         jgdi.killExecd(hosts, true);
-      } finally {
-         jgdi.close();
-      }
-   }
+//   public void testKillExecd() throws Exception {
+//      logger.entering("TestQmod", "testKillExecd");
+//      JGDI jgdi = createJGDI();
+//      try {
+//         List ehList = jgdi.getExecHostList();
+//         Iterator iter = ehList.iterator();
+//         String[] hosts = new String[ehList.size()];
+//         int i=0;
+//         while(iter.hasNext()) {
+//            ExecHost eh = (ExecHost)iter.next();
+//            if(eh.getName().equals("template") ||
+//                    eh.getName().equals("global")) {
+//               continue;
+//            }
+//            hosts[i] = eh.getName();
+//            i++;
+//         }
+//         jgdi.killExecd(hosts, true);
+//      } finally {
+//         jgdi.close();
+//      }
+//   }
    
    private int[] testGetEventClients(JGDI jgdi) throws Exception {
       List evlist = jgdi.getEventClientList();
@@ -141,15 +140,15 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
       return ids;
    }
    
-   public void testKillEventClients() throws Exception {
-      JGDI jgdi = createJGDI();
-      try {
-         int[] ids = testGetEventClients(jgdi);
-         jgdi.killEventClients(ids);
-      } finally {
-         jgdi.close();
-      }
-   }
+//   public void testKillEventClients() throws Exception {
+//      JGDI jgdi = createJGDI();
+//      try {
+//         int[] ids = testGetEventClients(jgdi);
+//         jgdi.killEventClients(ids);
+//      } finally {
+//         jgdi.close();
+//      }
+//   }
    
    public void testClearShareTreeUsage() throws Exception {
       JGDI jgdi = createJGDI();
@@ -164,34 +163,6 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
       JGDI jgdi = createJGDI();
       try {
          logger.fine("Scheduler Host: " + jgdi.getSchedulerHost());
-      } finally {
-         jgdi.close();
-      }
-   }
-   
-   public void testEnableQueues() throws Exception {
-      JGDI jgdi = createJGDI();
-      try {
-         List cqs = jgdi.getClusterQueueList();
-         Iterator iter = cqs.iterator();
-         String[] queues = new String[cqs.size()];
-         int i=0;
-         while(iter.hasNext()) {
-            ClusterQueue cq = (ClusterQueue)iter.next();
-            if(cq.getName().equals("template")) {
-               continue;
-            }
-            queues[i] = cq.getName();
-            i++;
-         }
-         for (i=0; i < queues.length; i++) {
-            logger.fine("Enable Queue: " + queues[i]);
-         }
-         try {
-         jgdi.enableQueues(queues, false);
-         } catch (IllegalArgumentException je) {
-            je.printStackTrace();
-         }
       } finally {
          jgdi.close();
       }
@@ -213,10 +184,20 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
             i++;
          }
          for (i=0; i < queues.length; i++) {
-           logger.fine("Disable Queue: " + queues[i]);
+            logger.fine("Disable Queue: " + queues[i]);
          }
          try {
             jgdi.disableQueues(queues, false);
+            Iterator cqiter = jgdi.getClusterQueueSummary(null).iterator();
+            while (cqiter.hasNext()) {
+               ClusterQueueSummary cs = (ClusterQueueSummary)cqiter.next();
+               for (int j=0; j<queues.length; j++) {
+                  if (cs.getName().equals(queues[j])) {
+                     System.out.println("disabled queue count for queue " + cs.getName() + 
+                                        " is " + cs.getDisabledManual());
+                  }
+               }   
+            }
          } catch (IllegalArgumentException je) {
             je.printStackTrace();
          }
@@ -225,6 +206,42 @@ public class TestQmod extends com.sun.grid.jgdi.BaseTestCase {
       }
    }
    
-   
+   public void testEnableQueues() throws Exception {
+      JGDI jgdi = createJGDI();
+      try {
+         List cqs = jgdi.getClusterQueueList();
+         Iterator iter = cqs.iterator();
+         String[] queues = new String[cqs.size()];
+         int i=0;
+         while(iter.hasNext()) {
+            ClusterQueue cq = (ClusterQueue)iter.next();
+            if (cq.getName().equals("template")) {
+               continue;
+            }
+            queues[i] = cq.getName();
+            i++;
+         }
+         for (i=0; i < queues.length; i++) {
+            logger.fine("Enable Queue: " + queues[i]);
+         }
+         try {
+            jgdi.enableQueues(queues, false);
+            Iterator cqiter = jgdi.getClusterQueueSummary(null).iterator();
+            while (cqiter.hasNext()) {
+               ClusterQueueSummary cs = (ClusterQueueSummary)cqiter.next();
+               for (int j=0; j<queues.length; j++) {
+                  if (cs.getName().equals(queues[j])) {
+                     System.out.println("disabled queue count for queue " + cs.getName() + 
+                                        " is " + cs.getDisabledManual());
+                  }
+               }   
+            }
+         } catch (IllegalArgumentException je) {
+            je.printStackTrace();
+         }
+      } finally {
+         jgdi.close();
+      }
+   }
    
 }

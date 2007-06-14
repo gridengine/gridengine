@@ -208,7 +208,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                lRemoveElem(master_ar_list, &ar);
 
                sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
-                      0, 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                      lGetUlong(ar, AR_id), 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
                sge_dstring_free(&buffer);
             }

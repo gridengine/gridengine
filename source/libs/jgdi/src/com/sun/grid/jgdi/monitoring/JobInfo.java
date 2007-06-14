@@ -83,6 +83,12 @@ public interface JobInfo {
    public String getQueue();
 
    /**
+    *  Get the queue instance name of the job
+    *  @return the queue instance name
+    */
+   public String getQinstanceName();
+
+   /**
     *   Get the name of the master queue of the job.
     *
     *   @return name of the master queue

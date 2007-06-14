@@ -1096,12 +1096,19 @@ static void qmonShareTreeUpdate(Widget w, XtPointer cld, XtPointer cad)
       if(!status) {
          DEXIT;
          return;
-      }
-      else {
-         if (answer)
+      } else {
+         if (answer) {
             qmonShareTreeOkay(w, NULL, NULL);
-         else
+            /*
+            ** answer yes and storing sharetree failed
+            */
+            if (dirty == True) {
+               DEXIT;
+               return;
+            }
+         } else {
             dirty = False;
+         }
       }      
    }   
    /*

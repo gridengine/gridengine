@@ -1,3 +1,8 @@
+AA-2007-06-14-0: Bugfix:    qmon loses sharetree changes
+                 Issue:     2265
+                 Bugtraq:   6280747
+                 Review:    RD
+                 
 AH-2007-06-01-3: Bugfix:    sge_schedd deadlock upon schedd_job_info
                             job_list being enabled
                  Bugster:   6564503

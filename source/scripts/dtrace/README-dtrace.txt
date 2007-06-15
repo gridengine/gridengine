@@ -117,10 +117,6 @@ Content
        
           For use of statistics intervals other than "15sec"
 
-      -cell       <cell>
-
-          Required if $SGE_CELL is not "default".
-    
       -spooling
      
           Shows qmaster spooling probes besides statistics. This

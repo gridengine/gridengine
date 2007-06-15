@@ -36,7 +36,6 @@ Usage()
 {
    echo "monitor.sh [options]"
    echo "options:"
-   echo "   -cell       <cell>     use \$SGE_CELL other than \"default\""
    echo "   -interval   <time>     use statistics interval other than \"15sec\""
    echo "   -spooling              show qmaster spooling probes"
    echo "   -requests              show incoming qmaster request probes"
@@ -44,7 +43,11 @@ Usage()
 }
 
 # monitor.sh defaults
-cell=default
+if [ "$SGE_CELL" = "" ]; then
+   cell=default
+else
+   cell=$SGE_CELL
+fi
 interval=15sec
 spooling_probes=0
 request_probes=0
@@ -67,11 +70,6 @@ while [ $# -gt 0 ]; do
       -interval)
          shift
          interval="$1"
-         shift
-         ;;
-      -cell)
-         shift
-         cell="$1"
          shift
          ;;
       -help)

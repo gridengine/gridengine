@@ -1,3 +1,6 @@
+PJ-2007-06-15-0: Enhancem:  - Manpages for Advance Reservations
+                 Review:    RD
+                 
 AH-2007-06-15-1: Bugfix:    dtrace monitor.sh script should use SGE_CELL variable 
                             instead of own command line parameter -cell
                  Bugster:   6569570

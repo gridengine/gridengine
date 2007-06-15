@@ -1,0 +1,243 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: qrsub.1,v $     Last Update: $Date: 2007/06/15 13:46:34 $     Revision: $Revision: 1.1 $
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH QRSUB 1 "$Date: 2007/06/15 13:46:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+.IP "qrsub   \-" 1i
+Submit an Advance Reservation (AR) to xxQS_NAMExx.
+.\"
+.\"
+.SH SYNTAX
+.B qrsub
+.B [\-a date_time]
+.B [\-A account_string] 
+.B [\-ckpt ckpt-name]
+.B [\-d duration time] 
+.B [\-e date_time]
+.B [\-he yes/no]
+.B [\-help] 
+.B [\-l resource_list]
+.B [\-now] 
+.B [\-M user[@host],...]
+.B [\-N AR's name]
+.B [\-w e/v]
+.B [\-pe pe_name slot_range]
+.B [\-q wc_queue_list]
+.B [\-u wc_user_list]
+.\"
+.SH DESCRIPTION
+
+.I Qrsub
+Submits an AR to the xxQS_NAMExx queuing system.
+.br
+For qrsub the administrator and the user may define default request files 
+(analogous to xxqs_name_sxx_request for qsub), which can contain any of 
+the possible command line options. 
+.br
+A cluster wide default request file is optional.
+If it is used must be placed under 
+.br
+$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_ar_request (global defaults file).
+.br
+A user private default request file is optional. If it is used must be placed under 
+.br
+$HOME/.sge_ar_request (user private defaults file).
+.\"
+.\"
+.SH OPTIONS
+.\"
+.IP "\fB\-a date_time\fP"
+Defines the activation (start) date_time of an AR.
+\fBDate_time\fP is not mandatory and if omitted, the current date_time is assumed. Either a duration or end date_time must also be specified. For details about date_time please see
+.M sge_types 1
+.\"
+.IP "\fB\-A account_string\fP"
+Identifies the account to which the resource consumption of the job, assigned to be part of AR,
+should be charged. For the "\fB\-A account_string\fP" value details please see "\fBname\fP" definition in 
+.M sge_types 1 .
+In the absence of this parameter xxQS_NAMExx 
+will place the default account string "xxqs_name_sxx" in the accounting record
+of the AR's job.
+.\"
+.IP "\fB\-ckpt ckpt_name\fP"
+Selects the checkpointing environment (see
+.M checkpoint 5 )
+the AR's jobs may request. Using this option guarantees only queues that provides this ckpt environment are used for reserving.
+.\"
+.IP "\fB\-d time\fP"
+Defines the duration of the AR.
+The duration time is not mandatory.
+if \fB"-d duration"\fP is requested, value must conform to either hh:mm:ss or seconds. For
+the details please see
+.M sge_types 1 .
+.\"
+.IP "\fB\-e date_time\fP"
+Defines the end date and time of an AR.
+The end time is not mandatory. If it is specified, either start date_time or duration must also be specified.
+if \fB"-e date_time"\fP is requested, value must conform to [[CC]]YY]MMDDhhmm[.SS]. For details please see
+.M sge_types 1 .
+.\"
+.IP "\fB\-he y[es]|n[o]\fP"
+Specifies the behavior when the AR goes into an error state. 
+A hard error "\fB\-he yes\fP" means as long as the AR is in error state no jobs using the AR will be scheduled. 
+If soft error "\fB\-he no\fP" is specified the AR stays usable with the remaining resources.
+.br
+By default the soft error handling is used.
+.\"
+.IP "\fB\-help\fP"
+Prints a listing of all options.
+.\"
+.IP "\fB\-l resource=value\fP,..."
+Creates an AR in a xxQS_NAMExx queue, providing the given resource request list.
+In case of
+.M complex 5
+describes how a list of available resources and their
+associated valid value specifiers can be obtained.
+.br
+There may be multiple \fB\-l\fP switches in a single
+command.
+.\"
+.IP "\fB\-m b|e|a|n\fP"
+Defines or redefines under which circumstances mail is to be sent
+to the AR's owner or to the users defined with the
+\fB\-M\fP option described below. The option arguments
+have the following meaning:
+.sp 1
+.nf
+.ta \w'|b|  'u
+`b'     Mail is sent at the beginning of the AR
+`e'     Mail is sent at the end of the AR
+`a'     Mail is sent when the AR goes into error state
+`n'     No mail is sent
+.fi
+.\"
+.IP "\fB\-M user[@host],...\fP"
+Defines or redefines the list of users to which the qmaster
+send mail.
+.\"
+.IP "\fB\-masterq wc_queue_list\fP"
+Only meaningful for parallel job's AR, i.e. together with the -pe option.
+.sp 1
+It's used to reserve the proper queues to match this request if it would be requested by a qsub.
+A more detailed description of \fIwc_queue_list\fP 
+can be found in
+.M sge_types 1 .
+.\"
+.IP "\fB\-now y[es]|n[o]\fP"                        
+This options has impact, how the queues are reserved.
+.br
+With the \fB\-now y\fP option, cause to reserve the queues, that have the qtype "INTERACTIVE" assigned.
+\fB\-now n\fP is default for \fIqrsub\fP.
+.\"
+.IP "\fB\-N name\fP"
+The name of the AR. The name if it si used must conform "\fBname\fP" as it is defined in 
+.M sge_types 1 .
+Invalid job names will be denied
+at a submit time.
+.\"
+.IP "\fB\-w e/v\fP"
+\fB\-w v\fP validate availability of AR request
+\fB\-w e\fP submit the AR request.
+\fB\-w e\fP is default for \fIqrsub\fP.
+.\"
+.IP "\fB\-pe parallel_env \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
+Parallel programming environment (PE) to select for the AR reservation of queues. 
+Please see the details of PE the parallel_env in
+.M sge_types 1 .
+.\"
+.IP "\fB\-q wc_queue_list\fP"
+Defines or redefines a list of cluster queues, queue domains or queue
+instances, that may be reserved by the AR. Please find a description
+of \fIwc_queue_list\fP in
+.M sge_types 1 .
+This parameter has all the properties of a resource request and
+will be merged with requirements derived from the \fB\-l\fP option
+described above.
+.\"
+.IP "\fB\-u username,...\fP"
+Job submission to this AR are allowed for the owner of AR or the users specified in the list
+of usernames.
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
+cell \fIqsub\fP, \fIqsh\fP, \fIqlogin\fP or \fIqalter\fP use (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment 
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_qmaster 8
+is expected to listen for communication requests.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
+.\"
+.\"
+.SH FILES
+.nf
+.ta 
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_ar_request\fR global defaults file
+\fI$HOME/.sge_ar_request\fR user private defaults file
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M qrdel 1 ,
+.M qrstat 1 ,
+.M qsub 1 ,
+.M sge_types 1 ,
+.M complex 5 .
+.\"
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.
+

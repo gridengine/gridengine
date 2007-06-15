@@ -55,8 +55,8 @@
 
 static void rqs_can_optimize(const lListElem *rule, bool *host, bool *queue, sge_assignment_t *a);
 
-static void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list, sge_assignment_t *a);
-static void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, sge_assignment_t *a);
+static void rqs_expand_cqueues(const lListElem *rule, sge_assignment_t *a);
+static void rqs_expand_hosts(const lListElem *rule, sge_assignment_t *a);
 
 static bool is_cqueue_global(const lListElem *rule);
 static bool is_host_global(const lListElem *rule);
@@ -67,8 +67,8 @@ static bool is_host_expand(const lListElem *rule);
 static bool cqueue_shadowed(const lListElem *rule, sge_assignment_t *a);
 static bool host_shadowed(const lListElem *rule, sge_assignment_t *a);
 
-static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sge_assignment_t *a);
-static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list, sge_assignment_t *a);
+static void rqs_excluded_hosts(const lListElem *rule, sge_assignment_t *a);
+static void rqs_excluded_cqueues(const lListElem *rule, sge_assignment_t *a);
 
 
 
@@ -344,25 +344,23 @@ static void rqs_can_optimize(const lListElem *rule, bool *host, bool *queue, sge
 *     rqs_excluded_cqueues() -- Find excluded queues
 *
 *  SYNOPSIS
-*     static void rqs_excluded_cqueues(const lListElem *rule, lList
-*     **skip_cqueue_list, sge_assignment_t *a)
+*     static void rqs_excluded_cqueues(const lListElem *rule, sge_assignment_t *a)
 *
 *  FUNCTION
 *     Find queues that are excluded by previous rules.
 *
 *  INPUTS
 *     const lListElem *rule    - The rule
-*     lList **skip_cqueue_list - List of already excluded queues
 *     sge_assignment_t *a      - Scheduler assignement
 *
 *  EXAMPLE
 *      limit        projects {*} queues !Q001 to F001=1
-*      limit        to F001=0   ( ---> returns Q001 in skip_cqueue_list)
+*      limit        to F001=0   ( ---> returns Q001 in a->skip_cqueue_list)
 *
 *  NOTES
 *     MT-NOTE: rqs_excluded_cqueues() is MT safe
 *******************************************************************************/
-static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list, sge_assignment_t *a)
+static void rqs_excluded_cqueues(const lListElem *rule, sge_assignment_t *a)
 {
    lListElem *cq;
    const lListElem *prev;
@@ -374,7 +372,7 @@ static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list
       const char *cqname = lGetString(cq, CQ_name);
       bool exclude = true;
 
-      if (lGetElemStr(*skip_cqueue_list, CTI_name, cqname)) {
+      if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname)) {
          ignored++;
          continue;
       }
@@ -390,7 +388,7 @@ static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list
          }
       }
       if (exclude) {
-         lAddElemStr(skip_cqueue_list, CTI_name, cqname, CTI_Type);
+         lAddElemStr(&(a->skip_cqueue_list), CTI_name, cqname, CTI_Type);
          excluded++;
       }
    }
@@ -407,15 +405,13 @@ static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list
 *     rqs_excluded_hosts() -- Find excluded hosts
 *
 *  SYNOPSIS
-*     static void rqs_excluded_hosts(const lListElem *rule, lList
-*     **skip_host_list, sge_assignment_t *a)
+*     static void rqs_excluded_hosts(const lListElem *rule, sge_assignment_t *a)
 *
 *  FUNCTION
 *     Find hosts that are excluded by previous rules.
 *
 *  INPUTS
 *     const lListElem *rule    - The rule
-*     lList **skip_host_list   - List of already excluded hosts
 *     sge_assignment_t *a      - Scheduler assignement
 *
 *  EXAMPLE
@@ -425,7 +421,7 @@ static void rqs_excluded_cqueues(const lListElem *rule, lList **skip_cqueue_list
 *  NOTES
 *     MT-NOTE: rqs_excluded_hosts() is MT safe
 *******************************************************************************/
-static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sge_assignment_t *a)
+static void rqs_excluded_hosts(const lListElem *rule, sge_assignment_t *a)
 {
    lListElem *eh;
    const lListElem *prev;
@@ -437,7 +433,7 @@ static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sg
       const char *hname = lGetHost(eh, EH_name);
       bool exclude = true;
 
-      if (lGetElemStr(*skip_host_list, CTI_name, hname)) {
+      if (lGetElemStr(a->skip_host_list, CTI_name, hname)) {
          ignored++;
          continue;
       }
@@ -453,7 +449,7 @@ static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sg
          }
       }
       if (exclude) {
-         lAddElemStr(skip_host_list, CTI_name, hname, CTI_Type);
+         lAddElemStr(&(a->skip_host_list), CTI_name, hname, CTI_Type);
          excluded++;
       }
    }
@@ -470,7 +466,7 @@ static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sg
 *     rqs_expand_cqueues() -- Add all matching cqueues to the list
 *
 *  SYNOPSIS
-*     void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list)
+*     void rqs_expand_cqueues(const lListElem *rule)
 *
 *  FUNCTION
 *     The names of all cluster queues that match the rule are added to
@@ -478,12 +474,11 @@ static void rqs_excluded_hosts(const lListElem *rule, lList **skip_host_list, sg
 *
 *  INPUTS
 *     const lListElem *rule    - RQR_Type
-*     lList **skip_cqueue_list - CTI_Type
 *
 *  NOTES
 *     MT-NOTE: rqs_expand_cqueues() is not MT safe
 *******************************************************************************/
-static void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list, sge_assignment_t *a)
+static void rqs_expand_cqueues(const lListElem *rule, sge_assignment_t *a)
 {
    const lListElem *cq;
    const char *cqname;
@@ -493,10 +488,10 @@ static void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list, 
 
    for_each (cq, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       cqname = lGetString(cq, CQ_name);
-      if (lGetElemStr(*skip_cqueue_list, CTI_name, cqname))
+      if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname))
          continue;
       if (rqs_filter_match(qfilter, FILTER_QUEUES, cqname, NULL, NULL, NULL) && !cqueue_shadowed_by(cqname, rule, a))
-         lAddElemStr(skip_cqueue_list, CTI_name, cqname, CTI_Type);
+         lAddElemStr(&(a->skip_cqueue_list), CTI_name, cqname, CTI_Type);
    }
 
    DEXIT;
@@ -517,14 +512,12 @@ static void rqs_expand_cqueues(const lListElem *rule, lList **skip_cqueue_list, 
 *
 *  INPUTS
 *     const lListElem *rule  - RQR_Type
-*     lList **skip_host_list - CTI_Type
 *     const lList *host_list - EH_Type
-*     lList *hgrp_list       - HGRP_Type
 *
 *  NOTES
 *     MT-NOTE: rqs_expand_hosts() is MT safe
 *******************************************************************************/
-static void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, sge_assignment_t *a)
+static void rqs_expand_hosts(const lListElem *rule, sge_assignment_t *a)
 {
    const lListElem *eh;
    const char *hname;
@@ -532,10 +525,10 @@ static void rqs_expand_hosts(const lListElem *rule, lList **skip_host_list, sge_
 
    for_each (eh, a->host_list) {
       hname = lGetHost(eh, EH_name);
-      if (lGetElemStr(*skip_host_list, CTI_name, hname))
+      if (lGetElemStr(a->skip_host_list, CTI_name, hname))
          continue;
       if (rqs_filter_match(hfilter, FILTER_HOSTS, hname, NULL, a->hgrp_list, NULL) && !host_shadowed_by(hname, rule, a))
-         lAddElemStr(skip_host_list, CTI_name, hname, CTI_Type);
+         lAddElemStr(&(a->skip_host_list), CTI_name, hname, CTI_Type);
    }
 
    return;
@@ -669,8 +662,7 @@ static bool is_cqueue_expand(const lListElem *rule)
 *
 *  SYNOPSIS
 *     bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule,
-*     const dstring *rule_name, const char* queue_name, const char* host_name,
-*     lList **skip_cqueue_list, lList **skip_host_list)
+*     const dstring *rule_name, const char* queue_name, const char* host_name)
 *
 *  FUNCTION
 *     This function tries to rule out hosts and cluster queues after a
@@ -686,8 +678,6 @@ static bool is_cqueue_expand(const lListElem *rule)
 *     const dstring *rule_name - Name of the rule (monitoring only)
 *     const char* queue_name   - Cluster queue name
 *     const char* host_name    - Host name
-*     lList **skip_cqueue_list - List of ruled out cluster queues
-*     lList **skip_host_list   - List of ruled out hosts
 *
 *  RESULT
 *     bool - True upon global limits exceeding
@@ -696,7 +686,7 @@ static bool is_cqueue_expand(const lListElem *rule)
 *     MT-NOTE: rqs_exceeded_sort_out() is MT safe
 *******************************************************************************/
 bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
-   const char* queue_name, const char* host_name, lList **skip_cqueue_list, lList **skip_host_list)
+   const char* queue_name, const char* host_name)
 {
    bool cq_global = is_cqueue_global(rule);
    bool eh_global = is_host_global(rule);
@@ -727,11 +717,11 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
       }
 
       if (queue_shadowed) {
-         rqs_excluded_cqueues(rule, skip_cqueue_list, a);
+         rqs_excluded_cqueues(rule, a);
          DPRINTF(("QUEUE: resource quota set %s deny job execution in all its queues\n", 
                sge_dstring_get_string(rule_name)));
       } else { /* must be host_shadowed */
-         rqs_excluded_hosts(rule, skip_host_list, a);
+         rqs_excluded_hosts(rule, a);
          DPRINTF(("HOST: resource quota set %s deny job execution in all its queues\n", 
                sge_dstring_get_string(rule_name)));
       }
@@ -748,11 +738,11 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
       }
 
       if (lGetBool(lGetObject(rule, RQR_filter_queues), RQRF_expand) == true) {
-         lAddElemStr(skip_cqueue_list, CTI_name, queue_name, CTI_Type);
+         lAddElemStr(&(a->skip_cqueue_list), CTI_name, queue_name, CTI_Type);
          DPRINTF(("QUEUE: resource quota set %s deny job execution in queue %s\n", 
                sge_dstring_get_string(rule_name), queue_name));
       } else {
-         rqs_expand_cqueues(rule, skip_cqueue_list, a);
+         rqs_expand_cqueues(rule, a);
          DPRINTF(("QUEUE: resource quota set %s deny job execution in all its queues\n", 
                sge_dstring_get_string(rule_name)));
       }
@@ -770,11 +760,11 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
       }
 
       if (lGetBool(lGetObject(rule, RQR_filter_hosts), RQRF_expand) == true) {
-         lAddElemStr(skip_host_list, CTI_name, host_name, CTI_Type);
+         lAddElemStr(&(a->skip_host_list), CTI_name, host_name, CTI_Type);
          DPRINTF(("HOST: resource quota set %s deny job execution at host %s\n",    
                sge_dstring_get_string(rule_name), host_name));
       } else {
-         rqs_expand_hosts(rule, skip_host_list, a);
+         rqs_expand_hosts(rule, a);
          DPRINTF(("HOST: resource quota set %s deny job execution at all its hosts\n", 
                sge_dstring_get_string(rule_name)));
       }
@@ -782,6 +772,7 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
       DRETURN(false);
    }
 }
+
 
 /****** sge_resource_quota/sge_user_is_referenced_in_rqs() ************************
 *  NAME

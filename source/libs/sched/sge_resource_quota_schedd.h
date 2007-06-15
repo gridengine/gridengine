@@ -37,8 +37,7 @@
 bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 
 bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dstring *rule_name,
-   const char* queue_name, const char* host_name,
-   lList **skip_cqueue_list, lList **skip_host_list);
+   const char* queue_name, const char* host_name);
 
 bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list);
 

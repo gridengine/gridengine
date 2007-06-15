@@ -635,7 +635,7 @@ rqs_get_rue_string(dstring *name, const lListElem *rule, const char *user,
 {
    lListElem *filter = NULL;
 
-   DENTER(TOP_LAYER, "rqs_get_rue_string");
+   DENTER(BASIS_LAYER, "rqs_get_rue_string");
 
    if (rule == NULL) {
       DRETURN(false);
@@ -790,7 +790,7 @@ rqs_get_matching_rule(const lListElem *rqs, const char *user, const char *group,
    lList *rule_list = lGetList(rqs, RQS_rule);
    int i = 0;
 
-   DENTER(TOP_LAYER, "rqs_get_matching_rule");
+   DENTER(BASIS_LAYER, "rqs_get_matching_rule");
 
    for_each (rule, rule_list) {
       i++;
@@ -1241,7 +1241,7 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
    bool ret = true;
    lListElem* ep; 
 
-   DENTER(TOP_LAYER, "rqs_filter_match");
+   DENTER(BASIS_LAYER, "rqs_filter_match");
 
    if (filter != NULL) {
       lList* scope = lGetList(filter, RQRF_scope);

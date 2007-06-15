@@ -113,19 +113,26 @@ typedef struct {
    bool       is_advance_reservation; /* true for advance reservation scheduling    */
    bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */
    bool       is_schedule_based;  /* true, if resource reservation is enabled       */
+   /* ------ this section is for caching of intermediate results ------------------ */
+   lList      *limit_list;        /* the resource quota limit list (RQL_Type)       */ 
+   lList      *skip_cqueue_list;  /* cluster queues that need not be checked any more (CTI_Type) */ 
+   lList      *skip_host_list;    /* hosts that need not be checked any more (CTI_Type) */ 
    /* ------ this section is the resulting assignment ----------------------------- */
    lListElem  *pe;                /* the parallel environment (PE_Type)             */
+   const char* pe_name;           /* name of the PE                                 */
    lList      *gdil;              /* the resources (JG_Type)                        */
    int        slots;              /* total number of slots                          */
    u_long32   start;              /* jobs start time                                */
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, NULL, NULL, 0, 0, 0}
+#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, \
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
+void assignment_clear_cache(sge_assignment_t *a);
 
 /* -------------------------------------------------------------------------------- */
 

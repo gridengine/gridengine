@@ -1,0 +1,149 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2004 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: qrdel.1,v $     Last Update: $Date: 2007/06/15 13:49:15 $     Revision: $Revision: 1.1.2.2 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH QDEL 1 "$Date: 2007/06/15 13:49:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.SH NAME
+qrdel \- delete xxQS_NAMExx Advance Reservations (AR)
+.SH SYNTAX
+.B qrdel
+.B [\-f]
+.B [\-help
+.B [\-u wc_user_list]
+.B wc_ar_list
+.\"
+.\" 
+.SH DESCRIPTION
+.I Qrdel
+provides a means for a user/operator/manager to delete
+one or more Advance Reservations (AR). A manager/operator can delete AR(s) belonging to any
+user, while a regular user can only delete his or her own AR(s).
+If a manager wants to delete another user's AR, the manager can specify
+the AR id.A "qrdel wc_ar_name" will delete only the AR of belonging to  
+that user by default. The manager is able to delete another user's AR via "-u wc_user_list". 
+Jobs referring to an AR tagged for deletion will also be removed. 
+Only if all jobs referring an AR are removed from the xxQS_NAMExx database 
+the AR will also be removed.
+
+.I Qrdel
+deletes AR in the order in which their AR 
+identifiers are presented. Find additional information concerning
+\fIwc_user_list\fP and \fIwc_ar_list\fP in
+.M sge_types 1 .
+.\"
+.\"
+.SH OPTIONS
+.\"
+.IP "\fB\-f\fP"
+Force action for AR. The AR(s) are deleted from the list of an AR
+registered at
+.M xxqs_name_sxx_qmaster 8
+even if the
+.M xxqs_name_sxx_execd 8
+controlling the AR(s) does not respond to the delete request sent by
+.M xxqs_name_sxx_qmaster 8 .
+.br
+Users which are neither xxQS_NAMExx managers nor operators can only use the
+.B \-f
+option (for their own AR) if the cluster configuration entry
+.\"
+.IP "\fB\-help\fP"
+Prints a listing of all options.
+.\"
+.IP "\fB\-u wc_user_list\fP"
+Deletes only those AR(s) which were submitted by
+users specified in the list of usernames.
+For managers it is possible to use \fB\qrdel -u "*" "*"\fP to delete
+all AR(s) of all users. If a manager wants to delete a specific
+AR of a user, he has to specify the user and the AR id. If no 
+AR is specified, all AR(s) belonging to that user are deleted.
+.\"
+.IP "\fBwc_ar_list\fP"
+A list of AR id's, which should be deleted
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\" 
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration
+files.
+.\"
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
+cell
+.I qrdel
+uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment 
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_qmaster 8
+is expected to listen for communication requests.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
+.\"
+.\"
+.SH FILES
+.nf
+.ta \w'<xxqs_name_sxx_root>/     'u
+.ta 
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_ar_request\fR global defaults file
+\fI$HOME/.sge_ar_request\fR user private defaults file
+.fi
+.\"
+.\"
+.SH "SEE ALSO"
+.M xxqs_name_sxx_intro 1 ,
+.M qrstat 1 ,
+.M qrsub 1 ,
+.M qsub 1 ,
+.M xxqs_name_sxx_qmaster 8 ,
+.M xxqs_name_sxx_execd 8 .
+.\"
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

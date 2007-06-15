@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/05/28 12:33:00 $     Revision: $Revision: 1.67 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/15 13:49:15 $     Revision: $Revision: 1.67.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/05/28 12:33:00 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/06/15 13:49:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -349,37 +349,8 @@ Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Defines or redefines
 the time and date at which a job is eligible for execution. \fBDate_time\fP
-conforms to [[CC]]YY]MMDDhhmm[.SS], where:
-.sp 1
-.nf
-.ta \w'CC  'u
-CC	denotes the century in 2 digits.
-YY	denotes the year in 2 digits.
-MM	denotes the month in 2 digits.
-DD	denotes the day in 2 digits.
-hh	denotes the hour in 2 digits.
-mm	denotes the minute in 2 digits.
-ss	denotes the seconds in 2 digits (default 00).
-.fi
-.sp 1
-If any of the optional date fields is omitted, the corresponding value of
-the current date is assumed. If CC is not specified, a YY of < 70 means 20YY.
-.br
-Usage of this option may cause unexpected results if the clocks of the
-hosts in the xxQS_NAMExx pool are out of sync. Also, the proper behavior of
-this option very much depends on the correct setting of the
-appropriate timezone, e.g. in the TZ environment variable (see
-.M date 1
-for details), when the xxQS_NAMExx daemons
-.M xxqs_name_sxx_qmaster 8
-and
-.M xxqs_name_sxx_execd 8
-are invoked.
-.sp 1
-.I Qalter
-allows changing this option even while the job executes. The modified
-parameter will only be in effect after a restart or migration of the job,
-however.
+conforms to [[CC]]YY]MMDDhhmm[.SS], for the details, please see \fBDate_time\fP in:
+.M sge_types 1 .
 .\"
 .IP "\fB\-ac variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -390,18 +361,30 @@ omitted. xxQS_NAMExx appends the given argument to the list of context
 variables for the job.
 Multiple \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP options may be given.
 The order is important here.
+.SP 1
+.I QALTER
+allows changing this option even while the job executes.
+.\"
+.IP "\fB\-ar AR_id\fP"
+Available for \fIqsub\fP, \fIqalter\f,  \fIqrsh\fP, \fIqsh\fP, or \fIqlogin\fPP  only.
+.sp 1
+The AR id \fBAR_is\fP is required.
+Assigns the submitted job to be a part of an existing Advance Reservation. 
+The complete lists of existing AR(s) can be obtained using
+.M qrstat 1
+command. 
 .sp 1
 .I Qalter
-allows changing this option even while the job executes.
+Allows changing the AR id for the job. 
+The change of the AR id for a running job will be rejected.
 .\"
 .IP "\fB\-A account_string\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 Identifies the account to which the resource consumption of the job
-should be charged. The \fBaccount_string\fP
-may be any arbitrary ASCII alphanumeric string
-but may not contain  "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*",  or "?".
+should be charged. The \fBaccount_string\fP should conform to \fBname\fP definition in
+M sge_types 1 .
 In the absence of this parameter xxQS_NAMExx 
 will place the default account string "xxqs_name_sxx" in the accounting record
 of the job.
@@ -964,10 +947,9 @@ cannot be executed immediately. \fB\-now n\fP is default for \fIqsub\fP.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
-The name of the job. The name can be any printable set
-of characters except "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*", and "?",
-and it has to start with an alphabetic character. Invalid job names will be denied
-at submit time.
+The name of the job. The name should follow the "\fBname\fP" definition in
+.M sge_types 1 .
+Invalid job names will be denied at submit time.
 .br
 If the \fB\-N\fP option is not present, xxQS_NAMExx assigns
 the name of the job script to the job after 
@@ -1077,32 +1059,8 @@ earlier eligible for being dispatched by the xxQS_NAMExx scheduler.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
-Parallel programming environment (PE) to instantiate. The
-range descriptor behind the PE name specifies the number of
-parallel processes to be run. xxQS_NAMExx will allocate the
-appropriate resources as available. The
-.M xxqs_name_sxx_pe 5
-manual page contains information about the definition of PEs
-and about how to obtain a list of currently valid PEs.
-.br
-You can specify a PE name which uses the wildcard character, "*".  Thus
-the request "pvm*" will match any parallel environment with a name
-starting with the string "pvm". In the case of multiple parallel environments
-whose names match the name string, the parallel environment with the most
-available slots is chosen.
-.br
-The range specification is a list of range expressions of the
-form "n-m", where n and m are positive, non-zero integers.  The form "n" is
-equivalent to "n-n".  The form "-m" is equivalent to "1-m".  The form "n-" is
-equivalent to "n-infinity".  The
-range specification is processed as follows: The largest
-number of queues requested is checked first. If enough queues
-meeting the specified attribute list are available, all are
-allocated. If not, the next smaller number of queues is checked,
-and so forth.
-.br
-If additional \fB\-l\fP options are present, they restrict the
-set of eligible queues for the parallel job.
+Parallel programming environment (PE) to instantiate. For more detail about PE please see the
+.M sge_types 1 .
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified

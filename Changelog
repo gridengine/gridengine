@@ -1,3 +1,6 @@
+PJ-2007-06-15-0: Enhancem:  - Manpages for Advance Reservations
+                 Review:    RD
+                 
 AA-2007-06-14-0: Enhancem:  - jgdi_qhost and qhost xml job handling
                             - fixed jgdi tests
                             - CULL_CONFIGURE -> CULL_JGDI_CONF

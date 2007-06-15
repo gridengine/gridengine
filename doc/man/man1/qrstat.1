@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/04/12 14:35:49 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/15 13:49:15 $     Revision: $Revision: 1.1.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,34 +30,31 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/04/12 14:35:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/06/15 13:49:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
-qrstat \- show the status of xxQS_NAMExx advance reservations
+qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .\"
 .\"
 .SH SYNTAX
 .B qrstat
-[
-.B -ar ar_id
-] [
-.B -help
-] [ \fB\-u\fP \fBuser,...\fP
-] [
-.B -explain
-] 
+.B [\-ar ar_id]
+.B [\-help]
+.B [\-u user,...]
+.B [\-explain]
+.\"
 .\"
 .SH DESCRIPTION
 .I qrstat
-shows the current status of the available xxQS_NAMExx advance reservations.
+shows the current status of the available xxQS_NAMExx AR(s).
 The selection option \fB\-ar\fP allows you to get information about 
-specific advance reservations. 
+specific AR. 
 .\"
 .SH OPTIONS
 .IP "\fB\-ar ar_id\fP"
-Prints various information about the advance reservation identified by ar_id.
+Prints various information about the Advance AR identified by ar_id.
 .\"
 .IP "\fB\-explain\fP"
-Displays the reason for an error state of an advance reservation. Possible reasons 
+Displays the reason for an error state of an AR. Possible reasons 
 are the unknown state of a host or queue instance.
 .sp
 The output format for the alarm reasons is one line per reason.
@@ -66,13 +63,13 @@ The output format for the alarm reasons is one line per reason.
 Prints a listing of all options.
 .\"
 .IP "\fB\-u user,...\fP"
-Display information only for those advance reservations 
-being associated with the users from the given user list.
+Display information only for those AR(s) 
+being created by the users from the given user list.
 .sp
 The string
 \fB\ $user\fP
 is a placeholder for the current username. An asterisk "*" can be used 
-as username wildcard to request any users' jobs be displayed. 
+as username wildcard to request any users AR(s) be displayed. 
 \"
 .IP "\fB\-xml\fP"
 This option can be used with all other options and changes the output to XML. The used
@@ -85,25 +82,31 @@ Depending on the presence or absence of the \fB-ar\fP option there are two
 output formats need to be differentiated.
 .PP
 The \fB\-ext\fP and \fB\-urg\fP options may be used 
-to display additional information for each job.
+to display additional information for each AR.
 .\"
 .SS "\fBAdvance Reservation Summary (without \-ar)\fP"
-Following the header line a section for each advance reservation
+Following the header line a section for each AR
 is provided. The columns contain information for
 .IP "\(bu" 3n
-the adavance reservation id.
+the AR id.
 .IP "\(bu" 3n
-the name of the reservation.
+the name of the AR.
 .IP "\(bu" 3n
-the current state of the reservation. One of folloging states 'wrxde".
+the current state of the AR. One of folloging states 'wWrEd".
+.sp 1
+w - waiting without error
+W - warning (effective - waiting with error)
+r - running
+E - error (effective - running with error)
+d - deleted 
 .IP "\(bu" 3n
-the start time.
+the start time of the AR.
 .IP "\(bu" 3n
-the end time.
+the end time of the AR.
 .IP "\(bu" 3n
-the duration of the advance reservation.
+the duration of the AR.
 .SS "\fBDetailed Format (with \-ar)\fP"
-The output containes two columns. The first one contains all advance reservation attributes.
+The output containes two columns. The first one contains all AR attributes.
 The second one the corresponding value.
 .\"
 .\"
@@ -156,6 +159,8 @@ service "sge_qmaster" instead to define that port.
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
 .M qrsub 1 ,
+.M qrdel 1 ,
+.M qsub 1 ,
 .\"
 .\"
 .SH "COPYRIGHT"

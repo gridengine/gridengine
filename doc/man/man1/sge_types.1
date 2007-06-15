@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/14 13:08:30 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/15 13:49:15 $     Revision: $Revision: 1.17.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/14 13:08:30 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/15 13:49:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -62,6 +62,10 @@ types is explained in this page.
 .\" wc_user_list      := wc_user[,wc_user,...]
 .\" wc_project        := project|pattern
 .\" wc_pe_name        := pe_name|pattern
+.\" parallel_env      := parallel_env \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP
+.\" date_time         := [[CC]]YY]MMDDhhmm[.SS]
+.\" time              := hh:mm:ss|seconds   
+.\" name              := ASCII alphanumeric string   
 .\"
 .SH "OBJECT TYPES"
 These types are used for defining xxQS_NAMExx configuration:
@@ -442,11 +446,86 @@ or a full pe name.
 .PP
 wc_pe_name := pe_name | pattern
 .PP
+.SS "\fBparallel_env\fP \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
+Parallel programming environment (PE) to select for the AR. The
+range descriptor behind the PE name specifies the number of
+parallel processes to be run. xxQS_NAMExx will allocate the
+appropriate resources as available. The
+.M xxqs_name_sxx_pe 5
+manual page contains information about the definition of PEs
+and about how to obtain a list of currently valid PEs.
+.PP
+You can specify a PE name which uses the wildcard character, "*".  Thus
+the request "pvm*" will match any parallel environment with a name
+starting with the string "pvm". In the case of multiple parallel environments
+whose names match the name string, the parallel environment with the most
+available slots is chosen.
+.PP
+The range specification is a list of range expressions of the
+form "n-m", where n and m are positive, non-zero integers.  The form "n" is
+equivalent to "n-n".  The form "-m" is equivalent to "1-m".  The form "n-" is
+equivalent to "n-infinity".  The
+range specification is processed as follows: The largest
+number of queues requested is checked first. If enough queues
+meeting the specified attribute list are available, all are
+reserved. If not, the next smaller number of queues is checked,
+and so forth.
+.PP
+.SS "\fBdate_time\fP"
+The \fBdate_time\fP value must conform to [[CC]]YY]MMDDhhmm[.SS], where:
+.PP
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+CC	denotes the century in 2 digits.
+YY	denotes the year in 2 digits.
+MM	denotes the month in 2 digits.
+DD	denotes the day in 2 digits.
+hh	denotes the hour in 2 digits.
+mm	denotes the minute in 2 digits.
+ss	denotes the seconds in 2 digits (default 00).
+.fi
+.SS "\fBtime\fP"
+The \fBtime\fP value must conform to hh:mm:ss, or seconds where:
+.PP
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+hh denotes the hour in 2 digits.
+mm denotes the minute in 2 digits.
+ss denotes the seconds in 2 digits (default 00).
+seconds  is a number of seconds (is used for duration values)
+.fi
+.sp 1
+If any of the optional date field is omitted, the corresponding value of
+the current date is assumed. If CC is not specified, a YY of < 70 means 20YY.
+.br
+Usage of this option may cause unexpected results if the clocks of the
+hosts in the xxQS_NAMExx pool are out of sync. Also, the proper behavior of
+this option very much depends on the correct setting of the
+appropriate timezone, e.g. in the TZ environment variable (see
+.M date 1
+for details), when the xxQS_NAMExx daemons
+.M xxqs_name_sxx_qmaster 8
+and
+.M xxqs_name_sxx_execd 8
+are invoked.
+.SS "\fBname\fP"
+The \fBname\fP
+may be any arbitrary ASCII alphanumeric string
+but may not contain  "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*",  or "?".
+.PP
 .\"
 .SH SEE ALSO
 .M qacct 1 ,
 .M qconf 1 ,
-.M qquota 1
+.M qquota 1 ,
+.M qsub 1 ,
+.M qrsub 1
 .\"
 .SH COPYRIGHT
 Copyright: 2004-2007 by Sun Microsystems, Inc.

@@ -1,3 +1,13 @@
+AA-2007-06-14-0: Enhancem:  - jgdi_qhost and qhost xml job handling
+                            - fixed jgdi tests
+                            - CULL_CONFIGURE -> CULL_JGDI_CONF
+                            - cleanup and split of jgdi_wrapper.c
+                            - handling of CULL_JGDI_RO fields
+                            - qmon looses sharetree changes fix
+                 Bugster:   6280747, 6548455
+                 Issue:     2265,2296
+                 Review:    RD
+
 JG-2007-06-13-0: Bugfix:    util/arch had problem with libc version containing 
                             comma (e.g. on RH5, Ubuntu 7.04).
                  Bugster:   6568712

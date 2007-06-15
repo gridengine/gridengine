@@ -87,8 +87,7 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qquota_
    if (jgdi_handler == NULL ) {
       answer_list_add(alpp, "malloc of jgdi_report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
    ret = (report_handler_t*)sge_malloc(sizeof(report_handler_t));
@@ -96,8 +95,7 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qquota_
       answer_list_add(alpp, "malloc of report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       FREE(jgdi_handler);  
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    
    memset(jgdi_handler, 0, sizeof(jgdi_report_handler_t));
@@ -117,8 +115,7 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qquota_
    jgdi_handler->qquota_result = qquota_result;
    jgdi_handler->env = env;
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp) {
@@ -135,21 +132,18 @@ static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp)
       /* Free the internal context */
       FREE((*handler)->ctx);
    }
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 
 static int jgdi_report_finished(report_handler_t* handler, lList **alpp) {
    DENTER( JGDI_LAYER, "jgdi_report_finished" );
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 static int jgdi_report_started(report_handler_t* handler, lList **alpp) {
    DENTER( JGDI_LAYER, "jgdi_report_started" );
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 static int jgdi_report_limit_rule_begin(report_handler_t* handler, const char* limit_rule_name, lList **alpp) {
@@ -163,8 +157,7 @@ static int jgdi_report_limit_rule_begin(report_handler_t* handler, const char* l
   
    jgdi_handler->result = ResourceQuotaRuleInfoImpl_init_0(env, &qquota_info, limit_rule_name, alpp);
    if (jgdi_handler->result != JGDI_SUCCESS) {
-      DEXIT;
-      return QQUOTA_ERROR;
+      DRETURN(QQUOTA_ERROR);
    }
    
    jgdi_handler->qquota_info = (*env)->NewGlobalRef(env, qquota_info);
@@ -173,12 +166,10 @@ static int jgdi_report_limit_rule_begin(report_handler_t* handler, const char* l
    
    if (jgdi_handler->qquota_info == NULL) {
       answer_list_add(alpp , "Can not create global reference for qquota info object", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QQUOTA_ERROR;
+      DRETURN(QQUOTA_ERROR);
    }
    
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 static int jgdi_report_limit_string_value(report_handler_t* handler, const char* name, const char *value, bool exclude, lList** alpp) {
@@ -193,78 +184,66 @@ static int jgdi_report_limit_string_value(report_handler_t* handler, const char*
    /* include lists */
    if (!strcmp(name, "users") && exclude == false) {
       if (ResourceQuotaRuleInfoImpl_addUser(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "projects") && exclude == false) {
       if (ResourceQuotaRuleInfoImpl_addProject(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "pes") && exclude == false) {
       if (ResourceQuotaRuleInfoImpl_addPe(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "queues") && exclude == false) {
       if (ResourceQuotaRuleInfoImpl_addQueue(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "hosts") && exclude == false) {
       if (ResourceQuotaRuleInfoImpl_addHost(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    /* exclude lists */
    if (!strcmp(name, "users") && exclude == true) {
       if (ResourceQuotaRuleInfoImpl_addXUser(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "projects") && exclude == true) {
       if (ResourceQuotaRuleInfoImpl_addXProject(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "pes") && exclude == true) {
       if (ResourceQuotaRuleInfoImpl_addXPe(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "queues") && exclude == true) {
       if (ResourceQuotaRuleInfoImpl_addXQueue(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
    if (!strcmp(name, "hosts") && exclude == true) {
       if (ResourceQuotaRuleInfoImpl_addXHost(env, jgdi_handler->qquota_info, value, alpp) != JGDI_SUCCESS) {
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
    
-   
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 static int jgdi_report_resource_value(report_handler_t* handler, const char* resource, const char* limit, const char* value, lList** alpp) {
@@ -276,43 +255,36 @@ static int jgdi_report_resource_value(report_handler_t* handler, const char* res
    
    if (jgdi_handler->qquota_info == NULL) {
       answer_list_add(alpp, "jgdi_report_resource_value: qquota_info object not set", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QQUOTA_ERROR;
+      DRETURN(QQUOTA_ERROR);
    }
 
    jgdi_log_printf(env, JGDI_LOGGER, FINER,
                      "resource='%s', limit='%s', value='%s'\n", resource, limit, value);
 
    if (ResourceQuotaImpl_init(env, &resource_obj, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QQUOTA_ERROR;
+     DRETURN(QQUOTA_ERROR);
    }
 
 
 
    if (resource_obj != NULL) {
       if (ResourceQuotaImpl_setName(env, resource_obj, resource, alpp) != JGDI_SUCCESS) {
-         DEXIT;
-         return QQUOTA_ERROR;
+         DRETURN(QQUOTA_ERROR);
       }
 
       if (ResourceQuotaImpl_setLimitValue(env, resource_obj, limit, alpp) != JGDI_SUCCESS) {
-         DEXIT;
-         return QQUOTA_ERROR;
+         DRETURN(QQUOTA_ERROR);
       }
 
       if (ResourceQuotaImpl_setUsageValue(env, resource_obj, value, alpp) != JGDI_SUCCESS) {
-         DEXIT;
-         return QQUOTA_ERROR;
+         DRETURN(QQUOTA_ERROR);
       }
       if (ResourceQuotaRuleInfoImpl_addLimit(env, jgdi_handler->qquota_info, resource_obj, alpp) != JGDI_SUCCESS) { 
-        DEXIT;
-        return QQUOTA_ERROR;
+        DRETURN(QQUOTA_ERROR);
       }
    }
 
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 
@@ -325,8 +297,7 @@ static int jgdi_report_limit_rule_finished(report_handler_t* handler, const char
    if (jgdi_handler->qquota_info == NULL) {
       answer_list_add(alpp, "qquota_info object is not available in jgdi_handler",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return QQUOTA_ERROR;
+      DRETURN(QQUOTA_ERROR);
    }
 
    if (jgdi_handler->qquota_result == NULL) {
@@ -335,15 +306,13 @@ static int jgdi_report_limit_rule_finished(report_handler_t* handler, const char
    }
    
    if (QQuotaResultImpl_addResourceQuotaRuleInfo(env, jgdi_handler->qquota_result, jgdi_handler->qquota_info, alpp) != JGDI_SUCCESS) {
-     DEXIT;
-     return QQUOTA_ERROR;
+     DRETURN(QQUOTA_ERROR);
    }
    DPRINTF(("DeleteGlobalRef\n"));
    (*env)->DeleteGlobalRef(env, jgdi_handler->qquota_info);
    jgdi_handler->qquota_info = NULL;
    
-   DEXIT;
-   return QQUOTA_SUCCESS;
+   DRETURN(QQUOTA_SUCCESS);
 }
 
 /*
@@ -479,6 +448,6 @@ error:
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
    
-   DEXIT;
+   DRETURN_VOID;
    
 }

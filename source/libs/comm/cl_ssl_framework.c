@@ -2305,7 +2305,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
       }
 
       /* load CA file from file */
-      if (cl_com_ssl_func__SSL_CTX_load_verify_locations( private->ssl_ctx, 
+      if (cl_com_ssl_func__SSL_CTX_load_verify_locations(private->ssl_ctx, 
                                          private->ssl_setup->ssl_CA_cert_pem_file, 
                                          NULL) != 1) {
 

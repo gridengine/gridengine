@@ -116,7 +116,7 @@ static struct servent *sge_getservbyname_r(struct servent *se_result, const char
 }
 
 #define SGE_PORT_CACHE_TIMEOUT 60*10   /* 10 Min. */
-int sge_get_qmaster_port(void) {
+int sge_get_qmaster_port(bool *from_services) {
    char* port = NULL;
    int int_port = -1;
 
@@ -175,6 +175,10 @@ int sge_get_qmaster_port(void) {
 
       /* set new port value */
       cached_port = int_port;
+
+      if (from_services) {
+         *from_services = true;
+      }
    }
 
    sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);

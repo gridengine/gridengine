@@ -61,6 +61,9 @@ import com.sun.grid.jgdi.TestValueFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ */
 public class <%=classname%>TestCase extends BaseTestCase {
    
    public  <%=classname%>TestCase(java.lang.String testName) {
@@ -94,10 +97,14 @@ public class <%=classname%>TestCase extends BaseTestCase {
          
          for (int i = 0; i < testValues.length; i++) {
             <%=classname%> testObj = (<%=classname%>)testValues[i];
+
+            logger.info("adding testObj " + testObj);
             
             jgdi.add<%=classname%>(testObj);
             
             try {
+
+              logger.info("fetching and diffing testObj " + testObj);
 
               <%=classname%> retObj = jgdi.get<%=classname%>(<%
               for (int i = 0; i < cullObj.getPrimaryKeyCount(); i++) {
@@ -149,6 +156,8 @@ public class <%=classname%>TestCase extends BaseTestCase {
                 
               %>);
               
+              logger.info("deleting testObj " + testObj);
+
               assertNull(testObj + " has not been deleted", retObj);
             }
          

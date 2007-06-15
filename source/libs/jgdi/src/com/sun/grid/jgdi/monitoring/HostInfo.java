@@ -136,31 +136,7 @@ public interface HostInfo {
    
    
    /**
-    * Get a queue value for the host
-    * @param qname  name of the queue
-    * @param name   name of the queue value
-    * @return  the queue value or <code>null</code>
-    */
-   public Object getQueueValue(String qname, String name);
-   
-   
-   /**
-    *  Get the set of queue names
-    *
-    *  @return the set of queue names
-    */
-   public Set getQueueNames();
-   
-   /**
-    *  Get the set of queue value names for a queue
-    *  @param  qname of the queue
-    *  @return the set of queue value names
-    */
-   public Set getQueueValueNames(String qname);
-   
-   /**
     *  Get the hostname
-    *
     *  @return the hostname
     */
    public String getHostname();
@@ -183,5 +159,23 @@ public interface HostInfo {
     *  @return the number of entries in the job list
     */
    public int getJobCount();
+
+   /**
+    *  Get the list of queues which are available on the host
+    *
+    *  <p><b>Note:</b> The queue list is only set if the
+    *  {@link QHostOptions#includeQueues} flag is set.</p>
+    *
+    *  @return list of queues (instances of {@link QueueInfo})
+    *  @see com.sun.grid.jgdi.JGDI#execQHost
+    */
+   public List getQueueList();
+   
+   /**
+    *  Get the number of entries in the queue list
+    *
+    *  @return the number of entries in the queue list
+    */
+   public int getQueueCount();
    
 }

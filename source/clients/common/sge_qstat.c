@@ -87,9 +87,6 @@
 
 
 #include "sge_qstat.h"
-
-#include "cull/cull_xml.h"
-
 #include "sge_mt_init.h"
 #include "setup_path.h"
 
@@ -130,7 +127,6 @@ void qstat_env_destroy(qstat_env_t* qstat_env) {
    lFreeWhat(&qstat_env->what_JAT_Type_template);
    /* Do not free the context - it's a reference */
    qstat_env->ctx = NULL;
-   FREE(qstat_env);
 }
 
 static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp);
@@ -166,24 +162,16 @@ static void print_qstat_env_to(qstat_env_t *qstat_env, FILE* file);
 
 int qselect(qstat_env_t* qstat_env, qselect_handler_t* handler, lList **alpp) {
  
-   int ret = 0;
-   int a_cqueue_is_selected = 0;
    lListElem *cqueue = NULL;
    lListElem *qep = NULL;
    
    DENTER(TOP_LAYER,"qselect");
    
-   if ((ret = qstat_env_prepare(qstat_env, false, alpp)) != 0) {
-      DRETURN(ret);
+   if (qstat_env_prepare(qstat_env, false, alpp) != 0) {
+      DRETURN(1);
    }
    
-   if ((a_cqueue_is_selected = qstat_env_filter_queues(qstat_env, NULL, alpp)) < 0) {
-      DRETURN(ret);
-   }
-   
-   if (!a_cqueue_is_selected) {
-/*       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, */
-/*                                  MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION); */
+   if (qstat_env_filter_queues(qstat_env, NULL, alpp) <= 0) {
       DRETURN(1);
    }
    

@@ -56,6 +56,7 @@ typedef struct {
    char*       sge_cell;
    u_long32    sge_qmaster_port;
    u_long32    sge_execd_port;
+   bool        from_services;
 } sge_env_state_t;
 
 static bool sge_env_state_setup(sge_env_state_class_t *thiz, 
@@ -63,6 +64,7 @@ static bool sge_env_state_setup(sge_env_state_class_t *thiz,
                                 const char *sge_cell, 
                                 u_long32 sge_qmaster_port, 
                                 u_long32 sge_execd_port, 
+                                bool from_services,
                                 sge_error_class_t *eh);
 static void sge_env_state_destroy(void *theState);
 static void sge_env_state_dprintf(sge_env_state_class_t *thiz);
@@ -70,12 +72,14 @@ static const char* get_sge_root(sge_env_state_class_t *thiz);
 static const char* get_sge_cell(sge_env_state_class_t *thiz);
 static u_long32 get_sge_qmaster_port(sge_env_state_class_t *thiz);
 static u_long32 get_sge_execd_port(sge_env_state_class_t *thiz);
+static bool is_from_services(sge_env_state_class_t *thiz);
 static void set_sge_root(sge_env_state_class_t *thiz, const char *sge_root);
 static void set_sge_cell(sge_env_state_class_t *thiz, const char *sge_cell);
+static void set_from_services(sge_env_state_class_t *thiz, bool from_services);
 static void set_sge_qmaster_port(sge_env_state_class_t *thiz, u_long32 sge_qmaster_port);
 static void set_sge_execd_port(sge_env_state_class_t *thiz, u_long32 sge_qmaster_port);
 
-sge_env_state_class_t *sge_env_state_class_create(const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port, sge_error_class_t *eh)
+sge_env_state_class_t *sge_env_state_class_create(const char *sge_root, const char *sge_cell, int sge_qmaster_port, int sge_execd_port, bool from_services, sge_error_class_t *eh)
 {
    sge_env_state_class_t *ret = (sge_env_state_class_t *)sge_malloc(sizeof(sge_env_state_class_t));
 
@@ -92,11 +96,13 @@ sge_env_state_class_t *sge_env_state_class_create(const char *sge_root, const ch
    ret->get_sge_cell = get_sge_cell;
    ret->get_sge_qmaster_port = get_sge_qmaster_port;
    ret->get_sge_execd_port = get_sge_execd_port;
+   ret->is_from_services = is_from_services;
 
    ret->set_sge_root = set_sge_root;
    ret->set_sge_cell = set_sge_cell;
    ret->set_sge_qmaster_port = set_sge_qmaster_port;
    ret->set_sge_execd_port = set_sge_execd_port;
+   ret->set_from_services = set_from_services;
 
    ret->sge_env_state_handle = (sge_env_state_t*)sge_malloc(sizeof(sge_env_state_t));
    if (ret->sge_env_state_handle == NULL) {
@@ -107,7 +113,7 @@ sge_env_state_class_t *sge_env_state_class_create(const char *sge_root, const ch
    }
    memset(ret->sge_env_state_handle, 0, sizeof(sge_env_state_t));
 
-   if (!sge_env_state_setup(ret, sge_root, sge_cell, sge_qmaster_port, sge_execd_port, eh)) {
+   if (!sge_env_state_setup(ret, sge_root, sge_cell, sge_qmaster_port, sge_execd_port, from_services, eh)) {
       sge_env_state_class_destroy(&ret);
       DEXIT;
       return NULL;
@@ -131,7 +137,7 @@ void sge_env_state_class_destroy(sge_env_state_class_t **pst)
    DEXIT;
 }
 
-static bool sge_env_state_setup(sge_env_state_class_t *thiz, const char *sge_root, const char *sge_cell, u_long32 sge_qmaster_port, u_long32 sge_execd_port, sge_error_class_t *eh)
+static bool sge_env_state_setup(sge_env_state_class_t *thiz, const char *sge_root, const char *sge_cell, u_long32 sge_qmaster_port, u_long32 sge_execd_port, bool from_services, sge_error_class_t *eh)
 {
    DENTER(TOP_LAYER, "sge_env_state_setup");
  
@@ -139,6 +145,7 @@ static bool sge_env_state_setup(sge_env_state_class_t *thiz, const char *sge_roo
    thiz->set_sge_execd_port(thiz, sge_execd_port);
    thiz->set_sge_root(thiz, sge_root);
    thiz->set_sge_cell(thiz, sge_cell);
+   thiz->set_from_services(thiz, from_services);
 
    /*thiz->dprintf(thiz);*/
 
@@ -169,6 +176,7 @@ static void sge_env_state_dprintf(sge_env_state_class_t *thiz)
    DPRINTF(("sge_cell            >%s<\n", es->sge_cell ? es->sge_cell : "NA"));
    DPRINTF(("sge_qmaster_port    >%d<\n", es->sge_qmaster_port));
    DPRINTF(("sge_execd_port      >%d<\n", es->sge_execd_port));
+   DPRINTF(("from_services       >%s<\n", es->from_services ? "true" : "false"));
 
    DEXIT;
 }
@@ -197,6 +205,12 @@ static u_long32 get_sge_execd_port(sge_env_state_class_t *thiz)
    return es->sge_execd_port;
 }
 
+static bool is_from_services(sge_env_state_class_t *thiz) 
+{
+   sge_env_state_t *es = (sge_env_state_t *) thiz->sge_env_state_handle;
+   return es->from_services;
+}
+
 static void set_sge_root(sge_env_state_class_t *thiz, const char *sge_root)
 {
    sge_env_state_t *es = (sge_env_state_t *) thiz->sge_env_state_handle;
@@ -221,5 +235,9 @@ static void set_sge_execd_port(sge_env_state_class_t *thiz, u_long32 sge_execd_p
    es->sge_execd_port = sge_execd_port; 
 }
 
-
+static void set_from_services(sge_env_state_class_t *thiz, bool from_services)
+{
+   sge_env_state_t *es = (sge_env_state_t *) thiz->sge_env_state_handle;
+   es->from_services = from_services;
+}
 

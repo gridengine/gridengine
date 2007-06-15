@@ -1,3 +1,4 @@
+<%
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -29,6 +30,8 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+%>
+
 <%
   java.beans.BeanInfo beanInfo = (java.beans.BeanInfo)params.get("beanInfo");
   Class beanClass = beanInfo.getBeanDescriptor().getBeanClass();
@@ -40,28 +43,22 @@
           classname = classname.substring(i+1);
       }
   }  
-  
   classname = classname.replace('$', '_');
-  
   java.beans.PropertyDescriptor [] props = beanInfo.getPropertyDescriptors();
-  
   com.sun.grid.javaconv.CWrapperHelper ch = new com.sun.grid.javaconv.CWrapperHelper(beanInfo.getBeanDescriptor().getBeanClass());
-  
   java.util.Iterator iter = null;
 %>
-jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp);
+/* ==== <%=classname%> ====================== */
+   jclass <%=classname%>_find_class(JNIEnv *env, lList** alpp);
 <%  
   // ---------------------------------------------------------------------------
   // ------------ CONSTRUCTORS -------------------------------------------------
   // ---------------------------------------------------------------------------
-  
    iter = ch.getConstructorNames().iterator();
    while(iter.hasNext()) {
       String constructorName = (String)iter.next();
       java.lang.reflect.Constructor constructor = ch.getConstructor(constructorName);
-%>
-jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
-   
+%>   jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
       Class [] parameters = constructor.getParameterTypes();
       for(int i = 0; i < parameters.length; i++) {
          if( String.class.equals(parameters[i])) {
@@ -73,34 +70,25 @@ jgdi_result_t <%=classname%>_<%=constructorName%>(JNIEnv *env, jobject*obj <%
       }
 %>, lList **alpp);
 <%   } // end of while(iter.hasNext())
-   
   // ---------------------------------------------------------------------------
   // ------------ Static Fields ------------------------------------------------
   // ---------------------------------------------------------------------------
-
  iter = ch.getStaticFieldNames().iterator();
  while(iter.hasNext()) {
     String fieldName = (String)iter.next();
     java.lang.reflect.Field field = ch.getStaticField(fieldName);
-  
-    
-%>
-jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp);
+%>   jgdi_result_t <%=classname%>_static_<%=fieldName%>(JNIEnv *env, <%=ch.getCType(field.getType())%> *res, lList **alpp);
 <%    
  } // end of while
-  
   // ---------------------------------------------------------------------------
   // ------------ Static METHODS -----------------------------------------------
   // ---------------------------------------------------------------------------
-   
    iter = ch.getStaticMethodNames().iterator();
    while(iter.hasNext()) {
       String methodName = (String)iter.next();
       java.lang.reflect.Method method = ch.getStaticMethod(methodName);
       
-%>
-jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
-   
+%>   jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
       Class [] parameters = method.getParameterTypes();      
       for(int i = 0; i < parameters.length; i++) {
          if( String.class.equals(parameters[i])) {
@@ -109,7 +97,6 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
          %>, <%=ch.getCType(parameters[i])%> p<%=i%> <%
          }
       }
-
       if (!Void.TYPE.equals(method.getReturnType())) {
          %>, <%=ch.getCType(method.getReturnType())%><%
            %>* result<%
@@ -119,19 +106,14 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env<%
       }
 %>, lList **alpp);
 <%   } // end of while(iter.hasNext())
-   
   // ---------------------------------------------------------------------------
   // ------------ METHODS ------------------------------------------------------
   // ---------------------------------------------------------------------------
-   
    iter = ch.getMethodNames().iterator();
    while(iter.hasNext()) {
       String methodName = (String)iter.next();
       java.lang.reflect.Method method = ch.getMethod(methodName);
-      
-%>
-jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
-   
+%>   jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanClass)%> obj <%
       Class [] parameters = method.getParameterTypes();
       for(int i = 0; i < parameters.length; i++) {
          if( String.class.equals(parameters[i])) {
@@ -140,7 +122,6 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
          %>, <%=ch.getCType(parameters[i])%> p<%=i%> <%
          }
       }
-
       if (!Void.TYPE.equals(method.getReturnType())) {
          %>, <%=ch.getCType(method.getReturnType())%><%
            %>* result<%

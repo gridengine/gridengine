@@ -77,7 +77,7 @@ static void sge_send_mail(u_long32 progid,
 ** DESCRIPTION
 **   sends a mail to each of the recipients in the list
 */
-void cull_mail(u_long32 progid, lList *user_list, char *subj, char *buf, const char *mail_type) {
+void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *buf, const char *mail_type) {
    char *mailer;
    int mailer_has_subj_line;
    lListElem *ep;

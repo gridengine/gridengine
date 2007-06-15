@@ -43,7 +43,7 @@ public class CullAttr {
    public static final String CULL_PRIMARY_KEY = "CULL_PRIMARY_KEY";
    public static final String CULL_READ_ONLY   = "CULL_JGDI_RO";
    public static final String CULL_HIDDEN      = "CULL_JGDI_HIDDEN";
-   public static final String CULL_CONFIGURE   = "CULL_CONFIGURE";
+   public static final String CULL_CONFIGURE   = "CULL_JGDI_CONF";
    private CullObject parent;
    private String name;
    private String type;

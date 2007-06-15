@@ -47,9 +47,9 @@ public class HostInfoImpl implements HostInfo, Serializable {
 
    private String hostname;
    private Map   hostValueMap = new HashMap();
-   private Map   queueMap = new HashMap();
    private Map   resourceMap = new HashMap();
    private List  jobList = new ArrayList();
+   private List  queueList = new ArrayList();
    
    /** 
     * Create a new host info object 
@@ -209,60 +209,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
          return dominanceMap.keySet();
       }
    }
-   
-   
-   /**
-    * Get a queue value for the host
-    * @param qname  name of the queue
-    * @param name   name of the queue value
-    * @return  the queue value or <code>null</code>
-    */
-   public Object getQueueValue(String qname, String name) {
-      Map queueValueMap = (Map)queueMap.get(qname);
-      if(queueValueMap != null) {
-         return queueValueMap.get(name);
-      }
-      return null;
-   }
-   
-   /**
-    * Add a queue value
-    * @param qname   name of the queue
-    * @param name    name of the queue value
-    * @param value   the queue value
-    */
-   public void addQueueValue(String qname, String name, Object value) {
-      Map queueValueMap = (Map)queueMap.get(qname);
-      if(queueValueMap == null) {
-         queueValueMap = new HashMap();
-         queueMap.put(qname, queueValueMap);
-      }
-      queueValueMap.put(name, value);
-   }
-   
-   /**
-    *  Get the set of queue names
-    *
-    *  @return the set of queue names
-    */
-   public Set getQueueNames() {
-      return queueMap.keySet();
-   }
-   
-   /**
-    *  Get the set of queue value names for a queue
-    *  @param  qname of the queue
-    *  @return the set of queue value names
-    */
-   public Set getQueueValueNames(String qname) {
-      Map queueValueMap = (Map)queueMap.get(qname);
-      if(queueValueMap == null) {
-         return Collections.EMPTY_SET;
-      } else {
-         return queueValueMap.keySet();
-      }
-   }
-   
+
    /**
     *  Get the hostname
     *
@@ -310,6 +257,35 @@ public class HostInfoImpl implements HostInfo, Serializable {
     */
    public void addJob(JobInfo job) {
       jobList.add(job);
+   }
+
+   /**
+    *  Get the list of queues which are available on the host
+    *
+    *  <p><b>Note:</b> The queue list is only set if the 
+    *  {@link QHostOptions#includeQueues} flag is set.</p>
+    *
+    *  @return list of queues (instances of {@link QueueInfo})
+    *  @see com.sun.grid.jgdi.JGDI#execQHost
+    */
+   public List getQueueList() {
+      return Collections.unmodifiableList(queueList);
+   }
+
+   /**
+    *  Get the number of entries in the queue list
+    *  @return the number of entries in the queue list
+    */
+   public int getQueueCount() {
+      return queueList.size();
+   }
+   
+   /**
+    *  Add a QueueInfo object to the queue list:
+    *  @param  queue  the queue info object
+    */
+   public void addQueue(QueueInfo queue) {
+      queueList.add(queue);
    }
            
 }

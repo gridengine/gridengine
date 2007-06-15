@@ -626,10 +626,14 @@ const lDescr *lGetElemDescr(const lListElem *ep)
 void lWriteElem(const lListElem *ep) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
    lWriteElem_(ep, &buffer, 0);   
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer); 
    DRETURN_VOID;
 }
@@ -652,10 +656,14 @@ void lWriteElem(const lListElem *ep)
 void lWriteElemTo(const lListElem *ep, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteElemTo");
    lWriteElem_(ep, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) { 
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -765,10 +773,17 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 void lWriteList(const lList *lp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteList");
+   if (!lp) {
+      DRETURN_VOID;
+   }
    lWriteList_(lp, &buffer, 0);
-   fprintf(stderr, "%s", sge_dstring_get_string(&buffer));
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(stderr, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -790,10 +805,14 @@ void lWriteList(const lList *lp)
 void lWriteListTo(const lList *lp, FILE *fp) 
 {
    dstring buffer = DSTRING_INIT;
+   const char *str;
 
    DENTER(CULL_LAYER, "lWriteListTo");
    lWriteList_(lp, &buffer, 0);
-   fprintf(fp, "%s", sge_dstring_get_string(&buffer) ?  sge_dstring_get_string(&buffer) : "");
+   str = sge_dstring_get_string(&buffer);
+   if (str != NULL) {
+      fprintf(fp, "%s", str);
+   }
    sge_dstring_free(&buffer);
    DRETURN_VOID;
 }
@@ -1361,8 +1380,7 @@ int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
 
    if (!lp1 || !lp0) {
       LERROR(LELISTNULL);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* Check if the two lists are equal */
@@ -1370,15 +1388,13 @@ int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
    dp1 = lGetListDescr(lp1);
    if (lCompListDescr(dp0, dp1)) {
       LERROR(LEDIFFDESCR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    while (lp1->first) {
       if (!(ep = lDechainElem(lp1, lp1->first))) {
          LERROR(LEDECHAINELEM);
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       /* 
@@ -1399,8 +1415,7 @@ int lOverrideStrList(lList *lp0, lList *lp1, int nm, const char *str)
    }
 
    lFreeList(&lp1);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** cull/list/lCompListDescr() ********************************************

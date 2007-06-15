@@ -45,7 +45,9 @@ public class UserFilter implements Serializable {
    
    private List userList = new ArrayList();
    
-   /** Creates a new instance of HostFilter */
+   /** 
+    * Creates a new instance of UserFilter 
+    */
    public UserFilter() {
    }
    
@@ -81,5 +83,4 @@ public class UserFilter implements Serializable {
       }
       return ret.toString();
    }
-   
 }

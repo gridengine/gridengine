@@ -46,6 +46,7 @@ public class JobInfoImpl implements JobInfo, Serializable {
    private String user;
    private String state;
    private String queue;
+   private String qinstance;
    private String masterQueue;
    private Date submitTime;
    private Date startTime;
@@ -165,6 +166,22 @@ public class JobInfoImpl implements JobInfo, Serializable {
    public void setQueue(String queue) {
       this.queue = queue;
    }
+   /**
+    *  Get the queue instance name of the job
+    *  @return the queue instance name
+    */
+   public String getQinstanceName() {
+      return qinstance;
+   }
+
+   /**
+    *  Set the queue instance name of the job
+    *  @param queue the queue instance name of the job
+    */
+   public void setQinstanceName(String qinstance) {
+      this.qinstance = qinstance;
+   }
+
 
    /**
     *   Get the name of the master queue of the job.

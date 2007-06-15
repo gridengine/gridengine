@@ -1022,6 +1022,7 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
       else   
          alp = alp2;
       if (!qmonMessageBox(w, alp, 0)) {
+         qmonShareTreeUpdate(w, st_tree, NULL);
          XmtMsgLinePrintf(st_message, "Success");
          XmtMsgLineClear(st_message, DISPLAY_MESSAGE_DURATION); 
       } else {  
@@ -1095,12 +1096,19 @@ static void qmonShareTreeUpdate(Widget w, XtPointer cld, XtPointer cad)
       if(!status) {
          DEXIT;
          return;
-      }
-      else {
-         if (answer)
+      } else {
+         if (answer) {
             qmonShareTreeOkay(w, NULL, NULL);
-         else
+            /*
+            ** answer yes and storing sharetree failed
+            */
+            if (dirty == True) {
+               DEXIT;
+               return;
+            }
+         } else {
             dirty = False;
+         }
       }      
    }   
    /*
@@ -2081,7 +2089,7 @@ Cardinal *share
    /*
    ** preset with default values
    */
-   sprintf(buf, sge_u32, (Cardinal) *share);
+   sprintf(buf, sge_u32, (u_long32) *share);
    XmtInputFieldSetString(node_name, name);
    XmtInputFieldSetString(node_share, buf);
 

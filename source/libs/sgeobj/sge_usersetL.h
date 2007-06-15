@@ -50,7 +50,7 @@ extern "C" {
  */
 
 /* special list element */
-#define DEADLINE_USERS "deadlineusers"
+#define DEADLINE_USERS     "deadlineusers"
 #define DEFAULT_DEPARTMENT "defaultdepartment"
 
 /* *INDENT-OFF* */
@@ -70,13 +70,13 @@ enum {
 LISTDEF(US_Type)
    JGDI_ROOT_OBJ(UserSet, SGE_USERSET_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    JGDI_EVENT_OBJ(ADD(sgeE_USERSET_ADD) | MODIFY(sgeE_USERSET_MOD) | DELETE(sgeE_USERSET_DEL) | GET_LIST(sgeE_USERSET_LIST))
-   SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_CONFIGURE)       /* configured name spooled */
-   SGE_ULONG_D(US_type, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE, 1)         /* configured type spooled */
-   SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)       /* configured share spooled */
-   SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_CONFIGURE)      /* configured override tickets spooled */
-   SGE_ULONG(US_job_cnt, CULL_DEFAULT | CULL_CONFIGURE)     /* local to schedd */
+   SGE_STRING(US_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF)       /* configured name spooled */
+   SGE_ULONG_D(US_type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF, 1)         /* configured type spooled */
+   SGE_ULONG(US_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)       /* configured share spooled */
+   SGE_ULONG(US_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* configured override tickets spooled */
+   SGE_ULONG(US_job_cnt, CULL_DEFAULT | CULL_JGDI_CONF)     /* local to schedd */
    SGE_ULONG(US_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* local to schedd */
-   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL | CULL_CONFIGURE)     /* UE_Type */
+   SGE_LIST(US_entries, UE_Type, CULL_DEFAULT  | CULL_SPOOL | CULL_JGDI_CONF)     /* UE_Type */
    SGE_BOOL(US_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 LISTEND 
 

@@ -649,9 +649,8 @@ Cardinal size
 ) {
    lList *list = NULL;
    String str = NULL;
-   static char buf[ 10 * BUFSIZ];
+   static char buf[100 * BUFSIZ];
    lListElem *ep = NULL;
-   int first_time;
 
    /*
     * Here special Qmon Quarks are used. Does it work ?
@@ -662,7 +661,7 @@ Cardinal size
        type != QmonQMR_Type && type != QmonQQR_Type &&
        type != QmonQJRE_Type && type != QmonQCTX_Type &&
        type != QmonQPE_Type) {
-      XmtWarningMsg("XmtDialogSetDialogValues", "Spinbox",
+      XmtWarningMsg("XmtDialogSetDialogValues", "StrListField",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'.",
           XtName(w), XrmQuarkToString(type));
@@ -685,7 +684,7 @@ Cardinal size
       str = write_pair_list(list, VARIABLE_TYPE);
    } 
    if (type == QmonQST_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
@@ -720,7 +719,7 @@ Cardinal size
       str = write_pair_list(list, MAIL_TYPE);
    }
    if (type == QmonQQR_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
       for_each(ep, list) {
          if (first_time) {
@@ -733,24 +732,21 @@ Cardinal size
       str = buf;
    }
    if (type == QmonQJRE_Type) {
-      first_time = 1;
+      int first_time = 1;
       strcpy(buf, "");
-      if (list) {
-         for_each(ep, list) {
-            if (first_time) {
-               first_time = 0;
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s", lGetString(ep, JRE_job_name));
-               else
-                  sprintf(buf, sge_u32, lGetUlong(ep, JRE_job_number));
-            }
-            else {
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
-               else  
-                  sprintf(buf, "%s "sge_u32, buf, lGetUlong(ep, JRE_job_number)); 
-            }   
-         }
+      for_each(ep, list) {
+         if (first_time) {
+            first_time = 0;
+            if (lGetString(ep, JRE_job_name))
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
+            else
+               sprintf(buf, sge_u32, lGetUlong(ep, JRE_job_number));
+         } else {
+            if (lGetString(ep, JRE_job_name))
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
+            else  
+               sprintf(buf, "%s "sge_u32, buf, lGetUlong(ep, JRE_job_number)); 
+         }   
       }
       str = buf;
    }
@@ -784,10 +780,11 @@ Cardinal size
    str = XmtInputFieldGetString(w);
 
    if (str && str[0] != '\0') {
-      if ( type == QmonQENV_Type || type == QmonQCTX_Type )
+      if (type == QmonQENV_Type || type == QmonQCTX_Type) {
          var_list_parse_from_string(&ret_list, str, 0); 
+      }
       if (type == QmonQST_Type) {
-            str_list_parse_from_string(&ret_list, str, " ");
+         str_list_parse_from_string(&ret_list, str, " ");
       }
       if (type == QmonQRN_Type) {
          range_list_parse_from_string(&ret_list, &alp, str,
@@ -825,10 +822,11 @@ Cardinal size
       }
    }
    
-   if (type == QmonQPE_Type)
+   if (type == QmonQPE_Type) {
       *(String*)address = str;
-   else
+   } else {
       *(lList**)address = ret_list;
+   }   
 }
 
 /*-------------------------------------------------------------------------*/

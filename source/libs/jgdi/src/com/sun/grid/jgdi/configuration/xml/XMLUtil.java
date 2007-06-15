@@ -743,7 +743,12 @@ public class XMLUtil {
          
          public Object getObject() {
             if (buffer != null) {
-               return buffer.toString();
+               String ret = buffer.toString();
+               if (NONE.equalsIgnoreCase(ret)) {
+                  return null;
+               } else {
+                  return ret;
+               }
             } else {
                throw new IllegalStateException("A string tag must not be empty");
             }
@@ -936,7 +941,12 @@ public class XMLUtil {
             if (((GEObjectHandler)parent).getObject() == null) {
                throw new SAXException("parent " + ((GEObjectHandler)parent).getName() + " has no object");
             }
-            pd.put(((GEObjectHandler)parent).getObject(), key, obj);
+            /* AA */
+            if (obj == null) {
+              pd.put(((GEObjectHandler)parent).getObject(), key, "NONE");   
+            } else {
+              pd.put(((GEObjectHandler)parent).getObject(), key, obj);
+            }  
          }
          
          public void characters(char[] ch, int start, int length) throws SAXException {

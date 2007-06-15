@@ -40,6 +40,7 @@ import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.QueueInstance;
 import com.sun.grid.jgdi.configuration.ExecHost;
+import com.sun.grid.jgdi.monitoring.QueueInfo;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -57,12 +58,11 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
    }
    
    protected void setUp() throws Exception {
-      System.loadLibrary( "jgdi" );
       super.setUp();
    }
    
    public static Test suite() {
-      TestSuite suite = new TestSuite( TestQHost.class);
+      TestSuite suite = new TestSuite(TestQHost.class);
       return suite;
    }
    
@@ -80,15 +80,14 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
             logger.fine("HostValue: " + hostValueNames + " = " + hostInfo.getHostValue(hostValueNames));
          }
          
-         Iterator queueIter = hostInfo.getQueueNames().iterator();
+         Iterator queueIter = hostInfo.getQueueList().iterator();
          while(queueIter.hasNext()) {
-            String queueName = (String)queueIter.next();
-            logger.fine("  Queue " + queueName + "--------");
-            Iterator queueValueIter = hostInfo.getQueueValueNames(queueName).iterator();
-            while(queueValueIter.hasNext()) {
-               String queueValueName = (String)queueValueIter.next();
-               logger.fine("   " + queueValueName + " = " + hostInfo.getQueueValue(queueName, queueValueName ));
-            }
+            QueueInfo qi = (QueueInfo)queueIter.next();
+            logger.fine("  Queue: " + qi.getQname());
+            logger.fine("  Qtype: " + qi.getQtype());
+            logger.fine("  State: " + qi.getState());
+            logger.fine("  total: " + qi.getTotalSlots());
+            logger.fine("  used:  " + qi.getUsedSlots());
          }
          
          Iterator dominanceIter = hostInfo.getDominanceSet().iterator();
@@ -139,15 +138,15 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
          while(iter.hasNext()) {
             ExecHost eh = (ExecHost)iter.next();
 
-            if(eh.getName().equals("template") ||
-               eh.getName().equals("global")) {
+            if (eh.getName().equals("template") ||
+                eh.getName().equals("global")) {
                continue;
             }
             HostFilter hf = new HostFilter();
             hf.addHost(eh.getName());
             qhostOptions.setHostFilter(hf);
 
-            QHostResult res = jgdi.execQHost( qhostOptions);
+            QHostResult res = jgdi.execQHost(qhostOptions);
             printResult(res);
 
             HostInfo hi = res.getHostInfo(eh.getName());
@@ -161,11 +160,22 @@ public class TestQHost extends com.sun.grid.jgdi.BaseTestCase {
                Iterator cqiIter = cq.getQinstancesList().iterator();
                while(cqiIter.hasNext()) {
                   QueueInstance cqi = (QueueInstance)cqiIter.next();
-                  if( cqi.getQhostname().equals(eh.getName()) ) {
-                     assertTrue("queue " + cq.getName() + " not included for host " + eh.getName(),
-                                hi.getQueueNames().contains(cq.getName()));
+                  if (cqi.getQhostname().equals(eh.getName()) ) {
+                     boolean foundq = false;
+                     Iterator hiter = hi.getQueueList().iterator();
+                     while (hiter.hasNext()) {
+                        String hqname = ((QueueInfo)hiter.next()).getQname();
+                        // System.out.println("++ comparing cq.getName() " + cq.getName() +
+                        //                      " and hqname " + hqname);
+                        if (cq.getName().equals(hqname)) {
+                        //   System.out.println("-- matching cq.getName() " + cq.getName() +
+                        //                      " and hqname " + hqname);
+                           foundq = true;
+                           break;
+                        }
+                     }
+                     assertTrue("queue " + cq.getName() + " not included for host " + eh.getName(), foundq);
                   }
-
                }
             }
          }      

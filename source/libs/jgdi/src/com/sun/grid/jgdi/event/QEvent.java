@@ -61,18 +61,15 @@ public class QEvent implements EventListener {
       if (args.length != 1) {
          usage();
       }
+
       try {
          QEvent qevt = new QEvent(args[0]);
-         
          qevt.start();
-         
          Runtime.getRuntime().addShutdownHook(qevt.new ShutdownHandler());
-         
          Thread.currentThread().sleep(Integer.MAX_VALUE);
-      } catch( Exception e) {
+      } catch (Exception e) {
          e.printStackTrace();
       }
-      
    }
    
    

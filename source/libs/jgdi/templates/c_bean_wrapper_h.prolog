@@ -32,3 +32,6 @@
 
 #ifndef JGDI_WRAPPER_H
 #define JGDI_WRAPPER_H
+
+#include "jgdi_wrapper_java.h"
+#include "jgdi_wrapper_event.h"

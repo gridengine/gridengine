@@ -118,7 +118,7 @@ public class ClusterQueueSummary implements java.io.Serializable {
    /**
     *  Get the number of currently used slots
     *
-    *  @return umber of currently used slots
+    *  @return number of currently used slots
     */
    public int getUsedSlots() {
       return usedSlots;

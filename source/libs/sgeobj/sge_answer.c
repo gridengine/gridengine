@@ -46,6 +46,8 @@
 
 #define ANSWER_LAYER CULL_LAYER
 
+static bool answer_is_recoverable(const lListElem *answer);
+
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
 *     AnswerList - Object used to return errors/warning/infos
@@ -152,7 +154,7 @@ bool answer_has_quality(const lListElem *answer, answer_quality_t quality)
 *  NOTES
 *     MT-NOTE: answer_is_recoverable() is MT safe
 ******************************************************************************/
-bool answer_is_recoverable(const lListElem *answer)
+static bool answer_is_recoverable(const lListElem *answer)
 {
    bool ret = true;
 
@@ -395,16 +397,16 @@ void answer_list_to_dstring(const lList *alp, dstring *diag)
       } else {
          lListElem *aep = NULL;
          
-         sge_dstring_clear (diag);
+         sge_dstring_clear(diag);
          
-         for_each (aep, alp) {
+         for_each(aep, alp) {
             const char *s;
 
             s = lGetString(aep, AN_text);
-            sge_dstring_append (diag, s);
+            sge_dstring_append(diag, s);
 
             if (strchr(s, '\n') == NULL) {
-               sge_dstring_append_char (diag, '\n');
+               sge_dstring_append_char(diag, '\n');
             }
          }
       }
@@ -470,8 +472,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
       sge_dstring_free(&buffer);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/answer/answer_list_has_quality() *******************************
@@ -764,8 +765,7 @@ answer_list_add(lList **answer_list, const char *text,
          lFreeElem(&answer);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool answer_list_add_elem(lList **answer_list, lListElem *answer)

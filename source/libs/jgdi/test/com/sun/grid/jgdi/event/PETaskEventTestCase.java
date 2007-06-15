@@ -66,7 +66,7 @@ public class PETaskEventTestCase extends BaseTestCase {
         jgdi = createJGDI();
         evc = createEventClient(0);
         super.setUp();
-        
+
         String peName = "pe" + System.currentTimeMillis();
         
         pe = new ParallelEnvironmentImpl();
@@ -85,6 +85,7 @@ public class PETaskEventTestCase extends BaseTestCase {
         
         String queueName = peName + ".q";
         queue.setName(queueName);
+        queue.putJobSlots("@/", 2);
         queue.removeAllPe();
         queue.addDefaultPe(peName);
         jgdi.addClusterQueue(queue);
@@ -93,14 +94,14 @@ public class PETaskEventTestCase extends BaseTestCase {
     }
     
     protected void tearDown() throws Exception {
-        if(queue != null) {
+        if (queue != null) {
             try {
                 jgdi.deleteClusterQueue(queue);
             } catch(JGDIException ex) {
                 logger.log(Level.WARNING, ex.getLocalizedMessage(), ex);
             }
         }
-        if(pe != null) {
+        if (pe != null) {
             try {
                 jgdi.deleteParallelEnvironment(pe);
             } catch(JGDIException ex) {

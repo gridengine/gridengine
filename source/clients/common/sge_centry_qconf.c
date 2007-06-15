@@ -1,4 +1,4 @@
-
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/*___INFO__MARK_END__*/
 
 #include <string.h>
 
@@ -676,7 +677,7 @@ centry_list_modify_from_file(sge_gdi_ctx_class_t *ctx, lList **answer_list, cons
                                              NULL, true, &qconf_ce_list_sfi,
                                              SP_FORM_ASCII, NULL, filename);
             
-      if (answer_list_output (answer_list)) {
+      if (answer_list_output(answer_list)) {
          lFreeList(&centry_list);
       }
 

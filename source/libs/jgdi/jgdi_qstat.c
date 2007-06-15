@@ -70,14 +70,11 @@ typedef struct {
 
 } jgdi_qstat_filter_t;
 
-static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *filter, 
-                                 qstat_env_t* qstat_env, lList **alpp);
-
-static jgdi_result_t build_queue_state_filter(JNIEnv *env, jgdi_qstat_filter_t *filter, 
-                                 qstat_env_t* qstat_env, lList **alpp);
+static jgdi_result_t build_queue_state_filter(JNIEnv *env, jobject queue_state_filter, 
+                                 u_long32* queue_state, lList **alpp);
                                  
-static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_filter_t *filter,
-                                           qstat_env_t *qstat_env, lList **alpp);
+static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jobject resource_attribute_filter,
+                                           lList**resource_attribute_list, u_long32 *full_listing, lList **alpp);
                                  
 
 static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, jgdi_qstat_filter_t *filter, 
@@ -152,10 +149,10 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       qstat_filter_add_q_attributes(qstat_env);                    
    }
    
-   if ((ret=build_resource_filter(env, filter, qstat_env, alpp)) != JGDI_SUCCESS) {
+   if ((ret=build_resource_filter(env, filter->resource_filter, &(qstat_env->resource_list), alpp)) != JGDI_SUCCESS) {
       goto error;
    }
-   if ((ret=build_resource_attribute_filter(env, filter, qstat_env, alpp)) != JGDI_SUCCESS) {
+   if ((ret=build_resource_attribute_filter(env, filter->resource_attribute_filter, &(qstat_env->qresource_list), &(qstat_env->full_listing), alpp)) != JGDI_SUCCESS) {
       goto error;
    }
    
@@ -176,7 +173,7 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       qstat_filter_add_pe_attributes(qstat_env);
    }
 
-   if ((ret=build_queue_state_filter(env, filter, qstat_env, alpp))) {
+   if ((ret=build_queue_state_filter(env, filter->queue_state_filter, &(qstat_env->queue_state), alpp))) {
       goto error;
    }
    
@@ -194,7 +191,7 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE, 
                       "END ------------- queue user filter --------------");
                       
-       qstat_filter_add_U_attributes(qstat_env);
+      qstat_filter_add_U_attributes(qstat_env);
    }
    
    if (filter->job_user_filter != NULL) {
@@ -222,8 +219,7 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
       job_state = (*env)->GetStringUTFChars(env, job_state_obj, 0);
       if (job_state == NULL) {
          answer_list_add(alpp, "jgdi_qstat_env_init: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return JGDI_ERROR;
+         DRETURN(JGDI_ERROR);
       }
       filter_res = build_job_state_filter(qstat_env, job_state, alpp);
       (*env)->ReleaseStringUTFChars(env, job_state_obj, job_state);
@@ -236,53 +232,47 @@ static jgdi_result_t jgdi_qstat_env_init(JNIEnv *env, sge_gdi_ctx_class_t *ctx, 
    
 error:
 
-  DEXIT;
-  return ret;
+  DRETURN(ret);
 }
 
 
-static jgdi_result_t build_queue_state_filter(JNIEnv *env, jgdi_qstat_filter_t *filter, 
-                                              qstat_env_t* qstat_env, lList **alpp) {
-                                                 
+static jgdi_result_t build_queue_state_filter(JNIEnv *env, jobject queue_state_filter, u_long32* queue_state, lList **alpp)
+{
    jgdi_result_t ret = JGDI_SUCCESS;
-   
+
    DENTER(JGDI_LAYER, "build_queue_state_filter");
    
-   if (filter->queue_state_filter != NULL) {
+   if (queue_state_filter != NULL) {
       jstring options_obj = NULL;
-      if ((ret = QueueStateFilter_getOptions(env, filter->queue_state_filter, &options_obj, alpp)) != JGDI_SUCCESS) {
-         DEXIT;
-         return ret;
+      if ((ret = QueueStateFilter_getOptions(env, queue_state_filter, &options_obj, alpp)) != JGDI_SUCCESS) {
+         DRETURN(ret);
       } else {
          const char* options;
          u_long32 filter = 0xFFFFFFFF;
          if (options_obj == NULL) {     
             answer_list_add(alpp, "build_queue_state_filter: options_obj is NULL", STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return JGDI_ILLEGAL_STATE;
+            DRETURN(JGDI_ILLEGAL_STATE);
          }
          options = (*env)->GetStringUTFChars(env, options_obj, 0);
          if (options == NULL) {
             answer_list_add(alpp, "build_queue_state_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return JGDI_ERROR;
+            DRETURN(JGDI_ERROR);
          }
          jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                              "queue state filter is '%s'", options);
-         qstat_env->queue_state = qinstance_state_from_string(options, alpp, filter);
+         *queue_state = qinstance_state_from_string(options, alpp, filter);
          (*env)->ReleaseStringUTFChars(env, options_obj, options);
       }
    } else {
-      qstat_env->queue_state = U_LONG32_MAX;
+      *queue_state = U_LONG32_MAX;
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
-static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_filter_t *filter,
-                                                     qstat_env_t *qstat_env, lList **alpp) {
+static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jobject resource_attribute_filter,
+                                                     lList **resource_attribute_list, u_long32 *full_listing, lList **alpp) {
    jobject value_name_list = NULL;
    jobject iterator = NULL;
    jgdi_result_t ret = JGDI_SUCCESS;
@@ -290,22 +280,20 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
    
    DENTER(JGDI_LAYER, "build_resource_attribute_filter");
 
-   if (filter->resource_attribute_filter == NULL) {
-      DEXIT;
-      return JGDI_SUCCESS;
+   if (resource_attribute_filter == NULL) {
+      DRETURN(JGDI_SUCCESS);
    }
    
-   qstat_env->full_listing |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
+   *full_listing |= QSTAT_DISPLAY_QRESOURCES|QSTAT_DISPLAY_FULL;
    
-   if ((ret = ResourceAttributeFilter_getValueNames(env, filter->resource_attribute_filter, &value_name_list, alpp)) != JGDI_SUCCESS) {
+   if ((ret = ResourceAttributeFilter_getValueNames(env, resource_attribute_filter, &value_name_list, alpp)) != JGDI_SUCCESS) {
       DPRINTF(("ResourceAttributeFilter_getValueNames failed\n"));
       goto error;
    }
    
    /* we allow an empty list */
    if (value_name_list == NULL) {
-      DEXIT;
-      return JGDI_SUCCESS;
+      DRETURN(JGDI_SUCCESS);
    }
    
    if ((ret = List_iterator(env, value_name_list, &iterator, alpp)) != JGDI_SUCCESS) {
@@ -316,7 +304,6 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
       jboolean has_next = false;
       jobject  name_obj = NULL;
       const char *name = NULL;
-      lListElem *complex_attribute = NULL;
       
       if ((ret = Iterator_hasNext(env, iterator, &has_next, alpp)) != JGDI_SUCCESS) {
          goto error;
@@ -332,19 +319,13 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
          ret = JGDI_ILLEGAL_STATE;
          goto error;
       }
-      
-      complex_attribute = lCreateElem(CE_Type);
-      if (qstat_env->qresource_list == NULL) {
-         qstat_env->qresource_list = lCreateList("qstat_l_requests", CE_Type);            
-      }
-      lAppendElem(qstat_env->qresource_list, complex_attribute);
       name = (*env)->GetStringUTFChars(env, name_obj, 0);
       if (name == NULL) {
          answer_list_add(alpp, "build_resource_attribute_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          ret = JGDI_ERROR;
          goto error;
       }
-      lSetString(complex_attribute, CE_name, name);
+      lAddElemStr(resource_attribute_list, CE_name, name, CE_Type);
       (*env)->ReleaseStringUTFChars(env, name_obj, name);
       count++;
    }
@@ -353,17 +334,16 @@ static jgdi_result_t build_resource_attribute_filter(JNIEnv *env, jgdi_qstat_fil
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "BEGIN ------------- resource attribute filter --------------");
       
-      jgdi_log_list(env, JGDI_QSTAT_LOGGER, FINE, qstat_env->qresource_list);
+      jgdi_log_list(env, JGDI_QSTAT_LOGGER, FINE, *resource_attribute_list);
       
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "END ------------- resource attribute filter --------------");
    }
 error:
    if (ret != JGDI_SUCCESS) {
-      lFreeList(&(qstat_env->qresource_list));
+      lFreeList(resource_attribute_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /*-------------------------------------------------------------------------*
@@ -384,8 +364,8 @@ error:
  *
  * DESCRIPTION
  *-------------------------------------------------------------------------*/
-static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *filter, 
-                                 qstat_env_t* qstat_env, lList **alpp) {
+jgdi_result_t build_resource_filter(JNIEnv *env, jobject resource_filter, 
+                                 lList **resource_list, lList **alpp) {
    jgdi_result_t ret = JGDI_SUCCESS;
    jobject resource_name_set = NULL;
    jobject iterator = NULL;
@@ -393,11 +373,16 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
    
    DENTER(JGDI_LAYER, "build_resource_filter");
    
-   if (filter->resource_filter == NULL) {
-      DEXIT;
-      return JGDI_SUCCESS;
+   if (resource_list == NULL) {
+      answer_list_add(alpp, "build_resource_filter: resource list is NULL",
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DRETURN(JGDI_ILLEGAL_ARGUMENT);
    }
-   if ((ret = ResourceFilter_getResourceNames(env, filter->resource_filter, &resource_name_set, alpp)) != JGDI_SUCCESS) {
+
+   if (resource_filter == NULL) {
+      DRETURN(JGDI_SUCCESS);
+   }
+   if ((ret = ResourceFilter_getResourceNames(env, resource_filter, &resource_name_set, alpp)) != JGDI_SUCCESS) {
       DPRINTF(("ResourceFilter_getResources failed\n"));
       goto error;
    }
@@ -436,25 +421,16 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
          ret = JGDI_ILLEGAL_STATE;
          goto error;
       }
-      
-      complex_attribute = lCreateElem(CE_Type);
-      if (qstat_env->resource_list == NULL) {
-         qstat_env->resource_list = lCreateList("qstat_l_requests", CE_Type);            
-      }
-      lAppendElem(qstat_env->resource_list, complex_attribute);
-      count++;
-      
-      
       name = (*env)->GetStringUTFChars(env, name_obj, 0);
       if (name == NULL) {
          answer_list_add(alpp, "build_resource_filter: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          ret = JGDI_ERROR;
          goto error;
       }
-      lSetString(complex_attribute, CE_name, name);
+      complex_attribute = lAddElemStr(resource_list, CE_name, name, CE_Type);
       (*env)->ReleaseStringUTFChars(env, name_obj, name);
       
-      if ((ret = ResourceFilter_getResource(env, filter->resource_filter, lGetString(complex_attribute, CE_name), 
+      if ((ret = ResourceFilter_getResource(env, resource_filter, lGetString(complex_attribute, CE_name), 
                                      &value_obj, alpp)) != JGDI_SUCCESS) {
          DPRINTF(("ResourceFilter_getResource failed\n"));
          goto error;
@@ -475,13 +451,15 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
          ret = JGDI_ILLEGAL_ARGUMENT;
          goto error;
       }
+
+      count++; 
    }
    
    if (count > 0) {
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "BEGIN ------------- resource attribute filter --------------");
       
-      jgdi_log_list(env, JGDI_QSTAT_LOGGER, FINE, qstat_env->resource_list);
+      jgdi_log_list(env, JGDI_QSTAT_LOGGER, FINE, *resource_list);
       
       jgdi_log_printf(env, JGDI_QSTAT_LOGGER, FINE,
                       "END ------------- resource attribute filter --------------");
@@ -489,10 +467,9 @@ static jgdi_result_t build_resource_filter(JNIEnv *env, jgdi_qstat_filter_t *fil
 
 error:
    if (ret != JGDI_SUCCESS) {
-      lFreeList(&(qstat_env->resource_list));
+      lFreeList(resource_list);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 typedef struct {
@@ -613,11 +590,9 @@ int jgdi_qstat_cqueue_summary(cqueue_summary_handler_t *handler, const char* cqn
 error:
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -774,12 +749,10 @@ static int jgdi_qstat_job(job_handler_t* handler, u_long32 jid, job_summary_t *s
 error:
    if (ret != JGDI_SUCCESS) {
       ctx->result = ret;
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    ctx->result = JGDI_SUCCESS;
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_sub_task(job_handler_t* handler, task_summary_t *summary, lList **alpp) {
@@ -833,11 +806,9 @@ error:
 
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_additional_info(job_handler_t *handler, job_additional_info_t name, const char* value, lList **alpp) { 
@@ -865,11 +836,9 @@ static int jgdi_qstat_job_additional_info(job_handler_t *handler, job_additional
    }
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;   
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_requested_pe(job_handler_t *handler, const char* pe_name, const char* pe_range, lList **alpp) {
@@ -888,11 +857,9 @@ static int jgdi_qstat_job_requested_pe(job_handler_t *handler, const char* pe_na
 error:
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_granted_pe(job_handler_t *handler, const char* pe_name, int pe_slots, lList **alpp) {
@@ -910,11 +877,9 @@ static int jgdi_qstat_job_granted_pe(job_handler_t *handler, const char* pe_name
 error:
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_request(job_handler_t* handler, const char* name, const char* value, lList **alpp) {
@@ -926,11 +891,9 @@ static int jgdi_qstat_job_request(job_handler_t* handler, const char* name, cons
    
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_hard_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp) {
@@ -942,11 +905,9 @@ static int jgdi_qstat_job_hard_resource(job_handler_t *handler, const char* name
    
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_soft_resource(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp) {
@@ -958,11 +919,9 @@ static int jgdi_qstat_job_soft_resource(job_handler_t *handler, const char* name
    
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_hard_requested_queue(job_handler_t *handler, const char* name, lList **alpp) {
@@ -974,11 +933,9 @@ static int jgdi_qstat_job_hard_requested_queue(job_handler_t *handler, const cha
    
    ctx->result = ret;
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_soft_requested_queue(job_handler_t *handler, const char* name, lList **alpp) {
@@ -988,11 +945,9 @@ static int jgdi_qstat_job_soft_requested_queue(job_handler_t *handler, const cha
    ctx->result = JobSummaryImpl_addSoftRequestedQueue(ctx->jni_env, ctx->job, name, alpp);
    
    if (ctx->result != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_master_hard_requested_queue(job_handler_t* handler, const char* name, lList **alpp) {
@@ -1002,11 +957,9 @@ static int jgdi_qstat_job_master_hard_requested_queue(job_handler_t* handler, co
    ctx->result = JobSummaryImpl_addHardRequestedMasterQueue(ctx->jni_env, ctx->job, name, alpp);
    
    if (ctx->result != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp) {
@@ -1016,11 +969,9 @@ static int jgdi_qstat_job_predecessor_requested(job_handler_t* handler, const ch
    ctx->result = JobSummaryImpl_addRequestedPredecessor(ctx->jni_env, ctx->job, name, alpp);
    
    if (ctx->result != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_predecessor(job_handler_t* handler, u_long32 jid, lList** alpp) {
@@ -1030,11 +981,9 @@ static int jgdi_qstat_job_predecessor(job_handler_t* handler, u_long32 jid, lLis
    ctx->result = JobSummaryImpl_addPredecessor(ctx->jni_env, ctx->job, jid, alpp);
    
    if (ctx->result != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp) {
@@ -1045,11 +994,9 @@ static int jgdi_qstat_job_finished(job_handler_t* handler, u_long32 jid, lList *
    ctx->result = List_add(ctx->jni_env, ctx->list, ctx->job, &add_result, alpp);
    ctx->job = NULL;
    if (ctx->result != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -1082,8 +1029,7 @@ static jgdi_result_t jgdi_qstat_job_init(job_handler_t* handler, jgdi_job_ctx_t 
    
    ret = ArrayList_init(env, &(ctx->list), alpp);
    
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 
@@ -1134,11 +1080,9 @@ static int jgdi_qstat_queue_started(qstat_handler_t *handler, const char* qname,
 error:
    ctx->result = ret;
    if(ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_summary(qstat_handler_t *handler, const char* qname,  queue_summary_t *summary, lList **alpp) {
@@ -1151,42 +1095,39 @@ static int jgdi_qstat_queue_summary(qstat_handler_t *handler, const char* qname,
    if (ctx->queue_instance_summary == NULL) {
       answer_list_add(alpp, "illegal state: have no queue_instance_summary object",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    qi_obj = ctx->queue_instance_summary;
    
    if (QueueInstanceSummaryImpl_setArch(env, qi_obj, summary->arch, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setFreeSlots(env, qi_obj, summary->free_slots, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setHasLoadValue(env, qi_obj, summary->has_load_value, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setHasLoadValueFromObject(env, qi_obj, summary->has_load_value_from_object, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setLoadAvg(env, qi_obj, summary->load_avg, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setLoadAvgStr(env, qi_obj, summary->load_avg_str, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   if (QueueInstanceSummaryImpl_setQueueType(env, qi_obj, summary->queue_type, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
-   }
-   
-   if (QueueInstanceSummaryImpl_setState(env, qi_obj, summary->state, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    if (QueueInstanceSummaryImpl_setUsedSlots(env, qi_obj, summary->used_slots, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setFreeSlots(env, qi_obj, summary->free_slots, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setHasLoadValue(env, qi_obj, summary->has_load_value, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setHasLoadValueFromObject(env, qi_obj, summary->has_load_value_from_object, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setLoadAvg(env, qi_obj, summary->load_avg, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setLoadAvgStr(env, qi_obj, summary->load_avg_str, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setQueueType(env, qi_obj, summary->queue_type, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   if (QueueInstanceSummaryImpl_setState(env, qi_obj, summary->state, alpp) != JGDI_SUCCESS) {
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
@@ -1197,16 +1138,14 @@ static int jgdi_qstat_queue_load_alarm(qstat_handler_t* handler, const char* qna
    if (ctx->queue_instance_summary == NULL) {
       answer_list_add(alpp, "illegal state: have no queue_instance_summary object",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    if (QueueInstanceSummaryImpl_setLoadAlarmReason(env, ctx->queue_instance_summary, reason, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) {
@@ -1217,16 +1156,14 @@ static int jgdi_qstat_queue_suspend_alarm(qstat_handler_t* handler, const char* 
    if (ctx->queue_instance_summary == NULL) {
       answer_list_add(alpp, "illegal state: have no queue_instance_summary object",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    if (QueueInstanceSummaryImpl_setSuspendAlarmReason(env, ctx->queue_instance_summary, reason, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp) {
@@ -1237,16 +1174,13 @@ static int jgdi_qstat_queue_message(qstat_handler_t* handler, const char* qname,
    if (ctx->queue_instance_summary == NULL) {
       answer_list_add(alpp, "illegal state: have no queue_instance_summary object",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    if (QueueInstanceSummaryImpl_addExplainMessage(env, ctx->queue_instance_summary, message, alpp) != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_resource(qstat_handler_t* handler, const char* dom, const char* name, const char* value, lList **alpp) {
@@ -1257,16 +1191,13 @@ static int jgdi_qstat_queue_resource(qstat_handler_t* handler, const char* dom, 
    if (ctx->queue_instance_summary == NULL) {
       answer_list_add(alpp, "illegal state: have no queue_instance_summary object",
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (QueueInstanceSummaryImpl_addResource(env, ctx->queue_instance_summary, dom, name, value, alpp) != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_finished(qstat_handler_t* handler, const char* qname, lList **alpp) {
@@ -1278,8 +1209,7 @@ static int jgdi_qstat_queue_finished(qstat_handler_t* handler, const char* qname
 
    ret = QueueInstanceSummaryResultImpl_addQueueInstanceSummary(env, ctx->result_obj, ctx->queue_instance_summary, alpp);
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
    ctx->queue_instance_summary = NULL;
@@ -1288,12 +1218,10 @@ static int jgdi_qstat_queue_finished(qstat_handler_t* handler, const char* qname
                    "queue instance %s finished", qname);
                         
    if (ret != JGDI_SUCCESS) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_queue_jobs_finished(qstat_handler_t *handler, const char* qname, lList **alpp) {
@@ -1302,15 +1230,14 @@ static int jgdi_qstat_queue_jobs_finished(qstat_handler_t *handler, const char* 
    DENTER(JGDI_LAYER, "jgdi_qstat_queue_jobs_finished");
    
    if (QueueInstanceSummaryImpl_addJobs(ctx->jni_env, ctx->queue_instance_summary, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
    if (List_clear(ctx->jni_env, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }                   
 
 
@@ -1320,15 +1247,14 @@ static int jgdi_qstat_pending_jobs_finished(qstat_handler_t *handler, lList **al
    DENTER(JGDI_LAYER,"jgdi_qstat_pending_jobs_finished");
    
    if (QueueInstanceSummaryResultImpl_addPendingJobs(ctx->jni_env, ctx->result_obj, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
    if (List_clear(ctx->jni_env, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_finished_jobs_finished(qstat_handler_t *handler, lList **alpp) {
@@ -1337,15 +1263,14 @@ static int jgdi_qstat_finished_jobs_finished(qstat_handler_t *handler, lList **a
    DENTER(JGDI_LAYER,"jgdi_qstat_finished_jobs_finished");
    
    if (QueueInstanceSummaryResultImpl_addFinishedJobs(ctx->jni_env, ctx->result_obj, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
    if (List_clear(ctx->jni_env, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_error_jobs_finished(qstat_handler_t *handler, lList **alpp) {
@@ -1354,15 +1279,14 @@ static int jgdi_qstat_error_jobs_finished(qstat_handler_t *handler, lList **alpp
    DENTER(JGDI_LAYER,"jgdi_qstat_error_jobs_finished");
    
    if (QueueInstanceSummaryResultImpl_addErrorJobs(ctx->jni_env, ctx->result_obj, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
    if (List_clear(ctx->jni_env, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int jgdi_qstat_zombie_jobs_finished(qstat_handler_t *handler, lList **alpp) {
@@ -1371,15 +1295,14 @@ static int jgdi_qstat_zombie_jobs_finished(qstat_handler_t *handler, lList **alp
    DENTER(JGDI_LAYER,"jgdi_qstat_zombie_jobs_finished");
    
    if (QueueInstanceSummaryResultImpl_addZombieJobs(ctx->jni_env, ctx->result_obj, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
    if (List_clear(ctx->jni_env, ctx->job_ctx.list, alpp) != JGDI_SUCCESS) {
-      DEXIT; return -1;
+      DRETURN(-1);
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -1402,6 +1325,9 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
    
    DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSummary");
    
+   memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
+   memset(&qstat_env, 0, sizeof(qstat_env));
+   
    jgdi_init_rmon_ctx(env, JGDI_QSTAT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
@@ -1410,10 +1336,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillQueueInstanceSumm
       goto error;
    }
    sge_gdi_set_thread_local_ctx(ctx);
-   
-   memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
-   
-   memset(&qstat_env, 0, sizeof(qstat_env));
    
    if (options != NULL) {
       if((ret = BasicQueueOptions_getQueueFilter(env, options, &(filter.queue_filter), &alp)) != JGDI_SUCCESS) {
@@ -1603,7 +1525,7 @@ error:
    }
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 
@@ -1627,6 +1549,9 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
    
    DENTER(JGDI_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSummary");
 
+   memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
+   memset(&qstat_env, 0, sizeof(qstat_env));
+
    jgdi_init_rmon_ctx(env, JGDI_QSTAT_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
@@ -1635,7 +1560,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
    }
    sge_gdi_set_thread_local_ctx(ctx);
    
-   memset(&filter, 0, sizeof(jgdi_qstat_filter_t));
    
    if (options != NULL) {
       if((ret = BasicQueueOptions_getQueueFilter(env, options, &(filter.queue_filter), &alp)) != JGDI_SUCCESS) {
@@ -1651,8 +1575,6 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_fillClusterQueueSumma
          goto error;
       }
    }
-   
-   memset(&qstat_env, 0, sizeof(qstat_env));
    
    if ((ret = jgdi_qstat_env_init(env, ctx, &filter, &qstat_env, &alp)) != JGDI_SUCCESS) {
       goto error;
@@ -1683,7 +1605,7 @@ error:
    }
    rmon_set_thread_ctx(NULL);
    jgdi_destroy_rmon_ctx(&rmon_ctx);
-   DEXIT;
+   DRETURN_VOID;
 }
 
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/15 13:49:15 $     Revision: $Revision: 1.1.2.1 $
+.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/18 10:38:25 $     Revision: $Revision: 1.1.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/06/15 13:49:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/06/18 10:38:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .\"
@@ -45,16 +45,16 @@ qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .\"
 .SH DESCRIPTION
 .I qrstat
-shows the current status of the available xxQS_NAMExx AR(s).
+shows the current status of the available xxQS_NAMExx ARs.
 The selection option \fB\-ar\fP allows you to get information about 
 specific AR. 
 .\"
 .SH OPTIONS
 .IP "\fB\-ar ar_id\fP"
-Prints various information about the Advance AR identified by ar_id.
+Prints various information about the AR identified by ar_id.
 .\"
 .IP "\fB\-explain\fP"
-Displays the reason for an error state of an AR. Possible reasons 
+Displays the reason for the error state of an AR. Possible reasons 
 are the unknown state of a host or queue instance.
 .sp
 The output format for the alarm reasons is one line per reason.
@@ -63,13 +63,13 @@ The output format for the alarm reasons is one line per reason.
 Prints a listing of all options.
 .\"
 .IP "\fB\-u user,...\fP"
-Display information only for those AR(s) 
-being created by the users from the given user list.
+Display information only for those ARs 
+created by the users from the given user list.
 .sp
 The string
 \fB\ $user\fP
 is a placeholder for the current username. An asterisk "*" can be used 
-as username wildcard to request any users AR(s) be displayed. 
+as username wildcard to request that all users' ARs be displayed. 
 \"
 .IP "\fB\-xml\fP"
 This option can be used with all other options and changes the output to XML. The used
@@ -85,7 +85,7 @@ The \fB\-ext\fP and \fB\-urg\fP options may be used
 to display additional information for each AR.
 .\"
 .SS "\fBAdvance Reservation Summary (without \-ar)\fP"
-Following the header line a section for each AR
+Following the header line, a section for each AR
 is provided. The columns contain information for
 .IP "\(bu" 3n
 the AR id.

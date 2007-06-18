@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/15 13:46:34 $     Revision: $Revision: 1.68 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/18 10:40:22 $     Revision: $Revision: 1.69 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/06/15 13:46:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/06/18 10:40:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -368,22 +368,23 @@ allows changing this option even while the job executes.
 .IP "\fB\-ar AR_id\fP"
 Available for \fIqsub\fP, \fIqalter\f,  \fIqrsh\fP, \fIqsh\fP, or \fIqlogin\fPP  only.
 .sp 1
-The AR id \fBAR_is\fP is required.
+The AR_id \fBAR_is\fP is required.
 Assigns the submitted job to be a part of an existing Advance Reservation. 
-The complete lists of existing AR(s) can be obtained using
+The complete list of existing Advance Reservations can be obtained using the
 .M qrstat 1
 command. 
 .sp 1
 .I Qalter
-Allows changing the AR id for the job. 
-The change of the AR id for a running job will be rejected.
+allows the AR_id of a pending job to be changed. 
+The AR_id of a running job cannot be changed.
 .\"
 .IP "\fB\-A account_string\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 Identifies the account to which the resource consumption of the job
-should be charged. The \fBaccount_string\fP should conform to \fBname\fP definition in
+should be charged. The \fBaccount_string\fP should conform to the \fBname\fP
+definition in
 M sge_types 1 .
 In the absence of this parameter xxQS_NAMExx 
 will place the default account string "xxqs_name_sxx" in the accounting record
@@ -1059,7 +1060,8 @@ earlier eligible for being dispatched by the xxQS_NAMExx scheduler.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
-Parallel programming environment (PE) to instantiate. For more detail about PE please see the
+Parallel programming environment (PE) to instantiate. For more detail about PEs,
+please see the
 .M sge_types 1 .
 .sp 1
 .I Qalter

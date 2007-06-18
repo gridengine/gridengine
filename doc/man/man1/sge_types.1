@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/15 13:46:34 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/18 10:40:22 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/15 13:46:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/18 10:40:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -447,7 +447,7 @@ or a full pe name.
 wc_pe_name := pe_name | pattern
 .PP
 .SS "\fBparallel_env\fP \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
-Parallel programming environment (PE) to select for the AR. The
+Parallel programming environment (PE) to select for an AR. The
 range descriptor behind the PE name specifies the number of
 parallel processes to be run. xxQS_NAMExx will allocate the
 appropriate resources as available. The
@@ -501,10 +501,10 @@ ss denotes the seconds in 2 digits (default 00).
 seconds  is a number of seconds (is used for duration values)
 .fi
 .sp 1
-If any of the optional date field is omitted, the corresponding value of
+If any of the optional date fields are omitted, the corresponding value of
 the current date is assumed. If CC is not specified, a YY of < 70 means 20YY.
 .br
-Usage of this option may cause unexpected results if the clocks of the
+Use of this option may cause unexpected results if the clocks of the
 hosts in the xxQS_NAMExx pool are out of sync. Also, the proper behavior of
 this option very much depends on the correct setting of the
 appropriate timezone, e.g. in the TZ environment variable (see
@@ -516,7 +516,7 @@ and
 are invoked.
 .SS "\fBname\fP"
 The \fBname\fP
-may be any arbitrary ASCII alphanumeric string
+may be any arbitrary alphanumeric ASCII string,
 but may not contain  "\\n", "\\t", "\\r", "/", ":", "@", "\\", "*",  or "?".
 .PP
 .\"

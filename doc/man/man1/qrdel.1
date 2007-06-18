@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrdel.1,v $     Last Update: $Date: 2007/06/15 13:46:34 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: qrdel.1,v $     Last Update: $Date: 2007/06/18 10:40:22 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QDEL 1 "$Date: 2007/06/15 13:46:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QDEL 1 "$Date: 2007/06/18 10:40:22 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrdel \- delete xxQS_NAMExx Advance Reservations (AR)
 .SH SYNTAX
@@ -44,17 +44,17 @@ qrdel \- delete xxQS_NAMExx Advance Reservations (AR)
 .SH DESCRIPTION
 .I Qrdel
 provides a means for a user/operator/manager to delete
-one or more Advance Reservations (AR). A manager/operator can delete AR(s) belonging to any
-user, while a regular user can only delete his or her own AR(s).
+one or more Advance Reservations (AR). A manager/operator can delete ARs belonging to any
+user, while a regular user can only delete his or her own ARs.
 If a manager wants to delete another user's AR, the manager can specify
-the AR id.A "qrdel wc_ar_name" will delete only the AR of belonging to  
-that user by default. The manager is able to delete another user's AR via "-u wc_user_list". 
+the AR id.  By default, "qrdel wc_ar_name" will delete only the ARs belonging to  
+that user. A manager is able to delete another user's AR via "-u wc_user_list". 
 Jobs referring to an AR tagged for deletion will also be removed. 
-Only if all jobs referring an AR are removed from the xxQS_NAMExx database 
-the AR will also be removed.
+Only if all jobs referring to an AR are removed from the xxQS_NAMExx database 
+will the AR also be removed.
 
 .I Qrdel
-deletes AR in the order in which their AR 
+deletes ARs in the order in which the AR 
 identifiers are presented. Find additional information concerning
 \fIwc_user_list\fP and \fIwc_ar_list\fP in
 .M sge_types 1 .
@@ -63,31 +63,31 @@ identifiers are presented. Find additional information concerning
 .SH OPTIONS
 .\"
 .IP "\fB\-f\fP"
-Force action for AR. The AR(s) are deleted from the list of an AR
-registered at
-.M xxqs_name_sxx_qmaster 8
+Force action for AR. The ARs are deleted from the list of ARs
+registered with the
+.M xxqs_name_sxx_qmaster 8 ,
 even if the
 .M xxqs_name_sxx_execd 8
-controlling the AR(s) does not respond to the delete request sent by
+controlling the ARs does not respond to the delete request sent by the
 .M xxqs_name_sxx_qmaster 8 .
 .br
-Users which are neither xxQS_NAMExx managers nor operators can only use the
+Users which have neither xxQS_NAMExx manager nor operator status can only use the
 .B \-f
-option (for their own AR) if the cluster configuration entry
+option for their own ARs.
 .\"
 .IP "\fB\-help\fP"
-Prints a listing of all options.
+Prints a list of all options.
 .\"
 .IP "\fB\-u wc_user_list\fP"
-Deletes only those AR(s) which were submitted by
+Deletes only those ARs which were submitted by
 users specified in the list of usernames.
-For managers it is possible to use \fB\qrdel -u "*" "*"\fP to delete
-all AR(s) of all users. If a manager wants to delete a specific
-AR of a user, he has to specify the user and the AR id. If no 
-AR is specified, all AR(s) belonging to that user are deleted.
+For managers, it is possible to use \fB\qrdel -u "*" "*"\fP to delete
+all ARs for all users. If a manager wants to delete a specific
+AR for a user, he has to specify the user and the AR id. If no 
+AR is specified, all ARs belonging to that user are deleted.
 .\"
 .IP "\fBwc_ar_list\fP"
-A list of AR id's, which should be deleted
+A list of AR id's that should be deleted
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
@@ -118,11 +118,11 @@ should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
 .IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
-If set, specifies the tcp port on which
+If set, specifies the tcp port on which the
 .M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry for the
-service "sge_qmaster" instead to define that port.
+Most installations will use a service map entry for the
+service "sge_qmaster" instead of defining the port.
 .\"
 .\"
 .SH FILES

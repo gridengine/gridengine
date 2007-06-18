@@ -218,6 +218,12 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       return answer;
    }
 
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-ar"))) {
+      /* the old advance reservation is overwritten */
+      lSetUlong(*pjob, JB_ar, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, &ep);
+   }
+
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-e"))) {
       lSetList(*pjob, JB_stderr_path_list, lCopyList("stderr_path_list", lGetList(ep, SPA_argval_lListT)));
       lRemoveElem(cmdline, &ep);

@@ -2001,7 +2001,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             }
          }
 
-         if(strcmp(cp, "jobarg") && strcmp(cp, "script") &&
+         if(strcmp(cp, "jobarg") && strcmp(cp, "script") && strcmp(cp, "-ar") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
             strcmp(cp, "-hold_jid") && strcmp(cp, "-h") && 

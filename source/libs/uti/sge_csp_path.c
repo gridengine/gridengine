@@ -300,6 +300,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    const char* sge_certfile = NULL;
    const char* sge_keyfile = NULL;
    int sge_qmaster_port = 0;
+   bool is_from_services = false;
    SGE_STRUCT_STAT sbuf;
 /*    bool sge_no_ca_local_root = false;  */
 
@@ -315,6 +316,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_root = sge_env->get_sge_root(sge_env);
    sge_cell = sge_env->get_sge_cell(sge_env);
    sge_qmaster_port = sge_env->get_sge_qmaster_port(sge_env);
+   is_from_services = sge_env->is_from_services(sge_env);
    
    progname = sge_prog->get_sge_formal_prog_name(sge_prog);
    username = sge_prog->get_user_name(sge_prog);
@@ -338,7 +340,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    sge_dstring_sprintf(&bw, "%s/%s/%s", sge_root, sge_cell, CA_DIR);
    ca_root = strdup(sge_dstring_get_string(&bw));
 
-   if (sge_qmaster_port) {
+   if (!is_from_services) {
       sge_dstring_sprintf(&bw, "%s/port%d/%s", CA_LOCAL_DIR, sge_qmaster_port, sge_cell);   
    } else {
       sge_dstring_sprintf(&bw, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, sge_cell);   
@@ -367,7 +369,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
          DEXIT;
          return false;
       }
-      if (sge_qmaster_port) {                     
+      if (!is_from_services) {                     
          sge_dstring_sprintf(&bw, "%s/%s/port%d/%s", pw->pw_dir, SGESecPath, sge_qmaster_port, sge_cell);   
       } else {         
          sge_dstring_sprintf(&bw, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, SGE_COMMD_SERVICE, sge_cell);   

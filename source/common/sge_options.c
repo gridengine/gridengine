@@ -473,7 +473,10 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* Mrqs_OPT - modify resource quota set from file */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* drqs_OPT - delete resource quota set */
- {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* terse_OPT - show only the job id, terse output */
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}
+
 /*               
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  e  q  n  A
   o  a  c  d  h  m  m  r  r  s  s  r  l  s  s  x  e  o  L

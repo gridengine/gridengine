@@ -2,15 +2,16 @@ Source Code Review Form
 =======================
 (version 1.3)
 
-Date: 19 June 2007
+Date:
 
 1 Identification
 
-1.1 Bugtraq       : 6522273
-1.2 Summary       : Wrong exit code with qconf -sds
-1.3 Changelog ID  : RN-2007-06-19-1
-1.4 Developer(s)  : RN
-1.5 Reviewer(s)   : JG
+1.1 Issue         : 916
+1.2 Bugtraq       : 6355875
+1.3 Summary       : qsub -terse to just output job id
+1.4 Changelog ID  : RN-2007-06-19-2
+1.5 Developer(s)  : RN
+1.6 Reviewer(s)   : JG
 
 
 2 Conforms to specification
@@ -46,8 +47,8 @@ Date: 19 June 2007
 3.6 [ ] no - comment:
 
 3.7 Issuezilla entry (if exists) complete and correct?
-3.7 [ ] yes
-3.7 [x] no - comment:
+3.7 [x] yes
+3.7 [ ] no - comment:
 
 
 4 Source review
@@ -69,16 +70,19 @@ Date: 19 June 2007
 
 5.1 Used memory leak debugger
 5.1 [ ] yes
-5.1 [x] no - Fix doesn't deal with memory allocation/deallocation
+5.1 [x] no - Fix doesn't allocate/deallocate memory
 
 5.2 Manual tests
-Description: For detached strings, check the exit code for qconf
+Description: 
+ -) man qsub has -terse entry
+ -) qsub -help has -terse entry
+ -) qsub -terse sleeper.sh shows only job-id?
 Successfull execution
 5.2 [x] yes
 5.2 [ ] no - comment:
 
 5.3 Testsuite covers issue
-5.3 [x] yes (Existing qconf test is extended to test this bug)
+5.3 [x] yes
 5.3 [ ] no - comment:
 
 5.4 If 5.3 = no: New testsuite test or module test created?

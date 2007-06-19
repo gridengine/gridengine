@@ -1152,6 +1152,10 @@ FILE *fp
       MARK(OA_TASK_ID_RANGE);
    }
 
+   if (VALID_OPT(terse_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_terse_OPT , MSG_GDI_UTEXT_terse_OPT );
+   }
+
    if (VALID_OPT(tsm_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_tsm_OPT , MSG_GDI_UTEXT_tsm_OPT );
    }

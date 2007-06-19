@@ -60,6 +60,7 @@
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
+#include "basis_types.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -100,6 +101,7 @@ char **argv
    u_long32 num_tasks;
    int count, stat;
    char *jobid_string = NULL;
+   bool has_terse = false;
    drmaa_attr_values_t *jobids = NULL;
 
    u_long32 prog_number = 0;
@@ -167,6 +169,13 @@ char **argv
       sge_usage(QSUB, stdout);
       DEXIT;
       SGE_EXIT(NULL, 0);
+   }
+
+   /*
+    * Check if -terse is requested
+    */
+   if (opt_list_has_X(opts_cmdline, "-terse")) {
+      has_terse = true;
    }
 
    /*
@@ -346,7 +355,10 @@ char **argv
    if (!just_verify) {
       const char *output = sge_dstring_get_string(&diag); 
 
-      if (output != NULL) {
+      if (has_terse) {
+         printf("%s", jobid_string);
+      }
+      else if (output != NULL) {
         printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));

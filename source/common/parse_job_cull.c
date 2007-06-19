@@ -481,6 +481,11 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
 
    parse_list_simple(cmdline, "-S", *pjob, JB_shell_list, PN_host, PN_path, FLG_LIST_MERGE);
 
+   /* -terse option, not needed in job struct */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-terse"))) {
+      lRemoveElem(cmdline, &ep);
+   }
+
    parse_list_simple(cmdline, "-u", *pjob, JB_user_list, 0, 0, FLG_LIST_APPEND);
 
    /*

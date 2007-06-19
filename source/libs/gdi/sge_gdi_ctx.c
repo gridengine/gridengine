@@ -801,19 +801,13 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    /* set uid and gid */
    {      
       struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
       struct passwd pw_struct;
       char buffer[2048];
-#endif
 
-#ifdef HAS_GETPWNAM_R
       pwd = sge_getpwnam_r(username, &pw_struct, buffer, sizeof(buffer));
-#else
-      pwd = sge_getpwnam(username);
-#endif
 
       if (!pwd) {
-         eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_getpwnam failed for username %s", username);
+         eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_getpwnam_r failed for username %s", username);
          DRETURN(false);
       }
       es->uid = pwd->pw_uid;
@@ -861,12 +855,18 @@ static bool sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const 
    */
    {
       struct passwd *pwd = NULL;
-      char buffer[2048];
+      char *buffer;
+      int size;
       struct passwd pwentry;
-      if (getpwuid_r((uid_t)getuid(), &pwentry, buffer, sizeof(buffer), &pwd) == 0) {
+
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      if (getpwuid_r((uid_t)getuid(), &pwentry, buffer, size, &pwd) == 0) {
          es->component_username = sge_strdup(es->component_username, pwd->pw_name);
+         FREE(buffer);
       } else {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "getpwuid_r failed");
+         FREE(buffer);
          DRETURN(false);
       }
 

@@ -110,9 +110,7 @@ print_func_t ostream
    lList *clp_cluster = NULL, *clp_user = NULL;
    lListElem *nxt, *cep_dest, *cep, *next;
    const char *task_name;
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
-#endif
    const char* user_name = ctx->get_username(ctx);
    const char* cell_root = ctx->get_cell_root(ctx);
 
@@ -144,11 +142,7 @@ print_func_t ostream
 
    }
 
-#ifdef HAS_GETPWNAM_R
    pwd = sge_getpwnam_r(user_name, &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(user_name);
-#endif
    
    /* user settings */
    if (pwd == NULL) {

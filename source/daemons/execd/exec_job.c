@@ -288,7 +288,7 @@ int err_length) {
    const char *masterhost = ctx->get_master(ctx, false);
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
-   char buffer[2048];
+   char buffer[20480];
 
    int write_osjob_id = 1;
 

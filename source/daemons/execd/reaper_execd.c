@@ -1505,21 +1505,31 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
       if (owner) {
          struct passwd *pw;
          struct passwd pw_struct;
-         stringT buffer_pw;
-         stringT buffer_pg;
+         char *buffer_pw;
+         int size_pw;
 
-         pw = sge_getpwnam_r(owner, &pw_struct, buffer_pw, MAX_STRING_SIZE);
+         size_pw = get_pw_buffer_size();
+         buffer_pw = sge_malloc(size_pw);
+         pw = sge_getpwnam_r(owner, &pw_struct, buffer_pw, size_pw);
          if (pw) {
+            char *buffer_pg;
+            int size_pg;
+
             if (mconf_get_use_qsub_gid()) {
                char *tmp_qsub_gid = search_conf_val("qsub_gid");
                pw->pw_gid = atol(tmp_qsub_gid);
             }
 
+            size_pg = get_group_buffer_size();
+            buffer_pg = sge_malloc(size_pg);
             if(sge_gid2group(pw->pw_gid, buffer_pg, 
-                             MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
+                             size_pg, MAX_NIS_RETRIES) != 0) {
                lSetString(jr, JR_group, buffer_pg);
             }
+            FREE(buffer_pg);
          }
+
+         FREE(buffer_pw);
       }
 
       add_usage(jr, "submission_time", get_conf_val("submission_time"), (double)0);

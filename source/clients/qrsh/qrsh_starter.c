@@ -635,7 +635,8 @@ static int startJob(char *command, char *wrapper, int noshell)
       return(status);
    } else {
       /* child */
-      char buffer[2048];
+      char *buffer = NULL;
+      int size;
       struct passwd pw_struct;
       char *shell    = NULL;
       char *userName = NULL;
@@ -665,7 +666,10 @@ static int startJob(char *command, char *wrapper, int noshell)
             exit(EXIT_FAILURE);
          }
 
-         if ((pw = sge_getpwnam_r(userName, &pw_struct, buffer, sizeof(buffer))) == NULL) {
+         size = get_pw_buffer_size();
+         buffer = sge_malloc(size);
+
+         if ((pw = sge_getpwnam_r(userName, &pw_struct, buffer, size)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_CANNOTGETUSERINFO_S, strerror(errno));
             exit(EXIT_FAILURE);
          }

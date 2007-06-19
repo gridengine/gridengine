@@ -427,13 +427,18 @@ lListElem *conf
 
       if (!strcmp(name, "admin_user")) {
          struct passwd pw_struct;
-         char buffer[2048];
+         char *buffer;
+         int size;
 
-         if (strcasecmp(value, "none") && !sge_getpwnam_r(value, &pw_struct, buffer, sizeof(buffer))) {
+         size = get_pw_buffer_size();
+         buffer = sge_malloc(size);
+         if (strcasecmp(value, "none") && !sge_getpwnam_r(value, &pw_struct, buffer, size)) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXASADMINUSER_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            FREE(buffer);
             DRETURN(STATUS_EEXIST);
          }
+         FREE(buffer);
       }
 
       if (!strcmp(name, "user_lists")||!strcmp(name, "xuser_lists")) {

@@ -205,12 +205,16 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       if (user) {
          struct passwd *pw;
          struct passwd pw_struct;
-         char buffer[2048];
+         char *buffer;
+         int size;
 
-         if (!(pw=sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer)))) {
+         size = get_pw_buffer_size();
+         buffer = sge_malloc(size);
+         if (!(pw=sge_getpwnam_r(user, &pw_struct, buffer, size))) {
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
+            FREE(buffer);
             SGE_EXIT(NULL, 1);
          }
  
@@ -221,6 +225,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             /* Only change user if we differ from the wanted user */
             if(myuid != SGE_SUPERUSER_UID) {
                write(2, not_root, sizeof(not_root));
+               FREE(buffer);
                SGE_EXIT(NULL, 1);
             }                             
             sprintf(err_str, "%s %d\n", pw->pw_name, (int)pw->pw_gid);
@@ -237,6 +242,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      res, user, strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
+               FREE(buffer);
                SGE_EXIT(NULL, 1);
             }
 #endif /* WIN32 */
@@ -246,6 +252,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
+               FREE(buffer);
                SGE_EXIT(NULL, 1);
             }
          }
@@ -255,6 +262,8 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          addenv("USER", pw->pw_name);
          addenv("LOGNAME", pw->pw_name);
          addenv("PATH", SGE_DEFAULT_PATH);
+
+         FREE(buffer);
       }
  
       if (login_shell)

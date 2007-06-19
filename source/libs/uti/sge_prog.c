@@ -50,6 +50,7 @@
 #include "sge_prog.h"
 #include "sge_answer.h"
 #include "sge_error_class.h"
+#include "sge_uidgid.h"
 #include "msg_utilib.h"
 
 /* Must match Qxxx defines in sge_prog.h */
@@ -534,10 +535,15 @@ void sge_getme(u_long32 program_number)
 
    {
       struct passwd *paswd = NULL;
-      char buffer[2048];
+      char *buffer;
+      int size;
       struct passwd pwentry;
-      SGE_ASSERT(getpwuid_r((uid_t)uti_state_get_uid(), &pwentry, buffer, sizeof(buffer), &paswd)==0)
+
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      SGE_ASSERT(getpwuid_r((uid_t)uti_state_get_uid(), &pwentry, buffer, size, &paswd) == 0)
       uti_state_set_user_name(paswd->pw_name);
+      FREE(buffer);
    }
 
    uti_state_set_default_cell(sge_get_default_cell());

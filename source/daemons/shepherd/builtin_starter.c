@@ -165,7 +165,8 @@ int truncate_stderr_out
    gid_t gid;
    struct passwd *pw=NULL;
    struct passwd pw_struct;
-   char buffer[2048];
+   char *buffer;
+   int size;
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
@@ -290,7 +291,10 @@ int truncate_stderr_out
 
    shepherd_trace_sprintf("reading passwd information for user '%s'",
          target_user ? target_user : "<NULL>");
-   pw = sge_getpwnam_r(target_user, &pw_struct, buffer, sizeof(buffer));
+
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
+   pw = sge_getpwnam_r(target_user, &pw_struct, buffer, size);
    if (!pw) {
       sprintf(err_str, "can't get password entry for user \"%s\"", target_user);
       shepherd_error(err_str);
@@ -850,6 +854,8 @@ int truncate_stderr_out
       }
    }
    start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, use_starter_method);
+
+   FREE(buffer);
    return;
 }
 

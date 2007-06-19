@@ -270,23 +270,28 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    } else {
       struct passwd *pw;
       struct passwd pw_struct;
-      char buffer[2048];
+      char *buffer;
+      int size;
 
-      pw = sge_getpwnam_r(user_name, &pw_struct, buffer, sizeof(buffer));
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      pw = sge_getpwnam_r(user_name, &pw_struct, buffer, size);
 
-      if (!pw) {   
+      if (!pw) {
          CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, user_name));
+         FREE(buffer);
          DRETURN(-1);
       }
       userdir = sge_malloc(strlen(pw->pw_dir) + strlen(SGESecPath) +
                           (cp ? strlen(cp) + 4 : strlen(SGE_COMMD_SERVICE)) +
                            strlen(sge_get_default_cell()) + 4);
-      if (cp)                     
-         sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp, 
-               sge_get_default_cell());
-      else         
-         sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, 
-                  SGE_COMMD_SERVICE, sge_get_default_cell());
+      if (cp) {
+         sprintf(userdir, "%s/%s/port%s/%s", pw->pw_dir, SGESecPath, cp,
+                 sge_get_default_cell());
+      } else {
+         sprintf(userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath,
+                 SGE_COMMD_SERVICE, sge_get_default_cell());
+      }
       user_local_dir = userdir;
    }
 

@@ -768,21 +768,18 @@ const char *get_root_file_path(dstring *absolut_filename, const char *cell_root,
 bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
 {
    bool ret = true;
-   struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
-   struct passwd pw_struct;
-   char buffer[2048];
-#endif
 
    DENTER(TOP_LAYER, "get_user_home");
 
    if (home_dir != NULL) {
+      struct passwd *pwd;
+      struct passwd pw_struct;
+      char *buffer;
+      int size;
 
-#ifdef HAS_GETPWNAM_R
-      pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
-#else
-      pwd = sge_getpwnam(user);
-#endif
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      pwd = sge_getpwnam_r(user, &pw_struct, buffer, size);
       if (!pwd) {
          answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
                          ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S, user);
@@ -796,7 +793,7 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
       if (ret) {
          sge_dstring_copy_string(home_dir, pwd->pw_dir);
       }
-
+      FREE(buffer);
    } else {
       /* should never happen */
       ret = false;

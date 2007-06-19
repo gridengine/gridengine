@@ -275,8 +275,7 @@ FCLOSE_ERROR:
 *         0 - OK
 *
 *  NOTES
-*     MT-NOTE: path_alias_list_initialize() is MT safe if getpwnam_r() 
-*     MT-NOTE: can be used
+*     MT-NOTE: path_alias_list_initialize() is MT safe
 ******************************************************************************/
 int path_alias_list_initialize(lList **path_alias_list, 
                                lList **alpp,
@@ -295,28 +294,30 @@ int path_alias_list_initialize(lList **path_alias_list,
     */
    {
       struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
       struct passwd pw_struct;
-      char buffer[2048];
-      pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
-#else
-      pwd = sge_getpwnam(user);
-#endif
+      char *buffer;
+      int size;
+
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      pwd = sge_getpwnam_r(user, &pw_struct, buffer, size);
 
       if (!pwd) {
          sprintf(err, MSG_USER_INVALIDNAMEX_S, user);
          answer_list_add(alpp, err, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         FREE(buffer);
+         DRETURN(-1);
       }
       if (!pwd->pw_dir) {
          sprintf(err, MSG_USER_NOHOMEDIRFORUSERX_S, user);
          answer_list_add(alpp, err, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return -1;
+         FREE(buffer);
+         DRETURN(-1);
       }
       sprintf(filename[0], "%s/%s", cell_root, PATH_ALIAS_COMMON_FILE);
       sprintf(filename[1], "%s/%s", pwd->pw_dir, PATH_ALIAS_HOME_FILE);
+
+      FREE(buffer);
    }
 
    /*

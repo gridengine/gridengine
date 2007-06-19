@@ -3948,32 +3948,32 @@ static char *drmaa_get_home_directory(const char* username, lList *alp)
 {
    struct passwd *pwd = NULL;
    char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
-   char buffer[2048];
-#endif
+   char *buffer;
+   int size;
 
    DENTER(TOP_LAYER, "drmaa_get_home_directory");
    
-#ifdef HAS_GETPWNAM_R
-   pwd = sge_getpwnam_r(username, &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(username);
-#endif
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
+   pwd = sge_getpwnam_r(username, &pw_struct, buffer, size);
 
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, username);
       answer_list_add(&alp, str, STATUS_ENOSUCHUSER, 
                       ANSWER_QUALITY_ERROR);
+      FREE(buffer);
       DRETURN(NULL);
    }
 
    if (!pwd->pw_dir) {
       sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, username);
       answer_list_add(&alp, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+      FREE(buffer);
       DRETURN(NULL);
    }
    
+   FREE(buffer);
    DRETURN(strdup(pwd->pw_dir));
 }
 

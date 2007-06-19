@@ -360,14 +360,17 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    } else {
       struct passwd *pw;
       struct passwd pw_struct;
-      char buffer[2048];
+      char *buffer;
+      int size;
 
-      pw = sge_getpwnam_r(username, &pw_struct, buffer, sizeof(buffer));
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      pw = sge_getpwnam_r(username, &pw_struct, buffer, size);
 
       if (!pw) {   
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SEC_USERNOTFOUND_S, username);
-         DEXIT;
-         return false;
+         FREE(buffer);
+         DRETURN(false);
       }
       if (!is_from_services) {                     
          sge_dstring_sprintf(&bw, "%s/%s/port%d/%s", pw->pw_dir, SGESecPath, sge_qmaster_port, sge_cell);   
@@ -376,6 +379,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
       }            
       user_dir = strdup(sge_dstring_get_string(&bw));
       user_local_dir = strdup(user_dir);
+      FREE(buffer);
    }
 
    sge_dstring_sprintf(&bw, "%s/%s", ca_root, CaCert);   

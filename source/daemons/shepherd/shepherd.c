@@ -2125,17 +2125,22 @@ static int start_async_command(const char *descr, char *cmd)
    char *cwd;
    struct passwd *pw=NULL;
    struct passwd pw_struct;
-   char buffer[2048];
-      
-   pw = sge_getpwnam_r(get_conf_val("job_owner"), &pw_struct, buffer, sizeof(buffer));
+   char *buffer;
+   int size;
+
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
+   pw = sge_getpwnam_r(get_conf_val("job_owner"), &pw_struct, buffer, size);
 
    if (!pw) {
       shepherd_error_sprintf("can't get password entry for user \"%s\"",
                              get_conf_val("job_owner"));
    }
+   /* the getpwnam is only a verification - the result is not used - free it */
+   FREE(buffer);
 
 	/* Create "error" and "exit_status" files here */
-	shepherd_error_init( );
+	shepherd_error_init();
                             
    if ((pid = fork()) == -1) {
       shepherd_trace_sprintf("can't fork for starting %s command", descr);
@@ -2446,17 +2451,21 @@ static int notify_tasker(u_long32 exit_status)
       char *job_owner;
       struct passwd *pw=NULL;
       struct passwd pw_struct;
-      char buffer[2048];
+      char *buffer;
+      int size;
 
       /* sig_info_file has to be removed by tasker 
          and tasker runs in user mode */
       job_owner = get_conf_val("job_owner");
-      pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, sizeof(buffer));
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, size);
       if (!pw) {
          shepherd_error_sprintf("can't get password entry for user "
                                 "\"%s\"", job_owner);
       }
       chown(sig_info_file, pw->pw_uid, -1);
+      FREE(buffer);
    }
 
    shepherd_trace_sprintf("signalling tasker with pid #"pid_t_fmt, tasker_pid);

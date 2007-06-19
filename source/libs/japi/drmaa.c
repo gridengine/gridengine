@@ -4008,18 +4008,12 @@ static char *drmaa_get_home_directory (lList *alp)
 {
    struct passwd *pwd = NULL;
    char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
    char buffer[2048];
-#endif
 
    DENTER (TOP_LAYER, "drmaa_get_home_directory");
    
-#ifdef HAS_GETPWNAM_R
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
 
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());

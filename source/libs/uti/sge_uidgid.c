@@ -90,8 +90,6 @@ static void uidgid_state_init(struct uidgid_state_t* theState);
 static void set_admin_user(uid_t, gid_t);
 static int  get_admin_user(uid_t*, gid_t*);
 
-static int get_group_buffer_size(void);
-
 static uid_t       uidgid_state_get_last_uid(void);
 static const char* uidgid_state_get_last_username(void);
 static gid_t       uidgid_state_get_last_gid(void);
@@ -252,8 +250,9 @@ int sge_set_admin_username(const char *user, char *err_str)
       set_admin_user(getuid(), getgid());
    } else {
       struct passwd pw_struct;
-      char buffer[2048];
-      admin = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
+      int size = get_pw_buffer_size();
+      char *buffer = sge_malloc(size);
+      admin = sge_getpwnam_r(user, &pw_struct, buffer, size);
       if (admin) {
          set_admin_user(admin->pw_uid, admin->pw_gid);
       } else {
@@ -261,6 +260,7 @@ int sge_set_admin_username(const char *user, char *err_str)
             sprintf(err_str, MSG_SYSTEM_ADMINUSERNOTEXIST_S, user);
          ret = -1;
       }
+      FREE(buffer);
    }
    DEXIT;
    return ret;
@@ -529,18 +529,23 @@ int sge_user2uid(const char *user, uid_t *puid, uid_t *pgid, int retries)
 {
    struct passwd *pw;
    struct passwd pwentry;
-   char buffer[2048];
+   char *buffer;
+   int size;
 
    DENTER(UIDGID_LAYER, "sge_user2uid");
+
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
 
    do {
       DPRINTF(("name: %s retries: %d\n", user, retries));
 
       if (!retries--) {
+         FREE(buffer);
          DEXIT;
          return 1;
       }
-      if (getpwnam_r(user, &pwentry, buffer, sizeof(buffer), &pw) != 0) {
+      if (getpwnam_r(user, &pwentry, buffer, size, &pw) != 0) {
          pw = NULL;
       }
    } while (pw == NULL);
@@ -552,6 +557,7 @@ int sge_user2uid(const char *user, uid_t *puid, uid_t *pgid, int retries)
       *pgid = pw->pw_gid;
    }
 
+   FREE(buffer);
    DEXIT; 
    return 0;
 } /* sge_user2uid() */
@@ -585,16 +591,21 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
 {
    struct group *gr;
    struct group grentry;
-   char buffer[2048];
+   char *buffer;
+   int size;
 
    DENTER(UIDGID_LAYER, "sge_group2gid");
 
+   size = get_group_buffer_size();
+   buffer = sge_malloc(size);
+
    do {
       if (!retries--) {
+         FREE(buffer);
          DEXIT;
          return 1;
       }
-      if (getgrnam_r(gname, &grentry, buffer, sizeof(buffer), &gr) != 0) {
+      if (getgrnam_r(gname, &grentry, buffer, size, &gr) != 0) {
          gr = NULL;
       }
    } while (gr == NULL);
@@ -603,6 +614,7 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
       *gidp = gr->gr_gid;
    }
 
+   FREE(buffer);
    DEXIT; 
    return 0;
 } /* sge_group2gid() */
@@ -634,23 +646,27 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
 ******************************************************************************/
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 {
-   struct passwd *pw;
-   struct passwd pwentry;
-   char buffer[2048];
    const char *last_username;
 
    DENTER(UIDGID_LAYER, "sge_uid2user");
 
    last_username = uidgid_state_get_last_username();
 
-   if (!last_username[0] || (uidgid_state_get_last_uid() != uid))
-   {
+   if (!last_username[0] || (uidgid_state_get_last_uid() != uid)) {
+      struct passwd *pw;
+      struct passwd pwentry;
+      int size;
+      char *buffer;
+
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      
       /* max retries that are made resolving user name */
-      while (getpwuid_r(uid, &pwentry, buffer, sizeof(buffer), &pw) != 0)
-      {
+      while (getpwuid_r(uid, &pwentry, buffer, size, &pw) != 0) {
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US, 
                   sge_u32c(uid), strerror(errno)));
+            FREE(buffer);
             DEXIT;
             return 1;
          }
@@ -659,7 +675,10 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       /* cache user name */
       uidgid_state_set_last_username(pw->pw_name);
       uidgid_state_set_last_uid(uid);
+
+      FREE(buffer);
    }
+
    if (dst) {
       sge_strlcpy(dst, uidgid_state_get_last_username(), sz);
    }
@@ -736,15 +755,71 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 } /* sge_gid2group() */
 
 
-static int get_group_buffer_size(void)
+/****** sge_uidgid/get_pw_buffer_size() ****************************************
+*  NAME
+*     get_pw_buffer_size() -- get the buffer size required for getpw*_r
+*
+*  SYNOPSIS
+*     int get_pw_buffer_size(void) 
+*
+*  FUNCTION
+*     Returns the buffer size required for functions like getpwnam_r.
+*     It can either be retrieved via sysconf, or a bit (20k) buffer
+*     size is taken.
+*
+*  RESULT
+*     int - buffer size in bytes
+*
+*  NOTES
+*     MT-NOTE: get_pw_buffer_size() is MT safe 
+*
+*  SEE ALSO
+*     sge_uidgid/get_group_buffer_size()
+*******************************************************************************/
+int get_pw_buffer_size(void)
+{
+   enum { buf_size = 20480 };  /* default is 20 KB */
+   
+   int sz = buf_size;
+
+#ifdef _SC_GETPW_R_SIZE_MAX
+   if ((sz = (int)sysconf(_SC_GETPW_R_SIZE_MAX)) != 0) {
+      sz = buf_size;
+   }
+#endif
+
+   return sz;
+}
+
+/****** sge_uidgid/get_group_buffer_size() ****************************************
+*  NAME
+*     get_group_buffer_size() -- get the buffer size required for getgr*_r
+*
+*  SYNOPSIS
+*     int get_group_buffer_size(void) 
+*
+*  FUNCTION
+*     Returns the buffer size required for functions like getgrnam_r.
+*     It can either be retrieved via sysconf, or a bit (20k) buffer
+*     size is taken.
+*
+*  RESULT
+*     int - buffer size in bytes
+*
+*  NOTES
+*     MT-NOTE: get_group_buffer_size() is MT safe 
+*
+*  SEE ALSO
+*     sge_uidgid/get_pw_buffer_size()
+*******************************************************************************/
+int get_group_buffer_size(void)
 {
    enum { buf_size = 20480 };  /* default is 20 KB */
    
    int sz = buf_size;
 
 #ifdef _SC_GETGR_R_SIZE_MAX
-   if ((sz = (int)sysconf(_SC_GETGR_R_SIZE_MAX)) != 0)
-   {
+   if ((sz = (int)sysconf(_SC_GETGR_R_SIZE_MAX)) != 0) {
       sz = buf_size;
    }
 #endif
@@ -777,8 +852,7 @@ static int get_group_buffer_size(void)
 *     gid_t qsub_gid                - ???
 *
 *  NOTES
-*     MT-NOTE: sge_set_uid_gid_addgrp() is not MT safe because it depends
-*     MT-NOTE: on sge_switch2start_user() and sge_getpwnam()
+*     MT-NOTE: sge_set_uid_gid_addgrp() is MT safe
 *
 *     TODO: This function needs to be rewritten from scratch! It calls
 *     'initgroups()' which is not part of POSIX. The call to 'initgroups()'
@@ -796,16 +870,40 @@ static int get_group_buffer_size(void)
 *         3 - no password entry in sgepasswd file
 *         4 - switch to user failed, likely wrong password for this user
 ******************************************************************************/
+static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
+                            int min_gid, int min_uid, int add_grp, char *err_str,
+                            int use_qsub_gid, gid_t qsub_gid,
+                            char *buffer, int size);
+
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, char *err_str,
                            int use_qsub_gid, gid_t qsub_gid)
+{
+   int ret;
+   char *buffer;
+   int size;
+
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
+
+   ret = _sge_set_uid_gid_addgrp(user, intermediate_user, min_gid, min_uid, add_grp, 
+                                 err_str, use_qsub_gid, qsub_gid,
+                                 buffer, size);
+
+   FREE(buffer);
+   return ret;
+}
+
+static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
+                            int min_gid, int min_uid, int add_grp, char *err_str,
+                            int use_qsub_gid, gid_t qsub_gid,
+                            char *buffer, int size)
 {
 #if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int status;
 #endif
    struct passwd *pw;
    struct passwd pw_struct;
-   char buffer[2048];
  
    sge_switch2start_user();
  
@@ -817,8 +915,8 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    if (intermediate_user) {
       user = intermediate_user;            
    }
- 
-   if (!(pw = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer)))) {
+
+   if (!(pw = sge_getpwnam_r(user, &pw_struct, buffer, size))) {
       sprintf(err_str, MSG_SYSTEM_GETPWNAMFAILED_S , user);
       return 1;
    }
@@ -831,7 +929,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    }
  
 #if !defined(INTERIX)
-   if ( !intermediate_user) {
+   if (!intermediate_user) {
       /*
        *  It should not be necessary to set min_gid/min_uid to 0
        *  for being able to run prolog/epilog/pe_start/pe_stop
@@ -964,7 +1062,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
    }
  
    return 0;
-} /* sge_set_uid_gid_addgrp() */ 
+} /* _sge_set_uid_gid_addgrp() */ 
 
 /****** uti/uidgid/sge_add_group() ********************************************
 *  NAME

@@ -85,6 +85,10 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
 struct group *sge_getgrgid_r(gid_t gid, struct group *pg, 
                              char *buffer, size_t bufsize, int retries);
 
+/* getting buffer sizes for getpwnam_r etc. */
+int get_group_buffer_size(void);
+int get_pw_buffer_size(void);
+
 /*
  * Deprecated functions. Do not use anymore!
  */

@@ -293,7 +293,7 @@ sge_c_gdi(char *host, sge_gdi_request *request, sge_gdi_request *response,
    if (!sge_security_verify_user(request->host, request->commproc, 
                                  request->id, user)) {
       CRITICAL((SGE_EVENT, MSG_SEC_CRED_SSSI, user, request->host, 
-                request->commproc, request->id));
+                request->commproc, (int)request->id));
       answer_list_add(&(response->alp), SGE_EVENT, 
                       STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       DEXIT;

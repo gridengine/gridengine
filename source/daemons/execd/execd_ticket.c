@@ -72,7 +72,7 @@ execd_ticket(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *ap
          DEXIT;
          return 0;
       }
-      DPRINTF(("got "sge_u32" new tickets for job "sge_u32"."sge_u32"\n", ticket, jobid, jataskid));
+      DPRINTF(("got %lf new tickets for job "sge_u32"."sge_u32"\n", ticket, jobid, jataskid));
       job_ticket = lAddElemUlong(&ticket_modifier, JB_job_number, jobid, JB_Type);   
       if (job_ticket) {
          task_ticket = lAddElemUlong(&jatasks, JAT_task_number, jataskid, JAT_Type);

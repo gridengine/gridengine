@@ -188,20 +188,14 @@ static char *get_user_home_defaults_file_path(lList **answer_list)
 {
    struct passwd *pwd;
    char str[256 + 1];
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
    char buffer[2048];
-#endif
 
    char *file = NULL;
    
    DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
 
-#ifdef HAS_GETPWNAM_R
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
    if (!pwd) {
       sprintf(str, MSG_USER_INVALIDNAMEX_S, uti_state_get_user_name());
       answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 

@@ -106,9 +106,7 @@ print_func_t ostream
    lList *clp_cluster = NULL, *clp_user = NULL;
    lListElem *nxt, *cep_dest, *cep, *next;
    const char *task_name;
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
-#endif
 
    /* cell global settings */
    sprintf(fname, "%s/common/qtask", path_state_get_cell_root());
@@ -138,11 +136,7 @@ print_func_t ostream
 
    }
 
-#ifdef HAS_GETPWNAM_R
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
-#else
-   pwd = sge_getpwnam(uti_state_get_user_name());
-#endif
    
    /* user settings */
    if (pwd == NULL) {

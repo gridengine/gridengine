@@ -758,20 +758,13 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
 {
    bool ret = true;
    struct passwd *pwd;
-#ifdef HAS_GETPWNAM_R
    struct passwd pw_struct;
    char buffer[2048];
-#endif
 
    DENTER(TOP_LAYER, "get_user_home");
 
    if (home_dir != NULL) {
-
-#ifdef HAS_GETPWNAM_R
       pwd = sge_getpwnam_r(user, &pw_struct, buffer, sizeof(buffer));
-#else
-      pwd = sge_getpwnam(user);
-#endif
       if (!pwd) {
          answer_list_add_sprintf(answer_list, STATUS_ENOSUCHUSER, 
                          ANSWER_QUALITY_ERROR, MSG_USER_INVALIDNAMEX_S, user);

@@ -87,6 +87,10 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
 
 bool sge_is_user_superuser(const char *name); 
 
+/* getting buffer sizes for getpwnam_r etc. */
+int get_group_buffer_size(void);
+int get_pw_buffer_size(void);
+
 /*
  * Deprecated functions. Do not use anymore!
  */

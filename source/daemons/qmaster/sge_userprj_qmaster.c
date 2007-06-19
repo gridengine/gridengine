@@ -327,28 +327,29 @@ int user        /* =1 user, =0 project */
    }
 
    if (user==0) { /* ensure this project is not referenced in any queue */
-      lListElem *cqueue;
-      lListElem *ep;
+      lListElem *cqueue, *prj;
 
-      /* check queues */
+      /*
+       * fix for bug 6422335
+       * check the cq configuration for project references instead of qinstances
+       */
       for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance;
-
-         for_each(qinstance, qinstance_list) {
-            if (userprj_list_locate(lGetList(qinstance, QU_projects), name)) {
+         for_each (prj, lGetList(cqueue, CQ_projects)) {
+            if (lGetSubStr(prj, UP_name, name, APRJLIST_value))  {
                ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                      MSG_OBJ_PRJS, MSG_OBJ_QUEUE, 
-                     lGetString(qinstance, QU_qname)));
+                     lGetString(cqueue, CQ_name)));
                answer_list_add(alpp, SGE_EVENT, 
                                STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;
                return STATUS_EEXIST;
             }
-            if (userprj_list_locate(lGetList(qinstance, QU_xprojects), name)) {
+         }
+         for_each (prj, lGetList(cqueue, CQ_xprojects)) {
+            if (lGetSubStr(prj, UP_name, name, APRJLIST_value))  {
                ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                      MSG_OBJ_XPRJS, MSG_OBJ_QUEUE, 
-                     lGetString(qinstance, QU_qname)));
+                     lGetString(cqueue, CQ_name)));
                answer_list_add(alpp, SGE_EVENT, 
                                STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                DEXIT;

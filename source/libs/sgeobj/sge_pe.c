@@ -50,6 +50,7 @@
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_cqueue.h"
+#include "sge_attrL.h"
 #include "sge_qinstance.h"
 #include "sge_range.h"
 #include "sge_userset.h"
@@ -195,21 +196,19 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
       } 
    }
    if (!ret) {
-      lListElem *cqueue = NULL;
+      lListElem *cqueue = NULL, *cpl = NULL;
 
+      /* fix for bug 6422335
+       * check cq configuration for pe references instead of qinstances
+       */
+      const char *pe_name = lGetString(pe, PE_name);
       for_each(cqueue, master_cqueue_list) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            if (qinstance_is_pe_referenced(qinstance, pe)) {
-               const char *pe_name = lGetString(pe, PE_name);
-               const char *name = lGetString(qinstance, QU_qname);
-
+         for_each(cpl, lGetList(cqueue, CQ_pe_list)){
+            if (lGetSubStr(cpl, ST_name, pe_name, ASTRLIST_value))  {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_INFO, 
                                        MSG_PEREFINQUEUE_SS, 
-                                       pe_name, name);
+                                       pe_name, lGetString(cqueue, CQ_name));
                ret = true;
                break;
             }

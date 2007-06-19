@@ -46,6 +46,7 @@
 #include "sge_parse_num_par.h"
 #include "sge_host.h"
 #include "sge_cqueue.h"
+#include "sge_attrL.h"
 #include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
@@ -395,19 +396,19 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
       ret = true;
    }
    if (!ret) {
-      lListElem *cqueue = NULL; 
-
+      lListElem *cqueue = NULL, *cel = NULL; 
+ 
+      /* fix for bug 6422335
+       * check the cq configuration for centry references instead of qinstances
+       */
       for_each(cqueue, master_cqueue_list) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            if (qinstance_is_centry_referenced(qinstance, centry)) {
-               const char *name = lGetString(qinstance, QU_full_name);
+         for_each(cel, lGetList(cqueue, CQ_consumable_config_list)){
+            if(lGetSubStr(cel, CE_name, centry_name, ACELIST_value)){
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_INFO, 
                                        MSG_CENTRYREFINQUEUE_SS,
-                                       centry_name, name);
+                                       centry_name,
+                                       lGetString(cqueue, CQ_name));
                ret = true;
                break;
             }

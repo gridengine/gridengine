@@ -1,3 +1,7 @@
+RN-2007-06-19-1: Bugfix   : Wrong exit code with qconf -sds.
+                 Bugster:   6522273
+                 Review:    JG
+
 RN-2007-06-19-0: Bugfix:    Still used usersets can be removed under certain 
                             conditions.
                  Bugster:   6422335

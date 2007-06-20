@@ -358,15 +358,13 @@ char **argv
       /* print the tersed output */
       if (has_terse) {
         printf("%s", jobid_string);
-      }
-      else if (output != NULL) {
+      } else if (output != NULL) {
         printf("%s", output);
       } else {
         printf(MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString(job, JB_job_name));
       }
       printf("\n");
-   }   
-   else {
+   } else {
       printf(MSG_JOB_VERIFYFOUNDQ);
       printf("\n");
    }   
@@ -664,8 +662,7 @@ static int report_exit_status(int stat, const char *jobid)
 
    if (aborted) {
       printf(MSG_QSUB_JOBNEVERRAN_S, jobid);
-   }
-   else {
+   } else {
       japi_wifexited(&exited, stat, NULL);
       if (exited) {
          japi_wexitstatus(&exit_status, stat, NULL);
@@ -679,8 +676,7 @@ static int report_exit_status(int stat, const char *jobid)
             printf(MSG_QSUB_JOBRECEIVEDSIGNAL_SS, jobid,
                     sge_dstring_get_string(&termsig));
             sge_dstring_free(&termsig);
-         }
-         else {
+         } else {
             printf(MSG_QSUB_JOBFINISHUNCLEAR_S, jobid);
          }
 

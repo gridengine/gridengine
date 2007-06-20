@@ -150,6 +150,7 @@ static void sge_ar_send_mail(lListElem *ar, int type);
 *  RESULT
 *     int - 0 on success
 *           STATUS_EUNKNOWN if an error occured
+*           STATUS_NOTOK_DOAGAIN if a temporary error
 *
 *  NOTES
 *     MT-NOTE: ar_mod() is not MT safe 
@@ -190,8 +191,8 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
    if (max_advance_reservations > 0 &&
        max_advance_reservations <= lGetNumberOfElem(*object_base[SGE_TYPE_AR].list)) {
       ERROR((SGE_EVENT, MSG_AR_MAXARSPERCLUSTER_U, sge_u32c(max_advance_reservations)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      goto ERROR; 
+      answer_list_add(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, ANSWER_QUALITY_ERROR);
+      goto DOITAGAIN; 
    }
 
    /*    AR_name, SGE_STRING */
@@ -246,6 +247,8 @@ int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar,
 
 ERROR:
    DRETURN(STATUS_EUNKNOWN);
+DOITAGAIN:
+   DRETURN(STATUS_NOTOK_DOAGAIN);
 }
 
 /****** sge_advance_reservation_qmaster/ar_spool() *****************************

@@ -484,7 +484,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 *                                 answer_quality_t quality) 
 *
 *  FUNCTION
-*     The function returns true (1) if the "answer_list" containes
+*     The function returns true if the "answer_list" contains
 *     at least one answer element with the given "quality". 
 *
 *  INPUTS
@@ -512,8 +512,47 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
+}
+
+/****** sge_answer/answer_list_has_status() ************************************
+*  NAME
+*     answer_list_has_status() -- status contains in list
+*
+*  SYNOPSIS
+*     bool answer_list_has_status(lList **answer_list, u_long32 status) 
+*
+*  FUNCTION
+*     The function returns true if the "answer_list" contains at least
+*     one answer element with the given status
+*
+*  INPUTS
+*     lList **answer_list - AN_Type list
+*     u_long32 status     - expected status
+*
+*  RESULT
+*     bool - true or false
+*
+*  NOTES
+*     MT-NOTE: answer_list_has_status() is MT safe 
+*******************************************************************************/
+bool answer_list_has_status(lList **answer_list, u_long32 status)
+{
+   bool ret = false;
+
+   DENTER(ANSWER_LAYER, "answer_list_has_status");
+
+   if (answer_list != NULL) {
+      lListElem *answer;   /* AN_Type */
+
+      for_each(answer, *answer_list) {
+         if (answer_get_status(answer) == status) {
+            ret = true;
+            break;
+         }
+      }
+   }
+   DRETURN(ret);
 }
 
 /****** sgeobj/answer/answer_list_has_error() *********************************

@@ -141,7 +141,11 @@ int main(int argc, char **argv) {
       if (answer_list_has_error(&alp)) {
          sge_prof_cleanup();
          sge_gdi2_shutdown((void**)&ctx);
-         DRETURN(1);
+         if (answer_list_has_status(&alp, STATUS_NOTOK_DOAGAIN)) {
+            DRETURN(25);
+         } else {
+            DRETURN(1);
+         }
       }
    }
 

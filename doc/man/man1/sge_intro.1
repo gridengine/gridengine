@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_intro.1,v $     Last Update: $Date: 2004/05/26 17:37:54 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: sge_intro.1,v $     Last Update: $Date: 2007/06/20 07:28:53 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_INTRO 1 "$Date: 2004/05/26 17:37:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_INTRO 1 "$Date: 2007/06/20 07:28:53 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 xxQS_NAMExx \- a facility for executing UNIX jobs on remote machines
@@ -121,6 +121,12 @@ queues is displayed on-line by changing colors at corresponding queue
 icons.
 .\"
 .TP
+.M qquota 1
+.I qquota
+provides a status listing of all currently used resource quotas (see
+.M xxqs_name_sxx_resource_quota 1).
+.\"
+.TP
 .M qresub 1
 .I qresub
 creates new jobs by copying currently running or pending jobs.
@@ -133,6 +139,11 @@ releases holds from jobs previously assigned to them e.g. via
 (see above).
 .\"
 .TP
+.M qrdel 1
+.I qrdel
+provides the means to cancel advance reservations.
+.\"
+.TP
 .M qrsh 1
 .I qrsh
 can be used for various purposes such as providing remote execution of
@@ -143,6 +154,15 @@ and terminal control, to provide a batch job submission client which
 remains active until the job has finished or to allow for the
 xxQS_NAMExx-controlled remote execution of the tasks of parallel jobs.
 .\"
+.TP
+.M qrstat 1
+.I qrstat
+provides a status listing of all advance reservations in the cluster.
+.\"
+.TP
+.M qrsub 1
+.I qrsub
+is the user interface for submitting a advance reservation to xxQS_NAMExx.
 .\"
 .TP
 .M qselect 1

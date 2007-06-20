@@ -107,6 +107,9 @@ bool answer_list_add_sprintf(lList **answer_list, u_long32 status,
 bool answer_list_has_quality(lList **answer_list, 
                              answer_quality_t quality);
 
+bool answer_list_has_status(lList **answer_list, 
+                            u_long32 status);
+
 bool answer_list_has_error(lList **answer_list);
 
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream);

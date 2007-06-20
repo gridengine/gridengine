@@ -1292,11 +1292,9 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
          if ((answer_status == STATUS_NOQMASTER) ||
              (answer_status == STATUS_NOCOMMD)) {
             result = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
-         }
-         else if (answer_status == STATUS_NOTOK_DOAGAIN) {
+         } else if (answer_status == STATUS_NOTOK_DOAGAIN) {
             result = DRMAA_ERRNO_TRY_LATER;
-         }
-         else {
+         } else {
             result = DRMAA_ERRNO_DENIED_BY_DRM;
          }
       }

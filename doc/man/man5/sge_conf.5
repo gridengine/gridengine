@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/05/23 19:51:14 $     Revision: $Revision: 1.58 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/20 07:40:12 $     Revision: $Revision: 1.58.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/05/23 19:51:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/20 07:40:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -701,6 +701,20 @@ limit is exceeded by a job submission then the submission command exits
 with exit status 25 and an appropriate error message.
 .PP
 Changing \fBmax_jobs\fP will take immediate effect.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SS "\fBmax_jobs\fP"
+The number of active (not finished) Advance Reservations simultaneously
+allowed in xxQS_NAMExx is controlled by this parameter. A value greater
+than 0 defines the limit. The default value 0 means "unlimited". If the
+.B max_advance_reservations
+limit is exceeded by an Advance Reservation request then the submission
+command exits with exit status 25 and an appropriate error message.
+.PP
+Changing \fBmax_advance_reservations\fP will take immediate effect.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/03/07 15:55:51 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/06/20 07:40:12 $     Revision: $Revision: 1.6.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/03/07 15:55:51 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/06/20 07:40:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
@@ -41,6 +41,9 @@ The job request distinction is done by a set of user, project, cluster queue, ho
 By using the resource quota sets administrators are allowed to define a fine granular resource quota
 configuration. This helps restricting some job requests to a lesser resource usage and granting
 other job requests a higher resource usage.
+.sp 1
+Note: Jobs requesting an Advance Reservation (AR) are not honored by Resource Quotas and
+are neither subject of the resulting limit, nor are debited in the usage consumption.
 .PP
 A list of currently configured rqs can be displayed via the
 .M qconf 1

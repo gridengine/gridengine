@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/18 10:38:25 $     Revision: $Revision: 1.1.2.2 $
+.\" $RCSfile: qrstat.1,v $     Last Update: $Date: 2007/06/20 07:40:12 $     Revision: $Revision: 1.1.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/06/18 10:38:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/06/20 07:40:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrstat \- show the status of xxQS_NAMExx Advance Reservations (AR)
 .\"
@@ -69,7 +69,8 @@ created by the users from the given user list.
 The string
 \fB\ $user\fP
 is a placeholder for the current username. An asterisk "*" can be used 
-as username wildcard to request that all users' ARs be displayed. 
+as username wildcard to request that all users' ARs be displayed. The
+default value for this switch is "\fB-u $user\fP".
 \"
 .IP "\fB\-xml\fP"
 This option can be used with all other options and changes the output to XML. The used
@@ -80,9 +81,6 @@ schemas are referenced in the XML output. The output is printed to stdout.
 .SH "OUTPUT FORMATS"
 Depending on the presence or absence of the \fB-ar\fP option there are two 
 output formats need to be differentiated.
-.PP
-The \fB\-ext\fP and \fB\-urg\fP options may be used 
-to display additional information for each AR.
 .\"
 .SS "\fBAdvance Reservation Summary (without \-ar)\fP"
 Following the header line, a section for each AR
@@ -94,11 +92,14 @@ the name of the AR.
 .IP "\(bu" 3n
 the current state of the AR. One of folloging states 'wWrEd".
 .sp 1
+.nf
+.ta \w'|b|  'u
 w - waiting without error
 W - warning (effective - waiting with error)
 r - running
 E - error (effective - running with error)
 d - deleted 
+.fi
 .IP "\(bu" 3n
 the start time of the AR.
 .IP "\(bu" 3n
@@ -150,9 +151,6 @@ service "sge_qmaster" instead to define that port.
 .ta \w'<xxqs_name_sxx_root>/     'u
 \fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qstat\fP
-	cluster qstat default options
 .fi
 .\"
 .\"

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/06/20 07:40:12 $     Revision: $Revision: 1.35.4.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/06/20 07:40:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -307,6 +307,8 @@ any of the hosts '-NA-' is printed instead of the value from the complex
 attribute definition.
 .IP "\(bu" 3n
 the number of currently used slots. 
+.IP "\(bu" 3n
+the number of slots reserved in advance. 
 .IP "\(bu" 3n
 the number of currently available slots.
 .IP "\(bu" 3n

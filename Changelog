@@ -1,3 +1,8 @@
+JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0
+                 Issue:     2299
+                 Bugtraq:   6536039
+                 Review:    MD
+
 RN-2007-06-19-2: Enhancem   qsub -terse to just output job id
                  Bugster:   6355875
                  Issue:     916

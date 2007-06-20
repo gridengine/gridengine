@@ -272,10 +272,12 @@ RemoveSpoolDir()
       echo "rm -fR $SPOOL_DIR" | $SHELL_NAME $exechost /bin/sh 
 
    else
-      $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
-      $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
-      rm -R $SPOOL_DIR/$HOST_DIR  
-      rm -fR $SPOOL_DIR 
+      if [ "$SPOOL_DIR" != "" ]; then
+         $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR"
+         $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR"
+         rm -R $SPOOL_DIR/$HOST_DIR  
+         rm -fR $SPOOL_DIR 
+      fi
    fi
 }
 

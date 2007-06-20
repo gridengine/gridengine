@@ -1,3 +1,8 @@
+JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0
+                 Issue:     2299
+                 Bugtraq:   6536039
+                 Review:    MD
+
 RD-2007-06-20-0: Enhancem.: - Added return value 25 for qrsub
                             - Enhanced man pages for advance reservations
                  Review:    PJ

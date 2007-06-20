@@ -68,8 +68,30 @@ fi
 
 . $SGE_ROOT/util/arch_variables
 
-V5BIN=$SGE_ROOT/bin/$ARCH
-V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+get_all_hosts()
+{
+   # have to run on the master host, as we might have 
+   # local spool directories, or BDB spooling
+   master_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
+   if [ "$HOST" = "" ]; then
+      HOST=`hostname`
+   fi
+   
+   if [ "$master_host" != "$HOST" ]; then
+      echo "ERROR: sgeremoterun -all has to be called on the master host. Exit." >&2
+      echo >&2
+      exit 1
+   fi
+
+   spooling=`grep spooling_method $SGE_ROOT/$SGE_CELL/common/bootstrap | awk '{ print $2 }'`
+   if [ "$spooling" = "classic" ]; then
+      qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/bootstrap | awk '{ print $2 }'`
+      hosts=`ls $qma_spool_dir/exec_hosts | egrep -v "template|global"`
+   else
+      hosts=`$SGE_ROOT/utilbin/$ARCH/spooledit list | grep "EXECHOST" | cut -d : -f 2 | egrep -v "template|global"`
+   fi
+}
+
 
 
 if [ $# -lt 2 -o "$1" = "-h" -o "$1" = "-help" ]; then
@@ -119,9 +141,7 @@ while [ "$1" != "" -a $done = false ]; do
             shift
             ;;
          -all)
-            qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/configuration | \
-                           awk '{ print $2 }'`
-            hosts=`ls $qma_spool_dir/exec_hosts|egrep -v "template|global"`
+            get_all_hosts
             ;;
          -noqmaster)
             qmaster=false
@@ -156,10 +176,10 @@ fi
 
 act_qmaster=none
 if [ $qmaster = false ]; then
-   if [ -f $SGE_ROOT/default/common/act_qmaster ]; then
-      act_qmaster=`cat $SGE_ROOT/default/common/act_qmaster`
+   if [ -f $SGE_ROOT/$SGE_CELL/common/act_qmaster ]; then
+      act_qmaster=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
    else
-     echo "File $SGE_ROOT/default/common/act_qmaster does not exist. Exit."
+     echo "File $SGE_ROOT/$SGE_CELL/common/act_qmaster does not exist. Exit."
      exit 1
    fi
 fi

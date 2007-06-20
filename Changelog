@@ -1,3 +1,8 @@
+JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0
+                 Issue:     2299
+                 Bugtraq:   6536039
+                 Review:    MD
+
 JG-2007-06-19-0: Bugfix:    Grid Engine commands failed, when the primary group
                             of the user was too big in groups file/map.
                  Issue:     2249

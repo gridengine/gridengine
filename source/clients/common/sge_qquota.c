@@ -154,8 +154,8 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
    int xml_ret = 0;
 
    qquota_filter_t qquota_filter = { "*",
-                                     NULL,
-                                     NULL,
+                                     "*",
+                                     "*",
                                      "*",
                                      "*" };
 

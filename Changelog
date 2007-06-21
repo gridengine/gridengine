@@ -1,3 +1,8 @@
+JG-2007-06-21-0: Bugfix:    qquota filtering broken for pe and project
+                 Bugster:   6539199
+                 Issue:     2300
+                 Review:    RD
+
 MP-2007-06-20-0: Bugfix:    inst_sge -ux uninstallation of exechost tries to 
                             delete local spooldir, even if it isn't configured.
                  Bugster:   6528949

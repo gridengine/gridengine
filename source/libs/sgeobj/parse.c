@@ -66,7 +66,7 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
 
    cp = sge_strtok(str, ",");
    lAddElemStr(lp, field, cp, descr);
-   while((cp = sge_strtok(NULL, ","))) {
+   while ((cp = sge_strtok(NULL, ","))) {
       lAddElemStr(lp, field, cp, descr);
    }
 
@@ -366,8 +366,8 @@ int field
 
    DENTER(TOP_LAYER, "parse_multi_stringlist");
 
-   if((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
-      while(ep) {
+   if ((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
+      while (ep) {
          /* collect all opts of same type, this is what 'multi' means in funcname!  */
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
             sge_parse_string_list(ppdestlist, lGetString(sep, ST_name), field, type);
@@ -375,11 +375,9 @@ int field
          lRemoveElem(*ppcmdline, &ep);
          ep = lGetElemStr(*ppcmdline, SPA_switch, opt);
       }
-      DEXIT;
-      return true;
+      DRETURN(true);
    } else {
-      DEXIT;
-      return false;
+      DRETURN(false);
    }
 }
 

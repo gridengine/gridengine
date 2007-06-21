@@ -1,3 +1,5 @@
+AA-2007-06-21-0: Cleanup:   missing copyrights in Xpm files
+
 JG-2007-06-21-0: Bugfix:    qquota filtering broken for pe and project
                  Bugster:   6539199
                  Issue:     2300
@@ -64,8 +66,8 @@ AA-2007-06-14-0: Enhancem:  - jgdi_qhost and qhost xml job handling
                             - cleanup and split of jgdi_wrapper.c
                             - handling of CULL_JGDI_RO fields
                             - qmon looses sharetree changes fix
-                 Bugster:   6280747
-                 Issue:     2265
+                 Bugster:   6280747,6548455,6560442,6546807
+                 Issue:     2265,2296,2232
                  Review:    RD
 
 JG-2007-06-13-0: Bugfix:    util/arch had problem with libc version containing 
@@ -122,9 +124,9 @@ AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
                             - reserved_slots -> resv_slots for consistency
                             - jgdi delete job crashes master
                  Issue:     1729, 2262, 2263, 2260, 2261, 747,
-                            2264
+                            2264, 2301
                  Bugster:   6327539, 6538740, 4818801, 4742097, 6553066, 6291044
-                            6555953
+                            6555953, 6551121
                  Review:    RD
   
 AH-2007-05-29-0: Bugfix:    - forgot error exit with AH-2007-05-25-2 memory

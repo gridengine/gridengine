@@ -1,3 +1,5 @@
+AA-2007-06-21-0: Cleanup:   missing copyrights in Xpm files
+
 RN-2007-06-21-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
 	         Bugster:   6433628
 		 Issue:     2307
@@ -50,8 +52,8 @@ AA-2007-06-14-0: Enhancem:  - jgdi_qhost and qhost xml job handling
                             - cleanup and split of jgdi_wrapper.c
                             - handling of CULL_JGDI_RO fields
                             - qmon looses sharetree changes fix
-                 Bugster:   6280747, 6548455
-                 Issue:     2265,2296
+                 Bugster:   6280747, 6548455,6546807
+                 Issue:     2265,2296,2232
                  Review:    RD
 
 JG-2007-06-13-0: Bugfix:    util/arch had problem with libc version containing 

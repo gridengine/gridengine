@@ -1,3 +1,8 @@
+RN-2007-06-21-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
+	         Bugster:   6433628
+		 Issue:     2307
+		 Review:    JG
+
 JG-2007-06-21-0: Bugfix:    qquota filtering broken for pe and project
                  Bugster:   6539199
                  Issue:     2300

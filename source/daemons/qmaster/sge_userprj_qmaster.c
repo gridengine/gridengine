@@ -295,13 +295,12 @@ int user        /* =1 user, =0 project */
 ) {
    const char *name;
    lListElem *ep;
-   lListElem *myep;
    lList* projects;
    object_description *object_base = object_type_get_object_description();
    
    DENTER(TOP_LAYER, "sge_del_userprj");
 
-   if ( !up_ep || !ruser || !rhost ) {
+   if (!up_ep || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -327,16 +326,15 @@ int user        /* =1 user, =0 project */
    }
 
    if (user==0) { /* ensure this project is not referenced in any queue */
-      lListElem *cqueue;
-      lListElem *ep, *cp;
+      lListElem *cqueue, *prj, *host;
 
       /*
        * fix for bug 6422335
        * check the cq configuration for project references instead of qinstances
        */
-      for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-         for_each (cp, lGetList(cqueue, CQ_projects)) {
-            if (lGetSubStr(cp, UP_name, name, APRJLIST_value))  {
+      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         for_each(prj, lGetList(cqueue, CQ_projects)) {
+            if (lGetSubStr(prj, UP_name, name, APRJLIST_value))  {
                ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                      MSG_OBJ_PRJS, MSG_OBJ_QUEUE, 
                      lGetString(cqueue, CQ_name)));
@@ -345,9 +343,9 @@ int user        /* =1 user, =0 project */
                DEXIT;
                return STATUS_EEXIST;
             }
-	 }
-         for_each (cp, lGetList(cqueue, CQ_xprojects)) {
-            if (lGetSubStr(cp, UP_name, name, APRJLIST_value))  {
+         }
+         for_each(prj, lGetList(cqueue, CQ_xprojects)) {
+            if (lGetSubStr(prj, UP_name, name, APRJLIST_value))  {
                ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
                      MSG_OBJ_XPRJS, MSG_OBJ_QUEUE, 
                      lGetString(cqueue, CQ_name)));
@@ -360,17 +358,17 @@ int user        /* =1 user, =0 project */
       }
 
       /* check hosts */
-      for_each (ep, *object_base[SGE_TYPE_EXECHOST].list) {
-         if (userprj_list_locate(lGetList(ep, EH_prj), name)) {
+      for_each(host, *object_base[SGE_TYPE_EXECHOST].list) {
+         if (userprj_list_locate(lGetList(host, EH_prj), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+                  MSG_OBJ_PRJS, MSG_OBJ_EH, lGetHost(host, EH_name)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
          }
-         if (userprj_list_locate(lGetList(ep, EH_xprj), name)) {
+         if (userprj_list_locate(lGetList(host, EH_xprj), name)) {
             ERROR((SGE_EVENT, MSG_SGETEXT_PROJECTSTILLREFERENCED_SSSS, name, 
-                  MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(ep, EH_name)));
+                  MSG_OBJ_XPRJS, MSG_OBJ_EH, lGetHost(host, EH_name)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return STATUS_EEXIST;
@@ -400,8 +398,8 @@ int user        /* =1 user, =0 project */
       lFreeList(&projects);
 
       /* check user list for reference */
-      if ((myep = lGetElemStr(*object_base[SGE_TYPE_USER].list, UP_default_project, name))) {
-         ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString (myep, UP_name)));
+      if ((prj = lGetElemStr(*object_base[SGE_TYPE_USER].list, UP_default_project, name))) {
+         ERROR((SGE_EVENT, MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS, name, lGetString(prj, UP_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EEXIST;

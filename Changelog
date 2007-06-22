@@ -1,3 +1,9 @@
+RD-2007-06-22-0: Bugfix:    - advance reservation did not honor master queue
+                            - fixed qrdel race condition with recently deleted
+                              job
+                 Enhancem:  - implemented qacct -ar
+                 Review:    AA
+
 CR-2007-06-22-0: Cleanup:   code cleanup in function sge_del_userprj
                  Review:    RD
 

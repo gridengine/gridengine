@@ -1125,6 +1125,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
    lSetList(dummy_job, JB_hard_resource_list, lCopyList("", lGetList(ar, AR_resource_list)));
    lSetList(dummy_job, JB_hard_queue_list, lCopyList("", lGetList(ar, AR_queue_list)));
+   lSetList(dummy_job, JB_master_hard_queue_list, lCopyList("", lGetList(ar, AR_master_queue_list)));
    lSetUlong(dummy_job, JB_type, lGetUlong(ar, AR_type));
    lSetString(dummy_job, JB_checkpoint_name, lGetString(ar, AR_checkpoint_name));
 
@@ -1776,13 +1777,7 @@ bool sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, int forced
                 * if task is already in status deleted and was signaled
                 * only recently and deletion is not forced, do nothing
                 */
-               if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
-                  (lGetUlong(tmp_task, JAT_state) & JDELETED &&
-                   lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
-                   !forced
-                  )
-                 ) {
-                  ret = false;
+               if (ISSET(lGetUlong(tmp_task, JAT_status), JFINISHED)) {
                   continue;
                }
 
@@ -1790,7 +1785,9 @@ bool sge_ar_remove_all_jobs(sge_gdi_ctx_class_t *ctx, u_long32 ar_id, int forced
                   sge_commit_job(ctx, jep, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED_EE,
                                  COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
                } else {
-                  job_mark_job_as_deleted(ctx, jep, tmp_task);
+                  if (!ISSET(lGetUlong(tmp_task, JAT_state), JDELETED)) {
+                     job_mark_job_as_deleted(ctx, jep, tmp_task);
+                  }
                   ret = false;
                }
             } else {

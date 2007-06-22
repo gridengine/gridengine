@@ -100,6 +100,7 @@ qrstat_filter_add_ar_attributes(qrstat_env_t *qrstat_env)
       AR_mail_list,
       AR_pe,
       AR_pe_range,
+      AR_master_queue_list,
       AR_acl_list,
       AR_xacl_list,
       AR_type,

@@ -46,7 +46,9 @@
 #include "sgeobj/sge_mailrec.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_mesobj.h"
+#include "sgeobj/cull_parse_util.h"
 
 #include "qrstat_report_handler.h"
 
@@ -150,11 +152,21 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
                   handler->report_finish_granted_parallel_environment(handler, answer_list);
                   sge_dstring_free(&pe_range_string);
                }
+               if (lGetList(ar, AR_master_queue_list) != NULL) {
+                  char tmp_buffer[MAX_STRING_SIZE];
+                  int fields[] = {QR_name, 0 };
+                  const char *delis[] = {" ", ",", ""};
+                  uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), lGetList(ar, AR_master_queue_list), 
+                                 fields, delis, FLG_NO_DELIS_STRINGS);
+                  handler->report_ar_node_string(handler, answer_list, "master hard queue_list", tmp_buffer);
+               }
 
-               handler->report_ar_node_string(handler, answer_list, "checkpoint_name",
-                                              lGetString(ar, AR_checkpoint_name));
+               if (lGetString(ar, AR_checkpoint_name) != NULL) {
+                  handler->report_ar_node_string(handler, answer_list, "checkpoint_name",
+                                                 lGetString(ar, AR_checkpoint_name));
+               }
 
-               {
+               if (lGetUlong(ar, AR_mail_options) != 0) {
                   dstring mailopt = DSTRING_INIT;
 
                   sge_dstring_append_mailopt(&mailopt, lGetUlong(ar, AR_mail_options));
@@ -201,7 +213,7 @@ qrstat_print(lList **answer_list, qrstat_report_handler_t *handler, qrstat_env_t
             handler->report_finish_ar(handler, answer_list);
          }
       }
-      
+
       handler->report_finish(handler, answer_list);
    }
    DRETURN(ret);

@@ -61,7 +61,8 @@ enum {
    QAJ_mem,
    QAJ_io,
    QAJ_iow,
-   QAJ_maxvmem
+   QAJ_maxvmem,
+   QAJ_arid
 };
 
 LISTDEF(QAJ_Type)
@@ -83,6 +84,7 @@ LISTDEF(QAJ_Type)
    SGE_DOUBLE(QAJ_io, CULL_DEFAULT)
    SGE_DOUBLE(QAJ_iow, CULL_DEFAULT)
    SGE_DOUBLE(QAJ_maxvmem, CULL_DEFAULT)
+   SGE_ULONG(QAJ_arid, CULL_DEFAULT)
 LISTEND
 
 
@@ -105,6 +107,7 @@ NAMEDEF(QAJN)
    NAME("QAJ_io")
    NAME("QAJ_iow")
    NAME("QAJ_maxvmem")
+   NAME("QAJ_arid")
 NAMEEND
 
 /* *INDENT-ON* */

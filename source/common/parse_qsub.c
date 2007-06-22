@@ -936,7 +936,7 @@ u_long32 flags
          sp++;
          if (!*sp) {
              answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                    MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT);
+                    MSG_PARSE_XOPTIONMUSTHAVEDESTIDLISTARGUMENT_S, "-masterq");
              DRETURN(answer);
          }
 
@@ -944,7 +944,7 @@ u_long32 flags
          i_ret = cull_parse_destination_identifier_list(&id_list, *sp);
          if (i_ret) {
              answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S, *sp);
+                     MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOXOPTION_SS, *sp, "-masterq");
              DRETURN(answer);
          }
          ep_opt = sge_add_arg(pcmdline, masterq_OPT, lListT, *(sp - 1), *sp);
@@ -1233,16 +1233,16 @@ DTRACE;
          /* next field is destination_identifier */
          sp++;
          if (!*sp) {
-             answer_list_add(&answer, MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT, 
-                     STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                     MSG_PARSE_XOPTIONMUSTHAVEDESTIDLISTARGUMENT_S, "-q");
              DRETURN(answer);
          }
 
          DPRINTF(("\"-q %s\"\n", *sp));
          i_ret = cull_parse_destination_identifier_list(&id_list, *sp);
          if (i_ret) {
-             answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                    MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S, *sp);
+             answer_list_add_sprintf(&answer, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                    MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOXOPTION_SS, *sp, "-q");
              DRETURN(answer);
          }
          ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, *(sp - 1), *sp);

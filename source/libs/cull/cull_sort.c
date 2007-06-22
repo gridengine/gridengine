@@ -70,8 +70,7 @@ int lInsertSorted(const lSortOrder * so, lListElem * ep, lList * lp)
       tmp = lPrev(tmp);
       lInsertElem(lp, tmp, ep);
 
-   }
-   else {
+   } else {
       /* append to list */
       lAppendElem(lp, ep);
    }
@@ -219,7 +218,7 @@ lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)
 *     lSortOrder* - sort order array 
 *
 *  EXAMPLE
-*     lParseSortOrder(dp,"%s+ %d-", H_hostname, H_memsize )
+*     lParseSortOrder(dp,"%I+ %I-", H_hostname, H_memsize )
 *     
 *     Returns a sort order array which can be used for sorting an list
 *     with ascending H_hostname and descending H_memsize. 

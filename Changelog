@@ -1,3 +1,7 @@
+RC-2007-06-22-0: Bugfix:    qhost -xml lacks '>' (small fix)
+                 Issue:     2308
+                 Review:    RC (patch submitted by Rayson)
+
 MD-2007-06-22-0: Bugfix:    SGE 6.1 upgrade procedure is broken when using
                             the classic qmaster spooling 
                  Bugster:   6564592 

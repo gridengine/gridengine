@@ -1,3 +1,6 @@
+CR-2007-06-22-0: Bugfix:    Fixed merge error introduced with RN-2007-06-19-0
+                 Review:    RD
+
 AA-2007-06-21-0: Cleanup:   missing copyrights in Xpm files
 
 RN-2007-06-21-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)

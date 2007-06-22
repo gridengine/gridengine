@@ -343,7 +343,7 @@ const parameters_t params[] = {
    {NULL,              NULL}
 };
 
-/* stores the overall configuraion */
+/* stores the overall configuration */
 static lList *Master_Sched_Config_List = NULL;
 
 const char *const policy_hierarchy_chars = "OFS";

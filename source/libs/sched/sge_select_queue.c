@@ -3086,7 +3086,7 @@ static dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const cha
   u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name)
 {
    lListElem *rqs;
-   dispatch_t result;
+   dispatch_t result = DISPATCH_OK;
 
    DENTER(TOP_LAYER, "rqs_by_slots");
 

@@ -1,0 +1,105 @@
+Source Code Review Form 
+=======================
+(version 1.3)
+
+Date: 2007-06-22
+
+1 Identification
+RD-2007-06-22-0: Bugfix:    - advance reservation did not honor master queue
+                            - fixed qrdel race condition with recently deleted
+                              job
+                 Enhancem:  - implemented qacct -ar
+                 Review:    AA
+
+2 Conforms to specification
+
+2 [X] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+
+3.1 user/admin guide OK, or doc CR filed?
+3.1 [X] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view) correct?
+3.2 [X] yes
+3.2 [ ] no - comment:
+
+3.3 -help output correct and complete?
+3.3 [X] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs, ADOC format) correct, updated?
+3.4 [X] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats and defines OK?
+3.5 [X] yes
+3.5 [ ] no - comment:
+
+3.6 Bugster CR complete and correct?
+3.6 [ ] yes
+3.6 [X] no - comment:
+n/a
+
+3.7 Issuezilla entry (if exists) complete and correct?
+3.7 [ ] yes
+3.7 [X] no - comment:
+n/a
+
+
+4 Source review
+
+4.1 Style guide conformance
+4.1 [X] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [X] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [X] yes
+4.3 [ ] no
+
+
+5 Tests
+
+5.1 Used memory leak debugger
+5.1 [X] yes
+5.1 [ ] no - comment:
+
+5.2 Manual tests
+Description:
+diffed old and new qacct output with several options to verify the sort order
+Successfull execution
+5.2 [X] yes
+5.2 [ ] no - comment:
+
+5.3 Testsuite covers issue
+5.3 [X] yes
+5.3 [ ] no - comment:
+
+5.4 If 5.3 = no: New testsuite test or module test created?
+5.4 [ ] yes, path: 
+5.4 [ ] no - justification:
+
+5.5 If 5.4 = no: Testsuite issue created?
+5.5 [ ] yes, id: 
+5.5 [ ] no - justification:
+
+5.6 Testsuite run successfull
+5.6 [X] yes
+5.6 [ ] no - comment:
+
+
+6 Comments
+
+
+7 Accepted
+7 [X] yes
+7 [ ] no - comment:
+
+

@@ -388,7 +388,7 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetList(job, JB_master_hard_queue_list)) {
          int fields[] = {QR_name, 0 };
          delis[0] = " ";
-         printf("master hard queue list:     ");
+         printf("master hard queue_list:     ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_master_hard_queue_list), 
             fields, delis, FLG_NO_DELIS_STRINGS);
       }

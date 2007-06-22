@@ -57,6 +57,7 @@
 #define MSG_HISTORY_DEPARTMENT      "DEPARTMENT"
 #define MSG_HISTORY_PE              "PE"
 #define MSG_HISTORY_SLOTS           "SLOTS"
+#define MSG_HISTORY_AR              "AR"
 #define MSG_HISTORY_TOTSYSTEMUSAGE  _MESSAGE(25089, _("Total System Usage"))
 #define MSG_HISTORY_USAGE           _MESSAGE(25090, _("usage:"    ))
 #define MSG_HISTORY_A_OPT_USAGE     _MESSAGE(25091, _("jobs accounted to the given account"      ))
@@ -68,13 +69,14 @@
 #define MSG_HISTORY_P_OPT_USAGE     _MESSAGE(25097, _("list [matching] project"))
 #define MSG_HISTORY_D_OPT_USAGE     _MESSAGE(25098, _("list [matching] department"))
 #define MSG_HISTORY_pe_OPT_USAGE    _MESSAGE(25099, _("list [matching] parallel environment"))
-#define MSG_HISTORY_slots_OPT_USAGE _MESSAGE(25100, _("list [matching] job slots"   ))
+#define MSG_HISTORY_slots_OPT_USAGE _MESSAGE(25100, _("list [matching] job slots"))
 #define MSG_HISTORY_l_OPT_USAGE     _MESSAGE(25101, _("request given complex attributes" ))
 #define MSG_HISTORY_b_OPT_USAGE     _MESSAGE(25102, _("jobs started after"))
 #define MSG_HISTORY_e_OPT_USAGE     _MESSAGE(25103, _("jobs started before"))
 #define MSG_HISTORY_d_OPT_USAGE     _MESSAGE(25104, _("jobs started during the last d days"))
 #define MSG_HISTORY_j_OPT_USAGE     _MESSAGE(25105, _("list all [matching] jobs"))
 #define MSG_HISTORY_t_OPT_USAGE     _MESSAGE(25106, _("list all [matching] tasks (requires -j option)"))
+#define MSG_HISTORY_ar_OPT_USAGE    _MESSAGE(25107, _("list [matching] advance reservations"))
 #define MSG_HISTORY_f_OPT_USAGE           _MESSAGE(25109, _("use alternate accounting file"))
 #define MSG_HISTORY_beginend_OPT_USAGE    _MESSAGE(25110, _("[[CC]YYMMDDhhmm[.SS]"))
 #define MSG_HISTORY_SHOWJOB_QNAME             "qname"

@@ -1,3 +1,9 @@
+RD-2007-06-22-0: Bugfix:    - advance reservation did not honor master queue
+                            - fixed qrdel race condition with recently deleted
+                              job
+                 Enhancem:  - implemented qacct -ar
+                 Review:    AA
+
 MD-2007-06-22-0: Bugfix:    merged from V61_BRANCH (MD-2007-06-22)
                  Review:    JG
 

@@ -113,11 +113,13 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    timestamp = sge_get_gmt();
                      
    qname = lGetString(jr, JR_queue_name);
-   if (!qname)
+   if (!qname) {
       qname = (char *)MSG_OBJ_UNKNOWNQ;
+   }
    err_str = lGetString(jr, JR_err_str);
-   if (!err_str)
+   if (!err_str) {
       err_str = MSG_UNKNOWNREASON;
+   }
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
@@ -149,10 +151,10 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                hostname,
                general_failure ? MSG_GENERAL : "",
                get_sstate_description(failed), err_str));
-   }
-   else
+   } else {
       INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), 
             hostname));
+   }
 
 
    /*-------------------------------------------------*/
@@ -186,6 +188,8 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
 
          if (ar != NULL && lGetUlong(ar, AR_state) == AR_DELETED) {
             lListElem *ar_queue;
+            u_long32 ar_id = lGetUlong(ar, AR_id);
+
             for_each(ar_queue, lGetList(ar, AR_reserved_queues)) {
                if (qinstance_slots_used(ar_queue) != 0) {
                   break;
@@ -196,7 +200,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                dstring buffer = DSTRING_INIT;
 
                sge_dstring_sprintf(&buffer, sge_U32CFormat,
-                                   sge_u32c(lGetUlong(ar, AR_id)));
+                                   sge_u32c(ar_id));
 
                ar_do_reservation(ar, false);
 
@@ -208,7 +212,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                lRemoveElem(master_ar_list, &ar);
 
                sge_event_spool(ctx, NULL, 0, sgeE_AR_DEL, 
-                      lGetUlong(ar, AR_id), 0, sge_dstring_get_string(&buffer), NULL, NULL,
+                      ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL,
                       NULL, NULL, NULL, true, true);
                sge_dstring_free(&buffer);
             }

@@ -1,3 +1,7 @@
+RC-2007-06-22-0: Bugfix:    qhost -xml lacks '>' (small fix)
+                 Issue:     2308
+                 Review:    RC (patch submitted by Rayson)
+
 RD-2007-06-22-0: Bugfix:    - advance reservation did not honor master queue
                             - fixed qrdel race condition with recently deleted
                               job

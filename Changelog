@@ -1,3 +1,8 @@
+GH-2007-06-22-0: Bugfix:    NFS write error on N1GE trace file
+                 Bugster:   6541085
+                 Issue:     2304
+                 Review:    AH, HP
+
 RC-2007-06-22-0: Bugfix:    qhost -xml lacks '>' (small fix)
                  Issue:     2308
                  Review:    RC (patch submitted by Rayson)

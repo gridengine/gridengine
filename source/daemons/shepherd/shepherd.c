@@ -620,7 +620,14 @@ int main(int argc, char **argv)
 	 * the trace file later.
 	 */
    shepherd_trace_chown( get_conf_val("job_owner"));
-	
+   /*
+    * Close trace file to force a new open() with super user credentials for
+    * NFS writes. Otherwise we will see EACCESS for all writes from now on
+    * until start bracketing file operations with seteuid(0), seteuid(admin_user).
+    * The next shepherd_trace() will open the trace file automatically.
+    */
+   shepherd_trace_exit();
+
    sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION, &ds));
    if (shepherd_trace(err_str)) {
       shepherd_error("can't write to \"trace\" file");

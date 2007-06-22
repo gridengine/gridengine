@@ -321,6 +321,7 @@ SetSpoolingOptionsBerkeleyDB()
    SPOOLING_LIB=libspoolb
    SPOOLING_SERVER=none
    SPOOLING_DIR="spooldb"
+   MKDIR="mkdir -p"
    params_ok=0
    if [ "$AUTO" = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
@@ -445,7 +446,7 @@ SetSpoolingOptionsBerkeleyDB()
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  Makedir $SPOOLING_DIR
+                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -502,7 +503,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      Makedir $SPOOLING_DIR
+      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
@@ -1032,12 +1033,14 @@ CreateSettingsFile()
 {
    $INFOTEXT "Creating settings files for >.profile/.cshrc<"
 
-   if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.sh ]; then
-      ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.sh
-   fi
-
-   if [ -f $SGE_ROOT_VAL/$COMMONDIR/settings.csh ]; then
-      ExecuteAsAdmin $RM $SGE_ROOT_VAL/$COMMONDIR/settings.csh
+   if [ $RECREATE_SETTINGS = "false" ]; then
+      if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+         ExecuteAsAdmin $RM $SGE_ROOT/$SGE_CELL/common/settings.sh
+      fi
+  
+      if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
+         ExecuteAsAdmin $RM $SGE_ROOT/$SGE_CELL/common/settings.csh
+      fi
    fi
 
    ExecuteAsAdmin util/create_settings.sh $SGE_ROOT_VAL/$COMMONDIR

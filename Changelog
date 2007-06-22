@@ -1,3 +1,6 @@
+MD-2007-06-22-0: Bugfix:    merged from V61_BRANCH (MD-2007-06-22)
+                 Review:    JG
+
 CR-2007-06-22-0: Cleanup:   code cleanup in function sge_del_userprj
                  Review:    RD
 
@@ -15,7 +18,7 @@ MP-2007-06-20-0: Bugfix:    inst_sge -ux uninstallation of exechost tries to
                  Review:    MD
 
 JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0
-                 Issue:     2299
+                 
                  Bugtraq:   6536039
                  Review:    MD
 

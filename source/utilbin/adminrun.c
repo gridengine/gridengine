@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <errno.h>
 
 #include "basis_types.h"
 #include "msg_utilbin.h"
@@ -60,6 +61,11 @@ int main(int argc, char **argv)
    if(geteuid() != SGE_SUPERUSER_UID) {
       argv+=2;
       execvp(argv[0], argv);
+      fprintf(stderr, "execvp errno=%d\n", errno);
+      fprintf(stderr, "Arguments, passed to adminrun:\n");
+      for (i=0; argv[i] != NULL; i++) {
+         fprintf(stderr, "argv[%d] = %s\n", i, argv[i]);
+      }
       fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);
       fprintf(stderr, "\n");
       return 127;
@@ -80,6 +86,11 @@ int main(int argc, char **argv)
  
    argv += 2;
    execvp(argv[0], argv);
+   fprintf(stderr, "execvp errno=%d\n", errno);
+   fprintf(stderr, "Arguments, passed to adminrun:\n");
+   for (i=0; argv[i] != NULL; i++) {
+      fprintf(stderr, "argv[%d] = %s\n", i, argv[i]);
+   }
 
    fprintf(stderr, MSG_COMMAND_EXECUTEFAILED_S , argv[0]);
    fprintf(stderr, "\n");

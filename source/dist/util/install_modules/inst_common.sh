@@ -114,7 +114,7 @@ BasicSettings()
 
   RM="rm -f"
   TOUCH="touch"
-  MORE="more"
+  MORE_CMD="more"
 
 }
 
@@ -241,6 +241,59 @@ ExecuteAsAdmin()
    fi
    return 0
 }
+
+
+#-------------------------------------------------------------------------
+# Execute command as user $ADMINUSER and exit if exit status != 0
+# if ADMINUSER = default then execute command unchanged
+#
+# uses binary "adminrun" form SGE distribution
+#
+# USES: variables "$verbose"    (if set to "true" print arguments)
+#                  $ADMINUSER   (if set to "default" do not use "adminrun)
+#                 "$SGE_UTILBIN"  (path to the binary in utilbin)
+#
+# ATTENTION: This function is a special function only for upgrades. Do not
+#            use for common install scripting!!!
+ExecuteAsAdminForUpgrade()
+{
+   if [ "$verbose" = true ]; then
+      $ECHO $*
+   fi
+
+   if [ $ADMINUSER = default ]; then
+      $*
+   else
+      cmd=$1
+      shift
+      if [ -f $SGE_UTILBIN/adminrun ]; then
+         $SGE_UTILBIN/adminrun $ADMINUSER $cmd $1 "$2"
+      else
+         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER $cmd $1 "$2"
+      fi
+   fi
+
+   if [ $? != 0 ]; then
+
+      $ECHO >&2
+      Translate 1 "Command failed: %s" "$cmd $1 $2"
+      $ECHO >&2
+      Translate 1 "Probably a permission problem. Please check file access permissions."
+      Translate 1 "Check read/write permission. Check if SGE daemons are running."
+      $ECHO >&2
+
+      $INFOTEXT -log "Command failed: %s" "$cmd $1 $2"
+      $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
+      $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
+
+      MoveLog
+      if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
+         exit 1
+      fi
+   fi
+   return 0
+}
+
 
 
 #-------------------------------------------------------------------------
@@ -424,9 +477,8 @@ ErrUsage()
              "   -rst       restore configuration from backup\n" \
              "   -copycerts copy local certificates to given hosts\n" \
              "   -v         print version\n" \
-             "   -upd       upgrade cluster from 5.x to 6.1\n" \
+             "   -upd       upgrade cluster from 6.0u2 or higher to 6.1\n" \
              "   -rccreate  create startup scripts from templates\n" \
-             "   -updatedb  BDB update from SGE Version 6.0/6.0u1 to 6.0u2\n" \
              "   -host      hostname for shadow master installation or uninstallation \n" \
              "              (eg. exec host)\n" \
              "   -resport   the install script does not allow SGE_QMASTER_PORT numbers \n" \
@@ -452,9 +504,6 @@ ErrUsage()
              "   inst_sge -ux all  Uninstalls all registered execution hosts\n" \
              "   inst_sge -db      Install a Berkeley DB Server on local host\n" \
              "   inst_sge -sm      Install a Shadow Master Host on local host\n" \
-             "   inst_sge -upd <SGE_ROOT> <SGE_CELL>                         \n" \
-             "   <sge-root> = SGE_ROOT directory of old 5.x installation.\n" \
-             "   <sge-cell> = SGE_CELL name of old 5.x installation.\n" \
              "   inst_sge -copycerts host or inst_sge -copycerts \"host1 host2\"\n" $myname
 
    if [ "$option" != "" ]; then 
@@ -614,11 +663,10 @@ WelcomeTheUserUpgrade()
              "   - The INTR character is often bound to the key Ctrl-C.\n" \
              "     The term >Ctrl-C< is used during the upgrade if you\n" \
              "     have the possibility to abort the upgrade\n\n" \
-             "The upgrade procedure will take approximately 5-10 minutes.\n" \
-             "After this upgrade you will get a running qmaster and schedd with\n" \
-             "the configuration of your old installation. If the upgrade was\n" \
-             "successfully completed it is necessary to install your execution hosts\n" \
-             "with the install_execd script."
+             "The upgrade procedure will take approximately 1-2 minutes.\n" \
+             "After this upgrade you will get a new set of settings and\n" \
+             "rc-startup script files. The old files will be stored in:\n" \
+             "$SGE_ROOT/$SGE_CELL/common directory"
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
@@ -644,6 +692,7 @@ WelcomeTheUserWinUpdate()
    $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
+
 
 #--------------------------------------------------------------------------
 #
@@ -2721,7 +2770,7 @@ LicenseAgreement()
    fi
 
    if [ -f $PWD/doc/LICENSE ]; then
-      $MORE $PWD/doc/LICENSE
+      $MORE_CMD $PWD/doc/LICENSE
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you agree with that license? (y/n) [n] >> "
 

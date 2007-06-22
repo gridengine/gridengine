@@ -607,15 +607,10 @@ UpdateHints()
    $INFOTEXT -u "Congratulation, your upgrade was successful!"
    $INFOTEXT -n "\nPlease check your setup, to make sure that everything is\n" \
                 "configured well!\n" \
-                "Due to new features of our product we added some new configuration\n" \
-                "options and we were forced to change some values of complexes.\n" \
-                "So, please check your complexes. You will find a updatelog file\n" \
-                "within the qmaster spool directory. This file shows you the name and\n" \
-                "of cemplexes and the values which have been concerned of the upgrade.\n" \
-                "Please log in to your executions hosts now and install the execution daemon\n" \
-                "with inst_sge -x -upd. If you're using loadsensor scripts for your execution hosts,\n" \
-                "please copy these scripts to the new location and adapt the path \nto the new location!\n" \
-                "Thank you very much for using SGE 6.0 and have fun!\n\n" 
+                "If you have installed rc-files, please log in to each host and copy the new\n" \
+                "rc-startup scripts to the right location. In case of using Berkeley DB Server\n" \
+                "host, please also care about it, and don't forget to copy the rc-file, too\n" \
+                "Thank you very much for using SGE 6.1 and have fun!\n\n" 
 }
 
 
@@ -704,3 +699,80 @@ UpgradeDB()
    $INFOTEXT "  Now you can restart your cluster!\n"
 }
 
+UpgradeErrorHandler()
+{
+   spooling_method=$1
+   QMASTER_SPOOLING_DIR=$2
+
+   $INFOTEXT -u "\n\nUpgrade Error !!!"
+   $INFOTEXT "\nThe upgrade procedure found running or pending jobs in your system. This is not\nallowed during system upgrade."\
+             "The upgrade procedure can "\
+             "try to remove all\nrunning and pending jobs from the system, an upgrade with existing jobs won't\nbe continued.\nThis is necessary"\
+             " due to modifications regarding the job structure.\nIf you decide to delete the jobs, it is necessary to resubmit them after\nthe"\
+             " upgrade, if the jobs are not deleted, the upgrade will exit!\n\n" 
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the upgrade procedure try to delete the existing jobs? (y/n) [y] >>"
+   if [ "$?" = 0 ]; then
+      $INFOTEXT "... deleting jobs, now !!!\n\n"
+      EliminateExistingJobs $spooling_method $QMASTER_SPOOL_DIR
+      $INFOTEXT "\nThe job's could be successfully removed! Please do not forget to check the\nlocal execd spooling"\
+                " directories for still existing job entries. These can't\nbe removed by this script. It is recommended"\
+                " to remove these entries manually."
+      $INFOTEXT "\n\nYou find the execd spooling directories using <qconf -sconf> for global and\n<qconf -sconf hostname> for local <execd_spooling_dir>, after restarting\nthe cluster.\n\n"
+      $INFOTEXT "Please check:"
+      $INFOTEXT "<execd_spooling_dir>/hostname/jobs"
+      $INFOTEXT "<execd_spooling_dir>/hostname/job_scripts"
+      $INFOTEXT "<execd_spooling_dir>/hostname/active_jobs"
+   else
+      $INFOTEXT "Exiting upgrade, now!"
+      exit 1
+   fi
+}
+
+
+
+EliminateExistingJobs()
+{
+   spooling_method=$1
+   QMASTER_SPOOLING_DIR=$2
+
+   RM="rm"
+   SPOOLEDIT="$SGE_ROOT/utilbin/$ARCH/spooledit"
+
+   if [ "$spooling_method" = "classic" ]; then
+      ExecuteAsAdmin $RM -fR $QMASTER_SPOOL_DIR/jobs/* 
+      ExecuteAsAdmin $RM -fR $QMASTER_SPOOL_DIR/job_scripts/* 
+   else
+      ret=0
+      while [ $ret = 0 ]; do
+         j=`$SGE_UTILBIN/spooledit list JOB | head -1` 
+         if [ "$j" != "" ]; then
+            ExecuteAsAdminForUpgrade $SPOOLEDIT delete "$j" 
+         fi 
+         if [ `$SGE_UTILBIN/spooledit list JOB | wc -l` = "0" ]; then
+            ret=1
+         fi
+      done
+
+      ret=0
+      while [ $ret = 0 ]; do
+         j=`$SGE_UTILBIN/spooledit list JATASK | head -1`
+         if [ "$j" != "" ]; then 
+            ExecuteAsAdminForUpgrade $SPOOLEDIT delete "$j"
+         fi
+         if [ `$SGE_UTILBIN/spooledit list JATASK | wc -l` = "0" ]; then
+            ret=1
+         fi   
+      done
+
+      ret=0
+      while [ $ret = 0 ]; do
+         j=`$SGE_UTILBIN/spooledit list PETASK | head -1`
+         if [ "$j" != "" ]; then 
+            ExecuteAsAdminForUpgrade $SPOOLEDIT delete "$j"
+         fi
+         if [ `$SGE_UTILBIN/spooledit list PETASK | wc -l` = "0" ]; then
+            ret=1
+         fi   
+      done
+   fi
+}

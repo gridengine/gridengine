@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.1beta"
+SGE_VERSION="6.1u1"
 
 #Reset PATH to a safe value
 #
@@ -82,6 +82,7 @@ SET_FILE_PERMS=false
 MAKE_RC=false
 WIN_UPDATE=false
 COPY_CA="false"
+RECREATE_SETTINGS="false"
 
 QMASTER="undef"
 EXECD="undef"
@@ -220,21 +221,10 @@ while [ $ARGC != 0 ]; do
      ;;
    -upd)
      UPDATE=true
-     OLD_SGE_ROOT=$2
-     OLD_SGE_CELL=$3
-     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" ]; then
-        ErrUsage
-        exit 1    
-     fi
-     shift
-     ARGC=`expr $ARGC - 1`
-     shift
-     ARGC=`expr $ARGC - 1`
-     QMASTER="install"
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_berkeley.sh
      . ./util/install_modules/inst_update.sh
-     #update from 5.3 to 6.0
+     #update from 6.0u2 or higher to 6.1
      ;;
    -winupdate)
      #update to new Gridengine Helper Service
@@ -258,11 +248,6 @@ while [ $ARGC != 0 ]; do
      MAKE_RC=true
      #Generate new rc scripts from settings file
      ;; 
-   -updatedb)
-     UPDATEDB=true
-     . ./util/install_modules/inst_update.sh
-     #Needed for 6.0 to 6.0u2 BDB update
-     ;;
    -noremote)
      NOREMOTE=true
      #Disable remote installation
@@ -333,51 +318,78 @@ if [ $WIN_SVC = "uninstall" ]; then
 fi
 
 
-if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" -a "$EXECD" != "install" ]; then
-   WelcomeTheUserUpgrade
-   CheckForLocalHostResolving
-   CheckWhoInstallsSGE
-   ProcessSGERoot 
-   GetQmasterPort
-   GetExecdPort
-   GetCell
-   GetQmasterSpoolDir $euid
-   SetCellDependentVariables
-   SetPermissions
-   SelectHostNameResolving
-   SetProductMode
-   MakeDirsMaster
-   SetSpoolingOptions
-   AddBootstrap
-   InitSpoolingDatabase
-   GetConfiguration
-   AddActQmaster
-   CreateSGEStartUpScripts $euid true master
-   CreateSGEStartUpScripts $euid true execd 
-   UpdateConfiguration
-   CreateSettingsFile
-   InitCA
-   AddSGEStartUpScript $euid master
-   StartQmaster
-   AddDefaultQueue
-   CopyCA execd
-   GetOldScheddConfig
-   UpdateHints
-fi
+if [ $UPDATE = "true" ]; then
 
-if [ "$UPDATE" = "true" -a "$EXECD" = "install" ]; then
-      WelcomeTheUserExecHost
-      CheckForLocalHostResolving
-      ProcessSGERoot
-      CheckQmasterInstallation
-      CheckCellDirectory
-      . $SGE_ROOT/$SGE_CELL/common/settings.sh
-      CheckCSP
-      CheckHostNameResolving install
-      AddSGEStartUpScript $euid execd
-      StartExecd
-      AddQueue
-      GiveHints
+   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+   MKDIR="mkdir -p"
+   WelcomeTheUserUpgrade
+   ProcessSGERoot
+   GetCell
+   SetCellDependentVariables
+   GetAdminUser
+
+   spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
+   QMASTER_SPOOL_DIR=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+
+      ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT/util/resources/centry/display_win_gui
+   
+   if [ "$spooling_method" = "classic" ]; then  # classic spooling case
+
+      ExecuteAsAdmin $MKDIR $QMASTER_SPOOL_DIR/resource_quotas
+
+      if [ `ls $QMASTER_SPOOL_DIR/jobs/ | wc -l` != 0 ]; then
+         # print Upgrade Error Message, and provide user solution to solve the problem
+         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
+      fi
+   else
+      if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then  # berkeley db spooling
+         is_rpc=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | grep ":"`  
+         if [ "$is_rpc" != "" ]; then  #rpc bdb spooling
+            $INFOTEXT "This system is configured for Berkeley DB Server spooling, please make sure,\nthat the Berkeley DB RPC service is running!\n"
+            $INFOTEXT -wait -n "Please do not continue, till BDB Service is running!\nHit <RETURN> to continue >>"
+            $CLEAR 
+         fi
+      fi
+      if [ `$SGE_UTILBIN/spooledit list | grep JOB | wc -l` != 0 ]; then
+         # print Upgrade Error Message, and provide user solution to solve the problem
+         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
+      fi
+   fi
+   
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgemaster ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgemaster_$DATE
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgeexecd ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgeexecd $SGE_ROOT/$SGE_CELL/common/sgeexecd_$DATE
+   fi 
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgebdb $SGE_ROOT/$SGE_CELL/common/sgebdb_$DATE
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/settings.sh $SGE_ROOT/$SGE_CELL/common/settings.sh_$DATE
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/settings.csh ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/settings.csh $SGE_ROOT/$SGE_CELL/common/settings.csh_$DATE
+   fi
+
+   $CLEAR
+   CreateSGEStartUpScripts $euid true master
+   CreateSGEStartUpScripts $euid true execd
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      is_rpc=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | grep ":"`  
+      if [ "$is_rpc" != "" ]; then  
+         CreateRPCServerScript
+      fi
+   fi
+   CreateSettingsFile
+   $CLEAR
+   UpdateHints
 fi
 
 if [ "$BERKELEY" = "install" ]; then
@@ -449,6 +461,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddWindowsAdmin
  AddHosts
  CopyCA execd
+ CopyCA submit 
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -1105,20 +1118,4 @@ if [ $MAKE_RC = "true" ]; then
 
 fi
 
-if [ $UPDATEDB = "true" ]; then
-
-   WelcomeTheUserUpgrade
-   ProcessSGERoot
-
-   $INFOTEXT -n "\nPlease enter your SGE_CELL directory or use the default [default] >> "
-
-   SGE_CELL=`Enter default`
-   SGE_CELL_VAL=$SGE_CELL
-
-   export SGE_CELL
-   export SGE_CELL_VAL
-   
-   $CLEAR
-   UpgradeDB
-fi
 exit 0

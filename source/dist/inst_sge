@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.1"
+SGE_VERSION="6.1u1"
 
 #Reset PATH to a safe value
 #
@@ -321,11 +321,42 @@ fi
 if [ $UPDATE = "true" ]; then
 
    DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+   MKDIR="mkdir -p"
    WelcomeTheUserUpgrade
    ProcessSGERoot
    GetCell
    SetCellDependentVariables
    GetAdminUser
+
+   spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_method" | awk '{ print $2 }'`
+   QMASTER_SPOOL_DIR=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+
+      ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT/util/resources/centry/display_win_gui
+   
+   if [ "$spooling_method" = "classic" ]; then  # classic spooling case
+
+      ExecuteAsAdmin $MKDIR $QMASTER_SPOOL_DIR/resource_quotas
+
+      if [ `ls $QMASTER_SPOOL_DIR/jobs/ | wc -l` != 0 ]; then
+         # print Upgrade Error Message, and provide user solution to solve the problem
+         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
+      fi
+   else
+      if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then  # berkeley db spooling
+         is_rpc=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | grep ":"`  
+         if [ "$is_rpc" != "" ]; then  #rpc bdb spooling
+            $INFOTEXT "This system is configured for Berkeley DB Server spooling, please make sure,\nthat the Berkeley DB RPC service is running!\n"
+            $INFOTEXT -wait -n "Please do not continue, till BDB Service is running!\nHit <RETURN> to continue >>"
+            $CLEAR 
+         fi
+      fi
+      if [ `$SGE_UTILBIN/spooledit list | grep JOB | wc -l` != 0 ]; then
+         # print Upgrade Error Message, and provide user solution to solve the problem
+         UpgradeErrorHandler $spooling_method $QMASTER_SPOOL_DIR
+         $INFOTEXT -wait -n "Hit <RETURN> to continue >>"
+      fi
+   fi
    
    if [ -f $SGE_ROOT/$SGE_CELL/common/sgemaster ]; then
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgemaster_$DATE

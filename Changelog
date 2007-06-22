@@ -1,3 +1,18 @@
+MD-2007-06-22-0: Bugfix:    SGE 6.1 upgrade procedure is broken when using
+                            the classic qmaster spooling 
+                 Bugster:   6564592 
+                 Issue:     2306
+
+                 Bugfix:    6.1 upgrade procedure shall exit when there are
+                            jobs in the cluster
+                 Bugster:   6568578
+                 Issue:     2293
+
+                 Bugfix:    Use of MORE fails on some architectures
+                 Bugster:   6529974  
+                 Issue:     2201
+                 Review:    JG
+
 CR-2007-06-22-0: Bugfix:    Fixed merge error introduced with RN-2007-06-19-0
                  Review:    RD
 

@@ -114,7 +114,7 @@ BasicSettings()
 
   RM="rm -f"
   TOUCH="touch"
-  MORE="more"
+  MORE_CMD="more"
 
 }
 
@@ -241,6 +241,59 @@ ExecuteAsAdmin()
    fi
    return 0
 }
+
+
+#-------------------------------------------------------------------------
+# Execute command as user $ADMINUSER and exit if exit status != 0
+# if ADMINUSER = default then execute command unchanged
+#
+# uses binary "adminrun" form SGE distribution
+#
+# USES: variables "$verbose"    (if set to "true" print arguments)
+#                  $ADMINUSER   (if set to "default" do not use "adminrun)
+#                 "$SGE_UTILBIN"  (path to the binary in utilbin)
+#
+# ATTENTION: This function is a special function only for upgrades. Do not
+#            use for common install scripting!!!
+ExecuteAsAdminForUpgrade()
+{
+   if [ "$verbose" = true ]; then
+      $ECHO $*
+   fi
+
+   if [ $ADMINUSER = default ]; then
+      $*
+   else
+      cmd=$1
+      shift
+      if [ -f $SGE_UTILBIN/adminrun ]; then
+         $SGE_UTILBIN/adminrun $ADMINUSER $cmd $1 "$2"
+      else
+         $SGE_ROOT/utilbin/$SGE_ARCH/adminrun $ADMINUSER $cmd $1 "$2"
+      fi
+   fi
+
+   if [ $? != 0 ]; then
+
+      $ECHO >&2
+      Translate 1 "Command failed: %s" "$cmd $1 $2"
+      $ECHO >&2
+      Translate 1 "Probably a permission problem. Please check file access permissions."
+      Translate 1 "Check read/write permission. Check if SGE daemons are running."
+      $ECHO >&2
+
+      $INFOTEXT -log "Command failed: %s" "$cmd $1 $2"
+      $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
+      $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
+
+      MoveLog
+      if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
+         exit 1
+      fi
+   fi
+   return 0
+}
+
 
 
 #-------------------------------------------------------------------------
@@ -2717,7 +2770,7 @@ LicenseAgreement()
    fi
 
    if [ -f $PWD/doc/LICENSE ]; then
-      $MORE $PWD/doc/LICENSE
+      $MORE_CMD $PWD/doc/LICENSE
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you agree with that license? (y/n) [n] >> "
 

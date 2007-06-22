@@ -321,6 +321,7 @@ SetSpoolingOptionsBerkeleyDB()
    SPOOLING_LIB=libspoolb
    SPOOLING_SERVER=none
    SPOOLING_DIR="spooldb"
+   MKDIR="mkdir -p"
    params_ok=0
    if [ "$AUTO" = "true" ]; then
       SPOOLING_SERVER=$DB_SPOOLING_SERVER
@@ -445,7 +446,7 @@ SetSpoolingOptionsBerkeleyDB()
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  Makedir $SPOOLING_DIR
+                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -502,7 +503,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      Makedir $SPOOLING_DIR
+      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"

@@ -1,3 +1,6 @@
+CR-2007-06-22-0: Cleanup:   code cleanup in function sge_del_userprj
+                 Review:    RD
+
 AA-2007-06-21-0: Cleanup:   missing copyrights in Xpm files
 
 JG-2007-06-20-0: Bugfix:    sgeremoterun didn't work with Grid Engine >= 6.0

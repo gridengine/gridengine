@@ -1,3 +1,5 @@
+JG-2007-06-23-0: Bugfix:    Fixed a merge error from JG-2007-06-19-0.
+
 RC-2007-06-22-0: Bugfix:    qhost -xml lacks '>' (small fix)
                  Issue:     2308
                  Review:    RC (patch submitted by Rayson)

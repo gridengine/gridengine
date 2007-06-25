@@ -312,8 +312,8 @@ int qstat_no_group(qstat_env_t* qstat_env, qstat_handler_t* handler, lList **alp
    
    
    if (handler->report_started && (ret = handler->report_started(handler, alpp))) {
-         DPRINTF(("report_started failed\n"));
-         DRETURN(ret);
+      DPRINTF(("report_started failed\n"));
+      DRETURN(ret);
    }
    
    if ((ret = qstat_handle_running_jobs(qstat_env, handler, alpp))) {
@@ -324,7 +324,7 @@ int qstat_no_group(qstat_env_t* qstat_env, qstat_handler_t* handler, lList **alp
    
    /* sort pending jobs */
    if (lGetNumberOfElem(qstat_env->job_list)>0 ) {
-         sgeee_sort_jobs(&(qstat_env->job_list));
+      sgeee_sort_jobs(&(qstat_env->job_list));
    }
    
       
@@ -1552,6 +1552,7 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
             break;
          }   
          nxt_jatep = lNext(jatep);
+
          if (!(((qstat_env->full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  
                ||
              ((qstat_env->full_listing & QSTAT_DISPLAY_USERHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) 
@@ -3191,8 +3192,11 @@ int build_job_state_filter(qstat_env_t *qstat_env, const char* job_state, lList 
    DENTER(TOP_LAYER, "build_job_state_filter");
 
    if (job_state != NULL) {
-      char * argstr = strdup(job_state);
-      static char noflag = '$';
+      /* 
+       * list of options for the -s switch
+       * when you add options, make sure that single byte options (e.g. "h")
+       * come after multi byte options starting with the same character (e.g. "hs")!
+       */
       static char* flags[] = {
          "hu", "hs", "ho", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
       };
@@ -3207,51 +3211,42 @@ int build_job_state_filter(qstat_env_t *qstat_env, const char* job_state, lList 
          QSTAT_DISPLAY_RUNNING, 
          QSTAT_DISPLAY_SUSPENDED, 
          QSTAT_DISPLAY_ZOMBIES,
-         (QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_RUNNING|
-          QSTAT_DISPLAY_SUSPENDED),
+         (QSTAT_DISPLAY_PENDING|QSTAT_DISPLAY_RUNNING|QSTAT_DISPLAY_SUSPENDED),
          0 
       };
-      int i, j;
-      char *s_switch;
+      int i;
+      const char *s;
       u_long32 rm_bits = 0;
       
       /* initialize bitmask */
-      for (j=0; flags[j]; j++) 
-         rm_bits |= bits[j];
+      for (i =0 ; flags[i] != 0; i++) {
+         rm_bits |= bits[i];
+      }
       qstat_env->full_listing &= ~rm_bits;
-      
+
       /* 
        * search each 'flag' in argstr
        * if we find the whole string we will set the corresponding 
        * bits in '*qstat_env->full_listing'
        */
-      for (i=0, s_switch=flags[i]; s_switch != NULL; i++, s_switch=flags[i]) {
-         for (j=0; argstr[j]; j++) { 
-            if ((argstr[j] == flags[i][0] && argstr[j] != noflag)) {
-               if ((strlen(flags[i]) == 2) && argstr[j+1] && (argstr[j+1] == flags[i][1])) {
-                  argstr[j] = noflag;
-                  argstr[j+1] = noflag;
-                  qstat_env->full_listing |= bits[i];
-                  break;
-               } else if ((strlen(flags[i]) == 1)){
-                  argstr[j] = noflag;
-                  qstat_env->full_listing |= bits[i];
-                  break;
-               }
+      s = job_state;
+      while (*s != '\0') {
+         bool matched = false;
+         for (i = 0; flags[i] != NULL; i++) {
+            if (strncmp(s, flags[i], strlen(flags[i])) == 0) {
+               qstat_env->full_listing |= bits[i];
+               s += strlen(flags[i]);
+               matched = true;
             }
          }
-      }
 
-      /* search for invalid options */
-      for (j=0; argstr[j]; j++) {
-         if (argstr[j] != noflag) {
+         if (!matched) {
             answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                                     "%s", MSG_OPTIONS_WRONGARGUMENTTOSOPT); 
             ret = -1;
             break;
          }
       }
-      FREE(argstr);
    }
 
    DRETURN(ret);

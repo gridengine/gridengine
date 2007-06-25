@@ -396,7 +396,6 @@ char **argv
             handler.destroy(&handler);
          }
       } else {
-         
          qstat_handler_t handler;
          
          if(isXML) {

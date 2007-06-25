@@ -1,3 +1,8 @@
+GH-2007-06-25-0: Bugfix:    NFS write error on N1GE trace file
+                 Bugtraq:   6541085
+                 Issue:     2304
+                 Review:    AH, HP
+
 CR-2007-06-22-0: Cleanup:   code cleanup in function sge_del_userprj
                  Review:    RD
 

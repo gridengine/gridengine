@@ -1,3 +1,8 @@
+GH-2007-06-25-0: Bugfix:    NFS write error on N1GE trace file
+                 Bugtraq:   6541085
+                 IZ:        2304
+                 Review:    AH, HP
+
 JG-2007-06-25-0: Bugfix:    qstat -s hX filtering is broken on darwin-ppc
                  Bugster:   6525883
                  Issue:     2191

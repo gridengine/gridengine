@@ -559,7 +559,9 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                      DPRINTF(("Found ambiguous value in domain "SFQ"\n", 
                                href_name));
                      ret = false;
-                     break;
+                     lFreeList(&host_list);
+                     lFreeList(&tmp_href_list);
+                     break; /* leave for_each loop */
                   }
                }
                lFreeList(&host_list);

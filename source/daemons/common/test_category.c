@@ -640,6 +640,7 @@ static int test(data_entry_t *test, char *result, int count)
    }
    lFreeElem(&job_elem);
    lFreeList(&access_list);
+   lFreeList(&project_list);
    lFreeList(&rqs_list);
    return ret;
 }

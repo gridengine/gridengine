@@ -1888,9 +1888,10 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp || lGetNumberOfElem(lp) == 0) {
+            if (lp == NULL || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
                fprintf(stderr, "\n");
+               lFreeList(&lp);
                DRETURN(1);
             }
 
@@ -1904,7 +1905,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            lFreeElem(&ep);
+            lFreeList(&lp);
             
             /* edit this file */
             status = sge_edit(filename, uid, gid);
@@ -1976,7 +1977,10 @@ char *argv[]
          lp = lCreateList("calendar to add", CAL_Type); 
          lAppendElem(lp, ep);
          alp = ctx->gdi(ctx, SGE_CALENDAR_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-         sge_parse_return |= show_gdi_request_answer_list(alp);
+         aep = lFirst(alp);
+         answer_exit_if_not_recoverable(aep);
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+         
          lFreeList(&alp);
          lFreeList(&lp);
 
@@ -2034,9 +2038,10 @@ char *argv[]
             }
             lFreeList(&alp);
 
-            if (!lp || lGetNumberOfElem(lp) == 0 ) {
+            if (lp == NULL || lGetNumberOfElem(lp) == 0 ) {
                fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
                fprintf(stderr, "\n");
+               lFreeList(&lp);
                DRETURN(1);
             }
 
@@ -2050,7 +2055,7 @@ char *argv[]
                sge_error_and_exit(NULL);
             }
 
-            lFreeElem(&ep);
+            lFreeList(&lp);
             
             /* edit this file */
             status = sge_edit(filename, uid, gid);
@@ -3642,22 +3647,20 @@ char *argv[]
             DRETURN(1); 
          }
 
-         if (!lp || lGetNumberOfElem(lp) == 0) {
+         if (lp == NULL || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_USER_XISNOKNOWNUSER_S, username);
             fprintf(stderr, "\n");
             fflush(stdout);
             fflush(stderr);
             lFreeList(&alp);
             lFreeElem(&newep);
+            lFreeList(&lp);
             DRETURN(1); 
          }
          lFreeList(&alp);
-         ep = lFirst(lp);
-         
-         /* edit user */
-         /* newep = edit_userprj(ep, true); */
 
          /* send it to qmaster */
+         lFreeList(&lp);
          lp = lCreateList("User list to modify", UP_Type); 
          lAppendElem(lp, newep);
          alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
@@ -3806,7 +3809,7 @@ char *argv[]
          aep = lFirst(alp);
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
-           fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+            fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             spp++;
             continue;
          }
@@ -3815,6 +3818,7 @@ char *argv[]
          if (!lp || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_CALENDAR_XISNOTACALENDAR_S, *spp);
             fprintf(stderr, "\n");
+            lFreeList(&lp);
             DRETURN(1);
          }
 
@@ -3824,6 +3828,7 @@ char *argv[]
                                               SP_DEST_STDOUT, SP_FORM_ASCII,
                                               NULL, false);
          FREE (filename_stdout);
+         lFreeList(&lp);
          if (answer_list_output(&alp)) {
             sge_error_and_exit(NULL);
          }
@@ -5276,7 +5281,8 @@ char *argv[]
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
             lFreeList(&alp);
-            FREE (filename_stdout);
+            FREE(filename_stdout);
+            FREE(fields);
          }
          spp++;
          continue;
@@ -6490,7 +6496,6 @@ u_long32 flags
       lFreeElem(&ep);
       DRETURN(3);
    }
-   
 
    if (filename == NULL) {
       bool failed = false;
@@ -6555,8 +6560,7 @@ u_long32 flags
       
       if (ep != NULL) {
          lSetHost(ep, CONF_hname, cfn);
-      }
-      else {
+      } else {
          fprintf(stderr, "%s\n", MSG_ANSWER_ERRORREADINGTEMPFILE);
          unlink(tmpname);
          FREE (tmpname);
@@ -6566,6 +6570,8 @@ u_long32 flags
       unlink(tmpname);
       FREE (tmpname);
    } else {
+      lFreeElem(&ep);
+
       fields_out[0] = NoName;
       fields = sge_build_CONF_field_list (false);
       ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
@@ -6885,6 +6891,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       
       FREE(name);
       FREE(value);
+      sge_dstring_free(&delim);
    }
 
    /* add object name to int vector and transform

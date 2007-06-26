@@ -402,7 +402,6 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
-               lListElem *tmp_elem = lCopyElem(this_elem);
                lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
                celist_attr_list_find_value(attr_list, answer_list,
@@ -412,6 +411,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 
                if (centry_list_fill_request(new_value, answer_list, master_centry_list, 
                                         true, true, false) == 0) {
+                   lListElem *tmp_elem = lCopyElem(this_elem);
 
                    /* We make a copy of new_value here because it will ultimately
                     * end up in the qinstance.  If we didn't copy it, we would end

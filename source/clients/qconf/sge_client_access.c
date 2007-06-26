@@ -261,14 +261,14 @@ lList **dst
    DENTER(TOP_LAYER, "sge_client_get_acls");
 
    where = NULL;
-   for_each(aclarg,acl_args) {
-
+   for_each(aclarg, acl_args) {
       acl_name = lGetString(aclarg, US_name);
       newcp = lWhere("%T(%I==%s)", US_Type, US_name, acl_name);
-      if (!where) 
+      if (where == NULL) {
          where = newcp;
-      else
+      } else {
          where = lOrWhere(where, newcp);
+      }
    }
    what = lWhat("%T(ALL)", US_Type);
    answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);

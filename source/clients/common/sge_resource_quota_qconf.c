@@ -502,7 +502,10 @@ bool rqs_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList *rqs_list, lList **
          ret = rqs_list_verify_attributes(rqs_list, answer_list, false);
       }
       if (ret) {
-         *answer_list = ctx->gdi(ctx, SGE_RQS_LIST, gdi_command, &rqs_list, NULL, NULL);
+         lList *my_answer_list = ctx->gdi(ctx, SGE_RQS_LIST, gdi_command, &rqs_list, NULL, NULL);
+         if (my_answer_list != NULL) {
+            answer_list_append_list(answer_list, &my_answer_list);
+         }
       }
    }
    DRETURN(ret);

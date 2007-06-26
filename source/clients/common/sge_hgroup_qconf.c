@@ -121,21 +121,22 @@ lListElem *hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx,
       lList *gdi_answer_list = NULL;
       lEnumeration *what = NULL;
       lCondition *where = NULL;
-      lList *houstgroup_list = NULL;
+      lList *hostgroup_list = NULL;
 
       what = lWhat("%T(ALL)", HGRP_Type);
       where = lWhere("%T(%I==%s)", HGRP_Type, HGRP_name, 
                      name);
       gdi_answer_list = ctx->gdi(ctx, SGE_HGROUP_LIST, SGE_GDI_GET, 
-                                &houstgroup_list, where, what);
+                                &hostgroup_list, where, what);
       lFreeWhat(&what);
       lFreeWhere(&where);
 
       if (!answer_list_has_error(&gdi_answer_list)) {
-         ret = lFirst(houstgroup_list);
+         ret = lDechainElem(hostgroup_list, lFirst(hostgroup_list));
       } else {
          answer_list_replace(answer_list, &gdi_answer_list);
       }
+      lFreeList(&hostgroup_list);
    } 
    DRETURN(ret);
 }
@@ -251,9 +252,11 @@ bool hgroup_add(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name,
          ret = hgroup_provide_modify_context(ctx, &hgroup, answer_list, true);
       }
       if (ret) {
-         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_ADD); 
-      } 
-   }  
+         ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_ADD);
+      }
+
+      lFreeElem(&hgroup);
+   }
   
    DRETURN(ret); 
 }
@@ -378,6 +381,7 @@ bool hgroup_delete(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *na
       if (hgroup != NULL) {
          ret = hgroup_add_del_mod_via_gdi(ctx, hgroup, answer_list, SGE_GDI_DEL); 
       }
+      lFreeElem(&hgroup);
    }
    DRETURN(ret);
 }
@@ -431,6 +435,7 @@ bool hgroup_show_structure(sge_gdi_ctx_class_t *ctx, lList **answer_list, const 
       answer_exit_if_not_recoverable(alep);
       if (answer_get_status(alep) != STATUS_OK) {
          fprintf(stderr, "%s\n", lGetString(alep, AN_text));
+         lFreeList(&alp);
          DRETURN(false);
       }
 
@@ -451,12 +456,17 @@ bool hgroup_show_structure(sge_gdi_ctx_class_t *ctx, lList **answer_list, const 
                printf("%s\n", sge_dstring_get_string(&string));
             }
             sge_dstring_free(&string);
+            lFreeList(&sub_host_list);
+            lFreeList(&sub_hgroup_list);
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_ERROR1,
                                  ANSWER_QUALITY_ERROR, MSG_HGROUP_NOTEXIST_S, name); 
          ret = false;
       }
+
+      lFreeList(&hgroup_list);
+      lFreeList(&alp);
    }
    DRETURN(ret);
 }

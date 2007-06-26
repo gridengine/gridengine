@@ -120,25 +120,22 @@ void sge_error_class_destroy(sge_error_class_t **ec)
    sge_error_destroy(&et);   
    
    FREE(*ec);
-   *ec = NULL;
 }
 
 static void sge_error_class_clear(sge_error_class_t* thiz) {
-   if( thiz != NULL ) { 
+   if (thiz != NULL) {
       sge_error_t *et = (sge_error_t*)thiz->sge_error_handle;
       sge_error_clear(et);
    }
 }
 
 static void sge_error_clear(sge_error_t *et) {
-   sge_error_message_t *elem = NULL;
-   sge_error_message_t *next = NULL;
-   
    DENTER(TOP_LAYER, "sge_error_clear");
    
-   if( et != NULL ) {
-      elem = et->first;
-      while (elem) {
+   if (et != NULL) {
+      sge_error_message_t *elem = et->first;
+      sge_error_message_t *next;
+      while (elem != NULL) {
          next = elem->next;
          sge_error_message_destroy(&elem);
          elem = next;
@@ -146,18 +143,18 @@ static void sge_error_clear(sge_error_t *et) {
       et->first = NULL;
       et->last = NULL;
    }
+
    DEXIT;
 }
 
 
 void sge_error_destroy(sge_error_t **t) {
-   
-   if( t == NULL || *t == NULL ) {
+   if (t == NULL || *t == NULL) {
       return;
    }
+
    sge_error_clear(*t);
    FREE(*t);
-   *t = NULL;
 }
 
 
@@ -166,8 +163,7 @@ void sge_error_message_destroy(sge_error_message_t** elem) {
       return;
    }
    FREE((*elem)->message);
-   (*elem)->message = NULL;
-   *elem = NULL;
+   FREE(*elem);
 }
 
 static bool sge_error_has_error(sge_error_class_t* eh) {   
@@ -297,7 +293,6 @@ void sge_error_iterator_class_destroy(sge_error_iterator_class_t** thiz)
 
    FREE(elem);
    FREE(*thiz);
-   *thiz = NULL;
 }
 
 static const char* sge_error_iterator_get_message(sge_error_iterator_class_t* thiz)
@@ -386,6 +381,8 @@ void sge_error_to_answer_list(sge_error_class_t *eh, lList **alpp, bool clear_er
    if (clear_errors) {
       sge_error_class_clear(eh);
    }
+
+   sge_error_iterator_class_destroy(&iter);
 }
 
 void sge_error_to_dstring(sge_error_class_t *eh, dstring *ds) {

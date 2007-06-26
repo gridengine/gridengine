@@ -731,6 +731,7 @@ int main(int argc, char *argv[])
       }
    } 
    sge_gdi2_shutdown((void**)&ctx);
+   sge_gdi_ctx_class_destroy(&ctx);
 
    sge_prof_cleanup();
    return failed;
@@ -5413,11 +5414,19 @@ error:
    else {
       t_option = '\0';
    }   
-
    
    return ret;
 }
 
+static void free_order(int **order)
+{
+   int i = 0;
+   while (order[i] != NULL) {
+      FREE(order[i]);
+      i++;
+   }
+   FREE(order);
+}
 
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
 {
@@ -5430,13 +5439,13 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    int **order = job_run_sequence_parse(jsr_str);
    int nwait = njobs;
 
-   if (!order) {
+   if (order == NULL) {
       fprintf(stderr, "failed parsing job run sequence string\n");
       return -1;
    }
    
    /* submit jobs in hold */
-   for (i=0; i<njobs; i++) {
+   for (i=0; i < njobs; i++) {
       int start = 0;
       int end = 0;
       int incr = 1;
@@ -5452,6 +5461,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          if (drmaa_run_bulk_jobs(&bulkJobId, jt, start, end, incr, 
                                  diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            free_order(order);
             return -1;
          }
          
@@ -5462,10 +5472,10 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
           array_job_run_sequence_adapt(order,i,counter);
           drmaa_release_job_ids(bulkJobId);
-      }
-      else {
+      } else {
          if (drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+            free_order(order);
             return -1;
          }
       
@@ -5482,6 +5492,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
    /* release all three jobs in one operation to ensure they get runnable at once for scheduler */
    if (drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE, diagnosis, sizeof(diagnosis)-1)!=DRMAA_ERRNO_SUCCESS) {
       fprintf(stderr, "drmaa_control(DRMAA_JOB_IDS_SESSION_ALL, DRMAA_CONTROL_RELEASE) failed: %s\n", diagnosis);
+      free_order(order);
       return -1;
    }
 
@@ -5502,11 +5513,13 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
          if (pos == -1) {
             fprintf(stderr, "drmaa_wait() returned unexpected job: %s\n", jobid);
+            free_order(order);
             return -1;
          }
 
 
          if (job_run_sequence_verify(pos, all_jobids, order)) {
+            free_order(order);
             return -1;
          }
 
@@ -5523,6 +5536,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
       }
    } while (drmaa_errno == DRMAA_ERRNO_SUCCESS);
 
+   free_order(order);
    return 0;
 }
 

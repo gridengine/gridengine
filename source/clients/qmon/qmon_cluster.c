@@ -127,8 +127,8 @@ typedef struct _tCClEntry {
    String token_extend_time;
    String gid_range;
    int zombie_jobs;
-   int auto_user_oticket;
-   int auto_user_fshare;
+   u_long32 auto_user_oticket;
+   u_long32 auto_user_fshare;
    String auto_user_default_project;
    String auto_user_delete_time;
 } tCClEntry;
@@ -325,11 +325,11 @@ XtResource ccl_resources[] = {
       XtRImmediate, NULL },
 
    { "auto_user_oticket", "auto_user_oticket", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_oticket),
+      sizeof(u_long32), XtOffsetOf(tCClEntry, auto_user_oticket),
       XtRImmediate, NULL },
 
    { "auto_user_fshare", "auto_user_fshare", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_fshare),
+      sizeof(u_long32), XtOffsetOf(tCClEntry, auto_user_fshare),
       XtRImmediate, NULL },
 
    { "auto_user_default_project", "auto_user_default_project", XtRString, 
@@ -2108,12 +2108,30 @@ tCClEntry *clen
 
    if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
       auto_user_oticket = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
+      if (auto_user_oticket && auto_user_oticket[0] != '\0') {
+         unsigned long lv = strtoul(auto_user_oticket, NULL, 10);
+         if (lv > U_LONG32_MAX) {
+            clen->auto_user_oticket = U_LONG32_MAX;
+         } else {
+            clen->auto_user_oticket = (u_long32)lv;
+         }   
+      } else {
+         clen->auto_user_oticket = 0;
+      }
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
       auto_user_fshare = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
+      if (auto_user_fshare && auto_user_fshare[0] != '\0') {
+         unsigned long lv = strtoul(auto_user_fshare, NULL, 10);
+         if (lv > U_LONG32_MAX) {
+            clen->auto_user_fshare = U_LONG32_MAX;
+         } else {
+            clen->auto_user_fshare = (u_long32)lv;
+         }   
+      } else {
+         clen->auto_user_fshare = 0;
+      }
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))

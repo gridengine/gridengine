@@ -141,12 +141,12 @@
 /* 
 ** utilib/sge_sysconf.c
 */
-#define MSG_SYSCONF_UNABLETORETRIEVE_I                _MESSAGE(49057, _("unable to retrieve value for system limit (%d)") )   
+#define MSG_SYSCONF_UNABLETORETRIEVE_I          _MESSAGE(49057, _("unable to retrieve value for system limit (%d)") )   
 
 /* 
 ** utilib/sge_uidgid.c
 */ 
-#define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49059, _("getpwuid("sge_U32CFormat") failed: "SFN))
+#define MSG_SYSTEM_GETPWUIDFAILED_US            _MESSAGE(49059, _("getpwuid("sge_U32CFormat") failed: "SFN))
 #define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _MESSAGE(49061, _("tried to change uid/gid without being root"))
 #define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _MESSAGE(49062, _("gid of user "SFN" ("sge_U32CFormat") less than minimum allowed in conf (%d)"))
 #define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _MESSAGE(49063, _("uid of user "SFN" ("sge_U32CFormat") less than minimum allowed in conf (%d)"))
@@ -178,7 +178,8 @@
 /*
  * 
  */
-#define MSG_UNREC_ERROR                            _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
+#define MSG_GDI_NUMERICALVALUENOTPOSITIVE               _MESSAGE(49081, _("Error! value not positive"))
+#define MSG_UNREC_ERROR                                 _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
 #define MSG_GDI_VALUETHATCANBESETTOINF                  _MESSAGE(49083, _("value that can be set to infinity"))
 #define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _MESSAGE(49084, _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!" ))
 #define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _MESSAGE(49085, _("Error! Unexpected end of numerical value near "SFN".\nExpected one of ',', '/' or '\\0'. Got '%c'" ))

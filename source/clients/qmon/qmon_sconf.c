@@ -330,7 +330,7 @@ static void qmonSchedOk(Widget w, XtPointer cld, XtPointer cad)
    sep = lFirst(scl); 
 
 
-   if (sep && qmonSchedGet(sep)) {
+   if (qmonSchedGet(sep)) {
 
       if (rmon_mlgetl(&RMON_DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("___SCHEDULER_CONF________________________\n");
@@ -539,8 +539,6 @@ printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
 printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
 **/
-   
-
 
    if (!data.algorithm || data.algorithm[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Algorithm required!}");

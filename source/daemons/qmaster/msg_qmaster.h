@@ -159,7 +159,8 @@
 #define MSG_GDI_KEYSTR_ASTERISK        _MESSAGE(33104, _("Asterisk"))
 
 #define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33940, _("Questionmark"))
-#define MSG_GDI_KEYSTR_LENGTH_S        _MESSAGE(33941, _("string is longer than %d, this is not allowed for objectnames") )
+#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33941, _("Comma"))
+#define MSG_GDI_KEYSTR_LENGTH_S        _MESSAGE(33942, _("string is longer than %d, this is not allowed for objectnames") )
 
 
 /*

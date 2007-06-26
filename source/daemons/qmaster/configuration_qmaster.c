@@ -71,6 +71,7 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+
 typedef struct { 
    lList*           list;   /* 'CONF_Type' list, holding the cluster configuration */
 } cluster_config_t;
@@ -538,6 +539,15 @@ lListElem *conf
                DEXIT;
                return STATUS_EEXIST;
             }
+         }
+      }
+
+      if (!strcmp(name, "auto_user_oticket") || !strcmp(name, "auto_user_fshare")) {
+         u_long32 uval = 0;
+         if (!value || !extended_parse_ulong_val(NULL, &uval, TYPE_INT, value, NULL, 0, 0, true)) {
+            ERROR((SGE_EVENT, MSG_CONF_FORMATERRORFORXINYCONFIG_SS, name, value ? value : "(NULL)"));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DRETURN(STATUS_EEXIST);
          }
       }
    }

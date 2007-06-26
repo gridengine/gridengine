@@ -412,6 +412,22 @@ Qmon*cluster_global_layout.cluster_max_jobs.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_jobs.value: 0
+
+Qmon*cluster_global_layout.cluster_auto_user_oticket.minimum: 0
+Qmon*cluster_global_layout.cluster_auto_user_oticket.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_auto_user_oticket.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_auto_user_oticket.columns: 5
+Qmon*cluster_global_layout.cluster_auto_user_oticket.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_auto_user_oticket.value: 0
+Qmon*cluster_global_layout.cluster_auto_user_oticket.incrementLarge: 10
+
+Qmon*cluster_global_layout.cluster_auto_user_fshare.minimum: 0
+Qmon*cluster_global_layout.cluster_auto_user_fshare.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_auto_user_fshare.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_auto_user_fshare.columns: 5
+Qmon*cluster_global_layout.cluster_auto_user_fshare.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_auto_user_fshare.value: 0
+Qmon*cluster_global_layout.cluster_auto_user_fshare.incrementLarge: 10
 !! 
 !! TrimAndTrail callback, remove leading and trailing whitespace after input
 !!

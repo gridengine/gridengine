@@ -764,7 +764,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
       
-      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
+      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0, true) ) {
          if (ec_get_edtime() != schedule_interval) {
            ec_set_edtime(schedule_interval);
          }

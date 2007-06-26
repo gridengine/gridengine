@@ -543,7 +543,7 @@ bool parse_time_param(const char *input, const char *variable, u_long32 *value)
             /* skip = */
             s++;
 
-            if (!extended_parse_ulong_val(NULL, value, TYPE_TIM, s, NULL, 0, 0)) {
+            if (!extended_parse_ulong_val(NULL, value, TYPE_TIM, s, NULL, 0, 0, false)) {
                *value = 0;
                ret = false;
             }

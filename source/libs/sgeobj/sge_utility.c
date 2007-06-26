@@ -111,15 +111,15 @@ an_status_t verify_str_key(
    lList **alpp, const char *str, size_t str_length, const char *name, int table) 
 {
    static const char *begin_strings[2][3];
-   static const char *mid_strings[2][19];
+   static const char *mid_strings[2][20];
 
    static char begin_chars[2][3] =
       { { '.', '#', 0 },
         { 0, 0, 0 } };
 
-   static const char mid_characters[2][19] =
-      { { '\n', '\t', '\r', ' ', '/', ':', '\'', '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%' , 0}, /* KEY_TABLE */
-        { '\n', '\t', '\r', '/', ':', '@', '\\', '*', '?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} };                    /* QSUB_TABLE */
+   static const char mid_characters[2][20] =
+      { { '\n', '\t', '\r', ' ', '/', ':', '\'', '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', '%', ',', 0},  /* KEY_TABLE  */
+        { '\n', '\t', '\r', '/', ':', '@', '\\', '*', '?', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} };                      /* QSUB_TABLE */
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];
 
@@ -155,7 +155,8 @@ an_status_t verify_str_key(
       mid_strings[0][15] = MSG_GDI_KEYSTR_PARENTHESIS;
       mid_strings[0][16] = MSG_GDI_KEYSTR_AT;
       mid_strings[0][17] = MSG_GDI_KEYSTR_PERCENT;
-      mid_strings[0][18] = NULL;
+      mid_strings[0][18] = MSG_GDI_KEYSTR_COMMA;
+      mid_strings[0][19] = NULL;
       mid_strings[1][0] = MSG_GDI_KEYSTR_RETURN;
       mid_strings[1][1] = MSG_GDI_KEYSTR_TABULATOR;
       mid_strings[1][2] = MSG_GDI_KEYSTR_CARRIAGERET;

@@ -71,6 +71,7 @@
 #include "qmon_globals.h"
 #include "AskForItems.h"
 #include "sge_gdi_ctx.h"
+#include "msg_qmaster.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -519,20 +520,47 @@ error:
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxDelAttr( Widget matrix)
+static void qmonCplxDelAttr(Widget matrix)
 {
    int rows;
    int i;
    int rows_to_delete = 0;
+   lList *alp = NULL;
    
 
    DENTER(GUI_LAYER, "qmonCplxDelAttr");
 
    rows = XbaeMatrixNumRows(matrix);
 
-   for (i=0; i<rows; i++)
-      if (XbaeMatrixIsRowSelected(matrix, i))
-         rows_to_delete++;
+   for (i=0; i<rows; i++) {
+      if (XbaeMatrixIsRowSelected(matrix, i)) {
+         /* check if its a build in value */
+         int j;
+         bool delete_it = true;
+         const char *name = XbaeMatrixGetCell(matrix, i, 0);
+         for (j=0; j < max_queue_resources; j++) {
+            if (strcmp(queue_resource[j].name, name) == 0) {
+               XbaeMatrixDeselectRow(matrix, i);
+               answer_list_add_sprintf(&alp, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_DEL_S, name);
+               delete_it = false;
+            }
+         }
+         for (j=0; j< max_host_resources; j++) {
+            if (strcmp(host_resource[j].name, name) == 0) {
+               XbaeMatrixDeselectRow(matrix, i);
+               answer_list_add_sprintf(&alp, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
+                                       MSG_INVALID_CENTRY_DEL_S, name);
+               delete_it = false;
+            }
+         }
+         if (delete_it) {
+            rows_to_delete++;
+         }   
+      }
+   }
+   qmonMessageBox(matrix, alp, 0);
+   lFreeList(&alp);
 
    i = 0;
    while (i<rows) {

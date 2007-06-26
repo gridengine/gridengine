@@ -1,3 +1,15 @@
+AA-2007-06-26-0: Bugix:     - Qmon Job Control Window: Incomprehensible Priority Button
+                            - Double clicking in Consumables/Fixed Attributes list...
+                            - complex attributes whose deletion is denied...
+                            - Help for Browser panel in qmon incomplete
+                            - Qmon x qconf inconsistent in allowed characters in attribute names
+                            - Qmon panel does not check for valid data in Scheduler Configuration
+                            - It is possible to negative tickets / shares in qmon and from the command line
+                              (partially fixed CR 6410844)
+                 Bugtraq:   6195248,6410592,6482211,6566033,6513116,6565951           
+                 Issue:     2314,2313,2312,2290,2289
+                 Review:    RD
+
 JG-2007-06-25-0: Bugfix:    qstat -s hX filtering is broken on darwin-ppc
                  Bugster:   6525883
                  Issue:     2191

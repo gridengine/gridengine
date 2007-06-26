@@ -113,14 +113,14 @@ NOTES
 int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
                     const char *s, char *error_str, int error_len) 
 {
-   return extended_parse_ulong_val(dvalp,uvalp,type,s,error_str,error_len,1);
+   return extended_parse_ulong_val(dvalp, uvalp, type, s, error_str, error_len, 1, false);
 }
 
 /* enable_infinity enhancement: if 0 no infinity value is allowed */
 /*    MT-NOTE: extended_parse_ulong_val() is MT safe */
 int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
                              const char *s, char *error_str, int error_len,
-                             int enable_infinity) 
+                             int enable_infinity, bool only_positive) 
 {
    int retval = 0; /* error */
    char dummy[10];
@@ -130,11 +130,18 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
       return 0;
    }
 
-   if ((strcasecmp(s,"infinity") == 0) && (enable_infinity == 0 )) {
+   if (only_positive && (strchr(s, '-') != NULL)) {
+      if (error_str) {
+         sge_strlcpy(error_str, MSG_GDI_NUMERICALVALUENOTPOSITIVE, error_len); 
+      } 
+      return 0;
+   }   
+
+   if ((enable_infinity == 0) && (strcasecmp(s,"infinity") == 0)) {
       if (error_str) {
          sge_strlcpy(error_str, MSG_GDI_VALUETHATCANBESETTOINF, error_len); 
-         return 0;
       } 
+      return 0;
    }
 
    if (uvalp == NULL) {

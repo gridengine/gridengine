@@ -820,7 +820,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
 
-      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
+      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0, true) ) {
          if (evc->ec_get_edtime(evc) != schedule_interval) {
            evc->ec_set_edtime(evc, schedule_interval);
          }

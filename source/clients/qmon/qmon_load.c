@@ -158,7 +158,7 @@ lList *entries
       }
 
       strcpy(stringval, "");
-      status = XmtAskForItem(w, NULL, "@{Select a load parameter}",
+      status = XmtAskForItem(w, NULL, "@{Select an attribute",
                      "@{Available attributes}", strs, n, False,
                      stringval, sizeof(stringval), NULL);
       /*
@@ -167,7 +167,7 @@ lList *entries
       StringTableFree(strs, n); 
    }
    else
-      XmtDisplayInformationMsg(w, NULL, "@{No load attributes available}", 
+      XmtDisplayInformationMsg(w, NULL, "@{No attributes available}", 
                                  NULL, NULL);
 
    if (status) {

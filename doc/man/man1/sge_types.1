@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/02/14 13:34:14 $     Revision: $Revision: 1.13.2.2 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/26 10:29:06 $     Revision: $Revision: 1.13.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/02/14 13:34:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/26 10:29:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -171,7 +171,7 @@ A user set name is the name of an xxQS_NAMExx access list or department describe
 .SS "\fBobject_name\fP"
 An object name is a sequence of up to 512 ASCII string characters except 
 "\\n", "\\t", "\\r", " ", "/", ":", "\'", "\\", "[", "]", "{", "}", 
-"|", "(", ")", "@", "%", or the " character itself.
+"|", "(", ")", "@", "%", "," or the " character itself.
 .fi
 .SH "MATCHING TYPES"
 These types are used for matching xxQS_NAMExx configuration:

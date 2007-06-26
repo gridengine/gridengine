@@ -390,8 +390,7 @@ int event_handler_default_scheduler(sge_evc_class_t *evc)
       schedd_log("--------------STOP-SCHEDULER-RUN-------------");
    }
    
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -541,7 +540,7 @@ DTRACE;
          CRITICAL((SGE_EVENT, "partial queue descriptor failed\n")); 
       }
       else {
-         what_queue2 = lWhat("%T(ALL)", queue_des );
+         what_queue2 = lWhat("%T(ALL)", queue_des);
 
          where_queue = lWhere("%T("
             " !(%I m= %u) &&" 
@@ -819,7 +818,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
       const char *time = lGetString(new, SC_schedule_interval); 
       u_long32 schedule_interval;  
 
-      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0) ) {
+      if (extended_parse_ulong_val(NULL, &schedule_interval, TYPE_TIM, time, NULL, 0, 0, true) ) {
          if (evc->ec_get_edtime(evc) != schedule_interval) {
            evc->ec_set_edtime(evc, schedule_interval);
          }
@@ -1223,7 +1222,7 @@ int subscribe_default_scheduler(sge_evc_class_t *evc)
    sge_mirror_subscribe(evc, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_all_queue, what_queue);
    sge_mirror_subscribe(evc, SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_RQS,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_RQS,            NULL, NULL, NULL, NULL, NULL);
 
    /* SG: this is not suported in the event master right now, for a total update 
       we have to fix it for goood some time. Issue: 1416*/

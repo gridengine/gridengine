@@ -175,7 +175,8 @@
 /*
  * 
  */
-#define MSG_UNREC_ERROR                            _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
+#define MSG_GDI_NUMERICALVALUENOTPOSITIVE               _MESSAGE(49081, _("Error! value not positive"))
+#define MSG_UNREC_ERROR                                 _MESSAGE(49082, _("unrecoverable error - contact systems manager"))
 #define MSG_GDI_VALUETHATCANBESETTOINF                  _MESSAGE(49083, _("value that can be set to infinity"))
 #define MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS             _MESSAGE(49084, _("Error! Unrecognized value-trailer '%20s' near '%20s'\nI expected multipliers k, K, m and M.\nThe value string is probably badly formed!" ))
 #define MSG_GDI_UNEXPECTEDENDOFNUMERICALVALUE_SC        _MESSAGE(49085, _("Error! Unexpected end of numerical value near "SFN".\nExpected one of ',', '/' or '\\0'. Got '%c'" ))

@@ -1128,6 +1128,12 @@ that are produced when a job is submitted or any administrative tasks are perfor
 To enable the browsing of one of these categories press the corresponding button in the @fBObjects@fR\n\
 field.\n\
 \n\
+@fBstdout, stderr@fR enable redirection of messages that go usually to the console to be redirected to the browser\n\
+window.\n\n\
+@fBQueue@fR enables the browsing of queue information by dragging the mouse over a queue line in the Queue Control dialog.\n\n\
+@fBJob@fR enables the browsing of job information by dragging the mouse over a job line in the Job Control dialog.\n\n\
+@fBMessages@fR switches on the display of informative or error messages that are returned by the master.\n\
+\n\n\
 Any output can be cleared by pressing the @fBClear@fR button.\n\
 The @fBDone@fR button closes the @fBObject Browser@fR.
 

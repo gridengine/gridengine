@@ -56,6 +56,7 @@
 #include "sge_qinstance.h"
 #include "sge_str.h"
 #include "sge_string.h"
+#include "sge_parse_num_par.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -65,6 +66,7 @@
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "uti/sge_string.h"
+#include "cull_parse_util.h"
 
 #if 0
 #include "Outline.h"
@@ -81,6 +83,8 @@ static void qmonHideCursor(Widget w, XtPointer cld, XtPointer cad);
 static Widget CreateListTree(Widget parent, String name, ArgList arglist, Cardinal argcount);
 
 
+static void set_DurationInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
+static void get_DurationInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_TimeInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void get_TimeInput(Widget w, XtPointer address, XrmQuark type, Cardinal size);
 static void set_StringList(Widget w, XtPointer address, XrmQuark type, Cardinal size);
@@ -194,6 +198,14 @@ static XmtWidgetType widgets[] = {
       set_TimeInput,
       get_TimeInput,
       False
+   },
+   {
+      "DurationInput",
+      NULL,
+      (XmtWidgetConstructor) CreateInputField,
+      set_DurationInput,
+      get_DurationInput,
+      False
    }
 };
 
@@ -306,6 +318,79 @@ Cardinal argcount
    lw = XmCreateScrolledListTree(parent, name, arg_list, argcount);
 
    return lw;
+}
+
+/*-------------------------------------------------------------------------*/
+static void set_DurationInput(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   Cardinal time_val = 0;
+/*    Cardinal day_val = 0; */
+   Cardinal hour_val = 0;
+   Cardinal minute_val = 0;
+   Cardinal second_val = 0;
+   char buffer[256];
+
+   if (type != QmonQCardinal )  {
+      XmtWarningMsg("XmtDialogSetDialogValues", "DurationInput",
+         "Type Mismatch: Widget '%s':\n\tCan't set widget values"
+         " from a resource of type '%s'",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+
+   if (size == sizeof(Cardinal))
+       time_val = *(Cardinal*) address;
+   else
+      return;
+
+   if (time_val == 0) {
+      sprintf(buffer, "%02d:%02d:%02d", 0, 0, 0);
+   } else {
+/*       day_val = time_val/(24*3600); */
+/*       time_val %= 24*3600; */
+      hour_val = time_val/3600;
+      time_val %= 3600;
+      minute_val = time_val/60;
+      second_val = time_val % 60;
+      sprintf(buffer, "%02d:%02d:%02d", hour_val, minute_val, second_val);
+   }
+   
+   XmtInputFieldSetString(w, buffer);
+}
+
+/*-------------------------------------------------------------------------*/
+static void get_DurationInput(
+Widget w,
+XtPointer address,
+XrmQuark type,
+Cardinal size 
+) {
+   Cardinal value = 0;
+   String str = NULL;
+   
+   if (type != QmonQCardinal ) { 
+      XmtWarningMsg("XmtDialogGetDialogValues", "DurationInput",
+         "Type Mismatch: Widget '%s':\n\tCan't get widget values"
+         " from a resource of type '%s'",
+          XtName(w), XrmQuarkToString(type));
+
+      return;
+   }
+   str = XmtInputFieldGetString(w);
+
+   if (str && str[0] != '\0') {
+      u_long32 tmp_date_time;
+
+      parse_ulong_val(NULL, &tmp_date_time, TYPE_TIM, str, NULL, 0);
+      value = (Cardinal)tmp_date_time;
+   }
+
+   *(Cardinal*)address = value;
 }
 
 /*-------------------------------------------------------------------------*/

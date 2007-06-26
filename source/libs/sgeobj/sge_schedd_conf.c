@@ -793,7 +793,7 @@ u_long32 sconf_get_load_adjustment_decay_time()
 
    time = get_load_adjustment_decay_time_str();
 
-   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, time, NULL, 0, 0)) {
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, time, NULL, 0, 0, true)) {
       uval = _DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME;
    }
 
@@ -1049,7 +1049,7 @@ u_long32 sconf_get_schedule_interval(void) {
    sge_mutex_lock("Sched_Conf_Lock", "", __LINE__, &pos.mutex);
    
    time = get_schedule_interval_str();
-   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, time, NULL, 0, 0) ) {
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, time, NULL, 0, 0, true) ) {
          uval = _SCHEDULE_TIME;
    }
 
@@ -1115,7 +1115,7 @@ u_long32 sconf_get_reprioritize_interval(void) {
   
    time = reprioritize_interval_str();
 
-   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM,time, NULL, 0 ,0)) {
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM,time, NULL, 0 ,0, true)) {
       uval = REPRIORITIZE_INTERVAL_I;
    }
    
@@ -2839,18 +2839,18 @@ bool sconf_validate_config_(lList **answer_list)
      
    /* --- SC_schedule_interval */
    s = get_schedule_interval_str();
-   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
+   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error), 0, true) ) {
       if (!s)
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));   
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "schedule_interval", "not defined"));   
       else
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", tmp_error));    
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "schedule_interval", tmp_error));    
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret =  false;
    }
 
    /* --- SC_load_adjustment_decay_time */
    s = get_load_adjustment_decay_time_str();
-   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+   if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error), 0, true)) {
       if (!s) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", "not defined"));
       }   
@@ -2916,7 +2916,7 @@ bool sconf_validate_config_(lList **answer_list)
    /* --- SC_reprioritize_interval */
    s = reprioritize_interval_str();
    if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, 
-                                              sizeof(tmp_error),0)) {
+                                              sizeof(tmp_error), 0, true)) {
       if (s == NULL) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", 
                         "not defined"));
@@ -2993,7 +2993,7 @@ bool sconf_validate_config_(lList **answer_list)
       const char *s = get_default_duration_str();
 
       if (s == NULL || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, 
-                                                 sizeof(tmp_error), 1) ) {
+                                                 sizeof(tmp_error), 1, true) ) {
          if (s == NULL) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", 
                                    "not defined"));   
@@ -3537,7 +3537,7 @@ static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_lis
    char *s;
 
    if (!(s=strchr(param, '=')) ||
-       !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, ++s, NULL, 0, 0)) {
+       !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, ++s, NULL, 0, 0, true)) {
       pos.s_duration_offset = DEFAULT_DURATION_OFFSET; 
       return false;
    }

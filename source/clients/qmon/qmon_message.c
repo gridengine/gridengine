@@ -161,6 +161,8 @@ int show_always
          /* FIX_CONST_GUI */
          XmTextInsert(msg_text_w, pos, (String)msg);
          pos += strlen(msg);
+         XmTextInsert(msg_text_w, pos, "\n");
+         pos += strlen("\n");
       }
    }
    XmTextShowPosition(msg_text_w, 0);

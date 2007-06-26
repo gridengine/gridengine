@@ -61,7 +61,7 @@ int parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
 
 int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type, 
                              const char *s, char *err_str, int err_len, 
-                             int enable_infinity);
+                             int enable_infinity, bool only_positive);
 
 char *resource_descr(double dval, u_long32 type, char *buffer);
 

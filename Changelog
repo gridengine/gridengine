@@ -1,3 +1,9 @@
+JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
+                            configured as transport, and CTRL-C was pressed.
+                 Bugster:   6573508
+                 Issue:     2316
+                 Review:    RD
+
 AA-2007-06-26-0: Bugix:     - Qmon Job Control Window: Incomprehensible Priority Button
                             - Double clicking in Consumables/Fixed Attributes list...
                             - complex attributes whose deletion is denied...

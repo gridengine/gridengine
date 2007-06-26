@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2004/11/12 15:40:02 $     Revision: $Revision: 1.12 $
+.\" $RCSfile: qmake.1,v $     Last Update: $Date: 2007/06/26 22:21:09 $     Revision: $Revision: 1.12.26.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMAKE 1 "$Date: 2004/11/12 15:40:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMAKE 1 "$Date: 2007/06/26 22:21:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 .PP
@@ -43,7 +43,7 @@ qmake \- distributed parallel make, scheduling by xxQS_NAMExx.
 ]
 .PP
 .SH DESCRIPTION
-.I Qmake
+.I qmake
 is a parallel, distributed
 .M make 1
 utility. Scheduling of the parallel
@@ -192,7 +192,7 @@ qsub -cwd -v PATH -pe make 1-10 [further xxqs_name_sxx options] <script>
 .RE
 .fi
 .sp 1
-.I Qmake
+.I qmake
 will inherit the resources granted for the job sumbitted above under
 parallel environment "make".
 .\"
@@ -233,7 +233,7 @@ will request the given architecture for job execution (see DESCRIPTION above).
 .SH KNOWN PROBLEMS
 .PP
 .SS Slow NFS server
-Very low file server performance may lead to problems on depending files.
+Very low file server performance may lead to problems on dependent files.
 .sp 1
 Example: Host a compiles a.c to a.o, host b compiles b.c to b.o, host c
 shall link program c from a.o and b.o. In case of very bad NFS
@@ -288,16 +288,16 @@ as well as
 .M make 1
 (GNU make manpage) and
 .I The GNU Make Manual
-in <xxqs_name_sxx_root>/3rd_party/qmake.
+in <xxQS_NAME_Sxx_ROOT>/3rd_party/qmake.
 .\"
 .\"
 .SH "COPYRIGHT"
-.I Qmake
+.I qmake
 contains portions of Gnu Make (\fIgmake\fP), which
 is the copyright of the Free Software Foundation,
 Inc., Boston, MA, and is protected by the Gnu General Public License.
 .br
 See
 .M xxqs_name_sxx_intro 1
-and the information provided in <xxqs_name_sxx_root>/3rd_party/qmake
+and the information provided in <xxQS_NAME_Sxx_ROOT>/3rd_party/qmake
 for a statement of further rights and permissions.

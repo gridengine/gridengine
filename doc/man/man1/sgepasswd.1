@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sgepasswd.1,v $     Last Update: $Date: 2005/05/11 11:50:25 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: sgepasswd.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.1.20.1 $
 .\"
 .\"
 .de SB		\" small and bold
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PASSWD 1 "$Date: 2005/05/11 11:50:25 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SGE_PASSWD 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 sgepasswd \- Modify the xxQS_NAMExx password file of xxQS_NAMExx 
 .\"
@@ -50,23 +50,23 @@ sgepasswd \- Modify the xxQS_NAMExx password file of xxQS_NAMExx
 .\"
 .SH DESCRIPTION
 .I sgepasswd
-modifys the xxQS_NAMExx password file 
+modifies the xxQS_NAMExx password file 
 .M sgepasswd 5 . 
 .PP
-This file containes a list of usernames and their windows password in 
+This file containes a list of usernames and their Microsoft Windows password in 
 encrypted form. 
-.M sge_execd 8
+.M See sge_execd 8
 and
 .M sge_shepherd 8  
-on hosts running Microsoft Windows as operating systems use this 
+on how hosts running Microsoft Windows as operating systems use this 
 information to start jobs for a certain user. 
 .PP
 Each user can use the 
 .I sgepasswd 
-application to add a new entry for the own user account. It is also possible 
+application to add a new entry for their own user account. It is also possible 
 to change the stored password with 
 .I sgepasswd 
-as far as the user knows the old one.
+since the user knows the old one.
 .PP
 The root user additionally has the permission to change the password entries 
 for other user accounts. Root can also delete existing entries.
@@ -78,7 +78,7 @@ binary is only available on non-Windows hosts.
 .\"
 .SH OPTIONS
 .IP "\fB\-D domain\fP"
-Per default 
+By default 
 .I sgepasswd 
 will add/modify the current Unix username without domain specification.
 This switch can be used to add a domain specification in front of the
@@ -98,11 +98,11 @@ Prints a listing of all options.
 .IP "\fBSGE_CERTFILE\fP" 1.5i
 Specifies the location of public key file. Per default 
 .I sgepasswd
-will use the file $SGE_ROOT/$SGE_CELL/common/sgeCA/certs/cert.pem
+will use the file $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sgeCA/certs/cert.pem
 .\"
 .IP "\fBSGE_KEYFILE\fP" 1.5i
 If set, specifies the location of the private key file.
-Default is /var/sgeCA/port${SGE_QMASTER_PORT}/private/key.pem
+Default is /var/sgeCA/port$xxQS_NAME_Sxx_QMASTER_PORT/private/key.pem
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2007/06/26 22:21:13 $     Revision: $Revision: 1.8.26.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2007/06/26 22:21:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
@@ -64,7 +64,7 @@ By using the \fI\-tsm\fP option of the
 command, 
 .I xxqs_name_sxx_schedd
 can be forced to print trace messages of its next scheduling run to the
-file \fI<xxqs_name_sxx_root>/<cell>/common/schedd_runlog\fP. The messages indicate
+file \fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/schedd_runlog\fP. The messages indicate
 the reasons for jobs and queues not being selected in that run
 .\"
 .\"
@@ -112,12 +112,12 @@ service "sge_qmaster" instead to define that port.
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/spool/qmaster/schedd\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster/schedd\fP
 	xxqs_name_sxx_schedd spool directory
-\fI<xxqs_name_sxx_root>/<cell>/common/sched_runlog\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sched_runlog\fP
 	xxqs_name_sxx_schedd trace information
-\fI<xxqs_name_sxx_root>/<cell>/common/sched_configuration\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sched_configuration\fP
 	xxqs_name_sxx_schedd configuration
 .fi
 See

@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOSTGROUP 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOSTGROUP 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 hostgroup \- host group entry file format
@@ -37,7 +37,7 @@ hostgroup \- host group entry file format
 .SH DESCRIPTION
 .PP
 A host group entry is used to merge host names to groups.
-Each  host  group  entry  file defines one group. Inside a
+Each  host group  entry  file defines one group. Inside a
 group definition file you can also reference to groups. These
 groups are called subgroups. A subgroup is referenced by the
 sign "@" as first character of the name.
@@ -45,7 +45,7 @@ sign "@" as first character of the name.
 A list of currently configured host group entries can be displayed 
 via the
 .M qconf 1
-\fB\-shgrpl\fP option. The contents of each enlisted host group entry 
+\fB\-shgrpl\fP option. The contents of each listed host group entry 
 can be
 shown via the \fB\-shgrp\fP switch. The output follows the
 .I hostgroup
@@ -54,7 +54,7 @@ modified via the \fB\-ahgrp\fP, \fB\-mhgrp\fP, \fB\-dhgrp\fP and
 \fB\-?attr\fP options to
 .M qconf 1 .
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -72,7 +72,7 @@ The name of all hosts and host groups (see
 which are member of the group. As list separators white-spaces are 
 supported only. Default value for this parameter is NONE.
 .PP
-Note, if the first character of the \fIhost_identifier\fP is an "@" sign the name 
+Note: if the first character of the \fIhost_identifier\fP is an "@" sign the name 
 is used to reference a 
 .M hostgroup 5 
 which is taken as sub group of this group. 

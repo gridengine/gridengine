@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2007/06/05 16:25:15 $     Revision: $Revision: 1.10.2.1 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2007/06/26 22:21:13 $     Revision: $Revision: 1.10.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2007/06/05 16:25:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2007/06/26 22:21:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -88,11 +88,11 @@ be viewed with qacct -j JobId (see
 .M qacct 1 );
 it is not the exit status of 
 .I xxqs_name_sxx_shepherd
-itself but of one of the methods executed by 
+itself but of one of the parameters passed to 
 .I xxqs_name_sxx_shepherd.
-This exit status can have several meanings, depending on in which method
+This exit status can have several meanings, depending on in where
 an error occurred (if any).
-The possible methods are: prolog, parallel start, job, parallel stop,
+The possible parameters are: prolog, parallel start, job, parallel stop,
 epilog, suspend, restart, terminate, clean, migrate, and checkpoint.
 
 The following exit values are returned:

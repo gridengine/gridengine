@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/26 10:29:06 $     Revision: $Revision: 1.13.2.3 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.13.2.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/26 10:29:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -148,7 +148,7 @@ A time specifier either consists of a positive decimal, hexadecimal or
 octal integer constant, in which case the value is interpreted to be in 
 seconds, or is built by 3 decimal integer numbers separated by colon 
 signs where the first number counts the hours, the second the minutes 
-and the third the seconds. If a number would be zero it can be left 
+and the third the seconds. If a number is zero it can be left 
 out but the separating colon must remain (e.g. 1:0:1 = 1::1 means 1 
 hours and 1 second).
 .\"
@@ -226,7 +226,8 @@ When patterns are used the following definitions apply:
 .ta \w'XXXXXXXX'u
 "*"	matches any character and any number of characters 
 	(between 0 and inv).
-"?"	matches any character. It cannot be no character
+"?"	matches any character. It must be a character other that the empty
+	string
 "."	is the character ".". It has no other meaning
 "\\"	escape character. "\\\\" = "\\", "\\*" = "*", "\\?" = "?"
 "[...]"	specifies an array or a range of allowed 
@@ -342,8 +343,8 @@ e.g.
 .ta \w'XXXXXXXXXXXXX'u
 *@@*	all queue instances whose underlaying
 	host is part of at least one hostgroup
-a*@@e*	all queue instances begins with a whose underlaying
-	host is part of at least one hostgroup begin with e
+a*@@e*	all queue instances begining with an 'a' whose underlaying
+	host is part of at least one hostgroup begining with 'e'
 *@@solaris	all queue instances on hosts part of
 	the @solaris hostgroup
 .fi
@@ -373,8 +374,8 @@ with a wildcard expression cluster queue name (\fIwc_cqueue\fP) followed by an
 at-character '@' and a wildcard expression hostname (\fIwc_host\fP).
 .PP
 \fIwc_qinstance\fP expressions are used to address a group
-of queue instances whose underlaying hostname matches the given expression.
-Please note that the first character of \fIwc_host\fP does never match 
+of queue instances whose underlying hostname matches the given expression.
+Please note that the first character of \fIwc_host\fP does not match
 the at-character '@'. 
 .PP
 .nf
@@ -437,8 +438,8 @@ or a full project name.
 wc_project := project | pattern
 .PP
 .SS "\fBwc_pe_name\fP"
-A wildcard parallel environment name pattern is either a wildcard pe name specification
-or a full pe name.
+A wildcard parallel environment name pattern is either a wildcard PE name specification
+or a full PE name.
 .PP
 wc_pe_name := pe_name | pattern
 .PP

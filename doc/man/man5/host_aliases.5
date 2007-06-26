@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_aliases.5,v $     Last Update: $Date: 2005/03/30 14:31:37 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: host_aliases.5,v $     Last Update: $Date: 2007/06/26 22:21:09 $     Revision: $Revision: 1.1.20.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_ALIASES 5 "$Date: 2005/03/30 14:31:37 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_ALIASES 5 "$Date: 2007/06/26 22:21:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_aliases \- xxQS_NAMExx host aliases file format
@@ -47,7 +47,7 @@ a xxQS_NAMExx host aliases file can be used to provide the communication
 daemons with a private and consistent hostname resolution database.
 .PP
 The location for the host aliases file is 
-\fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/host_aliases.\fP
 .\"
 .\"
 .SH FORMAT

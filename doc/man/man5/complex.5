@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.19.2.2 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/06/26 22:21:12 $     Revision: $Revision: 1.19.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2007/06/26 22:21:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -48,7 +48,7 @@ system.
 .PP
 The xxQS_NAMExx complex object defines all entries which are used for 
 configuring the global, the host, and queue object. The system has a 
-set of pre defined entries, which are assigned to a host or queue per default.
+set of pre defined entries, which are assigned to a host or queue by default.
 In a addition can the user define new entries and assign them to one or multiple
 objects. Each load value has to have its corresponding complex entry object, which
 defines the type and the relational operator for it.
@@ -68,7 +68,7 @@ configuration.
 The provided list contains all definitions of resource attributes in the system. Adding
 a new entry means to provide: name, shortcut, type, relop, requestable, consumable, 
 default, and urgency. The fields are described below. Changing one is easily done by 
-updated the field to change and removing an entry by deleting its definition. An 
+updating the field to change and removing an entry by deleting its definition. An 
 attribute can only be removed, when it is not referenced in a host or queue object 
 anymore. Also does the system have a set of default resource attributes which are 
 always attached to a host or queue. They cannot be deleted nor can the type of 
@@ -82,7 +82,7 @@ if it is attached to the global object(qconf -me global), it exits sytem wide, h
 only on that host (qconf -me NAME): cqueue object: only on that cqueue (qconf -mq NAME).
 .sp 1
 When the user attached a resource attribute to an object, one also has to assign a value
-to it; the resource limit. Another way to get a resource attribute value is done by 
+to it; the resource limit. Another way to get a resource attribute value is by 
 configuring a load sensor for that attribute. 
 .PP
 .\"
@@ -90,8 +90,8 @@ configuring a load sensor for that attribute.
 In its default form it contains a selection of parameters in the
 queue configuration as defined in
 .M queue_conf 5 .
-The queue configuration parameters being requestable for a job
-by the user in principal are:
+The queue configuration parameters requestable for a job
+by the user are:
 .sp 1
 .nf
 .RS
@@ -118,7 +118,7 @@ h_rss
 .\"
 .SS "\fBDefault host resource attributes\fP"
 The standard set of host related attributes consists 
-of two categories. he first category is built by several queue configuration
+of two categories. The first category is built by several queue configuration
 attributes which are particularly suitable to be managed on a host basis. These
 attributes are:
 .sp 1
@@ -161,7 +161,7 @@ for details).
 The characteristics definition for the standard load values is part of
 the default host complex, while administrator defined load values
 require extension of the host complex. Please refer to the file
-<xxqs_name_sxx_root>/doc/load_parameters.asc for detailed information on the
+$xxQS_NAME_Sxx_ROOT/doc/load_parameters.asc for detailed information on the
 standard set of load values.
 .\"
 .SS "\fBOverriding attributes\fP"
@@ -169,7 +169,7 @@ One attribute can be assigned to the global object, host object, and queue objec
 at the same time. On the host level it might get its value from the user
 defined resource limit and a load sensor. In case that the attribute is a consumable, 
 we have in addition to the resource limit and its load report on host level also 
-the internal usage, which the system keeps track of. The mergin is done as follows:
+the internal usage, which the system keeps track of. The merger is done as follows:
 .sp 1
 In general an attribute can be overridden on a lower level
    - global by hosts and queues
@@ -186,11 +186,11 @@ lower level. The user defined value always overrides the load value.
 restrictive than the old one.
 .sp 1
 In the case of a consumable on host level, which has also a load sensor, the
-system checks for the current usage, and if the internal accounting is more 
+system checks for the current usage. If the internal accounting is more 
 restrictive than the load sensor report, the internal value is kept; if the
 load sensour report is more restrictive, that one is kept.
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -228,26 +228,26 @@ This setting determines how the corresponding values are to be treated
 xxQS_NAMExx internally in case of comparisons or in case of load scaling for 
 the load complex entries:
 .IP "\(bu" 3n
-With \fBINT\fP only raw integers are allowed.
+With \fBINT\fP, only raw integers are allowed.
 .IP "\(bu" 3n
-With \fBDOUBLE\fP floating point numbers in double precision (decimal and
+With \fBDOUBLE\fP, floating point numbers in double precision (decimal and
 scientific notation) can be specified.
 .IP "\(bu" 3n
-With \fBTIME\fP time specifiers are allowed. Refer to 
+With \fBTIME\fP, time specifiers are allowed. Refer to 
 .M queue_conf 5  
 for a format description.
 .IP "\(bu" 3n
-With \fBMEMORY\fP memory size specifiers are allowed. Refer to 
+With \fBMEMORY\fP, memory size specifiers are allowed. Refer to 
 .M queue_conf 5 
 for a format description.
 .IP "\(bu" 3n
-With \fBBOOL\fP the strings TRUE and FALSE are allowed. When used in a 
+With \fBBOOL\fP, the strings TRUE and FALSE are allowed. When used in a 
 load formula (refer to 
 .M sched_conf 5
 )
 TRUE and FALSE get mapped into '1' and '0'.
 .IP "\(bu" 3n
-With \fBSTRING\fP all strings are allowed and is used for 
+With \fBSTRING\fP, all strings are allowed and is used for 
 wildcard regular boolean expression matching. 
 Please see 
 .M sge_types 1 
@@ -304,7 +304,7 @@ user in order to request a queue or a class of queues.
 If the entry is set to 'forced' or 'f' the 
 attribute has to be requested by a job or it is rejected.
 .sp
-To enable resource request enforcement the existence of the
+To enable resource request enforcement the 
 resource has to be defined. This can be done on a cluster global, per host
 and per queue basis. The definition of resource availability is performed 
 with the complex_values entry in
@@ -337,7 +337,7 @@ i.e. load values can be reported
 for consumable attributes or the consumable flag can be set for load 
 attributes. The xxQS_NAMExx consumable resource management takes both 
 the load (measuring availability of the resource) and the internal bookkeeping 
-into account in this case, and makes sure that neither of both exceeds a given 
+into account, and makes sure that neither exceeds a given 
 limit.
 .sp 1
 To enable consumable resource management the basic availability of a 
@@ -385,7 +385,7 @@ Meaningful only for consumable complex attributes (see
 .B consumable
 parameter above). xxQS_NAMExx assumes the resource amount denoted in the 
 .B default
-parameter implicitly to be consumed by jobs being dispatched to a 
+parameter implicitly to be consumed by jobs dispatched to a 
 host or queue managing the consumable attribute. Jobs explicitly requesting 
 the attribute via the \fI\-l\fP option to
 .M qsub 1
@@ -393,14 +393,14 @@ override this default value.
 .\"
 .SS "\fBurgency\fP"
 The urgency value allows influencing
-job priorities on a per resource base. The urgency value effects
-the addend for each resource when determining the resource request 
+job priorities on a per resource basis. The urgency value affects
+the addition of each resource when determining the resource request 
 related urgency contribution. For numeric type resource requests the 
-addend is the product of the urgency value, the jobs assumed slot 
+addition is the product of the urgency value, the jobs assumed slot 
 allocation and the per slot request as specified via \fI\-l\fP option to 
 .M qsub 1 .
 For string type requests the resources urgency value is directly 
-used as addend. Urgency values are of type real. See under 
+used as added. Urgency values are of type real. See under 
 .M sge_priority 5 
 for an overview on job priorities.
 .\"

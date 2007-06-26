@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2007/01/05 19:56:12 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.9.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMON 1 "$Date: 2007/01/05 19:56:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMON 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmon \- X-Windows OSF/Motif graphical user's interface for xxQS_NAMExx
 .\"
@@ -40,10 +40,10 @@ qmon \- X-Windows OSF/Motif graphical user's interface for xxQS_NAMExx
 .\"
 .\"
 .SH DESCRIPTION
-.I Qmon
+.I qmon
 allows administrators and users to manipulate the xxQS_NAMExx system
 from an X-Window environment.
-.I Qmon
+.I qmon
 provides various dialogues linked together in multiple ways.
 For each task the user wishes to accomplish via
 .I qmon
@@ -118,7 +118,7 @@ dialogue in order to submit new jobs or to change attributes of pending
 jobs (\fBQalter\fP button). The shown displayed fields in the tabular display
 and the jobs displayed can be customized by pressing the \fBCustomize\fP 
 button. This customization can be saved to the \fI~/.qmon_preferences\fP file
-and is used on following startups for the initial configuration of the 
+and can be used on subsequent startups for the initial configuration of the 
 \fBJob Control\fP dialogue.
 
 .\"
@@ -155,7 +155,7 @@ The \fBQueue Control\fP dialogue can be customized in a similar way as the
 .SS "\fBSubmit\fP"
 The
 .B Job Submission
-dialogue serves for submitting batch and interactive 
+dialogue is used for submitting batch and interactive 
 jobs and is also invoked when changing attributes of pending jobs from the 
 .B Job Control
 dialogue explained above (\fBQalter\fP button). To toggle between 
@@ -225,7 +225,7 @@ Execution Hosts
 .RE
 .fi
 .sp 1
-The host list to be manipulated is selected via clicking at one of the tabs 
+The host list to be manipulated is selected via clicking on one of the tabs 
 named correspondingly. The first two host lists only provide for adding or 
 deleting entries, thereby allowing administrative or submit permission for the 
 hosts on the lists, or denying it otherwise respectively.
@@ -236,7 +236,7 @@ sensors, consumable complex attributes and access attributes
 (access, xaccess and projects, xprojects) as described in
 .M complex 5 .
 CPU, memory and I/O usage reported for running jobs can be 
-scaled in addition and the relative performance of a host can be define with 
+scaled in addition and the relative performance of a host can be defined with 
 the
 .B Resource Capability Factor
 (see
@@ -244,14 +244,14 @@ the
 .\"
 .SS "\fBCluster Config\fP"
 This dialogue maintains the cluster global configuration as well as
-host specific derivatives (see
+host specific configurations (see
 .M xxqs_name_sxx_conf 5 ).
 When opened, the dialogue displays a selection list for all hosts which
 have a configuration assigned. The special name "global" refers to the
 cluster global configuration. By pushing the \fBAdd/Modify\fP button
 a sub-dialogue is opened, which allows for modification of the cluster
 configuration. For host specific configurations the 'global' host specific
-configuration fields are set insensitive and only the allowed parameters
+configuration fields are grayed out and only the allowed parameters
 can be manipulated.
 .\"
 .SS "\fBScheduler Config\fP"
@@ -290,7 +290,7 @@ button will open a
 calendar configuration dialogue, which allows to create new calendars or 
 which provides the means to change the existing ones. The
 .B Ok
-button registers the additional or modified calendar with
+button registers the additional or modified calendars with
 .M xxqs_name_sxx_qmaster 8 . 
 .\"
 .SS "\fBUser Config\fP"
@@ -372,9 +372,9 @@ with
 .\"
 .SS "\fBCheckpoint Config\fP"
 Checkpointing environment interfaces can be configured with this dialogue. 
-Checkpointing environments are necessary to describe the attributes which 
-the different checkpointing methods and their derivatives on various 
-operating system platforms supported by xxQS_NAMExx have. When the dialogue 
+Checkpointing environments are needed to describe the attributes of 
+the different checkpointing methods and their configurations on the various 
+operating system platforms supported by xxQS_NAMExx . When the dialogue 
 is opened a list of the already configured checkpointing environments is 
 displayed together with the current configuration (see
 .M checkpoint 5 )
@@ -388,11 +388,11 @@ button, the
 new or modified checkpointing environment is registered with
 .M xxqs_name_sxx_qmaster 8 .
 .\"
-.SS "\fBTicket Conf\fP"
+.SS "\fBTicket Config\fP"
 This dialogue offers an overview and editing screen for allocating tickets
 to the share-based, functional and override scheduling policies.
 .PP
-The \fBDeadline Job\fP button opens the \fBUser Conf\fP dialogue box.
+The \fBDeadline Job\fP button opens the \fBUser Config\fP dialogue box.
 Please change 
 to the Userset sub-dialogue and select the userset named "deadlineusers".
 Only users of this userset may submit deadline jobs.
@@ -424,7 +424,7 @@ and
 .M user 5
 for a description of the different types of override tickets).
 .\"
-.SS "\fBProject Conf\fP"
+.SS "\fBProject Config\fP"
 This button opens a dialog for creating projects.
 .br
 The dialogue offers a selection list for the existing projects and displays the 
@@ -436,7 +436,7 @@ button will open a project configuration dialogue, which allows to create new
 projects or which provides the means to change the existing ones. Project
 configuration in essence means giving or denying access to a project for
 usersets (see
-.B User Conf
+.B User Confing
 above as well as
 .M project 5 ).
 The Ok button registers the additional or modified project with
@@ -534,10 +534,10 @@ width of the window, then the text just runs off the end of the window.
 .SH "FILES"
 .nf
 .ta \w'/usr/lib/X11/defaults/Qmon     'u
-\fI<xxqs_name_sxx_root>/qmon/Qmon\fP	\fIQmon\fP sample resources file
-\fI/usr/lib/X11/defaults/Qmon\fP	\fIQmon\fP system resources file
-\fI$HOME/Qmon\fP	\fIQmon\fP user resources file
-\fI$HOME/.qmon_preferences\fP	\fIQmon\fP job/queue customization file
+\fIx$xQS_NAME_Sxx_ROOT/qmon/Qmon\fP	\fIqmon\fP sample resources file
+\fI/usr/lib/X11/defaults/Qmon\fP	\fIqmon\fP system resources file
+\fI$HOME/Qmon\fP	\fIqmon\fP user resources file
+\fI$HOME/.qmon_preferences\fP	\fIqmon\fP job/queue customization file
 .fi
 
 .\"
@@ -559,7 +559,7 @@ width of the window, then the text just runs off the end of the window.
 .SH "COPYRIGHT"
 See
 .M xxqs_name_sxx_intro 1
-and the information provided in <xxqs_name_sxx_root>/3rd_party/qmon
+and the information provided in <xxQS_NAME_Sxx_ROOT>/3rd_party/qmon
 for a statement
 of further rights and permissions and for credits to be given to public
 domain and freeware widget developers. 

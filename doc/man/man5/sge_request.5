@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_request.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_request.5,v $     Last Update: $Date: 2007/06/26 22:21:12 $     Revision: $Revision: 1.5.32.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_REQUEST 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_REQUEST 5 "$Date: 2007/06/26 22:21:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_request \- xxQS_NAMExx default request definition file format
@@ -132,8 +132,8 @@ qsub -l arch=sun4,s_cpu=5:0:0 -r n test.sh
 .\"
 .SH "FILES"
 .nf
-.ta \w'<xxqs_name_sxx_root>/   'u
-\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_request\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/   'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/xxqs_name_sxx_request\fP
 	global defaults file
 .ta \w'$HOME/.xxqs_name_sxx_request   'u
 \fI$HOME/.xxqs_name_sxx_request\fP	user private defaults file

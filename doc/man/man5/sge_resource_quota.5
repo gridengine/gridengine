@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/03/07 15:35:17 $     Revision: $Revision: 1.4.2.2 $
+.\" $RCSfile: sge_resource_quota.5,v $     Last Update: $Date: 2007/06/26 22:21:09 $     Revision: $Revision: 1.4.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/03/07 15:35:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_RESOURCE_QUOTA 5 "$Date: 2007/06/26 22:21:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
@@ -38,7 +38,7 @@ xxQS_NAME_Sxx_resource_quota \- xxQS_NAMExx resource quota file format
 Resource quota sets (rqs) are a flexible way to set a maximum resource consumption for any job requests. They are used by the scheduler to select the next possible jobs for running.
 The job request distinction is done by a set of user, project, cluster queue, host and pe filter criteria.
 .PP
-By using the resource quota sets administrators are allowed to define a fine granular resource quota
+By using the resource quota sets administrators can define a fine granular resource quota
 configuration. This helps restricting some job requests to a lesser resource usage and granting
 other job requests a higher resource usage.
 .PP
@@ -59,7 +59,7 @@ Every resource quota set consist of one or more resource quota rules. These rule
 in order, and the first rule that matches a specific request will be used. A resource quota
 set always results in at most one effective resource quota rule for a specific request.
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -75,7 +75,7 @@ for scheduling decisions. The default value is \fIfalse\fP.
 This description field is optional and can be set to arbitrary string. The
 default value is \fINONE\fP.
 .SS "\fBlimit\fP"
-Every resource quota set needs at least one resource quota rule definition started by
+Every resource quota set needs at least one resource quota rule definition started with
 the limit field. It's possible to define more resource quota rules divided by a new line.
 A resource quota rule consists of an optional name, the filters for a specific job
 request and the resource quota limit.

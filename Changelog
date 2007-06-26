@@ -1,3 +1,8 @@
+OJ-2007-06-26-0: Bugfix: Spelling, usage errors in  man pages
+                 Bugster: Not filed
+		 Issue:   Not filed
+		 Review:  DT
+
 JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
                             configured as transport, and CTRL-C was pressed.
                  Bugster:   6573508

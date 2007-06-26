@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: project.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.7.2.1 $
+.\" $RCSfile: project.5,v $     Last Update: $Date: 2007/06/26 22:21:11 $     Revision: $Revision: 1.7.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH PROJECT 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH PROJECT 5 "$Date: 2007/06/26 22:21:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 project \- xxQS_NAMExx project entry file format
@@ -42,14 +42,14 @@ under that project.
 .PP
 A list of currently configured projects can be displayed via the
 .M qconf 1
-\fB\-sprjl\fP option. The contents of each enlisted project definition
+\fB\-sprjl\fP option. The contents of each listed project definition
 can be shown via the \fB\-sprj\fP switch. The output follows the
 .I project
 format description. New projects can be created and existing can be
 modified via the \fB\-aprj\fP, \fB\-mprj\fP and \fB\-dprj\fP options to
 .M qconf 1 .
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -66,11 +66,11 @@ The current functional share of the project.
 .SS "\fBacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
-referring to those users being allowed to submit jobs to the project.
+referring to those users allowed to submit jobs to the project.
 .SS "\fBxacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )
-referring to those users being not allowed to submit jobs to the project.
+referring to those users not allowed to submit jobs to the project.
 .\"
 .\"
 .SH "SEE ALSO"

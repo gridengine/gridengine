@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2005/11/09 17:44:39 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.10.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2005/11/09 17:44:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -41,7 +41,7 @@ qping \- check application status of xxQS_NAMExx daemons.
 .\"
 .PP
 .SH DESCRIPTION
-.I Qping
+.I qping
 is used to validate the runtime status of a xxQS_NAMExx service daemon. The current
 xxQS_NAMExx implementation allows one to query the xxQS_NAME_Sxx_QMASTER daemon and any
 running xxQS_NAME_Sxx_EXECD daemon. The qping command is used to send a SIM (Status
@@ -110,7 +110,7 @@ There is no unusual timing situation.
 .in+3
 \fI1\fP
 One or more threads has reached warning timeout. This may happen when 
-at least one thread does not increment his time stamp for a not usual long
+at least one thread does not increment its time stamp for an unusually long
 time. A possible reason for this is a high workload for this thread.
 .in-3
     
@@ -251,7 +251,7 @@ Prints a list of all options.
 .SS "\fB\-i interval\fP"
 Set qping interval time.
 
-The default interval time is one second. Qping will send a SIM (Status Information Message)
+The default interval time is one second. qping will send a SIM (Status Information Message)
 on each interval time.
 
 .SS "\fB\-info\fP"
@@ -260,7 +260,7 @@ value 0 indicates no error. On errors qping returns with 1.
 
 .SS "\fB\-noalias\fP"
 Ignore host_aliases file, which is located at 
-\fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/host_aliases.\fP
 If this option is used it is not necessary to set any xxQS_NAMExx environment
 variable. 
 

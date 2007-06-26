@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/05 16:30:54 $     Revision: $Revision: 1.55.2.3 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.55.2.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/05 16:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -62,13 +62,17 @@ The actual configuration for both
 .M xxqs_name_sxx_qmaster 8
 and
 .M xxqs_name_sxx_execd 8
-is a superposition of a so called \fIglobal\fP configuration and
-a \fIlocal\fP configuration being pertinent for the host on which
+is a superposition of a \fIglobal\fP configuration and
+a \fIlocal\fP configuration pertinent for the host on which
 a master or execution daemon resides.
 If a local configuration is available, its entries overwrite the
 corresponding entries of the global configuration. \fBNote:\fP The local
 configuration does not have to contain all valid configuration entries,
 but only those which need to be modified against the global entries.
+.PP
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
+(\\newline) characters. The backslash and the newline are replaced with a
+space (" ") character before any interpretation.
 .\"
 .\"
 .SH FORMAT
@@ -95,15 +99,16 @@ contains all information spooled to disk. Thus, it is possible for the
 same directory path
 (the root access restrictions mentioned above need to be met, however).
 .PP
-Being a parameter set at installation time changing the global \fBexecd_spool_dir\fP
-in a running system is not supported. If the change should still be proceeded
-it is required to restart all effected execution daemons.  Please make sure running 
-jobs have finished before doing so.
-If you do so running jobs will be lost. 
+Changing the global \fBexecd_spool_dir\fP
+parameter set at installation time is not supported
+in a running system. If the change should still be done
+it is required to restart all affected execution daemons.  Please make sure running 
+jobs have finished before doing so,
+otherwise running jobs will be lost. 
 
 .PP
 The default location for the execution daemon spool
-directory is <xxqs_name_sxx_root>/<cell>/spool.
+directory is $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -192,7 +197,7 @@ specific tasks like the preparation of temporary file systems with the
 need for the same context information as the job.
 Each
 .M xxqs_name_sxx_execd 8
-may use a private prologue script. 
+may use a private prolog script. 
 Correspondingly, the execution host local 
 configurations is can be overwritten by the queue configuration (see
 .M queue_conf 5
@@ -201,10 +206,10 @@ Changing \fBprolog\fP will take
 immediate effect.
 .PP
 The default for \fBprolog\fP is the special value NONE, which prevents
-from execution of a prologue script. 
+from execution of a prolog script. 
 .PP
 The following special
-variables being expanded at runtime can be used (besides any other
+variables expanded at runtime can be used (besides any other
 strings which have to be interpreted by the procedure) to constitute 
 a command line:
 .IP "\fI$host\fP"
@@ -227,8 +232,9 @@ The cluster queue name of the master queue instance, i.e. the cluster
 queue in which the prolog and epilog procedures are started.
 .IP "\fI$stdin_path\fP"
 The pathname of the stdin file. This is always /dev/null for prolog, 
-pe_start, pe_stop and epilog. In the job script it is the pathname of the
-stdin file for the job. When delegated file staging is enabled, this path is set
+pe_start, pe_stop and epilog. It is the pathname of the
+stdin file for the job in the job script. When delegated file staging is enabled, 
+this path is set
 to $fs_stdin_tmp_path. When delegated file staging is not enabled, it is the stdin
 pathname given via DRMAA or qsub.
 .IP "\fI$stdout_path\fP"
@@ -301,7 +307,7 @@ specific tasks like the cleaning up of temporary file systems with the
 need for the same context information as the job.
 Each
 .M xxqs_name_sxx_execd 8
-may use a private epilogue script. 
+may use a private epilog script. 
 Correspondingly, the execution host local 
 configurations is can be overwritten by the queue configuration (see
 .M queue_conf 5
@@ -310,7 +316,7 @@ Changing \fBepilog\fP will take
 immediate effect.
 .PP
 The default for \fBepilog\fP is the special value NONE, which prevents
-from execution of a epilogue script.
+from execution of a epilog script.
 The  same  special variables as for \fBprolog\fP can be
 used to constitute a command line.
 .PP
@@ -332,7 +338,7 @@ starting jobs if \fIunix_behavior\fP is defined as \fBshell_start_mode\fP.
 .\"
 .IP \fIposix_compliant\fP
 POSIX does not consider first script line comments such a `#!/bin/csh'
-as being significant. The POSIX standard for batch queuing systems
+as significant. The POSIX standard for batch queuing systems
 (P1003.2d) therefore requires a compliant queuing system to ignore
 such lines but to use user specified or configured default command
 interpreters instead. Thus, if \fBshell_start_mode\fP is set to
@@ -355,7 +361,7 @@ readable by any user who may execute jobs.
 If this violates your
 site's security policies you may want to set \fBshell_start_mode\fP
 to \fIscript_from_stdin\fP. This will force xxQS_NAMExx to open the
-job script as well as the epilogue and prologue scripts for reading into
+job script as well as the epilog and prolog scripts for reading into
 STDIN as root (if
 .M xxqs_name_sxx_execd 8
 was started as root) before changing to the job owner's user account.
@@ -438,12 +444,12 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBuser_lists \fP"
-The \fBuser_lists\fP parameter contains a comma separated list of so called
+The \fBuser_lists\fP parameter contains a comma separated list of 
 user access lists as described in
 .M access_list 5 .
 Each user contained in at least one of the enlisted access lists has
 access to the cluster. If the \fBuser_lists\fP parameter is set to
-NONE (the default) any user has access being not explicitly excluded
+NONE (the default) any user has access not explicitly excluded
 via the \fBxuser_lists\fP parameter described below.
 If a user is contained both in an access list enlisted in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the cluster.
@@ -455,7 +461,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBxuser_lists \fP"
-The \fBxuser_lists\fP parameter contains a comma separated list of so called
+The \fBxuser_lists\fP parameter contains a comma separated list of 
 user access lists as described in
 .M access_list 5 .
 Each user contained in at least one of the enlisted access lists is denied
@@ -620,14 +626,14 @@ spool directories (see the description of the
 levels are available:
 .\"
 .IP "\fIlog_err\fP"
-All error events being recognized are logged.
+All error events are recognized are logged.
 .\"
 .IP "\fIlog_warning\fP"
-All error events being recognized and all detected signs of 
+All error events are recognized and all detected signs of 
 potentially erroneous behavior are logged.
 .\"
 .IP "\fIlog_info\fP"
-All error events being recognized, all detected signs of 
+All error events are recognized, all detected signs of 
 potentially erroneous behavior and a variety of informative
 messages are logged.
 .PP
@@ -850,7 +856,7 @@ forge -u $1 -t $2 | SetToken
 .PP
 Since it is necessary for \fIforge\fP to read the secret AFS server
 key, a site might wish to replace the \fBset_token_cmd\fP script by a
-command, which connects to a self written daemon at the AFS server. The
+command, which connects to a custom daemon at the AFS server. The
 token must be forged at the AFS server and returned to the local
 machine, where \fISetToken\fP is executed.
 .PP
@@ -882,7 +888,8 @@ may be overwritten by the execution host local configuration.
 This parameter is only present if your xxQS_NAMExx system is licensed
 to support AFS.
 .PP
-the time period for which AFS tokens are periodically extended. xxQS_NAMExx
+The \fBtoken_extend_time\fP is the time period for which AFS tokens are periodically 
+extended. xxQS_NAMExx
 will call the token extension 30 minutes before the tokens expire until
 jobs have finished and the corresponding tokens are no longer required.
 .PP
@@ -896,7 +903,7 @@ may be overwritten by the execution host local configuration.
 .SS "\fBgid_range\fP"
 The \fBgid_range\fP
 is a comma separated list of range expressions of the form n-m (n as
-well as m being integer numbers greater than 99), where m is an
+well as m are integer numbers greater than 99), where m is an
 abbreviation for m-m. These numbers are used in
 .M xxqs_name_sxx_execd 8
 to identify processes belonging to the same job.
@@ -1015,6 +1022,13 @@ string or seconds. There is no setting to turn the sharetree spooling
 off. 
 (e.g. STREE_SPOOL_INTERVAL=00:02:00)
 .PP
+.IP "\fIMAX_JOB_DELETION_TIME\fp
+Sets the value of how long the qmaster will spend deleting jobs. After this time,
+the qmaster will continue with other tasks and schedule the deletion of remaining
+jobs at a later time. The default value is 3 seconds, and will be used if no value
+is entered. The range of valid values is > 0 and <= 5.
+(e.g. MAX_JOB_DELETION_TIME=1)
+.PP
 Changing \fBqmaster_params\fP will take immediate effect.
 The default for \fBqmaster_params\fP is none.
 .PP
@@ -1023,7 +1037,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBexecd_params\fP"
-This is foreseen for passing additional parameters 
+This is used for passing additional parameters 
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"
@@ -1099,7 +1113,7 @@ may be overwritten by the execution host local configuration.
 .\"
 .\"
 .IP "\fIUSE_QSUB_GID\fP"
-If this parameter is set to true, the primary group id being active when a
+If this parameter is set to true, the primary group id  active when a
 job was submitted will be set to become the primary group id for job
 execution. If the parameter is not set, the primary group id as defined for
 the job owner in the execution host
@@ -1209,8 +1223,8 @@ for further information about sharelog.
 .SS "\fBfinished_jobs\fP"
 xxQS_NAMExx stores a certain number of \fIjust finished\fP jobs to provide
 post mortem status information. The \fBfinished_jobs\fP parameter defines the
-number of finished jobs being stored. If this maximum number is reached, the
-eldest finished job will be discarded for every new job being added to the
+number of finished jobs stored. If this maximum number is reached, the
+eldest finished job will be discarded for every new job added to the
 finished job list.
 .PP
 Changing \fBfinished_jobs\fP will take immediate effect.

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/02/14 13:34:16 $     Revision: $Revision: 1.31.2.1 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/06/26 22:21:09 $     Revision: $Revision: 1.31.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2007/02/14 13:34:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2007/06/26 22:21:09 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -50,7 +50,7 @@ option of the
 command. A default configuration is provided together with the 
 xxQS_NAMExx distribution package.
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -71,7 +71,7 @@ load value from all or part of the load parameters reported by
 .M xxqs_name_sxx_execd 8
 for each host and from all or part of the consumable resources (see
 .M complex 5 )
-being maintained for each host.
+maintained for each host.
 The load formula expression syntax is that of
 a summation weighted load values, that is:
 .sp 1
@@ -187,7 +187,7 @@ account to product a sorted queue list. Currently, two settings are valid:
 \fBseqno\fP and \fBload\fP. However in both cases, xxQS_NAMExx attempts to
 maximize the number of soft requests (see
 .M qsub 1 
-\fB\-s\fP option) being fulfilled by the queues for a particular as the
+\fB\-s\fP option) fulfilled by the queues for a particular as the
 primary criterion.
 .br
 Then, if the \fBqueue_sort_method\fP parameter is set to \fBseqno\fP,
@@ -377,7 +377,7 @@ each scheduling run.
 .\"
 .IP "\fIMONITOR\fP"
 If set equal to 1, the scheduler records information for each scheduling run allowing 
-to reproduce job resources utilization in the file \fI<xxqs_name_sxx_root>/<cell>/common/schedule\fP.\"
+to reproduce job resources utilization in the file \fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/schedule\fP.\"
 .\"
 .IP "\fISELECT_PE_RANGE_ALG\fP"
 This parameter sets the algorithm for the pe range computation. The default is automatic, which
@@ -419,7 +419,7 @@ algorithm to count finished jobs against a user or project for a configurable de
 time period. This feature is turned off by default, and the halftime is used instead.
 .br
 The halflife_decay_list also allows one to configure different decay rates for each usage 
-type being tracked (cpu, io, and mem). The list is specified in the following format:
+type tracked (cpu, io, and mem). The list is specified in the following format:
 .sp 1
 .nf
 .RS
@@ -498,7 +498,7 @@ if their prospective job end is before the start of the reservation (backfilling
 Reservation is done only for non-immediate jobs (-now no) that request reservation 
 (-R y). If max_reservation is set to "0" no job reservation is done. 
 .sp 1
-Note, that reservation scheduling can be performance consuming and hence reservation 
+Note: that reservation scheduling can be performance consuming and hence reservation 
 scheduling is switched off by default. Since reservation scheduling performance 
 consumption is known to grow with the number of pending jobs use of -R y option 
 is recommended only for those jobs actually queuing for bottleneck resources. 
@@ -515,8 +515,8 @@ time limit the default_duration is not enforced.
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/'u
-\fI<xxqs_name_sxx_root>/<cell>/common/sched_configuration\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sched_configuration\fP
 	xxqs_name_sxx_schedd configuration
 .fi
 .\"

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2006/10/24 08:05:01 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: bootstrap.5,v $     Last Update: $Date: 2007/06/26 22:21:11 $     Revision: $Revision: 1.7.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2006/10/24 08:05:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/26 22:21:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx bootstrap file
@@ -57,8 +57,8 @@ where the root account does not have the corresponding file access
 permissions (e.g. on a shared file system without global root read/write
 access).
 .PP
-Being a parameter set at installation time changing \fBadmin_user\fP in
-a running system is not supported. Changing it manually on a shut-down cluster
+Changing the \fBadmin_user\fP parameter set at installation time is not supported
+in a running system. Changing it manually on a shut-down cluster
 is possible, but if access to the xxQS_NAMExx spooling area is interrupted, 
 this will result in unpredictable behaviour.
 
@@ -80,9 +80,10 @@ parameter will have no effect if
 .B ignore_fqdn
 is set to "true".
 .sp 1
-Being a parameter set at installation time changing
+Changing  the 
 .B default_domain
-in a running system is not supported. The default for
+parameter set at installation time is not supported
+in a running system. The default for
 .B default_domain
 is "none", in which case it will not be used.
 .\"
@@ -94,9 +95,10 @@ domain. It is switched on if set to either "true" or "1". Switching it
 on may solve problems with load reports due to different hostname 
 resolutions across the cluster.
 .sp 1
-Being a parameter set at installation time changing
+Changing the
 .B ignore_fqdn
-in a running system is not supported. The default for
+parameter set at installation time is not supported
+in a running system. The default for
 .B ignore_fqdn
 is "true".
 .\"
@@ -116,7 +118,7 @@ at
 initialization time.
 The extension characterizing a shared library (.so, .sl, .dylib etc.) is not contained in \fBspooling_lib\fP.
 .PP
-If \fBspooling_method\fP was set to \fIberkeleydb\fP during installation, \fBspooling_lib\fP is set to \fIlibspoolb\fP, if \fIclassic\fP was chosen as \fBspooling_method\fP, \fBspooling_lib\fP is set to \fIlibspoolc\fP.
+If \fBspooling_method\fP was set to \fIberkeleydb\fP during installation, \fBspooling_lib\fP is set to \fIlibspoolb\fP. If \fIclassic\fP was chosen as \fBspooling_method\fP, \fBspooling_lib\fP is set to \fIlibspoolc\fP.
 .PP
 Not all operating systems allow the dynamic loading of libraries. On these
 platforms a certain spooling method (default: berkeleydb) is compiled into the binaries and the 
@@ -147,7 +149,7 @@ if the corresponding binaries are located in subdirectories named aix43,
 cray, lx24-x86, hp11, irix65, tru64, sol-sparc, etc.
 .PP
 The default location for the binary path is
-<xxqs_name_sxx_root>/bin
+<xxQS_NAME_Sxx_ROOT>/bin
 .PP
 .\"
 .\"
@@ -165,11 +167,12 @@ and regularly clean off the log files, e.g. via a
 .M cron 8
 job.
 .PP
-Being a parameter set at installation time changing \fBqmaster_spool_dir\fP
-in a running system is not supported.
+Changing the \fBqmaster_spool_dir\fP
+parameter set at installation time is not supported
+in a running system.
 .PP
 The default location for the
-master spool directory is <xxqs_name_sxx_root>/<cell>/spool/qmaster.
+master spool directory is $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster.
 .PP
 .\"
 .\"

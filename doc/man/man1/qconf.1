@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2007/01/30 08:00:39 $     Revision: $Revision: 1.28 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.28.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2007/01/30 08:00:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -38,15 +38,15 @@ qconf \- xxQS_NAMExx Queue Configuration
 .\"
 .\"
 .SH DESCRIPTION
-.I Qconf
+.I qconf
 allows the system administrator to add, delete, and modify
 the current xxQS_NAMExx configuration, including queue management,
 host management, complex management and user management.
-.I Qconf
+.I qconf
 also allows you to examine the current queue configuration
 for existing queues.
 .PP
-.I Qconf
+.I qconf
 allows the use of the backslash, '\\', character at the end of a line to
 indicate that the next line is a continuation of the current line.  When
 displaying settings, such as the output of one of the -s* options,
@@ -70,7 +70,7 @@ operations are available to all users with a valid account.
 Similar to \fB\-aattr\fP (see below) but takes specifications for the object
 attributes to be enhanced from file named \fBfname\fP. As opposed to
 \fB\-aattr\fP,
-multiple attributes can be enhanced. Their specification has to be enlisted
+multiple attributes can be enhanced. Their specification has to be listed
 in \fBfname\fP following the file format of the corresponding object (see
 .M queue_conf 5
 for the queue, for example).
@@ -97,7 +97,7 @@ Requires root or manager privileges.
 Add the configurations (see
 .M xxqs_name_sxx_conf 5 )
 specified in the files
-enlisted in the comma separated \fBfile_list\fP. The configuration
+listed in the comma separated \fBfile_list\fP. The configuration
 is added for the host that is identical to the file name.
 .br
 Requires root or manager privileges.
@@ -159,7 +159,7 @@ root/manager/operator privileges.
 Similar to \fB\-dattr\fP (see below) but the definition of the list
 attributes from which entries are to be deleted is contained in the
 file named \fBfname\fP. As opposed to \fB\-dattr\fP, multiple
-attributes can be modified. Their specification has to be enlisted in
+attributes can be modified. Their specification has to be listed in
 \fBfname\fP following the file format of the corresponding object (see
 .M queue_conf 5
 for the queue, for example).
@@ -174,7 +174,7 @@ Requires root/manager privileges.
 Similar to \fB\-mattr\fP (see below) but takes specifications for the object
 attributes to be modified from file named \fBfname\fP. As opposed to
 \fB\-mattr\fP,
-multiple attributes can be modified. Their specification has to be enlisted
+multiple attributes can be modified. Their specification has to be listed
 in \fBfname\fP following the file format of the corresponding object
 (see
 .M queue_conf 5
@@ -218,7 +218,7 @@ will be deleted. The file format of \fBfile\fP must comply
 to the format specified in 
 .M hostgroup 5 . Requires root or manager privilege.
 .\" 
-.IP "\fB\-Mrqs fname [mrqs_name]\fP	\fI<modify RQS configuration>\fP"
+.IP "\fB\-Mrqs fname [rqs_name]\fP	\fI<modify RQS configuration>\fP"
 Same as \fB\-mrqs\fP (see below) but
 instead of invoking an editor to modify the
 RQS configuration, the file \fBfname\fP
@@ -305,7 +305,7 @@ Requires root or manager privileges.
 Similar to \fB\-rattr\fP (see below) but the definition of the list
 attributes whose content is to be replace is contained in the file
 named \fBfname\fP. As opposed to \fB\-rattr\fP, multiple attributes can
-be modified. Their specification has to be enlisted in \fBfname\fP
+be modified. Their specification has to be listed in \fBfname\fP
 following the file format of the corresponding object (see
 .M queue_conf 5
 for the queue, for example).
@@ -401,7 +401,7 @@ to submit checkpointing jobs (see
 .M checkpoint 5
 for details on the format 
 of a checkpointing environment definition).
-.I Qconf
+.I qconf
 retrieves a default 
 checkpointing environment configuration and executes
 .M vi 1
@@ -488,7 +488,7 @@ to the list
 of RQSs maintained by xxQS_NAMExx (see
 .M xxqs_name_sxx_resource_quota 5
 for details on the format of a RQS definition).
-.I Qconf
+.I qconf
 retrieves a default RQS configuration
 and executes
 .M vi 1
@@ -515,7 +515,7 @@ of PEs maintained by xxQS_NAMExx and to be usable to submit
 parallel jobs (see
 .M xxqs_name_sxx_pe 5
 for details on the format of a PE definition).
-.I Qconf
+.I qconf
 retrieves a default PE configuration
 and executes
 .M vi 1
@@ -528,7 +528,7 @@ Requires root/manager privileges.
 .IP "\fB\-aprj\fP	\fI<add new project>\fP"
 Adds a project description to the list of registered projects (see
 .M project 5 ).
-.I Qconf
+.I qconf
 retrieves a template project configuration and executes
 .M vi 1
 (or $EDITOR if
@@ -538,7 +538,7 @@ project. Upon exit from the editor, the template is registered with
 Requires root or manager privileges.
 .\"
 .IP "\fB\-aq [queue_name]\fP	\fI<add new queue>\fP"
-.I Qconf
+.I qconf
 retrieves the default queue configuration (see
 .M queue_conf 5 )
 and executes
@@ -1078,7 +1078,7 @@ Show the definition of the
 .\"
 .IP "\fB\-srqsl\fP	\fI<show RQS\-list>\fP"
 Show a list of all currently defined
-\fIresource quota sets\fPs (RQSs).
+\fIresource quota set\fPs (RQSs).
 .\"
 .IP "\fB\-sm\fP	\fI<show managers>\fP"
 Displays the managers list.
@@ -1087,8 +1087,8 @@ Displays the managers list.
 Displays the operator list.
 .\"
 .IP "\fB\-sobjl obj_spec attr_name val\fP	\fI<show object list>\fP"
-Shows a list of all configuration objects for which val matches at least
-one configuration value of the attributes whose name matches with attr_name.
+Shows a list of all configuration objects for which value matches at least
+one configuration value of the attributes whose name matches attr_name.
 .sp
 Obj_spec can be "queue" or "queue_domain" or "queue_instance" or "exechost".
 Note: When "queue_domain" or "queue_instance" is specified as obj_spec
@@ -1096,7 +1096,7 @@ matching is only done with the attribute overridings concerning the host group
 or the execution host. In this case queue domain names resp. queue
 instances are returned.
 .sp
-Attr_name can be any of the configuration file keywords enlisted in
+Attr_name can be any of the configuration file keywords listed in
 .M queue_conf 5  
 or 
 .M host_conf 5 . 
@@ -1177,7 +1177,7 @@ The xxQS_NAMExx scheduler
 .M xxqs_name_sxx_schedd 8
 is forced by this option to print 
 trace messages of its next scheduling run to the file
-\fI<xxqs_name_sxx_root>/<cell>/common/schedd_runlog\fP.
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/schedd_runlog\fP.
 The messages indicate the reasons for 
 jobs and queues not being selected in that run.
 Requires root or manager privileges.
@@ -1245,8 +1245,8 @@ taking effect on next invocation of the queue (i.e., the next job).
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi
 .\"

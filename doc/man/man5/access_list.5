@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/02/14 13:34:14 $     Revision: $Revision: 1.6.2.1 $
+.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.6.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCESS_LIST 5 "$Date: 2007/02/14 13:34:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCESS_LIST 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 access_list \- xxQS_NAMExx access list file format
@@ -43,7 +43,7 @@ or parallel environments (see
 A list of currently configured 
 access lists can be displayed via the
 .M qconf 1
-\fB\-sul\fP option. The contents of each enlisted access list can
+\fB\-sul\fP option. The contents of each listed access list can
 shown via the \fB\-su\fP switch. The output follows the
 .I access_list
 format description. New access lists can be created and existing can be
@@ -53,7 +53,7 @@ modified via the \fB\-au\fP and \fB\-du\fP options to
 Departments are a special form of access list that additionally allow
 assignment of functional shares and override tickets. 
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -83,13 +83,14 @@ those UNIX users (see \fIuser_name\fP in
 or UNIX user groups that are assigned to the access list 
 or the department. Only symbolic names are allowed.  A group 
 is differentiated from a user name by prefixing the group name with a '@' sign. 
-Pure access lists allow enlisting any user or group in any access list.  
+Pure access lists allow listing any user or group in any access list.  
 .PP
-When using departments, each user or group enlisted may only be enlisted 
+When using departments, each user or group listed may only be 
 in one department, in order to ensure a unique assignment of jobs to departments. 
-To jobs whose users do not match with any of the users or groups enlisted under entries the 
-.I defaultdepartment 
-is assigned, if existing. 
+The
+.I defaultdepartment ,
+if it exists, is assigned
+to jobs whose users do not match with any of the users or groups listed in entries.  
 .\"
 .\"
 .SH "SEE ALSO"

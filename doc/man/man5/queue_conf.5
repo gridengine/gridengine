@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/06/05 16:37:08 $     Revision: $Revision: 1.24.2.2 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/06/26 22:21:12 $     Revision: $Revision: 1.24.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/06/05 16:37:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/06/26 22:21:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -38,10 +38,11 @@ queue_conf \- xxQS_NAMExx queue configuration file format
 .SH DESCRIPTION
 .I Queue_conf
 reflects the format of the template file for the cluster queue configuration.
-Via the \fB\-aq\fP and \fB\-mq\fP options of the
+You can add cluster queues and modify the configuration of
+any queue in the cluster
+via the \fB\-aq\fP and \fB\-mq\fP options of the
 .M qconf 1
-command, you can add cluster queues and modify the configuration of
-any queue in the cluster.
+command.
 .PP
 The \fIqueue_conf\fP parameters take as values strings, integer decimal
 numbers or boolean, time and memory specifiers as well as comma
@@ -61,8 +62,8 @@ k, K, m, M, g and G, where k means multiply the value by 1000, K multiply by
 the value is just counted in bytes.
 .PP
 If more than one host is specified under 'hostlist' (by means of a
-list of hosts or with host groups) it can be desirable to specify
-divergences from the setting used for each host. These divergences
+list of hosts or with host groups) it can be desirable to have
+user speficied overrides from the setting used for each host. These overrides
 can be expressed using the enhanced \fIqueue_conf\fP specifier syntax.
 This syntax builds upon the regular parameter specifier syntax as
 described below under 'FORMAT' separately for each parameter and
@@ -76,19 +77,19 @@ Even in the enhanced \fIqueue_conf\fP specifier syntax an entry
 <current_attribute_syntax>
 .PP
 without brackets denoting the default setting is required and
-used for all queue instances where no divergences are specified.
+used for all queue instances where no user speficied overrides are specified.
 Tuples with a host group host_identifier override the default
 setting. Tuples with a host name host_identifier override both
-the default and the host group setting. Note that also with the
-enhanced \fIqueue_conf\fP specifier syntax a default setting is always
-needed for all configuration attributes.
+the default and the host group setting. Note also that  
+a default setting is always needed for all configuration attributes
+with the enhanced \fIqueue_conf\fP specifier syntax.
 .PP
 Integrity verifications will be applied on the configuration.
 .PP
 Configurations without default setting are rejected.
 Ambiguous configurations with more than one attribute setting for
 a particular host are rejected.
-Configurations containing override values for hosts not enlisted
+Configurations containing override values for hosts not listed
 under 'hostname' are accepted but are indicated by \fB\-sick\fP
 of 
 .M qconf 1
@@ -113,8 +114,8 @@ names must begin with an "@" sign. If multiple hosts are specified
 the \fIqueue_conf\fP constitutes multiple queue instances. Each host may be 
 specified only once in this list. (type string; template default: NONE).
 .SS "\fBseq_no\fP"
-In conjunction with the hosts load situation at a time this 
-parameter specifies this queue's position in the scheduling order 
+This parameter, in conjunction with the hosts load, 
+specifies this queue's position in the scheduling order 
 within the suitable queues for a job to be dispatched under consideration 
 of the \fBqueue_sort_method\fP (see 
 .M sched_conf 5
@@ -126,7 +127,7 @@ reports queue information in the order defined by the
 value of the \fBseq_no\fP. Set this parameter to a monotonically
 increasing sequence. (type number; template default: 0).
 .SS "\fBload_thresholds\fP"
-\fBload_thresholds\fP is a list of load thresholds. Already if one
+\fBload_thresholds\fP is a list of load thresholds. If one
 of the thresholds is exceeded
 no further jobs will be scheduled to the queues and
 .M qmon 1
@@ -181,7 +182,7 @@ default is zero (which means no nice value is set explicitly). Negative
 values (up to -20) correspond to a higher scheduling priority, positive 
 values (up to +20) correspond to a lower scheduling priority.
 .PP
-Note, the value of priority has no effect, if xxQS_NAMExx adjusts
+Note: the value of priority has no effect, if xxQS_NAMExx adjusts
 priorities dynamically to implement ticket-based entitlement 
 policy goals. Dynamic priority adjustment is switched  off by
 default due to 
@@ -442,7 +443,7 @@ The starter_method will not be invoked for qsh, qlogin or qrsh acting as rlogin.
 
 These parameters can be used for overwriting the default method used by
 xxQS_NAMExx for suspension, release of a suspension and for termination
-of a job. Per default, the signals SIGSTOP, SIGCONT and SIGKILL are
+of a job. By default, the signals SIGSTOP, SIGCONT and SIGKILL are
 delivered to the job to perform these actions. However, for some
 applications this is not appropriate.
 
@@ -474,7 +475,7 @@ The name of the queue.
 The pid of the job.
 
 .SS "\fBnotify\fP"
-The time waited between delivery of SIGUSR1/SIGUSR2 
+The time to wait between delivery of SIGUSR1/SIGUSR2 
 notification signals and suspend/kill signals if job was submitted with
 the
 .M qsub 1
@@ -494,20 +495,20 @@ priority access
 The \fBuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
-Each user contained in at least one of the enlisted access lists has
+Each user contained in at least one of the listed access lists has
 access to the queue. If the \fBuser_lists\fP parameter is set to
 NONE (the default) any user has access being not explicitly excluded
 via the \fBxuser_lists\fP parameter described below.
-If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+If a user is contained both in an access list listed in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the queue.
 .SS "\fBxuser_lists\fP"
 The \fBxuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
 .M access_list 5 .
-Each user contained in at least one of the enlisted access lists is not
+Each user contained in at least one of the listed access lists is not
 allowed to access the queue. If the \fBxuser_lists\fP parameter is set to
 NONE (the default) any user has access.
-If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+If a user is contained both in an access list listed in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the queue.
 .SS "\fBprojects\fP"
 The \fBprojects\fP parameter contains a comma separated list of projects
@@ -528,7 +529,7 @@ A list of xxQS_NAMExx cluster queues. Subordinate relationships are in effect
 only between queue instances residing at the same host. If there is a 
 queue instance (be in the sub- or superordinated one) on only one
 particular host this relationship is ignored.
-queue instances residing on the same host will be suspended when a specified 
+Queue instances residing on the same host will be suspended when a specified 
 count of jobs is running in this queue instance.
 The list specification is the same as that of the \fBload_thresholds\fP
 parameter above, e.g. low_pri_q=5,small_q. The numbers denote the
@@ -653,7 +654,7 @@ explicit '\fIqmod \-d\fP' command (see
 The first two resource limit parameters,
 \fBs_rt\fP and \fBh_rt\fP, are implemented by 
 xxQS_NAMExx. They define the "real time" or also called "elapsed" or 
-"wall clock" time having passed since the start of the job. If \fBh_rt\fP
+"wall clock" time which has passed since the start of the job. If \fBh_rt\fP
 is exceeded by a job running in the queue, it is aborted via the SIGKILL
 signal (see
 .M kill 1 ).
@@ -665,7 +666,7 @@ defined in the queue configuration parameter
 (see above) has passed.
 .PP
 The resource limit parameters \fBs_cpu\fP and \fBh_cpu\fP are implemented
-by xxQS_NAMExx as a job limit. They 
+by xxQS_NAMExx as job limits. They 
 impose a limit on the amount of combined CPU time consumed by all the
 processes in the job. 
 If \fBh_cpu\fP is exceeded by a job running in the queue, it is aborted via

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.35.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -93,7 +93,7 @@ file may be  placed under
 $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_qstat
 The user private  file is searched at the location
 $HOME/.sge_qstat.
-The home directory request file has the highest precedence over
+The home directory request file has the higher precedence than
 the cluster global file.
 Command line can be used to override the flags contained in the files.
 .\"
@@ -189,7 +189,7 @@ displayed.
 .\"
 .IP "\fB\-pe pe_name,...\fP"
 Displays status information with respect to queues which are attached to 
-at least one of the parallel environments enlisted in the comma separated 
+at least one of the parallel environments listed in the comma separated 
 option argument. Status information for jobs is displayed either for those 
 which execute in one of the selected queues or which are pending and 
 might get scheduled to those queues in principle.
@@ -803,11 +803,11 @@ not know the best display length, one can set SGE_LONG_QNAMES to
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/act_qmaster\fP
 	xxQS_NAMExx master host file
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_qstat\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/xxqs_name_sxx_qstat\fP
 	cluster qstat default options
 \fI$HOME/.xxqs_name_sxx_qstat\fR	
 	user qstat default options

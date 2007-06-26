@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/03/01 11:07:11 $     Revision: $Revision: 1.11.2.2 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.11.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2007/03/01 11:07:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -48,7 +48,7 @@ registers to
 .M xxqs_name_sxx_qmaster 8
 for the very first time from a certain host. The
 .M qconf 1
-\fB\-sel\fP switch can be used to display a list of execution host being
+\fB\-sel\fP switch can be used to display a list of execution host 
 currently configured in your xxQS_NAMExx system. Via the \fB\-se\fP
 option you can print the execution host configuration of a
 specified host.
@@ -56,7 +56,7 @@ specified host.
 The special hostname "global" can be used to define cluster global 
 characteristics.
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"
@@ -70,12 +70,12 @@ The execution hosts name as defined for \fIhost_name\fP in
 .M sge_types 1 .
 .SS "\fBload_scaling\fP"
 A comma separated list of scaling values to be applied to each or part
-of the load values being reported by the
+of the load values reported by the
 .M xxqs_name_sxx_execd 8
-on the host and being defined in the cluster global "host" complex
+on the host and defined in the cluster global "host" complex
 (see
 .M complex 5 ).
-The load scaling factors are intended to level hardware or operating
+The load scaling factors are intended to balance hardware or operating
 system specific differences between execution hosts. 
 .sp 1
 The syntax of a load factor specification is as follows: First the name of
@@ -171,7 +171,7 @@ This entry cannot be configured but is only displayed in case of a
 .M qconf 1
 \fB\-se\fP command. All load values are displayed as reported by the
 .M xxqs_name_sxx_execd 8
-on the host. The load values are enlisted in a comma separated list. Each
+on the host. The load values are listed in a comma separated list. Each
 load value start with its name, followed by an equal sign and the reported
 value.
 .SS "\fBprocessors\fP"
@@ -193,23 +193,23 @@ for Memory consumption aggregated over the life-time of jobs and
 for data transferred via any I/O devices. The default NONE means
 "no scaling", i.e. all scaling factors are 1.
 .SS "\fBuser_lists\fP"
-The \fBuser_lists\fP parameter contains a comma separated list of so called
+The \fBuser_lists\fP parameter contains a comma separated list of 
 user access lists as described in
 .M access_list 5 .
-Each user contained in at least one of the enlisted access lists has
+Each user contained in at least one of the listed access lists has
 access to the host. If the \fBuser_lists\fP parameter is set to
-NONE (the default) any user has access being not explicitly excluded
+NONE (the default) any user has access not explicitly excluded
 via the \fBxuser_lists\fP parameter described below.
-If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+If a user is contained both in an access list listed in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the host.
 .SS "\fBxuser_lists\fP"
-The \fBxuser_lists\fP parameter contains a comma separated list of so called
+The \fBxuser_lists\fP parameter contains a comma separated list of 
 user access lists as described in
 .M access_list 5 .
-Each user contained in at least one of the enlisted access lists is not
+Each user contained in at least one of the listed access lists is not
 allowed to access the host. If the \fBxuser_lists\fP parameter is set to
 NONE (the default) any user has access.
-If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+If a user is contained both in an access list listed in \fBxuser_lists\fP
 and \fBuser_lists\fP the user is denied access to the host.
 .SS "\fBprojects\fP"
 The \fBprojects\fP parameter contains a comma separated list of projects

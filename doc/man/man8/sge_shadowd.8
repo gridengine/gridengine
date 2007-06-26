@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2005/03/30 14:31:38 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: sge_shadowd.8,v $     Last Update: $Date: 2007/06/26 22:21:14 $     Revision: $Revision: 1.9.20.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2005/03/30 14:31:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHADOWD 8 "$Date: 2007/06/26 22:21:14 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
@@ -40,11 +40,11 @@ xxqs_name_sxx_shadowd \- xxQS_NAMExx shadow master daemon
 .\"
 .SH DESCRIPTION
 .I xxqs_name_sxx_shadowd
-is a "light weight" process which can be run on so-called shadow
+is a "light weight" process which can be run on shadow
 master hosts in a xxQS_NAMExx cluster to detect failure of the current
 xxQS_NAMExx master daemon,
 .M xxqs_name_sxx_qmaster 8 ,
-and to start-up a new
+and to start- p a new
 .M xxqs_name_sxx_qmaster 8
 on the host on which the
 .I xxqs_name_sxx_shadowd
@@ -53,11 +53,11 @@ run a protocol which ensures that only one of them will start-up
 a new master daemon.
 .PP
 The  hosts suitable for being used as shadow master hosts must have
-shared root read/write access to the directory <xxqs_name_sxx_root>/<cell>/common
+shared root read/write access to the directory $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common
 as well as to the master daemon spool directory
-(by default <xxqs_name_sxx_root>/<cell>/spool/qmaster).
+(by default $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster).
 The names of the shadow master hosts need to be contained in the file 
-<xxqs_name_sxx_root>/<cell>/common/shadow_masters.
+$xxQS_NAME_Sxx_ROOT/<$xQS_NAME_Sxx_CELL/common/shadow_masters.
 .\"
 .\"
 .SH RESTRICTIONS
@@ -108,14 +108,14 @@ is started by
 .\"
 .SH "FILES"
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common\fP
 	Default configuration directory
-\fI<xxqs_name_sxx_root>/<cell>/common/shadow_masters\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/shadow_masters\fP
 	Shadow master hostname file.
-\fI<xxqs_name_sxx_root>/<cell>/spool/qmaster\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster\fP
 	Default master daemon spool directory
-\fI<xxqs_name_sxx_root>/<cell>/spool/qmaster/heartbeat\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/qmaster/heartbeat\fP
 	The heartbeat file.
 .fi
 .\"

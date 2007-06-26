@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/19 12:11:51 $     Revision: $Revision: 1.63.2.2 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2007/06/26 22:21:08 $     Revision: $Revision: 1.63.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2007/06/19 12:11:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2007/06/26 22:21:08 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -108,7 +108,7 @@ submit a copy of an existing xxQS_NAMExx job.
 .\"
 .SH DESCRIPTION
 
-.I Qsub
+.I qsub
 submits batch jobs to the xxQS_NAMExx queuing system. xxQS_NAMExx supports
 single- and multiple-node jobs. \fBCommand\fP can be a path to a
 binary or a script (see \fB-b\fP below) which contains the commands to be
@@ -123,7 +123,7 @@ in the script.  If the first two characters of a script line either
 match '#$' or are equal to the prefix string defined with the \fB-C\fP option
 described below, the line is parsed for embedded command flags.
 .PP
-.I Qsh
+.I qsh
 submits an interactive X-windows session to xxQS_NAMExx. An
 .M xterm 1
 is brought up from the executing machine with the display directed either to
@@ -140,7 +140,7 @@ executable.  Note, however, that the \fI\-e\fP and \fI\-ls\fP xterm options
 do not work with
 .I qsh .
 .PP
-.I Qlogin
+.I qlogin
 is similar to
 .I qsh
 in that it submits an interactive job
@@ -153,17 +153,22 @@ establishes a
 .M telnet 1
 connection with the remote host, using
 standard client- and server-side commands. These commands can
-be configured with the \fBqlogin_daemon\fP (server-side,
-xxQS_NAMExx
-.I telnetd
-if not set, otherwise something
-like /usr/sbin/in.telnetd) and \fBqlogin_command\fP (client-side,
-xxQS_NAMExx
-.I telnet
-if not set, otherwise
-something like /usr/bin/telnet) parameters in the global and
+be configured with the \fBqlogin_daemon\fP  and
+\fBqlogin_command\fP in the global and
 local configuration settings of
 .M xxqs_name_sxx_conf 5 .
+
+On the server-side, an 
+xxQS_NAMExx
+.I telnetd
+is used if the parameter is not set. Otherwise, it should be
+set to somethine like /usr/sbin/in.telnetd. 
+On the client side, an
+xxQS_NAMExx
+.I telnet
+is used it the parameter is not set. Otherwise, it should be set to 
+something like /usr/bin/telnet.
+
 The client side command is automatically
 parameterized with the remote host name and port number to which to
 connect, resulting in an invocation like
@@ -171,16 +176,16 @@ connect, resulting in an invocation like
 /usr/bin/telnet my_exec_host 2442
 .PP
 for example.
-.I Qlogin
+.I qlogin
 is invoked exactly like
 .I qsh
 and its jobs can only run on INTERACTIVE queues.
-.I Qlogin
+.I qlogin
 jobs can only be used if the
 .M xxqs_name_sxx_execd 8
 is running under the root account.
 .PP
-.I Qrsh
+.I qrsh
 is similar to 
 .I qlogin
 in that it submits an interactive job to the queuing system. 
@@ -218,14 +223,14 @@ and
 .M rlogin 1
 facilities supplied with the operating system.
 .PP
-.I Qrsh
+.I qrsh
 jobs can only run in INTERACTIVE queues unless the option \fB-now no\fP is
 used (see below).
 They can also only be run, if the 
 .M xxqs_name_sxx_execd 8
 is running under the root account.
 .PP
-.I Qrsh
+.I qrsh
 provides an additional useful feature for integrating with
 interactive tools providing a specific command shell. If the environment
 variable
@@ -242,21 +247,21 @@ command-line.
 The options \fB-cwd\fP,  \fB-v\fP,  \fB-V\fP,  and \fB-display\fP only 
 apply to batch jobs.
 .PP
-.I Qalter
+.I qalter
 can be used to change the attributes of pending jobs. For array jobs
 with a mix of running and pending tasks
 (see the \fB\-t\fP option below), modification with
 .I qalter
 only affects the pending tasks.
-.I Qalter
+.I qalter
 can change most of the 
 characteristics of a job (see the corresponding statements in the OPTIONS 
 section below), including those which were defined as embedded flags in the 
 script file (see above).  Some submit options, such as the job script, cannot
 be changed with
-I. qalter.
+.I qalter.
 .PP
-.I Qresub
+.I qresub
 allows the user to create jobs as copies of existing pending or running
 jobs. The copied jobs will have exactly the same attributes as the ones
 from which they were copied, except with a new job ID. The only modification to
@@ -266,7 +271,7 @@ is assignment of a hold state with the
 \fB\-h\fP option. This option can be used to first copy a job and then change
 its attributes via \fIqalter\fP.
 .PP
-Only a manager can use
+Only a user with manager privileges can use
 .I qresub
 on jobs submitted by another user.  Regular users can only use
 .I qresub
@@ -291,7 +296,7 @@ maintain shared default request files for both
 .I qsub
 and \fIqsh\fP.
 .PP
-A cluster wide default request file
+A cluster-wide default request file
 may be placed under $xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/xxqs_name_sxx_request.
 User private default request files are processed under the
 locations $HOME/.xxqs_name_sxx_request and $cwd/.xxqs_name_sxx_request. The working
@@ -349,7 +354,7 @@ Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Defines or redefines
 the time and date at which a job is eligible for execution. \fBDate_time\fP
-conforms to [[CC]]YY]MMDDhhmm.[ss], where:
+conforms to [[CC]]YY]MMDDhhmm[.SS], where:
 .sp 1
 .nf
 .ta \w'CC  'u
@@ -376,7 +381,7 @@ and
 .M xxqs_name_sxx_execd 8
 are invoked.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -391,7 +396,7 @@ variables for the job.
 Multiple \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP options may be given.
 The order is important here.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-A account_string\fP"
@@ -406,11 +411,11 @@ In the absence of this parameter xxQS_NAMExx
 will place the default account string "xxqs_name_sxx" in the accounting record
 of the job.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-b y[es]|n[o]\fP"
-Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow
+Available for \fIqsub\fP, \fIqrsh\fP only. \fIqalter\fP does not allow
 changing this option. This option cannot be embedded in the script file itself.
 .sp 1
 Gives the user the possibility to indicate explicitly whether
@@ -489,7 +494,7 @@ In the case of \fIqalter\fP, the previous definition of the current working
 directory will be overwritten if \fIqalter\fP is executed from a
 different directory than the preceding \fIqsub\fP or \fIqalter\fP.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -524,7 +529,7 @@ Removes the given variable(s) from the job's context.
 Multiple \fB\-ac\fP, \fB\-dc\fP, and \fB\-sc\fP options may be given.
 The order is important.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-display display_specifier\fP"
@@ -579,10 +584,10 @@ batch jobs the default file name has the form \fIjob_name.\fPe\fIjob_id\fP and
 .sp 1
 If \fBpath\fP is a directory, the standard error stream of the
 job will be put in this directory under the default file name.
-If the pathname contains certain pseudo environment variables,
+If the pathname contains certain pseudo-environment-variables,
 their value will be expanded at runtime of the job and will be used
 to constitute the standard error stream path name. The following
-pseudo environment variables are supported currently:
+pseudo-environment-variables are supported currently:
 .sp 1
 .nf
 .ta \w'$JOB_NAME   'u
@@ -594,7 +599,7 @@ $HOSTNAME	name of the execution host
 $TASK_ID	array job task index number
 .fi
 .sp 1
-Alternatively to $HOME the tilde sign "~" can be used as common in
+The tilde sign ("~")  can be  used as an alternative to $HOME, as is common in
 .M csh 1
 or
 .M ksh 1 .
@@ -603,7 +608,7 @@ so that "~<user>" expands to the home directory of <user>. Using
 another user ID than that of the job owner
 requires corresponding permissions, of course.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -678,13 +683,13 @@ An alternate means to assign hold is provided by the
 .M qhold 1
 facility.
 .sp 1
-If the job is a array job (see the \fB\-t\fP option below), all tasks
+If the job is an array job (see the \fB\-t\fP option below), all tasks
 specified via \fB\-t\fP are affected by the \fB\-h\fP operation
 simultaneously.
 .\"
 .sp 1
-.I Qalter
-allows changing this option even while the job executes. The modified
+.I qalter
+allows changing this option even while the job is executing. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .IP "\fB\-help\fP"
@@ -693,7 +698,7 @@ Prints  a listing of all options.
 .IP "\fB\-hold_jid wc_job_list\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only. See 
 .M sge_types 1 . 
-for \fB\wc_job_list\fP deffinition.
+for \fB\wc_job_list\fP definition.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
 reference by job name or pattern is only accepted if the 
@@ -709,7 +714,7 @@ or on all jobs with the requested name. The name dependencies are
 resolved at submit time and can only be changed via qalter. New
 jobs or name changes of other jobs will not be taken into account.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -731,12 +736,12 @@ the specified host. If the path contains a ":" without a
 .sp 1
 By default /dev/null is the input stream for the job.
 .sp 1
-It is possible to use certain pseudo variables, whose values will be
-expanded at runtime of the job and will be used to express the
+It is possible to use certain pseudo-variables, whose values will be
+expanded at time the job runs and will be used to express the
 standard input stream as described in the \fI-e\fP option for the standard
 error stream.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The
 modified parameter will only be in effect after a restart or migration
 of the job, however.
@@ -799,7 +804,7 @@ is merged into the standard output stream.
 If both the \fB\-j y\fP and the \fB\-e\fP options are present,
 xxQS_NAMExx sets but ignores the error-path attribute.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -857,7 +862,7 @@ soft or hard both in the same command line. In case of a
 serial job multiple \fB\-l\fP switches refine the definition
 for the sought queue.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -881,9 +886,9 @@ have the following meaning:
 `n'     No mail is sent.
 .fi
 .sp 1
-Currently no mail is sent when a job is suspended.
+By default, no mail is sent when a job is suspended.
 .sp 1
-.I Qalter
+.I qalter
 allows changing the b, e, and a option arguments even while the job
 executes. The modification of the b option argument will only be in
 effect after a restart or migration of the job, however.
@@ -894,9 +899,8 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 .sp 1
 Defines or redefines the list of users to which the server that executes
 the job has to send mail, if the server sends mail about the job.
-Default is the job owner at the originating host.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-masterq wc_queue_list\fP"
@@ -904,7 +908,7 @@ Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 Only meaningful for parallel jobs, i.e. together with the -pe option.
 .sp 1
 Defines or redefines a list of cluster queues, queue domains and queue 
-instances which may be used to become the so called
+instances which may be used to become the 
 .I master queue
 of this parallel job. A more detailed description of \fIwc_queue_list\fP 
 can be found in
@@ -919,7 +923,7 @@ A parallel job only has one \fImaster queue\fP.
 This parameter has all the properties of a resource request and will be
 merged with requirements derived from the \fB\-l\fP option described above.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The
 modified parameter will only be in effect after a restart or migration of
 the job, however.
@@ -943,7 +947,7 @@ and SIGUSR2 in some early Posix thread implementations. You might not want
 to use the \fB\-notify\fP option if you are running multi-threaded applications
 in your jobs under Linux, particularly on 2.0 or earlier kernels.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-now y[es]|n[o]\fP"                        
@@ -975,21 +979,21 @@ any directory pathname has been removed from the
 script-name. If the script is read from standard
 input, the job name defaults to STDIN.
 .br
-In the case of
+If 
 .I qsh
 or
 .I qlogin
-with the \fB\-N\fP option is absent, the string `INTERACT' is 
+is run without  the \fB\-N\fP option, the string `INTERACT' is 
 assigned to the job.
 .br
-In the case of 
+If 
 .I qrsh
-if the \fB\-N\fP option is absent, the resulting job name is determined from 
+is run without the \fB\-N\fP option, the resulting job name is determined from 
 the qrsh command line by using the argument string up to the first occurrence 
 of a semicolon or whitespace and removing the directory pathname.
 .br
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-noshell\fP"
@@ -1039,7 +1043,7 @@ output has the form \fIjob_name.\fPo\fIjob_id\fP and
 \fIjob_name.\fPo\fIjob_id\fP.\fBtask_id\fP for array job tasks (see
 \fB\-t\fP option below).
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1077,7 +1081,7 @@ earlier eligible for being dispatched by the xxQS_NAMExx scheduler.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
-Parallel programming environment (PE) to instantiate. The
+Start parallel programming environment (PE). The
 range descriptor behind the PE name specifies the number of
 parallel processes to be run. xxQS_NAMExx will allocate the
 appropriate resources as available. The
@@ -1104,7 +1108,7 @@ and so forth.
 If additional \fB\-l\fP options are present, they restrict the
 set of eligible queues for the parallel job.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1120,7 +1124,7 @@ This parameter has all the properties of a resource request and
 will be merged with requirements derived from the \fB\-l\fP option
 described above.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1152,9 +1156,9 @@ Interactive jobs submitted with
 .I qrsh
 or
 .I qlogin
-are not rerunnable.
+are not re-runnable.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 
@@ -1173,7 +1177,7 @@ Contexts provide a way to dynamically attach and remove meta-information
 to and from a job. The context variables are \fBnot\fP passed to the job's
 execution context in its environment.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes.
 .\"
 .IP "\fB\-shell y[es]|n[o]\fP"
@@ -1276,8 +1280,8 @@ assignments define the interpreting shell for the job if the host is the
 execution host. The shell path without host specification is used if the
 execution host matches none of the hosts in the list.
 .sp 1
-Furthermore, the pathname can be constructed with pseudo environment
-variables as described for the \fB\-e\fP option above.
+Furthermore, the pathname can be constructed with pseudo-environment-variables 
+as described for the \fB\-e\fP option above.
 .sp 1
 In the case of
 .I qsh
@@ -1287,7 +1291,7 @@ corresponding command interpreter in the
 (via its \fI\-e\fP option) 
 started on behalf of the interactive job. 
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1304,7 +1308,7 @@ environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP. The option arguments n, m and 
 .sp 1
 .nf
 .RS
-Following restrictions apply to the values n and m:
+The following restrictions apply to the values n and m:
 .sp 1
 .RS
 1 <= n <= MIN(2^31-1, max_aj_tasks)
@@ -1327,7 +1331,7 @@ All array job tasks inherit the same resource requests and attribute
 definitions as specified in the \fIqsub\fP or \fIqalter\fP command line,
 except for the \fB\-t\fP option. The tasks are scheduled independently and,
 provided enough resources exist, concurrently, very much like separate jobs.
-However, an array job or a sub-array there of can be accessed as a single unit
+An array job or a sub-array can be accessed, however,  as a single unit
 by commands like
 .M qmod 1
 or
@@ -1346,7 +1350,7 @@ with the default location
 .fi
 .sp 1
 In order to change this default, the \fB\-e\fP and \fB\-o\fP options (see
-above) can be used together with the pseudo environment variables $HOME,
+above) can be used together with the pseudo-environment-variables $HOME,
 $USER, $JOB_ID, $JOB_NAME, $HOSTNAME, and $xxQS_NAME_Sxx_TASK_ID.
 .sp 1
 Note, that you can use the output redirection to divert the output of all
@@ -1385,7 +1389,7 @@ the environment variables defined as arguments to the switch and,
 optionally, values of specified variables, to the execution context of
 the job.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1412,8 +1416,8 @@ session.
 .IP "\fB\-verify\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
-Instead of submitting a job, prints detailed information about the would-be job
-as though
+Instead of submitting a job, this option prints detailed information about the 
+would-be job as though
 .M qstat 1
 -j were used, including the effects of command-line parameters and the external 
 environment.
@@ -1475,7 +1479,7 @@ corresponding
 configuration files are present (see
 .M xxqs_name_sxx_aliases 5 ).
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1495,7 +1499,7 @@ Available for \fIqsub\fP, \fIqrsh\fP and \fIqalter\fP only.
 Arguments to the job. Not valid if the script is entered from standard
 input.
 .sp 1
-.I Qalter
+.I qalter
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
@@ -1579,10 +1583,9 @@ submitting client.
 .PP
 Furthermore, xxQS_NAMExx sets additional variables into the
 job's environment, as listed below.
-.IP "ARC"
 .IP "SGE_ARCH" 1.5i
 The xxQS_NAMExx architecture name of the node on which the job is
-running. The name is compiled-in into the
+running. The name is compiled into the
 .M xxqs_name_sxx_execd 8
 binary.
 .IP xxQS_NAME_Sxx_CKPT_ENV 1.5i
@@ -1825,16 +1828,16 @@ a.out
 \fI$REQUEST.peJID[.TASKID]\fR	STDERR of par. env. of job
 \fI$REQUEST.hostsJID[.TASKID]\fR	hosts file of par. env. of job
 .PP
-.ta \w'<xxqs_name_sxx_root>/.xxqs_name_sxx_aliases   'u
+.ta \w'$xxQS_NAME_Sxx_ROOT/.xxqs_name_sxx_aliases   'u
 \fI$cwd/.xxqs_name_sxx_aliases\fR	cwd path aliases
 \fI$cwd/.xxqs_name_sxx_request\fR	cwd default request
 \fI$HOME/.xxqs_name_sxx_aliases\fR	user path aliases
 \fI$HOME/.xxqs_name_sxx_request\fR	user default request
-\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_aliases\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/xxqs_name_sxx_aliases\fP
 	cluster path aliases
-\fI<xxqs_name_sxx_root>/<cell>/common/xxqs_name_sxx_request\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/xxqs_name_sxx_request\fP
 	cluster default request
-\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi
 .\"
@@ -1870,6 +1873,6 @@ Berkeley and its contributors.
 .sp 1
 See
 .M xxqs_name_sxx_intro 1
-as well as the information provided in <xxqs_name_sxx_root>/3rd_party/qrsh
-and <xxqs_name_sxx_root>/3rd_party/qlogin
+as well as the information provided in $xxQS_NAME_Sxx_ROOT/3rd_party/qrsh
+and $xxQS_NAME_Sxx_ROOT/3rd_party/qlogin
 for a statement of further rights and permissions.

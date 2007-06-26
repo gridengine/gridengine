@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2004/08/11 13:38:23 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2007/06/26 22:21:13 $     Revision: $Revision: 1.11.26.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2004/08/11 13:38:23 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2007/06/26 22:21:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
@@ -99,7 +99,7 @@ service "sge_execd" instead to define that port.
 .\"
 .SH RESTRICTIONS
 .I xxqs_name_sxx_qmaster
-is usually started from root on the master or shadow master machines of the
+is usually started by root on the master or shadow master machines of the
 cluster (refer to the
 .I xxQS_NAMExx Installation and Administration Guide
 for more information about the configuration of shadow master hosts).
@@ -110,14 +110,14 @@ by that same user are handled correctly by the system.
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/configuration\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/configuration\fP
 	xxQS_NAMExx global configuration
-\fI<xxqs_name_sxx_root>/<cell>/common/local_conf/<host>\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/local_conf/<host>\fP
 	xxQS_NAMExx host specific configuration
-\fI<xxqs_name_sxx_root>/<cell>/common/qmaster_args\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/qmaster_args\fP
 	\fIxxqs_name_sxx_qmaster\fP argument file
-\fI<xxqs_name_sxx_root>/<cell>/spool\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool\fP
 	Default master spool directory
 .fi
 .\"

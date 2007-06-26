@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qtcsh.1,v $     Last Update: $Date: 2004/11/12 15:40:03 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qtcsh.1,v $     Last Update: $Date: 2007/06/26 22:21:08 $     Revision: $Revision: 1.8.26.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QTCSH 1 "$Date: 2004/11/12 15:40:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QTCSH 1 "$Date: 2007/06/26 22:21:08 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qtcsh \- tcsh v6.09 with transparent remote execution by use of qrsh.
 .\"
@@ -45,14 +45,14 @@ qtcsh \- tcsh v6.09 with transparent remote execution by use of qrsh.
 .\"
 .SH DESCRIPTION
 .\"
-.I Qtcsh
+.I qtcsh
 is an extension to the popular
 .M csh 1
 derivative \fItcsh\fP. It allows the transparent remote execution commands
 entered in
 .I qtcsh
 controlled via xxQS_NAMExx.
-.I Qtcsh
+.I qtcsh
 can be used as interactive command interpreter as well as for the
 processing of
 .I tcsh
@@ -62,7 +62,7 @@ When invoked,
 .I qtcsh
 identifies which commands are to be
 run remotely and which are not. For this purpose the files
-<xxqs_name_sxx_root>/<cell>/common/qtask and ~/.qtask are processed. Each
+$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/qtask and ~/.qtask are processed. Each
 line in these files defines a command that is intended to be run remotely
 (see
 .M qtask 5
@@ -77,9 +77,9 @@ file are completely overridden in case
 there is an appropriate entry in the users
 .M qtask 5
 file.  This is prevented in case an exclamation mark is prefixed
-to the command name in the administrators qtask file.
+to the command name in the administrator's qtask file.
 .sp 1
-.I Qtcsh
+.I qtcsh
 always attempts to start the designated tasks remotely via
 .M qrsh 1 .
 Exceptions are
@@ -105,7 +105,7 @@ to use
 as login shell without the danger of being blocked when no xxQS_NAMExx
 service is available.
 .PP
-.I Qtcsh
+.I qtcsh
 can operate in three different modes determining whether
 .IP "\(bu" 3n
 tasks are executed remotely.
@@ -126,7 +126,7 @@ as described in section \fBBUILT-IN COMMANDS\fP.
 .\"
 .SH OPTIONS
 .\"
-The options enlisted below are special to \fIqtcsh\fP. The user
+The options listed below are special to \fIqtcsh\fP. The user
 is referred to the
 .M tcsh 1
 documentation for the explanation of further options.
@@ -226,7 +226,7 @@ mode is activated implicitly as if the \fB\-L\fP option was specified.
 .nf
 .ta \w'~/.qtask       'u
 \fI~/.qtask\fP	user qtask file.
-\fI<xxqs_name_sxx_root>/<cell>/common/qtask\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/qtask\fP
 	cluster qtask file.
 .fi
 .\"
@@ -237,11 +237,11 @@ mode is activated implicitly as if the \fB\-L\fP option was specified.
 .M qtask 5
 as well as
 .M tcsh 1
-under <xxqs_name_sxx_root>/3rd_party/qtcsh.
+under $xxQS_NAME_Sxx_ROOT/3rd_party/qtcsh.
 .\"
 .\"
 .SH "COPYRIGHT"
-.I Qtcsh
+.I qtcsh
 contains portions of
 .I tcsh
 which is copyrighted by The Regents of the University of California.
@@ -251,5 +251,5 @@ California, Berkeley and its contributors.
 .sp 1
 See
 .M xxqs_name_sxx_intro 1
-and the information provided in <xxqs_name_sxx_root>/3rd_party/qtcsh
+and the information provided in $xxQS_NAME_Sxx_ROOT/3rd_party/qtcsh
 for a statement of further rights and permissions.

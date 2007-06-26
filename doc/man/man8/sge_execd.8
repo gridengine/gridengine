@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2007/06/05 16:25:15 $     Revision: $Revision: 1.8.2.1 $
+.\" $RCSfile: sge_execd.8,v $     Last Update: $Date: 2007/06/26 22:21:13 $     Revision: $Revision: 1.8.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2007/06/05 16:25:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_EXECD 8 "$Date: 2007/06/26 22:21:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_execd \- xxQS_NAMExx job execution agent
 .\"
@@ -162,14 +162,14 @@ password  file  will  be   used   by  \fBsge_execd\fB. To change the contents
 of this file please use the \fBsgepasswd\fB command. It is not advised to  change  
 that file manually.
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/configuration\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/configuration\fP
 	xxQS_NAMExx global configuration
-\fI<xxqs_name_sxx_root>/<cell>/common/local_conf/<host>\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/local_conf/<host>\fP
 	xxQS_NAMExx host specific configuration
-\fI<xxqs_name_sxx_root>/<cell>/spool/<host>\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/spool/<host>\fP
 	Default execution host spool directory
-\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi
 .\"

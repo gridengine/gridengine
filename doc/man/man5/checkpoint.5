@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2007/02/14 13:34:15 $     Revision: $Revision: 1.9.2.1 $
+.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2007/06/26 22:21:12 $     Revision: $Revision: 1.9.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH CHECKPOINT 5 "$Date: 2007/02/14 13:34:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH CHECKPOINT 5 "$Date: 2007/06/26 22:21:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 checkpoint \- xxQS_NAMExx checkpointing environment configuration file format
@@ -37,7 +37,7 @@ checkpoint \- xxQS_NAMExx checkpointing environment configuration file format
 .\"
 .SH DESCRIPTION
 Checkpointing is a facility to save the complete status of an executing
-program or job and to restore and restart from this so called checkpoint
+program or job and to restore and restart from this checkpoint
 at a later point of time if the original program or job was halted, e.g.
 through a system crash.
 .PP
@@ -45,17 +45,17 @@ xxQS_NAMExx provides various levels of checkpointing support (see
 .M xxqs_name_sxx_ckpt 1 ).
 The checkpointing environment described here is a means to configure
 the different types of checkpointing in use for your xxQS_NAMExx cluster or
-parts thereof. For that purpose you can define the operations which
-have to be executed in initiating a checkpoint generation, a migration
-of a checkpoint to another host or a restart of a checkpointed
-application as well as the list of queues which are eligible for a
+parts thereof. For that purpose you can define: the operations which
+have to be executed in initiating a checkpoint generation in migration
+a checkpoint to another host  or in restarting a checkpointed
+application; the list of queues which are eligible for a
 checkpointing method.
 .PP
 Supporting different operating systems may easily force xxQS_NAMExx to 
 introduce operating system dependencies for the configuration of the 
 checkpointing configuration file and updates of the supported operating 
 system versions may lead to frequently changing implementation details. 
-Please refer to the <xxqs_name_sxx_root>/ckpt directory for more 
+Please refer to the $xxQS_NAME_Sxx_ROOT/ckpt directory for more 
 information.
 .PP
 Please use the \fI\-ackpt\fP, \fI\-dckpt\fP, \fI\-mckpt\fP or \fI\-sckpt\fP
@@ -66,7 +66,7 @@ use the corresponding
 .M qmon 1
 dialogue for X-Windows based interactive configuration.
 .PP
-Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
+Note: xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a
 space (" ") character before any interpretation.
 .\"

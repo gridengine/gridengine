@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2007/01/23 10:05:22 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2007/06/26 22:21:10 $     Revision: $Revision: 1.13.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2007/01/23 10:05:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2007/06/26 22:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -46,7 +46,7 @@ to derive accounting statistics.
 Each job is represented by a line in the accounting file. Empty lines
 and lines which contain one character or less are ignored.
 Accounting record entries are
-separated by colon (':') signs. The entries denote in their order
+separated by colon (':'). The entries denote in their order
 of appearance:
 .SS "\fBqname\fP"
 Name of the cluster queue in which the job has run.
@@ -71,13 +71,13 @@ Priority value assigned to the job corresponding to the \fBpriority\fP
 parameter in the queue configuration (see
 .M queue_conf 5 ).
 .SS "\fBsubmission_time\fP"
-Submission time (GMT unix time stamp).
+Submission time (GMT Unix time stamp).
 For slave tasks of tightly integrated parallel jobs, the submission_time is 
 always set to 0.
 .SS "\fBstart_time\fP"
-Start time (GMT unix time stamp).
+Start time (GMT Unix time stamp).
 .SS "\fBend_time\fP"
-End time (GMT unix time stamp).
+End time (GMT Unix time stamp).
 .SS "\fBfailed\fP"
 Indicates the problem which occurred in case a job could not be started on 
 the execution host (e.g. because the owner of the job did not have a valid 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2007/06/26 22:21:09 $     Revision: $Revision: 1.14.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2007/06/26 22:21:09 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -83,7 +83,7 @@ of information for wall-clock time, cpu-time, and system time
 for the categories of hostname, queue-name, group-name,
 owner-name, job-name, job-ID and for the queues meeting the resource
 requirements as specified with the \fB\-l\fP switch.
-Combinations of each category are permitted. Alternatively, all
+Combinations of category are permitted. Alternatively, all
 or specific jobs can be listed with the \fB\-j\fP switch.
 For example the
 search criteria could include summarizing for a queue and an
@@ -134,7 +134,7 @@ command.
 .IP "\fB\-j\fP [[\fBwc_queue_name\fP]]"
 The name, a expression for matching names, or ID of the job during execution 
 for which accounting information is printed. If neither a name nor an ID 
-is given all jobs are enlisted.
+is given all jobs are listed.
 .br
 This option changes the output format of
 \fIqacct\fP. If activated, CPU times are no longer accumulated but the
@@ -184,7 +184,7 @@ Please see there also for further information on array jobs.
 .IP "\fB\-P\fP [\fBProject\fP]"
 The name of the project for which usage is summarized.
 If \fBProject\fP is not given, accounting data is
-listed for each owning project separately.
+listed for each project separately.
 .\"
 .IP "\fB\-D\fP [\fBDepartment\fP]"
 The name of the department for which usage is summarized.
@@ -236,10 +236,10 @@ service "sge_execd" instead to define that port.
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_name_sxx_root>/     'u
-\fI<xxqs_name_sxx_root>/<cell>/common/accounting\fP
+.ta \w'$xxQS_NAME_Sxx_ROOT/     'u
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/accounting\fP
 	xxQS_NAMExx default accounting file
-\fI<xxqs_nam_sexx_root>/<cell>/common/act_qmaster\fP
+\fI$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi
 .\"

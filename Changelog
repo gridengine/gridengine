@@ -1,3 +1,6 @@
+RD-2007-06-27-0: Bugfix:    added -m64 in aimk for sol-amd64 and SunStudio 12
+                 Review:    MD
+
 JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
                             configured as transport, and CTRL-C was pressed.
                  Bugster:   6573508

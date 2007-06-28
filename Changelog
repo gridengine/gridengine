@@ -1,3 +1,8 @@
+RN-2007-06-28-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
+	         Bugster:   6433628
+		 Issue:     2307
+		 Review:    JG
+
 RD-2007-06-27-0: Bugfix:    added -m64 in aimk for sol-amd64 and SunStudio 12
                  Review:    MD
 

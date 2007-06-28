@@ -860,7 +860,7 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
 {
    lList *lp = lGetList (ep, nm);
    lListElem *vep = NULL;
-   bool first = true;
+   bool first = true, has_elems = false;
    
    DENTER(TOP_LAYER, "write_QU_consumable_config_list");
 
@@ -877,6 +877,9 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
       if (strcmp (name, "slots") != 0) {
          const char *strval = NULL;
          
+         /* we want to know if any elements from the list are available or not*/
+         has_elems = true;
+
          /* Print a separating space for all elements after the first */
          if (first) {
             first = false;
@@ -903,5 +906,9 @@ static int write_QU_consumable_config_list(const lListElem *ep, int nm,
       }
    }
    
+   /* for CR 6433628, adding NONE string when there are no complex values */
+   if (!has_elems){
+      sge_dstring_append(buffer, NONE_STR);
+   }  
    DRETURN(1);
 }

@@ -1,3 +1,8 @@
+RN-2007-06-28-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
+	         Bugster:   6433628
+		 Issue:     2307
+		 Review:    JG
+
 AA-2007-06-26-0: Bugix:     - Qmon Job Control Window: Incomprehensible Priority Button
                             - Double clicking in Consumables/Fixed Attributes list...
                             - complex attributes whose deletion is denied...

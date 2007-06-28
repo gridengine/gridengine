@@ -1,3 +1,8 @@
+OJ-2007-06-28-0: Bugfix: Merged in SGE 6.1 resource quota enhancements
+                 Bugster: 6542137 6551568, 6550718
+                 Issue: 2238, 2239
+		 Review: AH
+
 OJ-2007-06-26-0: Bugfix: Spelling, usage errors in  man pages
                  Bugster: Not filed
 		 Issue:   Not filed

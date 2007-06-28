@@ -219,9 +219,10 @@ const char* sge_get_schedd_text( int nr )
 
       case SCHEDD_INFO_JOBDYNAMICALLIMIT_SS   :
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT_SS      ;
-            
-      case SCHEDD_INFO_CANNOTRUNRQSGLOBAL_S:
-         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_S;
+
+      case SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS:
+         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS; 
+
 /* */
 
       case SCHEDD_INFO_CANNOTRUNATHOST          :
@@ -375,7 +376,7 @@ const char* sge_get_schedd_text( int nr )
          return MSG_SCHEDD_INFO_JOBDYNAMICALLIMIT;
 
       case SCHEDD_INFO_CANNOTRUNRQSGLOBAL:
-         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL;
+         return MSG_SCHEDD_INFO_CANNOTRUNRQSGLOBAL; 
 
       default:
          return "";

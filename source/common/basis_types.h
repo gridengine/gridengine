@@ -118,6 +118,7 @@ extern "C" {
 #endif
 
 #define U_LONG32_MAX 4294967295UL
+#define LONG32_MAX 2147483647
 
 /* set sge_u32 and sge_x32 for 64 or 32 bit machines */
 /* sge_uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */

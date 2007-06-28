@@ -79,7 +79,7 @@ int sge_split_suspended(lList **queue_list, lList **suspended);
 
 enum { 
    DISPATCH_TIME_NOW = 0, 
-   DISPATCH_TIME_QUEUE_END = MAX_ULONG32 
+   DISPATCH_TIME_QUEUE_END = LONG32_MAX
 };
 
 enum { 
@@ -95,6 +95,9 @@ typedef struct {
    lListElem  *job;               /* the job (JB_Type)                              */
    lListElem  *ja_task;           /* the task (JAT_Type) (if NULL only reschedule   */
                                   /* unknown verification is missing)               */
+   const char* user;              /* user name (JB_owner)                           */
+   const char* group;             /* group name (JB_group)                          */
+   const char* project;           /* project name (JB_project)                      */
    lListElem  *ckpt;              /* the checkpoint interface (CK_Type)             */
    lListElem  *gep;               /* the global host (EH_Type)                      */
    u_long32   duration;           /* jobs time of the assignment                    */
@@ -114,7 +117,7 @@ typedef struct {
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
+#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
@@ -144,7 +147,8 @@ bool is_requested(lList *req, const char *attr);
 
 dispatch_t 
 sge_queue_match_static(lListElem *queue, lListElem *job, const lListElem *pe, 
-                       const lListElem *ckpt, lList *centry_list, lList *acl_list, lList *hgrp_list);
+                       const lListElem *ckpt, lList *centry_list, lList *acl_list,
+                       lList *hgrp_list);
 
 dispatch_t
 sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host, lList *centry_list, 

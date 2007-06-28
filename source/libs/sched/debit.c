@@ -49,10 +49,18 @@
 #include "sge_log.h"
 #include "msg_schedd.h"
 #include "sched/sge_resource_quota_schedd.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_host.h"
+
 
 static int 
 debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 
                       lList *complex_list, order_t *orders);
+
+static int
+debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem *pe,
+                   lList *centry_list, lList *acl_list, lList *hgrp_list);
+
 
 /* -------------------------------------------------------------
 
@@ -233,5 +241,55 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
    sge_dstring_free(&queue_name);
 
    DEXIT;
-   return ret;
+   DRETURN(ret);
+}
+
+/****** sge_resource_quota_schedd/debit_job_from_rqs() **********************************
+*  NAME
+*     debit_job_from_rqs() -- debits job in all relevant resource quotas
+*
+*  SYNOPSIS
+*     int debit_job_from_rqs(lListElem *job, lList *granted, lListElem* pe, 
+*     lList *centry_list) 
+*
+*  FUNCTION
+*     The function debits in all relevant rule the requested amout of resources.
+*
+*  INPUTS
+*     lListElem *job     - job request (JB_Type)
+*     lList *granted     - granted list (JG_Type)
+*     lListElem* pe      - granted pe (PE_Type)
+*     lList *centry_list - consumable resouces list (CE_Type)
+*
+*  RESULT
+*     int - always 0
+*
+*  NOTES
+*     MT-NOTE: debit_job_from_rqs() is not MT safe 
+*
+*******************************************************************************/
+static int
+debit_job_from_rqs(lListElem *job, lList *granted, lList *rqs_list, lListElem* pe,
+                   lList *centry_list, lList *acl_list, lList *hgrp_list) 
+{
+   lListElem *gel = NULL;
+
+   DENTER(TOP_LAYER, "debit_job_from_rqs");
+
+   /* debit for all hosts */
+   for_each(gel, granted) {
+      const char* pe_name = NULL;
+      lListElem *rqs = NULL;
+      int slots = lGetUlong(gel, JG_slots);
+
+      if (pe != NULL) {
+         pe_name =  lGetString(pe, PE_name);
+      }
+
+      for_each (rqs, rqs_list) {
+         rqs_debit_consumable(rqs, job, gel, pe_name, centry_list, acl_list, hgrp_list, slots);
+      }
+   }
+
+   DRETURN(0);
 }

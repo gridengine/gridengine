@@ -41,6 +41,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_qref.h"
 #include "msg_common.h"
 #include "uti/sge_log.h"
 #include "uti/sge_parse_num_par.h"
@@ -1139,29 +1140,80 @@ rqs_is_matching_rule(lListElem *rule, const char *user, const char *group, const
 {
       DENTER(TOP_LAYER, "rqs_is_matching_rule");
 
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, master_hgroup_list, group)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, master_userset_list, NULL, group)) {
          DPRINTF(("user doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_projects), FILTER_PROJECTS, project, NULL, NULL, NULL)) {
          DPRINTF(("project doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_pes), FILTER_PES, pe, NULL, NULL, NULL)) {
          DPRINTF(("pe doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_queues), FILTER_QUEUES, queue, NULL, NULL, NULL)) {
          DPRINTF(("queue doesn't match\n"));
          DRETURN(false);
       }
-      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, master_userset_list, master_hgroup_list, NULL)) {
+      if (!rqs_filter_match(lGetObject(rule, RQR_filter_hosts), FILTER_HOSTS, host, NULL, master_hgroup_list, NULL)) {
          DPRINTF(("host doesn't match\n"));
          DRETURN(false);
       }
 
       DRETURN(true);
 }
+
+
+
+/****** sge_resource_quota/rqs_match_host_scope() ******************************
+*  NAME
+*     rqs_match_host_scope() -- Match name with host scope
+*
+*  SYNOPSIS
+*     static bool rqs_match_host_scope(lList *scope, const char *name, lList 
+*     *master_hgroup_list) 
+*
+*  FUNCTION
+*     The function matches the passed name with the host scope. Name
+*     may not only be a hostname, but also host group name or a wildcard
+*     expression. For performance reasons qref_list_host_rejected() is
+*     used for matching, if we got no pattern and no hostgroup.
+*
+*  INPUTS
+*     lList *scope              - A scope list (ST_Type)
+*     const char *name          - hostname/hostgroup name/wildcard expression
+*     lList *master_hgroup_list - the host group list (HGRP_Type)
+*
+*  RESULT
+*     bool - Returns true if 'name' matches
+*
+*  NOTES
+*     MT-NOTE: rqs_match_host_scope() is MT safe 
+*******************************************************************************/
+static bool rqs_match_host_scope(lList *scope, const char *name, lList *master_hgroup_list) 
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "rqs_match_host_scope");
+
+   if (lGetElemStr(scope, ST_name, "*")) {
+      DRETURN(true);
+   }
+   
+   if (sge_is_pattern(name) || is_hgroup_name(name)) {
+      DRETURN(rqs_match_user_host_scope(scope, FILTER_HOSTS, name, NULL, master_hgroup_list, NULL));
+   }
+
+   /* at this stage we know 'name' is a simple hostname or hostgroup name */
+   for_each(ep, scope) {
+      if (!qref_list_host_rejected(lGetString(ep, ST_name), name, master_hgroup_list)) {
+         DRETURN(true);
+      }
+   }
+   DRETURN(false);
+}
+
 
 
 /****** sge_resource_quota/rqs_filter_match() *******************************
@@ -1204,15 +1256,25 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
       lList* xscope = lGetList(filter, RQRF_xscope);
 
       switch (filter_type) {
-         case FILTER_USERS:
          case FILTER_HOSTS:
+            DPRINTF(("matching hosts with %s\n", value));
+            /* inverse logic because of xscope */
+            ret = rqs_match_host_scope(xscope, value, master_hgroup_list) ? false: true;
+            if (ret == true) { 
+               bool found = rqs_match_host_scope(scope, value, master_hgroup_list);
+               if (scope != NULL && found == false) {
+                  ret = false;
+               }
+            }
+            break;
+
+         case FILTER_USERS:
          {  
             DPRINTF(("matching users or hosts with %s\n", value));
             /* inverse logic because of xscope */
-            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, master_hgroup_list, group) ? false: true;
+            ret = rqs_match_user_host_scope(xscope, filter_type, value, master_userset_list, NULL, group) ? false: true;
             if (ret == true) { 
-               bool found = false;
-               found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, master_hgroup_list, group);
+               bool found = rqs_match_user_host_scope(scope, filter_type, value, master_userset_list, NULL, group);
                if (scope != NULL && found == false) {
                   ret = false;
                }
@@ -1267,52 +1329,6 @@ rqs_filter_match(lListElem *filter, int filter_type, const char *value, lList *m
    }
 
    DRETURN(ret);
-}
-
-/****** sge_resource_quota/sge_user_is_referenced_in_rqs() ************************
-*  NAME
-*     sge_user_is_referenced_in_rqs() -- search for user reference in rqs 
-*
-*  SYNOPSIS
-*     bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, 
-*     lList *acl_list) 
-*
-*  FUNCTION
-*     Search for a user reference in the resource quota sets
-*
-*  INPUTS
-*     const lList *rqs - resource quota set list
-*     const char *user  - user to search
-*     const char *group - user's group
-*     lList *acl_list   - acl list for user resolving
-*
-*  RESULT
-*     bool - true if user was found
-*            false if user was not found
-*
-*  NOTES
-*     MT-NOTE: sge_user_is_referenced_in_rqs() is MT safe 
-*
-*******************************************************************************/
-bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list)
-{
-   bool ret = false;
-   lListElem *ep;
-
-   for_each(ep, rqs) {
-      lList *rule_list = lGetList(ep, RQS_rule);
-      lListElem *rule;
-      for_each(rule, rule_list) {
-         if (rqs_filter_match(lGetObject(rule, RQR_filter_users), FILTER_USERS, user, acl_list, NULL, group)) {
-            ret = true;
-            break;
-         }
-      }
-      if (ret == true) {
-         break;
-      }
-   }
-   return ret;
 }
 
 /****** sge_resource_quota/sge_centry_referenced_in_rqs() *************************

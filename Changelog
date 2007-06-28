@@ -1,3 +1,13 @@
+AH-2007-06-28-0: Bugfix:    - parallel resource reservation broken when non-queue 
+                              instance based quotas limits apply
+                            - sort out queues/hosts unsuited due to RQS
+                            - call job_has_soft_requests() only once per assignment
+                            - move RQS scheduling code from sge_select_queue.c into
+                              sge_resource_quota_schedd.c
+                 Bugster:   6571749
+                 Issue:     2303
+                 Review:    AA
+
 RN-2007-06-28-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
 	         Bugster:   6433628
 		 Issue:     2307
@@ -107,8 +117,8 @@ AH-2007-06-15-0: Bugfix:    - Integrated resource quota and queue matching code
                             - Added quick exit for parallel matching code when just 
                               a single slot is requested 
                             - Duplicate scheduling info messages for reservation jobs
-                            - Resource reservation broken for jobs depending on RQS  
-                              specified for subset of queues only 
+                            - Resource reservation broken for sequential jobs depending 
+                              on RQS  specified for subset of queues only 
                             - Fixed issue with wildcard PE requests being used during
                               parallel matching for a specific PE
                  Bugster:   6564461,6569088

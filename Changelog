@@ -1,16 +1,19 @@
-AA-2007-06-29-0: Bugfix: incomplete fix of AA-2007-06-18-0
-                         /etc/services worked, set ports didn't
-                 Review: MD
+RD-2007-06-29-0: Bugfix:    duration offset config was ignored
+                 Review:    PJ 
 
-OJ-2007-06-28-0: Bugfix: Merged in SGE 6.1 resource quota enhancements
-                 Bugster: 6542137 6551568, 6550718
-                 Issue: 2238, 2239
-		 Review: AH
+AA-2007-06-29-0: Bugfix:   incomplete fix of AA-2007-06-18-0
+                           /etc/services worked, set ports didn't
+                 Review:   MD
 
-OJ-2007-06-26-0: Bugfix: Spelling, usage errors in  man pages
-                 Bugster: Not filed
-		 Issue:   Not filed
-		 Review:  DT
+OJ-2007-06-28-0: Bugfix:   Merged in SGE 6.1 resource quota enhancements
+                 Bugster:  6542137 6551568, 6550718
+                 Issue:    2238, 2239
+                 Review:   AH
+
+OJ-2007-06-26-0: Bugfix:   Spelling, usage errors in  man pages
+                 Bugster:  Not filed
+                 Issue:    Not filed
+                 Review:   DT
 
 JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
                             configured as transport, and CTRL-C was pressed.

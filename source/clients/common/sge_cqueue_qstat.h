@@ -63,4 +63,7 @@ int select_by_queue_state(u_long32 queue_states, lList *exechost_list, lList *qu
 int select_by_resource_list(lList *resource_list, lList *exechost_list, lList *queue_list, lList *centry_list, u_long32 empty_qs);
 bool is_cqueue_selected(lList *queue_list);
 
+int
+qinstance_slots_reserved_now(const lListElem *this_elem);
+
 #endif /* __SGE_CQUEUE_QSTAT */

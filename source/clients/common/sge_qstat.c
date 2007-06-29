@@ -1395,7 +1395,7 @@ static int handle_queue(lListElem *q, qstat_env_t *qstat_env, qstat_handler_t *h
    qinstance_print_qtype_to_dstring(q, &type_string, true);
    summary.queue_type = sge_dstring_get_string(&type_string);
 
-   summary.resv_slots = qinstance_slots_reserved(q);
+   summary.resv_slots = qinstance_slots_reserved_now(q);
    summary.used_slots = qinstance_slots_used(q);
    summary.free_slots = (int)lGetUlong(q, QU_job_slots);
 

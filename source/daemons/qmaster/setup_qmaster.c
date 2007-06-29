@@ -1005,8 +1005,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
                lSetUlong(jep, JB_script_size, len);
 
                unlink(lGetString(jep, JB_exec_file));
-            }
-            else {
+            } else {
                printf("could not read in script file\n");
             }
          }
@@ -1087,6 +1086,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       lList *ar_master_list = *object_base[SGE_TYPE_AR].list;
 
       next_ar = lFirst(ar_master_list);
+
       while((ar = next_ar)) {
          te_event_t ev = NULL;
 
@@ -1116,20 +1116,22 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
             sge_ar_remove_all_jobs(ctx, ar_id, 1, &monitor);
 
+            ar_do_reservation(ar, false);
+
             reporting_create_ar_log_record(NULL, ar, ARL_TERMINATED, 
                                      "end time of AR reached",
                                      now);  
             reporting_create_ar_acct_records(NULL, ar, now);                        
-            ar = lDechainElem(ar_master_list, ar);
 
             sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
+
+            lRemoveElem(ar_master_list, &ar);
 
             spool_delete_object(&answer_list, spool_get_default_context(), 
                                 SGE_TYPE_AR, 
                                 sge_dstring_get_string(&buffer),
                                 ctx->get_job_spooling(ctx));                     
 
-            lFreeElem(&ar);
             sge_dstring_free(&buffer);
 
          }

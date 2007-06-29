@@ -146,7 +146,7 @@ bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
          pw = sge_getpwnam_r(name, &pw_struct, buffer, size);
          
          if (pw == NULL) {
-           answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_USER_XISNOKNOWNUSER_S, name);
+           answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_USER_XISNOKNOWNUSER_S, name);
            FREE(buffer);
            DRETURN(false);
          }

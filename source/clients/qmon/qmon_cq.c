@@ -2177,7 +2177,7 @@ static void qmonCQUpdateQIMatrix(void)
                sge_dstring_free(&type_string);
             }
             /* number of used/free slots */
-            sprintf(to_print, "%d/%d/%d ", qinstance_slots_reserved(qp), qinstance_slots_used(qp),
+            sprintf(to_print, "%d/%d/%d ", qinstance_slots_reserved_now(qp), qinstance_slots_used(qp),
                      (int)lGetUlong(qp, QU_job_slots));
             sprintf(buf, "%-9.9s ", to_print);   
 #ifndef QI_SORTING

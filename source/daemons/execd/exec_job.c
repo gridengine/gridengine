@@ -1588,7 +1588,7 @@ int err_length) {
    if (i != 0) { /* parent or -1 */
       sigprocmask(SIG_SETMASK, &sigset_oset, NULL);
 
-      if(petep == NULL) {
+      if (petep == NULL) {
          /* nothing to be done for petasks: We do not signal single petasks, but always the whole jatask */
          lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
          lSetUlong(jatep, JAT_pending_signal, 0);

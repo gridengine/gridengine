@@ -1542,7 +1542,7 @@ ar_list_has_reservation_for_pe_with_slots(lList *ar_master_list,
 *
 *  FUNCTION
 *     The function creates the list AR_reserved_queues that stores the necessary
-*     data to debit jobs in a AR. The Elements in the queue are a reducted
+*     data to debit jobs in a AR. The Elements in the queue are a reduced
 *     element of type QI_Type
 *
 *  INPUTS

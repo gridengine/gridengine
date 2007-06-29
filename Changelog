@@ -1,3 +1,6 @@
+DT-2007-06-29-0: Enhancem.: o Fixed license text for JavaDocs
+                 Changed:   build.properties
+
 AA-2007-06-29-0: Bugfix: incomplete fix of AA-2007-06-18-0
                          /etc/services worked, set ports didn't
                  Review: MD
@@ -11,6 +14,7 @@ RD-2007-06-29-0: Bugfix:    - qstat didn't showed the current reserved slots
 
 DT-2007-06-28-0: Enhancem.: o Added license text to JavaDocs
                             o Added missing Changelog history
+                 Changed:   build.properties, classes/build.xml
 
 AH-2007-06-28-0: Bugfix:    - parallel resource reservation broken when non-queue 
                               instance based quotas limits apply

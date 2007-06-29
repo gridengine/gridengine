@@ -661,8 +661,6 @@ DTRACE;
             JB_wtcontr,
             JB_rrcontr,
             JB_script_file,
-            JB_soft_wallclock_gmt,
-            JB_hard_wallclock_gmt,
             JB_reserve,
             JB_ja_tasks,
             JB_ar,

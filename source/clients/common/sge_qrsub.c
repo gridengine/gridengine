@@ -137,17 +137,22 @@ bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
       if (!is_hgroup_name(name)) {
          struct passwd *pw;
          struct passwd pw_struct;
-         char buffer[2048];
+         char *buffer;
+         int size;
          stringT group;
 
-         pw = sge_getpwnam_r(name, &pw_struct, buffer, sizeof(buffer));
+         size = get_pw_buffer_size();
+         buffer = sge_malloc(size);
+         pw = sge_getpwnam_r(name, &pw_struct, buffer, size);
          
          if (pw == NULL) {
-           answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_USER_XISNOKNOWNUSER_S, name);
+           answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_USER_XISNOKNOWNUSER_S, name);
+           FREE(buffer);
            DRETURN(false);
          }
          sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
          lSetString(ep, ARA_group, group);
+         FREE(buffer);
       }
 
       if (is_xacl) {

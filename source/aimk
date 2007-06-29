@@ -1599,9 +1599,19 @@ case SOLARISAMD64:
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
       else if ( $BUILDARCH == SOLARISAMD64 ) then
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
-         set MEMFLAG = "-xarch=amd64"
-         set LFLAGS = "-xarch=amd64 $LFLAGS"
-	      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
+         
+         set compversion = `cc -V |& head -1 | cut -f4 -d" "`
+         set major = `echo $compversion | cut -f1 -d"."`
+         set minor = `echo $compversion | cut -f2 -d"."`
+         if ($major <= 5 && $minor <= 8) then
+            set MEMFLAG = "-xarch=amd64"
+            set LFLAGS = "-xarch=amd64 $LFLAGS"
+            set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
+         else
+            set MEMFLAG = "-m64"
+            set LFLAGS = "-m64 $LFLAGS"
+            set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -m64"
+         endif
       else
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
          set MEMFLAG = "-xarch=generic"

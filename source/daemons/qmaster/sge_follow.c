@@ -80,6 +80,7 @@
 #include "sge_cqueue.h"
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
@@ -281,10 +282,21 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (!pe) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -2;
+            DRETURN(-2);
          }
          lSetString(jatp, JAT_granted_pe, or_pe);  /* free me on error! */
+      }
+
+      if (lGetUlong(jep, JB_ar)) {
+         lListElem *ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, lGetUlong(jep, JB_ar));
+         if (!ar) {
+            ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,
+                   sge_u32c(lGetUlong(jep, JB_ar)),
+                   sge_u32c(lGetUlong(jep, JB_job_number))));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DRETURN(-2);
+         }
+         lSetUlong(jatp, JAT_wallclock_limit, (lGetUlong(ar, AR_end_time) - sge_get_gmt() - sconf_get_duration_offset()));
       }
 
       master_qep = NULL;

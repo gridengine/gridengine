@@ -1,6 +1,13 @@
-AA-2007-06-29-0: Bugfix: incomplete fix of AA-2007-06-18-0
-                         /etc/services worked, set ports didn't
-                 Review: MD
+RD-2007-06-29-0: Bugfix:    - qstat didn't showed the current reserved slots
+                            - fixed acl handling for advance reservation
+                            - duration offset was not enforced for AR jobs
+                            - duration offset config was ignored
+                            - fixed masterq scheduling for AR jobs
+                 Review:    PJ
+
+AA-2007-06-29-0: Bugfix:    incomplete fix of AA-2007-06-18-0
+                            /etc/services worked, set ports didn't
+                 Review:    MD
 
 JG-2007-06-26-1: Bugfix:    qrsh with command reported an error when ssh was 
                             configured as transport, and CTRL-C was pressed.

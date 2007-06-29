@@ -93,6 +93,7 @@
 #include "sched/sge_resource_quota_schedd.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_hgroup.h"
 #include "uti/sge_time.h"
 
 /* -- these implement helpers for the category optimization -------- */
@@ -476,11 +477,11 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
             pe_name = lGetString(pe, PE_name);
 
             best_result = parallel_maximize_slots_pe(best, &available_slots);
-            if (result != DISPATCH_OK) {
+            if (best_result != DISPATCH_OK) {
                schedd_mes_add(best->job_id, SCHEDD_INFO_PESLOTSNOTINRANGE_SI, pe_name, available_slots); 
             }
-            DPRINTF(("### AR ### assignment in PE \"%s\" with %d soft violations\n",
-                  lGetString(best->pe, PE_name), best->soft_violations));
+            DPRINTF(("### AR ### assignment in PE \"%s\" with %d soft violations and %d available slots\n",
+                  pe_name, best->soft_violations, available_slots));
          }
       } else { 
          for_each(pe, pe_list) {
@@ -1511,9 +1512,6 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
       if (lGetSubStr(ar_ep, QU_full_name, qinstance_name, AR_reserved_queues) == NULL) {
          schedd_mes_add_global(SCHEDD_INFO_QNOTARRESERVED_SI, qinstance_name, ar_id);
          DRETURN(DISPATCH_NEVER_CAT);
-      } else {
-         /* we can return because all of the other tests are already checked at AR reservation time */
-         DRETURN(DISPATCH_OK);
       }
    } else {
       /* this is not advance reservation job, we have to drop queues in orphaned state */
@@ -7198,22 +7196,82 @@ static dispatch_t match_static_advance_reservation(const sge_assignment_t *a)
 {
    dispatch_t result = DISPATCH_OK;
    lListElem *ar;
+   u_long32 ar_id = lGetUlong(a->job, JB_ar);
 
    DENTER(TOP_LAYER, "match_static_advance_reservation");
 
 
-   if (lGetUlong(a->job, JB_ar) != 0) {
-      if ((ar = lGetElemUlong(a->ar_list, AR_id, lGetUlong(a->job, JB_ar))) != NULL) {
+   if (ar_id != 0) {
+      if ((ar = lGetElemUlong(a->ar_list, AR_id, ar_id)) != NULL) {
+         lList *acl_list;
+
          if (!(a->is_job_verify)) {
             /* is ar in error and error handling is not soft? */
             if (lGetUlong(ar, AR_state) == AR_ERROR && lGetUlong(ar, AR_error_handling) != 0) {
-               schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, lGetUlong(a->job, JB_ar)); 
+               schedd_mes_add(a->job_id, SCHEDD_INFO_ARISINERROR_I, ar_id); 
                DRETURN(DISPATCH_NEVER_CAT);
             }
             
             /* is ar running? */
             if (lGetUlong(ar, AR_state) != AR_RUNNING) {
                schedd_mes_add(a->job_id, SCHEDD_INFO_EXECTIME_); 
+               DRETURN(DISPATCH_NEVER_CAT);
+            }
+         }
+
+         /* has user access? */
+         if ((acl_list = lGetList(ar, AR_xacl_list))) {
+            lListElem *acl_ep;
+            for_each(acl_ep, acl_list) {
+               const char* user = lGetString(acl_ep, ARA_name);
+
+               if (!is_hgroup_name(user)) {
+                  if (strcmp(a->user, user) == 0) {
+                     break;
+                  }
+               } else {
+                  /* skip preattached \@ sign */
+                  const char *acl_name = ++user;
+                  lListElem *userset_list = lGetElemStr(a->acl_list, US_name, acl_name);
+
+                  if (sge_contained_in_access_list(a->user, a->group, userset_list, NULL) == 1) {
+                     break;
+                  }
+               }
+            }
+            if (acl_ep != NULL){
+               dstring buffer = DSTRING_INIT;
+               sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
+               schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)); 
+               sge_dstring_free(&buffer);
+               DRETURN(DISPATCH_NEVER_CAT);
+            }
+         }
+         
+         if ((acl_list = lGetList(ar, AR_acl_list))) {
+            lListElem *acl_ep;
+            for_each(acl_ep, acl_list) {
+               const char *user = lGetString(acl_ep, ARA_name);
+
+               if (!is_hgroup_name(user)) {
+                  if (strcmp(a->user, user) == 0) {
+                     break;
+                  }
+               } else {
+                  /* skip preattached \@ sign */
+                  const char *acl_name = ++user;
+                  lListElem *userset_list = lGetElemStr(a->acl_list, US_name, acl_name);
+
+                  if (sge_contained_in_access_list(a->user, a->group, userset_list, NULL) == 1) {
+                     break;
+                  }
+               }
+            }
+            if (acl_ep == NULL){
+               dstring buffer = DSTRING_INIT;
+               sge_dstring_sprintf(&buffer, sge_U32CFormat, sge_u32c(ar_id));
+               schedd_mes_add(a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS, SGE_OBJ_AR, sge_dstring_get_string(&buffer)); 
+               sge_dstring_free(&buffer);
                DRETURN(DISPATCH_NEVER_CAT);
             }
          }

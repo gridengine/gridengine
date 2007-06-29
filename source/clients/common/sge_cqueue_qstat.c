@@ -56,6 +56,8 @@
 #include "sge_complex_schedd.h"
 #include "sge_schedd_conf.h"
 #include "sge_parse_num_par.h"
+#include "sched/sge_resource_utilization.h"
+#include "uti/sge_time.h"
 
 #include "msg_clients_common.h"
 
@@ -109,7 +111,7 @@ bool cqueue_calculate_summary(const lListElem *cqueue,
          bool has_value_from_object;
 
          used_slots = qinstance_slots_used(qinstance);
-         resv_slots = qinstance_slots_reserved(qinstance);
+         resv_slots = qinstance_slots_reserved_now(qinstance);
          (*used) += used_slots;
          (*resv) += resv_slots;
          (*total) += slots;
@@ -730,4 +732,42 @@ bool is_cqueue_selected(lList *queue_list)
 
    DEXIT;
    return a_cqueue_is_selected;
+}
+
+/****** sge_cqueue_qstat/qinstance_slots_reserved_now() ************************
+*  NAME
+*     qinstance_slots_reserved_now() -- get current reserved slots
+*
+*  SYNOPSIS
+*     int qinstance_slots_reserved_now(const lListElem *this_elem) 
+*
+*  FUNCTION
+*     rturns the current amount of reserved slots
+*
+*  INPUTS
+*     const lListElem *this_elem - queue elem (QU_Type)
+*
+*  RESULT
+*     int - number of currently reserved slots
+*
+*  NOTES
+*     MT-NOTE: qinstance_slots_reserved_now() is MT safe 
+*
+*  SEE ALSO
+*     qinstance_slots_reserved()
+*******************************************************************************/
+int qinstance_slots_reserved_now(const lListElem *this_elem)
+{
+   int ret = 0;
+   lListElem *slots;
+   u_long32 now = sge_get_gmt();
+   
+   DENTER(TOP_LAYER, "qinstance_slots_reserved_now");
+
+   slots = lGetSubStr(this_elem, RUE_name, SGE_ATTR_SLOTS, QU_resource_utilization);
+   if (slots != NULL) {
+      ret = utilization_max(slots, now, 0);
+   } 
+
+   DRETURN(ret);
 }

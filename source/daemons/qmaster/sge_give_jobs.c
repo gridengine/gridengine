@@ -1018,7 +1018,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
    lList *master_userset_list = *object_base[SGE_TYPE_USERSET].list;
    lList *master_hgroup_list = *object_base[SGE_TYPE_HGROUP].list;
    lList *master_rqs_list = *object_base[SGE_TYPE_RQS].list;
-   lList *master_ar_list = *object_base[SGE_TYPE_AR].list;
    lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
    lListElem *rqs = NULL;
    lListElem *ep = NULL;
@@ -1027,8 +1026,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
-   u_long32 task_wallclock = U_LONG32_MAX;
-   bool compute_qwallclock = false;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -1040,53 +1037,31 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
    switch (mode) {
    case COMMIT_ST_SENT:
+   {
+      lList *master_ar_list = *object_base[SGE_TYPE_AR].list;
+
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
-
-      if (!job_get_wallclock_limit(&task_wallclock, jep)) {
-         compute_qwallclock = true;
-      }
 
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
       global_host_ep = host_list_locate(master_exechost_list, "global");
       for_each(ep, gdil) {
+         lListElem *ar = NULL;
          u_long32 ar_id = lGetUlong(jep, JB_ar);
          const char *queue_name = lGetString(ep, JG_qname);
          lListElem *queue = NULL;
-         lListElem *ar = NULL;
          
          if ((queue = cqueue_list_locate_qinstance(master_cqueue_list, queue_name)) == NULL) {
             ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
                       queue_name, sge_u32c(lGetUlong(jep, JB_job_number))));
          } else if (ar_id != 0 && (ar = lGetElemUlong(master_ar_list, AR_id, ar_id)) == NULL) {
-             ERROR((SGE_EVENT, "can't find advance reservation "sge_U32CFormat" referenced in job "sge_U32CFormat,
-                    sge_u32c(ar_id), sge_u32c(lGetUlong(jep, JB_job_number))));
+            ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,
+                  sge_u32c(ar_id), sge_u32c(lGetUlong(jep, JB_job_number))));
          } else {
             const char *queue_hostname = lGetHost(queue, QU_qhostname);
-            const char *limit = NULL;
             int tmp_slot = lGetUlong(ep, JG_slots);
             lListElem *host;
-
-            if (compute_qwallclock) {
-               limit = lGetString(queue, QU_h_rt);
-               if (strcasecmp(limit, "infinity") != 0) {
-                  u_long32 clock_val;
-                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
-                  task_wallclock = MIN(task_wallclock, clock_val);
-               } else {
-                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
-               }
-
-               limit = lGetString(queue, QU_s_rt);
-               if (strcasecmp(limit, "infinity") != 0) {
-                  u_long32 clock_val;
-                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
-                  task_wallclock = MIN(task_wallclock, clock_val);
-               } else {
-                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
-               }
-            }
 
             /* debit consumable resources */ 
             if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot) > 0) {
@@ -1130,7 +1105,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   dstring buffer = DSTRING_INIT;
                   /* this info is not spooled */
                   sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
-                  sge_add_event(0, sgeE_AR_MOD, 0, 0, 
+                  sge_add_event(0, sgeE_AR_MOD, ar_id, 0, 
                                 sge_dstring_get_string(&buffer), NULL, NULL, ar);
                   lListElem_clear_changed_info(ar);
                   sge_dstring_free(&buffer);
@@ -1138,8 +1113,6 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             }
          }
       }
-
-      lSetUlong(jatep, JAT_wallclock_limit, task_wallclock);
 
       /* 
        * Would be nice if we could use a more accurate start time that could be reported 
@@ -1157,7 +1130,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          answer_list_output(&answer_list);
       }
       break;
-
+   }
    case COMMIT_ST_ARRIVED:
       lSetUlong(jatep, JAT_status, JRUNNING);
       reporting_create_job_log(NULL, now, JL_DELIVERED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_DELIVERED);

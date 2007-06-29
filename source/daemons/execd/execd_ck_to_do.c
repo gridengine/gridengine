@@ -497,7 +497,7 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
       next_signal = now + SIGNAL_RESEND_INTERVAL;
       /* resend signals to shepherds */
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
+         for_each(jatep, lGetList(jep, JB_ja_tasks)) {
 
             /* don't start wallclock before job acutally started */
             if (lGetUlong(jatep, JAT_status) == JWAITING4OSJID ||
@@ -505,14 +505,21 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
                continue;
 
             if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
-               lList *gdil_list = lGetList(jatep, 
+               u_long32 task_wallclock_limit = lGetUlong(jatep, JAT_wallclock_limit);
+               lList *gdil_list = lGetList(jatep,
                                            JAT_granted_destin_identifier_list);
+
                lSetUlong(jep, JB_soft_wallclock_gmt, 
                          execd_get_wallclock_limit(qualified_hostname, gdil_list, QU_s_rt, now));
                lSetUlong(jep, JB_hard_wallclock_gmt, 
                          execd_get_wallclock_limit(qualified_hostname, gdil_list, QU_h_rt, now));
-            }
 
+               if (task_wallclock_limit != 0) {
+                  lSetUlong(jep, JB_hard_wallclock_gmt, 
+                            MIN(lGetUlong(jep, JB_hard_wallclock_gmt), (now + task_wallclock_limit)));
+               }
+            }
+            
             if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {
                if (!(lGetUlong(jatep, JAT_pending_signal_delivery_time)) ||
                    (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {

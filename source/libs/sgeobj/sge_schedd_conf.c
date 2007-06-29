@@ -3645,7 +3645,7 @@ static bool sconf_eval_set_duration_offset(lList *param_list, lList **answer_lis
       pos.s_duration_offset = DEFAULT_DURATION_OFFSET; 
       return false;
    }
-   pos.s_duration_offset = DEFAULT_DURATION_OFFSET;
+   pos.s_duration_offset = uval;
 
    return true;
 }

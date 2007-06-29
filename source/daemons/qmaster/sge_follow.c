@@ -292,7 +292,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (!ar) {
             ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,
                    sge_u32c(lGetUlong(jep, JB_ar)),
-                   sge_u32c(lGetUlong(jep, JB_job_number)));
+                   sge_u32c(lGetUlong(jep, JB_job_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
          }

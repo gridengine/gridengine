@@ -133,7 +133,7 @@ int sge_get_qmaster_port(bool *from_services) {
    if (next_timeout > 0 ) {
       DPRINTF(("reresolve port timeout in "sge_U32CFormat"\n", sge_u32c( next_timeout - now.tv_sec)));
    }
-   if ( cached_port >= 0 && next_timeout > now.tv_sec ) {
+   if (cached_port >= 0 && next_timeout > now.tv_sec) {
       int_port = cached_port;
       DPRINTF(("returning cached port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
       sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -155,6 +155,9 @@ int sge_get_qmaster_port(bool *from_services) {
       se_help = sge_getservbyname_r(&se_result, "sge_qmaster", buffer, sizeof(buffer));
       if (se_help != NULL) {
          int_port = ntohs(se_help->s_port);
+         if (int_port > 0 && from_services) {
+            *from_services = true;
+         }
       }
    }
 
@@ -176,9 +179,6 @@ int sge_get_qmaster_port(bool *from_services) {
       /* set new port value */
       cached_port = int_port;
 
-      if (from_services) {
-         *from_services = true;
-      }
    }
 
    sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);

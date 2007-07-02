@@ -1,4 +1,7 @@
-DT-2007-06-29-0: Enhancem.: o Fixed license text for JavaDocs
+DT-2007-07-02-0: Bugfix:    o Last fix for license text for JavaDocs
+                 Changed:   build.properties
+
+DT-2007-06-29-0: Bugfix:    o Fixed license text for JavaDocs
                  Changed:   build.properties
 
 AA-2007-06-29-0: Bugfix: incomplete fix of AA-2007-06-18-0

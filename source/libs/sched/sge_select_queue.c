@@ -4855,7 +4855,7 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
 
       /* should be impossible to reach here without a master host */
       if (!master_hep) { 
-         ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERHOST_U, a->job_id));
+         ERROR((SGE_EVENT, MSG_SCHEDD_NOMASTERHOST_U, sge_u32c(a->job_id)));
          DRETURN(MATCH_LATER);
       }
 

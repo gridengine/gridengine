@@ -338,7 +338,7 @@ static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonCalendarModify");
 
    /*
-   ** on ocalning the dialog fill in the old values
+   ** on opening the dialog fill in the old values
    */
    XtVaGetValues( cal_names,
                   XmNselectedItems, &calnames,
@@ -359,8 +359,6 @@ static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
          XtManageChild(cal_ask_layout);
       }
    }
-
-   XtManageChild(cal_ask_layout);
 
    DEXIT;
 }

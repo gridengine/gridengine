@@ -1,3 +1,9 @@
+AA-2007-07-02-0: Bugfix:    - in qmon, under calendar configuration, it is possible
+                              to modify even if no calendar exists
+                 Bugster:   6513115
+                 Issue:     2320 
+                 Review:    RD
+
 RD-2007-06-29-0: Bugfix:    duration offset config was ignored
                  Review:    PJ
 

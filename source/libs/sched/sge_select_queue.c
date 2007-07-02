@@ -3264,13 +3264,13 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                /* check limit or reuse earlier results */
                if ((rql=lGetElemStr(limit_list, RQL_name, limit))) {
                   tt_rqs = lGetUlong(rql, RQL_time);
-                  rqs_result = lGetUlong(rql, RQL_result);
+                  rqs_result = (dispatch_t)lGetInt(rql, RQL_result);
                } else {
                   /* Check booked usage */
                   rqs_result = rqs_limitation_reached(a, rule, host_name, queue_name, &tt_rqs);
 
                   rql = lAddElemStr(&limit_list, RQL_name, limit, RQL_Type);
-                  lSetUlong(rql, RQL_result, rqs_result);
+                  lSetInt(rql, RQL_result, rqs_result);
                   lSetUlong(rql, RQL_time, tt_rqs);
 
                   if (rqs_result != DISPATCH_OK) {
@@ -5069,15 +5069,13 @@ static int parallel_make_granted_destination_id_list( sge_assignment_t *a)
             }
 
             if (slots != 0) {
-	       const char *owner=NULL;
                accu_host_slots += slots;
                host_slots -= slots;
                total_soft_violations += slots * lGetUlong(qep, QU_soft_violation);
 
                /* build gdil for that queue */
-               owner = a->user;
                DPRINTF((sge_u32": %d slots in queue %s user %s (host_slots = %d)\n", 
-                  a->job_id, slots, qname, lGetString(a->job, JB_owner), host_slots));
+                        a->job_id, slots, qname, a->user, host_slots));
 
                if (!(gdil_ep=lGetElemStr(gdil, JG_qname, qname))) {
                   gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);

@@ -338,13 +338,12 @@ static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonCalendarModify");
 
    /*
-   ** on ocalning the dialog fill in the old values
+   ** on opening the dialog fill in the old values
    */
    XtVaGetValues( cal_names,
                   XmNselectedItems, &calnames,
                   XmNselectedItemCount, &calnum,
                   NULL);
-   
    if (calnum == 1 && 
          XmStringGetLtoR(calnames[0], XmFONTLIST_DEFAULT_TAG, &calstr)) {
       XmtInputFieldSetString(cal_name_w, calstr);
@@ -359,8 +358,6 @@ static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
          XtManageChild(cal_ask_layout);
       }
    }
-
-   XtManageChild(cal_ask_layout);
 
    DEXIT;
 }
@@ -474,10 +471,11 @@ static void qmonCalendarDelete(Widget w, XtPointer cld, XtPointer cad)
          XtVaGetValues( cal_names,
                         XmNitemCount, &itemCount,
                         NULL);
-         if (itemCount)
+         if (itemCount) {
             XmListSelectPos(cal_names, 1, True);
-         else
+         } else {
             qmonCalendarFillConf(cal_names, NULL);
+         }   
 
       }
       lFreeList(&lp);

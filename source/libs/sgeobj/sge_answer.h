@@ -131,4 +131,9 @@ void answer_list_replace(lList **answer_list, lList **new_list);
 
 void answer_list_append_list(lList **answer_list, lList **new_list);
 
+int show_answer(lList *alp);
+
+int show_answer_list(lList *alp);
+
+
 #endif /* __SGE_ANSWER_H */

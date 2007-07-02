@@ -519,7 +519,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
                                                request->cp, request->enp);
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
          answer_list_add(&(answer->alp), SGE_EVENT, 
-                         STATUS_OK, ANSWER_QUALITY_INFO);
+                         STATUS_OK, ANSWER_QUALITY_END);
          gdi_request_pack_result(answer, &local_answer_list, pb);
          DEXIT;
          return;
@@ -537,7 +537,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
                                       request->enp, false, NULL);
 
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          lFreeList(&conf);
       }
       gdi_request_pack_result(answer, &local_answer_list, pb);
@@ -555,7 +555,7 @@ sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request,
          answer->lp = lSelectHashPack("qmaster_response", conf, request->cp, 
                                       request->enp, false, NULL);
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          lFreeList(&conf);
       }
       gdi_request_pack_result(answer, &local_answer_list, pb);
@@ -629,9 +629,12 @@ fprintf(stderr, "\n");
                                          request->enp, false, NULL);
 #endif
 
+            /* DIRTY HACK: The "ok" message should be removed from the answer list
+               05/21/2007 qualitiy was ANSWER_QUALITY_INFO but this results in "ok"
+               messages on qconf side */
             sprintf(SGE_EVENT, MSG_GDI_OKNL);
             answer_list_add(&(answer->alp), SGE_EVENT, 
-                            STATUS_OK, ANSWER_QUALITY_INFO);
+                            STATUS_OK, ANSWER_QUALITY_END);
 
 #if !USE_OLD_IMPL
             /*
@@ -653,8 +656,7 @@ fprintf(stderr, "\n");
 
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    }
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 
@@ -684,7 +686,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
 
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    DEXIT;
    return 0;
@@ -718,7 +720,7 @@ static int do_gdi_get_config_list(sge_gdi_request *aReq, sge_gdi_request *aRes, 
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
 
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    DEXIT;
    return 0;
@@ -738,7 +740,7 @@ static int do_gdi_get_sc_config_list(sge_gdi_request *aReq, sge_gdi_request *aRe
    *anAfterCnt = lGetNumberOfElem(aRes->lp);
 
    sprintf(SGE_EVENT, MSG_GDI_OKNL);
-   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   answer_list_add(&(aRes->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
    lFreeList(&conf);
    
@@ -898,13 +900,13 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                   
                   if (request->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], request->commproc)) {
                      sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target, monitor);
-                  } 
-                  else {
+                  } else {
                      sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
                   }
                   break;
             }
          } /* for_each request */
+
          if (request->target == SGE_ORDER_LIST) {
             sge_commit();
             sge_set_next_spooling_time();
@@ -938,8 +940,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
       lFreeList(&ticket_orders);
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /*
@@ -1218,7 +1219,7 @@ static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_r
    }
 
   sprintf(SGE_EVENT, MSG_GDI_OKNL);
-  answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO); 
+  answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END); 
   DEXIT;
   return;
 }
@@ -1752,14 +1753,12 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       */  
       break;
    default:
-      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 
@@ -1807,8 +1806,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          if (!is_locked) {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          }
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
       break;
 
@@ -1823,8 +1821,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          if (!is_locked) {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          }
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
       break;
 
@@ -1841,8 +1838,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
             if (!is_locked) {
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
             }
-            DEXIT;
-            return 1;
+            DRETURN(1);
          }
          break;
       }    
@@ -1853,8 +1849,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
          if (!is_locked) {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
          }
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
       break;
 
@@ -1870,24 +1865,21 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
         if (!is_locked) {
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
         }
-        DEXIT;
-        return 1;
+        DRETURN(1);
       }
       break;
    default:
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
    
    if (!is_locked) {
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /*
@@ -2032,8 +2024,7 @@ monitoring_t *monitor
    if (!instructions || !object) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* ep is no element of this type, if ep doesn't contain the the primary key attribute */
@@ -2041,8 +2032,7 @@ monitoring_t *monitor
    {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(object->key_nm), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* 
@@ -2052,13 +2042,11 @@ monitoring_t *monitor
    if ( object->key_nm == EH_name || 
         object->key_nm == AH_name || 
         object->key_nm == SH_name ) {
-      if ( sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK )
-      {
+      if (sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK) {
          const char *host = lGetHost(instructions, object->key_nm);    
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host ? host : "NULL"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
+         DRETURN(STATUS_EUNKNOWN);
       }
    }
 
@@ -2077,8 +2065,7 @@ monitoring_t *monitor
    if (name == NULL) {
       answer_list_add(alpp, MSG_OBJ_NAME_MISSING,
                       STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    /* prevent duplicates / modifying non existing objects */
@@ -2088,8 +2075,7 @@ monitoring_t *monitor
             MSG_SGETEXT_ALREADYEXISTS_SS:MSG_SGETEXT_DOESNOTEXIST_SS, 
             object->object_name, name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    /* create a new object (add case), or make a copy of the old object (mod case) */
@@ -2098,8 +2084,7 @@ monitoring_t *monitor
          : lCopyElem(old_obj)))) {
       ERROR((SGE_EVENT, MSG_MEM_MALLOC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+      DRETURN(STATUS_EEXIST);
    }
 
    /* modify the new object base on information in the request */
@@ -2129,8 +2114,7 @@ monitoring_t *monitor
    if (object->writer(ctx, alpp, new_obj, object)) {
       lFreeElem(&new_obj);
       lFreeList(&tmp_alp);
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    if (alpp != NULL) {
@@ -2148,7 +2132,6 @@ monitoring_t *monitor
          } 
       }
    }
-
    lFreeList(&tmp_alp);
    {
       lList **master_list = NULL;
@@ -2182,8 +2165,7 @@ monitoring_t *monitor
 
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
     
-   DEXIT;
-   return STATUS_OK;
+   DRETURN(STATUS_OK);
 }
 
 /*
@@ -2195,14 +2177,13 @@ gdi_object_t *get_gdi_object(u_long32 target)
 
    DENTER(TOP_LAYER, "get_gdi_object");
 
-   for (i=0; gdi_object[i].target; i++)
+   for (i=0; gdi_object[i].target; i++) {
       if (target == gdi_object[i].target) {
-         DEXIT;
-         return &gdi_object[i];
+         DRETURN(&gdi_object[i]);
       }
+   }
 
-   DEXIT;
-   return NULL;
+   DRETURN(NULL);
 }
 
 static int schedd_mod(

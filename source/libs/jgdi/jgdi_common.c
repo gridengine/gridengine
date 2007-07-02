@@ -447,16 +447,6 @@ jgdi_result_t listelem_to_obj(JNIEnv *env, lListElem *ep, jobject *obj, const lD
        DRETURN(ret);
    }
    
-   /* --------------------------------------------------------------------------
-      Quick and dirty hack to support the primitive types Manager and
-      Operator
-      TODO generate this code
-      ------------------------------------------------------------------------*/
-   if (descr == Manager_Type || descr == Operator_Type) {
-      *obj = (*env)->NewStringUTF(env, lGetString(ep, MO_name));
-      ret = JGDI_SUCCESS;
-      DRETURN(ret);
-   }
 
    /* Get the descriptor class of the bean class */
    if ((ret=Util_static_getDescriptor(env, clazz, &obj_descr, alpp)) != JGDI_SUCCESS) {
@@ -502,30 +492,6 @@ jgdi_result_t obj_to_listelem(JNIEnv *env, jobject obj, lListElem **elem, const 
       ret = JGDI_SUCCESS;
       goto error;
    }
-   /* --------------------------------------------------------------------------
-      Quick and Dirty Hack to support Operator_Type and Manager_Type
-      TODO generate this code and use the information from the cull definition
-      ------------------------------------------------------------------------*/
-   if (descr == Manager_Type || descr == Operator_Type) {
-      const char* name = NULL;
-      *elem = lCreateElem(descr);
-      if (!(*elem)) {
-         answer_list_add(alpp, "lCreateElem failed", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         ret = JGDI_ILLEGAL_STATE;
-         goto error;
-      }
-      name = (*env)->GetStringUTFChars(env, (jstring)obj, 0);
-      if (name == NULL) {
-         answer_list_add(alpp, "obj_to_listelem: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-         ret = JGDI_ERROR;
-         goto error;
-      }
-      lSetString(*elem,MO_name, name);
-      (*env)->ReleaseStringUTFChars(env, (jstring)obj, name);
-      ret = JGDI_SUCCESS;
-      goto error;
-   }
-   
    
    if ((ret = Object_getClass(env, obj, &clazz, alpp)) != JGDI_SUCCESS) {
       goto error;
@@ -3825,6 +3791,9 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
               }
             }
          }   
+         lFreeList(&lp);
+      } else if (target_list == SGE_CONFIG_LIST) {
+         alp = ctx->gdi(ctx, target_list, SGE_GDI_MOD, &lp, where, what);
          lFreeList(&lp);
       } else {   
          alp = ctx->gdi(ctx, target_list, SGE_GDI_ADD | SGE_GDI_SET_ALL, &lp, where, what);

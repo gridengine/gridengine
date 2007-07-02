@@ -47,6 +47,7 @@
 #define ANSWER_LAYER CULL_LAYER
 
 static bool answer_is_recoverable(const lListElem *answer);
+static bool answer_log(lListElem *answer);
 
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
@@ -484,7 +485,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 *                                 answer_quality_t quality) 
 *
 *  FUNCTION
-*     The function returns true if the "answer_list" contains
+*     The function returns true (1) if the "answer_list" contains
 *     at least one answer element with the given "quality". 
 *
 *  INPUTS
@@ -929,24 +930,7 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
 
    if (answer_list != NULL && *answer_list != NULL) {
       for_each(answer, *answer_list) {
-         switch (lGetUlong(answer, AN_quality)) {
-            case ANSWER_QUALITY_CRITICAL:
-               CRITICAL((SGE_EVENT, lGetString(answer, AN_text)));
-               ret = true;
-               break;
-            case ANSWER_QUALITY_ERROR:
-               ERROR((SGE_EVENT, lGetString(answer, AN_text)));
-               ret = true;
-               break;
-            case ANSWER_QUALITY_WARNING:
-               WARNING((SGE_EVENT, lGetString(answer, AN_text)));
-               break;
-            case ANSWER_QUALITY_INFO:
-               INFO((SGE_EVENT, lGetString(answer, AN_text)));
-               break;
-            default:
-               break;
-         }
+         ret = answer_log(answer);
       }
       if (is_free_list) {
          lFreeList(answer_list);
@@ -955,6 +939,59 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
 
    DEXIT;
    return ret;
+}
+
+/****** sgeobj/answer/answer_log() ****************************
+*  NAME
+*     answer_log() -- output answer
+*
+*  SYNOPSIS
+*     bool
+*     answer_log(lListElem *answer)
+*
+*  FUNCTION
+*     Prints the message contained in "answer". 
+*     The CRITICAL, ERROR, WARNING and INFO macros will be used for output.
+*
+*  INPUTS
+*     lListElem *answer       - AN_Type element 
+*
+*  RESULT
+*     bool - true if answer is an error, false otherwise and if answer == NULL 
+*
+*  NOTES
+*     MT-NOTE: answer_log() is MT safe
+******************************************************************************/
+static bool answer_log(lListElem *answer) {
+
+   bool ret = false;
+
+   DENTER(ANSWER_LAYER, "answer_log");
+
+   if (!answer) {
+      DRETURN(ret);
+   }
+
+   switch (lGetUlong(answer, AN_quality)) {
+      case ANSWER_QUALITY_CRITICAL:
+         CRITICAL((SGE_EVENT, lGetString(answer, AN_text)));
+         ret = true;
+         break;
+      case ANSWER_QUALITY_ERROR:
+         ERROR((SGE_EVENT, lGetString(answer, AN_text)));
+         ret = true;
+         break;
+      case ANSWER_QUALITY_WARNING:
+         WARNING((SGE_EVENT, lGetString(answer, AN_text)));
+         break;
+      case ANSWER_QUALITY_INFO:
+         INFO((SGE_EVENT, lGetString(answer, AN_text)));
+         break;
+      default:
+         break;
+   }
+
+   DRETURN(ret);
 }
 
 /****** sgeobj/answer/answer_list_output() ****************************
@@ -983,7 +1020,56 @@ bool answer_list_log(lList **answer_list, bool is_free_list) {
 *  NOTES
 *     MT-NOTE: answer_list_output() is MT safe
 ******************************************************************************/
-
 bool answer_list_output(lList **answer_list) {
    return answer_list_log(answer_list, true);
 }
+
+
+int show_answer(lList *alp) 
+{
+   lListElem *aep = NULL;
+   int ret = 0;
+   
+   DENTER(TOP_LAYER, "show_answer");
+   
+   if (alp != NULL) {
+    
+      for_each(aep,alp) {
+         answer_exit_if_not_recoverable(aep);
+         if (lGetUlong(aep, AN_status) != STATUS_OK) {
+            ret = 1;
+         }
+      }
+      aep = lLast(alp);
+      if (lGetUlong(aep, AN_quality) != ANSWER_QUALITY_END) {
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+      }
+   }
+   
+   DRETURN(ret);
+}
+
+int show_answer_list(lList *alp) 
+{
+   lListElem *aep = NULL;
+   int ret = 0;
+   
+   DENTER(TOP_LAYER, "show_answer_list");
+   
+   if (alp != NULL) {
+      for_each(aep,alp) {
+         if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_END) {
+            continue;
+         }
+
+         answer_exit_if_not_recoverable(aep);
+         if (lGetUlong (aep, AN_status) != STATUS_OK) {
+            ret = 1;
+         }
+         fprintf(stderr, "%s\n", lGetString(aep, AN_text));
+      }
+   }
+   
+   DRETURN(ret);
+}
+

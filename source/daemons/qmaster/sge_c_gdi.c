@@ -2062,7 +2062,7 @@ monitoring_t *monitor
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   /* ep is no element of this type, if ep has no QU_qname */
+   /* ep is no element of this type, if ep doesn't contain the the primary key attribute */
    if (lGetPosViaElem(instructions, object->key_nm, SGE_NO_ABORT) < 0)
    {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS, lNm2Str(object->key_nm), SGE_FUNC));

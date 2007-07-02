@@ -58,10 +58,7 @@ int *ret_id
    DENTER(TOP_LAYER, "id_sharetree");
 
    if (ep == NULL) {
-      ERROR((SGE_EVENT, MSG_OBJ_NOSTREEELEM));
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                              MSG_OBJ_NOSTREEELEM);
-/*       SGE_EXIT(NULL, 1); */
+      answer_list_add(alpp, MSG_OBJ_NOSTREEELEM, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(false);
    }
    

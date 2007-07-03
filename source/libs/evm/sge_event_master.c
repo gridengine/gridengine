@@ -805,20 +805,21 @@ process_mod_event_client(monitoring_t *monitor)
    }
    sge_mutex_unlock("event_master_change_evc_mutex", SGE_FUNC, __LINE__, &Master_Control.change_evc_mutex);
 
-   while ((clio =  lFirst(temp_evc_list)) != NULL) {
-      clio= lDechainElem(temp_evc_list, clio);
+   while ((clio = lFirst(temp_evc_list)) != NULL) {
+      clio = lDechainElem(temp_evc_list, clio);
 
       /* try to find event_client */
       id = lGetUlong(clio, EV_id);
 
-      lock_client (id, true);
+      lock_client(id, true);
 
-      event_client = get_event_client (id);
+      event_client = get_event_client(id);
 
       if (event_client == NULL) {
          unlock_client(id);
 
          ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(id), "modify"));
+         lFreeElem(&clio);
          continue;
       }
 
@@ -831,6 +832,7 @@ process_mod_event_client(monitoring_t *monitor)
          unlock_client(id);
 
          ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, sge_u32c(ev_d_time)));
+         lFreeElem(&clio);
          continue;         
       }
 
@@ -838,6 +840,7 @@ process_mod_event_client(monitoring_t *monitor)
          unlock_client(id);
 
          ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
+         lFreeElem(&clio);
          continue;
       }
 

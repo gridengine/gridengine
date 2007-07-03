@@ -276,6 +276,12 @@ lList **dst
    lFreeWhere(&where);
 
    answer_list_append_list(alpp, &answers);
+  
+   /*
+    * if NULL was passwd to alpp, answers will not be
+    * freed in answer_list_append_list!
+    */
+   lFreeList(&answers);
 
    DRETURN(0);
 }

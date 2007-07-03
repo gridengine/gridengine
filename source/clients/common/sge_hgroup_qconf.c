@@ -137,6 +137,7 @@ lListElem *hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx,
          answer_list_replace(answer_list, &gdi_answer_list);
       }
       lFreeList(&hostgroup_list);
+      lFreeList(&gdi_answer_list);
    } 
    DRETURN(ret);
 }

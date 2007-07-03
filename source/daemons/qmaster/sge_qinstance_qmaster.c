@@ -345,7 +345,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                            matching_group, is_ambiguous);
 
                if (centry_list_fill_request(new_value, answer_list, master_centry_list, 
-                                        true, true, false) == 0 ) {
+                                        true, true, false) == 0) {
                    lListElem *tmp_elem = lCopyElem(this_elem);
 
                    /* We make a copy of new_value here because it will ultimately

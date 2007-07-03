@@ -1,3 +1,6 @@
+JG-2007-07-03-0: Bugfix:    Fixed memory leaks in event master.
+                 Review:    RD
+
 AA-2007-07-02-0: Bugfix:    - in qmon, under calendar configuration, it is possible
                               to modify even if no calendar exists
                             - Inadequate error message when qconf -sstree is run

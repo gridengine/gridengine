@@ -160,6 +160,7 @@ char **argv
    u_long32 taskstart = 0;
    u_long32 taskend = 0;
    u_long32 taskstep = 0;
+   int ignored_jobs = 0;             /* counter of ignored jobs for accounting */
 
    char acctfile[SGE_PATH_MAX + 1];
    char account[1024];
@@ -781,12 +782,15 @@ char **argv
          int selected;
      
          sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname ); 
-         queue = cqueue_list_locate_qinstance(queue_list, sge_dstring_get_string(&qi));
+         queue = cqueue_list_locate_qinstance_msg(queue_list, sge_dstring_get_string(&qi), false);
          if (!queue) {
-            WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
-                      (int)dusage.job_number, dusage.qname));
+            /* 
+            * queue no longer exists, we can't get the complex attributes for this job, 
+            * we will ignore the job for accounting  and count the number of ignored jobs 
+            */
+            ignored_jobs++;
             continue;
-         }
+         }         
          sge_dstring_free(&qi); 
    
          sconf_set_qs_state(QS_STATE_EMPTY);
@@ -999,6 +1003,14 @@ char **argv
       } /* endif sortflags */
    } /* end while sge_read_rusage */
 
+   /*
+   * print the warning about the count of ignored jobs for accounting 
+   */
+   if (ignored_jobs > 0) {
+      WARNING((SGE_EVENT, MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS,
+                      ignored_jobs));
+      printf("\n");
+   }  
 
    /*
    ** exit routine attempts to close file if not NULL

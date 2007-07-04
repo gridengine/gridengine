@@ -1,3 +1,7 @@
+RD-2007-07-04-0: Bugfix:    Fixed broken resource reservation after commit
+                            RD-2007-06-29-0
+                 Review:    JG
+
 JG-2007-07-03-0: Bugfix:    Fixed memory leaks in event master.
                             Fixed memory leaks in qconf.
                  Review:    RD

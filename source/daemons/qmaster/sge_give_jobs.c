@@ -1026,6 +1026,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *sge_root = ctx->get_sge_root(ctx);
    bool job_spooling = ctx->get_job_spooling(ctx);
+   u_long32 task_wallclock = U_LONG32_MAX;
+   bool compute_qwallclock = false;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -1042,6 +1044,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
+
+      if (!job_get_wallclock_limit(&task_wallclock, jep)) {
+         compute_qwallclock = true;
+      }
 
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
@@ -1060,8 +1066,29 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   sge_u32c(ar_id), sge_u32c(lGetUlong(jep, JB_job_number))));
          } else {
             const char *queue_hostname = lGetHost(queue, QU_qhostname);
+            const char *limit = NULL;
             int tmp_slot = lGetUlong(ep, JG_slots);
             lListElem *host;
+
+            if (compute_qwallclock) {
+               limit = lGetString(queue, QU_h_rt);
+               if (strcasecmp(limit, "infinity") != 0) {
+                  u_long32 clock_val;
+                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
+                  task_wallclock = MIN(task_wallclock, clock_val);
+               } else {
+                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
+               }
+
+               limit = lGetString(queue, QU_s_rt);
+               if (strcasecmp(limit, "infinity") != 0) {
+                  u_long32 clock_val;
+                  parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
+                  task_wallclock = MIN(task_wallclock, clock_val);
+               } else {
+                  task_wallclock = MIN(task_wallclock, U_LONG32_MAX);
+               }
+            }
 
             /* debit consumable resources */ 
             if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot) > 0) {
@@ -1113,6 +1140,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             }
          }
       }
+
+      lSetUlong(jatep, JAT_wallclock_limit, task_wallclock);
 
       /* 
        * Would be nice if we could use a more accurate start time that could be reported 

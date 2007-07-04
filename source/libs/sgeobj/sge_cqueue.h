@@ -101,8 +101,10 @@ cqueue_list_locate(const lList *this_list, const char *name);
 lListElem *
 cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname);
 
-bool
+lListElem *
+cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool raise_error);
 
+bool
 cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
                    lListElem *reduced_elem, int sub_command,
                    int attribute_name, int sublist_host_name,

@@ -43,7 +43,7 @@
 #define MSG_HISTORY_ERRORUNABLETOOPENX_S     _MESSAGE(25074, _("error unable to open "SFN))
 #define MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST   _MESSAGE(25075, _("not enough memory to create list"))
 #define MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U  _MESSAGE(25076, _("ignoring invalid entry in line " sge_U32CFormat))
-#define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("ignoring job %d for accounting: jobs master queue "SFN" does not longer exist"))
+#define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("%d jobs ignored for accounting. Jobs master queue no longer exists."))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD   _MESSAGE(25084, _("Job-array tasks "sge_U32CFormat"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found" ))
 #define MSG_HISTORY_JOBIDXNOTFOUND_D          _MESSAGE(25085, _("job id " sge_U32CFormat  " not found"))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD    _MESSAGE(25086, _("Job-array tasks "SFQ"."sge_U32CFormat"-"sge_U32CFormat":"sge_U32CFormat" not found"))

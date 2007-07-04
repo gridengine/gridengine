@@ -1,3 +1,12 @@
+AP-2007-07-04-0: Bugfix:    qacct -l <attr>=<val> ignores jobs in output when they 
+                            reference no longer existing queue. Instead of warning 
+                            message for each job added one message with a count of 
+                            ignored jobs.
+                 Bugster:   6525375
+                 Issue:     2189
+                 Changed:   qacct, sgq_cqueue, msg_history
+                 Review:    JG
+
 MD-2007-07-04-0: Bugfix:    qsub -S <WINDOWS-SHELL> can't find shell
                  Bugster:   6232759 
                  Review:    HP

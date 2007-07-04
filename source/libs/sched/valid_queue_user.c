@@ -47,7 +47,7 @@
 #include "msg_schedd.h"
 
 static int sge_contained_in_access_list_(const char *user, const char *group, 
-                                         lList *acl, const lList *acl_list);
+                                         const lList *acl, const lList *acl_list);
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -68,8 +68,8 @@ int sge_has_access(const char *user, const char *group, lListElem *q,
 /* needed to test also sge_queue_type structures without converting the
 ** whole queue
 */
-int sge_has_access_(const char *user, const char *group, lList *q_acl,
-                    lList *q_xacl, const lList *acl_list) 
+int sge_has_access_(const char *user, const char *group, const lList *q_acl,
+                    const lList *q_xacl, const lList *acl_list) 
 {
    int ret;
 
@@ -106,7 +106,7 @@ int sge_has_access_(const char *user, const char *group, lList *q_acl,
    user, group: may be NULL
 */
 static int sge_contained_in_access_list_(const char *user, const char *group,
-                                         lList *acl, const lList *acl_list) 
+                                         const lList *acl, const lList *acl_list) 
 {
    lListElem *acl_search, *acl_found;
 
@@ -153,8 +153,8 @@ static int sge_contained_in_access_list_(const char *user, const char *group,
 *  NOTES
 *     MT-NOTE: sge_ar_queue_have_users_access() is MT safe 
 *******************************************************************************/
-bool sge_ar_have_users_access(lList **alpp, lListElem *ar, const char *name, lList *acl_list,
-                                    lList *xacl_list, lList *master_userset_list)
+bool sge_ar_have_users_access(lList **alpp, lListElem *ar, const char *name, const lList *acl_list,
+                                    const lList *xacl_list, const lList *master_userset_list)
 {
    bool ret = true;
    lListElem *acl_entry;

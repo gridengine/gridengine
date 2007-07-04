@@ -1,3 +1,7 @@
+MD-2007-07-04-0: Bugfix:    qsub -S <WINDOWS-SHELL> can't find shell
+                 Bugster:   6232759 
+                 Review:    HP
+
 JG-2007-07-03-0: Bugfix:    Fixed memory leaks in event master.
                             Fixed memory leaks in qconf.
                  Review:    RD

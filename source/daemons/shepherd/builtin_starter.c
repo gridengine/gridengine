@@ -1222,6 +1222,16 @@ int use_starter_method /* If this flag is set the shellpath contains the
    char *pre_args[10];
    char **pre_args_ptr;
    char err_str[2048];
+   char *shell_cmd_str;
+
+   /* Test which shell is requested. Different shells
+      need different command switches. e.g. cmd.exe needs /c or
+      unix shell need -c for starting a command. */
+   if ( strcasecmp(argv0, "cmd.exe") == 0 ) {
+      shell_cmd_str = "/c";
+   } else {
+      shell_cmd_str = "-c";
+   }
 
    pre_args_ptr = &pre_args[0];
    
@@ -1255,11 +1265,11 @@ int use_starter_method /* If this flag is set the shellpath contains the
 #endif
 
       pre_args_ptr[arg_id++] = argv0;
-      n_job_args = atoi(get_conf_val("njob_args"));
-      pre_args_ptr[arg_id++] = "-c";
+      pre_args_ptr[arg_id++] = shell_cmd_str;
       sge_dstring_append(&arguments, script_file);
-     
       sge_dstring_append(&arguments, " ");
+
+      n_job_args = atoi(get_conf_val("njob_args"));
       for (i = 0; i < n_job_args; i++) {
          char conf_val[256];
 
@@ -1316,7 +1326,7 @@ int use_starter_method /* If this flag is set the shellpath contains the
       pre_args_ptr[0] = argv0;
       sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
       shepherd_trace(err_str);
-      pre_args_ptr[1] = "-c";
+      pre_args_ptr[1] = shell_cmd_str;
       pre_args_ptr[2] = script_file;
       pre_args_ptr[3] = NULL;
       args = pre_args;

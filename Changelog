@@ -1,3 +1,6 @@
+LP-2007-07-04-1: Enhancem.: Adding .cvsignore files for NetBeans users
+                 Review:    LP
+
 LP-2007-07-04-0: Enhancem.: New JGDI shell qconf options implemented
                  Bugfix:    'qconf -help' suggests usage of patterns in 
                             user_list which is not true

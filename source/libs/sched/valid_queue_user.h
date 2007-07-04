@@ -35,10 +35,10 @@
 int sge_has_access(const char *user, const char *group, lListElem *q, 
                    const lList *acl_list);
 
-int sge_has_access_(const char *user, const char *group, lList *q_acl, 
-                    lList *q_xacl, const lList *acl_list);
+int sge_has_access_(const char *user, const char *group, const lList *q_acl, 
+                    const lList *q_xacl, const lList *acl_list);
 
-bool sge_ar_have_users_access(lList **alpp, lListElem *ar, const char *name, lList *acl_list, lList *xacl_list, lList *master_userset_list);
+bool sge_ar_have_users_access(lList **alpp, lListElem *ar, const char *name, const lList *acl_list, const lList *xacl_list, const lList *master_userset_list);
 
 #endif /* __VALID_QUEUE_USER_H */
 

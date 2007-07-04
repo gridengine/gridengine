@@ -53,7 +53,6 @@
 
 #define MSG_ORD_OLDVERSION_UUU        _MESSAGE(33018, _("scheduler sent a order for a modified job "sge_U32CFormat"."sge_U32CFormat" (Version: "sge_U32CFormat))
 #define MSG_ORD_TWICE_UU              _MESSAGE(33019, _("scheduler tries to schedule job "sge_U32CFormat"."sge_U32CFormat" twice"))
-#define MSG_ORD_INITIALTICKETS_U      _MESSAGE(33020, _(" with "sge_U32CFormat" initial tickets"))
 
 #define MSG_OBJ_UNABLE2FINDPE_S       _MESSAGE(33021, _("unable to find pe "SFQ))
 #define MSG_OBJ_NOQNAME               _MESSAGE(33022, _("can't get q_name"))

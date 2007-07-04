@@ -516,7 +516,7 @@ execd_ck_to_do(sge_gdi_ctx_class_t *ctx,
 
                if (task_wallclock_limit != 0) {
                   lSetUlong(jep, JB_hard_wallclock_gmt, 
-                            MIN(lGetUlong(jep, JB_hard_wallclock_gmt), (now + task_wallclock_limit)));
+                            MIN(lGetUlong(jep, JB_hard_wallclock_gmt), duration_add_offset(now, task_wallclock_limit)));
                }
             }
             

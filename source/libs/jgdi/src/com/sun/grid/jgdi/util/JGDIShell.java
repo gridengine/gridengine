@@ -133,6 +133,7 @@ public class JGDIShell implements Runnable, Shell {
          
          while( true) {
             String line = readlineHandler.readline(PROMPT);
+            line = line.trim();
             
             if(line == null) {
                break;

@@ -33,15 +33,14 @@ package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.configuration.ClusterQueue;
+import com.sun.grid.jgdi.configuration.AbstractManager;
+import com.sun.grid.jgdi.configuration.ConfigurationImpl;
+import com.sun.grid.jgdi.configuration.ExecHost;
 import com.sun.grid.jgdi.configuration.GEObject;
-import com.sun.grid.jgdi.configuration.Project;
-import com.sun.grid.jgdi.configuration.ProjectImpl;
-import com.sun.grid.jgdi.configuration.User;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
-import com.sun.grid.jgdi.configuration.UserImpl;
-import com.sun.grid.jgdi.configuration.Util;
-import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
+import com.sun.grid.jgdi.configuration.SchedConf;
+import com.sun.grid.jgdi.configuration.UserSet;
+import com.sun.grid.jgdi.configuration.UserSetImpl;
 import com.sun.grid.jgdi.util.OutputTable;
 import com.sun.grid.jgdi.util.shell.editor.EditorUtil;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
@@ -51,25 +50,22 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.UnknownHostException;
-import java.nio.ByteOrder;
-import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -109,8 +105,21 @@ public class QConfCommand extends AbstractCommand {
       "FORCED"    /* REQU_FORCED */
     };
     
+   private static Map typeConvertor;
+   static {
+      typeConvertor = new HashMap();
+      typeConvertor.put("checkpoint", "ckpt interface definition");
+      typeConvertor.put("resourcequotaset", "resource quota set list");
+      typeConvertor.put("project", "project list");
+      typeConvertor.put("user", "user list");
+   };
    
-   
+   private static Map addRemoveTypeConvertor;
+   static {
+       addRemoveTypeConvertor = new HashMap();
+       addRemoveTypeConvertor.put("clusterqueue","cluster queue");
+   }
+    
    
    /** Creates a new instance of QConfCommand */
    public QConfCommand(Shell shell, String name) {
@@ -120,109 +129,110 @@ public class QConfCommand extends AbstractCommand {
     public String getUsage() {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
+        pw.println("GE 6.1");
         pw.println("usage: qconf [options]");
-//      pw.println("   [-aattr obj_nm attr_nm val obj_id_lst]   add to a list attribute of an object");
-//      pw.println("   [-Aattr obj_nm fname obj_id_lst]         add to a list attribute of an object");
+        pw.println("   [-aattr obj_nm attr_nm val obj_id_lst]   add to a list attribute of an object");
+        pw.println("   [-Aattr obj_nm fname obj_id_lst]         add to a list attribute of an object");
         pw.println("   [-acal calendar_name]                    add a new calendar");
         pw.println("   [-Acal fname]                            add a new calendar from file");
         pw.println("   [-ackpt ckpt_name]                       add a ckpt interface definition");
         pw.println("   [-Ackpt fname]                           add a ckpt interface definition from file");
-//      pw.println("   [-aconf host_list]                       add configurations");
-//      pw.println("   [-Aconf file_list]                       add configurations from file_list");
+        pw.println("   [-aconf host_list]                       add configurations");
+        pw.println("   [-Aconf file_list]                       add configurations from file_list");
         pw.println("   [-ae [exec_server_template]]             add an exec host using a template");
         pw.println("   [-Ae fname]                              add an exec host from file");
-//      pw.println("   [-ah hostname]                           add an administrative host");
+        pw.println("   [-ah hostname]                           add an administrative host");
         pw.println("   [-ahgrp group]                           add new host group entry");
         pw.println("   [-Ahgrp file]                            add new host group entry from file");
         pw.println("   [-arqs [rqs_list]]                       add resource quota set(s)");
         pw.println("   [-Arqs fname]                            add resource quota set(s) from file");
-//      pw.println("   [-am user_list]                          add user to manager list");
-//      pw.println("   [-ao user_list]                          add user to operator list");
+        pw.println("   [-am user_list]                          add user to manager list");
+        pw.println("   [-ao user_list]                          add user to operator list");
         pw.println("   [-ap pe-name]                            add a new parallel environment");
         pw.println("   [-Ap fname]                              add a new parallel environment from file");
         pw.println("   [-aprj]                                  add project");
         pw.println("   [-Aprj fname]                            add project from file");
-        pw.println("   [-aq ]                                   add a new cluster queue");
+        pw.println("   [-aq [queue_name]]                       add a new cluster queue");
         pw.println("   [-Aq fname]                              add a queue from file");
-//      pw.println("   [-as hostname]                           add a submit host");
-//      pw.println("   [-astnode node_shares_list]              add sharetree node(s)");
-//      pw.println("   [-astree]                                create/modify the sharetree");
-//      pw.println("   [-Astree fname]                          create/modify the sharetree from file");
-//      pw.println("   [-au user_list listname_list]            add user(s) to userset list(s)");
-//      pw.println("   [-Au fname]                              add userset from file");
+        pw.println("   [-as hostname]                           add a submit host");
+        pw.println("   [-astnode node_shares_list]              add sharetree node(s)");
+        pw.println("   [-astree]                                create/modify the sharetree");
+        pw.println("   [-Astree fname]                          create/modify the sharetree from file");
+        pw.println("   [-au user_list listname_list]            add user(s) to userset list(s)");
+        pw.println("   [-Au fname]                              add userset from file");
         pw.println("   [-auser]                                 add user");
         pw.println("   [-Auser fname]                           add user from file");
         pw.println("   [-clearusage]                            clear all user/project sharetree usage");
         pw.println("   [-cq destin_id_list]                     clean queue");
-//      pw.println("   [-dattr obj_nm attr_nm val obj_id_lst]   delete from a list attribute of an object");
-//      pw.println("   [-Dattr obj_nm fname obj_id_lst]         delete from a list attribute of an object");
-        pw.println("   [-dcal calendar_name]                    remove a calendar");
-        pw.println("   [-dckpt ckpt_name]                       remove a ckpt interface definition");
-//      pw.println("   [-dconf host_list]                       delete local configurations");
-        pw.println("   [-de host_list]                          remove an exec server");
-        pw.println("   [-dh host_list]                          remove an administrative host");
+        pw.println("   [-dattr obj_nm attr_nm val obj_id_lst]   delete from a list attribute of an object");
+        pw.println("   [-Dattr obj_nm fname obj_id_lst]         delete from a list attribute of an object");
+        pw.println("   [-dcal calendar_name]                    delete calendar");
+        pw.println("   [-dckpt ckpt_name]                       delete ckpt interface definition");
+        pw.println("   [-dconf host_list]                       delete local configurations");
+        pw.println("   [-de host_list]                          delete exec server");
+        pw.println("   [-dh host_list]                          delete administrative host");
         pw.println("   [-dhgrp group]                           delete host group entry");
         pw.println("   [-drqs rqs_list]                         delete resource quota set(s)");
-        pw.println("   [-dm user_list]                          remove user from manager list");
-        pw.println("   [-do user_list]                          remove user from operator list");
-        pw.println("   [-dp pe-name]                            remove a parallel environment");
+        pw.println("   [-dm user_list]                          delete user from manager list");
+        pw.println("   [-do user_list]                          delete user from operator list");
+        pw.println("   [-dp pe-name]                            delete parallel environment");
         pw.println("   [-dprj project_list]                     delete project");
-        pw.println("   [-dq destin_id_list]                     remove a queue");
-        pw.println("   [-ds host_list]                          remove submit host");
-//      pw.println("   [-dstnode node_list]                     remove sharetree node(s)");
+        pw.println("   [-dq destin_id_list]                     delete queue");
+        pw.println("   [-ds host_list]                          delete submit host");
+        pw.println("   [-dstnode node_list]                     delete sharetree node(s)");
         pw.println("   [-dstree]                                delete the sharetree");
-//      pw.println("   [-du user_list listname_list]            remove user(s) from userset list(s)");
-//      pw.println("   [-dul listname_list]                     remove userset list(s) completely");
-        pw.println("   [-duser user_list]                       delete user");
+        pw.println("   [-du user_list listname_list]            delete user(s) from userset list(s)");
+        pw.println("   [-dul listname_list]                     delete userset list(s) completely");
+        pw.println("   [-duser user_list]                       delete user(s)");
         pw.println("   [-help]                                  print this help");
         pw.println("   [-ke[j] host_list                        shutdown execution daemon(s)");
         pw.println("   [-k{m|s}]                                shutdown master|scheduling daemon");
         pw.println("   [-kec evid_list]                         kill event client");
-//      pw.println("   [-mattr obj_nm attr_nm val obj_id_lst]   modify an attribute (or element in a sublist) of an object");
-//      pw.println("   [-Mattr obj_nm fname obj_id_lst]         modify an attribute (or element in a sublist) of an object");
-//      pw.println("   [-mc ]                                   modify complex attributes");
+        pw.println("   [-mattr obj_nm attr_nm val obj_id_lst]   modify an attribute (or element in a sublist) of an object");
+        pw.println("   [-Mattr obj_nm fname obj_id_lst]         modify an attribute (or element in a sublist) of an object");
+        pw.println("   [-mc ]                                   modify complex attributes");
         pw.println("   [-mckpt ckpt_name]                       modify a ckpt interface definition");
-//      pw.println("   [-Mc fname]                              modify complex attributes from file");
+        pw.println("   [-Mc fname]                              modify complex attributes from file");
         pw.println("   [-mcal calendar_name]                    modify calendar");
         pw.println("   [-Mcal fname]                            modify calendar from file");
         pw.println("   [-Mckpt fname]                           modify a ckpt interface definition from file");
-//      pw.println("   [-mconf [host_list|global]]              modify configurations");
-//      pw.println("   [-msconf]                                modify scheduler configuration");
-//      pw.println("   [-Msconf fname]                          modify scheduler configuration from file");
-//      pw.println("   [-me server]                             modify exec server");
-//      pw.println("   [-Me fname]                              modify exec server from file");
+        pw.println("   [-mconf [host_list|global]]              modify configurations");
+        pw.println("   [-msconf]                                modify scheduler configuration");
+        pw.println("   [-Msconf fname]                          modify scheduler configuration from file");
+        pw.println("   [-me server]                             modify exec server");
+        pw.println("   [-Me fname]                              modify exec server from file");
         pw.println("   [-mhgrp group]                           modify host group entry");
         pw.println("   [-Mhgrp file]                            modify host group entry from file");
         pw.println("   [-mrqs [rqs_list]]                       modify resource quota set(s)");
-        pw.println("   [-Mrqs fname]                            modify resource quota set(s) from file");
+        pw.println("   [-Mrqs fname [rqs_list]]                 modify resource quota set(s) from file");
         pw.println("   [-mp pe-name]                            modify a parallel environment");
         pw.println("   [-Mp fname]                              modify a parallel environment from file");
         pw.println("   [-mprj project]                          modify a project");
         pw.println("   [-Mprj fname]                            modify project from file");
         pw.println("   [-mq queue]                              modify a queue");
         pw.println("   [-Mq fname]                              modify a queue from file");
-//      pw.println("   [-mstnode node_shares_list]              modify sharetree node(s)");
-//      pw.println("   [-Mstree fname]                          modify/create the sharetree from file");
-//      pw.println("   [-mstree]                                modify/create the sharetree");
-//      pw.println("   [-mu listname_list]                      modify the given userset list");
-//      pw.println("   [-Mu fname]                              modify userset from file");
+        pw.println("   [-mstnode node_shares_list]              modify sharetree node(s)");
+        pw.println("   [-Mstree fname]                          modify/create the sharetree from file");
+        pw.println("   [-mstree]                                modify/create the sharetree");
+        pw.println("   [-mu listname_list]                      modify the given userset list");
+        pw.println("   [-Mu fname]                              modify userset from file");
         pw.println("   [-muser user]                            modify a user");
         pw.println("   [-Muser fname]                           modify a user from file");
-//      pw.println("   [-purge obj_nm3 attr_nm objectname]      removes attribute from object_instance");
-//      pw.println("   [-rattr obj_nm attr_nm val obj_id_lst]   replace a list attribute of an object");
-//      pw.println("   [-Rattr obj_nm fname obj_id_lst]         replace a list attribute of an object");
-        pw.println("   [-sc ]                                   show complex attributes");
+        pw.println("   [-purge obj_nm3 attr_nm objectname]      deletes attribute from object_instance");
+        pw.println("   [-rattr obj_nm attr_nm val obj_id_lst]   replace a list attribute of an object");
+        pw.println("   [-Rattr obj_nm fname obj_id_lst]         replace a list attribute of an object");
+        pw.println("   [-sc]                                    show complex attributes");
         pw.println("   [-scal calendar_name]                    show given calendar");
         pw.println("   [-scall]                                 show a list of all calendar names");
         pw.println("   [-sckpt ckpt_name]                       show ckpt interface definition");
         pw.println("   [-sckptl]                                show all ckpt interface definitions");
-//      pw.println("   [-sconf [host_list|global]]              show configurations");
-//      pw.println("   [-sconfl]                                show a list of all local configurations");
-//      pw.println("   [-se server]                             show given exec server");
-//      pw.println("   [-secl]                                  show event client list");
-//      pw.println("   [-sel]                                   show a list of all exec servers");
-//      pw.println("   [-sep]                                   show a list of all licensed processors");
-//      pw.println("   [-sh]                                    show a list of all administrative hosts");
+        pw.println("   [-sconf [host_list|global]]              show configurations");
+        pw.println("   [-sconfl]                                show a list of all local configurations");
+        pw.println("   [-se server]                             show given exec server");
+        pw.println("   [-secl]                                  show event client list");
+        pw.println("   [-sel]                                   show a list of all exec servers");
+        pw.println("   [-sep]                                   show a list of all licensed processors");
+        pw.println("   [-sh]                                    show a list of all administrative hosts");
         pw.println("   [-shgrp group]                           show host group");
         pw.println("   [-shgrp_tree group]                      show host group and used hostgroups as tree");
         pw.println("   [-shgrp_resolved group]                  show host group with resolved hostlist");
@@ -232,7 +242,7 @@ public class QConfCommand extends AbstractCommand {
         pw.println("   [-srqsl]                                 show resource quota set list");
         pw.println("   [-sm]                                    show a list of all managers");
         pw.println("   [-so]                                    show a list of all operators");
-//      pw.println("   [-sobjl obj_nm2 attr_nm val]             show objects which match the given value");
+        pw.println("   [-sobjl obj_nm2 attr_nm val]             show objects which match the given value");
         pw.println("   [-sp pe-name]                            show a parallel environment");
         pw.println("   [-spl]                                   show all parallel environments");
         pw.println("   [-sprj project]                          show a project");
@@ -240,25 +250,26 @@ public class QConfCommand extends AbstractCommand {
         pw.println("   [-sq [destin_id_list]]                   show the given queue");
         pw.println("   [-sql]                                   show a list of all queues");
         pw.println("   [-ss]                                    show a list of all submit hosts");
-//      pw.println("   [-sss]                                   show scheduler state");
-//      pw.println("   [-ssconf]                                show scheduler configuration");
-//      pw.println("   [-sstnode node_list]                     show sharetree node(s)");
-//      pw.println("   [-rsstnode node_list]                    show sharetree node(s) and its children");
-//      pw.println("   [-sstree]                                show the sharetree");
-//      pw.println("   [-su listname_list]                      show the given userset list");
+        pw.println("   [-sss]                                   show scheduler state");
+        pw.println("   [-ssconf]                                show scheduler configuration");
+        pw.println("   [-sstnode node_list]                     show sharetree node(s)");
+        pw.println("   [-rsstnode node_list]                    show sharetree node(s) and its children");
+        pw.println("   [-sstree]                                show the sharetree");
+        pw.println("   [-su listname_list]                      show the given userset list");
         pw.println("   [-suser user_list]                       show user(s)");
         pw.println("   [-sul]                                   show a list of all userset lists");
         pw.println("   [-suserl]                                show a list of all users");
         pw.println("   [-tsm]                                   trigger scheduler monitoring");
+        pw.println();
         pw.println("complex_list            complex[,complex,...]");
-        pw.println("destin_id_list          queue[ queue ...]");
+        pw.println("destin_id_list          queue[,queue,...]");
         pw.println("listname_list           listname[,listname,...]");
-        pw.println("rqs_list               rqs_name[,rqs_name,...]");        
+        pw.println("rqs_list                rqs_name[,rqs_name,...]");        
         pw.println("node_list               node_path[,node_path,...]");
         pw.println("node_path               [/]node_name[[/.]node_name...]");
         pw.println("node_shares_list        node_path=shares[,node_path=shares,...]");  
-        pw.println("user_list               user|pattern[,user|pattern,...]");
-        pw.println("obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"");
+        pw.println("user_list               user[,user,...]");
+        pw.println("obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\"");
         pw.println("attr_nm                 (see man pages)");
         pw.println("obj_id_lst              objectname [ objectname ...]");
         pw.println("project_list            project[,project,...]");
@@ -288,9 +299,13 @@ public class QConfCommand extends AbstractCommand {
         for(int i = 0; i < args.length; i++) {
             if (args[i].equals("-tsm")) {
                 jgdi.triggerSchedulerMonitoring();
+                //TODO LP: Message should be propagated from Qmaster
+                pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" triggers scheduler monitoring");
+                pw.flush();
                 break;
             } else if (args[i].equals("-clearusage")) {
                 jgdi.clearShareTreeUsage();
+                //TODO LP: Message should be propagated from Qmaster, we have no way of knowing what was modified
                 break;
             } else if (args[i].equals("-cq")) {
                 i++;
@@ -299,12 +314,13 @@ public class QConfCommand extends AbstractCommand {
                 }
                 String [] queues = parseDestinIdList(args[i]);
                 jgdi.cleanQueues(queues);
+                //TODO LP: Message should be propagated from Qmaster, we have no way of knowing what was modified
                 break;
-            } else if (args[i].equals("-kec")) {
-                
+            } else if (args[i].equals("-kec")) {              
                 i++;
                 if(i>= args.length) {
-                    throw new IllegalArgumentException("missing evid_list");
+                    pw.println("error: no option argument provided to \"-kec\"");
+                    pw.println(getUsage());
                 }
                 if(args[i].equals("all")) {
                     jgdi.killAllEventClients();
@@ -328,6 +344,9 @@ public class QConfCommand extends AbstractCommand {
                 break;
             } else if (args[i].equals("-ks")) {
                 jgdi.killScheduler();
+                //TODO LP: Message should be form qmaster
+                pw.println("sent shutdown notification to scheduler on host \""+jgdi.getActQMaster()+"\"");
+                pw.flush();
                 break;
             //CALENDAR
             } else if (args[i].equals("-acal")) {
@@ -372,6 +391,25 @@ public class QConfCommand extends AbstractCommand {
                 break;
             } else if (args[i].equals("-dckpt")) {
                 deleteGEObject(jgdi, "Checkpoint", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            //CONFIGURATION - no Mconf
+            } else if (args[i].equals("-aconf")) {
+                addNewGEObject(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-Aconf")) {
+                addNewGEObjectFromFile(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-mconf")) {
+                modifyGEObject(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-sconfl")) {
+                showGEObjectList(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-sconf")) {
+                showGEObject(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-dconf")) {
+                deleteGEObject(jgdi, "Configuration", Arrays.asList(args).subList(i,args.length), pw);
                 break;
             //EXEC HOST
             } else if (args[i].equals("-ae")) {
@@ -546,6 +584,144 @@ public class QConfCommand extends AbstractCommand {
             } else if (args[i].equals("-duser")) {
                 deleteGEObject(jgdi, "User", Arrays.asList(args).subList(i,args.length), pw);
                 break;
+            //USERLIST
+            } else if (args[i].equals("-au")) {
+               if (++i >= args.length) {
+                  pw.println("error: no option argument provided to \"-au\"");
+                  pw.println(getUsage());
+                  pw.flush();
+                  break;
+               }
+               String userName = args[i++];
+               if (i >= args.length) {
+                  pw.println("error: no list_name provided to \"-au" + userName + "\"");
+                  pw.println(getUsage());
+                  pw.flush();
+                  break;
+               }
+               String setName = args[i];
+               
+               UserSet us = null;
+               boolean create = false;
+               us = jgdi.getUserSet(setName);
+               if (us == null) {
+                  create = true;
+                  us = new UserSetImpl(true);
+                  us.setName(setName);
+               }
+               boolean entryExists = false;
+               for (Iterator iter = us.getEntriesList().iterator(); iter.hasNext(); ) {
+                  String entry = (String) iter.next();
+                  if (entry.equals(userName)) {
+                      entryExists = true;
+                      break;
+                  }
+               }
+               if (entryExists) {
+                  pw.println("\""+userName+"\" is already in access list \""+setName+"\"");
+               } else {
+                  us.addEntries(userName);
+                  if (create) {
+                     jgdi.addUserSet(us);
+                  } else {
+                     jgdi.updateUserSet(us);
+                  }
+                  pw.println("added \"" + userName + "\" to access list \"" + setName + "\"");
+               }
+               if (args.length > ++i) {
+                  pw.println("error: invalid option argument \"" + args[i] + "\"");
+                  pw.println("Usage: qconf -help");
+               }
+               pw.flush();
+               break;
+            } else if (args[i].equals("-Au")) {
+                addNewGEObjectFromFile(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-mu")) {
+                modifyGEObject(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-Mu")) {
+                modifyGEObjectFromFile(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-sul")) {
+                showGEObjectList(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-su")) {
+                showGEObject(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-du")) {
+                if (++i >= args.length) {
+                  pw.println("error: no option argument provided to \"-du\"");
+                  pw.println(getUsage());
+                  pw.flush();
+                  break;
+               }
+               String userName = args[i++];
+               if (i >= args.length) {
+                  pw.println("error: no list_name provided to \"-du" + userName + "\"");
+                  pw.println(getUsage());
+                  pw.flush();
+                  break;
+               }
+               String setName = args[i];
+
+               UserSet us = null;
+               boolean create = false;
+               us = jgdi.getUserSet(setName);
+               if (us != null) {
+                  boolean entryExists = false;
+                  for (Iterator iter = us.getEntriesList().iterator(); iter.hasNext();) {
+                     String entry = (String) iter.next();
+                     if (entry.equals(userName)) {
+                        entryExists = true;
+                        break;
+                     }
+                  }
+                  if (!entryExists) {
+                     pw.println("user \"" + userName + "\" is not in access list \"" + setName + "\"");
+                  } else {
+                     us.removeEntries(userName);
+                     jgdi.updateUserSet(us);
+                     pw.println("deleted user \"" + userName + "\" from access list \"" + setName + "\"");
+                  }
+               } else {
+                  pw.println("access list \"" + setName + "\" doesn't exist");
+               }
+               if (args.length > ++i) {
+                  pw.println("error: invalid option argument \"" + args[i] + "\"");
+                  pw.println("Usage: qconf -help");
+               }
+               pw.flush();
+               break;
+            } else if (args[i].equals("-dul")) {
+                deleteGEObject(jgdi, "UserSet", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            //MANAGER
+            } else if (args[i].equals("-am")) {
+                //addNewGEObject(jgdi, "Manager", Arrays.asList(args).subList(i,args.length), pw);
+                modifyAbstractUser(jgdi, "add", "Manager", "-am", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-sm")) {
+                //showUserList(jgdi, "Manager", Arrays.asList(args).subList(i,args.length), pw);
+                showGEObjectList(jgdi, "Manager", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-dm")) {
+                //deleteGEObject(jgdi, "Manager", Arrays.asList(args).subList(i,args.length), pw);
+                modifyAbstractUser(jgdi, "delete", "Manager", "-dm", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            //OPERATOR
+            } else if (args[i].equals("-ao")) {
+                //addNewGEObject(jgdi, "Operator", Arrays.asList(args).subList(i,args.length), pw);
+                modifyAbstractUser(jgdi, "add", "Operator", "-ao", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-so")) {
+                showGEObjectList(jgdi, "Operator", Arrays.asList(args).subList(i,args.length), pw);
+                //showUserList(jgdi, "Operator", Arrays.asList(args).subList(i,args.length), pw);
+                break;
+            } else if (args[i].equals("-do")) {
+                //deleteGEObject(jgdi, "Operator", Arrays.asList(args).subList(i,args.length), pw);
+                modifyAbstractUser(jgdi, "delete", "Operator", "-dm", Arrays.asList(args).subList(i,args.length), pw);
+                break;
             } else if (args[i].equals("-sc")) {
                 //Format is:nameLen+3 shortcutLen+3 typeLen+3 relopLen+3 requestableLen+8 consumableLen+7 defaultLen+3 urgencyLen+4
                 int nameLen = 0, shortcutLen = 0, typeLen = 0, relopLen = 2,
@@ -590,18 +766,23 @@ public class QConfCommand extends AbstractCommand {
                 pw.flush();
                 break;
             } else if (args[i].equals("-sds")) {
-                pw.println(jgdi.showDetachedSettingsAll());
-                pw.flush();
+                String sds = jgdi.showDetachedSettingsAll();
+                if (sds != null) {
+                  pw.println(sds);
+                  pw.flush();
+                }
                 break;
             } else if (args[i].equals("-secl")) {
                 List evcl = jgdi.getEventClientList();
                 if (evcl.size() > 0) {
                     OutputTable table = new OutputTable(com.sun.grid.jgdi.configuration.EventClient.class);
                     table.addCol("id", "ID", 8, OutputTable.Column.RIGHT);
-                    table.addCol("name", "Name", 15, OutputTable.Column.LEFT);
-                    table.addCol("host", "HOST", 25, OutputTable.Column.LEFT);
+                    table.addCol("name", "NAME", 15, OutputTable.Column.LEFT);
+                    table.addCol("host", "HOST", 24, OutputTable.Column.LEFT);
                     table.printHeader(pw);
-                    table.printDelimiter(pw, '-');
+                    //TODO LP client cleanup: Delimiter in client is one char longer
+                    //table.printDelimiter(pw, '-');
+                    pw.write("--------------------------------------------------\n");
                     Iterator iter = evcl.iterator();
                     while (iter.hasNext()) {
                         com.sun.grid.jgdi.configuration.EventClient evc = (com.sun.grid.jgdi.configuration.EventClient)iter.next();
@@ -612,8 +793,55 @@ public class QConfCommand extends AbstractCommand {
                 }
                 pw.flush();
                 break;
+            } else if (args[i].equals("-sep")) {
+               List hosts = jgdi.getExecHostList();
+               String name, arch;
+               int cpu, totalCpu = 0;
+               Set set;
+               pw.println("HOST                      PROCESSOR        ARCH");
+               pw.println("===============================================");
+               for (Iterator iter = hosts.iterator(); iter.hasNext(); ) {
+                  ExecHost eh = (ExecHost) iter.next();
+                  name = eh.getName();
+                  if (name.equals("global") || name.equals("template")) {
+                     continue;
+                  }
+                  cpu = eh.getProcessors();
+                  totalCpu += cpu;
+                  arch = eh.getLoad("arch");
+                  pw.println(name+Format.right(String.valueOf(cpu), 35 - name.length())+" "+arch);
+               }
+               pw.println("===============================================");
+               pw.println("SUM"+Format.right(String.valueOf(totalCpu), 32));
+               pw.flush();
+               break;
+            } else if (args[i].equals("-sh")) {
+               printListSortedByName(jgdi.getAdminHostList(), Arrays.asList(args).subList(i,args.length), pw);
+               break;
+            } else if (args[i].equals("-ss")) {
+               printListSortedByName(jgdi.getSubmitHostList(), Arrays.asList(args).subList(i,args.length), pw);
+               break;
+            } else if (args[i].equals("-sss")) {
+               pw.println(jgdi.getSchedulerHost());
+               if (args.length>3) {
+                  pw.println("error: invalid option argument \"" + args[3] + "\"");
+                  pw.println("Usage: qconf -help");
+               }
+               pw.flush();
+               break;
+            } else if (args[i].equals("-ssconf")) {
+               SchedConf sc = jgdi.getSchedConf();
+               String text = GEObjectEditor.getAllPropertiesAsText(sc);
+               pw.println(text);
+               pw.flush();
+               break;
+            } else if (args[i].equals("-sul")) {
+               printListSortedByName(jgdi.getUserSetList(), Arrays.asList(args).subList(i,args.length), pw);
+               break;
             } else if (args[i].equals("-help")) {
-                System.out.println(getUsage());
+                String usage = getUsage();
+                pw.print(usage);
+                pw.flush();
             } else if (args[i].startsWith("-ke") ) {
                 boolean terminateJobs = args[i].endsWith("j");
                 i++;
@@ -631,6 +859,38 @@ public class QConfCommand extends AbstractCommand {
                 throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
             }
         }
+    }
+    
+    private void printListSortedByName(List list, List args, PrintWriter pw) {
+       list = getNameList(list);
+       Collections.sort(list);
+       printList(list, args, pw);
+    }
+    
+    private void printList(List list, List args, PrintWriter pw) {
+       for (Iterator iter = list.iterator(); iter.hasNext(); ) {
+          pw.println(iter.next());
+       }
+       if (args.size()>2) {
+          pw.println("error: invalid option argument \"" + args.get(2) + "\"");
+          pw.println("Usage: qconf -help");
+       }
+       pw.flush();
+    }
+    
+    private List parseUserList(List argList) {
+       List list = new ArrayList();
+       //TODO LP: Now we stick to the client behavior don't accept additional args
+       String userList = (String) argList.get(1);
+       String[] users = userList.split(",");
+       String user;
+       for (int i = 0; i < users.length; i++) {
+          user = users[i].trim();
+          if (user.length() > 0) {
+             list.add(user);
+          }
+       }
+       return (list.size() > 0) ? list : null;
     }
     
     //TODO LP better to have it in ComplexEntry itself
@@ -745,6 +1005,125 @@ public class QConfCommand extends AbstractCommand {
        return list;
     }
     
+    private void modifyAbstractUser(JGDI jgdi, String operation, String type, String option, List args, PrintWriter pw) {
+       if (args.size() == 0) {
+          pw.println("error: no option argument provided to \""+option+"\"");
+          pw.println(getUsage());
+          pw.flush();
+          return;
+       }
+       if (args.size() > 2) {
+          pw.println("error: invalid option argument \"" + args.get(2) + "\"");
+          pw.println("Usage: qconf -help");
+          pw.flush();
+          return;
+       }
+       List userList = parseUserList(args);
+       String value;
+       Class cls;
+       Object obj;
+       GEObject geObj;
+       Method m;
+       for (Iterator iter = userList.iterator(); iter.hasNext(); ) {
+          geObj = null;
+          value = (String) iter.next();
+          try {
+             //Try to find the existing manager/operator
+             m = JGDI.class.getDeclaredMethod("get"+type+"List", new Class[] {});
+             List list = (List) m.invoke(jgdi, new Object[] {});
+             for (Iterator iterator = list.iterator(); iterator.hasNext(); ) {
+                AbstractManager am = (AbstractManager) iterator.next();
+                if (am.getName().equals(value)) {
+                   geObj = am;
+                   break;
+                }
+             }
+             //Adding existing value
+             if (operation.equals("add") && geObj != null) {
+                pw.println(type.toLowerCase()+" \""+value+"\" already exists");
+                pw.flush();
+                continue;
+             }
+             //When adding and does not exist, we create new instance
+             if (operation.equals("add") && geObj == null) {
+                cls = Class.forName("com.sun.grid.jgdi.configuration." + type + "Impl");
+                Constructor c = cls.getConstructor(new Class[] {boolean.class});
+                obj = c.newInstance(new Object[] {Boolean.TRUE});
+                if (!(obj instanceof GEObject)) {
+                   throw new IllegalAccessException("Class for type "+type+" is not an instance of GEObject");
+                }
+                geObj = (GEObject)obj;
+                Method setName = obj.getClass().getDeclaredMethod("setName", new Class[] {String.class});
+                setName.invoke(geObj, new Object[] { value });
+             }
+             //Removing non-existing value
+             if (operation.equals("delete") && geObj == null) {
+                pw.println("denied: "+type.toLowerCase()+" \""+value+"\" does not exist");
+                pw.flush();
+                continue;
+             }
+             //Finally we perform the task
+             Class paramClass = Class.forName("com.sun.grid.jgdi.configuration." + type);
+             m = JGDI.class.getDeclaredMethod(operation + type, new Class[] {paramClass});
+             m.invoke(jgdi, new Object[] {geObj});
+             pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName() +
+                   ((operation.equals("add")) ? " added " : " removed ") + "\""+value+"\"" +
+                   ((operation.equals("add")) ? " to " : " from ") + type.toLowerCase() + " list");
+             pw.flush();
+          } catch (ClassNotFoundException ex) {
+             ex.printStackTrace();
+          } catch (SecurityException ex) {
+             ex.printStackTrace();
+          } catch (NoSuchMethodException ex) {
+             ex.printStackTrace();
+          } catch (InstantiationException ex) {
+             ex.printStackTrace();
+          } catch (IllegalArgumentException ex) {
+             ex.printStackTrace();
+          } catch (IllegalAccessException ex) {
+             ex.printStackTrace();
+          } catch (InvocationTargetException ex) {
+             ex.printStackTrace();
+          } catch (JGDIException ex) {
+             ex.printStackTrace();
+          } catch (UnknownHostException ex) {
+             ex.printStackTrace();
+          };
+       }
+    }
+    
+    /*private void showUserList(JGDI jgdi, String type, List args, PrintWriter pw) {
+       String value;
+       List userList = null;
+       Class cls = jgdi.getClass();
+       Method m;
+       try {
+          m = cls.getDeclaredMethod("get" + type + "List", null);
+          userList = (List) m.invoke(jgdi, null);
+       } catch (SecurityException ex) {
+          ex.printStackTrace();
+       } catch (NoSuchMethodException ex) {
+          ex.printStackTrace();
+       } catch (IllegalArgumentException ex) {
+          ex.printStackTrace();
+       } catch (IllegalAccessException ex) {
+          ex.printStackTrace();
+       } catch (InvocationTargetException ex) {
+          ex.printStackTrace();
+       }
+       for (Iterator iter = userList.iterator(); iter.hasNext(); ) {
+          value = (String) iter.next();
+          pw.println(value);
+       }
+       if (args.size()>2) {
+          pw.println("error: invalid option argument \"" + args.get(2) + "\"");
+          pw.println("Usage: qconf -help");
+          pw.flush();
+          return;
+       }
+       pw.flush();
+    }*/
+              
     private void addNewGEObject(JGDI jgdi, String type, List args, PrintWriter pw) {
        Object obj;
        Class cls;
@@ -770,7 +1149,7 @@ public class QConfCommand extends AbstractCommand {
           Class paramType = Class.forName("com.sun.grid.jgdi.configuration." + type);
           Method m = JGDI.class.getDeclaredMethod("add"+type, new Class[] {paramType});
           m.invoke(jgdi, new Object[] {geObj});
-          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" added \""+geObj.getName()+"\" to "+type.toLowerCase()+" list");
+          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" added \""+geObj.getName()+"\" to "+convertAddRemoveTypeToMessage(type)+" list");
           pw.flush();
        } catch (ClassNotFoundException ex) {
           ex.printStackTrace();
@@ -820,18 +1199,25 @@ public class QConfCommand extends AbstractCommand {
              throw new IllegalAccessException("Class for type "+type+" is not an instance of GEObject");
           }
           String inputText = readFile(fileName);
-          keyAttrValue = getKeyAttributeValueFromString(pw, type, fileName, inputText);
+          String setNameMethod = "setName";
+          //CONFIGURATION special handling
+          if (type.equals("Configuration")) {
+             keyAttrValue = new File(fileName).getName();
+             setNameMethod = "setHname";
+          } else {
+            keyAttrValue = getKeyAttributeValueFromString(pw, type, fileName, inputText);
+          }
           if (keyAttrValue == null) {
              return;
           }
           GEObject geObj = (GEObject)obj;
-          Method setName = obj.getClass().getDeclaredMethod("setName", new Class[] {String.class});
+          Method setName = obj.getClass().getDeclaredMethod(setNameMethod, new Class[] {String.class});
           setName.invoke(obj, new Object[] {keyAttrValue});
           GEObjectEditor.updateObjectWithText(jgdi, geObj, inputText);
           Class paramType = Class.forName("com.sun.grid.jgdi.configuration." + type);
           Method m = JGDI.class.getDeclaredMethod("add"+type, new Class[] {paramType});
           m.invoke(jgdi, new Object[] {obj});
-          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" added \""+geObj.getName()+"\" to "+type.toLowerCase()+" list");
+          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" added \""+keyAttrValue+"\" to "+convertAddRemoveTypeToMessage(type)+" list");
           pw.flush();
        } catch (ClassNotFoundException ex) {
           ex.printStackTrace();
@@ -887,7 +1273,7 @@ public class QConfCommand extends AbstractCommand {
           Class paramType = Class.forName("com.sun.grid.jgdi.configuration." + type);
           Method m = JGDI.class.getDeclaredMethod("update"+type, new Class[] {paramType});
           m.invoke(jgdi, new Object[] {geObj});
-          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" modified \""+geObj.getName()+"\" in "+type.toLowerCase()+" list");
+          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" modified \""+geObj.getName()+"\" in "+convertAddRemoveTypeToMessage(type)+" list");
           pw.flush();
        } catch (ClassNotFoundException ex) {
           ex.printStackTrace();
@@ -946,7 +1332,7 @@ public class QConfCommand extends AbstractCommand {
           Class paramType = Class.forName("com.sun.grid.jgdi.configuration." + type);
           Method m = JGDI.class.getDeclaredMethod("update"+type, new Class[] {paramType});
           m.invoke(jgdi, new Object[] {obj});
-          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" modified \""+geObj.getName()+"\" in "+type.toLowerCase()+" list");
+          pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" modified \""+geObj.getName()+"\" in "+convertAddRemoveTypeToMessage(type)+" list");
           pw.flush();
        } catch (ClassNotFoundException ex) {
           ex.printStackTrace();
@@ -970,7 +1356,6 @@ public class QConfCommand extends AbstractCommand {
     }
     
     private void showGEObjectList(JGDI jgdi, String type, List args, PrintWriter pw) {
-       Object obj;
        Class cls;
        if (args.size() > 1) {
           pw.println("error: invalid option argument \"" + args.get(1) + "\"");
@@ -980,17 +1365,36 @@ public class QConfCommand extends AbstractCommand {
        }
        try {
           Class paramType = Class.forName("com.sun.grid.jgdi.configuration." + type);
-          Method getGEObjList = JGDI.class.getDeclaredMethod("get"+type+"List", null);
-          List list = sortListByName((List)getGEObjList.invoke(jgdi, null));
+          Method getGEObjList = JGDI.class.getDeclaredMethod("get" + type + "List", null);
+          List list = (List) getGEObjList.invoke(jgdi, null);
+          //CONFIGURATION special handling
+          if (type.equals("Configuration")) {
+             List relevantList = new ArrayList();
+             for (Iterator iter = list.iterator(); iter.hasNext(); ) {
+                String name = ((ConfigurationImpl) iter.next()).getHname();
+                if (!name.equals("global")) {
+                   relevantList.add(name);
+                }
+             }
+             Collections.sort(relevantList);
+             for (Iterator iter = relevantList.iterator(); iter.hasNext(); ) {
+                pw.println(iter.next());
+             }
+             pw.flush();
+             return;
+          }
+          list = getNameList(list);
+          adjustListValues(type, list);
+          Collections.sort(list);
+          type = type.toLowerCase();
+          String typeStr = (typeConvertor.containsKey(type)) ? (String) typeConvertor.get(type) : type;
           if (list.size() == 0) {
-             pw.println("no "+type.toLowerCase()+" defined");
+             pw.println("no "+typeStr+" defined");
              pw.flush();
              return;
           }
           for (Iterator iter = list.iterator(); iter.hasNext(); ) {
-             obj = iter.next();
-             Method getName = obj.getClass().getDeclaredMethod("getName", null);
-             pw.println(getName.invoke(obj, null));
+             pw.println(iter.next());
           }
           pw.flush();
        } catch (ClassNotFoundException ex) {
@@ -999,10 +1403,62 @@ public class QConfCommand extends AbstractCommand {
           ex.printStackTrace();
        } catch (NoSuchMethodException ex) {
           ex.printStackTrace();
+       } catch (IllegalArgumentException ex) {
+          ex.printStackTrace();
        } catch (IllegalAccessException ex) {
           ex.printStackTrace();
        } catch (InvocationTargetException ex) {
           ex.printStackTrace();
+       }
+    }
+    
+    private String convertAddRemoveTypeToMessage(String type) {
+        type = type.toLowerCase();
+        if (addRemoveTypeConvertor.containsKey(type)) {
+            return (String) addRemoveTypeConvertor.get(type);
+        }
+        return type;
+    }
+    
+    private List getNameList(List objList) {
+       List nameList = new ArrayList();
+       Object obj;
+       Class cls;
+       String name;
+       for (Iterator iter = objList.iterator(); iter.hasNext(); ) {
+          obj = iter.next();
+         Method getName;
+         try {
+            getName = obj.getClass().getDeclaredMethod("getName", null);
+            name = (String) getName.invoke(obj, null);
+            nameList.add(name);
+         } catch (SecurityException ex) {
+            ex.printStackTrace();
+         } catch (NoSuchMethodException ex) {
+            ex.printStackTrace();
+         } catch (IllegalArgumentException ex) {
+            ex.printStackTrace();
+         } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
+         } catch (InvocationTargetException ex) {
+            ex.printStackTrace();
+         }
+       }
+       return nameList;
+    }
+    
+    private void adjustListValues(String type, List list) {
+       if (type.equals("ExecHost")) {
+          String name;
+          int i=0;
+          while (i < list.size()) {
+             name = (String) list.get(i);
+             if (name.equals("global") || name.equals("template")) {
+                list.remove(i);
+             } else {
+                i++;
+             }
+          }
        }
     }
     
@@ -1050,9 +1506,14 @@ public class QConfCommand extends AbstractCommand {
              int i=0;
              pw.print((String)strList.get(i));
              for (i=1; i < strList.size(); i++) {
-                pw.println();
+                //ClusterQueues are without the empty lines
+                if (!type.equals("ClusterQueue")) pw.println();
                 pw.print((String)strList.get(i));
              }
+          }
+          //CONFIGURATION special handling
+          if (type.equals("Configuration")) {
+             pw.println();
           }
           pw.flush();
        } catch (ClassNotFoundException ex) {
@@ -1116,7 +1577,7 @@ public class QConfCommand extends AbstractCommand {
                 GEObject delObj = (GEObject) iter.next();
                 deleteGEObj.invoke(jgdi, new Object[] {delObj});
                 try {
-                   pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" removed \""+delObj.getName()+"\" from "+type.toLowerCase()+" list");
+                   pw.println(jgdi.getAdminUser()+"@"+java.net.InetAddress.getLocalHost().getHostName()+" removed \""+delObj.getName()+"\" from "+convertAddRemoveTypeToMessage(type)+" list");
                    pw.flush();
                 } catch (UnknownHostException ex) {
                    ex.printStackTrace();
@@ -1189,6 +1650,14 @@ public class QConfCommand extends AbstractCommand {
           for (int i=str.length(); i<n ; i++) {
              sb.append(' ');
           }
+          return sb.toString();
+       }
+       public static String right(String str, int n) {
+          StringBuffer sb = new StringBuffer();
+          for (int i=str.length(); i<n ; i++) {
+             sb.append(' ');
+          }
+          sb.append(str);
           return sb.toString();
        }
     }

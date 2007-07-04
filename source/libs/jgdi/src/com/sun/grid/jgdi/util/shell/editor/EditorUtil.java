@@ -36,31 +36,52 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
+import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
+import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.Project;
+import com.sun.grid.jgdi.configuration.SchedConf;
+import com.sun.grid.jgdi.configuration.SchedConfImpl;
 import com.sun.grid.jgdi.configuration.User;
+import com.sun.grid.jgdi.configuration.UserSet;
+import com.sun.grid.jgdi.configuration.UserSetImpl;
 import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
+import java.lang.IllegalArgumentException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.FieldPosition;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  *
  */
 public class EditorUtil {
-   public static String VALUE_NONE = "NONE";
-   public static String VALUE_UNDEFINED = "UNDEFINED";
-   public static String VALUE_INFINITY = "INFINITY";
-   public static String VALUE_DEFAULT = "@/";
+   public static final String VALUE_NONE = "NONE";
+   public static final String VALUE_UNDEFINED = "UNDEFINED";
+   public static final String VALUE_INFINITY = "INFINITY";
+   public static final String VALUE_DEFAULT = "@/";
    
-   public static String QTYPES[] = { "BATCH", "INTERACTIVE" };
+   public static final String QTYPES[] = { "BATCH", "INTERACTIVE" };
+   public static final String QSMTYPES[] = { "load", "seqno" };
+   private static final String userset_types[] = {
+      "ACL",   /* US_ACL   */
+      "DEPT",  /* US_DEPT  */
+     };
+   
+   public static final int PROPERTIES_ALL = 0;
+   public static final int PROPERTIES_READ_ONLY = 1;
+   public static final int PROPERTIES_CONFIGURABLE = 2;
    
    
    public static String unifyAttrWithClientNames(String objectName, String name) {
@@ -86,6 +107,12 @@ public class EditorUtil {
             return "restart_command";
          }
       }
+      //CONFIGURATION
+      /*if (objectName.equals("Configuration")) {
+         if (name.equals("name")) {
+            return "hname";
+         }
+      }*/
       //HOSTGROUP
       if (objectName.equals("Hostgroup")) {
          if (name.equals("name")) {
@@ -137,6 +164,12 @@ public class EditorUtil {
             return "complex_values";
          }
       }
+      //SCHEDCONF
+      if (objectName.equals("SchedConf")) {
+         if (name.equals("usage_weight")) {
+            return "usage_weight_list";
+         }
+      }
       return name;
    }
    
@@ -176,6 +209,13 @@ public class EditorUtil {
             return "rest_command";
          }
       }
+      //CONFIGURATION
+      //TODO LP: Check if client recognizes name or hname in a configuration file
+      /*if (objectName.equals("Configuration")) {
+         if (name.equals("hname")) {
+            return "name";
+         }
+      }*/
       //HOSTGROUP
       if (objectName.equals("Hostgroup")) {
          if (name.equals("group_name")) {
@@ -227,6 +267,12 @@ public class EditorUtil {
             return "consumable_config";
          }
       }
+      //SCHEDCONF
+      if (objectName.equals("SchedConf")) {
+         if (name.equals("usage_weight_list")) {
+            return "usage_weight";
+         }
+      }
       return name;
    }
    
@@ -274,9 +320,22 @@ public class EditorUtil {
       return name;
    }
    
+   static boolean doNotDisplayAttr(GEObject obj, PropertyDescriptor pd, int propScope) {
+      switch (propScope) {
+         case PROPERTIES_ALL:
+            return doNotDisplayAttrAll(obj, pd);
+         case PROPERTIES_CONFIGURABLE:
+            return doNotDisplayConfigurableAttr(obj, pd);
+         case PROPERTIES_READ_ONLY:
+            return false;
+         default:
+            throw new IllegalArgumentException("Invalid property scope specifier!");
+      }
+   }
+   
    /** Filters GEObject attributes so only those that are displayed by client 
     * are also displayed by JGDIShell (Used in qconf -s*) */ 
-   static boolean doNotDisplayAttr(GEObject obj, PropertyDescriptor pd) {
+   static boolean doNotDisplayAttrAll(GEObject obj, PropertyDescriptor pd) {
       String name = java2cName(obj, pd.getPropertyName());
       //ABSTRACT USER
       if (obj instanceof AbstractUser) {
@@ -292,6 +351,12 @@ public class EditorUtil {
             return true;
          }
       }
+      //USERSET
+      if (obj instanceof UserSet) {
+         if (name.equals("job_cnt")) {
+            return true;
+         }
+      }
       //PROJECT
       if (obj instanceof Project) {
          if (name.equals("delete_time") || name.equals("default_project")) {
@@ -301,6 +366,18 @@ public class EditorUtil {
       //QUEUE
       if (obj instanceof ClusterQueue) {
          if (name.equals("qinstances") || name.equals("tag")) {
+            return true;
+         }
+      }
+      //CONFIGURATION
+      if (obj instanceof Configuration) {
+         if (name.equals("version")) {
+            return true;
+         }
+      }
+      //SCHEDCONF
+      if (obj instanceof SchedConf) {
+         if (name.equals("weight_tickets_override")) {
             return true;
          }
       }
@@ -357,9 +434,15 @@ public class EditorUtil {
          return null;
       } else if (str.compareToIgnoreCase(VALUE_INFINITY)==0) {
          return new Integer(Integer.MAX_VALUE);
-      //QTYPE
+      //CLUSTERQUEUE - QTYPE
       } else if (key.equalsIgnoreCase("qtype")) {
          return getQtypeValue(str);
+      //USERSET - TYPE
+      /*} else if (key.equalsIgnoreCase("type")) {
+         return getUserSetTypeValue(str);*/
+      //SCHEDCONF - queue_sort_method
+      } else if (key.equalsIgnoreCase("queue_sort_method")) {
+         return getQSMtypeValue(str);
       } else {
          return new Integer(str);
       }
@@ -374,35 +457,74 @@ public class EditorUtil {
    }
    
    static Integer getQtypeValue(String str) {
+      return getTypeMappedValue(QTYPES, str);
+   }
+   
+   private static String getQtypeString(int val) {
+      return getTypeMappedString(QTYPES, val);
+   }
+   
+   static Integer getUserSetTypeValue(String str) {
+      return getTypeMappedValue(userset_types, str);
+   }
+   
+   private static String getUserSetTypeString(int val) {
+      return getTypeMappedString(userset_types, val);
+   }
+   
+   private static Integer getTypeMappedValue(String[] types, String str) {
       str = str.toUpperCase();
       int val = 0;
       int bitmask = 1;
       int pos=-1;
-      for (int i = 0; i < QTYPES.length ; i++) {
-         if ((pos = str.indexOf(QTYPES[i])) !=-1) {
+      for (int i = 0; i < types.length ; i++) {
+         if ((pos = str.indexOf(types[i])) !=-1) {
             val |= bitmask;
-            str = str.substring(0, pos) + str.substring(pos+QTYPES[i].length());
+            str = str.substring(0, pos) + str.substring(pos+types[i].length());
          }
          bitmask <<=1;
       }
       //Check there is nothing else in the line
       if (str.trim().length()>0) {
-         throw new IllegalArgumentException("Unknown qtype value \""+str.trim()+"\"");
+         throw new IllegalArgumentException("Unknown type value \""+str.trim()+"\"");
       }
       return new Integer(val);
    }
    
-   private static String getQtypeString(int val) {
+   private static String getTypeMappedString(String[] types, int val) {
       String str = "";
       int bitmask = 1;
       int pos=-1;
-      for (int i = 0; i < QTYPES.length ; i++) {
+      for (int i = 0; i < types.length ; i++) {
          if ((val & bitmask) == bitmask) {
-            str += QTYPES[i] + " ";
+            str += types[i] + " ";
          }
          bitmask <<=1;
       }
       return str.trim();
+   }
+   
+   static Integer getQSMtypeValue(String str) {
+      str = str.toUpperCase();
+      int val = 0;
+      int bitmask = 1;
+      int pos=-1;
+      for (int i = 0; i < QSMTYPES.length ; i++) {
+         if (str.equalsIgnoreCase(QSMTYPES[i])) {
+            return new Integer(i);
+         }
+      }
+      throw new IllegalArgumentException("Unknown qsm type value \""+str.trim()+"\"");
+   }
+   
+   private static String getQSMtypeString(int val) {
+      String str = "";
+      int bitmask = 1;
+      int pos=-1;
+      if (val < 0 || val >= QSMTYPES.length) {
+         throw new IllegalArgumentException("Unknown qsm type value \""+str.trim()+"\"");
+      }
+      return QSMTYPES[val];
    }
    
    private static Long parseTime(String time) {
@@ -426,16 +548,38 @@ public class EditorUtil {
       if (o instanceof List && ((List)o).size()==0) {
          return VALUE_NONE;
       }
+      if (o instanceof Boolean) {
+         return String.valueOf(o).toUpperCase();
+      }
+      if (o instanceof ComplexEntryImpl) {
+         ComplexEntry ce = ((ComplexEntryImpl)o);
+         return ce.getName()+"="+ce.getStringval();
+      }
+      if (o instanceof UserSetImpl) {
+         UserSet us = ((UserSetImpl)o);
+         return us.getName();
+      }
       if (o instanceof String) {
          String str = (String) o;
          if (str.trim().length()==0) {
             return null;
          }
       }
+      //TODO LP: Will need object type as well
       //CLUSTERQUEUE - QTYPE 
       if (key.equalsIgnoreCase("qtype")) {
          if (o instanceof Integer) {
             return getQtypeString(((Integer)o).intValue());
+         }
+      //USERSET - TYPE 
+      } else if (key.equalsIgnoreCase("type")) {
+         if (o instanceof Integer) {
+            return getUserSetTypeString(((Integer)o).intValue());
+         }
+      //SCHEDCONF - queue_sort_method
+      } else if (key.equals("queueSortMethod")) {
+         if (o instanceof Integer) {
+            return getQSMtypeString(((Integer)o).intValue());
          }
       }
       return o;
@@ -462,6 +606,8 @@ public class EditorUtil {
          return parseBoolean(value);
       } else if (type.equals("java.lang.String")) {
          return translateStringValueToObject(value);
+      } else if (type.equals("com.sun.grid.jgdi.configuration.ConfigurationElement")) {
+         //jgdi.getCo
       } else if (type.startsWith("com.sun.grid.jgdi.configuration.")) {
          if (translateStringValueToObject(value) == null) {
             return null;
@@ -487,7 +633,7 @@ public class EditorUtil {
                   }
                }
                Class cls = jgdi.getClass();
-               //TODO check if used JGDI.getJob(int jid);
+               //TODO LP: Check if anywhere used JGDI.getJob(int jid) and handle it
                Method m = cls.getDeclaredMethod("get"+name, new Class[] {String.class});
                newObj = m.invoke(jgdi, new Object[] {value});
                if (newObj == null) {
@@ -511,11 +657,19 @@ public class EditorUtil {
       } else {
          throw new IllegalArgumentException("Unknown data type=\""+type+"\"");
       }
+      return null;
    }
    
    static Object getPropertyValue(GEObject obj, PropertyDescriptor pd) {
       if (pd instanceof SimplePropertyDescriptor) {
-         return EditorUtil.translateObjectToStringValue(pd.getPropertyName(), ((SimplePropertyDescriptor)pd).getValue(obj));
+         Object value = ((SimplePropertyDescriptor)pd).getValue(obj);
+         //return EditorUtil.translateObjectToStringValue(pd.getPropertyName(), ((SimplePropertyDescriptor)pd).getValue(obj););
+         //SchedConf special formatting for double values 
+         if (obj instanceof SchedConf && value instanceof Double) {
+            DecimalFormat df = new DecimalFormat("#0.000000", new DecimalFormatSymbols(Locale.US));
+            return df.format(value);
+         }
+         return value;
       } else if (pd instanceof DefaultListPropertyDescriptor) {
          return convertList2String(obj, (DefaultListPropertyDescriptor)pd);
       } else if (pd instanceof DefaultMapPropertyDescriptor) {
@@ -542,6 +696,19 @@ public class EditorUtil {
    private static String convertMap2String(GEObject obj, DefaultMapPropertyDescriptor pd) {
       StringBuffer sb = new StringBuffer();
       Object val;
+      
+      //SchedConf special case with hardcoded sorting cpu,mem,io
+      if (obj instanceof SchedConf) {
+         Set keys = pd.getKeys(obj);
+         if (keys.size() != 3) {
+            throw new IllegalArgumentException("Author only expected 3 keys [cpu, mem, io], but you got "+keys.size());
+         }
+         DecimalFormat df = new DecimalFormat("#0.000000", new DecimalFormatSymbols(Locale.US));
+         return "cpu="+df.format(pd.get(obj,"cpu")) +
+                ",mem="+df.format(pd.get(obj,"mem")) +
+                ",io="+df.format(pd.get(obj,"io"));
+      }
+      
       for (Iterator iter = pd.getKeys(obj).iterator(); iter.hasNext(); ) {
          String key = (String) iter.next();
          val = EditorUtil.translateObjectToStringValue(pd.getPropertyName(), pd.get(obj, key));
@@ -572,14 +739,17 @@ public class EditorUtil {
             } else {
                val = EditorUtil.translateObjectToStringValue(pd.getPropertyName(), val);
             }
-            temp.append(val + ",");
+            //TODO LP: Decide the default behaviour
+            //temp.append(val + ",");
+            temp.append(val + " ");
          }
          if (temp.length() == 0) {
             continue;
          }
          temp.deleteCharAt(temp.length()-1);
          if (key.equals(EditorUtil.VALUE_DEFAULT)) {
-            sb.insert(0,temp);
+            //Due to missing method in Java 1.4, we need to convert temp to String
+            sb.insert(0,temp.toString());
          } else {
             sb.append(",[" + key + "=" + temp + "]");
          }

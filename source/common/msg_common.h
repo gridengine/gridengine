@@ -329,7 +329,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS            "job_tasks               [job_id['.'task_id_range]|job_name|pattern][' -t 'task_id_range]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB      "job_tasks               [job_id['.'task_id_range]]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user[,user,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\"|\"resource_quota\""

@@ -33,9 +33,12 @@
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
+import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
+import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
@@ -95,16 +98,23 @@ public class EditorParser {
          line = attr.substring(i);
          attr = EditorUtil.unifyClientNamesWithAttr(obj, attr.substring(0,i));
          
+         //CONFIGURATION special case
+         if (obj instanceof Configuration) {
+            map.put(attr, line.trim());
+            continue;
+         }
+         
          if ((pd = getPropertyDescriptor(obj, attr))==null) {
                throw new IllegalArgumentException("Skipped: Unknown attribute \""+attr+"\"");
          }
          if (pd.isReadOnly()) {
             throw new IllegalArgumentException("Skipped: Read only attribute \""+attr+"\"");
          }
+         
          line = parseOnePlainTextLine(obj,pd, line.trim());
          if (line == null || line.length() ==0) {
             throw new IllegalArgumentException("Invalid value format for attribute \""+attr+"\"");
-         }
+         }       
          map.put(pd, line);
       }
       return (!map.isEmpty()) ? map : null;
@@ -113,9 +123,11 @@ public class EditorParser {
    private static PropertyDescriptor getPropertyDescriptor(GEObject obj, String propertyName) {
       propertyName = EditorUtil.c2javaName(obj, propertyName);
       PropertyDescriptor pd;
+      String name;
       for (Iterator iter = GEObjectEditor.getAllProperties(obj).iterator(); iter.hasNext();) {
          pd = (PropertyDescriptor) iter.next();
-         if (pd.getPropertyName().equals(propertyName)) {
+         name = pd.getPropertyName();
+         if (name.equals(propertyName)) {
             return pd;
          }
       }
@@ -125,7 +137,7 @@ public class EditorParser {
    private static String parseOnePlainTextLine(GEObject obj, PropertyDescriptor pd, String values) {
       String type = pd.getPropertyType().getName();
       if (pd instanceof SimplePropertyDescriptor) {
-         List list = getSingleValueList(values," \t");
+         List list = getSingleValueList(obj, pd, values," \t");
          if (list.size() > 1) {
             throw new IllegalArgumentException("Expected only 1 argument for type=\""+type+"\" got: "+list.size()+" in "+values);
          }
@@ -135,7 +147,7 @@ public class EditorParser {
          }
          return value;
       } else if (pd instanceof DefaultListPropertyDescriptor) {
-         List list = getListValueList(values," \t,");
+         List list = getListValueList(obj, pd, values," \t,");
          if (list.size() != 1) {
             throw new IllegalArgumentException("Expected only list of arguments for type=\""+type+"\" got: "+list.toString());
          }
@@ -149,7 +161,7 @@ public class EditorParser {
       }
    }
    
-   private static List getSingleValueList(String values, String separators) {
+   private static List getSingleValueList(GEObject obj, PropertyDescriptor pd, String values, String separators) {
       StringBuffer sb = new StringBuffer(values);
       StringBuffer out = new StringBuffer();
       char c;
@@ -171,16 +183,16 @@ public class EditorParser {
          out.append(c);
       }
       if (out.length()>0) {
-         return Arrays.asList(new Object[] {out.toString().trim()});
+         return Arrays.asList(new Object[] {adjustAttrValues(obj, pd, out.toString().trim())});
       }
       return null;
    }
    
-   private static List getListValueList(String values, String separators) {
-      return getSingleValueList(values, separators);
+   private static List getListValueList(GEObject obj, PropertyDescriptor pd, String values, String separators) {
+      return getSingleValueList(obj, pd, values, separators);
    }
    
-   private static List getMapValueList(DefaultMapPropertyDescriptor pd, String values, String separators) {
+   private static List getMapValueList(GEObject obj, DefaultMapPropertyDescriptor pd, String values, String separators) {
       List list = new ArrayList();
       StringBuffer sb = new StringBuffer(values);
       StringBuffer out = new StringBuffer();
@@ -211,14 +223,14 @@ public class EditorParser {
                if (defaultUsed) {
                   throw new IllegalArgumentException("Unsupported format when parsing data. Got: "+values+" Expected: unique [key=value] pairs.");
                }
-               list.add("[@/="+adjustAttrValues(pd, out.toString().trim())+"]");
+               list.add("[@/="+adjustAttrValues(obj, pd, out.toString().trim())+"]");
                defaultUsed = true;
                out = new StringBuffer();
             }
          } else if (c == ']') {
             elemStart = false;
             if (out.length()>0) {
-               list.add("["+adjustAttrValues(pd, out.toString().trim())+"]");
+               list.add("["+adjustAttrValues(obj, pd, out.toString().trim())+"]");
                out = new StringBuffer();
             }
          } else {
@@ -229,18 +241,21 @@ public class EditorParser {
          if (defaultUsed) {
             throw new IllegalArgumentException("Unsupported format when parsing data. Got: "+values+" Expected: unique [key=value] pairs.");
          }
-         list.add("[@/="+adjustAttrValues(pd, out.toString().trim())+"]");
+         list.add("[@/="+adjustAttrValues(obj, pd, out.toString().trim())+"]");
          defaultUsed = true;
       }
       return list != null ? list : null;
    }
    
    /** Converts attribute values to understandable string values, e.g.: qtype 3 == "BATCH INTERACTIVE" */
-   private static String adjustAttrValues(PropertyDescriptor pd, String value) {
+   private static String adjustAttrValues(GEObject obj, PropertyDescriptor pd, String value) {
       String key = pd.getPropertyName();
       //ClusterQueue QTYPE attr
-      if (key.equalsIgnoreCase("qtype")) {
+      if (obj instanceof ClusterQueue && key.equalsIgnoreCase("qtype")) {
          return String.valueOf(EditorUtil.getQtypeValue(value).intValue());
+      //UserSet - type
+      } else if (obj instanceof UserSet && key.equalsIgnoreCase("type")) {
+         return String.valueOf(EditorUtil.getUserSetTypeValue(value).intValue());
       }
       return value;
    }
@@ -305,7 +320,7 @@ public class EditorParser {
       String validLine = "";
       String key, elem=null;
       String type = pd.getPropertyType().getName();
-      List list = getMapValueList(pd, values," \t,");
+      List list = getMapValueList(obj, pd, values," \t,");
       if (list == null || list.size() == 0) {
          throw new IllegalArgumentException("Got empty list. Argument \""+values+"\" has invalid format.");
       }

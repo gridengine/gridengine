@@ -1,3 +1,9 @@
+LP-2007-07-04-0: Enhancem.: New JGDI shell qconf options implemented
+                 Bugfix:    'qconf -help' suggests usage of patterns in 
+                            user_list which is not true
+                 Bugtraq:   6573980
+                 Review:    AA
+
 AP-2007-07-04-0: Bugfix:    qacct -l <attr>=<val> ignores jobs in output when they 
                             reference no longer existing queue. Instead of warning 
                             message for each job added one message with a count of 

@@ -1378,7 +1378,37 @@ cqueue_list_set_tag(lList *this_list, u_long32 tag_value, bool tag_qinstances)
 *     MT-NOTE: cqueue_list_locate_qinstance() is MT safe 
 *******************************************************************************/
 lListElem *
-cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name) 
+cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
+{
+   return cqueue_list_locate_qinstance_msg(cqueue_list, full_name, true);
+}
+
+/****** sgeobj/cqueue/cqueue_list_locate_qinstance_msg() ***********************
+*  NAME
+*     cqueue_list_locate_qinstance_msg() -- finds a certain qinstance 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool raise_error) 
+*
+*  FUNCTION
+*     Returns a certain qinstance with the name "full_name" from
+*     the master cqueue list given by "cqueue_list". 
+*
+*  INPUTS
+*     lList *cqueue_list    - CQ_Type 
+*     const char *full_name - qinstance name of the form <CQNAME>@<HOSTNAME> 
+*     bool raise_error      - true - show error messages
+*                           - false - suppress error messages
+*
+*  RESULT
+*     lListElem * - QU_Type
+*
+*  NOTES
+*     MT-NOTE: cqueue_list_locate_qinstance_msg() is MT safe 
+*******************************************************************************/
+lListElem *
+cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool raise_error) 
 {
    lListElem *ret = NULL;
 
@@ -1402,15 +1432,19 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
 
          ret = lGetElemHost(qinstance_list, QU_qhostname, hostname);
       } else {
-         ERROR((SGE_EVENT, MSG_CQUEUE_CQUEUEISNULL_SSSII, full_name, 
-                cqueue_name != NULL ? cqueue_name : "<null>", 
-                hostname != NULL ? hostname: "<null>", 
-                (int)has_hostname, (int)has_domain));
+         if (raise_error) {
+            ERROR((SGE_EVENT, MSG_CQUEUE_CQUEUEISNULL_SSSII, full_name, 
+                    cqueue_name != NULL ? cqueue_name : "<null>", 
+                    hostname != NULL ? hostname: "<null>", 
+                    (int)has_hostname, (int)has_domain));
+         }       
       }
       sge_dstring_free(&cqueue_name_buffer);
       sge_dstring_free(&host_domain_buffer);
    } else {
-      ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
+      if (raise_error) {
+         ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
+      }
    }
    DRETURN(ret);
 }

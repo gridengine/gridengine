@@ -1018,7 +1018,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
 
 /****** sge_select_queue/sge_select_queue() ************************************
 *  NAME
-*     sge_select_queue() -- checks weather a job fits on a given queue or host 
+*     sge_select_queue() -- checks whether a job matches a given queue or host 
 *
 *  SYNOPSIS
 *     int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem 
@@ -1026,8 +1026,8 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
 *     allow_non_requestable, int slots) 
 *
 *  FUNCTION
-*     Takes the requested attributes from a job and checks if it fits to the given
-*     host or queue. Only of of them has to be specified. It both, the function
+*     Takes the requested attributes from a job and checks if it matches the given
+*     host or queue. One and only one should be specified. If both, the function
 *     assumes, that the queue belongs to the given host. 
 *
 *  INPUTS

@@ -103,6 +103,9 @@ cqueue_list_locate(const lList *this_list, const char *name);
 lListElem *
 cqueue_locate_qinstance(const lListElem *this_elem, const char *hostname);
 
+lListElem *
+cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool raise_error);
+
 bool
 cqueue_list_find_all_matching_references(const lList *this_list,
                                          lList **answer_list,

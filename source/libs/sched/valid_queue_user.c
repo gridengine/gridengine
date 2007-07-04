@@ -121,7 +121,7 @@ static int sge_contained_in_access_list_(const char *user, const char *group,
          } 
       } else {
       	DPRINTF(("cannot find userset list entry \"%s\"\n", 
-		          lGetString(acl_search,US_name)));
+		          lGetString(acl_search, US_name)));
       }
    }
    DRETURN(0);

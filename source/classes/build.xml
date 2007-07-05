@@ -44,6 +44,7 @@ ___INFO__MARK_END__-->
       <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
       <property location="../scripts/removeGeneratedTags.pl" name="script"/>
+      <property name="license_text" value="&lt;!--___INFO__MARK_BEGIN__--&gt;&#10;The contents of this file are licensed under the &lt;a href=&quot;http://gridengine.sunsource.net/Gridengine_SISSL_license.html&quot;&gt;Sun Industry Standards Source License version 1.2&lt;/a&gt;.&lt;br&gt;&#10;Copyright 2007, Sun Microsystems, Inc.&#10;&lt;!--___INFO__MARK_END__--&gt;"/>
    </target>
 
    <target depends="init" description="Compile core classes." name="compile">
@@ -128,7 +129,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}">
          <fileset dir="${src.dir}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
@@ -141,7 +142,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}">
          <fileset dir="${src.dir}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>

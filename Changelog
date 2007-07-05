@@ -1,3 +1,12 @@
+JG-2007-07-05-0: Bugfix:    Removed .csvignore files - they prohibited checkout
+                            of 3rdparty modules.
+                            Fixed get_pw_buffer_size and get_group_buffer_size.
+                            Fixed drmaa error when native specification 
+                            contained leading spaces.
+                 Bugster:   6542987
+                 Issue:     2325
+                 Review:    RD
+
 LP-2007-07-04-1: Enhancem.: Adding .cvsignore files for NetBeans users
                  Review:    LP
 
@@ -7,10 +16,10 @@ LP-2007-07-04-0: Enhancem.: New JGDI shell qconf options implemented
                  Bugtraq:   6573980
                  Review:    AA
 
-AP-2007-07-04-0: Bugfix:    qacct -l <attr>=<val> ignores jobs in output when they 
-                            reference no longer existing queue. Instead of warning 
-                            message for each job added one message with a count of 
-                            ignored jobs.
+AP-2007-07-04-0: Bugfix:    qacct -l <attr>=<val> ignores jobs in output when 
+                            they reference no longer existing queue. Instead of 
+                            warning message for each job added one message with 
+                            a count of ignored jobs.
                  Bugster:   6525375
                  Issue:     2189
                  Changed:   qacct, sgq_cqueue, msg_history

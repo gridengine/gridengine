@@ -177,10 +177,10 @@ pid$1::report_list_send:return
    snd_schedd++;
 }
 
-pid$2::sge_mirror_process_events:return
+/* pid$2::sge_mirror_process_events:return
 { 
     rcv++;
-}
+} */
 
 /* --------------------------------------- [locks] ------------------------------------ */
 
@@ -279,11 +279,11 @@ pid$1::sge_c_gdi_mod:entry, pid$1::sge_c_gdi_add:entry, pid$1::sge_c_gdi_copy:en
 
 /* ------------------------------------- [scheduling] --------------------------------- */
 /* ---------------------------------- [synchronization] ------------------------------- */
-pid$2::sge_mirror_process_events:entry
+/* pid$2::sge_mirror_process_events:entry
 /$5 == 1/
 { 
    printf("\t%s() tid %d", probefunc, tid);
-}
+} */
 /* -------------------------------------- [commlib] ----------------------------------- */
 
 pid$1::cl_message_list_remove_receive:return

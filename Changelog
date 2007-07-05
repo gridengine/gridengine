@@ -1,5 +1,8 @@
-RD-2007-07-05-0: CVS        Created V61ARsnapshot2_TAG
+RD-2007-07-05-1: CVS        Created V61ARsnapshot2_TAG
 ------------------------------------------------------
+
+RD-2007-07-05-0: Bugfix:    Disabled sge_mirror_process_events dtrace probe
+                 Review:    AH
 
 RD-2007-07-04-2: Bugfix:    Merged DT-2007-07-02-0 from maintrunk
 

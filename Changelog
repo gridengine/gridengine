@@ -1,3 +1,10 @@
+JG-2007-07-05-0: Bugfix:    Fixed get_pw_buffer_size and get_group_buffer_size.
+                            Fixed drmaa error when native specification 
+                            contained leading spaces.
+                 Bugster:   6542987
+                 Issue:     2325
+                 Review:    RD
+
 AP-2007-07-04-0: Bugfix:    qacct -l <attr>=<val> ignores jobs in output when they 
                             reference no longer existing queue. Instead of warning 
                             message for each job added one message with a count of 

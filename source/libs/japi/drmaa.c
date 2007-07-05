@@ -34,9 +34,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
-
-#include <pthread.h>
 #include <pwd.h>
+#include <ctype.h>
 
 #include "sge_mtutil.h"
 
@@ -2680,9 +2679,17 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
     * append the native spec switches to the list if they exist
     */
    if ((ep=lGetElemStr (drmaa_jt->strings, VA_variable, DRMAA_NATIVE_SPECIFICATION))) {
+      int num_args;
+      char **args;
       const char *value = lGetString (ep, VA_value);
-      int num_args = sge_quick_count_num_args (value);
-      char **args = (char **)malloc (sizeof (char *) * (num_args + 1));
+
+      /* fix for IZ 2325: skip leading whitespace */
+      while (isspace(*value)) {
+         value++;
+      }
+      
+      num_args = sge_quick_count_num_args (value);
+      args = (char **)malloc (sizeof (char *) * (num_args + 1));
       
       DPRINTF (("processing %s = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, value));
       

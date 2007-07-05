@@ -202,7 +202,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public" bottom="${license_text}">
          <fileset dir="${src.dir}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>
@@ -215,7 +215,7 @@ ___INFO__MARK_END__-->
 
    <target depends="init" description="Javadoc tool docs for DRMAA" name="javadoc.all">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected" bottom="${license_text}">
          <fileset dir="${src.dir}">
             <include name="org/ggf/drmaa/*.java"/>
             <include name="com/sun/grid/drmaa/*.java"/>

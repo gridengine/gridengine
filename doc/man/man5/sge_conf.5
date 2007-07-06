@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/06/20 07:28:54 $     Revision: $Revision: 1.59 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2007/07/06 13:20:29 $     Revision: $Revision: 1.60 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/06/20 07:28:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2007/07/06 13:20:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1249,12 +1249,10 @@ overwritten by the execution host local configuration.
 This parameter specifies the executable that is to be started on the
 server side of a
 .M qlogin 1 
-request. Usually this is the fully qualified
-pathname of the system's telnet daemon. If no value is given, a specialized
-xxQS_NAMExx component is used.
+request. Usually this is the absolute pathname of the system's telnet daemon. 
 .PP
 Changing \fBqlogin_daemon\fP will take immediate effect.
-The default for \fBqlogin_daemon\fP is none.
+The default value for \fBqlogin_daemon\fP is the system's default telnetd.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -1264,13 +1262,11 @@ may be overwritten by the execution host local configuration.
 This is the command to be executed on the client side of a 
 .M qlogin 1
 request.
-Usually this is the fully qualified pathname of the systems's telnet
-client program. If no value is given, a specialized xxQS_NAMExx
-component is used. It is automatically started with the target host and
-port number as parameters.
+Usually this is the absolute pathname of the systems's telnet client program. Otherwise the systems default telnet client will be used. 
+It is automatically started with the target host and port number as parameters.
 .PP
 Changing \fBqlogin_command\fP will take immediate effect.
-The default for \fBqlogin_command\fP is none.
+The default value for \fBqlogin_command\fP is telnet.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -1282,16 +1278,14 @@ side of a
 .M qrsh 1
 request
 .B without
-a command argument to be executed
-remotely. Usually this is the fully qualified pathname of the system's
-rlogin daemon.  If no value is given, a specialized xxQS_NAMExx component
-is used.
+a command argument to be executed remotely. 
+Usually this is the absolute pathname of the system's rlogin daemon. 
 .sp 1
 Changing
 .B rlogin_daemon
 will take immediate effect. The default for
 .B rlogin_daemon
-is none.
+is the system's default rlogind.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
@@ -1302,21 +1296,19 @@ This is the command to be executed on the client side of a
 .M qrsh 1
 request
 .B without
-a command argument to be executed remotely. Usually this is the
-fully qualified pathname of the system's rlogin client program. If no value
-is given, a specialized xxQS_NAMExx component is used. The command is
-automatically started with the target host and port number as parameters
-like required for
-.M telnet 1 .
+a command argument to be executed remotely.
+If no value is given, a specialized xxQS_NAMExx component is used.
+The command is automatically started with the target host and port number 
+as parameters.
 The xxQS_NAMExx rlogin client has been extended
 to accept and use the port number argument. You can only use clients, such
 as \fIssh\fP, which also understand this syntax.
 .sp 1
 Changing
 .B rlogin_command
-will take immediate effect. The default for
+will take immediate effect. A default value for
 .B rlogin_command
-is none.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
@@ -1329,14 +1321,13 @@ side of a
 request
 .B with
 a command argument to be executed remotely.
-Usually this is the fully qualified pathname of the system's rsh daemon. If
-no value is given, a specialized xxQS_NAMExx component is used.
+If no value is given, a specialized xxQS_NAMExx component is used.
 .sp 1
 Changing
 .B rsh_daemon
-will take immediate effect. The default for
+will take immediate effect. A default value for
 .B rsh_daemon
-is none.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
@@ -1347,9 +1338,9 @@ This is the command to be executed on the client side of a
 .M qrsh 1
 request
 .B with
-a command argument to be executed remotely. Usually this is the fully
-qualified pathname of the system's rsh client program. If no value is
-given, a specialized xxQS_NAMExx component is used. The command is
+a command argument to be executed remotely.
+If no value is given, a specialized xxQS_NAMExx component is used. The command is
+automatically started with the target host and port number as parameters
 automatically started with the target host and port number as parameters
 like required for
 .M telnet 1
@@ -1360,9 +1351,9 @@ and use the port number argument. You can only use clients, such as
 .sp 1
 Changing
 .B rsh_command
-will take immediate effect. The default for
+will take immediate effect. A default value for
 .B rsh_command
-is none.
+is not configured.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.

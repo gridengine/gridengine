@@ -1,3 +1,9 @@
+MD-2007-07-06-0: Bugfix:    sge_conf(5), description for rlogin_daemon and 
+                            qlogin_daemon is wrong
+                 Bugster:   6506661
+                 Issue:     2326 
+                 Review:    JG
+
 JG-2007-07-06-0: Bugfix:    Fixed memory leaks in qsh.
                  Review:    RD
 

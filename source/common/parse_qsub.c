@@ -1634,8 +1634,7 @@ DTRACE;
                ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_JOBARG, NULL);
                lSetString(ep_opt, SPA_argval_lStringT, *sp);
             }
-         }
-         else {
+         } else {
             lList *jid_list = NULL;
 
             if (!strcmp(*sp, "--")) {
@@ -1654,8 +1653,7 @@ DTRACE;
             sp++;
          }
          continue;
-      }
-      else {
+      } else {
          ep_opt = sge_add_arg(pcmdline, 0, lStringT, "", NULL);
          lSetString(ep_opt, SPA_argval_lStringT, *sp);
       }
@@ -1668,15 +1666,14 @@ DTRACE;
          ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
          lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_TGT_USER);
 
-      }
-      else if (prog_number == QRLS) {
+      } else if (prog_number == QRLS) {
          ep_opt = sge_add_arg(pcmdline, h_OPT, lIntT, "-h", "u");
          lSetInt(ep_opt, SPA_argval_lIntT, MINUS_H_CMD_SUB | MINUS_H_TGT_USER);
       }
    }
+
    DEXIT;
    return answer;
-
 }
 
 

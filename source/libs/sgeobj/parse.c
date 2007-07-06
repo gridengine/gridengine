@@ -119,21 +119,19 @@ const char *opt_switch_arg
    
    DENTER(TOP_LAYER, "sge_add_arg");
    
-   if (!popt_list) {
+   if (popt_list == NULL) {
        DEXIT;
        return NULL;
    }
 
    ep = lAddElemStr(popt_list, SPA_switch, opt_switch, SPA_Type);
 
-   if (!ep) {
-      DEXIT;
-      return NULL;
+   if (ep != NULL) {
+      lSetUlong(ep, SPA_number, opt_number);
+      lSetUlong(ep, SPA_argtype, opt_type);
+      lSetString(ep, SPA_switch_arg, opt_switch_arg);
+      lSetUlong(ep, SPA_occurrence, BIT_SPA_OCC_ARG);
    }
-   lSetUlong(ep, SPA_number, opt_number);
-   lSetUlong(ep, SPA_argtype, opt_type);
-   lSetString(ep, SPA_switch_arg, opt_switch_arg);
-   lSetUlong(ep, SPA_occurrence, BIT_SPA_OCC_ARG);
 
    DEXIT;
    return ep;

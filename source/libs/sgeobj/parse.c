@@ -66,7 +66,7 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
 
    cp = sge_strtok(str, ",");
    lAddElemStr(lp, field, cp, descr);
-   while ((cp = sge_strtok(NULL, ","))) {
+   while((cp = sge_strtok(NULL, ","))) {
       lAddElemStr(lp, field, cp, descr);
    }
 
@@ -119,21 +119,19 @@ const char *opt_switch_arg
    
    DENTER(TOP_LAYER, "sge_add_arg");
    
-   if (!popt_list) {
+   if (popt_list == NULL) {
        DEXIT;
        return NULL;
    }
 
    ep = lAddElemStr(popt_list, SPA_switch, opt_switch, SPA_Type);
 
-   if (!ep) {
-      DEXIT;
-      return NULL;
+   if (ep != NULL) {
+      lSetUlong(ep, SPA_number, opt_number);
+      lSetUlong(ep, SPA_argtype, opt_type);
+      lSetString(ep, SPA_switch_arg, opt_switch_arg);
+      lSetUlong(ep, SPA_occurrence, BIT_SPA_OCC_ARG);
    }
-   lSetUlong(ep, SPA_number, opt_number);
-   lSetUlong(ep, SPA_argtype, opt_type);
-   lSetString(ep, SPA_switch_arg, opt_switch_arg);
-   lSetUlong(ep, SPA_occurrence, BIT_SPA_OCC_ARG);
 
    DEXIT;
    return ep;
@@ -366,8 +364,8 @@ int field
 
    DENTER(TOP_LAYER, "parse_multi_stringlist");
 
-   if ((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
-      while (ep) {
+   if((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
+      while(ep) {
          /* collect all opts of same type, this is what 'multi' means in funcname!  */
          for_each(sep, lGetList(ep, SPA_argval_lListT)) {
             sge_parse_string_list(ppdestlist, lGetString(sep, ST_name), field, type);

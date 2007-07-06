@@ -437,11 +437,10 @@ char *argv[]
             lListElem *hep = NULL;
 
             spp = sge_parser_get_next(spp);
-            host = sge_strdup(host, *spp);
 
             /* try to resolve hostname */
             hep = lCreateElem(EH_Type);
-            lSetHost(hep, EH_name, host);
+            lSetHost(hep, EH_name, *spp);
 
             switch (sge_resolve_host(hep, EH_name)) {
                case CL_RETVAL_OK:
@@ -1375,15 +1374,16 @@ char *argv[]
          if (lp && lGetNumberOfElem(lp) > 0) {
             alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
+            lFreeList(&alp);
          }
 
          /* update project usage */
          if (lp2 && lGetNumberOfElem(lp2) > 0) {
             alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
+            lFreeList(&alp);
          }
          
-         lFreeList(&alp);
          lFreeList(&lp);
          lFreeList(&lp2);
          spp++;
@@ -2354,15 +2354,17 @@ char *argv[]
             if (answer_get_status(aep) != STATUS_OK) {
                fprintf(stderr, "%s\n", lGetString(aep, AN_text));
                FREE (fields);
+               lFreeList(&alp);
                spp++;
                continue;
             }
             lFreeList(&alp);
 
-            if (!lp || lGetNumberOfElem(lp) == 0) {
+            if (lp == NULL || lGetNumberOfElem(lp) == 0) {
                fprintf(stderr, MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S, *spp);
                fprintf(stderr, "\n");
                FREE (fields);
+               lFreeList(&lp);
                DRETURN(1);
             }
 
@@ -2373,20 +2375,21 @@ char *argv[]
                                                  fields, &qconf_sfi,
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
-            
+           
+            lFreeList(&lp);
+
             if (answer_list_output(&alp)) {
                FREE (fields);
                sge_error_and_exit(NULL);
             }
 
-            lFreeElem(&ep);
-            
             /* edit this file */
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
                if (sge_error_and_exit(MSG_PARSE_EDITFAILED)) {
-                  FREE (fields);
+                  FREE(fields);
+                  FREE(filename);
                   continue;
                }
             }
@@ -2394,8 +2397,9 @@ char *argv[]
             if (status > 0) {
                unlink(filename);
                if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED)) {
-                     FREE (fields);
-                     continue;
+                  FREE(fields);
+                  FREE(filename);
+                  continue;
                }
             }
 
@@ -2405,6 +2409,7 @@ char *argv[]
                                             SP_FORM_ASCII, NULL, filename);
             
             unlink(filename);
+            FREE(filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -2431,8 +2436,6 @@ char *argv[]
                   continue;
                }
             }
-
-            FREE(filename);
          } else {
             spp = sge_parser_get_next(spp);
 

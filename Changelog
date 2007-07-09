@@ -1,3 +1,9 @@
+RN-2007-07-09-0: Bugfix : - Creating a userset with NONE as a type results in a core dump
+                          - Userset type should not accept empty string value
+                 Bugster: 6576153, 6576197
+                 Issue  : 2323, 2324
+                 Review : JG
+
 MD-2007-07-06-0: Bugfix:    sge_conf(5), description for rlogin_daemon and 
                             qlogin_daemon is wrong
                  Bugster:   6506661
@@ -128,9 +134,9 @@ CR-2007-06-22-0: Bugfix:    Fixed merge error introduced with RN-2007-06-19-0
 AA-2007-06-21-0: Cleanup:   missing copyrights in Xpm files
 
 RN-2007-06-21-0: Bugfix:    qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE)
-	         Bugster:   6433628
-		 Issue:     2307
-		 Review:    JG
+                 Bugster:   6433628
+                 Issue:     2307
+                 Review:    JG
 
 JG-2007-06-21-0: Bugfix:    qquota filtering broken for pe and project
                  Bugster:   6539199

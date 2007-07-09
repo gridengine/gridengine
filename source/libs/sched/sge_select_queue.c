@@ -3083,6 +3083,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    dstring rule_name = DSTRING_INIT;
    dstring rue_string = DSTRING_INIT;
    dstring limit_name = DSTRING_INIT;
+   u_long32 ar_id = lGetUlong(a->job, JB_ar);
+   lListElem *ar_ep = lGetElemUlong(a->ar_list, AR_id, ar_id);
 
    category_use_t use_category;
    
@@ -3151,7 +3153,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          continue;
       }
 
-      if ((result = rqs_by_slots(a, cqname, eh_name, 
+      if (ar_ep == NULL && (result = rqs_by_slots(a, cqname, eh_name, 
             &tt_rqs, &is_global, &rue_string, &limit_name, &rule_name)) != DISPATCH_OK) {
          best_queue_result = find_best_result(result, best_queue_result);
          if (is_global == false) {
@@ -3183,9 +3185,6 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       hep = lGetElemHost(a->host_list, EH_name, eh_name);
 
       if (hep != NULL) {
-         u_long32 ar_id = lGetUlong(a->job, JB_ar);
-         lListElem *ar_ep = lGetElemUlong(a->ar_list, AR_id, ar_id);
-
 
          /* match the none resources */
          if (sge_queue_match_static(qep, a->job, NULL, a->ckpt, a->centry_list, a->acl_list, a->hgrp_list, a->ar_list) != DISPATCH_OK) {
@@ -3202,7 +3201,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
             result = sequential_queue_time(&tt_ar, a, use_category.compute_violation?&queue_violations:NULL, 
                                          ar_queue);
             if (result != DISPATCH_OK) {
-               DPRINTF(("ar queue %s returned %d\n", eh_name, result));         
+               DPRINTF(("ar queue %s returned %d\n", qname, result));         
                if (skip_queue_list) { 
                   lAddElemStr(&skip_queue_list, CTI_name, lGetString(ar_queue, QU_full_name), CTI_Type);
                }
@@ -4530,11 +4529,9 @@ static dispatch_t parallel_make_granted_destination_id_list(sge_assignment_t *a,
          }
          if (allocation_rule==ALLOC_RULE_ROUNDROBIN) {
             host_slots = 1;
-         } 
-         else if (allocation_rule==ALLOC_RULE_FILLUP) {
+         } else if (allocation_rule==ALLOC_RULE_FILLUP) {
             host_slots = available;
-         } 
-         else {
+         } else {
             host_slots = allocation_rule;
          }
          host_slots_qend = host_slots;
@@ -4557,7 +4554,7 @@ static dispatch_t parallel_make_granted_destination_id_list(sge_assignment_t *a,
             slots = MIN(a->slots-accu_host_slots, MIN(host_slots, qtagged));
             slots_qend = slots;
 
-            if (slots) {
+            if (slots && lGetUlong(a->job, JB_ar) == 0) {
                parallel_check_and_debit_rqs_slots(a, lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname), &slots, &slots_qend, &rule_name, &rue_name, &limit_name);
             }
 
@@ -4576,8 +4573,7 @@ static dispatch_t parallel_make_granted_destination_id_list(sge_assignment_t *a,
                   lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
                   lSetHost(gdil_ep, JG_qhostname, eh_name);
                   lSetUlong(gdil_ep, JG_slots, slots);
-               } 
-               else {
+               } else {
                   lSetUlong(gdil_ep, JG_slots, lGetUlong(gdil_ep, JG_slots) + slots);
                }   
                /* untag */

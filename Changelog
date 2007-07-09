@@ -1,3 +1,6 @@
+RD-2007-07-09-0: Bugfix:    fixed broken RQS-AR interaction
+                 Review:    JG
+
 MD-2007-07-06-0: Bugfix:    sge_conf(5), description for rlogin_daemon and 
                             qlogin_daemon is wrong
                  Bugster:   6506661

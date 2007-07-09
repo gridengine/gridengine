@@ -85,7 +85,6 @@ sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
       /* -help */
       if (opt_list_has_X(*cmdline, "-help")) {
          sge_usage(QRSTAT, stdout);
-         ret = false;
          break;
       }
 

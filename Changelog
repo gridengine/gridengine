@@ -1,8 +1,10 @@
-RN-2007-07-09-0: Bugfix : - Creating a userset with NONE as a type results in a core dump
-                          - Userset type should not accept empty string value
-                 Bugster: 6576153, 6576197
-                 Issue  : 2323, 2324
-                 Review : JG
+RD-2007-07-09-0: Bugfix:    fixed broken build on win32-x86 
+
+RN-2007-07-09-0: Bugfix :   - Creating a userset with NONE as a type results in a core dump
+                            - Userset type should not accept empty string value
+                 Bugster:   6576153, 6576197
+                 Issue  :   2323, 2324
+                 Review :   JG
 
 MD-2007-07-06-0: Bugfix:    sge_conf(5), description for rlogin_daemon and 
                             qlogin_daemon is wrong

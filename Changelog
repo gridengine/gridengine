@@ -1,4 +1,4 @@
-RN-2007-07-09-0: Bugfix : - Creating a userset with NONE as a type results in a core dump
+RN-2007-07-10-0: Bugfix : - Creating a userset with NONE as a type results in a core dump
                           - Userset type should not accept empty string value
                  Bugster: 6576153, 6576197
                  Issue  : 2323, 2324

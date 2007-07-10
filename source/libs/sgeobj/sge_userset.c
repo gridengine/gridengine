@@ -303,9 +303,14 @@ userset_set_type_string(lListElem *userset, lList **answer_list,
 
    if (value != NULL && *value != 0) {
       if (!sge_parse_bitfield_str(value, userset_types, &type, 
-                                  "userset type", NULL, false)) {
+                                  "userset type", answer_list, false)) {
          ret = false;
       }
+   }
+   else { /* value == NULL || *value == 0 */
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_READCONFIGFILEEMPTYSPEC_S , "userset type"));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
    }
 
    lSetUlong(userset, US_type, type);

@@ -1,3 +1,23 @@
+AH-2007-07-11-0: Bugfix:    Various improvements with sequential assigments and
+                            reservation:
+                            - kicked out per queue instance soft violation caching
+                            - cache operation results and static host matching right 
+                              after CQ matching
+                            - added per host -q evaluation
+                            - stop iterating through queue instances when a soft/
+                              reservation solution is determined that won't become better
+                            - once a soft/reservation solution is found, queue 
+                              instances no longer are investigated further, as 
+                              soon as it becomes apparent no better soft/reservation 
+                              solution will jump out
+                            - do RQS shadowing also for reservation jobs if they 
+                              hinder better solution than already found
+                            - do host/cqueue exclusion with RQS shadowing also when
+                              host and cqueue shadows global limit rule
+                 Bugster:   6579232
+                 Issue:     2328
+                 Review:    AA
+
 RN-2007-07-11-0: Bugfix : - Creating a userset with NONE as a type results in a core dump
                           - Userset type should not accept empty string value
                  Bugster: 6576153, 6576197

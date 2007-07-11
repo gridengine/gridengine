@@ -715,6 +715,10 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
       }
 
       if (host_shadowed && queue_shadowed) {
+#if 1
+         rqs_excluded_cqueues(rule, a);
+         rqs_excluded_hosts(rule, a);
+#endif
          DPRINTF(("QUEUE INSTANCE: resource quota set %s deny job execution on %s@%s\n", 
                sge_dstring_get_string(rule_name), queue_name, host_name));
          DRETURN(false);
@@ -1333,6 +1337,7 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
 
    DRETURN(ret);
 }
+
 /****** sge_resource_quota_schedd/rqs_by_slots() ***********************************
 *  NAME
 *     rqs_by_slots() -- Check queue instance suitability due to RQS
@@ -1360,6 +1365,7 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
 *     dstring *rue_string  - caller maintained buffer
 *     dstring *limit_name  - caller maintained buffer
 *     dstring *rule_name   - caller maintained buffer
+*     u_long32 tt_best     - time of best solution found so far
 *
 *  RESULT
 *     static dispatch_t - usual return values
@@ -1368,7 +1374,7 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
 *     MT-NOTE: rqs_by_slots() is MT safe 
 *******************************************************************************/
 dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host, 
-  u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name)
+  u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name, u_long32 tt_best)
 {
    lListElem *rqs;
    dispatch_t result = DISPATCH_OK;
@@ -1427,6 +1433,12 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
          if (result != DISPATCH_OK)
             break;
 
+         if (a->is_reservation && tt_rqs >= tt_best) {
+            /* no need to further investigate these ones */
+            if (rqs_exceeded_sort_out(a, rule, rule_name, queue, host))
+               *is_global = true;
+         }
+
          *tt_rqs_all = MAX(*tt_rqs_all, tt_rqs);
       }
    }
@@ -1442,4 +1454,3 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
 
    DRETURN(result);
 }
-

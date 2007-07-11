@@ -418,7 +418,7 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
 *  INPUTS
 *     const char *qref_pattern - a wildcard pattern as defined for -q qref_list
 *     const char *cqname       - cluster queue name
-*     const char *hostname     - exeuction hostname
+*     const char *hostname     - exeuction hostname (may be NULL)
 *     const lList *hgroup_list - host group list
 *
 *  RESULT
@@ -440,8 +440,8 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
       int boo;
       char *wc_cqueue = strdup(qref_pattern);
       wc_cqueue[ s - qref_pattern ] = '\0';
-     /* reject the cluster queue expression support */
-      boo =sge_eval_expression(TYPE_STR,wc_cqueue, cqname, NULL);
+      /* reject the cluster queue expression support */
+      boo = sge_eval_expression(TYPE_STR,wc_cqueue, cqname, NULL);
       free(wc_cqueue);
       if (!boo) {
          if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
@@ -488,6 +488,57 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
 *  NOTES
 *     MT-NOTE: qref_list_cq_rejected() is MT safe
 *******************************************************************************/
+static bool
+qref_eh_rejected(const char *qref_pattern, const char *hostname, const lList *hgroup_list)
+{
+   const char *s;
+
+   DENTER(TOP_LAYER, "qref_cq_rejected");
+
+   if (!(s=strchr(qref_pattern, '@'))) {
+      DEXIT;
+      return false;
+   }
+  
+   if (!qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
+       DEXIT;
+       return false;
+   }
+
+   DEXIT;
+   return true;
+}
+
+bool
+qref_list_eh_rejected(const lList *qref_list, const char *hostname, const lList *hgroup_list)
+{
+   lListElem *qref_pattern = NULL;
+
+   DENTER(TOP_LAYER, "qref_list_eh_rejected");
+
+   if (!hostname) {
+      DEXIT;
+      return true;
+   }
+
+   if (!qref_list) {
+      DEXIT;
+      return false;
+   }
+
+   for_each(qref_pattern, qref_list) {
+      const char *name = lGetString(qref_pattern, QR_name);
+      if (qref_eh_rejected(name, hostname, hgroup_list)==false) {
+         DEXIT;
+         return false;
+      }
+   }
+
+   DEXIT;
+   return true;
+}
+
+
 bool
 qref_list_cq_rejected(const lList *qref_list, const char *cqname,
       const char *hostname, const lList *hgroup_list)
@@ -545,7 +596,7 @@ qref_list_cq_rejected(const lList *qref_list, const char *cqname,
 bool
 qref_list_host_rejected(const char *href, const char *hostname, const lList *hgroup_list)
 {
-   DENTER(TOP_LAYER, "qref_list_host_rejected");
+   DENTER(BASIS_LAYER, "qref_list_host_rejected");
 
    if (href[0] == '@') { /* wc_hostgroup */
       const char *wc_hostgroup = &href[1];

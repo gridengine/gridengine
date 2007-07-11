@@ -180,7 +180,7 @@ NAMEEND
 /* Resource Quota Limit - used only for caching scheduler-internally */
 enum {
    RQL_name = RQL_LOWERBOUND,
-   RQL_result,
+   RQL_result,      /* dispatch_t */
    RQL_time,        /* sequential dispatching only */
    RQL_slots,       /* parallel dispatching only */
    RQL_slots_qend   /* parallel dispatching only */

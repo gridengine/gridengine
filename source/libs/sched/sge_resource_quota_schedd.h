@@ -48,7 +48,6 @@ void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, c
       int *slots, int *slots_qend, dstring *rule_name, dstring *rue_name, dstring *limit_name);
 
 dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host, 
-  u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name);
-
+  u_long32 *tt_rqs_all, bool *is_global, dstring *rue_string, dstring *limit_name, dstring *rule_name, u_long32 tt_best);
 
 #endif /* __SGE_RESOURCE_QUOTA_SCHEDD_H*/

@@ -1774,7 +1774,7 @@ int main(int argc, char **argv)
       DPRINTF(("R E A D I N G    J O B ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("============================================\n"));
       
-      while(!do_exit) {
+      while (!do_exit) {
          lCondition *where;
          lEnumeration *what;
          u_long32 job_status;
@@ -1858,21 +1858,24 @@ int main(int argc, char **argv)
          if (do_shut || do_exit) {
             WARNING((SGE_EVENT, MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED));
             delete_job(ctx, job_id, lp_jobs);
+            lFreeList(&lp_poll);
             do_exit = 1;
             exit_status = 1;
             continue;
          }
   
          if (alp_error) {
+            lFreeList(&lp_poll);
             continue;
          }
   
-         if ( (lp_poll == NULL || lGetNumberOfElem(lp_poll) == 0 ) || !(jep = lFirst(lp_poll))) {
+         if ((lp_poll == NULL || lGetNumberOfElem(lp_poll) == 0 ) || !(jep = lFirst(lp_poll))) {
             WARNING((SGE_EVENT, "\n"));
             log_state_set_log_verbose(1);
             WARNING((SGE_EVENT, MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S, progname));
             do_exit = 1;
             exit_status = 1;
+            lFreeList(&lp_poll);
             continue;
          }
          
@@ -1885,6 +1888,8 @@ int main(int argc, char **argv)
             DPRINTF(("Job Status is: %lx (unenrolled)\n", job_status));
          }
    
+         lFreeList(&lp_poll);
+
          switch(job_status) {
             /* qsh or future -wait case */
             case JIDLE:
@@ -1919,8 +1924,6 @@ int main(int argc, char **argv)
                exit_status = 1;
                break;
          }
-   
-         lFreeList(&lp_poll);
 
          if (!do_exit && polling_interval < QSH_POLLING_MAX) {
             polling_interval *= 2;
@@ -1943,24 +1946,25 @@ static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp)
 {
    lListElem *jep;
    lList* idlp = NULL;
+   lList* alp;
    char job_str[128];
 
-   if (!jlp) {
+   if (jlp == NULL) {
       return;
    }
    jep = lFirst(jlp);
-   if (!jep) {
+   if (jep == NULL) {
       return;
    }
 
    sprintf(job_str, sge_u32, job_id);
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
-   ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
-   /*
-   ** no error handling here, we try to delete the job
-   ** if we can
-   */
+   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
+
+   /* no error handling here, we try to delete the job if we can */
+   lFreeList(&idlp);
+   lFreeList(&alp);
 }
 
 static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,

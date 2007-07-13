@@ -1,3 +1,6 @@
+JG-2007-07-13-0: Bugfix:    fixed (non critical) memory leaks
+                 Review:    RD
+
 RD-2007-07-09-0: Bugfix:    fixed broken build on win32-x86 
 
 RN-2007-07-09-0: Bugfix :   - Creating a userset with NONE as a type results in a core dump

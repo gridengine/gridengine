@@ -322,17 +322,16 @@ static void append_opts_from_default_files(u_long32 prog_number,
                ** we turn this error into a warning here
                */
                quality = ANSWER_QUALITY_WARNING;
-            }
-            else {
+            } else {
                do_exit = 1;
             }
-         }
-         else {
+         } else {
             DPRINTF(("Warning: Error: %s\n", lGetString(aep, AN_text)));
          }
          answer_list_add(answer_list, lGetString(aep, AN_text), status, 
                          quality);
       }
+      lFreeList(&alp);
 
       if (do_exit) {
          for (pstr = def_files; *pstr; free(*pstr++)) {

@@ -346,7 +346,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
    } 
 
    cell_root = sge_malloc(strlen(sge_root) + strlen(sge_cell) + 2);
-   if (!cell_root) {
+   if (cell_root == NULL) {
       if (error_dstring == NULL) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
          SGE_EXIT(NULL, 1);
@@ -367,6 +367,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          } else {
             sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOSGECELL_S, 
                                 cell_root);
+            FREE(cell_root);
             DEXIT;
             return false;
          }
@@ -383,6 +384,8 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          } else {
             sge_dstring_sprintf(error_dstring, MSG_UTI_DIRECTORYNOTEXIST_S, 
                                 common_dir);
+            FREE(cell_root);
+            FREE(common_dir);
             DEXIT;
             return false;
          }

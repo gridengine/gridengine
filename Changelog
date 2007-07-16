@@ -1,3 +1,6 @@
+JG-2007-07-16-0: Bugfix:    fixed (non critical) memory leaks
+                 Review:    RD
+
 AH-2007-07-11-0: Bugfix:    Various improvements with sequential assigments and
                             reservation:
                             - kicked out per queue instance soft violation caching

@@ -362,8 +362,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    if (ret == 1) {
       if (!include_names && !isdigit(job_str[0]) && (strcmp(job_str, "\"*\"") != 0)) {
          ret = -1;
-      }
-      else {   
+      } else {
          *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
          
          if (*idp) {

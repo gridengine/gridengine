@@ -92,14 +92,9 @@ switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
             token = stra_from_str(file_as_string, " \n\t");
             ret = switch_list_qstat_parse_from_cmdline(switch_list, answer_list,
                                                        mode, token);
-            /*
-             * Time to free malloc()ed memory from str_from_str() used for token
-             * list.
-             */
-            if (token != NULL) {
-               sge_strafree(token);
-            }
+            sge_strafree(token);
          }
+         FREE(file_as_string);
       }
    }  
    DRETURN(ret); 

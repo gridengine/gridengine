@@ -387,6 +387,7 @@ int *all_users
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
       if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
+         lFreeList(&jid_list);
          lFreeElem(&job);
          DRETURN(answer);
       }                                                 

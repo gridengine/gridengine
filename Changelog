@@ -1,5 +1,5 @@
 DT-2007-07-16-0: Tests:     o Fixed bad test formulation in DRMAA junit test
-                 Review:    pending (JG)
+                 Review:    JG
                  Changed:   DRMAA junit tests
 
 JG-2007-07-16-0: Bugfix:    fixed (non critical) memory leaks

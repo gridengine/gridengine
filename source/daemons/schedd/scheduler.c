@@ -474,7 +474,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
                                  *(splitted_job_lists[SPLIT_SUSPENDED]),
                                  lists->pe_list, lists->host_list, lists->queue_list, 
                                  lists->rqs_list, lists->centry_list, lists->acl_list,
-                                 lists->hgrp_list, true);
+                                 lists->hgrp_list, lists->ar_list, true);
 
       if (dis_queue_elem != NULL) {
          lDechainList(lists->queue_list, &(lists->dis_queue_list), dis_queue_elem);
@@ -997,7 +997,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    a.ar_list          = ar_list;
 
    /* in reservation scheduling mode a non-zero duration always must be defined */
-   if ( !job_get_duration(&a.duration, job) ) {
+   if (!job_get_duration(&a.duration, job) ) {
       schedd_mes_add(a.job_id, SCHEDD_INFO_CKPTNOTFOUND_);
       assignment_release(&a);
       DRETURN(DISPATCH_NEVER_CAT);

@@ -81,7 +81,7 @@ static int
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
                          lList *host_list, lList *queue_list, lList *rqs_list,
                          lList *centry_list, lList *acl_list, lList *hgroup_list,
-                         bool for_job_scheduling);
+                         lList *ar_list, bool for_job_scheduling);
 
 static void add_calendar_to_schedule(lList *queue_list);
 
@@ -272,7 +272,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
       - reservation is enabled and job duration not zero 
       - queue is already reserved by an advance reservation (resource_diagram != NULL)
    */
-   if (for_job && (sconf_get_max_reservations()==0 || duration==0)
+   if (for_job && (sconf_get_max_reservations() == 0 || duration == 0)
       && resource_diagram == NULL) /* AR queues have a resource diagram and we must reflect changes for this queues */
    { 
       DPRINTF(("max reservations reached or duration is 0\n"));
@@ -596,118 +596,126 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
 {
    lListElem *gel, *qep, *hep; 
    int slots = 0;
-   dstring rue_name = DSTRING_INIT;
+   u_long32 ar_id = lGetUlong(a->job, JB_ar);
 
    DENTER(TOP_LAYER, "add_job_utilization");
 
-   if (lGetUlong(a->job, JB_ar) != 0) {
-      /* ar jobs are already utilized! Ü*/
-      DRETURN(0);
-   }
+   if (ar_id == 0) {
+      /* debit non-AR-job */
 
-   /* parallel environment  */
-   if (a->pe) {
-      utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
-            a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type, for_job_scheduling);
-   }
-
-   /* global */
-   hep = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
-   rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, a->slots, 
-         EH_consumable_config_list, EH_resource_utilization, 
-         lGetHost(hep, EH_name), a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
-
-   /* hosts */
-   for_each(hep, a->host_list) {
-      lListElem *next_gel;
-      const void *queue_iterator = NULL;
-      const char *eh_name = lGetHost(hep, EH_name);
-
-      if (!strcmp(eh_name, SGE_GLOBAL_NAME)) 
-         continue;
-
-      /* determine number of slots per host */
-      slots = 0;
-      for (next_gel = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &queue_iterator);
-          (gel = next_gel);
-           next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
-         
-         slots += lGetUlong(gel, JG_slots);
-      }
-      if (slots != 0) {
-         rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, slots,
-                  EH_consumable_config_list, EH_resource_utilization, eh_name, a->start, 
-                  a->duration, HOST_TAG, for_job_scheduling);
-      }
-   }
-
-   /* queues */
-   for_each(gel, a->gdil) {  
-      int slots = lGetUlong(gel, JG_slots); 
-      const char *qname = lGetString(gel, JG_qname);
-      if ((qep = qinstance_list_locate2(a->queue_list, qname)) == NULL) {
-         continue;
+      dstring rue_name = DSTRING_INIT;
+      /* parallel environment  */
+      if (a->pe) {
+         utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
+               a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type, for_job_scheduling);
       }
 
-      if (!qep && (!strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_RUNNING) ||
-         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_SUSPENDED) ||
-         !strcmp(type, SCHEDULING_RECORD_ENTRY_TYPE_PREEMPTING))) { 
-         /* 
-          * This happens in case of queues that were sorted out b/c they 
-          * are unknown, in some suspend state or in calendar disable state. As long 
-          * as we do not intend to schedule future resource utilization for those 
-          * queues it's valid to simply ignore resource utilizations decided in former 
-          * schedule runs: running/suspneded/migrating jobs.
-          * 
-          * Entering rc_add_job_utilization() would result in an error logging which
-          * is intended with SCHEDULING_RECORD_ENTRY_TYPE_STARTING and 
-          * SCHEDULING_RECORD_ENTRY_TYPE_RESERVING.
-          */
-         continue;
+      /* global */
+      hep = host_list_locate(a->host_list, SGE_GLOBAL_NAME);
+      rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, a->slots, 
+            EH_consumable_config_list, EH_resource_utilization, 
+            lGetHost(hep, EH_name), a->start, a->duration, GLOBAL_TAG, for_job_scheduling);  
+
+      /* hosts */
+      for_each(hep, a->host_list) {
+         lListElem *next_gel;
+         const void *queue_iterator = NULL;
+         const char *eh_name = lGetHost(hep, EH_name);
+
+         if (!strcmp(eh_name, SGE_GLOBAL_NAME)) 
+            continue;
+
+         /* determine number of slots per host */
+         slots = 0;
+         for (next_gel = lGetElemHostFirst(a->gdil, JG_qhostname, eh_name, &queue_iterator);
+             (gel = next_gel);
+              next_gel = lGetElemHostNext(a->gdil, JG_qhostname, eh_name, &queue_iterator)) {
+            
+            slots += lGetUlong(gel, JG_slots);
+         }
+         if (slots != 0) {
+            rc_add_job_utilization(a->job, a->ja_task_id, type, hep, a->centry_list, slots,
+                     EH_consumable_config_list, EH_resource_utilization, eh_name, a->start, 
+                     a->duration, HOST_TAG, for_job_scheduling);
+         }
       }
-      rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
-               QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
-               a->duration, QUEUE_TAG, for_job_scheduling);
-   }
 
-   /* resource quotas */
-   for_each(gel, a->gdil) {
-      int slots = lGetUlong(gel, JG_slots);
-      const char* user = lGetString(a->job, JB_owner);
-      const char* group = lGetString(a->job, JB_group);
-      const char* project = lGetString(a->job, JB_project);
-      const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
-      const char* host = lGetHost(gel, JG_qhostname);
-      char *queue = NULL;
-      const char *queue_instance = lGetString(gel, JG_qname);
-
-      lListElem *rqs = NULL;
-
-      queue = cqueue_get_name_from_qinstance(queue_instance);
-      
-      for_each(rqs, a->rqs_list) {
-         lListElem *rule = NULL;
-
-         if (!lGetBool(rqs, RQS_enabled)) {
+      /* queues */
+      for_each(gel, a->gdil) {  
+         int slots = lGetUlong(gel, JG_slots); 
+         const char *qname = lGetString(gel, JG_qname);
+         if ((qep = qinstance_list_locate2(a->queue_list, qname)) == NULL) {
+            /* 
+             * This happens in case of queues that were sorted out b/c they 
+             * are unknown, in some suspend state or in calendar disable state. As long 
+             * as we do not intend to schedule future resource utilization for those 
+             * queues it's valid to simply ignore resource utilizations decided in former 
+             * schedule runs: running/suspneded/migrating jobs.
+             * 
+             */
             continue;
          }
 
-         rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list,
-                                       a->hgrp_list, NULL);
-         if (rule != NULL) {
-
-            rqs_get_rue_string(&rue_name, rule, user, project,
-                                host, queue, pe);
-
-            rqs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
-                                     a->centry_list, slots, lGetString(rqs, RQS_name),
-                                     a->start, a->duration);
-         }
+         rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
+                  QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
+                  a->duration, QUEUE_TAG, for_job_scheduling);
       }
-      FREE(queue);
-   }
 
-   sge_dstring_free(&rue_name);
+      /* resource quotas */
+      for_each(gel, a->gdil) {
+         int slots = lGetUlong(gel, JG_slots);
+         const char* user = lGetString(a->job, JB_owner);
+         const char* group = lGetString(a->job, JB_group);
+         const char* project = lGetString(a->job, JB_project);
+         const char* pe = (a->pe)?lGetString(a->pe, PE_name):NULL;
+         const char* host = lGetHost(gel, JG_qhostname);
+         char *queue = NULL;
+         const char *queue_instance = lGetString(gel, JG_qname);
+
+         lListElem *rqs = NULL;
+
+         queue = cqueue_get_name_from_qinstance(queue_instance);
+         
+         for_each(rqs, a->rqs_list) {
+            lListElem *rule = NULL;
+
+            if (!lGetBool(rqs, RQS_enabled)) {
+               continue;
+            }
+
+            rule = rqs_get_matching_rule(rqs, user, group, project, pe, host, queue, a->acl_list,
+                                          a->hgrp_list, NULL);
+            if (rule != NULL) {
+
+               rqs_get_rue_string(&rue_name, rule, user, project,
+                                   host, queue, pe);
+
+               rqs_add_job_utilization(a->job, a->ja_task_id, type, rule, rue_name,
+                                        a->centry_list, slots, lGetString(rqs, RQS_name),
+                                        a->start, a->duration);
+            }
+         }
+         FREE(queue);
+      }
+
+      sge_dstring_free(&rue_name);
+   } else {
+      /* debit AR-job */
+      for_each(gel, a->gdil) {
+         lListElem *ar = NULL;
+         int slots = lGetUlong(gel, JG_slots);
+         const char *qname = lGetString(gel, JG_qname);
+         
+         if ((ar = lGetElemUlong(a->ar_list, AR_id, ar_id)) != NULL) {
+            if ((qep = lGetSubStr(ar, QU_full_name, qname, AR_reserved_queues)) == NULL) {
+               continue;
+            }
+            rc_add_job_utilization(a->job, a->ja_task_id, type, qep, a->centry_list, slots,
+                  QU_consumable_config_list, QU_resource_utilization, qname, a->start, 
+                  a->duration, QUEUE_TAG, for_job_scheduling);
+         } 
+      }
+   }
 
    DRETURN(0);
 }
@@ -738,7 +746,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       DRETURN(0);
    }
 
-   for_each (cr_config, lGetList(ep, config_nm)) {
+   for_each(cr_config, lGetList(ep, config_nm)) {
       name = lGetString(cr_config, CE_name);
       dval = 0;
 
@@ -893,25 +901,20 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 *******************************************************************************/
 void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
    lList *pe_list, lList *host_list, lList *queue_list, lList *rqs_list, lList *centry_list,
-   lList *acl_list, lList *hgroup_list, bool for_job_scheduling)
+   lList *acl_list, lList *hgroup_list, lList *ar_list, bool for_job_scheduling)
 {
    DENTER(TOP_LAYER, "prepare_resource_schedules");
 
    add_job_list_to_schedule(running_jobs, false, pe_list, host_list, queue_list,
                             rqs_list, centry_list, acl_list, hgroup_list,
-                            for_job_scheduling);
+                            ar_list, for_job_scheduling);
    add_job_list_to_schedule(suspended_jobs, true, pe_list, host_list, queue_list,
                             rqs_list, centry_list, acl_list, hgroup_list,
-                            for_job_scheduling);
+                            ar_list, for_job_scheduling);
    add_calendar_to_schedule(queue_list); 
 
 #ifdef SGE_LOCK_DEBUG /* just for information purposes... */
-   {
-      object_description *object_base = object_type_get_object_description();
-      lList *ar_list = *object_base[SGE_TYPE_AR].list;
-      
-      utilization_print_all(pe_list, host_list, queue_list, ar_list); 
-   }
+   utilization_print_all(pe_list, host_list, queue_list, ar_list); 
 #endif   
 
    DRETURN_VOID;
@@ -921,7 +924,7 @@ static int
 add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list, 
                          lList *host_list, lList *queue_list, lList *rqs_list,
                          lList *centry_list, lList *acl_list, lList *hgroup_list,
-                         bool for_job_scheduling)
+                         lList *ar_list, bool for_job_scheduling)
 {
    lListElem *jep, *ja_task;
    const char *pe_name;
@@ -985,6 +988,7 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
          a.rqs_list = rqs_list;
          a.acl_list = acl_list;
          a.hgrp_list = hgroup_list;
+         a.ar_list = ar_list;
 
          DPRINTF(("Adding job "sge_U32CFormat"."sge_U32CFormat" into schedule " "start "
                   sge_U32CFormat" duration "sge_U32CFormat"\n", lGetUlong(jep, JB_job_number), 

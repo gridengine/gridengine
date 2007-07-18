@@ -1,3 +1,10 @@
+RD-2007-07-18-0: Bugfix:    - fixed AR-job scheduling with resource reservation
+                              enabled
+                            - enabled -R y for AR-jobs
+                            - fixed issue with multiple -l resource requests
+                              with qrsub
+                 Review:    AH 
+
 PJ-2007-07-18-0: Bugfix:    fixed (non critical) -ar switch for qsh, qrsh, qlogin
                  Review:    JG
 

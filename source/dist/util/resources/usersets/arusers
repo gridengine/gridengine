@@ -1,5 +1,5 @@
-name       defaultdepartment
-type       DEPT 
+name       arusers
+type       ACL
 oticket    0
 fshare     0
 entries    NONE

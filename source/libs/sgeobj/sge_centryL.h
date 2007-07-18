@@ -91,7 +91,7 @@ enum{
    HOST_TAG,
    GLOBAL_TAG,
    PE_TAG,     /* not really used as a tag */
-   RQS_TAG,
+   RQS_TAG,    /* not really used as a tag */
    MAX_TAG
 };
 

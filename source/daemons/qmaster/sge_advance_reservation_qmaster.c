@@ -1119,7 +1119,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                               *(splitted_job_lists[SPLIT_SUSPENDED]),
                               master_pe_list, a.host_list, a.queue_list, 
                               NULL, a.centry_list, a.acl_list,
-                              a.hgrp_list, false);
+                              a.hgrp_list, NULL, false);
 
    lSetUlong(dummy_job, JB_execution_time, lGetUlong(ar, AR_start_time));
    lSetUlong(dummy_job, JB_deadline, lGetUlong(ar, AR_end_time));
@@ -1637,20 +1637,22 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
 
       if (slots > 1) {
          lListElem *cr;
+         lListElem *new_cr;
+         
          for_each(cr, lGetList(ar, AR_resource_list)) {
             if (crl == NULL) {
                crl = lCreateList("", CE_Type);
             }
-            cr = lCopyElem(cr);
+            new_cr = lCopyElem(cr);
 
-            if (lGetBool(cr, CE_consumable) == true) {
+            if (lGetBool(new_cr, CE_consumable) == true) {
                double newval = lGetDouble(cr, CE_doubleval) * slots;
 
-               lSetDouble(cr, CE_doubleval, newval);
-               sge_dstring_sprintf(&buffer, "%f", lGetDouble(cr, CE_doubleval));
-               lSetString(cr, CE_stringval, sge_dstring_get_string(&buffer));
+               lSetDouble(new_cr, CE_doubleval, newval);
+               sge_dstring_sprintf(&buffer, "%f", lGetDouble(new_cr, CE_doubleval));
+               lSetString(new_cr, CE_stringval, sge_dstring_get_string(&buffer));
             }
-            lAppendElem(crl, lCopyElem(cr));
+            lAppendElem(crl, new_cr);
          }
       } else {
          crl = lCopyList("", lGetList(ar, AR_resource_list));

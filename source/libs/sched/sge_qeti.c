@@ -46,6 +46,7 @@
 
 #include "sge_qeti.h"
 #include "sge_resource_utilization.h"
+#include "sge_advance_reservation.h"
 
 #include "sge_select_queue.h"
 
@@ -215,6 +216,7 @@ sge_qeti_t *sge_qeti_allocate2(lList *cr_list)
 sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, 
       lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, lList *hgrp_list, lList *ar_list)
 {
+   int ar_id = lGetUlong(job, JB_ar);
    sge_qeti_t *iter = NULL;
    lListElem *next_queue, *qep, *hep;
    lList *requests = lGetList(job, JB_hard_resource_list);
@@ -225,24 +227,26 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
       DEXIT;
       return NULL;
    }
- 
-   /* add "slot" resource utilization entry of parallel environment */
-   if (sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, 
-                  lGetList(pe, PE_resource_utilization), lGetUlong(pe, PE_slots), true)) {
-      sge_qeti_release(&iter);
-      DEXIT;
-      return NULL;
-   }
 
-   /* add references to global resource utilization entries 
-      that might affect jobs queue end time */
-   if ((hep = host_list_locate(host_list, SGE_GLOBAL_NAME))) {
-      if (sge_add_qeti_resource_container(&iter->cr_refs_global, 
-               lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
-               centry_list, requests, false)!=0) {
+   if (ar_id == 0) {
+      /* add "slot" resource utilization entry of parallel environment */
+      if (sge_qeti_list_add(&iter->cr_refs_pe, SGE_ATTR_SLOTS, 
+                     lGetList(pe, PE_resource_utilization), lGetUlong(pe, PE_slots), true)) {
          sge_qeti_release(&iter);
          DEXIT;
          return NULL;
+      }
+
+      /* add references to global resource utilization entries 
+         that might affect jobs queue end time */
+      if ((hep = host_list_locate(host_list, SGE_GLOBAL_NAME))) {
+         if (sge_add_qeti_resource_container(&iter->cr_refs_global, 
+                  lGetList(hep, EH_resource_utilization), lGetList(hep, EH_consumable_config_list), 
+                  centry_list, requests, false)!=0) {
+            sge_qeti_release(&iter);
+            DEXIT;
+            return NULL;
+         }
       }
    }
 
@@ -278,11 +282,25 @@ sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt,
             continue;
          }   
 
-         if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
-                  lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
-                        centry_list, requests, false)!=0) {
-            sge_qeti_release(&iter);
-            DRETURN(NULL);
+         if (ar_id == 0) {
+            if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
+                     lGetList(qep, QU_resource_utilization), lGetList(qep, QU_consumable_config_list), 
+                           centry_list, requests, false)!=0) {
+               sge_qeti_release(&iter);
+               DRETURN(NULL);
+            }
+         } else {
+            const char *qname = lGetString(qep, QU_full_name);
+            lListElem *ar_queue;
+            lListElem *ar_ep = lGetElemUlong(ar_list, AR_id, ar_id);
+
+            ar_queue = lGetSubStr(ar_ep, QU_full_name, qname, AR_reserved_queues);
+            if (sge_add_qeti_resource_container(&iter->cr_refs_queue, 
+                     lGetList(ar_queue, QU_resource_utilization), lGetList(ar_queue, QU_consumable_config_list), 
+                           centry_list, requests, false)!=0) {
+               sge_qeti_release(&iter);
+               DRETURN(NULL);
+            }
          }
          
          is_relevant = true; 

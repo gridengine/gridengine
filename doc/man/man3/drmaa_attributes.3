@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2007/01/20 07:18:23 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2007/07/19 08:17:16 $     Revision: $Revision: 1.17.2.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2007/01/20 07:18:23 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2007/07/19 08:17:16 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -215,7 +215,7 @@ separate.
 .PP
 For various reasons, some options are silently ignored by DRMAA.  Setting any
 of these options will have no effect.  The ignored options are: -cwd, -help, -t,
--verify, -w w, and -w v.  The -cwd option can be reenabled by setting the
+-verify, -w w, and -w v.  The -cwd option can be re-enabled by setting the
 environment variable, SGE_DRMAA_ALLOW_CWD.  However, the -cwd option is not
 thread safe and should not be used in a multi-threaded context.
 .PP

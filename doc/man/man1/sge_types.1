@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.13.2.4 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2007/07/19 08:17:15 $     Revision: $Revision: 1.13.2.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2007/07/19 08:17:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -200,7 +200,7 @@ where:
 "|"	or operator -- logically or with the following expression
 "("	open bracket -- begin an inner expression.
 ")"	close bracket -- end an inner expression. 
-"pattern"	see the \fIpattern\fP definition thats follow
+"pattern"	see the \fIpattern\fP definition that's follow
 .fi
 .PP
 .\"
@@ -234,7 +234,7 @@ When patterns are used the following definitions apply:
 	characters for one character at a specific position.
         Character ranges may be specified using the a-z notation.
         The caret symbol (^) is \fBnot\fP interpreted as a logical
-        not; it is intrepreted literally.
+        not; it is interpreted literally.
 
 For more details please see 
 .M fnmatch 5
@@ -299,7 +299,7 @@ wc_job := job-id | job-name | pattern
 .PP
 .SS "\fBwc_job_range\fP"
 The wildcard job range specification allows to reference specific array
-tasks for one or multipe jobs. The job is referenced via wc_job and in
+tasks for one or multiple jobs. The job is referenced via wc_job and in
 addition gets a range specifier for the array tasks.
 .sp 1
 wc_job_range := wc_job [ -t range]
@@ -341,10 +341,10 @@ an at-character.
 e.g.
 .RS
 .ta \w'XXXXXXXXXXXXX'u
-*@@*	all queue instances whose underlaying
+*@@*	all queue instances whose underlying
 	host is part of at least one hostgroup
-a*@@e*	all queue instances begining with an 'a' whose underlaying
-	host is part of at least one hostgroup begining with 'e'
+a*@@e*	all queue instances beginning with an 'a' whose underlying
+	host is part of at least one hostgroup beginning with 'e'
 *@@solaris	all queue instances on hosts part of
 	the @solaris hostgroup
 .fi

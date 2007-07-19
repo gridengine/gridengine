@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2007/06/26 22:21:13 $     Revision: $Revision: 1.10.2.2 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2007/07/19 08:17:19 $     Revision: $Revision: 1.10.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2007/06/26 22:21:13 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2007/07/19 08:17:19 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -105,7 +105,7 @@ FORBID_RESCHEDULE
 is not set in the configuration
 (see 
 .M xxqs_name_sxx_conf 5 ),
-the job gets requeued.
+the job gets re-queued.
 Otherwise see "Other".
 .IP "100" 0.7i
 Job script, prolog and epilog: When
@@ -114,16 +114,16 @@ FORBID_APPERROR
 is not set in the configuration
 (see
 .M xxqs_name_sxx_conf 5 ),
-the job gets requeued.
+the job gets re-queued.
 Otherwise see "Other".
 .IP "Other" 0.7i
 Job script: This is the exit status of the job itself. No action is taken upon
 this exit status because the meaning of this exit status is not known.
 .br
 Prolog, epilog and parallel start: The queue is set to error state and the job is
-requeued.
+re-queued.
 .br
-Parallel stop: The queue is set to error state, but the job is not requeued. It
+Parallel stop: The queue is set to error state, but the job is not re-queued. It
 is assumed that the job itself ran successfully and only the clean up script failed.
 .br
 Suspend, restart, terminate, clean, and migrate: Always successful.

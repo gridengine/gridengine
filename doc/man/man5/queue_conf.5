@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/06/26 22:21:12 $     Revision: $Revision: 1.24.2.3 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2007/07/19 08:17:17 $     Revision: $Revision: 1.24.2.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2007/06/26 22:21:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2007/07/19 08:17:17 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -63,7 +63,7 @@ the value is just counted in bytes.
 .PP
 If more than one host is specified under 'hostlist' (by means of a
 list of hosts or with host groups) it can be desirable to have
-user speficied overrides from the setting used for each host. These overrides
+user specified overrides from the setting used for each host. These overrides
 can be expressed using the enhanced \fIqueue_conf\fP specifier syntax.
 This syntax builds upon the regular parameter specifier syntax as
 described below under 'FORMAT' separately for each parameter and
@@ -77,7 +77,7 @@ Even in the enhanced \fIqueue_conf\fP specifier syntax an entry
 <current_attribute_syntax>
 .PP
 without brackets denoting the default setting is required and
-used for all queue instances where no user speficied overrides are specified.
+used for all queue instances where no user specified overrides are specified.
 Tuples with a host group host_identifier override the default
 setting. Tuples with a host name host_identifier override both
 the default and the host group setting. Note also that  

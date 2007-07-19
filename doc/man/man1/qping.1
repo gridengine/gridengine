@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qping.1,v $     Last Update: $Date: 2007/06/26 22:21:07 $     Revision: $Revision: 1.10.6.1 $
+.\" $RCSfile: qping.1,v $     Last Update: $Date: 2007/07/19 08:17:15 $     Revision: $Revision: 1.10.6.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QPING 1 "$Date: 2007/06/26 22:21:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QPING 1 "$Date: 2007/07/19 08:17:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qping \- check application status of xxQS_NAMExx daemons.
 .PP
@@ -270,7 +270,7 @@ an SSL (Secure Socket Layer) configuration. The qping will use the configuration
 to connect to services running SSL. If the SGE settings file is not sourced, you
 have to use the -noalias option to bypass the need for the SGE_ROOT environment
 variable.
-The following environment variables are used to specifiy your certificates:
+The following environment variables are used to specify your certificates:
   SSL_CA_CERT_FILE - CA certificate file
   SSL_CERT_FILE    - certificates file
   SSL_KEY_FILE     - key file
@@ -288,7 +288,7 @@ This option allows an administrator to observe the communication protocol
 data flow of a xxQS_NAMExx service daemon. The qping -dump instruction must be started
 as root and on the same host where the observed daemon is running.
 
-The output is written to stdout. The enviroment variable "SGE_QPING_OUTPUT_FORMAT"
+The output is written to stdout. The environment variable "SGE_QPING_OUTPUT_FORMAT"
 can be set to hide columns, set a default column width or to set a hostname output
 format. The value of the environment variable can be set to any combination of
 the following specifiers separated by a space character:
@@ -329,7 +329,7 @@ This option is not currently implemented.
 .in+3
 -dump_tag MSG
 .in+3
-This option has the same behaviour as the -dump option. 
+This option has the same behavior as the -dump option. 
 .in-3
 .in-3    
 

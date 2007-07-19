@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/02/14 12:58:39 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2007/02/14 12:58:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -78,7 +78,7 @@ such an attribute be changed.
 .SS "\fBworking with resource attributes\fP"
 Before a user can request a resource attribute it has to be attached to the global, host,
 or cqueue object. The resource attribute exists only for the objects, it got attached to(
-if it is attached to the global object(qconf -me global), it exits sytem wide, host object: 
+if it is attached to the global object(qconf -me global), it exits system wide, host object: 
 only on that host (qconf -me NAME): cqueue object: only on that cqueue (qconf -mq NAME).
 .sp 1
 When the user attached a resource attribute to an object, one also has to assign a value
@@ -188,7 +188,7 @@ restrictive than the old one.
 In the case of a consumable on host level, which has also a load sensor, the
 system checks for the current usage, and if the internal accounting is more 
 restrictive than the load sensor report, the internal value is kept; if the
-load sensour report is more restrictive, that one is kept.
+load sensor report is more restrictive, that one is kept.
 .PP
 Note, xxQS_NAMExx allows backslashes (\\) be used to escape newline
 (\\newline) characters. The backslash and the newline are replaced with a

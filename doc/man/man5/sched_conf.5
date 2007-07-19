@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.32 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2007/07/19 09:04:32 $     Revision: $Revision: 1.33 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2007/07/19 09:04:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -344,7 +344,7 @@ and \fBstarter_method\fP in
 .M queue_conf 5 
 . The delays after job finish include delays due to a forced job termination 
 (\fBnotify\fP, \fBterminate_method\fP or \fBcheckpointing\fP), procedures run 
-after acutal job 
+after actual job 
 finish, such as \fBstop_proc_args\fP in
 .M sge_pe 5 
 or \fBepilog\fP in
@@ -352,7 +352,7 @@ or \fBepilog\fP in
 , and the delay until a new \fBschedule_interval\fP. 
 .br
 If the offset is too low, resource reservations (see \fBmax_reservation\fP)  
-can be delayed repeatedly due to an overly optistic job circulation time.
+can be delayed repeatedly due to an overly optimistic job circulation time.
 .\"
 .IP "\fIJC_FILTER\fP"
 If set to true, the scheduler limits the number of jobs it looks at during

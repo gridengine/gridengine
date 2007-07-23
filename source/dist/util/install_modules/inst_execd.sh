@@ -227,9 +227,16 @@ CheckCellDirectory()
 
 #--------------------------------------------------------------------------
 # CheckCSP check that there are no old certs/keys
+# And for windows host, also check and create the right windows specific certs
+# eg. certs for Administrator are created, but certs for HOSTNAME+Administrator
+# are also needed.
 #
 CheckCSP()
 {
+   if [ "$SGE_ARCH" = "win32-x86" ]; then
+      util/certtool.sh $SGE_ROOT $SGE_CELL
+   fi
+
    if [ $CSP = false ]; then
       return
    fi

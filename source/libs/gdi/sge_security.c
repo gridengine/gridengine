@@ -1499,19 +1499,19 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
          DPRINTF(("user = "SFQ"\n", user));
      }
 
-     if ( unique_identifier == NULL ) {
+     if (unique_identifier == NULL) {
          DPRINTF(("unique_identifier is NULL\n"));
          DRETURN(false);
       }
 
       if (check_admin_user) {
-        if (strcmp(unique_identifier, user) != 0 
+         if (strcmp(unique_identifier, user) != 0 
             && sge_is_user_superuser(unique_identifier) == false) { 
             DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             FREE(unique_identifier);
             DRETURN(false);
-        }     
+         }     
       } else {
          if (strcmp(unique_identifier, user) != 0) {
             DPRINTF((MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
@@ -1520,7 +1520,7 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
             DRETURN(false);
          }
       }
-      
+
       FREE(unique_identifier);
    }
 #endif

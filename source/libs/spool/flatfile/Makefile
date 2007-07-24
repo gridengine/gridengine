@@ -132,13 +132,3 @@ test_ff_cl: test_ff_cl.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $
                          $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
 test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl.c
-
-test_ff_cl_perf: test_ff_cl_perf.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                        $(RMONLIB) $(UTILIB) $(SPOOLFLIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_ff_cl_perf $(LFLAGS) test_ff_cl_perf.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) \
-                         $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
-                         $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
-test_ff_cl_perf.o: $(SPOOLFLIB_DIR)/test_ff_cl_perf.c
-	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl_perf.c

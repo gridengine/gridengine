@@ -1836,6 +1836,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
       }
       if (range_list[i] != NULL && show) { 
          if ((qstat_env->group_opt & GROUP_NO_TASK_GROUPS) == 0) {
+            sge_dstring_clear(&ja_task_id_string);
             range_list_print_to_string(range_list[i], &ja_task_id_string, false, false, false);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {

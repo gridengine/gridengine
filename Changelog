@@ -1,3 +1,9 @@
+AH-2007-07-24-0: Bugfix:    user/system/operator hold state combinations
+                            cause strange qstat output
+                 Bugster:   6584632
+                 Issue:     2334
+                 Review:    JG
+
 GH-2007-07-24-0: Bugfix:    qmaster failover should not change the
                             state of any queue
                  Bugtraq:   6396036

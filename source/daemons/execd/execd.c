@@ -564,7 +564,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
 
       }
 
-      if (sge_execd_register_at_qmaster(ctx, FALSE) != 0) {
+      if (sge_execd_register_at_qmaster(ctx, false) != 0) {
          if ( had_problems == 0) {
             had_problems = 1;
          }

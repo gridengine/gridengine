@@ -242,7 +242,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
     */
    sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
-   sge_qmaster_qinstance_set_initial_state(ret, FALSE);
+   sge_qmaster_qinstance_set_initial_state(ret, false);
    qinstance_increase_qversion(ret);
 
    DRETURN(ret);

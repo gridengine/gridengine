@@ -216,7 +216,7 @@ int dispatch( sge_gdi_ctx_class_t *ctx,
             if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
                 i != CL_RETVAL_CONNECT_ERROR) {
                /* re-register at qmaster when connection is up again */
-               if (sge_execd_register_at_qmaster(ctx, TRUE) == 0) {
+               if (sge_execd_register_at_qmaster(ctx, true) == 0) {
                   do_re_register = false;
                }
             }

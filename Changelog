@@ -1,3 +1,7 @@
+HP-2007-07-24-0: Bugfix:    Fixed broken build on irix65 after checkin
+                            GH-2007-07-24-0
+                 Review:    AH
+
 AH-2007-07-24-0: Bugfix:    user/system/operator hold state combinations
                             cause strange qstat output
                  Bugster:   6584632

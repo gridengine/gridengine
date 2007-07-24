@@ -902,9 +902,9 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
 		      * Evaluate subcommand.
 		      */
                      if (sub_command == SGE_GDI_EXECD_RESTART) {
-		        is_restart = TRUE;
+		        is_restart = true;
                      } else {
-		        is_restart = FALSE;
+		        is_restart = false;
 		     }
                      sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target,
 				         monitor, is_restart);

@@ -1,3 +1,13 @@
+RD-2007-07-24-0: Bugfix:    fixed compile error on AIX51
+                 Review:    AA
+
+RD-2007-07-18-0: Bugfix:    - fixed AR-job scheduling with resource reservation
+                              enabled
+                            - enabled -R y for AR-jobs
+                            - fixed issue with multiple -l resource requests
+                              with qrsub
+                 Review:    AH 
+
 RD-2007-07-05-1: CVS        Created V61ARsnapshot2_TAG
 ------------------------------------------------------
 

@@ -1,3 +1,6 @@
+RD-2007-07-24-0: Bugfix:    fixed compile error on AIX51
+                 Review:    AA
+
 MP-2007-07-19-0: Enhancem.: Checked spelling of all man pages.
                  Review:    OJ
 

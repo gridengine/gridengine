@@ -68,7 +68,7 @@ jgdi_clean:
 #	$(DEPEND) -f $(JGDI_DIR)/jgdi_dependencies $(XCFLAGS) $(JGDI_DIR)/*.c $(JGDI_BUILD_DIR)/*.c
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(LIBPATH) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 

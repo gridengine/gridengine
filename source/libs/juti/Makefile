@@ -66,7 +66,7 @@ juti_depend:
 ###############################################################################
 
 $(JUTILIB): $(JUTI_OBJS) $(JUTI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) $(LIBPATH) $(LIBS)  -o libjuti$(SHAREDEXT) $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libjuti$(SHAREDEXT) $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
 	../scripts/link_jnilib.sh libjuti  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 

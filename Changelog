@@ -1,3 +1,6 @@
+RD-2007-07-24-0: Bugfix:    fixed compile error on AIX51
+                 Review:    AA
+
 MD-2007-07-23-0: Bugfix:    windows csp mode does not work
                  Bugster:   6583897
                  Changed:   install_scripts, /libs/uti

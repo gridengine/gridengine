@@ -106,6 +106,6 @@ bool
 sge_qmaster_qinstance_state_set_ambiguous(lListElem *this_elem, bool set_state);
 
 bool
-sge_qmaster_qinstance_set_initial_state(lListElem *this_elem);
+sge_qmaster_qinstance_set_initial_state(lListElem *this_elem, bool is_restart);
 
 #endif /* _SGE_QINSTANCE_QMASTER_H_ */

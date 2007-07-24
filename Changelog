@@ -1,3 +1,8 @@
+GH-2007-07-24-0: Bugfix:    qmaster failover should not change the
+                            state of any queue
+                 Bugtraq:   6396036
+                 Review:    AH,JG
+
 RD-2007-07-24-0: Bugfix:    fixed compile error on AIX51
                  Review:    AA
 

@@ -459,7 +459,7 @@ const char *err_str
 *  SEE ALSO
 *     execd/execd_register()
 *******************************************************************************/
-int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx) {
+int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    int return_value = 0;
    static int sge_last_register_error_flag = 0;
    lList *hlp = NULL, *alp = NULL;
@@ -476,7 +476,19 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx) {
 
    /* register at qmaster */
    DPRINTF(("*****  Register at qmaster   *****\n"));
-   alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+   if (!is_restart) {
+      /*
+       * This is a regular startup.
+       */
+      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD,
+		     &hlp, NULL, NULL);
+   } else {
+      /*
+       * Indicate this is a restart to qmaster.
+       */
+      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
+		     &hlp, NULL, NULL);
+   }
    aep = lFirst(alp);
    if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
       if (sge_last_register_error_flag == 0) {
@@ -552,7 +564,7 @@ static void execd_register(sge_gdi_ctx_class_t *ctx)
 
       }
 
-      if (sge_execd_register_at_qmaster(ctx) != 0) {
+      if (sge_execd_register_at_qmaster(ctx, FALSE) != 0) {
          if ( had_problems == 0) {
             had_problems = 1;
          }

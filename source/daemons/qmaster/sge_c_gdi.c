@@ -766,6 +766,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
    dstring ds;
    char buffer[256];
    object_description *object_base = object_type_get_object_description();
+   bool is_restart;
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
 
@@ -897,7 +898,16 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
                   } 
                   
                   if (request->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], request->commproc)) {
-                     sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target, monitor);
+		     /*
+		      * Evaluate subcommand.
+		      */
+                     if (sub_command == SGE_GDI_EXECD_RESTART) {
+		        is_restart = TRUE;
+                     } else {
+		        is_restart = FALSE;
+		     }
+                     sge_execd_startedup(ctx, ep, &(answer->alp), user, host, request->target,
+				         monitor, is_restart);
                   } else {
                      sge_gdi_add_mod_generic(ctx, &(answer->alp), ep, 1, ao, user, host, sub_command, &ppList, monitor);
                   }

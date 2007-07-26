@@ -127,11 +127,8 @@ QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             
-QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolf.a
+QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolc.a
 
-#QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-#                -L. -lspoolc -lspoolf -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
-                
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
                 -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon \
                 -lcomm -lcommlists -luti -llck $(DLLIB)

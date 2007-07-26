@@ -170,6 +170,7 @@ int sub_command, monitoring_t *monitor
       if ((pos=lGetPosViaElem(ep, UP_default_project, SGE_NO_ABORT))>=0) {
          const char *dproj;
 
+         NULL_OUT_NONE(ep, UP_default_project);
          /* make sure default project exists */
          if ((dproj = lGetPosString(ep, pos))) {
              lList *master_project_list = *object_type_get_master_list(SGE_TYPE_PROJECT);

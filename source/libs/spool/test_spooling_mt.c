@@ -77,13 +77,12 @@ static int delay = 0;
 pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-extern lList *Master_Job_List;
-
 static bool add_job(int job_id)
 {
    bool write_ok;
    lListElem *job;
    lList *answer_list = NULL;
+   lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
 
    const char *key;
    dstring key_dstring;
@@ -91,7 +90,7 @@ static bool add_job(int job_id)
 
    sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
 
-   job = lAddElemUlong(&Master_Job_List, JB_job_number, job_id, JB_Type);
+   job = lAddElemUlong(&master_job_list, JB_job_number, job_id, JB_Type);
    key = job_get_key(job_id, 0, NULL, &key_dstring);
 #if LOCAL_TRANSACTION
    spool_transaction(&answer_list, spool_get_default_context(),
@@ -99,7 +98,7 @@ static bool add_job(int job_id)
    answer_list_output(&answer_list);
 #endif
    write_ok = spool_write_object(&answer_list, spool_get_default_context(),
-                                job, key, SGE_TYPE_JOB);
+                                job, key, SGE_TYPE_JOB, false);
    answer_list_output(&answer_list);
 
    if (delay > 0) {
@@ -119,6 +118,7 @@ static bool del_job(int job_id)
 {
    bool del_ok;
    lList *answer_list = NULL;
+   lList *master_job_list = *object_type_get_master_list(SGE_TYPE_JOB);
 
    const char *key;
    dstring key_dstring;
@@ -133,10 +133,10 @@ static bool del_job(int job_id)
    answer_list_output(&answer_list);
 #endif
    del_ok = spool_delete_object(&answer_list, spool_get_default_context(),
-                               SGE_TYPE_JOB, key);
+                               SGE_TYPE_JOB, key, false);
    answer_list_output(&answer_list);
 
-   lDelElemUlong(&Master_Job_List, JB_job_number, job_id);
+   lDelElemUlong(&master_job_list, JB_job_number, job_id);
 
    if (delay > 0) {
       usleep(delay * 1000);
@@ -159,7 +159,7 @@ static void *work(void *args)
 
    DENTER(TOP_LAYER, "work");
 
-   work_num = (int)args;
+   work_num = *((int *)args);
   
    WARNING((SGE_EVENT, "work %d starting %d loops\n", work_num, loops));
   
@@ -209,7 +209,6 @@ int main(int argc, char *argv[])
    int i, threads;
    pthread_t *t;
    int *args;
-   
 
    lList *answer_list = NULL;
    lListElem *spooling_context;
@@ -222,7 +221,7 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "       <url>     = path or host:database\n"));
       ERROR((SGE_EVENT, "       <threads> = number of threads\n"));
       ERROR((SGE_EVENT, "       <delay>   = delay after writing [ms]\n"));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
 
    url = argv[1];
@@ -239,24 +238,24 @@ int main(int argc, char *argv[])
    DPRINTF(("writing to database %s from %d threads\n", url, threads));
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(&answer_list, NULL, url);
+   spooling_context = spool_create_dynamic_context(&answer_list, NULL, url, NULL);
    answer_list_output(&answer_list);
    if(spooling_context == NULL) {
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT(NULL, EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
    if(!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT(NULL, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
 
    /* let n threads to parallel spooling */
    for (i = 0; i < threads; i++) {
       args[i] = i + 1;     
-      pthread_create(&(t[i]), NULL, work, (void *)args[i]);
+      pthread_create(&(t[i]), NULL, work, (void*)(&args[i]));
    }
 
    /* also work in current thread */

@@ -765,8 +765,7 @@ void sge_job_resend_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, 
    jatep = job_search_task(jep, NULL, jataskid);
    now = (time_t)sge_get_gmt();
 
-   if(!jep || !jatep)
-   {
+   if (!jep || !jatep) {
       WARNING((SGE_EVENT, MSG_COM_RESENDUNKNOWNJOB_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);     
       DEXIT;

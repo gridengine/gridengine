@@ -29,10 +29,16 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+
+/* do not compile in monitoring code */
+#ifndef NO_SGE_COMPILE_DEBUG
+#define NO_SGE_COMPILE_DEBUG
+#endif
 
 #include "sge.h"
 #include "sgermon.h"

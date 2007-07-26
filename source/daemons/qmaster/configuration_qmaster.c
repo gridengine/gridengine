@@ -116,7 +116,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
    spool_read_list(&anAnswer, aSpoolContext, &Cluster_Config.list, SGE_TYPE_CONFIG);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
-   
+ 
    answer_list_output(&anAnswer);
 
    DPRINTF(("qualified_hostname: '%s'\n", qualified_hostname));

@@ -65,17 +65,7 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_qinstance.h"
-
-/*
- * TODO List. Following features/bugs need to be addressed:
- * (Append new TODOs at the end of the list or remove items which are done)
- *
- *    3) lowering or removing a reserved consumable complex on global/host/queue level
- *       need to be rejected
- *
- *   15) ....
- *
- */
+#include "sgeobj/sge_cqueue.h"
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
 *  NAME
@@ -215,8 +205,8 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
          lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
          
          if (centry_list_fill_request(lGetList(ar, AR_resource_list),
-         alpp, master_centry_list, false, true,
-         false)) {
+                                      alpp, master_centry_list, false, true,
+                                      false)) {
             goto ERROR;
          }
          if (compress_ressources(alpp, lGetList(ar, AR_resource_list), SGE_OBJ_AR)) {
@@ -269,6 +259,25 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
          if (userset_list_validate_access(lGetList(ar, AR_xacl_list), ARA_name, alpp) != STATUS_OK) {
             goto ERROR;
          }
+      }
+
+      if (is_spool) {
+         lListElem *jg;
+         dstring cqueue_buffer = DSTRING_INIT;
+         dstring hostname_buffer = DSTRING_INIT;
+         for_each(jg, lGetList(ar, AR_granted_slots)){
+            const char *hostname = NULL;
+            const char *qname = lGetString(jg, JG_qname);
+            bool has_hostname = false;
+            bool has_domain = false;
+
+            cqueue_name_split(qname, &cqueue_buffer, &hostname_buffer,
+                              &has_hostname, &has_domain);
+            hostname = sge_dstring_get_string(&hostname_buffer);
+            lSetHost(jg, JG_qhostname, hostname);
+         }
+         sge_dstring_free(&cqueue_buffer);
+         sge_dstring_free(&hostname_buffer);
       }
       /*   AR_type,  SGE_ULONG     */
       /*   AR_state, SGE_ULONG               state of the AR */

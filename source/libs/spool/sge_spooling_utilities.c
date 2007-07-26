@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#define NO_SGE_COMPILE_DEBUG
+
 #include <string.h>
 
 #include "sge.h"
@@ -55,7 +57,8 @@
 #include "sge_pe.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
-#include "sge_userset.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_userprj.h"
 
 #include "sort_hosts.h"
 #include "sge_complex_schedd.h"
@@ -169,8 +172,7 @@ spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
 
    fields = _spool_get_fields_to_spool(answer_list, descr, instr);
 
-   DEXIT;
-   return fields;
+   DRETURN(fields);
 }
 
 static spooling_field *
@@ -201,8 +203,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
                               ANSWER_QUALITY_ERROR, 
                               MSG_UNABLETOALLOCATEBYTES_DS, 
                               (size * 1) * sizeof(spooling_field), SGE_FUNC);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* initialize fields */
@@ -519,6 +520,9 @@ bool spool_default_validate_func(lList **answer_list,
             ret = false;
          }
          break;
+      case SGE_TYPE_USER:
+         NULL_OUT_NONE(object, UP_default_project);
+         break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
       case SGE_TYPE_HGROUP:
@@ -527,12 +531,7 @@ bool spool_default_validate_func(lList **answer_list,
 #endif
       case SGE_TYPE_CALENDAR:
       case SGE_TYPE_PROJECT:
-      case SGE_TYPE_USER:
       case SGE_TYPE_SHARETREE:
-         /* JG: TODO: we need a function validate_sharetree.
-          * there is a function search_unspecified_node(), what is 
-          * qmaster doing?
-          */
       case SGE_TYPE_SCHEDD_CONF:
       case SGE_TYPE_JOB:
       default:

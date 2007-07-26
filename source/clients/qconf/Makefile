@@ -53,7 +53,7 @@ QCONF_ADD_SRC = \
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 
 
-QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o) libspoolf.a
+QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o) libspoolc.a
 
 QCONF_ADD_LIBS = -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
 

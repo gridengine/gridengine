@@ -203,30 +203,25 @@ href_list_compare(const lList *this_list, lList **answer_list,
       if (!href_list_has_member(list, host_or_group)) {
          if (is_hgroup_name(host_or_group)) {
             if (add_groups != NULL) {
-               ret &= href_list_add(add_groups, answer_list, host_or_group);
+               ret = href_list_add(add_groups, answer_list, host_or_group);
             }
-         } else {
-            if (add_hosts != NULL) {
-               ret &= href_list_add(add_hosts, answer_list, host_or_group);
-            }
+         } else if (add_hosts != NULL) {
+            ret = href_list_add(add_hosts, answer_list, host_or_group);
          }
       } else {
          if (is_hgroup_name(host_or_group)) {
             if (equity_groups != NULL) {
-               ret &= href_list_add(equity_groups, answer_list, host_or_group);
+               ret = href_list_add(equity_groups, answer_list, host_or_group);
             }
-         } else {
-            if (equity_hosts != NULL) {
-               ret &= href_list_add(equity_hosts, answer_list, host_or_group);
-            }
+         } else if (equity_hosts != NULL) {
+            ret = href_list_add(equity_hosts, answer_list, host_or_group);
          }
       }
       if (!ret) {
          break;
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/href/href_list_find_diff() *************************************

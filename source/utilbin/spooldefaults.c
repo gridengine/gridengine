@@ -58,15 +58,20 @@
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/classic/read_list.h"
 #include "spool/classic/read_write_sharetree.h"
-#include "spool/classic/rw_configuration.h"
+#include "spool/flatfile/sge_spooling_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/sge_dirent.h"
 #include "msg_utilbin.h"
 #include "sge_profiling.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "spool/msg_spoollib.h"
 
-static int spool_object_list(const char *directory, 
-                             int (*read_func)(lList **list, const char *dir, lList **answer_list),
-                             sge_object_type obj_type, 
-                             int nm, enum _enum_lMultiType cull_type);
+static int spool_object_list(const char *directory,
+                             const spooling_field *fields, 
+                             const spool_flatfile_instr *instr,
+                             const lDescr *descr,
+                             sge_object_type obj_type); 
 
 static void usage(const char *argv0)
 {
@@ -128,64 +133,36 @@ static int init_framework(sge_gdi_ctx_class_t *ctx)
       answer_list_output(&answer_list);
    }
 
-   DEXIT;
-   return ret;
-}
-
-static int spool_manop(const char *name, sge_object_type type)
-{
-   /* nod master list */
-   int ret = EXIT_SUCCESS;
-   lList **lpp = NULL;
-   lListElem *ep;
-   lList *answer_list = NULL;
-
-   DENTER(TOP_LAYER, "spool_manop");
-
-   /* We have to store the objects in a master list, as classic spooling
-    * writes one file with all managers / operators instead of spooling
-    * individual objects.
-    */
-   lpp = object_type_get_master_list(type);
-      
-   if (*lpp == NULL) {
-      *lpp = lCreateList("master list", object_type_get_descr(type));
-   }
-
-   /* only classic spooling */
-   ep = lCreateElem(MO_Type);
-   lSetString(ep, MO_name, name);
-   lAppendElem(*lpp, ep);
-   
-   object_type_commit_master_list(type, &answer_list);
-      
-   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, type, true)) {
-      /* error output has been done in spooling function */
-      ret = EXIT_FAILURE;
-   }
-   
-   answer_list_output(&answer_list);
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int spool_manops(sge_object_type type, int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
    int i;
+   lList *answer_list = NULL;
+   lList **lpp = object_type_get_master_list(type);
 
-   DENTER(TOP_LAYER, "spool_managers");
+   DENTER(TOP_LAYER, "spool_manops");
+
+   if (*lpp == NULL) {
+      *lpp = lCreateList("master list", object_type_get_descr(type));
+   }
+
 
    for (i = 2; i < argc; i++) {
-      ret = spool_manop(argv[i], type);
-      if (ret != EXIT_SUCCESS) {
-         break;
+      const char *name = argv[i];
+      lListElem *ep = lAddElemStr(lpp, MO_name, name, MO_Type);
+
+      if (!spool_write_object(&answer_list, spool_get_default_context(),
+                              ep, name, type, true)) {
+         /* error output has been done in spooling function */
+         answer_list_output(&answer_list);
+         ret = EXIT_FAILURE;
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int spool_configuration(int argc, char *argv[])
@@ -193,15 +170,20 @@ static int spool_configuration(int argc, char *argv[])
    int ret = EXIT_SUCCESS;
    lListElem *conf = NULL;
    lList *answer_list = NULL;
+   spooling_field *fields = sge_build_CONF_field_list(true);
 
    DENTER(TOP_LAYER, "spool_configuration");
 
-   conf = read_configuration(argv[2], SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
+   conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
+                                   fields, NULL, false, &qconf_sfi,
+                                   SP_FORM_ASCII, NULL, argv[2]);
+   FREE(fields);
    if (conf == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S, argv[2]));
       ret = EXIT_FAILURE;
    } else {
       /* put config into a list - we can't spool free objects */
+      lSetHost(conf, CONF_hname, SGE_GLOBAL_NAME);
       if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG, true)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
@@ -210,8 +192,7 @@ static int spool_configuration(int argc, char *argv[])
    }
    lFreeElem(&conf);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int spool_local_conf(int argc, char *argv[])
@@ -226,7 +207,13 @@ static int spool_local_conf(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else {
       lList *answer_list = NULL;
-      lListElem *conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
+      spooling_field *fields = sge_build_CONF_field_list(true);
+      lListElem *conf = NULL;
+
+      conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
+                                   fields, NULL, false, &qconf_sfi,
+                                   SP_FORM_ASCII, NULL, argv[2]);
+      FREE(fields);
 
       if (conf == NULL) {
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
@@ -236,6 +223,7 @@ static int spool_local_conf(int argc, char *argv[])
          lListElem *le = spool_read_object(NULL, spool_get_default_context(), SGE_TYPE_CONFIG, argv[3]); 
          if (le == NULL) { 
             /* put config into a list - we can't spool free objects */
+            lSetHost(conf, CONF_hname, argv[3]);
             if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG, true)) {
                /* error output has been done in spooling function */
@@ -245,74 +233,42 @@ static int spool_local_conf(int argc, char *argv[])
             fprintf(stderr, "config already there!\n");
          }
          answer_list_output(&answer_list);
+         lFreeElem(&conf);
       }
-      lFreeElem(&conf);
       lFreeList(&answer_list);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static int spool_sharetree(int argc, char *argv[])
 {
-   int ret = EXIT_SUCCESS;
-   lListElem *stree;
-   lList *answer_list = NULL;
-   char err_str[1024];
+   const spooling_field *fields = sge_build_STN_field_list(true, false);
+   int ret; 
 
-
-   DENTER(TOP_LAYER, "spool_sharetree");
-
-   /* we get an additional argument: the config name */
-   err_str[0] = '\0';
-   stree = read_sharetree(argv[2], NULL, 1, err_str, 1, NULL);
-
-   if (stree == NULL) {
-      ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS, 
-             argv[2], err_str));
-      ret = EXIT_FAILURE;
-   } else {
-      /* put config into a list - we can't spool free objects */
-      lList *list = lCreateList("sharetree", STN_Type);
-      lAppendElem(list, stree);
-      if (!spool_write_object(&answer_list, spool_get_default_context(), 
-                              stree, "sharetree", SGE_TYPE_SHARETREE, true)) {
-         /* error output has been done in spooling function */
-         ret = EXIT_FAILURE;
-      }
-      answer_list_output(&answer_list);
-   }
-
-   DEXIT;
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, STN_Type, SGE_TYPE_SHARETREE);
+   FREE(fields);
    return ret;
-}
+   }
 
 static int spool_complexes(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], read_all_centries, SGE_TYPE_CENTRY, 
-                            CE_name, lStringT);
+   return spool_object_list(argv[2], CE_fields, &qconf_sfi, CE_Type, SGE_TYPE_CENTRY);
 }
 
 static int spool_adminhosts(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_adminhost_list_from_disk, 
-                            SGE_TYPE_ADMINHOST, 
-                            AH_name, lHostT);
+   return spool_object_list(argv[2], AH_fields, &qconf_sfi, AH_Type, SGE_TYPE_ADMINHOST);
 }
 
 static int spool_calendars(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_cal_list_from_disk, 
-                            SGE_TYPE_CALENDAR, 
-                            CAL_name, lStringT);
+   return spool_object_list(argv[2], CAL_fields, &qconf_sfi, CAL_Type, SGE_TYPE_CALENDAR);
 }
 
 static int spool_ckpts(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_ckpt_list_from_disk, 
-                            SGE_TYPE_CKPT, 
-                            CK_name, lStringT);
+   return spool_object_list(argv[2], CK_fields, &qconf_sfi, CK_Type, SGE_TYPE_CKPT);
 }
 
 static int spool_cqueues(int argc, char *argv[])
@@ -326,101 +282,107 @@ static int spool_cqueues(int argc, char *argv[])
                    SGE_TYPE_EXECHOST);
    answer_list_output(&answer_list);
 
-   return spool_object_list(argv[2], sge_read_cqueue_list_from_disk, 
-                            SGE_TYPE_CQUEUE, 
-                            CQ_name, lStringT);
+   return spool_object_list(argv[2], CQ_fields, &qconf_sfi, CQ_Type, SGE_TYPE_CQUEUE);
 }
 
 static int spool_exechosts(int argc, char *argv[])
 {
    lList *answer_list = NULL;
+   const spooling_field *fields = sge_build_EH_field_list(true, false, false);
+   int ret; 
+
    spool_read_list(&answer_list, spool_get_default_context(), 
                    object_type_get_master_list(SGE_TYPE_CENTRY), 
                    SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
 
-   return spool_object_list(argv[2], sge_read_exechost_list_from_disk, 
-                            SGE_TYPE_EXECHOST, 
-                            EH_name, lHostT);
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, EH_Type, SGE_TYPE_EXECHOST);
+   FREE(fields);
+   return ret;
 }
 
 static int spool_projects(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_project_list_from_disk, 
-                            SGE_TYPE_PROJECT, 
-                            UP_name, lStringT);
+   const spooling_field *fields = sge_build_UP_field_list(true, false);
+   int ret; 
+
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, UP_Type, SGE_TYPE_PROJECT);
+   FREE(fields);
+   return ret;
 }
 
 static int spool_submithosts(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_submithost_list_from_disk, 
-                            SGE_TYPE_SUBMITHOST, 
-                            SH_name, lHostT);
+   return spool_object_list(argv[2], SH_fields, &qconf_sfi, SH_Type, SGE_TYPE_SUBMITHOST);
 }
 
 static int spool_users(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_user_list_from_disk, 
-                            SGE_TYPE_USER, 
-                            UP_name, lStringT);
+   const spooling_field *fields = sge_build_UP_field_list(true, true);
+   int ret; 
+
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, UP_Type, SGE_TYPE_PROJECT);
+   FREE(fields);
+   return ret;
 }
 
 static int spool_pes(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_pe_list_from_disk, 
-                            SGE_TYPE_PE, 
-                            PE_name, lStringT);
-}
+   const spooling_field *fields = sge_build_PE_field_list(true, false);
+   int ret; 
 
-static int spool_object_list(const char *directory, 
-                             int (*read_func)(lList **list, const char *dir, lList **answer_list),
-                             sge_object_type obj_type, 
-                             int nm, enum _enum_lMultiType cull_type)
-{
-   int ret = EXIT_SUCCESS;
-   lList *answer_list = NULL;
-   lList *list = NULL;
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "spool_object_list");
-
-   read_func(&list, directory, &answer_list);
-
-   for_each(ep, list) {
-      const char *key;
-
-      switch (cull_type) {
-         case lStringT:
-            key = lGetString(ep, nm);
-            break;
-         case lHostT:
-            key = lGetHost(ep, nm);
-            break;
-         default:
-            key = NULL;
-            ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ));
-            return EXIT_FAILURE;
-      }
-      if (!spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              key, obj_type, true)) {
-         /* error output has been done in spooling function */
-         ret = EXIT_FAILURE;
-         answer_list_output(&answer_list);
-         break;
-      }
-   }
-   lFreeList(&answer_list);
-   lFreeList(&list);
-
-   DEXIT;
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, PE_Type, SGE_TYPE_PE);
+   FREE(fields);
    return ret;
 }
 
 static int spool_usersets(int argc, char *argv[])
 {
-   return spool_object_list(argv[2], sge_read_userset_list_from_disk, 
-                            SGE_TYPE_USERSET, 
-                            US_name, lStringT);
+   return spool_object_list(argv[2], US_fields, &qconf_sfi, US_Type, SGE_TYPE_USERSET);
+}
+
+static int spool_object_list(const char *directory,
+                             const spooling_field *fields, 
+                             const spool_flatfile_instr *instr,
+                             const lDescr *descr,
+                             sge_object_type obj_type)
+{
+   int ret = EXIT_SUCCESS;
+   lList *answer_list = NULL;
+   lListElem *ep;
+   lList *direntries;
+   lListElem *direntry;
+   const char *name;
+   dstring file = DSTRING_INIT;
+
+   DENTER(TOP_LAYER, "spool_object_list");
+
+   direntries = sge_get_dirents(directory);
+   if (direntries) {
+      for_each(direntry, direntries) {
+         name = lGetString(direntry, ST_name);
+         if (name[0] != '.') {
+            sge_dstring_sprintf(&file, "%s/%s", directory, name);
+            ep = spool_flatfile_read_object(&answer_list, descr, NULL,
+                                            fields, NULL, true, instr,
+                                            SP_FORM_ASCII, NULL, sge_dstring_get_string(&file));
+            
+            if (ep != NULL && !spool_write_object(&answer_list, spool_get_default_context(), ep, 
+                                    name, obj_type, true)) {
+               /* error output has been done in spooling function */
+               ret = EXIT_FAILURE;
+               answer_list_output(&answer_list);
+               break;
+            }
+         }
+      }
+   }
+   lFreeList(&direntries);
+   sge_dstring_free(&file);
+
+   lFreeList(&answer_list);
+
+   DRETURN(ret);
 }
 
 int main(int argc, char *argv[])
@@ -512,6 +474,5 @@ int main(int argc, char *argv[])
 
    SGE_EXIT((void **)&ctx, ret);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }

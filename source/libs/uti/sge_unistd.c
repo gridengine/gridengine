@@ -392,7 +392,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
    dstring path = DSTRING_INIT;
    int ret;
 
-   DENTER(TOP_LAYER, "sge_mkdir");
+   DENTER(TOP_LAYER, "sge_mkdir2");
    
    if (base_dir == NULL || name == NULL) {
       if (exit_on_error) {
@@ -401,8 +401,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
          SGE_EXIT(NULL, 1);
       } else {
          ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
   
@@ -411,8 +410,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
    ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error, 0); 
    sge_dstring_free(&path);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** uti/unistd/sge_rmdir() ************************************************
@@ -446,15 +444,13 @@ int sge_rmdir(const char *cp, dstring *error)
    DENTER(TOP_LAYER, "sge_rmdir");
  
    if (!cp) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
+      sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
       DEXIT;
       return -1;
    }
  
    if (!(dir = opendir(cp))) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
+      sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
       DEXIT;
       return -1;
    }
@@ -466,8 +462,7 @@ int sge_rmdir(const char *cp, dstring *error)
  
 #ifndef WIN32 /* lstat not called */
          if (SGE_LSTAT(fname, &statbuf)) {
-            if (error) 
-               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
+            sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
             DEXIT;
             return -1;
@@ -475,8 +470,7 @@ int sge_rmdir(const char *cp, dstring *error)
 #else
          /* so symbolic links under Windows */
          if (SGE_STAT(fname, &statbuf)) {
-            if (error) 
-               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
+            sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
             DEXIT;
             return -1;
@@ -490,8 +484,7 @@ int sge_rmdir(const char *cp, dstring *error)
 #endif
     {
     if (sge_rmdir(fname, error)) {
-               if (error) 
-                  sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
+               sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
                closedir(dir);
                DEXIT;
                return -1;
@@ -502,8 +495,7 @@ int sge_rmdir(const char *cp, dstring *error)
             printf("unlink %s\n", fname);
 #else
             if (unlink(fname)) {
-               if (error) 
-                  sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
+               sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
                       fname, strerror(errno));
                closedir(dir);
                DEXIT;
@@ -520,8 +512,7 @@ int sge_rmdir(const char *cp, dstring *error)
    printf("rmdir %s\n", cp);
 #else
    if (rmdir(cp)) {
-      if (error) 
-         sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
+      sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
       DEXIT;
       return -1;
    }

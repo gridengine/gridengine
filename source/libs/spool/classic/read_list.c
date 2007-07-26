@@ -446,7 +446,7 @@ int sge_read_pe_list_from_disk(lList **list, const char *directory, lList **alpp
    }
 
    direntries = sge_get_dirents(directory);
-   if(direntries) {
+   if (direntries) {
       if (!sge_silent_get()) {
          printf(MSG_CONFIG_READINGIN_S, PE_DIR);
          printf("\n");

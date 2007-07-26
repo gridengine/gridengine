@@ -308,7 +308,7 @@ spool_classic_default_startup_func(lList **answer_list,
                                  ANSWER_QUALITY_INFO, 
                                  MSG_SPOOL_CHANGINGTOSPOOLDIRECTORY_S,
                                  url);
-         if(sge_chdir(url) != 0) {
+         if (sge_chdir(url) != 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_ERRORCHANGINGCWD_SS, url, 
@@ -1066,7 +1066,7 @@ spool_classic_default_write_func(lList **answer_list,
             sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
 
             sge_dstring_sprintf(&file_name, ".%s", SHARETREE_FILE);
-            if(write_sharetree(answer_list, object, 
+            if (write_sharetree(answer_list, object, 
                                (char *)sge_dstring_get_string(&file_name), NULL,
                                1, 1, 1) == 0) {
                rename(sge_dstring_get_string(&file_name), SHARETREE_FILE);

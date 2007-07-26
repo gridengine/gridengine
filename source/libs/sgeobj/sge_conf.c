@@ -325,7 +325,7 @@ static void sge_set_defined_defaults(const char *cell_root, lList **lpCfg)
    lListElem *ep = NULL;
    tConfEntry *pConf = NULL;
 
-   DENTER(TOP_LAYER, "sge_set_defined_defaults");
+   DENTER(BASIS_LAYER, "sge_set_defined_defaults");
 
    pConf = getConfEntry("execd_spool_dir", conf_entries);
    if ( pConf->value == NULL ) {
@@ -412,7 +412,7 @@ lList *lpCfg
 ) {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "setConfFromCull");
+   DENTER(BASIS_LAYER, "setConfFromCull");
 
    /* get following logging entries logged if log_info is selected */
    chg_conf_val(lpCfg, "loglevel", NULL, &Master_Config.loglevel, TYPE_LOG);
@@ -549,7 +549,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
    lListElem *elem, *ep2;
    lList *mlist = NULL;
    
-   DENTER(TOP_LAYER, "merge_configuration");
+   DENTER(BASIS_LAYER, "merge_configuration");
    if (lpp == NULL) {
       lpp = &mlist;
    }
@@ -882,7 +882,7 @@ void sge_show_conf()
 {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "sge_show_conf");
+   DENTER(BASIS_LAYER, "sge_show_conf");
  
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    DPRINTF(("conf.execd_spool_dir        >%s<\n", Master_Config.execd_spool_dir));
@@ -968,7 +968,7 @@ void sge_show_conf()
 *******************************************************************************/
 static void clean_conf(void) {
 
-   DENTER(TOP_LAYER, "clean_conf");
+   DENTER(BASIS_LAYER, "clean_conf");
 
    FREE(Master_Config.execd_spool_dir);
    FREE(Master_Config.mailer);
@@ -1029,7 +1029,7 @@ static void clean_conf(void) {
 *******************************************************************************/
 void conf_update_thread_profiling(const char *thread_name) 
 {
-   DENTER(TOP_LAYER, "conf_update_thread_profiling");
+   DENTER(BASIS_LAYER, "conf_update_thread_profiling");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    if (thread_name == NULL) {
       set_thread_prof_status_by_name("Signal Thread", prof_signal_thrd);
@@ -1055,7 +1055,7 @@ void conf_update_thread_profiling(const char *thread_name)
 char* mconf_get_execd_spool_dir(void) {
    char* execd_spool_dir = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_execd_spool_dir");
+   DENTER(BASIS_LAYER, "mconf_get_execd_spool_dir");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    execd_spool_dir = sge_strdup(execd_spool_dir, Master_Config.execd_spool_dir);
@@ -1068,7 +1068,7 @@ char* mconf_get_execd_spool_dir(void) {
 char* mconf_get_mailer(void) {
    char* mailer = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_mailer");
+   DENTER(BASIS_LAYER, "mconf_get_mailer");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    mailer = sge_strdup(mailer, Master_Config.mailer);
@@ -1081,7 +1081,7 @@ char* mconf_get_mailer(void) {
 char* mconf_get_xterm(void) {
    char* xterm = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_xterm");
+   DENTER(BASIS_LAYER, "mconf_get_xterm");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    xterm = sge_strdup(xterm, Master_Config.xterm);
@@ -1095,7 +1095,7 @@ char* mconf_get_xterm(void) {
 char* mconf_get_load_sensor(void) {
    char* load_sensor = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_load_sensor");
+   DENTER(BASIS_LAYER, "mconf_get_load_sensor");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    load_sensor = sge_strdup(load_sensor, Master_Config.load_sensor);
@@ -1108,7 +1108,7 @@ char* mconf_get_load_sensor(void) {
 char* mconf_get_prolog(void) {
    char* prolog = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_prolog");
+   DENTER(BASIS_LAYER, "mconf_get_prolog");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    prolog = sge_strdup(prolog, Master_Config.prolog);
@@ -1121,7 +1121,7 @@ char* mconf_get_prolog(void) {
 char* mconf_get_epilog(void) {
    char* epilog = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_epilog");
+   DENTER(BASIS_LAYER, "mconf_get_epilog");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    epilog = sge_strdup(epilog, Master_Config.epilog);
@@ -1134,7 +1134,7 @@ char* mconf_get_epilog(void) {
 char* mconf_get_shell_start_mode(void) {
    char* shell_start_mode = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_shell_start_mode");
+   DENTER(BASIS_LAYER, "mconf_get_shell_start_mode");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    shell_start_mode = sge_strdup(shell_start_mode, Master_Config.shell_start_mode);
@@ -1147,7 +1147,7 @@ char* mconf_get_shell_start_mode(void) {
 char* mconf_get_login_shells(void) {
    char* login_shells = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_login_shells");
+   DENTER(BASIS_LAYER, "mconf_get_login_shells");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    login_shells = sge_strdup(login_shells, Master_Config.login_shells);
@@ -1159,7 +1159,7 @@ char* mconf_get_login_shells(void) {
 u_long32 mconf_get_min_uid(void) {
    u_long32 min_uid;
 
-   DENTER(TOP_LAYER, "mconf_get_min_uid");
+   DENTER(BASIS_LAYER, "mconf_get_min_uid");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    min_uid = Master_Config.min_uid;
@@ -1171,7 +1171,7 @@ u_long32 mconf_get_min_uid(void) {
 u_long32 mconf_get_min_gid(void) {
    u_long32 min_gid;
 
-   DENTER(TOP_LAYER, "mconf_get_min_gid");
+   DENTER(BASIS_LAYER, "mconf_get_min_gid");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    min_gid = Master_Config.min_gid;
@@ -1183,7 +1183,7 @@ u_long32 mconf_get_min_gid(void) {
 u_long32 mconf_get_load_report_time(void) {
    u_long32 load_report_time;
 
-   DENTER(TOP_LAYER, "mconf_get_load_report_time");
+   DENTER(BASIS_LAYER, "mconf_get_load_report_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    load_report_time = Master_Config.load_report_time;
@@ -1195,7 +1195,7 @@ u_long32 mconf_get_load_report_time(void) {
 u_long32 mconf_get_max_unheard(void) {
    u_long32 max_unheard;
 
-   DENTER(TOP_LAYER, "mconf_get_max_unheard");
+   DENTER(BASIS_LAYER, "mconf_get_max_unheard");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_unheard = Master_Config.max_unheard;
@@ -1207,7 +1207,7 @@ u_long32 mconf_get_max_unheard(void) {
 u_long32 mconf_get_loglevel(void) {
    u_long32 loglevel;
 
-   DENTER(TOP_LAYER, "mconf_get_loglevel");
+   DENTER(BASIS_LAYER, "mconf_get_loglevel");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    loglevel = Master_Config.loglevel;
@@ -1220,7 +1220,7 @@ u_long32 mconf_get_loglevel(void) {
 char* mconf_get_enforce_project(void) {
    char* enforce_project = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_enforce_project");
+   DENTER(BASIS_LAYER, "mconf_get_enforce_project");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    enforce_project = sge_strdup(enforce_project, Master_Config.enforce_project);
@@ -1233,7 +1233,7 @@ char* mconf_get_enforce_project(void) {
 char* mconf_get_enforce_user(void) {
    char* enforce_user = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_enforce_user");
+   DENTER(BASIS_LAYER, "mconf_get_enforce_user");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    enforce_user = sge_strdup(enforce_user, Master_Config.enforce_user);
@@ -1247,7 +1247,7 @@ char* mconf_get_enforce_user(void) {
 char* mconf_get_administrator_mail(void) {
    char* administrator_mail = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_administrator_mail");
+   DENTER(BASIS_LAYER, "mconf_get_administrator_mail");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    administrator_mail = sge_strdup(administrator_mail, Master_Config.administrator_mail);
@@ -1260,7 +1260,7 @@ char* mconf_get_administrator_mail(void) {
 lList* mconf_get_user_lists(void) {
    lList* user_lists = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_user_lists");
+   DENTER(BASIS_LAYER, "mconf_get_user_lists");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    user_lists = lCopyList("user_lists", Master_Config.user_lists);
@@ -1273,7 +1273,7 @@ lList* mconf_get_user_lists(void) {
 lList* mconf_get_xuser_lists(void) {
    lList* xuser_lists = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_xuser_lists");
+   DENTER(BASIS_LAYER, "mconf_get_xuser_lists");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    xuser_lists = lCopyList("xuser_lists", Master_Config.xuser_lists);
@@ -1286,7 +1286,7 @@ lList* mconf_get_xuser_lists(void) {
 lList* mconf_get_projects(void) {
    lList* projects = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_projects");
+   DENTER(BASIS_LAYER, "mconf_get_projects");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    projects = lCopyList("projects", Master_Config.projects);
@@ -1299,7 +1299,7 @@ lList* mconf_get_projects(void) {
 lList* mconf_get_xprojects(void) {
    lList* xprojects = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_xprojects");
+   DENTER(BASIS_LAYER, "mconf_get_xprojects");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    xprojects = lCopyList("xprojects", Master_Config.xprojects);
@@ -1312,7 +1312,7 @@ lList* mconf_get_xprojects(void) {
 char* mconf_get_set_token_cmd(void) {
    char* set_token_cmd = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_set_token_cmd");
+   DENTER(BASIS_LAYER, "mconf_get_set_token_cmd");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    set_token_cmd = sge_strdup(set_token_cmd, Master_Config.set_token_cmd);
@@ -1325,7 +1325,7 @@ char* mconf_get_set_token_cmd(void) {
 char* mconf_get_pag_cmd(void) {
    char* pag_cmd = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_pag_cmd");
+   DENTER(BASIS_LAYER, "mconf_get_pag_cmd");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    pag_cmd = sge_strdup(pag_cmd, Master_Config.pag_cmd);
@@ -1337,7 +1337,7 @@ char* mconf_get_pag_cmd(void) {
 u_long32 mconf_get_token_extend_time(void) {
    u_long32 token_extend_time;
 
-   DENTER(TOP_LAYER, "mconf_get_token_extend_time");
+   DENTER(BASIS_LAYER, "mconf_get_token_extend_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    token_extend_time = Master_Config.token_extend_time;
@@ -1350,7 +1350,7 @@ u_long32 mconf_get_token_extend_time(void) {
 char* mconf_get_shepherd_cmd(void) {
    char* shepherd_cmd = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_shepherd_cmd");
+   DENTER(BASIS_LAYER, "mconf_get_shepherd_cmd");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    shepherd_cmd = sge_strdup(shepherd_cmd, Master_Config.shepherd_cmd);
@@ -1363,7 +1363,7 @@ char* mconf_get_shepherd_cmd(void) {
 char* mconf_get_qmaster_params(void) {
    char* qmaster_params = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_qmaster_params");
+   DENTER(BASIS_LAYER, "mconf_get_qmaster_params");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    qmaster_params = sge_strdup(qmaster_params, Master_Config.qmaster_params);
@@ -1376,7 +1376,7 @@ char* mconf_get_qmaster_params(void) {
 char* mconf_get_execd_params(void) {
    char* execd_params = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_execd_params");
+   DENTER(BASIS_LAYER, "mconf_get_execd_params");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    execd_params = sge_strdup(execd_params, Master_Config.execd_params);
@@ -1389,7 +1389,7 @@ char* mconf_get_execd_params(void) {
 char* mconf_get_reporting_params(void) {
    char* reporting_params = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_reporting_params");
+   DENTER(BASIS_LAYER, "mconf_get_reporting_params");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    reporting_params = sge_strdup(reporting_params, Master_Config.reporting_params);
@@ -1402,7 +1402,7 @@ char* mconf_get_reporting_params(void) {
 char* mconf_get_gid_range(void) {
    char* gid_range = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_gid_range");
+   DENTER(BASIS_LAYER, "mconf_get_gid_range");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    gid_range = sge_strdup(gid_range, Master_Config.gid_range);
@@ -1414,7 +1414,7 @@ char* mconf_get_gid_range(void) {
 u_long32 mconf_get_zombie_jobs(void) {
    u_long32 zombie_jobs;
 
-   DENTER(TOP_LAYER, "mconf_get_zombie_jobs");
+   DENTER(BASIS_LAYER, "mconf_get_zombie_jobs");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    zombie_jobs = Master_Config.zombie_jobs;
@@ -1427,7 +1427,7 @@ u_long32 mconf_get_zombie_jobs(void) {
 char* mconf_get_qlogin_daemon(void) {
    char* qlogin_daemon = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_qlogin_daemon");
+   DENTER(BASIS_LAYER, "mconf_get_qlogin_daemon");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    qlogin_daemon = sge_strdup(qlogin_daemon, Master_Config.qlogin_daemon);
@@ -1440,7 +1440,7 @@ char* mconf_get_qlogin_daemon(void) {
 char* mconf_get_qlogin_command(void) {
    char* qlogin_command = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_qlogin_command");
+   DENTER(BASIS_LAYER, "mconf_get_qlogin_command");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    qlogin_command = sge_strdup(qlogin_command, Master_Config.qlogin_command);
@@ -1453,7 +1453,7 @@ char* mconf_get_qlogin_command(void) {
 char* mconf_get_rsh_daemon(void) {
    char* rsh_daemon = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_rsh_daemon");
+   DENTER(BASIS_LAYER, "mconf_get_rsh_daemon");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    rsh_daemon = sge_strdup(rsh_daemon, Master_Config.rsh_daemon);
@@ -1464,7 +1464,7 @@ char* mconf_get_rsh_daemon(void) {
 
 void mconf_set_new_config(bool new_config)
 {
-   DENTER(TOP_LAYER, "mconf_set_new_config");
+   DENTER(BASIS_LAYER, "mconf_set_new_config");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
    
    is_new_config = new_config;
@@ -1477,7 +1477,7 @@ void mconf_set_new_config(bool new_config)
 bool mconf_is_new_config(void) {
    bool is;
 
-   DENTER(TOP_LAYER, "mconf_is_new_config");
+   DENTER(BASIS_LAYER, "mconf_is_new_config");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    is = is_new_config;
@@ -1490,7 +1490,7 @@ bool mconf_is_new_config(void) {
 char* mconf_get_rsh_command(void) {
    char* rsh_command = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_rsh_command");
+   DENTER(BASIS_LAYER, "mconf_get_rsh_command");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    rsh_command = sge_strdup(rsh_command, Master_Config.rsh_command);
@@ -1503,7 +1503,7 @@ char* mconf_get_rsh_command(void) {
 char* mconf_get_rlogin_daemon(void) {
    char* rlogin_daemon = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_rlogin_daemon");
+   DENTER(BASIS_LAYER, "mconf_get_rlogin_daemon");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    rlogin_daemon = sge_strdup(rlogin_daemon, Master_Config.rlogin_daemon);
@@ -1516,7 +1516,7 @@ char* mconf_get_rlogin_daemon(void) {
 char* mconf_get_rlogin_command(void) {
    char* rlogin_command = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_rlogin_command");
+   DENTER(BASIS_LAYER, "mconf_get_rlogin_command");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    rlogin_command = sge_strdup(rlogin_command, Master_Config.rlogin_command);
@@ -1528,7 +1528,7 @@ char* mconf_get_rlogin_command(void) {
 u_long32 mconf_get_reschedule_unknown(void) {
    u_long32 reschedule_unknown;
 
-   DENTER(TOP_LAYER, "mconf_get_reschedule_unknown");
+   DENTER(BASIS_LAYER, "mconf_get_reschedule_unknown");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    reschedule_unknown = Master_Config.reschedule_unknown;
@@ -1540,7 +1540,7 @@ u_long32 mconf_get_reschedule_unknown(void) {
 u_long32 mconf_get_max_aj_instances(void) {
    u_long32 max_aj_instances;
 
-   DENTER(TOP_LAYER, "mconf_get_max_aj_instances");
+   DENTER(BASIS_LAYER, "mconf_get_max_aj_instances");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_aj_instances = Master_Config.max_aj_instances;
@@ -1552,7 +1552,7 @@ u_long32 mconf_get_max_aj_instances(void) {
 u_long32 mconf_get_max_aj_tasks(void) {
    u_long32 max_aj_tasks;
 
-   DENTER(TOP_LAYER, "mconf_get_max_aj_tasks");
+   DENTER(BASIS_LAYER, "mconf_get_max_aj_tasks");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_aj_tasks = Master_Config.max_aj_tasks;
@@ -1564,7 +1564,7 @@ u_long32 mconf_get_max_aj_tasks(void) {
 u_long32 mconf_get_max_u_jobs(void) {
    u_long32 max_u_jobs;
 
-   DENTER(TOP_LAYER, "mconf_get_max_u_jobs");
+   DENTER(BASIS_LAYER, "mconf_get_max_u_jobs");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_u_jobs = Master_Config.max_u_jobs;
@@ -1576,7 +1576,7 @@ u_long32 mconf_get_max_u_jobs(void) {
 u_long32 mconf_get_max_jobs(void) {
    u_long32 max_jobs;
 
-   DENTER(TOP_LAYER, "mconf_get_max_jobs");
+   DENTER(BASIS_LAYER, "mconf_get_max_jobs");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_jobs = Master_Config.max_jobs;
@@ -1588,7 +1588,7 @@ u_long32 mconf_get_max_jobs(void) {
 u_long32 mconf_get_max_advance_reservations(void) {
    u_long32 max_advance_reservations;
 
-   DENTER(TOP_LAYER, "mconf_get_max_advance_reservations");
+   DENTER(BASIS_LAYER, "mconf_get_max_advance_reservations");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    max_advance_reservations = Master_Config.max_advance_reservations;
@@ -1600,7 +1600,7 @@ u_long32 mconf_get_max_advance_reservations(void) {
 u_long32 mconf_get_reprioritize(void) {
    u_long32 reprioritize;
 
-   DENTER(TOP_LAYER, "mconf_get_reprioritize");
+   DENTER(BASIS_LAYER, "mconf_get_reprioritize");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    reprioritize = Master_Config.reprioritize;
@@ -1612,7 +1612,7 @@ u_long32 mconf_get_reprioritize(void) {
 u_long32 mconf_get_auto_user_fshare(void) {
    u_long32 auto_user_fshare;
 
-   DENTER(TOP_LAYER, "mconf_get_auto_user_fshare");
+   DENTER(BASIS_LAYER, "mconf_get_auto_user_fshare");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    auto_user_fshare = Master_Config.auto_user_fshare;
@@ -1624,7 +1624,7 @@ u_long32 mconf_get_auto_user_fshare(void) {
 u_long32 mconf_get_auto_user_oticket(void) {
    u_long32 auto_user_oticket;
 
-   DENTER(TOP_LAYER, "mconf_get_auto_user_oticket");
+   DENTER(BASIS_LAYER, "mconf_get_auto_user_oticket");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    auto_user_oticket = Master_Config.auto_user_oticket;
@@ -1637,7 +1637,7 @@ u_long32 mconf_get_auto_user_oticket(void) {
 char* mconf_get_auto_user_default_project(void) {
    char* auto_user_default_project = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_auto_user_default_project");
+   DENTER(BASIS_LAYER, "mconf_get_auto_user_default_project");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    auto_user_default_project = sge_strdup(auto_user_default_project, Master_Config.auto_user_default_project);
@@ -1649,7 +1649,7 @@ char* mconf_get_auto_user_default_project(void) {
 u_long32 mconf_get_auto_user_delete_time(void) {
    u_long32 auto_user_delete_time;
 
-   DENTER(TOP_LAYER, "mconf_get_auto_user_delete_time");
+   DENTER(BASIS_LAYER, "mconf_get_auto_user_delete_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    auto_user_delete_time = Master_Config.auto_user_delete_time;
@@ -1662,7 +1662,7 @@ u_long32 mconf_get_auto_user_delete_time(void) {
 char* mconf_get_delegated_file_staging(void) {
    char* delegated_file_staging = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_delegated_file_staging");
+   DENTER(BASIS_LAYER, "mconf_get_delegated_file_staging");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    delegated_file_staging = sge_strdup(delegated_file_staging, Master_Config.delegated_file_staging);
@@ -1676,7 +1676,7 @@ char* mconf_get_delegated_file_staging(void) {
 bool mconf_is_monitor_message(void) {
   bool is;
 
-   DENTER(TOP_LAYER, "mconf_is_monitor_message");
+   DENTER(BASIS_LAYER, "mconf_is_monitor_message");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    is = is_monitor_message;
@@ -1688,7 +1688,7 @@ bool mconf_is_monitor_message(void) {
 bool mconf_get_use_qidle(void) {
    bool idle;
 
-   DENTER(TOP_LAYER, "mconf_get_use_qidle");
+   DENTER(BASIS_LAYER, "mconf_get_use_qidle");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    idle = use_qidle;
@@ -1700,7 +1700,7 @@ bool mconf_get_use_qidle(void) {
 bool mconf_get_forbid_reschedule(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_forbid_reschedule");
+   DENTER(BASIS_LAYER, "mconf_get_forbid_reschedule");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = forbid_reschedule;
@@ -1712,7 +1712,7 @@ bool mconf_get_forbid_reschedule(void) {
 bool mconf_get_forbid_apperror(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_forbid_apperror");
+   DENTER(BASIS_LAYER, "mconf_get_forbid_apperror");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = forbid_apperror;
@@ -1724,7 +1724,7 @@ bool mconf_get_forbid_apperror(void) {
 bool mconf_get_do_credentials(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_do_credentials");
+   DENTER(BASIS_LAYER, "mconf_get_do_credentials");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = do_credentials;
@@ -1736,7 +1736,7 @@ bool mconf_get_do_credentials(void) {
 bool mconf_get_do_authentication(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_do_authentication");
+   DENTER(BASIS_LAYER, "mconf_get_do_authentication");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = do_authentication;
@@ -1748,7 +1748,7 @@ bool mconf_get_do_authentication(void) {
 bool mconf_get_acct_reserved_usage(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_acct_reserved_usage");
+   DENTER(BASIS_LAYER, "mconf_get_acct_reserved_usage");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = acct_reserved_usage;
@@ -1760,7 +1760,7 @@ bool mconf_get_acct_reserved_usage(void) {
 bool mconf_get_sharetree_reserved_usage(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_sharetree_reserved_usage");
+   DENTER(BASIS_LAYER, "mconf_get_sharetree_reserved_usage");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = sharetree_reserved_usage;
@@ -1772,7 +1772,7 @@ bool mconf_get_sharetree_reserved_usage(void) {
 bool mconf_get_keep_active(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_keep_active");
+   DENTER(BASIS_LAYER, "mconf_get_keep_active");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = keep_active;
@@ -1784,7 +1784,7 @@ bool mconf_get_keep_active(void) {
 bool mconf_get_enable_windomacc(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_enable_windomacc");
+   DENTER(BASIS_LAYER, "mconf_get_enable_windomacc");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_windomacc;
@@ -1796,7 +1796,7 @@ bool mconf_get_enable_windomacc(void) {
 bool mconf_get_enable_addgrp_kill(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_enable_addgrp_kill");
+   DENTER(BASIS_LAYER, "mconf_get_enable_addgrp_kill");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_addgrp_kill;
@@ -1807,7 +1807,7 @@ bool mconf_get_enable_addgrp_kill(void) {
 bool mconf_get_simulate_hosts(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_simulate_hosts");
+   DENTER(BASIS_LAYER, "mconf_get_simulate_hosts");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = simulate_hosts;
@@ -1819,7 +1819,7 @@ bool mconf_get_simulate_hosts(void) {
 bool mconf_get_simulate_execds(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_simulate_execds");
+   DENTER(BASIS_LAYER, "mconf_get_simulate_execds");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = simulate_execds;
@@ -1831,7 +1831,7 @@ bool mconf_get_simulate_execds(void) {
 long mconf_get_ptf_max_priority(void) {
    long ret;
 
-   DENTER(TOP_LAYER, "mconf_get_max_priority");
+   DENTER(BASIS_LAYER, "mconf_get_max_priority");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = ptf_max_priority;
@@ -1843,7 +1843,7 @@ long mconf_get_ptf_max_priority(void) {
 long mconf_get_ptf_min_priority(void) {
    long ret;
 
-   DENTER(TOP_LAYER, "mconf_get_ptf_min_priority");
+   DENTER(BASIS_LAYER, "mconf_get_ptf_min_priority");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = ptf_min_priority;
@@ -1855,7 +1855,7 @@ long mconf_get_ptf_min_priority(void) {
 bool mconf_get_use_qsub_gid(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_use_qsub_gid");
+   DENTER(BASIS_LAYER, "mconf_get_use_qsub_gid");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = use_qsub_gid;
@@ -1867,7 +1867,7 @@ bool mconf_get_use_qsub_gid(void) {
 int mconf_get_notify_susp_type(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_notify_susp_type");
+   DENTER(BASIS_LAYER, "mconf_get_notify_susp_type");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = notify_susp_type;
@@ -1880,7 +1880,7 @@ int mconf_get_notify_susp_type(void) {
 char* mconf_get_notify_susp(void) {
    char* ret = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_notify_susp");
+   DENTER(BASIS_LAYER, "mconf_get_notify_susp");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = sge_strdup(ret, notify_susp);
@@ -1892,7 +1892,7 @@ char* mconf_get_notify_susp(void) {
 int mconf_get_notify_kill_type(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_notify_kill_type");
+   DENTER(BASIS_LAYER, "mconf_get_notify_kill_type");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = notify_kill_type;
@@ -1905,7 +1905,7 @@ int mconf_get_notify_kill_type(void) {
 char* mconf_get_notify_kill(void) {
    char* ret = NULL;
 
-   DENTER(TOP_LAYER, "mconf_get_notify_kill");
+   DENTER(BASIS_LAYER, "mconf_get_notify_kill");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = sge_strdup(ret, notify_kill);
@@ -1917,7 +1917,7 @@ char* mconf_get_notify_kill(void) {
 bool mconf_get_disable_reschedule(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_disable_reschedule");
+   DENTER(BASIS_LAYER, "mconf_get_disable_reschedule");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = disable_reschedule;
@@ -1930,7 +1930,7 @@ bool mconf_get_disable_reschedule(void) {
 int mconf_get_scheduler_timeout(void) {
    int timeout;
 
-   DENTER(TOP_LAYER, "mconf_get_scheduler_timeout");
+   DENTER(BASIS_LAYER, "mconf_get_scheduler_timeout");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    timeout = scheduler_timeout;
@@ -1941,7 +1941,7 @@ int mconf_get_scheduler_timeout(void) {
 
 void mconf_set_max_dynamic_event_clients(int value) {
 
-   DENTER(TOP_LAYER, "mconf_set_max_dynamic_event_clients");
+   DENTER(BASIS_LAYER, "mconf_set_max_dynamic_event_clients");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_WRITE);
 
    max_dynamic_event_clients = value;
@@ -1953,7 +1953,7 @@ void mconf_set_max_dynamic_event_clients(int value) {
 int mconf_get_max_dynamic_event_clients(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_max_dynamic_event_clients");
+   DENTER(BASIS_LAYER, "mconf_get_max_dynamic_event_clients");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = max_dynamic_event_clients;
@@ -1966,7 +1966,7 @@ int mconf_get_max_dynamic_event_clients(void) {
 bool mconf_get_set_lib_path(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_set_lib_path");
+   DENTER(BASIS_LAYER, "mconf_get_set_lib_path");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = set_lib_path;
@@ -1978,7 +1978,7 @@ bool mconf_get_set_lib_path(void) {
 bool mconf_get_inherit_env(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_inherit_env");
+   DENTER(BASIS_LAYER, "mconf_get_inherit_env");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = inherit_env;
@@ -1990,7 +1990,7 @@ bool mconf_get_inherit_env(void) {
 int mconf_get_spool_time(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_spool_time");
+   DENTER(BASIS_LAYER, "mconf_get_spool_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = spool_time;
@@ -2002,7 +2002,7 @@ int mconf_get_spool_time(void) {
 u_long32 mconf_get_monitor_time(void) {
    u_long32 monitor;
 
-   DENTER(TOP_LAYER, "mconf_get_monitor_time");
+   DENTER(BASIS_LAYER, "mconf_get_monitor_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    monitor = monitor_time;
@@ -2015,7 +2015,7 @@ u_long32 mconf_get_monitor_time(void) {
 bool mconf_get_do_accounting(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_do_accounting");
+   DENTER(BASIS_LAYER, "mconf_get_do_accounting");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = do_accounting;
@@ -2028,7 +2028,7 @@ bool mconf_get_do_accounting(void) {
 bool mconf_get_do_reporting(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_do_reporting");
+   DENTER(BASIS_LAYER, "mconf_get_do_reporting");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = do_reporting;
@@ -2041,7 +2041,7 @@ bool mconf_get_do_reporting(void) {
 bool mconf_get_do_joblog(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_do_joblog");
+   DENTER(BASIS_LAYER, "mconf_get_do_joblog");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = do_joblog;
@@ -2054,7 +2054,7 @@ bool mconf_get_do_joblog(void) {
 int mconf_get_reporting_flush_time(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_reporting_flush_time");
+   DENTER(BASIS_LAYER, "mconf_get_reporting_flush_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = reporting_flush_time;
@@ -2067,7 +2067,7 @@ int mconf_get_reporting_flush_time(void) {
 int mconf_get_accounting_flush_time(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_accounting_flush_time");
+   DENTER(BASIS_LAYER, "mconf_get_accounting_flush_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    if (accounting_flush_time >= 0) {
@@ -2088,7 +2088,7 @@ int mconf_get_accounting_flush_time(void) {
 int mconf_get_sharelog_time(void) {
    int ret;
 
-   DENTER(TOP_LAYER, "mconf_get_sharelog_time");
+   DENTER(BASIS_LAYER, "mconf_get_sharelog_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = sharelog_time;
@@ -2101,7 +2101,7 @@ int mconf_get_sharelog_time(void) {
 bool mconf_get_enable_forced_qdel(void) {
    bool ret;
 
-   DENTER(TOP_LAYER, "mconf_get_enable_forced_qdel");
+   DENTER(BASIS_LAYER, "mconf_get_enable_forced_qdel");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_forced_qdel;
@@ -2114,7 +2114,7 @@ bool mconf_get_enable_forced_qdel(void) {
 int mconf_get_max_job_deletion_time(void) {
    int deletion_time;
 
-   DENTER(TOP_LAYER, "mconf_get_max_job_deletion_time");
+   DENTER(BASIS_LAYER, "mconf_get_max_job_deletion_time");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    deletion_time = max_job_deletion_time;

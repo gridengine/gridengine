@@ -116,40 +116,30 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
       sge_get_file_path(spool_path_common, JOB_SPOOL_FILE, FORMAT_DEFAULT, 
                         flags, job_id, ja_task_id, NULL);  
       job = lReadElemFromDisk(NULL, spool_path_common, JB_Type, "job");
-      if (!job) {
-         DTRACE; 
-         goto error;
-      }
-      ja_tasks = ja_task_list_create_from_file(job_id, ja_task_id, flags); 
-      if (ja_tasks) {
-         lList *ja_task_list;
+      if (job) {
+         ja_tasks = ja_task_list_create_from_file(job_id, ja_task_id, flags); 
+         if (ja_tasks) {
+            lList *ja_task_list;
 
-         ja_task_list = lGetList(job, JB_ja_tasks);
-         if (ja_task_list) {
-            lAddList(ja_task_list, &ja_tasks);
+            ja_task_list = lGetList(job, JB_ja_tasks);
+            if (ja_task_list) {
+               lAddList(ja_task_list, &ja_tasks);
+            } else {
+               lSetList(job, JB_ja_tasks, ja_tasks);
+            }
+            ja_tasks = NULL;
+            lPSortList(ja_tasks, "%I+", JAT_task_number); 
          } else {
-            lSetList(job, JB_ja_tasks, ja_tasks);
+            /*
+             * This is no error! It only means that there is no enrolled
+             * task in the spool area (all tasks are unenrolled)
+             */
          }
-         ja_tasks = NULL;
-         lPSortList(ja_tasks, "%I+", JAT_task_number); 
-      } else {
-         /*
-          * This is no error! It only means that there is no enrolled
-          * task in the spool area (all tasks are unenrolled)
-          */
       }
    } else {
       job = lReadElemFromDisk(NULL, spool_path, JB_Type, "job");
-      if (!job) { 
-         goto error;
-      } 
    }
-   DEXIT;
-   return job;
-error:
-   DEXIT;
-   lFreeElem(&job);
-   return NULL;
+   DRETURN(job);
 }
 
 static lList *ja_task_list_create_from_file(u_long32 job_id, 
@@ -350,80 +340,53 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
                          sge_spool_flags_t flags) 
 {
    int ret;
-   int one_file;
-   int ignore_instances = flags & SPOOL_IGNORE_TASK_INSTANCES;
    int report_long_delays = flags & SPOOL_WITHIN_EXECD;
    u_long32 start = 0;
-   u_long32 end = 0;
    
    DENTER(TOP_LAYER, "job_write_spool_file");
 
-   if (report_long_delays)
+   if (report_long_delays) {
       start = sge_get_gmt();
+   }
 
-   one_file = job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
-                                        flags);
-   if (one_file) {
+   if (job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
+                                        flags)) {
       ret = job_write_as_single_file(job, ja_taskid, flags); 
    } else {
       ret = job_write_common_part(job, ja_taskid, flags);
-      if (!ret && !ignore_instances) {
+      if (!ret && !(flags & SPOOL_IGNORE_TASK_INSTANCES)) {
          ret = job_write_ja_task_part(job, ja_taskid, pe_task_id, flags); 
       }
    }
 
    if (report_long_delays) {
-      end = sge_get_gmt();
-      if (end - start > 30) {
+      u_long32 time = sge_get_gmt() - start;
+      if (time > 30) {
          /* administrators need to be aware of suspicious spooling delays */
          WARNING((SGE_EVENT, MSG_CONFIG_JOBSPOOLINGLONGDELAY_UUI, 
-         sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(ja_taskid), (int)(end - start)));
+         sge_u32c(lGetUlong(job, JB_job_number)), sge_u32c(ja_taskid), (int)time));
       }
    }
 
-   DEXIT; 
-   return ret;
+   DRETURN(ret);
 }
 
 static int job_has_to_spool_one_file(const lListElem *job, 
                                      const lList *pe_list,
                                      sge_spool_flags_t flags) 
 {
-   int ret = 1;
-   int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
    DENTER(TOP_LAYER, "job_has_to_spool_one_file");
 
-   if (handle_as_zombie) {
-      DTRACE;
-      ret = 1;
-   } else {
-      int within_execd = flags & SPOOL_WITHIN_EXECD;
-
-      if (within_execd) {
-         DTRACE;
-         ret = 1;
-      } else {
-         int tight_parallel = job_might_be_tight_parallel(job, pe_list);
-
-         if (tight_parallel) {
-            DTRACE;
-            ret = 0;
-         } else {
-            int is_exceeded = job_get_submit_ja_tasks(job) > 
-                              sge_get_ja_tasks_per_file();
-
-            if (is_exceeded) {
-               DTRACE;
-               ret = 0;
-            } else {
-               DTRACE;
-               ret = 1;
-            }
-         }
-      }
+   if ((flags & SPOOL_HANDLE_AS_ZOMBIE) || (flags & SPOOL_WITHIN_EXECD)) {
+      DRETURN(1);
+   } 
+   
+   if (job_might_be_tight_parallel(job, pe_list)
+               || (job_get_submit_ja_tasks(job) > sge_get_ja_tasks_per_file())) {
+      DRETURN(0);
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(1);
 }
 
 static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
@@ -648,8 +611,6 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    char spool_dir_second[SGE_PATH_MAX] = "";
    char spool_dir_third[SGE_PATH_MAX] = "";
    char spoolpath_common[SGE_PATH_MAX] = "";
-   char error_string_buffer[SGE_PATH_MAX];
-   dstring error_string;
    int within_execd = flags & SPOOL_WITHIN_EXECD;
    int handle_as_zombie = flags & SPOOL_HANDLE_AS_ZOMBIE;
    int one_file;
@@ -660,8 +621,6 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
    int try_to_remove_sub_dirs = 0;
 
    DENTER(TOP_LAYER, "job_remove_spool_file");
-
-   sge_dstring_init(&error_string, error_string_buffer, sizeof(error_string_buffer));
 
    one_file = job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
                                          flags);
@@ -753,7 +712,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
             DTRACE;
          }
          DPRINTF(("removing "SFN"\n", spool_dir));
-         if (sge_rmdir(spool_dir, &error_string)) {
+         if (sge_rmdir(spool_dir, NULL)) {
             ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                    MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
             DTRACE;

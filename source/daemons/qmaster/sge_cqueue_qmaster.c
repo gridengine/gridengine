@@ -216,7 +216,6 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
                        &tmp_has_changed_state_attr,
                        initial_modify, monitor);
 
-      DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
       *is_ambiguous |= tmp_is_ambiguous;
 
       index++;

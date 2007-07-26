@@ -441,7 +441,7 @@ u_long32 range_get_number_of_ids(const lListElem *this_elem)
 *******************************************************************************/
 void
 range_list_print_to_string(const lList *this_list,
-                           dstring * string, bool ignore_step,
+                           dstring *string, bool ignore_step,
                            bool comma_as_separator, bool print_always_as_range)
 {
    DENTER(RANGE_LAYER, "range_list_print_to_string");

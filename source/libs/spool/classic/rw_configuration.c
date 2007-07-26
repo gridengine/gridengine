@@ -217,8 +217,7 @@ u_long32 flags
                }
             }
          }
-      } 
-      else if (!strcmp(name, "admin_user")) {
+      } else if (!strcmp(name, "admin_user")) {
          value = strtok_r(NULL, " \t\n", &lasts);
          while (value[0] && isspace((int) value[0]))
             value++;
@@ -230,8 +229,7 @@ u_long32 flags
             FCLOSE(fp);
             DRETURN(NULL);
          }
-      } 
-      else if (!strcmp(name, "user_lists") || 
+      } else if (!strcmp(name, "user_lists") || 
          !strcmp(name, "xuser_lists") || 
          !strcmp(name, "projects") || 
          !strcmp(name, "xprojects") || 

@@ -215,7 +215,9 @@ int sge_is_valid_filename2(const char *fname);
 int sge_is_valid_filename(const char *fname);
 
 int sge_spoolmsg_write(FILE *file, const char comment_char,
-                       const char *version);   
+                       const char *version);
+
+void sge_spoolmsg_append(dstring *ds, const char comment_char, const char *version);
 
 char *sge_get_confval(const char *conf_val, const char *file);
 

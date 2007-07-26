@@ -441,7 +441,20 @@ int sge_spoolmsg_write(FILE *file, const char comment_char, const char *version)
    return 0;
 FPRINTF_ERROR:
    return -1;
-}    
+}
+
+void sge_spoolmsg_append(dstring *ds, const char comment_char, const char *version)
+{
+   int i = 0;
+
+   sge_dstring_sprintf_append(ds, "%c Version: %s\n", comment_char, version);
+   while(spoolmsg_message[i]) {
+      sge_dstring_sprintf_append(ds, "%c %s\n", comment_char, spoolmsg_message[i]);
+      i++;
+   }
+
+   return;
+}
 
 /****** uti/spool/sge_readpid() ***********************************************
 *  NAME
@@ -753,7 +766,6 @@ void sge_status_next_turn(void)
             if (!sp || !*sp) {
                sp = s;
             }
- 
             printf("%c\b", *sp++);
             fflush(stdout);
          }

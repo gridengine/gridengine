@@ -72,8 +72,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
    lListElem *context = NULL;
 
    /* shared lib name buffer and handle */
-   char shlib_buffer[MAX_STRING_SIZE];
-   dstring shlib_dstring;
+   dstring shlib_dstring = DSTRING_INIT;
    const char *shlib_fullname;
    void *shlib_handle;
 
@@ -86,7 +85,6 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
    /* build the full name of the shared lib - append architecture dependent
     * shlib postfix 
     */
-   sge_dstring_init(&shlib_dstring, shlib_buffer, sizeof(shlib_buffer));
    shlib_fullname = sge_dstring_sprintf(&shlib_dstring, "%s.%s", shlib_name, 
 #if defined(HP11) || defined(HP1164)
                                         "sl"
@@ -105,11 +103,26 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
 #endif   
 
    /* open the shared lib */
-   shlib_handle = dlopen(shlib_fullname, RTLD_NOW 
-#if defined(DARWIN)
-                         | RTLD_GLOBAL
-#endif
-                        );
+   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY);
+   # if defined(DARWIN)
+   # ifdef RTLD_NODELETE
+   shlib_handle = dlopen (shlib_fullname, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+   # else
+   shlib_handle = dlopen (shlib_fullname, RTLD_NOW | RTLD_GLOBAL );
+   # endif /* RTLD_NODELETE */
+   # elif defined(HP11) || defined(HP1164)
+   # ifdef RTLD_NODELETE
+   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
+   # else
+   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY );
+   # endif /* RTLD_NODELETE */
+   # else
+   # ifdef RTLD_NODELETE
+   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
+   # else
+   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY);
+   # endif /* RTLD_NODELETE */
+   #endif
                         
 #if defined(HP1164)   
    /*
@@ -128,11 +141,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
 
    /* retrieve function pointer of get_method function in shared lib */
    if (ok) {
-      char buffer[MAX_STRING_SIZE];
-      dstring get_spooling_method_func_name;
-
-      sge_dstring_init(&get_spooling_method_func_name, buffer, 
-                       MAX_STRING_SIZE);
+      dstring get_spooling_method_func_name = DSTRING_INIT;
 
       sge_dstring_sprintf(&get_spooling_method_func_name,
                           "get_%s_spooling_method", method);
@@ -147,6 +156,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
                                  shlib_fullname, dlerror());
          ok = false;
       }
+      sge_dstring_free(&get_spooling_method_func_name);
    }
 
    /* retrieve name of spooling method in shared lib */
@@ -172,12 +182,9 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
 
    /* create spooling context from shared lib */
    if (ok) {
-      char buffer[MAX_STRING_SIZE];
-      dstring create_context_func_name;
+      dstring create_context_func_name = DSTRING_INIT;
       spooling_create_context_func create_context;
 
-      sge_dstring_init(&create_context_func_name, buffer, 
-                       MAX_STRING_SIZE);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_INFO, 
                               MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS, 
@@ -199,6 +206,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
       } else {
          context = create_context(answer_list, args);
       }
+      sge_dstring_free(&create_context_func_name);
    }
 
    /* cleanup in case of initialization error */
@@ -207,6 +215,8 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
          dlclose(shlib_handle);
       }
    }
+
+   sge_dstring_free(&shlib_dstring);
 
    DRETURN(context);
 }

@@ -159,8 +159,7 @@ lListElem *suser_list_find(lList *suser_list, const char *suser_name)
 void suser_increase_job_counter(lListElem *suser)
 {
    if (suser != NULL) {
-      u_long32 jobs = lGetUlong(suser, SU_jobs) + 1;
-      lSetUlong(suser, SU_jobs, jobs);
+      lAddUlong(suser, SU_jobs, 1);
    }
 }
 
@@ -195,8 +194,7 @@ void suser_decrease_job_counter(lListElem *suser)
          ERROR((SGE_EVENT, MSG_SUSERCNTISALREADYZERO_S, 
                 lGetString(suser, SU_name))); 
       } else {
-         jobs -= 1;
-         lSetUlong(suser, SU_jobs, jobs);
+         lAddUlong(suser, SU_jobs, -1);
       }
    }
    DEXIT;
@@ -272,8 +270,7 @@ int suser_check_new_job(const lListElem *job, u_long32 max_u_jobs)
       else
          ret = 1;
    }      
-      DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/suser/suser_register_new_job() *********************************

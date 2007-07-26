@@ -196,8 +196,6 @@
 #define CKPTOBJ_DIR               "ckpt"
 #define CAL_DIR                   "calendars"
 #define ZOMBIE_DIR                "zombies"
-#define MAN_DIR                   "managers"
-#define OP_DIR                    "operators"
 #define RESOURCEQUOTAS_DIR        "resource_quotas"
 #define AR_DIR                    "advance_reservations"
 

@@ -1,3 +1,9 @@
+RD-2007-07-26-0: Cleanup:   - Made the flatfile spooling framework as the default for
+                              classic spooling
+                            - unified classic spooling for advance reservation
+                            - fixed broken pe range spooling for advance reservation
+                 Review:    AA
+
 HP-2007-07-24-0: Bugfix:    Fixed broken build on irix65 after checkin
                             GH-2007-07-24-0
                  Review:    AH

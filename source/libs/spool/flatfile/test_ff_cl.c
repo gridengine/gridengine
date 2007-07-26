@@ -87,6 +87,7 @@
 #include "spool/classic/read_write_userset.h"
 #include "spool/classic/read_write_sharetree.h"
 #include "spool/classic/read_write_resource_quota.h"
+#include "spool/classic/read_write_advance_reservation.h"
 #include "spool/classic/rw_configuration.h"
 #include "spool/classic/sched_conf.h"
 #include "spool/sge_spooling_utilities.h"
@@ -117,6 +118,7 @@ static int CU_test(void);
 #endif
 static int CONF_test(void);
 static int RQS_test(void);
+static int AR_test(void);
 
 #ifndef __SGE_NO_USERMAPPING__
 const spool_flatfile_instr qconf_comma_braced_sfi = 
@@ -146,7 +148,8 @@ typedef int (*func)(void);
  */
 int main(int argc, char** argv)
 {
-   const func test_array[] = { PE_test,
+   const func test_array[] = {
+                               PE_test,
                                CAL_test,
                                CK_test,
                                STN_test,
@@ -161,6 +164,7 @@ int main(int argc, char** argv)
                                HGRP_test,
                                CONF_test,
                                RQS_test,
+                               AR_test,
 #ifndef __SGE_NO_USERMAPPING__
                                CU_test,
 #endif
@@ -168,7 +172,7 @@ int main(int argc, char** argv)
 
    DENTER_MAIN(TOP_LAYER, "test_ff_cl");   
 
-   if(argc > 1) {
+   if (argc > 1) {
       int ret;
 
       while((ret = spool_lex())) {
@@ -178,6 +182,7 @@ int main(int argc, char** argv)
    else {
       int i = 0;
       sge_mt_init();
+      lInit(nmv);
 
       while (test_array[i] != NULL) {
          if (test_array[i]() != 0) {
@@ -2716,12 +2721,17 @@ static int QU_test(void)
    int ret = 0;
    lListElem *ep = NULL;
    lList * alp = NULL;
-   spooling_field *fields = sge_build_QU_field_list(false, false);
+   spooling_field *fields = sge_build_QU_field_list(false, true);
    const char *file1 = NULL, *file2 = NULL;
    
    ep = lCreateElem(QU_Type);
    lSetHost(ep, QU_qhostname, "Test_Name");
    lSetString(ep, QU_qname, "Test_Name2");
+   lSetUlong(ep, QU_state, 1);
+   lSetUlong(ep, QU_pending_signal, 2);
+   lSetUlong(ep, QU_pending_signal_delivery_time, 3);
+   lSetUlong(ep, QU_version, 4);
+   lSetUlong(ep, QU_queue_number, 5);
 
    printf("QU: No Args\n");   
    
@@ -2743,7 +2753,7 @@ static int QU_test(void)
                                        file2, false);
    
    lFreeElem(&ep);
-   ep = cull_read_in_qinstance(NULL, file2, 0, 0, NULL, NULL);
+   ep = cull_read_in_qinstance(NULL, file2, 1, 0, NULL, NULL);
    unlink(file2);
    FREE(file2);
    
@@ -2782,13 +2792,14 @@ static int HGRP_test(void)
    printf("HGRP: No Args\n");   
    
    /* Write a HGRP file using classic spooling */
-   file1 = write_host_group(0, 1, ep);
+   file1 = write_host_group(1, 1, ep);
    
    /* Read a HGRP file using flatfile spooling */
    lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, HGRP_Type, NULL,
                                    HGRP_fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
+   answer_list_output(&alp);
    
    /* Write a HGRP file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, ep, false,
@@ -2797,13 +2808,14 @@ static int HGRP_test(void)
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
                                        file2, false);
+   answer_list_output(&alp);
    
    lFreeElem(&ep);
-   ep = cull_read_in_host_group(NULL, file2, 0, 0, NULL, NULL);
+   ep = cull_read_in_host_group(NULL, file2, 1, 0, NULL, NULL);
    unlink(file2);
    FREE(file2);
    
-   file2 = write_host_group(0, 1, ep);
+   file2 = write_host_group(1, 1, ep);
    
    ret = diff(file1, file2);
    
@@ -2965,12 +2977,13 @@ static int CONF_test(void) {
    lListElem *ep2 = NULL;
    lList * lp = NULL;
    lList * alp = NULL;
-   spooling_field *fields = sge_build_CONF_field_list(false);
+   spooling_field *fields;
    const char *file1 = "/var/tmp/CONF_cl";
    const char *file2 = NULL;
    
    ep = lCreateElem(CONF_Type);
    lSetUlong(ep, CONF_version, 101);
+   lSetHost(ep, CONF_hname, "host1");
    
    lp = lCreateList("Config List", CF_Type);
    
@@ -2998,35 +3011,48 @@ static int CONF_test(void) {
    lSetString(ep2, CF_name, "login_shells");
    lSetString(ep2, CF_value, "sh,ksh,csh,tcsh");
    lAppendElem(lp, ep2);
+
+   ep2 = lCreateElem(CF_Type);
+   lSetString(ep2, CF_name, "execd_params");
+   lSetString(ep2, CF_value, "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0,SET_LIB_PATH=true");
+   lAppendElem(lp, ep2);
+
+   ep2 = lCreateElem(CF_Type);
+   lSetString(ep2, CF_name, "reporting_params");
+   lSetString(ep2, CF_value, "accounting=true reporting=false flush_time=00:00:05 joblog=true sharelog=00:10:00=true");
+   lAppendElem(lp, ep2);
    
    lSetList(ep, CONF_entries, lp);
    
-   printf("CONF: No Args\n");   
+   printf("CONF: No Args\n");
+
+   fields = sge_build_CONF_field_list(false);
    
    /* Write a CU file using classic spooling */
-   write_configuration(0, &alp,(char *)file1, ep, NULL, 0L);
+   write_configuration(0, &alp,(char *)file1, ep, NULL, 0);
+
    
    /* Read a CU file using flatfile spooling */
    lFreeElem(&ep);
    ep = spool_flatfile_read_object(&alp, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
-   
+
    /* Write a CU file using flatfile spooling */
    file2 = spool_flatfile_write_object(&alp, ep, false,
                                        fields,
                                        &qconf_sfi,
                                        SP_DEST_TMP,
                                        SP_FORM_ASCII, 
-                                       file2, false);
-   
+                                       file2, true);
+
    lFreeElem(&ep);
-   ep = read_configuration(file2, "Test_Name", 0L);
+   ep = read_configuration(file2, "Test_Name", 0);
    unlink(file2);
    FREE(file2);
-   
+
    file2 = strdup("/var/tmp/CONF_ff");
-   ret = write_configuration(0, &alp,(char *)file2, ep, NULL, 0L);
+   ret = write_configuration(0, &alp,(char *)file2, ep, NULL, 0);
    
    ret = diff(file1, file2);
    
@@ -3157,9 +3183,12 @@ static int RQS_test(void) {
    lFreeList(&rqs_list);
    rqs_list = spool_flatfile_read_list(&alp, RQS_Type, fields, NULL, true, &qconf_rqs_sfi,
                                    SP_FORM_ASCII, NULL, file1);
+   answer_list_output(&alp);
 
    /* Write a RQS file using flatfile spooling */
    file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
+
+   answer_list_output(&alp);
 
    /* Read a RQS file using classic spooling */
    lFreeList(&rqs_list);
@@ -3168,11 +3197,8 @@ static int RQS_test(void) {
    unlink(file2);
    FREE(file2);
 
-#if 1 
    file2 = spool_flatfile_write_list(&alp, rqs_list, fields, &qconf_rqs_sfi, SP_DEST_TMP, SP_FORM_ASCII, file2, false);
-#else
-   file2 = write_rqs_list(0, 1, rqs_list);
-#endif
+
 
    ret = diff(file1, file2);
 
@@ -3187,5 +3213,108 @@ static int RQS_test(void) {
 
    lFreeList(&rqs_list);
 
+   return ret;
+}
+
+static int AR_test(void) {
+   int ret = 0;
+   lList *lp;
+   lListElem *ep = NULL;
+   lListElem *ep1;
+   lList *alp = NULL;
+   const char *file1 = NULL, *file2 = NULL;
+   
+   ep = lCreateElem(AR_Type);
+   lSetUlong(ep, AR_id, 1);
+   lSetString(ep, AR_name, "Test_Name");
+
+   lp = lCreateList("range_list", RN_Type);
+   ep1 = lCreateElem(RN_Type);
+   lSetUlong(ep1, RN_min, 1);
+   lSetUlong(ep1, RN_max, 2);
+   lSetUlong(ep1, RN_step, 3);
+   lAppendElem(lp, ep1);
+   ep1 = lCreateElem(RN_Type);
+   lSetUlong(ep1, RN_min, 4);
+   lSetUlong(ep1, RN_max, 5);
+   lSetUlong(ep1, RN_step, 6);
+   lAppendElem(lp, ep1);
+   lSetList(ep, AR_pe_range, lp);
+
+   lp = lCreateList("resource_list", CE_Type);
+   ep1 = lCreateElem(CE_Type);
+   lSetString(ep1, CE_name, "ce1");
+   lSetString(ep1, CE_stringval, "101");
+   lAppendElem(lp, ep1);
+   ep1 = lCreateElem(CE_Type);
+   lSetString(ep1, CE_name, "ce2");
+   lSetDouble(ep1, CE_doubleval, 102);
+   lAppendElem(lp, ep1);
+   lSetList(ep, AR_resource_list, lp);
+
+   lAddSubStr(ep, QR_name, "queue1.q", AR_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue2.q", AR_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue3.q", AR_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue4.q", AR_queue_list, QR_Type);
+
+   ep1 = lAddSubStr(ep, JG_qname, "all.q@bla", AR_granted_slots, JG_Type);
+   lSetUlong(ep1, JG_slots, 5);
+   ep1 = lAddSubStr(ep, JG_qname, "my.q@bla", AR_granted_slots, JG_Type);
+   lSetUlong(ep1, JG_slots, 10);
+
+   lAddSubStr(ep, MR_user, "user1", AR_mail_list, MR_Type);
+   ep1 = lAddSubStr(ep, MR_user, "user2", AR_mail_list, MR_Type);
+   lSetHost(ep1, MR_host, "sun.com");
+
+   lAddSubStr(ep, QR_name, "queue1.q", AR_master_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue2.q", AR_master_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue3.q", AR_master_queue_list, QR_Type);
+   lAddSubStr(ep, QR_name, "queue4.q", AR_master_queue_list, QR_Type);
+
+   ep1 = lAddSubStr(ep, ARA_name, "user1", AR_acl_list, ARA_Type);
+   lSetString(ep1, ARA_group, "group1");
+   ep1 = lAddSubStr(ep, ARA_name, "user2", AR_acl_list, ARA_Type);
+   lSetString(ep1, ARA_group, "group2");
+   lAddSubStr(ep, ARA_name, "@userset1", AR_acl_list, ARA_Type);
+   lAddSubStr(ep, ARA_name, "@userset2", AR_acl_list, ARA_Type);
+
+  
+   printf("AR: No Args\n");   
+   
+   /* Write a AR file using classic spooling */
+   file1 = write_ar(1, 1, ep);
+
+   /* Read a AR file using flatfile spooling */
+   lFreeElem(&ep);
+   ep = spool_flatfile_read_object(&alp, AR_Type, NULL,
+                                   AR_fields, NULL, true, &qconf_sfi,
+                                   SP_FORM_ASCII, NULL, file1);
+   
+   /* Write a AR file using flatfile spooling */
+   file2 = spool_flatfile_write_object(&alp, ep, false,
+                                       AR_fields,
+                                       &qconf_sfi,
+                                       SP_DEST_TMP,
+                                       SP_FORM_ASCII, 
+                                       file2, true);
+  
+   lFreeElem(&ep);
+   ep = cull_read_in_ar(NULL, file2, 1, 0, NULL, NULL);
+   unlink(file2);
+   FREE(file2);
+   
+   file2 = write_ar(1, 1, ep);
+   
+   ret = diff(file1, file2);
+  
+   unlink(file1);
+   unlink(file2);
+   FREE(file1);
+   FREE(file2);
+   
+   lFreeElem(&ep);
+   
+   answer_list_output(&alp);   
+   lFreeList(&alp);
    return ret;
 }

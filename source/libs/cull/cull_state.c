@@ -157,7 +157,7 @@ void cull_state_set_global_sort_order( const lSortOrder *so)
    return;
 }
 
-void cull_state_set_name_space( const lNameSpace  *ns)
+void cull_state_set_name_space(const lNameSpace  *ns)
 {
    cull_state_t *cull_state = NULL;
 

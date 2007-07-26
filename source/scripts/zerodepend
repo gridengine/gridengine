@@ -65,9 +65,9 @@ files=" \
        libs/spool/spool_dependencies  \
        libs/spool/loader/spoolloader_dependencies  \
        libs/spool/berkeleydb/spoolb_dependencies  \
-       libs/spool/classic/spoolc_dependencies  \
+       libs/spool/classic/spoolc_old_dependencies  \
        libs/spool/dynamic/spoold_dependencies  \
-       libs/spool/flatfile/spoolf_dependencies  \
+       libs/spool/flatfile/spoolc_dependencies  \
        libs/spool/postgres/spoolp_dependencies  \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \

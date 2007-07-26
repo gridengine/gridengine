@@ -103,7 +103,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    ret = init_packbuffer(&pb, size, 0);
 
    /* pack ListElement */
-   if(ret == PACK_SUCCESS) {
+   if (ret == PACK_SUCCESS) {
       ret = cull_pack_elem(&pb, ep);
    }
 

@@ -77,7 +77,4 @@ int fprint_thresholds(FILE *fp, char *str, lList *thresholds, int print_slots);
 
 int fprint_resource_utilizations(FILE *fp, char *str, lList *thresholds, int print_slots); 
 
-int
-fprint_range_list(FILE *fp, char *name, lList *range_list); 
-
 #endif /* __CULL_PARSE_UTIL_H */

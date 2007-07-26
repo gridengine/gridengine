@@ -1002,7 +1002,7 @@ case DARWIN_PPC:
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
-   set SHARED_CFLAGS = "-dynamic"
+   set SHARED_CFLAGS = "-dynamic -fno-common"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L."
 
    set SHAREDEXT = ".dylib"

@@ -170,14 +170,14 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    expand = lGetBool(filter, RQRF_expand) ? true : false;
 
    if (expand) {
-      sge_dstring_append(buffer, "{");
+      sge_dstring_append_char(buffer, '{');
    }
 
    tlp = lGetList(filter, RQRF_scope);
    for_each(scope, tlp) {
       ret = true;
       if (!first) {
-         sge_dstring_append(buffer, ",");
+         sge_dstring_append_char(buffer, ',');
       } else {
          first = false;
       }
@@ -188,16 +188,16 @@ bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lLis
    for_each(scope, tlp) {
       ret = true;
       if (!first) {
-         sge_dstring_append(buffer, ",");
+         sge_dstring_append_char(buffer, ',');
       } else {
          first = false;
       }
-      sge_dstring_append(buffer, "!");
+      sge_dstring_append_char(buffer, '!');
       sge_dstring_append(buffer, lGetString(scope, ST_name));
    }
 
    if (expand) {
-      sge_dstring_append(buffer, "}");
+      sge_dstring_append_char(buffer, '}');
    }
 
    return ret; 

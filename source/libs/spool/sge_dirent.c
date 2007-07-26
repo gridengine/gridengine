@@ -78,8 +78,7 @@ lList *sge_get_dirents(const char *path) {
    }
    closedir(cwd);
 
-   DEXIT;
-   return (entries);
+   DRETURN(entries);
 }
 
 u_long32 sge_count_dirents(char *directory_name) 

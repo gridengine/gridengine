@@ -418,7 +418,7 @@ write_qinstance(int spool, int how, const lListElem *ep)
          FPRINTF((fp, "s_vmem             %s\n", lGetString(ep, QU_s_vmem)));
          FPRINTF((fp, "h_vmem             %s\n", lGetString(ep, QU_h_vmem)));
       }
-   } else if (how == 2) {
+   } else {
       /*
        * Spool only non-CQ attributes
        */

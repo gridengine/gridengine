@@ -1251,26 +1251,17 @@ bool job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
    bool ret = false;
    const char *pe_name = NULL;
 
-   DENTER(TOP_LAYER, "job_is_tight_parallel");
+   DENTER(TOP_LAYER, "job_might_be_tight_parallel");
+
    pe_name = lGetString(job, JB_pe);
    if (pe_name != NULL) {
-      int found_pe = 0;
-      int one_is_tight = 0;
       lListElem *pe;
 
-      DTRACE;
-
       for_each(pe, pe_list) {
-         if (pe_is_matching(pe, pe_name)) {
-            found_pe = 1;
-            one_is_tight |= lGetBool(pe, PE_control_slaves);
-            DTRACE;
+         if (pe_is_matching(pe, pe_name) && lGetBool(pe, PE_control_slaves)) {
+            ret = true;
+            break;
          }
-      }
-   
-      if (found_pe && one_is_tight) {
-         DTRACE;
-         ret = true;
       }
    }
    DRETURN(ret);

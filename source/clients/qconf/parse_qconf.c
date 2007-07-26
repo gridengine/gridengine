@@ -950,8 +950,6 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE); 
          }
          
-         NULL_OUT_NONE(ep, UP_default_project);
-        
          /* send it to qmaster */
          lp = lCreateList("User to add", UP_Type); 
          lAppendElem(lp, ep);
@@ -1086,7 +1084,7 @@ char *argv[]
             lFreeList(&lp);
          } else {
             char errstr[1024];
-            spooling_field *fields = sge_build_STN_field_list (false, true);
+            spooling_field *fields = sge_build_STN_field_list(false, true);
             
             spp = sge_parser_get_next(spp);
            
@@ -3520,8 +3518,7 @@ char *argv[]
             fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UP_name), lGetString(newep, UP_name));
             fprintf(stderr, "\n");
             DRETURN(1);
-         }
-         else {
+         } else {
             lFreeList(&lp);
             /* send it to qmaster */
             lp = lCreateList("User list to modify", UP_Type); 
@@ -3644,8 +3641,6 @@ char *argv[]
          if (newep == NULL) {
             sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE); 
          } 
-         
-         NULL_OUT_NONE(newep, UP_default_project);
          
          username = lGetString(newep, UP_name); 
                  
@@ -5885,10 +5880,6 @@ gid_t gid
       SGE_EXIT(NULL, 1);
    }
    
-   if (user) {
-      NULL_OUT_NONE(newep, UP_default_project);
-   }
-
    DRETURN(newep);
 }
 
@@ -6390,7 +6381,7 @@ const char *config_name
       }
       printf("%s:\n", cfn);
       
-      fields = sge_build_CONF_field_list (false);
+      fields = sge_build_CONF_field_list(false);
       filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
                                   SP_DEST_STDOUT, SP_FORM_ASCII, NULL, false);
       FREE (fields);
@@ -6503,7 +6494,7 @@ u_long32 flags
          lSetHost(ep, CONF_hname, cfn);
       }   
 
-      fields = sge_build_CONF_field_list (false);
+      fields = sge_build_CONF_field_list(false);
       tmpname = (char *)spool_flatfile_write_object(&alp, ep, false, fields,
                                             &qconf_sfi, SP_DEST_TMP, SP_FORM_ASCII, 
                                             tmpname, false);

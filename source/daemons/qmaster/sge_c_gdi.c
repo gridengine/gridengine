@@ -1914,7 +1914,9 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
    default:
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+      if (!is_locked) {
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+      }
       DRETURN(1);
    }
    

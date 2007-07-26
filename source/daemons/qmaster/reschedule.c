@@ -124,7 +124,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     * is the automatic rescheduling disabled
     */
    if (mconf_get_disable_reschedule()) {
-      DEXIT;
+      DTRACE;
       goto Error;
    }         
  
@@ -132,7 +132,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     * locate the host object which went in unknown-state
     */
    if (!(hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, hostname))) {
-      DEXIT;
+      DTRACE;
       goto Error;
    }
  
@@ -142,7 +142,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
    new_timeout = reschedule_unknown_timeout(hep);
    if (new_timeout == 0) {
       INFO((SGE_EVENT, MSG_RU_CANCELED_S, hostname));
-      DEXIT;
+      DTRACE;
       goto Error;
    } else if (new_timeout+add_time > timeout) {
       u_long32 when, delta = 0;
@@ -153,7 +153,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
       ev = te_new_event((time_t)when, TYPE_RESCHEDULE_UNKNOWN_EVENT, ONE_TIME_EVENT, delta, 0, hostname);
       te_add_event(ev);
       te_free_event(&ev);
-      DEXIT;
+      DTRACE;
       goto Error;
    }
  

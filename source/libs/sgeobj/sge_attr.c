@@ -240,7 +240,6 @@ attr_create(lList **answer_list, const char *href, void *value,
    return ret;
 }
 
-/* EB: ADOC: add commets */
 /****** sgeobj/attr/attr_list_add() *******************************************
 *  NAME
 *     attr_list_add() -- Add a new attribute entry to a list 
@@ -303,6 +302,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
    bool ret = false;
 
    DENTER(HOSTATTR_LAYER, "attr_list_add");
+
    if (this_list != NULL && attr != NULL && *attr != NULL) {
       lListElem *attr_elem = NULL; 
       const char *href = NULL;
@@ -311,11 +311,12 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
 
       href = lGetHost(*attr, href_nm);
       is_hgroup = is_hgroup_name(href);
-      attr_elem = attr_list_locate(*this_list, href, href_nm);
 
       if (*this_list == NULL) {
          *this_list = lCreateList("", descriptor);
          created_list = true;
+      } else {
+         attr_elem = attr_list_locate(*this_list, href, href_nm);
       }
 
       /*
@@ -335,7 +336,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
             if (flags & HOSTATTR_OVERWRITE) {
                object_set_any_type(attr_elem, value_nm, &value);
                lFreeElem(attr);
-/* FIXME ??? */               
                *attr = attr_elem;
                ret = true;
             } else {
@@ -346,7 +346,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
             }
          } else {
             lAppendElem(*this_list, *attr);
-/* FIXME ????            *attr = NULL; */
             ret = true;
          }
       } else {
@@ -425,8 +424,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
          lFreeList(this_list);
       }
    } 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/attr/attr_list_add_set_del() ***********************************
@@ -485,7 +483,6 @@ attr_list_add_set_del(lList **this_list, lList **answer_list,
          ret = attr_list_add(this_list, answer_list,
                              &attr, HOSTATTR_OVERWRITE, NULL,
                              descriptor, href_nm, value_nm);
-/* FIXME ???   lFreeElem(&attr); */
       }
    }
    return ret;
@@ -625,34 +622,28 @@ attr_list_find_value_href(const lList *this_list, lList **answer_list,
          DTRACE;
          ret = true;
       } else {
-         if (ret == false) {
-            lListElem *tmp_href = NULL;
+         lListElem *tmp_href = NULL;
 
+         /*
+          * Use the default value
+          */
+         tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
+         if (tmp_href != NULL) {
+            object_get_any_type(tmp_href, value_nm, value_buffer);
+            *found = false;
+            DTRACE;
+            ret = true;
+         } else {
             /*
-             * Use the default value
+             * Should never happen.
              */
-            tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
-            if (tmp_href != NULL) {
-               object_get_any_type(tmp_href, value_nm, value_buffer);
-               *found = false;
-               DTRACE;
-               ret = true;
-            } else {
-               /*
-                * Should never happen.
-                */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
-               answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
-            }
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
+            answer_list_add(answer_list, SGE_EVENT,
+                            STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
          }
       }
-      if (ret) {
-         DTRACE;
-      }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /*
@@ -664,75 +655,63 @@ bool
 attr_list_append_to_dstring(const lList *this_list, dstring *string,
                             const lDescr *descriptor, int href_nm, int value_nm)
 {
-   bool ret = true;
    bool found_default = false;
    bool found_group = false;
    bool found_host = false;
    lListElem *attr = NULL;
-   dstring default_string = DSTRING_INIT;
-   dstring group_string = DSTRING_INIT;
    dstring host_string = DSTRING_INIT;
-   const char *const comma = ",";
 
    DENTER(HOSTATTR_LAYER, "attr_list_append_to_dstring");
 
+   if ((attr = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm)) != NULL) {
+      found_default = true;
+      object_append_field_to_dstring(attr, NULL, string, value_nm,
+                                     '\0');
+   }
+   
    for_each(attr, this_list) {
       const char *href;
 
       href = lGetHost(attr, href_nm);
 
-      if (href != NULL && !strcmp(href, HOSTREF_DEFAULT)) {
-         object_append_field_to_dstring(attr, NULL, &default_string, value_nm,
-                                        '\0');
-         found_default = true;
-      } else if (is_hgroup_name(href)) {
-         if (found_group) {
-            sge_dstring_append(&group_string, comma);
-            
-         }
-         sge_dstring_sprintf_append(&group_string, "[%s=", href);
-         object_append_field_to_dstring(attr, NULL, &group_string, value_nm, 
-                                        '\0');
-         sge_dstring_append(&group_string, "]");
-         found_group = true;
+      if (href == NULL || (found_default && !strcmp(href, HOSTREF_DEFAULT))) {
+         continue;
       } else {
-         if (found_host) {
-            sge_dstring_append(&host_string, comma);
+         dstring *ds; /* will be reference to the corresponding dstring container */
+        
+         if (is_hgroup_name(href)) {
+            ds = string;
+            if (found_group || found_default) {
+               sge_dstring_append_char(ds, ',');
+            }
+            found_group = true;
+         } else {
+            ds = &host_string;
+            if (found_host) {
+               sge_dstring_append_char(ds, ',');
+            }
+            found_host = true;
          }
-         sge_dstring_sprintf_append(&host_string, "[%s=", href);
-         object_append_field_to_dstring(attr, NULL, &host_string, value_nm,
-                                        '\0');
-         sge_dstring_append(&host_string, "]");
-         found_host = true;
-      }
-   }
-   if (found_default) {
-      const char *s = sge_dstring_get_string(&default_string);
 
-      sge_dstring_append(string, s);
-   }
-   if (found_group) {
-      const char *s = sge_dstring_get_string(&group_string);
-      if (found_default) {
-         sge_dstring_append(string, comma);
+         sge_dstring_append_char(ds, '[');
+         sge_dstring_append(ds, href);
+         sge_dstring_append_char(ds, '=');
+         object_append_field_to_dstring(attr, NULL, ds, value_nm, 
+                                        '\0');
+         sge_dstring_append_char(ds, ']');
       }
-      sge_dstring_append(string, s);
    }
    if (found_host) {
-      const char *s = sge_dstring_get_string(&host_string);
-      if (found_group || found_default) {
-         sge_dstring_append(string, comma);
+      if (found_default || found_group) {
+         sge_dstring_append_char(string, ',');
       }
-      sge_dstring_append(string, s);
+      sge_dstring_append_dstring(string, &host_string);
    }
    if (!found_default && !found_group && !found_host) {
       sge_dstring_append(string, "NONE");
    }
-   sge_dstring_free(&default_string);
-   sge_dstring_free(&group_string);
    sge_dstring_free(&host_string);
-   DEXIT;
-   return ret;
+   DRETURN(true);
 }
 
 /*

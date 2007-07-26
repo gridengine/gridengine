@@ -71,6 +71,8 @@
 #include "spool/loader/sge_spooling_loader.h"
 #include "sge_event.h"
 
+static lList *Master_Job_List = NULL;
+
 #ifndef TEST_READ_ONLY
 static const char *random_string(int length)
 {
@@ -120,24 +122,7 @@ static bool generate_jobs(int num)
    return true;
 }
 
-static lList *
-copy_jobs()
-{
-   lList *copy;
-   
-   copy = lCopyList("copy", Master_Job_List);
-   return copy;
-}
-
-static lList *
-select_jobs(lEnumeration *what_job)
-{
-   lList *copy;
-   copy = lSelect("copy", Master_Job_List, NULL, what_job);
-   return copy;
-}
-
-static bool spool_data()
+static bool spool_data(void)
 {
    lList *answer_list = NULL;
    lListElem *context, *job;
@@ -148,8 +133,8 @@ static bool spool_data()
    fprintf(stdout, "spooling %d jobs\n", lGetNumberOfElem(Master_Job_List));
 
    for_each(job, Master_Job_List) {
-      sprintf(key, "%ld.0", lGetUlong(job, JB_job_number));
-      spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB);
+      sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
+      spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB, true);
       answer_list_output(&answer_list);
    }
 
@@ -173,13 +158,9 @@ static bool read_spooled_data(void)
 
 int main(int argc, char *argv[])
 {
-   int cl_err = 0;
+   sge_gdi_ctx_class_t *ctx = NULL;
    lListElem *spooling_context;
    lList *answer_list = NULL;
-   lEnumeration *what_job;
-#ifndef TEST_READ_ONLY
-   lList *copy;
-#endif
 
    DENTER_MAIN(TOP_LAYER, "test_performance");
 
@@ -189,73 +170,20 @@ int main(int argc, char *argv[])
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-   what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM1")", JB_Type,
-         JB_job_number, 
-         JB_script_file,
-         JB_submission_time,
-         JB_owner,
-         JB_uid,      /* x*/
-         JB_group,
-         JB_gid,        /* x*/
-         JB_execution_time,
-         JB_checkpoint_attr,     /* x*/
-
-         JB_checkpoint_interval, /* x*/
-         JB_checkpoint_name,   
-         JB_hard_resource_list,
-         JB_soft_resource_list,
-         JB_mail_options, /* may be we want to send mail */ /* x*/
-         JB_mail_list,  /* x*/
-         JB_job_name,   /* x*/
-         JB_priority,
-         JB_hard_queue_list,
-         JB_soft_queue_list,
-
-         JB_master_hard_queue_list,
-         JB_pe,
-         JB_pe_range,
-         JB_jid_predecessor_list,
-         JB_soft_wallclock_gmt,
-         JB_hard_wallclock_gmt,
-         JB_version,
-         JB_type,
-         JB_project,
-/* SGE */ JB_department,
-
-         /* JB_jobclass,*/ /*x*/
-         JB_deadline,
-         JB_host,
-         JB_override_tickets,
-         JB_ja_structure,
-         JB_ja_n_h_ids,
-         JB_ja_u_h_ids,
-         JB_ja_s_h_ids,
-         JB_ja_o_h_ids,   
-         JB_ja_tasks,
-
-         JB_ja_template,
-         JB_category);
-
    prof_start(SGE_PROF_CUSTOM1, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "performance", NULL);
 
    /* parse commandline parameters */
    if(argc != 4) {
       ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
-      SGE_EXIT(1);
+      SGE_EXIT(NULL, 1);
    }
-
-   sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QEVENT], NULL))) {
-      ERROR((SGE_EVENT, "sge_gdi_setup failed: %s\n", cl_get_error_text(cl_err)));
-      SGE_EXIT(1);
+   
+   if (sge_gdi2_setup(&ctx, QEVENT, NULL) != AE_OK) {
+      SGE_EXIT((void**)&ctx, 1);
    }
-
+   
    sge_setup_sig_handlers(QEVENT);
-
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
-      SGE_EXIT(1);
-   }   
 
 #define defstring(str) #str
 
@@ -263,14 +191,14 @@ int main(int argc, char *argv[])
    spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
    answer_list_output(&answer_list);
    if(spooling_context == NULL) {
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT(NULL, EXIT_FAILURE);
    }
 
    spool_set_default_context(spooling_context);
 
    if(!spool_startup_context(&answer_list, spooling_context, true)) {
       answer_list_output(&answer_list);
-      SGE_EXIT(EXIT_FAILURE);
+      SGE_EXIT(NULL, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
    
@@ -279,7 +207,7 @@ int main(int argc, char *argv[])
    generate_jobs(30000);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "generating jobs:\n");
-   prof_reset(NULL);
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
 /*
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    copy = copy_jobs();
@@ -299,21 +227,20 @@ int main(int argc, char *argv[])
    spool_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "spool jobs:\n");
-   prof_reset(NULL);
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
 
    lFreeList(&Master_Job_List);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "read jobs (cached):\n");
-   prof_reset(NULL);
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
   
    spool_shutdown_context(&answer_list, spooling_context);
    spool_startup_context(&answer_list, spooling_context, true);
   
-   Master_Job_List = lFreeList(Master_Job_List);
+   lFreeList(&Master_Job_List);
 #else
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();

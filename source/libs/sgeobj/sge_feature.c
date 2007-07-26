@@ -519,8 +519,7 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    sge_dstring_sprintf_append(buffer, " (build %d)", DAILY_BUILD_NUMBER);
 #endif
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** sgeobj/feature/feature_once_init() ************************************

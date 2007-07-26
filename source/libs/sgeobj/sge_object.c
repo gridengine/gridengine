@@ -590,11 +590,10 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 const char * 
 object_append_field_to_dstring(const lListElem *object, lList **answer_list, 
                                dstring *buffer, const int nm, 
-                               char string_quotes)
+                               const char string_quotes)
 {
    const char *ret = NULL;
-   char tmp_buf[MAX_STRING_SIZE];
-   dstring string;
+   dstring string = DSTRING_INIT;
    bool quote_special_case = false;
 
    DENTER(OBJECT_LAYER, "object_append_field_to_dstring");
@@ -610,8 +609,6 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
     *          QU_batch, QU_parallel, ...
     */
 
-   sge_dstring_init(&string, tmp_buf, sizeof(tmp_buf));
-    
    switch (nm) {
       case CE_valtype:
          ret = map_type2str(lGetUlong(object, nm));
@@ -665,8 +662,9 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
    /* we had a special case - append to result dstring */
    if (ret != NULL) {
       if (quote_special_case && string_quotes != '\0') {
-         ret = sge_dstring_sprintf_append(buffer, "%c%s%c", string_quotes, 
-                                          ret, string_quotes);
+         sge_dstring_append_char(buffer, string_quotes);
+         sge_dstring_append(buffer, ret);
+         ret = sge_dstring_append_char(buffer, string_quotes);
       } else { 
          ret = sge_dstring_append(buffer, ret);
       }
@@ -674,6 +672,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
       ret = object_append_raw_field_to_dstring(object, answer_list, buffer,
                                                nm, string_quotes);
    }
+   sge_dstring_free(&string);
 
    DRETURN(ret);
 }
@@ -770,10 +769,9 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
          case lStringT:
             str = lGetPosString(object, pos);
             if (string_quotes != '\0') {
-               result = sge_dstring_sprintf_append(buffer, "%c%s%c", 
-                                      string_quotes,
-                                      str != NULL ? str : NONE_STR,
-                                      string_quotes);
+               sge_dstring_append_char(buffer, string_quotes);
+               sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
+               result = sge_dstring_append_char(buffer, string_quotes);
             } else {
                result = sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
             }
@@ -781,10 +779,9 @@ object_append_raw_field_to_dstring(const lListElem *object, lList **answer_list,
          case lHostT:
             str = lGetPosHost(object, pos);
             if (string_quotes != '\0') {
-               result = sge_dstring_sprintf_append(buffer, "%c%s%c", 
-                                      string_quotes,
-                                      str != NULL ? str : NONE_STR,
-                                      string_quotes);
+               sge_dstring_append_char(buffer, string_quotes);
+               sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
+               result = sge_dstring_append_char(buffer, string_quotes);
             } else {
                result = sge_dstring_append(buffer, str != NULL ? str : NONE_STR);
             }

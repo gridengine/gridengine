@@ -2260,7 +2260,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       char *env_description;
       char *env_entry;
       lListElem *ep;
-      struct saved_vars_s *context;
+      struct saved_vars_s *context = NULL;
 
       ep = lCreateElem(VA_Type);
       lAppendElem(*lpp, ep);
@@ -2268,7 +2268,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_entry = sge_strdup(NULL, *envp);
       SGE_ASSERT((env_entry));
 
-      context = NULL;
       env_name = sge_strtok_r(env_entry, "=", &context);
       SGE_ASSERT((env_name));
       lSetString(ep, VA_variable, env_name);
@@ -2278,7 +2277,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
          lSetString(ep, VA_value, env_description);
       FREE(env_entry);
       sge_free_saved_vars(context);
-
    }
 
    DEXIT;

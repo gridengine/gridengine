@@ -68,43 +68,43 @@
  * spooling framework functions
  */
 
-#ifdef SPOOLING_flatfile
+#ifdef SPOOLING_classic
 const char *get_spooling_method(void);
 #else
-const char *get_flatfile_spooling_method(void);
+const char *get_classic_spooling_method(void);
 #endif
 
 lListElem *
-spool_flatfile_create_context(lList **answer_list, const char *args);
+spool_classic_create_context(lList **answer_list, const char *args);
 
 bool 
-spool_flatfile_default_startup_func(lList **answer_list, 
+spool_classic_default_startup_func(lList **answer_list, 
                                     const lListElem *rule, bool check);
 bool 
-spool_flatfile_common_startup_func(lList **answer_list, 
+spool_classic_common_startup_func(lList **answer_list, 
                                    const lListElem *rule, bool check);
 
 bool 
-spool_flatfile_default_list_func(lList **answer_list, 
+spool_classic_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule,
                                  lList **list, 
                                  const sge_object_type object_type);
 lListElem *
-spool_flatfile_default_read_func(lList **answer_list, 
+spool_classic_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule,
                                  const char *key, 
                                  const sge_object_type object_type);
 bool 
-spool_flatfile_default_write_func(lList **answer_list, 
+spool_classic_default_write_func(lList **answer_list, 
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
                                   const sge_object_type object_type);
 bool 
-spool_flatfile_default_delete_func(lList **answer_list, 
+spool_classic_default_delete_func(lList **answer_list, 
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 

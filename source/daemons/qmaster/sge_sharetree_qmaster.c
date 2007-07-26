@@ -113,8 +113,7 @@ int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx,
    lFreeList(&found);
    if (ret) {
       /* alpp gets filled by check_sharetree() */
-      DEXIT;
-      return STATUS_EUNKNOWN;
+      DRETURN(STATUS_EUNKNOWN);
    }
 
    /* check for presence of sharetree list and create if neccesary */
@@ -122,8 +121,10 @@ int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx,
       prev_version = 0;
       *lpp = lCreateList("sharetree list", STN_Type);
       adding = 1;
-   }
-   else {
+   } else if (lGetNumberOfElem(*lpp) == 0) {
+      prev_version = 0;
+      adding = 1;
+   } else {
       lListElem *first = lFirst(*lpp);
       /* real action: change user or project
          We simply replace the old element with the new one. If there is no
@@ -153,8 +154,7 @@ int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx,
    if (adding) {
       INFO((SGE_EVENT, MSG_STREE_ADDSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
-   }
-   else {
+   } else {
       INFO((SGE_EVENT, MSG_STREE_MODSTREE_SSII, 
          ruser, rhost, lGetNumberOfNodes(ep, NULL, STN_children), lGetNumberOfLeafs(ep, NULL, STN_children)));
    }
@@ -310,7 +310,6 @@ lList **found  /* tmp list that contains one entry for each found u/p */
             DEXIT;
             return -1;
          }
-
       }
 
       /* restore old found list */
@@ -318,9 +317,7 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          lFreeList(found);
          *found = save_found;
       }
-
    } else {
-
       /* a leaf node */
 
       /* check if this is a project node */

@@ -64,7 +64,7 @@
 
 static int intprt_resourcelist[] = { CE_name, CE_stringval, 0 };
 static int intprt_mail_recipiants[] = { MR_user, MR_host, 0 };
-static int intprt_range_list[] = { RN_min, RN_max, 0 };
+static int intprt_range_list[] = { RN_min, RN_max, RN_step, 0 };
 static int intprt_queue[] = { JG_qname, JG_slots, 0 }; 
 static int intprt_acl[] = { ARA_name, ARA_group, 0 }; 
 lListElem *
@@ -221,17 +221,6 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
          DRETURN(-1);
       }
    }
-   { /* restore double value and complex tzype */
-      object_description *object_base = object_type_get_object_description();
-      lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
-
-      
-      if (centry_list_fill_request(lGetList(ep, AR_resource_list), alpp, 
-          master_centry_list, false, true, false)) {
-          DRETURN(-1);
-      }
-   }
- 
    /* --------- AR_resource_utilization NOSPOOL */
 
    /* --------- AR_queue_list */
@@ -248,26 +237,6 @@ read_ar_work(lList **alpp, lList **clpp, int fields[], lListElem *ep,
       DRETURN(-1);
                    
    }
-   DPRINTF((    "granted_slots:\n"));
-   {  /* extract the host name from qname */
-      lListElem *jg;
-      dstring cqueue_buffer = DSTRING_INIT;
-      dstring hostname_buffer = DSTRING_INIT;
-      for_each(jg, lGetList(ep, AR_granted_slots)){
-         const char *hostname = NULL;
-         bool has_hostname = false;
-         bool has_domain = false;
-
-         s =  lGetString(jg, JG_qname);
-         cqueue_name_split(s, &cqueue_buffer, &hostname_buffer,
-                           &has_hostname, &has_domain);
-         hostname = sge_dstring_get_string(&hostname_buffer);
-         lSetHost(jg, JG_qhostname, hostname);
-      }
-      sge_dstring_free(&cqueue_buffer);
-      sge_dstring_free(&hostname_buffer);
-         
-   } /* end of granted_slots */
    
    /* --------- AR_mail_options */
    if (!set_conf_ulong(alpp, clpp, fields, "mail_options", ep, AR_mail_options)) {
@@ -382,14 +351,11 @@ char *write_ar(int spool, int how, const lListElem *ep)
    const char *s = NULL;
    const char *delis[] = {"=", ",", NULL};
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
-   dstring ds;
-   char buffer[256];
    lListElem *sep;
    int lret;
 
    DENTER(TOP_LAYER, "write_ar");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
    switch (how) {
    case 0:
       fp = stdout;
@@ -419,9 +385,14 @@ char *write_ar(int spool, int how, const lListElem *ep)
       DRETURN(NULL);
    }
    
-   if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR, 
-         feature_get_product_name(FS_VERSION, &ds)) < 0) {
-      goto FPRINTF_ERROR;
+   if (spool) {
+      dstring ds = DSTRING_INIT;
+      if (sge_spoolmsg_write(fp, COMMENT_CHAR, 
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
+         sge_dstring_free(&ds);
+         goto FPRINTF_ERROR;
+      }
+      sge_dstring_free(&ds);
    }
 
    /* --------- AR_id */
@@ -489,24 +460,10 @@ char *write_ar(int spool, int how, const lListElem *ep)
    
    /* --------- AR_queue_list */
    DPRINTF((    "queue_list:        \n"));
-   FPRINTF((fp, "queue_list           "));
-   sep = lFirst(lGetList(ep, AR_queue_list));
-   if (sep) {
-      do {
-         DPRINTF((    "%s", lGetString(sep, QR_name)));
-         FPRINTF((fp, "%s", lGetString(sep, QR_name)));
-         sep = lNext(sep);
-         if (sep) { 
-            DPRINTF((    " "));
-            FPRINTF((fp, " "));
-         }
-      } while (sep);
-      DPRINTF((    "\n"));
-      FPRINTF((fp, "\n"));
-   } else {
-      DPRINTF((    "NONE\n"));
-      FPRINTF((fp, "NONE\n"));
-   }  
+   lret = fprint_cull_list(fp,  "queue_list           ", lGetList(ep, AR_queue_list), QR_name);
+   if (lret == -1) {
+      goto FPRINTF_ERROR;
+   }
 
    /* --------- AR_granted_slots */
    DPRINTF((    "granted_slots:       "));
@@ -552,8 +509,8 @@ char *write_ar(int spool, int how, const lListElem *ep)
 
          user=lGetString(sep, MR_user);
          host=lGetHost(sep, MR_host); 
-         DPRINTF((    "%s %s", user, (host != NULL) ? host : "NONE"));
-         FPRINTF((fp, "%s %s", user, (host != NULL) ? host : "NONE"));
+         DPRINTF((    "%s=%s", user, (host != NULL) ? host : "NONE"));
+         FPRINTF((fp, "%s=%s", user, (host != NULL) ? host : "NONE"));
          sep = lNext(sep);
          if (sep) { 
             DPRINTF((    ",\n"));
@@ -574,7 +531,11 @@ char *write_ar(int spool, int how, const lListElem *ep)
 
    /* --------- AR_pe_range */
    DPRINTF((    "pe_range \n"));
-   fprint_range_list(fp, "pe_range             ", lGetList(ep, AR_pe_range));
+   FPRINTF((fp, "pe_range             "));
+   if (uni_print_list(fp, NULL, 0, lGetList(ep, AR_pe_range), intprt_range_list, delis, 0) < 0) {
+      goto FPRINTF_ERROR;
+   }
+   FPRINTF((fp, "\n"));
 
    /* --------- AR_granted_pe */
    s = lGetString(ep, AR_granted_pe);

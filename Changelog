@@ -1,3 +1,7 @@
+RD-2007-07-26-0: Bugfix:    - unified classic spooling for advance reservation
+                            - fixed broken pe range spooling for advance reservation
+                 Review:    AA
+
 RD-2007-07-24-0: Bugfix:    fixed compile error on AIX51
                  Review:    AA
 

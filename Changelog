@@ -1,3 +1,9 @@
+AH-2007-07-27-1: Bugfix:    Parallel RR broken if jobs wait for queue slots
+                            and no RQS configured
+                 Bugster:   6585721
+                 Issue:     2338
+                 Review:    RD
+
 RD-2007-07-26-0: Bugfix:    - unified classic spooling for advance reservation
                             - fixed broken pe range spooling for advance reservation
                  Review:    AA

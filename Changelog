@@ -1,3 +1,9 @@
+AH-2007-07-27-0: Bugfix:    Parallel RR broken if jobs wait for queue slots 
+                            and no RQS configured
+                 Bugster:   6585721
+                 Issue:     2338
+                 Review:    RD
+
 RD-2007-07-27-0: Bugfix:    removed duplicate dlopen() call in libspoold
                  Review:    AA
 

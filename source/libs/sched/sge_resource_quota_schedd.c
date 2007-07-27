@@ -1062,7 +1062,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
 
    /* We have to set at first the slots for the case no ruleset is defined or all are enabled */
    *slots = tslots;
-   *slots = tslots_qend;
+   *slots_qend = tslots_qend;
 
    if (lGetNumberOfElem(a->rqs_list) == 0) {
       DRETURN(result);

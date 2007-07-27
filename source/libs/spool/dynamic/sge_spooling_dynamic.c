@@ -103,24 +103,23 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
 #endif   
 
    /* open the shared lib */
-   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY);
    # if defined(DARWIN)
    # ifdef RTLD_NODELETE
-   shlib_handle = dlopen (shlib_fullname, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+   shlib_handle = dlopen(shlib_fullname, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
    # else
-   shlib_handle = dlopen (shlib_fullname, RTLD_NOW | RTLD_GLOBAL );
+   shlib_handle = dlopen(shlib_fullname, RTLD_NOW | RTLD_GLOBAL );
    # endif /* RTLD_NODELETE */
    # elif defined(HP11) || defined(HP1164)
    # ifdef RTLD_NODELETE
-   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
+   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
    # else
-   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY );
+   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY );
    # endif /* RTLD_NODELETE */
    # else
    # ifdef RTLD_NODELETE
-   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
+   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY | RTLD_NODELETE);
    # else
-   shlib_handle = dlopen (shlib_fullname, RTLD_LAZY);
+   shlib_handle = dlopen(shlib_fullname, RTLD_LAZY);
    # endif /* RTLD_NODELETE */
    #endif
                         

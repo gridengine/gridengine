@@ -1,3 +1,9 @@
+AH-2007-07-30-0: Bugfix:    user/system/operator hold state combinations 
+                            cause strange qstat output
+                 Bugster:   6584632
+                 Issue:     2334 
+                 Review:    JG
+
 RD-2007-07-30-1: CVS        Created V61u1_ARI_BRANCH
 -----------------------------------------------------
 

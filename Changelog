@@ -1,3 +1,6 @@
+HP-2007-07-31-0: Bugfix:    Fixed broken build after checkin RD-2007-07-26-0
+                 Changed:   source/libs/spool/Makefile
+
 AH-2007-07-27-0: Bugfix:    Parallel RR broken if jobs wait for queue slots 
                             and no RQS configured
                  Bugster:   6585721

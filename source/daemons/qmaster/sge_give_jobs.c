@@ -147,9 +147,6 @@ setCheckpointObj(lListElem *job);
 static lListElem* 
 copyJob(lListElem *job, lListElem *ja_task);
 
-#ifdef SOLARIS
-#pragma no_inline(spool_read_script, spool_delete_script)
-#endif
 
 /************************************************************************
  Master function to give job to the execd.
@@ -601,7 +598,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    ** if exec_file is not set, then this is an interactive job
    */
    if (master && job_spooling && lGetString(tmpjep, JB_exec_file) && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-      if (spool_read_script(NULL, tmpjep) == false) {
+      if (spool_read_script(NULL, lGetUlong(tmpjep, JB_job_number), tmpjep) == false) {
          lFreeElem(&tmpjep);
          DEXIT;
          return -1;
@@ -1378,7 +1375,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       if (!no_unlink) {
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-            spool_delete_script(&answer_list, jep);
+            spool_delete_script(&answer_list, lGetUlong(jep, JB_job_number), jep);
          }
       }
       break;

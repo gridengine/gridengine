@@ -993,8 +993,8 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
          sge_dstring_clear(&buffer);
 
          if (lGetString(jep, JB_exec_file) != NULL) {
-            if (spool_read_script(&answer_list, jep) == true) {
-               spool_delete_script(&answer_list, jep);
+            if (spool_read_script(&answer_list, job_id, jep) == true) {
+               spool_delete_script(&answer_list, job_id, jep);
             }  else {
                printf("could not read in script file\n");
             }

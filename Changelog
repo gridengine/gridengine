@@ -1,3 +1,7 @@
+PJ-2007-08-01-1: Bugfix:    DTRACE fix
+                 Changed:   The monitor.d script and signatures of job_write_script, job_read_script, job_delete_script
+                 Review:    LP
+
 PJ-2007-08-01-0: Enhancem.: Bdb jobscript spooling
                  Review:    RD
 

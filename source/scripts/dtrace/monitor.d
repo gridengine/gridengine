@@ -231,7 +231,7 @@ pid$1::spool_read_script:entry,pid$1::spool_write_script:entry,pid$1::spool_dele
 pid$1::spool_read_object:entry
 /$4 == 1/
 {
-   printf("\t%s(%d, %s) tid %d", probefunc, arg3, copyinstr(arg2), tid);
+   printf("\t%s(%d, %s) tid %d", probefunc, arg2, copyinstr(arg3), tid);
 }
 pid$1::spool_write_object:entry
 /$4 == 1/

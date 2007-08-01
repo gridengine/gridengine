@@ -77,8 +77,8 @@ void job_mark_job_as_deleted(sge_gdi_ctx_class_t *ctx, lListElem *j, lListElem *
 
 void sge_job_spool(sge_gdi_ctx_class_t *);
 
-bool spool_write_script(lList **answer_list, lListElem *jep);
-bool spool_delete_script(lList **answer_list, lListElem *jep);
-bool spool_read_script(lList **answer_list, lListElem *jep);
+bool spool_write_script(lList **answer_list, u_long32 jobid, lListElem *jep);
+bool spool_delete_script(lList **answer_list, u_long32 jobid, lListElem *jep);
+bool spool_read_script(lList **answer_list, u_long32 jobid, lListElem *jep);
 
 #endif /* __SGE_JOB_QMASTER_H */

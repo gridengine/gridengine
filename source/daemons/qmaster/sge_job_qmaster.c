@@ -801,7 +801,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       if (job_spooling)  {
          if (lGetString(jep, JB_script_file) && 
              !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-            if (spool_write_script(alpp, jep)==false) {
+            if (spool_write_script(alpp, job_number, jep)==false) {
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -3538,7 +3538,7 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
 
    /* read script from old job and reuse it */
    if (lGetString(new_jep, JB_exec_file) && job_spooling) {
-      spool_read_script(alpp, new_jep);
+      spool_read_script(alpp, seek_jid, new_jep);
    }
 
    job_initialize_id_lists(new_jep, NULL);
@@ -3599,7 +3599,7 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
 
          /* store job script*/
          if (lGetString(jep, JB_exec_file) != NULL && job_spooling) {
-            if (spool_write_script(&answer_list, jep) == false) {
+            if (spool_write_script(&answer_list, job_number, jep) == false) {
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                break;
             }
@@ -3679,13 +3679,14 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
 *     spool_write_script() -- Write job script
 *
 *  SYNOPSIS
-*     bool spool_write_script(lList **answer_list, lListElem *jep) 
+*     bool spool_write_script(lList **answer_list,u_long32 jobid, lListElem *jep) 
 *
 *  FUNCTION
 *     The function stores the script of a '-b n' job into a file.
 *
 *  INPUTS
 *     lList **answer_list
+*     u_long32 jobid - job id (needed for Dtrace only)
 *     lListElem *jep - the job
 *
 *  RESULT
@@ -3698,7 +3699,7 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
 *     spool_delete_script()
 *     spool_read_script()
 *******************************************************************************/
-bool spool_write_script(lList **answer_list, lListElem *jep)
+bool spool_write_script(lList **answer_list, u_long32 jobid, lListElem *jep)
 {
    bool ret=true;
    dstring buffer = DSTRING_INIT;
@@ -3720,13 +3721,14 @@ bool spool_write_script(lList **answer_list, lListElem *jep)
 *     spool_read_script() -- Read job script
 *
 *  SYNOPSIS
-*     bool spool_read_script(lList **answer_list, lListElem *jep) 
+*     bool spool_read_script(lList **answer_list, u_long32 jobid, lListElem *jep) 
 *
 *  FUNCTION
 *     The function reads the script of a '-b n' job from file.
 *
 *  INPUTS
 *     lList **answer_list
+*     u_long32 jobid - job id (needed for Dtrace only)
 *     lListElem *jep - the job
 *
 *  RESULT
@@ -3739,7 +3741,7 @@ bool spool_write_script(lList **answer_list, lListElem *jep)
 *     spool_write_script()
 *     spool_delete_script()
 *******************************************************************************/
-bool spool_read_script(lList **answer_list, lListElem *jep)
+bool spool_read_script(lList **answer_list, u_long32 jobid, lListElem *jep)
 {
    bool ret=true;
    dstring buffer = DSTRING_INIT;
@@ -3770,13 +3772,14 @@ bool spool_read_script(lList **answer_list, lListElem *jep)
 *     spool_delete_script() -- Delete job script
 *
 *  SYNOPSIS
-*     bool spool_delete_script(lList **answer_list, lListElem *jep) 
+*     bool spool_delete_script(lList **answer_list, u_long32 jobid, lListElem *jep) 
 *
 *  FUNCTION
 *     The function removes the file where the script of a '-b n' job is stored.
 *
 *  INPUTS
 *     lList **answer_list
+*     u_long32 jobid - job id (needed for Dtrace only)
 *     lListElem *jep - the job
 *
 *  RESULT
@@ -3789,7 +3792,7 @@ bool spool_read_script(lList **answer_list, lListElem *jep)
 *     spool_write_script()
 *     spool_read_script()
 *******************************************************************************/
-bool spool_delete_script(lList **answer_list, lListElem *jep)
+bool spool_delete_script(lList **answer_list, u_long32 jobid, lListElem *jep)
 {
    bool ret=true;
    dstring buffer = DSTRING_INIT;

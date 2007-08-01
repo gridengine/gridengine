@@ -191,13 +191,8 @@ static int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_c
 
 static void job_list_filter(lList *user_list, const char* jobid, lCondition **job_filter);
 
-static int spool_write_script(lListElem *jep, u_long32 jobid);
-
 static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced);
 
-#ifdef SOLARIS
-#pragma no_inline(spool_write_script)
-#endif
 
 /* when this character is modified, it has also be modified
    the JOB_NAME_DEL in clients/qalter/qalter.c
@@ -806,8 +801,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       if (job_spooling)  {
          if (lGetString(jep, JB_script_file) && 
              !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-
-            if (spool_write_script(jep, job_number)) {
+            if (spool_write_script(alpp, jep)==false) {
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -3544,15 +3538,7 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
 
    /* read script from old job and reuse it */
    if (lGetString(new_jep, JB_exec_file) && job_spooling) {
-      char *str;
-      int len;
-      PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-      if ((str = sge_file2string(lGetString(new_jep, JB_exec_file), &len))) {
-         lXchgString(new_jep, JB_script_ptr, &str);
-         FREE(str);
-         lSetUlong(new_jep, JB_script_size, len);
-      }
-      PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+      spool_read_script(alpp, new_jep);
    }
 
    job_initialize_id_lists(new_jep, NULL);
@@ -3612,10 +3598,8 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
          bool dbret = true;
 
          /* store job script*/
-         if (lGetString(jep, JB_exec_file) != NULL) {
-            if (sge_string2file(lGetString(jep, JB_script_ptr), 
-                             lGetUlong(jep, JB_script_size),
-                             lGetString(jep, JB_exec_file))) {
+         if (lGetString(jep, JB_exec_file) != NULL && job_spooling) {
+            if (spool_write_script(&answer_list, jep) == false) {
                ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(job_number), strerror(errno)));
                break;
             }
@@ -3695,17 +3679,17 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
 *     spool_write_script() -- Write job script
 *
 *  SYNOPSIS
-*     static int spool_write_script(lListElem *jep, u_long32 jobid) 
+*     bool spool_write_script(lList **answer_list, lListElem *jep) 
 *
 *  FUNCTION
 *     The function stores the script of a '-b n' job into a file.
 *
 *  INPUTS
+*     lList **answer_list
 *     lListElem *jep - the job
-*     u_long32 jobid - job id (needed for Dtrace only)
 *
 *  RESULT
-*     static int - 0 on success
+*     static bool - true on success
 *
 *  NOTES
 *     MT-NOTE: spool_write_script() is MT safe 
@@ -3714,16 +3698,111 @@ void sge_job_spool(sge_gdi_ctx_class_t *ctx) {
 *     spool_delete_script()
 *     spool_read_script()
 *******************************************************************************/
-static int spool_write_script(lListElem *jep, u_long32 jobid)
+bool spool_write_script(lList **answer_list, lListElem *jep)
 {
-   int ret;
+   bool ret=true;
+   dstring buffer = DSTRING_INIT;
+   
+   DENTER(TOP_LAYER, "spool_write_script");
    PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-
-   ret = sge_string2file(lGetString(jep, JB_script_ptr), 
-                             lGetUlong(jep, JB_script_size),
-                             lGetString(jep, JB_exec_file));
+   /* The whole job object is needed for spooling classic */
+   ret = spool_write_object(answer_list, spool_get_default_context(), 
+                            jep, jobscript_get_key(jep, &buffer), 
+                            SGE_TYPE_JOBSCRIPT, true); 
    PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-   return ret;
+   sge_dstring_free(&buffer);       
+   
+   DRETURN(ret);
+}
+
+/****** sge_job_qmaster/spool_read_script() **************************************
+*  NAME
+*     spool_read_script() -- Read job script
+*
+*  SYNOPSIS
+*     bool spool_read_script(lList **answer_list, lListElem *jep) 
+*
+*  FUNCTION
+*     The function reads the script of a '-b n' job from file.
+*
+*  INPUTS
+*     lList **answer_list
+*     lListElem *jep - the job
+*
+*  RESULT
+*     bool - true on success
+*
+*  NOTES
+*     MT-NOTE: spool_read_script() is MT safe 
+*
+*  SEE ALSO
+*     spool_write_script()
+*     spool_delete_script()
+*******************************************************************************/
+bool spool_read_script(lList **answer_list, lListElem *jep)
+{
+   bool ret=true;
+   dstring buffer = DSTRING_INIT;
+   lListElem *script_el = NULL;
+   DENTER(TOP_LAYER, "spool_read_script");
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   script_el = spool_read_object(answer_list, spool_get_default_context(), 
+                     SGE_TYPE_JOBSCRIPT, jobscript_get_key(jep, &buffer));
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   /* The spooled out structure must be restored */
+   if (script_el != NULL) {
+      char *script = (char *) lGetString(script_el, STU_name);
+      char *dummy = NULL;
+      int len = strlen(script);      
+      lXchgString(jep, JB_script_ptr, &script);
+      lXchgString(script_el, STU_name, &dummy);
+      lFreeElem(&script_el);
+      lSetUlong(jep, JB_script_size, len);
+   } else {
+      ret = false;
+   }
+   sge_dstring_free(&buffer);       
+   DRETURN(ret);
+}
+
+/****** sge_job_qmaster/spool_delete_script() ************************************
+*  NAME
+*     spool_delete_script() -- Delete job script
+*
+*  SYNOPSIS
+*     bool spool_delete_script(lList **answer_list, lListElem *jep) 
+*
+*  FUNCTION
+*     The function removes the file where the script of a '-b n' job is stored.
+*
+*  INPUTS
+*     lList **answer_list
+*     lListElem *jep - the job
+*
+*  RESULT
+*     bool - true on success
+*
+*  NOTES
+*     MT-NOTE: spool_delete_script() is MT safe 
+*
+*  SEE ALSO
+*     spool_write_script()
+*     spool_read_script()
+*******************************************************************************/
+bool spool_delete_script(lList **answer_list, lListElem *jep)
+{
+   bool ret=true;
+   dstring buffer = DSTRING_INIT;
+   DENTER(TOP_LAYER, "spool_delete_script");
+   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   ret = spool_delete_object(answer_list, spool_get_default_context(),
+                  SGE_TYPE_JOBSCRIPT, jobscript_get_key(jep, &buffer), true);
+   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
+   sge_dstring_free(&buffer);
+   lSetString(jep, JB_exec_file, NULL);
+   lSetString(jep, JB_script_file, NULL);
+   lSetUlong(jep, JB_script_size, 0);
+   DRETURN(ret);
 }
 
 static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, const char *ruser, const char *rhost, lListElem *job, u_long32 *r_start, u_long32 *r_end, u_long32 *step, lList* ja_structure, int *alltasks, u_long32 *deleted_tasks, u_long32 start_time, monitoring_t *monitor, int forced)

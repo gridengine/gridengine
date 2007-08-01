@@ -983,8 +983,6 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    if (!ctx->get_job_spooling(ctx)) {
       lList *answer_list = NULL;
       dstring buffer = DSTRING_INIT;
-      char *str = NULL;
-      int len = 0;
 
       INFO((SGE_EVENT, "job spooling is disabled - removing spooled jobs"));
 
@@ -995,13 +993,9 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
          sge_dstring_clear(&buffer);
 
          if (lGetString(jep, JB_exec_file) != NULL) {
-            if ((str = sge_file2string(lGetString(jep, JB_exec_file), &len))) {
-               lXchgString(jep, JB_script_ptr, &str);
-               FREE(str);
-               lSetUlong(jep, JB_script_size, len);
-
-               unlink(lGetString(jep, JB_exec_file));
-            } else {
+            if (spool_read_script(&answer_list, jep) == true) {
+               spool_delete_script(&answer_list, jep);
+            }  else {
                printf("could not read in script file\n");
             }
          }

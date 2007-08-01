@@ -180,6 +180,7 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL }, /*suser*/
    { NULL, generic_update_master_list,             NULL, NULL }, /*rqs*/
    { NULL, ar_update_master_list,                  NULL, NULL }, /*advance reservation*/
+   { NULL, NULL,                                   NULL, NULL }, /*jobscripts*/
 #ifndef __SGE_NO_USERMAPPING__
    { NULL, NULL,                                   NULL, NULL },
 #endif
@@ -855,6 +856,8 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
             evc->ec_mod_subscription_where(evc, sgeE_AR_MOD, what_el, where_el); 
          }
          break;
+      case SGE_TYPE_JOBSCRIPT:
+            return SGE_EM_NOT_INITIALIZED;
       default:
          return SGE_EM_BAD_ARG;
    }
@@ -1103,7 +1106,10 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
          evc->ec_unsubscribe(evc, sgeE_AR_DEL);
          evc->ec_unsubscribe(evc, sgeE_AR_MOD);
          break;
-      default:
+      case SGE_TYPE_JOBSCRIPT:
+            DEXIT;
+            return SGE_EM_NOT_INITIALIZED;
+     default:
          ERROR((SGE_EVENT, "received invalid event group %d", type));
          DEXIT;
          return SGE_EM_BAD_ARG;

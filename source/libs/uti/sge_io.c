@@ -695,13 +695,25 @@ char *sge_stream2string(FILE *fp, int *len)
 *  NOTES
 *     MT-NOTE: sge_string2file() is MT safe
 ******************************************************************************/ 
+
+/* #define USE_FOPEN */
+
 int sge_string2file(const char *str, int len, const char *fname)
 {
+#ifdef USE_FOPEN
    FILE *fp;
+#else
+   int fp = -1;
+#endif
  
    DENTER(TOP_LAYER, "sge_string2file");
  
-   if (!(fp = fopen(fname, "w"))) {
+#ifdef USE_FOPEN
+   if (!(fp = fopen(fname, "w")))
+#else
+   if (!(fp = open(fname, O_WRONLY | O_CREAT, 0666)))
+#endif
+   {
       ERROR((SGE_EVENT, MSG_FILE_OPENFAILED_S , fname));
       DEXIT;
       return -1;
@@ -710,17 +722,34 @@ int sge_string2file(const char *str, int len, const char *fname)
       len = strlen(str);
    }
  
-   if (fwrite(str, len, 1, fp) != 1) {
+#ifdef USE_FOPEN
+   if (fwrite(str, len, 1, fp) != 1)
+#else
+   if (write(fp, str, len) != len)
+#endif
+   {
       int old_errno = errno;
       ERROR((SGE_EVENT, MSG_FILE_WRITEBYTESFAILED_IS, len, fname));
+#ifdef USE_FOPEN
       FCLOSE(fp);
+#else
+      if (close(fp) != 0) { 
+         goto FCLOSE_ERROR; 
+      }
+#endif
       unlink(fname);
       errno = old_errno;
       DEXIT;
       return -1;
    }
  
+#ifdef USE_FOPEN
    FCLOSE(fp);
+#else
+   if (close(fp) != 0) { 
+      goto FCLOSE_ERROR; 
+   }
+#endif
    DEXIT;
    return 0;
 FCLOSE_ERROR:

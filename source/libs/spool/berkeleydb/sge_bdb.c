@@ -984,6 +984,64 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
    return ret;
 }
 
+bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
+                              const bdb_database database,
+                              const char *key, const char *str)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_write_string");
+
+   {
+      int dbret;
+      DBT key_dbt, data_dbt;
+
+      DB *db = bdb_get_db(info, database);
+      DB_TXN *txn = bdb_get_txn(info);
+
+      if (db == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                                 bdb_get_database_name(database));
+         spool_berkeleydb_error_close(info);
+         ret = false;
+      } else {
+         memset(&key_dbt, 0, sizeof(key_dbt));
+         memset(&data_dbt, 0, sizeof(data_dbt));
+         key_dbt.data = (void *)key;
+         key_dbt.size = strlen(key) + 1;
+         data_dbt.data = (void *) str;
+         data_dbt.size = strlen(str);
+
+         DPRINTF(("storing string with key "SFQ", size = %d "
+                  "to env = %p, db = %p, txn = %p, txn_id = %d\n", 
+                  key, data_dbt.size, bdb_get_env(info), db, 
+                  txn, txn->id(txn)));
+
+         /* Store a key/data pair. */
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         dbret = db->put(db, txn, &key_dbt, &data_dbt, 0);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
+         if (dbret != 0) {
+            spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_PUTERROR_SIS,
+                                    key, dbret, db_strerror(dbret));
+            ret = false;
+         } else {
+            DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d\n",
+                   key, data_dbt.size));
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
 bool
 spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
@@ -1755,8 +1813,56 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
+}
+
+char *
+spool_berkeleydb_read_string(lList **answer_list, bdb_info info,
+                             const bdb_database database,
+                             const char *key)
+{
+   char *ret = NULL;
+   int dbret;
+
+   DB *db;
+   DB_TXN *txn;
+
+   DBT key_dbt, data_dbt;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_read_string");
+
+   db  = bdb_get_db(info, database);
+   txn = bdb_get_txn(info);
+
+   if (db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              bdb_get_database_name(database));
+   } else {
+      DPRINTF(("querying string with key %s\n", key));
+
+      /* initialize query to first record for this object type */
+      memset(&key_dbt, 0, sizeof(key_dbt));
+      key_dbt.data = (void *)key;
+      key_dbt.size = strlen(key) + 1;
+      memset(&data_dbt, 0, sizeof(data_dbt));
+      data_dbt.flags = DB_DBT_MALLOC;
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      dbret = db->get(db, txn, &key_dbt, &data_dbt, 0);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      if (dbret != 0) {
+         spool_berkeleydb_handle_bdb_error(answer_list, info, dbret);
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_BERKELEY_QUERYERROR_SIS,
+                                 key, dbret, db_strerror(dbret));
+      } else {
+         ret = (char *) data_dbt.data;
+      }
+   }
+
+   DRETURN(ret);
 }
 
 static bool

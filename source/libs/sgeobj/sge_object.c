@@ -143,6 +143,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_SUser_List,           NULL,                   "SUBMIT_USER",       SU_Type,   SU_name           },
    { &Master_RQS_List,             NULL,                   "RQS",               RQS_Type,  RQS_name          },
    { &Master_AR_List,              NULL,                   "AR",                AR_Type,   AR_id             },
+   { NULL,                         NULL,                   "JOBSCRIPT",         STU_Type,  STU_name          },
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Cuser_List,           NULL,                   "USERMAPPING",       CU_Type,  CU_name            }
 #endif

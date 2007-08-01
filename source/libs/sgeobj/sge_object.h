@@ -110,6 +110,7 @@
 *        SGE_TYPE_SUSER
 *        SGE_TYPE_RQS
 *        SGE_TYPE_AR
+*        SGE_TYPE_JOBSCRIPT
 *
 *     If usermapping is enabled, an additional object type is defined:
 *        SGE_TYPE_HGROUP
@@ -147,6 +148,7 @@ typedef enum {
    SGE_TYPE_SUSER,            /*27*/
    SGE_TYPE_RQS,              /*28*/
    SGE_TYPE_AR,               /*29*/
+   SGE_TYPE_JOBSCRIPT,        /*30*/
 
 
    /*

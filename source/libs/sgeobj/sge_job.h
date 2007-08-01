@@ -247,6 +247,11 @@ const char *job_get_job_key(u_long32 job_id, dstring *buffer);
 
 const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
                         const char *pe_task_id, dstring *buffer);
+
+const char *jobscript_get_key(lListElem *jep, dstring *buffer);
+
+char *jobscript_parse_key(char *key,const char **exec_file);
+
 bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
                    char **pe_task_id, bool *only_job);
 

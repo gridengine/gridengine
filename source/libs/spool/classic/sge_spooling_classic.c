@@ -53,6 +53,8 @@
 #include "sge_ckpt.h"
 #include "sge_conf.h"
 #include "sge_job.h"
+#include "sge_io.h"
+#include "sge_strL.h"
 #include "sge_manop.h"
 #include "sge_sharetree.h"
 #include "sge_pe.h"
@@ -833,6 +835,22 @@ spool_classic_default_read_func(lList **answer_list,
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_NOTSUPPORTEDREADINGJOB);
          break;
+      case SGE_TYPE_JOBSCRIPT:
+         {
+            const char *exec_file = NULL;         
+            char *dup=strdup(key);
+            jobscript_parse_key(dup, &exec_file);
+            if (exec_file != NULL ) {
+               int len;
+               char *str = sge_file2string(exec_file, &len);
+               if (str != NULL) {
+                  ep = lCreateElem(STU_Type);
+                  lXchgString(ep, STU_name, &str);
+               }
+            }
+            FREE(dup);
+         }
+         break;         
       case SGE_TYPE_MANAGER:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
@@ -1048,6 +1066,11 @@ spool_classic_default_write_func(lList **answer_list,
             free(dup);
          }
          break;
+      case SGE_TYPE_JOBSCRIPT:
+         ret = sge_string2file(lGetString(object, JB_script_ptr), 
+                               lGetUlong(object, JB_script_size),
+                               lGetString(object, JB_exec_file)) ? false : true;
+         break;         
       case SGE_TYPE_MANAGER:
          if (write_manop(1, SGE_MANAGER_LIST) != 0) {
             ret = false;
@@ -1285,6 +1308,15 @@ spool_classic_default_delete_func(lList **answer_list,
             ret = (job_remove_spool_file(job_id, ja_task_id, pe_task_id, 
                                          SPOOL_DEFAULT) == 0) ? true : false;
             free(dup);
+         }
+         break;
+      case SGE_TYPE_JOBSCRIPT:
+        {
+            const char *exec_file;  
+            char *dup = strdup(key);
+            jobscript_parse_key(dup, &exec_file);
+            ret = unlink(exec_file) ? true : false;
+            FREE(dup);
          }
          break;
       case SGE_TYPE_MANAGER:

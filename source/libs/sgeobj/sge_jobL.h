@@ -195,15 +195,19 @@ enum {
 *        special comments in the script file.
 *
 *     SGE_XSTRING(JB_exec_file) 
-*     ---> what is exec_file, what script_file?
+*     ---> is the path to the locally spooled copy on the execution daemon, 
+*          it is script what actually gets executed, 
+*          In the case of a binary, is unused.
 *
 *     SGE_STRING(JB_script_file)
+*     ---> is the path to the job as sent from the CLI, is the path on the submit host  
+*          In the case of a binary, is the path to the binary 
 *
 *     SGE_ULONG(JB_script_size) 
 *     ---> really needed?
 *
 *     SGE_STRING(JB_script_ptr) 
-*     ---> what is it?
+*     ---> the pointer to the character area of the jobscript
 *
 *     Time information
 *     ================

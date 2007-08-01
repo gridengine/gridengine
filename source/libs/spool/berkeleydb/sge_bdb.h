@@ -78,6 +78,11 @@ bool
 spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                               const bdb_database database,
                               const lListElem *object, const char *key);
+
+bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
+                              const bdb_database database,
+                              const char *key, const char *str);
+                              
 bool
 spool_berkeleydb_write_pe_task(lList **answer_list, bdb_info info,
                                const lListElem *object, 
@@ -121,4 +126,10 @@ lListElem *
 spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                              const bdb_database database,
                              const char *key);
+
+char *
+spool_berkeleydb_read_string(lList **answer_list, bdb_info info,
+                             const bdb_database database,
+                             const char *key);
+                             
 #endif /* __SGE_BDB_H */    

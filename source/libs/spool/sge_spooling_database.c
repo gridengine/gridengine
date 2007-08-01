@@ -214,6 +214,8 @@ static table_description table_base[SGE_TYPE_ALL] = {
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
    { "sge_limitruleset" , NULL, NULL, NULL, NULL, NULL, NoName},
+   { "sge_ar" , NULL, NULL, NULL, NULL, NULL, NoName},
+   { "sge_jobscript" , NULL, NULL, NULL, NULL, NULL, NoName},
 #ifndef __SGE_NO_USERMAPPING__
    { "sge_cuser", NULL , NULL, NULL, NULL, NULL, NoName}
 #endif

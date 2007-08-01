@@ -4325,7 +4325,7 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
 {
    dispatch_t ret;
    int pslots = a->slots;
-   int pslots_qend;
+   int pslots_qend = 0;
 
 #ifdef SGE_PQS_API
    const char *qsort_args;

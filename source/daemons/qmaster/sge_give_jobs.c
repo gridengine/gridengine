@@ -147,8 +147,6 @@ setCheckpointObj(lListElem *job);
 static lListElem* 
 copyJob(lListElem *job, lListElem *ja_task);
 
-static int spool_delete_script(lListElem *jep, u_long32 jobid);
-static int spool_read_script(lListElem *jep, u_long32 jobid);
 #ifdef SOLARIS
 #pragma no_inline(spool_read_script, spool_delete_script)
 #endif
@@ -185,7 +183,6 @@ int sge_give_job(sge_gdi_ctx_class_t *ctx,
       lList *resources;
       lList *gdil_ep_JG_complex;
       lListElem *ep1, *cep;
-       
 
       if ((q = cqueue_list_locate_qinstance(master_cqueue_list, lGetString(gdil_ep, JG_qname)))) {
          resources = NULL;
@@ -604,7 +601,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    ** if exec_file is not set, then this is an interactive job
    */
    if (master && job_spooling && lGetString(tmpjep, JB_exec_file) && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-      if (spool_read_script(tmpjep, lGetUlong(tmpjep, JB_job_number))) {
+      if (spool_read_script(NULL, tmpjep) == false) {
          lFreeElem(&tmpjep);
          DEXIT;
          return -1;
@@ -1381,7 +1378,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       if (!no_unlink) {
          release_successor_jobs(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-            spool_delete_script(jep, jobid);
+            spool_delete_script(&answer_list, jep);
          }
       }
       break;
@@ -1993,76 +1990,3 @@ setCheckpointObj(lListElem *job)
    return ret;
 }
 
-/****** sge_give_jobs/spool_read_script() **************************************
-*  NAME
-*     spool_read_script() -- Read job script
-*
-*  SYNOPSIS
-*     static int spool_read_script(lListElem *jep, u_long32 jobid) 
-*
-*  FUNCTION
-*     The function reads the script of a '-b n' job from file.
-*
-*  INPUTS
-*     lListElem *jep - the job
-*     u_long32 jobid - job id (needed for Dtrace only)
-*
-*  RESULT
-*     static int - 0 on success
-*
-*  NOTES
-*     MT-NOTE: spool_read_script() is MT safe 
-*
-*  SEE ALSO
-*     spool_write_script()
-*     spool_delete_script()
-*******************************************************************************/
-static int spool_read_script(lListElem *jep, u_long32 jobid)
-{
-   int len;
-   char *str;
-
-   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-   str = sge_file2string(lGetString(jep, JB_exec_file), &len);
-   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-
-   lXchgString(jep, JB_script_ptr, &str);
-   FREE(str);
-   lSetUlong(jep, JB_script_size, len);
-
-   return 0;
-}
-
-/****** sge_give_jobs/spool_delete_script() ************************************
-*  NAME
-*     spool_delete_script() -- Delete job script
-*
-*  SYNOPSIS
-*     static int spool_delete_script(lListElem *jep, u_long32 jobid) 
-*
-*  FUNCTION
-*     The function removes the file where the script of a '-b n' job is stored.
-*
-*  INPUTS
-*     lListElem *jep - the job
-*     u_long32 jobid - job id (needed for Dtrace only)
-*
-*  RESULT
-*     static int - 0 on success
-*
-*  NOTES
-*     MT-NOTE: spool_delete_script() is MT safe 
-*
-*  SEE ALSO
-*     spool_delete_script()
-*     spool_read_script()
-*******************************************************************************/
-static int spool_delete_script(lListElem *jep, u_long32 jobid)
-{
-   int ret;
-   PROF_START_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-   ret = unlink(lGetString(jep, JB_exec_file));
-   lSetString(jep, JB_exec_file, NULL);
-   PROF_STOP_MEASUREMENT(SGE_PROF_JOBSCRIPT);
-   return ret;
-}

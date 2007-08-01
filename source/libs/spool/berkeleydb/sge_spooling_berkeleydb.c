@@ -48,6 +48,7 @@
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_strL.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
@@ -798,6 +799,24 @@ spool_berkeleydb_default_read_func(lList **answer_list,
       bdb_database database = BDB_CONFIG_DB;
 
       switch (object_type) {
+         case SGE_TYPE_JOBSCRIPT:
+            {
+               const char *exec_file; 
+               char *dup = strdup(key);
+               char *db_key = jobscript_parse_key(dup, &exec_file);
+               char *str;
+               str = spool_berkeleydb_read_string(answer_list, info, BDB_JOB_DB,
+                                                 db_key);              
+
+               if (str != NULL) {
+                  ep = lCreateElem(STU_Type);
+                  lXchgString(ep, STU_name, &str);
+               } else {
+                  ret = false;
+               }
+               FREE(dup);
+            }
+            break;
          case SGE_TYPE_JATASK:
          case SGE_TYPE_PETASK:
          case SGE_TYPE_JOB:
@@ -932,6 +951,19 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                                       object,
                                                       job_id, only_job);
                   }
+                  FREE(dup);
+               }
+               break;
+            case SGE_TYPE_JOBSCRIPT:
+               {
+                  const char *exec_file;  
+                  char *dup = strdup(key);
+                  const char *db_key = jobscript_parse_key(dup, &exec_file);
+                  const char *script = lGetString(object, JB_script_ptr);
+                  /* switch script */
+                  ret = spool_berkeleydb_write_string(answer_list, info, 
+                                                      BDB_JOB_DB,
+                                                      db_key, script); 
                   FREE(dup);
                }
                break;
@@ -1081,6 +1113,18 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                   FREE(dup);
                }
                break;
+            case SGE_TYPE_JOBSCRIPT:
+               {
+                  const char *exec_file; 
+                  char *dup = strdup(key);
+                  const char *db_key = jobscript_parse_key(dup, &exec_file);
+                  ret = spool_berkeleydb_delete_object(answer_list, info, 
+                                                    BDB_JOB_DB, 
+                                                    db_key, 
+                                                    false); 
+                  FREE(dup);
+               }                            
+               break;               
             default:
                table_name = object_type_get_name(object_type);
                dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 

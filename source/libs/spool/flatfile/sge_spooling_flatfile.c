@@ -48,6 +48,8 @@
 
 #include "sge_conf.h"
 #include "sge_str.h"
+#include "sge_io.h"
+#include "sge_strL.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -886,6 +888,22 @@ spool_classic_default_read_func(lList **answer_list,
          directory = CENTRY_DIR;
          filename  = key;
          break;
+      case SGE_TYPE_JOBSCRIPT:
+         {
+            const char *exec_file = NULL;         
+            char *dup=strdup(key);
+            jobscript_parse_key(dup, &exec_file);
+            if (exec_file != NULL ) {
+               int len;
+               char *str = sge_file2string(exec_file, &len);
+               if (str != NULL) {
+                  ep = lCreateElem(STU_Type);
+                  lXchgString(ep, STU_name, &str);
+               }
+            }
+            FREE(dup);
+         }
+         break;      
       case SGE_TYPE_JOB:
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1097,6 +1115,11 @@ spool_classic_default_write_func(lList **answer_list,
             free(dup);
          }
          break;
+      case SGE_TYPE_JOBSCRIPT:
+         ret = sge_string2file(lGetString(object, JB_script_ptr), 
+                               lGetUlong(object, JB_script_size),
+                               lGetString(object, JB_exec_file)) ? false : true;
+         break;           
       case SGE_TYPE_RQS:
          directory = RESOURCEQUOTAS_DIR;
          filename  = key;
@@ -1257,6 +1280,15 @@ spool_classic_default_delete_func(lList **answer_list,
                ret = false;
             }
             free(dup);
+         }
+         break;
+      case SGE_TYPE_JOBSCRIPT:
+        {
+            const char *exec_file;  
+            char *dup = strdup(key);
+            jobscript_parse_key(dup, &exec_file);
+            ret = unlink(exec_file) ? true : false;
+            FREE(dup);
          }
          break;
       case SGE_TYPE_MANAGER:

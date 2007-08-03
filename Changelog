@@ -1,3 +1,7 @@
+AH-2007-08-03-0: Bugfix:    Fixed issue with parallel RQS result caching introduced by 
+                            AH-2007-06-15-0 with multiple and craggy quota set-ups
+                 Review:    RD
+
 MD-2007-08-02-0: Enhancem.: added gelint script. (scripts for source code checking)
                  Review:    JG
                  Changed:   aimk, /scripts/scripts.html

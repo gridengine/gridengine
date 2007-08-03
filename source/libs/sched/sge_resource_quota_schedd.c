@@ -1060,19 +1060,12 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
 
    DENTER(TOP_LAYER, "parallel_rqs_slots_by_time");
 
-   /* We have to set at first the slots for the case no ruleset is defined or all are enabled */
-   *slots = tslots;
-   *slots_qend = tslots_qend;
-
-   if (lGetNumberOfElem(a->rqs_list) == 0) {
-      DRETURN(result);
-   } else {
+   if (lGetNumberOfElem(a->rqs_list) != 0) {
       const char* user = a->user;
       const char* group = a->group;
       const char* project = a->project;
       const char* pe = a->pe_name;
       lListElem *rql, *rqs;
-      bool first = true;
       dstring rule_name = DSTRING_INIT;
       dstring rue_string = DSTRING_INIT;
       dstring limit_name = DSTRING_INIT;
@@ -1097,26 +1090,22 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
             /* reuse earlier result */
             if ((rql=lGetElemStr(a->limit_list, RQL_name, limit_s))) {
                result = (dispatch_t)lGetInt(rql, RQL_result);
-               if (first) {
-                  first = false;
-                  *slots = lGetInt(rql, RQL_slots);
-                  *slots_qend = lGetInt(rql, RQL_slots_qend);
-               } else {
-                  *slots = MIN(*slots, lGetInt(rql, RQL_slots));
-                  *slots_qend = MIN(*slots_qend, lGetInt(rql, RQL_slots_qend));
-               }
+               tslots = MIN(tslots, lGetInt(rql, RQL_slots));
+               tslots_qend = MIN(tslots_qend, lGetInt(rql, RQL_slots_qend));
 
-               DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (cache)\n", 
-                     queue, host, result, *slots, *slots_qend, limit_s));
-            
+               DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (cache)\n",
+                     queue, host, result, tslots, tslots_qend, limit_s));
+
             } else {
+               int ttslots = INT_MAX;
+               int ttslots_qend = INT_MAX;
+
                for_each(limit, lGetList(rule, RQR_limit)) {
                   const char *limit_name = lGetString(limit, RQRL_name);
 
                   lListElem *raw_centry = centry_list_locate(a->centry_list, limit_name);
                   lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
                   lListElem *job_centry = centry_list_locate(job_centry_list, limit_name);
-
                   if (raw_centry == NULL) {
                      DPRINTF(("ignoring limit %s because not defined", limit_name));
                      continue;
@@ -1130,15 +1119,11 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                      rqs_get_rue_string(&rue_string, rule, user, project, host, queue, pe);
 
                      if (rqs_set_dynamical_limit(limit, a->gep, exec_host, a->centry_list)) {
-                        result = parallel_limit_slots_by_time(a, job_centry_list, &tslots, &tslots_qend, raw_centry, limit, &rue_string);
-                        if (first) {
-                           first = false;
-                           *slots = tslots;
-                           *slots_qend = tslots_qend;
-                        } else {
-                           *slots = MIN(*slots, tslots);
-                           *slots_qend = MIN(*slots_qend, tslots_qend);
-                        }
+                        int tttslots;
+                        int tttslots_qend;
+                        result = parallel_limit_slots_by_time(a, job_centry_list, &tttslots, &tttslots_qend, raw_centry, limit, &rue_string);
+                        ttslots = MIN(ttslots, tttslots);
+                        ttslots_qend = MIN(ttslots_qend, tttslots_qend);
                         if (result != DISPATCH_OK) {
                            break;
                         }
@@ -1157,24 +1142,26 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
                   }
                }
 
+               DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (fresh)\n",
+                     queue, host, result, ttslots, ttslots_qend, limit_s));
 
-               DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (fresh)\n", 
-                     queue, host, result, *slots, *slots_qend, limit_s));
-            
                /* store result for reuse */
                rql = lAddElemStr(&(a->limit_list), RQL_name, limit_s, RQL_Type);
                lSetInt(rql, RQL_result, result);
-               lSetInt(rql, RQL_slots, *slots);
-               lSetInt(rql, RQL_slots_qend, *slots_qend);
+               lSetInt(rql, RQL_slots, ttslots);
+               lSetInt(rql, RQL_slots_qend, ttslots_qend);
+
+               tslots = MIN(tslots, ttslots);
+               tslots_qend = MIN(tslots_qend, ttslots_qend);
 
                if (result != DISPATCH_OK || (slots == 0 && (!a->is_reservation || slots_qend == 0))) {
                   DPRINTF(("RQS PARALLEL SORT OUT\n"));
-                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
+                  schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS,
                         sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
                   rqs_exceeded_sort_out_par(a, rule, &rule_name, queue, host);
                }
             }
-               
+
             if (result != DISPATCH_OK || *slots == 0) {
                break;
             }
@@ -1185,12 +1172,14 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, con
       sge_dstring_free(&limit_name);
    }
 
-   DPRINTF(("parallel_rqs_slots_by_time(%s@%s) finalresult %d slots %d slots_qend %d\n", 
+   *slots = tslots;
+   *slots_qend = tslots_qend;
+
+   DPRINTF(("parallel_rqs_slots_by_time(%s@%s) finalresult %d slots %d slots_qend %d\n",
          queue, host, result, *slots, *slots_qend));
 
    DRETURN(result);
 }
-
 
 /****** sge_resource_quota_schedd/rqs_limitation_reached() *********************
 *  NAME

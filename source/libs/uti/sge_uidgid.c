@@ -607,7 +607,12 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
          DEXIT;
          return 1;
       }
-      if (getgrnam_r(gname, &grentry, buffer, size, &gr) != 0) {
+#if defined(INTERIX)
+      if (getgrnam_nomembers_r(gname, &grentry, buffer, size, &gr) != 0)
+#else
+      if (getgrnam_r(gname, &grentry, buffer, size, &gr) != 0)
+#endif
+      {
          gr = NULL;
       }
    } while (gr == NULL);
@@ -2041,7 +2046,12 @@ int getgrnam_r(const char *name, struct group *grp, char *buffer,
    pthread_mutex_lock(&sge_group_mutex);
    *result = NULL;
 
-   if ((tgrp = getgrnam(name)) == NULL) {
+#if defined(INTERIX)
+   if ((tgrp = getgrnam_nomembers(name)) == NULL)
+#else
+   if ((tgrp = getgrnam(name)) == NULL)
+#endif
+   {
       return NULL;
    }
 
@@ -2086,7 +2096,12 @@ int getgrgid_r(gid_t gid, struct group *grp, char *buffer,
    pthread_mutex_lock(&sge_group_mutex);
    *result = NULL;
 
-   if ((tgrp = getgrgid(gid)) == NULL) {
+#if defined(INTERIX)
+   if ((tgrp = getgrgid_nomembers(gid) == NULL)
+#else
+   if ((tgrp = getgrgid(gid)) == NULL)
+#endif
+   {
       return NULL;
    }
 

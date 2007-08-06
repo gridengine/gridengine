@@ -1,3 +1,8 @@
+HP-2007-08-06-0: Bugfix:    Overflow of group members in getgrgid_r() call on
+                            Interix causes submit clients and execd to fail.
+                 Bugster:   6589600
+                 Review:    JG
+                      
 AH-2007-07-30-0: Bugfix:    user/system/operator hold state combinations 
                             cause strange qstat output
                  Bugster:   6584632

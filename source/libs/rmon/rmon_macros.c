@@ -618,7 +618,7 @@ static int set_debug_level_from_env(void)
 
    s = strdup(env);
    if ((i = sscanf(s, "%d%d%d%d%d%d%d%d", l, l+1, l+2, l+3, l+4, l+5, l+6, l+7)) != N_LAYER) {
-      printf(MSG_RMON_ILLEGALDBUGLEVELFORMAT);
+      printf("%s\n", MSG_RMON_ILLEGALDBUGLEVELFORMAT);
       free((char *)s);
       return EINVAL;
    }

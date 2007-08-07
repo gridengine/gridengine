@@ -44,7 +44,7 @@
 #define MSG_RMON_MKSTDNAMEUNABLETOGETMYHOSTNAME_S  "mkstdname: unable to get my hostname: "SFN
 #define MSG_RMON_MKSTDNAMESTRINGTOOLONG         "mkstdname: string too long"
 #define MSG_RMON_ILLEGALDBUGLEVELFORMAT         "illegal debug level format"
-#define MSG_RMON_ILLEGALDBUGTARGETFORMAT         "illegal debug target format"
+#define MSG_RMON_ILLEGALDBUGTARGETFORMAT        "illegal debug target format"
 #define MSG_RMON_UNABLETOOPENXFORWRITING_S      "unable to open "SFN" for writing"
 #define MSG_RMON_ERRNOXY_DS                     "    ERRNO: %d, "SFN
 #define MSG_RMON_XERRORINASHAREDMEMOPERATION_I  "(%d) Error in a Shared Memory Operation !"

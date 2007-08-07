@@ -351,7 +351,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   sge_enable_msg_id_string = getenv(SGE_ENABLE_MSG_ID);
   if (sge_enable_msg_id_string != NULL) {
      int env_value = 0;
-     DPRINTF(("SGE_ENABLE_MSG_ID is set to \"%s\"\n",sge_enable_msg_id_string));  
+     DPRINTF(("SGE_ENABLE_MSG_ID is set to \"%s\"\n", sge_enable_msg_id_string));  
      env_value = atoi(sge_enable_msg_id_string);
      if (env_value == 0) {
          sge_enable_msg_id = 0;

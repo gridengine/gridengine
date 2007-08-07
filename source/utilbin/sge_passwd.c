@@ -878,18 +878,18 @@ password_write_file(char *users[], char *encryped_pwds[],
 
 FOPEN_ERROR:
    fprintf(stderr, MSG_PWD_OPEN_SGEPASSWD_SSI, prognames[SGE_PASSWD],
-      strerror(errno), errno);
+      strerror(errno), (long int)errno);
    goto FUNC_EXIT;
 
 FPRINTF_ERROR:
    fprintf(stderr, MSG_PWD_WRITE_SGEPASSWD_SSI, prognames[SGE_PASSWD],
-      strerror(errno), errno);
+      strerror(errno), (long int)errno);
    FCLOSE(fp);
    goto FUNC_EXIT;
 
 FCLOSE_ERROR:
    fprintf(stderr, MSG_PWD_CLOSE_SGEPASSWD_SSI, prognames[SGE_PASSWD],
-      strerror(errno), errno);
+      strerror(errno), (long int)errno);
    goto FUNC_EXIT;
 
 FUNC_EXIT:
@@ -1348,7 +1348,7 @@ int main(int argc, char *argv[])
    if (username == NULL || username[0] == '\0') {
       if (sge_uid2user(starter_uid, username, sizeof(username), MAX_NIS_RETRIES)) {
          fprintf(stderr, MSG_PWD_NO_USERNAME_SI, prognames[SGE_PASSWD],
-                 (int)starter_uid);
+                 (long int)starter_uid);
          fprintf(stderr, "\n");
          exit(7);
       }

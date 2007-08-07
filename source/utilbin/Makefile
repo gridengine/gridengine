@@ -49,7 +49,7 @@ UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                spooldefaults.c spooledit.c spoolinit.c \
                tst_pthread_signals.c fstype.c qping.c 
 
-UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
+UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) loadcheck.obj
 
 UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
                       sge_passwd_main.o

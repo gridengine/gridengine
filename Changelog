@@ -1,3 +1,10 @@
+HP-2007-08-07-0: Bugfix:    - Overflow of group members in getgrgid_r() call on
+                              Interix causes submit clients and execd to fail.
+                            - Fixed broken build.
+                 Bugster:   6589600
+                 Changed:   libs/uti/sge_uidgid.c
+                 Review:    JG
+
 JG-2007-08-07-0: Bugfix:    newline missing from "illegal debug level" message
                  Bugster:   6589807
                  Issue:     2343

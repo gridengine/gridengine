@@ -15,7 +15,7 @@ if [ ! -d "$GE/source" -a ! -f "$GE/Changelog" ]; then
 fi
 
 shift
-cd $GE
+cd $GE/source
 
 #ERRSECLEVEL=core        #core security checks printf scanf only
 ERRSECLEVEL=standard    #standard is core plus strlcpy and so on

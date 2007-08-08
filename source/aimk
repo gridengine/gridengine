@@ -2231,7 +2231,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
    if ( "$FLAGS_OUT" == true ) then
    echo ___C_O_M_P_I_L_E__I_N_C_L_U_D_E__ F_L_A_G_S___
       echo "CFLAGS:$CFLAGS"
-      echo "INCLUDES:$CORE_INCLUDE"
+      echo "INCLUDES:$CORE_INCLUDE $XINCD"
       exit 0
    endif
 

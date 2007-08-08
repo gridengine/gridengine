@@ -1,3 +1,6 @@
+MD-2007-08-08-0: Enhancem.: - changed gelint and aimk due to daily build
+                              integration
+
 HP-2007-08-07-0: Bugfix:    - Overflow of group members in getgrgid_r() call on
                               Interix causes submit clients and execd to fail.
                             - Fixed broken build.

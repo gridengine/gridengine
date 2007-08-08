@@ -1,6 +1,13 @@
+AH-2007-08-08-0: Bugfix:    - Parallel RR broken if jobs wait for queue slots
+                              and no RQS configured
+                            - Resource quota can prevent dispatching of jobs that 
+                              requests no resource in this quota
+                 Bugster:   6585721,6590574
+                 Issue:     2338,2345
+                 Review:    RD
+
 MD-2007-08-08-1: Enhancem.: - changed gelint and aimk due to daily build
                               integration
-
 
 MD-2007-08-08-0: Enhancem.: added gelint script. 
                             (merged from maintrunk, MD-2007-08-02-0) 

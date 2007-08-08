@@ -151,6 +151,7 @@ usage:
    echo "-debug            -> compile with debug information"
    echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-f                -> specify other Makefile instead of common/Makefile"
+   echo "-flags            -> print C_FLAGS and INCLUDE_FLAGS to stdout, used by gelint"
    echo "-gcc              -> use gcc instead of system compiler (where supported)"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
@@ -276,6 +277,7 @@ set LOADAVGLIBS      = ""
 set FSTYPELIBS       = ""
 set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
+set FLAGS_OUT        = "false"
 
 
 # Default settings for shared library creation
@@ -494,6 +496,9 @@ while ($#argv >= 1 && $?found)
          exit 1
       endif
       breaksw
+   case "-flags":
+      set FLAGS_OUT = true
+   breaksw
    case "-gcc"
       set CC       = gcc
       set CXX      = g++
@@ -2212,6 +2217,13 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
       endsw
    end
    set SPOOLING_DEPS = "$new_deps"
+
+   if ( "$FLAGS_OUT" == true ) then
+   echo ___C_O_M_P_I_L_E__I_N_C_L_U_D_E__ F_L_A_G_S___
+      echo "CFLAGS:$CFLAGS"
+      echo "INCLUDES:$CORE_INCLUDE"
+      exit 0
+   endif
 
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \

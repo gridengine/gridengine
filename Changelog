@@ -1,3 +1,6 @@
+MD-2007-08-08-0: Enhancem.: added gelint script. 
+                            (merged from maintrunk, MD-2007-08-02-0) 
+
 JG-2007-08-07-0: Bugfix:    newline missing from "illegal debug level" message
                  Bugster:   6589807
                  Review:    MD

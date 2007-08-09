@@ -33,9 +33,13 @@
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
+import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
+import com.sun.grid.jgdi.configuration.SchedConf;
+import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.configuration.reflect.DefaultListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
@@ -56,44 +60,30 @@ import java.util.Map;
  */
 public class EditorParser {
    
+   /**
+    * Converts text to map of PropertyDescriptors ... line, based on obj type
+    * Each line is also converted to the intermediate format.
+    */
    static Map parsePlainText(GEObject obj, String text) throws IOException {
-      int i, j;
       String attr, line;
       PropertyDescriptor pd;
-      LineNumberReader lnr = new LineNumberReader(new StringReader(text));
       Map map = new HashMap();
-      boolean eof = false;
-      while (!eof) {
-         attr = lnr.readLine();
-         if (attr == null) {
-            eof = true;
-            continue;
-         }
-         attr = attr.trim();
-         //Skip empty lines
-         if (attr.length() == 0) {
-            continue;
-         }
-         //Join lines ended with \
-         while (attr.endsWith("\\") && !eof) {
-            attr = attr.substring(0,attr.length()-1);
-            attr = attr.trim();
-            eof = (line = lnr.readLine()) == null;
-            if (!eof) {
-               line = line.trim();
-               if (line.length() > 0) {
-                  attr += " " + line;
-               }
-            }
-         }
-         i = attr.indexOf(' ');
-         j = attr.indexOf('\t');
-         if (i == j) {  //i=j=-1 (not found)
+      text = trimText(text);
+      String [] lines = text.split("\n");
+      for (int i=0; i<lines.length; i++) {
+         line = lines[i];
+         attr = line.split(" ")[0];
+         line = line.substring(attr.length()+1);
+         if (line.length() == 0) {  
             throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \""+attr+"\"");
          }
-         i = (i == -1) ? j : i;
-         line = attr.substring(i);
-         attr = EditorUtil.unifyClientNamesWithAttr(obj, attr.substring(0,i));
+         attr = EditorUtil.unifyClientNamesWithAttr(obj, attr);
+         
+         //CONFIGURATION special case
+         if (obj instanceof Configuration) {
+            map.put(attr, line);
+            continue;
+         }
          
          if ((pd = getPropertyDescriptor(obj, attr))==null) {
                throw new IllegalArgumentException("Skipped: Unknown attribute \""+attr+"\"");
@@ -101,31 +91,40 @@ public class EditorParser {
          if (pd.isReadOnly()) {
             throw new IllegalArgumentException("Skipped: Read only attribute \""+attr+"\"");
          }
+         
          line = parseOnePlainTextLine(obj,pd, line.trim());
          if (line == null || line.length() ==0) {
             throw new IllegalArgumentException("Invalid value format for attribute \""+attr+"\"");
-         }
+         }       
          map.put(pd, line);
       }
       return (!map.isEmpty()) ? map : null;
    }
    
+   /**
+    * Finds a PropertyDescriptor for given obj and propery name
+    */
    private static PropertyDescriptor getPropertyDescriptor(GEObject obj, String propertyName) {
       propertyName = EditorUtil.c2javaName(obj, propertyName);
       PropertyDescriptor pd;
+      String name;
       for (Iterator iter = GEObjectEditor.getAllProperties(obj).iterator(); iter.hasNext();) {
          pd = (PropertyDescriptor) iter.next();
-         if (pd.getPropertyName().equals(propertyName)) {
+         name = pd.getPropertyName();
+         if (name.equals(propertyName)) {
             return pd;
          }
       }
       return null;
    }
    
+   /**
+    * Converts a single line to intermediate format.
+    */
    private static String parseOnePlainTextLine(GEObject obj, PropertyDescriptor pd, String values) {
       String type = pd.getPropertyType().getName();
       if (pd instanceof SimplePropertyDescriptor) {
-         List list = getSingleValueList(values," \t");
+         List list = getSingleValueList(obj, pd, values," \t");
          if (list.size() > 1) {
             throw new IllegalArgumentException("Expected only 1 argument for type=\""+type+"\" got: "+list.size()+" in "+values);
          }
@@ -135,7 +134,7 @@ public class EditorParser {
          }
          return value;
       } else if (pd instanceof DefaultListPropertyDescriptor) {
-         List list = getListValueList(values," \t,");
+         List list = getListValueList(obj, pd, values," \t,");
          if (list.size() != 1) {
             throw new IllegalArgumentException("Expected only list of arguments for type=\""+type+"\" got: "+list.toString());
          }
@@ -149,7 +148,10 @@ public class EditorParser {
       }
    }
    
-   private static List getSingleValueList(String values, String separators) {
+   /**
+    * Return list of elements on the line values
+    */
+   private static List getSingleValueList(GEObject obj, PropertyDescriptor pd, String values, String separators) {
       StringBuffer sb = new StringBuffer(values);
       StringBuffer out = new StringBuffer();
       char c;
@@ -171,16 +173,22 @@ public class EditorParser {
          out.append(c);
       }
       if (out.length()>0) {
-         return Arrays.asList(new Object[] {out.toString().trim()});
+         return Arrays.asList(new Object[] {adjustAttrValues(obj, pd, out.toString().trim())});
       }
       return null;
    }
-   
-   private static List getListValueList(String values, String separators) {
-      return getSingleValueList(values, separators);
+      
+   /**
+    * Return list of elements on the line values. Expecting a list of values.
+    */
+   private static List getListValueList(GEObject obj, PropertyDescriptor pd, String values, String separators) {
+      return getSingleValueList(obj, pd, values, separators);
    }
    
-   private static List getMapValueList(DefaultMapPropertyDescriptor pd, String values, String separators) {
+   /**
+    * Return list of elements on the line values. Expecting a map value.
+    */
+   private static List getMapValueList(GEObject obj, DefaultMapPropertyDescriptor pd, String values, String separators) {
       List list = new ArrayList();
       StringBuffer sb = new StringBuffer(values);
       StringBuffer out = new StringBuffer();
@@ -211,14 +219,14 @@ public class EditorParser {
                if (defaultUsed) {
                   throw new IllegalArgumentException("Unsupported format when parsing data. Got: "+values+" Expected: unique [key=value] pairs.");
                }
-               list.add("[@/="+adjustAttrValues(pd, out.toString().trim())+"]");
+               list.add("[@/="+adjustAttrValues(obj, pd, out.toString().trim())+"]");
                defaultUsed = true;
                out = new StringBuffer();
             }
          } else if (c == ']') {
             elemStart = false;
             if (out.length()>0) {
-               list.add("["+adjustAttrValues(pd, out.toString().trim())+"]");
+               list.add("["+adjustAttrValues(obj, pd, out.toString().trim())+"]");
                out = new StringBuffer();
             }
          } else {
@@ -229,22 +237,28 @@ public class EditorParser {
          if (defaultUsed) {
             throw new IllegalArgumentException("Unsupported format when parsing data. Got: "+values+" Expected: unique [key=value] pairs.");
          }
-         list.add("[@/="+adjustAttrValues(pd, out.toString().trim())+"]");
+         list.add("[@/="+adjustAttrValues(obj, pd, out.toString().trim())+"]");
          defaultUsed = true;
       }
       return list != null ? list : null;
    }
    
    /** Converts attribute values to understandable string values, e.g.: qtype 3 == "BATCH INTERACTIVE" */
-   private static String adjustAttrValues(PropertyDescriptor pd, String value) {
+   private static String adjustAttrValues(GEObject obj, PropertyDescriptor pd, String value) {
       String key = pd.getPropertyName();
       //ClusterQueue QTYPE attr
-      if (key.equalsIgnoreCase("qtype")) {
+      if (obj instanceof ClusterQueue && key.equalsIgnoreCase("qtype")) {
          return String.valueOf(EditorUtil.getQtypeValue(value).intValue());
+      //UserSet - type
+      } else if (obj instanceof UserSet && key.equalsIgnoreCase("type")) {
+         return String.valueOf(EditorUtil.getUserSetTypeValue(value).intValue());
       }
       return value;
    }
    
+   /**
+    * Return list of elements on the line values. Expecting a map with list values.
+    */
    private static List getMapListValueList(String values, String separators) {
       List list = new ArrayList();
       StringBuffer sb = new StringBuffer(values);
@@ -300,15 +314,24 @@ public class EditorParser {
       }
       return list != null ? list : null;
    }
-   
+      
+   /**
+    * Validates a map line
+    */
    private static String validateMapLine(GEObject obj, DefaultMapPropertyDescriptor pd, String values) {
       String validLine = "";
       String key, elem=null;
       String type = pd.getPropertyType().getName();
-      List list = getMapValueList(pd, values," \t,");
+      //SchedConf usage_weight_list special case
+      if (obj instanceof SchedConf && pd.getPropertyName().equals("usageWeight")) {
+         return parseSchedConfUsageWeight(obj, pd, values);
+      }
+      
+      List list = getMapValueList(obj, pd, values," \t,");
       if (list == null || list.size() == 0) {
          throw new IllegalArgumentException("Got empty list. Argument \""+values+"\" has invalid format.");
       }
+      
       boolean isFirstElemMap, isCurrentElemMap;
       String[] elems;
       Iterator iter = list.iterator();
@@ -334,6 +357,9 @@ public class EditorParser {
       return validLine.trim();
    }
    
+   /**
+    * Validates a maplist line
+    */
    private static String validateMapListLine(GEObject obj, DefaultMapListPropertyDescriptor pd, String values) {
       String validLine = "";
       String key, elem=null;
@@ -365,6 +391,9 @@ public class EditorParser {
       return validLine.trim();
    }
    
+   /**
+    * Validates map line entry
+    */
    private static void validateOneMapListLineEntry(GEObject obj, DefaultMapListPropertyDescriptor pd, String key, String elem) {
       String[] subElems;
       boolean isCurrentElemMap;
@@ -385,7 +414,184 @@ public class EditorParser {
       }
    }
    
+   /**
+    * Parses and validates usage_weight attribute in scheduler configuration
+    */
+   private static String parseSchedConfUsageWeight(GEObject obj, DefaultMapPropertyDescriptor pd, String values) {
+      String result = "", elemStr = "", elem;
+      String type = pd.getPropertyType().getName();
+      String[] elems = values.split("[ \t,]");
+      List queue = new ArrayList();
+      for (int i=0; i<elems.length; i++) {
+         queue.add(elems[i]);
+      }
+      double sum = 0;
+      List expectedKeys = new ArrayList();
+      expectedKeys.add("cpu"); expectedKeys.add("mem"); expectedKeys.add("io");
+      int state = 0;
+      
+      //Remove empty elements
+      while (!queue.isEmpty()) {
+         elem = (String) queue.remove(0);
+         if (elem.length() > 0) {
+            //Expecting key
+            if (state == 0) {
+               //Split strings with =
+               if (elem.indexOf('=') != -1) {
+                  elems = elem.split("=");
+                  elem = elems[0];
+                  for (int i=elems.length-1; i>=1; i--) {
+                     queue.add(0, elems[i]);
+                     queue.add(0, "=");
+                  }
+               }
+               if (expectedKeys.isEmpty()) {
+                  throw new IllegalArgumentException("Unexpected element \""+elem+"\" in usage_weight_list definition.");
+               } else if (!expectedKeys.contains(elem)) {
+                  throw new IllegalArgumentException("Expected usage_weigth_list keys to be "+expectedKeys.toString());
+               }
+               expectedKeys.remove(elem);
+               elemStr = elem;
+               state = 1;
+            //Expecting = 
+            } else if (state == 1) {
+               if (!elem.equals("=")) {
+                  throw new IllegalArgumentException("Expected '=' after usage_weight_list "+elemStr);
+               }
+               elemStr += "=";
+               state = 2;
+            //Expecting value
+            } else if (state == 2) {
+               double d;
+               try {
+                  d = Double.parseDouble(elem);
+                  sum += d;
+               } catch (NumberFormatException ex) {
+                  throw new IllegalArgumentException("Expected double value after usage_weight_list "+elemStr);
+               }
+               elemStr += elem;
+               result += "["+elemStr+"] ";
+               state = 0;
+            }
+         }
+      }
+      if (sum != 1.0) {
+         throw new IllegalArgumentException("Sum of supplied double values does not equal to 1.0 in usage_weight_list "+elemStr);
+      }
+      return result.trim();
+   }
+   
+   /**
+    * Helper function. Testing if val is a map.
+    */
    static boolean isMap(String val) {
       return (val.indexOf('=')==-1) ? false : true;
+   }
+   
+   /**
+    * Removes whitespaces. Text is now separed with single ' '. Lines ending with
+    * \\ are join to one
+    */
+   //TODO LP: Decide how to report IOException in trimText and tokenizeToList
+   public static String trimText(String text) throws IOException {
+      return new Tokenizer(text).tokenizeToString();
+   }
+   
+   /**
+    * Removes whitespaces. Lines ending with  \\ are join to one.
+    * @return List of lines cointaing a list of elements
+    */
+   public static List tokenizeToList(String text)  {
+      List list = null;
+      try {
+         list = new Tokenizer(text).tokenizeToList();
+      } catch (IOException ex) {
+         ex.printStackTrace();
+      }
+      return list;
+   }
+   
+   /**
+    * Tokenizer. Reads text and removed whitespaces join lines on \\.
+    */
+   private static class Tokenizer {
+      String text;
+   
+      public Tokenizer(String text) {
+         this.text = text;
+      };
+      
+      public List tokenizeToList() throws IOException {
+         return tokenize();
+      }
+      
+      public String tokenizeToString() throws IOException {
+         String res = "";
+         List elems = tokenize();
+         for (Iterator lineIter = elems.iterator(); lineIter.hasNext(); ) {
+            List singleLine = (List) lineIter.next();
+            for (Iterator elemIter = singleLine.iterator(); elemIter.hasNext(); ) {
+               res += (String) elemIter.next() + " ";
+            }
+            res = res.trim() + "\n";
+         }
+         return res.substring(0,res.length()-1);
+      }
+   
+      private List tokenize() throws IOException {
+         LineNumberReader lnr = new LineNumberReader(new StringReader(text));
+         List list = new ArrayList();
+         boolean eof = false;
+         String line = "", temp;
+         while (!eof) {
+            line = lnr.readLine();
+            if (line == null) {
+               eof = true;
+               continue;
+            }
+            line = line.trim();
+            //Skip empty lines
+            if (line.length() == 0) {
+               continue;
+            }
+            //Join lines ended with \
+            while (line.endsWith("\\") && !eof) {
+               line = line.substring(0,line.length()-1);
+               line = line.trim();
+               eof = (temp = lnr.readLine()) == null;
+               if (!eof) {
+                  temp = temp.trim();
+                  if (temp.length() > 0) {
+                     line += " " + temp;
+                  }
+               }
+            }
+            list.add(getLineElems(line));
+         }
+         return (list.size() == 0) ? null : list;
+      }
+      
+      private List getLineElems(String line) {
+         String elems[] = line.split("[ \t]");
+         String elem;
+         List list = new ArrayList();
+         for (int i=0; i < elems.length; i++) {
+            elem = elems[i].trim();
+            if (elem.length()==0) continue;
+            list.add(elem);
+         }
+         return (list.size() == 0) ? null : list;
+      }
+      
+      /*private String trimLine(String line) {
+         String elems[] = line.split("[ \t]");
+         String res = "", elem;
+         for (int i=0; i < elems.length; i++) {
+            elem = elems[i].trim();
+            if (elem.length()==0) continue;
+            res += elem + " ";
+         }
+         return res.substring(0,res.length()-1);
+      }*/
    }
 }

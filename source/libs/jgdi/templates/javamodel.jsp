@@ -59,7 +59,7 @@ import java.util.logging.Level;
  *  defined in <%=jh.getSource(cullObj).getName()%>
  *
  *  <p><strong>Warning:</strong>  The  <%=classname%> class will 
- *  not be compatible with future N1&trade; Grid Engine releases.</p>
+ *  not be compatible with future Sun&trade; Grid Engine releases.</p>
  *
  */
 public interface <%=classname%> extends <%
@@ -71,7 +71,6 @@ public interface <%=classname%> extends <%
     } 
 %> { 
 <%
-
   // Iterator over all attributes and create member variable, 
     // getter and setter
   for(int i = 0; i < cullObj.getAttrCount(); i++ ) {
@@ -483,5 +482,17 @@ public interface <%=classname%> extends <%
    public boolean isSet<%=gsname%>();
 
 <%  } // end of for of attribute %>
+
+  <%//SPECIAL CODE for COMPLEX ENTRY
+  if (classname.equals("ComplexEntry")) {
+     %>
+    public String typeToString(int type);
+    public int typeToInt(String type);
+    public String opToString(int op);
+    public int opToInt(String type);
+    public String reqToString(int op);
+    public int reqToInt(String type);
+    <%
+  }%>
 
 }

@@ -61,7 +61,7 @@ import java.util.logging.Level;
  *  defined in <%=jh.getSource(cullObj).getName()%>
  *
  *  <p><strong>Warning:</strong>  The  <%=classname%> class will 
- *  not be compatible with future N1&trade; Grid Engine releases.</p>
+ *  not be compatible with future Sun&trade; Grid Engine releases.</p>
  */
 public class <%=classname%> extends <%
 
@@ -1136,4 +1136,109 @@ public class <%=classname%> extends <%
       return ret.toString();
   }
   
+  <%//SPECIAL CODE for COMPLEX ENTRY
+  if (classname.equals("ComplexEntryImpl")) { %>
+  private class Convertor {
+     private String typev[] = {
+        "??????",
+        "INT",     /* TYPE_INT */
+        "STRING",  /* TYPE_STR */
+        "TIME",    /* TYPE_TIM */
+        "MEMORY",  /* TYPE_MEM */
+        "BOOL",    /* TYPE_BOO */
+        "CSTRING", /* TYPE_CSTR */
+        "HOST",    /* TYPE_HOST */
+        "DOUBLE",  /* TYPE_DOUBLE */
+        "RESTRING", /* TYPE_RESTR */
+     
+        "TYPE_ACC",/* TYPE_ACC */
+        "TYPE_LOG",/* TYPE_LOG */
+        "TYPE_LOF" /* TYPE_LOF */
+     };
+     
+     private String ropv[] = {
+        "??",
+        "==", /* CMPLXEQ_OP */
+        ">=", /* CMPLXGE_OP */
+        ">",  /* CMPLXGT_OP */
+        "<",  /* CMPLXLT_OP */
+        "<=", /* CMPLXLE_OP */
+        "!="  /* CMPLXNE_OP */
+     };
+     
+     private String fopv[] = {
+        "??",
+        "NO",       /* REQU_NO */
+        "YES",      /* REQU_YES */
+        "FORCED"    /* REQU_FORCED */
+     };
+     
+     private String typeToString(int type) {
+        if (type < 1 || type >= typev.length) {
+           type = 0;
+        }
+        return typev[type];
+     }
+     private int typeToInt(String type) {
+        for (int i=1; i< typev.length; i++) {
+           if (type.equalsIgnoreCase(typev[i])) {
+              return i;
+           }
+        }
+        return 0;
+     }
+     
+     private String opToString(int op) {
+        if (op < 1 || op >= ropv.length) {
+           op = 0;
+        }
+        return ropv[op];
+     }
+     private int opToInt(String type) {
+        for (int i=1; i< ropv.length; i++) {
+           if (type.equalsIgnoreCase(ropv[i])) {
+              return i;
+           }
+        }
+        return 0;
+     }
+     
+     private String reqToString(int op) {
+        if (op < 1 || op >= fopv.length) {
+           op = 0;
+        }
+        return fopv[op];
+     }
+     private int reqToInt(String type) {
+        for (int i=1; i< fopv.length; i++) {
+           if (type.equalsIgnoreCase(fopv[i])) {
+              return i;
+           }
+        }
+        return 0;
+     }
+  }  //End of Convertor inner class
+  
+  public String typeToString(int type) {
+     return new Convertor().typeToString(type);
+  };
+  public int typeToInt(String type) {
+     return new Convertor().typeToInt(type);
+  };
+  
+  public String opToString(int op) {
+     return new Convertor().opToString(op);
+  };
+  public int opToInt(String type) {
+     return new Convertor().opToInt(type);
+  };
+  
+  public String reqToString(int op) {
+     return new Convertor().reqToString(op);
+  };
+  public int reqToInt(String type) {
+     return new Convertor().reqToInt(type);
+  };
+  <%}%> // End if ComplexEntry
+ 
 }

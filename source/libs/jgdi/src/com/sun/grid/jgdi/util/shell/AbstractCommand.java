@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,11 +42,17 @@ public abstract class AbstractCommand implements HistoryCommand {
    
    private Shell shell;
    private String name;
+   private ResourceBundle resource;
    
    /** Creates a new instance of AbstractCommand */
-   protected AbstractCommand(Shell shell, String name) {
+   protected AbstractCommand(Shell shell, String name, ResourceBundle resource) {
       this.shell = shell;
       this.name = name;
+      this.resource = resource;
+   }
+   
+   protected AbstractCommand(Shell shell, String name) {
+      this(shell, name, null);
    }
    
    public String getName() {
@@ -58,6 +65,10 @@ public abstract class AbstractCommand implements HistoryCommand {
    
    public Shell getShell() {
       return shell;
+   }
+   
+   public String getResourceString(String key) {
+      return resource.getString(key);
    }
    
    public String[] parseWCQueueList(String arg) {
@@ -110,5 +121,4 @@ public abstract class AbstractCommand implements HistoryCommand {
       }
       return ret;
    }
-   
 }

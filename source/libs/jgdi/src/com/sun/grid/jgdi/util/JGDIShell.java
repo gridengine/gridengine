@@ -61,7 +61,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -94,8 +96,11 @@ public class JGDIShell implements Runnable, Shell {
    private Map cmdMap = new HashMap();
    private TreeSet cmdSet = null;
    private ReadlineHandler readlineHandler;
+   private ResourceBundle jgdiResource;
    
+   //TODO LP: We should consider having single PrintWriter for all commands
    public JGDIShell() {
+      jgdiResource = null;//TODO LP: Why does not work - ResourceBundle.getBundle("UsageBundle");
       cmdMap.put("connect", new ConnectCommand() );
       cmdMap.put("exit", new ExitCommand() );
       cmdMap.put("help", new HelpCommand() );
@@ -103,7 +108,7 @@ public class JGDIShell implements Runnable, Shell {
       cmdMap.put("history", new PrintHistoryCommand() );
       cmdMap.put("xmldump", new XMLDumpCommand() );
       cmdMap.put("qmod", new QModCommand(this, "qmod"));
-      cmdMap.put("qconf", new QConfCommand(this, "qconf"));
+      cmdMap.put("qconf", new QConfCommand(this, "qconf", jgdiResource));
       cmdMap.put("qstat", new QStatCommand(this, "qstat"));
       cmdMap.put("qhost", new QHostCommand(this, "qhost"));
       cmdMap.put("qdel", new QDelCommand(this, "qdel"));
@@ -112,6 +117,9 @@ public class JGDIShell implements Runnable, Shell {
       cmdSet = new TreeSet(cmdMap.keySet());
       
       readlineHandler = createReadlineHandler();
+      
+      //Read resource bundles
+      
    }
    
    private Command getCommand(String name) {
@@ -133,6 +141,11 @@ public class JGDIShell implements Runnable, Shell {
          
          while( true) {
             String line = readlineHandler.readline(PROMPT);
+            //Print empty line
+            if (line == null) {
+               continue;
+            }
+            line = line.trim();
             
             if(line == null) {
                break;
@@ -147,8 +160,7 @@ public class JGDIShell implements Runnable, Shell {
             } catch(Exception e) {
                logger.log(Level.SEVERE, "Command failed", e);
             }
-         }
-         
+         }        
       } catch(EOFException eofe) {
          // Ignore
       } catch(IOException ioe) {
@@ -160,7 +172,8 @@ public class JGDIShell implements Runnable, Shell {
    
    
    private void runCommand(String line) throws Exception {
-      
+      if (line.trim().length()==0) return;
+            
       if(line.charAt(0) == '!') {
          // get command from history
          String name = line.substring(1);

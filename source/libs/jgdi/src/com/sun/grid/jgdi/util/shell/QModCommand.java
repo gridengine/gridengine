@@ -85,6 +85,7 @@ public class QModCommand extends AbstractCommand {
 
    public void run(String[] args) throws Exception {
       
+      PrintWriter pw = new PrintWriter(System.out);
       JGDI jgdi = getShell().getConnection();
       
       if (jgdi == null) {
@@ -99,7 +100,12 @@ public class QModCommand extends AbstractCommand {
       
       for(int i = 0; i < args.length; i++) {
          
-         if(args[i].equals("-cj")) {
+         if (args[i].equals("-help")) {
+            i++;
+            pw.print(getUsage());
+            pw.flush();
+            break;
+         } else if(args[i].equals("-cj")) {
             i++;
             if(i>=args.length) {
                throw new IllegalArgumentException("job_wc_queue_list is missing");

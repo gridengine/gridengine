@@ -1,3 +1,9 @@
+AH-2007-08-09-0: Bugfix:    Resource quota can prevent dispatching of jobs that
+                            requests no resource in this quota
+                 Bugster:   6590574
+                 Issue:     2345
+                 Review:    RD
+
 MD-2007-08-08-0: Enhancem.: - changed gelint and aimk due to daily build
                               integration
 

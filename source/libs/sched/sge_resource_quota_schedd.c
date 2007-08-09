@@ -1404,7 +1404,7 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
             lSetInt(rql, RQL_result, result);
             lSetUlong(rql, RQL_time, tt_rqs);
 
-            if (result != DISPATCH_OK) {
+            if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
                schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
                      sge_dstring_get_string(rue_string), sge_dstring_get_string(rule_name));
                if (rqs_exceeded_sort_out(a, rule, rule_name, queue, host)) {

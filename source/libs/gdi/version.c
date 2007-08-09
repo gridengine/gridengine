@@ -34,7 +34,7 @@
 
 #include "version.h"
 
-const char GDI_VERSION[] = "6.1u1";
+const char GDI_VERSION[] = "6.1u2";
 
 const gdi_ulong32 GRM_GDI_VERSION = 0x10002000;
 
@@ -57,8 +57,8 @@ vdict_t GRM_GDI_VERSION_ARRAY[] =
 };
 
 #ifdef ADD_SUN_COPYRIGHT
-const char GE_LONGNAME[] = "N1 Grid Engine";
-const char GE_SHORTNAME[] = "N1GE";
+const char GE_LONGNAME[] = "Sun Grid Engine";
+const char GE_SHORTNAME[] = "SGE";
 #else
 const char GE_LONGNAME[] = "Grid Engine";
 const char GE_SHORTNAME[] = "GE";

@@ -1,3 +1,7 @@
+RD-2007-08-09-0: Bugfix:    Corrected version number and product string
+                 Bugster:   6590960
+                 Review:    JG
+
 AH-2007-08-08-0: Bugfix:    - Parallel RR broken if jobs wait for queue slots
                               and no RQS configured
                             - Resource quota can prevent dispatching of jobs that 

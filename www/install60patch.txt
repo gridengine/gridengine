@@ -1,5 +1,5 @@
-              Installing a Grid Engine 6 Update Release
-              -----------------------------------------
+              Installing a Grid Engine 6.0 Update Release
+              -------------------------------------------
 
 1) Who needs to read this document
 2) Prerequisites
@@ -32,7 +32,7 @@
 ----------------------------------
 
    This document describes how to install a Grid Engine 6.0 update release
-   for an installing 6.0 cluster from a previous revision.
+   from a previous 6.0 revision.
 
    If you make a new installation of Grid Engine 6.0 or a newer update
    release please follow the directions in the N1 Grid Engine manuals which
@@ -56,8 +56,7 @@
    same directory for the binaries. If you are running the software in a
    heterogenous environment (mix of different binary architectures), you
    need to apply the patch installation for all binary architectures as well
-   as the "common" and "arco" packages. See the patch matrix above for
-   details about the available patches.
+   as the "common" and "arco" packages.
 
    If you installed the software on local filesystems, you need to install
    all relevant patches on all hosts where you installed the software
@@ -124,7 +123,7 @@
 ---------------------------------------------------
 
    Now install the update release by unpacking all 'tar.gz' files (all
-   binary packages and the "common" package.
+   binary packages and the "common" package).
 
 
 6) Berkeley DB database update needed

@@ -1,3 +1,84 @@
+Bugs fixed in SGE 6.1u2 since release 6.1u1
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        6590960   Man pages show the wrong version number
+2345     6590574   resource quota can prevent dispatching of jobs that requests no resource in this quota
+2343     6589807   newline missing from "illegal debug level format" message
+2338     6585721   Parallel RR broken if jobs wait for queue slots and no RQS configured
+2334     6584632   user/system/operator hold state combinations cause strange qstat output
+
+
+Bugs fixed in SGE 6.1u1 since release 6.1
+-----------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+2323     6576153   Creating a userset with NONE as a type results in a core dump 
+2317     6574565   Oralce, Postgres FOREIGN KEY fields need to be indexed 
+-        6573980   'qconf -help' suggests usage of patterns in user_list which is not true 
+2316     6573508   qrsh with ssh causes job to go in error state when Ctrl-C is pressed 
+2308     6572803   qhost -xml lacks '>' with initial qhost tag 
+2309     6572801   sge_queue_values definition does not contain PRIMARY KEY 
+2321     6571714   Inadequate error message when qconf -sstree is run when no share tree is configuredIf no share tree 
+2241     6568712   util/arch has problem recognizing libc version number with comma 
+2292     6568578   6.1 upgrade procedure shall exit when there are jobs in the cluster 
+2249     6568575   SGE does not work if primary group entry is too big in groups map 
+2284     6565841   Oracle: rollback segments keep filling up, Postgres: delete query keeps running 
+2306     6564592   SGE 6.1 upgrade procedure is broken when using the classic qmaster spooling 
+2275     6564503   sge_schedd deadlock upon schedd_job_info job_list being enabled 
+2250     6558006   qmaster may crash with projects or usersets used in RQS 
+2243     6555744   qmon crashes when displaying about dialog 
+2248     6554313   add -u <user> to scheduler category only if there is a resource quota for the user 
+2238     6551568   need faster resource quota matchmaking and more concise job info messages 
+-        6550718   qstat -j lacks resource quota info messages in case of "incomplete" resource quotas 
+2296     6548455   csp mode installation, using /etc/services, qmaster is not starting! 
+2232     6546807   qhost -j -xml does not work 
+2325     6542987   drmaa_run_job(3) raises error if drmaa_native_specification has leading spaces 
+2239     6542137   use of hostgroups in resource quotas is less performant than the full list of hosts 
+-        6541085   NFS write error on N1GE trace file 
+2300     6539199   qquota(1) filtering broken for project and pe if -P/-pe switch is not used 
+2299     6536039   sgeremoterun not working 
+2201     6529974   Use of MORE fails on some architectures 
+-        6528949   inst_sge -ux uninstallation of exechost tries to delete local spooldir, even it isn't configured! 
+2191     6525883   qstat -s hX filtering is broken on darwin 
+2189     6525375   qacct ignores jobs in output 
+2320     6513115   in qmon, under calendar configuration, it is possible to modify even if no calendar exists 
+2326     6506661   sge_conf(5), description for rlogin_daemon and qlogin_daemon is wrong 
+2307     6433628   qconf -sq all.q@myhost produces no value at all for complex_values (not even NONE) 
+2289     6565951   Qmon panel does not check for valid data in Scheduler Configuration 
+2314     6513116   Qmon x qconf inconsistent in allowed characters in attribute names 
+-        6195248   QMON Job Control Window: Incomprehensible Priority Button 
+2313     6410592   Double clicking in Consumables/Fixed Attributes list does not behave as a GUI should 
+2312     6482211   complex attributes whose deletion is denied donot reflect back after the denial message in qmon 
+2301     6551121   Memory leak in libdrmaa.so 
+916      6355875   qsub -terse to just output job id 
+-        6522273   Wrong exit code with qconf -sds 
+2266     6563346   Wrong usage of 'day' format model in trunc(date) Oracle functions 
+2187     6562190   memory leak in sge_schedd 
+2265     6280747   qmon loses sharetree changes 
+747      6291044   "Modify"-Button is activated but should be grayed 
+2263     6553066   qmon's Complex Configuration Load and Save buttons did not work 
+2262     4742097   Qmon has a ticket number limitation 
+1729     4818801   qmon on secondary screen crashes when "Job Control" is pressed 
+2261     6538740   clear usage operation should implicitely trigger refresh in share-tree dialogue 
+2260     6327539   Ability to sort queue instances using each column of the queue instances table 
+2229     6544869   UNKNOWN group/owner in accouting(5) 
+2247     6556411   DBW queries "Average Job Turnaround Time", "Average Job Wait Time" might not work 
+-        6481737   Arco should support webconsole 3.0.x 
+-        6559385   Calling JGDI getQueueInstanceSummary results in a memory leak 
+1813     6328064   Queue request -q from sge_request can't be overridden through command line 
+-        6355674   arcorun can not be used as sge_admin user if the toc file is not available 
+2164     6514085   Need a possibility to update existing example queries for the ARCo web application 
+-        6426331   remove util/sge_log_tee from distribution 
+-        6476263   function job_get_id_string() is not MT save and used in qmaster 
+2219     6536426   inst_sge -m fails for non-root when USER variable is not set 
+1860     6345522   qdel on a job in deleted state does not output any information 
+2258     5081743   queue status in reporting file is missing. 
+2050     6422335   still used usersets/project/calendar/pe/checkpoint can be removed under certain conditions 
+
+
 Bugs fixed in SGE 6.1 since release 6.1_beta
 --------------------------------------------
 

@@ -1,3 +1,7 @@
+LP-2007-08-09-0: Enhancem.: QConfCommand restructured.
+                 Enhancem.: Java templates have now specific code for some classes
+                 Review:    AA
+
 DT-2007-08-09-0: WWW:       o Fixed broken download link
 
 AH-2007-08-09-0: Bugfix:    Resource quota can prevent dispatching of jobs that

@@ -1,3 +1,5 @@
+MD-2007-08-13-0: Bugfix:    merged checkin MD-2007-07-23-0 from V61_BRANCH
+
 LP-2007-08-09-0: Enhancem.: QConfCommand restructured.
                  Enhancem.: Java templates have now specific code for some classes
                  Review:    AA

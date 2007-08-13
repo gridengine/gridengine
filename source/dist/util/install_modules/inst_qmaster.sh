@@ -1862,10 +1862,5 @@ AddWindowsAdmin()
       $SGE_BIN/qconf -am $WIN_ADMIN_NAME
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       $CLEAR
-      if [ "$CSP" = "true" ]; then
-         $SGE_ROOT/util/sgeCA/sge_ca -user "$WIN_ADMIN_NAME"
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         $CLEAR
-      fi
    fi
 }

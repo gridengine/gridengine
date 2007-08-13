@@ -1360,7 +1360,7 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
 *******************************************************************************/
 bool sge_is_user_superuser(const char *name)
 {
-   bool ret;
+   bool ret = false;
 
 #if defined(INTERIX)
    char buffer[1000];
@@ -1370,11 +1370,13 @@ bool sge_is_user_superuser(const char *name)
 
    /* strip Windows domain name from user name */
    plus_sign = strstr(buffer, "+");
-   if(plus_sign!=NULL) {
+   if (plus_sign!=NULL) {
       plus_sign++;
       strcpy(buffer, plus_sign);
    }
-   ret = (strcmp(name, buffer) == 0) ? true : false;
+   if ((strncmp(name, buffer, 1000) == 0) || (strcmp(name, "root") == 0)) {
+      ret = true;
+   }
 #else
    ret = (strcmp(name, "root") == 0) ? true : false;
 #endif

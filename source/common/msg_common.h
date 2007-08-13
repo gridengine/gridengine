@@ -121,6 +121,7 @@
 #define MSG_PARSE_WRONGMAILLISTFORMATXSPECTOMOPTION_S              _MESSAGE(23083, _("ERROR! Wrong mail list format "SFQ" specified to -M option"))
 #define MSG_PARSE_ARGUMENTTONOPTIONMUSTNOTCONTAINBSL              _MESSAGE(23084, _("ERROR! argument to -N option must not contain / "))
 #define MSG_PARSE_EMPTYSTRINGARGUMENTTONOPTIONINVALID              _MESSAGE(23085, _("ERROR! empty string argument to -N option invalid"))
+#define MSG_PARSE_WRONGJIDHOLDLISTFORMATXSPECTOHOLDJIDADOPTION_S   _MESSAGE(23086, _("ERROR! Wrong jid_hold_ad list format "SFQ" specified to -hold_jid_ad option"))
 #define MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S              _MESSAGE(23087, _("ERROR! Wrong stdout path list format "SFQ" specified to -o option"))
 #define MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT              _MESSAGE(23088, _("ERROR! -pe option must have pe_name argument"))
 #define MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT              _MESSAGE(23089, _("ERROR! -pe option must have range as 2nd argument"))
@@ -569,6 +570,9 @@
 
 #define MSG_GDI_USAGE_l_OPT_RESOURCE_LIST                "[-l resource_list]"
 #define MSG_GDI_UTEXT_l_OPT_RESOURCE_LIST                _MESSAGE(23365, _("request the given resources"))
+
+#define MSG_GDI_USAGE_hold_jid_ad_OPT                    "[-hold_jid_ad job_identifier_list]"
+#define MSG_GDI_UTEXT_hold_jid_ad_OPT                    _MESSAGE(23366, _("define jobnet array interdependencies"))
 
 #define MSG_GDI_USAGE_m_OPT_MAIL_OPTIONS                 "[-m mail_options]"
 #define MSG_GDI_UTEXT_m_OPT_MAIL_OPTIONS                 _MESSAGE(23367, _("define mail notification events"))

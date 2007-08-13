@@ -955,6 +955,9 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       /* doing this operation we need the complete job list read in */
       job_suc_pre(jep);
 
+      /* also do this for array dependency predecessors */
+      job_suc_pre_ad(jep);
+
       centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
                   NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);
    }

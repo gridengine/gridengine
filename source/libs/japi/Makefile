@@ -74,8 +74,8 @@ drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_perf \
          test_drmaa_perf.o test_drmaa_sync \
          test_drmaa_sync.o test_drmaa_no_bin test_drmaa_no_bin.o \
-         test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1892 \
-         test_drmaa_issue1892.o \
+         test_drmaa_issue1768 test_drmaa_issue1768.o test_drmaa_issue1832 \
+         test_drmaa_issue1832.o test_drmaa_issue1892 test_drmaa_issue1892.o \
          test_drmaa.1.0 test_drmaa.1.0.o test_drmaa.0.95 test_drmaa.0.95.o \
          compile compile.o
 
@@ -83,8 +83,9 @@ japilib: $(JAPILIB)
 drmaalib: $(DRMAALIB)
 
 drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_perf test_drmaa_sync \
-              test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1892 compile
-	
+              test_drmaa_no_bin test_drmaa_issue1768 test_drmaa_issue1832 \
+              test_drmaa_issue1892 compile \
+              	
 japi_clean:
 	$(RM) $(JAPILIB_OBJS) libjapi.0.95$(LIBEXT) libjapi.1.0$(LIBEXT)
 
@@ -198,6 +199,12 @@ test_drmaa_issue1768: test_drmaa_issue1768.o $(DRMAALIB)
 
 test_drmaa_issue1768.o: $(JAPILIB_DIR)/test_drmaa_issue1768.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_issue1768.c
+
+test_drmaa_issue1832: test_drmaa_issue1832.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_issue1832.o $(LFLAGS) $(LIBS) -ldrmaa
+
+test_drmaa_issue1832.o: $(JAPILIB_DIR)/test_drmaa_issue1832.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa_issue1832.c
 
 test_drmaa_issue1892: test_drmaa_issue1892.o $(DRMAALIB)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa_issue1892.o $(LFLAGS) $(LIBS) -ldrmaa

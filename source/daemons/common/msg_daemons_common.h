@@ -73,6 +73,7 @@
 #define MSG_JOB_JOBHASPEWITHNORANGES       _MESSAGE(27021, _("Job has parallel environment with no ranges"))
 #define MSG_LIST_ERRORFORMATINGRANGESINPE       _MESSAGE(27022, _("Error formatting ranges in -pe"))
 #define MSG_LIST_ERRORFORMATINGPATHLIST       _MESSAGE(27023, _("Error formatting path_list"))
+#define MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJIDAD       _MESSAGE(27024, _("Error formatting jid_request_list as -hold_jid-ad"))
 
 
 /*

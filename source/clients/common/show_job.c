@@ -432,7 +432,6 @@ void cull_show_job(lListElem *job, int flags)
             fields, delis, 0);
       }
 
-
    if (lGetPosViaElem(job, JB_jid_predecessor_list, SGE_NO_ABORT)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
          int fields[] = { JRE_job_number, 0 };
@@ -450,6 +449,36 @@ void cull_show_job(lListElem *job, int flags)
          delis[0] = "";
          printf("jid_successor_list:          ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_jid_successor_list), 
+            fields, delis, 0);
+      }
+
+   if (lGetPosViaElem(job, JB_ja_ad_request_list, SGE_NO_ABORT)>=0)
+      if (lGetList(job, JB_ja_ad_request_list) ) {
+         int fields[] = { JRE_job_name, 0 };
+
+         delis[0] = "";
+         printf("ja_ad_predecessor_list (req):  ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_ja_ad_request_list), 
+            fields, delis, 0);
+      }
+
+   if (lGetPosViaElem(job, JB_ja_ad_predecessor_list, SGE_NO_ABORT)>=0)
+      if (lGetList(job, JB_ja_ad_predecessor_list)) {
+         int fields[] = { JRE_job_number, 0 };
+
+         delis[0] = "";
+         printf("ja_ad_predecessor_list:       ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_ja_ad_predecessor_list), 
+            fields, delis, 0);
+      }
+
+   if (lGetPosViaElem(job, JB_ja_ad_successor_list, SGE_NO_ABORT)>=0)
+      if (lGetList(job, JB_ja_ad_successor_list)) {
+         int fields[] = { JRE_job_number, 0 };
+
+         delis[0] = "";
+         printf("ja_ad_successor_list:          ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_ja_ad_successor_list), 
             fields, delis, 0);
       }
 

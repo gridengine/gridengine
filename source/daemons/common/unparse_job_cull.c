@@ -185,6 +185,24 @@ int flags
    }
 
    /*
+   ** -hold_jid_ad
+   */
+   if ((lp = lGetList(job, JB_ja_ad_request_list))) {
+      int fields[] = { JRE_job_name, 0 };
+      const char *delis[] = {NULL, ",", NULL};
+
+      ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);
+      if (ret) {
+         DPRINTF(("Error %d formatting ja_ad_request_list as -hold_jid_ad\n", ret));
+         sprintf(str, MSG_LIST_ERRORFORMATINGJIDPREDECESSORLISTASHOLDJIDAD);
+         answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         return answer;
+      }
+      ep_opt = sge_add_arg(pcmdline, hold_jid_ad_OPT, lListT, "-hold_jid_ad", str);
+      lSetList(ep_opt, SPA_argval_lListT, lCopyList("hold_jid_ad list", lp));      
+   }
+
+   /*
    ** -i
    */
    if (sge_unparse_path_list(job, JB_stdin_path_list, "-i", pcmdline, 

@@ -361,6 +361,15 @@ lList **alpp
                               group_opt, slots_per_line, queue_name_length, report_handler, alpp);
                            already_printed = 1;
                         }
+
+                        if (!already_printed && (full_listing & QSTAT_DISPLAY_JOBARRAYHOLD) &&
+                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_JA_AD)) {
+                           sge_print_job(jlep, jatep, qep, print_jobid,
+                              (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
+                              slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 
+                              group_opt, slots_per_line, queue_name_length, report_handler, alpp);
+                           already_printed = 1;
+                        }
                      }
                   }
                }
@@ -1067,6 +1076,22 @@ lList **alpp
          ql = lGetList(job, JB_jid_predecessor_list);
          if (ql) {
             printf(QSTAT_INDENT "Predecessor Jobs: ");
+            for_each(qrep, ql) {
+               printf(sge_u32, lGetUlong(qrep, JRE_job_number));
+               printf("%s", lNext(qrep)?", ":"\n");
+            }
+         }
+         ql = lGetList(job, JB_ja_ad_request_list );
+         if (ql) {
+            printf(QSTAT_INDENT "Predecessor Array Jobs (request): ");
+            for_each(qrep, ql) {
+               printf("%s", lGetString(qrep, JRE_job_name));
+               printf("%s", lNext(qrep)?", ":"\n");
+            }
+         }
+         ql = lGetList(job, JB_ja_ad_predecessor_list);
+         if (ql) {
+            printf(QSTAT_INDENT "Predecessor Array Jobs: ");
             for_each(qrep, ql) {
                printf(sge_u32, lGetUlong(qrep, JRE_job_number));
                printf("%s", lNext(qrep)?", ":"\n");

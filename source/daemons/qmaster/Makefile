@@ -71,7 +71,8 @@ QMASTER_SRC = sge_qmaster_threads.c \
               sge_qmaster_process_message.c \
               sge_c_report.c \
               sge_reporting_qmaster.c \
-              sge_resource_quota_qmaster.c
+              sge_resource_quota_qmaster.c \
+              sge_task_depend.c
              
 QMASTER_ADD_SRC = usage.c sge_options.c \
               startprog.c shutdown.c \
@@ -265,9 +266,11 @@ sge_reporting_qmaster.o : $(QMASTER_DIR)/sge_reporting_qmaster.c
 sge_resource_quota_qmaster.o : $(QMASTER_DIR)/sge_resource_quota_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_resource_quota_qmaster.c
 
+sge_task_depend.o : $(QMASTER_DIR)/sge_task_depend.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_task_depend.c
+
 test_sge_qmaster_timed_event.o : $(QMASTER_DIR)/test_sge_qmaster_timed_event.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/test_sge_qmaster_timed_event.c
 
 test_sge_calendar.o : $(QMASTER_DIR)/test_sge_calendar.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/test_sge_calendar.c
-      

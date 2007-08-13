@@ -664,6 +664,9 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                         } else if ((qstat_env->full_listing & QSTAT_DISPLAY_SYSTEMHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) {
                            print_it = true;
+                        } else if ((qstat_env->full_listing & QSTAT_DISPLAY_JOBARRAYHOLD) &&
+                            (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_JA_AD)) {
+                           print_it = true;
                         } else {
                            print_it = false;
                         }       
@@ -1556,6 +1559,8 @@ static int handle_pending_jobs(qstat_env_t *qstat_env, qstat_handler_t *handler,
                ||
              ((qstat_env->full_listing & QSTAT_DISPLAY_SYSTEMHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_SYSTEM)) 
                ||
+             ((qstat_env->full_listing & QSTAT_DISPLAY_JOBARRAYHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_JA_AD)) 
+               ||
              ((qstat_env->full_listing & QSTAT_DISPLAY_JOBHOLD) && lGetList(jep, JB_jid_predecessor_list))
                ||
              ((qstat_env->full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) && lGetUlong(jep, JB_execution_time))
@@ -1808,8 +1813,8 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
                                     int slots, int slot, int *count,
                                     qstat_env_t *qstat_env, qstat_handler_t *handler, lList **alpp)
 {
-   lList *range_list[8];         /* RN_Type */
-   u_long32 hold_state[8];
+   lList *range_list[16];         /* RN_Type */
+   u_long32 hold_state[16];
    int i;
    dstring ja_task_id_string = DSTRING_INIT;
    int ret = 0;
@@ -1817,7 +1822,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
    DENTER(TOP_LAYER, "handle_jobs_not_enrolled");
 
    job_create_hold_id_lists(job, range_list, hold_state); 
-   for (i = 0; i <= 7; i++) {
+   for (i = 0; i <= 15; i++) {
       lList *answer_list = NULL;
       u_long32 first_id;
       int show = 0;
@@ -1825,6 +1830,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
       if (((qstat_env->full_listing & QSTAT_DISPLAY_USERHOLD) && (hold_state[i] & MINUS_H_TGT_USER)) ||
           ((qstat_env->full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (hold_state[i] & MINUS_H_TGT_OPERATOR)) ||
           ((qstat_env->full_listing & QSTAT_DISPLAY_SYSTEMHOLD) && (hold_state[i] & MINUS_H_TGT_SYSTEM)) ||
+          ((qstat_env->full_listing & QSTAT_DISPLAY_JOBARRAYHOLD) && (hold_state[i] & MINUS_H_TGT_JA_AD)) ||
           ((qstat_env->full_listing & QSTAT_DISPLAY_STARTTIMEHOLD) && (lGetUlong(job, JB_execution_time) > 0)) ||
           ((qstat_env->full_listing & QSTAT_DISPLAY_JOBHOLD) && (lGetList(job, JB_jid_predecessor_list) != 0)) ||
           (!(qstat_env->full_listing & QSTAT_DISPLAY_HOLD))
@@ -1833,6 +1839,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
       }
       if (range_list[i] != NULL && show) { 
          if ((qstat_env->group_opt & GROUP_NO_TASK_GROUPS) == 0) {
+            sge_dstring_clear(&ja_task_id_string);
             range_list_print_to_string(range_list[i], &ja_task_id_string, false);
             first_id = range_list_get_first_id(range_list[i], &answer_list);
             if (answer_list_has_error(&answer_list) != 1) {
@@ -1842,11 +1849,13 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
                lList *u_h_ids = NULL;
                lList *o_h_ids = NULL;
                lList *s_h_ids = NULL;
+               lList *a_h_ids = NULL;
 
                lXchgList(job, JB_ja_n_h_ids, &n_h_ids);
                lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
                lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
                lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+               lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
                
                if (*count == 0 && handler->report_pending_jobs_started && (ret=handler->report_pending_jobs_started(handler, alpp))) {
                   DPRINTF(("report_pending_jobs_started failed\n"));
@@ -1864,6 +1873,7 @@ static int handle_jobs_not_enrolled(lListElem *job, lListElem *qep, bool print_j
                lXchgList(job, JB_ja_u_h_ids, &u_h_ids);
                lXchgList(job, JB_ja_o_h_ids, &o_h_ids);
                lXchgList(job, JB_ja_s_h_ids, &s_h_ids);
+               lXchgList(job, JB_ja_a_h_ids, &a_h_ids);
                (*count)++;
             }
          } else {
@@ -2352,6 +2362,8 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
          }
       }
 
+      /* PING! should we be returning ja_ad predecessors? */
+
       if (handler->report_predecessor_requested) {
          ql = lGetList(job, JB_jid_request_list );
          if (ql) {
@@ -2589,7 +2601,7 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
        */
       if ((show & QSTAT_DISPLAY_PENDING) == QSTAT_DISPLAY_PENDING) {
          const u_long32 all_pending_flags = (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_OPERATORHOLD|
-                    QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_JOBHOLD|
+                    QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_JOBARRAYHOLD|QSTAT_DISPLAY_JOBHOLD|
                     QSTAT_DISPLAY_STARTTIMEHOLD|QSTAT_DISPLAY_PEND_REMAIN);
          /*
           * Fine grained stated selection for pending jobs
@@ -2692,6 +2704,25 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
                } 
                tmp_nw = lWhere("%T((%I -> %T(%I m= %u)))", JB_Type,
                                JB_ja_tasks, JAT_Type, JAT_hold, MINUS_H_TGT_SYSTEM);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               }
+            }
+            /*
+             * Job Array Dependency Hold 
+             */
+            if ((show & QSTAT_DISPLAY_JOBARRAYHOLD) == QSTAT_DISPLAY_JOBARRAYHOLD) {
+               tmp_nw = lWhere("%T(%I -> %T((%I > %u)))", JB_Type, JB_ja_a_h_ids, 
+                           RN_Type, RN_min, 0);
+               if (nw == NULL) {
+                  nw = tmp_nw;
+               } else {
+                  nw = lOrWhere(nw, tmp_nw);
+               } 
+               tmp_nw = lWhere("%T((%I -> %T(%I m= %u)))", JB_Type,
+                               JB_ja_tasks, JAT_Type, JAT_hold, MINUS_H_TGT_JA_AD);
                if (nw == NULL) {
                   nw = tmp_nw;
                } else {
@@ -2837,6 +2868,7 @@ void qstat_filter_add_core_attributes(qstat_env_t *qstat_env)
       JB_ja_u_h_ids,
       JB_ja_o_h_ids,
       JB_ja_s_h_ids,
+      JB_ja_a_h_ids,
       JB_ja_z_ids,
       JB_ja_template,
       JB_execution_time,
@@ -3195,12 +3227,13 @@ int build_job_state_filter(qstat_env_t *qstat_env, const char* job_state, lList 
        * come after multi byte options starting with the same character (e.g. "hs")!
        */
       static char* flags[] = {
-         "hu", "hs", "ho", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
+         "hu", "hs", "ho", "hd", "hj", "ha", "h", "p", "r", "s", "z", "a", NULL
       };
       static u_long32 bits[] = {
          (QSTAT_DISPLAY_USERHOLD|QSTAT_DISPLAY_PENDING), 
          (QSTAT_DISPLAY_SYSTEMHOLD|QSTAT_DISPLAY_PENDING), 
          (QSTAT_DISPLAY_OPERATORHOLD|QSTAT_DISPLAY_PENDING), 
+         (QSTAT_DISPLAY_JOBARRAYHOLD|QSTAT_DISPLAY_PENDING), 
          (QSTAT_DISPLAY_JOBHOLD|QSTAT_DISPLAY_PENDING), 
          (QSTAT_DISPLAY_STARTTIMEHOLD|QSTAT_DISPLAY_PENDING), 
          (QSTAT_DISPLAY_HOLD|QSTAT_DISPLAY_PENDING), 
@@ -3322,6 +3355,7 @@ static void print_qstat_env_to(qstat_env_t *qstat_env, FILE* file) {
          QSTAT_DISPLAY_USERHOLD,
          QSTAT_DISPLAY_SYSTEMHOLD,
          QSTAT_DISPLAY_OPERATORHOLD,
+         QSTAT_DISPLAY_JOBARRAYHOLD,
          QSTAT_DISPLAY_JOBHOLD,
          QSTAT_DISPLAY_STARTTIMEHOLD,
          QSTAT_DISPLAY_URGENCY,
@@ -3344,6 +3378,7 @@ static void print_qstat_env_to(qstat_env_t *qstat_env, FILE* file) {
          "QSTAT_DISPLAY_USERHOLD",
          "QSTAT_DISPLAY_SYSTEMHOLD",
          "QSTAT_DISPLAY_OPERATORHOLD",
+         "QSTAT_DISPLAY_JOBARRAYHOLD",
          "QSTAT_DISPLAY_JOBHOLD",
          "QSTAT_DISPLAY_STARTTIMEHOLD",
          "QSTAT_DISPLAY_URGENCY",

@@ -93,16 +93,17 @@ extern "C" {
 */
 enum { 
    /* need place for tree bits */
-   MINUS_H_CMD_ADD = (0<<3), /* adds targetted flags */
-   MINUS_H_CMD_SUB = (1<<3), /* remove targetted flags */
-   MINUS_H_CMD_SET = (2<<3)  /* overwrites using targetted flags */
+   MINUS_H_CMD_ADD = (0<<4), /* adds targetted flags */
+   MINUS_H_CMD_SUB = (1<<4), /* remove targetted flags */
+   MINUS_H_CMD_SET = (2<<4)  /* overwrites using targetted flags */
 }; 
 enum { 
    MINUS_H_TGT_USER     = 1, /* remove needs at least job owner */
    MINUS_H_TGT_OPERATOR = 2, /* remove needs at least operator  */
    MINUS_H_TGT_SYSTEM   = 4, /* remove needs at least manager   */
-   MINUS_H_TGT_ALL      = 7,
-   MINUS_H_TGT_NONE     = 15
+   MINUS_H_TGT_JA_AD    = 8, /* removed automatically */
+   MINUS_H_TGT_ALL      = 15,
+   MINUS_H_TGT_NONE     = 31
 };
 
 /* values for JB_verify_suitable_queues */
@@ -174,6 +175,15 @@ enum {
 *  
 *     SGE_LIST(JB_jid_successor_list)  
 *        Sucessor jobs (JRE_Type only JRE_job_number)
+*
+*     SGE_LIST(JB_ja_ad_request_list)
+*        job requested array dependencies (JRE_Type only JRE_job_name)
+*
+*     SGE_LIST(JB_ja_ad_predecessor_list)
+*        Predecessor array jobs (JRE_Type only JRE_job_name)
+*  
+*     SGE_LIST(JB_ja_ad_successor_list)  
+*        Sucessor array jobs (JRE_Type only JRE_job_number)
 *
 *     SGE_STRING(JB_session) 
 *        Jobs session (JAPI session tag for job event selection)  
@@ -389,6 +399,10 @@ enum {
 *        Just submitted and operator hold applied (RN_Type).
 *        ("qalter -h o/O jid.tid1-tid2:step")
 *
+*     SGE_LIST(JB_ja_a_h_ids)    
+*        Just submitted and array hold applied (RN_Type).
+*        ("qalter -hold_jid_ad wc_job_list")
+*
 *     SGE_LIST(JB_ja_z_ids)      
 *        Zombie task ids (RN_Type).
 *
@@ -512,6 +526,9 @@ enum {
    JB_jid_request_list,
    JB_jid_predecessor_list,
    JB_jid_successor_list,
+   JB_ja_ad_request_list,
+   JB_ja_ad_predecessor_list,
+   JB_ja_ad_successor_list,
    JB_session,
 
    JB_project,
@@ -576,6 +593,7 @@ enum {
    JB_ja_u_h_ids,
    JB_ja_s_h_ids,
    JB_ja_o_h_ids,
+   JB_ja_a_h_ids,
    JB_ja_z_ids,
    JB_ja_template,
    JB_ja_tasks,
@@ -612,6 +630,9 @@ LISTDEF(JB_Type)
    SGE_LIST(JB_jid_request_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO) 
    SGE_LIST(JB_jid_successor_list, JRE_Type, CULL_DEFAULT | CULL_JGDI_RO) 
+   SGE_LIST(JB_ja_ad_request_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_ja_ad_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO) 
+   SGE_LIST(JB_ja_ad_successor_list, JRE_Type, CULL_DEFAULT | CULL_JGDI_RO) 
    SGE_STRING(JB_session, CULL_DEFAULT | CULL_SPOOL) 
 
    SGE_STRING(JB_project, CULL_DEFAULT | CULL_SPOOL)             
@@ -676,6 +697,7 @@ LISTDEF(JB_Type)
    SGE_LIST(JB_ja_u_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
    SGE_LIST(JB_ja_s_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)    
    SGE_LIST(JB_ja_o_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
+   SGE_LIST(JB_ja_a_h_ids, RN_Type, CULL_DEFAULT)   
    SGE_LIST(JB_ja_z_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)   
    SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
    SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
@@ -710,6 +732,9 @@ NAMEDEF(JBN)
    NAME("JB_jid_request_list")
    NAME("JB_jid_predecessor_list")
    NAME("JB_jid_successor_list")
+   NAME("JB_ja_ad_request_list")
+   NAME("JB_ja_ad_predecessor_list")
+   NAME("JB_ja_ad_successor_list")
    NAME("JB_session")
 
    NAME("JB_project")
@@ -774,6 +799,7 @@ NAMEDEF(JBN)
    NAME("JB_ja_u_h_ids")
    NAME("JB_ja_s_h_ids")
    NAME("JB_ja_o_h_ids")
+   NAME("JB_ja_a_h_ids")
    NAME("JB_ja_z_ids")
    NAME("JB_ja_template")
    NAME("JB_ja_tasks")

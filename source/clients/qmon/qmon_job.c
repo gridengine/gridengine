@@ -842,13 +842,14 @@ void updateJobList(void)
           lFreeList(&ptasks);
       }
       if (lGetList(jep, JB_ja_n_h_ids) || lGetList(jep, JB_ja_u_h_ids) ||
-          lGetList(jep, JB_ja_o_h_ids) || lGetList(jep, JB_ja_s_h_ids)) {
-         lList *range_list[8];         /* RN_Type */
-         u_long32 hold_state[8];
+          lGetList(jep, JB_ja_o_h_ids) || lGetList(jep, JB_ja_s_h_ids) ||
+          lGetList(jep, JB_ja_a_h_ids)) {
+         lList *range_list[16];         /* RN_Type */
+         u_long32 hold_state[16];
          int i;
 
          job_create_hold_id_lists(jep, range_list, hold_state);
-         for (i = 0; i <= 7; i++) {
+         for (i = 0; i <= 15; i++) {
             if (range_list[i] != NULL) {
                lList *task_ids = range_list[i]; 
 

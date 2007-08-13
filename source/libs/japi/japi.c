@@ -3025,7 +3025,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
             if (!range_list_is_id_within(lGetList(job, JB_ja_n_h_ids), taskid) &&
                 !range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid) &&
                 !range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) &&
-                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid))
+                !range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) &&
+                !range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid))
                task_finished = true;
          }
       }
@@ -3152,8 +3153,10 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
           * them (WAITING_DUE_TO_TIME, WAITING_DUE_TO_PREDECESSOR ) 
           * actually are the user's hold but DRMAA user interface does 
           * not know these hold * conditions.
+          *
+          * PING! provisionally added job array hold state for enrolled task.
           */
-         if ((ja_task_hold & (MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM)) || 
+         if ((ja_task_hold & (MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM|MINUS_H_TGT_JA_AD)) || 
              (lGetUlong(job, JB_execution_time) > sge_get_gmt()) ||
              lGetList(job, JB_jid_predecessor_list))
             *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
@@ -3206,7 +3209,8 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
    if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid))
       *remote_ps |= DRMAA_PS_SUBSTATE_USER_SUSP;
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) ||
-       range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) /* ||
+       range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) ||
+       range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid) /* ||
        (lGetUlong(job, JB_execution_time) > sge_get_gmt()) || 
                     lGetList(job, JB_jid_predecessor_list) */
        )
@@ -3276,7 +3280,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
 
    /* prepare GDI GET JOB selection */
    job_selection = lWhere("%T(%I==%u)", JB_Type, JB_job_number, jobid);
-   job_fields = lWhat("%T(%I%I%I%I%I%I%I%I%I%I)", JB_Type, 
+   job_fields = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I)", JB_Type, 
          JB_job_number, 
          JB_type, 
          JB_ja_structure, 
@@ -3284,6 +3288,7 @@ static int japi_get_job_and_queues(u_long32 jobid, lList **retrieved_cqueue_list
          JB_ja_u_h_ids,
          JB_ja_s_h_ids,
          JB_ja_o_h_ids,
+         JB_ja_a_h_ids,
          JB_ja_tasks,
          JB_jid_predecessor_list, 
          JB_execution_time);

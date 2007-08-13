@@ -436,6 +436,22 @@ int *all_users
          nm_set(job_field, JB_jid_predecessor_list);
       }
 
+      /* -hold_jid_ad */
+      if (lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad")) {
+         lListElem *sep, *ep;
+         lList *jref_list = NULL;
+         while ((ep = lGetElemStr(cmdline, SPA_switch, "-hold_jid_ad"))) {
+            for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+               DPRINTF(("-hold_jid_ad %s\n", lGetString(sep, ST_name)));
+               lAddElemStr(&jref_list, JRE_job_name, lGetString(sep, ST_name), JRE_Type);
+            }
+            lRemoveElem(cmdline, &ep);
+         }
+         lSetList(job, JB_ja_ad_request_list , jref_list);
+         nm_set(job_field, JB_ja_ad_request_list );
+         nm_set(job_field, JB_ja_ad_predecessor_list);
+      }
+
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
          lSetBool(job, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
          lRemoveElem(cmdline, &ep);
@@ -824,6 +840,7 @@ int *all_users
          static int list_nm[] = {
             JB_stderr_path_list,
             JB_jid_request_list,
+            JB_ja_ad_request_list,
             JB_hard_resource_list,
             JB_soft_resource_list,
             JB_mail_list,

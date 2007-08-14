@@ -3693,6 +3693,7 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_ja_ad_request_list);
    predecessors_id = lCreateList("job_predecessors_ad", JRE_Type);
    if (!predecessors_id) {
+      lFreeList(&predecessors_id);
       ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
@@ -3702,9 +3703,10 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    job_get_submit_task_ids(job, &b0, &b1, &sb);
 
    /* only verify -hold_jid_ad option if predecessors are requested */
-   if(lGetNumberOfElem(predecessors_req) != 0) {
+   if (lGetNumberOfElem(predecessors_req) != 0) {
       /* verify -t option was used to create this job */
-      if(!job_is_array(job)) {
+      if (!job_is_array(job)) {
+         lFreeList(&predecessors_id);   
          DPRINTF(("could not create array dependence for non-array job\n"));
          ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -3716,12 +3718,14 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       const char *pre_ident = lGetString(pre, JRE_job_name);
       if (isdigit(pre_ident[0])) {
          if (strchr(pre_ident, '.')) {
+            lFreeList(&predecessors_id);
             DPRINTF(("a job cannot wait for a task to finish\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S, pre_ident));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EUNKNOWN);
          }
          if (atoi(pre_ident) == jobid) {
+            lFreeList(&predecessors_id);
             DPRINTF(("got my own jobid in JRE_job_name\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, sge_u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -3773,18 +3777,21 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
 
    /* verify the predecessor list before we try to calculate dependency info */
    for_each(pre, predecessors_id) {
-      u_long32 a0, a1, sa;
-
       /* locate the job id in the master list, if not found we can't do much here */
       lListElem *pred_job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), 
          lGetUlong(pre, JRE_job_number));
       if (!pred_job) continue;
-
-      /* refresh the task ranges for this predecessor */
-      job_get_submit_task_ids(pred_job, &a0, &a1, &sa);
-
+      /* verify this job is an array job */
+      if (!job_is_array(pred_job)) {
+         lFreeList(&predecessors_id);   
+         DPRINTF(("could not create array dependence on non-array job\n"));
+         ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DRETURN(STATUS_EUNKNOWN);
+      }
       /* verify this job has the same range of dependent sub-tasks */
       if (!sge_task_depend_is_same_range(pred_job, job)) {
+         lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence for jobs with different sub-task range\n"));
          ERROR((SGE_EVENT, MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

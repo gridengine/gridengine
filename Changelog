@@ -1,3 +1,7 @@
+RN-2007-08-14-0: Bugfix:    problem with floating point job resource limits
+                 Bugster:   4743006
+                 Review:    JG
+
 RD-2007-08-09-0: CVS        Created V61u2_TAG
 ---------------------------------------------
 

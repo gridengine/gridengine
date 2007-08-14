@@ -475,12 +475,6 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       else
          dummy = t;
    
-      if (t > RLIM_MAX)
-         *rlimp = RLIM_INFINITY;
-      else 
-         *rlimp = (sge_rlim_t)t;
-      *dvalp = t;
-
       if ((dummy == 0.0) && (dptr == str)) {    /* no valid number ==> bail */
          snprintf(err_str, err_len, MSG_GDI_NUMERICALVALUEINVALIDNONUMBER_SS , where, str);
          return 0;
@@ -490,8 +484,12 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       if (!(muli = get_multiplier(&rlmuli, &dptr, where, err_str, err_len)))
          return 0;
       dummy =    (u_long32) (dummy * muli);
-      *dvalp =              *dvalp * muli;
-      *rlimp = mul_infinity(*rlimp, rlmuli);
+      *dvalp =              t * muli;
+
+      if (t > RLIM_MAX || rlmuli>= RLIM_INFINITY || (double)(RLIM_MAX/muli)<t)
+         *rlimp = RLIM_INFINITY;
+      else 
+         *rlimp = (sge_rlim_t)(t*rlmuli);
 
       return (u_long32)dummy;
 

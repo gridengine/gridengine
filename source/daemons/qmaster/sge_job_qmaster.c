@@ -1207,8 +1207,8 @@ int sub_command, monitoring_t *monitor
                    * if task is already in status deleted and was signaled
                    * only recently and deletion is not forced, do nothing
                    */
-                  if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
-                     (lGetUlong(tmp_task, JAT_state) & JDELETED &&
+                  if ((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
+                      (lGetUlong(tmp_task, JAT_state) & JDELETED &&
                       lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt() &&
                       !lGetUlong(idep, ID_force)
                      )
@@ -3599,12 +3599,14 @@ static int job_verify_predecessors(lListElem *job, lList **alpp)
 
       if (isdigit(pre_ident[0])) {
          if (strchr(pre_ident, '.')) {
+            lFreeList(&predecessors_id);
             DPRINTF(("a job cannot wait for a task to finish\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S, pre_ident));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(STATUS_EUNKNOWN);
          }
          if (atoi(pre_ident) == jobid) {
+            lFreeList(&predecessors_id);
             DPRINTF(("got my own jobid in JRE_job_name\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, sge_u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -3693,7 +3695,6 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_ja_ad_request_list);
    predecessors_id = lCreateList("job_predecessors_ad", JRE_Type);
    if (!predecessors_id) {
-      lFreeList(&predecessors_id);
       ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
@@ -3783,7 +3784,7 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!pred_job) continue;
       /* verify this job is an array job */
       if (!job_is_array(pred_job)) {
-         lFreeList(&predecessors_id);   
+         lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence on non-array job\n"));
          ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

@@ -36,6 +36,7 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_answer.h"
+#include "sge_bitfield.h"
 
 static u_long32 task_depend_div_floor(u_long32 a, u_long32 b)
 {
@@ -115,10 +116,10 @@ int sge_task_depend_get_range(lListElem **range, lList **alpp,
 
    job_get_submit_task_ids(pre_jep, &a0, &a1, &sa);
    job_get_submit_task_ids(suc_jep, &b0, &b1, &sb);
-   
+
    /* do some basic checks on the input */
    if (!sge_task_depend_is_same_range(pre_jep, suc_jep) || 
-      ((task_id - 1) % sb) != 0) {
+       ((task_id - 1) % sb) != 0) {
       DRETURN(STATUS_EUNKNOWN);
    }
 
@@ -150,21 +151,17 @@ static bool task_depend_is_resched(lListElem *job, u_long32 task_id)
 {
    DENTER(TOP_LAYER, "task_depend_is_resched");
 
-   /* JA: FIXME: not sure about this one */
-
    if (job_is_enrolled(job, task_id)) {
       lListElem *ja_task = job_search_task(job, NULL, task_id);
       if (ja_task) {
+         /* JA: FIXME: only alter hold state when idle/waiting? */
          u_long32 state = lGetUlong(ja_task, JAT_state);
          u_long32 status = lGetUlong(ja_task, JAT_status);
-         /* JA: FIXME: only alter hold state when idle? */
-         if (status != JIDLE)
-            DRETURN(false);
-         /* JA: FIXME: are all states handled? */
-         if (state == (JQUEUED|JWAITING) ||
-             state == (JQUEUED|JWAITING|JHELD))
-            DRETURN(true);
-     }
+         bool ret = (ISSET(status, JIDLE) &&
+                     ISSET(state, JQUEUED) &&
+                     ISSET(state, JWAITING));
+         DRETURN(ret);
+      }
    }
    DRETURN(false);
 }
@@ -210,7 +207,6 @@ static bool task_depend_is_resched(lListElem *job, u_long32 task_id)
 bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
 {
    const lListElem *pre = NULL;  /* JRE_Type */
-   lListElem *dep_range = NULL;  /* RN_Type */
    u_long32 hold_state, new_state;
    int Depend = 0;
 
@@ -223,8 +219,8 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    }
 
    /* for enrolled tasks, we only update the hold state if they are rescheduled */
-   if(job_is_enrolled(suc_jep, task_id) &&
-      !task_depend_is_resched(suc_jep, task_id)) {
+   if (job_is_enrolled(suc_jep, task_id) &&
+       !task_depend_is_resched(suc_jep, task_id)) {
       DRETURN(false);
    }
 
@@ -232,9 +228,7 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    for_each(pre, lGetList(suc_jep, JB_ja_ad_predecessor_list)) {
       u_long32 sa, sa_task_id, amin, amax;
       const lListElem *pred_jep = NULL; /* JB_Type */
-
-      /* minor speed optimization */
-      if (Depend) break;
+      lListElem *dep_range = NULL;      /* RN_Type */
 
       /* locate the job id in the master list, if not found we can't do much here */
       pred_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), 
@@ -245,6 +239,7 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
       if (sge_task_depend_get_range(&dep_range, alpp, pred_jep, suc_jep, task_id)) {
          DPRINTF(("could not calculate dependent iteration ranges for a job\n"));
          /* since we can't calculate it, we must assume dependence */
+         lFreeElem(&dep_range);
          Depend = 1;
          break;
       }
@@ -263,16 +258,19 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
          /* if the task is not finished => dependence */
          ja_task = job_search_task(pred_jep, alpp, sa_task_id);
          if (ja_task) {
-            if(lGetUlong(ja_task, JAT_status) != JFINISHED) {
+            if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
                Depend = 1;
                break;
             }
          }
       }
-   }
 
-   /* cleanup, if a dep range was allocated */
-   lFreeElem(&dep_range);
+      /* cleanup, if a dep range was allocated */
+      lFreeElem(&dep_range);
+
+      /* minor speed optimization */
+      if (Depend) break;
+   }
 
    /* alter the hold state based on dependence info */
    hold_state = job_get_hold_state(suc_jep, task_id);
@@ -302,7 +300,9 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
 *  FUNCTION
 *     This function clears the JB_ja_a_h_ids dependence cache when it
 *     contains one or more task ranges and the job array dependency
-*     predecessor list is empty (-hold_jid_ad option).
+*     predecessor list is empty (-hold_jid_ad option). It might also
+*     release the JHELD flag of the JAT_state field for enrolled tasks
+*     with MINUS_H_TGT_JA_AD in the JAT_hold field.
 *
 *  INPUTS
 *     lListElem *suc_jep - JB_Type element
@@ -337,9 +337,10 @@ bool sge_task_depend_flush(lListElem *suc_jep, lList **alpp)
    }
 
    /* ensure empty hold states are consistent */ 
-   if(lGetNumberOfElem(lGetList(suc_jep, JB_ja_ad_predecessor_list)) == 0) {
+   if (lGetNumberOfElem(lGetList(suc_jep, JB_ja_ad_request_list)) > 0 &&
+       lGetNumberOfElem(lGetList(suc_jep, JB_ja_ad_predecessor_list)) == 0) {
       lListElem *ja_task;  /* JAT_Type */
-      if(lGetList(suc_jep, JB_ja_a_h_ids)) {
+      if (lGetList(suc_jep, JB_ja_a_h_ids)) {
          const lListElem *range;
          lList *a_h_ids = lCopyList("", lGetList(suc_jep, JB_ja_a_h_ids));
          for_each(range, a_h_ids) {

@@ -47,7 +47,7 @@
 #define MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL  _MESSAGE(19021, _("selects queues, which are in the given state(s)"))
 #define MSG_QSTAT_USAGE_SHOWREQUESTEDRESOURCESOFJOB    _MESSAGE(19022, _("show requested resources of job(s)"))
 #define MSG_QSTAT_USAGE_SHOWPENDINGRUNNINGSUSPENDESZOMBIEJOBS    _MESSAGE(19023, _("show pending, running, suspended, zombie jobs,"))
-#define MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD    _MESSAGE(19024, _("jobs with a user/operator/system/ja_ad hold, "))
+#define MSG_QSTAT_USAGE_JOBSWITHAUSEROPERATORSYSTEMHOLD    _MESSAGE(19024, _("jobs with a user/operator/system/array-dependency hold, "))
 #define MSG_QSTAT_USAGE_JOBSWITHSTARTTIMEINFUTORE    _MESSAGE(19025, _("jobs with a start time in future or any combination only."))
 #define MSG_QSTAT_USAGE_HISABBREVIATIONFORHUHOHSHJHA    _MESSAGE(19026, _("h is an abbreviation for huhohshdhjha"))
 #define MSG_QSTAT_USAGE_AISABBREVIATIONFOR              _MESSAGE(19027, _("a is an abbreviation for prsh"))

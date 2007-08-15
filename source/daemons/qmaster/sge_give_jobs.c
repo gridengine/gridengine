@@ -1501,16 +1501,17 @@ lListElem *jatep
       int Modified = 0;
       u_long32 bmin, bmax, sb;
 
-      /* PING! should be be doing something if this job cannot be located? */
+      /* JA: should be be doing something if this job cannot be located? */
       suc_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_ident);
       if (!suc_jep) continue;
 
       /* infer reverse dependencies from the completed predecessor task to this successor */
-      if(sge_task_depend_get_range(&suc_range, NULL, suc_jep, jep, task_id)) {
-         /* can this ever happen? yes. eg., task ranges deleted from either job array */ 
-         u_long32 job_id = lGetUlong(jep, JB_job_number);  
+      if (sge_task_depend_get_range(&suc_range, NULL, suc_jep, jep, task_id)) {
+         /* JA: this should not really happen at all.. maybe make it a proper error? */ 
+         u_long32 job_id = lGetUlong(jep, JB_job_number);
          DPRINTF(("unknown error computing dependants of task %lu.%lu\n", job_id, task_id));
          WARNING((SGE_EVENT, MSG_JOB_DEPENDUPT4J_UU, sge_u32c(job_id), sge_u32c(task_id)));
+         lFreeElem(&suc_range);
          continue;
       }
       
@@ -1518,9 +1519,9 @@ lListElem *jatep
       range_get_all_ids(suc_range, &bmin, &bmax, &sb);
 
       /* recalculate task dependency info for this range of tasks */
-      for( ; bmin <= bmax; bmin += sb) {
+      for ( ; bmin <= bmax; bmin += sb) {
          /* returns true if suc_jep was modified */
-         if(sge_task_depend_update(suc_jep, NULL, bmin))
+         if (sge_task_depend_update(suc_jep, NULL, bmin))
             Modified = 1;
       }
       
@@ -1807,6 +1808,10 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
             sge_dstring_free(&buffer);
          }
       }
+
+      /* unlink array successor tasks. we might have done this before,
+         we do it again to purge any lingering ja_ad holds */
+      release_successor_tasks_ad(job, ja_task);
    }
 
    DEXIT;

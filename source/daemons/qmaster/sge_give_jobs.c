@@ -121,7 +121,7 @@ static void
 release_successor_jobs_ad(lListElem *jep);
 
 static void
-release_successor_tasks_ad(lListElem *jep, lListElem *jatep);
+release_successor_tasks_ad(lListElem *jep, u_long32 task_id);
 
 static int 
 send_slave_jobs(sge_gdi_ctx_class_t *ctx, 
@@ -1235,7 +1235,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_job_finish_event(jep, jatep, jr, commit_flags, NULL);
 
       /* possibly release successor tasks if there are any array dependencies on this task */
-      release_successor_tasks_ad(jep, jatep);
+      if (jataskid)
+         release_successor_tasks_ad(jep, jataskid);
 
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
@@ -1486,7 +1487,7 @@ lListElem *jep
  *****************************************************************************/
 static void release_successor_tasks_ad(
 lListElem *jep,
-lListElem *jatep  
+u_long32 task_id  
 ) {
    const lListElem *jid;
 
@@ -1495,7 +1496,6 @@ lListElem *jatep
    /* every successor job of this job might have tasks to be released */
    for_each(jid, lGetList(jep, JB_ja_ad_successor_list)) {
       u_long32 job_ident = lGetUlong(jid, JRE_job_number);
-      u_long32 task_id = lGetUlong(jatep, JAT_task_number);
       lListElem *suc_range = NULL;
       lListElem *suc_jep = NULL;
       int Modified = 0;
@@ -1809,9 +1809,10 @@ static int sge_bury_job(bool job_spooling, const char *sge_root, lListElem *job,
          }
       }
 
-      /* unlink array successor tasks. we might have done this before,
-         we do it again to purge any lingering ja_ad holds */
-      release_successor_tasks_ad(job, ja_task);
+      /* release the successor tasks. this might have been done before
+         but to make sure, we do it again. we need to do this last to
+         make sure the task is gone when dependencies are calculated */
+      release_successor_tasks_ad(job, ja_task_id);
    }
 
    DEXIT;

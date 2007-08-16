@@ -6838,6 +6838,13 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       if (answer_list_output(alpp)) {
          DRETURN(1);
       }
+      if (*epp == NULL){
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_FILE_ERRORREADINGINFILE));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return 1;
+      }
+
       DTRACE;
    } else {
       const char *name = NULL;

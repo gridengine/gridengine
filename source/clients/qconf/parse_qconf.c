@@ -6871,6 +6871,12 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
          DEXIT;
          return 1;
       }
+      if (*epp == NULL){
+         SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_FILE_ERRORREADINGINFILE));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return 1;
+      }
       DTRACE;
    } else {
       const char *name = NULL;

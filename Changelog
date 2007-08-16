@@ -1,3 +1,8 @@
+RN-2007-08-16-0: Bugfix : qconf -(A,D,M,R)attr dumps core when the supplied file is empty
+                 Bugster: 6578213
+                 Issue  : 2327
+                 Review : JG
+
 HP-2007-08-06-0: Bugfix:    - Overflow of group members in getgrgid_r() call on
                               Interix causes submit clients and execd to fail.
                             - Fixed broken build.

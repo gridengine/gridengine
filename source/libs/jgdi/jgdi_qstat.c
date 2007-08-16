@@ -619,9 +619,11 @@ static int jgdi_qstat_job_soft_requested_queue(job_handler_t *handler, const cha
 static int jgdi_qstat_job_master_hard_requested_queue(job_handler_t* handler, const char* name, lList **alpp);
 static int jgdi_qstat_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
 static int jgdi_qstat_job_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
+static int jgdi_qstat_job_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
+static int jgdi_qstat_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 static int jgdi_qstat_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp);
 
-   
+
    
 static int jgdi_qstat_job(job_handler_t* handler, u_long32 jid, job_summary_t *summary, lList **alpp) {
    jgdi_job_ctx_t *ctx = (jgdi_job_ctx_t*)handler->ctx;
@@ -986,6 +988,30 @@ static int jgdi_qstat_job_predecessor(job_handler_t* handler, u_long32 jid, lLis
    DRETURN(0);
 }
 
+static int jgdi_qstat_job_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp) {
+   jgdi_job_ctx_t *ctx = (jgdi_job_ctx_t*)handler->ctx;
+   DENTER(JGDI_LAYER, "jgdi_qstat_job_ad_predecessor_requested");
+
+   ctx->result = JobSummaryImpl_addRequestedArrayPredecessor(ctx->jni_env, ctx->job, name, alpp);
+   
+   if (ctx->result != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   DRETURN(0);
+}
+
+static int jgdi_qstat_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lList** alpp) {
+   jgdi_job_ctx_t *ctx = (jgdi_job_ctx_t*)handler->ctx;
+   DENTER(JGDI_LAYER, "jgdi_qstat_job_ad_predecessor");
+
+   ctx->result = JobSummaryImpl_addArrayPredecessor(ctx->jni_env, ctx->job, jid, alpp);
+   
+   if (ctx->result != JGDI_SUCCESS) {
+      DRETURN(-1);
+   }
+   DRETURN(0);
+}
+
 static int jgdi_qstat_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp) {
    jgdi_job_ctx_t *ctx = (jgdi_job_ctx_t*)handler->ctx;
    jboolean add_result = false;
@@ -1023,6 +1049,8 @@ static jgdi_result_t jgdi_qstat_job_init(job_handler_t* handler, jgdi_job_ctx_t 
    handler->report_master_hard_requested_queue = jgdi_qstat_job_master_hard_requested_queue;
    handler->report_predecessor_requested = jgdi_qstat_job_predecessor_requested;
    handler->report_predecessor = jgdi_qstat_job_predecessor;
+   handler->report_ad_predecessor_requested = jgdi_qstat_job_ad_predecessor_requested;
+   handler->report_ad_predecessor = jgdi_qstat_job_ad_predecessor;
    handler->report_job_finished = jgdi_qstat_job_finished;
    
    ctx->result = JGDI_SUCCESS;

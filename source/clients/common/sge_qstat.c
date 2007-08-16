@@ -2362,8 +2362,6 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
          }
       }
 
-      /* PING! should we be returning ja_ad predecessors? */
-
       if (handler->report_predecessor_requested) {
          ql = lGetList(job, JB_jid_request_list );
          if (ql) {
@@ -2405,6 +2403,52 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
             if (handler->report_predecessors_finished && 
                 (ret=handler->report_predecessors_finished(handler, alpp))) {
                DPRINTF(("handler->report_predecessors_finished failed\n"));
+               goto error;
+            }
+         }
+      }
+
+      if (handler->report_ad_predecessor_requested) {
+         ql = lGetList(job, JB_ja_ad_request_list );
+         if (ql) {
+            if (handler->report_ad_predecessors_requested_started && 
+                (ret=handler->report_ad_predecessors_requested_started(handler, alpp))) {
+               DPRINTF(("handler->report_ad_predecessors_requested_started failed\n"));
+               goto error;
+            }
+            
+            for_each(qrep, ql) {
+               if((ret=handler->report_ad_predecessor_requested(handler, lGetString(qrep, JRE_job_name), alpp))) {
+                  DPRINTF(("handler->report_ad_predecessor_requested failed\n"));
+                  goto error;
+               }
+            }
+            
+            if (handler->report_ad_predecessors_requested_finished && 
+                (ret=handler->report_ad_predecessors_requested_finished(handler, alpp))) {
+               DPRINTF(("handler->report_ad_predecessors_requested_finished failed\n"));
+               goto error;
+            }
+         }
+      }
+      if (handler->report_ad_predecessor) {
+         ql = lGetList(job, JB_ja_ad_predecessor_list);
+         if (ql) {
+            if (handler->report_ad_predecessors_started && 
+                (ret=handler->report_ad_predecessors_started(handler, alpp))) {
+               DPRINTF(("handler->report_ad_predecessors_started failed\n"));
+               goto error;
+            }
+            
+            for_each(qrep, ql) {
+               if((ret=handler->report_ad_predecessor(handler, lGetUlong(qrep, JRE_job_number), alpp))) {
+                  DPRINTF(("handler->report_ad_predecessor failed\n"));
+                  goto error;
+               }
+            }
+            if (handler->report_ad_predecessors_finished && 
+                (ret=handler->report_ad_predecessors_finished(handler, alpp))) {
+               DPRINTF(("handler->report_ad_predecessors_finished failed\n"));
                goto error;
             }
          }
@@ -2859,6 +2903,7 @@ void qstat_filter_add_core_attributes(qstat_env_t *qstat_env)
       JB_type,
       JB_pe,
       JB_jid_predecessor_list,
+      JB_ja_ad_predecessor_list,
       JB_job_name,
       JB_submission_time,
       JB_pe_range,
@@ -3046,6 +3091,7 @@ void qstat_filter_add_r_attributes(qstat_env_t *qstat_env) {
       JB_soft_queue_list,
       JB_master_hard_queue_list,
       JB_jid_request_list,
+      JB_ja_ad_request_list,
       NoName
    };
    const int nm_JAT_Type_template[] = {

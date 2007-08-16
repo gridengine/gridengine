@@ -285,6 +285,14 @@ struct job_handler_str {
   int (*report_predecessor)(job_handler_t* handler, u_long32 jid, lList **alpp);
   int (*report_predecessors_finished)(job_handler_t* handler, lList **alpp);
   
+  int (*report_ad_predecessors_requested_started)(job_handler_t* handler, lList **alpp);
+  int (*report_ad_predecessor_requested)(job_handler_t* handler, const char* name, lList **alpp);
+  int (*report_ad_predecessors_requested_finished)(job_handler_t* handler, lList **alpp);
+  
+  int (*report_ad_predecessors_started)(job_handler_t* handler, lList **alpp);
+  int (*report_ad_predecessor)(job_handler_t* handler, u_long32 jid, lList **alpp);
+  int (*report_ad_predecessors_finished)(job_handler_t* handler, lList **alpp);
+
   int (*report_job_finished)(job_handler_t* handler, u_long32 jid, lList **alpp);
   
    

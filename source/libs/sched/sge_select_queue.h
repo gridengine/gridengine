@@ -103,7 +103,7 @@ typedef struct {
    lList      *acl_list;          /* the user sets (US_Type)                        */
    lList      *hgrp_list;         /* the host group list (HGRP_Type)                */
    lList      *rqs_list;          /* the resource quota set list (RQS_Type)         */ 
-   lList      *ar_list;           /* the resource quota set list (RQS_Type)         */ 
+   lList      *ar_list;           /* the advance reservation list (AR_Type)         */ 
    bool       is_reservation;     /* true, if a reservation for this job should be done */
    bool       is_advance_reservation; /* true for advance reservation scheduling    */
    bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */

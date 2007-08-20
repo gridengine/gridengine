@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
          argv++;
          if (argc== 1)
             usage(1);
-         if ((in = open(argv[1], O_CREAT|O_APPEND|O_WRONLY))<0) {
+         if ((in = open(argv[1], O_CREAT|O_APPEND|O_WRONLY, 0644))<0) {
             fprintf(stderr, "cannot write to \"%s\": %s\n", 
                argv[1], strerror(errno));
          }

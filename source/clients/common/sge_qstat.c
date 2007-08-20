@@ -1986,16 +1986,6 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep,
    if (sge_time) {
       summary.submit_time = (time_t)lGetUlong(job, JB_submission_time);
       summary.start_time = (time_t)lGetUlong(jatep, JAT_start_time);
-#if 0
-      /* AH: intermediate change to monitor JAT_stop_initiate_time 
-       * must be removed before 6.0 if really needed a better possiblity 
-       * for monitoring must be found (TODO)
-       */
-      if (getenv("JAT_stop_initiate_time") && (lGetUlong(jatep, JAT_state) & JDELETED))
-         summary.stop_initiate_time = (time_t)lGetUlong(jatep, JAT_stop_initiate_time);
-      else
-#endif
-         summary.start_time = (time_t)lGetUlong(jatep, JAT_start_time);
    }
    
    if (lGetUlong(jatep, JAT_status)==JRUNNING || lGetUlong(jatep, JAT_status)==JTRANSFERING) {

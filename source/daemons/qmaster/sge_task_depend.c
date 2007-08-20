@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+
 #include "sge_task_depend.h"
 #include "sge_ja_task.h"
 #include "sge_job_qmaster.h"
@@ -45,10 +47,12 @@ static u_long32 task_depend_div_floor(u_long32 a, u_long32 b)
    return a / b;
 }
 
+
 static u_long32 nearest_index_in_A(u_long32 i, u_long32 t0, u_long32 sa) 
 {
    return t0 + task_depend_div_floor(i - t0, sa) * sa;
 }
+
 
 static void task_depend(u_long32 *lb, u_long32 *ub, u_long32 t0, 
                         u_long32 sa, u_long32 sb, u_long32 step_b_id)
@@ -60,6 +64,7 @@ static void task_depend(u_long32 *lb, u_long32 *ub, u_long32 t0,
    *lb = nearest_index_in_A(i, t0, sa);
    *ub = nearest_index_in_A(i + sb - 1, t0, sa);
 }
+
 
 /**************** qmaster/task/sge_task_depend_get_range() *******************
 *  NAME
@@ -97,8 +102,7 @@ static void task_depend(u_long32 *lb, u_long32 *ub, u_long32 t0,
 *     It is safe to swap pre_jep and suc_jep provided that the given task id
 *     belongs to pre_jep (therefore reversing the sense of the dependence).
 *
-*  MT-NOTE
-*     sge_task_depend_get_range() is MT safe
+*     MT-NOTE: sge_task_depend_get_range() is MT safe
 *
 ******************************************************************************/
 int sge_task_depend_get_range(lListElem **range, lList **alpp, 
@@ -146,6 +150,7 @@ int sge_task_depend_get_range(lListElem **range, lList **alpp,
    DRETURN(0);
 }
 
+
 /*****************************************************************************
  Tasks matching this profile are considered finished for dependence purposes
  *****************************************************************************/
@@ -160,7 +165,7 @@ static bool task_depend_is_finished(const lListElem *job, u_long32 task_id)
    }
 
    ja_task = job_search_task(job, NULL, task_id);
-   if (ja_task) {
+   if (ja_task != NULL) {
       const lListElem *task = NULL; /* PE_Type */
       if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
          DRETURN(false);
@@ -172,20 +177,22 @@ static bool task_depend_is_finished(const lListElem *job, u_long32 task_id)
          }
       }
    }
+
    DRETURN(true);
 }
+
 
 /**************** qmaster/task/sge_task_depend_update() *******************
 *  NAME
 *     sge_task_depend_update() -- update job array dependencies for a task
 *
 *  SYNOPSIS
-*     bool sge_task_depend_update(lListElem *suc_jep, lList **alpp,
+*     bool sge_task_depend_update(lListElem *jep, lList **alpp,
                                   u_long32 task_id)
 *
 *  FUNCTION
 *     This function recalculates array dependency hold information
-*     for a particular task id of job suc_jep (-hold_jid_ad option).
+*     for a particular task id of job jep (-hold_jid_ad option).
 *     If the task is independent (i.e., has no predecessor tasks that
 *     are in an unfinished state), its id will be removed from the
 *     JB_ja_a_h_ids hold range and potentially moved to JB_ja_n_h_ids.
@@ -193,9 +200,9 @@ static bool task_depend_is_finished(const lListElem *job, u_long32 task_id)
 *     causing task mod events to be generated if the task was updated.
 *
 *  INPUTS
-*     lListElem *suc_jep - JB_Type element
-*     lList **alpp       - AN_Type list pointer
-*     u_long32 task_id   - a task id in job suc_jep
+*     lListElem *jep   - JB_Type element
+*     lList **alpp     - AN_Type list pointer
+*     u_long32 task_id - a task id in job jep
 *
 *  RESULT
 *     bool - true if the job was modified, otherwise false
@@ -208,13 +215,13 @@ static bool task_depend_is_finished(const lListElem *job, u_long32 task_id)
 *     Update status is returned to help the caller decide whether modify
 *     event code should be emitted.
 *
-*     If the job argument suc_jep is NULL, or the task indicated by task_id
+*     If the job argument jep is NULL, or the task indicated by task_id
 *     is already enrolled into ja_tasks, false is returned.
 *
 *     MT-NOTE: Is not thread safe. Reads from the global Job-List
 *
 ******************************************************************************/
-bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
+bool sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id)
 {
    const lListElem *pre = NULL;  /* JRE_Type */
    u_long32 hold_state, new_state;
@@ -223,19 +230,19 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    DENTER(TOP_LAYER, "sge_task_depend_update");
 
    /* this should not really be necessary */
-   if (suc_jep == NULL) {
-      DPRINTF(("got NULL for suc_jep job argument\n"));
+   if (jep == NULL) {
+      DPRINTF(("got NULL for job argument\n"));
       DRETURN(false);
    }
 
    /* JA: FIXME: now emulating qalter -h; just hold the task even if
       it is running, which handles task failed followed by qmod -c */
-   if (task_depend_is_finished(suc_jep, task_id)) {
+   if (task_depend_is_finished(jep, task_id)) {
       DRETURN(false);
    }
 
    /* process the resolved predecessor list */
-   for_each(pre, lGetList(suc_jep, JB_ja_ad_predecessor_list)) {
+   for_each(pre, lGetList(jep, JB_ja_ad_predecessor_list)) {
       u_long32 sa, sa_task_id, amin, amax;
       const lListElem *pred_jep = NULL; /* JB_Type */
       lListElem *dep_range = NULL;      /* RN_Type */
@@ -246,7 +253,7 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
       if (!pred_jep) continue;
 
       /* use the RSP functions to determine dependent predecessor task range */
-      if (sge_task_depend_get_range(&dep_range, alpp, pred_jep, suc_jep, task_id)) {
+      if (sge_task_depend_get_range(&dep_range, alpp, pred_jep, jep, task_id)) {
          /* since we can't calculate it, we must assume dependence */
          DPRINTF(("could not calculate dependent iteration ranges for a job\n"));
          lFreeElem(&dep_range);
@@ -272,7 +279,7 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    }
 
    /* alter the hold state based on dependence info */
-   hold_state = job_get_hold_state(suc_jep, task_id);
+   hold_state = job_get_hold_state(jep, task_id);
    if (Depend) {
       new_state = hold_state | MINUS_H_TGT_JA_AD;
    } else {
@@ -280,13 +287,15 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    }
 
    /* update the hold state, possibly moving the task between n_h_ids and
-      a_h_ids (or updating JAT_hold and JAT_state for enrolled tasks) */
+      a_h_ids (or maybe update JAT_hold and JAT_state for enrolled tasks) */
    if (new_state != hold_state) {
-      job_set_hold_state(suc_jep, alpp, task_id, new_state);
-      /* all task mod events will need to be added individually */
-      if (job_is_enrolled(suc_jep, task_id)) {
-         lListElem *ja_task = job_search_task(suc_jep, NULL, task_id); 
-         sge_add_jatask_event(sgeE_JATASK_MOD, suc_jep, ja_task);
+      job_set_hold_state(jep, alpp, task_id, new_state);
+      if (job_is_enrolled(jep, task_id)) {
+         /* all task mod events will need to be added individually */
+         lListElem *ja_task = job_search_task(jep, NULL, task_id);
+         if (ja_task != NULL)
+            sge_add_jatask_event(sgeE_JATASK_MOD, jep, ja_task);
+         /* false return value indicates we did not modify the job */
          DRETURN(false);
       }
       DRETURN(true);
@@ -295,13 +304,65 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
    DRETURN(false);
 }
 
+/****************** qmaster/task/sge_task_depend_init() **********************
+*  NAME
+*     sge_task_depend_init() -- initialize job array task dependencies
+*
+*  SYNOPSIS
+*     bool sge_task_depend_init(lListElem *jep, lList **alpp)
+*
+*  FUNCTION
+*     This function inits the JB_ja_a_h_ids dependence cache when the 
+*     array dependency request list is non-empty (-hold_jid_ad option). 
+*     It might also update the JHELD flag of the JAT_state field for enrolled 
+*     tasks with MINUS_H_TGT_JA_AD in the JAT_hold field. Task mod events will
+*     be generated if any enrolled tasks are updated.
+*
+*  INPUTS
+*     lListElem *jep - JB_Type element
+*     lList **alpp   - AN_Type list pointer
+*
+*  RESULT
+*     bool - true if the job was modified, otherwise false
+*
+*  NOTES
+*     Use thus function to completely recalculate array dependencies when
+*     the ja_ad_predecessors list is modified, or upon qmaster restart.
+*
+*     If the job was never an array successor, this function has no effect.
+*
+*     MT-NOTE: sge_task_depend_init() is not MT safe (calls MT unsafe method)
+*
+******************************************************************************/
+bool sge_task_depend_init(lListElem *jep, lList **alpp)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "sge_task_depend_init");
+
+   if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0) {
+      if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
+         /* fast case where all predecessors are "gone" */         
+         sge_task_depend_flush(jep, alpp);
+      } else {
+         u_long32 taskid, b0, b1, sb;
+         job_get_submit_task_ids(jep, &b0, &b1, &sb);
+         for (taskid = b0; taskid <= b1; taskid += sb) {
+            if (sge_task_depend_update(jep, alpp, taskid))
+               ret = true;
+         }
+      }
+   }
+   
+   DRETURN(ret);
+}
 
 /****************** qmaster/task/sge_task_depend_flush() **********************
 *  NAME
 *     sge_task_depend_flush() -- flush job array task dependencies
 *
 *  SYNOPSIS
-*     bool sge_task_depend_flush(lListElem *suc_jep, lList **alpp)
+*     bool sge_task_depend_flush(lListElem *jep, lList **alpp)
 *
 *  FUNCTION
 *     This function clears the JB_ja_a_h_ids dependence cache when it
@@ -312,8 +373,8 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
 *     be generated if the enrolled task was updated.
 *
 *  INPUTS
-*     lListElem *suc_jep - JB_Type element
-*     lList **alpp       - AN_Type list pointer
+*     lListElem *jep - JB_Type element
+*     lList **alpp   - AN_Type list pointer
 *
 *  RESULT
 *     bool - true if the job was modified, otherwise false
@@ -323,59 +384,59 @@ bool sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id)
 *     JB_ja_ad_predecessor_list as a way of ensuring that dependence state
 *     information in both structures is consistent. It is more efficient
 *     to call this function than to update dependency information accross
-*     the entire range of sub-tasks of job suc_jep.
+*     the entire range of sub-tasks of job jep.
 *
 *     If the job was never an array successor, this function has no effect.
 *
 *     MT-NOTE: sge_task_depend_flush() is MT safe
 *
 ******************************************************************************/
-bool sge_task_depend_flush(lListElem *suc_jep, lList **alpp)
+bool sge_task_depend_flush(lListElem *jep, lList **alpp)
 {
    bool ret = false;
 
    DENTER(TOP_LAYER, "sge_task_depend_flush");
 
    /* this should not really be necessary */
-   if (suc_jep == NULL) {
-      DPRINTF(("got NULL for suc_jep job argument\n"));
+   if (jep == NULL) {
+      DPRINTF(("got NULL for job argument\n"));
       DRETURN(false);
    }
 
    /* ensure empty hold states are consistent. if the reqest list is empty
       then the user doesn't want to change predecessors */
-   if (lGetNumberOfElem(lGetList(suc_jep, JB_ja_ad_request_list)) > 0 &&
-       lGetNumberOfElem(lGetList(suc_jep, JB_ja_ad_predecessor_list)) == 0) {
+   if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0 &&
+       lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
       lListElem *ja_task;  /* JAT_Type */
-      if (lGetList(suc_jep, JB_ja_a_h_ids)) {
+      if (lGetList(jep, JB_ja_a_h_ids)) {
          const lListElem *range;
-         lList *a_h_ids = lCopyList("", lGetList(suc_jep, JB_ja_a_h_ids));
+         lList *a_h_ids = lCopyList("", lGetList(jep, JB_ja_a_h_ids));
          for_each(range, a_h_ids) {
             u_long32 rmin, rmax, rstep, hold_state;
             range_get_all_ids(range, &rmin, &rmax, &rstep);
             for ( ; rmin <= rmax; rmin += rstep) {
-               hold_state = job_get_hold_state(suc_jep, rmin);
+               hold_state = job_get_hold_state(jep, rmin);
                hold_state &= ~MINUS_H_TGT_JA_AD;
-               job_set_hold_state(suc_jep, alpp, rmin, hold_state);
+               job_set_hold_state(jep, alpp, rmin, hold_state);
             }
          }
          lFreeList(&a_h_ids);
          /* just make sure it is null */
-         if (lGetList(suc_jep, JB_ja_a_h_ids)) {
+         if (lGetList(jep, JB_ja_a_h_ids)) {
             a_h_ids = NULL;
-            lXchgList(suc_jep, JB_ja_a_h_ids, &a_h_ids);
+            lXchgList(jep, JB_ja_a_h_ids, &a_h_ids);
             lFreeList(&a_h_ids);
          }
          ret = true;
       }
       /* unhold any arary held tasks that are enrolled */
-      for_each(ja_task, lGetList(suc_jep, JB_ja_tasks)) {
+      for_each(ja_task, lGetList(jep, JB_ja_tasks)) {
          u_long32 task_id = lGetUlong(ja_task, JAT_task_number);
-         u_long32 hold_state = job_get_hold_state(suc_jep, task_id);
+         u_long32 hold_state = job_get_hold_state(jep, task_id);
          if ((hold_state & MINUS_H_TGT_JA_AD) != 0) {
             hold_state &= ~MINUS_H_TGT_JA_AD;
-            job_set_hold_state(suc_jep, alpp, task_id, hold_state);
-            sge_add_jatask_event(sgeE_JATASK_MOD, suc_jep, ja_task);
+            job_set_hold_state(jep, alpp, task_id, hold_state);
+            sge_add_jatask_event(sgeE_JATASK_MOD, jep, ja_task);
          }
       }
    }

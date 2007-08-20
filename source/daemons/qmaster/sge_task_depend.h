@@ -44,9 +44,12 @@ sge_task_depend_get_range(lListElem **range, lList **alpp,
                           const lListElem *suc_jep, u_long32 task_id);
 
 bool
-sge_task_depend_update(lListElem *suc_jep, lList **alpp, u_long32 task_id);
+sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id);
 
 bool
-sge_task_depend_flush(lListElem *suc_jep, lList **alpp);
+sge_task_depend_init(lListElem *jep, lList **alpp);
+
+bool
+sge_task_depend_flush(lListElem *jep, lList **alpp);
 
 #endif /* __SGE_TASK_DEPEND_H */

@@ -107,6 +107,7 @@
 #include "spool/sge_spooling.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sge_resource_quota_qmaster.h"
+#include "sge_task_depend.h"
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -957,6 +958,10 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       /* also do this for array dependency predecessors */
       job_suc_pre_ad(jep);
+
+      /* array successor jobs need to have their cache rebuilt. this will
+         do nothing spectacular if the AD reqest list for this job is empty. */
+      sge_task_depend_init(jep, &answer_list);
 
       centry_list_fill_request(lGetList(jep, JB_hard_resource_list), 
                   NULL, *object_base[SGE_TYPE_CENTRY].list, false, true, false);

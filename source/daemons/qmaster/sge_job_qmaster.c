@@ -3688,7 +3688,6 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    lList *predecessors_id = NULL;
    lListElem *pre;
    lListElem *pre_temp;
-   u_long32 b0, b1, sb, taskid;
 
    DENTER(TOP_LAYER, "job_verify_predecessors_ad");
 
@@ -3700,11 +3699,8 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   /* these will be constant for the successor (this job) within this function */
-   job_get_submit_task_ids(job, &b0, &b1, &sb);
-
    /* only verify -hold_jid_ad option if predecessors are requested */
-   if (lGetNumberOfElem(predecessors_req) != 0) {
+   if (lGetNumberOfElem(predecessors_req) > 0) {
       /* verify -t option was used to create this job */
       if (!job_is_array(job)) {
          lFreeList(&predecessors_id);   
@@ -3803,10 +3799,8 @@ static int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    /* this obviously needs to be done before we call the update function */
    lSetList(job, JB_ja_ad_predecessor_list, predecessors_id);
 
-   /* update dependence information for each task of this job */
-   for (taskid = b0; taskid <= b1; taskid += sb) {
-      sge_task_depend_update(job, alpp, taskid);
-   }
+   /* recalculate dependence information for each task of this job */
+   sge_task_depend_init(job, alpp);
    
    DRETURN(0);
 }

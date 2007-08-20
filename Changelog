@@ -1,3 +1,14 @@
+AH-2007-08-20-0: Bugfix:    - user/system/operator hold state combinations 
+                              cause strange qstat output
+                            - Parallel RR broken if jobs wait for queue
+                              slots and no RQS configured
+                            - Resource quota can prevent dispatching of
+                              jobs that requests no resource in this quota
+                 Bugster:   6584632,6585721,6590574
+                 Issue:     2334,2338,2345
+                 Review:    JG,RD
+
+
 RD-2007-07-30-1: CVS        Created V61u1_ARI_BRANCH
 -----------------------------------------------------
 

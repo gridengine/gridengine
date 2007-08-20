@@ -166,7 +166,7 @@ drmaa_job_template_t *create_job_template(const char *job_path, const char *job_
    /* job name for hold_jid_ad list */
    drmaa_set_attribute(jt, DRMAA_JOB_NAME, job_name, NULL, 0);
 
-   /* drmaa_run_bulk_job(3) must accept “-hold_jid_ad wc_job_list” when passed through job  
+   /* drmaa_run_bulk_job(3) must accept -hold_jid_ad wc_job_list when passed through job  
       template attribute drmaa_native_specification */
    if (pred_name != NULL) {
       if (strlen(pred_name) > 256) {

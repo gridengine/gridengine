@@ -3273,7 +3273,7 @@ sequential_tag_queues_suitable4job_by_rqs(sge_assignment_t *a)
                   lSetInt(rql, RQL_result, rqs_result);
                   lSetUlong(rql, RQL_time, tt_rqs);
 
-                  if (rqs_result != DISPATCH_OK) {
+                  if (rqs_result != DISPATCH_OK && rqs_result != DISPATCH_MISSING_ATTR) {
                      schedd_mes_add(a->job_id, SCHEDD_INFO_CANNOTRUNRQSGLOBAL_SS, 
                            sge_dstring_get_string(&rue_string), sge_dstring_get_string(&rule_name));
                      if (rqs_exceeded_sort_out(a, rule, &rule_name, queue_name, host_name, &skip_cqueue_list, &skip_host_list)) {
@@ -4245,7 +4245,7 @@ parallel_rqs_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qen
 
    /* We have to set at first the slots for the case no ruleset is defined or all are enabled */
    *slots = tslots;
-   *slots = tslots_qend;
+   *slots_qend = tslots_qend;
 
    if (lGetNumberOfElem(a->rqs_list) == 0) {
       DRETURN(result);

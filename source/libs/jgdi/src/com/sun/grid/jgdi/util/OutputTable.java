@@ -346,7 +346,7 @@ public class OutputTable {
       
       public Object getValue(Object obj) {
          try {
-            return getter.invoke(obj, null);
+            return getter.invoke(obj, (java.lang.Object[])null);
          } catch (IllegalAccessException ex) {
             IllegalStateException ex1 = new IllegalStateException("No access in property " + clazz.getName() + "." + getName());
             ex1.initCause(ex);

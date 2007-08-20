@@ -44,7 +44,6 @@ import org.apache.tools.ant.util.ClasspathUtils;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class ClassFilter {
    

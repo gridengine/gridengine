@@ -100,7 +100,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
 
    /* get user list */
    if (!error) {
-      what = lWhat("%T(ALL)", UP_Type);
+      what = lWhat("%T(ALL)", UU_Type);
       user_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
                               NULL, NULL, what, NULL, &state, true);
       lFreeWhat(&what);
@@ -109,7 +109,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
 
    /* get project list */
    if (!error) {
-      what = lWhat("%T(ALL)", UP_Type);
+      what = lWhat("%T(ALL)", PR_Type);
       project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
                                  NULL, NULL, what, NULL, &state, true);
       lFreeWhat(&what);

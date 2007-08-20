@@ -36,7 +36,6 @@ import java.util.Map;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public interface Template {
 

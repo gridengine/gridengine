@@ -63,6 +63,15 @@
 
    <target name="init">
 
+      <echo>ant.java.version=${ant.java.version}</echo>
+      <condition property="supported.jdk">
+         <or>
+            <equals arg1="${ant.java.version}" arg2="1.5"/>
+            <equals arg1="${ant.java.version}" arg2="1.6"/>
+         </or>
+      </condition>
+      <fail unless="supported.jdk" message="jdk version ${ant.java.version} less than 1.5 => no jgdi" status="0"/>
+      
       <property name="sge.srcdir" location="../.."/>
       <property file="${sge.srcdir}/build_testsuite.properties"/>    
       <property file="${sge.srcdir}/build_private.properties"/>    
@@ -99,6 +108,8 @@
       <property name="project.name" value="${ant.project.name}"/>
       <property name="jar" location="${build.dir}/${project.name}.jar"/>
 
+      <property name="myjavac.source" value="1.5"/>
+      <property name="myjavac.target" value="1.5"/>
 
 
       <mkdir dir="${classes.dir}"/>
@@ -156,8 +167,8 @@
       <javac debug="true" deprecation="true" 
              destdir="${classes.dir}"
              includes="com/sun/grid/jgdi/jni/JGDIImpl.java, com/sun/grid/jgdi/jni/JGDIBase.java, com/sun/grid/jgdi/jni/EventClient.java"
-             target="${javac.target}"
-             source="${javac.source}">
+             target="${myjavac.target}"
+             source="${myjavac.source}">
          <src refid="jgdi.srcpath"/>
       </javac>
 
@@ -167,8 +178,8 @@
       <javac debug="${javac.debug}" 
              deprecation="${javac.deprecated}"  
              destdir="${classes.dir}"
-             target="${javac.target}"
-             source="${javac.source}">
+             target="${myjavac.target}"
+             source="${myjavac.source}">
          <src refid="jgdi.srcpath"/>
          <classpath refid="compile.classpath"/>
       </javac>
@@ -226,11 +237,12 @@
 
    <target name="javadoc.init" depends="init">
       <mkdir dir="${javadoc.dir}"/>
+
       <fileset id="javadoc.src.files" dir="${src.dir}">
          <include name="**/*.java"/>
-         <exclude name="**/reflect/*.java"/>
-         <exclude name="com/sun/grid/jgdi/configuration/xml/*.java"/>
-         <exclude name="com/sun/grid/jgdi/configuration/Util.java"/>
+         <!-- exclude name="**/reflect/*.java"/ -->
+         <!-- exclude name="com/sun/grid/jgdi/configuration/xml/*.java"/ -->
+         <!-- exclude name="com/sun/grid/jgdi/configuration/Util.java"/ -->
          <exclude name="com/sun/grid/jgdi/event/QEvent.java"/>
          <exclude name="com/sun/grid/jgdi/security/*.java"/>
       </fileset>
@@ -241,23 +253,23 @@
          <exclude name="**/*Testsuite.java"/>
          <exclude name="**/reflect/*.java"/>
          <exclude name="**/*Descriptor.java"/>
-         <exclude name="com/sun/grid/jgdi/configuration/*Impl.java"/>
+         <!--exclude name="com/sun/grid/jgdi/configuration/*Impl.java"/ -->
          <exclude name="com/sun/grid/jgdi/monitoring/*Impl.java"/>
       </fileset>   
 
    </target>    
 
    <target  name="javadoc" depends="javadoc.init" 
-            description="Javadoc for N1GE Java Admin API.">
+            description="Javadoc for SGE Java Admin API.">
       
       <javadoc destdir="${javadoc.dir}" 
                packagenames="com.sun.grid.*"
                overview="docs/Overview.html">
-         <doctitle><![CDATA[<h1>N1&trade; Grid Engine Java Admin API</h1>]]></doctitle>
-         <bottom><![CDATA[<i>Copyright &#169; 2005 Sun Microsystems, Inc. All rights reserved.</i>]]></bottom>
+         <doctitle><![CDATA[<h1>Sun&trade; Grid Engine Java Admin API</h1>]]></doctitle>
+         <bottom><![CDATA[<i>Copyright &#169; 2007 Sun Microsystems, Inc. All rights reserved.</i>]]></bottom>
          <fileset refid="javadoc.src.files"/>
          <fileset refid="javadoc.gensrc.files"/>
-         <tag name="todo" scope="all"  description="TODO:"/>
+         <tag name="jgdi.todo" scope="all"  description="TODO:"/>
       </javadoc>
    </target>
    
@@ -395,8 +407,8 @@
       <echo>java.library.path: ${java.library.path}</echo>      
       <cullconv packageName="com.sun.grid.jgdi.configuration"
                 buildDir="${build.dir}/tmp"
-                target="${javac.target}"
-                source="${javac.source}">
+                target="${myjavac.target}"
+                source="${myjavac.source}">
          <classpath>
             <path location="${cullconv.jar}"/>
          </classpath>
@@ -417,6 +429,9 @@
                            template="templates/javamodel.jsp"
                            scope="objects">
             <pattern objectFilter="root depend"/>
+            <pattern objectFilter="objects">
+               <include name="AN_Type"/>
+            </pattern>
          </javatemplateconv>
 
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -424,8 +439,27 @@
                            classSuffix="Impl"
                            scope="objects">
             <pattern objectFilter="root depend"/>
+            <pattern objectFilter="objects">
+               <include name="AN_Type"/>
+            </pattern>
          </javatemplateconv>
-         
+
+<!--         
+         <javatemplateconv outputDir="${gensrc.dir}"
+                           template="templates/javamodel_mbean.jsp"
+                           classSuffix="BeanMBean"
+                           scope="objects">   
+            <pattern objectFilter="root depend"/>
+         </javatemplateconv>
+
+         <javatemplateconv outputDir="${gensrc.dir}"
+                           template="templates/javamodel_impl_mbean.jsp"
+                           classSuffix="Bean"
+                           scope="objects">
+            <pattern objectFilter="root depend"/>
+         </javatemplateconv>
+-->                  
+                  
          
          <templateconv scope="definition"
                        outputFile="${gensrc.dir}/com/sun/grid/jgdi/configuration/ConfigurationFactory.java"
@@ -443,6 +477,9 @@
                            template="templates/javadescriptor.jsp"
                            scope="objects">
             <pattern objectFilter="root depend"/>
+            <pattern objectFilter="objects">
+               <include name="AN_Type"/>
+            </pattern>
          </javatemplateconv>
 
          <javatemplateconv outputDir="${gensrc.dir}"
@@ -505,6 +542,19 @@
          <templateconv scope="definition"
                        outputFile="${gensrc.dir}/com/sun/grid/jgdi/rmi/JGDIRemoteDescriptor.java"
                        templateFile="templates/java_rmi_jgdi_descriptor.jsp">
+            <pattern objectFilter="root primitive_root"/>
+         </templateconv>
+
+         <!-- JMX ====================================== -->               
+         <templateconv scope="definition"
+                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/management/mbeans/JGDIJMXMBean.java"
+                       templateFile="templates/java_jmx_jgdi.jsp">
+            <pattern objectFilter="root primitive_root"/>
+         </templateconv>
+
+         <templateconv scope="definition"
+                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/management/mbeans/JGDIJMX.java"
+                       templateFile="templates/java_jmx_jgdi_impl.jsp">
             <pattern objectFilter="root primitive_root"/>
          </templateconv>
 
@@ -594,8 +644,8 @@
            description="Create a all generated native source files"
            if="isJavaBuildHost">  
       <cullconv packageName="com.sun.grid.jgdi.configuration"
-                source="${javac.source}"
-                target="${javac.target}"
+                source="${myjavac.source}"
+                target="${myjavac.target}"
                 buildDir="${build.dir}/tmp">
          <classpath>
             <path location="${cullconv.jar}"/>
@@ -673,6 +723,7 @@
             </package>
             <package name="com.sun.grid.jgdi.configuration">
                <include name="Util"/>
+               <include name="JGDIAnswer"/>
             </package>
             <package name="com.sun.grid.jgdi.monitoring">
                <exclude name="TestClusterQueueSummary"/>
@@ -805,6 +856,9 @@
             <equals arg1="${sge.arch}" arg2="solaris64"/>
             <equals arg1="${sge.arch}" arg2="sol-amd64"/>
             <equals arg1="${sge.arch}" arg2="lx24-amd64"/>
+            <equals arg1="${sge.arch}" arg2="lx24-ia64"/>
+            <equals arg1="${sge.arch}" arg2="lx26-amd64"/>
+            <equals arg1="${sge.arch}" arg2="lx26-ia64"/>
             <equals arg1="${sge.arch}" arg2="hp11-64"/>
             <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
          </or>   
@@ -921,7 +975,7 @@
          <sysproperty key="java.util.logging.config.file" value="test/logging.properties"/>
          <sysproperty key="cluster.config.file.location" value="${cluster.config.file.location}"/>
          <classpath refid="test.classpath"/>
-         <formatter type="xml" usefile="no"/>
+         <formatter type='brief' usefile='false'/>
          <batchtest todir="${build.dir}" >
             <fileset dir="test">
                <include name="**/Test*.java"/>

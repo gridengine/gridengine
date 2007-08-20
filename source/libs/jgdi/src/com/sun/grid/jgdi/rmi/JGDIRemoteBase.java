@@ -47,15 +47,15 @@ import java.util.List;
 /**
  * Base interface for the JGDIRemote.
  *
- * @todo   optional ??
+ * @jgdi.todo   optional ??
  *         <p>add qquota functions</p>
  *
- * @todo   optional ??
+ * @jgdi.todo   optional ??
  *         <p>add qstat functions</p>
  *
- * @todo   optional ??
+ * @jgdi.todo   optional ??
  *         <p>add qhost functions</p>
- * @todo   optional ??
+ * @jgdi.todo   optional ??
  *         <p>add qmod functions</p>
  */
 public interface JGDIRemoteBase extends Remote {
@@ -241,7 +241,7 @@ public interface JGDIRemoteBase extends Remote {
     
     
     /**
-     * <p>The N1 Grid Engine scheduler sge_schedd(8) is forced to print
+     * <p>The Sun&trade; Grid Engine scheduler sge_schedd(8) is forced to print
      *   trace messages of its  next scheduling run to the file
      *  &lt;sge_root&gt;/&lt;cell&gt;/common/schedd_runlog.
      *   The messages indicate the reasons for jobs and queues not being
@@ -253,7 +253,7 @@ public interface JGDIRemoteBase extends Remote {
     public void triggerSchedulerMonitoring() throws RemoteException;
     
     /**
-     * <p>Return the host where the N1 Grid Engine scheduler sge_schedd(8) is
+     * <p>Return the host where the Sun&trade; Grid Engine scheduler sge_schedd(8) is
      *   active or null otherwise</p>
      * <p>The CLI equivialent for this method is <code>qconf -sss</code> (see man qconf(1)).</p>
      * @throws RemoteException RemoteException on any error on the GDI level

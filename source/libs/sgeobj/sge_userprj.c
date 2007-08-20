@@ -40,43 +40,91 @@
 
 #include "msg_sgeobjlib.h"
 
-/****** sgeobj/userprj/userprj_list_locate() **********************************
+/****** sgeobj/userprj/prj_list_locate() **********************************
 *  NAME
-*     userprj_list_locate() -- Find a user/project in a list 
+*     prj_list_locate() -- Find project in list 
 *
 *  SYNOPSIS
-*     lListElem* userprj_list_locate(lList *userprj_list, 
-*                                    const char *uerprj_name) 
+*     lListElem* prj_list_locate(lList *lp, const char *name) 
 *
 *  FUNCTION
-*     Find a user/project with the primary key "userprj_name" in
-*     the "userprj_list". 
+*     Find project in list. 
 *
 *  INPUTS
-*     lList *userprj_list     - UP_Type list 
-*     const char *uerprj_name - User or project name 
+*     lList *lp        - PR_Type list 
+*     const char *name - project name 
 *
 *  RESULT
-*     lListElem* - pointer to user or project element
-******************************************************************************/
-lListElem *
-userprj_list_locate(const lList *userprj_list, const char *uerprj_name) 
+*     lListElem* - NULL or element pointer
+*******************************************************************************/
+lListElem *prj_list_locate(const lList *lp, const char *name) 
 {
-   return lGetElemStr(userprj_list, UP_name, uerprj_name);
+   lListElem *ep = NULL;
+
+   DENTER(BASIS_LAYER, "prj_list_locate");
+
+   ep = lGetElemStr(lp, PR_name, name);
+
+   DRETURN(ep);
 }
 
-const char *
-userprj_list_append_to_dstring(const lList *this_list, dstring *string)
+/****** sgeobj/userprj/user_list_locate() **********************************
+*  NAME
+*     user_list_locate() -- Find user in list 
+*
+*  SYNOPSIS
+*     lListElem* user_list_locate(lList *lp, const char *name) 
+*
+*  FUNCTION
+*     Find user in list. 
+*
+*  INPUTS
+*     lList *lp        - UU_Type list 
+*     const char *name - user name 
+*
+*  RESULT
+*     lListElem* - NULL or element pointer
+*******************************************************************************/
+lListElem *user_list_locate(const lList *lp, const char *name) 
+{
+   lListElem *ep = NULL;
+
+   DENTER(BASIS_LAYER, "user_list_locate");
+
+   ep = lGetElemStr(lp, UU_name, name);
+
+   DRETURN(ep);
+}
+
+
+/****** sgeobj/userprj/prj_list_append_to_dstring() **********************************
+*  NAME
+*     prj_list_append_to_dstring() -- append prj from list to dstring
+*
+*  SYNOPSIS
+*     const char* prj_list_append_to_dstring(lList *lp, dstring *string) 
+*
+*  FUNCTION
+*     Append all projects in list lp to dstring string.
+*
+*  INPUTS
+*     lList *lp        - PR_Type list 
+*     dstring *string  - dstring to append to
+*
+*  RESULT
+*     const char* - NULL or resulting string of dstring 
+*******************************************************************************/
+const char *prj_list_append_to_dstring(const lList *this_list, dstring *string)
 {
    const char *ret = NULL;
 
-   DENTER(BASIS_LAYER, "userprj_list_append_to_dstring");
+   DENTER(BASIS_LAYER, "prj_list_append_to_dstring");
    if (string != NULL) {
       lListElem *elem = NULL;
       bool printed = false;
 
       for_each(elem, this_list) {
-         sge_dstring_append(string, lGetString(elem, UP_name));
+         sge_dstring_append(string, lGetString(elem, PR_name));
          if (lNext(elem)) {
             sge_dstring_append(string, " ");
          }
@@ -100,9 +148,9 @@ prj_list_do_all_exist(const lList *this_list, lList **answer_list,
 
    DENTER(TOP_LAYER, "prj_list_do_all_exist");
    for_each(prj, prj_list) {
-      const char *name = lGetString(prj, UP_name);
+      const char *name = lGetString(prj, PR_name);
 
-      if (userprj_list_locate(this_list, name) == NULL) {
+      if (prj_list_locate(this_list, name) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST,
                                  ANSWER_QUALITY_ERROR,
                                  MSG_CQUEUE_UNKNOWNPROJECT_S, name);
@@ -115,32 +163,48 @@ prj_list_do_all_exist(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-lList **
-prj_list_get_master_list(void)
+/***************************************************
+ Generate a Template for a user
+ ***************************************************/
+lListElem *getUserTemplate()
 {
-   return object_type_get_master_list(SGE_TYPE_PROJECT);
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "getUserTemplate");
+
+   ep = lCreateElem(UU_Type);
+   lSetString(ep, UU_name, "template");
+   lSetString(ep, UU_default_project, NULL);
+   lSetUlong(ep, UU_oticket, 0);
+   lSetUlong(ep, UU_fshare, 0);
+   lSetUlong(ep, UU_job_cnt, 0);
+   lSetList(ep, UU_project, NULL);
+   lSetList(ep, UU_usage, NULL);
+   lSetList(ep, UU_long_term_usage, NULL);
+
+   DEXIT;
+   return ep;
 }
 
 /***************************************************
  Generate a Template for a user or project
  ***************************************************/
-lListElem *getUserPrjTemplate()
+lListElem *getPrjTemplate()
 {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "getUserPrjTemplate");
+   DENTER(TOP_LAYER, "getPrjTemplate");
 
-   ep = lCreateElem(UP_Type);
-   lSetString(ep, UP_name, "template");
-   lSetString(ep, UP_default_project, NULL);
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 0);
-   lSetUlong(ep, UP_job_cnt, 0);
-   lSetList(ep, UP_project, NULL);
-   lSetList(ep, UP_usage, NULL);
-   lSetList(ep, UP_long_term_usage, NULL);
-   lSetList(ep, UP_acl, NULL);
-   lSetList(ep, UP_xacl, NULL);
+   ep = lCreateElem(PR_Type);
+   lSetString(ep, PR_name, "template");
+   lSetUlong(ep, PR_oticket, 0);
+   lSetUlong(ep, PR_fshare, 0);
+   lSetUlong(ep, PR_job_cnt, 0);
+   lSetList(ep, PR_project, NULL);
+   lSetList(ep, PR_usage, NULL);
+   lSetList(ep, PR_long_term_usage, NULL);
+   lSetList(ep, PR_acl, NULL);
+   lSetList(ep, PR_xacl, NULL);
 
    DEXIT;
    return ep;

@@ -61,9 +61,9 @@ if [ "$READLINE_LIB_PATH" ]; then
    fi
 fi
 
-POST_ARGS="bootstrap://${SGE_ROOT}@${SGE_CELL}:${SGE_QMASTER_PORT} $POST_ARGS"
+POST_ARGS="bootstrap://${SGE_ROOT}@${SGE_CELL}:${SGE_QMASTER_PORT} $POST_ARGS "
 
 echo PRE_ARGS $PRE_ARGS
 echo POST_ARGS $POST_ARGS
-run $PRE_ARGS -cp $CP com.sun.grid.jgdi.configuration.xml.XMLDump $POST_ARGS
+run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.configuration.xml.XMLDump $POST_ARGS
 

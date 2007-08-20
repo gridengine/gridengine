@@ -52,6 +52,7 @@
              cullObject.getType() == cullObject.TYPE_MAPPED)) {
 %>// for <%=name%>
 import com.sun.grid.jgdi.configuration.<%=classname%>;        
+import com.sun.grid.jgdi.configuration.<%=classname%>Impl;        
 <%        
         }
      } // end of genImport
@@ -60,10 +61,21 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
      private void genFillMethod() {
         if(!hasFillMethod) {
 %>        
-   private native void fill<%=name%>List(List list, JGDIFilter filter) throws JGDIException;
-   private void fill<%=name%>List(List list) throws JGDIException {
-      fill<%=name%>List(list, null);
+   private native void fill<%=name%>ListWithAnswer(List list, JGDIFilter filter, List answers) throws JGDIException;
+   
+   private void fill<%=name%>List(List list, JGDIFilter filter) throws JGDIException {
+      fill<%=name%>ListWithAnswer(list, filter, null);
    }
+   
+   private void fill<%=name%>List(List list) throws JGDIException {
+      fill<%=name%>ListWithAnswer(list, null, null);
+   }
+   
+   private void fill<%=name%>ListWithAnswer(List list, List answers) throws JGDIException {
+      fill<%=name%>ListWithAnswer(list, null, answers);
+   }
+
+   
 <%        
            hasFillMethod = true;
         } 
@@ -87,6 +99,24 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
            throw new IllegalStateException("Got more than 1 static <%=name%> objects");
       }
    }
+
+   /**
+    *   Get the <code><%=name%></code> object.
+    *   @param  answers the <code>answer list</code> object
+    *   @return the <code><%=name%></code> object.
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public <%=classname%> get<%=name%>WithAnswer(List answers) throws JGDIException {
+      ArrayList ret = new ArrayList(1);
+      fill<%=name%>ListWithAnswer(ret, answers);
+      switch(ret.size()) {
+         case 0: throw new IllegalStateException("static  <%=name%> object not found");
+         case 1: return (<%=classname%>)ret.get(0);
+         default:
+           throw new IllegalStateException("Got more than 1 static <%=name%> objects");
+      }
+   }
+
 <%        
      } // end of genGetMethod
      
@@ -152,7 +182,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
         filter.include(CullConstants.<%=pkName%>, <%=pkName%> ); <% 
     }
 %>
-        fill<%=name%>List(ret,filter);
+        fill<%=name%>List(ret, filter);
 
         switch(ret.size()) {
            case 0:  return null;
@@ -161,6 +191,61 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
                 throw new IllegalStateException("Duplicate primary key");
         }
    }
+   
+   /**
+    *  Get a <%=name%> by its primary key
+    *
+    *  @return the <%=name%>
+<%
+{
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+}
+%>   *   @param  answers the <code>answer list</code> object
+    *  @return the found <code><%=name%></code> object of <code>null</code>    
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public <%=classname%> get<%=name%>WithAnswer(<%
+    first = true;
+    iter = primaryKeys.keySet().iterator();
+    while(iter.hasNext()) {
+       String pkName = (String)iter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       if (first) {
+          first = false;
+       } else {
+         %>, <%
+       }
+       %> <%=pkType%> <%=pkName%> <%
+    }
+       %>, List answers) throws JGDIException {
+    
+        ArrayList ret = new ArrayList();
+        
+        PrimaryKeyFilter filter = new PrimaryKeyFilter("<%=cullname%>");<%
+
+    iter = primaryKeys.keySet().iterator();
+    while(iter.hasNext()) {
+       String pkName = (String)iter.next();
+        String pkType = (String)primaryKeys.get(pkName);%>
+        filter.include(CullConstants.<%=pkName%>, <%=pkName%> ); <% 
+    }
+%>
+        fill<%=name%>ListWithAnswer(ret, filter, answers);
+
+        switch(ret.size()) {
+           case 0:  return null;
+           case 1:  return (<%=classname%>)ret.get(0);
+           default:
+                throw new IllegalStateException("Duplicate primary key");
+        }
+   }
+   
 <%        
      } // end of genGetByPrimaryKeyMethod
   
@@ -172,6 +257,15 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
     *   @throws JGDIException on any error on the GDI layer
     */
    public native void add<%=name%>(<%=classname%> obj) throws JGDIException;
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  obj the new <code><%=name%></code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public native void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   
 <%        
      } // end of genAddMethod
      
@@ -183,8 +277,114 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
     *   @throws JGDIException on any error on the GDI layer
     */
    public native void delete<%=name%>(<%=classname%> obj) throws JGDIException;
+
+   /**
+    *   Delete a <code><%=name%></code> object.
+    *   @param obj  <code><%=name%></code> object with the primary key information
+    *   @param answers  <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public native void delete<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
 <%        
      } // end of genDeleteMethod
+     public void genDeleteByPrimaryKeyMethod() {
+%>
+
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+}
+%>    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>(<%
+    boolean first = true;  
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %><%=pkType%> <%=pkName%><%
+    } // end of while  
+    %>) throws JGDIException {
+       <%=classname%> obj = new <%=classname%>Impl(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %><%=pkName%><%
+    } // end of while  
+    %>);
+       delete<%=name%>(obj);
+    }
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+    *   @param answers  <code>answer list</code> object
+<%
+    }    
+}
+%>    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %><%=pkType%> <%=pkName%><%
+    } // end of while  
+    %>, java.util.List answers) throws JGDIException {
+       <%=classname%> obj = new <%=classname%>Impl(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %><%=pkName%><%
+    } // end of while  
+    %>);
+       delete<%=name%>WithAnswer(obj, answers);
+    }
+<%
+    } // end of genDeleteByPrimaryKeyMethod
      public void genUpdateMethod() { 
 %>       
    /**
@@ -193,6 +393,15 @@ import com.sun.grid.jgdi.configuration.<%=classname%>;
     *   @throws JGDIException on any error on the GDI layer
     */
    public native void update<%=name%>(<%=classname%> obj) throws JGDIException;
+
+   /**
+    *   Update a <code><%=name%></code> object.
+    *   @param obj      the <code><%=name%></code> object with the new values
+    *   @param answers  the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public native void update<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+
 <%   
      } // end of getUpdateMethod 
      
@@ -252,7 +461,7 @@ public class JGDIImpl extends JGDIBase implements com.sun.grid.jgdi.JGDI {
         PrimaryKeyFilter filter = new PrimaryKeyFilter("EH_Type");
         filter.exclude(CullConstants.EH_name, "template" ); 
         filter.exclude(CullConstants.EH_name, "global" );
-        fillExecHostList(ret,filter);
+        fillExecHostList(ret, filter);
         return ret;
    }
 

@@ -142,17 +142,18 @@ static int spool_manops(sge_object_type type, int argc, char *argv[])
    int i;
    lList *answer_list = NULL;
    lList **lpp = object_type_get_master_list(type);
+   int key = object_type_get_key_nm(type);
+   const lDescr *descr = object_type_get_descr(type);
 
    DENTER(TOP_LAYER, "spool_manops");
 
    if (*lpp == NULL) {
-      *lpp = lCreateList("master list", object_type_get_descr(type));
+      *lpp = lCreateList("master list", descr);
    }
-
 
    for (i = 2; i < argc; i++) {
       const char *name = argv[i];
-      lListElem *ep = lAddElemStr(lpp, MO_name, name, MO_Type);
+      lListElem *ep = lAddElemStr(lpp, key, name, descr);
 
       if (!spool_write_object(&answer_list, spool_get_default_context(),
                               ep, name, type, true)) {
@@ -183,7 +184,7 @@ static int spool_configuration(int argc, char *argv[])
       ret = EXIT_FAILURE;
    } else {
       /* put config into a list - we can't spool free objects */
-      lSetHost(conf, CONF_hname, SGE_GLOBAL_NAME);
+      lSetHost(conf, CONF_name, SGE_GLOBAL_NAME);
       if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG, true)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
@@ -223,7 +224,7 @@ static int spool_local_conf(int argc, char *argv[])
          lListElem *le = spool_read_object(NULL, spool_get_default_context(), SGE_TYPE_CONFIG, argv[3]); 
          if (le == NULL) { 
             /* put config into a list - we can't spool free objects */
-            lSetHost(conf, CONF_hname, argv[3]);
+            lSetHost(conf, CONF_name, argv[3]);
             if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG, true)) {
                /* error output has been done in spooling function */
@@ -303,10 +304,10 @@ static int spool_exechosts(int argc, char *argv[])
 
 static int spool_projects(int argc, char *argv[])
 {
-   const spooling_field *fields = sge_build_UP_field_list(true, false);
+   const spooling_field *fields = sge_build_PR_field_list(true);
    int ret; 
 
-   ret = spool_object_list(argv[2], fields, &qconf_sfi, UP_Type, SGE_TYPE_PROJECT);
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, PR_Type, SGE_TYPE_PROJECT);
    FREE(fields);
    return ret;
 }
@@ -318,10 +319,10 @@ static int spool_submithosts(int argc, char *argv[])
 
 static int spool_users(int argc, char *argv[])
 {
-   const spooling_field *fields = sge_build_UP_field_list(true, true);
+   const spooling_field *fields = sge_build_UU_field_list(true);
    int ret; 
 
-   ret = spool_object_list(argv[2], fields, &qconf_sfi, UP_Type, SGE_TYPE_PROJECT);
+   ret = spool_object_list(argv[2], fields, &qconf_sfi, UU_Type, SGE_TYPE_PROJECT);
    FREE(fields);
    return ret;
 }

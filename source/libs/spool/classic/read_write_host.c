@@ -181,14 +181,14 @@ int parsing_type
 
       /* --------- EH_prj  */
       if (!set_conf_list(alpp, clpp, fields?fields:opt, "projects", ep,
-               EH_prj, UP_Type, UP_name)) {
+               EH_prj, PR_Type, PR_name)) {
          DEXIT;
          return -1;
       }
 
       /* --------- EH_xprj  */
       if (!set_conf_list(alpp, clpp, fields?fields:opt, "xprojects", ep,
-               EH_xprj, UP_Type, UP_name)) {
+               EH_xprj, PR_Type, PR_name)) {
          DEXIT;
          return -1;
       }
@@ -466,12 +466,12 @@ char *file
          const char *delis[] = {"=", ",", NULL};
 
          ret = fprint_cull_list(fp,  "projects                   ", 
-            lGetList(ep, EH_prj), UP_name);
+            lGetList(ep, EH_prj), PR_name);
          if (ret == -1) {
             goto FPRINTF_ERROR;
          } 
          ret = fprint_cull_list(fp,  "xprojects                  ", 
-            lGetList(ep, EH_xprj), UP_name);
+            lGetList(ep, EH_xprj), PR_name);
          if (ret == -1) {
             goto FPRINTF_ERROR;
          } 

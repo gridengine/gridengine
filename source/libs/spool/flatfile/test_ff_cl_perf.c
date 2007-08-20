@@ -603,26 +603,26 @@ static int EH_test(void)
    
    lSetList(ep, EH_xacl, lp);
    
-   lp = lCreateList("Projects List", UP_Type);
+   lp = lCreateList("Projects List", PR_Type);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name13");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name13");
    lAppendElem(lp, ep2);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name14");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name14");
    lAppendElem(lp, ep2);
    
    lSetList(ep, EH_prj, lp);
    
-   lp = lCreateList("XProjects List", UP_Type);
+   lp = lCreateList("XProjects List", PR_Type);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name15");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name15");
    lAppendElem(lp, ep2);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name16");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name16");
    lAppendElem(lp, ep2);
    
    lSetList(ep, EH_xprj, lp);
@@ -1160,14 +1160,14 @@ static int CQ_test(void) {
    ep2 = lCreateElem(APRJLIST_Type);
    lSetHost(ep2, APRJLIST_href, "Test_Name96");
    
-   lp2 = lCreateList("Project List", UP_Type);
+   lp2 = lCreateList("Project List", PR_Type);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name97");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name97");
    lAppendElem(lp2, ep3);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name98");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name98");
    lAppendElem(lp2, ep3);
    
    lSetList(ep2, APRJLIST_value, lp2);
@@ -1180,14 +1180,14 @@ static int CQ_test(void) {
    ep2 = lCreateElem(APRJLIST_Type);
    lSetHost(ep2, APRJLIST_href, "Test_Name102");
    
-   lp2 = lCreateList("Project List", UP_Type);
+   lp2 = lCreateList("Project List", PR_Type);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name103");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name103");
    lAppendElem(lp2, ep3);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name104");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name104");
    lAppendElem(lp2, ep3);
    
    lSetList(ep2, APRJLIST_value, lp2);

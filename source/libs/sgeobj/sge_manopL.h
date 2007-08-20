@@ -44,35 +44,43 @@ extern "C" {
 
 /* 
  * This is the list type we use to hold the manager list 
- * and the operator list in the qmaster. 
  */
-
 enum {
-   MO_name = MO_LOWERBOUND
+   UM_name = UM_LOWERBOUND
 };
 
-LISTDEF(MO_Type)
-   JGDI_OBJ(AbstractManager)
-   SGE_STRING(MO_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF)
+LISTDEF(UM_Type)
+   JGDI_ROOT_OBJ(Manager, SGE_MANAGER_LIST, ADD | GET | DELETE | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_MANAGER_ADD) | MODIFY(sgeE_MANAGER_MOD) | DELETE(sgeE_MANAGER_DEL) | GET_LIST(sgeE_MANAGER_LIST))
+   SGE_STRING(UM_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF)
 LISTEND
 
-DERIVED_LISTDEF(Manager_Type, MO_Type)
-   JGDI_ROOT_OBJ(Manager, SGE_MANAGER_LIST, ADD | DELETE | GET_LIST)
-   JGDI_EVENT_OBJ(ADD(sgeE_MANAGER_ADD) | MODIFY(sgeE_MANAGER_MOD) | DELETE(sgeE_MANAGER_DEL) | GET_LIST(sgeE_MANAGER_LIST))
-DERIVED_LISTEND
-
-DERIVED_LISTDEF(Operator_Type, MO_Type)
-   JGDI_ROOT_OBJ(Operator, SGE_OPERATOR_LIST, ADD | DELETE | GET_LIST)
-   JGDI_EVENT_OBJ(ADD(sgeE_OPERATOR_ADD) | MODIFY(sgeE_OPERATOR_MOD) | DELETE(sgeE_OPERATOR_DEL) | GET_LIST(sgeE_OPERATOR_LIST))
-DERIVED_LISTEND
-
-NAMEDEF(MON)
-   NAME("MO_name")
+NAMEDEF(UMN)
+   NAME("UM_name")
 NAMEEND
 
-/* *INDENT-ON* */ 
+#define UMS sizeof(UMN)/sizeof(char*)
 
-#define MOS sizeof(MON)/sizeof(char*)
+/* 
+ * This is the list type we use to hold the manager list 
+ */
+enum {
+   UO_name = UO_LOWERBOUND
+};
+
+LISTDEF(UO_Type)
+   JGDI_ROOT_OBJ(Operator, SGE_OPERATOR_LIST, ADD | GET | DELETE | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_OPERATOR_ADD) | MODIFY(sgeE_OPERATOR_MOD) | DELETE(sgeE_OPERATOR_DEL) | GET_LIST(sgeE_OPERATOR_LIST))
+   SGE_STRING(UO_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF)
+LISTEND
+
+NAMEDEF(UON)
+   NAME("UO_name")
+NAMEEND
+
+#define UOS sizeof(UON)/sizeof(char*)
+
+
 #ifdef  __cplusplus
 }
 #endif

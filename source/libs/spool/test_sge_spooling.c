@@ -95,7 +95,7 @@ static lListElem* sge_get_configuration_for_host(const char* aName)
       strcpy(unique_name, aName);
    }
 
-   conf = lCopyElem(lGetElemHost(cluster_config, CONF_hname, unique_name));
+   conf = lCopyElem(lGetElemHost(cluster_config, CONF_name, unique_name));
 
    DRETURN(conf);
 }

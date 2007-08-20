@@ -31,12 +31,12 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.rmi;
 
+import com.sun.grid.jgdi.management.JGDIAgent;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.rmi.server.Unreferenced;
 
 /**
@@ -45,7 +45,7 @@ import java.rmi.server.Unreferenced;
  *  <p>The rmi proxy can be started from the commandline. Use the <code>-help</code>
  *     to get more information.</p>
  *
- *  <p>The JGDI Rmi proxy needs shared libs of the N1&trade; Grid Engine in the
+ *  <p>The JGDI Rmi proxy needs shared libs of the Sun&trade; Grid Engine in the
  *     <code>LD_LIBRARY_PATH</code>.</p>
  *
  *  <p><b>Example:</b></p>
@@ -81,12 +81,6 @@ public class JGDIRmiProxy implements Unreferenced {
     */
    public final static void main(String [] args) {
       
-//      try {
-//         System.loadLibrary("jgdi");
-//      } catch( Exception ex ) {
-//         ex.printStackTrace();
-//         System.exit(1);
-//      }
       if( args.length < 2 ) {
          usage("Invalid number of arguments", 1);
       }
@@ -150,6 +144,11 @@ public class JGDIRmiProxy implements Unreferenced {
          reg.bind(serviceName, stub);
          
          logger.info("JGDIRemoteFactory bound to name " + serviceName );
+
+         // start JGDIAgent
+         JGDIAgent agent = JGDIAgent.getDefault(sge_url);
+         // end JGDIAgent
+         logger.info("JGDIAgent.getDefault(" + sge_url + ")");
          
          ShutdownHook shutdownHook = new ShutdownHook(reg, serviceName);
          Runtime.getRuntime().addShutdownHook(shutdownHook);
@@ -194,7 +193,7 @@ public class JGDIRmiProxy implements Unreferenced {
       System.err.println("JGDIRmiProxy [options] <service name> <sge_url>");
       System.err.println();
       System.err.println("  <service name>   Bind name for the rmi service");
-      System.err.println("  <sge_url>        N1 Grid Engine connection URL");
+      System.err.println("  <sge_url>        Grid Engine connection URL");
       System.err.println("  Options:");
       System.err.println("    -help                 Print this help message");
       System.err.println("    -reg  <host>[:port]   Host and port of the rmi registry.");

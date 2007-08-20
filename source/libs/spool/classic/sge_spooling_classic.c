@@ -1003,7 +1003,7 @@ spool_classic_default_write_func(lList **answer_list,
             sge_dstring_init(&file_name, file_name_buf, SGE_PATH_MAX);
             sge_dstring_init(&real_name, real_name_buf, SGE_PATH_MAX);
 
-            if (sge_hostcmp(lGetHost(object, CONF_hname), "global") == 0) {
+            if (sge_hostcmp(lGetHost(object, CONF_name), "global") == 0) {
                sge_dstring_sprintf(&file_name, "%s/.%s",
                                    lGetString(rule, SPR_url), CONF_FILE);
                sge_dstring_sprintf(&real_name, "%s/%s",

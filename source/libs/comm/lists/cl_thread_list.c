@@ -39,6 +39,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include "cl_lists.h"
+
 
 /* this functions must lock / unlock the raw list manually */
 static int cl_thread_list_add_thread(cl_raw_list_t* list_p, cl_thread_settings_t* thread_config);  /* CR check */
@@ -70,7 +78,7 @@ static int cl_thread_list_add_thread(cl_raw_list_t* list_p, cl_thread_settings_t
    /* append elem and set elem pointer in new element */
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
  
-   if ( new_elem->raw_elem == NULL) {
+   if (new_elem->raw_elem == NULL) {
       free(new_elem);
       return CL_RETVAL_MALLOC;
    }
@@ -124,7 +132,7 @@ int cl_thread_list_cleanup(cl_raw_list_t** list_p) {    /* CR check */
 #define __CL_FUNCTION__ "cl_thread_list_create_thread()"
 int cl_thread_list_create_thread(cl_raw_list_t* list_p,
                                  cl_thread_settings_t** new_thread_p,
-                                 cl_raw_list_t* log_list ,
+                                 cl_raw_list_t* log_list,
                                  const char* name,
                                  int id,
                                  void * (*start_routine)(void *),

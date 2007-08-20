@@ -139,7 +139,8 @@ extern "C" {
       {AT_LOWERBOUND, ATS, ATN},        /* account list */
       {VA_LOWERBOUND, VAS, VAN},        /* variable list */
       {MR_LOWERBOUND, MRS, MRN},        /* mail recipiants list */
-      {MO_LOWERBOUND, MOS, MON},        /* manager and operator list */
+      {UM_LOWERBOUND, UMS, UMN},        /* manager list */
+      {UO_LOWERBOUND, UOS, UON},        /* operator list */
       {PE_LOWERBOUND, PES, PEN},        /* parallel environment object */
       {QR_LOWERBOUND, QRS, QRN},        /* queue reference used in PE object */
       {JC_LOWERBOUND, JCS, JCN},        /* job couter used in schedd */
@@ -154,7 +155,8 @@ extern "C" {
       {SPA_LOWERBOUND, SPAS, SPAN},     /* option parse struct */
       {REP_LOWERBOUND, REPS, REPN},     /* report list */
       {UA_LOWERBOUND, UAS, UAN},        /* usage list */
-      {UP_LOWERBOUND, UPS, UPN},        /* SGEEE - user/project */
+      {PR_LOWERBOUND, PRS, PRN},        /* SGEEE - project */
+      {UU_LOWERBOUND, UUS, UUN},        /* SGEEE - user */
       {STN_LOWERBOUND, STNS, STNN},     /* SGEEE - share tree node */
       {SC_LOWERBOUND, SCS, SCN},        /* scheduler config */
       {PET_LOWERBOUND, PETS, PETN},     /* PE Task object */
@@ -228,7 +230,7 @@ extern "C" {
       {ASTRING_LOWERBOUND, ASTRINGS, ASTRINGN},
       {ASTRLIST_LOWERBOUND, ASTRLISTS, ASTRLISTN}, /* CQ ST_Type-list sublist */
       {AUSRLIST_LOWERBOUND, AUSRLISTS, AUSRLISTN}, /* CQ US_Type-list sublist */
-      {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ UP_Type-list sublist */
+      {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ PR_Type-list sublist */
       {ACELIST_LOWERBOUND, ACELISTS, ACELISTN},    /* CQ CE_Type-list sublist */
       {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
       {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */

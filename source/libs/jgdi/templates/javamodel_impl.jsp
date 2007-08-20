@@ -44,6 +44,7 @@
 %>
 package <%=jh.getPackageName()%>;
 
+import javax.management.*;
 import com.sun.grid.jgdi.configuration.GEObject;
 import java.util.List;
 import java.util.LinkedList;
@@ -336,7 +337,7 @@ public class <%=classname%> extends <%
     *  @param index  index of the <%=mapAttr.getValueName()%> attribute
     *  @param <%=mapAttr.getValueName()%>  the <%=mapAttr.getValueName()%> attribute
     */
-   public void set<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, int index, <%=valueClassName%> value) {
+   public void set<%=gsname%>(<%=keyClassName%> <%=mapAttr.getKeyName()%>, int index, <%=valueClassName%> <%=mapAttr.getValueName()%>) {
       init<%=gsname%>();
       List list = (List)m_<%=attrName%>.get(<%=mapAttr.getKeyName()%>);
       if( list == null ) {
@@ -344,9 +345,9 @@ public class <%=classname%> extends <%
          m_<%=attrName%>.put(<%=mapAttr.getKeyName()%>, list);
       }
       <% if( jh.isPrimitiv(valueAttr) ) { %>
-      list.set(index, new <%=fullValueClassName%>(value));      
+      list.set(index, new <%=fullValueClassName%>(<%=mapAttr.getValueName()%>));      
       <% } else { %>
-      list.set(index, value);      
+      list.set(index, <%=mapAttr.getValueName()%>);      
       <% } %>   
    }
    
@@ -462,7 +463,6 @@ public class <%=classname%> extends <%
    /**
     *  Get the number of values for  the default <code><%=mapAttr.getKeyName()%></code>
     *  (<%=mapAttr.getDefaultKey()%>).
-    *  @param <%=mapAttr.getKeyName()%> the <%=mapAttr.getKeyName()%>
     */
    public int getDefault<%=gsname%>Count() {
        return get<%=gsname%>Count("<%=mapAttr.getDefaultKey()%>");
@@ -1105,37 +1105,152 @@ public class <%=classname%> extends <%
   public java.lang.String toString() {
       StringBuffer ret = new StringBuffer();
       ret.append("<%=classname%>(");
-      
 <%  {
      boolean first = true;
      com.sun.grid.cull.CullObject c = cullObj;
      
-     if(cullObj.getParentObject() != null) {
+     if (cullObj.getParentObject() != null) {
         c = cullObj.getParentObject();
      }
-    for(int i = 0; i < c.getAttrCount(); i++ ) {
+    for (int i = 0; i < c.getAttrCount(); i++) {
         attr = c.getAttr(i);
         String attrName = jh.getAttrName(attr);
-        String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+        String gsname = Character.toUpperCase(attrName.charAt(0)) +
                           attrName.substring(1);
-
-        if( attr.isPrimaryKey() ) {
-          if(first) {
+        if (attr.isPrimaryKey()) {
+          if (first) {
             first = false;
-          } else {
-            %>
+          } else {%>
           ret.append(", "); <%
-          } %>
+          }%>
           ret.append(get<%=gsname%>());
-        <% } // end of isPrimaryKey
+<%   }
     }
    }
-      %>
-    
+%>
       ret.append(")");
       return ret.toString();
   }
+
+<%
+    
+  class DumpCompletelyGenerator {
+     
+     public void dump(com.sun.grid.cull.CullAttr attr) {
+     
+        if (!attr.isReadOnly()) {
+           if (attr instanceof com.sun.grid.cull.CullMapListAttr) {
+              dumpMapListAttr((com.sun.grid.cull.CullMapListAttr)attr);
+           } else if (attr instanceof com.sun.grid.cull.CullMapAttr) {
+              dumpMapAttr((com.sun.grid.cull.CullMapAttr)attr);
+           } else if (attr instanceof com.sun.grid.cull.CullListAttr) {
+              dumpListAttr((com.sun.grid.cull.CullListAttr)attr);
+           } else {
+              dumpSimpleAttr(attr);
+           }
+        }
+     } // end of dump
+     
+     public void dumpMapListAttr(com.sun.grid.cull.CullMapListAttr attr) {
+             com.sun.grid.cull.CullAttr keyAttr = attr.getKeyAttr();
+             com.sun.grid.cull.CullAttr valueAttr = attr.getValueAttr();
+          String attrName = jh.getAttrName(attr);  
+          if (attrName.endsWith("List")) {
+             attrName  = attrName.substring(0, attrName.length() - 4 );
+          }
+          String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+                           attrName.substring(1);
+%>        
+          {
+             Iterator iter = get<%=gsname%>Keys().iterator();
+             while (iter.hasNext()) {
+                <%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key  = (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%>)iter.next();
+             
+                int count = get<%=gsname%>Count(key);
+                for (int i = 0; i < count; i++) {
+                   <%=jh.getFullClassName(valueAttr.getType())%> value = get<%=gsname%>(key, i);
+                   sb.append("<%=gsname%>[" + key + "," + i + "] = "  + value +"\n");
+                }
+             }
+          }
+<%                
+     } // end of dumpMapListAttr
   
+     public void dumpMapAttr(com.sun.grid.cull.CullMapAttr mapAttr) {
+             com.sun.grid.cull.CullAttr keyAttr = mapAttr.getKeyAttr();
+             com.sun.grid.cull.CullAttr valueAttr = mapAttr.getValueAttr();
+          String attrName = jh.getAttrName(mapAttr);   
+          if (attrName.endsWith("List")) {
+             attrName  = attrName.substring(0, attrName.length() - 4 );
+          }
+          String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+                           attrName.substring(1);
+%>           
+          {
+             Iterator iter = get<%=gsname%>Keys().iterator();
+             while (iter.hasNext()) {
+                <%=jh.getFullClassNameOrWrapper(keyAttr.getType())%> key  = (<%=jh.getFullClassNameOrWrapper(keyAttr.getType())%>)iter.next();
+                <%=jh.getFullClassName(valueAttr.getType())%> value = get<%=gsname%>(key);
+                sb.append("<%=gsname%>[" + key + "] = "  + value + "\n");
+             }
+          }
+<%                
+     } // end of dumpMapAttr
+     
+     public void dumpListAttr(com.sun.grid.cull.CullListAttr attr) {
+         String attrName = jh.getAttrName(attr);
+          if (attrName.endsWith("List")) {
+             attrName  = attrName.substring(0, attrName.length() - 4 );
+          }
+         String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+                          attrName.substring(1);
+%>        
+          {
+             int <%=attrName%>Count = get<%=gsname%>Count();
+             for (int i = 0; i < <%=attrName%>Count; i++) {
+                <%=jh.getFullClassName(attr.getType())%> value = get<%=gsname%>(i);
+                sb.append("<%=gsname%>[" + i + "] = "  + value + "\n");
+             } // end of for
+          }
+<%        
+     } // end of dumpListAttr
+     
+     public void dumpSimpleAttr(com.sun.grid.cull.CullAttr attr) {
+         String attrName = jh.getAttrName(attr);
+         String gsname =  Character.toUpperCase( attrName.charAt(0) ) +
+                          attrName.substring(1);
+         String getter = null;
+         if (jh.getClassName(attr.getType()).endsWith("oolean")) {
+            getter = "is" + gsname;
+         } else {
+            getter = "get" + gsname;
+         }
+%>
+         {
+            <%=jh.getFullClassName(attr.getType())%> value = <%=getter%>();
+            sb.append("<%=gsname%> = " + value + "\n");
+         }
+<%        
+     } // end of dumpSimpleAttr
+     
+  } // end of DumpCompletelyGenerator
+
+%>
+
+  public java.lang.String dump() {
+      StringBuffer sb = new StringBuffer();
+
+      <%  
+        DumpCompletelyGenerator dumpCompletelyGenerator = new DumpCompletelyGenerator();
+        for (int i = 0; i < cullObj.getAttrCount(); i++) {
+           attr = cullObj.getAttr(i);
+           dumpCompletelyGenerator.dump(attr);
+        }
+      %>
+
+      return sb.toString();
+  }    
+
   <%//SPECIAL CODE for COMPLEX ENTRY
   if (classname.equals("ComplexEntryImpl")) { %>
   private class Convertor {

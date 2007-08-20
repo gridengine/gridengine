@@ -70,6 +70,9 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lList **lpp = NULL;
    lListElem *added;
    int pos;
+   int key;
+   lDescr *descr = NULL;
+   ev_event eve = sgeE_EVENTSIZE; 
 
    DENTER(TOP_LAYER, "sge_add_manop");
 
@@ -84,10 +87,16 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    case SGE_MANAGER_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
       object_name = MSG_OBJ_MANAGER;
+      key = UM_name;
+      descr = UM_Type;
+      eve = sgeE_MANAGER_ADD;
       break;
    case SGE_OPERATOR_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
       object_name = MSG_OBJ_OPERATOR;
+      key = UO_name;
+      descr = UO_Type;
+      eve = sgeE_OPERATOR_ADD;
       break;
    default :
       DPRINTF(("unknown target passed to %s\n", SGE_FUNC));
@@ -95,10 +104,10 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       return STATUS_EUNKNOWN;
    }
 
-   /* ep is no acl element, if ep has no MO_name */
-   if ((pos = lGetPosViaElem(ep, MO_name, SGE_NO_ABORT)) < 0) {
+   /* ep is no acl element, if ep has no UM_name/UO_name */
+   if ((pos = lGetPosViaElem(ep, key, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(MO_name), SGE_FUNC));
+            lNm2Str(key), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -112,7 +121,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       return STATUS_EUNKNOWN;
    }
 
-   if (lGetElemStr(*lpp, MO_name, manop_name)) {
+   if (lGetElemStr(*lpp, key, manop_name)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_ALREADYEXISTS_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -120,11 +129,10 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    }
 
    /* update in interal lists */
-   added = lAddElemStr(lpp, MO_name, manop_name, MO_Type);
+   added = lAddElemStr(lpp, key, manop_name, descr);
 
    /* update on file */
-   if(!sge_event_spool(ctx, alpp, 0,
-                       target == SGE_MANAGER_LIST ? sgeE_MANAGER_ADD : sgeE_OPERATOR_ADD,
+   if(!sge_event_spool(ctx, alpp, 0, eve, 
                        0, 0, manop_name, NULL, NULL,
                        added, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
@@ -162,6 +170,9 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    const char *manop_name;
    const char *object_name;
    lList **lpp = NULL;
+   int key = NoName;
+   ev_event eve = sgeE_EVENTSIZE; 
+
 
    DENTER(TOP_LAYER, "sge_del_manop");
 
@@ -176,10 +187,14 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    case SGE_MANAGER_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
       object_name = MSG_OBJ_MANAGER;
+      key = UM_name;
+      eve = sgeE_MANAGER_DEL;
       break;
    case SGE_OPERATOR_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
       object_name = MSG_OBJ_OPERATOR;
+      key = UO_name;
+      eve = sgeE_OPERATOR_DEL;
       break;
    default :
       DPRINTF(("unknown target passed to %s\n", SGE_FUNC));
@@ -187,10 +202,10 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       return STATUS_EUNKNOWN;
    }
 
-   /* ep is no manop element, if ep has no MO_name */
-   if ((pos = lGetPosViaElem(ep, MO_name, SGE_NO_ABORT)) < 0) {
+   /* ep is no manop element, if ep has no UM_name/UO_name */
+   if ((pos = lGetPosViaElem(ep, key, SGE_NO_ABORT)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
-            lNm2Str(MO_name), SGE_FUNC));
+            lNm2Str(key), SGE_FUNC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -212,7 +227,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
       return STATUS_EEXIST;
    }
 
-   found = lGetElemStr(*lpp, MO_name, manop_name);
+   found = lGetElemStr(*lpp, key, manop_name);
    if (!found) {
       ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -223,11 +238,9 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    lDechainElem(*lpp, found);
 
    /* update on file */
-   if (!sge_event_spool(ctx,
-                        alpp, 0, target == SGE_MANAGER_LIST ? 
-                                 sgeE_MANAGER_DEL : sgeE_OPERATOR_DEL,
-                           0, 0, manop_name, NULL, NULL,
-                           NULL, NULL, NULL, true, true)) {
+   if (!sge_event_spool(ctx, alpp, 0, eve,
+                        0, 0, manop_name, NULL, NULL,
+                        NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object_name, manop_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    

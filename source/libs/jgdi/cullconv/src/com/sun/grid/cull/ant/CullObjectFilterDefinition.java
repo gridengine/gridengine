@@ -14,7 +14,6 @@ import org.apache.tools.ant.types.PatternSet;
 
 /**
  *
- * @author rh150277
  */
 public class CullObjectFilterDefinition extends PatternSet {
     

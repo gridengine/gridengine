@@ -41,7 +41,7 @@ import java.io.Serializable;
 
 /**
  *
- * @todo    beta ??
+ * @jgdi.todo    beta ??
  *          <p>Add javadoc comments</p>
  */
 public class QQuotaOptions implements Serializable {

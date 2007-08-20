@@ -500,15 +500,15 @@ const char *userset_name
    }
 
    for_each (ep, *object_base[SGE_TYPE_PROJECT].list) {
-      if (lGetElemStr(lGetList(ep, UP_acl), US_name, userset_name)) {
+      if (lGetElemStr(lGetList(ep, PR_acl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+               MSG_OBJ_USERLIST, MSG_OBJ_PRJ, lGetString(ep, PR_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
-      if (lGetElemStr(lGetList(ep, UP_xacl), US_name, userset_name)) {
+      if (lGetElemStr(lGetList(ep, PR_xacl), US_name, userset_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_USERSETSTILLREFERENCED_SSSS, userset_name, 
-               MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, UP_name)));
+               MSG_OBJ_XUSERLIST, MSG_OBJ_PRJ, lGetString(ep, PR_name)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }

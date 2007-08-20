@@ -480,12 +480,12 @@ int sub_command, monitoring_t *monitor
       if (lGetPosViaElem(ep, EH_prj, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_prj\n"));
          /* check prj list */
-         if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
+         if (verify_project_list(alpp, lGetList(ep, EH_prj),
                   *object_base[SGE_TYPE_PROJECT].list, "projects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
          }   
-         attr_mod_sub_list(alpp, new_host, EH_prj, UP_name, ep,
+         attr_mod_sub_list(alpp, new_host, EH_prj, PR_name, ep,
                            sub_command, SGE_ATTR_PROJECTS, 
                            SGE_OBJ_EXECHOST, 0);    
       }
@@ -494,12 +494,12 @@ int sub_command, monitoring_t *monitor
       if (lGetPosViaElem(ep, EH_xprj, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xprj\n"));
          /* check xprj list */
-         if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
+         if (verify_project_list(alpp, lGetList(ep, EH_xprj), 
                   *object_base[SGE_TYPE_PROJECT].list, "xprojects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
          }   
-         attr_mod_sub_list(alpp, new_host, EH_xprj, UP_name, ep,
+         attr_mod_sub_list(alpp, new_host, EH_xprj, PR_name, ep,
                            sub_command, SGE_ATTR_XPROJECTS, 
                            SGE_OBJ_EXECHOST, 0);   
       }
@@ -1473,8 +1473,8 @@ void host_diff_projects(const lListElem *new,
          const lListElem *old, lList **new_prj, lList **old_prj)
 {
    host_diff_sublist(new, old, EH_prj, EH_xprj,
-         UP_name, UP_Type, new_prj, old_prj);
-   lDiffListStr(UP_name, new_prj, old_prj);
+         PR_name, PR_Type, new_prj, old_prj);
+   lDiffListStr(PR_name, new_prj, old_prj);
 }
 
 /****** sge_host_qmaster/host_diff_usersets() **********************************

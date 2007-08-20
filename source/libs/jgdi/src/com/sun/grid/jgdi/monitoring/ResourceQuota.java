@@ -33,7 +33,7 @@ package com.sun.grid.jgdi.monitoring;
 
 /**
  *
- * @todo   beta ??
+ * @jgdi.todo   beta ??
  *         add javadoc comments
  */
 public interface ResourceQuota {

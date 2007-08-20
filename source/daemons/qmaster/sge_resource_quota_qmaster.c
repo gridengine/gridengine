@@ -660,8 +660,8 @@ bool rqs_diff_usersets(const lListElem *new_rqs, const lListElem *old_rqs, lList
 *  INPUTS
 *     const lListElem *new_rqs - new resource quota set list (RQS_Type)
 *     const lListElem *old_rqs - old resource quota set list (RQS_Type)
-*     lList **new_list          - list of referenced projects in new_rqs (UP_Type)
-*     lList **old_list          - list of referenced projects in old_rqs (UP_Type)
+*     lList **new_list          - list of referenced projects in new_rqs (PR_Type)
+*     lList **old_list          - list of referenced projects in old_rqs (PR_Type)
 *
 *  RESULT
 *     bool - true if some or none project is referenced
@@ -683,7 +683,7 @@ bool rqs_diff_projects(const lListElem *new_rqs, const lListElem *old_rqs, lList
    if (old_rqs && old_list) {
       const lListElem *rule;
       for_each(rule, lGetList(old_rqs, RQS_rule)) {
-         if (!filter_diff_usersets_or_projects(rule, RQR_filter_projects, old_list, UP_name, UP_Type, master_project_list)) {
+         if (!filter_diff_usersets_or_projects(rule, RQR_filter_projects, old_list, PR_name, PR_Type, master_project_list)) {
             break;
          } 
       }
@@ -692,7 +692,7 @@ bool rqs_diff_projects(const lListElem *new_rqs, const lListElem *old_rqs, lList
    if (new_rqs && new_list) {
       const lListElem *rule;
       for_each(rule, lGetList(new_rqs, RQS_rule)) {
-         if (!filter_diff_usersets_or_projects(rule, RQR_filter_projects, new_list, UP_name, UP_Type, master_project_list)) {
+         if (!filter_diff_usersets_or_projects(rule, RQR_filter_projects, new_list, PR_name, PR_Type, master_project_list)) {
             if (!old_rqs || lGetNumberOfElem(*old_list) == 0) {
                ret = false;
             }
@@ -701,7 +701,7 @@ bool rqs_diff_projects(const lListElem *new_rqs, const lListElem *old_rqs, lList
       }
    }
 
-   lDiffListStr(UP_name, new_list, old_list);
+   lDiffListStr(PR_name, new_list, old_list);
 
    DRETURN(ret);
 }

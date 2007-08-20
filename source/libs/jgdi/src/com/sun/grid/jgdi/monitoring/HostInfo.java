@@ -164,7 +164,7 @@ public interface HostInfo {
     *  Get the list of queues which are available on the host
     *
     *  <p><b>Note:</b> The queue list is only set if the
-    *  {@link QHostOptions#includeQueues} flag is set.</p>
+    *  {@link QHostOptions#includeQueue} flag is set.</p>
     *
     *  @return list of queues (instances of {@link QueueInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost

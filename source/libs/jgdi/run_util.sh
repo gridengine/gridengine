@@ -30,14 +30,17 @@ set_arch() {
 
 setup_env() {
    
-   
+#echo "BEGIN: $*"
+
+   general_args=true
    mode=run
    verbose=0
    JVM_ARGS=""
    APPL_ARGS=""
    
-   while [ $# -gt 0 ]; do
+   while [ "$general_args" = true -a $# -gt 0 ]; do
      case $1 in
+       --) general_args=false;;
        -v) verbose=1;;
        -d) mode=debug;;
        -j) mode=java_debug;;
@@ -56,10 +59,12 @@ setup_env() {
                JVM_ARGS="$JVM_ARGS -X$1"
             fi;;
        -cp) shift; JVM_ARGS="$JVM_ARGS -cp $1";;
-       *)  APPL_ARGS="$APPL_ARGS $1"
      esac
      shift
    done
+
+   APPL_ARGS="$APPL_ARGS $*"
+   #echo "APPL_ARGS: $APPL_ARGS"
    
    export verbose
    

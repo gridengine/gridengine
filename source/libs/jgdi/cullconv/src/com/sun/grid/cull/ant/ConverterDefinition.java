@@ -43,7 +43,6 @@ import org.apache.tools.ant.Project;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public abstract class ConverterDefinition {
 

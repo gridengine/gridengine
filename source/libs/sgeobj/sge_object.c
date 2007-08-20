@@ -116,18 +116,18 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Adminhost_List,       NULL,                   "ADMINHOST",         AH_Type,   AH_name           },
    { &Master_Calendar_List,        NULL,                   "CALENDAR",          CAL_Type,  CAL_name          },
    { &Master_Ckpt_List,            NULL,                   "CKPT",              CK_Type,   CK_name           },
-   { NULL,                         NULL,                   "CONFIG",            CONF_Type, CONF_hname        },
+   { NULL,                         NULL,                   "CONFIG",            CONF_Type, CONF_name         },
    { NULL,                         NULL,                   "GLOBAL_CONFIG",     NULL,      NoName            },
    { &Master_Exechost_List,        NULL,                   "EXECHOST",          EH_Type,   EH_name           },
    { NULL,                         NULL,                   "JATASK",            JAT_Type,  JAT_task_number   },
    { NULL,                         NULL,                   "PETASK",            PET_Type,  PET_id            },
    { &Master_Job_List,             NULL,                   "JOB",               JB_Type,   JB_job_number     },
    { &Master_Job_Schedd_Info_List, NULL,                   "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
-   { &Master_Manager_List,         NULL,                   "MANAGER",           MO_Type,   MO_name           },
-   { &Master_Operator_List,        NULL,                   "OPERATOR",          MO_Type,   MO_name           },
+   { &Master_Manager_List,         NULL,                   "MANAGER",           UM_Type,   UM_name           },
+   { &Master_Operator_List,        NULL,                   "OPERATOR",          UO_Type,   UO_name           },
    { &Master_Sharetree_List,       NULL,                   "SHARETREE",         STN_Type,  STN_name          },
    { &Master_Pe_List,              NULL,                   "PE",                PE_Type,   PE_name           },
-   { &Master_Project_List,         NULL,                   "PROJECT",           UP_Type,   UP_name           },
+   { &Master_Project_List,         NULL,                   "PROJECT",           PR_Type,   PR_name           },
    { &Master_CQueue_List,          NULL,                   "CQUEUE",            CQ_Type,   CQ_name           },
    { NULL,                         NULL,                   "QINSTANCE",         QU_Type,   QU_qname          },
    { NULL,                         sconf_validate_config_, "SCHEDD_CONF",       SC_Type,   NoName            },
@@ -135,7 +135,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { NULL,                         NULL,                   "SHUTDOWN",          NULL,      NoName            },
    { NULL,                         NULL,                   "QMASTER_GOES_DOWN", NULL,      NoName            },
    { &Master_Submithost_List,      NULL,                   "SUBMITHOST",        SH_Type,   SH_name           },
-   { &Master_User_List,            NULL,                   "USER",              UP_Type,   UP_name           },
+   { &Master_User_List,            NULL,                   "USER",              UU_Type,   UU_name           },
    { &Master_Userset_List,         NULL,                   "USERSET",           US_Type,   US_name           },
    { &Master_HGroup_List,          NULL,                   "HOSTGROUP",         HGRP_Type, HGRP_name         },
    { &Master_CEntry_List,          NULL,                   "COMPLEX_ENTRY",     CE_Type,   CE_name           },
@@ -647,7 +647,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          ret = userset_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case APRJLIST_value:
-         ret = userprj_list_append_to_dstring(lGetList(object, nm), &string);
+         ret = prj_list_append_to_dstring(lGetList(object, nm), &string);
          break;
       case ACELIST_value:
          ret = centry_list_append_to_dstring(lGetList(object, nm), &string);
@@ -949,7 +949,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          break;
       case APRJLIST_value:
          ret = object_parse_list_from_string(object, answer_list, nm, value,
-                                             UP_Type, UP_name);
+                                             PR_Type, PR_name);
          break;
       case ACELIST_value:
          ret = object_parse_celist_from_string(object, answer_list, nm, value);

@@ -106,9 +106,9 @@ public class TestRunner implements PrivilegedExceptionAction {
     }
     
     public Object run() throws Exception {
-        Method testSuiteMethod = testClass.getMethod("suite", null);
+        Method testSuiteMethod = testClass.getMethod("suite", (java.lang.Class[])null);
         
-        TestSuite suite = (TestSuite)testSuiteMethod.invoke(testClass,null);
+        TestSuite suite = (TestSuite)testSuiteMethod.invoke(testClass, (java.lang.Object[])null);
         
         TestResult result = new TestResult();
         

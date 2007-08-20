@@ -43,7 +43,6 @@ import org.apache.tools.ant.BuildException;
 
 /**
  *
- * @author rh150277
  */
 public class CullDependencies {
    

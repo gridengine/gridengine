@@ -114,7 +114,7 @@ static XmtWidgetType widgets[] = {
       False
    },
    {
-      "UP_TypeMatrix",         
+      "UU_TypeMatrix",         
       NULL,
       CreateMatrixSimple,
       set_2xN,

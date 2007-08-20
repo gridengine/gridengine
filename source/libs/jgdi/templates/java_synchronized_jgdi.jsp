@@ -139,6 +139,19 @@
         jgdi.update<%=name%>(obj);
       }
    }      
+
+   /**
+    *  Update <%=primaryKeys.size() == 0 ? "a" : "the"%> <code><%=name%></code> object.
+    *
+    *  @param  obj  the <code><%=name%></code> object with the new values
+    *  @param  answers  the <code>answer list</code> object
+    *  @throws JGDIException on any error
+    */
+   public void update<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.update<%=name%>WithAnswer(obj, answers);
+      }
+   }      
 <%
    } // end of genUpdateMethod
    
@@ -153,6 +166,19 @@
    public void add<%=name%>(<%=classname%> obj) throws JGDIException {
       synchronized(jgdi) {
         jgdi.add<%=name%>(obj);
+      }
+   }
+
+   /**
+    *  Add a new <code><%=name%></code> object.
+    *
+    *  @param obj  the new <code><%=name%></code> object
+    *  @param answers  the <code>answer list</code> object
+    *  @throws JGDIException on any error
+    */
+   public void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.add<%=name%>WithAnswer(obj, answers);
       }
    }
 <%   
@@ -171,8 +197,122 @@
         jgdi.delete<%=name%>(obj);
       }
    }
+
+   /**
+    *   Delete a <%=name%> object.
+    *
+    *   @param obj  the <%=name%> with the primary information
+    *   @param answers  the answer list object
+    *   @throws JGDIException on any error
+    */
+   public void delete<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.delete<%=name%>(obj);
+      }
+   }
 <%   
    } // end of genDeleteMethod
+        public void genDeleteByPrimaryKeyMethod() {
+%>
+
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+}
+%>  *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>(<%
+    boolean first = true;  
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkType%> <%=pkName%> <%
+    } // end of while  
+    %>) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.delete<%=name%>(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkName%> <%
+    } // end of while  
+    %>);
+      }
+    }
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+    *   @param answers  the answer list object
+<%
+    }    
+}
+%>  *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkType%> <%=pkName%> <%
+    } // end of while  
+    %>, java.util.List answers) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.delete<%=name%>WithAnswer(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkName%> <%
+    } // end of while  
+    %>, answers);
+      }
+    }
+<%
+    } // end of genDeleteByPrimaryKeyMethod
+
    
   } // end of class SynchronizedJGDI
   

@@ -41,7 +41,6 @@ import java.util.logging.Logger;
  * The <code>JavaHelper</code> contains all mapping functionality for mapping
  * cull objects to java objects.
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JavaHelper {
 

@@ -864,7 +864,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_MANAGER].list, SGE_TYPE_MANAGER);
    answer_list_output(&answer_list);
    if (!manop_is_manager("root")) {
-      ep = lAddElemStr(object_base[SGE_TYPE_MANAGER].list, MO_name, "root", MO_Type);
+      ep = lAddElemStr(object_base[SGE_TYPE_MANAGER].list, UM_name, "root", UM_Type);
 
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_MANAGER, job_spooling)) {
          answer_list_output(&answer_list);
@@ -873,7 +873,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       }
    }
    for_each(ep, *object_base[SGE_TYPE_MANAGER].list) {
-      DPRINTF(("%s\n", lGetString(ep, MO_name)));
+      DPRINTF(("%s\n", lGetString(ep, UM_name)));
    }   
 
    DPRINTF(("host group definitions-----------\n"));
@@ -884,7 +884,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_OPERATOR].list, SGE_TYPE_OPERATOR);
    answer_list_output(&answer_list);
    if (!manop_is_operator("root")) {
-      ep = lAddElemStr(object_base[SGE_TYPE_OPERATOR].list, MO_name, "root", MO_Type);
+      ep = lAddElemStr(object_base[SGE_TYPE_OPERATOR].list, UO_name, "root", UO_Type);
 
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_OPERATOR, job_spooling)) {
          answer_list_output(&answer_list);
@@ -894,7 +894,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
       }
    }
    for_each(ep, *object_base[SGE_TYPE_OPERATOR].list) {
-      DPRINTF(("%s\n", lGetString(ep, MO_name)));
+      DPRINTF(("%s\n", lGetString(ep, UO_name)));
    }   
 
 
@@ -1232,22 +1232,25 @@ remove_invalid_job_references(bool job_spooling, int user, object_description *o
 {
    lListElem *up, *upu, *next;
    u_long32 jobid;
+   int object_key = user ? UU_name : PR_name;
+   lList *object_list = user ? *object_base[SGE_TYPE_USER].list : *object_base[SGE_TYPE_PROJECT].list;
+   sge_object_type object_type = user ? SGE_TYPE_USER : SGE_TYPE_PROJECT;
+   const char *object_name = user ? MSG_OBJ_USER : MSG_OBJ_PRJ;
+   int debited_job_usage_key = user ? UU_debited_job_usage : PR_debited_job_usage;
 
    DENTER(TOP_LAYER, "remove_invalid_job_references");
 
-   for_each (up, user?*object_base[SGE_TYPE_USER].list:
-                      *object_base[SGE_TYPE_PROJECT].list) {
-
+   for_each(up, object_list) {
       int spool_me = 0;
-      next = lFirst(lGetList(up, UP_debited_job_usage));
+      next = lFirst(lGetList(up, debited_job_usage_key));
       while ((upu=next)) {
          next = lNext(upu);
 
          jobid = lGetUlong(upu, UPU_job_number);
          if (!job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), jobid)) {
-            lRemoveElem(lGetList(up, UP_debited_job_usage), &upu);
+            lRemoveElem(lGetList(up, debited_job_usage_key), &upu);
             WARNING((SGE_EVENT, "removing reference to no longer existing job "sge_u32" of %s "SFQ"\n",
-                           jobid, user?"user":"project", lGetString(up, UP_name)));
+                           jobid, object_name, lGetString(up, object_key)));
             spool_me = 1;
          }
       }
@@ -1255,9 +1258,7 @@ remove_invalid_job_references(bool job_spooling, int user, object_description *o
       if (spool_me) {
          lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), up, 
-                            lGetString(up, UP_name), user ? SGE_TYPE_USER : 
-                                                            SGE_TYPE_PROJECT,
-                                                            job_spooling);
+                            lGetString(up, object_key), object_type, job_spooling);
          answer_list_output(&answer_list);
       }
    }
@@ -1404,8 +1405,8 @@ static void init_categories(void)
     * now set categories flag with usersets/projects used as ACL
     */
    for_each(ep, p_list)
-      if ((prj = userprj_list_locate(master_project_list, lGetString(ep, UP_name))))
-         lSetBool(prj, UP_consider_with_categories, true);
+      if ((prj = prj_list_locate(master_project_list, lGetString(ep, PR_name))))
+         lSetBool(prj, PR_consider_with_categories, true);
 
    for_each(ep, u_list)
       if ((acl = userset_list_locate(master_userset_list, lGetString(ep, US_name))))

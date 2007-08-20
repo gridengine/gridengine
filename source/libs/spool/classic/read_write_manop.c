@@ -63,17 +63,23 @@ int target
    char str[256];
    FILE *fp;
    SGE_STRUCT_STAT st;
+   lDescr *descr = NULL;
+   int key;
 
    DENTER(TOP_LAYER, "read_manop");
 
    switch (target) {
    case SGE_MANAGER_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);      
+      descr = UM_Type;
+      key = UM_name;
       strcpy(filename, MAN_FILE);
       break;
       
    case SGE_OPERATOR_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);      
+      descr = UO_Type;
+      key = UO_name;
       strcpy(filename, OP_FILE);
       break;
 
@@ -96,12 +102,12 @@ int target
    }
    
    lFreeList(lpp);
-   *lpp = lCreateList("man/op list", MO_Type);
+   *lpp = lCreateList("man list", descr);
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
-      ep = lCreateElem(MO_Type);
+      ep = lCreateElem(descr);
       if (str[0] != COMMENT_CHAR) {
-         lSetString(ep, MO_name, str);
+         lSetString(ep, key, str);
          lAppendElem(*lpp, ep);
       } else {
          lFreeElem(&ep);
@@ -142,6 +148,7 @@ int target
    char filename[255], real_filename[255];
    dstring ds;
    char buffer[256];
+   int key;
 
    DENTER(TOP_LAYER, "write_manop");
 
@@ -149,6 +156,7 @@ int target
    switch (target) {
    case SGE_MANAGER_LIST:
       lp = *object_type_get_master_list(SGE_TYPE_MANAGER);      
+      key = UM_name;
       strcpy(filename, ".");
       strcat(filename, MAN_FILE);
       strcpy(real_filename, MAN_FILE);
@@ -156,6 +164,7 @@ int target
       
    case SGE_OPERATOR_LIST:
       lp = *object_type_get_master_list(SGE_TYPE_OPERATOR);      
+      key = UO_name;
       strcpy(filename, ".");
       strcat(filename, OP_FILE);
       strcpy(real_filename, OP_FILE);
@@ -179,7 +188,7 @@ int target
    }  
 
    for_each(ep, lp) {
-      FPRINTF((fp, "%s\n", lGetString(ep, MO_name)));
+      FPRINTF((fp, "%s\n", lGetString(ep, key)));
    }
 
    FCLOSE(fp);

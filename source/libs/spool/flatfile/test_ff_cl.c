@@ -1188,13 +1188,16 @@ static int UP_test(void) {
    const char *file1 = "/var/tmp/UP_cl";
    const char *file2 = NULL;
    
-   ep = lCreateElem(UP_Type);
-   lSetString(ep, UP_name, "Test_Name");
-   lSetUlong(ep, UP_oticket, 100);
-   lSetUlong(ep, UP_fshare, 50);
-   lSetUlong(ep, UP_delete_time, 123456789);
-   lSetString(ep, UP_default_project, "default_project");
-   lSetUlong(ep, UP_usage_time_stamp, 987654321);
+   ep = lCreateElem(PR_Type);
+   lSetString(ep, PR_name, "Test_Name");
+   lSetUlong(ep, PR_oticket, 100);
+   lSetUlong(ep, PR_fshare, 50);
+#if 0   
+   lSetUlong(ep, PR_delete_time, 123456789);
+   lSetString(ep, PR_default_project, "default_project");
+#endif   
+
+   lSetUlong(ep, PR_usage_time_stamp, 987654321);
    
    lp = lCreateList("Usage List", UA_Type);
    
@@ -1213,7 +1216,7 @@ static int UP_test(void) {
    lSetDouble(ep2, UA_value, 55.66);
    lAppendElem(lp, ep2);
       
-   lSetList(ep, UP_usage, lp);
+   lSetList(ep, PR_usage, lp);
    
    lp = lCreateList("LT Usage List", UA_Type);
    
@@ -1232,7 +1235,7 @@ static int UP_test(void) {
    lSetDouble(ep2, UA_value, 55.66);
    lAppendElem(lp, ep2);
       
-   lSetList(ep, UP_long_term_usage, lp);
+   lSetList(ep, PR_long_term_usage, lp);
    
    lp = lCreateList("Project List", UPP_Type);
    
@@ -1320,7 +1323,7 @@ static int UP_test(void) {
    lSetList(ep2, UPP_long_term_usage, lp2);
    lAppendElem(lp, ep2);
    
-   lSetList(ep, UP_project, lp);
+   lSetList(ep, PR_project, lp);
    
    lp = lCreateList("ACL List", US_Type);
    
@@ -1332,7 +1335,7 @@ static int UP_test(void) {
    lSetString(ep2, US_name, "Test_Name23");
    lAppendElem(lp, ep2);
    
-   lSetList(ep, UP_acl, lp);
+   lSetList(ep, PR_acl, lp);
    
    lp = lCreateList("XACL List", US_Type);
    
@@ -1344,7 +1347,7 @@ static int UP_test(void) {
    lSetString(ep2, US_name, "Test_Name25");
    lAppendElem(lp, ep2);
    
-   lSetList(ep, UP_xacl, lp);
+   lSetList(ep, PR_xacl, lp);
    
    lp = lCreateList("Debited Usage List", UPU_Type);
    
@@ -1394,7 +1397,7 @@ static int UP_test(void) {
    lSetList(ep2, UPU_old_usage_list, lp2);
    lAppendElem(lp, ep2);
    
-   lSetList(ep, UP_debited_job_usage, lp);
+   lSetList(ep, PR_debited_job_usage, lp);
 
    ep2 = lCopyElem(ep);
    
@@ -1404,8 +1407,8 @@ static int UP_test(void) {
    
    /* Read a UP file using flatfile spooling */
    lFreeElem(&ep);
-   fields = sge_build_UP_field_list(false, false);
-   ep = spool_flatfile_read_object(&alp, UP_Type, NULL,
+   fields = sge_build_PR_field_list(false);
+   ep = spool_flatfile_read_object(&alp, PR_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
          
@@ -1444,8 +1447,8 @@ static int UP_test(void) {
    
    /* Read a UP file using flatfile spooling */
    lFreeElem(&ep);
-   fields = sge_build_UP_field_list(false, true);
-   ep = spool_flatfile_read_object(&alp, UP_Type, NULL,
+   fields = sge_build_UU_field_list(false);
+   ep = spool_flatfile_read_object(&alp, UU_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
          
@@ -1699,26 +1702,26 @@ static int EH_test(void)
    
    lSetList(ep, EH_xacl, lp);
    
-   lp = lCreateList("Projects List", UP_Type);
+   lp = lCreateList("Projects List", PR_Type);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name13");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name13");
    lAppendElem(lp, ep2);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name14");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name14");
    lAppendElem(lp, ep2);
    
    lSetList(ep, EH_prj, lp);
    
-   lp = lCreateList("XProjects List", UP_Type);
+   lp = lCreateList("XProjects List", PR_Type);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name15");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name15");
    lAppendElem(lp, ep2);
    
-   ep2 = lCreateElem(UP_Type);
-   lSetString(ep2, UP_name, "Test_Name16");
+   ep2 = lCreateElem(PR_Type);
+   lSetString(ep2, PR_name, "Test_Name16");
    lAppendElem(lp, ep2);
    
    lSetList(ep, EH_xprj, lp);
@@ -2262,14 +2265,14 @@ static int CQ_test(void) {
    ep2 = lCreateElem(APRJLIST_Type);
    lSetHost(ep2, APRJLIST_href, "Test_Name96");
    
-   lp2 = lCreateList("Project List", UP_Type);
+   lp2 = lCreateList("Project List", PR_Type);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name97");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name97");
    lAppendElem(lp2, ep3);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name98");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name98");
    lAppendElem(lp2, ep3);
    
    lSetList(ep2, APRJLIST_value, lp2);
@@ -2282,14 +2285,14 @@ static int CQ_test(void) {
    ep2 = lCreateElem(APRJLIST_Type);
    lSetHost(ep2, APRJLIST_href, "Test_Name102");
    
-   lp2 = lCreateList("Project List", UP_Type);
+   lp2 = lCreateList("Project List", PR_Type);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name103");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name103");
    lAppendElem(lp2, ep3);
    
-   ep3 = lCreateElem(UP_Type);
-   lSetString(ep3, UP_name, "Test_Name104");
+   ep3 = lCreateElem(PR_Type);
+   lSetString(ep3, PR_name, "Test_Name104");
    lAppendElem(lp2, ep3);
    
    lSetList(ep2, APRJLIST_value, lp2);
@@ -2983,7 +2986,7 @@ static int CONF_test(void) {
    
    ep = lCreateElem(CONF_Type);
    lSetUlong(ep, CONF_version, 101);
-   lSetHost(ep, CONF_hname, "host1");
+   lSetHost(ep, CONF_name, "host1");
    
    lp = lCreateList("Config List", CF_Type);
    

@@ -48,9 +48,9 @@ typedef struct {
    lList *centry_list;      /* CE_Type */
    lList *acl_list;         /* US_Type */
    lList *pe_list;          /* PE_Type */
-   lList *user_list;        /* UP_Type */
+   lList *user_list;        /* UU_Type */
    lList *dept_list;        /* US_Type */
-   lList *project_list;     /* UP_Type */
+   lList *project_list;     /* PR_Type */
    lList *share_tree;       /* STN_Type */
    lList *ckpt_list;        /* CK_Type */
    lList *running_per_user; /* JC_Type */

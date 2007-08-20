@@ -49,7 +49,7 @@ fi
 
 POST_ARGS="$POST_ARGS bootstrap://${SGE_ROOT}@${SGE_CELL}:${SGE_QMASTER_PORT}"
 
-run $PRE_ARGS -cp $CP com.sun.grid.jgdi.event.QEvent $POST_ARGS
+run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.event.QEvent $POST_ARGS
 
 
 

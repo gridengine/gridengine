@@ -39,7 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * This simple example connects to the qmaster of a N1&trade; Grid Engine and
+ * This simple example connects to the qmaster of a Sun&trade; Grid Engine and
  * queries the list of availalbe <code>ClusterQueue</code>s
  *
  */

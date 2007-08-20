@@ -1093,7 +1093,7 @@ static bool should_reprioritize(void)
 
    DENTER(TOP_LAYER, "should_reprioritize");
 
-   confl = lCopyElem(lGetElemHost(Execd_Config_List, CONF_hname, "global"));
+   confl = lCopyElem(lGetElemHost(Execd_Config_List, CONF_name, "global"));
 
    if (confl) {
       ep_list = lGetList(confl, CONF_entries);

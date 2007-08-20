@@ -1115,7 +1115,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
             DPRINTF(("no access because queue has no project\n"));
             DRETURN(false);
          }
-         if ((!userprj_list_locate(projects, project))) {
+         if ((!prj_list_locate(projects, project))) {
             DPRINTF(("no access because project not contained in queues project list"));
             DRETURN(false);
          }
@@ -1125,7 +1125,7 @@ sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host,
          DPRINTF(("testing job xprojects lists\n"));
          if ((projects = lGetList(queue, QU_xprojects))) {
             if (((project = lGetString(job, JB_project)) &&
-                 userprj_list_locate(projects, project))) {
+                 prj_list_locate(projects, project))) {
                DPRINTF(("no access\n"));
                DRETURN(false);
             }
@@ -1546,7 +1546,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
             "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
-      if ((!userprj_list_locate(projects, project))) {
+      if ((!prj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
@@ -1556,7 +1556,7 @@ dispatch_t sge_queue_match_static(lListElem *queue, lListElem *job, const lListE
    /* check if job can run in queue based on excluded projects */
    if ((projects = lGetList(queue, QU_xprojects))) {
       if (((project = lGetString(job, JB_project)) &&
-           userprj_list_locate(projects, project))) {
+           prj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
@@ -1909,7 +1909,7 @@ sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host,
          DRETURN(DISPATCH_NEVER_CAT);
       }
 
-      if ((!userprj_list_locate(projects, project))) {
+      if ((!prj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_HASINCORRECTPRJ_SSS,
             project, "host", eh_name);
          DRETURN(DISPATCH_NEVER_CAT);
@@ -1919,7 +1919,7 @@ sge_host_match_static(lListElem *job, lListElem *ja_task, lListElem *host,
    /* check if job can run on host based on excluded projects */
    if ((projects = lGetList(host, EH_xprj))) {
       if (((project = lGetString(job, JB_project)) &&
-           userprj_list_locate(projects, project))) {
+           prj_list_locate(projects, project))) {
          schedd_mes_add(job_id, SCHEDD_INFO_EXCLPRJ_SSS,
             project, "host", eh_name);
          DRETURN(DISPATCH_NEVER_CAT);
@@ -2860,7 +2860,7 @@ static bool project_cq_rejected(const char *project, const lListElem *cq)
    rejected = true;
    for_each (alist, lGetList(cq, CQ_xprojects)) {
       projects = lGetList(alist, APRJLIST_value);
-      if (!projects || !userprj_list_locate(projects, project)) {
+      if (!projects || !prj_list_locate(projects, project)) {
          rejected = false;
          break;
       }
@@ -2873,7 +2873,7 @@ static bool project_cq_rejected(const char *project, const lListElem *cq)
    rejected = true;
    for_each (alist, lGetList(cq, CQ_projects)) {
       projects = lGetList(alist, APRJLIST_value);
-      if (!projects || userprj_list_locate(projects, project)) {
+      if (!projects || prj_list_locate(projects, project)) {
          rejected = false;
          break;
       }

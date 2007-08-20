@@ -36,7 +36,6 @@ import java.io.IOException;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public abstract class AbstractJavaToJavaConverter implements JavaToJavaConverter {
 

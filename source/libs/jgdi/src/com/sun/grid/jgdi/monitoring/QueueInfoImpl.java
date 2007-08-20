@@ -60,7 +60,7 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
 
    /**
     *  Set the name of the queue
-    *  @param name the name of the queue
+    *  @param qname the name of the queue
     */
    public void setQname(String qname) {
       this.qname = qname;
@@ -76,7 +76,7 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
 
    /**
     *  Set the name of the queue
-    *  @param name the name of the queue
+    *  @param qtype the type of the queue
     */
    public void setQtype(String qtype) {
       this.qtype = qtype;
@@ -107,7 +107,7 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
 
    /**
     *  Set the number of total queue slots
-    *  @param number of total queue slots
+    *  @param slotsTotal of total queue slots
     */
    public void setTotalSlots(int slotsTotal) {
       this.slotsTotal = slotsTotal;
@@ -123,7 +123,7 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
 
    /**
     *  Set the number of used queue slots
-    *  @param number of used queue slots
+    *  @param slotsUsed of used queue slots
     */
    public void setUsedSlots(int slotsUsed) {
       this.slotsUsed = slotsUsed;

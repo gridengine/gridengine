@@ -42,7 +42,7 @@ import com.sun.grid.jgdi.event.EventListener;
 
 /**
  * Simple example which demonstrates how to receive events from the
- * N1 Grid Engine
+ * Sun&trade; Grid Engine
  *
  */
 public class EventExample {

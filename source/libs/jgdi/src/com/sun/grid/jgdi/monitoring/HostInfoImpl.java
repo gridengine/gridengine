@@ -144,7 +144,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     * @param name   name of the host value
     * @param value  value
     */
-   public void addHostValue(String name, Object value) {
+   public void putHostValue(String name, Object value) {
       hostValueMap.put(name, value);
    }
       
@@ -156,6 +156,23 @@ public class HostInfoImpl implements HostInfo, Serializable {
    public Set getHostValueKeys() {
       return hostValueMap.keySet();
    }
+   
+   /**
+    * remove a host value
+    * @param name   name of the host value
+    */
+   public void removeHostValue(String name) {
+      hostValueMap.remove(name);
+   }
+
+   /**
+    * remove all host value
+    */
+   public void removeAllHostValue() {
+      hostValueMap.clear();
+   }
+   
+   
    
    /**
     * Get a resource value of the host
@@ -178,7 +195,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     * @param name   name of the resource
     * @param value  value
     */
-   public void addResourceValue(String dominance, String name, Object value) {
+   public void putResourceValue(String dominance, String name, Object value) {
       Map dominanceMap = (Map)resourceMap.get(dominance);
       if(dominanceMap == null) {
          dominanceMap = new HashMap();
@@ -187,6 +204,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
       dominanceMap.put(name, value);
    }
    
+ 
    
    /**
     * Get the set of available domincances
@@ -262,7 +280,7 @@ public class HostInfoImpl implements HostInfo, Serializable {
     *  Get the list of queues which are available on the host
     *
     *  <p><b>Note:</b> The queue list is only set if the 
-    *  {@link QHostOptions#includeQueues} flag is set.</p>
+    *  {@link QHostOptions#includeQueue} flag is set.</p>
     *
     *  @return list of queues (instances of {@link QueueInfo})
     *  @see com.sun.grid.jgdi.JGDI#execQHost

@@ -122,7 +122,39 @@
    
 <%
    } // end of genDeleteMethod
-     
+
+   protected void genDeleteByPrimaryKeyMethod() {
+%>
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+    *
+<%   java.util.Iterator iter = primaryKeys.keySet().iterator();
+   boolean first = true;
+   while(iter.hasNext()) {
+      String pkName = (String)iter.next();
+%>    *   @param <%=pkName%>  the <%=pkName%> of the <code><%=name%></code> object <%      
+   }
+%>      
+    *   @throws RemoteException on any error
+    */
+   public void delete<%=name%>(<%
+   
+   iter = primaryKeys.keySet().iterator();
+   first = true;
+   while(iter.hasNext()) {
+      String pkName = (String)iter.next();
+      String pkType = (String)primaryKeys.get(pkName);
+      if(first) {
+         first = false;
+      } else {
+         %>, <%
+      }
+      %> <%=pkType%> <%=pkName%><%
+   }
+   %>) throws RemoteException;
+<%        
+     } // end of genDeleteByPrimaryKeyMethod
+   
    protected void genGetByPrimaryKeyMethod() {
 %>
    /**

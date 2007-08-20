@@ -1132,7 +1132,7 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    ** project list 
    */ 
    if (project_l) {
-      up_all = lWhat("%T(ALL)", UP_Type);
+      up_all = lWhat("%T(ALL)", PR_Type);
       up_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_RECORD, SGE_PROJECT_LIST, SGE_GDI_GET, 
                            NULL, NULL, up_all, NULL, &state, true);
       lFreeWhat(&up_all);
@@ -1173,7 +1173,7 @@ static int qstat_env_get_all_lists(qstat_env_t* qstat_env, bool need_job_list, l
    /*
    ** global cluster configuration
    */
-   gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
+   gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_name, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    gc_id = qstat_env->ctx->gdi_multi(qstat_env->ctx, alpp, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
                         NULL, gc_where, gc_what, &mal, &state, true);

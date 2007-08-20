@@ -467,6 +467,7 @@ static u_long32 get_sge_execd_port(sge_gdi_ctx_class_t *thiz);
 static const char* get_spooling_method(sge_gdi_ctx_class_t *thiz);
 static const char* get_spooling_lib(sge_gdi_ctx_class_t *thiz);
 static const char* get_spooling_params(sge_gdi_ctx_class_t *thiz);
+static const char* get_libjvm_path(sge_gdi_ctx_class_t *thiz);
 static const char* get_username(sge_gdi_ctx_class_t *thiz);
 static const char* get_cell_root(sge_gdi_ctx_class_t *thiz);
 static const char* get_sge_root(sge_gdi_ctx_class_t *thiz);
@@ -580,6 +581,7 @@ sge_gdi_ctx_class_t *sge_gdi_ctx_class_create(int prog_number, const char* compo
    ret->get_username = get_username;
    ret->get_spooling_method = get_spooling_method;
    ret->get_spooling_lib = get_spooling_lib;
+   ret->get_libjvm_path = get_libjvm_path;
    ret->get_spooling_params = get_spooling_params;
    ret->get_admin_user = get_admin_user;
    ret->get_binary_path = get_binary_path;
@@ -1749,6 +1751,15 @@ static u_long32 get_gdi_thread_count(sge_gdi_ctx_class_t *thiz) {
    DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_gdi_thread_count");
    gdi_thread_count = bootstrap_state->get_gdi_thread_count(bootstrap_state);
    DRETURN(gdi_thread_count);
+}
+
+static const char* get_libjvm_path(sge_gdi_ctx_class_t *thiz) {
+   sge_bootstrap_state_class_t* bootstrap_state = thiz->get_sge_bootstrap_state(thiz);
+   const char *libjvm_path = NULL;
+   
+   DENTER(TOP_LAYER, "sge_gdi_ctx_class->get_libjvm_path");
+   libjvm_path = bootstrap_state->get_libjvm_path(bootstrap_state);
+   DRETURN(libjvm_path);
 }
 
 static sge_exit_func_t get_exit_func(sge_gdi_ctx_class_t *thiz) {

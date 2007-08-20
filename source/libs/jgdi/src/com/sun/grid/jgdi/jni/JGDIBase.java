@@ -142,100 +142,240 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
    /*
     * @inherited
     */
-   public native void cleanQueues(String[] queues) throws JGDIException;
+   public void cleanQueues(String[] queues) throws JGDIException {
+       cleanQueuesWithAnswer(queues, null);
+   }
+   
+   /*
+    * @inherited
+    */
+   public native void cleanQueuesWithAnswer(String[] queues, java.util.List answers) throws JGDIException;
+      
+   /*
+    * @inherited
+    */
+   public void unsuspendQueues(String[] queues, boolean force) throws JGDIException {
+      unsuspendQueuesWithAnswer(queues, force, null); 
+   }
+
+   /*
+    * @inherited
+    */
+   public native void unsuspendQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+      
+   /*
+    * @inherited
+    */
+   public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException {
+       unsuspendJobsWithAnswer(jobs, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void unsuspendJobsWithAnswer(String[] jobs, boolean force, java.util.List answers) throws JGDIException;
    
    
    /*
     * @inherited
     */
-   public native void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
-   
+   public void suspendQueues(String[] queues, boolean force) throws JGDIException {
+       suspendQueuesWithAnswer(queues, force, null);
+   }
+
    /*
     * @inherited
     */
-   public native void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void suspendQueues(String[] queues, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void suspendJobs(String[] jobs, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void clearJobs(String[] jobs, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void clearQueues(String[] queues, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void disableQueues(String[] queues, boolean force) throws JGDIException;
-   
-   /*
-    * @inherited
-    */
-   public native void enableQueues(String[] queues, boolean force) throws JGDIException;
+   public native void suspendQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
    
    
    /*
     * @inherited
     */
-   public native void killAllExecds(boolean terminateJobs) throws JGDIException;
+   public void suspendJobs(String[] jobs, boolean force) throws JGDIException {
+      suspendJobsWithAnswer(jobs, force, null); 
+   }
+
+   /*
+    * @inherited
+    */
+   public native void suspendJobsWithAnswer(String[] jobs, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
+   public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException {
+       rescheduleJobsWithAnswer(jobs, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void rescheduleJobsWithAnswer(String[] jobs, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void killEventClients(int[] ids) throws JGDIException;
+   public void rescheduleQueues(String[] queues, boolean force) throws JGDIException {
+      rescheduleQueuesWithAnswer(queues, force, null); 
+   }
+
+   /*
+    * @inherited
+    */
+   public native void rescheduleQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void triggerSchedulerMonitoring() throws JGDIException;
+   public void clearJobs(String[] jobs, boolean force) throws JGDIException {
+       clearJobsWithAnswer(jobs, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void clearJobsWithAnswer(String[] jobs, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void clearShareTreeUsage() throws JGDIException;
+   public void clearQueues(String[] queues, boolean force) throws JGDIException {
+       clearQueuesWithAnswer(queues, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void clearQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void killAllEventClients() throws JGDIException;
+   public void disableQueues(String[] queues, boolean force) throws JGDIException {
+       disableQueuesWithAnswer(queues, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void disableQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void killMaster() throws JGDIException;
+   public void enableQueues(String[] queues, boolean force) throws JGDIException {
+     enableQueuesWithAnswer(queues, force, null);  
+   }
+
+   /*
+    * @inherited
+    */
+   public native void enableQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+   
    
    /*
     * @inherited
     */
-   public native void killScheduler() throws JGDIException;
+   public void killAllExecds(boolean terminateJobs) throws JGDIException {
+       killAllExecdsWithAnswer(terminateJobs, null);
+   }
    
+   /*
+    * @inherited
+    */
+   public native void killAllExecdsWithAnswer(boolean terminateJobs, List answers) throws JGDIException;
+
+   /*
+    * @inherited
+    */
+   public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException {
+       killExecdWithAnswer(hosts, terminateJobs, null);
+   }
+   
+   /*
+    * @inherited
+    */
+   public native void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List answers) throws JGDIException;
+
+   /*
+    * @inherited
+    */
+   public void killEventClients(int[] ids) throws JGDIException {
+       killEventClientsWithAnswer(ids, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void killEventClientsWithAnswer(int[] ids, List answers) throws JGDIException;
+
+   /*
+    * @inherited
+    */
+   public void triggerSchedulerMonitoring() throws JGDIException {
+       triggerSchedulerMonitoringWithAnswer(null);
+   }
+           
+   /*
+    * @inherited
+    */
+   public native void triggerSchedulerMonitoringWithAnswer(java.util.List answer) throws JGDIException;
+   
+   /*
+    * @inherited
+    */
+   public void clearShareTreeUsage() throws JGDIException {
+      clearShareTreeUsageWithAnswer(null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void clearShareTreeUsageWithAnswer(java.util.List answers) throws JGDIException;
+   
+   
+   /*
+    * @inherited
+    */
+   public void killAllEventClients() throws JGDIException {
+       killAllEventClientsWithAnswer(null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void killAllEventClientsWithAnswer(List answers) throws JGDIException;
+   
+   /*
+    * @inherited
+    */
+   public void killMaster() throws JGDIException {
+      killMasterWithAnswer(null); 
+   }
+   
+   /*
+    * @inherited
+    */
+   public native void killMasterWithAnswer(List answers) throws JGDIException;
+   
+   /*
+    * @inherited
+    */
+   public void killScheduler() throws JGDIException {
+       killSchedulerWithAnswer(null);
+   }
+   
+   /*
+    * @inherited
+    */
+   public native void killSchedulerWithAnswer(List answers) throws JGDIException;
    
    /*
     * @inherited

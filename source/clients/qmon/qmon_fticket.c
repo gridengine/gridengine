@@ -724,17 +724,17 @@ XtPointer cad
 
    switch (cbs->state) {
       case FOT_USER:
-         fticket_info.field0 = UP_name;
-         fticket_info.field1 = UP_fshare;
+         fticket_info.field0 = UU_name;
+         fticket_info.field1 = UU_fshare;
          fticket_info.list_type = SGE_USER_LIST;
-         fticket_info.dp = UP_Type;
+         fticket_info.dp = UU_Type;
          break;
       
       case FOT_PROJECT:
-         fticket_info.field0 = UP_name;
-         fticket_info.field1 = UP_fshare;
+         fticket_info.field0 = PR_name;
+         fticket_info.field1 = PR_fshare;
          fticket_info.list_type = SGE_PROJECT_LIST;
-         fticket_info.dp = UP_Type;
+         fticket_info.dp = PR_Type;
          break;
       
       case FOT_USERSET:
@@ -1006,17 +1006,17 @@ XtPointer cad
 
    switch (cbs->state) {
       case FOT_USER:
-         oticket_info.field0 = UP_name;
-         oticket_info.field1 = UP_oticket;
+         oticket_info.field0 = UU_name;
+         oticket_info.field1 = UU_oticket;
          oticket_info.list_type = SGE_USER_LIST;
-         oticket_info.dp = UP_Type;
+         oticket_info.dp = UU_Type;
          break;
       
       case FOT_PROJECT:
-         oticket_info.field0 = UP_name;
-         oticket_info.field1 = UP_oticket;
+         oticket_info.field0 = PR_name;
+         oticket_info.field1 = PR_oticket;
          oticket_info.list_type = SGE_PROJECT_LIST;
-         oticket_info.dp = UP_Type;
+         oticket_info.dp = PR_Type;
          break;
       
       case FOT_USERSET:

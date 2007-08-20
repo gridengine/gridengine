@@ -136,8 +136,8 @@ void updateProjectList(void)
    DENTER(GUI_LAYER, "updateProjectList");
 
    cl = qmonMirrorList(SGE_PROJECT_LIST);
-   lPSortList(cl, "%I+", UP_name);
-   UpdateXmListFromCull(project_names, XmFONTLIST_DEFAULT_TAG, cl, UP_name);
+   lPSortList(cl, "%I+", PR_name);
+   UpdateXmListFromCull(project_names, XmFONTLIST_DEFAULT_TAG, cl, PR_name);
 
    DEXIT;
 }
@@ -187,21 +187,21 @@ lListElem *ep
    i = 0;
 
    /* Project name */
-   sprintf(buf, "%-20.20s %s", "Project Name", lGetString(ep, UP_name));
+   sprintf(buf, "%-20.20s %s", "Project Name", lGetString(ep, PR_name));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
    /* Override Tickets */
    sprintf(buf, "%-20.20s %d", "Override Tickets", 
-                        (int)lGetUlong(ep, UP_oticket));
+                        (int)lGetUlong(ep, PR_oticket));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
    /* fshare */
    sprintf(buf, "%-20.20s %d", "Functional Share", 
-                        (int)lGetUlong(ep, UP_fshare));
+                        (int)lGetUlong(ep, PR_fshare));
    items[i++] = XmStringCreateLtoR(buf, "LIST");
 
    /* users list */
-   ul = lGetList(ep, UP_acl);
+   ul = lGetList(ep, PR_acl);
    sprintf(buf, "%-20.20s", "Users");
    for_each(uep, ul) {
       strcat(buf, " "); 
@@ -212,7 +212,7 @@ lListElem *ep
    items[i++] = XmStringCreateLtoR(buf, "LIST");
    
    /* xusers list */
-   ul = lGetList(ep, UP_xacl);
+   ul = lGetList(ep, PR_xacl);
    sprintf(buf, "%-20.20s", "Xusers");
    for_each(uep, ul) {
       strcat(buf, " "); 
@@ -246,7 +246,7 @@ static void qmonSelectProject(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = userprj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjname);
+   ep = prj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjname);
 
    XtFree((char*) prjname);
 
@@ -403,7 +403,7 @@ static void qmonProjectModify(Widget w, XtPointer cld, XtPointer cad)
       XtVaSetValues( project_name_w,
                      XmNeditable, False,
                      NULL);
-      prjp = userprj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjstr);
+      prjp = prj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjstr);
       XtFree((char*)prjstr);
       if (prjp) {
          add_mode = 0;
@@ -443,22 +443,22 @@ static void qmonProjectOk(Widget w, XtPointer cld, XtPointer cad)
    ** build the cull list and send gdi request
    ** depending on success of gdi request close the dialog or stay open
    */
-   prjl = lCreateList("UP_ADD", UP_Type);
-   prep = lCreateElem(UP_Type);
+   prjl = lCreateList("PR_ADD", PR_Type);
+   prep = lCreateElem(PR_Type);
    
    if (prjl) {
       if (qmonProjectGetAsk(prep)) {
-         prjname = lGetString(prep, UP_name);
+         prjname = lGetString(prep, PR_name);
          /*
          ** gdi call 
          */
-         what = lWhat("%T(ALL)", UP_Type);
+         what = lWhat("%T(ALL)", PR_Type);
          
          if (add_mode) {
             lAppendElem(prjl, lCopyElem(prep));
             alp = qmonAddList(SGE_PROJECT_LIST, 
                               qmonMirrorListRef(SGE_PROJECT_LIST),
-                              UP_name, &prjl, NULL, what);
+                              PR_name, &prjl, NULL, what);
          }
          else {
             /*
@@ -475,13 +475,13 @@ static void qmonProjectOk(Widget w, XtPointer cld, XtPointer cad)
             }
                
             new_prep = lCopyElem(lGetElemStr(qmonMirrorList(SGE_PROJECT_LIST), 
-                                    UP_name, prjname));
-            lSwapList(new_prep, UP_acl, prep, UP_acl); 
-            lSwapList(new_prep, UP_xacl, prep, UP_xacl); 
+                                    PR_name, prjname));
+            lSwapList(new_prep, PR_acl, prep, PR_acl); 
+            lSwapList(new_prep, PR_xacl, prep, PR_xacl); 
             lAppendElem(prjl, new_prep);
             alp = qmonModList(SGE_PROJECT_LIST, 
                               qmonMirrorListRef(SGE_PROJECT_LIST),
-                              UP_name, &prjl, NULL, what);
+                              PR_name, &prjl, NULL, what);
          }
 
          if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK)
@@ -535,7 +535,7 @@ static void qmonProjectDelete(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonProjectDelete");
     
-   lp = XmStringToCull(project_names, UP_Type, UP_name, SELECTED_ITEMS); 
+   lp = XmStringToCull(project_names, PR_Type, PR_name, SELECTED_ITEMS); 
 
    if (lp) {
       status = XmtAskForBoolean(w, "xmtBooleanDialog", 
@@ -543,10 +543,10 @@ static void qmonProjectDelete(Widget w, XtPointer cld, XtPointer cad)
                      "@{Delete}", "@{Cancel}", NULL, XmtNoButton, XmDIALOG_WARNING, 
                      False, &answer, NULL);
       if (answer) { 
-         what = lWhat("%T(ALL)", UP_Type);
+         what = lWhat("%T(ALL)", PR_Type);
          alp = qmonDelList(SGE_PROJECT_LIST, 
                            qmonMirrorListRef(SGE_PROJECT_LIST),
-                           UP_name, &lp, NULL, what);
+                           PR_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
          lFreeWhat(&what);
@@ -582,17 +582,17 @@ lListElem *prjp
       return;
    }
 
-   prj_name = lGetString(prjp, UP_name);
+   prj_name = lGetString(prjp, PR_name);
    if (prj_name)
       XmtInputFieldSetString(project_name_w, prj_name);
 
    /*
    ** the lists have to be converted to XmString
    */
-   acl = lGetList(prjp, UP_acl);
+   acl = lGetList(prjp, PR_acl);
    UpdateXmListFromCull(project_acl_w, XmFONTLIST_DEFAULT_TAG, acl, US_name);
     
-   xacl = lGetList(prjp, UP_xacl);
+   xacl = lGetList(prjp, PR_xacl);
    UpdateXmListFromCull(project_xacl_w, XmFONTLIST_DEFAULT_TAG, xacl, US_name);
       
    DEXIT;
@@ -637,16 +637,16 @@ lListElem *prjp
       DEXIT;
       return False;
    }
-   lSetString(prjp, UP_name, prj_name);
+   lSetString(prjp, PR_name, prj_name);
   
    /*
    ** XmString entries --> Cull
    */
    acl = XmStringToCull(project_acl_w, US_Type, US_name, ALL_ITEMS);
-   lSetList(prjp, UP_acl, acl);
+   lSetList(prjp, PR_acl, acl);
 
    xacl = XmStringToCull(project_xacl_w, US_Type, US_name, ALL_ITEMS);
-   lSetList(prjp, UP_xacl, xacl);
+   lSetList(prjp, PR_xacl, xacl);
    
    DEXIT;
    return True;

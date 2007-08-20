@@ -33,7 +33,7 @@
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.configuration.AbstractUser;
+//import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
 import com.sun.grid.jgdi.configuration.ComplexEntry;

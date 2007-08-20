@@ -32,7 +32,7 @@
 package com.sun.grid.jgdi.monitoring.reflect;
 
 import com.sun.grid.jgdi.configuration.reflect.AbstractClassDescriptor;
-import com.sun.grid.jgdi.monitoring.HostInfo;
+import com.sun.grid.jgdi.monitoring.HostInfoImpl;
 
 /**
  *
@@ -41,7 +41,7 @@ public class HostInfoDescriptor extends AbstractClassDescriptor {
    
    /** Creates a new instance of HostInfoDescriptor */
    public HostInfoDescriptor() {
-      super(HostInfo.class, null);
+      super(HostInfoImpl.class, null);
       
       addSimple("hostname", String.class, null,-1, false, true, false);
       addSimple("arch", String.class, null, -1, false, true, false);

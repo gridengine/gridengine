@@ -62,6 +62,14 @@ public void genUpdateMethod() { %>
     *   @throws JGDIException on any error on the GDI layer
     */
    public void update<%=name%>(<%=classname%> obj) throws JGDIException;
+
+   /**
+    *   Update a <code><%=name%></code> object.
+    *   @param obj      the <code><%=name%></code> object with the new values
+    *   @param answers  the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void update<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
 <%        
     } // end of getUpdateMethod
     
@@ -92,10 +100,18 @@ public void genUpdateMethod() { %>
    
    /**
     *   Add a new <code><%=name%></code> object.
-    *   @param  obj the new <code><%=name%></code> object
+    *   @param  obj      the new <code><%=name%></code> object
     *   @throws JGDIException on any error on the GDI layer
     */
    public void add<%=name%>(<%=classname%> obj) throws JGDIException;
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param obj       the new <code><%=name%></code> object
+    *   @param answers   the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
 <%
     } // end of genAddMethod
     
@@ -107,8 +123,81 @@ public void genUpdateMethod() { %>
     *   @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>(<%=classname%> obj) throws JGDIException;
+   
+   /**
+    *   Delete a <code><%=name%></code> object.
+    *   @param obj       the <code><%=name%></code> object with the primary key information
+    *   @param answers   the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+
 <%
     } // end of genDeleteMethod
+    
+    public void genDeleteByPrimaryKeyMethod() {
+%>
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+}
+%>  *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>(<%
+    boolean first = true;  
+    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkType%> <%=pkName%> <%
+    } // end of while  
+    %>) throws JGDIException;
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+{
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+}
+%>  *  @param answers   the <code>answer list</code> object
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkType%> <%=pkName%> <%
+    } // end of while  
+    %>, java.util.List answers) throws JGDIException;
+<%
+    } // end of genDeleteByPrimaryKeyMethod
 
     public void genGetByPrimaryKeyMethod() {
 %> 
@@ -184,7 +273,7 @@ import com.sun.grid.jgdi.monitoring.QHostResult;
 %>    
 /**
  *  <p>The class <code>JGDI</code> is the central interface for communication with
- *  the N1GE master.</p>
+ *  the SGE master.</p>
  *
  *  <p>An instanceof of the interface can be obtained via the {@link JGDIFactory}. 
  *  For each <code>JGDI</code> instance the <code>close</code> method has to
@@ -203,7 +292,7 @@ import com.sun.grid.jgdi.monitoring.QHostResult;
  *    
  *  </pre>
  *
- *  <strong>Warning:</strong>  The JGDI interface will not be compatible with future N1&trade; Grid Engine releases. 
+ *  <strong>Warning:</strong>  The JGDI interface will not be compatible with future Sun&trade; Grid Engine releases. 
  *
  *  @version 6.5
  *

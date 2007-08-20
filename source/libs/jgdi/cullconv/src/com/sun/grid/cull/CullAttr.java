@@ -36,7 +36,6 @@ import com.sun.grid.cull.*;
 
 /**
  *
- * @author  rh150277
  */
 public class CullAttr {
    

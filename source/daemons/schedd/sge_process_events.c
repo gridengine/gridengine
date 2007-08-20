@@ -1094,23 +1094,23 @@ sge_process_project_event_before(sge_evc_class_t *evc, object_description *objec
 
    p = lGetString(event, ET_strkey);
    new = lFirst(lGetList(event, ET_new_version));
-   old = userprj_list_locate(*sge_master_list(object_base, SGE_TYPE_PROJECT), p);
+   old = prj_list_locate(*sge_master_list(object_base, SGE_TYPE_PROJECT), p);
 
    switch (action) {
    case SGE_EMA_ADD:
-      if (lGetBool(new, UP_consider_with_categories) == true) {
+      if (lGetBool(new, PR_consider_with_categories) == true) {
          rebuild_categories = true;
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_ADD(%s)\n", p));
       }
       break;
    case SGE_EMA_MOD:
-      if (lGetBool(new, UP_consider_with_categories) != lGetBool(old, UP_consider_with_categories)) {
+      if (lGetBool(new, PR_consider_with_categories) != lGetBool(old, PR_consider_with_categories)) {
          rebuild_categories = true;
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_MOD(%s)\n", p));
       }
       break;
    case SGE_EMA_DEL:
-      if (lGetBool(old, UP_consider_with_categories) == true) {
+      if (lGetBool(old, PR_consider_with_categories) == true) {
          rebuild_categories = true;
          DPRINTF(("callback before project event: rebuild categories due to SGE_EMA_DEL(%s)\n", p));
       }

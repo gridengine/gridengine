@@ -128,9 +128,21 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void clearShareTreeUsageWithAnswer(List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.clearShareTreeUsageWithAnswer(answers);
+        }
+    }
+
     public void cleanQueues(String[] queues) throws JGDIException {
         synchronized(jgdi) {
             jgdi.cleanQueues(queues);
+        }
+    }
+
+    public void cleanQueuesWithAnswer(String[] queues, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.cleanQueuesWithAnswer(queues, answers);
         }
     }
 
@@ -140,9 +152,22 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void killMasterWithAnswer(List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killMasterWithAnswer(answers);
+        }
+    }
+
+
     public void killScheduler() throws JGDIException {
         synchronized(jgdi) {
             jgdi.killScheduler();
+        }
+    }
+
+    public void killSchedulerWithAnswer(List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killSchedulerWithAnswer(answers);
         }
     }
 
@@ -152,9 +177,21 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killExecdWithAnswer(hosts, terminateJobs, answers);
+        }
+    }
+
     public void killAllExecds(boolean terminateJobs) throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllExecds(terminateJobs);
+        }
+    }
+
+    public void killAllExecdsWithAnswer(boolean terminateJobs, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killAllExecdsWithAnswer(terminateJobs, answers);
         }
     }
 
@@ -164,15 +201,33 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void killEventClientsWithAnswer(int[] ids, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killEventClientsWithAnswer(ids, answers);
+        }
+    }
+
     public void killAllEventClients() throws JGDIException {
         synchronized(jgdi) {
             jgdi.killAllEventClients();
         }
     }
 
+    public void killAllEventClientsWithAnswer(List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.killAllEventClientsWithAnswer(answers);
+        }
+    }
+
     public void triggerSchedulerMonitoring() throws JGDIException {
         synchronized(jgdi) {
             jgdi.triggerSchedulerMonitoring();
+        }
+    }
+
+    public void triggerSchedulerMonitoringWithAnswer(List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.triggerSchedulerMonitoringWithAnswer(answers);
         }
     }
 
@@ -188,9 +243,21 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void enableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.enableQueuesWithAnswer(queues, force, answers);
+        }
+    }
+
     public void disableQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.disableQueues(queues, force);
+        }
+    }
+
+    public void disableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.disableQueuesWithAnswer(queues, force, answers);
         }
     }
 
@@ -200,9 +267,21 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void suspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.suspendQueuesWithAnswer(queues, force, answers);
+        }
+    }
+
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendJobs(jobs, force);
+        }
+    }
+
+    public void suspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.suspendJobsWithAnswer(jobs, force, answers);
         }
     }
 
@@ -212,9 +291,21 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.unsuspendQueuesWithAnswer(queues, force, answers);
+        }
+    }
+    
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendJobs(jobs, force);
+        }
+    }
+
+    public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.unsuspendJobsWithAnswer(jobs, force, answers);
         }
     }
 
@@ -224,15 +315,35 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void clearQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.clearQueuesWithAnswer(queues, force, answers);
+        }
+    }
+
+
     public void clearJobs(String[] jobs, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.clearJobs(jobs, force);
         }
     }
 
+    public void clearJobsWithAnswer(String[] jobs, boolean force, List answer) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.clearJobsWithAnswer(jobs, force, answer);
+        }
+    }
+
+
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.rescheduleQueues(queues, force);
+        }
+    }
+
+    public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.rescheduleQueuesWithAnswer(queues, force, answers);
         }
     }
 
@@ -241,6 +352,13 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
             jgdi.rescheduleJobs(jobs, force);
         }
     }
+
+    public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.rescheduleJobsWithAnswer(jobs, force, answers);
+        }
+    }
+
 
     public String showDetachedSettings(String[] queues) throws JGDIException {
         synchronized(jgdi) {

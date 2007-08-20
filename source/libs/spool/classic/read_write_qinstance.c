@@ -373,14 +373,14 @@ write_qinstance(int spool, int how, const lListElem *ep)
       
          list = lGetList(ep, QU_projects);
 
-         userprj_list_append_to_dstring(list, &tmp_string);
+         prj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "projects           %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);
       
          list = lGetList(ep, QU_xprojects);
 
-         userprj_list_append_to_dstring(list, &tmp_string);
+         prj_list_append_to_dstring(list, &tmp_string);
          FPRINTF((fp, "xprojects          %s\n", 
                   sge_dstring_get_string(&tmp_string)));
          sge_dstring_free(&tmp_string);

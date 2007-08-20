@@ -219,7 +219,7 @@ static int jgdi_report_host_string_value(qhost_report_handler_t* handler, const 
    
    value_obj = (*env)->NewStringUTF(env, value);
    
-   if (HostInfoImpl_addHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
+   if (HostInfoImpl_putHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
      DRETURN(QHOST_ERROR);
    }
    
@@ -242,7 +242,7 @@ static int jgdi_report_host_ulong_value(qhost_report_handler_t* handler, const c
      DRETURN(QHOST_ERROR);
    }
    
-   if (HostInfoImpl_addHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
+   if (HostInfoImpl_putHostValue(env, jgdi_handler->qhost_info, name, value_obj, alpp) != JGDI_SUCCESS) {
      DRETURN(QHOST_ERROR);
    }
    DRETURN(QHOST_SUCCESS);
@@ -291,7 +291,7 @@ static int jgdi_report_resource_value(qhost_report_handler_t* handler, const cha
    
    value_obj = (*env)->NewStringUTF(env, value);
 
-   if (HostInfoImpl_addResourceValue(env, jgdi_handler->qhost_info, dominance, name, value_obj, alpp) != JGDI_SUCCESS) { 
+   if (HostInfoImpl_putResourceValue(env, jgdi_handler->qhost_info, dominance, name, value_obj, alpp) != JGDI_SUCCESS) { 
      DRETURN(QHOST_ERROR);
    }
 

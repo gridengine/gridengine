@@ -53,7 +53,7 @@
 #define QmonRSTU_Type    "STU_Type"
 #define QmonRRN_Type     "RN_Type"
 #define QmonRTRN_Type    "TRN_Type"
-#define QmonRUP_Type     "UP_Type"
+#define QmonRPR_Type     "PR_Type"
 #define QmonRUA_Type     "UA_Type"
 #define QmonRQR_Type     "QR_Type"
 #define QmonRLT_Type     "LT_Type"
@@ -83,7 +83,7 @@ externalref XrmQuark QmonQRN_Type;
 externalref XrmQuark QmonQTRN_Type;
 externalref XrmQuark QmonQInt;
 externalref XrmQuark QmonQCardinal;
-externalref XrmQuark QmonQUP_Type;
+externalref XrmQuark QmonQPR_Type;
 externalref XrmQuark QmonQUA_Type;
 externalref XrmQuark QmonQQR_Type;
 externalref XrmQuark QmonQLT_Type;

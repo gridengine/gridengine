@@ -104,6 +104,14 @@ int user        /* =1 user, =0 project */
    int ret;
    dstring ds;
    char buffer[256];
+   int obj_key = user ? UU_name : PR_name;
+   int obj_oticket = user ? UU_oticket : PR_oticket;
+   int obj_fshare = user ? UU_fshare : PR_fshare;
+   int obj_usage = user ? UU_usage : PR_usage;
+   int obj_usage_time_stamp = user ? UU_usage_time_stamp : PR_usage_time_stamp;
+   int obj_long_term_usage = user ? UU_long_term_usage : PR_long_term_usage;
+   int obj_debited_job_usage = user ? UU_debited_job_usage : PR_debited_job_usage;
+   int obj_project = user ? UU_project : PR_project;
 
    DENTER(TOP_LAYER, "write_userprj");
 
@@ -130,41 +138,41 @@ int user        /* =1 user, =0 project */
       goto FPRINTF_ERROR;
    } 
 
-   FPRINTF((fp, "name %s\n", lGetString(ep, UP_name)));
+   FPRINTF((fp, "name %s\n", lGetString(ep, obj_key)));
 
    {
       lList *pul;
 
-      FPRINTF((fp, "oticket " sge_u32 "\n", lGetUlong(ep, UP_oticket)));
-      FPRINTF((fp, "fshare " sge_u32 "\n", lGetUlong(ep, UP_fshare)));
+      FPRINTF((fp, "oticket " sge_u32 "\n", lGetUlong(ep, obj_oticket)));
+      FPRINTF((fp, "fshare " sge_u32 "\n", lGetUlong(ep, obj_fshare)));
 #if defined(allow_delete_time_modification)
       if (user)
-         FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UP_delete_time)));
+         FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UU_delete_time)));
 #endif
 
       if (spool) {
 #if !defined(allow_delete_time_modification)
          if (user)
-            FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UP_delete_time)));
+            FPRINTF((fp, "delete_time " sge_u32 "\n", lGetUlong(ep, UU_delete_time)));
 #endif
          FPRINTF((fp, "usage "));
-         ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_usage), 
-            intprt_as_usage, delis,0);
+         ret = uni_print_list(fp, NULL, 0, lGetList(ep, obj_usage), 
+            intprt_as_usage, delis, 0);
          if (ret < 0) {
             goto FPRINTF_ERROR;
          }
          FPRINTF((fp, "\n"));
          FPRINTF((fp, "usage_time_stamp " sge_u32 "\n", 
-                        lGetUlong(ep, UP_usage_time_stamp)));
+                        lGetUlong(ep, obj_usage_time_stamp)));
          FPRINTF((fp, "long_term_usage "));
-         ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_long_term_usage),
+         ret = uni_print_list(fp, NULL, 0, lGetList(ep, obj_long_term_usage),
             intprt_as_usage, delis,0);
          if (ret < 0) {
             goto FPRINTF_ERROR;
          }
          FPRINTF((fp, "\n"));
          FPRINTF((fp, "project "));
-         if ((pul=lGetList(ep, UP_project))) {
+         if ((pul=lGetList(ep, obj_project))) {
             FPRINTF((fp, "{\n"));
             for_each (ju, pul) {
                const char *upp_name = lGetString(ju, UPP_name);
@@ -198,20 +206,20 @@ int user        /* =1 user, =0 project */
    }
 
    if (user) {
-      const char *dproj = lGetString(ep, UP_default_project);
+      const char *dproj = lGetString(ep, UU_default_project);
       FPRINTF((fp, "default_project %s\n", dproj ? dproj : "NONE"));
    }
    
    if (!user) {
       FPRINTF((fp, "acl "));
-      ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_acl), intprt_as_acl, 
+      ret = uni_print_list(fp, NULL, 0, lGetList(ep, PR_acl), intprt_as_acl, 
                      delis, 0);
       if (ret < 0) {
          goto FPRINTF_ERROR;
       }
 
       FPRINTF((fp, "\nxacl "));
-      ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_xacl), intprt_as_acl, 
+      ret = uni_print_list(fp, NULL, 0, lGetList(ep, PR_xacl), intprt_as_acl, 
                      delis, 0);
       if (ret < 0) {
          goto FPRINTF_ERROR;
@@ -220,7 +228,7 @@ int user        /* =1 user, =0 project */
    }
                   
    if (spool) {
-      for_each (ju, lGetList(ep, UP_debited_job_usage)) {
+      for_each (ju, lGetList(ep, obj_debited_job_usage)) {
          FPRINTF((fp, sge_u32" ", lGetUlong(ju, UPU_job_number)));
          ret = uni_print_list(fp, NULL, 0, lGetList(ju, UPU_old_usage_list), 
                         intprt_as_usage, delis,0);
@@ -263,36 +271,43 @@ int parsing_type
    lListElem *upu = NULL;
    lListElem *cp = NULL;
    lListElem *next = NULL;
+   int obj_key = user ? UU_name : PR_name;
+   int obj_oticket = user ? UU_oticket : PR_oticket;
+   int obj_fshare = user ? UU_fshare : PR_fshare;
+   int obj_usage = user ? UU_usage : PR_usage;
+   int obj_usage_time_stamp = user ? UU_usage_time_stamp : PR_usage_time_stamp;
+   int obj_long_term_usage = user ? UU_long_term_usage : PR_long_term_usage;
+   int obj_debited_job_usage = user ? UU_debited_job_usage : PR_debited_job_usage;
+   int obj_project = user ? UU_project : PR_project;
 
    DENTER(TOP_LAYER, "read_userprj_work");
 
    /* --------- UP_name */
-   if (!set_conf_string(alpp, clpp, fields, "name", ep, UP_name)) {
+   if (!set_conf_string(alpp, clpp, fields, "name", ep, obj_key)) {
       DRETURN(-1);
    }
 
    /* --------- UP_oticket */
-   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, UP_oticket)) {
+   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, obj_oticket)) {
       DRETURN(-1);
    }
 
    /* --------- UP_fshare */
-   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, UP_fshare)) {
+   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, obj_fshare)) {
       DRETURN(-1);
    }
 
-   /* --------- UP_default_project */
+   /* --------- UU_default_project */
    if (user) {
-
       if (!set_conf_string(alpp, clpp, fields, "default_project", ep,
-             UP_default_project)) {
+             UU_default_project)) {
          DRETURN(-1);
       }
-      NULL_OUT_NONE(ep, UP_default_project);
+      NULL_OUT_NONE(ep, UU_default_project);
 
 #if defined(allow_delete_time_modification)
       if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
-               UP_delete_time)) {
+               UU_delete_time)) {
          DRETURN(-1);
       }
 #endif
@@ -304,7 +319,7 @@ int parsing_type
       const char *val;
 
 #if !defined(allow_delete_time_modification)
-      /* --------- UP_delete_time */
+      /* --------- UU_delete_time */
       if (user) {
          if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
                   UP_delete_time)) {
@@ -315,19 +330,19 @@ int parsing_type
 
       /* --------- UP_usage */
       if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
-               UP_usage, UA_Type, intprt_as_usage)) {
+               obj_usage, UA_Type, intprt_as_usage)) {
          DRETURN(-1);
       }
 
       /* --------- UP_usage_time_stamp */
       if (!set_conf_ulong(alpp, clpp, fields, "usage_time_stamp", ep, 
-               UP_usage_time_stamp)) {
+               obj_usage_time_stamp)) {
          DRETURN(-1);
       }
 
       /* --------- UP_long_term_usage */
       if (!set_conf_deflist(alpp, clpp, fields, "long_term_usage", ep, 
-               UP_long_term_usage, UA_Type, intprt_as_usage)) {
+               obj_long_term_usage, UA_Type, intprt_as_usage)) {
          DRETURN(-1);
       }
 
@@ -340,14 +355,14 @@ int parsing_type
          while ((cp = next)) {
             next = lNext(cp);
             name = lGetString(cp, CF_name);
-            add_nm_to_set(fields, UP_project);
+            add_nm_to_set(fields, obj_project);
 
             if ((lGetList(cp, CF_sublist))) {
 
                ssclp = lCopyList(NULL, lGetList(cp, CF_sublist));
 
                /* --------- UPP_name */
-               if (!(upp = lAddSubStr(ep, UPP_name, name, UP_project, UPP_Type))) {
+               if (!(upp = lAddSubStr(ep, UPP_name, name, obj_project, UPP_Type))) {
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PROJECT_FOUNDPROJECTXTWICE_S, name));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX,
                          ANSWER_QUALITY_ERROR);
@@ -399,22 +414,22 @@ int parsing_type
        * object.
        */
 
-      /* --------- UP_delete_time */
+      /* --------- UU_delete_time */
       if (user) {
-         lSetUlong(ep, UP_delete_time, 0);
+         lSetUlong(ep, UU_delete_time, 0);
       }
 #endif
 
    }
 
    if (!user) {
-      /* --------- UP_acl */
-      if (!set_conf_list(alpp, clpp, fields, "acl", ep, UP_acl, US_Type, US_name)) {
+      /* --------- PR_acl */
+      if (!set_conf_list(alpp, clpp, fields, "acl", ep, PR_acl, US_Type, US_name)) {
          DRETURN(-1);
       }
 
-      /* --------- UP_xacl */
-      if (!set_conf_list(alpp, clpp, fields, "xacl", ep, UP_xacl, US_Type, US_name)) {
+      /* --------- PR_xacl */
+      if (!set_conf_list(alpp, clpp, fields, "xacl", ep, PR_xacl, US_Type, US_name)) {
          DRETURN(-1);
       }
    }
@@ -431,10 +446,10 @@ int parsing_type
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DRETURN(-1);
          }
-         add_nm_to_set(fields, UP_debited_job_usage);
+         add_nm_to_set(fields, obj_debited_job_usage);
 
          if (!(upu = lAddSubUlong(ep, UPU_job_number, job_number, 
-                                    UP_debited_job_usage, UPU_Type))) {
+                                    obj_debited_job_usage, UPU_Type))) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_JOB_FOUNDJOBXTWICE_U, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             DRETURN(-1);
@@ -461,13 +476,17 @@ int user,
 int *tag 
 ) {
    lListElem *ep;
-   struct read_object_args args = { UP_Type, "userprj", read_userprj_work };
+   struct read_object_args args = { PR_Type, "userprj", read_userprj_work };
    int intern_tag = 0;
 
    DENTER(TOP_LAYER, "cull_read_in_userprj");
 
-   ep = read_object(dirname, filename, spool, user, 0,&args, tag?tag:&intern_tag, NULL);
+   if (user) {
+      args.objtype = UU_Type;
+   }
 
+   ep = read_object(dirname, filename, spool, user, 0, &args, tag ? tag : &intern_tag, NULL);
+ 
    DRETURN(ep);
 }
 
@@ -493,18 +512,18 @@ int main(int argc, char *argv[])
 
 
    lInit(nmv);
-   ep = lCreateElem(UP_Type);
+   ep = lCreateElem(UU_Type);
 
-   lSetString(ep, UP_name, "andreas");
+   lSetString(ep, UU_name, "andreas");
 
-   sep = lAddSubStr(ep, UA_name, "mem", UP_usage, UA_Type);
+   sep = lAddSubStr(ep, UA_name, "mem", UU_usage, UA_Type);
    lSetDouble(sep, UA_value, 1.5);
-   sep = lAddSubStr(ep, UA_name, "io", UP_usage, UA_Type);
+   sep = lAddSubStr(ep, UA_name, "io", UU_usage, UA_Type);
    lSetDouble(sep, UA_value, 2.5);
-   sep = lAddSubStr(ep, UA_name, "cpu", UP_usage, UA_Type);
+   sep = lAddSubStr(ep, UA_name, "cpu", UU_usage, UA_Type);
    lSetDouble(sep, UA_value, 3.5);
 
-   sep = lAddSubUlong(ep, UPU_job_number, 20, UP_debited_job_usage, UPU_Type);
+   sep = lAddSubUlong(ep, UPU_job_number, 20, UU_debited_job_usage, UPU_Type);
       ssep = lAddSubStr(sep, UA_name, "mem", UPU_old_usage_list, UA_Type);
       lSetDouble(ssep, UA_value, 1.5);
       ssep = lAddSubStr(sep, UA_name, "io", UPU_old_usage_list, UA_Type);
@@ -512,7 +531,7 @@ int main(int argc, char *argv[])
       ssep = lAddSubStr(sep, UA_name, "cpu", UPU_old_usage_list, UA_Type);
       lSetDouble(ssep, UA_value, 3.5);
 
-   sep = lAddSubUlong(ep, UPU_job_number, 21, UP_debited_job_usage, UPU_Type);
+   sep = lAddSubUlong(ep, UPU_job_number, 21, UU_debited_job_usage, UPU_Type);
       ssep = lAddSubStr(sep, UA_name, "mem", UPU_old_usage_list, UA_Type);
       lSetDouble(ssep, UA_value, 1.25);
       ssep = lAddSubStr(sep, UA_name, "io", UPU_old_usage_list, UA_Type);

@@ -66,6 +66,7 @@ enum {
 };
 
 LISTDEF(AN_Type)
+   JGDI_OBJ(JGDIAnswer)
    SGE_ULONG(AN_status, CULL_DEFAULT)
    SGE_STRING(AN_text, CULL_DEFAULT)
    SGE_ULONG(AN_quality, CULL_DEFAULT)

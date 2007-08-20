@@ -1066,7 +1066,7 @@ static ListTreeItem* cq_add_aprjlist(Widget tree, ListTreeItem *parent,
       lList *value = lGetList(ep, APRJLIST_value);
       sublist = ListTreeAddBranch(tree, item, hostref);
       for_each(ep2, value) { 
-         char *name = (char*) lGetString(ep2, UP_name);
+         char *name = (char*) lGetString(ep2, PR_name);
          ListTreeAddLeaf(tree, sublist, name ? name : "-NA-");
       }   
    }   
@@ -1146,7 +1146,7 @@ static ListTreeItem* cq_add_asolist(Widget tree, ListTreeItem *parent,
       u_long32 u = lGetUlong(ep, AQTLIST_value);
       sublist = ListTreeAddBranch(tree, item, hostref);
       for_each(ep2, value) { 
-         char *name = lGetString(ep2, UP_name);
+         char *name = lGetString(ep2, PR_name);
          ListTreeAddLeaf(tree, sublist, name ? name : "-NA-");
       }   
    }   
@@ -1366,13 +1366,13 @@ lListElem *qep
    /* projects */
    sge_dstring_sprintf_append(info, "%-30.30s", "Project List:");
    for_each(ep, lGetList(qep, QU_projects)) {
-      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, UP_name));
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, PR_name));
    }
    sge_dstring_sprintf_append(info, "\n"); 
    /* xprojects */
    sge_dstring_sprintf_append(info, "%-30.30s", "XProject List:");
    for_each(ep, lGetList(qep, QU_xprojects)) {
-      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, UP_name));
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, PR_name));
    }
    sge_dstring_sprintf_append(info, "\n"); 
 

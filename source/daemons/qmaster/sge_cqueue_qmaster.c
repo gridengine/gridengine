@@ -1252,8 +1252,8 @@ static void cqueue_diff_sublist(const lListElem *new, const lListElem *old,
 *  INPUTS
 *     const lListElem *new - New cluster queue (CQ_Type)
 *     const lListElem *old - Old cluster queue (CQ_Type)
-*     lList **new_prj      - New project references (UP_Type)
-*     lList **old_prj      - Old project references (UP_Type)
+*     lList **new_prj      - New project references (PR_Type)
+*     lList **old_prj      - Old project references (PR_Type)
 *
 *  NOTES
 *     MT-NOTE: cqueue_diff_projects() is MT safe
@@ -1262,8 +1262,8 @@ void cqueue_diff_projects(const lListElem *new,
          const lListElem *old, lList **new_prj, lList **old_prj)
 {
    cqueue_diff_sublist(new, old, CQ_projects, CQ_xprojects,
-         APRJLIST_value, UP_name, UP_Type, new_prj, old_prj);
-   lDiffListStr(UP_name, new_prj, old_prj);
+         APRJLIST_value, PR_name, PR_Type, new_prj, old_prj);
+   lDiffListStr(PR_name, new_prj, old_prj);
 }
 
 /****** sge_cqueue_qmaster/cqueue_diff_usersets() ******************************

@@ -1,3 +1,12 @@
+AA-2007-08-20-0: Enhancem.: - require jdk 1.5 for jgdi
+                            - comment cleanup
+                            - userprj UP_Type split into UU_Type and PR_Type
+                            - manager/operator MO_Type split into UM_Type and UO_Type
+                            - added *WithAnswer methods to return answers from master in jgdi
+                            - jvm thread code: to activate -> aimk -DJVM_THREAD
+                              in bootstrap file add: libjvm_path  <java_home_for_arch>/jre/lib/<java_arch>/server/libjvm.so
+                 Review:    EB
+
 MD-2007-08-13-0: Bugfix:    merged checkin MD-2007-07-23-0 from V61_BRANCH
 
 LP-2007-08-09-0: Enhancem.: QConfCommand restructured.

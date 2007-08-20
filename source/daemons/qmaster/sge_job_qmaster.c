@@ -611,7 +611,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
          /* ensure user exists if enforce_user flag is set */
          if (enforce_user && !strcasecmp(enforce_user, "true") && 
-                  !userprj_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
+                  !user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
             ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -624,8 +624,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /* set default project */
       if (!lGetString(jep, JB_project) && ruser && *object_base[SGE_TYPE_USER].list) {
          lListElem *uep = NULL;
-         if ((uep = userprj_list_locate(*object_base[SGE_TYPE_USER].list, ruser)))
-            lSetString(jep, JB_project, lGetString(uep, UP_default_project));
+         if ((uep = user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)))
+            lSetString(jep, JB_project, lGetString(uep, UU_default_project));
       }
 
       /* project */
@@ -634,7 +634,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
          if ((project=lGetString(jep, JB_project))) {
             lList* xprojects;
             lListElem *pep;
-            if (!(pep = userprj_list_locate(*object_base[SGE_TYPE_PROJECT].list , project))) {
+            if (!(pep = prj_list_locate(*object_base[SGE_TYPE_PROJECT].list , project))) {
                ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -644,8 +644,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
             /* ensure user belongs to this project */
             if (!sge_has_access_(ruser, group, 
-                                 lGetList(pep, UP_acl), 
-                                 lGetList(pep, UP_xacl), 
+                                 lGetList(pep, PR_acl), 
+                                 lGetList(pep, PR_xacl), 
                                  *object_base[SGE_TYPE_USERSET].list)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
                         project, ruser));
@@ -657,8 +657,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
 
             /* verify project can submit jobs */
             xprojects = mconf_get_xprojects();
-            if ((xprojects && userprj_list_locate(xprojects, project)) ||
-                (projects && !userprj_list_locate(projects, project))) {
+            if ((xprojects && prj_list_locate(xprojects, project)) ||
+                (projects && !prj_list_locate(projects, project))) {
                ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
@@ -2746,7 +2746,7 @@ int *trigger
       enforce_project = mconf_get_enforce_project();
       
       project = lGetString(jep, JB_project);
-      if (project && !userprj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), 
+      if (project && !prj_list_locate(*object_type_get_master_list(SGE_TYPE_PROJECT), 
                                           project)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_JOB_PROJECT, project));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);

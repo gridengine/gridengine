@@ -65,9 +65,9 @@ public class XMLDump {
          
          if(name.equals("all")) {
             
-            Method method = JGDI.class.getMethod("get" + objectName + "List", null);
+            Method method = JGDI.class.getMethod("get" + objectName + "List", (java.lang.Class[])null);
             
-            List list = (List)method.invoke(jgdi, null);
+            List list = (List)method.invoke(jgdi, (java.lang.Object[])null);
             
             Iterator iter = list.iterator();
             while(iter.hasNext()) {

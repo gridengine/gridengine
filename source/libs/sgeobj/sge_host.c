@@ -292,7 +292,7 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
          }
          break;
       case EH_name:
-      case CONF_hname:
+      case CONF_name:
          if ((strcmp(hostname, SGE_GLOBAL_NAME)!=0) && 
              (strcmp(hostname, SGE_TEMPLATE_NAME)!=0)) {
             ret = getuniquehostname(hostname, unique, 0);

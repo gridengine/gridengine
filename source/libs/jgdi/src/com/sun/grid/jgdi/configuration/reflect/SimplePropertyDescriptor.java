@@ -113,7 +113,7 @@ public class SimplePropertyDescriptor extends PropertyDescriptor {
     */   
    public Object getValue( Object bean ) {
       try {
-         return getter.invoke( bean, null );
+         return getter.invoke( bean, (java.lang.Object[])null );
       } catch( IllegalAccessException ila ) {
          IllegalStateException ilse = new IllegalStateException("getter of " 
              + getBeanClass().getName() + "." + getPropertyName() 

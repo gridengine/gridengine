@@ -151,6 +151,18 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException
      */
     public void clearShareTreeUsage() throws JGDIException;
+
+    /**
+     * <p>Clears all user and project usage from  the  sharetree.
+     * All usage will be initialized back to zero.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -clearusage</code> (see man qconf(1)).</p>
+     *
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException
+     */
+    public void clearShareTreeUsageWithAnswer(List answers) throws JGDIException;
+    
     
     /**
      * <p>Cleans queue from jobs which haven't been reaped. Primarily for
@@ -162,7 +174,19 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void cleanQueues(String[] queues) throws JGDIException;
-    
+
+    /**
+     * <p>Cleans queue from jobs which haven't been reaped. Primarily for
+     *    development purpose. Requires root/manager/operator privileges.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -kcq</code> (see man qconf(1)).</p>
+     *
+     * @param queues a wild card queue list
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void cleanQueuesWithAnswer(String[] queues, List answers) throws JGDIException;
+
     
     /**
      * Send the qmaster a kill signal.
@@ -172,6 +196,17 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killMaster() throws JGDIException;
+
+    /**
+     * Send the qmaster a kill signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -km</code> (see man qconf(1)).</p>
+     *
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void killMasterWithAnswer(List answers) throws JGDIException;
+    
     
     /**
      * Send the schedduler a kill signal.
@@ -181,6 +216,16 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killScheduler() throws JGDIException;
+
+    /**
+     * Send the schedduler a kill signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -ks</code> (see man qconf(1)).</p>
+     *
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void killSchedulerWithAnswer(List answers) throws JGDIException;
     
     /**
      * Send some execution hosts a kill signal.
@@ -194,7 +239,20 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
      */
     public void killExecd(String[] hosts, boolean terminateJobs) throws JGDIException;
-    
+
+    /**
+     * Send some execution hosts a kill signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -ke</code> (see man qconf(1)).</p>
+     *
+     * @param hosts         a host name list
+     * @param terminateJobs if true, all jobs running on the execution hosts are
+     *                      aborted prior to termination of the corresponding
+     *                      sge_execd(8).
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void killExecdWithAnswer(String[] hosts, boolean terminateJobs, List answers) throws JGDIException;
     
     /**
      * Send all execution hosts a kill signal.
@@ -208,6 +266,18 @@ public interface JGDIBase {
      */
     public void killAllExecds(boolean terminateJobs) throws JGDIException;
     
+    /**
+     * Send all execution hosts a kill signal.
+     *
+     * <p>The CLI equivialent for this method is <code>qconf -ke all</code> (see man qconf(1)).</p>
+     *
+     * @param terminateJobs if true, all jobs running on the execution hosts are
+     *                      aborted prior to termination of the corresponding
+     *                      sge_execd(8).
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
+     */
+    public void killAllExecdsWithAnswer(boolean terminateJobs, List answers) throws JGDIException;
     
     /**
      * <p>Used to shutdown event clients registered at qmaster(8), except
@@ -219,6 +289,19 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void killEventClients(int [] ids) throws JGDIException;
+
+    /**
+     * <p>Used to shutdown event clients registered at qmaster(8), except
+     *    special clients like the sge_schedd(8)</p>
+     * <p>Requires root or manager privilege.</p>
+     * <p>The CLI equivialent for this method is <code>qconf -secl</code> (see man qconf(1)).</p>
+     *
+     * @param ids  array with the ids of the event clients which should be killed
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void killEventClientsWithAnswer(int [] ids, List answers) throws JGDIException;
+    
     
     /**
      * <p>Used to shutdown event clients all registered at qmaster(8).</p>
@@ -226,6 +309,12 @@ public interface JGDIBase {
      */
     public void killAllEventClients() throws JGDIException;
     
+    /**
+     * <p>Used to shutdown event clients all registered at qmaster(8).</p>
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void killAllEventClientsWithAnswer(List answers) throws JGDIException;
     
     /**
      * <p>The N1 Grid Engine scheduler sge_schedd(8) is forced to print
@@ -238,6 +327,19 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void triggerSchedulerMonitoring() throws JGDIException;
+
+    /**
+     * <p>The N1 Grid Engine scheduler sge_schedd(8) is forced to print
+     *   trace messages of its  next scheduling run to the file
+     *  &lt;sge_root&gt;/&lt;cell&gt;/common/schedd_runlog.
+     *   The messages indicate the reasons for jobs and queues not being
+     *   selected in that run.</p>
+     * <p>Requires root or manager privileges.</p>
+     * <p>The CLI equivialent for this method is <code>qconf -tsm</code> (see man qconf(1)).</p>
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void triggerSchedulerMonitoringWithAnswer(List answers) throws JGDIException;
     
     /**
      * <p>Return the host where the N1 Grid Engine scheduler sge_schedd(8) is
@@ -256,6 +358,17 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void enableQueues(String[] queues, boolean force) throws JGDIException;
+
+    /**
+     * <p>Enable queue(s).</p>
+     * <p>The CLI equivialent for this method is <code>qmod -e<code> (see man qmod(1)).</p>
+     * @param queues  a wildcard queue list
+     * @param force   force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void enableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
+    
     
     /**
      * <p>Disable queue(s),  i.e. no further jobs are dispatched to disabled
@@ -266,6 +379,18 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void disableQueues(String[] queues, boolean force) throws JGDIException;
+
+    /**
+     * <p>Disable queue(s),  i.e. no further jobs are dispatched to disabled
+     *  queues while jobs already executing in these queues are allowed to finish.</p>
+     * <p>The CLI equivialent for this method is <code>qmod -d<code> (see man qmod(1)).</p>
+     * @param queues  a wildcard queue list
+     * @param force   force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void disableQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
+    
     
     /**
      * <p>Suspend the  queues  and  any jobs which might be active.</p>
@@ -277,6 +402,18 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendQueues(String[] queues, boolean force) throws JGDIException;
+
+    /**
+     * <p>Suspend the  queues  and  any jobs which might be active.</p>
+     *
+     * <p>The CLI equivialent for this method is qmod -sq (see man qmod(1)).</p>
+     *
+     * @param queues  a wildcard queue list
+     * @param force   force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void suspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
     
     
     /**
@@ -291,7 +428,20 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void suspendJobs(String[] jobs, boolean force) throws JGDIException;
-    
+
+    /**
+     * <p>Suspends job(s). If a job is  both suspended explicitly and via
+     * suspension of its queue, a following unsuspend  of  the  queue  will  not
+     * release the suspension state on the job.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -sj</code> (see man qmod(1)).</p>
+     *
+     * @param jobs   a wildcard job list
+     * @param force  force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void suspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException;
     
     /**
      * <p>Unsuspends the queues and any jobs which might be active.</p>
@@ -305,6 +455,18 @@ public interface JGDIBase {
      */
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException;
     
+    /**
+     * <p>Unsuspends the queues and any jobs which might be active.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -usq</code>
+     *    (see man qmod(1)).</p>
+     *
+     * @param queues  a wildcard queue list
+     * @param force   force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void unsuspendQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
     
     /**
      * <p>Unsuspends the job(s). If a job is both  suspended  explicitly
@@ -321,6 +483,21 @@ public interface JGDIBase {
     public void unsuspendJobs(String[] jobs, boolean force) throws JGDIException;
     
     /**
+     * <p>Unsuspends the job(s). If a job is both  suspended  explicitly
+     * and via suspension of its queue, a following unsuspend of the
+     * queue will not release the suspension state on the job.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -usj</code>
+     *    (see man qmod(1)).</p>
+     *
+     * @param  jobs   a wildcard queue list
+     * @param  force  force the action
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void unsuspendJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException;
+
+    /**
      * <p>Clears the error state of the specified queues(s).</p>
      *
      * <p>The CLI equivialent for this method is <code>qmod -cq<code>
@@ -332,6 +509,20 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void clearQueues(String[] queues, boolean force) throws JGDIException;
+
+    /**
+     * <p>Clears the error state of the specified queues(s).</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -cq<code>
+     *    (see man qmod(1)).</p>
+     *
+     * @param queues  a wildcard queue list
+     * @param force   <p>Force the modification action for the queue
+     *                   despite the apparent  current  state of the queue.</p>
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void clearQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
     
     /**
      * <p>Clears the error state of the specified jobs(s).</p>
@@ -344,6 +535,17 @@ public interface JGDIBase {
      */
     public void clearJobs(String[] jobs, boolean force) throws JGDIException;
     
+    /**
+     * <p>Clears the error state of the specified jobs(s).</p>
+     *
+     * <p>The CLI equivialent for this method is qmod -cj (see man qmod(1)).</p>
+     *
+     * @param jobs   a wildcard job list
+     * @param force  Force the modification action for the job(s)
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void clearJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException;
     
     /**
      *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
@@ -356,7 +558,19 @@ public interface JGDIBase {
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException;
-    
+
+    /**
+     *  <p>Reschedules  all  jobs  currently running  in  the  queue(s). Requires
+     *  root  or  manager privileges.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -r</code> (see man qmod(1)).</p>
+     * @param queues  a wildcard queue list
+     * @param force   Force the modification action for the queue
+     *                despite the apparent  current  state of the queue.
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void rescheduleQueuesWithAnswer(String[] queues, boolean force, List answers) throws JGDIException;
     
     /**
      * <p>If applied  to  running  jobs,  reschedules  the  jobs.
@@ -366,10 +580,22 @@ public interface JGDIBase {
      *
      * @param jobs   a wildcard job range list
      * @param force  Force the modification action for the job(s)
-     * @throws com.sun.grid.jgdi.JGDIException
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public void rescheduleJobs(String[] jobs, boolean force) throws JGDIException;
+
+    /**
+     * <p>If applied  to  running  jobs,  reschedules  the  jobs.
+     * Requires root or manager privileges.</p>
+     *
+     * <p>The CLI equivialent for this method is <code>qmod -r</code> (see man qmod(1)).</p>
+     *
+     * @param jobs   a wildcard job range list
+     * @param force  Force the modification action for the job(s)
+     * @param answers   the <code>answer list</code> object
+     * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
+     */
+    public void rescheduleJobsWithAnswer(String[] jobs, boolean force, List answers) throws JGDIException;
     
     /**
      * <p>Show the detached settings of a cluster queue
@@ -379,7 +605,6 @@ public interface JGDIBase {
      *
      * @param queues   a wildcard cluster queue list
      * @return the detached settings summary information as a <code>java.lang.String</code>
-     * @throws com.sun.grid.jgdi.JGDIException
      * @throws com.sun.grid.jgdi.JGDIException JGDIException on any error on the GDI level
      */
     public String showDetachedSettings(String[] queues) throws JGDIException;

@@ -85,6 +85,12 @@ public class EditorParser {
             continue;
          }
          
+         //CONFIGURATION special case
+         if (obj instanceof Configuration) {
+            map.put(attr, line.trim());
+            continue;
+         }
+         
          if ((pd = getPropertyDescriptor(obj, attr))==null) {
                throw new IllegalArgumentException("Skipped: Unknown attribute \""+attr+"\"");
          }
@@ -92,7 +98,7 @@ public class EditorParser {
             throw new IllegalArgumentException("Skipped: Read only attribute \""+attr+"\"");
          }
          
-         line = parseOnePlainTextLine(obj,pd, line.trim());
+         line = parseOnePlainTextLine(obj, pd, line.trim());
          if (line == null || line.length() ==0) {
             throw new IllegalArgumentException("Invalid value format for attribute \""+attr+"\"");
          }       
@@ -102,7 +108,7 @@ public class EditorParser {
    }
    
    /**
-    * Finds a PropertyDescriptor for given obj and propery name
+    * Finds a PropertyDescriptor for given obj and property name
     */
    private static PropertyDescriptor getPropertyDescriptor(GEObject obj, String propertyName) {
       propertyName = EditorUtil.c2javaName(obj, propertyName);

@@ -154,12 +154,16 @@ enum NameSpaceBoundaries {
    MR_LOWERBOUND = VA_UPPERBOUND + 1,
    MR_UPPERBOUND = MR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
+   /* manager list */
+   UM_LOWERBOUND = MR_UPPERBOUND + 1,
+   UM_UPPERBOUND = UM_LOWERBOUND + 1*BASIC_UNIT - 1,
+   
    /* manager and operator list */
-   MO_LOWERBOUND = MR_UPPERBOUND + 1,
-   MO_UPPERBOUND = MO_LOWERBOUND + 1*BASIC_UNIT - 1,
+   UO_LOWERBOUND = UM_UPPERBOUND + 1,
+   UO_UPPERBOUND = UO_LOWERBOUND + 1*BASIC_UNIT - 1,
    
    /* the event itself */
-   ET_LOWERBOUND = MO_UPPERBOUND + 1,
+   ET_LOWERBOUND = UO_UPPERBOUND + 1,
    ET_UPPERBOUND = ET_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* subscribed event list */
@@ -230,12 +234,16 @@ enum NameSpaceBoundaries {
    UA_LOWERBOUND = SO_UPPERBOUND + 1,
    UA_UPPERBOUND = UA_LOWERBOUND + 1*BASIC_UNIT - 1,
 
+   /* list of projects */
+   PR_LOWERBOUND = UA_UPPERBOUND + 1,
+   PR_UPPERBOUND = PR_LOWERBOUND + 1*BASIC_UNIT - 1,
+
    /* list of users/projects */
-   UP_LOWERBOUND = UA_UPPERBOUND + 1,
-   UP_UPPERBOUND = UP_LOWERBOUND + 1*BASIC_UNIT - 1,
+   UU_LOWERBOUND = PR_UPPERBOUND + 1,
+   UU_UPPERBOUND = UU_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* list of share tree nodes */
-   STN_LOWERBOUND = UP_UPPERBOUND + 1,
+   STN_LOWERBOUND = UU_UPPERBOUND + 1,
    STN_UPPERBOUND = STN_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* scheduler config */

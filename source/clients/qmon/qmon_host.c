@@ -130,12 +130,12 @@ XtResource host_resources[] = {
       XtRImmediate, NULL },
       
 /*---- projects  ----*/
-   { "prj", "prj", QmonRUP_Type,
+   { "prj", "prj", QmonRPR_Type,
       sizeof(lList *),
       XtOffsetOf(tHostEntry, prj),
       XtRImmediate, NULL },
    
-   { "xprj", "xprj", QmonRUP_Type,
+   { "xprj", "xprj", QmonRPR_Type,
       sizeof(lList *),
       XtOffsetOf(tHostEntry, xprj),
       XtRImmediate, NULL },
@@ -471,8 +471,8 @@ static void qmonHostAvailableProjects(void)
    DENTER(GUI_LAYER, "qmonHostAvailableProjects");
 
    lp = qmonMirrorList(SGE_PROJECT_LIST);
-   lPSortList(lp, "%I+", UP_name);
-   UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, lp, UP_name);
+   lPSortList(lp, "%I+", PR_name);
+   UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, lp, PR_name);
 
    DEXIT;
 }
@@ -646,7 +646,7 @@ static void qmonExecHostSelect(Widget w, XtPointer cld, XtPointer cad)
       sprintf(buf, "%-15.15s", "Projects");
       for_each(ep, lsl) {
          strcat(buf, " ");
-         strcat(buf, lGetString(ep, UP_name));
+         strcat(buf, lGetString(ep, PR_name));
       }
       if (!lGetNumberOfElem(lsl))
          strcat(buf, " NONE");
@@ -661,7 +661,7 @@ static void qmonExecHostSelect(Widget w, XtPointer cld, XtPointer cad)
       sprintf(buf, "%-15.15s", "XProjects");
       for_each(ep, lsl) {
          strcat(buf, " ");
-         strcat(buf, lGetString(ep, UP_name));
+         strcat(buf, lGetString(ep, PR_name));
       }
       if (!lGetNumberOfElem(lsl))
          strcat(buf, " NONE");

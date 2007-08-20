@@ -36,7 +36,6 @@ import java.io.File;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TemplateConverterDefinition extends ConverterDefinition {
    

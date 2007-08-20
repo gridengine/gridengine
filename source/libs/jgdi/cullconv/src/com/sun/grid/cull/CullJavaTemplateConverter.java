@@ -40,7 +40,6 @@ import java.util.Map;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class CullJavaTemplateConverter extends AbstractCullToJavaConverter {
    

@@ -89,7 +89,7 @@ public class JobMonitor extends JFrame {
    
    private ConnectionHistory connectionHistory;
    public JobMonitor() {
-      super("N1 Grid Engine Job Monitor");
+      super("Sun Grid Engine Job Monitor");
       this.addWindowListener( new ExitHandler() );
       
       JScrollPane sc = new JScrollPane(jobTable);

@@ -229,7 +229,7 @@ void sge_build_job_category_dstring(dstring *category_str, lListElem *job, lList
       const char *project = lGetPosString(job, Category_Control.cull_order_pos.JB_project_pos);
 
       const lListElem *prj;
-      if (project && (prj=lGetElemStr(prj_list, UP_name, project)) && lGetBool(prj, UP_consider_with_categories)) {
+      if (project && (prj=lGetElemStr(prj_list, PR_name, project)) && lGetBool(prj, PR_consider_with_categories)) {
          if (did_project)
             *did_project = true;
          sge_unparse_string_option_dstring(category_str, job, Category_Control.cull_order_pos.JB_project_pos, "-P");

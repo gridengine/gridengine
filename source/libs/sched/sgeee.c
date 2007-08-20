@@ -177,7 +177,7 @@ static double calc_pjob_override_tickets_shared( sge_ref_t *ref);
 static void free_fcategories(lList **fcategories, sge_ref_list_t ** ref_array);
 static u_long32 build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **root, 
                                         sge_ref_list_t ** ref_array, int dependent, 
-                                        u_long32 job_tickets, u_long32 up_tickets, u_long32 dp_tickets); 
+                                        u_long32 job_tickets, u_long32 user_tickets, u_long32 prj_tickets, u_long32 dp_tickets); 
 static void copy_ftickets(sge_ref_list_t *source, sge_ref_list_t *dest);
 static void destribute_ftickets(lList *root, int dependent);
 
@@ -207,7 +207,8 @@ static double Master_max_tix = 0.0;     /* thread local */
 static int halflife = 0;                /* stores the last used halflife time to detect changes  thread_local*/
 static int last_seqno = 0;              /* stores the last used seqno for the orders  thread_local*/
 static u_long32 past = 0;               /* stores the last re-order send time thread local */
-static lEnumeration *usage_what = NULL; /* thread local */
+static lEnumeration *user_usage_what = NULL; /* thread local */
+static lEnumeration *prj_usage_what = NULL; /* thread local */
 static lEnumeration *share_tree_what = NULL; /* thread local */
 
 
@@ -744,22 +745,22 @@ sge_set_job_refs( lListElem *job,
     * locate user object and save off reference
     *-------------------------------------------------------------*/
 
-   ref->user = userprj_list_locate(lists->user_list,
+   ref->user = user_list_locate(lists->user_list,
                                    lGetString(job, JB_owner));
    if (ref->user) {
-      lSetUlong(ref->user, UP_job_cnt, 0);
-      lSetUlong(ref->user, UP_pending_job_cnt, 0);
+      lSetUlong(ref->user, UU_job_cnt, 0);
+      lSetUlong(ref->user, UU_pending_job_cnt, 0);
    }
 
    /*-------------------------------------------------------------
     * locate project object and save off reference
     *-------------------------------------------------------------*/
 
-   ref->project = userprj_list_locate(lists->project_list,
+   ref->project = prj_list_locate(lists->project_list,
                                       lGetString(job, JB_project));
    if (ref->project) {
-      lSetUlong(ref->project, UP_job_cnt, 0);
-      lSetUlong(ref->project, UP_pending_job_cnt, 0);
+      lSetUlong(ref->project, PR_job_cnt, 0);
+      lSetUlong(ref->project, PR_pending_job_cnt, 0);
    }
 
    /*-------------------------------------------------------------
@@ -773,8 +774,8 @@ sge_set_job_refs( lListElem *job,
 
       if (ref->user || ref->project) {
          ref->node = search_userprj_node(root,
-               ref->user ? lGetString(ref->user, UP_name) : NULL,
-               ref->project ? lGetString(ref->project, UP_name) : NULL,
+               ref->user ? lGetString(ref->user, UU_name) : NULL,
+               ref->project ? lGetString(ref->project, PR_name) : NULL,
                &pnode);
 
          /*
@@ -786,7 +787,7 @@ sge_set_job_refs( lListElem *job,
          if (ref->user && ref->node && pnode &&
              strcmp(lGetString(ref->node, STN_name), "default") == 0) {
             ref->node = lCopyElem(ref->node);
-            lSetString(ref->node, STN_name, lGetString(ref->user, UP_name));
+            lSetString(ref->node, STN_name, lGetString(ref->user, UU_name));
             lSetUlong(ref->node, STN_temp, 1);
             lAppendElem(lGetList(pnode, STN_children), ref->node);
          }
@@ -815,16 +816,17 @@ static void
 sge_set_job_cnts( sge_ref_t *ref,
                   int queued )
 {
-   int up_job_cnt = queued ? UP_pending_job_cnt : UP_job_cnt;
-   int us_job_cnt = queued ? US_pending_job_cnt : US_job_cnt;
+   int prj_job_cnt_nm = queued ? PR_pending_job_cnt : PR_job_cnt;
+   int user_job_cnt_nm = queued ? UU_pending_job_cnt : UU_job_cnt;
+   int us_job_cnt_nm = queued ? US_pending_job_cnt : US_job_cnt;
    if (ref->user) {
-      lSetUlong(ref->user, up_job_cnt, lGetUlong(ref->user, up_job_cnt)+1);
+      lAddUlong(ref->user, user_job_cnt_nm, 1);
    }   
    if (ref->project) {
-      lSetUlong(ref->project, up_job_cnt, lGetUlong(ref->project,up_job_cnt)+1);
+      lAddUlong(ref->project, prj_job_cnt_nm, 1);
    }   
    if (ref->dept) {
-      lSetUlong(ref->dept, us_job_cnt, lGetUlong(ref->dept, us_job_cnt)+1);
+      lAddUlong(ref->dept, us_job_cnt_nm, 1);
    }
 
    return;
@@ -839,14 +841,18 @@ static void
 sge_unset_job_cnts( sge_ref_t *ref,
                     int queued )
 {
-   int up_job_cnt = queued ? UP_pending_job_cnt : UP_job_cnt;
-   int us_job_cnt = queued ? US_pending_job_cnt : US_job_cnt;
-   if (ref->user)
-      lSetUlong(ref->user, up_job_cnt, lGetUlong(ref->user, up_job_cnt)-1);
-   if (ref->project)
-      lSetUlong(ref->project, up_job_cnt, lGetUlong(ref->project,up_job_cnt)-1);
-   if (ref->dept)
-      lSetUlong(ref->dept, us_job_cnt, lGetUlong(ref->dept, us_job_cnt)-1);
+   int prj_job_cnt_nm = queued ? PR_pending_job_cnt : PR_job_cnt;
+   int user_job_cnt_nm = queued ? UU_pending_job_cnt : UU_job_cnt;
+   int us_job_cnt_nm = queued ? US_pending_job_cnt : US_job_cnt;
+   if (ref->user) {
+      lAddUlong(ref->user, user_job_cnt_nm, -1);
+   }   
+   if (ref->project) {
+      lAddUlong(ref->project, prj_job_cnt_nm, -1);
+   }   
+   if (ref->dept) {
+      lAddUlong(ref->dept, us_job_cnt_nm, -1);
+   }
    return;
 }
 
@@ -1113,36 +1119,36 @@ delete_debited_job_usage( sge_ref_t *ref,
    DPRINTF(("DDJU (1) "sge_u32"\n", lGetUlong(job, JB_job_number)));
 
    if (user) {
-      upu_list = lGetList(user, UP_debited_job_usage);
+      upu_list = lGetList(user, UU_debited_job_usage);
       DPRINTF(("DDJU (2) "sge_u32"\n", lGetUlong(job, JB_job_number)));
       if (upu_list) {
          
          /* Note: In order to cause the qmaster to delete the
             usage for this job, we zero out UPU_old_usage_list
-            for this job in the UP_debited_job_usage list */
+            for this job in the UU_debited_job_usage list */
          DPRINTF(("DDJU (3) "sge_u32"\n", lGetUlong(job, JB_job_number))); 
 
          if ((upu = lGetElemUlong(upu_list, UPU_job_number,
                              lGetUlong(job, JB_job_number)))) {
             DPRINTF(("DDJU (4) "sge_u32"\n", lGetUlong(job, JB_job_number)));
             lSetList(upu, UPU_old_usage_list, NULL);
-            lSetUlong(user, UP_usage_seqno, seqno);
+            lSetUlong(user, UU_usage_seqno, seqno);
          }
       }
    }
 
    if (project) {
-      upu_list = lGetList(project, UP_debited_job_usage);
+      upu_list = lGetList(project, PR_debited_job_usage);
       if (upu_list) {
          
          /* Note: In order to cause the qmaster to delete the
             usage for this job, we zero out UPU_old_usage_list
-            for this job in the UP_debited_job_usage list */
+            for this job in the PR_debited_job_usage list */
 
          if ((upu = lGetElemUlong(upu_list, UPU_job_number,
                              lGetUlong(job, JB_job_number)))) {
             lSetList(upu, UPU_old_usage_list, NULL);
-            lSetUlong(project, UP_usage_seqno, seqno);
+            lSetUlong(project, PR_usage_seqno, seqno);
          }
       }
    }
@@ -1190,19 +1196,19 @@ combine_usage( sge_ref_t *ref )
 
          if (ref->user) {
             if (ref->project) {
-               lList *upp_list = lGetList(ref->user, UP_project);
+               lList *upp_list = lGetList(ref->user, UU_project);
                lListElem *upp;
                if (upp_list &&
                    ((upp = lGetElemStr(upp_list, UPP_name,
-                                       lGetString(ref->project, UP_name)))))
+                                       lGetString(ref->project, PR_name)))))
                   usage_list = lGetList(upp, UPP_usage);
             } 
             else {
-               usage_list = lGetList(ref->user, UP_usage);
+               usage_list = lGetList(ref->user, UU_usage);
             }
          } 
          else if (ref->project) { /* not sure about this, use it when? */
-            usage_list = lGetList(ref->project, UP_usage);
+            usage_list = lGetList(ref->project, PR_usage);
          }
 
          for_each(usage_elem, usage_list) {
@@ -1253,6 +1259,7 @@ decay_and_sum_usage( sge_ref_t *ref,
              *project=ref->project,
              *userprj = NULL,
              *petask;
+   int obj_debited_job_usage = PR_debited_job_usage;          
 
    if (!node && !user && !project) {
       return;
@@ -1260,9 +1267,10 @@ decay_and_sum_usage( sge_ref_t *ref,
 
    if (ref->user) {
       userprj = ref->user;
-   }
-   else if (ref->project) {
+      obj_debited_job_usage = UU_debited_job_usage;
+   } else if (ref->project) {
       userprj = ref->project;
+      obj_debited_job_usage = PR_debited_job_usage;
    }
 
    /*-------------------------------------------------------------
@@ -1270,11 +1278,11 @@ decay_and_sum_usage( sge_ref_t *ref,
     *-------------------------------------------------------------*/
     
    if (user) {
-      decay_userprj_usage(user, decay_list, seqno, curr_time);
+      decay_userprj_usage(user, true, decay_list, seqno, curr_time);
    }
 
    if (project) {
-      decay_userprj_usage(project, decay_list, seqno, curr_time);
+      decay_userprj_usage(project, false, decay_list, seqno, curr_time);
    }
 
    /*-------------------------------------------------------------
@@ -1305,7 +1313,7 @@ decay_and_sum_usage( sge_ref_t *ref,
 
    if (userprj) {
       lListElem *upu;
-      lList *upu_list = lGetList(userprj, UP_debited_job_usage);
+      lList *upu_list = lGetList(userprj, obj_debited_job_usage);
       if (upu_list) {
          if ((upu = lGetElemUlong(upu_list, UPU_job_number,
                                   lGetUlong(job, JB_job_number)))) {
@@ -1316,21 +1324,22 @@ decay_and_sum_usage( sge_ref_t *ref,
       }
    }
 
-   if (!old_usage_list)
+   if (!old_usage_list) {
       old_usage_list = build_usage_list("old_usage_list", NULL);
+   }
 
    if (user) {
 
       /* if there is a user & project, usage is kept in the project sub-list */
 
       if (project) {
-         lList *upp_list = lGetList(user, UP_project);
+         lList *upp_list = lGetList(user, UU_project);
          lListElem *upp;
-         const char *project_name = lGetString(project, UP_name);
+         const char *project_name = lGetString(project, PR_name);
 
          if (!upp_list) {
             upp_list = lCreateList("", UPP_Type);
-            lSetList(user, UP_project, upp_list);
+            lSetList(user, UU_project, upp_list);
          }
          if (!((upp = lGetElemStr(upp_list, UPP_name, project_name))))
             upp = lAddElemStr(&upp_list, UPP_name, project_name, UPP_Type);
@@ -1347,32 +1356,32 @@ decay_and_sum_usage( sge_ref_t *ref,
          }
 
       } else {
-         user_long_term_usage_list = lGetList(user, UP_long_term_usage);
+         user_long_term_usage_list = lGetList(user, UU_long_term_usage);
          if (!user_long_term_usage_list) {
             user_long_term_usage_list = 
                   build_usage_list("user_long_term_usage_list", NULL);
-            lSetList(user, UP_long_term_usage, user_long_term_usage_list);
+            lSetList(user, UU_long_term_usage, user_long_term_usage_list);
          }
-         user_usage_list = lGetList(user, UP_usage);
+         user_usage_list = lGetList(user, UU_usage);
          if (!user_usage_list) {
             user_usage_list = build_usage_list("user_usage_list", NULL);
-            lSetList(user, UP_usage, user_usage_list);
+            lSetList(user, UU_usage, user_usage_list);
          }
       }
    }
 
    if (project) {
-      project_long_term_usage_list = lGetList(project, UP_long_term_usage);
+      project_long_term_usage_list = lGetList(project, PR_long_term_usage);
       if (!project_long_term_usage_list) {
          project_long_term_usage_list =
               build_usage_list("project_long_term_usage_list", NULL);
-         lSetList(project, UP_long_term_usage, project_long_term_usage_list);
+         lSetList(project, PR_long_term_usage, project_long_term_usage_list);
       }
-      project_usage_list = lGetList(project, UP_usage);
+      project_usage_list = lGetList(project, PR_usage);
       if (!project_usage_list) {
          project_usage_list = build_usage_list("project_usage_list", 
                                                 NULL);
-         lSetList(project, UP_usage, project_usage_list);
+         lSetList(project, PR_usage, project_usage_list);
       }
    }
 
@@ -1510,10 +1519,10 @@ decay_and_sum_usage( sge_ref_t *ref,
       if (userprj) {
          lListElem *upu;
          u_long jobnum = lGetUlong(job, JB_job_number);
-         lList *upu_list = lGetList(userprj, UP_debited_job_usage);
+         lList *upu_list = lGetList(userprj, obj_debited_job_usage);
          if (!upu_list) {
             upu_list = lCreateList("", UPU_Type);
-            lSetList(userprj, UP_debited_job_usage, upu_list);
+            lSetList(userprj, obj_debited_job_usage, upu_list);
          }
          if ((upu = lGetElemUlong(upu_list, UPU_job_number, jobnum))) {
             lSetList(upu, UPU_old_usage_list,
@@ -1726,7 +1735,7 @@ static void destribute_ftickets(lList *root, int dependent){
 *******************************************************************************/
 static u_long32 build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList **fcategories, 
                                         sge_ref_list_t ** ref_array, int dependent, 
-                                        u_long32 job_tickets, u_long32 up_tickets, u_long32 dp_tickets) {
+                                        u_long32 job_tickets, u_long32 user_tickets, u_long32 project_tickets, u_long32 dp_tickets) {
    lListElem *current;
    u_long32 job_ndx; 
    int ref_array_pos = 0;
@@ -1759,13 +1768,13 @@ static u_long32 build_functional_categories(sge_ref_t *job_ref, int num_jobs, lL
          project_el = jref->project;
 
          if(user_el){
-            user_shares = lGetUlong(user_el, up_tickets); 
+            user_shares = lGetUlong(user_el, user_tickets); 
             if (user_shares == 0) {
                user_el = NULL;
             }
          }
          if(project_el){
-            project_shares = lGetUlong(project_el, up_tickets); 
+            project_shares = lGetUlong(project_el, project_tickets); 
             if (project_shares == 0) {
                project_el = NULL;
             }
@@ -1938,10 +1947,10 @@ static void calc_job_functional_tickets_pass1( sge_ref_t *ref,
     *-------------------------------------------------------------*/
 
    if (ref->user) {
-      job_cnt = lGetUlong(ref->user, UP_job_cnt);
+      job_cnt = lGetUlong(ref->user, UU_job_cnt);
       ref->user_fshare = shared ?
-            (double)lGetUlong(ref->user, UP_fshare) / job_cnt :
-            lGetUlong(ref->user, UP_fshare);
+            (double)lGetUlong(ref->user, UU_fshare) / job_cnt :
+            lGetUlong(ref->user, UU_fshare);
       if(sum_shares || job_cnt<=1)
          *sum_of_user_functional_shares += ref->user_fshare;
 
@@ -1952,10 +1961,10 @@ static void calc_job_functional_tickets_pass1( sge_ref_t *ref,
     *-------------------------------------------------------------*/
 
    if (ref->project) {
-      job_cnt = lGetUlong(ref->project, UP_job_cnt);
+      job_cnt = lGetUlong(ref->project, PR_job_cnt);
       ref->project_fshare = shared ?
-            (double)lGetUlong(ref->project, UP_fshare) / job_cnt :
-            lGetUlong(ref->project, UP_fshare);
+            (double)lGetUlong(ref->project, PR_fshare) / job_cnt :
+            lGetUlong(ref->project, PR_fshare);
       if(sum_shares || job_cnt<=1)
          *sum_of_project_functional_shares += ref->project_fshare;
    }
@@ -2131,15 +2140,15 @@ static double calc_job_override_tickets( sge_ref_t *ref, int shared) {
 
    if (shared) {
       if (ref->user) {
-         job_cnt = lGetUlong(ref->user, UP_job_cnt);
-         if (((otickets = lGetUlong(ref->user, UP_oticket)) &&
+         job_cnt = lGetUlong(ref->user, UU_job_cnt);
+         if (((otickets = lGetUlong(ref->user, UU_oticket)) &&
              (job_cnt )))
             job_override_tickets += (otickets / job_cnt);
       }
 
       if (ref->project) {
-         job_cnt = lGetUlong(ref->project, UP_job_cnt);
-         if (((otickets = lGetUlong(ref->project, UP_oticket)) &&
+         job_cnt = lGetUlong(ref->project, PR_job_cnt);
+         if (((otickets = lGetUlong(ref->project, PR_oticket)) &&
              (job_cnt )))
             job_override_tickets += (otickets / job_cnt);
       }
@@ -2153,11 +2162,11 @@ static double calc_job_override_tickets( sge_ref_t *ref, int shared) {
    }
    else {
       if (ref->user) {
-         job_override_tickets += lGetUlong(ref->user, UP_oticket);
+         job_override_tickets += lGetUlong(ref->user, UU_oticket);
       }
 
       if (ref->project) {
-         job_override_tickets += lGetUlong(ref->project, UP_oticket);
+         job_override_tickets += lGetUlong(ref->project, PR_oticket);
       }
 
       if (ref->dept) {
@@ -2187,15 +2196,15 @@ static double calc_pjob_override_tickets_shared( sge_ref_t *ref) {
     *-------------------------------------------------------*/
 
    if (ref->user) {
-      if ((otickets = lGetUlong(ref->user, UP_oticket)) > 0) { 
-         job_cnt = lGetUlong(ref->user, UP_job_cnt) + 1;
+      if ((otickets = lGetUlong(ref->user, UU_oticket)) > 0) { 
+         job_cnt = lGetUlong(ref->user, UU_job_cnt) + 1;
          job_override_tickets += (otickets / job_cnt);
       }   
    }
 
    if (ref->project) {
-      if ((otickets = lGetUlong(ref->project, UP_oticket)) > 0) {
-         job_cnt = lGetUlong(ref->project, UP_job_cnt) + 1;      
+      if ((otickets = lGetUlong(ref->project, PR_oticket)) > 0) {
+         job_cnt = lGetUlong(ref->project, PR_job_cnt) + 1;      
          job_override_tickets += (otickets / job_cnt);
       }   
    }
@@ -2407,7 +2416,7 @@ static void calc_intern_pending_job_functional_tickets(
    if (ref->user) {
       ref->user_fshare = lGetUlong(current, FCAT_user_share);
       if(share_functional_shares) {
-         ref->user_fshare /= lGetUlong(ref->user, UP_job_cnt) +1 ; 
+         ref->user_fshare /= lGetUlong(ref->user, UU_job_cnt) +1 ; 
       }   
       else { 
          sum_of_user_functional_shares += ref->user_fshare;
@@ -2421,7 +2430,7 @@ static void calc_intern_pending_job_functional_tickets(
    if (ref->project) { 
       ref->project_fshare = lGetUlong(current, FCAT_project_share);
       if(share_functional_shares) {
-         ref->project_fshare /= (lGetUlong(ref->project, UP_job_cnt) +1);
+         ref->project_fshare /= (lGetUlong(ref->project, PR_job_cnt) +1);
       }   
       else {     
          sum_of_project_functional_shares += ref->project_fshare;
@@ -2598,10 +2607,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          calculate_default_decay_constant(oldhalflife);
       }   
       for_each(userprj, lists->user_list) {
-         decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
+         decay_userprj_usage(userprj, true, decay_list, sge_scheduling_run, curr_time);
       }
       for_each(userprj, lists->project_list) {
-         decay_userprj_usage(userprj, decay_list, sge_scheduling_run, curr_time);
+         decay_userprj_usage(userprj, false, decay_list, sge_scheduling_run, curr_time);
       }
    } 
    else {
@@ -3062,7 +3071,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          u_long32 max =   sconf_get_max_functional_jobs_to_schedule();
          u_long32 pjobs = build_functional_categories(job_ref, num_jobs, &fcategories, 
                                      &ref_array, hierarchy[policy_ndx].dependent, 
-                                     JB_jobshare, UP_fshare, US_fshare);
+                                     JB_jobshare, UU_fshare, PR_fshare, US_fshare);
 
 
          max = MIN(max, pjobs); 
@@ -3776,7 +3785,8 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                        lList *finished_jobs, order_t *orders, 
                        bool update_usage_and_configuration, int seqno, bool update_execd)
 {
-   lCondition *where=NULL;
+   lCondition *user_where=NULL;
+   lCondition *prj_where=NULL;
    lList *up_list = NULL;
    lList *order_list = NULL;
    lListElem *order = NULL;
@@ -3796,11 +3806,17 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
                          STN_adjusted_current_proportion);
    }   
 
-   if (usage_what == NULL) {
-      usage_what = lWhat("%T(%I %I %I %I %I %I %I)", UP_Type,
-                   UP_name, UP_usage, UP_usage_time_stamp,
-                   UP_long_term_usage, UP_project, UP_debited_job_usage,
-                   UP_version);
+   if (user_usage_what == NULL) {
+      user_usage_what = lWhat("%T(%I %I %I %I %I %I %I)", UU_Type,
+                              UU_name, UU_usage, UU_usage_time_stamp,
+                              UU_long_term_usage, UU_project,
+                              UU_debited_job_usage, UU_version);
+   }   
+   if (prj_usage_what == NULL) {
+      prj_usage_what = lWhat("%T(%I %I %I %I %I %I %I)", PR_Type,
+                              PR_name, PR_usage, PR_usage_time_stamp,
+                              PR_long_term_usage, PR_project,
+                              PR_debited_job_usage, PR_version);
    }   
 
    if (orders->pendingOrderList == NULL) {
@@ -3908,18 +3924,17 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
       /* NOTE: make sure we get all usage entries which have been decayed
          or have accumulated additional usage */
 
-      where = lWhere("%T(%I > %u)", UP_Type, UP_usage_seqno, last_seqno);
+      user_where = lWhere("%T(%I > %u)", UU_Type, UU_usage_seqno, last_seqno);
 
       if (lists->user_list) {
          norders = lGetNumberOfElem(order_list); 
-         if ((up_list = lSelect("", lists->user_list, where, usage_what))) {
+         if ((up_list = lSelect("", lists->user_list, user_where, user_usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_type, ORT_update_user_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
-            } 
-            else {
+            } else {
                lFreeList(&up_list);
             }
          }
@@ -3932,20 +3947,22 @@ sge_build_sgeee_orders(sge_Sdescr_t *lists, lList *running_jobs, lList *queued_j
        *-----------------------------------------------------------------*/
       if (lists->project_list) {
          norders = lGetNumberOfElem(order_list); 
-         if ((up_list = lSelect("", lists->project_list, where, usage_what))) {
+         if ((up_list = lSelect("", lists->project_list, prj_where, prj_usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_type, ORT_update_project_usage);
                lSetList(order, OR_joker, up_list);
                lAppendElem(order_list, order);
-            } else
+            } else {
                lFreeList(&up_list);
+            }   
          }
          DPRINTF(("   added %d orders for updating usage of project\n",
             lGetNumberOfElem(order_list) - norders));
       }
 
-      lFreeWhere(&where);
+      lFreeWhere(&user_where);
+      lFreeWhere(&prj_where);
 
       /*-----------------------------------------------------------------
        * build update share tree order
@@ -4370,7 +4387,7 @@ static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int nu
          DENTER(TOP_LAYER, "calculate_pending_shared_override_tickets");
        
          max = build_functional_categories(job_ref, num_jobs, &fcategories, &ref_array, dependent, 
-                                     JB_override_tickets, UP_oticket, US_oticket);
+                                     JB_override_tickets, UU_oticket, PR_oticket, US_oticket);
 
          if (max > 0) {
             sort_list = malloc(max * sizeof(sge_ref_t *));
@@ -4523,27 +4540,27 @@ main(int argc, char **argv)
 
    /* build user list */
 
-   ep = lAddElemStr(&(lists->user_list), UP_name, "davidson", UP_Type); 
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 200);
+   ep = lAddElemStr(&(lists->user_list), UU_name, "davidson", UU_Type); 
+   lSetUlong(ep, UU_oticket, 0);
+   lSetUlong(ep, UU_fshare, 200);
 
-   ep = lAddElemStr(&(lists->user_list), UP_name, "garrenp", UP_Type); 
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 100);
+   ep = lAddElemStr(&(lists->user_list), UU_name, "garrenp", UU_Type); 
+   lSetUlong(ep, UU_oticket, 0);
+   lSetUlong(ep, UU_fshare, 100);
 
-   ep = lAddElemStr(&(lists->user_list), UP_name, "stair", UP_Type); 
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 100);
+   ep = lAddElemStr(&(lists->user_list), UU_name, "stair", UU_Type); 
+   lSetUlong(ep, UU_oticket, 0);
+   lSetUlong(ep, UU_fshare, 100);
 
    /* build project list */
     
-   ep = lAddElemStr(&(lists->project_list), UP_name, "sgeee", UP_Type); 
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 200);
+   ep = lAddElemStr(&(lists->project_list), PR_name, "sgeee", PR_Type); 
+   lSetUlong(ep, PR_oticket, 0);
+   lSetUlong(ep, PR_fshare, 200);
 
-   ep = lAddElemStr(&(lists->project_list), UP_name, "ms", UP_Type); 
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 100);
+   ep = lAddElemStr(&(lists->project_list), PR_name, "ms", PR_Type); 
+   lSetUlong(ep, PR_oticket, 0);
+   lSetUlong(ep, PR_fshare, 100);
 
 
    /* build department list */

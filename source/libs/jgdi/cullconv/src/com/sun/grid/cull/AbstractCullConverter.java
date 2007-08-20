@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  rh150277
  */
 public abstract class AbstractCullConverter implements CullConverter {
    
@@ -68,7 +67,6 @@ public abstract class AbstractCullConverter implements CullConverter {
       list.toArray( ret );
       return ret;
    }
-
 
    public boolean iterateObjects() {
       return iterateObjects;

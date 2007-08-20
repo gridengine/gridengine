@@ -606,7 +606,7 @@ XtResource cq_resources[] = {
       XtRImmediate, NULL },
       
 /*---- projects  ----*/
-   { "prj", "prj", QmonRUP_Type,
+   { "prj", "prj", QmonRPR_Type,
       sizeof(lList *), XtOffsetOf(tQCEntry, prj),
       XtRImmediate, NULL },
    
@@ -614,7 +614,7 @@ XtResource cq_resources[] = {
       sizeof(int), XtOffsetOf(tQCEntry, prj_tw),
       XtRImmediate, NULL },
       
-   { "xprj", "xprj", QmonRUP_Type,
+   { "xprj", "xprj", QmonRPR_Type,
       sizeof(lList *), XtOffsetOf(tQCEntry, xprj),
       XtRImmediate, NULL },
       
@@ -2196,8 +2196,8 @@ static void updateQCP(void)
    
    /* disable/enable redisplay while updating */
    XmtLayoutDisableLayout(cq_dialog);
-   lPSortList(pl, "%I+", UP_name);
-   UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, pl, UP_name);
+   lPSortList(pl, "%I+", PR_name);
+   UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, pl, PR_name);
    XmtLayoutEnableLayout(cq_dialog);
 
    DEXIT;

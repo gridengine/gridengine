@@ -52,7 +52,7 @@ int userprj_spool(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *upe, gdi_ob
 
 int sge_del_userprj(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, lList **upl, const char *ruser, const char *rhost, int user);
 
-int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, const char *attr_name, const char *obj_descr, const char *obj_name);
+int verify_project_list(lList **alpp, lList *name_list, lList *userprj_list, const char *attr_name, const char *obj_descr, const char *obj_name);
 
 void sge_automatic_user_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);
 

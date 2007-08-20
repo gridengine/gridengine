@@ -1946,10 +1946,10 @@ lListElem **lepp
       /*
        * they might otherwise send global twice
        */
-      where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
+      where = lWhere("%T(%I c= %s)", CONF_Type, CONF_name, SGE_GLOBAL_NAME);
       DPRINTF(("requesting global\n"));
    } else {
-      where = lWhere("%T(%I c= %s || %I h= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME, CONF_hname,
+      where = lWhere("%T(%I c= %s || %I h= %s)", CONF_Type, CONF_name, SGE_GLOBAL_NAME, CONF_name,
                      lGetHost(hep, EH_name));
       DPRINTF(("requesting global and %s\n", lGetHost(hep, EH_name)));
    }
@@ -1977,7 +1977,7 @@ lListElem **lepp
       WARNING((SGE_EVENT, MSG_CONF_REQCONF_II, 2 - is_global_requested, lGetNumberOfElem(lp)));
    }
 
-   if (!(*gepp = lGetElemHost(lp, CONF_hname, SGE_GLOBAL_NAME))) {
+   if (!(*gepp = lGetElemHost(lp, CONF_name, SGE_GLOBAL_NAME))) {
       ERROR((SGE_EVENT, MSG_CONF_NOGLOBAL));
       lFreeList(&lp);
       lFreeElem(&hep);
@@ -1986,7 +1986,7 @@ lListElem **lepp
    lDechainElem(lp, *gepp);
 
    if (!is_global_requested) {
-      if (!(*lepp = lGetElemHost(lp, CONF_hname, lGetHost(hep, EH_name)))) {
+      if (!(*lepp = lGetElemHost(lp, CONF_name, lGetHost(hep, EH_name)))) {
          if (*gepp) {
             WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
          }

@@ -65,8 +65,8 @@ enum {
                               * spooled */
    EH_acl,                   /* US_Type - userset access list */
    EH_xacl,                  /* US_Type - userset access list */
-   EH_prj,                   /* UP_Type - project access list */
-   EH_xprj,                  /* UP_Type - project excluded access list */
+   EH_prj,                   /* PR_Type - project access list */
+   EH_xprj,                  /* PR_Type - project excluded access list */
 
    /* scheduling stuff */
    EH_sort_value,            /* combined load value for sorting only
@@ -140,8 +140,8 @@ LISTDEF(EH_Type)
    SGE_ULONG(EH_processors, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
    SGE_LIST(EH_acl, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_LIST(EH_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
-   SGE_LIST(EH_prj, Prj_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
-   SGE_LIST(EH_xprj, Prj_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+   SGE_LIST(EH_prj, PR_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+   SGE_LIST(EH_xprj, PR_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
 
    /* scheduling stuff */
    SGE_DOUBLE(EH_sort_value, CULL_DEFAULT | CULL_JGDI_HIDDEN)

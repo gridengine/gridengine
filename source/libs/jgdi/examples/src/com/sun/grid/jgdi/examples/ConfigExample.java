@@ -39,7 +39,7 @@ import com.sun.grid.jgdi.configuration.ConfigurationFactory;
 
 /**
  * Simple example which demonstrates how to add/update/delete configuration
- * objects of the N1&trade; Grid Engine
+ * objects of the Sun&trade; Grid Engine
  *
  */
 public class ConfigExample {

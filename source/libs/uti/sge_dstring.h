@@ -50,6 +50,7 @@
 *     The DSTRING_INIT counterpart for static buffers is sge_dstring_init()
 ******************************************************************************/
 
+#include <sys/types.h>
 #include <stdarg.h>
 
 #include "basis_types.h"

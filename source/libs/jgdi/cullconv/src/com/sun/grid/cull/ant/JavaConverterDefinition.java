@@ -38,7 +38,6 @@ import org.apache.tools.ant.Project;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class JavaConverterDefinition extends ConverterDefinition {
    

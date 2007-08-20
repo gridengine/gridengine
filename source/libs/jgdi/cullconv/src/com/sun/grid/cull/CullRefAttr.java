@@ -33,7 +33,6 @@ package com.sun.grid.cull;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class CullRefAttr extends CullAttr {
    

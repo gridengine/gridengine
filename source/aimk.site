@@ -47,17 +47,21 @@ endsw
 # JAVA settings
 setenv ARCH $buildarch
 setenv EN_QUIET 1
+
 switch($buildarch)
-   case "sol-amd64":
-   case "lx24-amd64":
-      if ( -f /vol2/resources/en_jdk15 ) then
-         source /vol2/resources/en_jdk15 
-      endif 
-      breaksw
-   default:
+   # don't support jdk1.5
+   case "irix65":
+   case "hp11":
+   case "hp11-64":
+   case "aix51":
       if ( -f /vol2/resources/en_jdk14 ) then
          source /vol2/resources/en_jdk14 
       endif   
+      breaksw
+   default:
+      if ( -f /vol2/resources/en_jdk15 ) then
+         source /vol2/resources/en_jdk15 
+      endif 
       breaksw
 endsw
 

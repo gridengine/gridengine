@@ -176,7 +176,7 @@ public class JobInfoImpl implements JobInfo, Serializable {
 
    /**
     *  Set the queue instance name of the job
-    *  @param queue the queue instance name of the job
+    *  @param qinstance the queue instance name of the job
     */
    public void setQinstanceName(String qinstance) {
       this.qinstance = qinstance;

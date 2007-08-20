@@ -49,7 +49,6 @@ import java.util.Map;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class CWrapperHelper {
 

@@ -228,11 +228,11 @@ spool_classic_create_context(lList **answer_list, const char *args)
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_PROJECT:
-                  field_info[i].fields = sge_build_UP_field_list(true, false);
+                  field_info[i].fields = sge_build_PR_field_list(true);
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_USER:
-                  field_info[i].fields = sge_build_UP_field_list(true, true);
+                  field_info[i].fields = sge_build_UU_field_list(true);
                   field_info[i].instr  = &qconf_sfi;
                   break;
                case SGE_TYPE_SHARETREE:
@@ -571,7 +571,7 @@ spool_classic_default_list_func(lList **answer_list,
             directory = CKPTOBJ_DIR;
             break;
          case SGE_TYPE_CONFIG:
-            key_nm    = CONF_hname;
+            key_nm    = CONF_name;
             filename  = "global";
             directory = LOCAL_CONF_DIR;
             break;
@@ -1359,6 +1359,7 @@ static bool write_manop(int spool, int target) {
    lList *lp;
    char filename[255], real_filename[255];
    dstring ds = DSTRING_INIT;
+   int key = NoName;
 
    DENTER(TOP_LAYER, "write_manop");
 
@@ -1368,6 +1369,7 @@ static bool write_manop(int spool, int target) {
       strcpy(filename, ".");
       strcat(filename, MAN_FILE);
       strcpy(real_filename, MAN_FILE);
+      key = UM_name;
       break;
       
    case SGE_OPERATOR_LIST:
@@ -1375,6 +1377,7 @@ static bool write_manop(int spool, int target) {
       strcpy(filename, ".");
       strcat(filename, OP_FILE);
       strcpy(real_filename, OP_FILE);
+      key = UO_name;
       break;
 
    default:
@@ -1395,7 +1398,7 @@ static bool write_manop(int spool, int target) {
    sge_dstring_free(&ds);
 
    for_each(ep, lp) {
-      FPRINTF((fp, "%s\n", lGetString(ep, MO_name)));
+      FPRINTF((fp, "%s\n", lGetString(ep, key)));
    }
 
    FCLOSE(fp);
@@ -1419,6 +1422,8 @@ static bool read_manop(int target) {
    char str[256];
    FILE *fp;
    SGE_STRUCT_STAT st;
+   int key = NoName;
+   lDescr *descr = NULL;
 
    DENTER(TOP_LAYER, "read_manop");
 
@@ -1426,11 +1431,15 @@ static bool read_manop(int target) {
    case SGE_MANAGER_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);      
       strcpy(filename, MAN_FILE);
+      key = UM_name;
+      descr = UM_Type;
       break;
       
    case SGE_OPERATOR_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);      
       strcpy(filename, OP_FILE);
+      key = UO_name;
+      descr = UO_Type;
       break;
 
    default:
@@ -1449,11 +1458,11 @@ static bool read_manop(int target) {
    }
    
    lFreeList(lpp);
-   *lpp = lCreateList("man/op list", MO_Type);
+   *lpp = lCreateList("man/op list", descr);
 
    while (fscanf(fp, "%[^\n]\n", str) == 1) {
       if (str[0] != COMMENT_CHAR) {
-         lAddElemStr(lpp, MO_name, str, MO_Type);
+         lAddElemStr(lpp, key, str, descr);
       }
    }
 

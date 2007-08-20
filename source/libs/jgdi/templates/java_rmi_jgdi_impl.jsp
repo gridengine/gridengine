@@ -205,6 +205,51 @@
 <%   
    } // end of genDeleteMethod
    
+   public void genDeleteByPrimaryKeyMethod() {
+%>       
+   /**
+    *   Delete the <code><%=name%></code> object by primary key
+    *   @throws RemoteException on any error
+    */
+   public void delete<%=name%>(<%
+      java.util.Iterator iter = primaryKeys.keySet().iterator();
+      boolean first = true;
+      while(iter.hasNext()) {
+         String pkName = (String)iter.next();
+         String pkType = (String)primaryKeys.get(pkName);
+         if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %> <%=pkType%> <%=pkName%><%
+      }
+   
+   %>) throws RemoteException {
+      logger.entering("JGDIRemoteImpl", "delete<%=name%>()");
+      try {
+        logger.exiting("JGDIRemoteImpl", "delete<%=name%>()");
+        jgdi.delete<%=name%>(<%
+      iter = primaryKeys.keySet().iterator();
+      first = true;
+      while(iter.hasNext()) {
+         String pkName = (String)iter.next();
+         if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%><%
+      }
+   %>);
+      } catch( Exception e ) {
+         logger.throwing("JGDIRemoteImpl", "delete<%=name%>()", e);
+         throw new RemoteException(e.getMessage(), e);
+      }
+   }  
+<%       
+   } // genDeleteByPrimaryKeyMethod
+  
   } // end of class JGDIRemoteGenerator
   
   // ---------------------------------------------------------------------------

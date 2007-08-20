@@ -33,7 +33,7 @@
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.configuration.AbstractUser;
+//import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
@@ -339,14 +339,6 @@ public class EditorUtil {
     */ 
    static boolean doNotDisplayAttrAll(GEObject obj, PropertyDescriptor pd) {
       String name = java2cName(obj, pd.getPropertyName());
-      //ABSTRACT USER
-      if (obj instanceof AbstractUser) {
-         if (name.equals("usage") || name.equals("usage_time_stamp") ||
-             name.equals("long_term_usage") || name.equals("debited_job_usage") ||
-             name.equals("version") || name.equals("project")) {
-            return true;
-         }
-      }
       //USER
       if (obj instanceof User) {
          if (name.equals("acl") || name.equals("xacl")) {
@@ -390,12 +382,6 @@ public class EditorUtil {
     * are also displayed by JGDIShell (Used in qconf -a*,-m*) */ 
    static boolean doNotDisplayConfigurableAttr(GEObject obj, PropertyDescriptor pd) {
       String name = java2cName(obj, pd.getPropertyName());
-      //ABSTRACT USER
-      if (obj instanceof AbstractUser) {
-         if (name.equals("project")) {
-            return true;
-         }
-      }
       //USER
       if (obj instanceof User) {
          if (name.equals("acl") || name.equals("xacl")) {

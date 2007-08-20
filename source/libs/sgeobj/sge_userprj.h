@@ -34,18 +34,18 @@
 
 #include "sge_userprjL.h"
 
-lList **
-prj_list_get_master_list(void);
+lListElem *prj_list_locate(const lList *prj_list,
+                           const char *prj_name);
 
-lListElem *userprj_list_locate(const lList *userprj_list,
-                               const char *uerprj_name);
+lListElem *user_list_locate(const lList *user_list,
+                            const char *user_name);
 
-const char *
-userprj_list_append_to_dstring(const lList *this_list, dstring *string);
+const char *prj_list_append_to_dstring(const lList *this_list, dstring *string);
 
-bool
-prj_list_do_all_exist(const lList *this_list, lList **answer_list,
-                      const lList *userprj_list);
-lListElem *getUserPrjTemplate(void);
+bool prj_list_do_all_exist(const lList *this_list, lList **answer_list,
+                           const lList *userprj_list);
+
+lListElem *getUserTemplate(void);
+lListElem *getPrjTemplate(void);
 
 #endif /* __SGE_USERPRJ_H */

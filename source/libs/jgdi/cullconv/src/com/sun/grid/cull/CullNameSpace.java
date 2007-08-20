@@ -37,7 +37,6 @@ import java.util.Collections;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class CullNameSpace {
    private String nameSpace;

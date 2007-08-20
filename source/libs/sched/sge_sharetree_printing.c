@@ -207,7 +207,7 @@ print_node(dstring *out, const lListElem *node,
       dstring node_name_dstring = DSTRING_INIT;
 
       current_time = sge_get_gmt();
-      time_stamp = user ? lGetUlong(user, UP_usage_time_stamp) : 0;
+      time_stamp = user ? lGetUlong(user, UU_usage_time_stamp) : 0;
 
       /*
        * we want to name the Root node simply /, instead of /Root 
@@ -220,8 +220,8 @@ print_node(dstring *out, const lListElem *node,
       }
       node_name = sge_dstring_get_string(&node_name_dstring);
 
-      user_name = user?lGetString(user, UP_name):"";
-      project_name = project?lGetString(project, UP_name):"";
+      user_name = user ? lGetString(user, UU_name) : "";
+      project_name = project ? lGetString(project, PR_name) : "";
       shares = lGetUlong(node, STN_shares);
       job_count = lGetUlong(node, STN_job_ref_count);
       level = lGetDouble(node, STN_proportion);
@@ -232,23 +232,23 @@ print_node(dstring *out, const lListElem *node,
       combined_usage = lGetDouble(node, STN_combined_usage);
 
       if (lGetList(node, STN_children) == NULL && user && project) {
-         lList *projl = lGetList(user, UP_project);
+         lList *projl = lGetList(user, UU_project);
          lListElem *upp;
          if (projl) {
             if ((upp=lGetElemStr(projl, UPP_name,
-                                 lGetString(project, UP_name)))) {
+                                 lGetString(project, PR_name)))) {
                usage = lGetList(upp, UPP_usage);
                ltusage = lGetList(upp, UPP_long_term_usage);
             }
          }
-      } else if (user && strcmp(lGetString(user, UP_name), 
+      } else if (user && strcmp(lGetString(user, UU_name), 
                                 lGetString(node, STN_name))==0) {
-         usage = lGetList(user, UP_usage);
-         ltusage = lGetList(user, UP_long_term_usage);
-      } else if (project && strcmp(lGetString(project, UP_name), 
+         usage = lGetList(user, UU_usage);
+         ltusage = lGetList(user, UU_long_term_usage);
+      } else if (project && strcmp(lGetString(project, PR_name), 
                                    lGetString(node, STN_name))==0) {
-         usage = lGetList(project, UP_usage);
-         ltusage = lGetList(project, UP_long_term_usage);
+         usage = lGetList(project, PR_usage);
+         ltusage = lGetList(project, PR_long_term_usage);
       }
 
       if (usage) {
@@ -329,11 +329,11 @@ print_nodes(dstring *out, const lListElem *node, const lListElem *parent,
    dstring node_name_dstring = DSTRING_INIT;
 
    if (!project) {
-      project = userprj_list_locate(projects, lGetString(node, STN_name));
+      project = prj_list_locate(projects, lGetString(node, STN_name));
    }
 
    if (children == NULL) {
-      user = userprj_list_locate(users, lGetString(node, STN_name));
+      user = user_list_locate(users, lGetString(node, STN_name));
    } else {
       user = NULL;
    }

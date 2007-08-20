@@ -49,7 +49,7 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
    private Class     implClass;
    private String    cullName;
    
-   protected AbstractClassDescriptor( Class beanClass, String cullName ) {
+   protected AbstractClassDescriptor(Class beanClass, String cullName) {
       this.beanClass = beanClass;
       this.cullName = cullName;
    }
@@ -58,28 +58,28 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
       return Collections.unmodifiableList(propertyList);
    }
    
-   protected void add( PropertyDescriptor property ) {
-      propertyList.add( property );
-      propertyMap.put( property.getPropertyName(), property );
+   protected void add(PropertyDescriptor property) {
+      propertyList.add(property);
+      propertyMap.put(property.getPropertyName(), property);
    }
    
-   protected SimplePropertyDescriptor addSimple( String name, Class type, String cullType, int cullFieldName, boolean required, boolean readOnly, boolean configurable ) {
+   protected SimplePropertyDescriptor addSimple(String name, Class type, String cullType, int cullFieldName, boolean required, boolean readOnly, boolean configurable) {
       SimplePropertyDescriptor prop =  
-             new SimplePropertyDescriptor( beanClass, name, type, cullType, cullFieldName, required, readOnly, configurable );
-      add( prop );
+             new SimplePropertyDescriptor(beanClass, name, type, cullType, cullFieldName, required, readOnly, configurable);
+      add(prop);
       return prop;
    }
    
-   protected ListPropertyDescriptor addList( String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly, boolean configurable ) {
+   protected ListPropertyDescriptor addList(String name, Class type, String cullType, int cullFieldName, boolean browsable, boolean readOnly, boolean configurable) {
       ListPropertyDescriptor prop = 
-           new DefaultListPropertyDescriptor( beanClass, name, type, cullType, cullFieldName, browsable, readOnly, configurable );
-      add( prop );
+           new DefaultListPropertyDescriptor(beanClass, name, type, cullType, cullFieldName, browsable, readOnly, configurable);
+      add(prop);
       return prop;
    }
    
    protected MapPropertyDescriptor addMap(String name, Class type, String cullType, Class keyType,
                          int cullFieldName, int keyCullFieldName, int valueCullFieldName, 
-                         Object defaultKey, boolean readOnly, boolean configurable )
+                         Object defaultKey, boolean readOnly, boolean configurable)
    {
       MapPropertyDescriptor prop = 
          new DefaultMapPropertyDescriptor(beanClass, name, type, cullType, keyType,
@@ -91,7 +91,7 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
 
    protected MapListPropertyDescriptor addMapList(String name, Class type, String cullType, Class keyType, String cullListType,
                          int cullFieldName, int keyCullFieldName, int valueCullFieldName,
-                         Object defaultKey, boolean readOnly, boolean configurable )
+                         Object defaultKey, boolean readOnly, boolean configurable)
    {
       MapListPropertyDescriptor prop = 
          new DefaultMapListPropertyDescriptor(beanClass, name, type, cullType, keyType, cullListType,
@@ -107,7 +107,7 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
    
    public String[] getPropertyNames() {
       String [] ret = new String[propertyMap.size()];
-      propertyMap.keySet().toArray( ret );
+      propertyMap.keySet().toArray(ret);
       return ret;
    }   
    
@@ -141,34 +141,34 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
          } else {
             return beanClass.newInstance();
          }
-      } catch(IllegalAccessException ile ) {
-         IllegalStateException ilse = new IllegalStateException( "Constructor" 
-          + beanClass.getName() + " is not accessible" );
-         ilse.initCause( ile );
+      } catch(IllegalAccessException ile) {
+         IllegalStateException ilse = new IllegalStateException("Constructor" 
+          + beanClass.getName() + " is not accessible");
+         ilse.initCause(ile);
          throw ilse;
-      } catch(InstantiationException iae ) {
-         IllegalStateException ilse = new IllegalStateException( "Can't create instanceof of " + beanClass.getName() );
-         ilse.initCause( iae );
+      } catch(InstantiationException iae) {
+         IllegalStateException ilse = new IllegalStateException("Can't create instanceof of " + beanClass.getName());
+         ilse.initCause(iae);
          throw ilse;
       }
    }
    
    public Object clone(Object bean) {
       
-      ClassDescriptor classDescr = Util.getDescriptor( bean.getClass() );
+      ClassDescriptor classDescr = Util.getDescriptor(bean.getClass());
       
       Object ret = classDescr.newInstance();
       
       PropertyDescriptor propDescr = null;
       
-      for( int i = 0; i < classDescr.getPropertyCount(); i++ ) {
+      for(int i = 0; i < classDescr.getPropertyCount(); i++) {
          propDescr = classDescr.getProperty(i);   
-         if( propDescr.getPropertyName().equals( "parent" ) ) {
+         if(propDescr.getPropertyName().equals("parent")) {
             SimplePropertyDescriptor parentPropDescr = 
                   ((SimplePropertyDescriptor)propDescr);            
-            parentPropDescr.setValue( ret, parentPropDescr.getValue( bean ) );
+            parentPropDescr.setValue(ret, parentPropDescr.getValue(bean));
          } else {
-            propDescr.clone( bean , ret );
+            propDescr.clone(bean , ret);
          }
       }
       
@@ -177,27 +177,27 @@ public abstract class AbstractClassDescriptor implements ClassDescriptor {
    
    public void registryObjects(Object root) {
       
-      ClassDescriptor cd = Util.getDescriptor( root.getClass() );
+      ClassDescriptor cd = Util.getDescriptor(root.getClass());
       
       int count = cd.getPropertyCount();
       PropertyDescriptor pd = null;
       
-      for( int i = 0; i < count; i++ ) {
+      for(int i = 0; i < count; i++) {
          pd = cd.getProperty(i);
-         if( !pd.getPropertyName().equals( "parent" ) &&
-             GEObject.class.isAssignableFrom( pd.getPropertyType() ) ) {
+         if(!pd.getPropertyName().equals("parent") &&
+             GEObject.class.isAssignableFrom(pd.getPropertyType())) {
             GEObject value = null;
             
-            if( pd instanceof SimplePropertyDescriptor ) {
+            if(pd instanceof SimplePropertyDescriptor) {
 
-               value = (GEObject)((SimplePropertyDescriptor)pd).getValue( root );
-            } else if ( pd instanceof ListPropertyDescriptor ) {
+               value = (GEObject)((SimplePropertyDescriptor)pd).getValue(root);
+            } else if (pd instanceof ListPropertyDescriptor) {
                
                ListPropertyDescriptor lpd = (ListPropertyDescriptor)pd;
-               int valueCount = lpd.getCount( root );
-               for( int ii = 0; ii < valueCount; ii++) {
+               int valueCount = lpd.getCount(root);
+               for(int ii = 0; ii < valueCount; ii++) {
                   
-                  value = (GEObject)lpd.get( root, ii );
+                  value = (GEObject)lpd.get(root, ii);
                }
                
             }

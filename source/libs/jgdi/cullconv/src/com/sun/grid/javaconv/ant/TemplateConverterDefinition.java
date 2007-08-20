@@ -39,7 +39,6 @@ import org.apache.tools.ant.Project;
 
 /**
  *
- * @author rh150277
  */
 public class TemplateConverterDefinition extends AbstractConverterDefinition {
    

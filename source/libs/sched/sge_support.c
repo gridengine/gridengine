@@ -110,13 +110,19 @@ decay_usage( lList *usage_list,
 
 void
 decay_userprj_usage( lListElem *userprj,
+                     bool is_user,
                      const lList *decay_list,
                      u_long seqno,
                      u_long curr_time )
 {
    u_long usage_time_stamp;
+   int obj_usage_seqno_POS = is_user ? UU_usage_seqno_POS : PR_usage_seqno_POS;
+   int obj_usage_time_stamp_POS = is_user ? UU_usage_time_stamp_POS : PR_usage_time_stamp_POS;
+   int obj_usage_POS = is_user ? UU_usage_POS : PR_usage_POS;
+   int obj_project_POS = is_user ? UU_project_POS : PR_project_POS;
+   
 
-   if (userprj && seqno != lGetPosUlong(userprj, UP_usage_seqno_POS)) {
+   if (userprj && seqno != lGetPosUlong(userprj, obj_usage_seqno_POS)) {
 
    /*-------------------------------------------------------------
     * Note: In order to decay usage once per decay interval, we
@@ -127,24 +133,24 @@ decay_userprj_usage( lListElem *userprj,
     * the scheduling interval.
     *-------------------------------------------------------------*/
 
-      usage_time_stamp = lGetPosUlong(userprj, UP_usage_time_stamp_POS);
+      usage_time_stamp = lGetPosUlong(userprj, obj_usage_time_stamp_POS);
 
       if (usage_time_stamp > 0) {
          lListElem *upp;
 
-         decay_usage(lGetPosList(userprj, UP_usage_POS), decay_list,
+         decay_usage(lGetPosList(userprj, obj_usage_POS), decay_list,
                      curr_time, usage_time_stamp);
 
-         for_each(upp, lGetPosList(userprj, UP_project_POS)) {
+         for_each(upp, lGetPosList(userprj, obj_project_POS)) {
             decay_usage(lGetPosList(upp, UPP_usage_POS), decay_list,
                         curr_time, usage_time_stamp);
          }
 
       }
 
-      lSetPosUlong(userprj, UP_usage_time_stamp_POS, curr_time);
+      lSetPosUlong(userprj, obj_usage_time_stamp_POS, curr_time);
       if (seqno != (u_long) -1) {
-      	lSetPosUlong(userprj, UP_usage_seqno_POS, seqno);
+      	lSetPosUlong(userprj, obj_usage_seqno_POS, seqno);
       }
 
    }
@@ -282,11 +288,14 @@ sge_calc_node_usage( lListElem *node,
    lListElem *usage_weight, *usage_elem;
    double sum_of_usage_weights = 0;
    const char *usage_name;
+   bool is_user = false;
 
    DENTER(TOP_LAYER, "sge_calc_node_usage");
 
    children = lGetPosList(node, STN_children_POS);
    if (!children) {
+      
+      is_user = true;
 
       if (projname) {
 
@@ -294,10 +303,10 @@ sge_calc_node_usage( lListElem *node,
           * Get usage from project usage sub-list in user object
           *-------------------------------------------------------------*/
 
-         if ((userprj = userprj_list_locate(user_list, 
+         if ((userprj = user_list_locate(user_list, 
                                       lGetPosString(node, STN_name_POS)))) {
 
-            lList *projects = lGetList(userprj, UP_project);
+            lList *projects = lGetList(userprj, UU_project);
             lListElem *upp;
 
             if (projects)
@@ -312,15 +321,15 @@ sge_calc_node_usage( lListElem *node,
           * Get usage directly from corresponding user or project object
           *-------------------------------------------------------------*/
 
-         if ((userprj = userprj_list_locate(user_list, 
+         if ((userprj = user_list_locate(user_list, 
                                             lGetPosString(node, STN_name_POS)))) {
 
-            usage_list = lGetList(userprj, UP_usage);
+            usage_list = lGetList(userprj, UU_usage);
 
-         } else if ((userprj = userprj_list_locate(project_list, 
+         } else if ((userprj = prj_list_locate(project_list, 
                                                    lGetPosString(node, STN_name_POS)))) {
 
-            usage_list = lGetList(userprj, UP_usage);
+            usage_list = lGetList(userprj, PR_usage);
 
          }
       }
@@ -332,11 +341,11 @@ sge_calc_node_usage( lListElem *node,
        *-------------------------------------------------------------*/
 
       if (!projname) {
-         if ((userprj = userprj_list_locate(project_list, 
+         if ((userprj = prj_list_locate(project_list, 
                                             lGetPosString(node, STN_name_POS)))) {
             project_node = 1;
-            usage_list = lGetList(userprj, UP_usage);
-            projname = lGetString(userprj, UP_name);
+            usage_list = lGetList(userprj, PR_usage);
+            projname = lGetString(userprj, PR_name);
          }
       }
 
@@ -350,7 +359,7 @@ sge_calc_node_usage( lListElem *node,
        *-------------------------------------------------------------*/
 
       if (curr_time) {
-         decay_userprj_usage(userprj, decay_list, seqno, curr_time);
+         decay_userprj_usage(userprj, is_user, decay_list, seqno, curr_time);
       }  
 
       /*-------------------------------------------------------------
@@ -592,7 +601,7 @@ set_share_tree_project_flags( const lList *project_list,
    if (!project_list || !node)
       return;
 
-   if (userprj_list_locate(project_list, lGetString(node, STN_name)))
+   if (prj_list_locate(project_list, lGetString(node, STN_name)))
       lSetUlong(node, STN_project, 1);
    else
       lSetUlong(node, STN_project, 0);
@@ -635,16 +644,16 @@ sge_add_default_user_nodes( lListElem *root_node,
       ** check acl and xacl of project for the temp users
       ** only users that are allowed for the project are shown
       */
-      lList *xacl = lGetList(project, UP_xacl);
-      lList *acl = lGetList(project, UP_acl);
+      lList *xacl = lGetList(project, PR_xacl);
+      lList *acl = lGetList(project, PR_acl);
 
-      proj_name = lGetString(project, UP_name);
+      proj_name = lGetString(project, PR_name);
 
       if (search_userprj_node(root_node, "default", proj_name, NULL)) {
          for_each(user, user_list) {
             int has_access = 1;
             
-            user_name = lGetString(user, UP_name);
+            user_name = lGetString(user, UU_name);
 
             /*
             ** check if user would be allowed
@@ -673,7 +682,7 @@ sge_add_default_user_nodes( lListElem *root_node,
    proj_name = NULL;
    if (search_userprj_node(root_node, "default", proj_name, NULL)) {
       for_each(user, user_list) {
-         user_name = lGetString(user, UP_name);
+         user_name = lGetString(user, UU_name);
          if (((dnode=search_userprj_node(root_node, user_name, proj_name, &pnode))) &&
              strcmp("default", lGetString(dnode, STN_name)) == 0) {
             lListElem *node = lCopyElem(dnode);

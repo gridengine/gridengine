@@ -838,7 +838,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory, lList *
    DENTER(TOP_LAYER, "sge_read_project_list_from_disk");
 
    if (*list == NULL) {
-      *list = lCreateList("", UP_Type);
+      *list = lCreateList("", PR_Type);
    }
    
    direntries = sge_get_dirents(directory);
@@ -870,7 +870,7 @@ int sge_read_project_list_from_disk(lList **list, const char *directory, lList *
                       lGetString(direntry, ST_name)));
                DRETURN(-1);
             }
-            if (strcmp(lGetString(ep, UP_name), lGetString(direntry, ST_name))) {
+            if (strcmp(lGetString(ep, PR_name), lGetString(direntry, ST_name))) {
                ERROR((SGE_EVENT, MSG_QMASTER_PRJINCORRECT_S,
                       lGetString(direntry, ST_name)));
                DRETURN(-1);
@@ -895,7 +895,7 @@ int sge_read_user_list_from_disk(lList **list, const char *directory, lList **al
    DENTER(TOP_LAYER, "sge_read_user_list_from_disk");
 
    if (*list == NULL) {
-      *list = lCreateList("", UP_Type);
+      *list = lCreateList("", UU_Type);
    }
 
    direntries = sge_get_dirents(directory);
@@ -1180,9 +1180,9 @@ int read_all_configurations(lList **alpp,
          lList *alp = NULL;
 
          /* resolve config name */
-         old_name = strdup(lGetHost(el, CONF_hname));
+         old_name = strdup(lGetHost(el, CONF_name));
 
-         ret = sge_resolve_host(el, CONF_hname);
+         ret = sge_resolve_host(el, CONF_name);
          if (ret != CL_RETVAL_OK) {
             if (ret != CL_RETVAL_GETHOSTNAME_ERROR  ) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS, "local configuration", old_name, cl_get_error_text(ret)));
@@ -1191,10 +1191,10 @@ int read_all_configurations(lList **alpp,
             }
             WARNING((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS, "local configuration", old_name));
          }
-         new_name = lGetHost(el, CONF_hname);
+         new_name = lGetHost(el, CONF_name);
 
          /* simply ignore it if it exists already */
-         if (*lpp && lGetElemHost(*lpp, CONF_hname, new_name)) {
+         if (*lpp && lGetElemHost(*lpp, CONF_name, new_name)) {
             free(old_name);
             lFreeElem(&el);
             continue;

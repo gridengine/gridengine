@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author  rh150277
  */
 public class CullObject {
     

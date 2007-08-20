@@ -277,29 +277,29 @@ static void qmonManopFillList(void)
 
    /* manager list */
    lp = qmonMirrorList(SGE_MANAGER_LIST);
-   lPSortList(lp, "%I+", MO_name);
-   UpdateXmListFromCull(manager_list, XmFONTLIST_DEFAULT_TAG, lp, MO_name);
+   lPSortList(lp, "%I+", UM_name);
+   UpdateXmListFromCull(manager_list, XmFONTLIST_DEFAULT_TAG, lp, UM_name);
    
    /* operator list */
    lp = qmonMirrorList(SGE_OPERATOR_LIST);
-   lPSortList(lp, "%I+", MO_name);
-   UpdateXmListFromCull(operator_list, XmFONTLIST_DEFAULT_TAG, lp, MO_name);
+   lPSortList(lp, "%I+", UO_name);
+   UpdateXmListFromCull(operator_list, XmFONTLIST_DEFAULT_TAG, lp, UO_name);
 
    /* userset list */
    updateUsersetList();
 
    /* user list */
    lp = qmonMirrorList(SGE_USER_LIST);
-   lPSortList(lp, "%I+", UP_name);
+   lPSortList(lp, "%I+", UU_name);
    /*
-   ** set UP_default_project to NONE
+   ** set UU_default_project to NONE
    */
    cl = lCopyList("cl", lp);
    for_each (ep, cl) {
-      if (ep && !lGetString(ep, UP_default_project)) 
-         lSetString(ep, UP_default_project, "NONE");
+      if (ep && !lGetString(ep, UU_default_project)) 
+         lSetString(ep, UU_default_project, "NONE");
    }
-   qmonSetNxN(user_matrix, cl, 3, UP_name, UP_default_project, UP_delete_time);
+   qmonSetNxN(user_matrix, cl, 3, UU_name, UU_default_project, UU_delete_time);
    lFreeList(&cl);
 
    DEXIT;
@@ -333,14 +333,14 @@ static void qmonManopDelete(Widget w, XtPointer cld, XtPointer cad)
 
    switch (type) {
       case SGE_MANAGER_LIST:
-         lp = XmStringToCull(manager_list, MO_Type, MO_name, SELECTED_ITEMS);
-         dp = MO_Type;
-         nm = MO_name;
+         lp = XmStringToCull(manager_list, UM_Type, UM_name, SELECTED_ITEMS);
+         dp = UM_Type;
+         nm = UM_name;
          break;
       case SGE_OPERATOR_LIST:
-         lp = XmStringToCull(operator_list, MO_Type, MO_name, SELECTED_ITEMS);
-         dp = MO_Type;
-         nm = MO_name;
+         lp = XmStringToCull(operator_list, UO_Type, UO_name, SELECTED_ITEMS);
+         dp = UO_Type;
+         nm = UO_name;
          break;
 
       case SGE_USER_LIST:
@@ -349,11 +349,11 @@ static void qmonManopDelete(Widget w, XtPointer cld, XtPointer cad)
             String s = XbaeMatrixGetCell(user_matrix, i, 0);
             if (XbaeMatrixIsRowSelected(user_matrix, i) && s &&
                     strcmp(s, ""))
-               lAddElemStr(&lp, UP_name, s, UP_Type); 
+               lAddElemStr(&lp, UU_name, s, UU_Type); 
          } 
          XbaeMatrixDeselectAll(user_matrix);
-         dp = UP_Type;
-         nm = UP_name;
+         dp = UU_Type;
+         nm = UU_name;
          break;
 
       case SGE_USERSET_LIST:
@@ -398,19 +398,19 @@ static void qmonManopAdd(Widget w, XtPointer cld, XtPointer cad)
 
    switch (type) {
       case SGE_MANAGER_LIST:
-         dp = MO_Type;
-         nm = MO_name;
+         dp = UM_Type;
+         nm = UM_name;
          username = manager_name;
          break;
       case SGE_OPERATOR_LIST:
-         dp = MO_Type;
-         nm = MO_name;
+         dp = UO_Type;
+         nm = UO_name;
          username = operator_name;
          break;
 
       case SGE_USER_LIST:
-         dp = UP_Type;
-         nm = UP_name;
+         dp = UU_Type;
+         nm = UU_name;
          username = user_name;
          break;
 
@@ -438,7 +438,7 @@ static void qmonManopAdd(Widget w, XtPointer cld, XtPointer cad)
       }
       lSetString(lFirst(lp), nm, user);
 /*       if (type == SGE_USER_LIST) */
-/*          lSetString(lFirst(lp), UP_default_project, "NONE"); */
+/*          lSetString(lFirst(lp), UU_default_project, "NONE"); */
       
       alp = qmonAddList(type, qmonMirrorListRef(type), 
                            nm, &lp, NULL, what);
@@ -977,7 +977,7 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonUserAskForProject");
 
    if (!what) {
-      what = lWhat("%T(%I %I)", UP_Type, UP_name, UP_default_project);
+      what = lWhat("%T(%I %I)", UU_Type, UU_name, UU_default_project);
    }
 
    if (cbs->column != 1) {
@@ -993,7 +993,7 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
    pl = qmonMirrorList(SGE_PROJECT_LIST);
-   lPSortList(pl, "%I+", UP_name);
+   lPSortList(pl, "%I+", PR_name);
    n = lGetNumberOfElem(pl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*(n+1)); 
@@ -1002,7 +1002,7 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
         /*
         ** we get only references don't free, the strings
         */
-        strs[i+1] = lGetString(cep, UP_name);
+        strs[i+1] = lGetString(cep, PR_name);
       }
     
       strcpy(buf, "");
@@ -1018,8 +1018,8 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
             String s = XbaeMatrixGetCell(user_matrix, i, 0);
             if (XbaeMatrixIsRowSelected(user_matrix, i) && s &&
                     strcmp(s, "")) {
-               ep = lAddElemStr(&lp, UP_name, s, UP_Type); 
-               lSetString(ep, UP_default_project, buf);
+               ep = lAddElemStr(&lp, UU_name, s, UU_Type); 
+               lSetString(ep, UU_default_project, buf);
             }
          } 
          XbaeMatrixDeselectAll(user_matrix);
@@ -1028,14 +1028,14 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
          ** send to master as modify request
          */
          for_each (ep, lp) {
-            if (ep && lGetString(ep, UP_default_project) && 
-                !strcasecmp(lGetString(ep, UP_default_project), "NONE")) 
-               lSetString(ep, UP_default_project, NULL);
+            if (ep && lGetString(ep, UU_default_project) && 
+                !strcasecmp(lGetString(ep, UU_default_project), "NONE")) 
+               lSetString(ep, UU_default_project, NULL);
          }
          if (lp) {
              alp = qmonModList(SGE_USER_LIST, 
                                qmonMirrorListRef(SGE_USER_LIST),
-                               UP_name, &lp, NULL, what);
+                               UU_name, &lp, NULL, what);
              qmonMessageBox(w, alp, 0);
              updateManopList();
 
@@ -1048,9 +1048,10 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
       */
       XtFree((char*)strs);
    }
-   else
+   else {
       qmonMessageShow(w, True, 
             "@{Please configure a project first !}");
+   }         
    
    DEXIT;
 }

@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 
 /**
  * Abstract helper class for generating code which performs GDI actions
- * @author richard.hierlmeier@sun.com
  */
 public abstract class AbstractGDIGenerator {
    
@@ -70,6 +69,7 @@ public abstract class AbstractGDIGenerator {
             logger.fine("generate delete method for " + cullObject.getName());
          }
          genDeleteMethod();
+         genDeleteByPrimaryKeyMethod();
       }
       if (cullObject.hasAddOperation()) {
          if(logger.isLoggable(Level.FINE)) {
@@ -105,6 +105,7 @@ public abstract class AbstractGDIGenerator {
    protected abstract void genGetByPrimaryKeyMethod();
    protected abstract void genAddMethod();
    protected abstract void genDeleteMethod();
+   protected abstract void genDeleteByPrimaryKeyMethod();
    public abstract void genImport();
    
    

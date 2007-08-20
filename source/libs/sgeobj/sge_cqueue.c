@@ -129,8 +129,8 @@ list_attribute_struct cqueue_attribute_array[] = {
    { CQ_acl,                     QU_acl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS,        false,  false, cqueue_verify_user_list},
    { CQ_xacl,                    QU_xacl,                   AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS,       false,  false, cqueue_verify_user_list},
 
-   { CQ_projects,                QU_projects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS,          true,   false, cqueue_verify_project_list},
-   { CQ_xprojects,               QU_xprojects,              APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS,         true,   false, cqueue_verify_project_list},
+   { CQ_projects,                QU_projects,               APRJLIST_href, APRJLIST_value,   PR_name,    SGE_ATTR_PROJECTS,          true,   false, cqueue_verify_project_list},
+   { CQ_xprojects,               QU_xprojects,              APRJLIST_href, APRJLIST_value,   PR_name,    SGE_ATTR_XPROJECTS,         true,   false, cqueue_verify_project_list},
 
    { CQ_consumable_config_list,  QU_consumable_config_list, ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES,    false,  false, cqueue_verify_consumable_config_list},
    { CQ_load_thresholds,         QU_load_thresholds,        ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD,    false,  false, NULL},

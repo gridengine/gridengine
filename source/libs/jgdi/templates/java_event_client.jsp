@@ -80,7 +80,7 @@ import com.sun.grid.jgdi.event.EventListener;
  *
  *  </pre>
  *
- *  @todo    beta ??
+ *  @jgdi.todo    beta ??
  *           Add support for trigger events (sgeE_JATASK_*, sgeE_PETASK_*,
  *           sgeE_JOB*, sgeE_NEW_SHARETREE, sgeE_QINSTANCE_*)
  *

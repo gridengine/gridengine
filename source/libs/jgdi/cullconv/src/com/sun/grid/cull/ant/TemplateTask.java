@@ -48,7 +48,6 @@ import org.apache.tools.ant.types.Path;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class TemplateTask extends Task {
    

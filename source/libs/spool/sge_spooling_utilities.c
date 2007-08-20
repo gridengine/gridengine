@@ -454,11 +454,11 @@ bool spool_default_validate_func(lList **answer_list,
       case SGE_TYPE_CONFIG:
          {
             int cl_ret;
-            char *old_name = strdup(lGetHost(object, CONF_hname));
+            char *old_name = strdup(lGetHost(object, CONF_name));
 
             /* try hostname resolving */
             if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
-               cl_ret = sge_resolve_host(object, CONF_hname);
+               cl_ret = sge_resolve_host(object, CONF_name);
                /* if hostname resolving failed: create error */
                if (cl_ret != CL_RETVAL_OK) {
                   if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
@@ -475,7 +475,7 @@ bool spool_default_validate_func(lList **answer_list,
                   }
                } else {
                   /* if hostname resolving changed hostname: spool */
-                  const char *new_name = lGetHost(object, CONF_hname);
+                  const char *new_name = lGetHost(object, CONF_name);
                   if (strcmp(old_name, new_name) != 0) {
                      spooling_write_func write_func = 
                              (spooling_write_func)lGetRef(rule, SPR_write_func);
@@ -521,7 +521,7 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_USER:
-         NULL_OUT_NONE(object, UP_default_project);
+         NULL_OUT_NONE(object, UU_default_project);
          break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:

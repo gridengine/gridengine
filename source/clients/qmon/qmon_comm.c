@@ -147,13 +147,13 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_ORDER_LIST].what = lWhat("%T(ALL)", OR_Type);
    QmonMirrorList[SGE_MASTER_EVENT].what = lWhat("%T(ALL)", EV_Type);
    QmonMirrorList[SGE_CONFIG_LIST].what = lWhat("%T(ALL)", CONF_Type);
-   QmonMirrorList[SGE_MANAGER_LIST].what = lWhat("%T(ALL)", MO_Type);
-   QmonMirrorList[SGE_OPERATOR_LIST].what = lWhat("%T(ALL)", MO_Type);
+   QmonMirrorList[SGE_MANAGER_LIST].what = lWhat("%T(ALL)", UM_Type);
+   QmonMirrorList[SGE_OPERATOR_LIST].what = lWhat("%T(ALL)", UO_Type);
    QmonMirrorList[SGE_PE_LIST].what = lWhat("%T(ALL)", PE_Type);
    QmonMirrorList[SGE_SC_LIST].what = lWhat("%T(ALL)", SC_Type);
-   QmonMirrorList[SGE_USER_LIST].what = lWhat("%T(ALL)", UP_Type);
+   QmonMirrorList[SGE_USER_LIST].what = lWhat("%T(ALL)", UU_Type);
    QmonMirrorList[SGE_USERSET_LIST].what = lWhat("%T(ALL)", US_Type);
-   QmonMirrorList[SGE_PROJECT_LIST].what = lWhat("%T(ALL)", UP_Type);
+   QmonMirrorList[SGE_PROJECT_LIST].what = lWhat("%T(ALL)", PR_Type);
    QmonMirrorList[SGE_SHARETREE_LIST].what = lWhat("%T(ALL)", STN_Type);
    QmonMirrorList[SGE_CKPT_LIST].what = lWhat("%T(ALL)", CK_Type);
    QmonMirrorList[SGE_CALENDAR_LIST].what = lWhat("%T(ALL)", CAL_Type);

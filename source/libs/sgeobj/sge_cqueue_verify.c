@@ -245,7 +245,7 @@ cqueue_verify_project_list(lListElem *cqueue, lList **answer_list,
       lList *project_list = lGetList(attr_elem, APRJLIST_value);
 
       if (project_list != NULL) {
-         const lList *master_list = *(prj_list_get_master_list());
+         const lList *master_list = *object_type_get_master_list(SGE_TYPE_PROJECT);
 
          if (!prj_list_do_all_exist(master_list, answer_list, project_list)) {
             ret = false;

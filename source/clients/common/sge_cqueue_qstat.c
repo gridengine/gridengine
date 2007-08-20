@@ -447,11 +447,11 @@ lList *project_list
                 for_each(pep, prj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   
@@ -460,11 +460,11 @@ lList *project_list
                 for_each(pep, xprj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   
@@ -491,11 +491,11 @@ lList *project_list
                 for_each(pep, h_prj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   
@@ -504,11 +504,11 @@ lList *project_list
                 for_each(pep, h_xprj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   
@@ -535,11 +535,11 @@ lList *project_list
                 for_each(pep, global_prj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   
@@ -548,11 +548,11 @@ lList *project_list
                 for_each(pep, global_xprj) {
                    const char *prj_name;
                    lListElem *prj;
-                   if ((prj_name = lGetString(pep, UP_name))!=NULL) {
-                      if ((prj = userprj_list_locate(project_list, prj_name)) != NULL) {
+                   if ((prj_name = lGetString(pep, PR_name))!=NULL) {
+                      if ((prj = prj_list_locate(project_list, prj_name)) != NULL) {
                          q_access &= (name[0]=='@')?
-                            !sge_has_access_(NULL, &name[1], lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list): 
-                            !sge_has_access_(name, NULL, lGetList(prj, UP_acl), lGetList(prj, UP_xacl), acl_list); 
+                            !sge_has_access_(NULL, &name[1], lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list): 
+                            !sge_has_access_(name, NULL, lGetList(prj, PR_acl), lGetList(prj, PR_xacl), acl_list); 
                       } else {
                         DPRINTF(("no reference object for project %s\n", prj_name));
                       }   

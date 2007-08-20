@@ -110,7 +110,7 @@
 <% 
    if (cullObj.hasModifyOperation()) {
 %>         
-         // TODO modify the test object
+         // @jgdi.todo modify the test object
 <%
      if(name.equals("Calendar")) {
 %>

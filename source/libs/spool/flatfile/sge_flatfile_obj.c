@@ -169,14 +169,14 @@ static spooling_field ATIME_sub_fields[] = {
    {  NoName,              0, NULL,                NULL, NULL, NULL}
 };
 
-static spooling_field UP_sub_fields[] = {
-   {  UP_name,             0, NULL,                NULL, NULL, NULL},
+static spooling_field PR_sub_fields[] = {
+   {  PR_name,             0, NULL,                NULL, NULL, NULL},
    {  NoName,              0, NULL,                NULL, NULL, NULL}
 };
 
 static spooling_field APRJLIST_sub_fields[] = {
    {  APRJLIST_href,       0, NULL,                NULL, NULL, NULL},
-   {  APRJLIST_value,      0, NULL,                UP_sub_fields, NULL, NULL},
+   {  APRJLIST_value,      0, NULL,                PR_sub_fields, NULL, NULL},
    {  NoName,              0, NULL,                NULL, NULL, NULL}
 };
 
@@ -585,66 +585,87 @@ static void create_spooling_field (
    }
 }
 
-spooling_field *sge_build_UP_field_list (bool spool, bool user)
+spooling_field *sge_build_PR_field_list(bool spool)
 {
-   /* There are 13 possible UP_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*13);
+   /* There are 11 possible PR_Type fields. */
+   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*11);
    int count = 0;
    
    /* Build the list of fields to read and write */
-   create_spooling_field(&fields[count++], UP_name, 0, "name", NULL,
+   create_spooling_field(&fields[count++], PR_name, 0, "name", NULL,
                           NULL, NULL, NULL);
-   
-   create_spooling_field(&fields[count++], UP_oticket, 0, "oticket",
+   create_spooling_field(&fields[count++], PR_oticket, 0, "oticket",
                           NULL, NULL, NULL, NULL);
-   create_spooling_field(&fields[count++], UP_fshare, 0, "fshare",
+   create_spooling_field(&fields[count++], PR_fshare, 0, "fshare",
                           NULL, NULL, NULL, NULL);
-#if defined(allow_delete_time_modification)
-   if (user) {
-      create_spooling_field(&fields[count++], UP_delete_time, 0,
-                             "delete_time", NULL, NULL, NULL, NULL);
-   }
-#endif
-   
    if (spool) {
-#if !defined(allow_delete_time_modification)
-      if (user) {
-         create_spooling_field(&fields[count++], UP_delete_time, 0, "delete_time",
-                          NULL, NULL, NULL, NULL);
-      }
-#endif
-      create_spooling_field(&fields[count++], UP_usage, 0, "usage",
+      create_spooling_field(&fields[count++], PR_usage, 0, "usage",
                              UA_sub_fields, NULL, NULL, NULL);
-      create_spooling_field(&fields[count++], UP_usage_time_stamp, 0, "usage_time_stamp",
+      create_spooling_field(&fields[count++], PR_usage_time_stamp, 0, "usage_time_stamp",
                              NULL, NULL, NULL, NULL);
-      create_spooling_field(&fields[count++], UP_long_term_usage, 0, "long_term_usage",
+      create_spooling_field(&fields[count++], PR_long_term_usage, 0, "long_term_usage",
                              UA_sub_fields, NULL, NULL, NULL);
-      create_spooling_field(&fields[count++], UP_project, 0, "project",
+      create_spooling_field(&fields[count++], PR_project, 0, "project",
                              UPP_sub_fields, NULL, NULL, NULL);
    }
-   
-   if (user) {
-      create_spooling_field(&fields[count++], UP_default_project, 0,
-                             "default_project", NULL, NULL, NULL, NULL);
-   } else {
-      create_spooling_field(&fields[count++], UP_acl, 0, "acl", US_sub_fields,
-                             NULL, NULL, NULL);
-      create_spooling_field(&fields[count++], UP_xacl, 0, "xacl",
-                             US_sub_fields, NULL, NULL, NULL);
-   }
-                  
+   create_spooling_field(&fields[count++], PR_acl, 0, "acl", US_sub_fields,
+                          NULL, NULL, NULL);
+   create_spooling_field(&fields[count++], PR_xacl, 0, "xacl",
+                          US_sub_fields, NULL, NULL, NULL);
    if (spool) {
-      create_spooling_field(&fields[count++], UP_debited_job_usage, 0, NULL,
+      create_spooling_field(&fields[count++], PR_debited_job_usage, 0, NULL,
                              UPU_sub_fields, NULL, NULL, NULL);
    }
-   
    create_spooling_field(&fields[count++], NoName, 0, NULL, NULL, NULL, NULL,
                           NULL);
    
    return fields;
 }
 
-spooling_field *sge_build_STN_field_list (bool spool, bool recurse)
+spooling_field *sge_build_UU_field_list(bool spool)
+{
+   /* There are 11 possible UU_Type fields. */
+   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*11);
+   int count = 0;
+   
+   /* Build the list of fields to read and write */
+   create_spooling_field(&fields[count++], UU_name, 0, "name", NULL,
+                          NULL, NULL, NULL);
+   create_spooling_field(&fields[count++], UU_oticket, 0, "oticket",
+                          NULL, NULL, NULL, NULL);
+   create_spooling_field(&fields[count++], UU_fshare, 0, "fshare",
+                          NULL, NULL, NULL, NULL);
+#if defined(allow_delete_time_modification)
+   create_spooling_field(&fields[count++], UU_delete_time, 0,
+                             "delete_time", NULL, NULL, NULL, NULL);
+#endif
+   if (spool) {
+#if !defined(allow_delete_time_modification)
+      create_spooling_field(&fields[count++], UU_delete_time, 0, "delete_time",
+                            NULL, NULL, NULL, NULL);
+#endif
+      create_spooling_field(&fields[count++], UU_usage, 0, "usage",
+                             UA_sub_fields, NULL, NULL, NULL);
+      create_spooling_field(&fields[count++], UU_usage_time_stamp, 0, "usage_time_stamp",
+                             NULL, NULL, NULL, NULL);
+      create_spooling_field(&fields[count++], UU_long_term_usage, 0, "long_term_usage",
+                             UA_sub_fields, NULL, NULL, NULL);
+      create_spooling_field(&fields[count++], UU_project, 0, "project",
+                             UPP_sub_fields, NULL, NULL, NULL);
+   }
+   create_spooling_field(&fields[count++], UU_default_project, 0,
+                             "default_project", NULL, NULL, NULL, NULL);
+   if (spool) {
+      create_spooling_field(&fields[count++], UU_debited_job_usage, 0, NULL,
+                             UPU_sub_fields, NULL, NULL, NULL);
+   }
+   create_spooling_field(&fields[count++], NoName, 0, NULL, NULL, NULL, NULL,
+                          NULL);
+   
+   return fields;
+}
+
+spooling_field *sge_build_STN_field_list(bool spool, bool recurse)
 {
    /* There are 7 possible STN_Type fields. */
    spooling_field *fields = (spooling_field *)malloc (sizeof(spooling_field)*7);
@@ -678,7 +699,7 @@ spooling_field *sge_build_STN_field_list (bool spool, bool recurse)
    return fields;
 }
 
-spooling_field *sge_build_PE_field_list (bool spool, bool to_stdout)
+spooling_field *sge_build_PE_field_list(bool spool, bool to_stdout)
 {
 #ifdef SGE_PQS_API
    /* There are 15 possible PE_Type fields. */
@@ -781,9 +802,9 @@ spooling_field *sge_build_EH_field_list(bool spool, bool to_stdout,
                           US_sub_fields, NULL, NULL, NULL);
    
    create_spooling_field(&fields[count++], EH_prj, 21, "projects",
-                          UP_sub_fields, NULL, NULL, NULL);
+                          PR_sub_fields, NULL, NULL, NULL);
    create_spooling_field(&fields[count++], EH_xprj, 21, "xprojects",
-                          UP_sub_fields, NULL, NULL, NULL);
+                          PR_sub_fields, NULL, NULL, NULL);
    create_spooling_field(&fields[count++], EH_usage_scaling_list, 21,
                           "usage_scaling", HS_sub_fields,
                           &qconf_sub_name_value_comma_sfi, NULL, NULL);
@@ -946,7 +967,7 @@ spooling_field *sge_build_CONF_field_list(bool spool_config)
    int count = 0;
    
    if (spool_config) {
-      create_spooling_field(&fields[count++], CONF_hname, 28, "conf_name",
+      create_spooling_field(&fields[count++], CONF_name, 28, "conf_name",
                              NULL, NULL, NULL, NULL);
       create_spooling_field(&fields[count++], CONF_version, 28, "conf_version",
                              NULL, NULL, NULL, NULL);
@@ -1031,9 +1052,9 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
                              "complex_values", CE_sub_fields, NULL, NULL, NULL);
       
       create_spooling_field (&fields[count++], QU_projects, 21, "projects",
-                             UP_sub_fields, NULL, NULL, NULL);
+                             PR_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_xprojects, 21, "xprojects",
-                             UP_sub_fields, NULL, NULL, NULL);
+                             PR_sub_fields, NULL, NULL, NULL);
       
       create_spooling_field (&fields[count++], QU_calendar, 21, "calendar",
                              NULL, NULL, NULL, NULL);
@@ -1150,7 +1171,7 @@ static int write_CQ_ulng_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_celist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_celist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    lList *lp = NULL;
@@ -1228,7 +1249,7 @@ static int write_CQ_str_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_qtlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_qtlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    lList *lp = NULL;
@@ -1254,7 +1275,7 @@ static int write_CQ_qtlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_strlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_strlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    lList *lp = NULL;
@@ -1280,7 +1301,7 @@ static int write_CQ_strlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_bool_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_bool_attr_list(lListElem *ep, int nm, const char *buffer,
                                    lList **alp)
 {
    lList *lp = NULL;
@@ -1306,7 +1327,7 @@ static int write_CQ_bool_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_usrlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_usrlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    lList *lp = NULL;
@@ -1332,7 +1353,7 @@ static int write_CQ_usrlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_solist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_solist_attr_list(lListElem *ep, int nm, const char *buffer,
                                      lList **alp)
 {
    lList *lp = NULL;
@@ -1358,7 +1379,7 @@ static int write_CQ_solist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_prjlist_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_prjlist_attr_list(lListElem *ep, int nm, const char *buffer,
                                       lList **alp)
 {
    lList *lp = NULL;
@@ -1384,7 +1405,7 @@ static int write_CQ_prjlist_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_time_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_time_attr_list(lListElem *ep, int nm, const char *buffer,
                                    lList **alp)
 {
    lList *lp = NULL;
@@ -1410,7 +1431,7 @@ static int write_CQ_time_attr_list(const lListElem *ep, int nm,
    return 1;
 }
 
-static int read_CQ_mem_attr_list (lListElem *ep, int nm, const char *buffer,
+static int read_CQ_mem_attr_list(lListElem *ep, int nm, const char *buffer,
                                   lList **alp)
 {
    lList *lp = NULL;

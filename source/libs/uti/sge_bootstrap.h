@@ -51,6 +51,7 @@ const char *bootstrap_get_qmaster_spool_dir(void);
 const char *bootstrap_get_security_mode(void);
 bool       bootstrap_get_job_spooling(void);
 int        bootstrap_get_gdi_thread_count(void);
+const char *bootstrap_get_libjvm_path(void);
 
 void bootstrap_set_admin_user(const char *value);
 void bootstrap_set_default_domain(const char *value);
@@ -63,6 +64,7 @@ void bootstrap_set_qmaster_spool_dir(const char *value);
 void bootstrap_set_security_mode(const char *value);
 void bootstrap_set_job_spooling(bool value);
 void bootstrap_set_gdi_thread_count(int value);
+void bootstrap_set_libjvm_path(const char *value);
 
 #endif
 
@@ -86,6 +88,7 @@ struct sge_bootstrap_state_class_str {
    const char* (*get_security_mode)(sge_bootstrap_state_class_t *thiz);
    bool (*get_job_spooling)(sge_bootstrap_state_class_t *thiz);
    int (*get_gdi_thread_count)(sge_bootstrap_state_class_t *thiz);
+   const char* (*get_libjvm_path)(sge_bootstrap_state_class_t *thiz);
 
    void (*set_admin_user)(sge_bootstrap_state_class_t *thiz, const char *admin_user);
    void (*set_default_domain)(sge_bootstrap_state_class_t *thiz, const char *default_domain);
@@ -98,6 +101,7 @@ struct sge_bootstrap_state_class_str {
    void (*set_security_mode)(sge_bootstrap_state_class_t *thiz, const char *security_mode);
    void (*set_job_spooling)(sge_bootstrap_state_class_t *thiz, bool job_spooling);
    void (*set_gdi_thread_count)(sge_bootstrap_state_class_t *thiz, int gdi_thread_count);
+   void (*set_libjvm_path)(sge_bootstrap_state_class_t *thiz, const char *libjvm_path);
 };
 
 sge_bootstrap_state_class_t *sge_bootstrap_state_class_create(sge_path_state_class_t *sge_paths, sge_error_class_t *eh);

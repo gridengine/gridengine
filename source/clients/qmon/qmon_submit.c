@@ -2875,7 +2875,7 @@ static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad)
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = (StringConst)lGetString(cep, UP_name);
+        strs[i] = (StringConst)lGetString(cep, PR_name);
       }
     
       strcpy(buf, "");

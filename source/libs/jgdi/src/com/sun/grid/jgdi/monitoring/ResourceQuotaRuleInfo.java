@@ -35,7 +35,7 @@ import java.util.List;
 
 /**
  *
- * @todo   beta ??
+ * @jgdi.todo   beta ??
  *         add javadoc comments
  */
 public interface ResourceQuotaRuleInfo {

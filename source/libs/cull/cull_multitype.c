@@ -208,7 +208,7 @@ const char *lMt2Str(int mt)
 *     returns the string representation of a name id
 *
 *  INPUTS
-*     int nm - name id (e.g. CONF_hname)
+*     int nm - name id (e.g. CONF_name)
 *
 *  RESULT
 *     char* - string representation of id

@@ -46,8 +46,8 @@
    <owner key='@/'><US_Type>NONE</US_Type></owner>
    <acl key='@/'><US_Type>NONE</US_Type></acl>
    <xacl key='@/'><US_Type>NONE</US_Type></xacl>
-   <projects key='@/'><UP_Type>NONE</UP_Type></projects>
-   <xprojects key='@/'><UP_Type>NONE</UP_Type></xprojects>
+   <projects key='@/'><PR_Type>NONE</PR_Type></projects>
+   <xprojects key='@/'><PR_Type>NONE</PR_Type></xprojects>
    <loadThresholds key='@/'>
      <CE_Type>
          <name>np_load_avg</name>

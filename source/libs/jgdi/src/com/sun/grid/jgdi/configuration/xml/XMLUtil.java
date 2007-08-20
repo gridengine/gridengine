@@ -64,7 +64,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * This class implements the serialisation/deserialion of cull object
  * int xml.
- * @todo   alpha ??
+ * @jgdi.todo   alpha ??
  *         <p>Implement missing primitive handlers</p>
  */
 public class XMLUtil {
@@ -130,7 +130,7 @@ public class XMLUtil {
             } else if (pd instanceof MapListPropertyDescriptor) {
                write(obj, (MapListPropertyDescriptor)pd, p);
             } else {
-               throw new IllegalStateException("Unknown proprty type " + pd.getClass());
+               throw new IllegalStateException("Unknown property type " + pd.getClass());
             }
             
          }

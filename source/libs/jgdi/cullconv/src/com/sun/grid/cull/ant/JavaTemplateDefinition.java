@@ -38,7 +38,6 @@ import org.apache.tools.ant.BuildException;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class JavaTemplateDefinition extends JavaConverterDefinition {
    

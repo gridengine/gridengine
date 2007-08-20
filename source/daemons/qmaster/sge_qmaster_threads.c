@@ -30,6 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#if 0
+#ifndef NO_JNI
+#define JVM_THREAD
+#endif
+#endif
+
 #include <signal.h>
 #include <pthread.h>
 #include <string.h>
@@ -93,20 +99,42 @@ typedef struct {
    pthread_mutex_t mutex;      /* used for thread exclusion  */
    pthread_cond_t  cond_var;   /* used for thread waiting    */
    pthread_t       sig_thrd;   /* signal thread              */
+#ifdef JVM_THREAD   
+   pthread_t       jvm_thrd;   /* jvm thread                 */
+#endif   
    bool            shutdown;   /* true -> shutdown qmaster   */
    short           thrd_count; /* number of active threads (main thread does not count) */
 } qmaster_control_t;
 
 
+#ifdef JVM_THREAD   
+
+#include <jni.h>
+
+static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv);
+static int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv);
+static int load_libs(JNIEnv *env, jclass main_class);
+
+static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, INVALID_THREAD, false, 0};
+#else
 static qmaster_control_t Qmaster_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, INVALID_THREAD, false, 0};
+#endif
 
 /* thread management */
 static void      inc_thread_count(void);
 static bool      should_terminate(void);
 static void      wait_for_thread_termination(void);
+
 static void      set_signal_thread(pthread_t);
 static pthread_t get_signal_thread(void);
 static void*     signal_thread(void*);
+
+#ifdef JVM_THREAD
+static void      set_jvm_thread(pthread_t);
+static pthread_t get_jvm_thread(void);
+static void*     jvm_thread(void*);
+#endif
+
 static void*     message_thread(void*);
 
 static int       qmaster_exit_state = 0;
@@ -357,7 +385,7 @@ void sge_start_heartbeat(void)
 
    
    /* this is for testsuite shadowd test */
-   if ( getenv("SGE_TEST_HEARTBEAT_TIMEOUT") != NULL) {
+   if (getenv("SGE_TEST_HEARTBEAT_TIMEOUT") != NULL) {
       int test_timeout = atoi(getenv("SGE_TEST_HEARTBEAT_TIMEOUT"));
       set_inc_qmaster_heartbeat_test_mode(test_timeout);
       DPRINTF(("heartbeat timeout test enabled (timeout="sge_U32CFormat")\n", sge_u32c(test_timeout)));
@@ -393,9 +421,15 @@ void sge_start_heartbeat(void)
 *******************************************************************************/
 void sge_create_and_join_threads(sge_gdi_ctx_class_t *ctx)
 {
+#ifdef JVM_THREAD
+   enum { NUM_THRDS = 6 };
+   const char *thread_names[NUM_THRDS] = {"SIGT", "JVM", "MT(1)","MT(2)","MT(3)","MT(4)"}; 
+   pthread_t tids[NUM_THRDS];
+#else
    enum { NUM_THRDS = 5 };
    const char *thread_names[NUM_THRDS] = {"SIGT","MT(1)","MT(2)","MT(3)","MT(4)"}; 
    pthread_t tids[NUM_THRDS];
+#endif   
    u_long32 threads = ctx->get_gdi_thread_count(ctx);
    int i;
 
@@ -412,11 +446,23 @@ void sge_create_and_join_threads(sge_gdi_ctx_class_t *ctx)
    
    set_signal_thread(tids[0]);
 
+#ifdef JVM_THREAD
+   pthread_create(&(tids[1]), NULL, jvm_thread, (void*)thread_names[1]);
+   inc_thread_count();
+
+   set_jvm_thread(tids[1]);
+
+   for (i = 2; i <= threads; i++) {
+      pthread_create(&(tids[i]), NULL, message_thread, (void*)thread_names[i]);
+      inc_thread_count();
+   }
+#else
    for (i = 1; i <= threads; i++) {
       pthread_create(&(tids[i]), NULL, message_thread, (void*)thread_names[i]);
       inc_thread_count();
    }
-
+#endif   
+   
    for (i = 0; i <= threads; i++) {
       pthread_join(tids[i], NULL);
    }
@@ -870,6 +916,12 @@ static void* signal_thread(void* anArg)
       switch (sig_num) {
          case SIGINT:
          case SIGTERM:
+#ifdef JVM_THREAD
+            if (pthread_kill(get_jvm_thread(), SIGINT) != 0) {
+               /* error occurred */
+            }
+            set_jvm_thread(INVALID_THREAD);
+#endif
             wait_for_thread_termination();
             set_signal_thread(INVALID_THREAD);
             is_continue = false;
@@ -1055,6 +1107,11 @@ static int sge_shutdown_qmaster_via_signal_thread(int i)
 {
    int return_value = 0;
    DENTER(TOP_LAYER, "sge_shutdown_qmaster_via_signal_thread");
+#ifdef JVM_THREAD
+   if (pthread_kill(get_jvm_thread(), SIGINT) != 0) {
+      return_value = -1;         
+   }
+#endif
    if (pthread_kill(get_signal_thread(), SIGINT) != 0) {
       return_value = -1;         
    }
@@ -1067,4 +1124,442 @@ int sge_get_qmaster_exit_state(void) {
    return qmaster_exit_state;
 }
 
+
+#ifdef JVM_THREAD
+
+#ifdef LINUX
+#ifndef __USE_GNU
+#define __USE_GNU
+#endif
+#endif
+
+#include <dlfcn.h>
+#include <string.h>
+
+#ifdef LINUX
+#ifdef __USE_GNU
+#undef __USE_GNU
+#endif
+#endif
+
+#ifdef SOLARIS
+#include <link.h>
+#endif
+
+
+typedef int (*JNI_CreateJavaVM_Func)(JavaVM **pvm, void **penv, void *args);
+
+#ifdef DARWIN
+int JNI_CreateJavaVM_Impl(JavaVM **pvm, void **penv, void *args);
+#endif
+
+
+/****** qmaster/sge_qmaster_main/set_jvm_thread() ***************************
+*  NAME
+*     set_jvm_thread() -- Store jvm thread in qmaster control structure
+*
+*  SYNOPSIS
+*     static void set_jvm_thread(pthread_t aThread) 
+*
+*  FUNCTION
+*     Store jvm thread in qmaster control structure. To invalidate the
+*     jvm thread, use 'INVALID_THREAD' as an argument
+*
+*     NOTE: This function should *ONLY* be invoked from the function which
+*     does create the jvm thread or from the jvm thread itself.
+*
+*  INPUTS
+*     pthread_t aThread - jvm thread or 'INVALID_THREAD'.
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: set_jvm_thread() is MT safe.
+*
+*******************************************************************************/
+static void set_jvm_thread(pthread_t aThread)
+{
+   DENTER(TOP_LAYER, "set_jvm_thread");
+
+   sge_mutex_lock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   Qmaster_Control.jvm_thrd = aThread;
+
+   sge_mutex_unlock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   DEXIT;
+   return;
+} /* set_jvm_thread() */
+
+/****** qmaster/sge_qmaster_main/get_jvm_thread() ***************************
+*  NAME
+*     get_jvm_thread() -- Get jvm thread from the qmaster control
+*                            structure.
+*
+*  SYNOPSIS
+*     static pthread_t get_jvm_thread(void) 
+*
+*  FUNCTION
+*     Get jvm thread from the qmaster control structure.
+*
+*     NOTE: There is *NO* guarantee that the jvm thread returned by this 
+*     function still is alive and kicking! 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     pthread_t - jvm thread or 'INVALID_THREAD'. 
+*
+*  NOTES
+*     MT-NOTE: get_jvm_thread() is MT safe 
+*
+*******************************************************************************/
+static pthread_t get_jvm_thread(void)
+{
+   pthread_t thrd = INVALID_THREAD;
+
+   DENTER(TOP_LAYER, "get_jvm_thread");
+
+   sge_mutex_lock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   thrd = Qmaster_Control.jvm_thrd;
+
+   sge_mutex_unlock("qmaster_mutex", SGE_FUNC, __LINE__, &Qmaster_Control.mutex);
+
+   DEXIT;
+   return thrd;
+} /* get_jvm_thread() */
+
+/*-------------------------------------------------------------------------*
+ * NAME
+ *   create_vm - create a jvm
+ * PARAMETER
+ *  argc - number of arguments for the jvm
+ *  argv - arguments for the jvm
+ *
+ * RETURN
+ *
+ *   NULL -  jvm could not be created
+ *   else -  jvm has been created
+ *
+ * EXTERNAL
+ *
+ * DESCRIPTION
+ *-------------------------------------------------------------------------*/
+static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
+{
+   void *libjvm_handle = NULL;
+   bool ok = true;
+	JavaVM* jvm;
+	JNIEnv* env;
+	JavaVMInitArgs args;
+   JNI_CreateJavaVM_Func sge_JNI_CreateJavaVM = NULL;
+   int i = 0;
+	JavaVMOption* options = NULL;
+	
+   DENTER(GDI_LAYER, "sge_gdi_kill_master");
+
+   options = (JavaVMOption*)malloc(argc*sizeof(JavaVMOption));
+
+	/* There is a new JNI_VERSION_1_4, but it doesn't add anything for the purposes of our example. */
+	args.version = JNI_VERSION_1_2;
+	args.nOptions = argc;
+   for(i=0; i < argc; i++) {
+      /*printf("jvm_args[%d] = %s\n", i, argv[i]);*/
+      options[i].optionString = argv[i];
+   }
+	args.options = options;
+	args.ignoreUnrecognized = JNI_FALSE;
+
+   /* build the full name of the shared lib - append architecture dependent
+    * shlib postfix 
+    */
+#ifdef HP1164
+   /*
+   ** need to switch to start user for HP
+   */
+   sge_switch2start_user();
+#endif   
+
+   /* open the shared lib */
+   # if defined(DARWIN)
+   # ifdef RTLD_NODELETE
+   libjvm_handle = dlopen(libjvm_path, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+   # else
+   libjvm_handle = dlopen(libjvm_path, RTLD_NOW | RTLD_GLOBAL );
+   # endif /* RTLD_NODELETE */
+   # elif defined(HP11) || defined(HP1164)
+   # ifdef RTLD_NODELETE
+   libjvm_handle = dlopen(libjvm_path, RTLD_LAZY | RTLD_NODELETE);
+   # else
+   libjvm_handle = dlopen(libjvm_path, RTLD_LAZY );
+   # endif /* RTLD_NODELETE */
+   # else
+   # ifdef RTLD_NODELETE
+   libjvm_handle = dlopen(libjvm_path, RTLD_LAZY | RTLD_NODELETE);
+   # else
+   libjvm_handle = dlopen(libjvm_path, RTLD_LAZY);
+   # endif /* RTLD_NODELETE */
+   #endif
+
+#ifdef HP1164
+   /*
+   ** switch back to admin user for HP
+   */
+   sge_switch2admin_user();
+#endif
+
+   if (libjvm_handle == NULL) {
+      CRITICAL((SGE_EVENT, "could not load libjvmi %s", dlerror()));
+      ok = false;
+   }
+
+   /* retrieve function pointer of get_method function in shared lib */
+   if (ok) {
+#ifdef DARWIN
+      /*
+      ** for darwin there exists no JNI_CreateJavaVM, Why not maybe a fix in the future ???
+      */
+      const char* JNI_CreateJavaVM_FuncName = "JNI_CreateJavaVM_Impl";
+#else
+      const char* JNI_CreateJavaVM_FuncName = "JNI_CreateJavaVM";
+#endif
+	   sge_JNI_CreateJavaVM = (JNI_CreateJavaVM_Func)dlsym(libjvm_handle, JNI_CreateJavaVM_FuncName);
+      if (sge_JNI_CreateJavaVM == NULL) {
+         CRITICAL((SGE_EVENT, "could not load sge_JNI_CreateJavaVM %s", dlerror()));
+         ok = false;
+      }
+   }
+
+	if ((i = sge_JNI_CreateJavaVM(&jvm, (void **)&env, &args)) < 0) {
+      CRITICAL((SGE_EVENT, "can not create JVM (error code %d)\n", i));
+      env = NULL;
+   }
+   
+   free(options);
+	DRETURN(env);
+}
+
+/*-------------------------------------------------------------------------*
+ * NAME
+ *   load_libs - call the loadLibs method of com.sun.grid.jgdi.TestRunner
+ *
+ * PARAMETER
+ *  env -  JNI environment
+ *
+ * RETURN
+ *   0 - loadLibs method successfully executed
+ *   else - error
+ *
+ * EXTERNAL
+ *
+ * DESCRIPTION
+ *
+ *   the loadLibs method of com.sun.grid.jgdi.TestRunner load the shared
+ *   library libjgdi.so. If the jgdi_test program is started a debugger
+ *   after the call of this method all symbols of the shared library 
+ *   are available
+ *-------------------------------------------------------------------------*/
+static int load_libs(JNIEnv *env, jclass main_class) {
+	jmethodID mid;
+   
+	mid = (*env)->GetStaticMethodID(env, main_class, "loadLib", "()V");
+   if (mid != NULL) {
+      (*env)->CallStaticVoidMethod(env, main_class, mid);
+      if( (*env)->ExceptionOccurred(env)) {
+         (*env)->ExceptionDescribe(env);
+         return 1;
+      }
+   } else {
+      (*env)->ExceptionClear(env);
+   }
+   
+   return 0;
+}
+
+
+/*-------------------------------------------------------------------------*
+ * NAME
+ *   invoke_main - invoke the main method of com.sun.grid.jgdi.TestRunner
+ * PARAMETER
+ *  env  - the JNI environment
+ *  argc - number of arguments for the main method
+ *  argv - the arguments for the main method
+ *
+ * RETURN
+ *
+ *  exit code of the JVM
+ *
+ * EXTERNAL
+ *
+ * DESCRIPTION
+ *-------------------------------------------------------------------------*/
+static int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv) {
+	jmethodID main_mid;
+	jobjectArray main_args;
+   int i = 0;
+   
+	main_mid = (*env)->GetStaticMethodID(env, main_class, "main", "([Ljava/lang/String;)V");
+   if (main_mid == NULL) {
+      fprintf(stderr, "class has no main method\n");
+      return 1;
+   }
+
+	main_args = (*env)->NewObjectArray(env, argc, (*env)->FindClass(env, "java/lang/String"), NULL);
+   
+   for(i=0; i < argc; i++) {
+      jstring str = (*env)->NewStringUTF(env, argv[i]);
+      printf("argv[%d] = %s\n", i, argv[i]);
+      (*env)->SetObjectArrayElement(env, main_args, i, str);
+   }
+
+	(*env)->CallStaticVoidMethod(env, main_class, main_mid, main_args);
+   
+   if( (*env)->ExceptionOccurred(env)) {
+      (*env)->ExceptionDescribe(env);
+      return 1;
+   }
+   
+   return 0;
+}
+
+
+static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
+{
+
+   dstring ds = DSTRING_INIT;
+   const char *libjvm_path = NULL; 
+   char *jvm_argv[11];
+   char *main_argv[4];
+   int i;
+   char main_class_name[] = "com/sun/grid/jgdi/rmi/JGDIRmiProxy";
+	JNIEnv* env = NULL;
+   jobject main_class = NULL;
+
+   DENTER(TOP_LAYER, "sge_run_jvm");
+
+   libjvm_path = ctx->get_libjvm_path(ctx);
+
+   if (libjvm_path == NULL) {
+      DRETURN(anArg);
+   }   
+
+   jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
+   jvm_argv[1] = strdup("-Djava.security.manager=java.rmi.RMISecurityManager");
+   jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/util/rmiproxy.policy", ctx->get_sge_root(ctx)));
+   jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
+   jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
+   jvm_argv[5] = strdup("-Djava.rmi.server.logCalls=true");
+   jvm_argv[6] = strdup("-verbose:jni");
+   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/util/management.properties", ctx->get_sge_root(ctx)));
+   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/util/jmxremote.access", ctx->get_sge_root(ctx)));
+   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/util/jmxremote.password", ctx->get_sge_root(ctx)));
+   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/util/jaas.config", ctx->get_sge_root(ctx)));
+   
+   main_argv[0] = strdup("-reg");
+   main_argv[1] = strdup("local:54321");
+   main_argv[2] = strdup("jgdi");
+   main_argv[3] = strdup(sge_dstring_sprintf(&ds, "bootstrap://%s@%s:"sge_u32, ctx->get_sge_root(ctx), ctx->get_default_cell(ctx), ctx->get_sge_qmaster_port(ctx)));
+
+   sge_dstring_free(&ds);
+
+
+   /*
+   ** for debugging
+   */
+   for (i=0; i<sizeof(jvm_argv)/sizeof(char*); i++) {
+      DPRINTF(("jvm_argv[%d]: %s\n", i, jvm_argv[i]));
+   }   
+
+   for (i=0; i<sizeof(main_argv)/sizeof(char*); i++) {
+      DPRINTF(("main_argv[%d]: %s\n", i, main_argv[i]));
+   }   
+
+	env = create_vm(libjvm_path, sizeof(jvm_argv)/sizeof(char *), jvm_argv);
+   main_class = (*env)->FindClass(env, main_class_name);
+
+   if (load_libs(env, main_class)) {
+      CRITICAL((SGE_EVENT, "main_class is NULL\n"));
+   }
+   
+   if (main_class != NULL) {
+      invoke_main(env, main_class, sizeof(main_argv)/sizeof(char*), main_argv);
+   } else {
+      CRITICAL((SGE_EVENT, "main_class is NULL\n"));
+   }   
+
+   for (i=0; i<sizeof(jvm_argv)/sizeof(char*); i++) {
+      FREE(jvm_argv[i]);
+   }   
+
+   for (i=0; i<sizeof(main_argv)/sizeof(char*); i++) {
+      FREE(main_argv[i]);
+   }   
+   DRETURN(anArg);
+   
+} /* sge_run_jvm */
+
+
+/****** qmaster/sge_qmaster_main/jvm_thread() ******************************
+*  NAME
+*     jvm_thread() -- jvm thread function 
+*
+*  SYNOPSIS
+*     static void* jvm_thread(void* anArg) 
+*
+*  FUNCTION
+*     run jvm. 
+*
+*  INPUTS
+*     void* anArg - not used 
+*
+*  RESULT
+*     void* - none 
+*
+*  NOTES
+*     MT-NOTE: jvm_thread() is a thread function. Do NOT use this function
+*     MT-NOTE: in any other way!
+*
+*******************************************************************************/
+static void* jvm_thread(void* anArg)
+{
+   time_t next_prof_output = 0;
+   monitoring_t monitor;
+   sge_gdi_ctx_class_t *ctx = NULL;
+   bool jvm_started = false;
+
+   DENTER(TOP_LAYER, "jvm_thread");
+
+   sge_monitor_init(&monitor, (char *) anArg, GDI_EXT, MT_WARNING, MT_ERROR);
+   
+   sge_qmaster_thread_init(&ctx, true);
+
+   /* register at profiling module */
+   set_thread_name(pthread_self(),"JVM Thread");
+   conf_update_thread_profiling("JVM Thread");
+
+   while (should_terminate() == false) {
+      
+      thread_start_stop_profiling();
+
+      if (jvm_started == false) {
+         sge_run_jvm(ctx, anArg, &monitor);
+         jvm_started = true;
+      }
+
+      thread_output_profiling("message thread profiling summary:\n", 
+                              &next_prof_output);
+
+      sge_monitor_output(&monitor);
+   }
+
+   sge_monitor_free(&monitor);
+   
+   DEXIT;
+   return NULL;
+} /* jvm_thread() */
+
+#endif
 

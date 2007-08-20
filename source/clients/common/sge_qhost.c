@@ -920,7 +920,7 @@ u_long32 show
    /*
    ** global cluster configuration
    */
-   gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_hname, SGE_GLOBAL_NAME);
+   gc_where = lWhere("%T(%I c= %s)", CONF_Type, CONF_name, SGE_GLOBAL_NAME);
    gc_what = lWhat("%T(ALL)", CONF_Type);
    
    gc_id = ctx->gdi_multi(ctx, 

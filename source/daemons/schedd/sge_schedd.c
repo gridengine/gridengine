@@ -461,10 +461,10 @@ static int sge_ck_qmaster(sge_gdi_ctx_class_t *ctx, const char *former_master_ho
 /*---------------------------------------------------------------*/
    DPRINTF(("Checking if user \"%s\" is manager\n", username));
 
-   what = lWhat("%T(ALL)", MO_Type);
+   what = lWhat("%T(ALL)", UM_Type);
    where = lWhere("%T(%I == %s)",
-                  MO_Type,
-                  MO_name, username);
+                  UM_Type,
+                  UM_name, username);
    alp = ctx->gdi(ctx, SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
    lFreeWhere(&where);
    lFreeWhat(&what);

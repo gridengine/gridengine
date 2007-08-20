@@ -66,7 +66,7 @@ bool manop_is_manager(const char *user_name)
    if (user_name == NULL) {
       ret = false;
    } else if (lGetElemStr(*object_type_get_master_list(SGE_TYPE_MANAGER), 
-                          MO_name, user_name) != NULL) {
+                          UM_name, user_name) != NULL) {
       ret = true;
    }
    DEXIT;
@@ -106,10 +106,10 @@ bool manop_is_operator(const char *user_name)
    if (user_name == NULL) {
       ret = false;
    } else if(lGetElemStr(*object_type_get_master_list(SGE_TYPE_OPERATOR), 
-                         MO_name, user_name) != NULL) {
+                         UO_name, user_name) != NULL) {
       ret = true;
    } else if (lGetElemStr(*object_type_get_master_list(SGE_TYPE_MANAGER), 
-                          MO_name, user_name) != NULL) {
+                          UM_name, user_name) != NULL) {
       ret = true;
    }
    DRETURN(ret);

@@ -448,7 +448,7 @@ lList *lpCfg
    
    if ((ep = lGetElemStr(lpCfg, CF_name, "projects"))) {
       lList *lp = NULL;
-      if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
+      if (!lString2ListNone(lGetString(ep, CF_value), &lp, PR_Type, PR_name, " \t,")) {
          lFreeList(&(Master_Config.projects));
          Master_Config.projects = lp;
       }   
@@ -456,7 +456,7 @@ lList *lpCfg
 
    if ((ep = lGetElemStr(lpCfg, CF_name, "xprojects"))) {
       lList *lp = NULL;
-      if (!lString2ListNone(lGetString(ep, CF_value), &lp, UP_Type, UP_name, " \t,")) {
+      if (!lString2ListNone(lGetString(ep, CF_value), &lp, PR_Type, PR_name, " \t,")) {
          lFreeList(&(Master_Config.xprojects));
          Master_Config.xprojects = lp;
       }   
@@ -942,12 +942,12 @@ void sge_show_conf()
    for_each (ep, Master_Config.projects) {
       DPRINTF(("%s             >%s<\n", 
               lPrev(ep)?"             ":"conf.projects", 
-              lGetString(ep, UP_name)));
+              lGetString(ep, PR_name)));
    }
    for_each (ep, Master_Config.xprojects) {
       DPRINTF(("%s            >%s<\n", 
               lPrev(ep)?"              ":"conf.xprojects", 
-              lGetString(ep, UP_name)));
+              lGetString(ep, PR_name)));
    }
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
 

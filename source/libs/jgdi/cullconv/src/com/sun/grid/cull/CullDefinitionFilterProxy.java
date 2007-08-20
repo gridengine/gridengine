@@ -35,7 +35,6 @@ import java.util.logging.*;
 
 /**
  *
- * @author rh150277
  */
 public class CullDefinitionFilterProxy extends CullDefinition {
    

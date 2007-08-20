@@ -252,11 +252,11 @@ XtResource ccl_resources[] = {
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_xusers),
       XtRImmediate, NULL },
 
-   { "cluster_projects", "cluster_projects", QmonRUP_Type,
+   { "cluster_projects", "cluster_projects", QmonRPR_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_projects),
       XtRImmediate, NULL },
 
-   { "cluster_xprojects", "cluster_xprojects", QmonRUP_Type,
+   { "cluster_xprojects", "cluster_xprojects", QmonRPR_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_xprojects),
       XtRImmediate, NULL },
 
@@ -489,7 +489,7 @@ void updateClusterList(void)
    DENTER(GUI_LAYER, "updateClusterList");
 
    cl = qmonMirrorList(SGE_CONFIG_LIST);
-   UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_hname);
+   UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_name);
    XmListMoveItemToPos(cluster_host_list, "global", 1);
 
    XtVaGetValues( cluster_host_list,
@@ -524,7 +524,7 @@ static void qmonSelectHost(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_hname, hname);
+   ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, hname);
    XtFree((char*) hname);
    qmonClusterFillConf(cluster_conf_list, ep);
    
@@ -834,7 +834,7 @@ static void qmonClusterChange(Widget w, XtPointer cld, XtPointer cad)
             qmonClusterLayoutSetSensitive(False);
       }
       if (selectedItemCount && host) {
-         ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_hname, host);
+         ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, host);
          qmonCullToCClEntry(ep, &cluster_entry);
          XmtInputFieldSetString(cluster_host, host);
          XtVaSetValues( cluster_host,
@@ -896,7 +896,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
    } else {
       if (add_mode) {
          lList *old = qmonMirrorList(SGE_CONFIG_LIST);
-         lListElem *ep = lGetElemHost(old, CONF_hname, host ? host :"");
+         lListElem *ep = lGetElemHost(old, CONF_name, host ? host :"");
 
          if (ep) {
             qmonMessageShow(w, True, "host '%s' already exists", host ? host : "");
@@ -910,7 +910,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
 
    if (qmonCClEntryToCull(layout, &cluster_entry, &conf_entries, local)) {
       confl = lCreateElemList("Conf_list", CONF_Type, 1);
-      lSetHost(lFirst(confl), CONF_hname, host ? host : "global");
+      lSetHost(lFirst(confl), CONF_name, host ? host : "global");
       lSetList(lFirst(confl), CONF_entries, conf_entries);
 
       xhost = XmtCreateXmString(host ? host : "global");
@@ -925,7 +925,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
       */
       what = lWhat("%T(ALL)", CONF_Type);
 
-      alp = qmonModList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_hname, &confl, NULL, what);
+      alp = qmonModList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_name, &confl, NULL, what);
 
       aep = lFirst(alp);
       if (lFirst(alp) && lGetUlong(aep, AN_status) == STATUS_OK)
@@ -1040,7 +1040,7 @@ static void qmonClusterDelete(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonClusterDelete");
     
-   lp = XmStringToCull(cluster_host_list, CONF_Type, CONF_hname,
+   lp = XmStringToCull(cluster_host_list, CONF_Type, CONF_name,
                            SELECTED_ITEMS); 
 
    if (lp) {
@@ -1051,7 +1051,7 @@ static void qmonClusterDelete(Widget w, XtPointer cld, XtPointer cad)
       if (answer) {
          what = lWhat("%T(ALL)", CONF_Type);
 
-         alp = qmonDelList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_hname, 
+         alp = qmonDelList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_name, 
                            &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -1114,7 +1114,7 @@ int local
    /*
    ** get the global conf list
    */
-   gep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_hname, "global");
+   gep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, "global");
    if (!gep) {
       *lpp = NULL;
       DEXIT;
@@ -1700,11 +1700,11 @@ int local
       for_each(uep, clen->cluster_projects) {
          if (first) {
             first = False;
-            strcpy(buf, lGetString(uep, UP_name));
+            strcpy(buf, lGetString(uep, PR_name));
          }
          else {
             strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
+            strcat(buf, lGetString(uep, PR_name));
          }
       }
       ep = lGetElemStr(confl, CF_name, "projects");
@@ -1715,22 +1715,22 @@ int local
       for_each(uep, clen->cluster_xprojects) {
          if (first) {
             first = False;
-            strcpy(buf, lGetString(uep, UP_name));
+            strcpy(buf, lGetString(uep, PR_name));
          }
          else {
             strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
+            strcat(buf, lGetString(uep, PR_name));
          }
       }
       ep = lGetElemStr(confl, CF_name, "xprojects");
       lSetString(ep, CF_value, buf);
 
       ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
-      sprintf(buf, "%d", clen->auto_user_fshare);
+      sprintf(buf, sge_u32, clen->auto_user_fshare);
       lSetString(ep, CF_value, buf);
 
       ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
-      sprintf(buf, "%d", clen->auto_user_oticket);
+      sprintf(buf, sge_u32, clen->auto_user_oticket);
       lSetString(ep, CF_value, buf);
       
       ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
@@ -2097,13 +2097,13 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
       lFreeList(&clen->cluster_projects);
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
-                           UP_Type, UP_name, NULL);
+                           PR_Type, PR_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
       lFreeList(&(clen->cluster_xprojects));
       lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
-                           UP_Type, UP_name, NULL);
+                           PR_Type, PR_name, NULL);
    }
 
    if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
@@ -2414,15 +2414,15 @@ static void qmonClusterAskForProjects(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
    ql_in = qmonMirrorList(SGE_PROJECT_LIST);
-   ql_out = XmStringToCull(list, UP_Type, UP_name, ALL_ITEMS);
+   ql_out = XmStringToCull(list, PR_Type, PR_name, ALL_ITEMS);
 
-   status = XmtAskForItems(w, NULL, NULL, "@{Select Project}", ql_in, UP_name,
-                  "@{@fBAvailable Projects}", &ql_out, UP_Type, UP_name, 
+   status = XmtAskForItems(w, NULL, NULL, "@{Select Project}", ql_in, PR_name,
+                  "@{@fBAvailable Projects}", &ql_out, PR_Type, PR_name, 
                   "@{@fBChosen Projects}", NULL);
 
    if (status) {
       UpdateXmListFromCull(list, XmFONTLIST_DEFAULT_TAG, ql_out,
-                              UP_name);
+                              PR_name);
    }
    lFreeList(&ql_out);
 

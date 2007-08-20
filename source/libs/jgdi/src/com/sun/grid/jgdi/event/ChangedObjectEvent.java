@@ -38,7 +38,7 @@ import java.util.List;
 
 /**
  * Base class of all events which signalizes a changes of  
- * objects in the N1[tm] Grid Engine.
+ * objects in the Sun [tm] Grid Engine.
  *
  */
 public abstract class ChangedObjectEvent extends Event implements java.io.Serializable {

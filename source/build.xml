@@ -11,7 +11,7 @@
       <macrodef name="myant">
          <attribute name="target" default=""/>
          <!-- attribute name="args" default="${sge.ant.args}"/ -->
-         <attribute name="dir"    default="${basedir}"/>
+         <attribute name="dir" default="${basedir}"/>
          <sequential>
             <java classname="org.apache.tools.ant.launch.Launcher" 
                fork="true" failonerror="true"

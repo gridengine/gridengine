@@ -205,8 +205,8 @@ static lList *test_create_project(const char *project)
 {
    lList *project_list = NULL;
    lListElem *prj;
-   prj = lAddElemStr(&project_list, UP_name, project, UP_Type);
-   lSetBool(prj, UP_consider_with_categories, true);
+   prj = lAddElemStr(&project_list, PR_name, project, PR_Type);
+   lSetBool(prj, PR_consider_with_categories, true);
    return project_list;
 }
 

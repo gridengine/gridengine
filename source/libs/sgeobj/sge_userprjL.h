@@ -40,131 +40,227 @@
 extern "C" {
 #endif
 
-/* *INDENT-OFF* */ 
 
 /*
  * This is the list type we use to hold the 
- * information for user/project. This objects are targets of throwing
- * tickets to them and as usage accumulators. There are no real differences 
- * at the moment, so putting them together is convenient.
+ * information for project. This objects are targets of throwing
+ * tickets to them and as usage accumulators.
  */
 enum {
-   UP_name = UP_LOWERBOUND,
-   UP_oticket,
-   UP_fshare,
-   UP_delete_time,
-   UP_job_cnt,
-   UP_pending_job_cnt,
-   UP_usage,
-   UP_usage_time_stamp,
-   UP_usage_seqno,
-   UP_long_term_usage,
-   UP_project,
-   UP_acl,
-   UP_xacl,
-   UP_debited_job_usage,
-   UP_default_project,
-   UP_version,
-   UP_consider_with_categories
+   PR_name = PR_LOWERBOUND,
+   PR_oticket,
+   PR_fshare,
+   PR_job_cnt,
+   PR_pending_job_cnt,
+   PR_usage,
+   PR_usage_time_stamp,
+   PR_usage_seqno,
+   PR_long_term_usage,
+   PR_project,
+   PR_acl,
+   PR_xacl,
+   PR_debited_job_usage,
+   PR_version,
+   PR_consider_with_categories
 };
 
 enum {
-   UP_name_POS = 0,
-   UP_oticket_POS,
-   UP_fshare_POS,
-   UP_delete_time_POS,
-   UP_job_cnt_POS,
-   UP_pending_job_cnt_POS,
-   UP_usage_POS,
-   UP_usage_time_stamp_POS,
-   UP_usage_seqno_POS,
-   UP_long_term_usage_POS,
-   UP_project_POS,
-   UP_acl_POS,
-   UP_xacl_POS,
-   UP_debited_job_usage_POS,
-   UP_default_project_POS,
-   UP_version_POS
+   PR_name_POS = 0,
+   PR_oticket_POS,
+   PR_fshare_POS,
+   PR_job_cnt_POS,
+   PR_pending_job_cnt_POS,
+   PR_usage_POS,
+   PR_usage_time_stamp_POS,
+   PR_usage_seqno_POS,
+   PR_long_term_usage_POS,
+   PR_project_POS,
+   PR_acl_POS,
+   PR_xacl_POS,
+   PR_debited_job_usage_POS,
+   PR_version_POS
 };
 
-LISTDEF(UP_Type)
-   JGDI_OBJ(AbstractUser)
-   SGE_STRING_D(UP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF, "template")       /* configured user/project name spooled */
-   SGE_ULONG(UP_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)      /* configured override tickets (set by Qmon,
-                               * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)       /* configured functional shares (set by Qmon, 
-                               * used by SGEEE schedd) spooled */
-   SGE_ULONG(UP_delete_time, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF) /* delete time for automatic users, (set by qmaster, 
-                               * used by SGEEE qmaster) spooled */
-   SGE_ULONG(UP_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)     /* job count (set and used by SGEEE schedd, not 
-                               * spooled) schedd local, not stored to 
-                               * qmaster */
-   SGE_ULONG(UP_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)  /* job count (set and used by SGEEE schedd, not 
-                               * spooled) schedd local, not stored to 
-                               * qmaster */
-   SGE_MAP(UP_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)         /* UA_Type; decayed usage set and used by SGEEE 
-                               * schedd stored to qmaster; spooled */
-   SGE_ULONG(UP_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)    /* time stamp of last decay set when
-                                       * UP_usage changes; set and used
-                                       * by * SGEEE schedd stored to qmaster;
-                                       * spooled */
-   SGE_ULONG(UP_usage_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* usage sequence number set and used by SGE
-                               * schedd, not stored to qmaster; not
-                               * spooled */
-   SGE_MAP(UP_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)       /* UA_Type; long term accumulated 
-                                       * non-decayed i usage; set by SGEEE 
-                                       * schedd stored to qmaster; spooled */
-   SGE_LIST(UP_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)       /* UPP_Type; usage on a project basis set and used 
-                               * by SGEEE schedd stored to qmaster; spooled
-                               * Only used by projects */
-   SGE_LIST(UP_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF) /* US_Type but only names are filled 
-                               * configured excluded user access list used
-                               * by SGEEE schedd; spooled */
-   SGE_LIST(UP_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)        /* US_Type but only names are filled configured 
-                                       * excluded user access list used by SGEEE schedd; 
-                                       * spooled */
-   SGE_LIST(UP_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)     /* UPU_Type (see below) still *
-                                       * debited usage per job (set and *
-                                       * used by SGEEE schedd) */
-   SGE_STRING(UP_default_project, CULL_DEFAULT | CULL_SPOOL_USER | CULL_JGDI_CONF)     /* default project for user */
-   SGE_ULONG(UP_version, CULL_DEFAULT | CULL_JGDI_RO)     /* user/project version, increments when usage
-                               * is updated, stored to qmaster, not spooled */
-   SGE_BOOL(UP_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* true, if project plays role with categories */
+LISTDEF(PR_Type)
+   JGDI_ROOT_OBJ(Project, SGE_PROJECT_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_PROJECT_ADD) | MODIFY(sgeE_PROJECT_MOD) | DELETE(sgeE_PROJECT_DEL) | GET_LIST(sgeE_PROJECT_LIST))
+
+   /* configured project name spooled */
+   SGE_STRING_D(PR_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF, "template")
+
+   /* configured override tickets (set by Qmon, used by SGEEE schedd) spooled */
+   SGE_ULONG(PR_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+
+   /* configured functional shares (set by Qmon, used by SGEEE schedd) spooled */
+   SGE_ULONG(PR_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+
+   /* job count (set and used by SGEEE schedd, not spooled) schedd local, not stored to qmaster */
+   SGE_ULONG(PR_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* job count (set and used by SGEEE schedd, not spooled) schedd local, not stored to qmaster */
+   SGE_ULONG(PR_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* UA_Type; decayed usage set and used by SGEEE schedd stored to qmaster; spooled */
+   SGE_MAP(PR_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* time stamp of last decay set when * PR_usage changes; set and used by SGEEE schedd stored to qmaster; spooled */
+   SGE_ULONG(PR_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* usage sequence number set and used by SGE schedd, not stored to qmaster; not spooled */
+   SGE_ULONG(PR_usage_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* UA_Type; long term accumulated non-decayed i usage; set by SGEEE schedd stored to qmaster; spooled */
+   SGE_MAP(PR_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* UPP_Type; usage on a project basis set and used by SGEEE schedd stored to qmaster; spooled Only used by projects */
+   SGE_LIST(PR_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* US_Type but only names are filled configured excluded user access list used by SGEEE schedd; spooled */
+   SGE_LIST(PR_acl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)
+
+   /* US_Type but only names are filled configured excluded user access list used by SGEEE schedd; spooled */
+   SGE_LIST(PR_xacl, US_Type, CULL_DEFAULT | CULL_SPOOL_PROJECT | CULL_JGDI_CONF)
+
+   /* UPU_Type (see below) still debited usage per job (set and used by SGEEE schedd) */
+   SGE_LIST(PR_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* user/project version, increments when usage is updated, stored to qmaster, not spooled */
+   SGE_ULONG(PR_version, CULL_DEFAULT | CULL_JGDI_RO)
+
+   /* true, if project plays role with categories */
+   SGE_BOOL(PR_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 LISTEND 
 
-DERIVED_LISTDEF(Prj_Type, UP_Type)
-  JGDI_ROOT_OBJ(Project, SGE_PROJECT_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
-  JGDI_EVENT_OBJ(ADD(sgeE_PROJECT_ADD) | MODIFY(sgeE_PROJECT_MOD) | DELETE(sgeE_PROJECT_DEL) | GET_LIST(sgeE_PROJECT_LIST))
-DERIVED_LISTEND
-
-DERIVED_LISTDEF(User_Type, UP_Type)
-  JGDI_ROOT_OBJ(User, SGE_USER_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
-  JGDI_EVENT_OBJ(ADD(sgeE_USER_ADD) | MODIFY(sgeE_USER_MOD) | DELETE(sgeE_USER_DEL) | GET_LIST(sgeE_USER_LIST))
-DERIVED_LISTEND
-
-
-NAMEDEF(UPN)
-   NAME("UP_name")
-   NAME("UP_oticket")
-   NAME("UP_fshare")
-   NAME("UP_delete_time")
-   NAME("UP_job_cnt")
-   NAME("UP_pending_job_cnt")
-   NAME("UP_usage")
-   NAME("UP_usage_time_stamp")
-   NAME("UP_usage_seqno")
-   NAME("UP_long_term_usage")
-   NAME("UP_project")
-   NAME("UP_acl")
-   NAME("UP_xacl")
-   NAME("UP_debited_job_usage")
-   NAME("UP_default_project")
-   NAME("UP_version")
-   NAME("UP_consider_with_categories")
+NAMEDEF(PRN)
+   NAME("PR_name")
+   NAME("PR_oticket")
+   NAME("PR_fshare")
+   NAME("PR_job_cnt")
+   NAME("PR_pending_job_cnt")
+   NAME("PR_usage")
+   NAME("PR_usage_time_stamp")
+   NAME("PR_usage_seqno")
+   NAME("PR_long_term_usage")
+   NAME("PR_project")
+   NAME("PR_acl")
+   NAME("PR_xacl")
+   NAME("PR_debited_job_usage")
+   NAME("PR_version")
+   NAME("PR_consider_with_categories")
 NAMEEND
 
 
-#define UPS sizeof(UPN)/sizeof(char*)
+#define PRS sizeof(PRN)/sizeof(char*)
+
+/*
+ * This is the list type we use to hold the 
+ * information for user. This objects are targets of throwing
+ * tickets to them and as usage accumulators.
+ */
+enum {
+   UU_name = UU_LOWERBOUND,
+   UU_oticket,
+   UU_fshare,
+   UU_delete_time,
+   UU_job_cnt,
+   UU_pending_job_cnt,
+   UU_usage,
+   UU_usage_time_stamp,
+   UU_usage_seqno,
+   UU_long_term_usage,
+   UU_project,
+   UU_debited_job_usage,
+   UU_default_project,
+   UU_version,
+   UU_consider_with_categories
+};
+
+enum {
+   UU_name_POS = 0,
+   UU_oticket_POS,
+   UU_fshare_POS,
+   UU_delete_time_POS,
+   UU_job_cnt_POS,
+   UU_pending_job_cnt_POS,
+   UU_usage_POS,
+   UU_usage_time_stamp_POS,
+   UU_usage_seqno_POS,
+   UU_long_term_usage_POS,
+   UU_project_POS,
+   UU_debited_job_usage_POS,
+   UU_default_project_POS,
+   UU_version_POS
+};
+
+LISTDEF(UU_Type)
+   JGDI_ROOT_OBJ(User, SGE_USER_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_EVENT_OBJ(ADD(sgeE_USER_ADD) | MODIFY(sgeE_USER_MOD) | DELETE(sgeE_USER_DEL) | GET_LIST(sgeE_USER_LIST))
+
+   /* configured user name spooled */
+   SGE_STRING_D(UU_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_JGDI_CONF, "template")
+
+   /* configured override tickets (set by Qmon, used by SGEEE schedd) spooled */
+   SGE_ULONG(UU_oticket, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+   
+   /* configured functional shares (set by Qmon, used by SGEEE schedd) spooled */
+   SGE_ULONG(UU_fshare, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+
+   /* delete time for automatic users, (set by qmaster, * used by SGEEE qmaster) spooled */
+   SGE_ULONG(UU_delete_time, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+
+   /* job count (set and used by SGEEE schedd, not spooled) schedd local, not stored to qmaster */
+   SGE_ULONG(UU_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* job count (set and used by SGEEE schedd, not spooled) schedd local, not stored to qmaster */
+   SGE_ULONG(UU_pending_job_cnt, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* UA_Type; decayed usage set and used by SGEEE schedd stored to qmaster; spooled */
+   SGE_MAP(UU_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* time stamp of last decay set when UU_usage changes; set and used by SGEEE schedd stored to qmaster; spooled */
+   SGE_ULONG(UU_usage_time_stamp, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* usage sequence number set and used by SGE schedd, not stored to qmaster; not spooled */
+   SGE_ULONG(UU_usage_seqno, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+
+   /* UA_Type; long term accumulated * non-decayed i usage; set by SGEEE schedd stored to qmaster; spooled */
+   SGE_MAP(UU_long_term_usage, UA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* UPP_Type; usage on a project basis set and used by SGEEE schedd stored to qmaster; spooled Only used by projects */
+   SGE_LIST(UU_project, UPP_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* UPU_Type (see below) still debited usage per job (set and used by SGEEE schedd) */
+   SGE_LIST(UU_debited_job_usage, UPU_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_RO)
+
+   /* default project for user */
+   SGE_STRING(UU_default_project, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+
+   /* user/project version, increments when usage is updated, stored to qmaster, not spooled */
+   SGE_ULONG(UU_version, CULL_DEFAULT | CULL_JGDI_RO)
+
+   /* true, if project plays role with categories */
+   SGE_BOOL(UU_consider_with_categories, CULL_DEFAULT | CULL_JGDI_HIDDEN)
+LISTEND 
+
+NAMEDEF(UUN)
+   NAME("UU_name")
+   NAME("UU_oticket")
+   NAME("UU_fshare")
+   NAME("UU_delete_time")
+   NAME("UU_job_cnt")
+   NAME("UU_pending_job_cnt")
+   NAME("UU_usage")
+   NAME("UU_usage_time_stamp")
+   NAME("UU_usage_seqno")
+   NAME("UU_long_term_usage")
+   NAME("UU_project")
+   NAME("UU_debited_job_usage")
+   NAME("UU_default_project")
+   NAME("UU_version")
+   NAME("UU_consider_with_categories")
+NAMEEND
+
+#define UUS sizeof(UUN)/sizeof(char*)
 
 
 /*

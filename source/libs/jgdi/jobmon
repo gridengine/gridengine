@@ -5,7 +5,7 @@ BASEDIR=`cd $BASEDIR; pwd`
 
 . $BASEDIR/run_util.sh
 
-run $* -cp $BASEDIR/build/classes com.sun.grid.jgdi.examples.JobMonitor 
+run $* -cp $BASEDIR/build/classes -- com.sun.grid.jgdi.examples.JobMonitor 
 
 
 

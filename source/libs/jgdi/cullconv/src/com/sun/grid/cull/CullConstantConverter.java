@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author richard.hierlmeier@sun.com
  */
 public class CullConstantConverter extends AbstractCullToJavaConverter {
    

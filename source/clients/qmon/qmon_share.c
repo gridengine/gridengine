@@ -996,14 +996,14 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
 
    /* clear user usage */
    for_each(ep, ul) {
-      lSetList(ep, UP_usage, NULL);
-      lSetList(ep, UP_project, NULL);
+      lSetList(ep, UU_usage, NULL);
+      lSetList(ep, UU_project, NULL);
    }
 
    /* clear project usage */
    for_each(ep, pl) {
-      lSetList(ep, UP_usage, NULL);
-      lSetList(ep, UP_project, NULL);
+      lSetList(ep, PR_usage, NULL);
+      lSetList(ep, PR_project, NULL);
    }
 
    /* update user usage */

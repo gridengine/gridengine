@@ -35,7 +35,6 @@ import java.io.*;
 
 /**
  *
- * @author  rh150277
  */
 public class Printer {
    

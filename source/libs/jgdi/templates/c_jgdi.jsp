@@ -1,3 +1,4 @@
+<%
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -29,6 +30,8 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+%>
+
 <%
    com.sun.grid.cull.JavaHelper jh = (com.sun.grid.cull.JavaHelper)params.get("javaHelper");
    com.sun.grid.cull.CullDefinition cullDef = (com.sun.grid.cull.CullDefinition)params.get("cullDef");
@@ -57,10 +60,10 @@
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
  * Method:    get<%=classname%>List
  */
-JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject list, jobject filter) {
+JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobject list, jobject filter, jobject answers) {
    
    DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_fill(env, jgdi, list, filter, "<%=fullClassname%>", <%=listname%>, <%=cullname%>);
+   jgdi_fill(env, jgdi, list, filter, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, answers);
    DEXIT;
 }
 <%           
@@ -79,7 +82,19 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject list, 
 JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 {
    DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_add(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>);
+   jgdi_add(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, NULL);
+   DEXIT;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIImpl
+ * Method:    add<%=classname%>WithAnswer
+ * Signature: (L<%=fullClassname%>;L/java/util/List;)V
+ */
+JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobject jobj, jobject answers)
+{
+   DENTER(TOP_LAYER, "<%=methodName%>WithAnswer");
+   jgdi_add(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, answers);
    DEXIT;
 }
 <%
@@ -96,9 +111,22 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 {
    DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>);
+   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, NULL);
    DEXIT;
 }
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIImpl
+ * Method:    delete<%=classname%>WithAnswer
+ * Signature: (L<%=fullClassname%>;, L/java/util/List;)V
+ */
+JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobject jobj, jobject answers)
+{
+   DENTER(TOP_LAYER, "<%=methodName%>");
+   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, answers);
+   DEXIT;
+}
+
 <%                      
        } // end of genDeleteMethod
        
@@ -115,7 +143,19 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 {
    DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_update(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>);
+   jgdi_update(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, NULL);
+   DEXIT;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIImpl
+ * Method:    update<%=classname%>WithAnswer
+ * Signature: (L<%=fullClassname%>;, L/java/util/List;)V
+ */
+JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobject jobj, jobject answers)
+{
+   DENTER(TOP_LAYER, "<%=methodName%>");
+   jgdi_update(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, answers);
    DEXIT;
 }
 <%           
@@ -159,6 +199,47 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
    generators.add(gen);
    }
 %>
+<%
+   java.util.Iterator iter = generators.iterator();
+   boolean first = true;
+   
+   while(iter.hasNext()) {
+      CGDIGenerator gen = (CGDIGenerator)iter.next();
+      if (first) {
+         first = false;
+%>
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
 #include <ctype.h>
 #include <string.h>
 #include <jni.h>
@@ -179,11 +260,7 @@ JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 
 #define JGDI_DEBUG
 
-<%
-   java.util.Iterator iter = generators.iterator();
-   
-   while(iter.hasNext()) {
-      CGDIGenerator gen = (CGDIGenerator)iter.next();
+<%}
       gen.genListMethod();
       gen.genAddMethod();
       gen.genDeleteMethod();

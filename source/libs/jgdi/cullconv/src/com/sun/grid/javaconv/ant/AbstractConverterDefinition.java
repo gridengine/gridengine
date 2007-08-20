@@ -35,7 +35,6 @@ import com.sun.grid.javaconv.JavaToJavaConverter;
 
 /**
  *
- * @author rh150277
  */
 public abstract class AbstractConverterDefinition {
    

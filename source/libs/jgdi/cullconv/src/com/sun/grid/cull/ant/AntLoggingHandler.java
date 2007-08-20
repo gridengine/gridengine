@@ -37,7 +37,6 @@ import org.apache.tools.ant.Project;
 
 /**
  *
- * @author  richard.hierlmeier@sun.com
  */
 public class AntLoggingHandler extends Handler {
    

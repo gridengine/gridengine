@@ -59,7 +59,7 @@ validate_jobs(drmaa_job_ids_t *jobids)
          exit(1);
       }
       /* drmaa_job_ps(3) to return either DRMAA_PS_SYSTEM_ON_HOLD or DRMAA_PS_USER_SYSTEM_ON_HOLD for 
-       * array tasks that are in hold due to “-hold_jid_ad wc_job_list” */
+       * array tasks that are in hold due to -hold_jid_ad wc_job_list */
       drmaa_errno = drmaa_job_ps(jobid, &status, errorbuf, sizeof(errorbuf)-1);
       if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
          fprintf(stderr, "drmaa_job_ps failed: %s\n", errorbuf);
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     
    printf ("OK\n");
 
-   return 1;
+   return 0;
 }
 
 static 

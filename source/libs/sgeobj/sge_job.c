@@ -279,7 +279,7 @@ u_long32 job_get_ja_task_hold_state(const lListElem *job,
 *                                   u_long32 hold_state[16]) 
 *
 *  FUNCTION
-*     This function creates eight 'id_lists'. Tasks whose id is 
+*     This function creates sixteen 'id_lists'. Tasks whose id is 
 *     contained in an id list has the hold state combination delivered 
 *     by 'hold_state'.
 *

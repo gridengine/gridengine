@@ -3153,8 +3153,6 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
           * them (WAITING_DUE_TO_TIME, WAITING_DUE_TO_PREDECESSOR ) 
           * actually are the user's hold but DRMAA user interface does 
           * not know these hold * conditions.
-          *
-          * PING! provisionally added job array hold state for enrolled task.
           */
          if ((ja_task_hold & (MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM|MINUS_H_TGT_JA_AD)) || 
              (lGetUlong(job, JB_execution_time) > sge_get_gmt()) ||

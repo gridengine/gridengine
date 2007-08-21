@@ -1235,9 +1235,9 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_job_finish_event(jep, jatep, jr, commit_flags, NULL);
 
       /* possibly release successor tasks if there are any array dependencies on this task */
-      if (jataskid)
+      if (jataskid) {
          release_successor_tasks_ad(jep, jataskid);
-
+      }
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
       }
@@ -1501,7 +1501,7 @@ u_long32 task_id
       int Modified = 0;
       u_long32 bmin, bmax, sb;
 
-      /* JA: should be be doing something if this job cannot be located? */
+      /* JA: should be doing something if this job cannot be located? */
       suc_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_ident);
       if (!suc_jep) continue;
 

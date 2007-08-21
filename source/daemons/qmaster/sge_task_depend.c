@@ -40,7 +40,6 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_answer.h"
-#include "sge_bitfield.h"
 
 static u_long32 task_depend_div_floor(u_long32 a, u_long32 b)
 {
@@ -216,7 +215,7 @@ static bool task_depend_is_finished(const lListElem *job, u_long32 task_id)
 *     event code should be emitted.
 *
 *     If the job argument jep is NULL, or the task indicated by task_id
-*     is already enrolled into ja_tasks, false is returned.
+*     in jep is finished, false is returned.
 *
 *     MT-NOTE: Is not thread safe. Reads from the global Job-List
 *
@@ -295,7 +294,6 @@ bool sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id)
          lListElem *ja_task = job_search_task(jep, NULL, task_id);
          if (ja_task != NULL)
             sge_add_jatask_event(sgeE_JATASK_MOD, jep, ja_task);
-         /* false return value indicates we did not modify the job */
          DRETURN(false);
       }
       DRETURN(true);
@@ -313,10 +311,10 @@ bool sge_task_depend_update(lListElem *jep, lList **alpp, u_long32 task_id)
 *
 *  FUNCTION
 *     This function inits the JB_ja_a_h_ids dependence cache when the 
-*     array dependency request list is non-empty (-hold_jid_ad option). 
+*     array dependency request list is non-empty (-hold_jid_ad option).
 *     It might also update the JHELD flag of the JAT_state field for enrolled 
-*     tasks with MINUS_H_TGT_JA_AD in the JAT_hold field. Task mod events will
-*     be generated if any enrolled tasks are updated.
+*     tasks, placing or clearing the MINUS_H_TGT_JA_AD bits of the JAT_hold
+*     field. Task mod events are generated for the modified enrolled tasks.
 *
 *  INPUTS
 *     lListElem *jep - JB_Type element
@@ -339,6 +337,11 @@ bool sge_task_depend_init(lListElem *jep, lList **alpp)
    bool ret = false;
 
    DENTER(TOP_LAYER, "sge_task_depend_init");
+
+   if (jep == NULL) {
+      DPRINTF(("got NULL for job argument\n"));
+      DRETURN(false);
+   }
 
    if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0) {
       if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
@@ -403,8 +406,8 @@ bool sge_task_depend_flush(lListElem *jep, lList **alpp)
       DRETURN(false);
    }
 
-   /* ensure empty hold states are consistent. if the reqest list is empty
-      then the user doesn't want to change predecessors */
+   /* ensure empty hold states are consistent. if the request list is empty
+      then we don't want to modify array predecessors cache */
    if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0 &&
        lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
       lListElem *ja_task;  /* JAT_Type */

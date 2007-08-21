@@ -86,7 +86,7 @@ libspoolc.a:	$(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 libspoolc$(SHAREDEXT): $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsgeobj -lsgeobjd -lcomm -lcull -luti -lrmon $(LIBS) -lcommlists \
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcomm -lcull -luti -lrmon $(LIBS) -lcommlists \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 ###############################################################################

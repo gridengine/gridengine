@@ -346,7 +346,8 @@ bool sge_task_depend_init(lListElem *jep, lList **alpp)
    if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_request_list)) > 0) {
       if (lGetNumberOfElem(lGetList(jep, JB_ja_ad_predecessor_list)) == 0) {
          /* fast case where all predecessors are "gone" */         
-         sge_task_depend_flush(jep, alpp);
+         if (sge_task_depend_flush(jep, alpp))
+            ret = true;
       } else {
          u_long32 taskid, b0, b1, sb;
          job_get_submit_task_ids(jep, &b0, &b1, &sb);

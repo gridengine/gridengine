@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QQuotaResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
@@ -38,6 +39,7 @@ import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QQuotaOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.List;
 
 /**
@@ -168,7 +170,7 @@ public interface JGDIBase {
      * <p>Cleans queue from jobs which haven't been reaped. Primarily for
      *    development purpose. Requires root/manager/operator privileges.</p>
      *
-     * <p>The CLI equivialent for this method is <code>qconf -kcq</code> (see man qconf(1)).</p>
+     * <p>The CLI equivialent for this method is <code>qconf -cq</code> (see man qconf(1)).</p>
      *
      * @param queues a wild card queue list
      * @throws com.sun.grid.jgdi.JGDIException on any error on the GDI layer
@@ -179,7 +181,7 @@ public interface JGDIBase {
      * <p>Cleans queue from jobs which haven't been reaped. Primarily for
      *    development purpose. Requires root/manager/operator privileges.</p>
      *
-     * <p>The CLI equivialent for this method is <code>qconf -kcq</code> (see man qconf(1)).</p>
+     * <p>The CLI equivialent for this method is <code>qconf -cq</code> (see man qconf(1)).</p>
      *
      * @param queues a wild card queue list
      * @param answers   the <code>answer list</code> object

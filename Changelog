@@ -1,3 +1,12 @@
+LP-2007-08-24-0: Cleanup: Merged new JGDI *WithAnswer functionality
+                          Code cleanup using Java 1.5
+                 Enhancem.: Using annotation and reflection to cache option 
+                            methods in QConfCommand.
+                            Introduced UsageResource bundle for the commands
+                            Generating generic qconf option methods using new 
+                            java_qconf_cmd.jsp template
+                 Review:    PJ
+
 EB-2007-08-21-0: Build:     Fixed broken installation when classic spooling was used
                  Review:    AA
 

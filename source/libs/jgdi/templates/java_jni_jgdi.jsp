@@ -265,8 +265,34 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @throws JGDIException on any error on the GDI layer
     */
    public native void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+
+<% if ((name.equals("Manager")) || 
+       (name.equals("Operator")) ||
+       (name.equals("AdminHost")) || 
+       (name.equals("SubmitHost"))) { %>
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>(String name) throws JGDIException {
+      <%=name%> obj = new <%=name%>Impl(name);
+      add<%=name%>(obj);
+   }
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(String name, java.util.List answers) throws JGDIException {
+      <%=name%> obj = new <%=name%>Impl(name);
+       add<%=name%>WithAnswer(obj, answers);
+   }
    
-<%        
+<%   
+       } //end if classname     
      } // end of genAddMethod
      
      public void genDeleteMethod() {
@@ -430,6 +456,7 @@ import com.sun.grid.jgdi.filter.*;
 import java.util.List;
 import java.util.ArrayList;
 import com.sun.grid.jgdi.CullConstants;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QHostResultImpl;

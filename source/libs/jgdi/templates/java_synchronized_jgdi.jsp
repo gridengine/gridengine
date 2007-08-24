@@ -181,7 +181,35 @@
         jgdi.add<%=name%>WithAnswer(obj, answers);
       }
    }
-<%   
+   
+   <% if ((name.equals("Manager")) || 
+       (name.equals("Operator")) ||
+       (name.equals("AdminHost")) || 
+       (name.equals("SubmitHost"))) { %>
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>(String name) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.add<%=name%>(name);
+      }
+   }
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(String name, java.util.List answers) throws JGDIException {
+      synchronized(jgdi) {
+        jgdi.add<%=name%>WithAnswer(name, answers);
+      }
+   }
+     
+<%  } // end if 
    } // end of getAddMethod
    
    public void genDeleteMethod() {

@@ -36,15 +36,9 @@ import com.sun.grid.jgdi.JGDIException;
 //import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
-import com.sun.grid.jgdi.configuration.ComplexEntry;
-import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
 import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.ConfigurationElement;
 import com.sun.grid.jgdi.configuration.ConfigurationElementImpl;
-import com.sun.grid.jgdi.configuration.ConfigurationImpl;
-import com.sun.grid.jgdi.configuration.Project;
-import com.sun.grid.jgdi.configuration.SchedConf;
-import com.sun.grid.jgdi.configuration.User;
 import com.sun.grid.jgdi.configuration.Util;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.reflect.ClassDescriptor;
@@ -55,18 +49,8 @@ import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.configuration.UserSet;
 import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -235,20 +219,17 @@ public class GEObjectEditor {
          isCurrentElemMap = EditorParser.isMap(elems[i]);
          if (isCurrentElemMap) {
             subElems = elems[i].split("=");
-            name = subElems[0];
+            //name = subElems[0];
             strVal = (String) EditorUtil.translateStringValueToObject(subElems[1]);
-            val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, name);
+            if (strVal == null) {
+               continue;
+            }
+            val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, elems[i]);
             if (val == null) {
                continue;
             }
-            if (val instanceof ComplexEntry) {
-               ((ComplexEntryImpl)val).setStringval((String)EditorUtil.translateObjectToStringValue(pd.getPropertyName(), strVal));
-            } else if (strVal == null) {
-               continue;
-            } else if (obj instanceof TestGEObject) {
-               val = val+"="+strVal; 
-            } else {
-               throw new IllegalArgumentException("MapList with map elements not expected (not implemented) for "+obj.getClass().getName()+" class.");
+            if (obj instanceof TestGEObject) {
+               val = val+"="+strVal; //TODO LP: Check the tests
             }
          } else {
             name = elems[i];
@@ -413,6 +394,7 @@ public class GEObjectEditor {
       ClassDescriptor cd = Util.getDescriptor(obj.getClass());
       Iterator iter = cd.getProperties().iterator();
       while (iter.hasNext()) {
+         
          PropertyDescriptor pd = (PropertyDescriptor)iter.next();
          if (EditorUtil.doNotDisplayAttr(obj, pd, propScope)) {
             continue;

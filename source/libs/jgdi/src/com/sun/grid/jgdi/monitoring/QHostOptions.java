@@ -47,6 +47,7 @@ public class QHostOptions implements Serializable {
    
    private boolean includeJobs;
    private boolean includeQueue;
+   private boolean showAsXML;
    
    /**
     *  If the hostValueFilter is not set the standard values will be included
@@ -88,6 +89,23 @@ public class QHostOptions implements Serializable {
     */
    public void setIncludeQueue(boolean includeQueue) {
       this.includeQueue = includeQueue;
+   }
+   
+   /**
+    *  <p>Determine if to show the result as an xml</p>
+    *  <p>The CLI equivialent for this options is <code>qhost -xml</code></p>
+    *  @return boolean
+    */
+   public boolean showAsXML() {
+      return showAsXML;
+   }
+
+   /**
+    *  Set the showAsXML flag
+    *  @param showAsXML the flag
+    */
+   public void setShowAsXML(boolean showAsXML) {
+      this.showAsXML = showAsXML;
    }
 
    /**

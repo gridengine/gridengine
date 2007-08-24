@@ -431,14 +431,6 @@ static int jgdi_report_job_ulong_value(qhost_report_handler_t *report_handler, c
 
    DPRINTF(("jgdi_report_job_ulong_value: queue(%s), job(%s), key(%s), value("sge_u32")\n", qname, job_name, key, value));
 
-   if (!strcmp(key, "taskid")) {
-      char taskstr[BUFSIZ];
-      snprintf(taskstr, sizeof(taskstr)-1, sge_u32, value);
-      if (JobInfoImpl_setTaskId(env, ctx->job_info, taskstr, alpp) != JGDI_SUCCESS) {
-         goto error; 
-      }
-   }
-
    if (!strcmp(key, "start_time")) {
       if (JobInfoImpl_setStartTime_0(env, ctx->job_info, ((jlong)value)*1000, alpp) != JGDI_SUCCESS) {
          goto error; 
@@ -501,6 +493,12 @@ static int jgdi_report_job_string_value(qhost_report_handler_t *report_handler, 
 
    if (!strcmp(key, "job_state")) {
       if (JobInfoImpl_setState(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
+   if (!strcmp(key, "taskid")) {
+      if (JobInfoImpl_setTaskId(env, ctx->job_info, value, alpp) != JGDI_SUCCESS) {
          goto error; 
       }
    }

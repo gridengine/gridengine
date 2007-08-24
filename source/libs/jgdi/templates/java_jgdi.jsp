@@ -112,7 +112,28 @@ public void genUpdateMethod() { %>
     *   @throws JGDIException on any error on the GDI layer
     */
    public void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
-<%
+
+<% if ((name.equals("Manager")) || 
+       (name.equals("Operator")) ||
+       (name.equals("AdminHost")) || 
+       (name.equals("SubmitHost"))) { %>
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>(String name) throws JGDIException;
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(String name, java.util.List answers) throws JGDIException;
+
+<%    
+       } //end if classname
     } // end of genAddMethod
     
     public void genDeleteMethod() {
@@ -260,7 +281,9 @@ public void genUpdateMethod() { %>
 
 package com.sun.grid.jgdi;
 
+
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 
@@ -304,6 +327,6 @@ public interface JGDI extends JGDIBase {
      JGDIGenerator gen = (JGDIGenerator)iter.next();
      gen.genMethods();
   }  
-%>    
+%>
    
 }

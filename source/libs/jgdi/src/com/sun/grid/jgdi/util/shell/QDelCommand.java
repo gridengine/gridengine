@@ -32,9 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.jni.JGDIBase;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import com.sun.grid.jgdi.util.JGDIShell;
 
 /**
  *
@@ -47,21 +45,10 @@ public class QDelCommand extends AbstractCommand {
         super(shell, name);
     }
     
-    public String getUsage() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        pw.println("usage: qdel [options] job_task_list");
-        pw.println("[-f]                               force action");
-        pw.println("[-help]                            print this help");
-        pw.println("[-u user_list]                     delete all jobs of users specified in list");
-        pw.println();
-        pw.println("job_task_list                      delete all jobs given in list");
-        pw.println("job_task_list  job_tasks[ job_tasks[ ...]]");
-        pw.println("job_tasks      {job_id[.task_id_range]|job_name|pattern}[ -t task_id_range]");
-        pw.println("task_id_range  task_id[-task_id[:step]]");
-        pw.println("user_list      {user|pattern}[,{user|pattern}[,...]]");
-        return sw.getBuffer().toString();
-    }
+   public String getUsage() {
+      return JGDIShell.getResourceString("sge.version.string") + "\n" + 
+             JGDIShell.getResourceString("usage.qdel");
+   }
     
     
     public void run(String[] args) throws Exception {
@@ -79,7 +66,10 @@ public class QDelCommand extends AbstractCommand {
         boolean force = false;
         
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-f")) {
+            if (args[i].equals("-help")) {
+                System.out.println(getUsage());
+                break;
+            } else if (args[i].equals("-f")) {
                 System.out.println("-f option parsed");
                 break;
             } else {
@@ -93,7 +83,5 @@ public class QDelCommand extends AbstractCommand {
         String [] ret = arg.split(" ");
         return ret;
     }
-    
-    
-    
+
 }

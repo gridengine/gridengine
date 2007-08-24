@@ -437,10 +437,10 @@ public class QueueInstanceSummaryPrinter {
       
       OutputTable ret = new OutputTable(JobInfo.class);
       
-      ret.addCol("id", "job-ID", 7, OutputTable.Column.RIGHT);
-      ret.addCol("priority", "priority", 7, OutputTable.POINT_FIVE_FORMAT);
+      ret.addCol("id", "job-ID ", 7, OutputTable.Column.RIGHT);
+      ret.addCol("priority", "prior", 7, OutputTable.POINT_FIVE_FORMAT);
       ret.addCol("name", "name", 10);
-      ret.addCol("user", "user", 13);
+      ret.addCol("user", "user", 12);
       ret.addCol("state", "state", 5);
       Calc timeCalc = new Calc() {
          public Object getValue(Object obj) {
@@ -452,8 +452,16 @@ public class QueueInstanceSummaryPrinter {
       if (!options.includeQueue()) {
          ret.addCol("qinstanceName", "queue", 10);
       }
-      ret.addCol("masterQueue", "masterQueue", 7);
-      ret.addCol("taskID", "ja-taskID", 7);
+      ret.addCol("masterQueue", "master", 6);
+      ret.addCol("taskID", "ja-task-ID", 10, new JaTaskIdCalc() {
+         public Object getValue(Object obj) {
+            String ret = ((JobInfo)obj).getTaskId();
+            if (ret == null) {
+               return "";
+            }
+            return ret;
+         }
+      });
       
       return ret;
    }
@@ -634,13 +642,26 @@ public class QueueInstanceSummaryPrinter {
          hiTable.printRow(pw, hi);
          if (options.includeQueue() || options.includeJobs()) {
             Iterator qiter = hi.getQueueList().iterator();
-            
             while (qiter.hasNext()) {
                QueueInfo qi = (QueueInfo)qiter.next();
                if (options.includeQueue()) {
+                  //Print queue header
+                  /*if (!options.includeJobs()) {
+                     pw.print("   ");
+                     hqTable.printHeader(pw);
+                     pw.print("   ");
+                     hqTable.printDelimiter(pw, '-');
+                  }*/
                   pw.print("   ");
                   hqTable.printRow(pw, qi);
                }
+               //Print jobs header
+               /*if (options.includeJobs() && !hi.getJobList().isEmpty() && !options.includeQueue()) {
+                  pw.print("   ");
+                  hjTable.printHeader(pw);
+                  pw.print("   ");
+                  hjTable.printDelimiter(pw, '-');
+               }*/
                if (options.includeJobs()) {
                   if (!hi.getJobList().isEmpty()) {
                      Iterator jiter = hi.getJobList().iterator();
@@ -662,7 +683,7 @@ public class QueueInstanceSummaryPrinter {
                Iterator resIter = hi.getResourceValueNames(dom).iterator();
                while (resIter.hasNext()) {
                   String name = (String)resIter.next();
-                  pw.print("    " + dom + ":" + name + "=");
+                  pw.print("   " + dom + ":" + name + "=");
                   pw.println(hi.getResourceValue(dom, name));
                }
             }

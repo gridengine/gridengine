@@ -35,14 +35,12 @@ package com.sun.grid.jgdi.util.shell.editor;
 import com.sun.grid.jgdi.JGDI;
 //import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
-import com.sun.grid.jgdi.configuration.ClusterQueueImpl;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
 import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.Project;
 import com.sun.grid.jgdi.configuration.SchedConf;
-import com.sun.grid.jgdi.configuration.SchedConfImpl;
 import com.sun.grid.jgdi.configuration.User;
 import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.configuration.UserSetImpl;
@@ -57,7 +55,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.text.FieldPosition;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -629,7 +626,7 @@ public class EditorUtil {
                } else if (name.equals("ComplexEntry")) {
                   elems = value.split("=");
                   value = elems[0];
-                  //tmp = elems[1]; - is set in GEObjectEditor.updateOneMapListEntry
+                  tmp = elems[1]; //TODO LP: is set in GEObjectEditor.updateOneMapListEntry
                }
                Class cls = jgdi.getClass();
                //TODO LP: Check if anywhere used JGDI.getJob(int jid) and handle it

@@ -32,7 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.monitoring.HostInfo;
+import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryPrinter;
@@ -40,10 +40,10 @@ import com.sun.grid.jgdi.monitoring.filter.HostFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
+import com.sun.grid.jgdi.util.JGDIShell;
 import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -58,25 +58,11 @@ public class QHostCommand extends AbstractCommand {
    }
    
    public String getUsage() {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      
-      pw.println("usage: qhost [options]");
-      pw.println("        [-help]                           print this help");
-      pw.println("        [-h hostlist]                     display only selected hosts");
-      pw.println("        [-q]                              display queues hosted by host");
-      pw.println("        [-j]                              display jobs hosted by host");
-      pw.println("        [-F [resource_attributes]]        full output and show (selected) resources of queue(s)");
-      pw.println("        [-l attr=value[,...]]             request the given resources");
-      pw.println("        [-u user[,...]]                   show only jobs for user(s)");
-      pw.println("        [-xml]                            display the information in XML-Format");
-      pw.close();
-      return sw.getBuffer().toString();
+      return JGDIShell.getResourceString("sge.version.string")+"\n"+
+            JGDIShell.getResourceString("usage.qhost");
    }
    
    public void run(String[] args) throws Exception {
-      QHostOptions options = parse(args);
-      
       JGDI jgdi = getShell().getConnection();
       
       if (jgdi == null) {
@@ -84,42 +70,79 @@ public class QHostCommand extends AbstractCommand {
       }
       
       PrintWriter pw = new PrintWriter(System.out);
-      QHostResult res = jgdi.execQHost(options);
-      QueueInstanceSummaryPrinter.print(pw, res, options);
+      
+      List argList = new ArrayList();
+      String arg;
+      //Expand args to list of args, 'arg1,arg2 arg3' -> 3 args
+      for (int i=0; i<args.length; i++) {
+         arg = args[i];
+         String[] subElems = arg.split("[,]");
+         for (int j=0; j< subElems.length; j++) {
+            arg = subElems[j].trim();
+            if (arg.length() > 0) {
+               argList.add(arg);
+            }
+         }
+      }
+      try {
+         QHostOptions options = parse(argList, pw);
+         if (options != null) {
+            QHostResult res = jgdi.execQHost(options);
+            if (options.showAsXML()) {
+               /*TODO LP: -xml is not implemented for object other that GEObjects
+                 we could use a JAXB and some generator to get the schema for other objects*/
+               pw.println("XML OUTPUT NOT IMPLEMENTED");
+               pw.flush();
+            } else {
+               QueueInstanceSummaryPrinter.print(pw, res, options);
+            }
+         }
+      } catch (JGDIException ex) {
+         pw.println(ex.getMessage());
+      } finally {
+         pw.flush();
+      }
+   }
+   
+   //-help
+   private static void printUsage(PrintWriter pw) {
+      pw.println(JGDIShell.getResourceString("sge.version.string")+"\n"+
+            JGDIShell.getResourceString("usage.qhost"));
       pw.flush();
    }
    
-   private QHostOptions parse(String [] args) throws Exception {
+   static QHostOptions parse(List argList, PrintWriter pw) throws Exception {
       ResourceAttributeFilter resourceAttributeFilter = null;
       ResourceFilter resourceFilter = null;
       boolean showQueues = false;
       boolean showJobs = false;
+      boolean showAsXML = false;
       UserFilter userFilter = null;
       HostFilter hostFilter = null;
       
-      LinkedList argList = new LinkedList();
-      for (int i = 0; i < args.length; i++) {
-         argList.add(args[i]);
-      }
-      
       while (!argList.isEmpty()) {
-         String arg = (String)argList.removeFirst();
+         String arg = (String)argList.remove(0);
          
          if (arg.equals("-help")) {
-            System.out.print(getUsage());
+            printUsage(pw);
+            return null;
          } else if (arg.equals("-h")) {
             if (argList.isEmpty()) {
-               throw new IllegalArgumentException("missing host_list");
+               pw.println("error: ERROR! -h option must have argument");
+               pw.flush();
+               return null;
             }
-            arg = (String)argList.removeFirst();
+            arg = (String)argList.remove(0);
+            //TODO LP: Qmaster should check if the value exists and is correct not the client
+            //E.g.: qhost -h dfds -> qmaster should try to resolve the host a return error message
             hostFilter = HostFilter.parse(arg);
          } else if (arg.equals("-F")) {
             if (!argList.isEmpty()) {
-               arg = (String)argList.getFirst();
+               arg = (String)argList.get(0);
                // we allow only a comma separated arg string
                // qhost CLI allows also whitespace separated arguments
                if (!arg.startsWith("-")) {
-                  arg = (String)argList.removeFirst();
+                  arg = (String)argList.remove(0);
                   resourceAttributeFilter = ResourceAttributeFilter.parse(arg);
                } else {
                   resourceAttributeFilter = new ResourceAttributeFilter();
@@ -127,25 +150,44 @@ public class QHostCommand extends AbstractCommand {
             } else {
                resourceAttributeFilter = new ResourceAttributeFilter();
             }
-         }  else if (arg.equals("-j")) {
+         } else if (arg.equals("-j")) {
             showJobs = true;
          } else if (arg.equals("-l")) {
             if (argList.isEmpty()) {
-               throw new IllegalArgumentException("missing resource_list");
+               pw.println("error: ERROR! -l option must have argument");
+               pw.flush();
+               return null;
             }
             resourceFilter = new ResourceFilter();
-            arg = (String)argList.removeFirst();
-            resourceFilter = ResourceFilter.parse(arg);
+            arg = (String)argList.remove(0);
+            try {
+               //TODO LP: Qmaster should check if the value exists and is correct not the client
+               //E.g.: qhost -l bal=34 -> qmaster should say bla does not exist
+               //E.g.: qhost -l swap_total -> qmaster - no value to swap_total
+               resourceFilter = ResourceFilter.parse(arg);
+            } catch (IllegalArgumentException ex) {
+               pw.println("error: "+ex.getMessage());
+               pw.flush();
+               return null;
+            }
          } else if (arg.equals("-q")) {
             showQueues = true;
          } else if (arg.equals("-u")) {
             if (argList.isEmpty()) {
-               throw new IllegalArgumentException("missing user_list");
+               pw.println("error: ERROR! -u option must have argument");
+               pw.flush();
+               return null;
             }
-            arg = (String)argList.removeFirst();
+            arg = (String)argList.remove(0);
             userFilter = UserFilter.parse(arg);
+            showJobs = true;
+         } else if (arg.equals("-xml")) {
+            showAsXML = true;
          } else {
-            throw new IllegalStateException("Unknown argument" + arg);
+            printUsage(pw);
+            pw.println("error: ERROR! invalid option argument \""+arg+"\"");
+            pw.flush();
+            return null;
          }
       }
       
@@ -153,6 +195,7 @@ public class QHostCommand extends AbstractCommand {
       
       options.setIncludeJobs(showJobs);
       options.setIncludeQueue(showQueues);
+      options.setShowAsXML(showAsXML);
       if (hostFilter != null) {
          options.setHostFilter(hostFilter);
       }

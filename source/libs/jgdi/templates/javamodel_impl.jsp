@@ -1354,6 +1354,6 @@ public class <%=classname%> extends <%
   public int reqToInt(String type) {
      return new Convertor().reqToInt(type);
   };
-  <%}%> // End if ComplexEntry
+  <%} // End if ComplexEntry %>
  
 }

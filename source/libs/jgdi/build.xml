@@ -200,6 +200,7 @@
       </fileset>
       <fileset id="jar.properties" dir="${src.dir}">
          <include name="com/sun/grid/jgdi/Resources*.properties"/>
+         <include name="com/sun/grid/jgdi/util/shell/UsageResources.properties"/>
       </fileset>
       <dependset>
          <srcfileset refid="jar.classes"/>
@@ -632,7 +633,13 @@
                <exclude name="PET_Type"/>
                <exclude name="SME_Type"/>
             </pattern>
-         </javatemplateconv>                           
+         </javatemplateconv>
+         
+         <!-- COMMAND OPTIONS -->
+         <templateconv scope="definition"
+                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/util/shell/QConfCommandGenerated.java"
+                       templateFile="templates/java_qconf_cmd.jsp">
+         </templateconv>
          
          <cullFiles dir="${build.dir}">
             <include name="sge_all_listsL.template"/>
@@ -850,7 +857,7 @@
          <equals arg1="${sge.src.targetbits}" arg2="TARGET_32BIT"/>
       </condition>
       
-      <condition property="datamodel" value="-d64">
+      <condition property="datamodel" value="-d64" else="">
          <or>
             <equals arg1="${sge.arch}" arg2="sol-sparc64"/>
             <equals arg1="${sge.arch}" arg2="solaris64"/>
@@ -863,8 +870,6 @@
             <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
          </or>   
       </condition>
-      <!-- else -->
-      <property name="datamodel" value=""/>
       
       <fail message="Unsuported ARCH ${sge.arch}" unless="sge.src.arch"/>
       

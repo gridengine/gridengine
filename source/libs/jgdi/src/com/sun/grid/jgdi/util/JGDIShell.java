@@ -62,6 +62,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -95,20 +97,18 @@ public class JGDIShell implements Runnable, Shell {
    private Map cmdMap = new HashMap();
    private TreeSet cmdSet = null;
    private ReadlineHandler readlineHandler;
-   private ResourceBundle jgdiResource;
+   private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
    
    //TODO LP: We should consider having single PrintWriter for all commands
-   public JGDIShell() {
-      jgdiResource = null;//TODO LP: Why does not work - ResourceBundle.getBundle("UsageBundle");
-      cmdMap.put("connect", new ConnectCommand());
-      cmdMap.put("exit", new ExitCommand());
-      cmdMap.put("help", new HelpCommand());
-      cmdMap.put("debug", new DebugCommand());
-      cmdMap.put("history", new PrintHistoryCommand());
-      cmdMap.put("xmldump", new XMLDumpCommand());
+   public JGDIShell() {  
+      cmdMap.put("connect", new ConnectCommand() );
+      cmdMap.put("exit", new ExitCommand() );
+      cmdMap.put("help", new HelpCommand() );
+      cmdMap.put("debug", new DebugCommand() );
+      cmdMap.put("history", new PrintHistoryCommand() );
+      cmdMap.put("xmldump", new XMLDumpCommand() );
       cmdMap.put("qmod", new QModCommand(this, "qmod"));
       cmdMap.put("qconf", new QConfCommand(this, "qconf"));
-      //cmdMap.put("qconf", new QConfCommand(this, "qconf", jgdiResource));
       cmdMap.put("qstat", new QStatCommand(this, "qstat"));
       cmdMap.put("qhost", new QHostCommand(this, "qhost"));
       cmdMap.put("qdel", new QDelCommand(this, "qdel"));
@@ -118,8 +118,7 @@ public class JGDIShell implements Runnable, Shell {
       
       readlineHandler = createReadlineHandler();
       
-      //Read resource bundles
-      
+      //Read resource bundles      
    }
    
    private Command getCommand(String name) {
@@ -170,7 +169,6 @@ public class JGDIShell implements Runnable, Shell {
       readlineHandler.cleanup();
       System.exit(0);
    }
-   
    
    private void runCommand(String line) throws Exception {
       if (line.trim().length()==0) return;
@@ -276,6 +274,10 @@ public class JGDIShell implements Runnable, Shell {
             shell.exec(url);
          }
       }
+   }
+   
+   public static String getResourceString(String key) {
+      return usageResources.getString(key);
    }
    
    private void exec(final String url) {

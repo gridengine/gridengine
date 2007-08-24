@@ -32,10 +32,7 @@
 
 package com.sun.grid.jgdi.util.shell.editor;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
-import com.sun.grid.jgdi.configuration.ComplexEntry;
-import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
 import com.sun.grid.jgdi.configuration.Configuration;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.SchedConf;
@@ -73,7 +70,7 @@ public class EditorParser {
       for (int i=0; i<lines.length; i++) {
          line = lines[i];
          attr = line.split(" ")[0];
-         line = line.substring(attr.length()+1);
+         line = (line.length() == attr.length()) ? "" : line.substring(attr.length()+1);
          if (line.length() == 0) {  
             throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \""+attr+"\"");
          }

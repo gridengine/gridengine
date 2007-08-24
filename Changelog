@@ -1,3 +1,6 @@
+LP-2007-08-24-1: Bugfix: Quick fix for JGDI build break
+                 Review: LP
+
 LP-2007-08-24-0: Cleanup: Merged new JGDI *WithAnswer functionality
                           Code cleanup using Java 1.5
                  Enhancem.: Using annotation and reflection to cache option 

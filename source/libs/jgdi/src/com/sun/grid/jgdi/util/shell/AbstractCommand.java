@@ -148,7 +148,7 @@ public abstract class AbstractCommand implements HistoryCommand {
          } else {
             msg = "error: invalid option argument \"" + option + "\"\nUsage: qconf -help";
          }
-         throw new OptionFormatException(msg);
+         throw new IllegalArgumentException(msg);
       }
       OptionDescriptor od = (OptionDescriptor) optMap.get(option);
       List argList = new ArrayList();
@@ -164,8 +164,8 @@ public abstract class AbstractCommand implements HistoryCommand {
          }
          //Check we have all mandatory args
          if (i != od.getMandatoryArgCount()) {
-            throw new OptionFormatException("Expected "+od.getMandatoryArgCount()+
-                     " arguments for "+option+" option. Got only "+argList.size());
+            throw new IllegalArgumentException("Expected "+od.getMandatoryArgCount()+
+                     " arguments for "+option+" option. Got only "+argList.size()+".");
          }
          //Try to get as many optional args as possible
          i=0;

@@ -1,3 +1,8 @@
+RH-2007-08-27-0: Bugfix:    juti: Commit method of UnixLoginModule does not report RuntimeExceptions
+                 Bugster:   6597423
+                 Issue:     2353
+                 Review:    JG
+
 RN-2007-08-16-0: Bugfix:    qconf -(A,D,M,R)attr dumps core when the supplied
                             file is empty
                  Bugster:   6578213

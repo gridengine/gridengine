@@ -637,13 +637,18 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
        */
       tmp_list = lCreateList("", RN_Type);
       if (tmp_list) {
-         next_range1 = lFirst(range_list);
-         while ((range1 = next_range1)) {
+
+         for (next_range1 = lFirst(range_list); (range1 = next_range1); next_range1 = lNext(range1)) {
+
             next_range2 = lNext(next_range1);
+#ifndef FIX2351
             range_correct_end(range1);
+#endif
             while ((range2 = next_range2)) {
                next_range2 = lNext(range2);
+#ifndef FIX2351
                range_correct_end(range2);
+#endif
                if (range_is_overlapping(range1, range2)) {
                   range2 = lDechainElem(range_list, range2);
                   lAppendElem(tmp_list, range2);
@@ -651,7 +656,6 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
                   break;
                }
             }
-            next_range1 = lNext(range1);
          }
 
          /*

@@ -495,7 +495,7 @@ bool sge_task_depend_is_same_range(const lListElem *pre_jep,
    job_get_submit_task_ids(suc_jep, &b0, &b1, &sb);
 
    /* equivalent jobs must have the same range of sub-tasks */
-   if (a0 != b0 || (a1 + sa - 1) != (b1 + sb - 1)) {
+   if (a0 != b0 || a1 != b1) {
       DRETURN(false);
    }
 

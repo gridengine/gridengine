@@ -1,3 +1,8 @@
+AH-2007-08-27-0: Bugfix:    - enhanced test_drmaa_issue1832 test procedure
+                            - fix issue in sge_task_depend_is_same_range()
+                            - added inactive fix for #2351
+                 Issue:     2351
+
 AH-2007-08-20-0: Bugfix:    - user/system/operator hold state combinations 
                               cause strange qstat output
                             - Parallel RR broken if jobs wait for queue

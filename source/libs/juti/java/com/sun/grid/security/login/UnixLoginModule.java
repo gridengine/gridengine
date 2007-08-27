@@ -262,14 +262,12 @@ public class UnixLoginModule implements LoginModule {
     public boolean commit() {
         LOGGER.entering("UnixLoginModule", "commit");
         if(loginSucceded) {
-           try {
-               subject.getPrincipals().addAll(principals);
+           subject.getPrincipals().addAll(principals);
+           if(LOGGER.isLoggable(Level.FINER)) {
                LOGGER.log(Level.FINE, "unixlogin.subject.principal", 
                           new Integer(subject.getPrincipals().size()) );
-               commitSucceded = true; 
-           } catch(Exception ex) {
-               LOGGER.throwing("UnixLoginModule", "commit", ex);
            }
+           commitSucceded = true; 
         }
         LOGGER.exiting("UnixLoginModule", "commit", Boolean.valueOf(commitSucceded));
         return commitSucceded;

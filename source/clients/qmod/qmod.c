@@ -263,7 +263,7 @@ lList *alp = NULL;
             goto error;
          }
 
-         range_list_sort_uniq_compress(task_id_range_list, &alp);
+         range_list_sort_uniq_compress(task_id_range_list, &alp, true);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
             answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             goto error;

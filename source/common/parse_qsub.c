@@ -1325,7 +1325,8 @@ DTRACE;
             DRETURN(answer);
          }
 
-         range_list_sort_uniq_compress(task_id_range_list, &answer);
+         range_list_sort_uniq_compress(task_id_range_list, &answer, false);
+
          if (lGetNumberOfElem(task_id_range_list) > 1) {
             answer_list_add(&answer, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeList(&task_id_range_list);

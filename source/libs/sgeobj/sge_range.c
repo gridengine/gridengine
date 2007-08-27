@@ -619,7 +619,7 @@ double range_list_get_average(const lList *this_list, u_long32 upperbound)
 *  NOTES
 *     MT-NOTE: range_list_sort_uniq_compress() is MT safe
 ******************************************************************************/
-void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
+void range_list_sort_uniq_compress(lList *range_list, lList **answer_list, bool correct_end)
 {
    DENTER(RANGE_LAYER, "range_list_sort_uniq_compress");
    if (range_list) {
@@ -641,14 +641,14 @@ void range_list_sort_uniq_compress(lList *range_list, lList **answer_list)
          for (next_range1 = lFirst(range_list); (range1 = next_range1); next_range1 = lNext(range1)) {
 
             next_range2 = lNext(next_range1);
-#ifndef FIX2351
-            range_correct_end(range1);
-#endif
+
+            if (correct_end)
+               range_correct_end(range1);
+
             while ((range2 = next_range2)) {
                next_range2 = lNext(range2);
-#ifndef FIX2351
-               range_correct_end(range2);
-#endif
+               if (correct_end)
+                  range_correct_end(range2);
                if (range_is_overlapping(range1, range2)) {
                   range2 = lDechainElem(range_list, range2);
                   lAppendElem(tmp_list, range2);
@@ -1328,7 +1328,7 @@ void range_list_calculate_union_set(lList **range_list,
          goto error;
       }
 
-      range_list_sort_uniq_compress(*range_list, answer_list);
+      range_list_sort_uniq_compress(*range_list, answer_list, true);
       if (answer_list_has_error(answer_list)) {
          DTRACE;
          goto error;
@@ -1393,7 +1393,7 @@ void range_list_calculate_difference_set(lList **range_list,
          goto error;
       }
 
-      range_list_sort_uniq_compress(*range_list, answer_list);
+      range_list_sort_uniq_compress(*range_list, answer_list, true);
       if (answer_list_has_error(answer_list)) {
          goto error;
       }

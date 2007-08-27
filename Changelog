@@ -1,3 +1,8 @@
+AH-2007-08-27-1: Bugfix:    Finalized and reviewed AH-2007-08-27-0
+                 Bugster:   6597463
+                 Issue:     2351
+                 Review:    EB
+
 AH-2007-08-27-0: Bugfix:    - enhanced test_drmaa_issue1832 test procedure
                             - fix issue in sge_task_depend_is_same_range()
                             - added inactive fix for #2351

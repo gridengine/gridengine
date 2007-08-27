@@ -94,7 +94,7 @@ bool range_list_is_empty(const lList *this_list);
 
 void range_list_compress(lList *this_list);
 
-void range_list_sort_uniq_compress(lList *this_list, lList **answer_list);
+void range_list_sort_uniq_compress(lList *this_list, lList **answer_list, bool correct_end);
 
 u_long32 range_list_get_first_id(const lList *this_list, lList **answer_list);
 

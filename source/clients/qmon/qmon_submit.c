@@ -2120,7 +2120,7 @@ int save
          lFreeList(&alp);
          return False;
       }  
-      range_list_sort_uniq_compress(range_list, &alp);
+      range_list_sort_uniq_compress(range_list, &alp, false);
       if (lGetNumberOfElem(range_list) > 1) {
          answer_list_add(&alp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, 0);
          qmonMessageBox(qmon_submit, alp, 0);

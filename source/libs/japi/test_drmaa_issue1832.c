@@ -135,7 +135,7 @@ int main(int argc, char **argv)
       exit(EXIT_FAILURE);
    }
 
-   for (i=0; i< sizeof(chunking)/sizeof(void *); i++) {
+   for (i=0; i< sizeof(chunking)/sizeof(chunking[0]); i++) {
 
       jt_a = create_job_template(argv[1], "JobA", NULL, chunking[i].a);
       jt_b = create_job_template(argv[1], "JobB", "JobA", chunking[i].b);

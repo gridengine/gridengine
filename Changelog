@@ -1,23 +1,27 @@
+LP-2007-08-29-1: Enhancem.: Using LONG32_MAX
+                            Added missing copyrights
+                 Review:    PJ
+
 RD-2007-08-29-0: Bugfix:    fixed issue with SS12 and dtrace on amd64
                  Review:    AH
 
 LP-2007-08-29-0: Enhancem.: Added JGDI QrStat, Qrdel cmds
                  Enhancem.: Now using file imports in JGDI generation process 
                             (*.static files)
-                 Bugfix: Fixed JGDI qconf -acal
-                 Bugfix: Handling ulong32 to jint overflow in JGDI
-                 Review: PJ
+                 Bugfix:    Fixed JGDI qconf -acal
+                 Bugfix:    Handling ulong32 to jint overflow in JGDI
+                 Review:    PJ
 
 RH-2007-08-27-0: Bugfix:    juti: Commit method of UnixLoginModule does not report RuntimeExceptions
                  Bugster:   6597423
                  Issue:     2353
                  Review:    JG
 
-LP-2007-08-24-1: Bugfix: Quick fix for JGDI build break
-                 Review: LP
+LP-2007-08-24-1: Bugfix:    Quick fix for JGDI build break
+                 Review:    LP
 
-LP-2007-08-24-0: Cleanup: Merged new JGDI *WithAnswer functionality
-                          Code cleanup using Java 1.5
+LP-2007-08-24-0: Cleanup:   Merged new JGDI *WithAnswer functionality
+                            Code cleanup using Java 1.5
                  Enhancem.: Using annotation and reflection to cache option 
                             methods in QConfCommand.
                             Introduced UsageResource bundle for the commands

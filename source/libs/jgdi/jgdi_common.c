@@ -2481,7 +2481,7 @@ jgdi_result_t set_int(JNIEnv *env, jclass bean_class, jobject obj, const char* p
    
    DENTER(BASIS_LAYER, "set_int");
    /* jint overflow */
-   if (value > 2147483647) {
+   if (value > LONG32_MAX) {
       DPRINTF(("set_int: ulong32 to jint overflow (returning -1)\n"));
       value = -1;
    }

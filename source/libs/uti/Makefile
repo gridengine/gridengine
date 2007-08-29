@@ -252,8 +252,8 @@ test_sge_profiling: test_sge_profiling.o $(UTILIB) $(LCKLIB) $(RMONLIB)
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c
 
-test_sge_uidgid: test_sge_uidgid.o $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_uidgid $(LFLAGS) test_sge_uidgid.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_sge_uidgid: test_sge_uidgid.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(WINGRIDLIB_DEP)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_uidgid $(LFLAGS) test_sge_uidgid.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(WINGRIDLIB) $(LIBS)
 
 test_sge_uidgid.o: $(UTILIB_DIR)/test_sge_uidgid.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_uidgid.c

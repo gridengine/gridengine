@@ -1,3 +1,6 @@
+RD-2007-07-29-1: Bugfix:    fixed broken build on win32-x86
+                 Review:    AH
+
 AH-2007-08-29-1: Bugfix:    qsub -t 1-N:N creates a normal job with one task
                  Bugster:   6597463
                  Issue:     2351

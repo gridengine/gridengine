@@ -1,3 +1,8 @@
+AH-2007-08-29-0: Bugfix:    qsub -t 1-N:N creates a normal job with one task
+                 Bugster:   6597463
+                 Issue:     2351
+                 Review:    EB
+
 RD-2007-08-29-0: Enhancem:  Added compile support for SS12 on amd64
                  Review:    AH
 

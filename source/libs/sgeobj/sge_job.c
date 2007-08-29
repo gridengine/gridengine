@@ -1824,7 +1824,8 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          lListElem *range = NULL;
 
          for_each(range, range_list) {
-            range_correct_end(range);
+            if (field[i] != JB_ja_structure)
+               range_correct_end(range);
             if (range_is_id_within(range, 0)) {
                ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,

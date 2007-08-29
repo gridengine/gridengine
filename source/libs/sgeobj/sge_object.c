@@ -2799,7 +2799,7 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
    DENTER(TOP_LAYER, "object_verify_pe_range");
    
    /* ensure jobs PE range list request is normalized and ascending */
-   range_list_sort_uniq_compress(pe_range, NULL);
+   range_list_sort_uniq_compress(pe_range, NULL, true);
    
    for_each(relem, pe_range) {
       pe_range_min = lGetUlong(relem, RN_min);

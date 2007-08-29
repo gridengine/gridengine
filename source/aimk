@@ -1613,9 +1613,9 @@ case SOLARISAMD64:
             set LFLAGS = "-xarch=amd64 $LFLAGS"
             set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
          else
-            set MEMFLAG = "-m64"
-            set LFLAGS = "-m64 $LFLAGS"
-            set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -m64"
+            set MEMFLAG = "-xarch=sse2 -m64"
+            set LFLAGS = "-xarch=sse2 -m64 $LFLAGS"
+            set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=sse2 -m64"
          endif
       else
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"

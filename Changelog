@@ -1,3 +1,6 @@
+RD-2007-08-29-0: Bugfix:    fixed issue with SS12 and dtrace on amd64
+                 Review:    AH
+
 LP-2007-08-29-0: Enhancem.: Added JGDI QrStat, Qrdel cmds
                  Enhancem.: Now using file imports in JGDI generation process 
                             (*.static files)

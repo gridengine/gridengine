@@ -346,7 +346,7 @@ lList **alpp
             goto error; 
          }
 
-         range_list_sort_uniq_compress(task_id_range_list, alpp);
+         range_list_sort_uniq_compress(task_id_range_list, alpp, true);
          if (lGetNumberOfElem(task_id_range_list) > 1) {
             answer_list_add(alpp, MSG_QCONF_ONLYONERANGE, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             goto error;

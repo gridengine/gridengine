@@ -118,7 +118,7 @@ void ja_task_list_print_to_string(const lList *ja_task_list,
 
       range_list_insert_id(&range_list, NULL, tid);      
    } 
-   range_list_sort_uniq_compress(range_list, NULL); 
+   range_list_sort_uniq_compress(range_list, NULL, true); 
    range_list_print_to_string(range_list, range_string, false, false, false); 
    lFreeList(&range_list);
    DRETURN_VOID;
@@ -366,7 +366,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
          *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
          
          if (*idp) {
-            range_list_sort_uniq_compress(task_id_range_list, alpp);
+            range_list_sort_uniq_compress(task_id_range_list, alpp, true);
             lSetList(*idp, ID_ja_structure, task_id_range_list);
          }
       }

@@ -4363,7 +4363,7 @@ static void *japi_implementation_thread(void *p)
                         DPRINTF(("adding started task %ld for job %ld\n",
                                  intkey2, intkey));
                         range_list_insert_id (&range, &alp, intkey2);
-                        range_list_sort_uniq_compress (range, &japi_ec_alp);
+                        range_list_sort_uniq_compress(range, &japi_ec_alp, true);
                         lXchgList(japi_job, JJ_started_task_ids, &range);
 
                         /* signal all application threads waiting for a job event */

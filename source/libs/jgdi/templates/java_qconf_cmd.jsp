@@ -36,22 +36,14 @@
  
 
 <%
-  //final com.sun.grid.cull.JavaHelper jh = (com.sun.grid.cull.JavaHelper)params.get("javaHelper");
-  //final com.sun.grid.cull.CullDefinition cullDef = (com.sun.grid.cull.CullDefinition)params.get("cullDef");
-  
     /*
     * Helper class to initialize option Map.
     */
    class MapInit {
-      private final int ADD = 0;
-      private final int ADD_FROM_FILE = 1;
-      private final int MODIFY = 2;
-      private final int MODIFY_FROM_FILE = 3;
-      private final int SHOW = 4;
-      private final int SHOW_LIST = 5;
-      private final int DELETE = 6;
-      
       java.util.Map<String, String> nameToOpt = new java.util.HashMap<String, String>();
+
+      //TODO LP: Is already defined in OptionMethod, however annotation not seen in this context
+      static final int MAX_ARG_VALUE = Integer.MAX_VALUE / 8;
       
       public MapInit() {
          nameToOpt.put("Calendar","cal");
@@ -79,9 +71,9 @@
          genAddFromFileMethod(type, "-A"+opt, 1, 0);
          genModifyMethod(type, "-m"+opt, 1, 0);
          genModifyFromFileMethod(type, "-M"+opt, 1, 0);
-         genShowMethod(type, "-s"+opt, 1, Integer.MAX_VALUE);
+         genShowMethod(type, "-s"+opt, 1, MAX_ARG_VALUE);
          genShowListMethod(type, "-s"+opt+"l", 0, 0);
-         genDeleteMethod(type, "-d"+opt, 1, Integer.MAX_VALUE);
+         genDeleteMethod(type, "-d"+opt, 1, MAX_ARG_VALUE);
       }
       
       void genAddMethod(String objectType, String optionString, int mandatory, int optional) {  
@@ -284,12 +276,7 @@
   // ---------------------------------------------------------------------------
   // Build Generator instances
   // ---------------------------------------------------------------------------
-  //java.util.List<String> keyList = java.util.Collection
-  MapInit init = new MapInit();       
-  //Special cases
-  /* 
-  nameToOpt.put("ShareTree","stree");
-  nameToOpt.put("UserSet","u");*/
+  MapInit init = new MapInit();
 %>
 package com.sun.grid.jgdi.util.shell;
 
@@ -297,10 +284,18 @@ import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.*;
 import com.sun.grid.jgdi.util.shell.AbstractCommand;
+import com.sun.grid.jgdi.util.shell.editor.EditorUtil;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
+import com.sun.grid.jgdi.util.shell.editor.TextEditor;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -327,12 +322,13 @@ public abstract class QConfCommandGenerated extends AbstractCommand {
   init.genAddFromFileMethod("UserSet","-Au", 1, 0);
   init.genModifyMethod("UserSet", "-mu", 1, 0);
   init.genModifyFromFileMethod("UserSet","-Mu",  1, 0);
-  init.genShowMethod("UserSet", "-su", 1, Integer.MAX_VALUE);
+  init.genShowMethod("UserSet", "-su", 1, init.MAX_ARG_VALUE);
   init.genShowListMethod("UserSet", "-sul", 0, 0);
   //Operator
   init.genShowListMethod("Operator", "-so", 0, 0);
   //Manager
   init.genShowListMethod("Manager", "-sm", 0, 0);
 %>
+  <%@include file="java_qconf_cmd.static"%>
 }
 

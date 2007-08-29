@@ -75,6 +75,14 @@ public class OptionDescriptor {
    }
    
    /**
+    * Gets sum of mandatory and optional arguments
+    * @return int sum of mandatory and optional arguments
+    */
+   public int getMaxArgCount() {
+      return mandatoryArgCount + optionalArgCount;
+   }
+   
+   /**
     * Getter method
     * @return value
     */
@@ -87,10 +95,7 @@ public class OptionDescriptor {
     * @return value
     */
    public boolean isMultiple() {
-       if (optionalArgCount == Integer.MAX_VALUE ) {
-           return true;
-       }
-       return ((optionalArgCount+mandatoryArgCount) > 1) ? true : false;
+       return (getMaxArgCount() > 1) ? true : false;
    }
    
    /**

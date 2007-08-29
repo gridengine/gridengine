@@ -114,7 +114,7 @@ public class EditorParser {
       for (Iterator iter = GEObjectEditor.getAllProperties(obj).iterator(); iter.hasNext();) {
          pd = (PropertyDescriptor) iter.next();
          name = pd.getPropertyName();
-         if (name.equals(propertyName)) {
+         if (name.equalsIgnoreCase(propertyName)) {
             return pd;
          }
       }

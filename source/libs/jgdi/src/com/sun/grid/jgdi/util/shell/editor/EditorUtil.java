@@ -55,9 +55,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 /**
@@ -80,94 +84,31 @@ public class EditorUtil {
    public static final int PROPERTIES_READ_ONLY = 1;
    public static final int PROPERTIES_CONFIGURABLE = 2;
    
+   /* Used only for attribute mapping to the C and Java atrribute names that are not the same */
+   private static final ResourceBundle resource = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.editor.EditorResources");
+   /* Used only for attribute mapping to the C and Java atrribute names that are not the same */
+   static final Map<String, Map<String, String>> conv = new HashMap<String, Map<String, String>>();
    
+   /** Convert JGDI name to equivalent in the clients */
    public static String unifyAttrWithClientNames(String objectName, String name) {
-      //Convert JGDI name to equivalent in the clients
-      //CALENDAR
-      if (objectName.equals("Calendar")) {
-         if (name.equals("name")) {
-            return "calendar_name";
-         }
-         if (name.equals("year")) {
-            return "year_calendar";
-         }
-         if (name.equals("week")) {
-            return "week_calendar";
-         }        
+      String val=null;
+      Map<String, String> tr = conv.get(objectName);
+      if (tr != null) {
+         val = tr.get(name);
       }
-      //CHECKPOINT
-      if (objectName.equals("Checkpoint")) {
-         if (name.equals("name")) {
-            return "ckpt_name";
+      if (val == null) {
+         try {
+            val = resource.getString(objectName+"."+name);
+            if (tr == null) {
+              tr=new HashMap<String, String>();
+              conv.put(objectName, tr);
+            }
+            tr.put(name, val);
+         } catch (MissingResourceException ex) {
+            return name;
          }
-         if (name.equals("rest_command")) {
-            return "restart_command";
-         }
-      }
-      //CONFIGURATION
-      if (objectName.equals("Configuration")) {
-         if (name.equals("name")) {
-            return "hostname";
-         }
-      }
-      //HOSTGROUP
-      if (objectName.equals("Hostgroup")) {
-         if (name.equals("name")) {
-            return "group_name";
-         }
-         if (name.equals("host")) {
-            return "hostlist";
-         }
-      }
-      //PARALLEL ENVIRONMENT
-      if (objectName.equals("ParallelEnvironment")) {
-         if (name.equals("name")) {
-            return "pe_name";
-         }
-         if (name.equals("user")) {
-            return "user_lists";
-         }
-         if (name.equals("xuser")) {
-            return "xuser_lists";
-         }
-      }
-      //QUEUE
-      if (objectName.equals("ClusterQueue")) {
-         if (name.equals("name")) {
-            return "qname";
-         }
-         if (name.equals("pe")) {
-            return "pe_list";
-         }
-         if (name.equals("job_slots")) {
-            return "slots";
-         }
-         if (name.equals("ckpt")) {
-            return "ckpt_list";
-         }
-         if (name.equals("owner")) {
-            return "owner_list";
-         }
-         if (name.equals("acl")) {
-            return "user_lists";
-         }
-         if (name.equals("xacl")) {
-            return "xuser_lists";
-         }
-         if (name.equals("subordinate")) {
-            return "subordinate_list";
-         }
-         if (name.equals("consumable_config")) {
-            return "complex_values";
-         }
-      }
-      //SCHEDCONF
-      if (objectName.equals("SchedConf")) {
-         if (name.equals("usage_weight")) {
-            return "usage_weight_list";
-         }
-      }
-      return name;
+      }    
+      return val;
    }
    
    static String unifyAttrWithClientNames(GEObject obj, String name) {
@@ -183,91 +124,15 @@ public class EditorUtil {
       return unifyAttrWithClientNames(objectName, name);
    }
    
+   /** Convert client name to equivalent name in JGDI */
    static String unifyClientNamesWithAttr(String objectName, String name) {
-      //Convert client name to equivalent name in JGDI
-      //CALENDAR
-      if (objectName.equals("Calendar")) {
-         if (name.equals("calendar_name")) {
-            return "name";
-         }
-         if (name.equals("year_calendar")) {
-            return "year";
-         }
-         if (name.equals("week_calendar")) {
-            return "week";
-         }        
+      Map<String, String> tr = conv.get(objectName);
+      if (tr == null) {
+          return name;
       }
-      //CHECKPOINT
-      if (objectName.equals("Checkpoint")) {
-         if (name.equals("ckpt_name")) {
-            return "name";
-         }
-         if (name.equals("restart_command")) {
-            return "rest_command";
-         }
-      }
-      //CONFIGURATION
-      //TODO LP: Check if client recognizes name or hname in a configuration file - it does not
-      if (objectName.equals("Configuration")) {
-         if (name.equals("hostname")) {
-            return "name";
-         }
-      }
-      //HOSTGROUP
-      if (objectName.equals("Hostgroup")) {
-         if (name.equals("group_name")) {
-            return "name";
-         }
-         if (name.equals("hostlist")) {
-            return "host";
-         }
-      }
-      //PARALLEL ENVIRONMENT
-      if (objectName.equals("ParallelEnvironment")) {
-         if (name.equals("pe_name")) {
-            return "name";
-         }
-         if (name.equals("user_lists")) {
-            return "user";
-         }
-         if (name.equals("xuser_lists")) {
-            return "xuser";
-         }
-      }
-      //QUEUE
-      if (objectName.equals("ClusterQueue")) {
-         if (name.equals("qname")) {
-            return "name";
-         }
-         if (name.equals("pe_list")) {
-            return "pe";
-         }
-         if (name.equals("slots")) {
-            return "job_slots";
-         }
-         if (name.equals("ckpt_list")) {
-            return "ckpt";
-         }
-         if (name.equals("owner_list")) {
-            return "owner";
-         }
-         if (name.equals("user_lists")) {
-            return "acl";
-         }
-         if (name.equals("xuser_lists")) {
-            return "xacl";
-         }
-         if (name.equals("subordinate_list")) {
-            return "subordinate";
-         }
-         if (name.equals("complex_values")) {
-            return "consumable_config";
-         }
-      }
-      //SCHEDCONF
-      if (objectName.equals("SchedConf")) {
-         if (name.equals("usage_weight_list")) {
-            return "usage_weight";
+      for (Map.Entry<String, String> e : tr.entrySet()) {
+         if (e.getValue().equals(name)) {
+            return e.getKey(); 
          }
       }
       return name;

@@ -1,0 +1,11 @@
+
+private static String[] arState = { "u", "w", "r", "x", "d", "E", "W" };
+
+public String getStateAsString() {
+   int ord = getState();
+   if (ord < 0 || ord > arState.length) {
+      return "?";
+   }
+   return arState[ord];
+}
+

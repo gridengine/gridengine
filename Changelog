@@ -1,3 +1,10 @@
+LP-2007-08-29-0: Enhancem.: Added JGDI QrStat, Qrdel cmds
+                 Enhancem.: Now using file imports in JGDI generation process 
+                            (*.static files)
+                 Bugfix: Fixed JGDI qconf -acal
+                 Bugfix: Handling ulong32 to jint overflow in JGDI
+                 Review: PJ
+
 RH-2007-08-27-0: Bugfix:    juti: Commit method of UnixLoginModule does not report RuntimeExceptions
                  Bugster:   6597423
                  Issue:     2353

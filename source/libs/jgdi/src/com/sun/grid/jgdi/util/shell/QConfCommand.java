@@ -42,7 +42,6 @@ import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.configuration.ShareTree;
 import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import com.sun.grid.jgdi.configuration.UserSet;
-import com.sun.grid.jgdi.util.JGDIShell;
 import com.sun.grid.jgdi.util.OutputTable;
 import com.sun.grid.jgdi.util.shell.QConfCommandGenerated;
 import com.sun.grid.jgdi.util.shell.editor.EditorParser;
@@ -52,7 +51,6 @@ import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,26 +61,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+import static com.sun.grid.jgdi.util.shell.OptionMethod.MAX_ARG_VALUE;
 /**
  *
  */
 public class QConfCommand extends QConfCommandGenerated {
    
-   private static Map optMap = null; /* Map holding all qconf options and method that should be invoked for it */
+    /* Map holding all qconf options and method that should be invoked for it */
+   private static Map<String, OptionDescriptor> optMap = null;
    
    /** Initialize the option map optMap if not yet created.
     *  Map is created by scanning all OptionMethod annotated functions.
     *  NOTE: Only options in the map will be recognized as implemented 
     */
-   public Map getOptMap(){
+   public Map<String, OptionDescriptor> getOptMap(){
       if (optMap == null) {
-         optMap = new HashMap(140);
-         MapInit init = new MapInit();
+         optMap = new HashMap<String, OptionDescriptor>(140);
          for (Method m : this.getClass().getMethods()) {
             for (Annotation a : m.getDeclaredAnnotations()) {
                if (a instanceof OptionMethod) {
                   OptionMethod o = (OptionMethod)a;
-                  init.addSingleMethod(o.id(), o.min(), o.extra(), this, m);
+                  //Add method to the optMap
+                  MapInit.addSingleMethod(o.id(), o.min(), o.extra(), this, m);
                }
             }
          }
@@ -97,8 +98,8 @@ public class QConfCommand extends QConfCommandGenerated {
    
 
    public String getUsage() {
-      return JGDIShell.getResourceString("sge.version.string")+"\n"+
-             JGDIShell.getResourceString("usage.qconf");
+      return getResourceString("sge.version.string")+"\n"+
+             getResourceString("usage.qconf");
    }
    
    public void run(String[] args) throws Exception {
@@ -116,16 +117,14 @@ public class QConfCommand extends QConfCommandGenerated {
       
       boolean force = false;
       
-      List argList = new ArrayList();
-      String arg;
+      List<String> argList = new ArrayList<String>();
       //Expand args to list of args, 'arg1,arg2 arg3' -> 3 args
-      for (int i=0; i<args.length; i++) {
-         arg = args[i];
+      for (String arg : args) {
          String[] subElems = arg.split("[,]");
-         for (int j=0; j< subElems.length; j++) {
-            arg = subElems[j].trim();
-            if (arg.length() > 0) {
-               argList.add(arg);
+         for (String subElem : subElems) {
+            subElem = subElem.trim();
+            if (subElem.length() > 0) {
+               argList.add(subElem);
             }
          }
       }
@@ -136,9 +135,12 @@ public class QConfCommand extends QConfCommandGenerated {
             //Get option info
             info = getOptionInfo(getOptMap(), argList);
             info.invokeOption(jgdi, pw);
-         } catch (Exception ex) {
-            pw.println(ex.getMessage());
-            pw.flush();
+         } catch (java.lang.IllegalArgumentException ex) {
+             pw.println(ex.getMessage());
+         } catch (Exception ex) { 
+            ex.printStackTrace();
+         } finally {
+            pw.flush(); 
          }
       }  
    }
@@ -150,7 +152,7 @@ public class QConfCommand extends QConfCommandGenerated {
       pw.println(getUsage());
    }
 
-   String getTextFromFile(final List args, final PrintWriter pw) {
+   String getTextFromFile(final List<String> args, final PrintWriter pw) {
       if (args.size() <= 0) {
          pw.println("no file argument given");
          pw.flush();
@@ -162,7 +164,7 @@ public class QConfCommand extends QConfCommandGenerated {
          pw.flush();
          return null;
       }
-      String fileName = (String) args.get(0);
+      String fileName = args.get(0);
       String inputText = null;
       try {
          inputText = readFile(fileName);
@@ -223,7 +225,7 @@ public class QConfCommand extends QConfCommandGenerated {
       oi.optionDone();
    }
 
-   @OptionMethod(id = "-as", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-as", extra = MAX_ARG_VALUE)
    public void addSubmitHost(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -233,7 +235,7 @@ public class QConfCommand extends QConfCommandGenerated {
       printAnswers(answers, pw);
    }
 
-   @OptionMethod(id = "-ds", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-ds", extra = MAX_ARG_VALUE)
    public void deleteSubmitHost(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -253,7 +255,7 @@ public class QConfCommand extends QConfCommandGenerated {
       oi.optionDone();
    }
 
-   @OptionMethod(id = "-ah", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-ah", extra = MAX_ARG_VALUE)
    public void addAdminHost(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -263,7 +265,7 @@ public class QConfCommand extends QConfCommandGenerated {
       printAnswers(answers, pw);
    }
 
-   @OptionMethod(id = "-dh", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-dh", extra = MAX_ARG_VALUE)
    public void deleteAdminHost(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -410,7 +412,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-cq
-   @OptionMethod(id = "-cq", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-cq", extra = MAX_ARG_VALUE)
    public void cleanQueue(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -423,7 +425,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-kec
-   @OptionMethod(id = "-kec", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-kec", extra = MAX_ARG_VALUE)
    public void killEventClient(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -546,7 +548,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-ke
-   @OptionMethod(id = "-ke", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-ke", extra = MAX_ARG_VALUE)
    public void killExecd(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -555,7 +557,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-kej
-   @OptionMethod(id = "-kej", extra = Integer.MAX_VALUE)
+   @OptionMethod(id = "-kej", extra = MAX_ARG_VALUE)
    public void killExecdWithJobs(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -910,7 +912,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
    
    //MANAGER
-   @OptionMethod(id = "-am", extra=Integer.MAX_VALUE)
+   @OptionMethod(id = "-am", extra=MAX_ARG_VALUE)
    public void addManager(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -920,7 +922,7 @@ public class QConfCommand extends QConfCommandGenerated {
       printAnswers(answer, pw);
    }
    
-   @OptionMethod(id = "-dm", extra=Integer.MAX_VALUE)
+   @OptionMethod(id = "-dm", extra=MAX_ARG_VALUE)
    public void deleteManager(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -931,7 +933,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
    
    //OPERATOR
-   @OptionMethod(id = "-ao", extra=Integer.MAX_VALUE)
+   @OptionMethod(id = "-ao", extra=MAX_ARG_VALUE)
    public void addOperator(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -941,7 +943,7 @@ public class QConfCommand extends QConfCommandGenerated {
       printAnswers(answer, pw);
    }
    
-   @OptionMethod(id = "-do", extra=Integer.MAX_VALUE)
+   @OptionMethod(id = "-do", extra=MAX_ARG_VALUE)
    public void deleteOperator(final OptionInfo oi) throws JGDIException {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
@@ -1019,7 +1021,7 @@ public class QConfCommand extends QConfCommandGenerated {
     * optMap holds information what method should be called for a specific option string, among other things
     */
    static private class MapInit {      
-      void addSingleMethod(String optionStr, int mandatory, int optional, AbstractCommand option, Method method) {
+      static void addSingleMethod(String optionStr, int mandatory, int optional, AbstractCommand option, Method method) {
          try {
             optMap.put(optionStr, new OptionDescriptor(mandatory, optional, option, method));
          } catch (Exception ex) {

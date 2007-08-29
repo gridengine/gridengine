@@ -45,6 +45,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+
 /**
  *
  */
@@ -58,8 +60,8 @@ public class QHostCommand extends AbstractCommand {
    }
    
    public String getUsage() {
-      return JGDIShell.getResourceString("sge.version.string")+"\n"+
-            JGDIShell.getResourceString("usage.qhost");
+      return getResourceString("sge.version.string")+"\n"+
+             getResourceString("usage.qhost");
    }
    
    public void run(String[] args) throws Exception {

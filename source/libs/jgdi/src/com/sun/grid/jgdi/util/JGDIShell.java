@@ -44,6 +44,8 @@ import com.sun.grid.jgdi.util.shell.QStatCommand;
 import com.sun.grid.jgdi.util.shell.QHostCommand;
 import com.sun.grid.jgdi.util.shell.QDelCommand;
 import com.sun.grid.jgdi.util.shell.QQuotaCommand;
+import com.sun.grid.jgdi.util.shell.QrDelCommand;
+import com.sun.grid.jgdi.util.shell.QrStatCommand;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -101,18 +103,20 @@ public class JGDIShell implements Runnable, Shell {
    
    //TODO LP: We should consider having single PrintWriter for all commands
    public JGDIShell() {  
-      cmdMap.put("connect", new ConnectCommand() );
-      cmdMap.put("exit", new ExitCommand() );
-      cmdMap.put("help", new HelpCommand() );
-      cmdMap.put("debug", new DebugCommand() );
-      cmdMap.put("history", new PrintHistoryCommand() );
-      cmdMap.put("xmldump", new XMLDumpCommand() );
+      cmdMap.put("connect", new ConnectCommand());
+      cmdMap.put("exit", new ExitCommand());
+      cmdMap.put("help", new HelpCommand());
+      cmdMap.put("debug", new DebugCommand());
+      cmdMap.put("history", new PrintHistoryCommand());
+      cmdMap.put("xmldump", new XMLDumpCommand());
       cmdMap.put("qmod", new QModCommand(this, "qmod"));
       cmdMap.put("qconf", new QConfCommand(this, "qconf"));
       cmdMap.put("qstat", new QStatCommand(this, "qstat"));
       cmdMap.put("qhost", new QHostCommand(this, "qhost"));
       cmdMap.put("qdel", new QDelCommand(this, "qdel"));
       cmdMap.put("qquota", new QQuotaCommand(this, "qquota"));
+      cmdMap.put("qrstat", new QrStatCommand(this, "qrstat"));
+      cmdMap.put("qrdel", new QrDelCommand(this, "qrdel"));
       
       cmdSet = new TreeSet(cmdMap.keySet());
       
@@ -198,6 +202,7 @@ public class JGDIShell implements Runnable, Shell {
       
       Command cmd = getCommand(parsedLine.cmd);
       if (cmd == null) {
+         System.out.println("Executing /bin/sh -c "+line);
          String [] cmds = {
             "/bin/sh", "-c", line
          };

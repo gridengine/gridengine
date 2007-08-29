@@ -2480,7 +2480,11 @@ jgdi_result_t set_int(JNIEnv *env, jclass bean_class, jobject obj, const char* p
    jmethodID mid = NULL;
    
    DENTER(BASIS_LAYER, "set_int");
-
+   /* jint overflow */
+   if (value > 2147483647) {
+      DPRINTF(("set_int: ulong32 to jint overflow (returning -1)\n"));
+      value = -1;
+   }
    sprintf(buf, "set%c%s", toupper(property_name[0]), &property_name[1]);
    mid = get_methodid(env, bean_class, buf, "(I)V", alpp);
    if (!mid) {
@@ -2531,7 +2535,7 @@ jgdi_result_t set_long(JNIEnv *env, jclass bean_class, jobject obj, const char* 
    }
 
    (*env)->CallVoidMethod(env, obj, mid, (jlong)value);
-   if (test_jni_error(env, "set_int: CallVoidMethod failed", alpp)) {
+   if (test_jni_error(env, "set_long: CallVoidMethod failed", alpp)) {
       DRETURN(JGDI_ERROR);
    }
 

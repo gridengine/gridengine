@@ -32,7 +32,8 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.util.JGDIShell;
+
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 
 /**
  *
@@ -46,8 +47,8 @@ public class QDelCommand extends AbstractCommand {
     }
     
    public String getUsage() {
-      return JGDIShell.getResourceString("sge.version.string") + "\n" + 
-             JGDIShell.getResourceString("usage.qdel");
+      return getResourceString("sge.version.string") + "\n" + 
+             getResourceString("usage.qdel");
    }
     
     

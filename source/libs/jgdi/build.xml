@@ -201,6 +201,7 @@
       <fileset id="jar.properties" dir="${src.dir}">
          <include name="com/sun/grid/jgdi/Resources*.properties"/>
          <include name="com/sun/grid/jgdi/util/shell/UsageResources.properties"/>
+         <include name="com/sun/grid/jgdi/util/shell/editor/EditorResources.properties"/>
       </fileset>
       <dependset>
          <srcfileset refid="jar.classes"/>

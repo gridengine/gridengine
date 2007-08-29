@@ -484,15 +484,15 @@ public interface <%=classname%> extends <%
 <%  } // end of for of attribute %>
 
   <%//SPECIAL CODE for COMPLEX ENTRY
-  if (classname.equals("ComplexEntry")) {
-     %>
+  if (classname.equals("ComplexEntry")) { %>
     public String typeToString(int type);
     public int typeToInt(String type);
     public String opToString(int op);
     public int opToInt(String type);
     public String reqToString(int op);
     public int reqToInt(String type);
-    <%
-  }%>
+<% } else if (classname.equals("AdvanceReservation")) { %>
+    public String getStateAsString();
+<% } %>
 
 }

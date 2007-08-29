@@ -49,6 +49,7 @@ import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
@@ -62,42 +63,16 @@ public class QStatCommand extends AbstractCommand {
     }
     
     public String getUsage() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        
-        pw.println("usage: qstat [options]");
-        pw.println("        [-ext]                            view additional attributes");
-        pw.println("        [-explain a|c|A|E]                show reason for c(onfiguration amiguous), a(larm), suspend A(larm), E(rror) state");
-        pw.println("        [-f]                              full output");
-        pw.println("        [-F [resource_attributes]]        full output and show (selected) resources of queue(s)");
-        pw.println("        [-g {c}]                          display cluster queue summary");
-        pw.println("        [-g {d}]                          display all job-array tasks (do not group)");
-        pw.println("        [-g {t}]                          display all parallel job tasks (do not group)");
-        pw.println("        [-help]                           print this help");
-        pw.println("        [-j job_identifier_list ]         show scheduler job information");
-        pw.println("        [-l resource_list]                request the given resources");
-        pw.println("        [-ne]                             hide empty queues");
-        pw.println("        [-pe pe_list]                     select only queues with one of these parallel environments");
-        pw.println("        [-q wc_queue_list]                print information on given queue");
-        pw.println("        [-qs {a|c|d|o|s|u|A|C|D|E|S}]     selects queues, which are in the given state(s)");
-        pw.println("        [-r]                              show requested resources of job(s)");
-        pw.println("        [-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}] show pending, running, suspended, zombie jobs,");
-        pw.println("                                          jobs with a user/operator/system hold,");
-        pw.println("                                          jobs with a start time in future or any combination only.");
-        pw.println("                                          h is an abbreviation for huhohshjha");
-        pw.println("                                          a is an abbreviation for prsh");
-        pw.println("        [-t]                              show task information (implicitly -g t)");
-        pw.println("        [-u user_list]                    view only jobs of this user");
-        pw.println("        [-U user_list]                    select only queues where these users have access");
-        pw.println("        [-urg]                            display job urgency information");
-        pw.println("        [-pri]                            display job priority information");
-        pw.println("        [-xml]                            display the information in XML-Format");
-        pw.close();
-        return sw.getBuffer().toString();
+        return getResourceString("sge.version.string")+"\n"+
+               getResourceString("usage.qstat");
     }
     
     public void run(String[] args) throws Exception {
-        BasicQueueOptions options = parse(args);
+        PrintWriter pw = shell.getPrintWriter();
+        BasicQueueOptions options = parse(args, pw);
+        if (options == null) {
+           return; 
+        }
         
         JGDI jgdi = getShell().getConnection();
         
@@ -105,7 +80,6 @@ public class QStatCommand extends AbstractCommand {
             throw new IllegalStateException("Not connected");
         }
         
-        PrintWriter pw = new PrintWriter(System.out);
         if (options instanceof QueueInstanceSummaryOptions) {
             QueueInstanceSummaryResult res = jgdi.getQueueInstanceSummary((QueueInstanceSummaryOptions)options);
             QueueInstanceSummaryPrinter.print(pw, res, (QueueInstanceSummaryOptions)options);
@@ -113,11 +87,9 @@ public class QStatCommand extends AbstractCommand {
             List res = jgdi.getClusterQueueSummary((ClusterQueueSummaryOptions)options);
             pw.println("printing cluster queue summary not yet implemented");
         }
-        pw.flush();
-        
     }
     
-    private BasicQueueOptions parse(String [] args) throws Exception {
+    private BasicQueueOptions parse(String [] args, PrintWriter pw) throws Exception {
         boolean ext = false;
         Character explain = null;
         boolean fullOutput = false;
@@ -144,7 +116,10 @@ public class QStatCommand extends AbstractCommand {
         while (!argList.isEmpty()) {
             String arg = (String)argList.removeFirst();
             
-            if (arg.equals("-ext")) {
+            if (arg.equals("-help")) {
+               pw.println(getUsage());
+               return null;
+            } else if (arg.equals("-ext")) {
                 ext = true;
             } else if (arg.equals("-explain")) {
                 if (argList.isEmpty()) {

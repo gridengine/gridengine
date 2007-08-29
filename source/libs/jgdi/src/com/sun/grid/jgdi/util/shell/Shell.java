@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
+import java.io.PrintWriter;
 import java.util.logging.Logger;
 
 /**
@@ -41,4 +42,5 @@ public interface Shell {
 
    public Logger getLogger();
    public JGDI getConnection();
+   public PrintWriter getPrintWriter();
 }

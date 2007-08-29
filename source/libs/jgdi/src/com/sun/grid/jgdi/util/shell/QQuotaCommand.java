@@ -44,10 +44,10 @@ import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
@@ -59,33 +59,23 @@ public class QQuotaCommand extends AbstractCommand {
    }
    
    public String getUsage() {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      pw.println("usage: qquota [options]");
-      pw.println("[-help]                    print this help");
-      pw.println("[-h host_list]             display only selected hosts");
-      pw.println("[-l resource_attributes]   request the given resources");
-      pw.println("[-u user_list]             display only selected users");
-      pw.println("[-pe pe_list]              display only selected parallel environments");
-      pw.println("[-P project_list]          display only selected projects");
-      pw.println("[-q wc_queue_list]         display only selected queues");
-      pw.println("[-xml]                     display the information in XML-Format");
-      pw.flush();
-      return sw.getBuffer().toString();
+      return getResourceString("sge.version.string")+"\n"+
+             getResourceString("usage.qquota");
    }
    
    
    public void run(String[] args) throws Exception {
-      
-      QQuotaOptions options = parse(args);
-      
+      PrintWriter pw = shell.getPrintWriter();
+      QQuotaOptions options = parse(args, pw);
+      if (options == null) {
+         return; 
+      }
       JGDI jgdi = getShell().getConnection();
       
       if (jgdi == null) {
          throw new IllegalStateException("Not connected");
       }
       
-      PrintWriter pw = new PrintWriter(System.out);
       QQuotaResult res = jgdi.getQQuota(options);
       
       if (res.getResourceQuotaRules().size() > 0) {
@@ -115,16 +105,14 @@ public class QQuotaCommand extends AbstractCommand {
             }
             if (!info.getHosts().isEmpty()) {
                pw.print(" hosts" + info.getHosts());
-            }
-            
+            }            
             pw.println();
          }
-         pw.flush();
       }
       
    }
    
-   private QQuotaOptions parse(String [] args) throws Exception {
+   private QQuotaOptions parse(String [] args, PrintWriter pw) throws Exception {
       ResourceAttributeFilter resourceAttributeFilter = null;
       ResourceFilter resourceFilter = null;
       UserFilter userFilter = null;
@@ -142,7 +130,8 @@ public class QQuotaCommand extends AbstractCommand {
          String arg = (String)argList.removeFirst();
          
          if(arg.equals("-help")) {
-            System.out.print(getUsage());
+            pw.println(getUsage());
+            return null;
          } else if (arg.equals("-h")) {
             if(argList.isEmpty()) {
                throw new IllegalArgumentException("missing host_list");

@@ -63,7 +63,7 @@ public class QrDelCommand extends AbstractCommand {
          throw new IllegalArgumentException("Invalid number of arguments");
       }
 
-      PrintWriter pw = new PrintWriter(System.out);
+      PrintWriter pw = shell.getPrintWriter();
 
 
       boolean force = false;

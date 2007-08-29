@@ -35,6 +35,7 @@ import com.sun.grid.jgdi.JGDI;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
@@ -47,45 +48,12 @@ public class QModCommand extends AbstractCommand {
    }
 
    public String getUsage() {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      pw.println("usage: qmod [options]");
-      pw.println("   [-c job_wc_queue_list]  clear error state");
-      pw.println("   [-cj job_list]          clear job error state");
-      pw.println("   [-cq wc_queue_list]     clear queue error state");
-      pw.println("   [-d wc_queue_list]      disable");
-      pw.println("   [-e wc_queue_list]      enable");
-      pw.println("   [-f]                    force action");
-      pw.println("   [-help]                 print this help");
-      pw.println("   [-r job_wc_queue_list]  reschedule jobs (running in queue)");
-      pw.println("   [-rj job_list]          reschedule jobs");
-      pw.println("   [-rq wc_queue_list]     reschedule all jobs in a queue");
-      pw.println("   [-s job_wc_queue_list]  suspend");
-      pw.println("   [-sj job_list]          suspend jobs");
-      pw.println("   [-sq wc_queue_list]     suspend queues");
-      pw.println("   [-us job_wc_queue_list] unsuspend");
-      pw.println("   [-usj job_list]         unsuspend jobs");
-      pw.println("   [-usq wc_queue_list]    unsuspend queues");
-      pw.println();
-      pw.println("   job_wc_queue_list          {job_tasks|wc_queue}[{','|' '}{job_tasks|wc_queue}[{','|' '}...]]");
-      pw.println("   job_list                   {job_tasks}[{','|' '}job_tasks[{','|' '}...]]");
-      pw.println("   job_tasks                  {{job_id'.'task_id_range}|job_name|pattern}[' -t 'task_id_range]");
-      pw.println("   task_id_range              task_id['-'task_id[':'step]]");
-      pw.println("   wc_cqueue                  wildcard expression matching a cluster queue");
-      pw.println("   wc_host                    wildcard expression matching a host");
-      pw.println("   wc_hostgroup               wildcard expression matching a hostgroup");
-      pw.println("   wc_qinstance               wc_cqueue@wc_host");
-      pw.println("   wc_qdomain                 wc_cqueue@wc_hostgroup");
-      pw.println("   wc_queue                   wc_cqueue|wc_qdomain|wc_qinstance");
-      pw.println("   wc_queue_list              wc_queue[','wc_queue[','...]]");
-      pw.flush();
-      return sw.getBuffer().toString();
+      return getResourceString("sge.version.string")+"\n"+
+             getResourceString("usage.qmod");
    }
    
 
-   public void run(String[] args) throws Exception {
-      
-      PrintWriter pw = new PrintWriter(System.out);
+   public void run(String[] args) throws Exception {  
       JGDI jgdi = getShell().getConnection();
       
       if (jgdi == null) {
@@ -95,16 +63,15 @@ public class QModCommand extends AbstractCommand {
          throw new IllegalArgumentException("Invalid number of arguments");
       }
       
+      PrintWriter pw = shell.getPrintWriter();
       
       boolean force = false;
       
       for(int i = 0; i < args.length; i++) {
          
          if (args[i].equals("-help")) {
-            i++;
-            pw.print(getUsage());
-            pw.flush();
-            break;
+            pw.println(getUsage());
+            return;
          } else if(args[i].equals("-cj")) {
             i++;
             if(i>=args.length) {

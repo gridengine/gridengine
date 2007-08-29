@@ -32,7 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 /**
- *
+ * Command interface
  */
 public interface Command {
    

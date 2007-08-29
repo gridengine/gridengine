@@ -1,3 +1,7 @@
+LP-2007-08-29-2: Enhancem.: JGDIShell uses single PrintWriter
+                            All JGDIShell -help options use UsageResources file
+                 Review:    PJ
+
 RD-2007-08-29-1: Bugfix:    fixed broken build on win32-x86
                  Review:    AH
 

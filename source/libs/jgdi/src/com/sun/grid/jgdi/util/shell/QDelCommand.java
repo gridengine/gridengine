@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
+import java.io.PrintWriter;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 
@@ -52,8 +53,7 @@ public class QDelCommand extends AbstractCommand {
    }
     
     
-    public void run(String[] args) throws Exception {
-        
+    public void run(String[] args) throws Exception {      
         JGDI jgdi = getShell().getConnection();
         
         if (jgdi == null) {
@@ -62,16 +62,16 @@ public class QDelCommand extends AbstractCommand {
         if (args.length == 0) {
             throw new IllegalArgumentException("Invalid number of arguments");
         }
-        
+        PrintWriter pw = shell.getPrintWriter();
         
         boolean force = false;
         
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-help")) {
-                System.out.println(getUsage());
+                pw.println(getUsage());
                 break;
             } else if (args[i].equals("-f")) {
-                System.out.println("-f option parsed");
+                pw.println("-f option parsed");
                 break;
             } else {
                 throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);

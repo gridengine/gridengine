@@ -52,6 +52,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -64,8 +65,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -100,9 +99,11 @@ public class JGDIShell implements Runnable, Shell {
    private TreeSet cmdSet = null;
    private ReadlineHandler readlineHandler;
    private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
+   private final PrintWriter pw;
    
    //TODO LP: We should consider having single PrintWriter for all commands
-   public JGDIShell() {  
+   public JGDIShell() {
+      pw = new PrintWriter(System.out) ;
       cmdMap.put("connect", new ConnectCommand());
       cmdMap.put("exit", new ExitCommand());
       cmdMap.put("help", new HelpCommand());
@@ -129,12 +130,25 @@ public class JGDIShell implements Runnable, Shell {
       return (Command)cmdMap.get(name);
    }
    
+   /**
+    * Getter method
+    */
    public JGDI getConnection() {
       return jgdi;
    }
    
+   /**
+    * Getter method
+    */
    public Logger getLogger() {
       return logger;
+   }
+   
+   /**
+    * Getter method
+    */
+   public PrintWriter getPrintWriter() {
+      return pw; 
    }
    
    public void run() {
@@ -163,6 +177,8 @@ public class JGDIShell implements Runnable, Shell {
             } catch(Exception e) {
                System.err.println(e.getLocalizedMessage());
                logger.log(Level.SEVERE, "Command failed", e);
+            } finally {
+               pw.flush(); 
             }
          }        
       } catch(EOFException eofe) {
@@ -199,7 +215,6 @@ public class JGDIShell implements Runnable, Shell {
          }
       }
       ParsedLine parsedLine = new ParsedLine(line);
-      
       Command cmd = getCommand(parsedLine.cmd);
       if (cmd == null) {
          System.out.println("Executing /bin/sh -c "+line);
@@ -293,6 +308,8 @@ public class JGDIShell implements Runnable, Shell {
             System.err.println(ex.getMessage());
             logger.severe(ex.getMessage());
             System.exit(1);
+         } finally {
+            pw.flush(); 
          }
       }
       run(); //We didn't get any other params, so we actually run the JGDIShell
@@ -308,6 +325,8 @@ public class JGDIShell implements Runnable, Shell {
             System.err.println(ex.getMessage());
             logger.severe(ex.getMessage());
             System.exit(1);
+         } finally {
+            pw.flush(); 
          }
       }
    }
@@ -423,18 +442,18 @@ public class JGDIShell implements Runnable, Shell {
          switch(args.length) {
          case 0: {
             Iterator iter = cmdMap.keySet().iterator();
-            logger.info("Available commands: ");
+            pw.println("Available commands: ");
             while (iter.hasNext()) {
-               logger.info((String)iter.next());
+               pw.println((String)iter.next());
             }
          }
          break;
          case 1: {
             Command cmd = getCommand(args[0]);
             if (cmd == null) {
-               logger.severe("command " + args[0] + " not found");
+               pw.println("command " + args[0] + " not found");
             }
-            logger.info(cmd.getUsage());
+            pw.println(cmd.getUsage());
          }
          break;
          default:

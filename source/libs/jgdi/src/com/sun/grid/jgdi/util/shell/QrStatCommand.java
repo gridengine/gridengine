@@ -61,7 +61,7 @@ public class QrStatCommand extends AbstractCommand {
          throw new IllegalStateException("Not connected");
       }
 
-      PrintWriter pw = new PrintWriter(System.out);
+      PrintWriter pw = shell.getPrintWriter();
 
       List<String> userList = new ArrayList<String>();
       List<String> arList = new ArrayList<String>();
@@ -152,7 +152,6 @@ public class QrStatCommand extends AbstractCommand {
       }
       //TimeZone.setDefault(currentTz);
       pw.println("_exit_code="+printAnswers(answers, pw)+"_");
-      pw.flush();
    }
    
    public static String getDateAndTimeAsString(int time) {

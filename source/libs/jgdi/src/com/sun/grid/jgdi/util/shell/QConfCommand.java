@@ -43,7 +43,6 @@ import com.sun.grid.jgdi.configuration.ShareTree;
 import com.sun.grid.jgdi.configuration.ShareTreeImpl;
 import com.sun.grid.jgdi.configuration.UserSet;
 import com.sun.grid.jgdi.util.OutputTable;
-import com.sun.grid.jgdi.util.shell.QConfCommandGenerated;
 import com.sun.grid.jgdi.util.shell.editor.EditorParser;
 import java.beans.IntrospectionException;
 import java.io.IOException;
@@ -113,7 +112,7 @@ public class QConfCommand extends QConfCommandGenerated {
          throw new IllegalArgumentException("Invalid number of arguments");
       }
       
-      PrintWriter pw = new PrintWriter(System.out);
+      PrintWriter pw = shell.getPrintWriter();
       
       boolean force = false;
       
@@ -139,8 +138,6 @@ public class QConfCommand extends QConfCommandGenerated {
              pw.println(ex.getMessage());
          } catch (Exception ex) { 
             ex.printStackTrace();
-         } finally {
-            pw.flush(); 
          }
       }  
    }
@@ -155,13 +152,11 @@ public class QConfCommand extends QConfCommandGenerated {
    String getTextFromFile(final List<String> args, final PrintWriter pw) {
       if (args.size() <= 0) {
          pw.println("no file argument given");
-         pw.flush();
          return null;
       }
       if (args.size() != 1) {
          pw.println("error: invalid option argument \"" + args.get(1) + "\"");
          pw.println("Usage: qconf -help");
-         pw.flush();
          return null;
       }
       String fileName = args.get(0);
@@ -171,7 +166,6 @@ public class QConfCommand extends QConfCommandGenerated {
       } catch (IOException ex) {
          pw.println("error: error opening file \"" + fileName + "\" for reading: " + ex.getMessage());
          pw.println("error reading in file");
-         pw.flush();
       }
       return inputText;
    }
@@ -213,7 +207,6 @@ public class QConfCommand extends QConfCommandGenerated {
       for (Iterator iter = list.iterator(); iter.hasNext();) {
          pw.println(iter.next());
       }
-      pw.flush();
    }
    
    //SUBMITHOST
@@ -310,7 +303,6 @@ public class QConfCommand extends QConfCommandGenerated {
       final PrintWriter pw = oi.getPw();
       String inputText = getTextFromFile(oi.getArgs(), pw);
       pw.println("NOT IMPLEMENTED");
-      pw.flush();
    }
 
    @OptionMethod(id = "-sstree", min = 0)
@@ -578,7 +570,6 @@ public class QConfCommand extends QConfCommandGenerated {
          jgdi.killExecd(args.toArray(new String[args.size()]), terminateJobs);
       } catch (JGDIException ex) {
          pw.println(ex.getMessage());
-         pw.flush();
       }
    }
 
@@ -644,7 +635,6 @@ public class QConfCommand extends QConfCommandGenerated {
    //TODO LP: Remove recursion in shgrp_tree
    private void showHostgroupTree(final JGDI jgdi, Hostgroup obj, String prefix, final String tab, final PrintWriter pw) {
       pw.println(prefix + obj.getName());
-      pw.flush();
       prefix += tab;
 
       String hgroup;
@@ -656,12 +646,10 @@ public class QConfCommand extends QConfCommandGenerated {
                obj = jgdi.getHostgroup(hgroup);
             } catch (JGDIException ex) {
                pw.println(ex.getMessage());
-               pw.flush();
             }
             showHostgroupTree(jgdi, obj, prefix, tab, pw);
          } else {
             pw.println(prefix + hgroup);
-            pw.flush();
          }
       }
    }
@@ -682,7 +670,6 @@ public class QConfCommand extends QConfCommandGenerated {
                   queue.add(obj);
                } catch (JGDIException ex) {
                   pw.println(ex.getMessage());
-                  pw.flush();
                }
             } else {
                if (!result.contains(hgroup)) {
@@ -723,7 +710,6 @@ public class QConfCommand extends QConfCommandGenerated {
       final JGDI jgdi = oi.getJgdi();
       final PrintWriter pw = oi.getPw();
       pw.print(showComplexes(jgdi));
-      pw.flush();
    }
 
    /**
@@ -811,7 +797,6 @@ public class QConfCommand extends QConfCommandGenerated {
                jgdi.addComplexEntry(ce);
             } catch (JGDIException ex) {
                pw.println(ex.getMessage());
-               pw.flush();
             }
          }
          //Modify existing
@@ -821,7 +806,6 @@ public class QConfCommand extends QConfCommandGenerated {
                jgdi.updateComplexEntry(ce);
             } catch (JGDIException ex) {
                pw.println(ex.getMessage());
-               pw.flush();
             }
          }
          //Remove not defined anymore
@@ -831,7 +815,6 @@ public class QConfCommand extends QConfCommandGenerated {
                jgdi.deleteComplexEntry(ce);
             } catch (JGDIException ex) {
                pw.println(ex.getMessage());
-               pw.flush();
             }
          }
       } catch (JGDIException ex) {

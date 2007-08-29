@@ -1,3 +1,6 @@
+RD-2007-08-29-0: Enhancem:  Added compile support for SS12 on amd64
+                 Review:    AH
+
 RH-2007-08-27-0: Bugfix:    juti: Commit method of UnixLoginModule does not report RuntimeExceptions
                  Bugster:   6597423
                  Issue:     2353

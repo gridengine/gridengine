@@ -1,3 +1,9 @@
+AA-2007-08-30-0: Enhancem.: - bugfix for AA-2007-08-20-0
+                            - N1GE->SGE
+                            - test_ff_cl
+                            - message numbers
+                 Review:    RD           
+                            
 RD-2007-08-30-0: Docs:      added ARCo Space Requirements HowTo
                  Review:    JO
 

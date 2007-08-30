@@ -106,7 +106,8 @@ static int CK_test(void);
 static int STN_test(void);
 static int CE_test(void);
 static int CEL_test(void); 
-static int UP_test(void);
+static int UU_test(void);
+static int PR_test(void);
 static int US_test(void);
 static int EH_test(void);
 static int CQ_test(void);
@@ -155,7 +156,8 @@ int main(int argc, char** argv)
                                STN_test,
                                CE_test,
                                CEL_test,
-                               UP_test,
+                               UU_test,
+                               PR_test,
                                EH_test,
                                US_test,
                                CQ_test,
@@ -1176,29 +1178,10 @@ static int diff(const char *file1, const char *file2)
    return ret;
 }
 
-static int UP_test(void) {
-   int ret = 0;
-   lListElem *ep = NULL;
-   lListElem *ep2 = NULL;
-   lListElem *ep3 = NULL;
+static lList *buildUsageList(void) {   
    lList *lp = NULL;
-   lList *lp2 = NULL;
-   lList *alp = NULL;
-   spooling_field *fields = NULL;
-   const char *file1 = "/var/tmp/UP_cl";
-   const char *file2 = NULL;
-   
-   ep = lCreateElem(PR_Type);
-   lSetString(ep, PR_name, "Test_Name");
-   lSetUlong(ep, PR_oticket, 100);
-   lSetUlong(ep, PR_fshare, 50);
-#if 0   
-   lSetUlong(ep, PR_delete_time, 123456789);
-   lSetString(ep, PR_default_project, "default_project");
-#endif   
+   lListElem *ep2 = NULL;
 
-   lSetUlong(ep, PR_usage_time_stamp, 987654321);
-   
    lp = lCreateList("Usage List", UA_Type);
    
    ep2 = lCreateElem(UA_Type);
@@ -1215,9 +1198,14 @@ static int UP_test(void) {
    lSetString(ep2, UA_name, "Test_Name4");
    lSetDouble(ep2, UA_value, 55.66);
    lAppendElem(lp, ep2);
-      
-   lSetList(ep, PR_usage, lp);
-   
+
+   return lp;
+}
+
+static lList *buildLTUsageList(void) {
+   lList *lp = NULL;
+   lListElem *ep2 = NULL;
+
    lp = lCreateList("LT Usage List", UA_Type);
    
    ep2 = lCreateElem(UA_Type);
@@ -1234,9 +1222,16 @@ static int UP_test(void) {
    lSetString(ep2, UA_name, "Test_Name7");
    lSetDouble(ep2, UA_value, 55.66);
    lAppendElem(lp, ep2);
-      
-   lSetList(ep, PR_long_term_usage, lp);
-   
+ 
+   return lp;
+}      
+
+static lList *buildProjectList(void) {
+   lList *lp = NULL;
+   lList *lp2 = NULL;
+   lListElem *ep2 = NULL;
+   lListElem *ep3 = NULL;
+
    lp = lCreateList("Project List", UPP_Type);
    
    ep2 = lCreateElem(UPP_Type);
@@ -1322,33 +1317,16 @@ static int UP_test(void) {
       
    lSetList(ep2, UPP_long_term_usage, lp2);
    lAppendElem(lp, ep2);
-   
-   lSetList(ep, PR_project, lp);
-   
-   lp = lCreateList("ACL List", US_Type);
-   
-   ep2 = lCreateElem(US_Type);
-   lSetString(ep2, US_name, "Test_Name22");
-   lAppendElem(lp, ep2);
-   
-   ep2 = lCreateElem(US_Type);
-   lSetString(ep2, US_name, "Test_Name23");
-   lAppendElem(lp, ep2);
-   
-   lSetList(ep, PR_acl, lp);
-   
-   lp = lCreateList("XACL List", US_Type);
-   
-   ep2 = lCreateElem(US_Type);
-   lSetString(ep2, US_name, "Test_Name24");
-   lAppendElem(lp, ep2);
-   
-   ep2 = lCreateElem(US_Type);
-   lSetString(ep2, US_name, "Test_Name25");
-   lAppendElem(lp, ep2);
-   
-   lSetList(ep, PR_xacl, lp);
-   
+
+   return lp;
+}
+
+static lList *buildDebitedUsageList(void) {
+   lList *lp = NULL;
+   lList *lp2 = NULL;
+   lListElem *ep2 = NULL;
+   lListElem *ep3 = NULL;
+
    lp = lCreateList("Debited Usage List", UPU_Type);
    
    ep2 = lCreateElem(UPU_Type);
@@ -1396,77 +1374,100 @@ static int UP_test(void) {
       
    lSetList(ep2, UPU_old_usage_list, lp2);
    lAppendElem(lp, ep2);
-   
-   lSetList(ep, PR_debited_job_usage, lp);
 
-   ep2 = lCopyElem(ep);
-   
-   printf("UP: spool = 0, user = 0\n");
-   /* Write a UP file using classic spooling */
-   write_userprj(&alp, ep,(char *)file1, NULL, 0, 0);
-   
-   /* Read a UP file using flatfile spooling */
-   lFreeElem(&ep);
-   fields = sge_build_PR_field_list(false);
-   ep = spool_flatfile_read_object(&alp, PR_Type, NULL,
-                                   fields, NULL, true, &qconf_sfi,
-                                   SP_FORM_ASCII, NULL, file1);
-         
-   /* Write a UP file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
-                                     fields,
-                                     &qconf_sfi,
-                                     SP_DEST_TMP,
-                                     SP_FORM_ASCII, 
-                                     file2, false);
+   return lp;
+}   
 
-   lFreeElem(&ep);
-   ep = cull_read_in_userprj(NULL, file2, 0, 0, NULL);
-   unlink(file2);
-   FREE(file2);
+static lList *buildACLList(void) {
+   lList *lp = NULL;
+   lListElem *ep2 = NULL;
 
-   file2 = "/var/tmp/UP_ff";
-   write_userprj(&alp, ep,(char *)file2, NULL, 0, 0);
+   lp = lCreateList("ACL List", US_Type);
    
-   ret = diff(file1, file2);
+   ep2 = lCreateElem(US_Type);
+   lSetString(ep2, US_name, "Test_Name22");
+   lAppendElem(lp, ep2);
    
-   unlink(file1);
-   unlink(file2);
-   FREE(fields);
-   
-   lFreeElem(&ep);
-   ep = ep2;
+   ep2 = lCreateElem(US_Type);
+   lSetString(ep2, US_name, "Test_Name23");
+   lAppendElem(lp, ep2);
 
-   if (ret != 0) {
-      return ret;
-   }
+   return lp;
+}   
    
-   printf("UP: spool = 0, user = 1\n");
-   /* Write a UP file using classic spooling */
-   write_userprj(&alp, ep,(char *)file1, NULL, 0, 1);
+static lList *buildXACLList(void) {
+   lList *lp = NULL;
+   lListElem *ep2 = NULL;
+
+   lp = lCreateList("XACL List", US_Type);
    
-   /* Read a UP file using flatfile spooling */
-   lFreeElem(&ep);
+   ep2 = lCreateElem(US_Type);
+   lSetString(ep2, US_name, "Test_Name24");
+   lAppendElem(lp, ep2);
+   
+   ep2 = lCreateElem(US_Type);
+   lSetString(ep2, US_name, "Test_Name25");
+   lAppendElem(lp, ep2);
+
+   return lp;
+}   
+
+static int UU_test(void) {
+   int ret = 0;
+   lListElem *user = NULL;
+   lList *lp = NULL;
+   lList *alp = NULL;
+   spooling_field *fields = NULL;
+   const char *file1 = "/var/tmp/UU_cl";
+   const char *file2 = NULL;
+   
+   user = lCreateElem(UU_Type);
+   lSetString(user, UU_name, "Test_Name");
+   lSetUlong(user, UU_oticket, 100);
+   lSetUlong(user, UU_fshare, 50);
+   lSetUlong(user, UU_delete_time, 123456789);
+   lSetString(user, UU_default_project, "default_project");
+
+   lSetUlong(user, UU_usage_time_stamp, 987654321);
+
+   lp = buildUsageList();
+   lSetList(user, UU_usage, lp);
+   
+   lp = buildLTUsageList();
+   lSetList(user, UU_long_term_usage, lp);
+   
+   lp = buildProjectList();
+   lSetList(user, UU_project, lp);
+   
+   lp = buildDebitedUsageList();
+   lSetList(user, UU_debited_job_usage, lp);
+
+   printf("UU: spool = 0, user = 1\n");
+   /* Write a UU file using classic spooling */
+   write_userprj(&alp, user,(char *)file1, NULL, 0, 1);
+   
+   /* Read a UU file using flatfile spooling */
+   lFreeElem(&user);
    fields = sge_build_UU_field_list(false);
-   ep = spool_flatfile_read_object(&alp, UU_Type, NULL,
+   user = spool_flatfile_read_object(&alp, UU_Type, NULL,
                                    fields, NULL, true, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, file1);
          
-   /* Write a UP file using flatfile spooling */
-   file2 = spool_flatfile_write_object(&alp, ep, false,
+   /* Write a UU file using flatfile spooling */
+   file2 = spool_flatfile_write_object(&alp, user, false,
                                      fields,
                                      &qconf_sfi,
                                      SP_DEST_TMP,
                                      SP_FORM_ASCII, 
                                      file2, false);
 
-   lFreeElem(&ep);
-   ep = cull_read_in_userprj(NULL, file2, 0, 1, NULL);
+   lFreeElem(&user);
+   user = cull_read_in_userprj(NULL, file2, 0, 1, NULL);
    unlink(file2);
    FREE(file2);
 
-   file2 = "/var/tmp/UP_ff";
-   write_userprj(&alp, ep,(char *)file2, NULL, 0, 1);
+   file2 = "/var/tmp/UU_ff";
+   write_userprj(&alp, user, (char *)file2, NULL, 0, 1);
    
    ret = diff(file1, file2);
    
@@ -1474,10 +1475,85 @@ static int UP_test(void) {
    unlink(file2);
    FREE(fields);
    
-   lFreeElem(&ep);
+   lFreeElem(&user);
    
-   printf("UP: spool = 1, user = 0 -- INVALID\n");
-   printf("UP: spool = 1, user = 1 -- INVALID\n");
+   printf("UU: spool = 1, user = 1 -- INVALID\n");
+   
+   answer_list_output(&alp);   
+   lFreeList(&alp);
+   
+   return ret;
+}
+
+static int PR_test(void) {
+   int ret = 0;
+   lListElem *prj = NULL;
+   lList *lp = NULL;
+   lList *alp = NULL;
+   spooling_field *fields = NULL;
+   const char *file1 = "/var/tmp/PR_cl";
+   const char *file2 = NULL;
+   
+   prj = lCreateElem(PR_Type);
+   lSetString(prj, PR_name, "Test_Name");
+   lSetUlong(prj, PR_oticket, 100);
+   lSetUlong(prj, PR_fshare, 50);
+   lSetUlong(prj, PR_usage_time_stamp, 987654321);
+
+   lp = buildUsageList();
+   lSetList(prj, PR_usage, lp);
+   
+   lp = buildLTUsageList();
+   lSetList(prj, PR_long_term_usage, lp);
+   
+   lp = buildProjectList();
+   lSetList(prj, PR_project, lp);
+   
+   lp = buildACLList();
+   lSetList(prj, PR_acl, lp);
+   
+   lp = buildXACLList();
+   lSetList(prj, PR_xacl, lp);
+   
+   lp = buildDebitedUsageList();
+   lSetList(prj, PR_debited_job_usage, lp);
+
+   printf("PR: spool = 0, user = 0\n");
+   /* Write a PR file using classic spooling */
+   write_userprj(&alp, prj,(char *)file1, NULL, 0, 0);
+   
+   /* Read a PR file using flatfile spooling */
+   lFreeElem(&prj);
+   fields = sge_build_PR_field_list(false);
+   prj = spool_flatfile_read_object(&alp, PR_Type, NULL,
+                                   fields, NULL, true, &qconf_sfi,
+                                   SP_FORM_ASCII, NULL, file1);
+         
+   /* Write a PR file using flatfile spooling */
+   file2 = spool_flatfile_write_object(&alp, prj, false,
+                                     fields,
+                                     &qconf_sfi,
+                                     SP_DEST_TMP,
+                                     SP_FORM_ASCII, 
+                                     file2, false);
+
+   lFreeElem(&prj);
+   prj = cull_read_in_userprj(NULL, file2, 0, 0, NULL);
+   unlink(file2);
+   FREE(file2);
+
+   file2 = "/var/tmp/PR_ff";
+   write_userprj(&alp, prj, (char *)file2, NULL, 0, 0);
+   
+   ret = diff(file1, file2);
+   
+   unlink(file1);
+   unlink(file2);
+   FREE(fields);
+   
+   lFreeElem(&prj);
+
+   printf("PR: spool = 1, user = 0 -- INVALID\n");
    
    answer_list_output(&alp);   
    lFreeList(&alp);

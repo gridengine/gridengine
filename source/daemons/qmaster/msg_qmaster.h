@@ -156,10 +156,6 @@
 #define MSG_GDI_KEYSTR_PERCENT         _MESSAGE(33103, _("Percent"))
 #define MSG_GDI_KEYSTR_ASTERISK        _MESSAGE(33104, _("Asterisk"))
 
-#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33940, _("Questionmark"))
-#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33941, _("Comma"))
-#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33942, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
-
 
 /*
 ** ck_to_do_qmaster.c
@@ -786,4 +782,8 @@
 #define MSG_QUEUE_MODNOCMPLXDENYDUETOAR_SS          _MESSAGE(33944, _("denied: changing "SFQ" in "SFN" would break advance reservations"))
 #define MSG_JOB_ARNOLONGERAVAILABE_U                _MESSAGE(33945, _("the advance reservation "sge_U32CFormat" is no longer available"))
       
+#define MSG_GDI_KEYSTR_QUESTIONMARK    _MESSAGE(33946, _("Questionmark"))
+#define MSG_GDI_KEYSTR_COMMA           _MESSAGE(33947, _("Comma"))
+#define MSG_GDI_KEYSTR_LENGTH_U        _MESSAGE(33948, _("string is longer than "sge_U32CFormat", this is not allowed for objectnames") )
+
 #endif

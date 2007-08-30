@@ -120,7 +120,6 @@ decay_userprj_usage( lListElem *userprj,
    int obj_usage_time_stamp_POS = is_user ? UU_usage_time_stamp_POS : PR_usage_time_stamp_POS;
    int obj_usage_POS = is_user ? UU_usage_POS : PR_usage_POS;
    int obj_project_POS = is_user ? UU_project_POS : PR_project_POS;
-   
 
    if (userprj && seqno != lGetPosUlong(userprj, obj_usage_seqno_POS)) {
 
@@ -295,7 +294,6 @@ sge_calc_node_usage( lListElem *node,
    children = lGetPosList(node, STN_children_POS);
    if (!children) {
       
-      is_user = true;
 
       if (projname) {
 
@@ -303,16 +301,18 @@ sge_calc_node_usage( lListElem *node,
           * Get usage from project usage sub-list in user object
           *-------------------------------------------------------------*/
 
+
          if ((userprj = user_list_locate(user_list, 
                                       lGetPosString(node, STN_name_POS)))) {
-
             lList *projects = lGetList(userprj, UU_project);
             lListElem *upp;
 
-            if (projects)
-               if ((upp=lGetElemStr(projects, UPP_name, projname)))
+            is_user = true;
+            if (projects) {
+               if ((upp=lGetElemStr(projects, UPP_name, projname))) {
                   usage_list = lGetList(upp, UPP_usage);
-
+               }
+            }   
          }
 
       } else {
@@ -324,11 +324,13 @@ sge_calc_node_usage( lListElem *node,
          if ((userprj = user_list_locate(user_list, 
                                             lGetPosString(node, STN_name_POS)))) {
 
+            is_user = true;
             usage_list = lGetList(userprj, UU_usage);
 
          } else if ((userprj = prj_list_locate(project_list, 
                                                    lGetPosString(node, STN_name_POS)))) {
 
+            is_user = false;
             usage_list = lGetList(userprj, PR_usage);
 
          }
@@ -339,11 +341,11 @@ sge_calc_node_usage( lListElem *node,
        * If this is a project node, then return the project usage
        * rather than the children's usage
        *-------------------------------------------------------------*/
-
       if (!projname) {
          if ((userprj = prj_list_locate(project_list, 
                                             lGetPosString(node, STN_name_POS)))) {
             project_node = 1;
+            is_user = false;
             usage_list = lGetList(userprj, PR_usage);
             projname = lGetString(userprj, PR_name);
          }
@@ -358,7 +360,7 @@ sge_calc_node_usage( lListElem *node,
        * Decay usage
        *-------------------------------------------------------------*/
 
-      if (curr_time) {
+      if (curr_time && userprj) {
          decay_userprj_usage(userprj, is_user, decay_list, seqno, curr_time);
       }  
 

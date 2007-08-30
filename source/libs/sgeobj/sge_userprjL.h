@@ -78,7 +78,8 @@ enum {
    PR_acl_POS,
    PR_xacl_POS,
    PR_debited_job_usage_POS,
-   PR_version_POS
+   PR_version_POS,
+   PR_consider_with_categories_POS
 };
 
 LISTDEF(PR_Type)
@@ -189,7 +190,8 @@ enum {
    UU_project_POS,
    UU_debited_job_usage_POS,
    UU_default_project_POS,
-   UU_version_POS
+   UU_version_POS,
+   UU_consider_with_categories_POS
 };
 
 LISTDEF(UU_Type)

@@ -57,8 +57,8 @@ vdict_t GRM_GDI_VERSION_ARRAY[] =
 };
 
 #ifdef ADD_SUN_COPYRIGHT
-const char GE_LONGNAME[] = "N1 Grid Engine";
-const char GE_SHORTNAME[] = "N1GE";
+const char GE_LONGNAME[] = "Sun Grid Engine";
+const char GE_SHORTNAME[] = "SGE";
 #else
 const char GE_LONGNAME[] = "Grid Engine";
 const char GE_SHORTNAME[] = "GE";

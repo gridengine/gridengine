@@ -247,8 +247,8 @@ int userprj_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, 
    DENTER(TOP_LAYER, "userprj_success");
 
    for_each(rqs, *(object_type_get_master_list(SGE_TYPE_RQS))) {
-      if (scope_is_referenced_rqs(rqs, RQR_filter_projects, lGetString(ep, PR_name))) {
-         lSetBool(ep, PR_consider_with_categories, true);
+      if (scope_is_referenced_rqs(rqs, user_flag ? RQR_filter_users : RQR_filter_projects, lGetString(ep, user_flag ? UU_name : PR_name))) {
+         lSetBool(ep, user_flag ? UU_consider_with_categories : PR_consider_with_categories, true);
          break;
       }
    }

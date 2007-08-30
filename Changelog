@@ -1,3 +1,6 @@
+RD-2007-08-30-0: Docs:      added ARCo Space Requirements HowTo
+                 Review:    JO
+
 LP-2007-08-29-2: Enhancem.: JGDIShell uses single PrintWriter
                             All JGDIShell -help options use UsageResources file
                  Review:    PJ

@@ -1,5 +1,4 @@
 <HTML>
-<!--This file created 24.04.2005 22:32 Uhr by Claris Home Page version 3.0-->
 <HEAD>
 <TITLE>Grid Engine HOWTOs</TITLE>
    <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
@@ -9,22 +8,23 @@
 </HEAD>
 <BODY>
 <H1><FONT COLOR="#336699">Grid Engine HOWTOs</FONT></H1>
-
-<BLOCKQUOTE><A HREF="#General%20Grid%20Engine%20concepts">General
+<H2></A>Table Of Contents</H2>
+<BLOCKQUOTE>
+   <A HREF="#General%20Grid%20Engine%20concepts">General
    Grid Engine concepts</A><BR>
    <A HREF="#Resource%20management">Resource management</A><BR>
-   <B>&#91;NEW 6.1&#93;</B> <A HREF="http://wiki.gridengine.info/wiki/index.php/EvaluationExpressionSupport">Logical resource expressions</A><BR>
-   <B>&#91;NEW 6.1&#93;</B> <A HREF="http://gridengine.sunsource.net/nonav/source/browse/~checkout~/gridengine/doc/devel/rfe/ResourceQuotaSpecification.html">Resource quotas</A><BR>
    <A HREF="#Cluster%20management">Cluster management</A><BR>
    <A HREF="#Special%20Applications">Special Applications</A><BR>
    <A HREF="#Tight Integration of Parallel Libraries">Tight
    Integration of Parallel Libraries</A><BR>
+   <A HREF="#Accounting and Reporting Database">Accounting and Reporting Database (ARCo)</A><BR>
    <A HREF="#Installation,%20Upgrade,%20Patches">Installation,
-   Upgrade, Patches for SGE 5.3 and 6.0</A></BLOCKQUOTE>
+   Upgrade, Patches for SGE 5.3 and 6.0</A>
+</BLOCKQUOTE>
 
+<H2></A>Content</H2>
 <H4><A NAME="General Grid Engine concepts"></A>General Grid Engine
 concepts</H4>
-
 <BLOCKQUOTE>
    <b>[NEW]</b> <A HREF="http://youtube.com/watch?v=0JBsMitNnQ8">Introduction to Grid Engine video</A><BR>
    <A HREF="basic_usage.html">Basic Usage</A><BR>
@@ -34,11 +34,12 @@ concepts</H4>
    Machine</A><BR>
    <A HREF="shadow.html">Setting Up a Shadow Master</A><BR>
    <A HREF="commonproblems.html">Commonly Seen Problems</A><BR>
-   <A HREF="troubleshooting.html">Troubleshooting</A></BLOCKQUOTE>
+   <A HREF="troubleshooting.html">Troubleshooting</A>
+</BLOCKQUOTE>
 
 <H4><A NAME="Resource management"></A>Resource management</H4>
-
-<BLOCKQUOTE><A HREF="drmaa_java.html">DRMAA Java<SUP>TM</SUP>
+<BLOCKQUOTE>
+   <A HREF="drmaa_java.html">DRMAA Java<SUP>TM</SUP>
    Language Binding</A><BR>
    <A HREF="filestaging/filestaging6.html">File Staging in Grid
    Engine 6.0</A><BR>
@@ -59,11 +60,14 @@ concepts</H4>
    Guidelines</A><BR>
    <B>&#91;NEW&#93;</B> <A HREF="http://www.sun.com/blueprints/1005/819-4325.html">Scheduler 
    Policies for Job Prioritization in the N1 Grid Engine 6 System </A><BR>
-   <A HREF="filestaging">File Staging</A></BLOCKQUOTE>
+   <A HREF="filestaging">File Staging</A>
+   <B>&#91;NEW 6.1&#93;</B> <A HREF="http://wiki.gridengine.info/wiki/index.php/EvaluationExpressionSupport">Logical resource expressions</A><BR>
+   <B>&#91;NEW 6.1&#93;</B> <A HREF="http://gridengine.sunsource.net/nonav/source/browse/~checkout~/gridengine/doc/devel/rfe/ResourceQuotaSpecification.html">Resource quotas</A><BR>
+</BLOCKQUOTE>
 
 <H4><A NAME="Cluster management"></A>Cluster management</H4>
-
-<BLOCKQUOTE><A HREF="tuning.html">Tuning guide</A><BR>
+<BLOCKQUOTE>
+   <A HREF="tuning.html">Tuning guide</A><BR>
    <B>&#91;NEW 6.0+6.1&#93;</B> <A HREF="http://wiki.gridengine.info/wiki/index.php/Dtrace">Master monitoring and bottleneck analysis</A><BR>
    <A HREF="scripting.html">Command Line and Scripting of
    Administrative Tasks</A><BR>
@@ -83,10 +87,10 @@ concepts</H4>
    <A HREF="http://www.sun.com/blueprints/0805/819-3165.html">Using Host Groups 
    and Cluster Queues</A><BR>
    <B>&#91;NEW&#93;</B> <A HREF="http://wiki.c0t0d0s0.org/index.php/How_to_create_a_GridEngine_testbed">What Solaris 10 containers are good for? A hands-on sample.</A><BR>
-   <B>&#91;NEW 6.0+6.1&#93;</B> <A HREF="sshfs-integration.pdf">Running jobs on data kept (on a USB connected HD) in a separate network via sshfs</A></BLOCKQUOTE>
+   <B>&#91;NEW 6.0+6.1&#93;</B> <A HREF="sshfs-integration.pdf">Running jobs on data kept (on a USB connected HD) in a separate network via sshfs</A>
+</BLOCKQUOTE>
 
 <H4><A NAME="Special Applications"></A>Special Applications</H4>
-
 <BLOCKQUOTE>
    <b>[NEW]</b> <A HREF="http://www.grid4utility.org">SGE Transfer Queue to Globus and GridWay</A><BR>
    <A HREF="http://bioteam.net/dag/sge-flexlm-integration/">FlexLM
@@ -109,12 +113,13 @@ concepts</H4>
    <A HREF="http://www.sun.com/bigadmin/content/sunsolve/">Integration of Meiosys MetaCluster HPC with N1[TM] Grid Engine 6</A><BR>
    <A HREF="jam.html">JAM - Job &amp; Application Manager</A><BR>
    <A HREF="JGrid/jgrid.html">JGrid - an RMI-based Java interface for
-   Grid Engine</A></BLOCKQUOTE>
+   Grid Engine</A>
+</BLOCKQUOTE>
 
 <H4><A NAME="Tight Integration of Parallel Libraries"></A>Tight
 Integration of Parallel Libraries</H4>
-
-<BLOCKQUOTE><B>&#91;IN PREPARATION&#93;</B> Tight Integration of
+<BLOCKQUOTE>
+   <B>&#91;IN PREPARATION&#93;</B> Tight Integration of
    GlobalArrays (TCGMSG) and SGE<BR>
    <A HREF="lam-integration/lam-integration.html">Tight Integration
    of LAM/MPI and SGE</A><BR>
@@ -128,18 +133,23 @@ Integration of Parallel Libraries</H4>
    <A HREF="http://www.open-mpi.org/faq/?category=running#run-n1ge-or-sge">Tight integration of Open MPI with SGE</A>
 </BLOCKQUOTE>
 
+<H4> <A NAME="Accounting and Reporting Database"></A>Accounting and Reporting Database (ARCo)</H4>
+<BLOCKQUOTE>
+   <A HREF="arco/arco-oracle10g.html">ARCo and Oracle 10g Database</A><BR>
+   <A HREF="arco/arco_mysql.txt">ARCo on MySQL Database</A><BR>
+   <B>&#91;NEW&#93;</B> <A HREF="arco/arco-db_size.html">Space Requirements for the ARCo database</A><BR>
+</BLOCKQUOTE>
+
 <H4><A NAME="Installation, Upgrade, Patches"></A>Installation,
 Upgrade, Patches</H4>
-
-<BLOCKQUOTE><B>&#91;NEW&#93;</B> <A HREF="arco/arco-oracle10g.html">ARCo and Oracle 10g Database</A><BR>
-   <B>&#91;NEW&#93;</B> <A HREF="arco/arco_mysql.txt">ARCo on MySQL Database</A><BR>
+<BLOCKQUOTE>
    <B>&#91;NEW&#93;</B> <A HREF="../install61patch.txt">Install SGE 6.1 patches</A><BR>
    <B>&#91;NEW&#93;</B> <A HREF="/project/gridengine/61patches.txt">Bugfixes for SGE 6.1</A><BR>
    <A HREF="../install60patch.txt">Install SGE 6.0 patches</A><BR>
    <B>&#91;UPDATED&#93;</B> <A HREF="/project/gridengine/60patches.txt">Bugfixes for SGE 6.0</A><BR>
    <A HREF="/project/gridengine/install53patch.txt">Install SGE 5.3 patches</A><BR>
-   <A HREF="/project/gridengine/53patches.txt">Bugfixes for SGE 5.3<BR>
-   </A></BLOCKQUOTE>
+   <A HREF="/project/gridengine/53patches.txt">Bugfixes for SGE 5.3<BR></A>
+</BLOCKQUOTE>
 </BODY>
 </HTML>
 

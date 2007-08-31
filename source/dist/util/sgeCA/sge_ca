@@ -999,9 +999,7 @@ MakeCert()
 
    RANDFILE=$RSFILE; export RANDFILE
 
-   if [ $rootinstalls = true ]; then
-      umask 077
-   fi
+   umask 077
 
    # create a certificate request
    ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS

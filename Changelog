@@ -1,3 +1,7 @@
+MP-2007-08-31-0: Bugfix:    qstat -j output disagrees between xml and plain messages
+                 Bugster:   6440408
+                 Review:    JG
+
 AA-2007-08-30-0: Enhancem.: - bugfix for AA-2007-08-20-0
                             - N1GE->SGE
                             - test_ff_cl

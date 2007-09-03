@@ -1,7 +1,7 @@
 RD-2007-08-29-0: Enhancem:  Added compile support for SS12 on amd64
                  Review:    AH
 
-RN-2007-08-16-0: Bugfix :   qconf -(A,D,M,R)attr dumps core when the supplied file is empty
+RN-2007-08-16-0: Bugfix:    qconf -(A,D,M,R)attr dumps core when the supplied file is empty
                  Bugster:   6578213
                  Issue:     2327
                  Review:    JG
@@ -12,7 +12,7 @@ HP-2007-08-06-0: Bugfix:    - Overflow of group members in getgrgid_r() call on
                  Bugster:   6589600
                  Review:    JG
 
-RN-2007-07-10-0: Bugfix :   - Creating a userset with NONE as a type results in a core dump
+RN-2007-07-10-0: Bugfix:    - Creating a userset with NONE as a type results in a core dump
                             - Userset type should not accept empty string value
                  Bugster:   6576153, 6576197
                  Issue:     2323, 2324

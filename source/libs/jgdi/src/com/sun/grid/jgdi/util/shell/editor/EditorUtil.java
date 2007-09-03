@@ -33,7 +33,6 @@
 package com.sun.grid.jgdi.util.shell.editor;
 
 import com.sun.grid.jgdi.JGDI;
-//import com.sun.grid.jgdi.configuration.AbstractUser;
 import com.sun.grid.jgdi.configuration.ClusterQueue;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
@@ -49,12 +48,12 @@ import com.sun.grid.jgdi.configuration.reflect.DefaultMapListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.DefaultMapPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
-import java.lang.IllegalArgumentException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -87,11 +86,19 @@ public class EditorUtil {
    /* Used only for attribute mapping to the C and Java atrribute names that are not the same */
    private static final ResourceBundle resource = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.editor.EditorResources");
    /* Used only for attribute mapping to the C and Java atrribute names that are not the same */
-   static final Map<String, Map<String, String>> conv = new HashMap<String, Map<String, String>>();
+   static Map<String, Map<String, String>> conv = null;
    
    /** Convert JGDI name to equivalent in the clients */
    public static String unifyAttrWithClientNames(String objectName, String name) {
       String val=null;
+      if (conv == null) {
+         conv = new HashMap<String, Map<String, String>>();
+         Enumeration<String> t = resource.getKeys();
+         while (t.hasMoreElements()) {
+            String[] res = t.nextElement().split("[.]");
+            unifyAttrWithClientNames(res[0], res[1]);
+         } 
+      }
       Map<String, String> tr = conv.get(objectName);
       if (tr != null) {
          val = tr.get(name);
@@ -105,7 +112,7 @@ public class EditorUtil {
             }
             tr.put(name, val);
          } catch (MissingResourceException ex) {
-            return name;
+            return name;//java2cName(obj, name) name;
          }
       }    
       return val;
@@ -126,13 +133,21 @@ public class EditorUtil {
    
    /** Convert client name to equivalent name in JGDI */
    static String unifyClientNamesWithAttr(String objectName, String name) {
+      if (conv == null) {
+         conv = new HashMap<String, Map<String, String>>();
+         Enumeration<String> t = resource.getKeys();
+         while (t.hasMoreElements()) {
+            String[] res = t.nextElement().split("[.]");
+            unifyAttrWithClientNames(res[0], res[1]);
+         }
+      }
       Map<String, String> tr = conv.get(objectName);
       if (tr == null) {
           return name;
       }
       for (Map.Entry<String, String> e : tr.entrySet()) {
          if (e.getValue().equals(name)) {
-            return e.getKey(); 
+            return e.getKey();
          }
       }
       return name;
@@ -152,6 +167,11 @@ public class EditorUtil {
    }
    
    static String c2javaName(GEObject obj, String cName) {
+      //Unify with inconsistencies in clients 
+      String name = unifyClientNamesWithAttr(obj, cName);
+      if (!name.equals(cName)) {
+         return name; 
+      }
       StringBuffer sb = new StringBuffer();
       String[] parts = cName.toLowerCase().split("_");
       for (int i=0; i<parts.length; i++) {
@@ -161,12 +181,15 @@ public class EditorUtil {
       char c = Character.toLowerCase(sb.charAt(0));
       sb.deleteCharAt(0);
       sb.insert(0,c);
-      //unify with inconsistencies in clients
-      String name = unifyClientNamesWithAttr(obj, sb.toString());
-      return name;
+      return sb.toString();
    }
     
    static String java2cName(GEObject obj, String javaName) {
+      //Unify with inconsistencies in clients
+      String name = unifyAttrWithClientNames(obj, javaName);
+      if (!name.equals(javaName)) {
+         return name; 
+      }
       StringBuffer sb = new StringBuffer(javaName);
       char c;
       for (int i = 0; i<sb.length(); i++) {
@@ -177,9 +200,7 @@ public class EditorUtil {
             i++;
          }
       }
-      //unify with inconsistencies in clients
-      String name = unifyAttrWithClientNames(obj, sb.toString());
-      return name;
+      return sb.toString();
    }
    
    static boolean doNotDisplayAttr(GEObject obj, PropertyDescriptor pd, int propScope) {

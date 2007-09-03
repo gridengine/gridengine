@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 
 /**
@@ -124,8 +125,8 @@ public abstract class AnnotatedCommand extends AbstractCommand {
       for (String option : options) {
          pw.println(option);
       }
-      //to stop further processing
-      throw new IllegalArgumentException("");
+      // To avoid the continue of the command
+      throw new CancellationException();
    }   
    
    /**

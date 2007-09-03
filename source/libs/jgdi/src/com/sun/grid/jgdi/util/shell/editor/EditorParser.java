@@ -74,7 +74,7 @@ public class EditorParser {
          if (line.length() == 0) {  
             throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \""+attr+"\"");
          }
-         attr = EditorUtil.unifyClientNamesWithAttr(obj, attr);
+         attr = EditorUtil.c2javaName(obj, attr);
          
          //CONFIGURATION special case
          if (obj instanceof Configuration) {

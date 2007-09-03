@@ -35,9 +35,11 @@ import com.sun.grid.jgdi.configuration.AdvanceReservation;
 import com.sun.grid.jgdi.configuration.AdvanceReservationImpl;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+import static com.sun.grid.jgdi.util.shell.Util.*;
 
 @CommandAnnotation("qrstat")
 public class QrStatCommand extends AnnotatedCommand {
@@ -73,7 +75,11 @@ public class QrStatCommand extends AnnotatedCommand {
          for (AdvanceReservation ar : ars) {
             if (!arlist) {
                if (userList.isEmpty() || userList.contains(ar.getOwner())) {
-                  pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getDurationAsString(ar.getDuration()));
+                  if (xml) {
+                     XMLUtil.write(ar, pw); 
+                  } else {
+                     pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getTimeAsString(ar.getDuration()));
+                  }
                }
             } else {
                if (arList.remove((Object) ar.getId()) && (userList.isEmpty() || userList.contains(ar.getOwner()))) {
@@ -104,11 +110,11 @@ public class QrStatCommand extends AnnotatedCommand {
       }
    }   
    //[-help]                                  print this help
-   @OptionAnnotation("-help")
+   @OptionAnnotation(value="-help",min=0)
    public void printUsage(final OptionInfo oi) throws JGDIException {
       pw.println(getUsage());
       // To avoid the continue of the command
-      throw new IllegalArgumentException("");
+      throw new CancellationException();
    }   
    //[-u user_list]                           all advance reservations of users specified in list
    @OptionAnnotation(value="-u",extra=OptionAnnotation.MAX_ARG_VALUE)
@@ -126,21 +132,5 @@ public class QrStatCommand extends AnnotatedCommand {
    public void setExplain(final OptionInfo oi) throws JGDIException {
        explain=true;
       throw new UnsupportedOperationException("Option -explain is not implemented");
-   }   
-
-   
-   public static String getDateAndTimeAsString(int time) {
-       if (time == -1) {
-           return "N/A";
-       }
-       return String.format("%1$tm/%1$td/%1$tY %1$tT", new Date(time*1000L));
-   }
-   
-   public static String getDurationAsString(int duration) {
-      if (duration == -1) {
-         return "N/A";
-      }
-      Date d = new Date(duration * 1000L);
-      return String.format("%1$d:%2$tM:%2$tS", duration / 3600L, d);
    }
 }

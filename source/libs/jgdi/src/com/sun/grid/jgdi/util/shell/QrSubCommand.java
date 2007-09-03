@@ -47,8 +47,10 @@ import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+import static com.sun.grid.jgdi.util.shell.Util.*;
 
 /**
  *
@@ -62,7 +64,6 @@ public class QrSubCommand extends AnnotatedCommand {
           + getResourceString("usage.qrsub");
    }
   
-   @Override
    public void run(String[] args) throws Exception {
       if (args.length == 0) {
          throw new IllegalArgumentException("Invalid number of arguments");
@@ -81,7 +82,7 @@ public class QrSubCommand extends AnnotatedCommand {
    //[-a date_time]                           request a start time
    @OptionAnnotation("-a")
    public void setStartTime(final OptionInfo oi) throws JGDIException {
-      ar.setStartTime(0); // TODO PJ date_time to int
+      ar.setStartTime(getDateTimeAsInt(oi.getFirstArg()));
    }   
    
    //[-A account_string]                      account string in accounting record
@@ -98,24 +99,25 @@ public class QrSubCommand extends AnnotatedCommand {
    //[-d time]                                duration of time window
    @OptionAnnotation("-d")
    public void setDuration(final OptionInfo oi) throws JGDIException {
-     ar.setDuration(3600); // TODO PJ duration to int
+     ar.setDuration(getTimeAsInt(oi.getFirstArg()));
+     oi.optionDone();
    }  
    //[-e date_time]                           request an end time
    @OptionAnnotation("-e")
    public void setEndTime(final OptionInfo oi) throws JGDIException {
-      ar.setEndTime(0); // TODO PJ date_time to int
+      ar.setEndTime(getDateTimeAsInt(oi.getFirstArg()));
    }  
    //[-he  y[es]|n[o]]                        enable/disable hard error handling
    @OptionAnnotation("-he")
    public void setHardError(final OptionInfo oi) throws JGDIException {
-      ar.setErrorHandling(0); //TODO PJ yes|no to int
+      ar.setErrorHandling(getYesNoAsInt(oi.getFirstArg()));
    }  
    //[-help]                                  print this help
    @OptionAnnotation(value = "-help", min = 0)
    public void printUsage(final OptionInfo oi) throws JGDIException {
       pw.println(getUsage());
       // To avoid the continue of the command
-      throw new IllegalArgumentException("");
+      throw new CancellationException();
    }
    //[-l resource_list]                       request the given resources
    @OptionAnnotation(value="-l",extra=OptionAnnotation.MAX_ARG_VALUE)
@@ -133,7 +135,7 @@ public class QrSubCommand extends AnnotatedCommand {
    //[-m mail_options]                        define mail notification events
    @OptionAnnotation(value="-m",extra=OptionAnnotation.MAX_ARG_VALUE)
    public void setMailOption(final OptionInfo oi) throws JGDIException {
-      ar.setMailOptions(0); // TODO PJ mail to int
+      ar.setMailOptions(getMailOptionsAsInt(oi.getFirstArg()));
    }  
    //[-masterq wc_queue_list]                 bind master task to queue(s)
    @OptionAnnotation(value="-masterq",extra=OptionAnnotation.MAX_ARG_VALUE)
@@ -146,7 +148,7 @@ public class QrSubCommand extends AnnotatedCommand {
    //[-now y[es]|n[o]]                        start job immediately or not at all
    @OptionAnnotation("-now")
    public void setNow(final OptionInfo oi) throws JGDIException {
-      ar.setType(0); //TODO PJ now to type
+      ar.setType(getYesNoAsInt(oi.getFirstArg()));
    }  
    //[-M mail_list]                           notify these e-mail addresses
    @OptionAnnotation(value="-M",extra=OptionAnnotation.MAX_ARG_VALUE)

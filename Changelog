@@ -1,3 +1,7 @@
+LP-2007-09-03-0: Enhancem.: Added new Util class
+                 Bugfix:    Fixed several broken JGDIShell command options
+                 Review:    PJ
+
 PJ-2007-09-03-0: Enhancem.: Implemented qrstat, qrsub in JGDI
                  Cleanup:   Command refactoring
                  Review:    LP

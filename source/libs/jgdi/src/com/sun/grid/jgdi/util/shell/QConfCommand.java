@@ -399,32 +399,31 @@ public class QConfCommand extends QConfCommandGenerated {
    //-sep
    @OptionAnnotation(value = "-sep", min = 0)
    public void showProcessors(final OptionInfo oi) throws JGDIException {
-      List hosts;
-      hosts = jgdi.getExecHostList();
+      List<ExecHost> hosts;
+      hosts = (List<ExecHost>) jgdi.getExecHostList();
       String name;
       String arch;
       int cpu;
       int totalCpu = 0;
-      Set set;
       pw.println("HOST                      PROCESSOR        ARCH");
       pw.println("===============================================");
-      for (Iterator iter = hosts.iterator(); iter.hasNext();) {
-         ExecHost eh = (ExecHost) iter.next();
-         name = eh.getName();
+      //TODO LP: How about we sort the hosts by name first?
+      for (ExecHost host : hosts) {
+         name = host.getName();
          if (name.equals("global") || name.equals("template")) {
             continue;
          }
-         cpu = eh.getProcessors();
+         cpu = host.getProcessors();
          totalCpu += cpu;
-         if (eh.isSetLoad()) {
-            arch = " " + eh.getLoad("arch");
+         if (host.isSetLoad()) {
+            arch = host.getLoad("arch");
          } else {
             arch = "";
          }
-         pw.printf("%-26.26s %10.10d %12.12s",name ,cpu, arch);
+         pw.printf("%-25.25s %9d %11s%n",name ,cpu, arch);
       }
       pw.println("===============================================");
-      pw.printf("%-26.26s %10.10d", "SUM", totalCpu);
+      pw.printf("%-25.25s %9d%n", "SUM", totalCpu);
    }
 
    //-sss
@@ -737,7 +736,7 @@ public class QConfCommand extends QConfCommandGenerated {
          urgencyLen = Math.max(urgencyLen, complex.getUrgencyWeight().length());
       }
       //Now format the columns
-      String header0=String.format("%20.20s %11.11s %12.12s %6.6s %12.12s %11.11s %9.9s %9.9s","#name", "shortcut", "type", "relop", "requestable", "consumable", "default", "urgency");
+      String header0=String.format("%-19.19s %-10.10s %-11.11s %-5.5s %-11.11s %-10.10s %-8.8s %-8s","#name", "shortcut", "type", "relop", "requestable", "consumable", "default", "urgency");
       StringBuffer header1 = new StringBuffer("#");
       for (int j = 0; j < header0.length() - 1; j++) {
          header1.append("-");
@@ -748,7 +747,7 @@ public class QConfCommand extends QConfCommandGenerated {
       //And finally print the columns
       for (Iterator iter = complexList.iterator(); iter.hasNext();) {
          ComplexEntry complex = (ComplexEntry) iter.next();
-         val = String.format("%20.20s %11.11s %12.12s %6.6s %12.12s %11.11s %9.9s %9.9s", complex.getName(),
+         val = String.format("%-19.19s %-10.10s %-11.11s %-5.5s %-11.11s %-10.10s %-8.8s %-8s", complex.getName(),
                       complex.getShortcut(),ceDummy.typeToString(complex.getValtype()), 
                       ceDummy.opToString(complex.getRelop()), ceDummy.reqToString(complex.getRequestable()),
                       (complex.isConsumable()) ? "YES" : "NO", complex.getDefault(), complex.getUrgencyWeight());

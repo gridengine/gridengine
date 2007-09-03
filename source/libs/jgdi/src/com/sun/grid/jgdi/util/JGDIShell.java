@@ -76,6 +76,7 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
+import java.util.concurrent.CancellationException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -184,25 +185,8 @@ public class JGDIShell implements Runnable, Shell {
             if (line == null) {
                continue;
             }
-            line = line.trim();
-
-            if (line == null) {
-               break;
-            }
-            line.trim();
-            if (line.length() == 0) {
-               continue;
-            }
-
-            try {
-               runCommand(line);
-            } catch(Exception e) {
-               pw.println(e.getMessage());
-               logger.log(Level.INFO, "Command failed", e);
-            } finally {
-               pw.flush();
-            }
-         }
+            runCommand(line);
+         }  
       } catch(EOFException eofe) {
          // Ignore
       } catch(IOException ioe) {
@@ -212,50 +196,59 @@ public class JGDIShell implements Runnable, Shell {
       System.exit(0);
    }
    
-   private void runCommand(String line) throws Exception {
-      if (line.trim().length()==0) {
-          return;
-      }
-            
-      if (line.charAt(0) == '!') {
-         // get command from history
-         String name = line.substring(1);
-         try {
-            int id = Integer.parseInt(name);
-            line = null;
-            Iterator iter = historyList.iterator();
-            while (iter.hasNext()) {
-               HistoryElement elem = (HistoryElement)iter.next();
-               if (elem.getId() == id) {
-                  line = elem.getLine();
-                  break;
-               }
-            }
-            if (line == null) {
-               throw new IllegalArgumentException("command with id " + id + " not found in history");
-            }
-         } catch(NumberFormatException nfe) {
-            throw new IllegalArgumentException("Expected !<num>, but got: "+line);
-         }
-      }
-      ParsedLine parsedLine = new ParsedLine(line);
-      Command cmd = getCommand(parsedLine.cmd);
-      if (cmd == null) {
-         runShellCommand(line);
+   private void runCommand(String line) {
+      line = line.trim(); 
+      if (line.length() == 0) {
          return;
       }
-      
-      if (cmd instanceof HistoryCommand) {
-         if (historyList.size() > maxHistory) {
-            historyList.removeFirst();
+      try {
+         if (line.charAt(0) == '!') {
+            // get command from history
+            String name = line.substring(1);
+            try {
+               int id = Integer.parseInt(name);
+               line = null;
+               Iterator iter = historyList.iterator();
+               while (iter.hasNext()) {
+                  HistoryElement elem = (HistoryElement) iter.next();
+                  if (elem.getId() == id) {
+                     line = elem.getLine();
+                     break;
+                  }
+               }
+               if (line == null) {
+                  throw new IllegalArgumentException("command with id " + id + " not found in history");
+               }
+            } catch (NumberFormatException nfe) {
+               throw new IllegalArgumentException("Expected !<num>, but got: " + line);
+            }
          }
-         historyList.add(new HistoryElement(++historyIndex, line));
+         ParsedLine parsedLine = new ParsedLine(line);
+         Command cmd = getCommand(parsedLine.cmd);
+         if (cmd == null) {
+            runShellCommand(line);
+            return;
+         }
+
+         if (cmd instanceof HistoryCommand) {
+            if (historyList.size() > maxHistory) {
+               historyList.removeFirst();
+            }
+            historyList.add(new HistoryElement(++historyIndex, line));
+         }
+
+         cmd.init(this);
+         cmd.run(parsedLine.args);
+      } catch (CancellationException expected) {
+      } catch (Exception ex) {
+         pw.println(ex.getMessage());
+         logger.info("Command failed: " + ex.getMessage());
+      } finally {
+         pw.flush();
       }
-      cmd.init(this);
-      cmd.run(parsedLine.args);
    }
    
-      void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
+   void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
       pw.println("Executing /bin/sh -c " + line);
       pw.flush();
       String[] cmds = {"/bin/sh", "-c", line};
@@ -331,34 +324,17 @@ public class JGDIShell implements Runnable, Shell {
    
    private void exec(final String url) {
       if (url != null) {
-         try {
-            runCommand("connect " + url);
-         } catch(Exception ex) {
-            pw.println(ex.getMessage());
-            pw.flush(); 
-            logger.info(ex.getMessage());
-            System.exit(1); //newer flush
-         } finally {
-            pw.flush(); 
-         }
+         runCommand("connect " + url);
       }
       run(); //We didn't get any other params, so we actually run the JGDIShell
    }
    
    private void exec(final String url, final String cmdParams) {
       if (url != null) {
-         try {
-            runCommand("connect " + url);
-            //We just want to execute a single command passed as param and exit.
-            runCommand(cmdParams);
-         } catch(Exception ex) {
-            pw.println(ex.getMessage());
-            pw.flush();
-            logger.info(ex.getMessage());
-            System.exit(1); //newer flush
-         } finally {
-            pw.flush(); 
-         }
+         runCommand("connect " + url);
+         //We just want to execute a single command passed as param and exit.
+         runCommand(cmdParams);
+         System.exit(1);
       }
    }
    
@@ -454,7 +430,9 @@ public class JGDIShell implements Runnable, Shell {
             try {
                jgdi.close();
             } catch(JGDIException ex1) {
-               logger.warning("close failed: " + ex1.getMessage());
+               final String msg = "close failed: " + ex1.getMessage();
+               pw.println(msg);
+               logger.warning(msg);
             }
          }
          readlineHandler.cleanup();
@@ -514,7 +492,9 @@ public class JGDIShell implements Runnable, Shell {
             try {
                jgdi.close();
             } catch(JGDIException ex1) {
-               logger.warning("close failed: " + ex1.getMessage());
+               final String msg = "close failed: " + ex1.getMessage();
+               pw.println(msg);
+               logger.warning(msg);
             }
          }
          logger.info("connect to " + args[0]);
@@ -582,26 +562,10 @@ public class JGDIShell implements Runnable, Shell {
       }
       
       public void run(String[] args) throws Exception {
-         
-         Iterator iter = historyList.iterator();
-         int i = 0;
-         StringBuffer buf = new StringBuffer();
-         
+         Iterator iter = historyList.iterator();         
          while (iter.hasNext()) {
             HistoryElement elem = (HistoryElement)iter.next();
-            int id = elem.getId();
-            buf.setLength(0);
-            if (id<10) {
-               buf.append(' ');
-            }
-            if (id<100) {
-               buf.append(' ');
-            }
-            buf.append(id);
-            buf.append("   ");
-            buf.append(elem.getLine());
-            logger.info(buf.toString());
-            i++;
+            pw.printf("%5d %s%n", elem.getId(), elem.getLine());
          }
       }
 

@@ -33,20 +33,14 @@ package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDI;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
+@CommandAnnotation("qmod")
 public class QModCommand extends AbstractCommand {
    
-   
-   /** Creates a new instance of QModCommand */
-   public QModCommand(Shell shell, String name) {
-      super(shell, name);
-   }
-
    public String getUsage() {
       return getResourceString("sge.version.string")+"\n"+
              getResourceString("usage.qmod");
@@ -54,16 +48,9 @@ public class QModCommand extends AbstractCommand {
    
 
    public void run(String[] args) throws Exception {  
-      JGDI jgdi = getShell().getConnection();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
       if(args.length == 0) {
          throw new IllegalArgumentException("Invalid number of arguments");
       }
-      
-      PrintWriter pw = shell.getPrintWriter();
       
       boolean force = false;
       

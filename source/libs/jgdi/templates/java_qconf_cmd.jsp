@@ -42,7 +42,7 @@
    class MapInit {
       java.util.Map<String, String> nameToOpt = new java.util.HashMap<String, String>();
 
-      //TODO LP: Is already defined in OptionMethod, however annotation not seen in this context
+      //TODO LP: Is already defined in OptionAnnotation, however annotation not seen in this context
       static final int MAX_ARG_VALUE = Integer.MAX_VALUE / 8;
       
       public MapInit() {
@@ -80,13 +80,11 @@
       %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void add<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       String arg = oi.getFirstArg();
       if (arg == null) {
          arg = "template";
@@ -96,7 +94,7 @@
       String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
       GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
       jgdi.add<%=objectType%>WithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
       oi.optionDone();
    }   
    <%
@@ -106,13 +104,11 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void addFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String fileName = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       <%=objectType%> obj = new <%=objectType%>Impl(true);
@@ -129,7 +125,7 @@
       obj.setName(keyAttrValue);
       GEObjectEditor.updateObjectWithText(jgdi, obj, inputText);
       jgdi.add<%=objectType%>WithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
       oi.optionDone();
    }  
    <%
@@ -139,13 +135,11 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void modify<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String arg = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       <% if ( mandatory == 0 && optional == 0 ) { %>
@@ -156,7 +150,7 @@
       String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
       GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
       jgdi.update<%=objectType%>WithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
       oi.optionDone();
    }  
    <%
@@ -166,13 +160,11 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void modifyFromFile<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String fileName = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       String inputText = readFile(fileName);
@@ -188,7 +180,7 @@
       <%} %>
       GEObjectEditor.updateObjectWithText(jgdi, obj, inputText);
       jgdi.update<%=objectType%>WithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
       oi.optionDone();
    }  
    <%
@@ -198,13 +190,11 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void show<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String arg = oi.getFirstArg();
       <% if ( mandatory == 0 && optional == 0 ) { %>
       <%=objectType%> obj = jgdi.get<%=objectType%>();
@@ -221,13 +211,11 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void showList<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List< <%=objectType%> > list = (List< <%=objectType%> >)jgdi.get<%=objectType%>List();
       List<String> values = new ArrayList<String>();
       for (<%=objectType%> obj : list) {
@@ -255,17 +243,15 @@
        %>
    /**
     *   Implements qconf <%=optionString%> option
-    *   @param  OptionInfo oi - option enviroment object
+    *   @param  oi <b>OptionInfo</b> option enviroment object
     *   @throws JGDIException on any error on the GDI layer
     */
-   @OptionMethod(id = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
+   @OptionAnnotation(value = "<%=optionString%>", min = <%=mandatory%>, extra = <%=optional%>)
    public void delete<%=objectType%>(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String arg = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       jgdi.delete<%=objectType%>WithAnswer(arg, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    <%
        } //end genDeleteMethod  
@@ -283,7 +269,7 @@ package com.sun.grid.jgdi.util.shell;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.*;
-import com.sun.grid.jgdi.util.shell.AbstractCommand;
+import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
 import com.sun.grid.jgdi.util.shell.editor.EditorUtil;
 import com.sun.grid.jgdi.util.shell.editor.GEObjectEditor;
 import com.sun.grid.jgdi.util.shell.editor.TextEditor;
@@ -305,11 +291,8 @@ import java.util.List;
  * NOTE: QConfCommand should extend this class.
  * @see @link {QConfCommand}
  */
-public abstract class QConfCommandGenerated extends AbstractCommand {
+public abstract class QConfCommandGenerated extends AnnotatedCommand {
 
-   public QConfCommandGenerated(Shell shell, String name) {
-      super(shell, name);
-   }
    
 <% for (String objType : init.getMap().keySet()) {
      init.genDefaultMethodsForType(objType);

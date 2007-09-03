@@ -31,10 +31,9 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
+import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,18 +41,9 @@ import java.util.logging.Logger;
  *
  */
 public abstract class AbstractCommand implements HistoryCommand {
-   final Shell shell;
-   private String name;
-   
-   /** Creates a new instance of AbstractCommand */
-   protected AbstractCommand(Shell shell, String name) {
-      this.shell = shell;
-      this.name = name;
-   }
-   
-   public String getName() {
-      return name;
-   }
+   Shell shell=null;
+   JGDI jgdi = null;
+   PrintWriter pw=null;
    
    public Logger getLogger() {
       return shell.getLogger();
@@ -63,6 +53,12 @@ public abstract class AbstractCommand implements HistoryCommand {
       return shell;
    }
    
+   public void init(Shell shell) throws Exception {
+      this.shell=shell;  
+      this.jgdi = shell.getConnection();
+      this.pw = shell.getPrintWriter();
+   }
+
    public String[] parseWCQueueList(String arg) {
       String [] ret = arg.split(",");
       if(getLogger().isLoggable(Level.FINE)) {
@@ -113,81 +109,14 @@ public abstract class AbstractCommand implements HistoryCommand {
       }
       return ret;
    }
-   
 
-    /**
-    * Gets option info. Returns correct Option object and all its arguments
-    * Default behavior: 1) Read all mandatory args. Error if not complete
-    *                   2) Read max optional args until end or next option found
-    * Arguments have to be already expanded
-    * @param optMap {@link Map} holding all options for current command.
-    */
-   //TODO LP: Discuss this enhancement. We now accept "arg1,arg2 arg3,arg4" as 4 valid args
-   static OptionInfo getOptionInfo(final Map<String, OptionDescriptor> optMap, List<String> args) {
-      //Check we have a map set
-      if (optMap.isEmpty()) {
-         throw new UnsupportedOperationException("Cannot get OptionInfo from the abstract class CommandOption directly!");
-      }
-      String option = args.remove(0);
-      String msg;
-      if (!optMap.containsKey(option)) {
-         if (option.startsWith("-")) {
-            msg = "error: unknown option \""+option+"\"\nUsage: qconf -help";
-         } else {
-            msg = "error: invalid option argument \"" + option + "\"\nUsage: qconf -help";
-         }
-         throw new IllegalArgumentException(msg);
-      }
-      OptionDescriptor od = optMap.get(option);
-      List<String> argList = new ArrayList<String>();
-      String arg;
-      
-      if (!od.isWithoutArgs()) {
-         int i=0;
-         //Try to ge all mandatory args
-         while (i<od.getMandatoryArgCount() && args.size() > 0) {
-            arg = args.remove(0);
-            argList.add(arg);
-            i++;
-         }
-         //Check we have all mandatory args
-         if (i != od.getMandatoryArgCount()) {
-            throw new IllegalArgumentException("Expected "+od.getMandatoryArgCount()+
-                     " arguments for "+option+" option. Got only "+argList.size()+".");
-         }
-         //Try to get as many optional args as possible
-         i=0;
-         while (i<od.getOptionalArgCount() && args.size() > 0) {
-            arg = (String) args.remove(0);      
-            //Not enough args?
-            if (optMap.containsKey(arg)) {
-               args.add(0,arg);
-               break;
-            }
-            argList.add(arg);
-            i++;
-         }
-      }
-      
-      //Check if we have more args than expected
-      if (args.size() > od.getMaxArgCount()) {
-         msg = "Expected only "+od.getMaxArgCount()+" arguments for "+option+" option. Got "+argList.size()+".";
-         throw new IllegalArgumentException(msg);
-      }
-      
-      boolean hasNoArgs = (od.getMandatoryArgCount() == 0 && od.getOptionalArgCount() == 0);
-      if (hasNoArgs) {
-         return new OptionInfo(od, optMap);
-      }
-      //TODO: Check we have correct args
-      return new OptionInfo(od, argList, optMap);
-   }
-   
    /**
-     * <p>Prints the JGDI answer list to specified PrintWriter.</p>
-     * <p>Helper method for JGDI methods *withAnswer</p>
-     */
-    public int printAnswers(java.util.List<JGDIAnswer> answers, java.io.PrintWriter pw) {
+    * <p>Prints the JGDI answer list to specified PrintWriter.</p>
+    * <p>Helper method for JGDI methods *withAnswer</p>
+    * @param answers a JGDI answer list
+    * @return an int exit code
+    */
+    public int printAnswers(java.util.List<JGDIAnswer> answers) {
        int exitCode = 0;
        int status;
        for (JGDIAnswer answer : answers) {

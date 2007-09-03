@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
@@ -47,11 +46,9 @@ import com.sun.grid.jgdi.util.shell.editor.EditorParser;
 import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -61,95 +58,32 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
-import static com.sun.grid.jgdi.util.shell.OptionMethod.MAX_ARG_VALUE;
+import static com.sun.grid.jgdi.util.shell.OptionAnnotation.MAX_ARG_VALUE;
 /**
  *
  */
+@CommandAnnotation("qconf")
 public class QConfCommand extends QConfCommandGenerated {
-   
-    /* Map holding all qconf options and method that should be invoked for it */
-   private static Map<String, OptionDescriptor> optMap = null;
-   
-   /** Initialize the option map optMap if not yet created.
-    *  Map is created by scanning all OptionMethod annotated functions.
-    *  NOTE: Only options in the map will be recognized as implemented 
-    */
-   public Map<String, OptionDescriptor> getOptMap(){
-      if (optMap == null) {
-         optMap = new HashMap<String, OptionDescriptor>(140);
-         for (Method m : this.getClass().getMethods()) {
-            for (Annotation a : m.getDeclaredAnnotations()) {
-               if (a instanceof OptionMethod) {
-                  OptionMethod o = (OptionMethod)a;
-                  //Add method to the optMap
-                  MapInit.addSingleMethod(o.id(), o.min(), o.extra(), this, m);
-               }
-            }
-         }
-      }
-      return optMap;
-   }
-   
-   /** Creates a new instance of QConfCommand */
-   public QConfCommand(Shell shell, String name) {
-      super(shell, name);
-   }
-   
 
    public String getUsage() {
       return getResourceString("sge.version.string")+"\n"+
              getResourceString("usage.qconf");
    }
-   
+
    public void run(String[] args) throws Exception {
-      
-      JGDI jgdi = getShell().getConnection();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-      if(args.length == 0) {
+      if (args.length == 0) {
          throw new IllegalArgumentException("Invalid number of arguments");
       }
-      
-      PrintWriter pw = shell.getPrintWriter();
-      
-      boolean force = false;
-      
-      List<String> argList = new ArrayList<String>();
-      //Expand args to list of args, 'arg1,arg2 arg3' -> 3 args
-      for (String arg : args) {
-         String[] subElems = arg.split("[,]");
-         for (String subElem : subElems) {
-            subElem = subElem.trim();
-            if (subElem.length() > 0) {
-               argList.add(subElem);
-            }
-         }
-      }
-      
-      OptionInfo info;
-      while (!argList.isEmpty()) {
-         try {
-            //Get option info
-            info = getOptionInfo(getOptMap(), argList);
-            info.invokeOption(jgdi, pw);
-         } catch (java.lang.IllegalArgumentException ex) {
-             pw.println(ex.getMessage());
-         } catch (Exception ex) { 
-            ex.printStackTrace();
-         }
-      }  
+      parseArgsInvokeOptions(args);
    }
    
    //-help
-   @OptionMethod(id = "-help", min = 0)
+   @OptionAnnotation(value = "-help", min = 0)
    public void printUsage(final OptionInfo oi) throws JGDIException {
-      final PrintWriter pw = oi.getPw();
       pw.println(getUsage());
    }
 
-   String getTextFromFile(final List<String> args, final PrintWriter pw) {
+   String getTextFromFile(final List<String> args) {
       if (args.size() <= 0) {
          pw.println("no file argument given");
          return null;
@@ -170,6 +104,7 @@ public class QConfCommand extends QConfCommandGenerated {
       return inputText;
    }
 
+   @SuppressWarnings("unchecked")
    private List getNameList(final List objList) {
       List nameList = new ArrayList();
       Object obj;
@@ -197,6 +132,7 @@ public class QConfCommand extends QConfCommandGenerated {
       return nameList;
    }
 
+   @SuppressWarnings("unchecked")
    void printListSortedByName(List list, final List args, final PrintWriter pw) {
       list = getNameList(list);
       Collections.sort(list);
@@ -210,132 +146,110 @@ public class QConfCommand extends QConfCommandGenerated {
    }
    
    //SUBMITHOST
-   @OptionMethod(id = "-ss", min = 0)
+   @OptionAnnotation(value = "-ss", min = 0)
    public void showSubmitHostList(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       printListSortedByName(jgdi.getSubmitHostList(), oi.getArgs(), pw);
       oi.optionDone();
    }
 
-   @OptionMethod(id = "-as", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-as", extra = MAX_ARG_VALUE)
    public void addSubmitHost(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String hostName = oi.getFirstArg();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.addSubmitHostWithAnswer(hostName, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
-   @OptionMethod(id = "-ds", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-ds", extra = MAX_ARG_VALUE)
    public void deleteSubmitHost(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String hostName = oi.getFirstArg();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.deleteSubmitHostWithAnswer(hostName, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    //ADMINHOST
-   @OptionMethod(id = "-sh", min = 0)
+   @OptionAnnotation(value = "-sh", min = 0)
    public void showAdminHostList(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
       printListSortedByName(jgdi.getAdminHostList(), args, pw);
       oi.optionDone();
    }
 
-   @OptionMethod(id = "-ah", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-ah", extra = MAX_ARG_VALUE)
    public void addAdminHost(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       String hostName = oi.getFirstArg();
       jgdi.addAdminHostWithAnswer(hostName, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
-   @OptionMethod(id = "-dh", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-dh", extra = MAX_ARG_VALUE)
    public void deleteAdminHost(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String hostName = oi.getFirstArg();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.deleteAdminHostWithAnswer(hostName, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    //SHARETREE
-   @OptionMethod(id = "-astree", min = 0)
+   @OptionAnnotation(value = "-astree", min = 0)
    public void addShareTree(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      String text = runEditor(showShareTreeNode(jgdi, "Root", true));
+      String text = runEditor(showShareTreeNode("Root", true));
       pw.println("NOT IMPLEMENTED");
       oi.optionDone();
    }
 
-   @OptionMethod(id = "-Astree")
+   @OptionAnnotation("-Astree")
    public void addShareTreeFromFile(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      String inputText = getTextFromFile(oi.getArgs(), pw);
+      String inputText = getTextFromFile(oi.getArgs());
       if (inputText == null) {
          return;
       }
       pw.println("NOT IMPLEMENTED");
    }
 
-   @OptionMethod(id = "-mstree", min = 0)
+   @OptionAnnotation(value = "-mstree", min = 0)
    public void modifyShareTree(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      String text = runEditor(showShareTreeNode(jgdi, "Root", true));
+      String text = runEditor(showShareTreeNode("Root", true));
       pw.println("NOT IMPLEMENTED");
    }
 
-   @OptionMethod(id = "-Mstree")
+   @OptionAnnotation("-Mstree")
    public void modifyShareTreeFromFile(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      String inputText = getTextFromFile(oi.getArgs(), pw);
+      String inputText = getTextFromFile(oi.getArgs());
       pw.println("NOT IMPLEMENTED");
    }
 
-   @OptionMethod(id = "-sstree", min = 0)
+   @OptionAnnotation(value = "-sstree", min = 0)
    public void showShareTree(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      pw.println(showShareTreeNode(jgdi, "Root", true));
+      pw.println(showShareTreeNode("Root", true));
    }
 
-   @OptionMethod(id = "-dstree", min = 0)
+   @OptionAnnotation(value = "-dstree", min = 0)
    public void deleteShareTree(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       ShareTree empty = new ShareTreeImpl(true);
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.updateShareTreeWithAnswer(empty, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    /**
     * Show sharetree node
+    * @param oi 
+    * @return 
+    * @throws com.sun.grid.jgdi.JGDIException 
     */
    String showShareTreeNode(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String name = oi.getFirstArg();
-      return showShareTreeNode(jgdi, name, false);
+      return showShareTreeNode(name, false);
    }
 
    /*
     * Show sharetree node
     */
-   private String showShareTreeNode(final JGDI jgdi, final String name, final boolean showTree) throws JGDIException {
+   @SuppressWarnings("unchecked")
+   private String showShareTreeNode(final String name, final boolean showTree) throws JGDIException {
       StringBuffer sb = new StringBuffer();
       List queue = new ArrayList();
       List childList;
@@ -383,44 +297,36 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-tsm
-   @OptionMethod(id = "-tsm", min = 0)
+   @OptionAnnotation(value = "-tsm", min = 0)
    public void triggerSchedulerMonitoring(OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.triggerSchedulerMonitoringWithAnswer(answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    //-clearusage
-   @OptionMethod(id = "-clearusage", min = 0)
+   @OptionAnnotation(value = "-clearusage", min = 0)
    public void clearUsage(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.clearShareTreeUsageWithAnswer(answers);
       //TODO LP: Bug - got no answers
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    //-cq
-   @OptionMethod(id = "-cq", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-cq", extra = MAX_ARG_VALUE)
    public void cleanQueue(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
       final String[] queues = args.toArray(new String[oi.getArgs().size()]);
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.cleanQueuesWithAnswer(queues, answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
       oi.optionDone();
    }
 
    //-kec
-   @OptionMethod(id = "-kec", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-kec", extra = MAX_ARG_VALUE)
    public void killEventClient(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
       String arg;
       int[] ids = new int[args.size()];
@@ -442,28 +348,22 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-km
-   @OptionMethod(id = "-km", min = 0)
+   @OptionAnnotation(value = "-km", min = 0)
    public void killMaster(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       jgdi.killMaster();
    }
 
    //-ks
-   @OptionMethod(id = "-ks", min = 0)
+   @OptionAnnotation(value = "-ks", min = 0)
    public void killScheduler(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
       jgdi.killSchedulerWithAnswer(answers);
-      printAnswers(answers, pw);
+      printAnswers(answers);
    }
 
    //-sds
-   @OptionMethod(id = "-sds", min = 0)
+   @OptionAnnotation(value = "-sds", min = 0)
    public void showDetachedSettings(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       String sds;
       sds = jgdi.showDetachedSettingsAll();
       pw.println(sds);
@@ -471,10 +371,8 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-secl
-   @OptionMethod(id = "-secl", min = 0)
+   @OptionAnnotation(value = "-secl", min = 0)
    public void showEventClientList(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List evcl;
       evcl = jgdi.getEventClientList();
       if (evcl.size() > 0) {
@@ -499,10 +397,8 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-sep
-   @OptionMethod(id = "-sep", min = 0)
+   @OptionAnnotation(value = "-sep", min = 0)
    public void showProcessors(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List hosts;
       hosts = jgdi.getExecHostList();
       String name;
@@ -532,32 +428,26 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //-sss
-   @OptionMethod(id = "-sss", min = 0)
+   @OptionAnnotation(value = "-sss", min = 0)
    public void showSchedulerState(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       pw.println(jgdi.getSchedulerHost());
    }
 
    //-ke
-   @OptionMethod(id = "-ke", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-ke", extra = MAX_ARG_VALUE)
    public void killExecd(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
-      killExecd(jgdi, false, args, pw);
+      killExecd(false, args);
    }
 
    //-kej
-   @OptionMethod(id = "-kej", extra = MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-kej", extra = MAX_ARG_VALUE)
    public void killExecdWithJobs(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
-      killExecd(jgdi, true, args, pw);
+      killExecd(true, args);
    }
 
-   private void killExecd(final JGDI jgdi, final boolean terminateJobs, final List<String> args, final PrintWriter pw) {
+   private void killExecd(final boolean terminateJobs, final List<String> args) {
       String host;
       try {
          for (int i = 0; i < args.size(); i++) {
@@ -577,10 +467,8 @@ public class QConfCommand extends QConfCommandGenerated {
     * Special handling methods for Hostgroup
     */
    //-shgrp_tree
-   @OptionMethod(id = "-shgrp_tree")
+   @OptionAnnotation(value = "-shgrp_tree")
    public void showHostgroupTree(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
 
       int i = 0;
@@ -597,16 +485,15 @@ public class QConfCommand extends QConfCommandGenerated {
          }
          //Print the tree
          if (obj != null) {
-            showHostgroupTree(jgdi, obj, "", "   ", pw);
+            showHostgroupTree(obj, "", "   ");
          }
       }
    }
 
    //-shgrp_resolved
-   @OptionMethod(id = "-shgrp_resolved")
+   @OptionAnnotation(value = "-shgrp_resolved")
+   @SuppressWarnings("unchecked")
    public void showHostgroupResolved(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
       int i = 0;
       while (i < args.size()) {
@@ -622,7 +509,7 @@ public class QConfCommand extends QConfCommandGenerated {
          //Print the tree
          if (obj != null) {
             ArrayList hnames = new ArrayList();
-            printHostgroupResolved(hnames, jgdi, obj, pw);
+            printHostgroupResolved(hnames, obj);
             String out = "";
             for (Iterator iter = hnames.iterator(); iter.hasNext();) {
                out += (String) iter.next() + " ";
@@ -633,7 +520,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //TODO LP: Remove recursion in shgrp_tree
-   private void showHostgroupTree(final JGDI jgdi, Hostgroup obj, String prefix, final String tab, final PrintWriter pw) {
+   private void showHostgroupTree(Hostgroup obj, String prefix, final String tab) {
       pw.println(prefix + obj.getName());
       prefix += tab;
 
@@ -647,7 +534,7 @@ public class QConfCommand extends QConfCommandGenerated {
             } catch (JGDIException ex) {
                pw.println(ex.getMessage());
             }
-            showHostgroupTree(jgdi, obj, prefix, tab, pw);
+            showHostgroupTree(obj, prefix, tab);
          } else {
             pw.println(prefix + hgroup);
          }
@@ -655,7 +542,7 @@ public class QConfCommand extends QConfCommandGenerated {
    }
 
    //TODO: Clients use postorder, better to use sort?
-   private void printHostgroupResolved(List<String> result, final JGDI jgdi, Hostgroup obj, final PrintWriter pw) {
+   private void printHostgroupResolved(List<String> result, Hostgroup obj) {
       ArrayList<Hostgroup> queue = new ArrayList<Hostgroup>();
       queue.add(obj);
       String hgroup;
@@ -683,39 +570,35 @@ public class QConfCommand extends QConfCommandGenerated {
 
    //COMPLEXENTRY
    //-mc
-   @OptionMethod(id = "-mc", min = 0)
+   @OptionAnnotation(value = "-mc", min = 0)
    public void modifyComplexEntry(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      String text = runEditor(showComplexes(jgdi));
-      modifyComplexes(jgdi, text, pw);
+      String text = runEditor(showComplexes());
+      modifyComplexes(text);
    }
 
    //-Mc
-   @OptionMethod(id = "-Mc")
+   @OptionAnnotation(value = "-Mc")
    public void modifyComplexEntryFromFile(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final List<String> args = oi.getArgs();
-      String inputText = getTextFromFile(args, pw);
+      String inputText = getTextFromFile(args);
       if (inputText == null) {
          return;
       }
-      modifyComplexes(jgdi, inputText, pw);
+      modifyComplexes(inputText);
    }
 
    //-sc
-   @OptionMethod(id = "-sc", min = 0)
+   @OptionAnnotation(value = "-sc", min = 0)
    public void showComplexEntry(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      pw.print(showComplexes(jgdi));
+      pw.print(showComplexes());
    }
 
    /**
     * Updates the complex entry list based on the text
+    * @param text 
     */
-   private void modifyComplexes(final JGDI jgdi, final String text, final PrintWriter pw) {
+   @SuppressWarnings("unchecked")
+   private void modifyComplexes(final String text) {
       ComplexEntry ce;
       //Now parse lines and fields ignore whitespaces join lines on \
       List lineList = EditorParser.tokenizeToList(text);
@@ -822,7 +705,7 @@ public class QConfCommand extends QConfCommandGenerated {
       }
    }
 
-   private static String showComplexes(final JGDI jgdi) {
+   private String showComplexes() {
       StringBuffer sb = new StringBuffer();
       List cList = null;
       try {
@@ -875,6 +758,7 @@ public class QConfCommand extends QConfCommandGenerated {
       return sb.toString();
    }
 
+   @SuppressWarnings("unchecked")
    private static List sortListByName(final List list) {
       Collections.sort(list, new Comparator() {
 
@@ -895,121 +779,78 @@ public class QConfCommand extends QConfCommandGenerated {
    }
    
    //MANAGER
-   @OptionMethod(id = "-am", extra=MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-am", extra=MAX_ARG_VALUE)
    public void addManager(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String name = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       jgdi.addManagerWithAnswer(name, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
-   @OptionMethod(id = "-dm", extra=MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-dm", extra=MAX_ARG_VALUE)
    public void deleteManager(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String name = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       jgdi.deleteManagerWithAnswer(name, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
    //OPERATOR
-   @OptionMethod(id = "-ao", extra=MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-ao", extra=MAX_ARG_VALUE)
    public void addOperator(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String name = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       jgdi.addOperatorWithAnswer(name, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
-   @OptionMethod(id = "-do", extra=MAX_ARG_VALUE)
+   @OptionAnnotation(value = "-do", extra=MAX_ARG_VALUE)
    public void deleteOperator(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       final String name = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       jgdi.deleteOperatorWithAnswer(name, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
    //USERSET
    //-sul
-   @OptionMethod(id = "-sul", min=0)
+   @OptionAnnotation(value = "-sul", min=0)
    public void showUserSetList(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
-      final List<String> args = oi.getArgs();
-      printListSortedByName(jgdi.getUserSetList(), args, pw);
+      printListSortedByName(jgdi.getUserSetList(), null , pw);
    }
    
    //-au
-   @OptionMethod(id = "-au", min=2)
+   @OptionAnnotation(value = "-au", min=2)
    public void addUserSet(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       final String userName = oi.getFirstArg();
       String setName = oi.getFirstArg();
       UserSet obj = jgdi.getUserSet(setName);
       obj.addEntries(userName);
       jgdi.updateUserSetWithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
    //-du
-   @OptionMethod(id = "-du", min=2)
+   @OptionAnnotation(value = "-du", min=2)
    public void deleteUserSet(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       final String userName = oi.getFirstArg();
       String setName = oi.getFirstArg();
       UserSet obj = jgdi.getUserSet(setName);
       obj.removeEntries(userName);
       jgdi.updateUserSetWithAnswer(obj, answer);
-      printAnswers(answer, pw);
+      printAnswers(answer);
    }
    
    //-dul
-   @OptionMethod(id = "-dul", min=1)
+   @OptionAnnotation(value = "-dul", min=1)
    public void deleteUserSetList(final OptionInfo oi) throws JGDIException {
-      final JGDI jgdi = oi.getJgdi();
-      final PrintWriter pw = oi.getPw();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       final String setName = oi.getFirstArg();
       UserSet obj = jgdi.getUserSet(setName);
       obj.removeAllEntries();
       jgdi.updateUserSetWithAnswer(obj, answer);
-      printAnswers(answer, pw);
-   }
-   
-   @OptionMethod(id = "-list", min=0)
-   public void listOptions(final OptionInfo oi) throws JGDIException {
-      final PrintWriter pw = oi.getPw();
-      String str = new String();
-      Set<String> set = oi.getMap().keySet();
-      String[] options = oi.getMap().keySet().toArray(new String[set.size()]);
-      Arrays.sort(options);
-      for (String option : options) {
-         pw.println(option);
-      }
-   }
-   
-   /*
-    * Helper class to initialize optMap.
-    * optMap holds information what method should be called for a specific option string, among other things
-    */
-   static private class MapInit {      
-      static void addSingleMethod(String optionStr, int mandatory, int optional, AbstractCommand option, Method method) {
-         try {
-            optMap.put(optionStr, new OptionDescriptor(mandatory, optional, option, method));
-         } catch (Exception ex) {
-            throw new ExceptionInInitializerError(new Exception("<QConfCommand> failed: "+ex.getMessage()));
-         }
-      }
+      printAnswers(answer);
    }
 }

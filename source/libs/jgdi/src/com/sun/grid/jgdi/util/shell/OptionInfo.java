@@ -31,8 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
-import com.sun.grid.jgdi.JGDIException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -46,33 +44,25 @@ import java.util.Map;
 public class OptionInfo {
    private List<String> args=new ArrayList<String>();
    private OptionDescriptor od=null;
-   private JGDI jgdi=null;
-   private PrintWriter pw=null;
    private Map<String, OptionDescriptor> map=null;
+   private boolean optionDone=false;
   
    /**
     * Constructs OptionInfo class
-    * @param option Instance of {@link CommandOption} or its child
-    * @param type {@link String} name of the JGDI object that the option is bind to.
-    *             May not be neccessary to be set for option extending {@link CommandOption}
+    * @param od 
     * @param args {@link List} of arguments for the current option
-    * @param cls {@link Class} of the option object
-    * @param method {@link Method} of the {@link Class} cls to run
+    * @param map 
     */
    public OptionInfo(OptionDescriptor od, List<String> args, Map<String, OptionDescriptor> map) {
       this.od = od;
-      this.args = new ArrayList<String>(args);
+      this.args = new ArrayList<String>(args); // TODO consider not to copy all of this
       this.map = map;
    }
    
    /**
     * Constructs OptionInfo class
-    * @param option Instance of {@link CommandOption} or its child
-    * @param type {@link String} name of the JGDI object that the option is bind to.
-    *             May not be neccessary to be set for option extending {@link CommandOption}
-    * @param hasNoArgs True if option has no arguments
-    * @param cls {@link Class} of the option object
-    * @param method {@link Method} of the {@link Class} cls to run
+    * @param od tho option descriptor class
+    * @param map a map of
     */
    public OptionInfo(OptionDescriptor od, Map<String, OptionDescriptor> map) {
       this(od, new ArrayList<String>(), map);
@@ -83,30 +73,28 @@ public class OptionInfo {
     * are processed.
     *  NOTE: Use getFirstArg() and optionDone() to avoid infinite loop.
     * @see getFirstArg(), optionDone(), @link {OptionMethod}
-    * @param jgdi {@link JGDI} instance
-    * @param pw {@link PrintWriter} instance
+    * @throws java.lang.Exception 
     */
-   public void invokeOption(JGDI jgdi, PrintWriter pw) {
-      List<OptionInfo> objList = new ArrayList<OptionInfo>();
-      this.pw=pw;
-      this.jgdi=jgdi;
-      objList.add(this);
-
+   public void invokeOption() throws Exception {
       //Invoke it
-      do  {
+      do {
          try {
-            getMethod().invoke(getOd().getCommand(), objList.toArray());
+            final Method method = getMethod();
+            final AbstractCommand command = getOd().getCommand();
+            List<OptionInfo> objList = new ArrayList<OptionInfo>();
+            objList.add(this);
+            method.invoke(command, objList.toArray());
          } catch (Exception ex) {
+            optionDone();
             Throwable cause = ex.getCause();
-            if (cause != null && cause instanceof JGDIException) {
-               pw.print(cause.getMessage());
+            // Rethrow the generated Exception
+            if (cause != null && cause instanceof Exception) {
+               throw (Exception) cause;
             } else {
-               ex.printStackTrace();
+               throw ex;
             }
-         } finally {
-             pw.flush();
-         }
-      }  while(!getArgs().isEmpty() && getOd().isMultiple());      
+         } 
+      } while (!isOptionDone() && getOd().isMultiple());
    }
    
    /**
@@ -122,31 +110,31 @@ public class OptionInfo {
     * @return {@link List} of option arguments
     */
    public List<String> getArgs() {
-      return args;
+      List<String> ret = new ArrayList<String>(args);
+      optionDone();
+      return ret;
    }
-
+   
+   /**
+    * Gets the arguments
+    * @return {@link List} of option arguments
+    */
+   public String getArgsAsString() {
+      StringBuilder sb = new StringBuilder();
+      for(String arg: args){
+          sb.append(arg);
+          sb.append(",");
+      }
+      // Return string without the last comma
+      optionDone();
+      return sb.deleteCharAt(sb.length()-1).toString();
+   }
    /**
     * Getter method
     * @return value
     */
    public Method getMethod() {
       return getOd().getMethod();
-   }
-
-   /**
-    * Getter method
-    * @return value
-    */
-   public JGDI getJgdi() {
-      return jgdi;
-   }
-
-   /**
-    * 
-    * @return 
-    */
-   public PrintWriter getPw() {
-      return pw;
    }
 
    /**
@@ -163,7 +151,7 @@ public class OptionInfo {
     * @see getFirstArg()
     */
    public void optionDone(){
-       args.clear();
+       optionDone=true;
    }
 
    /**
@@ -173,10 +161,14 @@ public class OptionInfo {
     * @return String - first argument of the option or null if no arg
     */
    public String getFirstArg() {
-      if (args == null || args.size() == 0) {
+      if (args == null || args.size() == 0) { 
          return null;
       }
-      return getArgs().remove(0);
+      final String ret = args.remove(0);
+      if(args.isEmpty()) {
+          optionDone();
+      }
+      return ret;
    }
 
    /**
@@ -185,5 +177,9 @@ public class OptionInfo {
     */
    public Map<String, OptionDescriptor> getMap() {
       return map;
+   }
+
+   public boolean isOptionDone() {
+      return optionDone;
    }
 }

@@ -51,12 +51,8 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
+@CommandAnnotation("qquota")
 public class QQuotaCommand extends AbstractCommand {
-   
-   /** Creates a new instance of QModCommand */
-   public QQuotaCommand(Shell shell, String name) {
-      super(shell, name);
-   }
    
    public String getUsage() {
       return getResourceString("sge.version.string")+"\n"+
@@ -65,15 +61,9 @@ public class QQuotaCommand extends AbstractCommand {
    
    
    public void run(String[] args) throws Exception {
-      PrintWriter pw = shell.getPrintWriter();
-      QQuotaOptions options = parse(args, pw);
+      QQuotaOptions options = parse(args);
       if (options == null) {
          return; 
-      }
-      JGDI jgdi = getShell().getConnection();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
       }
       
       QQuotaResult res = jgdi.getQQuota(options);
@@ -112,7 +102,7 @@ public class QQuotaCommand extends AbstractCommand {
       
    }
    
-   private QQuotaOptions parse(String [] args, PrintWriter pw) throws Exception {
+   private QQuotaOptions parse(String [] args) throws Exception {
       ResourceAttributeFilter resourceAttributeFilter = null;
       ResourceFilter resourceFilter = null;
       UserFilter userFilter = null;

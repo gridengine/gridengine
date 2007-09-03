@@ -42,18 +42,22 @@ import java.util.StringTokenizer;
  *
  */
 public class ResourceAttributeFilter implements Serializable {
-    
-    private List valueNames = new ArrayList();
-    
-    
-    public static ResourceAttributeFilter parse(String str) {
-        ResourceAttributeFilter ret = new ResourceAttributeFilter();
-        StringTokenizer st = new StringTokenizer(str, ",");
-        while(st.hasMoreTokens()) {
-            ret.addValueName(st.nextToken().trim());
-        }
-        return ret;
-    }
+
+  
+   private List<String> valueNames = new ArrayList<String>();
+
+   public static ResourceAttributeFilter parse(String str) {
+      ResourceAttributeFilter ret = new ResourceAttributeFilter();
+      return ret.fill(str);
+   }
+
+   public ResourceAttributeFilter fill(String str) {
+      StringTokenizer st = new StringTokenizer(str, ",");
+      while (st.hasMoreTokens()) {
+         addValueName(st.nextToken().trim());
+      }
+      return this;
+   }
     
     public void addValueName(String valueName) {
         valueNames.add(valueName);
@@ -67,6 +71,7 @@ public class ResourceAttributeFilter implements Serializable {
         }
     }
     
+   @Override
     public String toString() {
         
         StringBuffer buf = new StringBuffer();

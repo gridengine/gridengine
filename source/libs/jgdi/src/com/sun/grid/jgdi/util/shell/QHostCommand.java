@@ -40,7 +40,6 @@ import com.sun.grid.jgdi.monitoring.filter.HostFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
-import com.sun.grid.jgdi.util.JGDIShell;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,14 +49,9 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
+@CommandAnnotation("qhost")
 public class QHostCommand extends AbstractCommand {
    
-   /**
-    * Creates a new instance of QHostCommand
-    */
-   public QHostCommand(Shell shell, String name) {
-      super(shell, name);
-   }
    
    public String getUsage() {
       return getResourceString("sge.version.string")+"\n"+
@@ -65,13 +59,6 @@ public class QHostCommand extends AbstractCommand {
    }
    
    public void run(String[] args) throws Exception {
-      JGDI jgdi = getShell().getConnection();
-      
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-      
-      PrintWriter pw = shell.getPrintWriter();
       
       List argList = new ArrayList();
       String arg;
@@ -87,7 +74,7 @@ public class QHostCommand extends AbstractCommand {
          }
       }
       try {
-         QHostOptions options = parse(argList, pw);
+         QHostOptions options = parse(argList);
          if (options != null) {
             QHostResult res = jgdi.execQHost(options);
             if (options.showAsXML()) {
@@ -103,7 +90,7 @@ public class QHostCommand extends AbstractCommand {
       }
    }
    
-   private QHostOptions parse(List argList, PrintWriter pw) throws Exception {
+   private QHostOptions parse(List argList) throws Exception {
       ResourceAttributeFilter resourceAttributeFilter = null;
       ResourceFilter resourceFilter = null;
       boolean showQueues = false;

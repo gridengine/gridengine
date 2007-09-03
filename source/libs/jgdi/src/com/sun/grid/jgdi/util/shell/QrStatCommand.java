@@ -30,129 +30,104 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.AdvanceReservation;
-import com.sun.grid.jgdi.configuration.JGDIAnswer;
-import java.io.PrintWriter;
+import com.sun.grid.jgdi.configuration.AdvanceReservationImpl;
+import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 
-public class QrStatCommand extends AbstractCommand {
+@CommandAnnotation("qrstat")
+public class QrStatCommand extends AnnotatedCommand {
+    List<String> userList = null;
+    List<Integer> arList = null;
 
-   /** Creates a new instance of QModCommand */
-   public QrStatCommand(Shell shell, String name) {
-      super(shell, name);
-   }
+    boolean xml=false;
+    boolean explain=false;
 
    public String getUsage() {
-      return getResourceString("sge.version.string") + "\n" + getResourceString("usage.qrstat");
+      return getResourceString("sge.version.string") + "\n"
+           + getResourceString("usage.qrstat");
    }
 
    public void run(String[] args) throws Exception {
+      userList = new ArrayList<String>();
+      arList = new ArrayList<Integer>();
+      boolean arlist=false;
 
-      JGDI jgdi = getShell().getConnection();
+      //parse the option
+      parseArgsInvokeOptions(args);
 
-      if (jgdi == null) {
-         throw new IllegalStateException("Not connected");
-      }
-
-      PrintWriter pw = shell.getPrintWriter();
-
-      List<String> userList = new ArrayList<String>();
-      List<String> arList = new ArrayList<String>();
-
-      for (int i = 0; i < args.length; i++) {
-         if (args[i].equals("-help")) {
-            pw.println(getUsage());
-            return;
-         } else if (args[i].equals("-ar")) {
-            i++;
-            arList = Arrays.asList(args[i].split(","));
-         } else if (args[i].equals("-u")) {
-            i++;
-            userList = Arrays.asList(args[i].split(",")); 
-         } else {
-            pw.println("error: ERROR! invalid option argument \"" + args[i] + "\"");
-            pw.println("Usage: qrdel -help");
-            return;
-         }
-      }
+      arlist = !arList.isEmpty();
       //Let's take ar_list and look for candidates to delete
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings(value = "unchecked")
       List<AdvanceReservation> ars = (List<AdvanceReservation>) jgdi.getAdvanceReservationList();
       //Filter out just the ars in the arList
-      if (arList.size() > 0) {
-        boolean found;
-        int arId;
-        for (AdvanceReservation ar : ars) {
-           found = false;
-           for (String arStr : arList) {
-              try {
-                 arId = Integer.parseInt(arStr);
-                 if (ar.getId() == arId) {
-                    arList.remove(arStr);
-                    found = true;
-                    break;
-                 }
-              } catch (NumberFormatException ex) {
-                 //Not an id, perhaps an AR name
-                 if (ar.getName().equals(arStr)) {
-                    arList.remove(arStr);
-                    found = true;
-                    break;
-                 }
-              }
-           }
-           //If not specified in the list we won't delete this ar later
-           if (!found) {
-              ars.remove(ar);
-           }
-        }
-      }
-      //Now we have a list of ARs to delete
-      //Let's filter out AR that belong to not specifed users
-      if (userList.size() > 0) {
-         boolean isValid = false;
+      if (ars.size() > 0) {
+         if (arList.isEmpty()) {
+            pw.println("ar-id   name       owner        state start at             end at               duration");
+            pw.println("----------------------------------------------------------------------------------------");
+         }
          for (AdvanceReservation ar : ars) {
-            isValid = false;
-            for (String user : userList) {
-               if (ar.getOwner().equals(user)) {
-                  isValid = true;
-                  break;
+            if (!arlist) {
+               if (userList.isEmpty() || userList.contains(ar.getOwner())) {
+                  pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n", ar.getId(), ar.getName() == null ? "" : ar.getName(), ar.getOwner(), ar.getStateAsString(), getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()), getDurationAsString(ar.getDuration()));
                }
-            }
-            //Exclude ARs for not specified users
-            if (!isValid) {
-               ars.remove(ar);
+            } else {
+               if (arList.remove((Object) ar.getId()) && (userList.isEmpty() || userList.contains(ar.getOwner()))) {
+                  AdvanceReservationImpl ari = (AdvanceReservationImpl) ar;
+                  if (xml) {
+                     XMLUtil.write(ari, pw);
+                  } else {
+                     pw.println(ari.dump());
+                  }
+               }
             }
          }
       }
-      //Exit if we have nothing to report
-      if (ars.size() == 0) {
-          return;
+
+      if (!arList.isEmpty()) {
+         pw.println("Following advance reservations do not exist:");
+         pw.println(arList);
       }
-      //Finally delete all matched ARs
-      if (arList.size() > 0) {
-          //TODO: finish
-          pw.println("NOT IMPLEMENTED");
-          return;
-      }
-      List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();
-      pw.println("ar-id   name       owner        state start at             end at               duration");
-      pw.println("----------------------------------------------------------------------------------------");
-      for (AdvanceReservation ar : ars) {
-         pw.printf("%1$7d %2$-10.10s %3$-12.12s %4$-5.5s %5$-20.20s %6$-20.20s %7$s\n",
-               ar.getId(), ar.getName()==null ? "" : ar.getName() , ar.getOwner(), ar.getStateAsString(), 
-               getDateAndTimeAsString(ar.getStartTime()), getDateAndTimeAsString(ar.getEndTime()) , getDurationAsString(ar.getDuration()));
-      }
-      //TimeZone.setDefault(currentTz);
-      pw.println("_exit_code="+printAnswers(answers, pw)+"_");
    }
+   
+   //[-ar ar_id_list]                         show advance reservation information
+   @OptionAnnotation(value="-ar",extra=OptionAnnotation.MAX_ARG_VALUE)
+   public void setAdvanceReservationList(final OptionInfo oi) throws JGDIException {
+      try { 
+        arList.add(Integer.parseInt(oi.getFirstArg()));
+      } catch (NumberFormatException ex) {
+          throw new IllegalArgumentException("error: ERROR! invalid id, must be an unsigned integer");
+      }
+   }   
+   //[-help]                                  print this help
+   @OptionAnnotation("-help")
+   public void printUsage(final OptionInfo oi) throws JGDIException {
+      pw.println(getUsage());
+      // To avoid the continue of the command
+      throw new IllegalArgumentException("");
+   }   
+   //[-u user_list]                           all advance reservations of users specified in list
+   @OptionAnnotation(value="-u",extra=OptionAnnotation.MAX_ARG_VALUE)
+   public void setUserList(final OptionInfo oi) throws JGDIException {
+      userList.add(oi.getFirstArg());
+   }   
+   
+   //[-xml]                                   display the information in XML-Format
+   @OptionAnnotation(value="-xml",min=0)
+   public void setXml(final OptionInfo oi) throws JGDIException {
+      xml=true;
+   }   
+   //[-explain]                               show reason for error state
+   @OptionAnnotation(value="-explain",min=0)
+   public void setExplain(final OptionInfo oi) throws JGDIException {
+       explain=true;
+      throw new UnsupportedOperationException("Option -explain is not implemented");
+   }   
+
    
    public static String getDateAndTimeAsString(int time) {
        if (time == -1) {

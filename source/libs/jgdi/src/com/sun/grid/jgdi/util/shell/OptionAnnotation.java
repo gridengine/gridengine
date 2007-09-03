@@ -43,12 +43,18 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface OptionMethod {
+public @interface OptionAnnotation {
     public static final int MAX_ARG_VALUE = Integer.MAX_VALUE / 8;
-   /** option string */
-    String id();
-   /** number of required args */
+   /** option string 
+    * @return 
+    */
+    String value();
+   /** number of required args 
+    * @return 
+    */
     int min()      default 1; 
-   /** number of optional args */
+   /** number of optional args 
+    * @return 
+    */
     int extra()    default 0;
 }

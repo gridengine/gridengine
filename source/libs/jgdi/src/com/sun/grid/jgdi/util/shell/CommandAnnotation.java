@@ -29,50 +29,23 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
-import java.io.PrintWriter;
-
-import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * Option Function Annotation
+ * Is intended to be used for automatic option info discovery
  */
-@CommandAnnotation("qdel")
-public class QDelCommand extends AbstractCommand {
-    
-    
-   public String getUsage() {
-      return getResourceString("sge.version.string") + "\n" + 
-             getResourceString("usage.qdel");
-   }
-    
-    
-    public void run(String[] args) throws Exception {      
-        if (args.length == 0) {
-            throw new IllegalArgumentException("Invalid number of arguments");
-        }
-        
-        boolean force = false;
-        
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-help")) {
-                pw.println(getUsage());
-                break;
-            } else if (args[i].equals("-f")) {
-                pw.println("-f option parsed");
-                break;
-            } else {
-                throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
-            }
-        }
-    }
-    
-    
-    private String [] parseDestinIdList(String arg) {
-        String [] ret = arg.split(" ");
-        return ret;
-    }
-
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface CommandAnnotation {
+   /** command string 
+    * @return a command value 
+    */
+    String value();
 }

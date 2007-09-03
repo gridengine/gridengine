@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.monitoring.BasicQueueOptions;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
@@ -44,8 +43,6 @@ import com.sun.grid.jgdi.monitoring.filter.QueueStateFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,14 +50,8 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
+@CommandAnnotation("qstat")
 public class QStatCommand extends AbstractCommand {
-    
-    /**
-     * Creates a new instance of QStatCommand
-     */
-    public QStatCommand(Shell shell, String name) {
-        super(shell, name);
-    }
     
     public String getUsage() {
         return getResourceString("sge.version.string")+"\n"+
@@ -68,16 +59,9 @@ public class QStatCommand extends AbstractCommand {
     }
     
     public void run(String[] args) throws Exception {
-        PrintWriter pw = shell.getPrintWriter();
-        BasicQueueOptions options = parse(args, pw);
+        BasicQueueOptions options = parse(args);
         if (options == null) {
            return; 
-        }
-        
-        JGDI jgdi = getShell().getConnection();
-        
-        if (jgdi == null) {
-            throw new IllegalStateException("Not connected");
         }
         
         if (options instanceof QueueInstanceSummaryOptions) {
@@ -89,7 +73,7 @@ public class QStatCommand extends AbstractCommand {
         }
     }
     
-    private BasicQueueOptions parse(String [] args, PrintWriter pw) throws Exception {
+    private BasicQueueOptions parse(String [] args) throws Exception {
         boolean ext = false;
         Character explain = null;
         boolean fullOutput = false;

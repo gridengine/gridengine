@@ -37,15 +37,8 @@ import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.util.shell.Command;
+import com.sun.grid.jgdi.util.shell.CommandAnnotation;
 import com.sun.grid.jgdi.util.shell.HistoryCommand;
-import com.sun.grid.jgdi.util.shell.QConfCommand;
-import com.sun.grid.jgdi.util.shell.QModCommand;
-import com.sun.grid.jgdi.util.shell.QStatCommand;
-import com.sun.grid.jgdi.util.shell.QHostCommand;
-import com.sun.grid.jgdi.util.shell.QDelCommand;
-import com.sun.grid.jgdi.util.shell.QQuotaCommand;
-import com.sun.grid.jgdi.util.shell.QrDelCommand;
-import com.sun.grid.jgdi.util.shell.QrStatCommand;
 import com.sun.grid.jgdi.util.shell.Shell;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -80,6 +73,11 @@ import javax.security.auth.callback.TextOutputCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import java.io.File;
+import java.net.URI;
+import java.net.URL;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  *
@@ -89,73 +87,97 @@ public class JGDIShell implements Runnable, Shell {
    private static Logger logger = Logger.getLogger(JGDIShell.class.getName());
    private static String PROMPT = "jgdi> ";
    
-   private LinkedList historyList = new LinkedList();
+   private LinkedList<HistoryElement> historyList = new LinkedList<HistoryElement>();
    private int historyIndex = 0;
    private int maxHistory = 30;
    
    private JGDI jgdi;
-   
-   private Map cmdMap = new HashMap();
-   private TreeSet cmdSet = null;
+  
+   private Map<String, Command> cmdMap = new HashMap<String, Command>();
+   private TreeSet<String> cmdSet = null;
    private ReadlineHandler readlineHandler;
    private static final ResourceBundle usageResources = ResourceBundle.getBundle("com.sun.grid.jgdi.util.shell.UsageResources");
    private final PrintWriter pw;
    
    //TODO LP: We should consider having single PrintWriter for all commands
    public JGDIShell() {
-      pw = new PrintWriter(System.out) ;
+      pw = new PrintWriter(System.out);
       cmdMap.put("connect", new ConnectCommand());
       cmdMap.put("exit", new ExitCommand());
       cmdMap.put("help", new HelpCommand());
       cmdMap.put("debug", new DebugCommand());
       cmdMap.put("history", new PrintHistoryCommand());
       cmdMap.put("xmldump", new XMLDumpCommand());
-      cmdMap.put("qmod", new QModCommand(this, "qmod"));
-      cmdMap.put("qconf", new QConfCommand(this, "qconf"));
-      cmdMap.put("qstat", new QStatCommand(this, "qstat"));
-      cmdMap.put("qhost", new QHostCommand(this, "qhost"));
-      cmdMap.put("qdel", new QDelCommand(this, "qdel"));
-      cmdMap.put("qquota", new QQuotaCommand(this, "qquota"));
-      cmdMap.put("qrstat", new QrStatCommand(this, "qrstat"));
-      cmdMap.put("qrdel", new QrDelCommand(this, "qrdel"));
-      
-      cmdSet = new TreeSet(cmdMap.keySet());
-      
+
+      // Register all command classes
+      try {
+         List<Class> classes = getAllAnnotatedClasses(this.getClass().getPackage(), CommandAnnotation.class);
+         for (Class cls : classes) {
+            addAnnotatedCommand( cls);
+         }
+      } catch (Exception ex) {
+         pw.println(ex.getMessage());
+      }
+
+      cmdSet = new TreeSet<String>(cmdMap.keySet());
       readlineHandler = createReadlineHandler();
-      
-      //Read resource bundles      
+
+      //Read resource bundles
    }
-   
-   private Command getCommand(String name) {
-      return (Command)cmdMap.get(name);
+
+   /**
+    * Registe the annotated  class
+    * @param cls Annotated class child of AbstractCommand 
+    * @throws java.lang.Exception 
+    */
+   private void addAnnotatedCommand(Class cls) throws Exception {
+      @SuppressWarnings("unchecked")
+      CommandAnnotation ca = (CommandAnnotation) cls.getAnnotation(CommandAnnotation.class);
+      final Object newInstance = cls.newInstance();
+      if( newInstance instanceof Command) {
+        cmdMap.put(ca.value(), (Command) newInstance);
+      } else {
+          throw new IllegalStateException("Can not cast "+newInstance.getClass().getName()+" to Command");
+      }
    }
-   
+
+   private Command getCommand(String name) throws Exception {
+      return cmdMap.get(name);
+   }
+
    /**
     * Getter method
+    * @return a <b>JGDI</b> object
     */
    public JGDI getConnection() {
+      if (jgdi == null) {
+         throw new IllegalStateException("Not connected");
+      }
       return jgdi;
    }
-   
+
    /**
     * Getter method
+    * @return a logger
     */
    public Logger getLogger() {
       return logger;
    }
-   
+
    /**
     * Getter method
+    * @return a writer
     */
    public PrintWriter getPrintWriter() {
-      return pw; 
+      if (pw == null) {
+         throw new IllegalStateException("pw is not initialized");
+      } 
+      return pw;
    }
-   
+
    public void run() {
-      
+
       try {
-         BufferedReader rd = new BufferedReader(new InputStreamReader(System.in));
-         
          while (true) {
             String line = readlineHandler.readline(PROMPT);
             //Print empty line
@@ -163,7 +185,7 @@ public class JGDIShell implements Runnable, Shell {
                continue;
             }
             line = line.trim();
-            
+
             if (line == null) {
                break;
             }
@@ -171,16 +193,16 @@ public class JGDIShell implements Runnable, Shell {
             if (line.length() == 0) {
                continue;
             }
-            
+
             try {
                runCommand(line);
             } catch(Exception e) {
-               System.err.println(e.getLocalizedMessage());
-               logger.log(Level.SEVERE, "Command failed", e);
+               pw.println(e.getMessage());
+               logger.log(Level.INFO, "Command failed", e);
             } finally {
-               pw.flush(); 
+               pw.flush();
             }
-         }        
+         }
       } catch(EOFException eofe) {
          // Ignore
       } catch(IOException ioe) {
@@ -191,7 +213,9 @@ public class JGDIShell implements Runnable, Shell {
    }
    
    private void runCommand(String line) throws Exception {
-      if (line.trim().length()==0) return;
+      if (line.trim().length()==0) {
+          return;
+      }
             
       if (line.charAt(0) == '!') {
          // get command from history
@@ -217,18 +241,7 @@ public class JGDIShell implements Runnable, Shell {
       ParsedLine parsedLine = new ParsedLine(line);
       Command cmd = getCommand(parsedLine.cmd);
       if (cmd == null) {
-         System.out.println("Executing /bin/sh -c "+line);
-         String [] cmds = {
-            "/bin/sh", "-c", line
-         };
-         Process p = Runtime.getRuntime().exec(cmds);
-         GetResponse to = new GetResponse(p.getInputStream());
-         GetResponse te = new GetResponse(p.getErrorStream());
-         to.start();
-         te.start();
-         p.waitFor();
-         to.join();
-         te.join();
+         runShellCommand(line);
          return;
       }
       
@@ -238,9 +251,25 @@ public class JGDIShell implements Runnable, Shell {
          }
          historyList.add(new HistoryElement(++historyIndex, line));
       }
+      cmd.init(this);
       cmd.run(parsedLine.args);
    }
    
+      void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
+      pw.println("Executing /bin/sh -c " + line);
+      pw.flush();
+      String[] cmds = {"/bin/sh", "-c", line};
+      Process p = Runtime.getRuntime().exec(cmds);
+      GetResponse to = new GetResponse(p.getInputStream());
+      GetResponse te = new GetResponse(p.getErrorStream());
+      to.start();
+      te.start();
+      p.waitFor();
+      to.join();
+      te.join();
+   }
+   
+   @SuppressWarnings("unchecked")
    public static void main(String[] args) {
       String url = null;
       boolean useCsp = false;
@@ -305,9 +334,10 @@ public class JGDIShell implements Runnable, Shell {
          try {
             runCommand("connect " + url);
          } catch(Exception ex) {
-            System.err.println(ex.getMessage());
-            logger.severe(ex.getMessage());
-            System.exit(1);
+            pw.println(ex.getMessage());
+            pw.flush(); 
+            logger.info(ex.getMessage());
+            System.exit(1); //newer flush
          } finally {
             pw.flush(); 
          }
@@ -322,9 +352,10 @@ public class JGDIShell implements Runnable, Shell {
             //We just want to execute a single command passed as param and exit.
             runCommand(cmdParams);
          } catch(Exception ex) {
-            System.err.println(ex.getMessage());
-            logger.severe(ex.getMessage());
-            System.exit(1);
+            pw.println(ex.getMessage());
+            pw.flush();
+            logger.info(ex.getMessage());
+            System.exit(1); //newer flush
          } finally {
             pw.flush(); 
          }
@@ -362,7 +393,7 @@ public class JGDIShell implements Runnable, Shell {
             return;
          }
          
-         ArrayList argList = new ArrayList();
+         ArrayList<String> argList = new ArrayList<String>();
          
          while (i<line.length()) {
             
@@ -430,6 +461,8 @@ public class JGDIShell implements Runnable, Shell {
          System.exit(0);
       }
 
+      public void init(Shell shell) throws Exception {
+      }
    }
    
    class HelpCommand implements Command {
@@ -460,7 +493,9 @@ public class JGDIShell implements Runnable, Shell {
             throw new IllegalArgumentException("Invalid number of arguments");
          }
       }
-      
+
+      public void init(Shell shell) throws Exception {
+      }
    }
    
    class ConnectCommand implements HistoryCommand {
@@ -485,7 +520,9 @@ public class JGDIShell implements Runnable, Shell {
          logger.info("connect to " + args[0]);
          jgdi = JGDIFactory.newInstance(args[0]);
       }
-      
+
+      public void init(Shell shell) throws Exception {
+      }
    }
    
    class DebugCommand implements HistoryCommand {
@@ -493,6 +530,8 @@ public class JGDIShell implements Runnable, Shell {
          return "debug [-l <logger>] [<level>]";
       }
       
+      // TODO Logger.global is deprecated, clean up this
+      @SuppressWarnings("deprecation")
       public void run(String[] args) throws Exception {
          
          String loggerName = logger.getName();
@@ -531,7 +570,9 @@ public class JGDIShell implements Runnable, Shell {
             }
          }
       }
-      
+
+      public void init(Shell shell) throws Exception {
+      }
    }
    
    class PrintHistoryCommand implements Command {
@@ -563,8 +604,10 @@ public class JGDIShell implements Runnable, Shell {
             i++;
          }
       }
+
+      public void init(Shell shell) throws Exception {
+      }
    }
-   
    
    class XMLDumpCommand implements HistoryCommand {
       
@@ -600,6 +643,9 @@ public class JGDIShell implements Runnable, Shell {
             System.out.flush();
          }
       }
+
+      public void init(Shell shell) throws Exception {
+      }
    }
    
    static class HistoryElement {
@@ -626,7 +672,9 @@ public class JGDIShell implements Runnable, Shell {
          Class readlineClass = Class.forName("org.gnu.readline.Readline");
          Class readlineLibClass = Class.forName("org.gnu.readline.ReadlineLibrary");
          
+         @SuppressWarnings("unchecked")
          Method byNameMethod = readlineLibClass.getMethod("byName", new Class[] { String.class });
+         @SuppressWarnings("unchecked")
          Method loadMethod = readlineClass.getMethod("load", new Class[] { readlineLibClass });
          
          String [] libs = { "GnuReadline", "Editline", "Getline", "PureJava" };
@@ -642,6 +690,7 @@ public class JGDIShell implements Runnable, Shell {
                
                loadMethod.invoke(readlineClass, new Object[] { readlineLib });
                
+               @SuppressWarnings("unchecked")
                Method initReadlineMethod = readlineClass.getMethod("initReadline", new Class [] { String.class });
                initReadlineMethod.invoke(readlineClass, new Object [] { "JGDIShell" });
 
@@ -660,6 +709,57 @@ public class JGDIShell implements Runnable, Shell {
       return new DefaultReadlineHandler();
    }
    
+   /**
+    * Attempts to list annotated classes in the given package and its ancestors
+    * as determined by the context class loader
+    *
+    * @param pkg a <b>Package</b> as a starting point
+    * @param annotated <b>Class</b> the annotation class to search
+    * @return a list of all annotated classes that exist within that package
+    * @throws ClassNotFoundException if something went wrong
+    */
+   @SuppressWarnings("unchecked")
+   public static List<Class> getAllAnnotatedClasses(Package pkg, Class annotated) throws ClassNotFoundException {
+      ArrayList<Class> classes = new ArrayList<Class>();
+       try {
+         ClassLoader cld = Thread.currentThread().getContextClassLoader();
+         if (cld == null) {
+            throw new ClassNotFoundException("Can't get class loader.");
+         }
+         String path = pkg.getName().replace('.', '/')+"/";
+        // This will hold a list of directories matching the pckgname. 
+        //There may be more than one if a package is split over multiple jars/paths
+        Enumeration<URL> resources = cld.getResources(path);
+         while (resources.hasMoreElements()) {
+            final URL nextElement = resources.nextElement();
+            // Slipt out just the jar file name
+            final JarFile jarFile = new JarFile(new File(new URI(nextElement.getPath().split("!")[0])));
+            // Go throught all elements in jar and ask for annotation for those in pkg
+            for (Enumeration e = jarFile.entries(); e.hasMoreElements();) {
+               JarEntry current = (JarEntry) e.nextElement();
+               final String name = current.getName();
+               // Is at least from the same package as pkg and it is a class
+               if (name.length() > path.length() && name.substring(0, path.length()).equals(path) && name.endsWith(".class")) {
+                  try {
+                     final Class forName = Class.forName(current.getName().replaceAll("/", ".").replace(".class", ""));
+                     if (forName.isAnnotationPresent(annotated)) {
+                        classes.add(forName);
+                     }
+                  } catch (NoClassDefFoundError expected) {
+                  }
+               }
+            }
+         }
+      } catch (Exception ex) {
+         throw new ClassNotFoundException(ex.getMessage());
+      }
+
+      return classes;
+   }
+ 
+  
+
+
    interface ReadlineHandler {
       
       public String readline(String prompt) throws IOException;
@@ -673,6 +773,7 @@ public class JGDIShell implements Runnable, Shell {
       private Method readlineMethod;
       private Method cleanupMethod;
       
+      @SuppressWarnings("unchecked")
       public NativeReadlineHandler(Class readlineClass) throws Exception {
          
          this.readlineClass = readlineClass;
@@ -800,6 +901,9 @@ public class JGDIShell implements Runnable, Shell {
       }
    }
    
+   /**
+    * Helper for handlinng shell streams in runShellCommand 
+    */
    class GetResponse extends Thread {
       private InputStream stream;
       
@@ -807,6 +911,7 @@ public class JGDIShell implements Runnable, Shell {
          stream = is;
       }
       
+      @Override
       public void run() {
          while (true) {
             try {
@@ -814,7 +919,7 @@ public class JGDIShell implements Runnable, Shell {
                if (c == -1) {
                   break;
                }
-               System.out.print((char)c);
+               pw.print((char)c);
             } catch (IOException ex) {
                ex.printStackTrace();
             }

@@ -4,6 +4,7 @@ CR-2007-08-31-0: Cleanup:   sge_ca script now does umask 077 also for no
 
 MP-2007-08-31-0: Bugfix:    qstat -j output disagrees between xml and plain messages
                  Bugster:   6440408
+                 Issue:     2076
                  Review:    JG
 
 AH-2007-08-29-0: Bugfix:    qsub -t 1-N:N creates a normal job with one task

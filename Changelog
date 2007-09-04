@@ -1,3 +1,8 @@
+RN-2007-09-04-0: Bugfix:    qconf -(A,D,M,R)attr dumps core when the supplied file is empty
+                 Bugster:   6578213
+                 Issue:     2327
+                 Review:    JG
+
 LP-2007-09-03-0: Enhancem.: Added new Util class
                  Bugfix:    Fixed several broken JGDIShell command options
                  Review:    PJ

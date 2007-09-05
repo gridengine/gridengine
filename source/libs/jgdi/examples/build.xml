@@ -80,6 +80,12 @@
       <run classname="com.sun.grid.jgdi.examples.EventExample"/>
    </target>
    
+   <target name="run.EventMonitor" depends="run.init"
+           description="Runs the event monitor example">
+      <run classname="com.sun.grid.jgdi.examples.jmxeventmonitor.Main"/>
+   </target>
+   
+   
    <target name="clean">
       <delete dir="classes"/>
    </target>

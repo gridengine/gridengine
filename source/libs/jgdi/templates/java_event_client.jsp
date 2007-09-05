@@ -66,8 +66,8 @@ import com.sun.grid.jgdi.event.EventListener;
  *  evc.addEventListener(new MyEventListener());
  *
  *  evc.subscribeAll();
- *  evc.subscribeAddCalendar(true);
- *  evc.subscribeModCalendar(true);
+ *  evc.subscribeCalendarAdd(true);
+ *  evc.subscribeCalendarMod(true);
  *  evc.commit();
  *
  *  evc.start();
@@ -117,7 +117,7 @@ public interface EventClient extends EventClientBase {
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeAdd<%=name%>(boolean subscribe) throws JGDIException;
+     public void subscribe<%=name%>Add(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the add <%=name%> event.
@@ -126,14 +126,14 @@ public interface EventClient extends EventClientBase {
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setAdd<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     public void set<%=name%>AddFlush(boolean flush, int interval) throws JGDIException;
 
      /**
       * Get the flush time of the add <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int getAdd<%=name%>Flush() throws JGDIException;
+     public int get<%=name%>AddFlush() throws JGDIException;
      
 <%
       }
@@ -146,7 +146,7 @@ public interface EventClient extends EventClientBase {
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeDel<%=name%>(boolean subscribe) throws JGDIException;
+     public void subscribe<%=name%>Del(boolean subscribe) throws JGDIException;
 
      /**
       *  Set the flush time for the del <%=name%> event.
@@ -155,14 +155,14 @@ public interface EventClient extends EventClientBase {
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setDel<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     public void set<%=name%>DelFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the del <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int  getDel<%=name%>Flush() throws JGDIException;
+     public int  get<%=name%>DelFlush() throws JGDIException;
      
 <%     
       }
@@ -174,7 +174,7 @@ public interface EventClient extends EventClientBase {
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeList<%=name%>(boolean subscribe) throws JGDIException;
+     public void subscribe<%=name%>List(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the list <%=name%> event.
@@ -183,14 +183,14 @@ public interface EventClient extends EventClientBase {
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setList<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     public void set<%=name%>ListFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the list <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int getList<%=name%>Flush() throws JGDIException;
+     public int get<%=name%>ListFlush() throws JGDIException;
      
 <%         
       } // end if hasGetListOperation
@@ -202,7 +202,7 @@ public interface EventClient extends EventClientBase {
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeMod<%=name%>(boolean subscribe) throws JGDIException;
+     public void subscribe<%=name%>Mod(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the del <%=name%> event.
@@ -211,14 +211,14 @@ public interface EventClient extends EventClientBase {
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setMod<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     public void set<%=name%>ModFlush(boolean flush, int interval) throws JGDIException;
 
      /**
       * Get the flush time of the mod <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int  getMod<%=name%>Flush() throws JGDIException;
+     public int  get<%=name%>ModFlush() throws JGDIException;
      
 <% 
       } // end of hasModifyOperation

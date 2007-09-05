@@ -1,3 +1,6 @@
+RH-2007-09-05-0: Enhancem.: jgdi event support for jmx interface added
+                 Review:    AA
+
 RN-2007-09-04-0: Bugfix:    qconf -(A,D,M,R)attr dumps core when the supplied file is empty
                  Bugster:   6578213
                  Issue:     2327

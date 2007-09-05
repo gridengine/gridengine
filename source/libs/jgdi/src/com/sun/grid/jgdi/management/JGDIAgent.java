@@ -32,16 +32,20 @@
 
 package com.sun.grid.jgdi.management;
 
+import java.util.logging.Level;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
 
 import com.sun.grid.jgdi.management.mbeans.JGDIJMX;
+import java.util.logging.Logger;
 
 /**
  * JGDI JMX agent class.
  */
 public class JGDIAgent {
+    
+   private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
    private JGDIJMX mbean;
 //   private CalendarBean cal;
    
@@ -56,12 +60,16 @@ public class JGDIAgent {
       
       //TODO Add your MBean registration code here
       
-      System.out.println("----------------- JGDIAgent init ---------------");
+      log.log(Level.INFO,"init: " + url + "-----------------------");
+      
       // Instantiate JGDIJMX MBean
       mbean = new JGDIJMX(url);
       ObjectName mbeanName = new ObjectName("gridengine:type=JGDI");
       //Register the JGDI MBean
       getMBeanServer().registerMBean(mbean, mbeanName);
+      
+      log.log(Level.INFO,"mbean " + mbeanName + " registered");
+      
       
 //      cal = new CalendarBean();
 //      mbeanName = new ObjectName("jgdi.grid.sun.com:type=configuration.CalendarBean");

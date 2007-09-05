@@ -807,6 +807,7 @@ if [ $instcommon = true ]; then
       Execute cp libs/jgdi/util/jmxremote.password.template $DEST_SGE_ROOT/util/jmxremote.password
       Execute cp libs/jgdi/util/management.properties $DEST_SGE_ROOT/util
       Execute cp libs/jgdi/util/jaas.config $DEST_SGE_ROOT/util
+      Execute cp libs/jgdi/util/logging.properties $DEST_SGE_ROOT/util
       if [ $enforce_shlibpath = true ]; then
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/create_settings.sh > $DEST_SGE_ROOT/util/create_settings.sh
          Execute grep -v "#ENFORCE_SHLIBPATH#" dist/util/rctemplates/sgemaster_template > $DEST_SGE_ROOT/util/rctemplates/sgemaster_template

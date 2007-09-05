@@ -33,6 +33,7 @@
 package com.sun.grid.jgdi.management.mbeans;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.event.EventTypeEnum;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
@@ -42,21 +43,44 @@ import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Interface JGDIJMXBaseMBean
+ *
+ *
  */
 public interface JGDIJMXBaseMBean {
 
    public String getCurrentJGDIVersion() throws JGDIException;
-
-   // Event Client -> Notification
-   public void startEventClient() throws JGDIException;
-   public void stopEventClient() throws JGDIException;
-   public void subscribeAll() throws JGDIException;
-   public void unsubscribeAll() throws JGDIException;
-   public void subscribeAddJob() throws JGDIException;
-   public void unsubscribeAddJob() throws JGDIException;
+   
+   /**
+    *   Subscribe a set of event types if they are not already subscribed.
+    *
+    *   @param set of event types
+    */
+   public void subscribe(Set<EventTypeEnum> subscription) throws JGDIException;
+   
+   /**
+    *   Unsubcribe a set of event types if the are not already unsubscribed.
+    *
+    *   @param set of event type which should be unsubcribed
+    */
+   public void unsubscribe(Set<EventTypeEnum> subscription) throws JGDIException;
+   
+   /**
+    *  Get the current event subscription.
+    *
+    *  @return set of event type which a currently subscribed
+    */
+   public Set<EventTypeEnum> getSubscription();
+   
+   /**
+    *   Set the current event subscription.
+    *
+    *   @param subscription  the set of subscribed event types
+    */
+   public void setSubscription(Set<EventTypeEnum> subscription);
 
    // ========= JGDIBase methods ================================
    public String getAdminUser() throws JGDIException;

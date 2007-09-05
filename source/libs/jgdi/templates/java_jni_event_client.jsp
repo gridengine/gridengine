@@ -89,13 +89,13 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeAdd<%=name%>(boolean subscribe) throws JGDIException {
+     public void subscribe<%=name%>Add(boolean subscribe) throws JGDIException {
         synchronized(syncObject) {
-           nativeSubscribeAdd<%=name%>(subscribe);
+           nativeSubscribe<%=name%>Add(subscribe);
         }
      }
      
-     private native void nativeSubscribeAdd<%=name%>(boolean subscribe) throws JGDIException;
+     private native void nativeSubscribe<%=name%>Add(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the add <%=name%> event.
@@ -104,26 +104,26 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setAdd<%=name%>Flush(boolean flush, int interval) throws JGDIException {
+     public void set<%=name%>AddFlush(boolean flush, int interval) throws JGDIException {
         synchronized(syncObject) {
-           nativeSetAdd<%=name%>Flush(flush, interval);
+           nativeSet<%=name%>AddFlush(flush, interval);
         }
      }
 
-     private native void nativeSetAdd<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     private native void nativeSet<%=name%>AddFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the add <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int getAdd<%=name%>Flush() throws JGDIException {
+     public int get<%=name%>AddFlush() throws JGDIException {
         synchronized(syncObject) {
-           return nativeGetAdd<%=name%>Flush();
+           return nativeGet<%=name%>AddFlush();
         }
      }
      
-     private native int nativeGetAdd<%=name%>Flush() throws JGDIException;
+     private native int nativeGet<%=name%>AddFlush() throws JGDIException;
 <%
       }
       
@@ -135,13 +135,13 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeDel<%=name%>(boolean subscribe) throws JGDIException {
+     public void subscribe<%=name%>Del(boolean subscribe) throws JGDIException {
         synchronized(syncObject) {
-           nativeSubscribeDel<%=name%>(subscribe);
+           nativeSubscribe<%=name%>Del(subscribe);
         }
      }
 
-     private native void nativeSubscribeDel<%=name%>(boolean subscribe) throws JGDIException;
+     private native void nativeSubscribe<%=name%>Del(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the del <%=name%> event.
@@ -150,26 +150,26 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setDel<%=name%>Flush(boolean flush, int interval) throws JGDIException {
+     public void set<%=name%>DelFlush(boolean flush, int interval) throws JGDIException {
         synchronized(syncObject) {
-           nativeSetDel<%=name%>Flush(flush, interval);
+           nativeSet<%=name%>DelFlush(flush, interval);
         }
      }
      
-     private native void nativeSetDel<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     private native void nativeSet<%=name%>DelFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the del <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int  getDel<%=name%>Flush() throws JGDIException {
+     public int  get<%=name%>DelFlush() throws JGDIException {
         synchronized(syncObject) {
-           return nativeGetDel<%=name%>Flush();
+           return nativeGet<%=name%>DelFlush();
         }
      }
      
-     private native int nativeGetDel<%=name%>Flush() throws JGDIException;
+     private native int nativeGet<%=name%>DelFlush() throws JGDIException;
      
 <%     
       }
@@ -181,13 +181,13 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeList<%=name%>(boolean subscribe) throws JGDIException {
+     public void subscribe<%=name%>List(boolean subscribe) throws JGDIException {
         synchronized(syncObject) {
-           nativeSubscribeList<%=name%>(subscribe);
+           nativeSubscribe<%=name%>List(subscribe);
         }
      }
      
-     private native void nativeSubscribeList<%=name%>(boolean subscribe) throws JGDIException;
+     private native void nativeSubscribe<%=name%>List(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the list <%=name%> event.
@@ -196,26 +196,26 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setList<%=name%>Flush(boolean flush, int interval) throws JGDIException {
+     public void set<%=name%>ListFlush(boolean flush, int interval) throws JGDIException {
         synchronized(syncObject) {
-           nativeSetList<%=name%>Flush(flush, interval);
+           nativeSet<%=name%>ListFlush(flush, interval);
         }
      }
      
-     private native void nativeSetList<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     private native void nativeSet<%=name%>ListFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the list <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int getList<%=name%>Flush() throws JGDIException {
+     public int get<%=name%>ListFlush() throws JGDIException {
         synchronized(syncObject) {
-           return nativeGetList<%=name%>Flush();
+           return nativeGet<%=name%>ListFlush();
         }
      }
      
-     private native int nativeGetList<%=name%>Flush() throws JGDIException;
+     private native int nativeGet<%=name%>ListFlush() throws JGDIException;
      
 <%         
       } // end if hasGetListOperation
@@ -227,13 +227,13 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param subscribe Subscribe/Unsubscribe flag
       *  @throws JGDIException if the subcribtion is failed
       */
-     public void subscribeMod<%=name%>(boolean subscribe) throws JGDIException {
+     public void subscribe<%=name%>Mod(boolean subscribe) throws JGDIException {
         synchronized(syncObject) {
-           nativeSubscribeMod<%=name%>(subscribe);
+           nativeSubscribe<%=name%>Mod(subscribe);
         }
      }
      
-     private native void nativeSubscribeMod<%=name%>(boolean subscribe) throws JGDIException;
+     private native void nativeSubscribe<%=name%>Mod(boolean subscribe) throws JGDIException;
      
      /**
       *  Set the flush time for the del <%=name%> event.
@@ -242,26 +242,26 @@ public class EventClientImpl extends AbstractEventClient implements com.sun.grid
       *  @param  interval  flush interval in seconds
       *  @throws JGDIException on any error
       */
-     public void setMod<%=name%>Flush(boolean flush, int interval) throws JGDIException {
+     public void set<%=name%>ModFlush(boolean flush, int interval) throws JGDIException {
         synchronized(syncObject) {
-           nativeSetMod<%=name%>Flush(flush, interval);
+           nativeSet<%=name%>ModFlush(flush, interval);
         }
      }
 
-     private native void nativeSetMod<%=name%>Flush(boolean flush, int interval) throws JGDIException;
+     private native void nativeSet<%=name%>ModFlush(boolean flush, int interval) throws JGDIException;
      
      /**
       * Get the flush time of the mod <%=name%> event
       *
       * @return the flush time of the add <%=name%> event in seconds
       */
-     public int  getMod<%=name%>Flush() throws JGDIException {
+     public int  get<%=name%>ModFlush() throws JGDIException {
         synchronized(syncObject) {
-           return nativeGetMod<%=name%>Flush();  
+           return nativeGet<%=name%>ModFlush();  
         }
      }
      
-     private native int  nativeGetMod<%=name%>Flush() throws JGDIException;
+     private native int  nativeGet<%=name%>ModFlush() throws JGDIException;
      
 <% 
       } // end of hasModifyOperation

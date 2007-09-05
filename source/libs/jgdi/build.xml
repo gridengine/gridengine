@@ -608,6 +608,18 @@
          </templateconv>
          
          <templateconv scope="definition"
+                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/management/NotificationBridgeFactory.java"
+                       templateFile="templates/java_jmx_notification_bridge_factory.jsp">
+            <pattern objectFilter="event"/>
+         </templateconv>
+         
+         <templateconv scope="definition"
+                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/event/EventTypeEnum.java"
+                       templateFile="templates/java_event_type_enum.jsp">
+            <pattern objectFilter="event"/>
+         </templateconv>
+         
+         <templateconv scope="definition"
                        outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/EventClientImpl.java"
                        templateFile="templates/java_jni_event_client.jsp">
             <pattern objectFilter="event"/>
@@ -1067,7 +1079,7 @@
          </classpath>
       </java>
    </target>
-
+   
    <target name="test.login" depends="init, jni.init, compile">
 
       <java fork="true" classname="com.sun.grid.jgdi.login.JGDILoginTest">

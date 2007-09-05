@@ -82,16 +82,16 @@
 
          evc.addEventListener(waitThread);
 
-         evc.subscribeAdd<%=name%>(true);
-         evc.setAdd<%=name%>Flush(true, flushInterval);
+         evc.subscribe<%=name%>Add(true);
+         evc.set<%=name%>AddFlush(true, flushInterval);
          
-         evc.subscribeDel<%=name%>(true);
-         evc.setDel<%=name%>Flush(true, flushInterval);
+         evc.subscribe<%=name%>Del(true);
+         evc.set<%=name%>DelFlush(true, flushInterval);
 <% 
    if (cullObj.hasModifyOperation()) {
 %>         
-         evc.subscribeMod<%=name%>(true);            
-         evc.setMod<%=name%>Flush(true, flushInterval);
+         evc.subscribe<%=name%>Mod(true);            
+         evc.set<%=name%>ModFlush(true, flushInterval);
 <%
    }
 %>         
@@ -141,11 +141,11 @@
 
       } finally {
          waitThread.interrupt();
-         evc.subscribeAdd<%=name%>(false);
-         evc.subscribeDel<%=name%>(false);
+         evc.subscribe<%=name%>Add(false);
+         evc.subscribe<%=name%>Del(false);
 <% 
    if (cullObj.hasModifyOperation()) {
-%>         evc.subscribeMod<%=name%>(false);            
+%>         evc.subscribe<%=name%>Mod(false);            
 <%
    }
 %>         
@@ -190,8 +190,8 @@
 
          evc.addEventListener(waitThread);
 
-         evc.subscribeMod<%=name%>(true);
-         evc.setMod<%=name%>Flush(true, flushInterval);
+         evc.subscribe<%=name%>Mod(true);
+         evc.set<%=name%>ModFlush(true, flushInterval);
          
          evc.commit();
          waitThread.start();
@@ -210,7 +210,7 @@
          
       } finally {
          waitThread.interrupt();
-         evc.subscribeMod<%=name%>(false);
+         evc.subscribe<%=name%>Mod(false);
          evc.commit();
 
          testObj = jgdi.get<%=name%>();

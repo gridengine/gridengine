@@ -67,9 +67,9 @@ public class EventExample {
             
             evc.start();
             
-            evc.subscribeAddCheckpoint(true);
-            evc.subscribeModCheckpoint(true);
-            evc.subscribeDelCheckpoint(true);
+            evc.subscribeCheckpointAdd(true);
+            evc.subscribeCheckpointMod(true);
+            evc.subscribeCheckpointDel(true);
             
             evc.commit();
             

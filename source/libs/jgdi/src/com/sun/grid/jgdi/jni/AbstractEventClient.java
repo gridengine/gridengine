@@ -208,14 +208,14 @@ public abstract class AbstractEventClient implements Runnable {
                         gotShutdownEvent = true;
                      }
                   } catch(Exception e) {
-                     e.printStackTrace();
+                     logger.log(Level.WARNING, "error in fire event", e);
                   }
                }
 //give threads a different priority or use Thread.sleep() or queue events ?????
 //               Thread.sleep(1);
                Thread.yield();
             } catch( Exception e ) {
-               e.printStackTrace();
+               logger.log(Level.WARNING, "error in event loop", e);
             }
             eventList.clear();
             if (gotShutdownEvent) {

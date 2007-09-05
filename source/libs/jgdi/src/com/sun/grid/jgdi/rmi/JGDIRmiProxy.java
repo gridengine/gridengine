@@ -176,7 +176,9 @@ public class JGDIRmiProxy implements Unreferenced {
          } catch(Exception re) {
             logger.throwing(getClass().getName(), "run", re);
          } finally {
-            notifyAll();
+            synchronized(this) {
+                notifyAll();
+            }
          }
       }
       

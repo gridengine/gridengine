@@ -55,20 +55,20 @@
      }
      public void generate() {
         if (this.cullObj.hasAddEvent()) {
-           generate("Add" + name, cullObj.getAddEventName());
-           generateFlush("Add" + name, cullObj.getAddEventName());
+           generate(name + "Add", cullObj.getAddEventName());
+           generateFlush(name + "Add", cullObj.getAddEventName());
         }
         if (this.cullObj.hasDeleteEvent()) {
-           generate("Del" + name, cullObj.getDeleteEventName());
-           generateFlush("Del" + name, cullObj.getDeleteEventName());
+           generate(name + "Del", cullObj.getDeleteEventName());
+           generateFlush(name + "Del", cullObj.getDeleteEventName());
         }
         if (this.cullObj.hasGetListEvent()) {
-           generate("List" + name, cullObj.getGetListEventName());
-           generateFlush("List" + name, cullObj.getGetListEventName());
+           generate(name + "List", cullObj.getGetListEventName());
+           generateFlush(name + "List", cullObj.getGetListEventName());
         }
         if (this.cullObj.hasModifyEvent()) {
-           generate("Mod" + name, cullObj.getModifyEventName());
-           generateFlush("Mod" + name, cullObj.getModifyEventName());
+           generate(name + "Mod", cullObj.getModifyEventName());
+           generateFlush(name + "Mod", cullObj.getModifyEventName());
         }
      }
      

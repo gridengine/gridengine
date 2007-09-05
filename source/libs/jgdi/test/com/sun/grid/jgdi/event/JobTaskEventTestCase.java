@@ -83,14 +83,14 @@ public class JobTaskEventTestCase extends BaseTestCase {
        });
        
        
-       evc.subscribeAddJobTask(true);
-       evc.setAddJobTaskFlush(true, 1);
+       evc.subscribeJobTaskAdd(true);
+       evc.setJobTaskAddFlush(true, 1);
        
-       evc.subscribeDelJobTask(true);
-       evc.setDelJobTaskFlush(true, 1);
+       evc.subscribeJobTaskDel(true);
+       evc.setJobTaskDelFlush(true, 1);
        
-       evc.subscribeDelJob(true);
-       evc.setDelJobFlush(true, 1);
+       evc.subscribeJobDel(true);
+       evc.setJobDelFlush(true, 1);
        
 
        JobTaskEventListener lis = new JobTaskEventListener(jobid);

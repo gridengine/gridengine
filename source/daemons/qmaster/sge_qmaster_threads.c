@@ -87,6 +87,7 @@
 #include "setup_path.h"
 #include "uti/sge_os.h"
 #include "sge_advance_reservation_qmaster.h"
+#include "sge_string.h"
 
 /*
  * This is NOT officially approved by POSIX. In fact, POSIX does not specify a
@@ -1431,13 +1432,18 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
 
    dstring ds = DSTRING_INIT;
    const char *libjvm_path = NULL; 
-   char *jvm_argv[11];
+
+   char **jvm_argv;
+   int   jvm_argc = 0;
    char *main_argv[4];
    int i;
    char main_class_name[] = "com/sun/grid/jgdi/rmi/JGDIRmiProxy";
 	JNIEnv* env = NULL;
    jobject main_class = NULL;
-
+   const char* additional_jvm_args = getenv("SGE_JVM_ARGS");
+   char** additional_jvm_argv = NULL;
+   int   additional_jvm_argc = 0;
+   
    DENTER(TOP_LAYER, "sge_run_jvm");
 
    libjvm_path = ctx->get_libjvm_path(ctx);
@@ -1446,18 +1452,49 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
       DRETURN(anArg);
    }   
 
+   if (additional_jvm_args != NULL) {
+        char * args = strdup(additional_jvm_args);
+        char** tmp_argv = string_list(args," ", NULL);
+        
+        for(i=0; tmp_argv[i] != NULL; i++) {
+           DPRINTF(("additional jvm arg[%d]: %s\n", i, tmp_argv[i]));
+           additional_jvm_argc++;
+        }
+        
+        additional_jvm_argv = (char**)sge_malloc(additional_jvm_argc*sizeof(char*));
+        for(i=0; i < additional_jvm_argc; i++) {
+           additional_jvm_argv[i] = strdup(tmp_argv[i]);
+           FREE(tmp_argv[i]);
+        }
+        FREE(tmp_argv);
+        FREE(args);
+        jvm_argc = 10 + additional_jvm_argc;
+   } else {
+      additional_jvm_argv = NULL;
+      jvm_argc = 10;
+      additional_jvm_argc = 0;
+   }
+   
+   DPRINTF(("jvm_argc = %d\n", jvm_argc));
+   DPRINTF(("additional_jvm_argc = %d\n", additional_jvm_argc));
+   
+   jvm_argv = (char**)sge_malloc(jvm_argc * sizeof(char*));
    jvm_argv[0] = strdup(sge_dstring_sprintf(&ds, "-Djava.class.path=%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
    jvm_argv[1] = strdup("-Djava.security.manager=java.rmi.RMISecurityManager");
    jvm_argv[2] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.policy=%s/util/rmiproxy.policy", ctx->get_sge_root(ctx)));
    jvm_argv[3] = strdup(sge_dstring_sprintf(&ds, "-Djava.rmi.server.codebase=file://%s/lib/jgdi.jar", ctx->get_sge_root(ctx)));
    jvm_argv[4] = strdup(sge_dstring_sprintf(&ds, "-Djava.library.path=%s/lib/%s", ctx->get_sge_root(ctx), sge_get_arch()));
-   jvm_argv[5] = strdup("-Djava.rmi.server.logCalls=true");
-   jvm_argv[6] = strdup("-verbose:jni");
-   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/util/management.properties", ctx->get_sge_root(ctx)));
-   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/util/jmxremote.access", ctx->get_sge_root(ctx)));
-   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/util/jmxremote.password", ctx->get_sge_root(ctx)));
-   jvm_argv[10] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/util/jaas.config", ctx->get_sge_root(ctx)));
-   
+   jvm_argv[5] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.config.file=%s/util/management.properties", ctx->get_sge_root(ctx)));
+   jvm_argv[6] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.access.file=%s/util/jmxremote.access", ctx->get_sge_root(ctx)));
+   jvm_argv[7] = strdup(sge_dstring_sprintf(&ds, "-Dcom.sun.management.jmxremote.password.file=%s/util/jmxremote.password", ctx->get_sge_root(ctx)));
+   jvm_argv[8] = strdup(sge_dstring_sprintf(&ds, "-Djava.security.auth.login.config=%s/util/jaas.config", ctx->get_sge_root(ctx)));
+   jvm_argv[9] = strdup(sge_dstring_sprintf(&ds, "-Djava.util.logging.config.file=%s/util/logging.properties", ctx->get_sge_root(ctx)));
+
+   for(i=0; i < additional_jvm_argc; i++) {
+      jvm_argv[10+i] = additional_jvm_argv[i];
+   }
+   FREE(additional_jvm_argv);
+
    main_argv[0] = strdup("-reg");
    main_argv[1] = strdup("local:54321");
    main_argv[2] = strdup("jgdi");
@@ -1469,7 +1506,7 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
    /*
    ** for debugging
    */
-   for (i=0; i<sizeof(jvm_argv)/sizeof(char*); i++) {
+   for (i=0; i<jvm_argc; i++) {
       DPRINTF(("jvm_argv[%d]: %s\n", i, jvm_argv[i]));
    }   
 
@@ -1477,7 +1514,7 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
       DPRINTF(("main_argv[%d]: %s\n", i, main_argv[i]));
    }   
 
-	env = create_vm(libjvm_path, sizeof(jvm_argv)/sizeof(char *), jvm_argv);
+	env = create_vm(libjvm_path, jvm_argc, jvm_argv);
    main_class = (*env)->FindClass(env, main_class_name);
 
    if (load_libs(env, main_class)) {
@@ -1490,13 +1527,14 @@ static void *sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *mo
       CRITICAL((SGE_EVENT, "main_class is NULL\n"));
    }   
 
-   for (i=0; i<sizeof(jvm_argv)/sizeof(char*); i++) {
+   for (i=0; i<jvm_argc; i++) {
       FREE(jvm_argv[i]);
    }   
+   FREE(jvm_argv);
 
    for (i=0; i<sizeof(main_argv)/sizeof(char*); i++) {
       FREE(main_argv[i]);
-   }   
+   }
    DRETURN(anArg);
    
 } /* sge_run_jvm */

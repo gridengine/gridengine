@@ -135,14 +135,14 @@ public class PETaskEventTestCase extends BaseTestCase {
         });
         
         
-        evc.subscribeAddPETask(true);
-        evc.setAddPETaskFlush(true, 1);
+        evc.subscribePETaskAdd(true);
+        evc.setPETaskAddFlush(true, 1);
         
-        evc.subscribeDelPETask(true);
-        evc.setDelPETaskFlush(true, 1);
+        evc.subscribePETaskDel(true);
+        evc.setPETaskDelFlush(true, 1);
         
-        evc.subscribeDelJob(true);
-        evc.setDelJobFlush(true, 1);
+        evc.subscribeJobDel(true);
+        evc.setJobDelFlush(true, 1);
         
         PETaskEventListener lis = new PETaskEventListener(jobid);
         evc.addEventListener(lis);

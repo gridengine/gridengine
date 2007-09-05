@@ -1,3 +1,7 @@
+AH-2007-09-05-0: Enhancem.: Enhanced test_drmaa_issue1832 
+                            - added progress bar that is based either on 
+                              drmaa_job_ps() or drmaa_wait() information
+
 AH-2007-08-27-1: Bugfix:    Finalized and reviewed AH-2007-08-27-0
                  Bugster:   6597463
                  Issue:     2351

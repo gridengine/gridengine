@@ -74,7 +74,7 @@ public class ProjectFilter implements Serializable {
    }
    
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       
       ret.append("ProjectFilter[");
       Iterator iter = prjList.iterator();

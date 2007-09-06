@@ -39,7 +39,7 @@ PRE_ARGS="$PRE_ARGS -Djava.util.logging.config.file=util/shell_logging.propertie
 if [ $SGE_ROOT != "" ]; then
    CP=$SGE_ROOT/lib/jgdi.jar
 else
-   CP=build/classes
+   CP=build/jgdi.jar
 fi
 
 #echo "READLINE_JAVA_JAR: $READLINE_JAVA_JAR"
@@ -67,6 +67,6 @@ fi
 
 POST_ARGS="$POST_ARGS $POSTPOST_ARGS"
 
-echo "run $PRE_ARGS -cp $CP com.sun.grid.jgdi.util.JGDIShell $POST_ARGS"
+# echo "run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS"
 run $PRE_ARGS -cp $CP -- com.sun.grid.jgdi.util.JGDIShell $POST_ARGS
 

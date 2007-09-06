@@ -61,7 +61,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
      private void genFillMethod() {
         if(!hasFillMethod) {
 %>        
-   private native void fill<%=name%>ListWithAnswer(List list, JGDIFilter filter, List answers) throws JGDIException;
+   private native void fill<%=name%>ListWithAnswer(List list, JGDIFilter filter, List<JGDIAnswer> answers) throws JGDIException;
    
    private void fill<%=name%>List(List list, JGDIFilter filter) throws JGDIException {
       fill<%=name%>ListWithAnswer(list, filter, null);
@@ -71,7 +71,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
       fill<%=name%>ListWithAnswer(list, null, null);
    }
    
-   private void fill<%=name%>ListWithAnswer(List list, List answers) throws JGDIException {
+   private void fill<%=name%>ListWithAnswer(List list, List<JGDIAnswer> answers) throws JGDIException {
       fill<%=name%>ListWithAnswer(list, null, answers);
    }
 
@@ -106,7 +106,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @return the <code><%=name%></code> object.
     *   @throws JGDIException on any error on the GDI layer
     */
-   public <%=classname%> get<%=name%>WithAnswer(List answers) throws JGDIException {
+   public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException {
       ArrayList ret = new ArrayList(1);
       fill<%=name%>ListWithAnswer(ret, answers);
       switch(ret.size()) {
@@ -133,6 +133,18 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
       fill<%=name%>List(ret);
       return ret;
    }
+   /**
+    *   Get the list of all defined <code><%=name%></code> objects.
+    *   @param  answers the <code>answer list</code> object
+    *   @return list of <code><%=name%></code> objects
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public List get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException {
+      ArrayList ret = new ArrayList();
+      fill<%=name%>ListWithAnswer(ret, answers);
+      return ret;
+   }
+
 <%        
      } // end of genGetMethod
      
@@ -223,7 +235,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
        }
        %> <%=pkType%> <%=pkName%> <%
     }
-       %>, List answers) throws JGDIException {
+       %>, List<JGDIAnswer> answers) throws JGDIException {
     
         ArrayList ret = new ArrayList();
         
@@ -264,7 +276,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @param  answers the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public native void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public native void add<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 
 <% if ((name.equals("Manager")) || 
        (name.equals("Operator")) ||
@@ -286,7 +298,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @param  answers the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public void add<%=name%>WithAnswer(String name, java.util.List answers) throws JGDIException {
+   public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException {
       <%=name%> obj = new <%=name%>Impl(name);
        add<%=name%>WithAnswer(obj, answers);
    }
@@ -310,7 +322,18 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @param answers  <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public native void delete<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public native void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
+   
+   /**
+    *   Delete several <code><%=name%></code> objects.
+    *   @param objs  <code><%=name%></code> object array with the primary key information
+    *   @param force  <code>force</code> delete flag
+    *   @param userFilter  delete object for users contained in userFilter
+    *   @param answers  <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public native void delete<%=name%>sWithAnswer(Object[] objs, boolean force, UserFilter userFilter, List<JGDIAnswer> answers) throws JGDIException;
+   
 <%        
      } // end of genDeleteMethod
      public void genDeleteByPrimaryKeyMethod() {
@@ -391,7 +414,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
        }
        %><%=pkType%> <%=pkName%><%
     } // end of while  
-    %>, java.util.List answers) throws JGDIException {
+    %>, List<JGDIAnswer> answers) throws JGDIException {
        <%=classname%> obj = new <%=classname%>Impl(<%
     first = true;  
     pkIter = primaryKeys.keySet().iterator();
@@ -409,6 +432,80 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     %>);
        delete<%=name%>WithAnswer(obj, answers);
     }
+
+   /**
+    *   Delete several <code><%=name%></code> objects by its primary key
+<%
+{
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       String pkType = (String)primaryKeys.get(pkName);
+%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }
+} 
+if (name.equals("Job") || name.equals("AdvanceReservation")) {%>    
+    *   @param forced  <code>forced</code> delete flag
+    *   @param userFilter  delete objects owned by users contained in userFilter 
+<%}%>    *   @param answers  <code>answer list</code> object  
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>sWithAnswer(<%
+    first = true;  
+    pkIter = primaryKeys.keySet().iterator();
+    while(pkIter.hasNext()) {
+       String pkName = (String)pkIter.next();
+       // String pkType = (String)primaryKeys.get(pkName);
+       
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %>String[] <%=pkName%>s<%
+    } // end of while  
+    if (name.equals("Job") || name.equals("AdvanceReservation")) {%>, boolean forced, UserFilter userFilter
+    <%}%>, List<JGDIAnswer> answers) throws JGDIException {
+       
+       
+       
+<%
+    if (name.equals("Job") || name.equals("AdvanceReservation")) {
+      first = true;  
+      pkIter = primaryKeys.keySet().iterator();
+      while(pkIter.hasNext()) {
+         String pkName = (String)pkIter.next();%>
+         delete<%=name%>sWithAnswer(  
+         <% if (first) {
+            first = false;%>
+            (Object[])<%=pkName%>s
+         <%} else {%>
+            , (Object[])<%=pkName%>s
+         <%}%>
+       <%} // end of while %>
+        , forced, userFilter, answers);
+<%} else {
+      first = true;  
+      pkIter = primaryKeys.keySet().iterator();
+      while(pkIter.hasNext()) {
+         String pkName = (String)pkIter.next();%>
+  
+      <% if (first) {%>
+       // Other objects
+       List< <%=classname%> > list = new ArrayList< <%=classname%> >();
+
+       for (int i=0; <%=pkName%>s != null && i < <%=pkName%>s.length; i++) {
+             <%=classname%> obj = new <%=classname%>Impl(
+       <%} else {%> , <%}%>
+       <%=pkName%>s[i]
+  <%} // end of while 
+         %> );
+         list.add(obj);
+       }
+       delete<%=name%>sWithAnswer(list.toArray(), false, null, answers);      
+<%}%>    
+  }
 <%
     } // end of genDeleteByPrimaryKeyMethod
      public void genUpdateMethod() { 
@@ -426,7 +523,7 @@ import com.sun.grid.jgdi.configuration.<%=classname%>Impl;
     *   @param answers  the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public native void update<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public native void update<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 
 <%   
      } // end of getUpdateMethod 
@@ -457,9 +554,8 @@ import java.util.List;
 import java.util.ArrayList;
 import com.sun.grid.jgdi.CullConstants;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
-import com.sun.grid.jgdi.monitoring.QHostOptions;
-import com.sun.grid.jgdi.monitoring.QHostResult;
-import com.sun.grid.jgdi.monitoring.QHostResultImpl;
+import com.sun.grid.jgdi.monitoring.filter.UserFilter;
+
 <%  iter = generators.iterator();
      while( iter.hasNext() ) {
       JGDIJniGenerator gen = (JGDIJniGenerator)iter.next();

@@ -286,7 +286,7 @@ public class SGEFormatter extends Formatter {
     private void init() {
         String host;
 
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
 
         int argsCount = 0;
         int dateCol = -1;
@@ -324,7 +324,7 @@ public class SGEFormatter extends Formatter {
            }
         }
 
-        StringBuffer prefix = new StringBuffer();
+        StringBuilder prefix = new StringBuilder();
         int prefixLen = DEFAULT_STACKTRACE_INDENT;
 
         for (int i = 0; i < prefixLen; i++) {
@@ -389,7 +389,7 @@ public class SGEFormatter extends Formatter {
        if (str.length() > length) {
           return str.substring(str.length() - length);
        } else {
-          StringBuffer ret = new StringBuffer(length);
+          StringBuilder ret = new StringBuilder(length);
 
           int len = length - str.length();
           if (rightAlign) {

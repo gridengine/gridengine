@@ -261,6 +261,18 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void suspend(String[] queues, boolean force) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.suspend(queues, force);
+        }
+    }
+
+    public void suspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.suspendWithAnswer(queues, force, answers);
+        }
+    }
+
     public void suspendQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.suspendQueues(queues, force);
@@ -285,6 +297,18 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void unsuspend(String[] queues, boolean force) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.unsuspend(queues, force);
+        }
+    }
+
+    public void unsuspendWithAnswer(String[] queues, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.unsuspendWithAnswer(queues, force, answers);
+        }
+    }
+    
     public void unsuspendQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {
             jgdi.unsuspendQueues(queues, force);
@@ -334,6 +358,17 @@ public class SynchronizedJGDIBase implements com.sun.grid.jgdi.JGDIBase {
         }
     }
 
+    public void reschedule(String[] queue_or_job, boolean force) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.reschedule(queue_or_job, force);
+        }
+    }
+
+    public void rescheduleWithAnswer(String[] queue_or_job, boolean force, List answers) throws JGDIException {
+        synchronized(jgdi) {
+            jgdi.rescheduleWithAnswer(queue_or_job, force, answers);
+        }
+    }
 
     public void rescheduleQueues(String[] queues, boolean force) throws JGDIException {
         synchronized(jgdi) {

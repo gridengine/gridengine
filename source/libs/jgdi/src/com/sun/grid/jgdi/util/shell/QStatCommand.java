@@ -78,7 +78,7 @@ public class QStatCommand extends AbstractCommand {
         Character explain = null;
         boolean fullOutput = false;
         ResourceAttributeFilter resourceAttributeFilter = null;
-        StringBuffer groupOptions = new StringBuffer();
+        StringBuilder groupOptions = new StringBuilder();
         ResourceFilter resourceFilter = null;
         boolean showEmptyQueues = true;
         ParallelEnvironmentFilter peFilter = null;

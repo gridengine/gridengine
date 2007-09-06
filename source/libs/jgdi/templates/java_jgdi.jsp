@@ -69,7 +69,7 @@ public void genUpdateMethod() { %>
     *   @param answers  the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public void update<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public void update<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 <%        
     } // end of getUpdateMethod
     
@@ -81,6 +81,14 @@ public void genUpdateMethod() { %>
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>() throws JGDIException;
+
+   /**
+    *   Get the <code><%=name%></code> object.
+    *   @param answers  the <code>answer list</code> object
+    *   @return the <code><%=classname%></code> object.
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 <%   
     } // end of genGetMethod
     
@@ -91,7 +99,14 @@ public void genUpdateMethod() { %>
     *   @return list of <code><%=name%></code> objects
     *   @throws JGDIException on any error on the GDI layer
     */
-   public java.util.List get<%=name%>List() throws JGDIException;
+   public List get<%=name%>List() throws JGDIException;
+   /**
+    *   Get the list of all defined <code><%=name%></code> objects.
+    *   @param answers  the <code>answer list</code> object    
+    *   @return list of <code><%=name%></code> objects
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public List get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 <%
     } // end of genGetListMethod
     
@@ -111,7 +126,7 @@ public void genUpdateMethod() { %>
     *   @param answers   the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public void add<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public void add<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 
 <% if ((name.equals("Manager")) || 
        (name.equals("Operator")) ||
@@ -130,7 +145,7 @@ public void genUpdateMethod() { %>
     *   @param  answers the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public void add<%=name%>WithAnswer(String name, java.util.List answers) throws JGDIException;
+   public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException;
 
 <%    
        } //end if classname
@@ -151,7 +166,7 @@ public void genUpdateMethod() { %>
     *   @param answers   the <code>answer list</code> object
     *   @throws JGDIException on any error on the GDI layer
     */
-   public void delete<%=name%>WithAnswer(<%=classname%> obj, java.util.List answers) throws JGDIException;
+   public void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 
 <%
     } // end of genDeleteMethod
@@ -161,62 +176,77 @@ public void genUpdateMethod() { %>
    /**
     *   Delete a <code><%=name%></code> object by its primary key
 <%
-{
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
-<%
-    }    
-}
-%>  *  @throws JGDIException on any error on the GDI layer
+<%  } // end of for
+%>    *  @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>(<%
-    boolean first = true;  
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
-       if(first) {
-         first = false;
-       } else {
-            %> , <%           
-       } 
-       %> <%=pkType%> <%=pkName%> <%
-    } // end of while  
+      boolean first = true;  
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+          String pkName = entry.getKey();
+          String pkType = entry.getValue();
+          if (first) {
+             first = false;
+          } else { %> , <%           
+       } %> <%=pkType%> <%=pkName%> <%
+    } // end of for  
     %>) throws JGDIException;
    /**
     *   Delete a <code><%=name%></code> object by its primary key
 <%
-{
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
-<%
-    }    
-}
-%>  *  @param answers   the <code>answer list</code> object
+<% 
+    } // end of for    
+%>    *  @param answers   the <code>answer list</code> object
     *  @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>WithAnswer(<%
-    first = true;  
-    pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
-       if(first) {
+      first = true;  
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+          String pkName = entry.getKey();
+          String pkType = entry.getValue();
+          if (first) {
+              first = false;
+          } else { %> , <%           
+       } %> <%=pkType%> <%=pkName%> <%
+    } // end of for
+    %>, List<JGDIAnswer> answers) throws JGDIException;
+
+
+   /**
+    *   Delete several <code><%=name%></code> objects by their primary key
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       // String pkType = entry.getValue();
+%>    *  @param String[] <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
+<%
+    } // end of for
+%>    *  @param answers   the <code>answer list</code> object
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>sWithAnswer(<%
+    first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       // String pkType = entry.getValue();
+       if (first) {
          first = false;
        } else {
             %> , <%           
        } 
-       %> <%=pkType%> <%=pkName%> <%
-    } // end of while  
-    %>, java.util.List answers) throws JGDIException;
+       %> String[] <%=pkName%>s <%
+    } // end of for
+    %>
+<% if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
+    , boolean forced, UserFilter userFilter
+<% }%>    , List<JGDIAnswer> answers) throws JGDIException;
 <%
     } // end of genDeleteByPrimaryKeyMethod
 
@@ -227,33 +257,58 @@ public void genUpdateMethod() { %>
     *
     *  @return the <%=name%>
 <%
-{
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
 %>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
 <%
-    }    
-}
+    } // end of for
 %>    *  @return the found <code><%=name%></code> object of <code>null</code>    
     *  @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>(<%
     boolean first = true;  
-    java.util.Iterator pkIter = primaryKeys.keySet().iterator();
-    while(pkIter.hasNext()) {
-       String pkName = (String)pkIter.next();
-       String pkType = (String)primaryKeys.get(pkName);
-       
-       if(first) {
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if (first) {
          first = false;
        } else {
             %> , <%           
        } 
        %> <%=pkType%> <%=pkName%> <%
-    } // end of while  
+    } // end of for
     %>) throws JGDIException;
+
+   /**
+    *  Get a <%=name%> by its primary key
+    *
+    *  @return the <%=name%>
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    } // end of for
+%>   *  @param answers   the <code>answer list</code> object  
+    *  @return the found <code><%=name%></code> object of <code>null</code>    
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public <%=classname%> get<%=name%>WithAnswer(<%
+    first = true;  
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if (first) {
+         first = false;
+       } else {
+            %> , <%           
+       } 
+       %> <%=pkType%> <%=pkName%> <%
+    } // end of for
+    %>, List<JGDIAnswer> answers) throws JGDIException;
+
 <%     
      } // end of genGetByPrimaryKeyMethod
   } // end of class JGDIGenerator
@@ -281,11 +336,10 @@ public void genUpdateMethod() { %>
 
 package com.sun.grid.jgdi;
 
-
+import java.util.List;
 import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
-import com.sun.grid.jgdi.monitoring.QHostOptions;
-import com.sun.grid.jgdi.monitoring.QHostResult;
+import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 
 <% // Import all cull object names;
   iter = generators.iterator();

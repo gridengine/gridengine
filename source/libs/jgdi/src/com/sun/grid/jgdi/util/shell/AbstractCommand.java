@@ -62,7 +62,7 @@ public abstract class AbstractCommand implements HistoryCommand {
    public String[] parseWCQueueList(String arg) {
       String [] ret = arg.split(",");
       if(getLogger().isLoggable(Level.FINE)) {
-         StringBuffer buf = new StringBuffer();
+         StringBuilder buf = new StringBuilder();
          buf.append("wc_queue_list [");
          for(int i = 0; i < ret.length; i++) {
             if(i>0) {
@@ -75,14 +75,14 @@ public abstract class AbstractCommand implements HistoryCommand {
       }
       return ret;
    }
-   
+
    public String[] parseJobWCQueueList(String arg) {
       String [] ret = arg.split(",");
-      if(getLogger().isLoggable(Level.FINE)) {
-         StringBuffer buf = new StringBuffer();
+      if (getLogger().isLoggable(Level.FINE)) {
+         StringBuilder buf = new StringBuilder();
          buf.append("job_wc_queue_list [");
-         for(int i = 0; i < ret.length; i++) {
-            if(i>0) {
+         for (int i = 0; i < ret.length; i++) {
+            if (i > 0) {
                buf.append(", ");
             }
             buf.append(ret[i]);
@@ -94,12 +94,12 @@ public abstract class AbstractCommand implements HistoryCommand {
    }
 
    public String[] parseJobList(String arg) {
-      String [] ret = arg.split(",");
-      if(getLogger().isLoggable(Level.FINE)) {
-         StringBuffer buf = new StringBuffer();
+      String[] ret = arg.split(",");
+      if (getLogger().isLoggable(Level.FINE)) {
+         StringBuilder buf = new StringBuilder();
          buf.append("job_list [");
-         for(int i = 0; i < ret.length; i++) {
-            if(i>0) {
+         for (int i = 0; i < ret.length; i++) {
+            if (i > 0) {
                buf.append(", ");
             }
             buf.append(ret[i]);

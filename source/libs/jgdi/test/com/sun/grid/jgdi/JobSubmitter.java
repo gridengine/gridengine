@@ -54,7 +54,7 @@ public class JobSubmitter {
     private final static Logger logger = Logger.getLogger(JobSubmitter.class.getName());
     
     private static String replaceParams(ClusterConfig cluster, String str) {
-        StringBuffer buf = new StringBuffer(str);
+        StringBuilder buf = new StringBuilder(str);
         
         String [] params = new String [] {
             "$SGE_ROOT"
@@ -98,7 +98,7 @@ public class JobSubmitter {
 
         if(logger.isLoggable(Level.INFO)) {
             
-           StringBuffer buf = new StringBuffer();
+           StringBuilder buf = new StringBuilder();
            for(int i = 0; i < cmd.length; i++) {
                if(i > 0) {
                    buf.append(" ");

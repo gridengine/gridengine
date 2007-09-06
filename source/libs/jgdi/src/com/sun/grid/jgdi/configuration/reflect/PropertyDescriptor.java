@@ -100,7 +100,7 @@ public abstract class PropertyDescriptor {
 
    protected Method findMethod(String prefix, String suffix, Class [] argTypes) {
       
-      StringBuffer buf = new StringBuffer();
+      StringBuilder buf = new StringBuilder();
       if (prefix != null) {
          buf.append(prefix);
       }
@@ -114,7 +114,7 @@ public abstract class PropertyDescriptor {
       try {
          return beanClass.getMethod(methodName, argTypes);
       } catch (NoSuchMethodException nse) {
-         StringBuffer buffer = new StringBuffer();
+         StringBuilder buffer = new StringBuilder();
          if (argTypes != null) {
             for (int i=0; i<argTypes.length; i++) {
                if (i>0) {

@@ -155,8 +155,8 @@ public class EditorParser {
     * Return list of elements on the line values
     */
    private static List getSingleValueList(GEObject obj, PropertyDescriptor pd, String values, String separators) {
-      StringBuffer sb = new StringBuffer(values);
-      StringBuffer out = new StringBuffer();
+      StringBuilder sb = new StringBuilder(values);
+      StringBuilder out = new StringBuilder();
       char c;
       boolean skipped = false;
       for (int i=0; i < values.length(); i++) {
@@ -193,8 +193,8 @@ public class EditorParser {
     */
    private static List getMapValueList(GEObject obj, DefaultMapPropertyDescriptor pd, String values, String separators) {
       List list = new ArrayList();
-      StringBuffer sb = new StringBuffer(values);
-      StringBuffer out = new StringBuffer();
+      StringBuilder sb = new StringBuilder(values);
+      StringBuilder out = new StringBuilder();
       char c;
       boolean elemStart = false;
       boolean skipped = false;
@@ -224,13 +224,13 @@ public class EditorParser {
                }
                list.add("[@/="+adjustAttrValues(obj, pd, out.toString().trim())+"]");
                defaultUsed = true;
-               out = new StringBuffer();
+               out = new StringBuilder();
             }
          } else if (c == ']') {
             elemStart = false;
             if (out.length()>0) {
                list.add("["+adjustAttrValues(obj, pd, out.toString().trim())+"]");
-               out = new StringBuffer();
+               out = new StringBuilder();
             }
          } else {
             out.append(c);
@@ -264,8 +264,8 @@ public class EditorParser {
     */
    private static List getMapListValueList(String values, String separators) {
       List list = new ArrayList();
-      StringBuffer sb = new StringBuffer(values);
-      StringBuffer out = new StringBuffer();
+      StringBuilder sb = new StringBuilder(values);
+      StringBuilder out = new StringBuilder();
       char c;
       boolean elemStart = false;
       boolean skipped = false;
@@ -296,13 +296,13 @@ public class EditorParser {
                }
                list.add("[@/="+out.toString().trim()+"]");
                defaultUsed = true;
-               out = new StringBuffer();
+               out = new StringBuilder();
             }
          } else if (c == ']') {
             elemStart = false;
             if (out.length()>0) {
                list.add("["+out.toString().trim()+"]");
-               out = new StringBuffer();
+               out = new StringBuilder();
             }
          } else {
             out.append(c);

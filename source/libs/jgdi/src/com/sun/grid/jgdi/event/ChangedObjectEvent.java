@@ -95,7 +95,7 @@ public abstract class ChangedObjectEvent extends Event implements java.io.Serial
    }
 
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       ret.append("[");
       ret.append(super.toString());
       ret.append(", ");

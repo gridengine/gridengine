@@ -230,7 +230,7 @@ public class JobStateFilter implements Serializable {
      */
     public String getStateString() {
         if(stateStr == null) {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             
             for(int i = 0; i < ALL_SIMPLE_STATES.length; i++ ) {
                 if(ALL_SIMPLE_STATES[i].isSet(mask)) {

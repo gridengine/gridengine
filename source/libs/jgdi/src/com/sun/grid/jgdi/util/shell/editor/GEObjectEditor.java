@@ -49,6 +49,7 @@ import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.SimplePropertyDescriptor;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.configuration.SchedConf;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -295,7 +296,7 @@ public class GEObjectEditor {
       int maxLen = 0;
       String name, spaces;
       Object value;
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
       PropertyDescriptor pd;
       List subNames = null, subValues = null;
       for (Iterator iter = getProperties(obj, propScope).iterator(); iter.hasNext();) {
@@ -339,10 +340,10 @@ public class GEObjectEditor {
             sb.append(spaces+value+"\n");
          }
       }
-      /*//SCHEDCONF special formatting case
+      //SCHEDCONF special formatting case
       if (obj instanceof SchedConf) {
          sb.deleteCharAt(sb.length()-1);
-      }*/
+      }
       return sb.toString();
    }
    

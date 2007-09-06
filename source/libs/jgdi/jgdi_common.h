@@ -108,7 +108,8 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
 
 void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, int target_list, lDescr *descr, jobject answers);
 
-void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr, jobject answers);
+void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr, jboolean force, jobject answers);
+void jgdi_delete_array(JNIEnv *env, jobject jgdi, jobjectArray obj_array, const char *classname, int target_list, lDescr *descr, jboolean force, jobject options, jobject answers);
 
 void jgdi_update(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, int target_list, lDescr *descr, jobject answers);
 

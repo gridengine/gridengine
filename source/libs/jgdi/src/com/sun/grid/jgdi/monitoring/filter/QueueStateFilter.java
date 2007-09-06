@@ -219,7 +219,7 @@ public class QueueStateFilter implements Serializable {
    }
    
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       ret.append("QueueStateFilter[");
       ret.append(getOptions());
       ret.append( " (");

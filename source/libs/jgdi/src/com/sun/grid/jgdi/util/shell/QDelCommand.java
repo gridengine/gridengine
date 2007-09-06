@@ -31,48 +31,73 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
-import java.io.PrintWriter;
-
+import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.JGDIFactory;
+import com.sun.grid.jgdi.configuration.JGDIAnswer;
+import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  *
  */
 @CommandAnnotation("qdel")
 public class QDelCommand extends AbstractCommand {
-    
-    
+   
    public String getUsage() {
-      return getResourceString("sge.version.string") + "\n" + 
-             getResourceString("usage.qdel");
+      return JGDIFactory.getJGDIVersion() + "\n" +
+         getResourceString("usage.qdel");
    }
-    
-    
-    public void run(String[] args) throws Exception {      
-        if (args.length == 0) {
-            throw new IllegalArgumentException("Invalid number of arguments");
-        }
-        
-        boolean force = false;
-        
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-help")) {
-                pw.println(getUsage());
-                break;
-            } else if (args[i].equals("-f")) {
-                pw.println("-f option parsed");
-                break;
-            } else {
-                throw new IllegalArgumentException("Unknown or not implemented option " + args[i]);
+   
+   public void run(String[] args) throws Exception {
+      
+      boolean force = false;
+      UserFilter users = null;
+      List<JGDIAnswer> answers = new LinkedList<JGDIAnswer>();
+      String[] jobs = null;
+      
+      if (jgdi == null) {
+         throw new IllegalStateException("Not connected");
+      }
+      if (args.length == 0) {
+         pw.println(getUsage());
+         pw.flush();
+         return;
+      }
+      
+      for (int i = 0; i < args.length; i++) {
+         if (args[i].equals("-help")) {
+            i++;
+            pw.println(getUsage());
+            pw.flush();
+            break;
+         } else if (args[i].equals("-u")) {
+            i++;
+            if (i >= args.length) {
+               throw new IllegalArgumentException("user_list is missing");
             }
-        }
-    }
-    
-    
-    private String [] parseDestinIdList(String arg) {
-        String [] ret = arg.split(" ");
-        return ret;
-    }
-
+            users = UserFilter.parse(args[i]);
+         } else if (args[i].equals("-f")) {
+            force = true;
+         } else if (args[i].charAt(0) == '-') {
+            pw.println(getUsage());
+            pw.flush();
+            throw new IllegalArgumentException("error: ERROR! invalid option argument \"" + args[i] + "\"");
+         } else {
+            jobs = parseDestinIdList(args[i]);
+         }
+      }
+//      try {
+         jgdi.deleteJobsWithAnswer(jobs, force, users, answers);
+//      } catch (JGDIException je) {
+//         // ignore
+//      }
+      printAnswers(answers);
+   }
+   
+   private String[] parseDestinIdList(String arg) {
+      String[] ret = arg.split(",");
+      return ret;
+   }
 }

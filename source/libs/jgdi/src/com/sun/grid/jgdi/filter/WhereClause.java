@@ -50,7 +50,7 @@ public class WhereClause {
       }
       this.type = type;
       this.field = field;
-      StringBuffer buf = new StringBuffer("%T(%I");
+      StringBuilder buf = new StringBuilder("%T(%I");
       buf.append(relop);
       if(value instanceof Long) {
          buf.append("%u");

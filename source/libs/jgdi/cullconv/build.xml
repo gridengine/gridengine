@@ -24,8 +24,8 @@
         <javac debug="${javac.debug}" 
          deprecation="${javac.deprecated}"
          destdir="build/classes"
-         target="1.4"
-         source="1.4">
+         target="1.5"
+         source="1.5">
             <src path="src"/>
             <src path="build/gensrc"/>
        </javac>

@@ -90,11 +90,14 @@
          arg = "template";
       }
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
-      <%=objectType%> obj = new <%=objectType%>Impl(true);
+      <%=objectType%> obj = new <%=objectType%>Impl(arg);
       String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
-      GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
-      jgdi.add<%=objectType%>WithAnswer(obj, answer);
-      printAnswers(answer);
+
+      if (userTypedText != null) {
+         GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
+         jgdi.add<%=objectType%>WithAnswer(obj, answer);
+         printAnswers(answer);
+      }
       oi.optionDone();
    }   
    <%
@@ -143,13 +146,20 @@
       final String arg = oi.getFirstArg();
       List<JGDIAnswer> answer = new ArrayList<JGDIAnswer>();
       <% if ( mandatory == 0 && optional == 0 ) { %>
-      <%=objectType%> obj = jgdi.get<%=objectType%>();
+      <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(answer);
       <% } else { %>
-      <%=objectType%> obj = jgdi.get<%=objectType%>(arg);
+      <%=objectType%> obj = jgdi.get<%=objectType%>WithAnswer(arg, answer);
       <% }%>
-      String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
-      GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
-      jgdi.update<%=objectType%>WithAnswer(obj, answer);
+
+      if (obj != null) {
+         // clear the ok answer from the get request
+         answer.clear();
+         String userTypedText = runEditor(GEObjectEditor.getConfigurablePropertiesAsText(obj));
+         if (userTypedText != null) {
+            GEObjectEditor.updateObjectWithText(jgdi, obj, userTypedText);
+            jgdi.update<%=objectType%>WithAnswer(obj, answer);
+         }
+      }
       printAnswers(answer);
       oi.optionDone();
    }  

@@ -1103,7 +1103,7 @@ public class <%=classname%> extends <%
   }
   
   public java.lang.String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       ret.append("<%=classname%>(");
 <%  {
      boolean first = true;
@@ -1238,7 +1238,7 @@ public class <%=classname%> extends <%
 %>
 
   public java.lang.String dump() {
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
 
       <%  
         DumpCompletelyGenerator dumpCompletelyGenerator = new DumpCompletelyGenerator();

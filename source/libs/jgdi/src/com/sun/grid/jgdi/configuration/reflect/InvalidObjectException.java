@@ -82,7 +82,7 @@ public class InvalidObjectException extends java.lang.Exception {
    
    public String toString() {
       
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       
       ret.append(getMessage());
       if( propertyErrorMap != null) {

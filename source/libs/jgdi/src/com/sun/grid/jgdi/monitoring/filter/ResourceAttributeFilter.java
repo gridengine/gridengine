@@ -74,7 +74,7 @@ public class ResourceAttributeFilter implements Serializable {
    @Override
     public String toString() {
         
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         Iterator iter = getValueNames().iterator();
         boolean first = true;
         buf.append("[ResourceAttributeFilter: ");

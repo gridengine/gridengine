@@ -1,3 +1,12 @@
+AA-2007-09-06-0: Enhancem.: - commlib read error messages fix in sge_log()
+                            - missing answer lists in QConfCommand
+                            - sge_edit() external editor handling
+                            - delete<Obj>sWithAnswer() method
+                            - QDelCommand, QModCommand
+                            - replacement of java_synchronized_jgdi.jsp via proxy class
+                            - StringBuffer -> StringBuilder
+                 Review:    RH
+
 PJ-2007-09-06-0: Enhancem.: added qsub command to JGDI
                  Cleanup:   qrstat, qrsub
                  Review:    LP

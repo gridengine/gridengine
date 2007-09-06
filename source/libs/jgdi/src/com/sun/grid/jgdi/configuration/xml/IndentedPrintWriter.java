@@ -45,7 +45,7 @@ import java.io.Writer;
  */
 public class IndentedPrintWriter extends PrintWriter {
    
-   private StringBuffer indent = new StringBuffer();
+   private StringBuilder indent = new StringBuilder();
    
    /** this flag indicates that a indent should
     *  be added.

@@ -164,14 +164,14 @@
    </target>
 
    <target depends="init, gensrc" name="compile.javah">
-      <javac debug="true" deprecation="true" 
+      <javac debug="${javac.debug}"
+             deprecation="${javac.deprecated}"
              destdir="${classes.dir}"
              includes="com/sun/grid/jgdi/jni/JGDIImpl.java, com/sun/grid/jgdi/jni/JGDIBase.java, com/sun/grid/jgdi/jni/EventClient.java"
              target="${myjavac.target}"
              source="${myjavac.source}">
          <src refid="jgdi.srcpath"/>
       </javac>
-
    </target>
 
    <target depends="init, gensrc" name="compile" if="isJavaBuildHost">
@@ -182,6 +182,7 @@
              source="${myjavac.source}">
          <src refid="jgdi.srcpath"/>
          <classpath refid="compile.classpath"/>
+         <!--compilerarg line="-Xlint:unchecked"/-->
       </javac>
       
       <rmic base="${classes.dir}" includes="com/sun/grid/jgdi/rmi/JGDIRemote*Impl.class">   
@@ -506,14 +507,7 @@
                        templateFile="templates/java_jni_jgdi.jsp">
             <pattern objectFilter="root primitive_root"/>
          </templateconv>
-         
-         <templateconv scope="definition"
-                       outputFile="${gensrc.dir}/com/sun/grid/jgdi/jni/SynchronizedJGDI.java"
-                       templateFile="templates/java_synchronized_jgdi.jsp">
-            <pattern objectFilter="root primitive_root"/>
-         </templateconv>
-         
-
+                  
          <templateconv scope="objects"
                        outputFile="${build.dir}/jgdi.c"
                        templateFile="templates/c_jgdi.jsp">

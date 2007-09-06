@@ -328,7 +328,7 @@ public class XMLUtil {
    }
    
    private static String quoteCharacters(String s) {
-      StringBuffer result = null;
+      StringBuilder result = null;
       for(int i = 0, max = s.length(), delta = 0; i < max; i++) {
          char c = s.charAt(i);
          String replacement = null;
@@ -349,7 +349,7 @@ public class XMLUtil {
          
          if (replacement != null) {
             if (result == null) {
-               result = new StringBuffer(s);
+               result = new StringBuilder(s);
             }
             result.replace(i + delta, i + delta + 1, replacement);
             delta += (replacement.length() - 1);
@@ -551,7 +551,7 @@ public class XMLUtil {
       char[] resolveResources(char[] ch, int start, int length) throws SAXException {
          int end = start + length;
          int i = start;
-         StringBuffer ret = new StringBuffer();
+         StringBuilder ret = new StringBuilder();
          
          while(i < end) {
             if (ch[i] == '$') {
@@ -681,12 +681,12 @@ public class XMLUtil {
             }
          }
          
-         private StringBuffer value;
+         private StringBuilder value;
          
          public void characters(char[] ch, int start, int length) throws SAXException {
             if (length > 0) {
                if (value == null) {
-                  value = new StringBuffer();
+                  value = new StringBuilder();
                }
                value.append(ch,start,length);
             }
@@ -716,7 +716,7 @@ public class XMLUtil {
       
       class StringHandler extends AbstractObjectHandler {
 
-         private StringBuffer buffer;
+         private StringBuilder buffer;
          
          public StringHandler(CullPropertyHandler parent, String name) {
             super(parent, name);
@@ -728,7 +728,7 @@ public class XMLUtil {
          
          public void characters(char[] ch, int start, int length) throws SAXException {
             if (buffer == null) {
-               buffer = new StringBuffer();
+               buffer = new StringBuilder();
             }
             buffer.append(ch,start, length);
          }
@@ -851,7 +851,7 @@ public class XMLUtil {
       
       class SimplePropertyHandler extends CullPropertyHandler {
          private SimplePropertyDescriptor pd;
-         private StringBuffer value;
+         private StringBuilder value;
          
          public SimplePropertyHandler(GEObjectHandler parent, SimplePropertyDescriptor pd) {
             super(parent);
@@ -872,7 +872,7 @@ public class XMLUtil {
          
          public void characters(char[] ch, int start, int length) throws SAXException {
             if (value == null) {
-               value = new StringBuffer();
+               value = new StringBuilder();
             }
             value.append(ch,start,length);
          }
@@ -921,7 +921,7 @@ public class XMLUtil {
       
       class MapPropertyHandler extends CullPropertyHandler {
          private MapPropertyDescriptor pd;
-         private StringBuffer value;
+         private StringBuilder value;
          private String key;
          
          public MapPropertyHandler(GEObjectHandler parent, MapPropertyDescriptor pd, org.xml.sax.Attributes attributes) {
@@ -951,7 +951,7 @@ public class XMLUtil {
          
          public void characters(char[] ch, int start, int length) throws SAXException {
             if (value == null) {
-               value = new StringBuffer();
+               value = new StringBuilder();
             }
             value.append(ch,start,length);
          }
@@ -972,7 +972,7 @@ public class XMLUtil {
       class MapListPropertyHandler extends CullPropertyHandler {
          private MapListPropertyDescriptor pd;
          private String key;
-         private StringBuffer value;
+         private StringBuilder value;
          
          public MapListPropertyHandler(GEObjectHandler parent, MapListPropertyDescriptor pd, org.xml.sax.Attributes attributes) {
             super(parent);

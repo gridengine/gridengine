@@ -99,10 +99,11 @@ JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobj
 }
 <%
        } // end of genAddMethod     
-           
+
        public void genDeleteMethod() {
          String methodName = "Java_com_sun_grid_jgdi_jni_JGDIImpl_delete" + classname;
 %>
+/* -------------- Delete ------------------------------------------------------- */           
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
  * Method:    delete<%=classname%>
@@ -111,19 +112,31 @@ JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobj
 JNIEXPORT void JNICALL <%=methodName%>(JNIEnv *env, jobject jgdi, jobject jobj)
 {
    DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, NULL);
+   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, false, NULL);
    DEXIT;
 }
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIImpl
  * Method:    delete<%=classname%>WithAnswer
- * Signature: (L<%=fullClassname%>;, L/java/util/List;)V
+ * Signature: (L<%=fullClassname%>;L/java/util/List;)V
  */
 JNIEXPORT void JNICALL <%=methodName%>WithAnswer(JNIEnv *env, jobject jgdi, jobject jobj, jobject answers)
 {
-   DENTER(TOP_LAYER, "<%=methodName%>");
-   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, answers);
+   DENTER(TOP_LAYER, "<%=methodName%>WithAnswer");
+   jgdi_delete(env, jgdi, jobj, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, false, answers);
+   DEXIT;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIImpl
+ * Method:    delete<%=classname%>sWithAnswer
+ * Signature: ([Ljava/lang/Object;ZL/java/util/List;)V
+ */
+JNIEXPORT void JNICALL <%=methodName%>sWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray jobj_array, jboolean forced, jobject options, jobject answers)
+{
+   DENTER(TOP_LAYER, "<%=methodName%>sWithAnswer");
+   jgdi_delete_array(env, jgdi, jobj_array, "<%=fullClassname%>", <%=listname%>, <%=cullname%>, forced, options, answers);
    DEXIT;
 }
 

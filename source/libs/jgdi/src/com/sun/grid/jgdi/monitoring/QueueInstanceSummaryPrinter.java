@@ -360,7 +360,7 @@ public class QueueInstanceSummaryPrinter {
             
             QueueInstanceSummary qi = (QueueInstanceSummary)obj;
             
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             ret.append(qi.getReservedSlots());
             ret.append('/');
             ret.append(qi.getUsedSlots());
@@ -417,7 +417,7 @@ public class QueueInstanceSummaryPrinter {
       
       Calc slotCalc = new Calc() {
          public Object getValue(Object obj) {
-            StringBuffer ret = new StringBuffer();
+            StringBuilder ret = new StringBuilder();
             QueueInfo qi = (QueueInfo)obj;
             // ret.append(qi.getReservedSlots());
             // ret.append('/');

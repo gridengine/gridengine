@@ -72,7 +72,7 @@ public class ParallelEnvironmentFilter implements Serializable {
    }
    
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       
       ret.append("ParallelEnvironmentFilter[");
       Iterator iter = peList.iterator();

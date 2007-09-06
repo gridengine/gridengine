@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.configuration;
 
-import com.sun.grid.jgdi.configuration.*;
 import com.sun.grid.jgdi.configuration.reflect.ClassDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.ListPropertyDescriptor;
 import com.sun.grid.jgdi.configuration.reflect.PropertyDescriptor;
@@ -44,7 +43,7 @@ import java.util.*;
  */
 public class Util {
    
-   private static Map classDescriptorMap = Collections.synchronizedMap(new HashMap());
+   private static Map<Class, ClassDescriptor> classDescriptorMap = Collections.synchronizedMap(new HashMap<Class, ClassDescriptor>());
 
    /**
     *  Get a descriptor of a cull type
@@ -70,7 +69,7 @@ public class Util {
    public static ClassDescriptor getDescriptor(Class aClass) {
       //System.out.println("getDescriptor: " + aClass.getName());
       ClassDescriptor ret = null;
-      ret = (ClassDescriptor)classDescriptorMap.get(aClass);
+      ret = classDescriptorMap.get(aClass);
       if (ret == null) {
          ret = createDescriptor(aClass);
          classDescriptorMap.put(aClass, ret);
@@ -138,7 +137,7 @@ public class Util {
    }
 
    public static GEObject findObject(String path, GEObject root) {
-      int dotIndex = path.indexOf(".");
+      int dotIndex = path.indexOf('.');
       
       String name = path;
       String rest  = null;

@@ -58,7 +58,7 @@ setup_env() {
             else
                JVM_ARGS="$JVM_ARGS -X$1"
             fi;;
-       -cp) shift; JVM_ARGS="$JVM_ARGS -cp $1";;
+       -cp) shift; JVM_ARGS="$JVM_ARGS -cp "$1"";;
      esac
      shift
    done
@@ -96,6 +96,18 @@ setup_env() {
                   DEBUGGER=gdb
                   ;;
       lx24-amd64) SRC_ARCH=LINUXAMD64_24
+                  JAVA_ARCH=amd64
+                  DEBUGGER=gdb
+                  ;;
+      ulx24-amd64) SRC_ARCH=ULINUXAMD64_24
+                  JAVA_ARCH=amd64
+                  DEBUGGER=gdb
+                  ;;
+      lx26-amd64) SRC_ARCH=LINUXAMD64_26
+                  JAVA_ARCH=amd64
+                  DEBUGGER=gdb
+                  ;;
+      ulx26-amd64) SRC_ARCH=ULINUXAMD64_26
                   JAVA_ARCH=amd64
                   DEBUGGER=gdb
                   ;;

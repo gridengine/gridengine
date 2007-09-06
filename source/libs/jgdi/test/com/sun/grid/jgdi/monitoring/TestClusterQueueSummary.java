@@ -67,7 +67,7 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
    private void printResult(List result) {
       Iterator iter = result.iterator();
       logger.fine("CLUSTER QUEUE CQLOAD   USED  AVAIL  TOTAL");
-      StringBuffer buf = new StringBuffer();
+      StringBuilder buf = new StringBuilder();
       
       while(iter.hasNext()) {
          ClusterQueueSummary cqs = (ClusterQueueSummary)iter.next();

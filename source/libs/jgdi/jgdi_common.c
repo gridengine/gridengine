@@ -55,6 +55,9 @@
 #include "sge_calendar.h"
 #include "sge_cqueue.h"
 #include "jgdi_logging.h"
+#include "sge_ja_task.h"
+#include "msg_sgeobjlib.h"
+#include "sge_edit.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
 
@@ -204,6 +207,13 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_initNative(JNIEnv *en
                                                        sge_dstring_get_string(&component_name),
                                                        url, username, &alp);
          sge_dstring_free(&component_name);
+
+         /*
+         ** TODO: find a more consistent solution for logging -> sge_log()
+         **       to suppress any console log output
+         */
+         log_state_set_log_verbose(0);
+   
          if (ctx == NULL) {
             pthread_mutex_unlock(&sge_gdi_ctx_mutex);
             throw_error_from_answer_list(env, JGDI_ERROR, alp);
@@ -3845,8 +3855,123 @@ error:
    DRETURN_VOID;
 }
 
+void jgdi_delete_array(JNIEnv *env, jobject jgdi, jobjectArray obj_array, const char *classname, int target_list, lDescr *descr, jboolean force, jobject userFilter, jobject answers)
+{
+   jgdi_result_t ret = JGDI_SUCCESS;
+   rmon_ctx_t rmon_ctx;
+   lList *alp = NULL;
+   lList *ref_list = NULL;
+   
+   DENTER(TOP_LAYER, "jgdi_delete_array");
+  
+   jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
+   rmon_set_thread_ctx(&rmon_ctx);
 
-void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr, jobject answers)
+   if (obj_array != NULL) {
+      int i;
+      jsize asize = (*env)->GetArrayLength(env, obj_array);
+      
+      for (i=0; i<asize; i++) {
+          jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
+          if (obj) {
+             if (target_list == SGE_JOB_LIST || target_list == SGE_AR_LIST) {
+                lListElem *iep = NULL;
+                const char* name = (*env)->GetStringUTFChars(env, obj, 0);
+                if (name == NULL) {
+                   answer_list_add(&alp, "jgdi_delete_array: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+                   goto error;
+                }
+                if (target_list == SGE_JOB_LIST) {
+                   if (sge_parse_jobtasks(&ref_list, &iep, name, &alp, true, NULL) == -1) {
+                      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_JOB_XISINVALIDJOBTASKID_S, name);
+                   }
+                   lSetUlong(iep, ID_force, force);
+                 } else {
+                  iep = lAddElemStr(&ref_list, ID_str, name, ID_Type);
+                  lSetUlong(iep, ID_force, force);
+                }
+                if (name) {
+                  (*env)->ReleaseStringUTFChars(env, obj, name);
+                }
+             } else {   
+                lListElem *ep = NULL;
+                if ((ret = obj_to_listelem(env, obj, &ep, descr, &alp)) != JGDI_SUCCESS) {
+                   goto error;
+                }
+                if (ref_list == NULL) {
+                   ref_list = lCreateList("", descr);
+                }   
+                lAppendElem(ref_list, ep);
+             }
+          }   
+      }
+   }      
+
+   /*
+   ** handle the userFilter for Job and AdvanceReservation in addition
+   */
+   if (userFilter != NULL && (target_list == SGE_JOB_LIST || target_list == SGE_AR_LIST)) {
+      lList *user_list = NULL;
+      if (get_string_list(env, userFilter, "getUsers", &user_list, ST_Type, ST_name, &alp) != JGDI_SUCCESS) {
+         lFreeList(&user_list);
+         goto error;
+      }
+      if (user_list) {
+         lListElem *iep;
+         if (lGetNumberOfElem(ref_list) == 0){
+            iep = lAddElemStr(&ref_list, ID_str, "0", ID_Type);
+            lSetList(iep, ID_user_list, user_list);
+            lSetUlong(iep, ID_force, force);
+         } else {
+            for_each(iep, ref_list){
+               lSetList(iep, ID_user_list, user_list);
+               lSetUlong(iep, ID_force, force);
+            }
+         }
+      }
+   }
+   
+   jgdi_log_printf(env, JGDI_LOGGER, FINER,
+                   "jgdi_delete_array: ref_list BEGIN ----------------------------------------");
+   
+   jgdi_log_list(env, JGDI_LOGGER, FINER, ref_list);
+
+   jgdi_log_printf(env, JGDI_LOGGER, FINER,
+                   "jgdi_delete_array: ref_list END ----------------------------------------");
+      
+   if (ref_list != NULL) {      
+      sge_gdi_ctx_class_t *ctx = NULL;
+      /* get context */
+      ret = getGDIContext(env, jgdi, &ctx, &alp);
+      if (ret != JGDI_SUCCESS) {
+         goto error;
+      }
+
+      alp = ctx->gdi(ctx, target_list, SGE_GDI_DEL, &ref_list, NULL, NULL);
+      lFreeList(&ref_list);
+      
+      if (answers != NULL) {
+         generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
+      }
+      if (answer_list_has_error(&alp)) {
+         ret = JGDI_ERROR;
+      }
+      
+   }
+
+error:
+   /* if error throw exception */
+   if (ret != JGDI_SUCCESS) {
+      throw_error_from_answer_list(env, ret, alp);
+   }
+   lFreeList(&alp);
+   rmon_set_thread_ctx(NULL);
+   jgdi_destroy_rmon_ctx(&rmon_ctx);
+   
+   DRETURN_VOID;
+}
+
+void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname, int target_list, lDescr *descr, jboolean force, jobject answers)
 {
    lList *lp = NULL;
    lList *alp = NULL;
@@ -3886,13 +4011,13 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
       sprintf(id_buf, sge_u32, lGetUlong(ep, JB_job_number));
       lFreeElem(&ep);
       iep = lAddElemStr(&lp, ID_str, id_buf, ID_Type); 
-      lSetUlong(iep, ID_force, false);
+      lSetUlong(iep, ID_force, force);
       what = lWhat("%T(ALL)", ID_Type);
    } else if (target_list == SGE_AR_LIST) {
       sprintf(id_buf, sge_u32, lGetUlong(ep, AR_id));
       lFreeElem(&ep);
       iep = lAddElemStr(&lp, ID_str, id_buf, ID_Type);
-      lSetUlong(iep, ID_force, false);
+      lSetUlong(iep, ID_force, force);
       what = lWhat("%T(ALL)", ID_Type);
    } else {
       lp = lCreateList("", descr);
@@ -4522,6 +4647,23 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_cleanQueuesWithAnswer
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIBase
+ * Method:    unsuspendWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers) 
+{
+   u_long32 transition = QI_DO_UNSUSPEND;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBase
  * Method:    unsuspendQueuesWithAnswer
  * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
  */
@@ -4548,6 +4690,23 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendJobsWithAnsw
    u_long32 option = force;
 
    DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_unsuspendJobs");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBase
+ * Method:    suspendWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_suspendWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_SUSPEND;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_suspendWithAnswer");
 
    jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
 
@@ -4607,10 +4766,27 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleJobsWithAns
 
 /*
  * Class:     com_sun_grid_jgdi_jni_JGDIBase
+ * Method:    rescheduleWithAnswer
+ * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+{
+   u_long32 transition = QI_DO_RESCHEDULE;
+   u_long32 option = force;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleWithAnswer");
+
+   jgdi_qmod(env, jgdi, obj_array, force, transition, option, answers);
+
+   DRETURN_VOID;
+}
+
+/*
+ * Class:     com_sun_grid_jgdi_jni_JGDIBase
  * Method:    rescheduleQueuesWithAnswer
  * Signature: ([Ljava/lang/String;ZLjava/util/List;)V
  */
-JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleQueueWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
+JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBase_rescheduleQueuesWithAnswer(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolean force, jobject answers)
 {
    u_long32 transition = QI_DO_RESCHEDULE | QUEUE_DO_ACTION;
    u_long32 option = force;
@@ -4937,6 +5113,30 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_JGDIFactory_setJGDIVersion(JNIE
    sprintf(version_string, "%s %s", GE_SHORTNAME, GDI_VERSION);
    DRETURN((*env)->NewStringUTF(env, version_string));
 }
+
+
+/*
+ * Class:     com_sun_grid_jgdi_util_shell_editor_EditorUtil
+ * Method:    nativeSgeEdit
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_com_sun_grid_jgdi_util_shell_editor_EditorUtil_nativeSgeEdit(JNIEnv *env, jclass clazz, jstring path) {
+   jint ret = 0;
+   uid_t uid = getuid();
+   uid_t gid = getgid();
+   const char *strpath = NULL;
+
+   DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_util_shell_editor_EditorUtil_nativeSgeEdit");
+
+   strpath = (*env)->GetStringUTFChars(env, path, 0);
+   ret = sge_edit(strpath, uid, gid);
+   if (strpath) { 
+      (*env)->ReleaseStringUTFChars(env, path, strpath);
+   }
+
+   DRETURN(ret);
+}
+
 
 /*-------------------------------------------------------------------------*
  * NAME

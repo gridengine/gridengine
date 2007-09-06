@@ -63,7 +63,7 @@
       File f = new File(fileName);
       long fileSize = f.length();
       FileReader fr;
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
       try {
          fr = new FileReader(f);
          char[] buff = new char[2048];
@@ -109,14 +109,14 @@
       if (editor == null) {
          return runJavaEditor(text);
       }
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
       try {
          File f = File.createTempFile("edit", null, new File("/tmp"));
          FileWriter fw = new FileWriter(f);
          fw.write(text);
          fw.flush();
          fw.close();
-
+/*
          String[] cmds;
          //TODO LP Think about this. Vi has to be execed in tty. Graphic editors not.
          if (editor.equalsIgnoreCase("vi") || editor.equalsIgnoreCase("vim")) {
@@ -127,6 +127,8 @@
 
          Process p = Runtime.getRuntime().exec(cmds);
          int exitCode = p.waitFor();
+*/
+         int exitCode = EditorUtil.sgeEdit(f);
          if (exitCode != 0) {
             return null;
          }
@@ -141,8 +143,10 @@
          }
       } catch (IOException ioe) {
          ioe.printStackTrace();
+/*
       } catch (InterruptedException ie) {
          ie.printStackTrace();
+*/
       }
       return sb.toString();
    }

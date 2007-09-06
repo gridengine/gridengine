@@ -25,7 +25,7 @@ public abstract class AbstractGDIGenerator {
    protected String name;
    
    /* key is the name of the primary key field, value is the java type */
-   protected java.util.Map primaryKeys = new java.util.HashMap();
+   protected java.util.Map<String,String> primaryKeys = new java.util.HashMap<String,String>();
    
    protected com.sun.grid.cull.CullObject cullObject;
    

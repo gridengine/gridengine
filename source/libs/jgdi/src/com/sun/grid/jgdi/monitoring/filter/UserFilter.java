@@ -50,7 +50,7 @@ public class UserFilter implements Serializable {
     */
    public UserFilter() {
    }
-   
+
    public static UserFilter parse(String userList) {
        UserFilter ret = new UserFilter();
        StringTokenizer st = new StringTokenizer(userList, ",");
@@ -70,17 +70,18 @@ public class UserFilter implements Serializable {
    }
 
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       
       ret.append("UserFilter[");
       Iterator iter = userList.iterator();
       if(iter.hasNext()) {
          ret.append(iter.next());
          while(iter.hasNext()) {
-            ret.append(",");
+            ret.append(", ");
             ret.append(iter.next());
          }
       }
+      ret.append("]");
       return ret.toString();
    }
 }

@@ -77,7 +77,7 @@
                 <package-root>src</package-root>
                 <classpath mode="compile">${local.ant.home}/lib/ant.jar</classpath>
                 <built-to>cullconv.jar</built-to>
-                <source-level>1.4</source-level>
+                <source-level>1.5</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>test</package-root>

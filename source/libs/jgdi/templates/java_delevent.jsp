@@ -113,7 +113,7 @@ public class <%=name%>DelEvent extends DelEvent implements java.io.Serializable 
    }
    
    public String toString() {
-      StringBuffer ret = new StringBuffer();
+      StringBuilder ret = new StringBuilder();
       ret.append(super.toString());
       ret.append(",");
       ret.append("<%=jh.getClassName(cullObj)%>");

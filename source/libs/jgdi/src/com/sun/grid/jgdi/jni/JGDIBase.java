@@ -150,6 +150,19 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     * @inherited
     */
    public native void cleanQueuesWithAnswer(String[] queues, java.util.List answers) throws JGDIException;
+
+   /*
+    * @inherited
+    */
+   public void unsuspend(String[] queues, boolean force) throws JGDIException {
+      unsuspendWithAnswer(queues, force, null); 
+   }
+
+   /*
+    * @inherited
+    */
+   public native void unsuspendWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+      
       
    /*
     * @inherited
@@ -174,6 +187,18 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     * @inherited
     */
    public native void unsuspendJobsWithAnswer(String[] jobs, boolean force, java.util.List answers) throws JGDIException;
+   
+   /*
+    * @inherited
+    */
+   public void suspend(String[] queues, boolean force) throws JGDIException {
+       suspendWithAnswer(queues, force, null);
+   }
+
+   /*
+    * @inherited
+    */
+   public native void suspendWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
    
    
    /*
@@ -226,6 +251,18 @@ abstract public class JGDIBase implements com.sun.grid.jgdi.JGDIBase {
     * @inherited
     */
    public native void rescheduleQueuesWithAnswer(String[] queues, boolean force, java.util.List answers) throws JGDIException;
+
+   /*
+    * @inherited
+    */
+   public void reschedule(String[] queue_or_job, boolean force) throws JGDIException {
+      rescheduleWithAnswer(queue_or_job, force, null); 
+   }
+
+   /*
+    * @inherited
+    */
+   public native void rescheduleWithAnswer(String[] queue_or_job, boolean force, java.util.List answers) throws JGDIException;
    
    
    /*

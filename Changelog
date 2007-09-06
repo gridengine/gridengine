@@ -1,3 +1,7 @@
+PJ-2007-09-06-0: Enhancem.: added qsub command to JGDI
+                 Cleanup:   qrstat, qrsub
+                 Review:    LP
+
 RH-2007-09-05-0: Enhancem.: jgdi event support for jmx interface added
                  Review:    AA
 

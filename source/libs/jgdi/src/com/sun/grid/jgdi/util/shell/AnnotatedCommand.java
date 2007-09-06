@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
 
 
 /**
@@ -126,7 +125,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
          pw.println(option);
       }
       // To avoid the continue of the command
-      throw new CancellationException();
+      throw new AbortException();
    }   
    
    /**
@@ -145,17 +144,21 @@ public abstract class AnnotatedCommand extends AbstractCommand {
          throw new UnsupportedOperationException("Cannot get OptionInfo from the abstract class CommandOption directly!");
       }
 
-      String option = args.remove(0);
+      String option = args.get(0);
       String msg;
 
       if (!optMap.containsKey(option)) {
          if (option.startsWith("-")) {
             msg = "error: unknown option \"" + option + "\"\nUsage: qconf -help";
+            throw new IllegalArgumentException(msg);
          } else {
             msg = "error: invalid option argument \"" + option + "\"\nUsage: qconf -help";
+            // return this option to list and repotr this
+            throw new ExtraArgumentException(msg,args);
          }
-
-         throw new IllegalArgumentException(msg);
+      } else {
+         // for known option remove it from the list
+         args.remove(0);
       }
 
       OptionDescriptor od = optMap.get(option);

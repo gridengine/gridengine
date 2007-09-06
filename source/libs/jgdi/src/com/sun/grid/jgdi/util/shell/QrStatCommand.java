@@ -36,7 +36,6 @@ import com.sun.grid.jgdi.configuration.AdvanceReservationImpl;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CancellationException;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 import static com.sun.grid.jgdi.util.shell.Util.*;
@@ -55,14 +54,12 @@ public class QrStatCommand extends AnnotatedCommand {
    }
 
    public void run(String[] args) throws Exception {
-      userList = new ArrayList<String>();
-      arList = new ArrayList<Integer>();
-      boolean arlist=false;
+      clear();
 
       //parse the option
       parseArgsInvokeOptions(args);
-
-      arlist = !arList.isEmpty();
+      
+      boolean arlist = !arList.isEmpty();
       //Let's take ar_list and look for candidates to delete
       @SuppressWarnings(value = "unchecked")
       List<AdvanceReservation> ars = (List<AdvanceReservation>) jgdi.getAdvanceReservationList();
@@ -114,7 +111,7 @@ public class QrStatCommand extends AnnotatedCommand {
    public void printUsage(final OptionInfo oi) throws JGDIException {
       pw.println(getUsage());
       // To avoid the continue of the command
-      throw new CancellationException();
+      throw new AbortException();
    }   
    //[-u user_list]                           all advance reservations of users specified in list
    @OptionAnnotation(value="-u",extra=OptionAnnotation.MAX_ARG_VALUE)
@@ -132,5 +129,10 @@ public class QrStatCommand extends AnnotatedCommand {
    public void setExplain(final OptionInfo oi) throws JGDIException {
        explain=true;
       throw new UnsupportedOperationException("Option -explain is not implemented");
+   }
+
+   private void clear() {
+      userList = new ArrayList<String>();
+      arList = new ArrayList<Integer>();
    }
 }

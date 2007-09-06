@@ -248,7 +248,7 @@ public class JGDIShell implements Runnable, Shell {
       }
    }
    
-   void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
+   public void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
       pw.println("Executing /bin/sh -c " + line);
       pw.flush();
       String[] cmds = {"/bin/sh", "-c", line};

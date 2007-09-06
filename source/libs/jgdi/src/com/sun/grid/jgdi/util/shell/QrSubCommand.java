@@ -47,7 +47,6 @@ import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
 
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 import static com.sun.grid.jgdi.util.shell.Util.*;
@@ -117,7 +116,7 @@ public class QrSubCommand extends AnnotatedCommand {
    public void printUsage(final OptionInfo oi) throws JGDIException {
       pw.println(getUsage());
       // To avoid the continue of the command
-      throw new CancellationException();
+      throw new AbortException();
    }
    //[-l resource_list]                       request the given resources
    @OptionAnnotation(value="-l",extra=OptionAnnotation.MAX_ARG_VALUE)

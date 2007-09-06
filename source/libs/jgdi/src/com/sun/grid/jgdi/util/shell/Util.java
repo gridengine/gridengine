@@ -157,6 +157,10 @@ public class Util {
       }
    }
    
+   public static boolean isYes(String str) {
+      return getYesNoAsInt(str)==1 ? true : false;
+   }
+   
    public static String getYesNoAsString(int val) {
       switch (val) {
       case 0: return "NO";
@@ -199,6 +203,10 @@ public class Util {
          throw new IllegalArgumentException("Unknown mail option type(s): '"+val+"'");
       }
       return ret;
+   }
+
+   static int getJobVerifyModeAsInt(String firstArg) {
+      throw new UnsupportedOperationException("Not yet implemented");
    }
    
    private static boolean isValueValid(String value, String pattern) {

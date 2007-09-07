@@ -76,6 +76,18 @@ public abstract class BasicQueueOptions implements Serializable {
    public void setQueueFilter(QueueFilter queueFilter) {
       this.queueFilter = queueFilter;
    }
+   
+   /**
+    *  Update the content of the queue user filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateQueueFilter(String vals) {
+      if (queueFilter == null) {
+         queueFilter = QueueFilter.parse(vals);
+      } else {
+         queueFilter.fill(vals);
+      }
+   }
 
    /**
     * Get the the resource filter.
@@ -93,6 +105,18 @@ public abstract class BasicQueueOptions implements Serializable {
     */
    public void setResourceFilter(ResourceFilter resourceFilter) {
       this.resourceFilter = resourceFilter;
+   }
+   
+   /**
+    *  Update the content of the resource filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateResourceFilter(String vals) {
+      if (resourceFilter == null) {
+         resourceFilter = ResourceFilter.parse(vals);
+      } else {
+         resourceFilter.fill(vals);
+      }
    }
 
    /**
@@ -113,6 +137,18 @@ public abstract class BasicQueueOptions implements Serializable {
    public void setQueueStateFilter(QueueStateFilter queueStateFilter) {
       this.queueStateFilter = queueStateFilter;
    }
+   
+   /**
+    *  Update the content of the queue state filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateQueueStateFilter(String vals) {
+      if (queueStateFilter == null) {
+         queueStateFilter = QueueStateFilter.parse(vals);
+      } else {
+         queueStateFilter.fill(vals);
+      }
+   }
 
    /**
     *  Get the queue user filter. The result of the qstat algorithm will only
@@ -132,6 +168,18 @@ public abstract class BasicQueueOptions implements Serializable {
     */
    public void setQueueUserFilter(UserFilter queueUserFilter) {
       this.queueUserFilter = queueUserFilter;
+   }
+   
+   /**
+    *  Update the content of the queue user filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateQueueUserFilter(String vals) {
+      if (queueUserFilter == null) {
+         queueUserFilter = UserFilter.parse(vals);
+      } else {
+         queueUserFilter.fill(vals);
+      }
    }
 
    /**

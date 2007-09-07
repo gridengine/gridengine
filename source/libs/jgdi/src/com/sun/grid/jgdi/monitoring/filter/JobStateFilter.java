@@ -145,6 +145,16 @@ public class JobStateFilter implements Serializable {
      * @return the job state
      */
     public static JobStateFilter parse(String stateString) {
+        JobStateFilter ret = new JobStateFilter();
+        return ret.fill(stateString);
+    }
+    
+    /**
+     * Parse a job state string.
+     * @param stateString  the job state string
+     * @return the job state
+     */
+    public static JobStateFilter fill(String stateString) {
         
         JobStateFilter ret = new JobStateFilter();
         String str = null;

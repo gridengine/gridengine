@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.ARA;
 import com.sun.grid.jgdi.configuration.ARAImpl;
 import com.sun.grid.jgdi.configuration.AdvanceReservation;
@@ -59,8 +60,7 @@ public class QrSubCommand extends AnnotatedCommand {
     AdvanceReservation ar = null;    
     
    public String getUsage() {
-      return getResourceString("sge.version.string") + "\n" 
-          + getResourceString("usage.qrsub");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrsub");
    }
   
    public void run(String[] args) throws Exception {
@@ -70,7 +70,7 @@ public class QrSubCommand extends AnnotatedCommand {
       // new ar object
       ar = new AdvanceReservationImpl(false); 
       // parse arguments and fill the ar object
-      parseArgsInvokeOptions(args);
+      parseAndInvokeOptions(args);
       
       // Send the ar object to qmaster
       List<JGDIAnswer> answers = new ArrayList<JGDIAnswer>();

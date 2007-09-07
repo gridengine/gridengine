@@ -116,16 +116,28 @@ public abstract class AbstractCommand implements HistoryCommand {
     * @param answers a JGDI answer list
     * @return an int exit code
     */
-    public int printAnswers(java.util.List<JGDIAnswer> answers) {
+    public void printAnswers(java.util.List<JGDIAnswer> answers) {
        int exitCode = 0;
        int status;
-       for (JGDIAnswer answer : answers) {
+       int i=0;
+       if (answers.size() == 0) {
+          return; 
+       }
+       JGDIAnswer answer;
+       for (i=0; i<answers.size()-1; i++) {
+          answer = answers.get(i);
           status = answer.getStatus(); 
           if ( status != 0) {
              exitCode = status;
           }
           pw.println(answer.getText());
        }
-       return exitCode;
+       //Get the last
+       answer = answers.get(i);
+       status = answer.getStatus();
+       if (status != 0 || exitCode != 0) {
+          throw new IllegalArgumentException(answer.getText());
+       }
+       pw.println(answer.getText());
     }
 }

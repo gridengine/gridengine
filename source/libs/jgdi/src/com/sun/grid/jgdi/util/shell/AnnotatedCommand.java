@@ -32,6 +32,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDIException;
+import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -48,49 +49,104 @@ import java.util.Set;
 public abstract class AnnotatedCommand extends AbstractCommand {
 
    /* Map holding all qconf options and method that should be invoked for it */
-   private Map<String, OptionDescriptor> optMap = null;
-
+   private static Map<Class<? extends Command>, Map<String, OptionDescriptor>> commandOptionMap = null;
+   private Map<String, OptionDescriptor> optionDescriptorMap = null;
+   private List<OptionInfo> optionList = null;
+   private Map<String, OptionInfo> optionInfoMap = null;
+   
    /**
-    * Initialize the option map optMap if not yet created.
+    * Initialize the option map optionDescriptorMap if not yet created.
     * Map is created by scanning all OptionMethod annotated functions.
     * NOTE: Only options in the map will be recognized as implemented
     * @return 
     */
-   public Map<String, OptionDescriptor> getOptMap() {
-      if (optMap == null) {
-         optMap = new HashMap<String, OptionDescriptor>(140);
+   public static void initOptionDescriptorMap(Class<? extends Command> cls, PrintWriter pw) throws Exception {
+      if (commandOptionMap == null) {
+         commandOptionMap = new HashMap<Class<? extends Command>, Map<String, OptionDescriptor>>(30);
+      }
+      if (!commandOptionMap.containsKey(cls)) {
+         Map<String, OptionDescriptor> optionDescriptorMap = new HashMap<String, OptionDescriptor>(140);
 
-         for (Method m : this.getClass().getMethods()) {
+         for (Method m : cls.getMethods()) {
             for (Annotation a : m.getDeclaredAnnotations()) {
                if (a instanceof OptionAnnotation) {
                   OptionAnnotation o = (OptionAnnotation) a;
-                  //Add method to the optMap
-                  addSingleMethod(o.value(), o.min(), o.extra(), this, m);
+                  if (optionDescriptorMap.containsKey(o.value())) {
+                     OptionDescriptor od = optionDescriptorMap.get(o.value());
+                     if (!od.getMethod().getName().equals(m.getName())) {
+                        pw.println("WARNING: Attempt to override " +od.getMethod().getDeclaringClass().getName()+"."+od.getMethod().getName() + " by " + cls.getName() + "." + m.getName() + "() for option \""+o.value()+"\"\n");
+                     }
+                  }
+                  //Add method to the optionDescriptorMap
+                  optionDescriptorMap.put(o.value(), new OptionDescriptor(o.value(), o.min(), o.extra(), m));
                }
             }
          }
+   
+         commandOptionMap.put(cls, optionDescriptorMap);
       }
-
-      return optMap;
    }
    
    /**
-    * Parse all arguments and invoke appropriate method
-    * It call Annotated functions for every recognized option.
-    * @param args command line options
-    * @throws java.lang.Exception en exception during the option call
-    * or some runable exception, when the options are wrong
+    * Finds option info based on option name.
+    * Use to do a lookahead if specific option was in the argument list.
+    * @params option String
+    * @returns OptionInfo associated with the option or null does not exist
     */
-   protected void parseArgsInvokeOptions(String[] args) throws Exception {
-      List<String> argList = parseArgs(args);
-
+   public OptionInfo getOptionInfo(String option) {
+      if (optionInfoMap.containsKey(option)) {
+         return optionInfoMap.get(option);
+      }
+      return null;
+   }
+   
+   /**
+    * Getter method
+    * @returns Map<String, OptionDescriptor>
+    */
+   public Map<String, OptionDescriptor> getOptionDescriptorMap() {
+      if (this.optionDescriptorMap == null) {
+         optionDescriptorMap = commandOptionMap.get(this.getClass());
+      }
+      return optionDescriptorMap;
+   }
+   
+   protected void parseOptions(String[] args) throws Exception {
+      optionList = new ArrayList<OptionInfo>(); 
+      optionInfoMap = new HashMap<String, OptionInfo>();
+      List<String> argList = tokenizeArgs(args);
       while (!argList.isEmpty()) {
          //Get option info, token are divided by known option
          //to option and reladet arguments
-         // The arguments are tested for declared multiplicity  
-         OptionInfo info = getOptionInfo(getOptMap(), argList);
-         //At the end the option handling function is called
-         info.invokeOption();
+         // The arguments are tested for declared multiplicity
+         OptionInfo info = getOptionInfo(getOptionDescriptorMap(), argList);
+         optionList.add(info);
+         optionInfoMap.put(info.getOd().getOption(), info);
+      }
+   }
+   
+   /**
+    * Parse all arguments and invoke appropriate methods
+    * It calls annotated functions for every recognized option.
+    * @param args command line options
+    * @throws java.lang.Exception an exception during the option call
+    * or some runnable exception, when the options are wrong
+    */
+   protected void parseAndInvokeOptions(String[] args) throws Exception {
+       parseOptions(args);
+       invokeOptions();
+   }
+   
+   /**
+    * Invoke appropriate methods
+    * It calls annotated functions for every recognized option.
+    * @param args command line options
+    * @throws java.lang.Exception an exception during the option call
+    * or some runnable exception, when the options are wrong
+    */
+   protected void invokeOptions() throws Exception {
+      for (OptionInfo oi : optionList) {
+         oi.invokeOption(this);
       }
    }
 
@@ -100,7 +156,7 @@ public abstract class AnnotatedCommand extends AbstractCommand {
     * @param args command line option
     * @return List of tokens
     */
-   protected List<String> parseArgs(String[] args) {
+   protected List<String> tokenizeArgs(String[] args) {
       ArrayList<String> argList = new ArrayList<String>();
       //Expand args to list of args, 'arg1,arg2 arg3' -> 3 args
       for (String arg : args) {
@@ -115,6 +171,9 @@ public abstract class AnnotatedCommand extends AbstractCommand {
       return argList;
    }   
    
+   /**
+    * Lists all known (registered) options for the command
+    */
    @OptionAnnotation(value = "-list", min=0)
    public void listOptions(final OptionInfo oi) throws JGDIException {
       String str = new String();
@@ -212,13 +271,4 @@ public abstract class AnnotatedCommand extends AbstractCommand {
       //TODO: Check we have correct args
       return new OptionInfo(od, argList, optMap);
    }
-
-   void addSingleMethod(String optionStr, int mandatory, int optional, AbstractCommand option, Method method) {
-      try {
-         optMap.put(optionStr, new OptionDescriptor(mandatory, optional, option, method));
-      } catch (Exception ex) {
-         throw new ExceptionInInitializerError(new Exception("<QConfCommand> failed: " + ex.getMessage()));
-      }
-   }
-   
 }

@@ -35,5 +35,5 @@ package com.sun.grid.jgdi.util.shell;
  * To Abort the run method. Replace CancellationException to avoid the
  * conflict with concurent package.
  */
-class AbortException extends IllegalArgumentException{
+public class AbortException extends IllegalArgumentException{
 }

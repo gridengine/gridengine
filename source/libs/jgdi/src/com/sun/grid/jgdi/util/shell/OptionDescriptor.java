@@ -37,25 +37,25 @@ import java.lang.reflect.Method;
  * Describes command option parameters as cache entry
  */
 public class OptionDescriptor {
-   private AbstractCommand command;
+   private String option;
    private int mandatoryArgCount;
    private int optionalArgCount;
    private Method method;
    
    /**
     * Constructor
+    * @param option - option string
     * @param mandatory - number of mandatory arguments
     * @param optional - number of optional arguments
-    * @param command - current command
     * @param method - command method to execute
     * @throws java.lang.InstantiationException 
     * @throws java.lang.IllegalAccessException 
     */
-   public OptionDescriptor(int mandatory, int optional, AbstractCommand command, Method method) throws InstantiationException,IllegalAccessException  {
-      mandatoryArgCount = mandatory;
-      optionalArgCount = optional;
+   public OptionDescriptor(String option, int mandatory, int optional, Method method) throws InstantiationException,IllegalAccessException  {
+      this.option = option;
+      this.mandatoryArgCount = mandatory;
+      this.optionalArgCount = optional;
       this.method = method;
-      this.command = command;
    }
    
    /**
@@ -97,14 +97,6 @@ public class OptionDescriptor {
    public boolean isMultiple() {
        return (getMaxArgCount() > 1) ? true : false;
    }
-   
-   /**
-    * Getter method
-    * @return value
-    */
-   public AbstractCommand getCommand() {
-      return command;
-   }
 
    /**
     * Getter method
@@ -112,5 +104,9 @@ public class OptionDescriptor {
     */
    public Method getMethod() {
       return method;
+   }
+
+   public String getOption() {
+      return option;
    }
 }

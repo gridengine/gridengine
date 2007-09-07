@@ -46,18 +46,22 @@ public class QueueFilter implements Serializable {
    
    private static Logger logger = Logger.getLogger(QueueFilter.class.getName());
    
-   private List queues = new ArrayList();
+   private List<String> queues = new ArrayList<String>();
    /** Creates a new instance of QueueFilter */
    public QueueFilter() {
    }
    
-   public static QueueFilter parse(String wcQueueList) {
+   public static QueueFilter parse(String str) {
        QueueFilter ret = new QueueFilter();
-       StringTokenizer st = new StringTokenizer(wcQueueList, ",");
-       while(st.hasMoreTokens()) {
-           ret.addQueue(st.nextToken());
+       return ret.fill(str);
+   }
+   
+   public QueueFilter fill(String list) {
+       String[] elems = list.split(",");
+       for (String elem : elems) {
+           addQueue(elem);
        }
-       return ret;
+       return this;
    }
    
    public void addQueue(String queue) {

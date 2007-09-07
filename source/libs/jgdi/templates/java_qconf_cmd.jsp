@@ -229,12 +229,9 @@
       List< <%=objectType%> > list = (List< <%=objectType%> >)jgdi.get<%=objectType%>List();
       List<String> values = new ArrayList<String>();
       for (<%=objectType%> obj : list) {
-         String name = obj.getName();
-         if (!name.equals("global")) {
-            values.add(name);
-         }
+         values.add(obj.getName());
       }
-      <% if (objectType.equals("Configuration")) { %>
+      <% if (objectType.equals("Configuration") || objectType.equals("UserSet")) { %>
       values.remove("global");
       <%} else if (objectType.equals("ExecHost")) { %>
       values.remove("global");
@@ -321,6 +318,10 @@ public abstract class QConfCommandGenerated extends AnnotatedCommand {
   init.genShowListMethod("Operator", "-so", 0, 0);
   //Manager
   init.genShowListMethod("Manager", "-sm", 0, 0);
+  //SubmitHost
+  init.genShowListMethod("SubmitHost", "-ss", 0, 0);
+  //AdminHost
+  init.genShowListMethod("AdminHost", "-sh", 0, 0);
 %>
   <%@include file="java_qconf_cmd.static"%>
 }

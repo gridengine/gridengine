@@ -75,13 +75,7 @@ public class EditorParser {
             throw new IllegalArgumentException("Expected at least 2 tokens name and value got: \""+attr+"\"");
          }
          attr = EditorUtil.c2javaName(obj, attr);
-         
-         //CONFIGURATION special case
-         if (obj instanceof Configuration) {
-            map.put(attr, line);
-            continue;
-         }
-         
+                 
          //CONFIGURATION special case
          if (obj instanceof Configuration) {
             map.put(attr, line.trim());
@@ -504,8 +498,8 @@ public class EditorParser {
     * Removes whitespaces. Lines ending with  \\ are join to one.
     * @return List of lines cointaing a list of elements
     */
-   public static List tokenizeToList(String text)  {
-      List list = null;
+   public static List<List<String>> tokenizeToList(String text)  {
+      List<List<String>> list = null;
       try {
          list = new Tokenizer(text).tokenizeToList();
       } catch (IOException ex) {
@@ -524,7 +518,7 @@ public class EditorParser {
          this.text = text;
       };
       
-      public List tokenizeToList() throws IOException {
+      public List<List<String>> tokenizeToList() throws IOException {
          return tokenize();
       }
       
@@ -541,9 +535,9 @@ public class EditorParser {
          return res.substring(0,res.length()-1);
       }
    
-      private List tokenize() throws IOException {
+      private List<List<String>> tokenize() throws IOException {
          LineNumberReader lnr = new LineNumberReader(new StringReader(text));
-         List list = new ArrayList();
+         List<List<String>> list = new ArrayList<List<String>>();
          boolean eof = false;
          String line = "", temp;
          while (!eof) {
@@ -574,12 +568,11 @@ public class EditorParser {
          return (list.size() == 0) ? null : list;
       }
       
-      private List getLineElems(String line) {
+      private List<String> getLineElems(String line) {
          String elems[] = line.split("[ \t]");
-         String elem;
-         List list = new ArrayList();
-         for (int i=0; i < elems.length; i++) {
-            elem = elems[i].trim();
+         List<String> list = new ArrayList<String>();
+         for (String elem : elems) {
+            elem = elem.trim();
             if (elem.length()==0) continue;
             list.add(elem);
          }

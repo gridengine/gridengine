@@ -43,7 +43,7 @@ import java.util.StringTokenizer;
  */
 public class ParallelEnvironmentFilter implements Serializable {
    
-   private List peList = new ArrayList();
+   private List<String> peList = new ArrayList<String>();
    
    /** Creates a new instance of ParallelEnvironmentFilter */
    public ParallelEnvironmentFilter() {
@@ -51,11 +51,15 @@ public class ParallelEnvironmentFilter implements Serializable {
    
    public static ParallelEnvironmentFilter parse(String str) {
        ParallelEnvironmentFilter ret = new ParallelEnvironmentFilter();
-       StringTokenizer st = new StringTokenizer(str, ",");
-       while(st.hasMoreTokens()) {
-           ret.addPE(st.nextToken());
+       return ret.fill(str);
+   }
+   
+   public ParallelEnvironmentFilter fill(String list) {
+       String[] elems = list.split(",");
+       for (String elem : elems) {
+           addPE(elem);
        }
-       return ret;
+       return this;
    }
    
    
@@ -71,6 +75,7 @@ public class ParallelEnvironmentFilter implements Serializable {
       return peList.size();
    }
    
+   @Override
    public String toString() {
       StringBuilder ret = new StringBuilder();
       

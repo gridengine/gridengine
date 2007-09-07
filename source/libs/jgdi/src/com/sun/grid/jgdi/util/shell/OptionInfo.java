@@ -75,12 +75,11 @@ public class OptionInfo {
     * @see getFirstArg(), optionDone(), @link {OptionMethod}
     * @throws java.lang.Exception 
     */
-   public void invokeOption() throws Exception {
+   public void invokeOption(Command command) throws Exception {
       //Invoke it
       do {
          try {
             final Method method = getMethod();
-            final AbstractCommand command = getOd().getCommand();
             List<OptionInfo> objList = new ArrayList<OptionInfo>();
             objList.add(this);
             method.invoke(command, objList.toArray());
@@ -95,14 +94,6 @@ public class OptionInfo {
             }
          } 
       } while (!isOptionDone() && getOd().isMultiple());
-   }
-   
-   /**
-    * Getter method
-    * @return {@link AbstractCommand} object
-    */
-   public AbstractCommand getCommand() {
-      return getOd().getCommand();
    }
    
    /**

@@ -108,6 +108,18 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
    }
    
    /**
+    *  Update the content of the resource attribute filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateResourceAttributeFilter(String vals) {
+      if (resourceAttributeFilter == null) {
+         resourceAttributeFilter = ResourceAttributeFilter.parse(vals);      
+      } else {
+         resourceAttributeFilter.fill(vals);
+      }
+   }
+   
+   /**
     * <p>Determine if the explain flag is set.</p>
     *
     * <p>If the explain flag is set, the {@link QueueInstanceSummary} will include
@@ -201,6 +213,8 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
     */
    public void setShowArrayJobs(boolean showArrayJobs) {
       this.showArrayJobs = showArrayJobs;
+      //Only -g d or -g t is valid
+      this.showPEJobs = false;
    }
 
    /**
@@ -221,6 +235,8 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
     */
    public void setShowPEJobs(boolean showPEJobs) {
       this.showPEJobs = showPEJobs;
+      //Only -g d or -g t is valid
+      this.showArrayJobs = false;
    }
 
    /**
@@ -237,6 +253,18 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
     */
    public void setPeFilter(ParallelEnvironmentFilter peFilter) {
       this.peFilter = peFilter;
+   }
+   
+   /**
+    *  Update the content of the PE filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updatePeFilter(String vals) {
+      if (peFilter == null) {
+         peFilter = ParallelEnvironmentFilter.parse(vals);
+      } else {
+         peFilter.fill(vals);
+      }
    }
 
    /**
@@ -311,6 +339,18 @@ public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Se
     */
    public void setJobUserFilter(UserFilter jobUserFilter) {
       this.jobUserFilter = jobUserFilter;
+   }
+   
+   /**
+    *  Update the content of the job user filter by adding values in vals
+    *  @param vals values to be added to the filter
+    */
+   public void updateJobUserFilter(String vals) {
+      if (jobUserFilter == null) {
+         jobUserFilter = UserFilter.parse(vals);
+      } else {
+         jobUserFilter.fill(vals);
+      }
    }
 
    /**

@@ -189,22 +189,26 @@ public class QueueStateFilter implements Serializable {
    public void setSubordinate(boolean flag) {
        set(SUBORDINATE, flag);
    }
-
+   
    public static QueueStateFilter parse(String options) {
       QueueStateFilter ret = new QueueStateFilter();
+      return ret.fill(options);
+   }
+
+   public QueueStateFilter fill(String options) {
       char c;
       outer:
       for(int i = 0; i < options.length(); i++) {
          c = options.charAt(i);
          for(int stateIndex = 0; stateIndex < STATE_TO_STR.length; stateIndex++) {
             if(STATE_TO_STR[stateIndex].letter == c) {
-               ret.set(STATE_TO_STR[stateIndex].state, true);
+               set(STATE_TO_STR[stateIndex].state, true);
                continue outer;
             }
          }
          throw new IllegalArgumentException("Unknown queue state " + c);
       }
-      return ret;
+      return this;
    }
    
    public String getOptions() {
@@ -218,6 +222,7 @@ public class QueueStateFilter implements Serializable {
       return new String(buf, 0, bufIndex);
    }
    
+   @Override
    public String toString() {
       StringBuilder ret = new StringBuilder();
       ret.append("QueueStateFilter[");

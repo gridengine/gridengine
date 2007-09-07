@@ -31,7 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.monitoring.ResourceQuotaRuleInfo;
 import com.sun.grid.jgdi.monitoring.QQuotaOptions;
 import com.sun.grid.jgdi.monitoring.QQuotaResult;
@@ -43,7 +43,6 @@ import com.sun.grid.jgdi.monitoring.filter.QueueFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
-import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -55,8 +54,7 @@ import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 public class QQuotaCommand extends AbstractCommand {
    
    public String getUsage() {
-      return getResourceString("sge.version.string")+"\n"+
-             getResourceString("usage.qquota");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qquota");
    }
    
    

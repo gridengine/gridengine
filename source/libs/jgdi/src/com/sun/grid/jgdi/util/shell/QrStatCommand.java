@@ -31,6 +31,7 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.AdvanceReservation;
 import com.sun.grid.jgdi.configuration.AdvanceReservationImpl;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
@@ -49,15 +50,14 @@ public class QrStatCommand extends AnnotatedCommand {
     boolean explain=false;
 
    public String getUsage() {
-      return getResourceString("sge.version.string") + "\n"
-           + getResourceString("usage.qrstat");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qrstat");
    }
 
    public void run(String[] args) throws Exception {
       clear();
 
       //parse the option
-      parseArgsInvokeOptions(args);
+      parseAndInvokeOptions(args);
       
       boolean arlist = !arList.isEmpty();
       //Let's take ar_list and look for candidates to delete

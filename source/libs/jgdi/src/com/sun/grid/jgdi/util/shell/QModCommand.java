@@ -45,8 +45,7 @@ import java.util.List;
 public class QModCommand extends AbstractCommand {
    
    public String getUsage() {
-      return JGDIFactory.getJGDIVersion() + "\n" +
-         getResourceString("usage.qmod");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qmod");
    }
    
    public void run(String[] args) throws Exception {

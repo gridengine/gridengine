@@ -32,9 +32,9 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.ComplexEntry;
 import com.sun.grid.jgdi.configuration.ComplexEntryImpl;
-import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import com.sun.grid.jgdi.configuration.JobImpl;
 import com.sun.grid.jgdi.configuration.JobReferenceImpl;
 import com.sun.grid.jgdi.configuration.JobTaskImpl;
@@ -46,7 +46,6 @@ import com.sun.grid.jgdi.configuration.RangeImpl;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.util.JGDIShell;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
@@ -65,7 +64,7 @@ public class QSubCommand extends AnnotatedCommand {
    boolean binary=false;
 
    public String getUsage() {
-      return getResourceString("sge.version.string") + "\n" + getResourceString("usage.qsub");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qsub");
    }
 
    public void run(String[] args) throws Exception {
@@ -77,7 +76,7 @@ public class QSubCommand extends AnnotatedCommand {
 
       // parse arguments and fill the ar object
       try {
-         parseArgsInvokeOptions(args);
+         parseAndInvokeOptions(args);
       } catch (ExtraArgumentException ea) {
          for(String arg : ea.getArgs()){
             job.addJobArgs(arg);

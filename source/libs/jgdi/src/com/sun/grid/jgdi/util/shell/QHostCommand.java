@@ -31,8 +31,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIException;
+import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.monitoring.QHostOptions;
 import com.sun.grid.jgdi.monitoring.QHostResult;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryPrinter;
@@ -40,7 +40,6 @@ import com.sun.grid.jgdi.monitoring.filter.HostFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceAttributeFilter;
 import com.sun.grid.jgdi.monitoring.filter.ResourceFilter;
 import com.sun.grid.jgdi.monitoring.filter.UserFilter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,8 +53,7 @@ public class QHostCommand extends AbstractCommand {
    
    
    public String getUsage() {
-      return getResourceString("sge.version.string")+"\n"+
-             getResourceString("usage.qhost");
+      return JGDIFactory.getJGDIVersion() + "\n" + getResourceString("usage.qhost");
    }
    
    public void run(String[] args) throws Exception {

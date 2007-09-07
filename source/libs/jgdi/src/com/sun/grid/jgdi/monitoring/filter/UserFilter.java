@@ -43,7 +43,7 @@ import java.util.StringTokenizer;
  */
 public class UserFilter implements Serializable {
    
-   private List userList = new ArrayList();
+   private List<String> userList = new ArrayList<String>();
    
    /** 
     * Creates a new instance of UserFilter 
@@ -53,11 +53,15 @@ public class UserFilter implements Serializable {
 
    public static UserFilter parse(String userList) {
        UserFilter ret = new UserFilter();
-       StringTokenizer st = new StringTokenizer(userList, ",");
-       while(st.hasMoreTokens()) {
-           ret.addUser(st.nextToken());
+       return ret.fill(userList);
+   }
+   
+   public UserFilter fill(String list) {
+       String[] elems = list.split(",");
+       for (String elem : elems) {
+           addUser(elem);
        }
-       return ret;
+       return this;
    }
    
    

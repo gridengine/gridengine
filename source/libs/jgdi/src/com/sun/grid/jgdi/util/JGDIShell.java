@@ -36,6 +36,9 @@ import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
+import com.sun.grid.jgdi.util.shell.AbortException;
+import com.sun.grid.jgdi.util.shell.AbstractCommand;
+import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
 import com.sun.grid.jgdi.util.shell.Command;
 import com.sun.grid.jgdi.util.shell.CommandAnnotation;
 import com.sun.grid.jgdi.util.shell.HistoryCommand;
@@ -76,7 +79,6 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
-import java.util.concurrent.CancellationException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -131,19 +133,27 @@ public class JGDIShell implements Runnable, Shell {
     * @param cls Annotated class child of AbstractCommand 
     * @throws java.lang.Exception 
     */
+   @SuppressWarnings("unchecked")
    private void addAnnotatedCommand(Class cls) throws Exception {
-      @SuppressWarnings("unchecked")
       CommandAnnotation ca = (CommandAnnotation) cls.getAnnotation(CommandAnnotation.class);
-      final Object newInstance = cls.newInstance();
-      if( newInstance instanceof Command) {
-        cmdMap.put(ca.value(), (Command) newInstance);
+      if (Command.class.isAssignableFrom(cls)) {
+         cmdMap.put(ca.value(), (Command) cls.newInstance());
+         if (AnnotatedCommand.class.isAssignableFrom(cls)) {
+            AnnotatedCommand.initOptionDescriptorMap(cls, pw);
+         }
       } else {
-          throw new IllegalStateException("Can not cast "+newInstance.getClass().getName()+" to Command");
+          throw new IllegalStateException("Can not assign "+cls.getName()+" from Command.class");
       }
    }
 
+   
    private Command getCommand(String name) throws Exception {
-      return cmdMap.get(name);
+      Command cmd = cmdMap.get(name);
+      //We need a new isntance of command for each request
+      if (cmd  instanceof AbstractCommand) {
+          cmd = cmd.getClass().newInstance();
+      }
+      return cmd;
    }
 
    /**
@@ -196,10 +206,11 @@ public class JGDIShell implements Runnable, Shell {
       System.exit(0);
    }
    
-   private void runCommand(String line) {
+   private int runCommand(String line) {
+      int exitCode = 0;
       line = line.trim(); 
       if (line.length() == 0) {
-         return;
+         return 0;
       }
       try {
          if (line.charAt(0) == '!') {
@@ -226,8 +237,8 @@ public class JGDIShell implements Runnable, Shell {
          ParsedLine parsedLine = new ParsedLine(line);
          Command cmd = getCommand(parsedLine.cmd);
          if (cmd == null) {
-            runShellCommand(line);
-            return;
+            exitCode = runShellCommand(line);
+            return exitCode;
          }
 
          if (cmd instanceof HistoryCommand) {
@@ -239,16 +250,26 @@ public class JGDIShell implements Runnable, Shell {
 
          cmd.init(this);
          cmd.run(parsedLine.args);
-      } catch (CancellationException expected) {
-      } catch (Exception ex) {
+      } catch (AbortException expected) {
+      } catch (IllegalArgumentException ex) {
          pw.println(ex.getMessage());
          logger.info("Command failed: " + ex.getMessage());
+         exitCode = 1; //There was an error during the execution
+      } catch (JGDIException ex) {
+         pw.println(ex.getMessage());
+         logger.info("Command failed: " + ex.getMessage());
+         exitCode = 1; //There was an error during the execution
+      } catch (Exception ex)  {
+         ex.printStackTrace(pw); 
+         logger.log(Level.SEVERE, "Command failed: " + ex.getMessage(), ex);
+         exitCode = 1; //There was an error during the execution
       } finally {
          pw.flush();
       }
+      return exitCode;
    }
    
-   public void runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
+   public int runShellCommand(String line) throws InterruptedException, IOException, InterruptedException {
       pw.println("Executing /bin/sh -c " + line);
       pw.flush();
       String[] cmds = {"/bin/sh", "-c", line};
@@ -260,6 +281,7 @@ public class JGDIShell implements Runnable, Shell {
       p.waitFor();
       to.join();
       te.join();
+      return p.exitValue();
    }
    
    @SuppressWarnings("unchecked")
@@ -333,8 +355,8 @@ public class JGDIShell implements Runnable, Shell {
       if (url != null) {
          runCommand("connect " + url);
          //We just want to execute a single command passed as param and exit.
-         runCommand(cmdParams);
-         System.exit(1);
+         int exitCode = runCommand(cmdParams);
+         System.exit(exitCode);
       }
    }
    

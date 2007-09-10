@@ -1,3 +1,8 @@
+OJ-2007-09-28-0: Bugfix:   Merged in SGE 6.1 resource quota enhancements
+		 Bugster:  6551121, 6564461, 6569088, 66571749, 6579232, 6585721 
+                 Issue:    2274, 2293, 2303, 2338 
+                 Review:   AH
+
 CR-2007-08-31-0: Cleanup:   sge_ca script now does umask 077 also for no
                             root user installations (merged from maintrunk)
                  Review:    AA

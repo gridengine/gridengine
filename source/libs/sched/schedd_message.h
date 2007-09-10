@@ -40,6 +40,10 @@ extern "C" {
 
 #define MAXMSGLEN 256
 
+/* enable/disable message creation into sme/tmp_sme */
+void schedd_mes_on(void);
+void schedd_mes_off(void);
+
 /* Initialize module variables */
 /* prepare tmp_sme for collecting messages */
 void schedd_mes_initialize(void);

@@ -708,6 +708,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, sge_Sdescr_t *lists, order_t *ord
       bool is_immediate_array_job = false;
       struct timeval now, later;
       double time;
+
       gettimeofday(&now, NULL);
 
       while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING]))) != NULL) {
@@ -1074,6 +1075,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
             is_computed_reservation = true;
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
+            assignment_clear_cache(&a);
 
             result = sge_select_parallel_environment(&a, pe_list);
 
@@ -1123,6 +1125,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
                   a.job_id, a.ja_task_id, a.duration)); 
             a.start = DISPATCH_TIME_QUEUE_END;
             a.is_reservation = true;
+            assignment_clear_cache(&a);
             
             result = sge_sequential_assignment(&a);
             if (result == DISPATCH_OK) {

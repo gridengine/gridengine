@@ -82,12 +82,6 @@ enum {
    DISPATCH_TIME_QUEUE_END = LONG32_MAX
 };
 
-enum { 
-   MATCH_NOW = 0x01, 
-   MATCH_LATER = 0x02, 
-   MATCH_NEVER = 0x04 
-};
-
 typedef struct {
    /* ------ this section determines the assignment ------------------------------- */
    u_long32    job_id;            /* job id (convenience reasons)                   */
@@ -109,19 +103,29 @@ typedef struct {
    lList      *hgrp_list;         /* the host group list (HGRP_Type)                */
    lList      *rqs_list;          /* the resource quota set list (RQS_Type)         */ 
    bool       is_reservation;     /* true, if a reservation for this job should be done */
+   bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */
+   bool       is_schedule_based;  /* true, if resource reservation is enabled       */
+   bool       is_soft;           /* true, if job has soft requests       */
+   /* ------ this section is for caching of intermediate results ------------------ */
+   lList      *limit_list;        /* the resource quota limit list (RQL_Type)       */ 
+   lList      *skip_cqueue_list;  /* cluster queues that need not be checked any more (CTI_Type) */ 
+   lList      *skip_host_list;    /* hosts that need not be checked any more (CTI_Type) */ 
    /* ------ this section is the resulting assignment ----------------------------- */
    lListElem  *pe;                /* the parallel environment (PE_Type)             */
+   const char* pe_name;           /* name of the PE                                 */
    lList      *gdil;              /* the resources (JG_Type)                        */
    int        slots;              /* total number of slots                          */
    u_long32   start;              /* jobs start time                                */
    int        soft_violations;    /* number of soft request violations              */
 } sge_assignment_t;
 
-#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, 0, 0, 0}
+#define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, \
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
+void assignment_clear_cache(sge_assignment_t *a);
 
 /* -------------------------------------------------------------------------------- */
 
@@ -164,6 +168,17 @@ int sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
                          bool *has_value_from_object);
 
 int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, const lList *exechost_list, const lList *complex_list);
+
+dispatch_t
+parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,
+                 int *slots, int *slots_qend, lList *total_list, lList *rue_list, lList *load_attr,
+                 bool force_slots, lListElem *queue, u_long32 layer, double lc_factor, u_long32 tag,
+                 bool allow_non_requestable, const char *object_name);
+
+dispatch_t
+ri_time_by_slots(const sge_assignment_t *a, lListElem *request, lList *load_attr, lList *config_attr, lList *actual_attr,
+                lListElem *queue, dstring *reason, bool allow_non_requestable,
+                int slots, u_long32 layer, double lc_factor, u_long32 *start_time, const char *object_name);
 
 
 #endif

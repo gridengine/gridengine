@@ -204,14 +204,6 @@ u_long32 gdi_state_get_next_request_id(void)
    return gdi_state->request_id;
 }
 
-#ifdef USE_GDI_STATE
-static void gdi_state_set_made_setup(int i)
-{
-   GET_SPECIFIC(gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_made_setup");
-   gdi_state->made_setup = i;
-}
-#endif
-
 
 int gdi_state_get_made_setup(void)
 {
@@ -694,11 +686,12 @@ static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, i
 
 static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup)
 {
-   sge_gdi_ctx_t *gdi_ctx = NULL;
+   sge_gdi_ctx_t *gdi_ctx;
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_set_is_setup");
 
    if (!thiz || !thiz->sge_gdi_ctx_handle) {
+      DPRINTF(("CTX: couldn't set %s\n", is_setup?"true":"false"));
       DRETURN_VOID;
    }   
    
@@ -712,15 +705,17 @@ static void sge_gdi_ctx_set_is_setup(sge_gdi_ctx_class_t *thiz, bool is_setup)
 
 static bool sge_gdi_ctx_is_setup(sge_gdi_ctx_class_t *thiz)
 {
-   sge_gdi_ctx_t *gdi_ctx = NULL;
+   sge_gdi_ctx_t *gdi_ctx;
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_is_setup");
 
    if (!thiz || !thiz->sge_gdi_ctx_handle) {
+      DPRINTF(("CTX: couldn't return true/false\n"));
       DRETURN(false);
    }   
    
    gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
+   DPRINTF(("CTX: return %s\n", gdi_ctx->is_setup?"true":"false"));
 
    DRETURN(gdi_ctx->is_setup);
 }
@@ -2074,34 +2069,16 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
 
    DENTER(TOP_LAYER, "sge_gdi2_setup");
 
-#ifdef USE_GDI_STATE 
-   if (alpp != NULL && *alpp != NULL) {
-     alpp_was_null = false;
+   if (sge_gdi_ctx_is_setup(*context_ref)) {
+      if (alpp_was_null) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      } else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                 MSG_GDI_GDI_ALREADY_SETUP);
+      }
+      DRETURN(AE_ALREADY_SETUP);
    }
 
-   /* TODO: gdi_state_t should be part of context */
-   /* initialize libraries */
-   pthread_once(&gdi_once_control, gdi_once_init);
-   if (gdi_state_get_made_setup()) {
-      if (alpp_was_null) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
-      } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                                 MSG_GDI_GDI_ALREADY_SETUP);
-      }
-      DRETURN(AE_ALREADY_SETUP);
-   }
-#else   
-   if (context_ref && sge_gdi_ctx_is_setup(*context_ref)) {
-      if (alpp_was_null) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
-      } else {
-         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
-                                 MSG_GDI_GDI_ALREADY_SETUP);
-      }
-      DRETURN(AE_ALREADY_SETUP);
-   }
-#endif
    ret = sge_setup2(context_ref, progid, alpp); 
    if (ret != AE_OK) {
       DRETURN(ret);
@@ -2112,12 +2089,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, lList **a
       DRETURN(AE_QMASTER_DOWN);
    }
 
-#ifdef USE_GDI_STATE
-   /* TODO: gdi_state should be part of context */
-   gdi_state_set_made_setup(1);
-#else   
    sge_gdi_ctx_set_is_setup(*context_ref, true);
-#endif
 
    DRETURN(AE_OK);
 }

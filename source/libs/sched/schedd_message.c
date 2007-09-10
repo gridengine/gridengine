@@ -55,15 +55,20 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
 static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list);
 
 /* 
- * Message structure where job scheduling informations are stored 
+ * Message structure where job scheduling informations are stored if not disabled
  */
 static lListElem *sme = NULL;
 static lListElem *tmp_sme = NULL;
+static bool mes_schedd_info = true;
 
 /* 
- * write scheduling informaten into logfile
+ * write scheduling information into logfile
  */
 static int log_schedd_info = 1;
+
+
+void schedd_mes_on(void) { mes_schedd_info = true; }
+void schedd_mes_off(void) { mes_schedd_info = false; }
 
 static void schedd_mes_find_others(lList *job_list,
                                    int ignore_category)
@@ -366,6 +371,7 @@ void schedd_mes_set_logging(int bval) {
 int schedd_mes_get_logging(void) {
    return log_schedd_info;
 }
+
 /****** schedd/schedd_mes/schedd_mes_add() ************************************
 *  NAME
 *     schedd_mes_add() -- Add one entry into the message structure. 
@@ -431,28 +437,34 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
    vsprintf(msg, fmt, args);
 #endif
 
+#if 1
+   DPRINTF(("schedd_job_info: %d %s\n", schedd_job_info, msg));
+#endif
+
    if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
-      if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
-         if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
-                                      job_number)) {
-            DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
-            return;
+      if (mes_schedd_info == true) {
+         if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
+            if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
+                                         job_number)) {
+               DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
+               return;
+            }
          }
+         if (!tmp_sme) {
+            schedd_mes_initialize();
+         }   
+
+         mes = lCreateElem(MES_Type);
+         jobs_ulng = lCreateList("job ids", ULNG_Type);
+         lSetList(mes, MES_job_number_list, jobs_ulng);
+         lSetUlong(mes, MES_message_number, message_number);
+         lSetString(mes, MES_message, msg);
+         lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
+
+         jid_ulng = lCreateElem(ULNG_Type);
+         lSetUlong(jid_ulng, ULNG, job_number);
+         lAppendElem(jobs_ulng, jid_ulng);
       }
-      if (!tmp_sme) {
-         schedd_mes_initialize();
-      }   
-
-      mes = lCreateElem(MES_Type);
-      jobs_ulng = lCreateList("job ids", ULNG_Type);
-      lSetList(mes, MES_job_number_list, jobs_ulng);
-      lSetUlong(mes, MES_message_number, message_number);
-      lSetString(mes, MES_message, msg);
-      lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
-
-      jid_ulng = lCreateElem(ULNG_Type);
-      lSetUlong(jid_ulng, ULNG, job_number);
-      lAppendElem(jobs_ulng, jid_ulng);
 
       if (log_schedd_info) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
@@ -531,33 +543,36 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 #endif
 
    if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
-      if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
-         if (!sconf_is_id_in_schedd_job_info_range(job_number)) {
-            DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
-            return;
+
+      if (mes_schedd_info == true) {
+         if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
+            if (!sconf_is_id_in_schedd_job_info_range(job_number)) {
+               DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
+               return;
+            }
          }
-      }
-      if (!tmp_sme) {
-         schedd_mes_initialize();
-      }   
+         if (!tmp_sme) {
+            schedd_mes_initialize();
+         }   
 
-      mes = lGetElemUlong(lGetList(tmp_sme, SME_message_list), MES_message_number, message_number);
-      if (mes == NULL) {
-         mes = lCreateElem(MES_Type);
-         jobs_ulng = lCreateList("job ids", ULNG_Type);
-         lSetList(mes, MES_job_number_list, jobs_ulng);
-         lSetUlong(mes, MES_message_number, message_number);
-         lSetString(mes, MES_message, msg);
-         
-         lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
-      } 
-      else {
-         jobs_ulng = lGetList(mes, MES_job_number_list);
-      }
+         mes = lGetElemUlong(lGetList(tmp_sme, SME_message_list), MES_message_number, message_number);
+         if (mes == NULL) {
+            mes = lCreateElem(MES_Type);
+            jobs_ulng = lCreateList("job ids", ULNG_Type);
+            lSetList(mes, MES_job_number_list, jobs_ulng);
+            lSetUlong(mes, MES_message_number, message_number);
+            lSetString(mes, MES_message, msg);
+            
+            lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
+         } 
+         else {
+            jobs_ulng = lGetList(mes, MES_job_number_list);
+         }
 
-      jid_ulng = lCreateElem(ULNG_Type);
-      lSetUlong(jid_ulng, ULNG, job_number);
-      lAppendElem(jobs_ulng, jid_ulng);
+         jid_ulng = lCreateElem(ULNG_Type);
+         lSetUlong(jid_ulng, ULNG, job_number);
+         lAppendElem(jobs_ulng, jid_ulng);
+      }
 
       if (log_schedd_info) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);

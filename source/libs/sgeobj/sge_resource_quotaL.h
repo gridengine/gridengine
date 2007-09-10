@@ -180,20 +180,26 @@ NAMEEND
 /* Resource Quota Limit - used only for caching scheduler-internally */
 enum {
    RQL_name = RQL_LOWERBOUND,
-   RQL_result,
-   RQL_time
+   RQL_result,      /* dispatch_t */
+   RQL_time,        /* sequential dispatching only */
+   RQL_slots,       /* parallel dispatching only */
+   RQL_slots_qend   /* parallel dispatching only */
 };
 
 LISTDEF(RQL_Type)
  SGE_STRING(RQL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE )
  SGE_INT(RQL_result, CULL_DEFAULT )
  SGE_ULONG(RQL_time, CULL_DEFAULT )
+ SGE_INT(RQL_slots, CULL_DEFAULT )
+ SGE_INT(RQL_slots_qend, CULL_DEFAULT )
 LISTEND
  
 NAMEDEF(RQLN)
    NAME("RQL_name")
    NAME("RQL_result")
    NAME("RQL_time")
+   NAME("RQL_slots")
+   NAME("RQL_slots_qend")
 NAMEEND
 
 #define RQLS sizeof(RQLN)/sizeof(char*)

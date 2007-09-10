@@ -402,7 +402,7 @@ int main(int argc, char **argv)
    if (do_1st)
       samples = 1;
    else
-      samples = sizeof(chunking)/sizeof(void *);
+      samples = sizeof(chunking)/sizeof(chunking[0]);
 
    while ((drmaa_errno=drmaa_init(NULL, errorbuf, sizeof(errorbuf)-1) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE))
       sleep(1);

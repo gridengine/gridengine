@@ -34,7 +34,7 @@
 
 #include "version.h"
 
-const char GDI_VERSION[] = "6.1u1";
+const char GDI_VERSION[] = "6.1ARI";
 
 const gdi_ulong32 GRM_GDI_VERSION = 0x10002000;
 

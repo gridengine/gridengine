@@ -48,7 +48,7 @@
 #include "msg_sgeobjlib.h"
 #include "sge_string.h"
 
-static const char* userset_types[] = {
+const char* userset_types[] = {
    "ACL",   /* US_ACL   */
    "DEPT",  /* US_DEPT  */
    NULL

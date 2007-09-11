@@ -52,17 +52,6 @@
 #include "msg_common.h"
 #include "spool/classic/msg_spoollib_classic.h"
 
-/*
-** corresponding enum is in sge_usersetL.h
-** the order is important, cause the corresponding enum is created
-** in sge_parse_enum by value = (1<<array_index) 
-*/
-static const char* userset_types[] = {
-   "ACL",   /* US_ACL   */
-   "DEPT",  /* US_DEPT  */
-   ""
-};
-
 static int read_userset_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, int spool, int flag, int *tag, int parsing_type);
 
 /****
@@ -139,6 +128,7 @@ int spool
    u_long32 bitmask, type;
    char filename[SGE_PATH_MAX];
    int ret;
+   bool first = true; 
    dstring ds;
    char buffer[256];
 
@@ -173,9 +163,14 @@ int spool
    type = lGetUlong(ep, US_type);
    FPRINTF((fp, "type       "));
    bitmask = 1;
-   for (ptr = userset_types; **ptr != '\0'; ptr++) {
+   for (ptr = userset_types; *ptr != NULL; ptr++) {
       if (bitmask & type) {
-         FPRINTF((fp,"%s",*ptr));
+         if (first) {
+            FPRINTF((fp,"%s",*ptr));
+            first = false;
+         } else {   
+            FPRINTF((fp," %s",*ptr));
+         }
       }
       bitmask <<= 1;
    };

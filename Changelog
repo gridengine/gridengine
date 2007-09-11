@@ -1,3 +1,6 @@
+RD-2007-09-11-0: CVS        Created V61ARI_SNAPSHOT_TAG
+-------------------------------------------------------
+
 AH-2007-09-05-0: Enhancem.: Enhanced test_drmaa_issue1832 
                             - added progress bar that is based either on 
                               drmaa_job_ps() or drmaa_wait() information

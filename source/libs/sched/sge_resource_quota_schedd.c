@@ -721,7 +721,7 @@ bool rqs_exceeded_sort_out(sge_assignment_t *a, const lListElem *rule, const dst
 #if 1
          rqs_excluded_cqueues(rule, a);
          rqs_excluded_hosts(rule, a);
-#endif 1
+#endif
          DPRINTF(("QUEUE INSTANCE: resource quota set %s deny job execution on %s@%s\n", 
                sge_dstring_get_string(rule_name), queue_name, host_name));
          DRETURN(false);

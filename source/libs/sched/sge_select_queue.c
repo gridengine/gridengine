@@ -387,7 +387,6 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
    lListElem *pe;
    const char *pe_request, *pe_name;
    dispatch_t result, best_result = DISPATCH_NEVER_CAT;
-   int old_logging = 0;
 
    DENTER(TOP_LAYER, "sge_select_parallel_environment");
 
@@ -3041,7 +3040,6 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       const char *eh_name;
       const char *qname, *cqname;
       u_long32 tt_rqs = 0;   
-      bool is_global;
 
       lListElem *hep;
 

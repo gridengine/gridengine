@@ -1,3 +1,10 @@
+RN-2007-09-12-0: Bugfix:    - Creating a userset with NONE as a type results
+                              in a core dump
+                            - Userset spooling in classic mode is broken
+                 Bugster:   6576153,6600619
+                 Issue:     2323,2356 
+                 Review:    RD
+
 LP-2007-09-07-0: Enhancem.: JGDIShell detects multiple option registrations
                             JGDIShell can handle exit codes
                  Cleanup:   JGDIShell commands
